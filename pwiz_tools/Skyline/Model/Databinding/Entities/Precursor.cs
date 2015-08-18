@@ -19,7 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Controls.SeqNode;
@@ -27,7 +26,6 @@ using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Lib;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -70,20 +68,9 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return MakeChromInfoResultsMap(DocNode.Results, file => new PrecursorResult(this, file));
         }
 
-        private bool IsCustomMolecule()
-        {
-            return !Peptide.DocNode.IsProteomic;
-        }
-
-        private void ThrowIfNotCustomMolecule()
-        {
-            if (!IsCustomMolecule())
-                throw new InvalidDataException(Resources.Peptide_ThrowIfNotSmallMolecule_Direct_editing_of_this_value_is_only_supported_for_small_molecules_);
-        }
-
         protected override TransitionGroupDocNode CreateEmptyNode()
         {
-            return new TransitionGroupDocNode(new TransitionGroup(new Model.Peptide(null, "X", null, null, 0), 1, IsotopeLabelType.light), null); // Not L10N
+            return new TransitionGroupDocNode(new TransitionGroup(new Model.Peptide(null, "X", null, null, 0), null, 1, IsotopeLabelType.light), null); // Not L10N
         }
 
         [InvariantDisplayName("PrecursorResultsSummary")]
@@ -114,6 +101,49 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get
             {
                 return DocNode.GetPrecursorIonPersistentNeutralMass();
+            }
+        }
+
+        private bool IsSmallMolecule()
+        {
+            return DocNode.TransitionGroup.IsCustomIon;
+        }
+
+        [InvariantDisplayName("PrecursorIonName")]
+        [Format(NullValue = TextUtil.EXCEL_NA)]
+        public string IonName
+        {
+            get
+            {
+                if (IsSmallMolecule())
+                {
+                    return (DocNode.CustomIon.Name ?? string.Empty);
+                }
+                else
+                {
+                    var parent = DataSchema.Document.FindNode(IdentityPath.Parent) as PeptideDocNode;
+                    var molecule = RefinementSettings.ConvertToSmallMolecule(RefinementSettings.ConvertToSmallMoleculesMode.formulas, SrmDocument, parent, DocNode.TransitionGroup.PrecursorCharge, DocNode.TransitionGroup.LabelType);
+                    return molecule.InvariantName ?? string.Empty;
+                }
+            }
+        }
+
+        [InvariantDisplayName("PrecursorIonFormula")]
+        [Format(NullValue = TextUtil.EXCEL_NA)]
+        public string IonFormula
+        {
+            get
+            {
+                if (IsSmallMolecule())
+                {
+                    return (DocNode.CustomIon.Formula ?? string.Empty);
+                }
+                else
+                {
+                    PeptideDocNode parent = DataSchema.Document.FindNode(IdentityPath.Parent) as PeptideDocNode;
+                    var molecule = RefinementSettings.ConvertToSmallMolecule(RefinementSettings.ConvertToSmallMoleculesMode.formulas, SrmDocument, parent, DocNode.TransitionGroup.PrecursorCharge, DocNode.TransitionGroup.LabelType);
+                    return molecule.Formula ?? string.Empty;
+                }
             }
         }
 
@@ -168,30 +198,84 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                return !Peptide.DocNode.IsProteomic 
-                ? DocNode.ExplicitValues.CollisionEnergy 
-                : null;
+                return DocNode.ExplicitValues.CollisionEnergy;
             }
             set
             {
-                ThrowIfNotCustomMolecule();  // Only settable for custom ions
                 var values = DocNode.ExplicitValues.ChangeCollisionEnergy(value);
                 ChangeDocNode(EditDescription.SetColumn("ExplicitCollisionEnergy", value), // Not L10N
                     DocNode.ChangeExplicitValues(values));
             }
         }
 
+        [Format(Formats.OPT_PARAMETER, NullValue = TextUtil.EXCEL_NA)]
+        public double? SLens
+        {
+            get
+            {
+                return DocNode.ExplicitValues.SLens;
+            }
+            set
+            {
+                var values = DocNode.ExplicitValues.ChangeSLens(value);
+                ChangeDocNode(EditDescription.SetColumn("SLens", value), // Not L10N
+                    DocNode.ChangeExplicitValues(values));
+            }
+        }
+
+        [Format(Formats.OPT_PARAMETER, NullValue = TextUtil.EXCEL_NA)]
+        public double? ConeVoltage
+        {
+            get
+            {
+                return DocNode.ExplicitValues.ConeVoltage;
+            }
+            set
+            {
+                var values = DocNode.ExplicitValues.ChangeConeVoltage(value);
+                ChangeDocNode(EditDescription.SetColumn("ConeVoltage", value), // Not L10N
+                    DocNode.ChangeExplicitValues(values));
+            }
+        }
+
+        [Format(Formats.OPT_PARAMETER, NullValue = TextUtil.EXCEL_NA)]
+        public double? ExplicitDeclusteringPotential
+        {
+            get
+            {
+                return DocNode.ExplicitValues.DeclusteringPotential;
+            }
+            set
+            {
+                var values = DocNode.ExplicitValues.ChangeDeclusteringPotential(value);
+                ChangeDocNode(EditDescription.SetColumn("ExplicitDeclusteringPotential", value), // Not L10N
+                    DocNode.ChangeExplicitValues(values));
+            }
+        }
+
+        [Format(Formats.OPT_PARAMETER, NullValue = TextUtil.EXCEL_NA)]
+        public double? ExplicitCompensationVoltage
+        {
+            get
+            {
+                return DocNode.ExplicitValues.CompensationVoltage;
+            }
+            set
+            {
+                var values = DocNode.ExplicitValues.ChangeCompensationVoltage(value);
+                ChangeDocNode(EditDescription.SetColumn("ExplicitCompensationVoltage", value), // Not L10N
+                    DocNode.ChangeExplicitValues(values));
+            }
+        }
+        
         public double? ExplicitDriftTimeMsec
         {
             get
             {
-                return !Peptide.DocNode.IsProteomic
-                    ? DocNode.ExplicitValues.DriftTimeMsec
-                    : null;
+                return DocNode.ExplicitValues.DriftTimeMsec;
             }
             set
             {
-                ThrowIfNotCustomMolecule(); // Only settable for custom ions
                 var values = DocNode.ExplicitValues.ChangeDriftTime(value);
                 ChangeDocNode(EditDescription.SetColumn("ExplicitDriftTimeMsec", value), // Not L10N
                     DocNode.ChangeExplicitValues(values));
@@ -202,13 +286,10 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                return !Peptide.DocNode.IsProteomic
-                    ? DocNode.ExplicitValues.DriftTimeHighEnergyOffsetMsec
-                    : null;
+                return DocNode.ExplicitValues.DriftTimeHighEnergyOffsetMsec;
             }
             set
             {
-                ThrowIfNotCustomMolecule(); // Only settable for custom ions
                 var values = DocNode.ExplicitValues.ChangeDriftTimeHighEnergyOffsetMsec(value);
                 ChangeDocNode(EditDescription.SetColumn("ExplicitDriftTimeHighEnergyOffsetMsec", value), // Not L10N
                     DocNode.ChangeExplicitValues(values));

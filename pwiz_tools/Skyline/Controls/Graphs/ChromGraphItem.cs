@@ -249,7 +249,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (nodeGroup.TransitionGroup.IsCustomIon)
             {
                 // Showing precursor m/z, so avoid showing ion masses as in DisplayName
-                var customIon = nodeGroup.TransitionGroup.Peptide.CustomIon;
+                var customIon = nodeGroup.CustomIon;
                 seq = customIon.Name ?? customIon.Formula;
             }
             string prefix = string.Empty;

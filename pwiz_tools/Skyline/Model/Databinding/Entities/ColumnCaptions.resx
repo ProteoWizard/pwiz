@@ -699,6 +699,12 @@
   <data name="IonFormula">
     <value>Ion Formula</value>
   </data>
+  <data name="PrecursorIonName">
+    <value>Precursor Ion Name</value>
+  </data>
+  <data name="PrecursorIonFormula">
+    <value>Precursor Ion Formula</value>
+  </data>
   <data name="ProductIonFormula">
     <value>Product Ion Formula</value>
   </data>
@@ -716,5 +722,17 @@
   </data>
   <data name="ExplicitRetentionTimeWindow">
     <value>Explicit Retention Time Window</value>
+  </data>
+  <data name="SLens">
+    <value>S-Lens</value>
+  </data>
+  <data name="ConeVoltage">
+    <value>Cone Voltage</value>
+  </data>
+  <data name="ExplicitDeclusteringPotential">
+    <value>Explicit Declustering Potential</value>
+  </data>
+  <data name="ExplicitCompensationVoltage">
+    <value>Explicit Compensation Voltage</value>
   </data>
 </root>

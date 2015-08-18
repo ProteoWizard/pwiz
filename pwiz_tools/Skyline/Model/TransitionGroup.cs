@@ -58,28 +58,41 @@ namespace pwiz.Skyline.Model
 
         private readonly Peptide _peptide;
 
-        public TransitionGroup(Peptide peptide, int precursorCharge, IsotopeLabelType labelType)
-            : this(peptide, precursorCharge, labelType, false, null)
-        {            
+        public TransitionGroup(Peptide peptide, DocNodeCustomIon customIon, int precursorCharge, IsotopeLabelType labelType)
+            : this(peptide, customIon, precursorCharge, labelType, false, null)
+        {
         }
 
         public TransitionGroup(Peptide peptide, int precursorCharge, IsotopeLabelType labelType, bool unlimitedCharge, int? decoyMassShift)
+            : this(peptide, null, precursorCharge, labelType, unlimitedCharge, decoyMassShift)
+        {
+        }
+
+        public TransitionGroup(Peptide peptide, DocNodeCustomIon customIon, int precursorCharge, IsotopeLabelType labelType, bool unlimitedCharge, int? decoyMassShift)
         {
             _peptide = peptide;
-
+            CustomIon = customIon ?? Peptide.CustomIon; // If parent molecule is a custom ion, and none specified, use that
             PrecursorCharge = precursorCharge;
             LabelType = labelType;
             DecoyMassShift = decoyMassShift;
 
-            Validate(unlimitedCharge);
+            Validate(unlimitedCharge ? 0 : precursorCharge);
         }
 
+        /// <summary>
+        /// Our parent molecule
+        /// </summary>
         public Peptide Peptide { get { return _peptide; } }
+
+        /// <summary>
+        /// This typically matches the parent molecule's custom ion if we're the first transition group, but not necessarily
+        /// </summary>
+        public DocNodeCustomIon CustomIon { get; private set; }
 
         public int PrecursorCharge { get; private set; }
         public IsotopeLabelType LabelType { get; private set; }
         public int? DecoyMassShift { get; private set; }
-        public bool IsCustomIon{ get { return Peptide.IsCustomIon; } }
+        public bool IsCustomIon { get { return CustomIon != null; } }
         public string LabelTypeText
         {
             get { return (!LabelType.IsLight ? " (" + LabelType + ")" : string.Empty); } // Not L10N
@@ -136,7 +149,7 @@ namespace pwiz.Skyline.Model
                 transition.MassIndex,
                 transition.Charge,
                 decoyMassShift,
-                transition.CustomIon ?? Peptide.CustomIon); // Handle reporter ions as well as small molecules
+                transition.CustomIon ?? CustomIon); // Handle reporter ions as well as small molecules
             var isotopeDist = nodeGroupMatching.IsotopeDist;
             double massH;
             if (tranNew.IsCustom())
@@ -167,6 +180,7 @@ namespace pwiz.Skyline.Model
                                                              IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks,
                                                              bool useFilter)
         {
+            Assume.IsTrue(ReferenceEquals(groupDocNode.TransitionGroup, this));
             // Get necessary mass calculators and masses
             var calcFilterPre = settings.GetPrecursorCalc(IsotopeLabelType.light, mods);
             var calcFilter = settings.GetFragmentCalc(IsotopeLabelType.light, mods);
@@ -181,8 +195,9 @@ namespace pwiz.Skyline.Model
             if (!ReferenceEquals(calcFilter, calcPredict))
             {
                 // Get the normal precursor m/z for filtering, so that light and heavy ion picks will match.
-                if (!IsCustomIon)  // TODO bspratt proper heavy labeling for small molecules
-                    precursorMz = SequenceMassCalc.GetMZ(calcFilterPre.GetPrecursorMass(sequence), PrecursorCharge);
+                precursorMz = IsCustomIon ? 
+                    BioMassCalc.CalculateIonMz(calcFilterPre.GetPrecursorMass(groupDocNode.CustomIon), groupDocNode.TransitionGroup.PrecursorCharge) : 
+                    SequenceMassCalc.GetMZ(calcFilterPre.GetPrecursorMass(sequence), groupDocNode.TransitionGroup.PrecursorCharge);
             }
             if (!IsAvoidMismatchedIsotopeTransitions)
                 precursorMzAccept = precursorMz;
@@ -248,7 +263,7 @@ namespace pwiz.Skyline.Model
             {
                 bool libraryFilter = (pick == TransitionLibraryPick.all || pick == TransitionLibraryPick.filter);
                 foreach (var nodeTran in GetPrecursorTransitions(settings, mods, calcFilterPre, calcPredict,
-                        precursorMz, isotopeDist, potentialLosses, transitionRanks, libraryFilter, useFilter))
+                    precursorMz, isotopeDist, potentialLosses, transitionRanks, libraryFilter, useFilter))
                 {
                     if (minMz <= nodeTran.Mz && nodeTran.Mz <= maxMz)
                         yield return nodeTran;
@@ -258,7 +273,7 @@ namespace pwiz.Skyline.Model
             // Return special ions from settings, if this is a peptide
             if (!IsCustomIon)
             {
-                // This is a peptide, but it may have custom transitions, check those
+                // This is a peptide, but it may have custom transitions (reporter ions), check those
                 foreach (var measuredIon in tranSettings.Filter.MeasuredIons.Where(m => m.IsCustom))
                 {
                     if (useFilter && measuredIon.IsOptional)
@@ -271,14 +286,11 @@ namespace pwiz.Skyline.Model
                 }
             }
 
-            foreach (var nodeTran in groupDocNode.Transitions.Where(tran => tran.Transition.IsCustomAndEditable()))
+            // For small molecules we can't generate new nodes, so just mz filter those we have
+            foreach (var nodeTran in groupDocNode.Transitions.Where(tran => tran.Transition.IsNonPrecursorNonReporterCustomIon()))
             {
-                double massH = settings.GetFragmentMass(IsotopeLabelType.light, null, nodeTran.Transition, null);
-                var nodeTran2 = CreateTransitionNode(nodeTran.Transition.IonType, 0, nodeTran.Transition.Charge, massH,
-                    nodeTran.Losses, transitionRanks, nodeTran.Transition.CustomIon);
-                if (minMz <= nodeTran2.Mz && nodeTran2.Mz <= maxMz)
-                    yield return nodeTran2;
-
+                if (minMz <= nodeTran.Mz && nodeTran.Mz <= maxMz)
+                    yield return nodeTran;
             }
 
             if (sequence == null) // Completely custom
@@ -289,7 +301,7 @@ namespace pwiz.Skyline.Model
             {
                 // If it is not yet loaded, or nothing got ranked, return an empty enumeration
                 if (!settings.PeptideSettings.Libraries.IsLoaded ||
-                        (transitionRanks != null && transitionRanks.Count == 0))
+                    (transitionRanks != null && transitionRanks.Count == 0))
                 {
                     yield break;
                 }
@@ -380,7 +392,7 @@ namespace pwiz.Skyline.Model
                                     }
                                     // If allowing library or filter, check the filter to decide whether to accept
                                     else if (pick == TransitionLibraryPick.all_plus &&
-                                            tranSettings.Accept(sequence, precursorMzAccept, type, i, ionMz, start, end, startMz))
+                                                tranSettings.Accept(sequence, precursorMzAccept, type, i, ionMz, start, end, startMz))
                                     {
                                         nodeTranReturn = CreateTransitionNode(type, i, charge, massH, losses, transitionRanks);
                                     }
@@ -400,7 +412,7 @@ namespace pwiz.Skyline.Model
                             {
                                 if (IsAvoidMismatchedIsotopeTransitions &&
                                     !OtherLabelTypesAllowed(settings, minMz, maxMz, start, end, startMz, accept,
-                                                            groupDocNode, nodeTranReturn, listOtherTypes))
+                                        groupDocNode, nodeTranReturn, listOtherTypes))
                                 {
                                     continue;
                                 }
@@ -463,7 +475,7 @@ namespace pwiz.Skyline.Model
             {
                 var ionMz =
                     BioMassCalc.CalculateIonMz(
-                        Peptide.CustomIon.GetMass(settings.TransitionSettings.Prediction.PrecursorMassType),
+                        CustomIon.GetMass(settings.TransitionSettings.Prediction.PrecursorMassType),
                         PrecursorCharge);
                 if (!useFilter ||
                     !libraryFilter || 
@@ -480,13 +492,13 @@ namespace pwiz.Skyline.Model
                             if (minMz > ionMz || ionMz > maxMz)
                                 continue;
                             var isotopeDistInfo = new TransitionIsotopeDistInfo(isotopeDist.GetRankI(i), isotopeDist.GetProportionI(i));
-                            yield return CreateTransitionNode(i, precursorMS1Mass, isotopeDistInfo, null, transitionRanks, Peptide.CustomIon);
+                            yield return CreateTransitionNode(i, precursorMS1Mass, isotopeDistInfo, null, transitionRanks, CustomIon);
                         }
                     }
                     else
                     {
-                        var transition = new Transition(this, PrecursorCharge, null, Peptide.CustomIon, IonType.precursor);
-                        double massH = Peptide.CustomIon.GetMass(settings.TransitionSettings.Prediction.PrecursorMassType);
+                        var transition = new Transition(this, PrecursorCharge, null, CustomIon, IonType.precursor);
+                        double massH = CustomIon.GetMass(settings.TransitionSettings.Prediction.PrecursorMassType);
                         yield return new TransitionDocNode(transition, null, massH, null, null);
                     }
                 }
@@ -822,22 +834,23 @@ namespace pwiz.Skyline.Model
             return (Transition.GetFragmentNTermAA(sequence, cleavageOffset) == 'P');
         }
 
-        private void Validate(bool unlimitedCharge)
+        public void Validate(int? charge)
         {
-            if (unlimitedCharge)
-                return;
-            if (IsCustomIon)
+            if (charge.HasValue && charge != 0)
             {
-                if (MIN_PRECURSOR_CHARGE > Math.Abs(PrecursorCharge) || Math.Abs(PrecursorCharge) > MAX_PRECURSOR_CHARGE)
+                if (IsCustomIon)
+                {
+                    if (MIN_PRECURSOR_CHARGE > Math.Abs(charge.Value) || Math.Abs(charge.Value) > MAX_PRECURSOR_CHARGE)
+                        throw new InvalidDataException(
+                            string.Format(Resources.Transition_Validate_Precursor_charge__0__must_be_non_zero_and_between__1__and__2__,
+                                charge, -MAX_PRECURSOR_CHARGE, MAX_PRECURSOR_CHARGE));
+                }
+                else if (MIN_PRECURSOR_CHARGE > charge || charge > MAX_PRECURSOR_CHARGE)
+                {
                     throw new InvalidDataException(
-                        string.Format(Resources.Transition_Validate_Precursor_charge__0__must_be_non_zero_and_between__1__and__2__,
-                                      PrecursorCharge, -MAX_PRECURSOR_CHARGE, MAX_PRECURSOR_CHARGE));
-            }
-            else if (MIN_PRECURSOR_CHARGE > PrecursorCharge || PrecursorCharge > MAX_PRECURSOR_CHARGE)
-            {
-                throw new InvalidDataException(
-                    string.Format(Resources.TransitionGroup_Validate_Precursor_charge__0__must_be_between__1__and__2__,
-                                  PrecursorCharge, MIN_PRECURSOR_CHARGE, MAX_PRECURSOR_CHARGE));
+                        string.Format(Resources.TransitionGroup_Validate_Precursor_charge__0__must_be_between__1__and__2__,
+                            charge, MIN_PRECURSOR_CHARGE, MAX_PRECURSOR_CHARGE));
+                }
             }
             if (DecoyMassShift.HasValue)
             {
@@ -858,10 +871,12 @@ namespace pwiz.Skyline.Model
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return Equals(obj._peptide, _peptide) &&
+            bool equal =  Equals(obj._peptide, _peptide) &&
+                Equals(obj.CustomIon, CustomIon) &&
                 obj.PrecursorCharge == PrecursorCharge &&
                 obj.LabelType.Equals(LabelType) &&
                 obj.DecoyMassShift.Equals(DecoyMassShift);
+            return equal; // For debugging convenience
         }
 
         public override bool Equals(object obj)

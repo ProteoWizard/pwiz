@@ -801,62 +801,55 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         public static void ConvertedSmallMoleculeDocumentIsSimilar(SrmDocument document, SrmDocument converted)
         {
+            // Are both versions valid?
+            Serializable(converted);
+            Serializable(document);
+
             var convertedMoleculeGroupsIterator = converted.MoleculeGroups.GetEnumerator();
             foreach (var peptideGroupDocNode in document.MoleculeGroups)
             {
                 convertedMoleculeGroupsIterator.MoveNext();
                 var convertedMoleculeGroupDocNode = convertedMoleculeGroupsIterator.Current;
                 var convertedMoleculesIterator = convertedMoleculeGroupDocNode.Molecules.GetEnumerator();
-                IEnumerator<TransitionGroupDocNode> convertedTransitionGroupIterator = null;
                 foreach (var mol in peptideGroupDocNode.Molecules)
                 {
-                    var precursorCharge = 0;
-                    var isotopeLabelType = IsotopeLabelType.light;
+                    convertedMoleculesIterator.MoveNext();
+                    var convertedMol = convertedMoleculesIterator.Current;
+                    if (convertedMol.Note != null)
+                        Assert.AreEqual(mol.Note ?? string.Empty, convertedMol.Note.Replace(RefinementSettings.TestingConvertedFromProteomic, string.Empty));
+                    else
+                        Assert.AreEqual(mol.CustomIon.InvariantName, SrmDocument.TestingNonProteomicMoleculeName); // This was the magic test molecule
+                    Assert.AreEqual(mol.SourceKey, convertedMol.SourceKey);
+                    Assert.AreEqual(mol.Rank, convertedMol.Rank);
+                    Assert.AreEqual(mol.Results, convertedMol.Results);
+                    Assert.AreEqual(mol.ExplicitRetentionTime, convertedMol.ExplicitRetentionTime);
+                    Assert.AreEqual(mol.BestResult, convertedMol.BestResult);
+                    var convertedTransitionGroupIterator = convertedMol.TransitionGroups.GetEnumerator();
                     foreach (var transitionGroupDocNode in mol.TransitionGroups)
                     {
-                        var transitionGroup = transitionGroupDocNode.TransitionGroup;
-                        if (transitionGroupDocNode.PrecursorCharge != precursorCharge ||
-                             !Equals(isotopeLabelType, transitionGroup.LabelType))
+                        convertedTransitionGroupIterator.MoveNext();
+                        var convertedTransitionGroupDocNode = convertedTransitionGroupIterator.Current;
+                        Assert.AreEqual(transitionGroupDocNode.TransitionGroup.PrecursorCharge, convertedTransitionGroupDocNode.TransitionGroup.PrecursorCharge);
+                        Assert.AreEqual(transitionGroupDocNode.TransitionGroup.LabelType, convertedTransitionGroupDocNode.TransitionGroup.LabelType);
+                        Assert.AreEqual(transitionGroupDocNode.PrecursorMz, convertedTransitionGroupDocNode.PrecursorMz, SequenceMassCalc.MassTolerance, "transitiongroup as small molecule");
+                        Assert.AreEqual(transitionGroupDocNode.IsotopeDist, convertedTransitionGroupDocNode.IsotopeDist);
+                        // Remove any library info, since for the moment at least small molecules don't support this and it won't roundtrip
+                        var resultsNew = RefinementSettings.RemoveTransitionGroupChromInfoLibraryInfo(transitionGroupDocNode);
+                        Assert.AreEqual(resultsNew, convertedTransitionGroupDocNode.Results, transitionGroupDocNode + " vs " + convertedTransitionGroupDocNode);
+
+                        Assert.AreEqual(transitionGroupDocNode.TransitionGroup.PrecursorCharge, convertedTransitionGroupDocNode.TransitionGroup.PrecursorCharge);
+                        Assert.AreEqual(transitionGroupDocNode.TransitionGroup.LabelType, convertedTransitionGroupDocNode.TransitionGroup.LabelType);
+
+                        var convertedTransitionIterator = convertedTransitionGroupDocNode.Transitions.GetEnumerator();
+                        foreach (var transition in transitionGroupDocNode.Transitions)
                         {
-                            // A change in charge or label means a new small molecule
-                            convertedMoleculesIterator.MoveNext();
-                            var convertedMol = convertedMoleculesIterator.Current;
-                            Assert.AreEqual(mol.Note, convertedMol.Note);
-                            Assert.AreEqual(mol.SourceKey, convertedMol.SourceKey);
-                            Assert.AreEqual(mol.Rank, convertedMol.Rank);
-                            Assert.AreEqual(mol.Results, convertedMol.Results);
-                            Assert.AreEqual(mol.ExplicitRetentionTime, convertedMol.ExplicitRetentionTime);
-                            Assert.AreEqual(mol.BestResult, convertedMol.BestResult);
-
-                            convertedTransitionGroupIterator = convertedMol.TransitionGroups.GetEnumerator();
-                            convertedTransitionGroupIterator.MoveNext();
-                            precursorCharge = transitionGroup.PrecursorCharge;
-                            isotopeLabelType = transitionGroup.LabelType;
+                            convertedTransitionIterator.MoveNext();
+                            var convertedTransition = convertedTransitionIterator.Current;
+                            Assert.AreEqual(transition.Mz, convertedTransition.Mz, SequenceMassCalc.MassTolerance, "transition as small molecule");
+                            Assert.AreEqual(transition.IsotopeDistInfo, convertedTransition.IsotopeDistInfo);
+                            Assert.AreEqual(transition.Results, convertedTransition.Results);
                         }
-                        if (convertedTransitionGroupIterator != null)
-                        {
-                            var convertedTransitionGroupDocNode = convertedTransitionGroupIterator.Current;
-                            var convertedTransitionGroup = convertedTransitionGroupDocNode.TransitionGroup;
-                            Assert.AreEqual(transitionGroupDocNode.PrecursorCharge, convertedTransitionGroupDocNode.PrecursorCharge);
-                            Assert.AreEqual(transitionGroup.LabelType, convertedTransitionGroup.LabelType);
-                            Assert.AreEqual(transitionGroupDocNode.PrecursorMz, convertedTransitionGroupDocNode.PrecursorMz, 1.0E-6, "transitiongroup as small molecule");
-                            Assert.AreEqual(transitionGroupDocNode.IsotopeDist, convertedTransitionGroupDocNode.IsotopeDist);
-                            Assert.AreEqual(transitionGroupDocNode.Results, convertedTransitionGroupDocNode.Results);
-
-                            Assert.AreEqual(transitionGroup.PrecursorCharge, convertedTransitionGroup.PrecursorCharge);
-                            Assert.AreEqual(transitionGroup.LabelType, convertedTransitionGroup.LabelType);
-
-                            var convertedTransitionIterator = convertedTransitionGroupDocNode.Transitions.GetEnumerator();
-                            foreach (var transition in transitionGroupDocNode.Transitions)
-                            {
-                                convertedTransitionIterator.MoveNext();
-                                var convertedTransition = convertedTransitionIterator.Current;
-                                Assert.AreEqual(transition.Mz, convertedTransition.Mz, 1.0E-6, "transition as small molecule");
-                                Assert.AreEqual(transition.IsotopeDistInfo, convertedTransition.IsotopeDistInfo);
-                                Assert.AreEqual(transition.Results, convertedTransition.Results);
-                            }
-                            Assert.IsFalse(convertedTransitionIterator.MoveNext());
-                        }
+                        Assert.IsFalse(convertedTransitionIterator.MoveNext());
                     }
                     Assert.IsFalse(convertedTransitionGroupIterator == null || convertedTransitionGroupIterator.MoveNext());
                 }

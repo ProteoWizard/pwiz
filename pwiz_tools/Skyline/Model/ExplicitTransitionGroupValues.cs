@@ -27,34 +27,46 @@ namespace pwiz.Skyline.Model
         /// Helper class of attributes we normally calculate or get from a library, but which may
         /// be specified in an imported transition list or by some other means.
         /// </summary>
-        
-        public static readonly ExplicitTransitionGroupValues EMPTY = new ExplicitTransitionGroupValues();
+
+        public static readonly ExplicitTransitionGroupValues EMPTY = new ExplicitTransitionGroupValues(null);
+        public static readonly ExplicitTransitionGroupValues TEST = new ExplicitTransitionGroupValues(1.23, 2.34, -.345, 4.56, 5.67, 6.78, 7.89); // Using this helps catch untested functionality as we add members
 
         public ExplicitTransitionGroupValues(double? explicitCollisionEnergy,
             double? explicitDriftTimeMsec,
-            double? explicitDriftTimeHighEnergyOffsetMsec)
+            double? explicitDriftTimeHighEnergyOffsetMsec,
+            double? explicitSLens,
+            double? explicitConeVoltage,
+            double? explicitDeclusteringPotential,
+            double? explicitCompensationVoltage)
         {
             CollisionEnergy = explicitCollisionEnergy;
             DriftTimeMsec = explicitDriftTimeMsec;
             DriftTimeHighEnergyOffsetMsec = explicitDriftTimeHighEnergyOffsetMsec;
+            SLens = explicitSLens;
+            ConeVoltage = explicitConeVoltage;
+            DeclusteringPotential = explicitDeclusteringPotential;
+            CompensationVoltage = explicitCompensationVoltage;
         }
 
         public ExplicitTransitionGroupValues(ExplicitTransitionGroupValues other)
             : this(
                 (other == null) ? null : other.CollisionEnergy,
                 (other == null) ? null : other.DriftTimeMsec,
-                (other == null) ? null : other.DriftTimeHighEnergyOffsetMsec)
-        {
-        }
-
-        public ExplicitTransitionGroupValues()
-            : this(null)
+                (other == null) ? null : other.DriftTimeHighEnergyOffsetMsec,
+                (other == null) ? null : other.SLens,
+                (other == null) ? null : other.ConeVoltage,
+                (other == null) ? null : other.DeclusteringPotential,
+                (other == null) ? null : other.CompensationVoltage)
         {
         }
 
         public double? CollisionEnergy { get; private set; } // For import formats with explicit values for CE
         public double? DriftTimeMsec { get; private set; } // For import formats with explicit values for DT
         public double? DriftTimeHighEnergyOffsetMsec { get; private set; } // For import formats with explicit values for DT
+        public double? SLens { get; private set; } // For Thermo
+        public double? ConeVoltage { get; private set; } // For Waters
+        public double? DeclusteringPotential { get; private set; } // For import formats with explicit values for DP
+        public double? CompensationVoltage { get; private set; } // For import formats with explicit values for CV
 
         public ExplicitTransitionGroupValues ChangeCollisionEnergy(double? ce)
         {
@@ -71,11 +83,35 @@ namespace pwiz.Skyline.Model
             return ChangeProp(ImClone(this), (im, v) => im.DriftTimeMsec = v, dt);
         }
 
+        public ExplicitTransitionGroupValues ChangeSLens(double? slens)
+        {
+            return ChangeProp(ImClone(this), (im, v) => im.SLens = v, slens);
+        }
+
+        public ExplicitTransitionGroupValues ChangeConeVoltage(double? coneVoltage)
+        {
+            return ChangeProp(ImClone(this), (im, v) => im.ConeVoltage = v, coneVoltage);
+        }
+
+        public ExplicitTransitionGroupValues ChangeDeclusteringPotential(double? dp)
+        {
+            return ChangeProp(ImClone(this), (im, v) => im.DeclusteringPotential = v, dp);
+        }
+
+        public ExplicitTransitionGroupValues ChangeCompensationVoltage(double? cv)
+        {
+            return ChangeProp(ImClone(this), (im, v) => im.CompensationVoltage = v, cv);
+        }
+
         protected bool Equals(ExplicitTransitionGroupValues other)
         {
-            return CollisionEnergy.Equals(other.CollisionEnergy) &&
-                   DriftTimeMsec.Equals(other.DriftTimeMsec) &&
-                   DriftTimeHighEnergyOffsetMsec.Equals(other.DriftTimeHighEnergyOffsetMsec);
+            return Equals(CollisionEnergy, other.CollisionEnergy) &&
+                   Equals(DriftTimeMsec, other.DriftTimeMsec) &&
+                   Equals(DriftTimeHighEnergyOffsetMsec, other.DriftTimeHighEnergyOffsetMsec) &&
+                   Equals(SLens, other.SLens) &&
+                   Equals(ConeVoltage, other.ConeVoltage) &&
+                   CompensationVoltage.Equals(other.CompensationVoltage) &&
+                   DeclusteringPotential.Equals(other.DeclusteringPotential);
         }
 
         public override bool Equals(object obj)
@@ -93,6 +129,10 @@ namespace pwiz.Skyline.Model
                 int hashCode = CollisionEnergy.GetHashCode();
                 hashCode = (hashCode * 397) ^ DriftTimeMsec.GetHashCode();
                 hashCode = (hashCode * 397) ^ DriftTimeHighEnergyOffsetMsec.GetHashCode();
+                hashCode = (hashCode * 397) ^ SLens.GetHashCode();
+                hashCode = (hashCode * 397) ^ ConeVoltage.GetHashCode();
+                hashCode = (hashCode * 397) ^ DeclusteringPotential.GetHashCode();
+                hashCode = (hashCode * 397) ^ CompensationVoltage.GetHashCode();
                 return hashCode;
             }
         }

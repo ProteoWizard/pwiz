@@ -172,6 +172,12 @@
   <data name="addMoleculeContextMenuItem.Text" xml:space="preserve">
     <value>Add Small Molecule...</value>
   </data>
+  <data name="addSmallMoleculePrecursorContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>199, 24</value>
+  </data>
+  <data name="addSmallMoleculePrecursorContextMenuItem.Text" xml:space="preserve">
+    <value>Add Precursor...</value>
+  </data>
   <data name="addTransitionMoleculeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>189, 22</value>
   </data>
@@ -2788,6 +2794,12 @@
     <value>addMoleculeContextMenuItem</value>
   </data>
   <data name="&gt;&gt;addMoleculeContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;addSmallMoleculePrecursorContextMenuItem.Name" xml:space="preserve">
+    <value>addSmallMoleculePrecursorContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;addSmallMoleculePrecursorContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;addTransitionMoleculeContextMenuItem.Name" xml:space="preserve">

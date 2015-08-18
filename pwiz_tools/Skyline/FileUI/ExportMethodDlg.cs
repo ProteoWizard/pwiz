@@ -168,6 +168,18 @@ namespace pwiz.Skyline.FileUI
             foreach (string tuneType in ExportOptimize.CompensationVoltageTuneTypes)
                 comboTuning.Items.Add(tuneType);
             comboTuning.SelectedIndex = 0;
+
+            // Further repositioning - for design layout convenience we have many things to the right of the OK button.
+            // Find all such items and shift them to the left, then resize the form itself.
+            foreach (var controlObj in Controls)
+            {
+                var control = controlObj as Control;
+                if ((control != null) && (control.Left > btnOk.Right))
+                {
+                    control.Left = cbIgnoreProteins.Left; // Align with a known-good control
+                }
+            }
+            SetBounds(Left, Top, btnOk.Right + 2 * label4.Left, Height);
         }
 
         protected override void OnHandleCreated(EventArgs e)
@@ -385,6 +397,15 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        public bool UseSlens
+        {
+            get { return _exportProperties.UseSlens; }
+            set
+            {
+                _exportProperties.UseSlens = cbSlens.Checked = value;
+            }
+        }
+
         public bool AddTriggerReference
         {
             get { return _exportProperties.AddTriggerReference; }
@@ -472,6 +493,13 @@ namespace pwiz.Skyline.FileUI
                     ? labelDwellTime.Top - panelThermoRt.Height
                     : labelDwellTime.Top + (panelThermoRt.Height / 2);
             }
+        }
+
+        private void UpdateThermoSLensControl(ExportMethodType targetType)
+        {
+            cbSlens.Visible = cbSlens.Enabled =
+                InstrumentType == ExportInstrumentType.THERMO_QUANTIVA ||
+                InstrumentType == ExportInstrumentType.THERMO;  // TODO bspratt is this specific enough?
         }
 
         private void UpdateMaxTransitions()
@@ -906,6 +934,7 @@ namespace pwiz.Skyline.FileUI
             _exportProperties.IgnoreProteins = cbIgnoreProteins.Checked;
             _exportProperties.FullScans = _document.Settings.TransitionSettings.FullScan.IsEnabledMsMs;
             _exportProperties.AddEnergyRamp = panelThermoColumns.Visible && cbEnergyRamp.Checked;
+            _exportProperties.UseSlens = cbSlens.Checked;
             _exportProperties.AddTriggerReference = panelThermoColumns.Visible && cbTriggerRefColumns.Checked;
 
             _exportProperties.ExportMultiQuant = panelAbSciexTOF.Visible && cbExportMultiQuant.Checked;
@@ -1328,6 +1357,7 @@ namespace pwiz.Skyline.FileUI
             UpdateAbSciexControls();
             UpdateWatersControls();
             UpdateThermoRtControls(targetType);
+            UpdateThermoSLensControl(targetType);
             UpdateMaxLabel(standard);
         }
 

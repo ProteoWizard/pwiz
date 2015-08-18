@@ -1359,6 +1359,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                                      ITransitionGroupPeakData<TData> standardGroup)
         {
             // Enumerate as many elements as match by position
+            Assume.IsTrue(lightGroup.NodeGroup.TransitionGroup.PrecursorCharge == standardGroup.NodeGroup.TransitionGroup.PrecursorCharge);
             int i = 0;
             while (i < lightGroup.TransitionPeakData.Count && i < standardGroup.TransitionPeakData.Count)
             {
@@ -1385,13 +1386,12 @@ namespace pwiz.Skyline.Model.Results.Scoring
             }
         }
 
-        public static bool EquivalentTrans(TransitionDocNode nodeTran1, TransitionDocNode nodeTran2)
+        private static bool EquivalentTrans(TransitionDocNode nodeTran1, TransitionDocNode nodeTran2)
         {
+            // Note: assumes caller has already verifed precursorCharge match
             if (nodeTran1 == null && nodeTran2 == null)
                 return true;
             if (nodeTran1 == null || nodeTran2 == null)
-                return false;
-            if (nodeTran1.Transition.Group.PrecursorCharge != nodeTran2.Transition.Group.PrecursorCharge)
                 return false;
             if (!nodeTran1.Transition.Equivalent(nodeTran2.Transition))
                 return false;

@@ -76,6 +76,9 @@ namespace pwiz.Skyline.Model.Results
                 monoMassIndex++;
             }
 
+            if (!q1FilterValues.Any())  // As is small molecule docs with mz values only, no formulas
+                return;
+
             // Use the filtering algorithm that will be used on real data to determine the
             // expected proportions of the mass distribution that will end up filtered into
             // peaks

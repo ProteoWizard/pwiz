@@ -250,6 +250,12 @@ namespace pwiz.Skyline.Model.DocSettings
             return precursorCalc;
         }
 
+        // For use with small molecules where we don't deal with modifications
+        public IPrecursorMassCalc GetDefaultPrecursorCalc()
+        {
+            return _precursorMassCalcs[0].MassCalc;
+        }
+
         public IPrecursorMassCalc TryGetPrecursorCalc(IsotopeLabelType labelType, ExplicitMods mods)
         {
             var massCalcBase = GetBaseCalc(labelType, mods, _precursorMassCalcs);
@@ -289,16 +295,32 @@ namespace pwiz.Skyline.Model.DocSettings
             return GetMassCalc(labelType, _fragmentMassCalcs);
         }
 
+        /// <summary>
+        /// For use with small molecules, where we don't deal with modifications
+        /// </summary>
+        public IFragmentMassCalc GetDefaultFragmentCalc()
+        {
+            return _fragmentMassCalcs[0].MassCalc;
+        }
+
         public double GetFragmentMass(IsotopeLabelType labelType, ExplicitMods mods,
                                       Transition transition, IsotopeDistInfo isotopeDist)
         {
-            if (transition.IsCustom() && string.IsNullOrEmpty(transition.CustomIon.Formula))
-            {
-                // Without a formula we're just going to grab its stated mass, so get a simple calculator
-                labelType = IsotopeLabelType.light;
-            }
             // Return the singly protonated mass of the peptide fragment, or custom ion mass before electron removal
-            return GetFragmentCalc(labelType, mods).GetFragmentMass(transition, isotopeDist);
+            IFragmentMassCalc calc = GetFragmentCalc(labelType, mods);
+            if (calc == null && transition.IsCustom())
+            {
+                // Small molecules provide their own ion formula, just use the standard calculator
+                calc = GetDefaultFragmentCalc();
+            }
+            if (calc == null)
+            {
+                Assume.Fail(string.Format("Unable to locate fragment calculator for isotope label type {0} and mods {1}", // Not L10N
+                        labelType == null ? "(null)" : labelType.ToString(), // Not L10N
+                        mods == null ? "(null)" : mods.ToString())); // Not L10N
+                return 0;   // Keep resharper happy
+            }
+            return calc.GetFragmentMass(transition, isotopeDist);
         }
 
         public ChromSource GetChromSource(TransitionDocNode nodeTran)
@@ -320,7 +342,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public string GetDisplayName(PeptideDocNode nodePep)
         {
-            return nodePep.Peptide.IsCustomIon ? nodePep.Peptide.CustomIon.DisplayName : nodePep.ModifiedSequenceDisplay;
+            return nodePep.Peptide.IsCustomIon ? nodePep.CustomIon.DisplayName : nodePep.ModifiedSequenceDisplay;
         }
 
         public string GetModifiedSequence(PeptideDocNode nodePep)
@@ -358,7 +380,7 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 if (nodePep.Peptide.IsCustomIon)
                 {
-                    double mass = nodePep.Peptide.CustomIon.GetMass(TransitionSettings.Prediction.PrecursorMassType);
+                    double mass = nodeGroup.TransitionGroup.CustomIon.GetMass(TransitionSettings.Prediction.PrecursorMassType);
                     mz = BioMassCalc.CalculateIonMz(mass, nodeGroup.TransitionGroup.PrecursorCharge);
                 }
                 else
@@ -1712,13 +1734,14 @@ namespace pwiz.Skyline.Model.DocSettings
     {
         MassType MassType { get; }
         double GetPrecursorMass(string seq);
+        double GetPrecursorMass(CustomIon customIon);
         bool IsModified(string seq);
         string GetModifiedSequence(string seq, bool formatNarrow);
         string GetModifiedSequence(string seq, SequenceModFormatType format, bool explicitModsOnly);
         double GetAAModMass(char aa, int seqIndex, int seqLength);
         MassDistribution GetMzDistribution(string seq, int charge, IsotopeAbundances abundances);
         MassDistribution GetMZDistributionFromFormula(string formula, int charge, IsotopeAbundances abundances);
-        MassDistribution GetMZDistributionSinglePoint(double mass);
+        MassDistribution GetMZDistributionSinglePoint(double mz, int charge);
         string GetIonFormula(string peptideSequence, int charge);
     }
 

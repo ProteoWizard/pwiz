@@ -81,9 +81,10 @@ namespace pwiz.Skyline.Util.Extensions
         /// <param name="writer">The writer to use for output</param>
         /// <param name="text">The text value to output</param>
         /// <param name="separator">The separator being used</param>
-        public static void WriteDsvField(this TextWriter writer, string text, char separator)
+        /// <param name="replace">Optional value for replacing unwanted characters instead of quoting string</param>
+        public static void WriteDsvField(this TextWriter writer, string text, char separator, string replace = null)
         {
-            writer.Write(text.ToDsvField(separator));
+            writer.Write(text.ToDsvField(separator, replace));
         }
 
         /// <summary>
@@ -91,12 +92,16 @@ namespace pwiz.Skyline.Util.Extensions
         /// </summary>
         /// <param name="text">The text value of the field</param>
         /// <param name="separator">The separator being used</param>
-        public static string ToDsvField(this string text, char separator)
+        /// <param name="replace">Optional value for replacing unwanted characters instead of quoting string</param>
+        public static string ToDsvField(this string text, char separator, string replace = null)
         {
             if (text == null)
                 return string.Empty;
-            if (text.IndexOfAny(new[] { '"', separator, '\r', '\n' }) == -1) // Not L10N
+            var unwanted = new[] { '"', separator, '\r', '\n' }; // Not L10N
+            if (text.IndexOfAny(unwanted) == -1) 
                 return text;
+            if (!string.IsNullOrEmpty(replace))
+                return string.Join(replace, text.Split(unwanted));
             return '"' + text.Replace("\"", "\"\"") + '"'; // Not L10N
         }
 

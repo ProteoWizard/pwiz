@@ -295,7 +295,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             var listChildrenNew = GetChoices(DocNode, DocSettings, nodePep.ExplicitMods, useFilter);
             // Existing transitions must be part of the first settings change to ensure proper
             // handling of user set peak boundaries.
-            MergeChosen(listChildrenNew, useFilter, node => ((TransitionDocNode)node).Key);
+            MergeChosen(listChildrenNew, useFilter, node => ((TransitionDocNode)node).Key(DocNode));
             var nodeGroup = (TransitionGroupDocNode)DocNode.ChangeChildrenChecked(listChildrenNew);
             var diff = new SrmSettingsDiff(DocSettings, true);
             // Update results on the group to correctly handle user set peak boundaries
@@ -313,7 +313,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             listChildrenNew = new List<DocNode>(nodeGroup.Children);
             // Merge with existing transitions again to avoid changes based on the settings
             // updates.
-            MergeChosen(listChildrenNew, useFilter, node => ((TransitionDocNode)node).Key);
+            MergeChosen(listChildrenNew, useFilter, node => ((TransitionDocNode)node).Key(nodeGroup));
             return listChildrenNew;
         }
 
@@ -364,23 +364,49 @@ namespace pwiz.Skyline.Controls.SeqNode
         /// <summary>
         /// True if this node has siblings with the same charge state, and
         /// if those siblings must be in-synch, then only if they are not.
+        /// For small molecules, true only if all transitions are precursor transitions
         /// </summary>
         private bool HasSiblingsToSynch(bool mustBeInSynch)
         {
             var siblingNodes = Parent.Nodes;
             if (siblingNodes.Count > 1)
             {
+                // For small molecules, we can only synch precursor transitions,
+                // and only if both transition groups are defined by formula, or both by mz
+                if (!IsSynchable())
+                    return false;
                 var tranGroupThis = DocNode.TransitionGroup;
                 foreach (TransitionGroupTreeNode nodeTree in siblingNodes)
                 {
                     var tranGroup = nodeTree.DocNode.TransitionGroup;
                     if (!ReferenceEquals(tranGroupThis, tranGroup) &&
-                            tranGroupThis.PrecursorCharge == tranGroup.PrecursorCharge &&
-                            !(mustBeInSynch && DocNode.EquivalentChildren(nodeTree.DocNode)))
-                        return true;
+                        tranGroupThis.PrecursorCharge == tranGroup.PrecursorCharge &&
+                        !(mustBeInSynch && DocNode.EquivalentChildren(nodeTree.DocNode)))
+                    {
+                        if (!tranGroupThis.IsCustomIon)
+                        {
+                            return true;
+                        }
+                        else if (tranGroup.IsCustomIon && nodeTree.IsSynchable() &&
+                                 string.IsNullOrEmpty(tranGroupThis.CustomIon.Formula) ==
+                                 string.IsNullOrEmpty(tranGroup.CustomIon.Formula))
+                        {
+                            return true;
+                        }
+                    }
                 }
             }
             return false;
+        }
+
+        private bool IsSynchable()
+        {
+            var tranGroupThis = DocNode.TransitionGroup;
+            if (tranGroupThis.IsCustomIon)
+            {
+                return GetChoices(false).Cast<TransitionDocNode>().All(trans => trans.Transition.IsPrecursor());
+            }
+            return true;
         }
         
         #endregion
@@ -417,15 +443,15 @@ namespace pwiz.Skyline.Controls.SeqNode
                 var customTable = new TableDesc();
                 using (RenderTools rt = new RenderTools())
                 {
-                    customTable.AddDetailRow(Resources.TransitionGroupTreeNode_RenderTip_Molecule, nodePep.Peptide.CustomIon.Name, rt);
+                    customTable.AddDetailRow(Resources.TransitionGroupTreeNode_RenderTip_Molecule, nodeGroup.CustomIon.Name, rt);
                     customTable.AddDetailRow(Resources.TransitionGroupTreeNode_RenderTip_Precursor_charge,
                         nodeGroup.TransitionGroup.PrecursorCharge.ToString(LocalizationHelper.CurrentCulture), rt);
                     customTable.AddDetailRow(Resources.TransitionGroupTreeNode_RenderTip_Precursor_mz,
                         string.Format("{0:F04}", nodeGroup.PrecursorMz), rt); // Not L10N
-                    if (nodePep.Peptide.CustomIon.Formula != null)
+                    if (nodeGroup.CustomIon.Formula != null)
                     {
                         customTable.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Formula,
-                            nodePep.Peptide.CustomIon.Formula, rt);
+                            nodeGroup.CustomIon.Formula, rt);
                     }
                     SizeF size = customTable.CalcDimensions(g);
                     customTable.Draw(g);

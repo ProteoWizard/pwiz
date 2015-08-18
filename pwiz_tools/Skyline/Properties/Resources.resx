@@ -7904,9 +7904,6 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="EditMeasuredIonDlg_EditMeasuredIonDlg__Monoisotopic_mass_" xml:space="preserve">
     <value>&amp;Monoisotopic mass:</value>
   </data>
-  <data name="EditCustomMoleculeDlg_OkDialog_The_custom_molecule_already_exists_" xml:space="preserve">
-    <value>The custom molecule already exists.</value>
-  </data>
   <data name="EditCustomMoleculeDlg_OkDialog_Custom_molecules_must_have_a_mass_greater_than_or_equal_to__0__" xml:space="preserve">
     <value>Custom molecules must have a mass greater than or equal to {0}.</value>
   </data>
@@ -7958,9 +7955,6 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="SkylineWindow_ModifyTransition_Modify_Transition" xml:space="preserve">
     <value>Modify Transition</value>
   </data>
-  <data name="SkylineWindow_ModifyPeptide_Modify_Custom_Ion" xml:space="preserve">
-    <value>Modify Custom Ion</value>
-  </data>
   <data name="Transition_Validate_A_transition_of_ion_type__0__must_have_a_custom_ion_" xml:space="preserve">
     <value>A transition of ion type {0} must have a custom ion.</value>
   </data>
@@ -7994,11 +7988,11 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="PasteDlg_UpdateMoleculeType_Protein_description" xml:space="preserve">
     <value>Protein description</value>
   </data>
-  <data name="PasteDlg_UpdateMoleculeType_Precursor_Formula" xml:space="preserve">
-    <value>Precursor Formula</value>
+  <data name="PasteDlg_UpdateMoleculeType_Precursor_Ion_Formula" xml:space="preserve">
+    <value>Precursor Ion Formula</value>
   </data>
-  <data name="PasteDlg_UpdateMoleculeType_Product_Formula" xml:space="preserve">
-    <value>Product Formula</value>
+  <data name="PasteDlg_UpdateMoleculeType_Product_Ion_Formula" xml:space="preserve">
+    <value>Product Ion Formula</value>
   </data>
   <data name="PasteDlg_UpdateMoleculeType_Precursor_Charge" xml:space="preserve">
     <value>Precursor Charge</value>
@@ -8089,6 +8083,12 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   </data>
   <data name="EditCustomMoleculeDlg_EditCustomMoleculeDlg__Monoisotopic_m_z_" xml:space="preserve">
     <value>&amp;Monoisotopic m/z:</value>
+  </data>
+  <data name="EditCustomMoleculeDlg_EditCustomMoleculeDlg_A_verage_mass_" xml:space="preserve">
+    <value>A&amp;verage mass:</value>
+  </data>
+  <data name="EditCustomMoleculeDlg_EditCustomMoleculeDlg__Monoisotopic_mass_" xml:space="preserve">
+    <value>&amp;Monoisotopic mass:</value>
   </data>
   <data name="MismatchedIsotopeTransitionsFinder_DisplayName_Mismatched_transitions" xml:space="preserve">
     <value>Mismatched transitions</value>
@@ -8249,6 +8249,12 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   </data>
   <data name="Peptide_ThrowIfNotSmallMolecule_Direct_editing_of_this_value_is_only_supported_for_small_molecules_" xml:space="preserve">
     <value>Direct editing of this value is only supported for small molecules.</value>
+  </data>
+  <data name="SkylineWindow_AddSmallMolecule_Add_Precursor" xml:space="preserve">
+    <value>Add Precursor</value>
+  </data>
+  <data name="SkylineWindow_AddSmallMolecule_Add_small_molecule_precursor__0_" xml:space="preserve">
+    <value>Add small molecule precursor {0}</value>
   </data>
   <data name="Peptide_ExplicitRetentionTimeWindow_Explicit_retention_time_window_requires_an_explicit_retention_time_value_" xml:space="preserve">
     <value>Explicit retention time window requires an explicit retention time value.</value>
@@ -8623,5 +8629,50 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   </data>
   <data name="CommandLine_ImportTransitionList_Importing_transiton_list__0____" xml:space="preserve">
     <value>Importing transiton list {0}...</value>
+  </data>
+  <data name="SkylineWindow_ModifySmallMoleculeTransitionGroup_Modify_Custom_Ion_Precursor" xml:space="preserve">
+    <value>Modify Custom Ion Precursor</value>
+  </data>
+  <data name="SkylineWindow_ModifyPeptide_Modify_Small_Molecule" xml:space="preserve">
+    <value>Modify Small Molecule</value>
+  </data>
+  <data name="EditCustomMoleculeDlg_OkDialog_A_similar_transition_already_exists_" xml:space="preserve">
+    <value>A similar transition already exists.</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_S_Lens" xml:space="preserve">
+    <value>S-Lens</value>
+  </data>
+  <data name="PasteDlg_ReadPrecursorOrProductColumns_Invalid_S_Lens_value__0_" xml:space="preserve">
+    <value>Invalid S-Lens value {0}</value>
+  </data>
+  <data name="SrmDocument_GetPeptideGroupId_molecules" xml:space="preserve">
+    <value>molecules</value>
+  </data>
+  <data name="PasteDlg_ReadPrecursorOrProductColumns_Invalid_cone_voltage_value__0_" xml:space="preserve">
+    <value>Invalid cone voltage value {0}</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Cone_Voltage" xml:space="preserve">
+    <value>Cone Voltage</value>
+  </data>
+  <data name="EditCustomMoleculeDlg_OkDialog_A_precursor_with_that_charge_and_label_type_already_exists_" xml:space="preserve">
+    <value>A precursor with that charge and label type already exists.</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Label_Type" xml:space="preserve">
+    <value>Label Type</value>
+  </data>
+  <data name="PasteDlg_ReadPrecursorOrProductColumns_Invalid_declustering_potential__0_" xml:space="preserve">
+    <value>Invalid declustering potential {0}</value>
+  </data>
+  <data name="PasteDlg_ReadPrecursorOrProductColumns_Invalid_compensation_voltage__0_" xml:space="preserve">
+    <value>Invalid compensation voltage {0}</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage" xml:space="preserve">
+    <value>Explicit Compensation Voltage</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Explicit_Declustering_Potential" xml:space="preserve">
+    <value>Explicit Declustering Potential</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Note" xml:space="preserve">
+    <value>Note</value>
   </data>
 </root>

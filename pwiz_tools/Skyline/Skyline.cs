@@ -1734,14 +1734,76 @@ namespace pwiz.Skyline
 
         private void modifyPeptideMenuItem_Click(object sender, EventArgs e)
         {
+            var nodeTranGroupTree = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>();
             var nodeTranTree = SequenceTree.GetNodeOfType<TransitionTreeNode>();
-            if (nodeTranTree == null || !nodeTranTree.DocNode.Transition.IsCustomAndEditable())
+            if (nodeTranTree == null && nodeTranGroupTree != null && nodeTranGroupTree.DocNode.TransitionGroup.IsCustomIon)
             {
-                ModifyPeptide();
+                ModifySmallMoleculeTransitionGroup();
+            }
+            else if (nodeTranTree != null && nodeTranTree.DocNode.Transition.IsNonPrecursorNonReporterCustomIon())
+            {
+                ModifyTransition(nodeTranTree);
             }
             else
             {
-                ModifyTransition(nodeTranTree);
+                ModifyPeptide();
+            }
+        }
+
+        public void ModifySmallMoleculeTransitionGroup()
+        {
+            var nodeTransitionGroupTree = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>();
+
+            if (nodeTransitionGroupTree == null)
+                return;
+
+            var nodeTransGroup = nodeTransitionGroupTree.DocNode;
+            if (!nodeTransGroup.Peptide.IsCustomIon)
+                return;
+
+            var existingPrecursors = nodeTransitionGroupTree.PepNode.TransitionGroups.Select(child => child.TransitionGroup).Where(c => c.IsCustomIon).ToArray();
+            using (var dlg = new EditCustomMoleculeDlg(this, Resources.SkylineWindow_ModifySmallMoleculeTransitionGroup_Modify_Custom_Ion_Precursor, 
+                    nodeTransGroup.TransitionGroup, // Self
+                    existingPrecursors, // Self and siblings
+                    TransitionGroup.MIN_PRECURSOR_CHARGE,
+                    TransitionGroup.MAX_PRECURSOR_CHARGE,
+                    Document.Settings,
+                    null,
+                    null,
+                    nodeTransGroup.TransitionGroup.PrecursorCharge,
+                    nodeTransGroup.ExplicitValues,
+                    null,
+                    nodeTransGroup.TransitionGroup.LabelType))
+            {
+                dlg.ResultCustomIon = nodeTransGroup.CustomIon; // Set initial value change check
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    var newTransGroup = new TransitionGroup(nodeTransGroup.Peptide, dlg.ResultCustomIon, dlg.Charge,
+                        dlg.IsotopeLabelType);
+                    ModifyDocument(string.Format(Resources.SkylineWindow_ModifyPeptide_Modify__0__,
+                            nodeTransitionGroupTree.Text),
+                        doc =>
+                        {
+                            if (!Equals(newTransGroup, nodeTransGroup.Id))
+                            {
+                                // ID Changes impact all children, because IDs have back pointers to their parents.
+                                // User altered some identity item so we have to insert a copy of the tree from here down, and delete  
+                                var newNode = nodeTransGroup.UpdateSmallMoleculeTransitionGroup(nodeTransGroup.Peptide, newTransGroup, Document.Settings);
+                                var newdoc = (SrmDocument) doc.Insert(nodeTransitionGroupTree.Path, newNode);
+                                return (SrmDocument) newdoc.RemoveChild(nodeTransitionGroupTree.Path.Parent, nodeTransGroup);
+                            }
+                            else
+                            {
+                                var newNode =
+                                    new TransitionGroupDocNode(nodeTransGroup.TransitionGroup,
+                                        nodeTransGroup.Annotations, Document.Settings, null, null,
+                                        dlg.ResultExplicitTransitionGroupValues, nodeTransGroup.Results,
+                                        nodeTransGroup.Children.Cast<TransitionDocNode>().ToArray(),
+                                        nodeTransGroup.AutoManageChildren);
+                                return (SrmDocument) doc.ReplaceChild(nodeTransitionGroupTree.Path.Parent, newNode);
+                            }
+                        });
+                }
             }
         }
 
@@ -1750,23 +1812,17 @@ namespace pwiz.Skyline
             var nodePepTree = SequenceTree.GetNodeOfType<PeptideTreeNode>();
             if (nodePepTree != null)
             {
-                var nodePeptideGroupTree = SequenceTree.GetNodeOfType<PeptideGroupTreeNode>();
-                PeptideDocNode nodePep = nodePepTree.DocNode;
+                var nodePep = nodePepTree.DocNode;
                 if (nodePep.Peptide.IsCustomIon)
                 {
-                    var existing = nodePeptideGroupTree.DocNode.SmallMolecules
-                        .Where(p => !ReferenceEquals(p.Peptide, nodePep.Peptide))
-                        .Select(p => p.Peptide.CustomIon);
-
-                    // End up here when modifying the Molecule equivalent of a peptide - but charge actually resides on the precursor transition
-                    Assume.IsTrue(nodePep.TransitionGroups.Count() == 1); // We support only one transition group per custom molecule
-                    var transitionGroupDocNode = nodePep.TransitionGroups.First();
-                    var transitionGroup = nodePep.GetNonProteomicChildren().First();
-                    using (var dlg = new EditCustomMoleculeDlg(Resources.SkylineWindow_ModifyPeptide_Modify_Custom_Ion, existing,
-                        TransitionGroup.MIN_PRECURSOR_CHARGE,
-                        TransitionGroup.MAX_PRECURSOR_CHARGE, 
-                        Document.Settings.TransitionSettings,
-                        transitionGroup.PrecursorCharge, true, transitionGroupDocNode.ExplicitValues, nodePep.ExplicitRetentionTime))
+                    // End up here when modifying the small molecule equivalent of a peptide
+                    // We want to be able to adjust explicit retention time in particular
+                    using (
+                        var dlg = new EditCustomMoleculeDlg(this, Resources.SkylineWindow_ModifyPeptide_Modify_Small_Molecule,
+                            Document.Settings,
+                            nodePep.Peptide.CustomIon.Name,
+                            nodePep.Peptide.CustomIon.Formula,
+                            nodePep.ExplicitRetentionTime ?? ExplicitRetentionTimeInfo.EMPTY))
                     {
                         dlg.ResultCustomIon = nodePep.Peptide.CustomIon;
                         if (dlg.ShowDialog(this) == DialogResult.OK)
@@ -1777,11 +1833,12 @@ namespace pwiz.Skyline
                                 {
                                     // If we didn't change the custom ion's formula and/or mass, the ID should be unchanged and we can just change any needed transition info.
                                     // But if custom ion has changed then we can't "Replace", since newNode has a different identity and isn't in the document.  We have to 
-                                    // insert and delete instead.
-                                    var newNode = nodePep.ChangeCustomIonValues(doc.Settings, dlg.ResultCustomIon, dlg.Charge, dlg.ResultRetentionTimeInfo, dlg.ResultExplicitTransitionGroupValues);
+                                    // insert and delete instead.  
+                                    var newNode = nodePep.ChangeCustomIonValues(doc.Settings, dlg.ResultCustomIon, dlg.ExplicitRetentionTimeInfo);
                                     if (!nodePep.Peptide.Equals(newNode.Peptide)) // Did that change the Id object?
                                     {
-                                        var newdoc = (SrmDocument)doc.Insert(nodePepTree.Path, newNode);
+                                        // We don't want the tree selection to change, so note this as a replacement.
+                                        var newdoc = (SrmDocument)doc.Insert(nodePepTree.Path, newNode.ChangeReplacedId(nodePep.Id));
                                         return (SrmDocument)newdoc.RemoveChild(nodePepTree.Path.Parent, nodePep);
                                     }
                                     else
@@ -1794,7 +1851,7 @@ namespace pwiz.Skyline
                 }
                 else
                 {
-                    using (EditPepModsDlg dlg = new EditPepModsDlg(DocumentUI.Settings, nodePep))
+                    using (var dlg = new EditPepModsDlg(DocumentUI.Settings, nodePep))
                     {
                         dlg.Height = Math.Min(dlg.Height, Screen.FromControl(this).WorkingArea.Height);
                         if (dlg.ShowDialog(this) == DialogResult.OK)
@@ -1818,18 +1875,20 @@ namespace pwiz.Skyline
         public void ModifyTransition(TransitionTreeNode nodeTranTree)
         {
             var nodeTran = nodeTranTree.DocNode;
-            if (nodeTran.Transition.IsCustomAndEditable())
+            if (nodeTran.Transition.IsNonPrecursorNonReporterCustomIon())
             {
                 var nodeGroupTree = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>();
-                // Existing molecules to avoid duplication
+                // Existing transitions to avoid duplication
                 var existingMolecules = nodeGroupTree.DocNode.Transitions
-                        .Where(t => !ReferenceEquals(t.Transition, nodeTran.Transition))
-                        .Select(t => t.Transition.CustomIon);
-                using (var dlg = new EditCustomMoleculeDlg(Resources.SkylineWindow_ModifyTransition_Modify_Transition, existingMolecules,
+                        .Select(nodeT => nodeT.Transition)
+                        .Where(t => t.CustomIon is DocNodeCustomIon).ToArray();
+
+                using (var dlg = new EditCustomMoleculeDlg(this, Resources.SkylineWindow_ModifyTransition_Modify_Transition, 
+                    nodeTran.Transition, existingMolecules, // Self and siblings
                     Transition.MIN_PRODUCT_CHARGE,
                     Transition.MAX_PRODUCT_CHARGE,
-                    Document.Settings.TransitionSettings,
-                    nodeTran.Transition.Charge, false, null, null))
+                    Document.Settings,
+                    null, null, nodeTran.Transition.Charge, null, null, null))
                 {
                     dlg.ResultCustomIon = nodeTran.Transition.CustomIon as DocNodeCustomIon;
                     if (dlg.ShowDialog(this) == DialogResult.OK)
@@ -1838,7 +1897,7 @@ namespace pwiz.Skyline
                                 nodeTranTree.Text),
                             doc =>
                             {
-                                    
+                                Assume.IsTrue(ReferenceEquals(nodeGroupTree.DocNode.TransitionGroup, nodeTran.Transition.Group));
                                 var mass = dlg.ResultCustomIon.GetMass(
                                         doc.Settings.TransitionSettings.Prediction.FragmentMassType);
                                 var transition = new Transition(nodeTran.Transition.Group, dlg.Charge, null,
@@ -1851,7 +1910,8 @@ namespace pwiz.Skyline
                                         null,
                                         null);
                                 // Note we can't just Replace the node, as it has a new Id that's not in the doc.
-                                var newDoc = doc.Insert(nodeTranTree.Path, newNode);
+                                // But neither do we want the tree selection to change, so note this as a replacement.
+                                var newDoc = doc.Insert(nodeTranTree.Path, newNode.ChangeReplacedId(nodeTran.Id));
                                 return (SrmDocument)newDoc.RemoveChild(nodeTranTree.Path.Parent, nodeTran);
                             });
                     }
@@ -2214,13 +2274,17 @@ namespace pwiz.Skyline
             editNoteContextMenuItem.Enabled = (SequenceTree.SelectedNode is SrmTreeNode && enabled);
             removePeakContextMenuItem.Visible = (SequenceTree.SelectedNode is TransitionTreeNode && enabled);
             bool enabledModify = SequenceTree.GetNodeOfType<PeptideTreeNode>() != null;
+            var transitionTreeNode = SequenceTree.SelectedNode as TransitionTreeNode;
+            if (transitionTreeNode != null && transitionTreeNode.DocNode.Transition.IsPrecursor() && transitionTreeNode.DocNode.Transition.IsCustom())
+                enabledModify = false; // Don't offer to modify generated custom precursor nodes
             modifyPeptideContextMenuItem.Visible = enabledModify && enabled;
             setStandardTypeContextMenuItem.Visible = (HasSelectedTargetPeptides() && enabled);
             // Custom molecule support
             var nodePepGroupTree = SequenceTree.SelectedNode as PeptideGroupTreeNode;
+            var nodePepTree = SequenceTree.SelectedNode as PeptideTreeNode;
             addMoleculeContextMenuItem.Visible = enabled && nodePepGroupTree != null && 
                 (nodePepGroupTree.DocNode.IsEmpty || nodePepGroupTree.DocNode.IsNonProteomic);
-
+            addSmallMoleculePrecursorContextMenuItem.Visible = enabledModify && nodePepTree != null && !nodePepTree.DocNode.IsProteomic;
             var nodeTranGroupTree = SequenceTree.SelectedNode as TransitionGroupTreeNode;
             addTransitionMoleculeContextMenuItem.Visible = enabled && nodeTranGroupTree != null &&
                 nodeTranGroupTree.PepNode.Peptide.IsCustomIon;
@@ -4262,25 +4326,46 @@ namespace pwiz.Skyline
             AddSmallMolecule();
         }
 
+        private void addSmallMoleculePrecursorContextMenuItem_Click(object sender, EventArgs e)
+        {
+            AddSmallMolecule();
+        }
+
         private void addTransitionMoleculeContextMenuItem_Click(object sender, EventArgs e)
         {
             AddSmallMolecule();
+        }
+
+        private TransitionDocNode[] GetDefaultPrecursorTransitions(SrmDocument doc, TransitionGroup tranGroup)
+        {
+            // TODO bspratt :
+            // You might want to prepoluate one or more precursor transitions, if full scan MS1 "Isotope peaks include"=="count" 
+            // (in which case you'd want more than one), or Transition Settings ion types filter includes "p"
+            // var transition = new Transition(tranGroup, tranGroup.PrecursorCharge, null, tranGroup.CustomMolecule);
+            // var massType = doc.Settings.TransitionSettings.Prediction.FragmentMassType;
+            // double mass = transition.CustomIon.GetMass(massType);
+            // var nodeTran = new TransitionDocNode(transition, null, mass, null, null); // Precursor transition
+            // return new[] { nodeTran };
+            return new TransitionDocNode[0];
         }
 
         public void AddSmallMolecule()
         {
             var nodeGroupTree = SequenceTree.SelectedNode as TransitionGroupTreeNode;
             var nodePepGroupTree = SequenceTree.SelectedNode as PeptideGroupTreeNode;
+            var nodePepTree = SequenceTree.SelectedNode as PeptideTreeNode;
             if (nodeGroupTree != null)
             {
+                // Adding a transition - just want charge and formula/mz
                 var nodeGroup = nodeGroupTree.DocNode;
                 var groupPath = nodeGroupTree.Path;
-                var existingIons = nodeGroup.Transitions.Select(child => child.Transition.CustomIon)
-                                                        .Where(c => c is DocNodeCustomIon);
-                using (var dlg = new EditCustomMoleculeDlg(Resources.SkylineWindow_AddMolecule_Add_Transition, existingIons,
+                // List of existing transitions to avoid duplication
+                var existingIons = nodeGroup.Transitions.Select(child => child.Transition)
+                                                        .Where(c => c.CustomIon is DocNodeCustomIon).ToArray();
+                using (var dlg = new EditCustomMoleculeDlg(this, Resources.SkylineWindow_AddMolecule_Add_Transition, null, existingIons,
                     Transition.MIN_PRODUCT_CHARGE,
                     Transition.MAX_PRODUCT_CHARGE,
-                    Document.Settings.TransitionSettings, 1, false, nodeGroup.ExplicitValues, null))
+                    Document.Settings, null, null, nodeGroup.Transitions.Any()?nodeGroup.Transitions.Last().Transition.Charge:1, null, null, null))
                 {
                     if (dlg.ShowDialog(this) == DialogResult.OK)
                     {
@@ -4294,6 +4379,37 @@ namespace pwiz.Skyline
                             double mass = transition.CustomIon.GetMass(massType);
                             var nodeTran = new TransitionDocNode(transition, null, mass, null, null);
                             return (SrmDocument)doc.Add(groupPath, nodeTran);
+                        });
+                    }
+                }
+            }
+            else if (nodePepTree != null)
+            {
+                // Adding a precursor - appends a transition group to the current peptide's existing list
+                var nodePep = nodePepTree.DocNode;
+                var pepPath = nodePepTree.Path;
+                var notFirst = nodePep.TransitionGroups.Any();
+                // Get a list of existing precursors - likely basis for adding a heavy version
+                var existingIons = notFirst ? nodePep.TransitionGroups.Select(child => child.CustomIon).Where(x => x != null).ToArray() : null;
+                var existingPrecursors = nodePep.TransitionGroups.Select(child => child.TransitionGroup).Where(c => c.IsCustomIon).ToArray();
+                using (var dlg = new EditCustomMoleculeDlg(this, Resources.SkylineWindow_AddSmallMolecule_Add_Precursor, 
+                    null, existingPrecursors,
+                    TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE, Document.Settings,
+                    (existingIons == null) ? nodePep.Peptide.CustomIon.Name : existingIons.First().Name,
+                    (existingIons == null) ? nodePep.Peptide.CustomIon.Formula : existingIons.First().Formula,
+                    notFirst ? nodePep.TransitionGroups.First().TransitionGroup.PrecursorCharge : 1, 
+                    notFirst ? nodePep.TransitionGroups.First().ExplicitValues :  ExplicitTransitionGroupValues.EMPTY, 
+                    null, 
+                    IsotopeLabelType.heavy))
+                {
+                    if (dlg.ShowDialog(this) == DialogResult.OK)
+                    {
+                        ModifyDocument(string.Format(Resources.SkylineWindow_AddSmallMolecule_Add_small_molecule_precursor__0_, dlg.ResultCustomIon.DisplayName), doc =>
+                        {
+                            var tranGroup = new TransitionGroup(nodePep.Peptide, dlg.ResultCustomIon, dlg.Charge, dlg.IsotopeLabelType);
+                            var tranGroupDocNode = new TransitionGroupDocNode(tranGroup, Annotations.EMPTY,
+                                doc.Settings, null, null, dlg.ResultExplicitTransitionGroupValues, null, GetDefaultPrecursorTransitions(doc, tranGroup), true);
+                            return (SrmDocument)doc.Add(pepPath, tranGroupDocNode);
                         });
                     }
                 }
@@ -4313,18 +4429,19 @@ namespace pwiz.Skyline
                 }
 
                 var pepGroupPath = nodePepGroupTree.Path;
-                var existingIons = nodePepGroup.SmallMolecules.Select(child => child.Peptide.CustomIon);
-                using (var dlg = new EditCustomMoleculeDlg(Resources.SkylineWindow_AddSmallMolecule_Add_Small_Molecule, existingIons,
-                    TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE, Document.Settings.TransitionSettings, 1, true, null, null))
+                using (var dlg = new EditCustomMoleculeDlg(this, Resources.SkylineWindow_AddSmallMolecule_Add_Small_Molecule, null, null,
+                    TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE, Document.Settings, null, string.Empty, 1, 
+                    ExplicitTransitionGroupValues.EMPTY, ExplicitRetentionTimeInfo.EMPTY, IsotopeLabelType.light))
                 {
                     if (dlg.ShowDialog(this) == DialogResult.OK)
                     {
                         ModifyDocument(string.Format(Resources.SkylineWindow_AddSmallMolecule_Add_small_molecule__0_, dlg.ResultCustomIon.DisplayName), doc =>
                         {
                             var peptide = new Peptide(dlg.ResultCustomIon);
-                            var tranGroup = new TransitionGroup(peptide, dlg.Charge, IsotopeLabelType.light);
+                            var tranGroup = new TransitionGroup(peptide, dlg.Charge, dlg.IsotopeLabelType, true, null);
                             var tranGroupDocNode = new TransitionGroupDocNode(tranGroup, Annotations.EMPTY,
-                                doc.Settings, null, null, dlg.ResultExplicitTransitionGroupValues, null, new TransitionDocNode[0], true);
+                                doc.Settings, null, null, dlg.ResultExplicitTransitionGroupValues, null,
+                                GetDefaultPrecursorTransitions(doc, tranGroup), true);
                             var nodePepNew = new PeptideDocNode(peptide, Document.Settings, null, null,
                                 dlg.ResultRetentionTimeInfo, new[] { tranGroupDocNode }, true);
                             return (SrmDocument) doc.Add(pepGroupPath, nodePepNew);

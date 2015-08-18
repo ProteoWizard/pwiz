@@ -274,6 +274,12 @@ namespace pwiz.Skyline.Util
                 writer.WriteAttribute(name, value.Value);
         }
 
+        public static void WriteAttributeNullableRoundTrip(this XmlWriter writer, Enum name, double? value)
+        {
+            if (value.HasValue)
+                writer.WriteAttributeString(name, value.Value.ToString("G17", CultureInfo.InvariantCulture)); // Not L10N
+        }
+
         public static void WriteAttributeIfString(this XmlWriter writer, Enum name, string value)
         {
             if (!string.IsNullOrEmpty(value))
@@ -394,6 +400,11 @@ namespace pwiz.Skyline.Util
         public static void WriteAttribute(this XmlWriter writer, string name, double value)
         {
             writer.WriteAttributeString(name, value.ToString(CultureInfo.InvariantCulture));
+        }
+
+        public static void WriteAttributeRoundTrip(this XmlWriter writer, string name, double value)
+        {
+            writer.WriteAttribute(name, value.ToString("G17", CultureInfo.InvariantCulture)); // Not L10N
         }
 
         public static void WriteAttribute(this XmlWriter writer, string name, float value)

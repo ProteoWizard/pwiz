@@ -45,7 +45,7 @@ namespace pwiz.SkylineTestA.Results
         public void FullScanFilterTest()
         {
             List<SrmDocument> docCheckpoints;
-            DoFullScanFilterTest(false, false, false, out docCheckpoints);
+            DoFullScanFilterTest(RefinementSettings.ConvertToSmallMoleculesMode.none, out docCheckpoints);
         }
 
         [TestMethod]
@@ -53,11 +53,23 @@ namespace pwiz.SkylineTestA.Results
         {
             List<SrmDocument> docCheckpoints;
             List<SrmDocument> docCheckpointsSM;
-            DoFullScanFilterTest(true, false, true, out docCheckpointsSM);
-            DoFullScanFilterTest(false, false, true, out docCheckpoints);
+            DoFullScanFilterTest(RefinementSettings.ConvertToSmallMoleculesMode.formulas, out docCheckpointsSM);
+            DoFullScanFilterTest(RefinementSettings.ConvertToSmallMoleculesMode.none, out docCheckpoints);
 
             for (var i = 0; i < docCheckpoints.Count; i++)
                 CompareDocumentTransitions(docCheckpoints[i], docCheckpointsSM[i]);
+        }
+
+        [TestMethod]
+        public void FullScanFilterTestAsSmallMoleculesRoundtrip()
+        {
+            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            var docPath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_test4.sky");
+            var expectedPepCount = 3;
+            var expectedTransGroupCount = 4;
+            var expectedTransCount = 32;
+            InitFullScanDocument(docPath, 3, ref expectedPepCount, ref expectedTransGroupCount,
+                ref expectedTransCount, RefinementSettings.ConvertToSmallMoleculesMode.formulas);
         }
 
         [TestMethod]
@@ -65,14 +77,14 @@ namespace pwiz.SkylineTestA.Results
         {
             List<SrmDocument> docCheckpoints;
             List<SrmDocument> docCheckpointsSM;
-            DoFullScanFilterTest(true, true, true, out docCheckpointsSM);
-            DoFullScanFilterTest(false, false, true, out docCheckpoints);
+            DoFullScanFilterTest(RefinementSettings.ConvertToSmallMoleculesMode.masses_only, out docCheckpointsSM);
+            DoFullScanFilterTest(RefinementSettings.ConvertToSmallMoleculesMode.none, out docCheckpoints);
 
             for (var i = 0; i < docCheckpointsSM.Count; i++)
                 CompareDocumentTransitions(docCheckpoints[i], docCheckpointsSM[i]);
         }
 
-        private void DoFullScanFilterTest(bool asSmallMolecules, bool smallMoleculesAsMasses, bool dropMultipleCharges,
+        private void DoFullScanFilterTest(RefinementSettings.ConvertToSmallMoleculesMode asSmallMolecules,
             out List<SrmDocument> docCheckpoints)
         {
             docCheckpoints = new List<SrmDocument>();
@@ -83,7 +95,7 @@ namespace pwiz.SkylineTestA.Results
             var expectedPepCount = 7;
             var expectedTransGroupCount = 7;
             var expectedTransCount = 49;
-            var doc = InitFullScanDocument(docPath, 2, ref expectedPepCount, ref expectedTransGroupCount, ref expectedTransCount, dropMultipleCharges, asSmallMolecules, smallMoleculesAsMasses);
+            var doc = InitFullScanDocument(docPath, 2, ref expectedPepCount, ref expectedTransGroupCount, ref expectedTransCount, asSmallMolecules);
             var docContainer = new ResultsTestDocumentContainer(doc, docPath);
 
             // Import the first RAW file (or mzML for international)
@@ -112,7 +124,7 @@ namespace pwiz.SkylineTestA.Results
             expectedPepCount = 3;
             expectedTransGroupCount = 3;
             expectedTransCount = 21;
-            doc = InitFullScanDocument(docPath, 1, ref expectedPepCount, ref expectedTransGroupCount, ref expectedTransCount, dropMultipleCharges, asSmallMolecules, smallMoleculesAsMasses);
+            doc = InitFullScanDocument(docPath, 1, ref expectedPepCount, ref expectedTransGroupCount, ref expectedTransCount, asSmallMolecules);
             docCheckpoints.Add(doc);
             Assert.AreEqual(FullScanMassAnalyzerType.orbitrap, doc.Settings.TransitionSettings.FullScan.ProductMassAnalyzer);
             // Make sure saving this type of document works
@@ -129,7 +141,7 @@ namespace pwiz.SkylineTestA.Results
             expectedPepCount = 3;
             expectedTransGroupCount = 4;
             expectedTransCount = 32;
-            doc = InitFullScanDocument(docPath, 3, ref expectedPepCount, ref expectedTransGroupCount, ref expectedTransCount, dropMultipleCharges, asSmallMolecules, smallMoleculesAsMasses);
+            doc = InitFullScanDocument(docPath, 3, ref expectedPepCount, ref expectedTransGroupCount, ref expectedTransCount, asSmallMolecules);
             Assert.AreEqual(FullScanMassAnalyzerType.none, doc.Settings.TransitionSettings.FullScan.ProductMassAnalyzer);
             Assert.AreEqual(FullScanMassAnalyzerType.none, doc.Settings.TransitionSettings.FullScan.PrecursorMassAnalyzer);
             docCheckpoints.Add(doc);
@@ -191,7 +203,7 @@ namespace pwiz.SkylineTestA.Results
                 }
             }
 
-            if (asSmallMolecules && smallMoleculesAsMasses)
+            if (asSmallMolecules == RefinementSettings.ConvertToSmallMoleculesMode.masses_only)
                 return; // Can't work with isotope distributions when we don't have ion formulas
 
 
@@ -200,7 +212,7 @@ namespace pwiz.SkylineTestA.Results
             expectedPepCount = 2;
             expectedTransGroupCount = 2;
             expectedTransCount = 2;
-            doc = InitFullScanDocument(docPath, 2, ref expectedPepCount, ref expectedTransGroupCount, ref expectedTransCount, dropMultipleCharges, asSmallMolecules, smallMoleculesAsMasses);
+            doc = InitFullScanDocument(docPath, 2, ref expectedPepCount, ref expectedTransGroupCount, ref expectedTransCount, asSmallMolecules);
             Assert.AreEqual(FullScanMassAnalyzerType.none, doc.Settings.TransitionSettings.FullScan.ProductMassAnalyzer);
             Assert.AreEqual(FullScanMassAnalyzerType.none, doc.Settings.TransitionSettings.FullScan.PrecursorMassAnalyzer);
             var docMs1 = doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fs =>
@@ -217,34 +229,41 @@ namespace pwiz.SkylineTestA.Results
             docCheckpoints.Add(docContainer.ChangeMeasuredResults(measuredResults, 1, 1, 1));
             // Because of the way the mzML files were filtered, all of the LVN peaks should be present
             // in the first replicate, and all of the NVN peaks should be present in the other.
-            foreach (var nodeTran in docContainer.Document.MoleculeTransitions)
+            foreach (var nodeTranGroup in docContainer.Document.MoleculeTransitionGroups)
             {
-                Assert.IsTrue(nodeTran.HasResults);
-                Assert.AreEqual(1, nodeTran.Results.Count);
-                if ((nodeTran.Transition.Group.Peptide.IsCustomIon
-                    ? nodeTran.Transition.Group.Peptide.CustomIon.Name
-                    : nodeTran.Transition.Group.Peptide.Sequence).StartsWith("LVN"))
-                    Assert.IsFalse(nodeTran.Results[0][0].IsEmpty);
-                else
-                    Assert.IsTrue(nodeTran.Results[0][0].IsEmpty);
+                foreach (var docNode in nodeTranGroup.Children)
+                {
+                    var nodeTran = (TransitionDocNode) docNode;
+                    Assert.IsTrue(nodeTran.HasResults);
+                    Assert.AreEqual(1, nodeTran.Results.Count);
+                    if ((nodeTran.Transition.Group.Peptide.IsCustomIon
+                        ? nodeTranGroup.CustomIon.Name
+                        : nodeTran.Transition.Group.Peptide.Sequence).StartsWith("LVN"))
+                        Assert.IsFalse(nodeTran.Results[0][0].IsEmpty);
+                    else
+                        Assert.IsTrue(nodeTran.Results[0][0].IsEmpty);
+                }
             }
-
             const string rep2 = "rep2";
             listResults.Add(new ChromatogramSet(rep2, new[] {testFilesDir.GetTestPath("S_2_NVN.mzML")}));
             measuredResults = new MeasuredResults(listResults.ToArray());
             docCheckpoints.Add(docContainer.ChangeMeasuredResults(measuredResults, 1, 1, 1));
             // Because of the way the mzML files were filtered, all of the LVN peaks should be present
             // in the first replicate, and all of the NVN peaks should be present in the other.
-            foreach (var nodeTran in docContainer.Document.MoleculeTransitions)
+            foreach (var nodeTranGroup in docContainer.Document.MoleculeTransitionGroups)
             {
-                Assert.IsTrue(nodeTran.HasResults);
-                Assert.AreEqual(2, nodeTran.Results.Count);
-                if ((nodeTran.Transition.Group.Peptide.IsCustomIon
-                    ? nodeTran.Transition.Group.Peptide.CustomIon.Name
-                    : nodeTran.Transition.Group.Peptide.Sequence).StartsWith("LVN"))
-                    Assert.IsTrue(nodeTran.Results[1][0].IsEmpty);
-                else
-                    Assert.IsFalse(nodeTran.Results[1][0].IsEmpty);
+                foreach (var docNode in nodeTranGroup.Children)
+                {
+                    var nodeTran = (TransitionDocNode) docNode;
+                    Assert.IsTrue(nodeTran.HasResults);
+                    Assert.AreEqual(2, nodeTran.Results.Count);
+                    if ((nodeTran.Transition.Group.Peptide.IsCustomIon
+                        ? nodeTranGroup.CustomIon.Name
+                        : nodeTran.Transition.Group.Peptide.Sequence).StartsWith("LVN"))
+                        Assert.IsTrue(nodeTran.Results[1][0].IsEmpty);
+                    else
+                        Assert.IsFalse(nodeTran.Results[1][0].IsEmpty);
+                }
             }
 
             // Chromatograms should be present in the cache for a number of isotopes.
@@ -282,61 +301,16 @@ namespace pwiz.SkylineTestA.Results
             Assert.IsTrue(tranM1.Results[0][0].IsEmpty && tranM1.Results[1][0].IsEmpty);
         }
 
-        private static SrmDocument InitFullScanDocument(string docPath, int prot, ref int pep, ref int prec, ref int tran, bool dropMultipleCharges, bool asSmallMolecules, bool smallMoleculesAsMasses)
+        private static SrmDocument InitFullScanDocument(string docPath, int prot, ref int pep, ref int prec, ref int tran, RefinementSettings.ConvertToSmallMoleculesMode smallMoleculeTestMode)
         {
             SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
             int? expectedRevisionNumber = 0;
-            while (dropMultipleCharges)
+            if (smallMoleculeTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none)
             {
-                // Simplify the test by dropping any multiple charges
-                bool docChanged = false;
-                foreach (var group in doc.MoleculeGroups)
-                {
-                    foreach (var molecule in group.Molecules)
-                    {
-                        var charge = molecule.TransitionGroups.Any() ? molecule.TransitionGroups.First().PrecursorCharge : 0;
-                        foreach (var transitionGroup in molecule.TransitionGroups)
-                        {
-                            if (charge != transitionGroup.PrecursorCharge)
-                            {
-                                prec--;
-                                tran -= transitionGroup.TransitionCount;
-                                PeptideDocNode pepNew = (PeptideDocNode)molecule.RemoveChild(transitionGroup);
-                                PeptideGroupDocNode groupNew = (PeptideGroupDocNode)group.ReplaceChild(pepNew);
-                                doc = (SrmDocument) doc.ReplaceChild(groupNew);
-                                expectedRevisionNumber++;
-                                docChanged = true;
-                                break;
-                            }
-                        }
-                        if (docChanged)
-                            break;
-                    }
-                    if (docChanged)
-                        break;
-                }
-                if (!docChanged)
-                    break;
-            }
-            if (asSmallMolecules)
-            {
-                // For small molecules we require one charge per molecule, so this conversion may boost that count
-                foreach (var peptide in doc.Peptides)
-                {
-                    int charge = peptide.TransitionGroups.Any()?peptide.TransitionGroups.First().PrecursorCharge:0;
-                    foreach (var transitionGroup in peptide.TransitionGroups)
-                    {
-                        if (charge != transitionGroup.PrecursorCharge)
-                        {
-                            charge = transitionGroup.PrecursorCharge;
-                            pep++; // Multiple charges mean multiple small molecules 
-                        }
-                    }
-                }
                 var refine = new RefinementSettings();
                 var oldDoc = doc;
                 AssertEx.Serializable(oldDoc);
-                doc = refine.ConvertToSmallMolecules(doc, smallMoleculesAsMasses);
+                doc = refine.ConvertToSmallMolecules(doc, smallMoleculeTestMode);
                 AssertEx.ConvertedSmallMoleculeDocumentIsSimilar(oldDoc, doc);
                 AssertEx.Serializable(doc);
                 expectedRevisionNumber = null;
@@ -353,7 +327,7 @@ namespace pwiz.SkylineTestA.Results
         public void FullScanSettingsTest()
         {
             List<SrmDocument> docCheckpoints;
-            DoFullScanSettingsTest(false, out docCheckpoints);
+            DoFullScanSettingsTest(RefinementSettings.ConvertToSmallMoleculesMode.none, out docCheckpoints);
         }
 
         [TestMethod]
@@ -362,27 +336,23 @@ namespace pwiz.SkylineTestA.Results
             List<SrmDocument> docCheckpoints;
             List<SrmDocument> docCheckpointsSM;
 
-            DoFullScanSettingsTest(true, out docCheckpointsSM);
-            DoFullScanSettingsTest(false, out docCheckpoints);
+            DoFullScanSettingsTest(RefinementSettings.ConvertToSmallMoleculesMode.formulas, out docCheckpointsSM);
+            DoFullScanSettingsTest(RefinementSettings.ConvertToSmallMoleculesMode.none, out docCheckpoints);
 
             for (var i = 0; i < docCheckpoints.Count; i++)
                 CompareDocumentTransitions(docCheckpoints[i], docCheckpointsSM[i]);
         }
 
-        public void DoFullScanSettingsTest(bool asSmallMolecules, 
+        public void DoFullScanSettingsTest(RefinementSettings.ConvertToSmallMoleculesMode asSmallMolecules, 
             out List<SrmDocument> docCheckPoints)
         {
             TestSmallMolecules = false; // Don't need that magic extra node, we have an explicit test
 
             docCheckPoints = new List<SrmDocument>();
             var doc = ResultsUtil.DeserializeDocument("MultiLabel.sky", GetType());
-            var pepdoc = doc;
-            if (asSmallMolecules)
-            {
-                var refine = new RefinementSettings();
-                doc = refine.ConvertToSmallMolecules(pepdoc);
-            }
-            Assert.IsFalse(doc.PeptideTransitionGroups.Any(nodeGroup => nodeGroup.IsotopeDist != null));
+            var refine = new RefinementSettings();
+            doc = refine.ConvertToSmallMolecules(doc, asSmallMolecules);
+            Assert.IsFalse(doc.MoleculeTransitionGroups.Any(nodeGroup => nodeGroup.IsotopeDist != null));
             AssertEx.Serializable(doc, AssertEx.Cloned);
 
             double c13Delta = BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.C13) -
@@ -409,13 +379,13 @@ namespace pwiz.SkylineTestA.Results
                 // Within 2.5% of 100% of the entire isotope distribution
                 Assert.AreEqual(1.0, isotopePeaks.ExpectedProportions.Sum(), 0.025);
 
-                // Precursor mass and m/z values are expected to match exactly
-                Assert.AreEqual(nodeGroup.PrecursorMz, nodeGroup.IsotopeDist.GetMZI(0));
+                // Precursor mass and m/z values are expected to match exactly (well, within XML roundtrip accuracy anyway)
+                Assert.AreEqual(nodeGroup.PrecursorMz, nodeGroup.IsotopeDist.GetMZI(0), SequenceMassCalc.MassTolerance);
                 Assert.AreEqual(nodeGroup.PrecursorMz, nodeGroup.TransitionGroup.IsCustomIon ?
                                 BioMassCalc.CalculateIonMz(nodeGroup.IsotopeDist.GetMassI(0),
                                                        nodeGroup.TransitionGroup.PrecursorCharge) :
                                 SequenceMassCalc.GetMZ(nodeGroup.IsotopeDist.GetMassI(0),
-                                                       nodeGroup.TransitionGroup.PrecursorCharge));
+                                                       nodeGroup.TransitionGroup.PrecursorCharge), SequenceMassCalc.MassTolerance);
 
                 // Check isotope distribution masses
                 for (int i = 1; i < isotopePeaks.CountPeaks; i++)
@@ -550,8 +520,8 @@ namespace pwiz.SkylineTestA.Results
                 Assert.IsNotNull(isotopePeaks);
                 // The peaks should always includ at least M-1
                 Assert.IsTrue(isotopePeaks.MassIndexToPeakIndex(0) > 0);
-                // Precursor mass and m/z values are expected to match exactly
-                Assert.AreEqual(nodeGroup.PrecursorMz, nodeGroup.IsotopeDist.GetMZI(0));
+                // Precursor mass and m/z values are expected to match exactly (well, within XML roundtrip tolerance anyway)
+                Assert.AreEqual(nodeGroup.PrecursorMz, nodeGroup.IsotopeDist.GetMZI(0), SequenceMassCalc.MassTolerance);
 
                 // Check isotope distribution masses
                 for (int i = 1; i < isotopePeaks.CountPeaks; i++)
@@ -560,7 +530,7 @@ namespace pwiz.SkylineTestA.Results
                     Assert.IsTrue(isotopePeaks.GetMZI(massIndex - 1) < isotopePeaks.GetMZI(massIndex));
                     double massDelta = GetMassDelta(isotopePeaks, massIndex);
                     bool containsSulfur = nodeGroup.TransitionGroup.Peptide.IsCustomIon
-                        ? (nodeGroup.TransitionGroup.Peptide.CustomIon.Formula.IndexOfAny("S".ToCharArray()) != -1)
+                        ? (nodeGroup.CustomIon.Formula.IndexOfAny("S".ToCharArray()) != -1)
                         : (nodeGroup.TransitionGroup.Peptide.Sequence.IndexOfAny("CM".ToCharArray()) != -1);
                     if (massIndex == 0)
                     {
@@ -589,25 +559,36 @@ namespace pwiz.SkylineTestA.Results
 
         private void CompareDocumentTransitions(SrmDocument docA, SrmDocument docB)
         {
-            Assert.AreEqual(docA.MoleculeTransitionCount, docB.MoleculeTransitionCount);
-            var docBTransitions = docB.MoleculeTransitions.GetEnumerator();
-            foreach (var transDocA in docA.MoleculeTransitions)
+            // Note that we can't just run the lists in parallel - one of these is likely a small molecule conversion of the other,
+            // and will have its transitions sorted differently
+            Assert.AreEqual(docA.MoleculeTransitionGroupCount, docB.MoleculeTransitionGroupCount);
+            var docBTransitionGroups = docB.MoleculeTransitionGroups.GetEnumerator();
+            foreach (var transGroupDocA in docA.MoleculeTransitionGroups)
             {
-                Assert.IsTrue(docBTransitions.MoveNext());
-                var transDocB = docBTransitions.Current;
-                Assert.AreEqual(transDocA.Transition.IsPrecursor(), transDocB.Transition.IsPrecursor());
-                // Assert.AreEqual(trans.Transition.IonType, transDocB.Transition.IonType); can't expect this - one doc may be a small molecule translation test
-                Assert.AreEqual(transDocA.Mz, transDocB.Mz, 1.0E-5);
-                if (transDocA.Results == null)
-                    Assert.IsNull(transDocB.Results);
-                else
-                    Assert.AreEqual(transDocA.Results.Count, transDocB.Results.Count);
-                var docBChromInfos = transDocB.ChromInfos.GetEnumerator();
-                foreach (var infoDocA in transDocA.ChromInfos)
+                Assert.IsTrue(docBTransitionGroups.MoveNext());
+                var transGroupDocB = docBTransitionGroups.Current;
+                Assert.AreEqual(transGroupDocA.TransitionCount, transGroupDocB.TransitionCount);
+                var docBTransitions = transGroupDocB.Transitions.ToArray();
+                var docBTransitionsMatched = new List<TransitionDocNode>();
+                foreach (var transDocA in transGroupDocA.Transitions)
                 {
-                    Assert.IsTrue(docBChromInfos.MoveNext());
-                    var infoDocB = docBChromInfos.Current;
-                    Assert.IsTrue(infoDocA.Equals(infoDocB));
+                    var a = transDocA;
+                    var transDocB = docBTransitions.FirstOrDefault(b => 
+                        a.Transition.IsPrecursor() == b.Transition.IsPrecursor() &&
+                        Math.Abs(a.Mz - b.Mz) <= 1.0E-5 &&
+                        ((a.Results == null)
+                            ? (b.Results == null)
+                            : (a.Results.Count == b.Results.Count)));
+                    Assert.IsNotNull(transDocB, "failed to find matching transition");
+                    Assert.IsFalse(docBTransitionsMatched.Contains(transDocB), "transition matched twice");
+                    docBTransitionsMatched.Add(transDocB);
+                    var docBChromInfos = transDocB.ChromInfos.GetEnumerator();
+                    foreach (var infoDocA in transDocA.ChromInfos)
+                    {
+                        Assert.IsTrue(docBChromInfos.MoveNext());
+                        var infoDocB = docBChromInfos.Current;
+                        Assert.IsTrue(infoDocA.Equals(infoDocB));
+                    }
                 }
             }
         }

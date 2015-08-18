@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Text.RegularExpressions;
 using pwiz.Common.Chemistry;
 using pwiz.Skyline.Properties;
@@ -296,6 +297,19 @@ namespace pwiz.Skyline.Util
                 ThrowArgumentException(desc);
 
             return totalMass;
+        }
+
+        /// <summary>
+        /// Turn a formula like C5H9H'3NO2S into C5H12NO2S
+        /// </summary>
+        public string StripLabelsFromFormula(string desc)
+        {
+            if (string.IsNullOrEmpty(desc))
+                return null;
+            string parse = desc.Replace("'",string.Empty).Replace("\"",string.Empty); // Not L10N
+            var dictAtomCounts = new Dictionary<string, int>();
+            ParseCounts(ref parse, dictAtomCounts, false);
+            return dictAtomCounts.Aggregate(string.Empty, (current, pair) => current + string.Format(CultureInfo.InvariantCulture, "{0}{1}", pair.Key, (pair.Value>1) ? pair.Value.ToString() : string.Empty)); // Not L10N
         }
 
         /// <summary>

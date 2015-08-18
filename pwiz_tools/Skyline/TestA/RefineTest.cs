@@ -222,6 +222,11 @@ namespace pwiz.SkylineTestA
         [TestMethod]
         public void RefineConvertToSmallMoleculesTest()
         {
+            // Exercise the code that helps match heavy labeled ion formulas with unlabled
+            Assert.AreEqual("C5H12NO2S", BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula("C5H9H'3NO2S"));
+            Assert.IsNull(BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula(""));
+            Assert.IsNull(BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula(null));
+
             TestFilesDir testFilesDir = new TestFilesDir(TestContext, @"TestA\Refine.zip");
 
             var document = InitRefineDocument(testFilesDir);
@@ -237,7 +242,18 @@ namespace pwiz.SkylineTestA
 
             var document = InitRefineDocument(testFilesDir);
             var refineSettings = new RefinementSettings();
-            var converted = refineSettings.ConvertToSmallMolecules(document, true);
+            var converted = refineSettings.ConvertToSmallMolecules(document, RefinementSettings.ConvertToSmallMoleculesMode.masses_only);
+            AssertEx.ConvertedSmallMoleculeDocumentIsSimilar(document, converted);
+        }
+
+        [TestMethod]
+        public void RefineConvertToSmallMoleculeMassesAndNamesTest()
+        {
+            TestFilesDir testFilesDir = new TestFilesDir(TestContext, @"TestA\Refine.zip");
+
+            var document = InitRefineDocument(testFilesDir);
+            var refineSettings = new RefinementSettings();
+            var converted = refineSettings.ConvertToSmallMolecules(document, RefinementSettings.ConvertToSmallMoleculesMode.masses_and_names);
             AssertEx.ConvertedSmallMoleculeDocumentIsSimilar(document, converted);
         }
 

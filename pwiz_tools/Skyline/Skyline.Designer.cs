@@ -42,6 +42,7 @@ namespace pwiz.Skyline
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.pickChildrenContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.addMoleculeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.addSmallMoleculePrecursorContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.addTransitionMoleculeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removePeakContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.setStandardTypeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -448,6 +449,7 @@ namespace pwiz.Skyline
             this.toolStripSeparator1,
             this.pickChildrenContextMenuItem,
             this.addMoleculeContextMenuItem,
+            this.addSmallMoleculePrecursorContextMenuItem,
             this.addTransitionMoleculeContextMenuItem,
             this.removePeakContextMenuItem,
             this.setStandardTypeContextMenuItem,
@@ -505,6 +507,12 @@ namespace pwiz.Skyline
             this.addMoleculeContextMenuItem.Name = "addMoleculeContextMenuItem";
             resources.ApplyResources(this.addMoleculeContextMenuItem, "addMoleculeContextMenuItem");
             this.addMoleculeContextMenuItem.Click += new System.EventHandler(this.addMoleculeContextMenuItem_Click);
+            // 
+            // addSmallMoleculePrecursorContextMenuItem
+            // 
+            this.addSmallMoleculePrecursorContextMenuItem.Name = "addSmallMoleculePrecursorContextMenuItem";
+            resources.ApplyResources(this.addSmallMoleculePrecursorContextMenuItem, "addSmallMoleculePrecursorContextMenuItem");
+            this.addSmallMoleculePrecursorContextMenuItem.Click += new System.EventHandler(this.addSmallMoleculePrecursorContextMenuItem_Click);
             // 
             // addTransitionMoleculeContextMenuItem
             // 
@@ -2983,7 +2991,7 @@ namespace pwiz.Skyline
             this.addGroupComparisonMenuItem.Name = "addGroupComparisonMenuItem";
             resources.ApplyResources(this.addGroupComparisonMenuItem, "addGroupComparisonMenuItem");
             this.addGroupComparisonMenuItem.Click += new System.EventHandler(this.addFoldChangeMenuItem_Click);
-            // 
+           // 
             // editGroupComparisonListMenuItem
             // 
             this.editGroupComparisonListMenuItem.Name = "editGroupComparisonListMenuItem";
@@ -3658,6 +3666,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator53;
         private System.Windows.Forms.ToolStripMenuItem acceptProteinsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem editGroupComparisonListMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem addSmallMoleculePrecursorContextMenuItem;
     }
 }
 

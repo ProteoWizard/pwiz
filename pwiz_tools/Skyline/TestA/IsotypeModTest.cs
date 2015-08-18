@@ -112,7 +112,7 @@ namespace pwiz.SkylineTestA
         [TestMethod]
         public void MultiLabelTypeListTest()
         {
-            TestSmallMolecules = false; // TODO bspratt - sort out export/import of transition lists for non-proteomic molecules
+            TestSmallMolecules = false; // we don't expect to roundtrip export/import of transition lists for non-proteomic molecules
 
             int startRev = 0;
             SrmDocument document = new SrmDocument(SrmSettingsList.GetDefault().ChangeTransitionInstrument(inst => inst.ChangeMaxMz(1800)));
@@ -131,6 +131,10 @@ namespace pwiz.SkylineTestA
                         new TypedModifications(LABEL_TYPE15_N, HEAVY_MODS_15_N)
                     }));
             var docMulti = docFasta.ChangeSettings(settings);
+
+            // CONSIDER: make explicit S-Lens, cone voltage, CE etc roundtrip?
+            // docMulti.MoleculeTransitionGroups.FirstOrDefault().ChangeExplicitValues(ExplicitTransitionGroupValues.TEST)
+
 
             // Make sure transition lists export to various formats and roundtrip
             VerifyExportRoundTrip(new ThermoMassListExporter(docMulti), docFasta);

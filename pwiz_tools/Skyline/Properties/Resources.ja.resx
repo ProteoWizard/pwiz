@@ -7901,9 +7901,6 @@
   <data name="EditMeasuredIonDlg_EditMeasuredIonDlg__Monoisotopic_mass_" xml:space="preserve">
     <value>モノアイソトピック質量(&amp;M)：</value>
   </data>
-  <data name="EditCustomMoleculeDlg_OkDialog_The_custom_molecule_already_exists_" xml:space="preserve">
-    <value>カスタム分子は既に存在しています。</value>
-  </data>
   <data name="EditCustomMoleculeDlg_OkDialog_Custom_molecules_must_have_a_mass_greater_than_or_equal_to__0__" xml:space="preserve">
     <value>カスタム分子は、{0}以上の質量でなければなりません。</value>
   </data>
@@ -7954,9 +7951,6 @@
   </data>
   <data name="SkylineWindow_ModifyTransition_Modify_Transition" xml:space="preserve">
     <value>トランジションを修飾</value>
-  </data>
-  <data name="SkylineWindow_ModifyPeptide_Modify_Custom_Ion" xml:space="preserve">
-    <value>カスタムイオンを修飾</value>
   </data>
   <data name="Transition_Validate_A_transition_of_ion_type__0__must_have_a_custom_ion_" xml:space="preserve">
     <value>イオンタイプ{0}のトランジションにはカスタムイオンがなければなりません。</value>

@@ -303,9 +303,6 @@
   <data name="&gt;&gt;labelDriftTimeHighEnergyOffsetMsec.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
-  <data name="textRetentionTime.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
-  </data>
   <data name="textRetentionTime.Location" type="System.Drawing.Point, System.Drawing">
     <value>9, 47</value>
   </data>
@@ -329,9 +326,6 @@
   </data>
   <data name="&gt;&gt;textRetentionTime.ZOrder" xml:space="preserve">
     <value>4</value>
-  </data>
-  <data name="labelRetentionTime.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
   </data>
   <data name="labelRetentionTime.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -608,9 +602,6 @@
   </metadata>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
     <value>383, 448</value>
-  </data>
-  <data name="$this.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>

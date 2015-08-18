@@ -146,12 +146,42 @@ namespace pwiz.SkylineTest.Results
         [TestMethod]
         public void ThermoRatioTest()
         {
+            DoThermoRatioTest(RefinementSettings.ConvertToSmallMoleculesMode.none);
+        }
+
+        [TestMethod]
+        public void ThermoRatioTestAsSmallMolecules()
+        {
+            // Ratio match by formula
+            DoThermoRatioTest(RefinementSettings.ConvertToSmallMoleculesMode.formulas);
+        }
+
+        [TestMethod]
+        public void ThermoRatioTestAsSmallMoleculeMassesAndNames()
+        {
+            // Ratio match by names
+            DoThermoRatioTest(RefinementSettings.ConvertToSmallMoleculesMode.masses_and_names);
+        }
+
+        public void DoThermoRatioTest(RefinementSettings.ConvertToSmallMoleculesMode smallMoleculesTestMode)
+        {
+            TestSmallMolecules = false;  // We do this explicitly
+
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
             string docPath;
             SrmDocument doc = InitThermoDocument(testFilesDir, out docPath);
             SrmSettings settings = doc.Settings.ChangePeptideModifications(mods =>
                 mods.ChangeInternalStandardTypes(new[]{IsotopeLabelType.light}));
             doc = doc.ChangeSettings(settings);
+            if (smallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none)
+            {
+                var docOrig = doc;
+                var refine = new RefinementSettings();
+                doc = refine.ConvertToSmallMolecules(doc, smallMoleculesTestMode);
+                // This is our first example of a converted label doc - check roundtripping
+                AssertEx.ConvertedSmallMoleculeDocumentIsSimilar(docOrig, doc);
+                AssertEx.Serializable(doc);
+            }
             var docContainer = new ResultsTestDocumentContainer(doc, docPath);
             string extRaw = ExtensionTestContext.ExtThermoRaw;
             var listChromatograms = new List<ChromatogramSet>
@@ -173,7 +203,7 @@ namespace pwiz.SkylineTest.Results
             docResults = docContainer.Document;
             // Make sure all groups have at least 5 transitions (of 6) with ratios
             int ratioGroupMissingCount = 0;
-            foreach (var nodeGroup in docResults.PeptideTransitionGroups)
+            foreach (var nodeGroup in docResults.MoleculeTransitionGroups)
             {
                 if (nodeGroup.TransitionGroup.LabelType.IsLight)
                 {
@@ -234,6 +264,7 @@ namespace pwiz.SkylineTest.Results
             IdentityPath pathGroupHeavy = new IdentityPath(pathFirstPep, nodeGroupHeavy.TransitionGroup);
             float? ratioStart = nodeGroupHeavy.Results[0][0].Ratio;
             Assert.IsTrue(ratioStart.HasValue, "No starting heavy group ratio");
+            var expectedValues = new[] { 1.403414, 1.38697791, 1.34598482 };
             for (int i = 0; i < 3; i++)
             {
                 var pathLight = docResults.GetPathTo((int) SrmDocument.Level.Transitions, 0);
@@ -241,6 +272,7 @@ namespace pwiz.SkylineTest.Results
                 TransitionDocNode nodeTran = (TransitionDocNode) docResults.FindNode(pathHeavy);
                 float? ratioTran = nodeTran.Results[0][0].Ratio;
                 Assert.IsTrue(ratioTran.HasValue, "Expected transition ratio not found");
+                Assert.AreEqual(ratioTran.Value, expectedValues[i], 1.0e-5);
                 docResults = (SrmDocument) docResults.RemoveChild(pathLight.Parent, docResults.FindNode(pathLight));
                 nodeTran = (TransitionDocNode) docResults.FindNode(pathHeavy);
                 Assert.IsFalse(nodeTran.Results[0][0].Ratio.HasValue, "Unexpected transiton ratio found");
@@ -262,28 +294,30 @@ namespace pwiz.SkylineTest.Results
                                    "Group ratio still present with no transition ratios");
                 }
             }
-
-            bool firstAdd = true;
-            var nodeGroupLightOrig = (TransitionGroupDocNode) doc.FindNode(pathGroupLight);
-            DocNode[] lightChildrenOrig = nodeGroupLightOrig.Children.ToArray();
-            foreach (var nodeTran in nodeGroupLightOrig.GetTransitions(docResults.Settings,
-                null, nodeGroupLightOrig.PrecursorMz, null, null, null, false))
+            bool asSmallMolecules = (smallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none);
+            if (!asSmallMolecules) // GetTransitions() doesn't work the same way for small molecules - it only lists existing ones
             {
-                var transition = nodeTran.Transition;
-                if (!firstAdd && lightChildrenOrig.IndexOf(node => Equals(node.Id, transition)) == -1)
-                    continue;
-                // Add the first transition, and then the original transitions
-                docResults = (SrmDocument) docResults.Add(pathGroupLight, nodeTran);
-                nodeGroupHeavy = (TransitionGroupDocNode) docResults.FindNode(pathGroupHeavy);
-                if (firstAdd)
-                    Assert.IsNull(nodeGroupHeavy.Results[0][0].Ratio, "Unexpected heavy ratio found");
-                else
-                    Assert.IsNotNull(nodeGroupHeavy.Results[0][0].Ratio,
-                                     "Heavy ratio null after adding light children");
-                firstAdd = false;
+                bool firstAdd = true;
+                var nodeGroupLightOrig = (TransitionGroupDocNode) doc.FindNode(pathGroupLight);
+                DocNode[] lightChildrenOrig = nodeGroupLightOrig.Children.ToArray();
+                foreach (var nodeTran in nodeGroupLightOrig.GetTransitions(docResults.Settings,
+                    null, nodeGroupLightOrig.PrecursorMz, null, null, null, false))
+                {
+                    var transition = nodeTran.Transition;
+                    if (!firstAdd && lightChildrenOrig.IndexOf(node => Equals(node.Id, transition)) == -1)
+                        continue;
+                    // Add the first transition, and then the original transitions
+                    docResults = (SrmDocument) docResults.Add(pathGroupLight, nodeTran);
+                    nodeGroupHeavy = (TransitionGroupDocNode) docResults.FindNode(pathGroupHeavy);
+                    if (firstAdd)
+                        Assert.IsNull(nodeGroupHeavy.Results[0][0].Ratio, "Unexpected heavy ratio found");
+                    else
+                        Assert.IsNotNull(nodeGroupHeavy.Results[0][0].Ratio,
+                            "Heavy ratio null after adding light children");
+                    firstAdd = false;
+                }
+                Assert.AreEqual(ratioStart, nodeGroupHeavy.Results[0][0].Ratio);
             }
-            Assert.AreEqual(ratioStart, nodeGroupHeavy.Results[0][0].Ratio);
-
             // Release file handles
             docContainer.Release();
             testFilesDir.Dispose();

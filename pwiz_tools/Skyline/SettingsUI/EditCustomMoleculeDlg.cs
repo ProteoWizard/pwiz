@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
@@ -35,50 +36,143 @@ namespace pwiz.Skyline.SettingsUI
     {
         private DocNodeCustomIon _resultCustomIon;
         private readonly FormulaBox _formulaBox;
-        private readonly IEnumerable<CustomIon> _existing;
+        private readonly Identity _initialId;
+        private readonly IEnumerable<Identity> _existingIds;
         private readonly int _minCharge;
         private readonly int _maxCharge;
-        private readonly TransitionSettings _settings;
+        private readonly TransitionSettings _transitionSettings;
+        private PeptideSettings _peptideSettings;
+        private readonly PeptideSettingsUI.LabelTypeComboDriver _driverLabelType;
+        private readonly SkylineWindow _parent;
 
-        public EditCustomMoleculeDlg(String title, IEnumerable<CustomIon> existing, int minCharge, int maxCharge, 
-            TransitionSettings settings, int defaultCharge, bool isPrecursor, ExplicitTransitionGroupValues explicitAttributes, ExplicitRetentionTimeInfo explicitRetentionTime)
+        /// <summary>
+        /// For modifying at the Molecule level
+        /// </summary>
+        public EditCustomMoleculeDlg(SkylineWindow parent, string title,
+            SrmSettings settings, string defaultName, string defaultFormula, ExplicitRetentionTimeInfo explicitRetentionTime) :
+            this(parent, title, null, null, 0, 0, null, defaultName, defaultFormula, null, null, explicitRetentionTime, null, false)
+        {
+        }
+
+        /// <summary>
+        /// For creating at the Molecule level (create molecule and first transition group) or modifying at the transition level
+        /// Null values imply "don't ask user for this"
+        /// </summary>
+        public EditCustomMoleculeDlg(SkylineWindow parent, string title, Identity initialId, IEnumerable<Identity> existingIds, int minCharge, int maxCharge,
+            SrmSettings settings, string defaultName, string defaultFormula, int? defaultCharge, ExplicitTransitionGroupValues explicitAttributes, 
+            ExplicitRetentionTimeInfo explicitRetentionTime,
+            IsotopeLabelType defaultIsotopeLabelType, bool enableFormulaEditing = true)
         {
             Text = title;
-            _existing = existing;
+            _parent = parent;
+            _initialId = initialId;
+            _existingIds = existingIds;
             _minCharge = minCharge;
             _maxCharge = maxCharge;
-            _settings = settings;
+            _transitionSettings = settings != null ? settings.TransitionSettings : null;
+            _peptideSettings = settings != null ? settings.PeptideSettings : null;
 
             InitializeComponent();
-            ResultExplicitTransitionGroupValues = new ExplicitTransitionGroupValues(explicitAttributes);
+
+            NameText = defaultName;
+            var needOptionalValuesBox = explicitRetentionTime != null || explicitAttributes != null;
+            var heightDelta = 0;
+
+            if (explicitAttributes == null)
+            {
+                ResultExplicitTransitionGroupValues = null;
+                labelCollisionEnergy.Visible = false;
+                textCollisionEnergy.Visible = false;
+                labelSLens.Visible = false;
+                textSLens.Visible = false;
+                labelConeVoltage.Visible = false;
+                textConeVoltage.Visible = false;
+                labelDriftTimeHighEnergyOffsetMsec.Visible = false;
+                textDriftTimeHighEnergyOffsetMsec.Visible = false;
+                labelDriftTimeMsec.Visible = false;
+                textDriftTimeMsec.Visible = false;
+                if (needOptionalValuesBox)
+                {
+                    // We blanked out everything but the retention time
+                    var vmargin = labelRetentionTime.Location.Y;
+                    var newHeight = textRetentionTime.Location.Y + textRetentionTime.Height +  vmargin;
+                    heightDelta = groupBoxOptionalValues.Height - newHeight;
+                    groupBoxOptionalValues.Height = newHeight;
+                }
+            }
+            else
+            {
+                ResultExplicitTransitionGroupValues = new ExplicitTransitionGroupValues(explicitAttributes);
+            }
+            
+            string labelAverage = defaultCharge.HasValue
+                ? Resources.EditCustomMoleculeDlg_EditCustomMoleculeDlg_A_verage_m_z_
+                : Resources.EditCustomMoleculeDlg_EditCustomMoleculeDlg_A_verage_mass_;
+            string labelMono = defaultCharge.HasValue
+                ? Resources.EditCustomMoleculeDlg_EditCustomMoleculeDlg__Monoisotopic_m_z_
+                : Resources.EditCustomMoleculeDlg_EditCustomMoleculeDlg__Monoisotopic_mass_;
 
             _formulaBox =
                 new FormulaBox(Resources.EditMeasuredIonDlg_EditMeasuredIonDlg_Ion__chemical_formula_,
-                    Resources.EditCustomMoleculeDlg_EditCustomMoleculeDlg_A_verage_m_z_,
-                    Resources.EditCustomMoleculeDlg_EditCustomMoleculeDlg__Monoisotopic_m_z_, 
+                    labelAverage,
+                    labelMono, 
                     defaultCharge)
                 {
+                    Formula = defaultFormula,
                     Location = new Point(textName.Left, textName.Bottom + 12)
                 };
             Controls.Add(_formulaBox);
             _formulaBox.TabIndex = 2;
-            textCharge.Visible = labelCharge.Visible = true;
-            Charge = defaultCharge;
+            _formulaBox.Enabled = enableFormulaEditing;
+            bool needCharge = defaultCharge.HasValue;
+            textCharge.Visible = labelCharge.Visible = needCharge;
+            Charge = defaultCharge ?? 0;
+            if (needOptionalValuesBox && !needCharge)
+            {
+                heightDelta += groupBoxOptionalValues.Location.Y - labelCharge.Location.Y;
+                groupBoxOptionalValues.Location = new Point(groupBoxOptionalValues.Location.X, labelCharge.Location.Y);
+            }
             if (explicitRetentionTime == null)
             {
+                // Don't ask user for retetention times
                 RetentionTime = null;
                 RetentionTimeWindow = null;
+                labelRetentionTime.Visible = false;
+                labelRetentionTimeWindow.Visible = false;
+                textRetentionTime.Visible = false;
+                textRetentionTimeWindow.Visible = false;
+                if (needOptionalValuesBox)
+                {
+                    var rtHeight = labelCollisionEnergy.Location.Y - labelRetentionTimeWindow.Location.Y;
+                    groupBoxOptionalValues.Height -= rtHeight;
+                    heightDelta += rtHeight;
+                }
             }
             else
             {
                 RetentionTime = explicitRetentionTime.RetentionTime;
                 RetentionTimeWindow = explicitRetentionTime.RetentionTimeWindow;
             }
-            if (!isPrecursor)
+            if (!needOptionalValuesBox)
             {
                 groupBoxOptionalValues.Visible = false;
-                Height -= groupBoxOptionalValues.Height;
+                heightDelta = groupBoxOptionalValues.Height;
             }
+            // Initialize label
+            if (settings != null && defaultIsotopeLabelType != null)
+            {
+                _driverLabelType = new PeptideSettingsUI.LabelTypeComboDriver(comboIsotopeLabelType,
+                    settings.PeptideSettings.Modifications, null, null, null, null)
+                {
+                    SelectedName = defaultIsotopeLabelType.Name
+                };
+            }
+            else
+            {
+                comboIsotopeLabelType.Visible = false;
+                labelIsotopeLabelType.Visible = false;
+            }
+            Height -= heightDelta;
         }
 
         public DocNodeCustomIon ResultCustomIon
@@ -98,7 +192,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             get
             {
-                return new ExplicitTransitionGroupValues(CollisionEnergy, DriftTimeMsec, DriftTimeHighEnergyOffsetMsec);
+                return new ExplicitTransitionGroupValues(CollisionEnergy, DriftTimeMsec, DriftTimeHighEnergyOffsetMsec, SLens, ConeVoltage, DeclusteringPotential, CompensationVoltage);
             }
             set
             {
@@ -107,6 +201,10 @@ namespace pwiz.Skyline.SettingsUI
                 CollisionEnergy = resultExplicitTransitionGroupValues.CollisionEnergy;
                 DriftTimeMsec = resultExplicitTransitionGroupValues.DriftTimeMsec;
                 DriftTimeHighEnergyOffsetMsec = resultExplicitTransitionGroupValues.DriftTimeHighEnergyOffsetMsec;
+                SLens = resultExplicitTransitionGroupValues.SLens;
+                ConeVoltage = resultExplicitTransitionGroupValues.ConeVoltage;
+                DeclusteringPotential = resultExplicitTransitionGroupValues.DeclusteringPotential;
+                CompensationVoltage = resultExplicitTransitionGroupValues.CompensationVoltage;
             }
         }
 
@@ -177,6 +275,30 @@ namespace pwiz.Skyline.SettingsUI
             set { textCollisionEnergy.Text = EmptyForNullOrNonPositive(value); }
         }
 
+        public double? DeclusteringPotential
+        {
+            get { return NullForEmpty(textDeclusteringPotential.Text); }
+            set { textDeclusteringPotential.Text = EmptyForNullOrNonPositive(value); }
+        }
+
+        public double? CompensationVoltage
+        {
+            get { return NullForEmpty(textCompensationVoltage.Text); }
+            set { textCompensationVoltage.Text = EmptyForNullOrNonPositive(value); }
+        }
+
+        public double? SLens
+        {
+            get { return NullForEmpty(textSLens.Text); }
+            set { textSLens.Text = EmptyForNullOrNonPositive(value); }
+        }
+
+        public double? ConeVoltage
+        {
+            get { return NullForEmpty(textConeVoltage.Text); }
+            set { textConeVoltage.Text = EmptyForNullOrNonPositive(value); }
+        }
+
         public double? RetentionTime
         {
             get { return NullForEmpty(textRetentionTime.Text); }
@@ -187,6 +309,16 @@ namespace pwiz.Skyline.SettingsUI
         {
             get { return NullForEmpty(textRetentionTimeWindow.Text); }
             set { textRetentionTimeWindow.Text = EmptyForNullOrNonPositive(value); }
+        }
+
+        public ExplicitRetentionTimeInfo ExplicitRetentionTimeInfo
+        {
+            get
+            {
+                return RetentionTime.HasValue
+                    ? new ExplicitRetentionTimeInfo(RetentionTime.Value, RetentionTimeWindow)
+                    : null;
+            }
         }
 
         public double? DriftTimeMsec
@@ -201,23 +333,17 @@ namespace pwiz.Skyline.SettingsUI
             set { textDriftTimeHighEnergyOffsetMsec.Text = value == null ? string.Empty : value.Value.ToString(LocalizationHelper.CurrentCulture); } // Negative values are normal here
         }
 
+        public IsotopeLabelType IsotopeLabelType
+        {
+            get { return (_driverLabelType == null) ? null :_driverLabelType.SelectedMods.LabelType; }
+            set { if (_driverLabelType != null) _driverLabelType.SelectedName = value.Name; }
+        }
+
         public void OkDialog()
         {
             var helper = new MessageBoxHelper(this);
-            if (
-                _existing.Contains(
-                    c =>
-                        !ReferenceEquals(_resultCustomIon, c) && (string.IsNullOrEmpty(textName.Text)
-                            ? (Equals(_formulaBox.Formula, c.Formula) && Equals(_formulaBox.AverageMass, c.AverageMass) &&
-                               (Equals(_formulaBox.MonoMass, c.MonoisotopicMass)))
-                            : Equals(textName.Text, c.Name))))
-            {
-                helper.ShowTextBoxError(textName,
-                    Resources.EditCustomMoleculeDlg_OkDialog_The_custom_molecule_already_exists_, textName.Text);
-                return;
-            }
-            int charge;
-            if (!helper.ValidateSignedNumberTextBox(textCharge, _minCharge, _maxCharge, out charge))
+            var charge = 0;
+            if (textCharge.Visible && !helper.ValidateSignedNumberTextBox(textCharge, _minCharge, _maxCharge, out charge))
                 return;
             if (RetentionTimeWindow.HasValue && !RetentionTime.HasValue)
             {
@@ -251,8 +377,9 @@ namespace pwiz.Skyline.SettingsUI
                 return;
             }
 
-            if (!_settings.IsMeasurablePrecursor(BioMassCalc.CalculateIonMz(monoMass, charge)) ||
-                !_settings.IsMeasurablePrecursor(BioMassCalc.CalculateIonMz(averageMass, charge)))
+            if ((_transitionSettings != null) &&
+                (!_transitionSettings.IsMeasurablePrecursor(BioMassCalc.CalculateIonMz(monoMass, charge)) ||
+                !_transitionSettings.IsMeasurablePrecursor(BioMassCalc.CalculateIonMz(averageMass, charge))))
             {
                 _formulaBox.ShowTextBoxErrorFormula(helper, Resources.SkylineWindow_AddMolecule_The_precursor_m_z_for_this_molecule_is_out_of_range_for_your_instrument_settings_);
                 return;
@@ -272,6 +399,52 @@ namespace pwiz.Skyline.SettingsUI
             else
             {
                 ResultCustomIon = new DocNodeCustomIon(monoMass, averageMass, textName.Text);
+            }
+            // Did user change the list of heavy labels?
+            if (_driverLabelType != null)
+            {
+                PeptideModifications modifications = new PeptideModifications(
+                    _peptideSettings.Modifications.StaticModifications,
+                    _peptideSettings.Modifications.MaxVariableMods,  
+                    _peptideSettings.Modifications.MaxNeutralLosses,
+                    _driverLabelType.GetHeavyModifications(), // This is the only thing the user may have altered
+                    _peptideSettings.Modifications.InternalStandardTypes);
+                var settings = _peptideSettings.ChangeModifications(modifications);
+                // Only update if anything changed
+                if (!Equals(settings, _peptideSettings))
+                {
+                    SrmSettings newSettings = _parent.DocumentUI.Settings.ChangePeptideSettings(settings);
+                    if (!_parent.ChangeSettings(newSettings, true))
+                    {
+                        return;
+                    }
+                    _peptideSettings = newSettings.PeptideSettings;
+                }
+            }
+
+            // See if this combination of charge and label would conflict with any existing transition groups
+            if (_existingIds != null && _existingIds.Any(t =>
+                {
+                    var transitionGroup = t as TransitionGroup;
+                    return transitionGroup != null && Equals(transitionGroup.LabelType, IsotopeLabelType) &&
+                           Equals(transitionGroup.PrecursorCharge, Charge) && !ReferenceEquals(t, _initialId);
+                }))
+            {
+                helper.ShowTextBoxError(textName,
+                    Resources.EditCustomMoleculeDlg_OkDialog_A_precursor_with_that_charge_and_label_type_already_exists_, textName.Text);
+                return;
+            }
+
+            // See if this would conflict with any existing transitions
+            if (_existingIds != null && (_existingIds.Any(t =>
+                {
+                    var transition = t as Transition;
+                    return transition != null && ((transition.Charge == Charge) && Equals(transition.CustomIon, ResultCustomIon)) && !ReferenceEquals(t, _initialId);
+                })))
+            {
+                helper.ShowTextBoxError(textName,
+                    Resources.EditCustomMoleculeDlg_OkDialog_A_similar_transition_already_exists_, textName.Text);
+                return;
             }
             DialogResult = DialogResult.OK;
         }
@@ -310,6 +483,14 @@ namespace pwiz.Skyline.SettingsUI
         {
             OkDialog();
         }
+
+        private void comboLabelType_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            // Handle label type selection events, like <Edit list...>
+            if (_driverLabelType != null)
+                _driverLabelType.SelectedIndexChangedEvent();
+        }
+
 
         #region For Testing
 

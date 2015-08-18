@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
 using System.IO;
 using pwiz.Common.DataBinding.Attributes;
@@ -70,12 +69,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return DocNode.Peptide.IsCustomIon;
         }
 
-        private void ThrowIfNotSmallMolecule()
-        {
-            if (!IsSmallMolecule())
-                throw new InvalidDataException(Resources.Peptide_ThrowIfNotSmallMolecule_Direct_editing_of_this_value_is_only_supported_for_small_molecules_);
-        }
-
         protected override PeptideDocNode CreateEmptyNode()
         {
             return new PeptideDocNode(new Model.Peptide(null, "X", null, null, 0)); // Not L10N
@@ -112,9 +105,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                return IsSmallMolecule()
-                    ? (DocNode.Peptide.CustomIon.Name ?? String.Empty)
-                    : null;
+                if (IsSmallMolecule())
+                {
+                    return DocNode.CustomIon.Name ?? string.Empty;
+                }
+                else
+                {
+                    var molecule = RefinementSettings.ConvertToSmallMolecule(RefinementSettings.ConvertToSmallMoleculesMode.formulas, SrmDocument, DocNode);
+                    return molecule.InvariantName ?? string.Empty;
+                }
             }
         }
 
@@ -123,9 +122,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                return IsSmallMolecule()
-                    ? (DocNode.Peptide.CustomIon.Formula ?? String.Empty)
-                    : null;
+                if (IsSmallMolecule())
+                {
+                    return DocNode.CustomIon.Formula ?? string.Empty;
+                }
+                else
+                {
+                    var molecule = RefinementSettings.ConvertToSmallMolecule(RefinementSettings.ConvertToSmallMoleculesMode.formulas, SrmDocument, DocNode);
+                    return molecule.Formula ?? string.Empty;
+                }
             }
         }
 
@@ -203,13 +208,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                if (IsSmallMolecule() && DocNode.ExplicitRetentionTime != null)
+                if (DocNode.ExplicitRetentionTime != null)
                    return DocNode.ExplicitRetentionTime.RetentionTime;
                 return null;
             }
             set
             {
-                ThrowIfNotSmallMolecule();  // Only settable for custom ions
                 ChangeDocNode(EditDescription.SetColumn("ExplicitRetentionTime", value), // Not L10N
                     DocNode.ChangeExplicitRetentionTime(value));
             }
@@ -220,13 +224,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                if (IsSmallMolecule() && DocNode.ExplicitRetentionTime != null)
+                if (DocNode.ExplicitRetentionTime != null)
                     return DocNode.ExplicitRetentionTime.RetentionTimeWindow;
                 return null;
             }
             set
             {
-                ThrowIfNotSmallMolecule();  // Only settable for custom ions
                 if (DocNode.ExplicitRetentionTime == null)
                 {
                     // Can't set window without retention time
@@ -262,7 +265,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             var peptide = DocNode.Peptide;
             return peptide.IsCustomIon
-                ? peptide.CustomIon.ToString()
+                ? DocNode.CustomIon.ToString()
                 : peptide.Sequence;
         }
 

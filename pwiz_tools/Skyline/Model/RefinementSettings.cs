@@ -24,6 +24,7 @@ using System.Linq;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -604,18 +605,93 @@ namespace pwiz.Skyline.Model
             return nodeGroupRefined;
         }
 
-        public string SmallMoleculeNameFromPeptide(string peptideSequence, int precursorCharge, IsotopeLabelType isotopeLabelType)
+        public static string SmallMoleculeNameFromPeptide(string peptideSequence, int precursorCharge)
         {
-             return String.Format("{0}({1}H{2}{3})", // Not L10N
-                                     peptideSequence, 
-                                     (precursorCharge < 0) ? "-" :"+", // Not L10N
-                                     Math.Abs(precursorCharge), 
-                                     Equals(isotopeLabelType, IsotopeLabelType.light) ? string.Empty : " "+isotopeLabelType); // Not L10N
+            if (precursorCharge == 0)
+            {
+                return peptideSequence;
+            }
+            else
+            {
+                return string.Format("{0}({1}H{2})", // Not L10N
+                    peptideSequence,
+                    (precursorCharge < 0) ? "-" : "+", // Not L10N
+                    Math.Abs(precursorCharge));
+
+            }
         }
 
-        public SrmDocument ConvertToSmallMolecules(SrmDocument document, bool massesOnly = false, bool invertCharges = false, bool ignoreDecoys = false)
+        public enum ConvertToSmallMoleculesMode
         {
+            none,        // No conversion - call to ConvertToSmallMolecules is a no-op
+            formulas,    // Convert peptides to custom ions with ion formulas
+            masses_and_names,  // Convert peptides to custom ions but retain just the masses, and names for use in ratio calcs
+            masses_only  // Convert peptides to custom ions but retain just the masses, no formulas or names so ratio calcs have to work on sorted mz
+        };
+
+        /// <summary>
+        /// Removes any library info - useful in test since for the moment at least small molecules don't support this and it won't roundtrip
+        /// </summary>
+        public static Results<TransitionGroupChromInfo> RemoveTransitionGroupChromInfoLibraryInfo(TransitionGroupDocNode transitionGroupDocNode)
+        {
+            if (transitionGroupDocNode.Results == null)
+                return null;
+
+            var listResultsNew = new List<ChromInfoList<TransitionGroupChromInfo>>();
+            foreach (var info in transitionGroupDocNode.Results)
+            {
+                if (info != null)
+                {
+                    var infoNew = new List<TransitionGroupChromInfo>();
+                    foreach (var result in info)
+                    {
+                        infoNew.Add(result.ChangeLibraryDotProduct(null));
+                    }
+                    listResultsNew.Add(new ChromInfoList<TransitionGroupChromInfo>(infoNew));
+                }
+            }
+            var resultsNew = new Results<TransitionGroupChromInfo>(listResultsNew);
+            return resultsNew;
+        }
+
+        public static DocNodeCustomIon ConvertToSmallMolecule(ConvertToSmallMoleculesMode mode, 
+            SrmDocument document, PeptideDocNode nodePep, int precursorCharge = 0, IsotopeLabelType isotopeLabelType = null)
+        {
+            // We're just using this masscalc to get the ion formula, so mono vs average doesn't matter
+            isotopeLabelType = isotopeLabelType ?? IsotopeLabelType.light;
+            var peptideSequence = nodePep.Peptide.Sequence;
+            var masscalc = document.Settings.TryGetPrecursorCalc(isotopeLabelType, nodePep.ExplicitMods) ?? new SequenceMassCalc(MassType.Monoisotopic);
+            // Determine the molecular formula of the charged/labeled peptide
+            var moleculeFormula = masscalc.GetIonFormula(peptideSequence, precursorCharge);
+            var moleculeCustomIon = new DocNodeCustomIon(moleculeFormula,
+                SmallMoleculeNameFromPeptide(peptideSequence, precursorCharge));
+            if (mode == ConvertToSmallMoleculesMode.masses_only)
+            {
+                // No formulas or names, just masses - see how we handle that
+                moleculeCustomIon = new DocNodeCustomIon(moleculeCustomIon.MonoisotopicMass,
+                    moleculeCustomIon.AverageMass);
+            }
+            else if (mode == ConvertToSmallMoleculesMode.masses_and_names)
+            {
+                // Just masses and names - see how we handle that
+                moleculeCustomIon = new DocNodeCustomIon(moleculeCustomIon.MonoisotopicMass,
+                    moleculeCustomIon.AverageMass, moleculeCustomIon.Name);
+            }
+            return moleculeCustomIon;
+        }
+
+        public const string TestingConvertedFromProteomic = "zzzTestingConvertedFromProteomic"; // Not L10N
+
+        public SrmDocument ConvertToSmallMolecules(SrmDocument document, 
+            ConvertToSmallMoleculesMode mode = ConvertToSmallMoleculesMode.formulas, 
+            bool invertCharges = false, 
+            bool ignoreDecoys=false)
+        {
+            if (mode == ConvertToSmallMoleculesMode.none)
+                return document;
             var newdoc = new SrmDocument(document.Settings);
+            var note = new Annotations(TestingConvertedFromProteomic, null, 1); // Mark this as a testing node so we don't sort it
+
             newdoc = (SrmDocument)newdoc.ChangeIgnoreChangingChildren(true); // Retain copied results
 
             foreach (var peptideGroupDocNode in document.MoleculeGroups)
@@ -628,79 +704,64 @@ namespace pwiz.Skyline.Model
                 {
                     var newPeptideGroup = new PeptideGroup();
                     var newPeptideGroupDocNode = new PeptideGroupDocNode(newPeptideGroup,
-                        peptideGroupDocNode.Annotations, peptideGroupDocNode.Name,
+                        peptideGroupDocNode.Annotations.Merge(note), peptideGroupDocNode.Name,
                         peptideGroupDocNode.Description, new PeptideDocNode[0],
                         peptideGroupDocNode.AutoManageChildren);
-                    // We're just using this masscalc to get the ion formula, so mono vs average doesn't matter
-                    var seqMassCalcMono = new SequenceMassCalc(MassType.Monoisotopic);
                     foreach (var mol in peptideGroupDocNode.Molecules)
                     {
-                        var precursorCharge = 0;
-                        var isotopeLabelType = IsotopeLabelType.light;
                         var peptideSequence = mol.Peptide.Sequence;
-                        string moleculeFormula = null;
-                        Peptide newPeptide = null;
-                        PeptideDocNode newPeptideDocNode = null;
+                        // Create a PeptideDocNode with the presumably baseline charge and label
+                        var precursorCharge = (mol.TransitionGroups.Any() ? mol.TransitionGroups.First().TransitionGroup.PrecursorCharge : 0) * (invertCharges ? -1 : 1);
+                        var isotopeLabelType = mol.TransitionGroups.Any() ? mol.TransitionGroups.First().TransitionGroup.LabelType : IsotopeLabelType.light;
+                        var moleculeCustomIon = ConvertToSmallMolecule(mode, document, mol, precursorCharge, isotopeLabelType);
+                        var precursorCustomIon = moleculeCustomIon;
+                        var newPeptide = new Peptide(moleculeCustomIon);
+                        var newPeptideDocNode = new PeptideDocNode(newPeptide, newdoc.Settings, null, null,
+                            null, null, mol.ExplicitRetentionTime, note, mol.Results, new TransitionGroupDocNode[0],
+                            mol.AutoManageChildren);
+
                         foreach (var transitionGroupDocNode in mol.TransitionGroups)
                         {
-                            var transitionGroup = transitionGroupDocNode.TransitionGroup;
-                            if (transitionGroup.PrecursorCharge != Math.Abs(precursorCharge) ||
-                                !Equals(isotopeLabelType, transitionGroup.LabelType))
-                            {
-                                // Different charges or labels mean different ion formulas
-                                if (newPeptideDocNode != null)
-                                    newPeptideGroupDocNode = (PeptideGroupDocNode)newPeptideGroupDocNode.Add(newPeptideDocNode);
-                                precursorCharge = transitionGroup.PrecursorCharge * (invertCharges ? -1 : 1);
-                                isotopeLabelType = transitionGroup.LabelType;
-                                var masscalc = document.Settings.TryGetPrecursorCalc(isotopeLabelType, mol.ExplicitMods) ?? seqMassCalcMono;
-
-                                var masscalcB = (mol.ExplicitMods != null)
-                                    ? new ExplicitSequenceMassCalc(mol.ExplicitMods, seqMassCalcMono, isotopeLabelType)
-                                    : document.Settings.TryGetPrecursorCalc(isotopeLabelType, null) ?? seqMassCalcMono;
-
-                                if (!Equals(masscalcB, masscalc))
-                                    masscalc = masscalcB;
-
-                                // Determine the molecular formula of the charged peptide
-                                moleculeFormula = masscalc.GetIonFormula(peptideSequence, precursorCharge);
-                                var moleculeCustomIon = new DocNodeCustomIon(moleculeFormula,
-                                    SmallMoleculeNameFromPeptide(peptideSequence, precursorCharge, isotopeLabelType));
-                                if (massesOnly)
-                                {
-                                    // Discard the formula if we're testing the use of mass-only target specification
-                                    moleculeCustomIon = new DocNodeCustomIon(moleculeCustomIon.MonoisotopicMass, moleculeCustomIon.AverageMass);
-                                }
-                                newPeptide = new Peptide(moleculeCustomIon);
-                                newPeptideDocNode = new PeptideDocNode(newPeptide, newdoc.Settings, null, null,
-                                    mol.ExplicitRetentionTime, new TransitionGroupDocNode[0], mol.AutoManageChildren);
-                                newPeptideDocNode = newPeptideDocNode.ChangeResults(mol.Results);
-                            }
-                            var newTransitionGroup = new TransitionGroup(newPeptide, precursorCharge,
-                                transitionGroup.LabelType);
-
-                            var newTransitionGroupDocNode = new TransitionGroupDocNode(newTransitionGroup,
-                                transitionGroupDocNode.Annotations, document.Settings,
-                                null, null, null, transitionGroupDocNode.Results, null,
-                                transitionGroupDocNode.AutoManageChildren);
                             if (transitionGroupDocNode.IsDecoy)
                             {
                                 if (ignoreDecoys)
                                     continue;
                                 throw new Exception("There is no translation from decoy to small molecules"); // Not L10N
                             }
+
+                            if (transitionGroupDocNode.TransitionGroup.PrecursorCharge != Math.Abs(precursorCharge) ||
+                                !Equals(isotopeLabelType, transitionGroupDocNode.TransitionGroup.LabelType))
+                            {
+                                // Different charges or labels mean different ion formulas
+                                precursorCharge = transitionGroupDocNode.TransitionGroup.PrecursorCharge * (invertCharges ? -1 : 1);
+                                isotopeLabelType = transitionGroupDocNode.TransitionGroup.LabelType;
+                                precursorCustomIon = ConvertToSmallMolecule(mode, document, mol, precursorCharge, isotopeLabelType);
+                            }
+
+                            var newTransitionGroup = new TransitionGroup(newPeptide, precursorCustomIon, precursorCharge, isotopeLabelType);
+                            // Remove any library info, since for the moment at least small molecules don't support this and it won't roundtrip
+                            var resultsNew = RemoveTransitionGroupChromInfoLibraryInfo(transitionGroupDocNode);
+                            var newTransitionGroupDocNode = new TransitionGroupDocNode(newTransitionGroup,
+                                transitionGroupDocNode.Annotations.Merge(note), document.Settings,
+                                null, null, transitionGroupDocNode.ExplicitValues, resultsNew, null,
+                                transitionGroupDocNode.AutoManageChildren);
+                            var mzShift = invertCharges ? 2.0 * BioMassCalc.MassProton : 0;  // We removed hydrogen rather than added
+                            Assume.IsTrue((Math.Abs(newTransitionGroupDocNode.PrecursorMz + mzShift - transitionGroupDocNode.PrecursorMz) - Math.Abs(transitionGroupDocNode.TransitionGroup.PrecursorCharge * BioMassCalc.MassElectron)) <= 1E-5);
+
                             foreach (var transition in transitionGroupDocNode.Transitions)
                             {
                                 double mass = 0;
+                                var transitionCharge = transition.Transition.Charge * (invertCharges ? -1 : 1);
                                 var ionType = IonType.custom;
                                 CustomIon transitionCustomIon;
-                                var mzShift = invertCharges ? 2.0 * BioMassCalc.MassProton : 0;  // We removed hydrogen rather than added
                                 double mzShiftTransition = 0;
                                 if (transition.Transition.IonType == IonType.precursor)
                                 {
                                     ionType = IonType.precursor;
-                                    var name = SmallMoleculeNameFromPeptide(peptideSequence,
-                                        transition.Transition.Charge, transitionGroup.LabelType);
-                                    transitionCustomIon = new DocNodeCustomIon(moleculeFormula, null, null, name);
+                                    transitionCustomIon = new DocNodeCustomIon(precursorCustomIon.Formula,
+                                        string.IsNullOrEmpty(precursorCustomIon.Formula) ? precursorCustomIon.MonoisotopicMass : (double?) null,
+                                        string.IsNullOrEmpty(precursorCustomIon.Formula) ? precursorCustomIon.AverageMass : (double?) null,
+                                        SmallMoleculeNameFromPeptide(peptideSequence, transitionCharge));
                                     mzShiftTransition = invertCharges ? 2.0 * BioMassCalc.MassProton : 0;  // We removed hydrogen rather than added
                                 }
                                 else if (transition.Transition.IonType == IonType.custom)
@@ -711,14 +772,19 @@ namespace pwiz.Skyline.Model
                                 else
                                 {
                                     // TODO - try to get fragment formula?
-                                    var mz = transition.Mz;
-                                    mass = Math.Round(BioMassCalc.CalculateIonMassFromMz(mz, transition.Transition.Charge), 9); // Avoid XML roundtrip rounding issues
-                                    transitionCustomIon = new DocNodeCustomIon(mass, mass, // We can't really get at mono vs average mass from m/z, but for test purposes this is fine
+                                    mass = BioMassCalc.CalculateIonMassFromMz(transition.Mz, transition.Transition.Charge);
+                                    transitionCustomIon = new DocNodeCustomIon(mass, mass,// We can't really get at mono vs average mass from m/z, but for test purposes this is fine
                                         transition.Transition.FragmentIonName);
                                 }
-                                if (massesOnly)
+                                if (mode == ConvertToSmallMoleculesMode.masses_and_names)
                                 {
-                                    // Discard the formula if we're testing the use of mass-only target specification
+                                    // Discard the formula if we're testing the use of mass-with-names (for matching in ratio calcs) target specification
+                                    transitionCustomIon = new DocNodeCustomIon(transitionCustomIon.MonoisotopicMass, transitionCustomIon.AverageMass,
+                                        transition.Transition.FragmentIonName);
+                                }
+                                else if (mode == ConvertToSmallMoleculesMode.masses_only)
+                                {
+                                    // Discard the formula and name if we're testing the use of mass-only target specification
                                     transitionCustomIon = new DocNodeCustomIon(transitionCustomIon.MonoisotopicMass, transitionCustomIon.AverageMass);
                                 }
 
@@ -729,11 +795,10 @@ namespace pwiz.Skyline.Model
                                 {
                                     mass = document.Settings.GetFragmentMass(transitionGroupDocNode.TransitionGroup.LabelType, null, newTransition, newTransitionGroupDocNode.IsotopeDist);
                                 }
-                                var newTransitionDocNode = new TransitionDocNode(newTransition, transition.Annotations,
+                                var newTransitionDocNode = new TransitionDocNode(newTransition, transition.Annotations.Merge(note),
                                     null, mass, transition.IsotopeDistInfo, null,
                                     transition.Results);
-                                Assume.IsTrue((Math.Abs(newTransitionDocNode.Mz + mzShiftTransition - transition.Mz) - Math.Abs(transitionGroupDocNode.PrecursorCharge * BioMassCalc.MassElectron)) <= 1E-5);
-                                Assume.IsTrue((Math.Abs(newTransitionGroupDocNode.PrecursorMz + mzShift - transitionGroupDocNode.PrecursorMz) - Math.Abs(transitionGroupDocNode.PrecursorCharge * BioMassCalc.MassElectron)) <= 1E-5);
+                                Assume.IsTrue((Math.Abs(newTransitionDocNode.Mz + mzShiftTransition - transition.Mz) - Math.Abs(transitionGroupDocNode.TransitionGroup.PrecursorCharge * BioMassCalc.MassElectron)) <= 1E-5, String.Format("unexpected mz difference {0}-{1}={2}", newTransitionDocNode.Mz , transition.Mz, newTransitionDocNode.Mz - transition.Mz)); // Not L10N
                                 newTransitionGroupDocNode =
                                     (TransitionGroupDocNode)newTransitionGroupDocNode.Add(newTransitionDocNode);
                             }

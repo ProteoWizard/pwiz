@@ -125,6 +125,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => peptideSettingsUI.PickedHeavyMods = new[] { HEAVY_K, HEAVY_R });
             OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
             WaitForCondition(
+                60 * 1000 * (AllowInternetAccess ? 6 : 3), // Protein metadata lookup can take longer
                 () =>
                 SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries.Count > 0
                 && SkylineWindow.Document.Settings.HasBackgroundProteome

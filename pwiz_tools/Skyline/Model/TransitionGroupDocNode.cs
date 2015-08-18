@@ -97,12 +97,46 @@ namespace pwiz.Skyline.Model
             RelativeRT = relativeRT;
             LibInfo = group.LibInfo;
             Results = group.Results;
-            ExplicitValues = group.ExplicitValues;
+            ExplicitValues = group.ExplicitValues ?? ExplicitTransitionGroupValues.EMPTY;
         }
 
         public TransitionGroup TransitionGroup { get { return (TransitionGroup) Id; }}
 
         public IEnumerable<TransitionDocNode> Transitions { get { return Children.Cast<TransitionDocNode>(); } }
+
+        protected override IList<DocNode> OrderedChildren(IList<DocNode> children)
+        {
+            if (IsCustomIon && children.Any() && !SrmDocument.IsSpecialNonProteomicTestDocNode(this) && !SrmDocument.IsConvertedFromProteomicTestDocNode(this))
+            {
+                // Enforce order that facilitates Isotope ratio calculation, especially in cases where all we have is mz
+                return children.OrderBy(t => (TransitionDocNode)t, new TransitionDocNode.CustomIonEquivalenceComparer()).ToArray();
+            }
+            else
+            {
+                return children;
+            }
+        }
+
+        /// <summary>
+        /// Deep copy for use in small molecule user editing - we have to deep copy entire branches for changes to IDs
+        /// </summary>
+        /// <returns> Copy of transition group and its transitions, all with new IDs and backpointers</returns>
+        public TransitionGroupDocNode UpdateSmallMoleculeTransitionGroup(Peptide parentNew, TransitionGroup groupNew, SrmSettings settings)
+        {
+            Assume.IsTrue(IsCustomIon);
+            var children = new List<TransitionDocNode>();
+            groupNew = groupNew ?? new TransitionGroup(parentNew ?? TransitionGroup.Peptide, TransitionGroup.CustomIon, TransitionGroup.PrecursorCharge, TransitionGroup.LabelType, false, TransitionGroup.DecoyMassShift);
+            foreach (var nodeTran in Transitions)
+            {
+                var transition = nodeTran.Transition;
+                var tranNew = new Transition(groupNew, transition.IonType, transition.CleavageOffset,
+                    transition.MassIndex, transition.Charge, transition.DecoyMassShift, transition.CustomIon);
+                var nodeTranNew = new TransitionDocNode(tranNew, nodeTran.Annotations, nodeTran.Losses,
+                    nodeTran.GetIonMass(), nodeTran.IsotopeDistInfo, nodeTran.LibInfo, nodeTran.Results);
+                children.Add(nodeTranNew);
+            }
+            return new TransitionGroupDocNode(groupNew, Annotations, settings, null, LibInfo, ExplicitValues, Results, children.ToArray(), AutoManageChildren);
+        }
 
         public IEnumerable<TransitionDocNode> GetMsTransitions(bool fullScanMs)
         {
@@ -116,6 +150,13 @@ namespace pwiz.Skyline.Model
         public IEnumerable<TransitionDocNode> GetMsMsTransitions(bool fullScanMs)
         {
             return fullScanMs ? Transitions.Where(nodeTran => !nodeTran.IsMs1) : Transitions;
+        }
+
+        public bool IsCustomIon { get { return TransitionGroup.IsCustomIon;  } }
+
+        public DocNodeCustomIon CustomIon
+        {
+            get { return TransitionGroup.CustomIon;  }
         }
 
         /// <summary>
@@ -132,6 +173,8 @@ namespace pwiz.Skyline.Model
         public double PrecursorMz { get; private set; }
 
         public int PrecursorCharge { get { return TransitionGroup.PrecursorCharge; } }
+
+        public Peptide Peptide { get { return TransitionGroup.Peptide; } }
 
         public bool IsDecoy { get { return TransitionGroup.DecoyMassShift.HasValue; } }
 
@@ -618,14 +661,23 @@ namespace pwiz.Skyline.Model
             string seq = TransitionGroup.Peptide.Sequence;
             int charge = TransitionGroup.PrecursorCharge;
             IsotopeLabelType labelType = TransitionGroup.LabelType;
-            IPrecursorMassCalc calc = null;
-            double mass = TransitionGroup.Peptide.IsCustomIon
-                ? TransitionGroup.Peptide.CustomIon.GetMass(settings.TransitionSettings.Prediction.PrecursorMassType)
-                : (calc = settings.GetPrecursorCalc(labelType, mods)).GetPrecursorMass(seq);
-            double mz = ( TransitionGroup.Peptide.IsCustomIon ? BioMassCalc.CalculateIonMz(mass, charge) : SequenceMassCalc.GetMZ(mass, charge) ) +
-                SequenceMassCalc.GetPeptideInterval(TransitionGroup.DecoyMassShift);
-            if (TransitionGroup.DecoyMassShift.HasValue)
-                mass = SequenceMassCalc.GetMH(mz, charge);
+            IPrecursorMassCalc calc;
+            double mass, mz;
+            if (IsCustomIon)
+            {
+                calc = settings.GetDefaultPrecursorCalc();
+                mass = CustomIon.GetMass(settings.TransitionSettings.Prediction.PrecursorMassType);
+                mz = BioMassCalc.CalculateIonMz(mass, charge);
+            }
+            else
+            {
+                calc = settings.GetPrecursorCalc(labelType, mods);
+                mass = calc.GetPrecursorMass(seq);
+                mz = SequenceMassCalc.GetMZ(mass, charge) + 
+                    SequenceMassCalc.GetPeptideInterval(TransitionGroup.DecoyMassShift);
+                if (TransitionGroup.DecoyMassShift.HasValue)
+                    mass = SequenceMassCalc.GetMH(mz, charge);
+            }
 
             isotopeDist = null;
             var fullScan = settings.TransitionSettings.FullScan;
@@ -640,14 +692,14 @@ namespace pwiz.Skyline.Model
                     if (TransitionGroup.DecoyMassShift.HasValue)
                         massDist = ShiftMzDistribution(massDist, TransitionGroup.DecoyMassShift.Value);
                 }
-                else if (TransitionGroup.Peptide.CustomIon.Formula != null)
+                else if (CustomIon.Formula != null)
                 {
-                    massDist = calc.GetMZDistributionFromFormula(TransitionGroup.Peptide.CustomIon.Formula,
+                    massDist = calc.GetMZDistributionFromFormula(CustomIon.Formula,
                         charge, fullScan.IsotopeAbundances);
                 }
                 else
                 {
-                    massDist = calc.GetMZDistributionSinglePoint(mass);
+                    massDist = calc.GetMZDistributionSinglePoint(mz, charge);
                 }
                 isotopeDist = new IsotopeDistInfo(massDist, mass, !TransitionGroup.Peptide.IsCustomIon, charge,
                     settings.TransitionSettings.FullScan.GetPrecursorFilterWindow,
@@ -675,13 +727,13 @@ namespace pwiz.Skyline.Model
         public TransitionGroupDocNode ChangePrecursorMz(SrmSettings settings, ExplicitMods mods)
         {
             return ChangeProp(ImClone(this), im =>
-                                                 {
-                                                     IsotopeDistInfo isotopeDist;
-                                                     im.PrecursorMz = CalcPrecursorMZ(settings, mods, out isotopeDist);
-                                                     // Preserve reference equality, if no change to isotope peaks
-                                                     Helpers.AssignIfEquals(ref isotopeDist, IsotopeDist);
-                                                     im.IsotopeDist = isotopeDist;
-                                                 });
+            {
+                IsotopeDistInfo isotopeDist;
+                im.PrecursorMz = CalcPrecursorMZ(settings, mods, out isotopeDist);
+                // Preserve reference equality, if no change to isotope peaks
+                Helpers.AssignIfEquals(ref isotopeDist, IsotopeDist);
+                im.IsotopeDist = isotopeDist;
+            });
         }
 
         public TransitionGroupDocNode ChangeSettings(SrmSettings settingsNew, PeptideDocNode nodePep, ExplicitMods mods, SrmSettingsDiff diff)
@@ -730,7 +782,7 @@ namespace pwiz.Skyline.Model
 
                     DocNode existing;
                     // Add values that existed before the change.
-                    if (mapIdToChild.TryGetValue(nodeTran.Key, out existing))
+                    if (mapIdToChild.TryGetValue(nodeTran.Key(this), out existing))
                     {
                         nodeTranResult = (TransitionDocNode) existing;
                         if (diff.DiffTransitionProps)
@@ -886,7 +938,7 @@ namespace pwiz.Skyline.Model
             // Make sure node points to correct parent.
             if (!ReferenceEquals(parent.Peptide, TransitionGroup.Peptide))
             {
-                result = (TransitionGroupDocNode) ChangeId(new TransitionGroup(parent.Peptide,
+                result = (TransitionGroupDocNode) ChangeId(new TransitionGroup(parent.Peptide, CustomIon,
                     TransitionGroup.PrecursorCharge, TransitionGroup.LabelType));
             }
             // Match children resulting from ChangeSettings to current children
@@ -922,12 +974,12 @@ namespace pwiz.Skyline.Model
 
         private TransitionDocNode FindEquivalentTransition(TransitionDocNode nodeTran)
         {
-            return Transitions.FirstOrDefault(t => t.Key.Equivalent(nodeTran.Key));
+            return Transitions.FirstOrDefault(t => t.Key(this).Equivalent(nodeTran.Key(this)));
         }
 
         private Dictionary<TransitionLossKey, DocNode> CreateTransitionLossToChildMap()
         {
-            return Children.ToDictionary(child => ((TransitionDocNode) child).Key);
+            return Children.ToDictionary(child => ((TransitionDocNode) child).Key(this));
         }
 
         public TransitionGroupDocNode UpdateResults(SrmSettings settingsNew,
@@ -984,7 +1036,7 @@ namespace pwiz.Skyline.Model
                 {
                     setTranPrevious = new HashSet<TransitionLossKey>(
                         from child in nodePrevious.Children
-                        select ((TransitionDocNode)child).Key);
+                        select ((TransitionDocNode)child).Key(this));
                 }
 
                 float mzMatchTolerance = (float)settingsNew.TransitionSettings.Instrument.MzMatchTolerance;
@@ -2111,6 +2163,17 @@ namespace pwiz.Skyline.Model
             return TransitionGroup.Peptide.IsCustomIon ? Math.Round(ionMass, SequenceMassCalc.MassPrecision) : SequenceMassCalc.PersistentNeutral(ionMass);
         }
 
+        public class CustomIonPrecursorComparer : IComparer<TransitionGroupDocNode>
+        {
+            public int Compare(TransitionGroupDocNode left, TransitionGroupDocNode right)
+            {
+                var test = Peptide.CompareGroups(left, right);
+                if (test != 0)
+                    return test;
+                return left.PrecursorMz.CompareTo(right.PrecursorMz);
+            }
+        }
+        
         #region Property change methods
 
         public TransitionGroupDocNode ChangeLibInfo(SpectrumHeaderInfo prop)
@@ -2120,7 +2183,7 @@ namespace pwiz.Skyline.Model
 
         public TransitionGroupDocNode ChangeExplicitValues(ExplicitTransitionGroupValues prop)
         {
-            return ChangeProp(ImClone(this), im => im.ExplicitValues = prop);
+            return Equals(prop, ExplicitValues) ? this : ChangeProp(ImClone(this), im => im.ExplicitValues = prop);
         }
 
         public TransitionGroupDocNode ChangeResults(Results<TransitionGroupChromInfo> prop)
@@ -2366,7 +2429,7 @@ namespace pwiz.Skyline.Model
                 // m/z, isotope distribution and library info calculated later
                 var nodeTranNew = new TransitionDocNode(tran, losses, 0, null, null);
                 // keep existing nodes, if we have them
-                var nodeTranExist = nodeResult.Transitions.FirstOrDefault(n => Equals(n.Key, nodeTranNew.Key));
+                var nodeTranExist = nodeResult.Transitions.FirstOrDefault(n => Equals(n.Key(this), nodeTranNew.Key(this)));
                 childrenNew.Add(nodeTranExist ?? nodeTranNew);
             }
             nodeResult = (TransitionGroupDocNode)nodeResult.ChangeChildrenChecked(childrenNew);
@@ -2398,7 +2461,7 @@ namespace pwiz.Skyline.Model
             var dictPepIndex = new Dictionary<TransitionLossKey, int>();
             for (int i = 0; i < childrenNew.Count; i++)
             {
-                var key = childrenNew[i].Key;
+                var key = childrenNew[i].Key(this);
                 if (!dictPepIndex.ContainsKey(key))
                     dictPepIndex[key] = i;
             }
@@ -2406,7 +2469,7 @@ namespace pwiz.Skyline.Model
             foreach (TransitionDocNode nodeTran in nodeGroupMerge.Children)
             {
                 int i;
-                if (!dictPepIndex.TryGetValue(nodeTran.Key, out i))
+                if (!dictPepIndex.TryGetValue(nodeTran.Key(nodeGroupMerge), out i))
                     childrenNew.Add(nodeTran);
                 else if (mergeMatch != null)
                     childrenNew[i] = mergeMatch(childrenNew[i], nodeTran);
@@ -2483,11 +2546,14 @@ namespace pwiz.Skyline.Model
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return base.Equals(obj) &&
-                   obj.PrecursorMz == PrecursorMz &&
-                   Equals(obj.IsotopeDist, IsotopeDist) &&
-                   Equals(obj.LibInfo, LibInfo) &&
-                   Equals(obj.Results, Results);
+            var equal = base.Equals(obj) &&
+                        obj.PrecursorMz == PrecursorMz &&
+                        Equals(obj.IsotopeDist, IsotopeDist) &&
+                        Equals(obj.LibInfo, LibInfo) &&
+                        Equals(obj.Results, Results) &&
+                        Equals(obj.CustomIon, CustomIon) &&
+                        Equals(obj.ExplicitValues, ExplicitValues);
+            return equal;
         }
 
         public override bool Equals(object obj)
@@ -2506,6 +2572,8 @@ namespace pwiz.Skyline.Model
                 result = (result*397) ^ (IsotopeDist != null ? IsotopeDist.GetHashCode() : 0);
                 result = (result*397) ^ (LibInfo != null ? LibInfo.GetHashCode() : 0);
                 result = (result*397) ^ (Results != null ? Results.GetHashCode() : 0);
+                result = (result*397) ^ ExplicitValues.GetHashCode();
+                result = (result*397) ^ (CustomIon != null ? CustomIon.GetHashCode() : 0);
                 return result;
             }
         }

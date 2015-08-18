@@ -46,7 +46,7 @@ namespace pwiz.Skyline.Model.Find
             return nodeGroup != null && nodeGroup.HasResults && nodeGroup.Results.Any(chromInfo => chromInfo == null);
         }
 
-        protected override bool IsMatch(TransitionDocNode nodeTran)
+        protected override bool IsMatch(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran)
         {
             return nodeTran != null && nodeTran.HasResults && nodeTran.Results.Any(chromInfo => chromInfo == null);
         }

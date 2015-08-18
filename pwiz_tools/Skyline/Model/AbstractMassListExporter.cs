@@ -98,9 +98,11 @@ namespace pwiz.Skyline.Model
             {
                 _cultureInfo = value;
                 FieldSeparator = TextUtil.GetCsvSeparator(_cultureInfo);
+                FieldSeparatorReplacement = "_";  // For use in formats where quoting the value does not suffice, as reportedly in xcalibur
             }
         }
         public char FieldSeparator { get; private set; }
+        public string FieldSeparatorReplacement { get; private set; }
 
         public Dictionary<string, StringBuilder> MemoryOutput { get; private set; }
 
@@ -160,9 +162,9 @@ namespace pwiz.Skyline.Model
             fileIterator.NextFile();
         }
 
-        public string GetCompound(PeptideDocNode nodePep)
+        public string GetCompound(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup)
         {
-            return nodePep.Peptide.IsCustomIon ? nodePep.Peptide.CustomIon.DisplayName : Document.Settings.GetModifiedSequence(nodePep);
+            return nodePep.Peptide.IsCustomIon ? nodeGroup.CustomIon.InvariantName : Document.Settings.GetModifiedSequence(nodePep);
         }
 
         private RequiredPeptideSet GetRequiredPeptides(bool single)
@@ -698,17 +700,16 @@ namespace pwiz.Skyline.Model
         {
             // If explicit CE, then no optimizing. Just return zero CE for anything but central transition
             var explicitCE = nodeGroup.ExplicitValues.CollisionEnergy;
-            if (explicitCE.HasValue && step != 0)
-                return 0;   // No optimizing of explicit CE values
+            if (explicitCE.HasValue)
+            {
+                return step == 0 ? explicitCE.Value : 0;  // No optimizing of explicit values
+            }
 
-            if (OptimizeType == null || explicitCE.HasValue)
+            if (OptimizeType == null)
             {
                 double? optimizedCE = Document.GetOptimizedCollisionEnergy(nodePep, nodeGroup, nodeTran);
                 if (optimizedCE.HasValue)
                     return optimizedCE.Value;
-
-                // Should have returned the explicit value
-                Assume.IsFalse(explicitCE.HasValue);
             }
 
             // If exporting optimization methods, or optimization data should be ignored,
@@ -724,6 +725,12 @@ namespace pwiz.Skyline.Model
                                                   TransitionDocNode nodeTran,
                                                   int step)
         {
+            double? explicitDP = nodeGroup.ExplicitValues.DeclusteringPotential;
+            if (explicitDP.HasValue)
+            {
+                return step == 0 ? explicitDP.Value : 0;  // No optimizing of explicit values
+            }
+
             var prediction = Document.Settings.TransitionSettings.Prediction;
 
             // If exporting optimization methods, or optimization data should be ignored,
@@ -743,6 +750,11 @@ namespace pwiz.Skyline.Model
                                                 TransitionDocNode nodeTran,
                                                 int step)
         {
+            double? explicitCV = nodeGroup.ExplicitValues.CompensationVoltage;
+            if (explicitCV.HasValue)
+            {
+                return step == 0 ? explicitCV.Value : 0;  // No optimizing of explicit values
+            }
             var prediction = Document.Settings.TransitionSettings.Prediction;
             return ExportOptimize.CompensationVoltageTuneTypes.Contains(OptimizeType) || prediction.OptimizedMethodType == OptimizedMethodType.None
                 ? Document.GetCompensationVoltage(nodePep, nodeGroup, step, CompensationVoltageParameters.GetTuneLevel(OptimizeType))

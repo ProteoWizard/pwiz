@@ -171,7 +171,8 @@ namespace pwiz.SkylineTestFunctional
                 {
                     if (nodeTran.Transition.IsPrecursor())
                     {
-                        Assert.AreEqual(nodeTran.Transition.Charge, nodeTran.Transition.Group.PrecursorCharge);
+                        Assert.AreSame(nodeTran.Transition.Group, nodeGroup.TransitionGroup);
+                        Assert.AreEqual(nodeTran.Transition.Charge, nodeGroup.TransitionGroup.PrecursorCharge);
                         Assert.AreEqual(nodeTran.Mz, nodeGroup.PrecursorMz);
                         countPrecursors++;
                     }

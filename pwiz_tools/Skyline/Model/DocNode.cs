@@ -85,6 +85,18 @@ namespace pwiz.Skyline.Model
         {
             return ChangeProp(ImClone(this), im => im.Id = id);
         }
+        
+        /// <summary>
+        /// Useful when user alters small molecule ID info in the UI - normally a change in node
+        /// ID causes the tree display to collapse, and selection to pop up a level.  This allows
+        /// the tree to retain selection so the user isn't alarmed.
+        /// </summary>
+        public DocNode ChangeReplacedId(Identity id)
+        {
+            return ChangeProp(ImClone(this), im => im.ReplacedId = id);
+        }
+
+        public Identity ReplacedId { get; private set; }
 
         /// <summary>
         /// Returns a clone of this with a different property value.
@@ -113,6 +125,14 @@ namespace pwiz.Skyline.Model
         public virtual string GetDisplayText(DisplaySettings settings)
         {
             return string.Empty;
+        }
+
+        /// <summary>
+        /// For node types that must appear in a sorted order - eg small molecule stuff where user may create nodes in any order
+        /// </summary>
+        protected virtual IList<DocNode> OrderedChildren(IList<DocNode> children)
+        {
+            return children; // No default sort order
         }
 
         /// <summary>
@@ -359,7 +379,11 @@ namespace pwiz.Skyline.Model
         public IList<DocNode> Children
         {
             get { return _children; }
-            private set { _children = value as DocNodeChildren ?? new DocNodeChildren(value); }
+            private set
+            {
+                var ordered = OrderedChildren(value);
+                _children = ordered as DocNodeChildren ?? new DocNodeChildren(ordered);
+            }
         }
 
         /// <summary>
@@ -1249,9 +1273,10 @@ namespace pwiz.Skyline.Model
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return base.Equals(obj) 
+            var equal = base.Equals(obj) 
                 && ArrayUtil.EqualsDeep(obj.Children, Children)
                 && AutoManageChildren == obj.AutoManageChildren;
+            return equal; // For debugging convenience
         }
 
         public override bool Equals(object obj)

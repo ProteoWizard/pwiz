@@ -38,10 +38,24 @@ namespace pwiz.SkylineTest.Results
         [TestMethod]
         public void MultiplePeptidesSameMz()
         {
+            RunMultiplePeptidesSameMz(RefinementSettings.ConvertToSmallMoleculesMode.none);
+            RunMultiplePeptidesSameMz(RefinementSettings.ConvertToSmallMoleculesMode.formulas);
+            RunMultiplePeptidesSameMz(RefinementSettings.ConvertToSmallMoleculesMode.masses_and_names);
+            RunMultiplePeptidesSameMz(RefinementSettings.ConvertToSmallMoleculesMode.masses_only);
+        }
+
+        private void RunMultiplePeptidesSameMz(RefinementSettings.ConvertToSmallMoleculesMode asSmallMolecules)
+        {
+            if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.none)
+                TestDirectoryName = asSmallMolecules.ToString();
+
+            TestSmallMolecules = false;  // Don't need the magic test node, we have an explicit test
+
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
 
             string docPath;
             SrmDocument document = InitMultiplePeptidesSameMzDocument(testFilesDir, out docPath);
+            document = (new RefinementSettings()).ConvertToSmallMolecules(document, asSmallMolecules);
             var docContainer = new ResultsTestDocumentContainer(document, docPath);
 
             var doc = docContainer.Document;
@@ -56,7 +70,7 @@ namespace pwiz.SkylineTest.Results
 
             float tolerance = (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
             var results = document.Settings.MeasuredResults;
-            foreach (var pair in document.PeptidePrecursorPairs)
+            foreach (var pair in document.MoleculePrecursorPairs)
             {
                 ChromatogramGroupInfo[] chromGroupInfo;
                 Assert.IsTrue(results.TryLoadChromatogram(0, pair.NodePep, pair.NodeGroup,
@@ -65,7 +79,7 @@ namespace pwiz.SkylineTest.Results
             }
             // now drill down for specific values
             int nPeptides = 0;
-            foreach (var nodePep in document.Peptides.Where(nodePep => nodePep.Results[0] != null))
+            foreach (var nodePep in document.Molecules.Where(nodePep => nodePep.Results[0] != null))
             {
                 // expecting three peptide result in this small data set
                 if (nodePep.Results[0].Sum(chromInfo => chromInfo.PeakCountRatio > 0 ? 1 : 0) > 0)

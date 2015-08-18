@@ -42,26 +42,32 @@ namespace pwiz.SkylineTest.Results
         [TestMethod]
         public void AgilentMseChromatogramTest()
         {
-            DoAgilentMseChromatogramTest(false);
+            DoAgilentMseChromatogramTest(RefinementSettings.ConvertToSmallMoleculesMode.none);
         }
 
         [TestMethod]
         public void AgilentMseChromatogramTestAsSmallMolecules()
         {
-            DoAgilentMseChromatogramTest(true);
+            DoAgilentMseChromatogramTest(RefinementSettings.ConvertToSmallMoleculesMode.formulas);
         }
 
-        public void DoAgilentMseChromatogramTest(bool asSmallMolecules)
+        [TestMethod]
+        public void AgilentMseChromatogramTestAsSmallMoleculeMasses()
+        {
+            DoAgilentMseChromatogramTest(RefinementSettings.ConvertToSmallMoleculesMode.masses_only);
+        }
+
+        public void DoAgilentMseChromatogramTest(RefinementSettings.ConvertToSmallMoleculesMode asSmallMolecules)
         {
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
             TestSmallMolecules = false; // We have an explicit test for that here
 
             string docPath;
             SrmDocument document = InitAgilentMseDocument(testFilesDir, out docPath);
-            if (asSmallMolecules)
+            if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.none)
             {
                 var refine = new RefinementSettings();
-                document = refine.ConvertToSmallMolecules(document);
+                document = refine.ConvertToSmallMolecules(document, asSmallMolecules);
             }
             var docContainer = new ResultsTestDocumentContainer(document, docPath);
             var doc = docContainer.Document;

@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model
@@ -72,7 +73,7 @@ namespace pwiz.Skyline.Model
         public int Length { get { return Sequence != null ? Sequence.Length : 0; }}
 
         // CONSIDER: Polymorphism?
-        public string TextId { get { return IsCustomIon ? CustomIon.DisplayName : Sequence; } }
+        public string TextId { get { return IsCustomIon ? CustomIon.InvariantName : Sequence; } }
 
         public int Order { get { return Begin ?? 0; } }
 
@@ -120,8 +121,12 @@ namespace pwiz.Skyline.Model
         {
             if (IsCustomIon)
             {
-                if (nodePep.GetNonProteomicChildren().Any())
-                    yield return nodePep.GetNonProteomicChildren().First();  // Just return the precursor transition - we don't do multiple charges for custom ions
+                // We can't generate nodes as we do with peptides, so just filter what we do have on instrument mz range
+                foreach (var group in nodePep.TransitionGroups.Where(tranGroup => tranGroup.TransitionGroup.IsCustomIon))
+                {
+                    if (!useFilter || settings.TransitionSettings.IsMeasurablePrecursor(group.PrecursorMz))
+                      yield return group.TransitionGroup;
+                }
             }
             else
             {
@@ -164,7 +169,7 @@ namespace pwiz.Skyline.Model
                         if (i == 0 || precursorMass != precursorMassLight)
                         {
                             if (settings.TransitionSettings.IsMeasurablePrecursor(SequenceMassCalc.GetMZ(precursorMass,charge)))
-                                yield return new TransitionGroup(this, charge, labelType);
+                                yield return new TransitionGroup(this, null, charge, labelType);
                         }
                     }
                 }
@@ -281,6 +286,8 @@ namespace pwiz.Skyline.Model
         {
             if (IsCustomIon)
             {
+                Assume.IsNull(_fastaSequence);
+                Assume.IsNull(Sequence);
                 CustomIon.Validate();
             }
             else if (_fastaSequence == null)
@@ -316,13 +323,14 @@ namespace pwiz.Skyline.Model
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return Equals(obj._fastaSequence, _fastaSequence) &&
+            var equal = Equals(obj._fastaSequence, _fastaSequence) &&
                 Equals(obj.Sequence, Sequence) &&
                 obj.Begin.Equals(Begin) &&
                 obj.End.Equals(End) &&
                 obj.MissedCleavages == MissedCleavages &&
                 Equals(obj.CustomIon, CustomIon) &&
                 obj.IsDecoy == IsDecoy;
+            return equal; // For debugging convenience
         }
 
         public override bool Equals(object obj)

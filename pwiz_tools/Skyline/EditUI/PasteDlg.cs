@@ -561,11 +561,17 @@ namespace pwiz.Skyline.EditUI
         private const int INDEX_PRODUCT_MZ = 6;
         private const int INDEX_MOLECULE_CHARGE = 7;
         private const int INDEX_PRODUCT_CHARGE = 8;
-        private const int INDEX_RETENTION_TIME = 9;
-        private const int INDEX_RETENTION_TIME_WINDOW = 10;
-        private const int INDEX_COLLISION_ENERGY = 11;
-        private const int INDEX_MOLECULE_DRIFT_TIME_MSEC = 12;
-        private const int INDEX_HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC = 13;
+        private const int INDEX_LABEL_TYPE = 9;
+        private const int INDEX_RETENTION_TIME = 10;
+        private const int INDEX_RETENTION_TIME_WINDOW = 11;
+        private const int INDEX_COLLISION_ENERGY = 12;
+        private const int INDEX_NOTE = 13;
+        private const int INDEX_MOLECULE_DRIFT_TIME_MSEC = 14;
+        private const int INDEX_HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC = 15;
+        private const int INDEX_SLENS = 16;
+        private const int INDEX_CONE_VOLTAGE = 17;
+        private const int INDEX_COMPENSATION_VOLTAGE = 18;
+        private const int INDEX_DECLUSTERING_POTENTIAL = 19;
 
         private static int? ValidateFormulaWithMz(SrmDocument document, ref string moleculeFormula, double mz, int? charge, out double monoMass, out double averageMass)
         {
@@ -625,15 +631,19 @@ namespace pwiz.Skyline.EditUI
         {
             public string Name { get; private set; }
             public string Formula { get; private set; }
+            public string Note { get; private set; }
             public double Mz { get; private set; }
             public int Charge { get; private set; }
             public double MonoMass { get; private set; }
             public double AverageMass { get; private set; }
+            public IsotopeLabelType IsotopeLabelType { get; private set;  }
             public ExplicitRetentionTimeInfo ExplicitRetentionTime { get; private set; }
             public ExplicitTransitionGroupValues ExplicitTransitionGroupValues { get; private set; }
             public MoleculeInfo(string name, string formula, int charge, double mz, double monoMass, double averageMass,
+                IsotopeLabelType isotopeLabelType,
                 ExplicitRetentionTimeInfo explicitRetentionTime,
-                ExplicitTransitionGroupValues explicitTransitionGroupValues)
+                ExplicitTransitionGroupValues explicitTransitionGroupValues,
+                string note)
             {
                 Name = name;
                 Formula = formula;
@@ -641,8 +651,15 @@ namespace pwiz.Skyline.EditUI
                 Mz = mz;
                 MonoMass = monoMass;
                 AverageMass = averageMass;
+                IsotopeLabelType = isotopeLabelType;
                 ExplicitRetentionTime = explicitRetentionTime;
                 ExplicitTransitionGroupValues = explicitTransitionGroupValues;
+                Note = note;
+            }
+
+            public DocNodeCustomIon ToCustomIon()
+            {
+                return new DocNodeCustomIon(Formula, MonoMass, AverageMass, Name);
             }
         }
 
@@ -660,6 +677,8 @@ namespace pwiz.Skyline.EditUI
             int indexCharge = getPrecursorColumns ? INDEX_MOLECULE_CHARGE : INDEX_PRODUCT_CHARGE;
             var name = NullForEmpty(Convert.ToString(row.Cells[indexName].Value));
             var formula = NullForEmpty(Convert.ToString(row.Cells[indexFormula].Value));
+            var note = NullForEmpty(Convert.ToString(row.Cells[INDEX_NOTE].Value));
+            IsotopeLabelType isotopeLabelType = null;
             double mz;
             bool badMz = false;
             if (!double.TryParse(Convert.ToString(row.Cells[indexMz].Value), out mz))
@@ -696,10 +715,30 @@ namespace pwiz.Skyline.EditUI
             }
             double dtmp;
             double? collisionEnergy = null;
+            double? slens = null;
+            double? coneVoltage = null;
             double? retentionTime = null;
             double? retentionTimeWindow = null;
+            double? declusteringPotential = null;
+            double? compensationVoltage = null;
             if (getPrecursorColumns)
             {
+                var label = NullForEmpty(Convert.ToString(row.Cells[INDEX_LABEL_TYPE].Value));
+                if (label != null)
+                {
+                    var typedMods = DocumentUiContainer.Document.Settings.PeptideSettings.Modifications.GetModificationsByName(label);
+                    if (typedMods == null)
+                    {
+                        ShowTransitionError(new PasteError
+                        {
+                            Column = INDEX_LABEL_TYPE,
+                            Line = row.Index,
+                            Message = string.Format(Resources.SrmDocument_ReadLabelType_The_isotope_modification_type__0__does_not_exist_in_the_document_settings, label)
+                        });
+                        return null;
+                    }
+                    isotopeLabelType = typedMods.LabelType;
+                }
                 if (double.TryParse(Convert.ToString(row.Cells[INDEX_COLLISION_ENERGY].Value), out dtmp))
                     collisionEnergy = dtmp;
                 else if (!String.IsNullOrEmpty(Convert.ToString(row.Cells[INDEX_COLLISION_ENERGY].Value)))
@@ -709,6 +748,54 @@ namespace pwiz.Skyline.EditUI
                         Column = INDEX_COLLISION_ENERGY,
                         Line = row.Index,
                         Message = String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_collision_energy_value__0_, Convert.ToString(row.Cells[INDEX_COLLISION_ENERGY].Value))
+                    });
+                    return null;
+                }
+                if (double.TryParse(Convert.ToString(row.Cells[INDEX_SLENS].Value), out dtmp))
+                    slens = dtmp;
+                else if (!String.IsNullOrEmpty(Convert.ToString(row.Cells[INDEX_SLENS].Value)))
+                {
+                    ShowTransitionError(new PasteError
+                    {
+                        Column = INDEX_SLENS,
+                        Line = row.Index,
+                        Message = String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_S_Lens_value__0_, Convert.ToString(row.Cells[INDEX_SLENS].Value))
+                    });
+                    return null;
+                }
+                if (double.TryParse(Convert.ToString(row.Cells[INDEX_CONE_VOLTAGE].Value), out dtmp))
+                    coneVoltage = dtmp;
+                else if (!String.IsNullOrEmpty(Convert.ToString(row.Cells[INDEX_CONE_VOLTAGE].Value)))
+                {
+                    ShowTransitionError(new PasteError
+                    {
+                        Column = INDEX_CONE_VOLTAGE,
+                        Line = row.Index,
+                        Message = String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_cone_voltage_value__0_, Convert.ToString(row.Cells[INDEX_CONE_VOLTAGE].Value))
+                    });
+                    return null;
+                }
+                if (double.TryParse(Convert.ToString(row.Cells[INDEX_DECLUSTERING_POTENTIAL].Value), out dtmp))
+                    declusteringPotential = dtmp;
+                else if (!string.IsNullOrEmpty(Convert.ToString(row.Cells[INDEX_DECLUSTERING_POTENTIAL].Value)))
+                {
+                    ShowTransitionError(new PasteError
+                    {
+                        Column = INDEX_DECLUSTERING_POTENTIAL,
+                        Line = row.Index,
+                        Message = String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_declustering_potential__0_, Convert.ToString(row.Cells[INDEX_DECLUSTERING_POTENTIAL].Value))
+                    });
+                    return null;
+                }
+                if (double.TryParse(Convert.ToString(row.Cells[INDEX_COMPENSATION_VOLTAGE].Value), out dtmp))
+                    compensationVoltage = dtmp;
+                else if (!string.IsNullOrEmpty(Convert.ToString(row.Cells[INDEX_COMPENSATION_VOLTAGE].Value)))
+                {
+                    ShowTransitionError(new PasteError
+                    {
+                        Column = INDEX_COMPENSATION_VOLTAGE,
+                        Line = row.Index,
+                        Message = String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_compensation_voltage__0_, Convert.ToString(row.Cells[INDEX_COMPENSATION_VOLTAGE].Value))
                     });
                     return null;
                 }
@@ -804,7 +891,8 @@ namespace pwiz.Skyline.EditUI
                 var retentionTimeInfo = retentionTime.HasValue
                     ? new ExplicitRetentionTimeInfo(retentionTime.Value, retentionTimeWindow)
                     : null;
-                var explicitTransitionGroupValues = new ExplicitTransitionGroupValues(collisionEnergy, driftTimePrecursorMsec, driftTimeHighEnergyOffsetMsec);
+                var explicitTransitionGroupValues = new ExplicitTransitionGroupValues(collisionEnergy, driftTimePrecursorMsec, driftTimeHighEnergyOffsetMsec, slens, 
+                    coneVoltage, declusteringPotential, compensationVoltage);
                 var massOk = true;
                 string massErrMsg = null;
                 var absCharge = Math.Abs(charge ?? 0);
@@ -836,7 +924,7 @@ namespace pwiz.Skyline.EditUI
                                 if (charge.HasValue)
                                 {
                                     row.Cells[indexCharge].Value = charge.Value;
-                                    return new MoleculeInfo(name, formula, charge.Value, mz, monoMass, averageMmass, retentionTimeInfo, explicitTransitionGroupValues);
+                                    return new MoleculeInfo(name, formula, charge.Value, mz, monoMass, averageMmass, isotopeLabelType, retentionTimeInfo, explicitTransitionGroupValues, note);
                                 }
                                 errMessage = String.Format(getPrecursorColumns
                                     ? Resources.PasteDlg_ValidateEntry_Error_on_line__0___Precursor_formula_and_m_z_value_do_not_agree_for_any_charge_state_
@@ -850,7 +938,7 @@ namespace pwiz.Skyline.EditUI
                             massOk = monoMass < CustomIon.MAX_MASS && averageMmass < CustomIon.MAX_MASS;
                             row.Cells[indexMz].Value = mz;
                             if (massOk)
-                                return new MoleculeInfo(name, formula, charge.Value, mz, monoMass, averageMmass, retentionTimeInfo, explicitTransitionGroupValues);
+                                return new MoleculeInfo(name, formula, charge.Value, mz, monoMass, averageMmass, isotopeLabelType, retentionTimeInfo, explicitTransitionGroupValues, note);
                         }
                     }
                     catch (InvalidDataException x)
@@ -866,7 +954,7 @@ namespace pwiz.Skyline.EditUI
                     massOk = monoMass < CustomIon.MAX_MASS && averageMmass < CustomIon.MAX_MASS;
                     errColumn = indexMz;
                     if (massOk)
-                        return new MoleculeInfo(name, formula, charge.Value, mz, monoMass, averageMmass, retentionTimeInfo, explicitTransitionGroupValues);
+                        return new MoleculeInfo(name, formula, charge.Value, mz, monoMass, averageMmass, isotopeLabelType, retentionTimeInfo, explicitTransitionGroupValues, note);
                 }
                 if (!massOk)
                 {
@@ -948,18 +1036,18 @@ namespace pwiz.Skyline.EditUI
                         var pathPepGroup = new IdentityPath(pepGroup.Id);
                         if (Equals(pepGroup.Name, Convert.ToString(row.Cells[INDEX_MOLECULE_GROUP].Value)))
                         {
-                            // Found a molecule group with the same name - can we find an existing molecule to which we can add a transition?
+                            // Found a molecule group with the same name - can we find an existing transition group to which we can add a transition?
                             pepGroupFound = true;
                             bool pepFound = false;
                             foreach (var pep in pepGroup.SmallMolecules)
                             {
                                 var pepPath = new IdentityPath(pathPepGroup, pep.Id);
-                                var ionMonoMz = BioMassCalc.CalculateIonMz(pep.Peptide.CustomIon.MonoisotopicMass, charge);
-                                var ionAverageMz = BioMassCalc.CalculateIonMz(pep.Peptide.CustomIon.AverageMass, charge);
+                                var ionMonoMz = BioMassCalc.CalculateIonMz(pep.CustomIon.MonoisotopicMass, charge);
+                                var ionAverageMz = BioMassCalc.CalculateIonMz(pep.CustomIon.AverageMass, charge);
                                 // Match existing molecule if same name (if any) and same formula (if any) and similar m/z at the precursor charge
                                 // (we don't just check mass since we don't have a tolerance value for that)
-                                if (Equals(pep.Peptide.CustomIon.Name, precursor.Name) &&
-                                    Equals(pep.Peptide.CustomIon.Formula, precursor.Formula) &&
+                                if (Equals(pep.CustomIon.Name, precursor.Name) &&
+                                    Equals(pep.CustomIon.Formula, precursor.Formula) &&
                                     Math.Abs(ionMonoMz - precursorMonoMz) <= document.Settings.TransitionSettings.Instrument.MzMatchTolerance &&
                                     Math.Abs(ionAverageMz - precursorAverageMz) <= document.Settings.TransitionSettings.Instrument.MzMatchTolerance)
                                 {
@@ -1286,7 +1374,10 @@ namespace pwiz.Skyline.EditUI
                 });
                 return null;
             }
-            var group = new TransitionGroup(pep, moleculeInfo.Charge, IsotopeLabelType.light);
+            
+            var customIon = moleculeInfo.ToCustomIon();
+            var isotopeLabelType = moleculeInfo.IsotopeLabelType ?? IsotopeLabelType.light;
+            var group = new TransitionGroup(pep, customIon, moleculeInfo.Charge, isotopeLabelType);
             try
             {
                 var tran = GetMoleculeTransition(document, row, pep, group, requireProductInfo);
@@ -1317,7 +1408,7 @@ namespace pwiz.Skyline.EditUI
             {
                 return null;
             }
-            DocNodeCustomIon ion = new DocNodeCustomIon(molecule.Formula, molecule.MonoMass, molecule.AverageMass, molecule.Name);
+            var ion = molecule.ToCustomIon();
             var ionType = (ion.MonoisotopicMass.Equals(pep.CustomIon.MonoisotopicMass) &&
                            ion.AverageMass.Equals(pep.CustomIon.AverageMass)) // Same mass, must be a precursor transition
                 ? IonType.precursor
@@ -1325,7 +1416,14 @@ namespace pwiz.Skyline.EditUI
             double mass = ion.GetMass(massType);
 
             var transition = new Transition(group, molecule.Charge, null, ion, ionType);
-            return new TransitionDocNode(transition, document.Annotations, null, mass, null, null, null);
+            var annotations = document.Annotations;
+            if (!string.IsNullOrEmpty(molecule.Note))
+            {
+                var note = document.Annotations.Note;
+                note = string.IsNullOrEmpty(note) ? molecule.Note : (note + "\r\n" + molecule.Note); // Not L10N
+                annotations = new Annotations(note, document.Annotations.ListAnnotations(), 0);
+            }
+            return new TransitionDocNode(transition, annotations, null, mass, null, null, null);
         }
 
         private static PeptideGroupDocNode FindPeptideGroupDocNode(SrmDocument document, PeptideGroupDocNode nodePepGroup)
@@ -1373,7 +1471,7 @@ namespace pwiz.Skyline.EditUI
                 checkedListBox.Items.Add(c.HeaderText, c.Visible);
             }
             checkedListBox.Height = checkedListBox.Items.Count * radioMolecule.Height * 12 / 10;
-            checkedListBox.Width = radioMolecule.Width * 2;
+            checkedListBox.Width = radioMolecule.Width * 3;
             var controlHost = new ToolStripControlHost(checkedListBox)
             {
                 Padding = Padding.Empty,
@@ -2124,6 +2222,12 @@ namespace pwiz.Skyline.EditUI
             public const string cePrecursor = "PrecursorCE"; // Not L10N
             public const string dtPrecursor = "PrecursorDT"; // Not L10N
             public const string dtHighEnergyOffset = "HighEnergyDTOffset"; // Not L10N
+            public const string slens = "SLens"; // Not L10N
+            public const string coneVoltage = "ConeVoltage"; // Not L10N
+            public const string compensationVoltage = "CompensationVoltage"; // Not L10N
+            public const string declusteringPotential = "DeclusteringPotential"; // Not L10N
+            public const string note = "Note"; // Not L10N
+            public const string labelType = "LabelType"; // Not L10N
         }
         private void UpdateMoleculeType()
         {
@@ -2182,20 +2286,26 @@ namespace pwiz.Skyline.EditUI
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.moleculeGroup, Resources.PasteDlg_UpdateMoleculeType_Molecule_List_Name);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.namePrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Name);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.nameProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Name);
-                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.formulaPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Formula); 
-                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.formulaProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Formula);
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.formulaPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Ion_Formula); 
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.formulaProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Ion_Formula);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.mzPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_m_z);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.mzProduct, Resources.PasteDlg_UpdateMoleculeType_Product_m_z);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.chargePrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Charge);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.chargeProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.labelType, Resources.PasteDlg_UpdateMoleculeType_Label_Type);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.rtPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.rtWindowPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.cePrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy);
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.note, Resources.PasteDlg_UpdateMoleculeType_Note);
                 var defaultColumns = new List<string>();
-                for (var col = 0; col < gridViewTransitionList.Columns.Count; col++)  // Get the list without drift time settings, as the default
+                for (var col = 0; col < gridViewTransitionList.Columns.Count; col++)  // As the default, get the list without relatively exotic items like drift time, SLens, ConeVoltage etc settings
                     defaultColumns.Add(gridViewTransitionList.Columns[col].Name);
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.slens, Resources.PasteDlg_UpdateMoleculeType_S_Lens);
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.coneVoltage, Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.dtPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Drift_Time__msec_);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.dtHighEnergyOffset, Resources.PasteDlg_UpdateMoleculeType_Explicit_Drift_Time_High_Energy_Offset__msec_);
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.compensationVoltage, Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage);
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.declusteringPotential, Resources.PasteDlg_UpdateMoleculeType_Explicit_Declustering_Potential);
 
                 // Now set order and visibility based on settings, if any
                 SetSmallMoleculeColumns(Settings.Default.CustomMoleculeTransitionInsertColumnsList.Any()

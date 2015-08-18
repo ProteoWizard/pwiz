@@ -53,6 +53,7 @@
             this.cbTriggerRefColumns = new System.Windows.Forms.CheckBox();
             this.cbExportMultiQuant = new System.Windows.Forms.CheckBox();
             this.cbUseStartAndEndRts = new System.Windows.Forms.CheckBox();
+            this.cbSlens = new System.Windows.Forms.CheckBox();
             this.comboOptimizing = new System.Windows.Forms.ComboBox();
             this.labelOptimizing = new System.Windows.Forms.Label();
             this.labelMethods = new System.Windows.Forms.Label();
@@ -118,8 +119,8 @@
             // 
             // btnCancel
             // 
-            resources.ApplyResources(this.btnCancel, "btnCancel");
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            resources.ApplyResources(this.btnCancel, "btnCancel");
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
@@ -235,6 +236,12 @@
             this.helpTip.SetToolTip(this.cbUseStartAndEndRts, resources.GetString("cbUseStartAndEndRts.ToolTip"));
             this.cbUseStartAndEndRts.UseVisualStyleBackColor = true;
             // 
+            // cbSlens
+            // 
+            resources.ApplyResources(this.cbSlens, "cbSlens");
+            this.cbSlens.Name = "cbSlens";
+            this.cbSlens.UseVisualStyleBackColor = true;
+            // 
             // comboOptimizing
             // 
             this.comboOptimizing.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
@@ -338,6 +345,7 @@
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.cbSlens);
             this.Controls.Add(this.labelMaxTransitions);
             this.Controls.Add(this.panelSciexTune);
             this.Controls.Add(this.panelTriggered);
@@ -430,5 +438,6 @@
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Panel panelWaters;
         private System.Windows.Forms.CheckBox cbExportEdcMass;
+        private System.Windows.Forms.CheckBox cbSlens;
     }
 }

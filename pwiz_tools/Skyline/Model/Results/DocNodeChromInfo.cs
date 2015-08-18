@@ -254,6 +254,11 @@ namespace pwiz.Skyline.Model.Results
             return ChangeProp(ImClone(this), im => im.UserSet = prop);
         }
 
+        public TransitionGroupChromInfo ChangeLibraryDotProduct(float? prop)
+        {
+            return ChangeProp(ImClone(this), im => im.LibraryDotProduct = prop);
+        }
+        
         #endregion
 
         #region object overrides

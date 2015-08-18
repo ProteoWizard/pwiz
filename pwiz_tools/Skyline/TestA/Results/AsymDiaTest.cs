@@ -43,16 +43,22 @@ namespace pwiz.SkylineTestA.Results
         [TestMethod]
         public void AsymmetricIsolationTest()
         {
-            DoAsymmetricIsolationTest(false);
+            DoAsymmetricIsolationTest(RefinementSettings.ConvertToSmallMoleculesMode.none);
         }
 
         [TestMethod]
         public void AsymmetricIsolationTestAsSmallMolecules()
         {
-            DoAsymmetricIsolationTest(true);
+            DoAsymmetricIsolationTest(RefinementSettings.ConvertToSmallMoleculesMode.formulas);
         }
 
-        public void DoAsymmetricIsolationTest(bool asSmallMolecules)
+        [TestMethod]
+        public void AsymmetricIsolationTestAsSmallMoleculeMasses()
+        {
+            DoAsymmetricIsolationTest(RefinementSettings.ConvertToSmallMoleculesMode.masses_only);
+        }
+
+        public void DoAsymmetricIsolationTest(RefinementSettings.ConvertToSmallMoleculesMode asSmallMolecules)
         {
             TestSmallMolecules = false;  // We test small molecules explicitly in this test
 
@@ -63,12 +69,9 @@ namespace pwiz.SkylineTestA.Results
             string cachePath = ChromatogramCache.FinalPathForName(docPath, null);
             FileEx.SafeDelete(cachePath);
             SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
-            if (asSmallMolecules)
-            {
-                var refine = new RefinementSettings();
-                doc = refine.ConvertToSmallMolecules(doc);
-            }
-            var expectedMoleculeCount = asSmallMolecules ? 2 : 1;  // Different labels, different ion formulas
+            var refine = new RefinementSettings();
+            doc = refine.ConvertToSmallMolecules(doc, asSmallMolecules);
+            const int expectedMoleculeCount = 1;   // At first small molecules did not support multiple charge states, and this was 2 for that test mode
             AssertEx.IsDocumentState(doc, null, 1, expectedMoleculeCount, 2, 4);
             var fullScanInitial = doc.Settings.TransitionSettings.FullScan;
             Assert.IsTrue(fullScanInitial.IsEnabledMsMs);
@@ -89,8 +92,8 @@ namespace pwiz.SkylineTestA.Results
                 nodeGroup = docResults.MoleculeTransitionGroups.First();
                 ratio = nodeGroup.Results[0][0].Ratio ?? 0;
                 // The expected ratio is 1.0, but the symmetric isolation window should produce poor results
-                if (!asSmallMolecules) // TODO bspratt- proper isoptope label support for small molecules
-                Assert.AreEqual(0.25, ratio, 0.05);
+                if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)  // Can't use labels without a formula
+                    Assert.AreEqual(0.25, ratio, 0.05);
 
                 // Revert to original document, and get rid of results cache
                 Assert.IsTrue(docContainer.SetDocument(doc, docResults, false));
@@ -108,8 +111,8 @@ namespace pwiz.SkylineTestA.Results
                 nodeGroup = docResults.MoleculeTransitionGroups.First();
                 ratio = nodeGroup.Results[0][0].Ratio ?? 0;
                 // Asymmetric should be a lot closer to 1.0
-                if (!asSmallMolecules) // TODO bspratt- proper isoptope label support for small molecules
-                Assert.AreEqual(1.05, ratio, 0.05);
+                if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)  // Can't use labels without a formula
+                    Assert.AreEqual(1.05, ratio, 0.05);
 
                 // Revert to original document, and get rid of results cache
                 Assert.IsTrue(docContainer.SetDocument(doc, docResults, false));
@@ -132,8 +135,8 @@ namespace pwiz.SkylineTestA.Results
                 nodeGroup = docResults.MoleculeTransitionGroups.First();
                 ratio = nodeGroup.Results[0][0].Ratio ?? 0;
                 // Asymmetric should be a lot closer to 1.0
-                if (!asSmallMolecules) // TODO bspratt- proper isoptope label support for small molecules
-                Assert.AreEqual(1.05, ratio, 0.05);
+                if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)  // Can't use labels without a formula
+                    Assert.AreEqual(1.05, ratio, 0.05);
 
                 // Revert to original document, and get rid of results cache
                 Assert.IsTrue(docContainer.SetDocument(doc, docResults, false));
@@ -156,8 +159,8 @@ namespace pwiz.SkylineTestA.Results
                 nodeGroup = docResults.MoleculeTransitionGroups.First();
                 ratio = nodeGroup.Results[0][0].Ratio ?? 0;
                 // Asymmetric should be a lot closer to 1.0
-                if (!asSmallMolecules) // TODO bspratt- proper isoptope label support for small molecules
-                Assert.AreEqual(1.05, ratio, 0.05);
+                if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)  // Can't use labels without a formula
+                    Assert.AreEqual(1.05, ratio, 0.05);
 
                 // Revert to original document, and get rid of results cache
                 Assert.IsTrue(docContainer.SetDocument(doc, docResults, false));

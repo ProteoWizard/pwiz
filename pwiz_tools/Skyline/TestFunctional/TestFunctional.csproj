@@ -219,6 +219,7 @@
     <Compile Include="SrmCourseScenarioTest.cs" />
     <Compile Include="StandardTypeTest.cs" />
     <Compile Include="StartPageTest.cs" />
+    <Compile Include="SynchSiblingsSmallMoleculesTest.cs" />
     <Compile Include="SynchSiblingsTest.cs" />
     <Compile Include="BackgroundProteomeTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -332,6 +333,7 @@
     <None Include="SrmCourseScenarioTest.zip" />
     <None Include="StandardTypeTest.zip" />
     <None Include="StartPageTest.zip" />
+    <None Include="SynchSiblingsSmallMoleculesTest.zip" />
     <None Include="SynchSiblingsTest.zip" />
     <None Include="ToolServiceTest.zip" />
     <None Include="ToolStoreDlgTest.zip" />

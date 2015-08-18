@@ -351,7 +351,7 @@ namespace pwiz.SkylineTestA
                 IsStandard = isStandard;
                 var libInfo = new ChromLibSpectrumHeaderInfo("", 0);
                 var peptide = new Peptide(null, "AVVAVVA", null, null, 0);
-                NodeGroup = new TransitionGroupDocNode(new TransitionGroup(peptide, charge, labelType), null, null,
+                NodeGroup = new TransitionGroupDocNode(new TransitionGroup(peptide, null, charge, labelType), null, null,
                    null, libInfo, ExplicitTransitionGroupValues.EMPTY, null, new TransitionDocNode[0], true);
             }
 
@@ -380,7 +380,7 @@ namespace pwiz.SkylineTestA
                     labelType = IsotopeLabelType.light;
                 PeakData = new MockPeakData(data, massError) as TPeak;
                 var peptide = new Peptide(null, "AVVAVVA", null, null, 0);
-                var tranGroup = new TransitionGroup(peptide, charge, labelType);
+                var tranGroup =  new TransitionGroup(peptide, null, charge, labelType);
                 int offset = ionType == IonType.precursor ? 6 : 0;
                 var isotopeInfo = isotopeProportion == null ? null : new TransitionIsotopeDistInfo(1, (float)isotopeProportion);
                 NodeTran = new TransitionDocNode(new Transition(tranGroup, ionType, offset, 0, charge, null),

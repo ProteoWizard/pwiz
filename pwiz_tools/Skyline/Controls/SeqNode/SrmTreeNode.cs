@@ -713,7 +713,8 @@ namespace pwiz.Skyline.Controls.SeqNode
                         break;
                     if (!ReferenceEquals(nodeTree.Model, nodeDoc))
                     {
-                        if (ReferenceEquals(nodeTree.Model.Id, nodeDoc.Id))
+                        if (ReferenceEquals(nodeTree.Model.Id, nodeDoc.Id) ||
+                            ReferenceEquals(nodeTree.Model.Id, nodeDoc.ReplacedId)) // Node was replaced by a different Id, but should not change selection
                         {
                             nodeTree.Model = nodeDoc;
                             selChanged = ReferenceEquals(nodeTree, nodeSel);

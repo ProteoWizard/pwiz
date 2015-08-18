@@ -56,19 +56,19 @@ namespace pwiz.Skyline.Model.Find
 
                 foreach (var nodeTran in nodeGroup.Transitions)
                 {
-                    matchInfo.AddTransition(nodeTran);
+                    matchInfo.AddTransition(nodeTran, nodeGroup);
                 }
             }
             // Not actually looking for peptides
             return false;
         }
 
-        protected override bool IsMatch(TransitionDocNode nodeTran)
+        protected override bool IsMatch(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran)
         {
             TransitionMatchInfo matchInfo;
-            if (!_dictChargeToMatchInfo.TryGetValue(nodeTran.Transition.Group.PrecursorCharge, out matchInfo))
+            if (!_dictChargeToMatchInfo.TryGetValue(nodeGroup.TransitionGroup.PrecursorCharge, out matchInfo))
                 return true;    // Unexpected missing charge state
-            return !matchInfo.IsFullyMatched(nodeTran);
+            return !matchInfo.IsFullyMatched(nodeTran, nodeGroup);
         }
 
         private class TransitionMatchInfo
@@ -87,18 +87,22 @@ namespace pwiz.Skyline.Model.Find
                 _labelTypeSet.Add(nodeGroup.TransitionGroup.LabelType);
             }
 
-            public void AddTransition(TransitionDocNode nodeTran)
+            /// <summary>
+            /// In the case of small molecule transitions specified by mass only, position within 
+            /// the parent's list of transitions is the only meaningful key.  So we need to know our parent.
+            /// </summary>
+            public void AddTransition(TransitionDocNode nodeTran, TransitionGroupDocNode parent)
             {
-                var tranKey = nodeTran.EquivalentKey;
+                var tranKey = nodeTran.EquivalentKey(parent);
                 if (!_dictTransitionCount.ContainsKey(tranKey))
-                    _dictTransitionCount.Add(nodeTran.EquivalentKey, 0);
+                    _dictTransitionCount.Add(tranKey, 0);
                 _dictTransitionCount[tranKey]++;
             }
 
-            public bool IsFullyMatched(TransitionDocNode nodeTran)
+            public bool IsFullyMatched(TransitionDocNode nodeTran, TransitionGroupDocNode parent)
             {
                 int count;
-                if (!_dictTransitionCount.TryGetValue(nodeTran.EquivalentKey, out count))
+                if (!_dictTransitionCount.TryGetValue(nodeTran.EquivalentKey(parent), out count))
                     return true;
                 return count == _labelTypeSet.Count;
             }

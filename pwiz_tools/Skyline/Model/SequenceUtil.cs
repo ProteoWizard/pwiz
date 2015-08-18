@@ -130,6 +130,7 @@ namespace pwiz.Skyline.Model
     public class SequenceMassCalc : IPrecursorMassCalc, IFragmentMassCalc
     {
         public static int MassPrecision { get { return 6; } }
+        public static double MassTolerance { get { return 1e-6; } }
 
         /// <summary>
         /// Average mass of an amino acid from 
@@ -642,9 +643,9 @@ namespace pwiz.Skyline.Model
             return GetMzDistribution(molecule, charge, abundances, 0, false);
         }
 
-        public MassDistribution GetMZDistributionSinglePoint(double mass)
+        public MassDistribution GetMZDistributionSinglePoint(double mz, int charge)
         {
-            return MassDistribution.NewInstance(new SortedDictionary<double, double> {{mass, 1}}, _massResolution, _minimumAbundance);
+            return MassDistribution.NewInstance(new SortedDictionary<double, double> {{mz, charge}}, _massResolution, _minimumAbundance);
         }
 
         public string GetIonFormula(string peptideSequence, int charge)
@@ -779,6 +780,13 @@ namespace pwiz.Skyline.Model
             get { return _massCalc.MassType; }
         }
 
+        public double GetPrecursorMass(CustomIon customIon)
+        {
+            return (MassType == MassType.Average)
+                ? customIon.AverageMass
+                : customIon.MonoisotopicMass;
+        }
+
         public double GetPrecursorMass(string seq)
         {
             return GetPrecursorMass(seq, null);
@@ -889,23 +897,17 @@ namespace pwiz.Skyline.Model
             {
                 var type = transition.IonType;
                 var massIndex = transition.MassIndex;
-                if (Transition.IsPrecursor(type))
+                if (Transition.IsPrecursor(type) && (isotopeDist != null))
                 {
-                    if (isotopeDist != null)
+                    var i = isotopeDist.MassIndexToPeakIndex(massIndex);
+                    if (0 > i || i >= isotopeDist.CountPeaks)
                     {
-                        int i = isotopeDist.MassIndexToPeakIndex(massIndex);
-                        if (0 > i || i >= isotopeDist.CountPeaks)
-                        {
-                            throw new IndexOutOfRangeException(
-                                string.Format(Resources.SequenceMassCalc_GetFragmentMass_Precursor_isotope__0__is_outside_the_isotope_distribution__1__to__2__,
-                                              GetMassIDescripion(massIndex), isotopeDist.PeakIndexToMassIndex(0),
-                                              isotopeDist.PeakIndexToMassIndex(isotopeDist.CountPeaks - 1)));
-                        }
-                        return isotopeDist.GetMassI(massIndex);
+                        throw new IndexOutOfRangeException(
+                            string.Format(Resources.SequenceMassCalc_GetFragmentMass_Precursor_isotope__0__is_outside_the_isotope_distribution__1__to__2__,
+                                            GetMassIDescripion(massIndex), isotopeDist.PeakIndexToMassIndex(0),
+                                            isotopeDist.PeakIndexToMassIndex(isotopeDist.CountPeaks - 1)));
                     }
-                    return (MassType == MassType.Average) 
-                            ? transition.Group.Peptide.CustomIon.AverageMass
-                            : transition.Group.Peptide.CustomIon.MonoisotopicMass;
+                    return isotopeDist.GetMassI(massIndex);
                 }
                 return (MassType == MassType.Average) 
                         ? transition.CustomIon.AverageMass
@@ -1137,6 +1139,11 @@ namespace pwiz.Skyline.Model
             get { return _massCalcBase.MassType; }
         }
 
+        public double GetPrecursorMass(CustomIon ion)
+        {
+            return _massCalcBase.GetPrecursorMass(ion);
+        }
+
         public double GetPrecursorMass(string seq)
         {
             return _massCalcBase.GetPrecursorMass(seq, _mods);
@@ -1186,9 +1193,9 @@ namespace pwiz.Skyline.Model
             return _massCalcBase.GetMZDistributionFromFormula(formula, charge, abundances);
         }
 
-        public MassDistribution GetMZDistributionSinglePoint(double mass)
+        public MassDistribution GetMZDistributionSinglePoint(double mz, int charge)
         {
-            return  _massCalcBase.GetMZDistributionSinglePoint(mass);
+            return  _massCalcBase.GetMZDistributionSinglePoint(mz, charge);
         }
 
         public double[,] GetFragmentIonMasses(string seq)

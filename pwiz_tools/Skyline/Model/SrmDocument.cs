@@ -239,7 +239,8 @@ namespace pwiz.Skyline.Model
         public const double FORMAT_VERSION_2_62 = 2.62;   // Revised small molecule support
         public const double FORMAT_VERSION_3_1 = 3.1;   // Release format. No change from 2.62
         public const double FORMAT_VERSION_3_11 = 3.11; // Adds compensation voltage optimization support
-        public const double FORMAT_VERSION = FORMAT_VERSION_3_11;
+        public const double FORMAT_VERSION_3_12 = 3.12; // Adds small molecule ion labels and multiple charge states
+        public const double FORMAT_VERSION = FORMAT_VERSION_3_12;
 
         public const int MAX_PEPTIDE_COUNT = 100*1000;
         public const int MAX_TRANSITION_COUNT = 6*MAX_PEPTIDE_COUNT; // Modern DIA experiments may often have 6 transitions per peptide
@@ -555,7 +556,7 @@ namespace pwiz.Skyline.Model
         private void CheckIsProteinMetadataComplete()
         {
             // Non proteomic molecules never do protein metadata searches
-            var unsearched = (from pg in MoleculeGroups where pg.IsProteomic && pg.ProteinMetadata.NeedsSearch() select pg);
+            var unsearched = (from pg in PeptideGroups where pg.ProteinMetadata.NeedsSearch() select pg);
             IsProteinMetadataPending = unsearched.Any();
         }
 
@@ -987,8 +988,17 @@ namespace pwiz.Skyline.Model
         public static string TestingNonProteomicFragmentName = TestingNonProteomicBaseName + "Fragment";  // Not L10N
         public static string TestingNonProteomicFragment2Name = TestingNonProteomicBaseName + "Fragment2";  // Not L10N
 
+        public static bool IsConvertedFromProteomicTestDocNode(DocNode node)
+        {
+            // Is this a node that was created for test purposes by transforming an existing peptide doc?
+            return (node != null && node.Annotations.Note != null &&
+                    node.Annotations.Note.Contains(RefinementSettings.TestingConvertedFromProteomic));
+        }
+
         public static bool IsSpecialNonProteomicTestDocNode(DocNode node)
         {
+            if (node != null && node.Annotations.Note != null && node.Annotations.Note.Contains(TestingNonProteomicBaseName))
+                return true;
             var docNode = node as PeptideGroupDocNode;
             if (docNode != null)
             {
@@ -1007,7 +1017,7 @@ namespace pwiz.Skyline.Model
                     var groupDocNode = node as TransitionGroupDocNode;
                     if (groupDocNode != null)
                     {
-                        var ion = groupDocNode.TransitionGroup.Peptide.CustomIon;
+                        var ion = groupDocNode.TransitionGroup.CustomIon;
                         return ion != null && Equals(ion.Name, TestingNonProteomicMoleculeName);
                     }
                     else
@@ -1029,16 +1039,17 @@ namespace pwiz.Skyline.Model
 
         /// <summary>
         /// For automated test of custom molecules in tests that aren't originally designed to test that at all
-        /// Creates a peptide group with a custom molecule, and two transitions - precursor and a custom fragment
+        /// Creates a peptide group with a custom molecule, and three transitions - precursor and custom fragments by formula and by mass
         /// Custom fragment mass needs to be large enough to avoid the default 50 mz lower cutoff in instrument settings
         /// </summary>
         public PeptideGroupDocNode CreateNonProteomicTestPeptideGroupDocNode(IEnumerable<PeptideGroupDocNode> existingPeptideGroups)
         {
             var pepGroup = new PeptideGroup();
+            var note = Annotations.Merge(new Annotations(TestingNonProteomicBaseName, null, 0));  // Tag it as not needing/wanting canonical small molecule sort - these need to be at the doc end, always
             var pep = new Peptide(new DocNodeCustomIon("C16O4H4", TestingNonProteomicMoleculeName)); // Not L10N
             const int charge = -1; // Negative charge for maximum test value, since that's new too
-            var tranGroup = new TransitionGroup(pep, charge, IsotopeLabelType.light);
-            var tranPrecursor = new Transition(tranGroup, IonType.precursor, 0, 0, charge);
+            var tranGroup = new TransitionGroup(pep, pep.CustomIon, charge, IsotopeLabelType.light);
+            var tranPrecursor = new Transition(tranGroup, IonType.precursor, 0, 0, charge, null, pep.CustomIon);
             // Specify formula
             var tranFragment = new Transition(tranGroup, charge, 0, new DocNodeCustomIon("C2H2O2", TestingNonProteomicFragmentName)); // Not L10N
             // Specify mass
@@ -1066,18 +1077,18 @@ namespace pwiz.Skyline.Model
                     isotopeDistInfo = TransitionDocNode.GetIsotopeDistInfo(tranPrecursor, null, nodeGroup.IsotopeDist);
             }
 
-            var tranPrecursorNode = new TransitionDocNode(tranPrecursor, Annotations, null,
+            var tranPrecursorNode = new TransitionDocNode(tranPrecursor, note, null,
                 pep.CustomIon.GetMass(Settings.TransitionSettings.Prediction.FragmentMassType), isotopeDistInfo, null, null);
-            var tranFragmentNode = new TransitionDocNode(tranFragment, Annotations, null,
+            var tranFragmentNode = new TransitionDocNode(tranFragment, note, null,
                 tranFragment.CustomIon.GetMass(Settings.TransitionSettings.Prediction.FragmentMassType), null, null, null);
-            var tranFragmentNode2 = new TransitionDocNode(tranFragment2, Annotations, null,
+            var tranFragmentNode2 = new TransitionDocNode(tranFragment2, note, null,
                 tranFragment2.CustomIon.GetMass(Settings.TransitionSettings.Prediction.FragmentMassType), null, null, null);
-            var tranGroupNode = new TransitionGroupDocNode(tranGroup, Annotations, Settings, null, null, ExplicitTransitionGroupValues.EMPTY, null,
+            var tranGroupNode = new TransitionGroupDocNode(tranGroup, note, Settings, null, null, ExplicitTransitionGroupValues.EMPTY, null,
                 hasPrecursorTransitions ? new[] { tranPrecursorNode, tranFragmentNode, tranFragmentNode2 } : new[] { tranFragmentNode, tranFragmentNode2 }, 
                 autoManageChildren);
             var pepNode = new PeptideDocNode(pep, Settings, null, null, null, new[] { tranGroupNode }, true);
             var metadata = new ProteinMetadata(TestingNonProteomicMoleculeGroupName, String.Empty).SetWebSearchCompleted(); 
-            return new PeptideGroupDocNode(pepGroup, Annotations, metadata, new[] { pepNode }, true);
+            return new PeptideGroupDocNode(pepGroup, note, metadata, new[] { pepNode }, true);
             
         }
 
@@ -1582,13 +1593,21 @@ namespace pwiz.Skyline.Model
             public const string decoy_mass_shift = "decoy_mass_shift";
             public const string isotope_dist_rank = "isotope_dist_rank";
             public const string isotope_dist_proportion = "isotope_dist_proportion";
+            public const string ion_formula = "ion_formula";
+            public const string custom_ion_name = "custom_ion_name";
+            public const string mass_monoisotopic = "mass_monoisotopic";
+            public const string mass_average = "mass_average";
             public const string modified_sequence = "modified_sequence";
             public const string lookup_sequence = "lookup_sequence";
             public const string cleavage_aa = "cleavage_aa";
             public const string loss_neutral_mass = "loss_neutral_mass";
             public const string collision_energy = "collision_energy";
             public const string explicit_collision_energy = "explicit_collision_energy";
+            public const string s_lens = "s_lens";
+            public const string cone_voltage = "cone_voltage";
             public const string declustering_potential = "declustering_potential";
+            public const string explicit_declustering_potential = "explicit_declustering_potential";
+            public const string explicit_compensation_voltage = "explicit_compensation_voltage";
             public const string standard_type = "standard_type";
             public const string measured_ion_name = "measured_ion_name";
 
@@ -1929,14 +1948,19 @@ namespace pwiz.Skyline.Model
         }
 
         /// <summary>
-        /// Deserialize any explictly set CE and DT information from attributes
+        /// Deserialize any explictly set CE, DT, etc information from attributes
         /// </summary>
         static private ExplicitTransitionGroupValues ReadExplicitTransitionValuesAttributes(XmlReader reader)
         {
             double? importedCollisionEnergy = reader.GetNullableDoubleAttribute(ATTR.explicit_collision_energy);
             double? importedDriftTimeMsec = reader.GetNullableDoubleAttribute(ATTR.explicit_drift_time_msec);
             double? importedDriftTimeHighEnergyOffsetMsec = reader.GetNullableDoubleAttribute(ATTR.explicit_drift_time_high_energy_offset_msec);
-            return new ExplicitTransitionGroupValues(importedCollisionEnergy, importedDriftTimeMsec, importedDriftTimeHighEnergyOffsetMsec);
+            double? importedSLens = reader.GetNullableDoubleAttribute(ATTR.s_lens);
+            double? importedConeVoltage = reader.GetNullableDoubleAttribute(ATTR.cone_voltage);
+            double? importedCompensationVoltage = reader.GetNullableDoubleAttribute(ATTR.explicit_compensation_voltage);
+            double? importedDeclusteringPotential = reader.GetNullableDoubleAttribute(ATTR.explicit_declustering_potential);
+            return new ExplicitTransitionGroupValues(importedCollisionEnergy, importedDriftTimeMsec, importedDriftTimeHighEnergyOffsetMsec, importedSLens, importedConeVoltage, 
+                importedDeclusteringPotential, importedCompensationVoltage);
         }
 
         /// <summary>
@@ -1975,8 +1999,9 @@ namespace pwiz.Skyline.Model
             ExplicitMods mods = null, lookupMods = null;
             Results<PeptideChromInfo> results = null;
             TransitionGroupDocNode[] children = null;
-            Peptide peptide = isCustomMolecule ? 
-                new Peptide(DocNodeCustomIon.Deserialize(reader)) : // This Deserialize only reads attribures, doesn't advance the reader
+            var customIon = isCustomMolecule ? DocNodeCustomIon.Deserialize(reader) : null; // This Deserialize only reads attribures, doesn't advance the reader
+            var peptide = isCustomMolecule ? 
+                new Peptide(customIon) : 
                 new Peptide(group as FastaSequence, sequence, start, end, missedCleavages, isDecoy);
 
             if (reader.IsEmptyElement)
@@ -1996,7 +2021,7 @@ namespace pwiz.Skyline.Model
 
                 if (reader.IsStartElement(EL.precursor))
                 {
-                    children = ReadTransitionGroupListXml(reader, peptide, mods);
+                    children = ReadTransitionGroupListXml(reader, peptide, mods, customIon);
                 }
                 else if (reader.IsStartElement(EL.selected_transitions))
                 {
@@ -2160,23 +2185,56 @@ namespace pwiz.Skyline.Model
         /// <param name="reader">The reader positioned at the first element</param>
         /// <param name="peptide">A previously read parent <see cref="Identity"/></param>
         /// <param name="mods">Explicit modifications for the peptide</param>
+        /// <param name="customIon">Custom ion to use for reading older formats</param>
         /// <returns>A new array of <see cref="TransitionGroupDocNode"/></returns>
-        private TransitionGroupDocNode[] ReadTransitionGroupListXml(XmlReader reader, Peptide peptide, ExplicitMods mods)
+        private TransitionGroupDocNode[] ReadTransitionGroupListXml(XmlReader reader, Peptide peptide, ExplicitMods mods, DocNodeCustomIon customIon)
         {
             var list = new List<TransitionGroupDocNode>();
             while (reader.IsStartElement(EL.precursor))
-                list.Add(ReadTransitionGroupXml(reader, peptide, mods));
+                list.Add(ReadTransitionGroupXml(reader, peptide, mods, customIon));
             return list.ToArray();
         }
 
-        private TransitionGroupDocNode ReadTransitionGroupXml(XmlReader reader, Peptide peptide, ExplicitMods mods)
+        private TransitionGroupDocNode ReadTransitionGroupXml(XmlReader reader, Peptide peptide, ExplicitMods mods, DocNodeCustomIon customIon)
         {
             int precursorCharge = reader.GetIntAttribute(ATTR.charge);
-
             var typedMods = ReadLabelType(reader, IsotopeLabelType.light);
+
             int? decoyMassShift = reader.GetNullableIntAttribute(ATTR.decoy_mass_shift);
             var explicitTransitionGroupValues = ReadExplicitTransitionValuesAttributes(reader);
-            TransitionGroup group = new TransitionGroup(peptide, precursorCharge, typedMods.LabelType, false, decoyMassShift);
+            if (peptide.IsCustomIon)
+            {
+                // In small molecules, different labels and charges mean different ion formulas
+                var ionFormula = reader.GetAttribute(ATTR.ion_formula);
+                if (!string.IsNullOrEmpty(ionFormula))
+                {
+                    var ionName = reader.GetAttribute(ATTR.custom_ion_name);
+                    customIon = new DocNodeCustomIon(ionFormula, ionName);
+                }
+                else
+                {
+                    var mz = reader.GetDoubleAttribute(ATTR.precursor_mz); // Normally ignored, but needed for molecules that are declared by mz and charge only
+                    var mass = BioMassCalc.CalculateIonMassFromMz(mz, precursorCharge); // We can't actually tell mono from average in this case
+                    double massMono = reader.GetNullableDoubleAttribute(ATTR.mass_monoisotopic) ?? mass;
+                    double massAverage = reader.GetNullableDoubleAttribute(ATTR.mass_average) ?? mass;
+                    if (FormatVersion < FORMAT_VERSION_3_12)
+                    {
+                        // In Skyline 3.1 we didn't suppport more than one transition group per molecule
+                        // Passed-in customIon is the primary precursor
+                    }
+                    // We need to determine if this is the primary precursor transition - but all we have to go on is mass
+                    else if (Math.Round(massMono, SequenceMassCalc.MassPrecision) == Math.Round(customIon.MonoisotopicMass, SequenceMassCalc.MassPrecision) &&
+                        Math.Round(massAverage, SequenceMassCalc.MassPrecision) == Math.Round(customIon.AverageMass, SequenceMassCalc.MassPrecision))
+                    {
+                        // Passed-in customIon is the primary precursor
+                    }
+                    else
+                    {
+                        customIon = new DocNodeCustomIon(massMono, massAverage, reader.GetAttribute(ATTR.custom_ion_name));
+                    }
+                }
+            }
+            var group = new TransitionGroup(peptide, customIon, precursorCharge, typedMods.LabelType, false, decoyMassShift);
             var children = new TransitionDocNode[0];    // Empty until proven otherwise
             bool autoManageChildren = reader.GetBoolAttribute(ATTR.auto_manage_children, true);
 
@@ -2210,7 +2268,6 @@ namespace pwiz.Skyline.Model
                                                   results,
                                                   children,
                                                   autoManageChildren);
-
                 children = ReadTransitionListXml(reader, group, mods, nodeGroup.IsotopeDist);
 
                 reader.ReadEndElement();
@@ -2342,7 +2399,7 @@ namespace pwiz.Skyline.Model
                     else
                     {
                         // No existing group matches, so create a new one
-                        curGroup = new TransitionGroup(peptide, info.PrecursorCharge, IsotopeLabelType.light);
+                        curGroup = new TransitionGroup(peptide, null, info.PrecursorCharge, IsotopeLabelType.light);
                         curList = new List<TransitionDocNode>();
                         listGroups.Add(curGroup);
                         mapGroupToList.Add(curGroup, curList);
@@ -2411,7 +2468,7 @@ namespace pwiz.Skyline.Model
                 if (info.MeasuredIon != null)
                     customIon = info.MeasuredIon.CustomIon;
                 else if (isPrecursor)
-                    customIon = group.Peptide.CustomIon;
+                    customIon = group.CustomIon;
                 else
                     customIon = DocNodeCustomIon.Deserialize(reader);
             }
@@ -2858,6 +2915,10 @@ namespace pwiz.Skyline.Model
             writer.WriteAttributeNullable(ATTR.explicit_collision_energy, importedAttributes.CollisionEnergy);
             writer.WriteAttributeNullable(ATTR.explicit_drift_time_msec, importedAttributes.DriftTimeMsec);
             writer.WriteAttributeNullable(ATTR.explicit_drift_time_high_energy_offset_msec, importedAttributes.DriftTimeHighEnergyOffsetMsec);
+            writer.WriteAttributeNullable(ATTR.s_lens, importedAttributes.SLens);
+            writer.WriteAttributeNullable(ATTR.cone_voltage, importedAttributes.ConeVoltage);
+            writer.WriteAttributeNullable(ATTR.explicit_declustering_potential, importedAttributes.DeclusteringPotential);
+            writer.WriteAttributeNullable(ATTR.explicit_compensation_voltage, importedAttributes.CompensationVoltage);
         }
 
         /// <summary>
@@ -3121,6 +3182,11 @@ namespace pwiz.Skyline.Model
                 string seq = node.TransitionGroup.Peptide.Sequence;
                 writer.WriteAttribute(ATTR.modified_sequence, calcPre.GetModifiedSequence(seq, true));
             }
+            else
+            {
+                // Custom ion
+                node.CustomIon.WriteXml(writer);
+            }
             // Write child elements
             WriteAnnotations(writer, node.Annotations);
             if (node.HasLibInfo)
@@ -3241,7 +3307,7 @@ namespace pwiz.Skyline.Model
             {
                 if (ceRegression != null && !ce.HasValue)
                 {
-                    ce = ceRegression.GetCollisionEnergy(transition.Group.PrecursorCharge, regressionMz);
+                    ce = ceRegression.GetCollisionEnergy(nodeGroup.PrecursorCharge, regressionMz);
                 }
                 if (dpRegression != null)
                 {
@@ -3363,6 +3429,8 @@ namespace pwiz.Skyline.Model
 
         public double GetOptimizedDeclusteringPotential(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTransition)
         {
+            if (nodeGroup.ExplicitValues.DeclusteringPotential.HasValue)
+                return nodeGroup.ExplicitValues.DeclusteringPotential.Value;   // Use the explicitly imported value
             var prediction = Settings.TransitionSettings.Prediction;
             var methodType = prediction.OptimizedMethodType;
             var regression = prediction.DeclusteringPotential;
@@ -3539,6 +3607,9 @@ namespace pwiz.Skyline.Model
 
         public double GetOptimizedCompensationVoltage(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup)
         {
+            if (nodeGroup.ExplicitValues.CompensationVoltage.HasValue)
+                return nodeGroup.ExplicitValues.CompensationVoltage.Value;
+
             var prediction = Settings.TransitionSettings.Prediction;
             var lib = prediction.OptimizedLibrary;
 

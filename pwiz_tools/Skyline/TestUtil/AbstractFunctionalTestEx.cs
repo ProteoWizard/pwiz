@@ -23,6 +23,9 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Graphs;
 using System.Windows.Forms;
+using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Controls.Editor;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
@@ -61,12 +64,14 @@ namespace pwiz.SkylineTestUtil
             WaitForDocumentLoaded();
         }
 
-        public void ConvertDocumentToSmallMolecules(bool massesOnly = false, bool invertCharges = false, bool ignoreDecoys = false)
+        public void ConvertDocumentToSmallMolecules(RefinementSettings.ConvertToSmallMoleculesMode mode = RefinementSettings.ConvertToSmallMoleculesMode.formulas, 
+            bool invertCharges = false, bool ignoreDecoys = false)
         {
+            WaitForDocumentLoaded();
             RunUI(() => SkylineWindow.ModifyDocument("Convert to small molecules", document =>
             {
                 var refine = new RefinementSettings();
-                return refine.ConvertToSmallMolecules(document, massesOnly, invertCharges, ignoreDecoys);
+                return refine.ConvertToSmallMolecules(document, mode, invertCharges, ignoreDecoys);
             }));
         }
 
@@ -120,6 +125,29 @@ namespace pwiz.SkylineTestUtil
                 fullScanDlg.SelectedTab = tab;
             });
             return fullScanDlg;
+        }
+
+        public DataGridViewColumn FindDocumentGridColumn(DocumentGridForm documentGrid, string colName)
+        {
+            WaitForCondition(() => (documentGrid.FindColumn(PropertyPath.Parse(colName)) != null));
+            return documentGrid.FindColumn(PropertyPath.Parse(colName));
+        }
+
+        public void EnableDocumentGridColumns(DocumentGridForm documentGrid, string viewName, int expectedRows, string[] colNames)
+        {
+            RunUI(() => documentGrid.ChooseView(viewName));
+            WaitForCondition(() => (documentGrid.RowCount == expectedRows)); // Let it initialize
+            RunDlg<ViewEditor>(documentGrid.NavBar.CustomizeView,
+                viewEditor =>
+                {
+                    foreach (var colName in colNames)
+                    {
+                        Assert.IsTrue(viewEditor.ChooseColumnsTab.TrySelect(PropertyPath.Parse(colName)));
+                        viewEditor.ChooseColumnsTab.AddSelectedColumn();
+                    }
+                    viewEditor.ViewName = viewName;
+                    viewEditor.OkDialog();
+                });
         }
 
         /// <summary>

@@ -33,6 +33,7 @@ namespace pwiz.Skyline.Model
         public const double MAX_MASS = 100000;
         public const double MIN_MASS = MeasuredIon.MIN_REPORTER_MASS;
         private string _formula;
+        private string _unlabledFormula;
         
         /// <summary>
         /// A simple object used to represent any molecule
@@ -61,14 +62,27 @@ namespace pwiz.Skyline.Model
         public string Formula
         { 
             get {return _formula;} 
-            private set { _formula = string.IsNullOrEmpty(value) ? null : value; } 
+            private set
+            {
+                _formula = string.IsNullOrEmpty(value) ? null : value;
+                _unlabledFormula = BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula(_formula);
+                Helpers.AssignIfEquals(ref _unlabledFormula, _formula); // Save some string space if actually unlableled
+            }
         }
+
+        public string UnlabeledFormula { get { return _unlabledFormula; } }
+
+        /// <summary>
+        /// For matching heavy/light pairs in small molecule documents
+        /// </summary>
+        public string PrimaryEquivalenceKey { get { return Name; } }
+        public string SecondaryEquivalenceKey { get { return UnlabeledFormula; } }
 
         public string Name { get; protected set; }
         public double MonoisotopicMass { get; private set; }
         public double AverageMass { get; private set; }
 
-        private const string massFormat = "{0} [{1}/{2}]"; // Not L10N
+        private const string massFormat = "{0} [{1:F06}/{2:F06}]"; // Not L10N
 
         public string DisplayName
         {
@@ -125,10 +139,11 @@ namespace pwiz.Skyline.Model
 
         private bool Equals(CustomIon other)
         {
-            return string.Equals(Formula, other.Formula) &&
+            var equal = string.Equals(Formula, other.Formula) &&
                 string.Equals(Name, other.Name) &&
                 MonoisotopicMass.Equals(other.MonoisotopicMass) &&
                 AverageMass.Equals(other.AverageMass);
+            return equal; // For debugging convenience
         }
 
         public override bool Equals(object obj)
@@ -149,6 +164,34 @@ namespace pwiz.Skyline.Model
                 hashCode = (hashCode*397) ^ AverageMass.GetHashCode();
                 return hashCode;
             }
+        }
+
+        /// <summary>
+        /// For use in heavy/light matching, where formula or name is only reliable match value
+        /// Without that we use transition list mz sort order
+        /// </summary>
+        public static bool Equivalent(CustomIon ionA, CustomIon ionB)
+        {
+            if (Equals(ionA, ionB))
+                return true;
+            if (ionA == null || ionB == null)
+                return false; // One null, one non-null
+            // Name
+            if (ionA.PrimaryEquivalenceKey != null || ionB.PrimaryEquivalenceKey != null)
+                return Equals(ionA.PrimaryEquivalenceKey, ionB.PrimaryEquivalenceKey);
+            // Formula (stripped of labels)
+            if (ionA.SecondaryEquivalenceKey != null || ionB.SecondaryEquivalenceKey != null)
+                return Equals(ionA.SecondaryEquivalenceKey, ionB.SecondaryEquivalenceKey);
+            return true; // Not proven to be unequivalent - it's up to caller to think about mz
+        }
+
+        public int GetEquivalentHashCode()
+        {
+            if (!string.IsNullOrEmpty(PrimaryEquivalenceKey))
+                return PrimaryEquivalenceKey.GetHashCode();
+            if (!string.IsNullOrEmpty(SecondaryEquivalenceKey))
+                return SecondaryEquivalenceKey.GetHashCode();
+            return 0;
         }
 
         protected enum ATTR
@@ -183,9 +226,17 @@ namespace pwiz.Skyline.Model
         public void WriteXml(XmlWriter writer)
         {
             if (Formula != null)
+            {
                 writer.WriteAttribute(ATTR.ion_formula, Formula);
-            writer.WriteAttributeNullable(ATTR.mass_average, AverageMass);
-            writer.WriteAttributeNullable(ATTR.mass_monoisotopic, MonoisotopicMass);
+                writer.WriteAttributeNullable(ATTR.mass_average, AverageMass);
+                writer.WriteAttributeNullable(ATTR.mass_monoisotopic, MonoisotopicMass);
+            }
+            else
+            {
+                // Without a formula we can't rederive masses, so write at higher precision
+                writer.WriteAttributeNullableRoundTrip(ATTR.mass_average, AverageMass);
+                writer.WriteAttributeNullableRoundTrip(ATTR.mass_monoisotopic, MonoisotopicMass);
+            }
             if (Name != null)
                 writer.WriteAttribute(ATTR.custom_ion_name, Name);
         }

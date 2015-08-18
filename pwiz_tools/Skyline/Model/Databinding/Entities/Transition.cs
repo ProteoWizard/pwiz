@@ -66,13 +66,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         private bool IsCustomTransition()
         {
-            return DocNode.Transition.IsCustomAndEditable()  // As opposed to just IsCustom(), which might be a reporter ion on a peptide node
-                   || (DocNode.Transition.IsPrecursor() && DocNode.Transition.IsCustom()); // Watch for precursor transitions too
+            return DocNode.Transition.IsNonReporterCustomIon();  // As opposed to just IsCustom(), which might be a reporter ion on a peptide node
         }
 
         protected override TransitionDocNode CreateEmptyNode()
         {
-            return new TransitionDocNode(new Model.Transition(new TransitionGroup(new Model.Peptide(null, "X", null, null, 0), 1, IsotopeLabelType.light), 0), Annotations.EMPTY, null, 0, null, null, null); // Not L10N
+            return new TransitionDocNode(new Model.Transition(new TransitionGroup(new Model.Peptide(null, "X", null, null, 0), null, 1, IsotopeLabelType.light), 0), Annotations.EMPTY, null, 0, null, null, null); // Not L10N
         }
 
         [InvariantDisplayName("TransitionResultsSummary")]

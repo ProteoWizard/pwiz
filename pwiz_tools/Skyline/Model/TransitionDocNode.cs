@@ -67,11 +67,14 @@ namespace pwiz.Skyline.Model
 
         public Transition Transition { get { return (Transition)Id; } }
 
-        public TransitionLossKey Key { get { return new TransitionLossKey(Transition, Losses); } }
-
-        public TransitionLossEquivalentKey EquivalentKey
+        public TransitionLossKey Key(TransitionGroupDocNode parent)
         {
-            get { return new TransitionLossEquivalentKey(Transition, Losses); }
+            return new TransitionLossKey(parent, this, Losses);
+        }
+
+        public TransitionLossEquivalentKey EquivalentKey(TransitionGroupDocNode parent)
+        {
+            return new TransitionLossEquivalentKey(parent, this, Losses); 
         }
 
         public double Mz { get; private set; }
@@ -339,7 +342,8 @@ namespace pwiz.Skyline.Model
                 ? new Transition(parent.TransitionGroup,
                     Transition.Charge,
                     Transition.MassIndex,
-                    Transition.CustomIon)
+                    Transition.CustomIon,
+                    Transition.IonType)
                 : new Transition(parent.TransitionGroup,
                                 Transition.IonType,
                                 Transition.CleavageOffset,
@@ -358,6 +362,30 @@ namespace pwiz.Skyline.Model
         public override string GetDisplayText(DisplaySettings settings)
         {
             return TransitionTreeNode.DisplayText(this, settings);    
+        }
+
+        public string PrimaryCustomIonEquivalenceKey
+        {
+            get { return Transition.CustomIon.PrimaryEquivalenceKey; }
+        }
+
+        public string SecondaryCustomIonEquivalenceKey
+        {
+            get { return Transition.CustomIon.SecondaryEquivalenceKey; }
+        }
+
+        public class CustomIonEquivalenceComparer : IComparer<TransitionDocNode>
+        {
+            public int Compare(TransitionDocNode left, TransitionDocNode right)
+            {
+                if (left.Transition.IsPrecursor() != right.Transition.IsPrecursor())
+                    return left.Transition.IsPrecursor() ? -1 : 1;  // Precursors come first
+                if (!string.IsNullOrEmpty(left.PrimaryCustomIonEquivalenceKey) && !string.IsNullOrEmpty(right.PrimaryCustomIonEquivalenceKey))
+                    return string.CompareOrdinal(left.PrimaryCustomIonEquivalenceKey, right.PrimaryCustomIonEquivalenceKey);
+                if (!string.IsNullOrEmpty(left.SecondaryCustomIonEquivalenceKey) && !string.IsNullOrEmpty(right.SecondaryCustomIonEquivalenceKey))
+                    return string.CompareOrdinal(left.SecondaryCustomIonEquivalenceKey, right.SecondaryCustomIonEquivalenceKey);
+                return right.Mz.CompareTo(left.Mz); // Decreasing mz sort
+            }
         }
 
         #region Property change methods
@@ -533,10 +561,11 @@ namespace pwiz.Skyline.Model
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return base.Equals(obj) && obj.Mz == Mz &&
+            var equal =  base.Equals(obj) && obj.Mz == Mz &&
                    Equals(obj.IsotopeDistInfo, IsotopeDistInfo) &&
                    Equals(obj.LibInfo, LibInfo) &&
                    Equals(obj.Results, Results);
+            return equal;  // For debugging convenience
         }
 
         public override bool Equals(object obj)

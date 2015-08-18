@@ -359,6 +359,7 @@ namespace pwiz.Skyline
         }
 
         public bool AddEnergyRamp { get; private set; }
+        public bool UseSlens { get; private set; }
         private int _runLength;
         public int RunLength
         {
@@ -383,6 +384,7 @@ namespace pwiz.Skyline
                 {
 
                     AddEnergyRamp = AddEnergyRamp,
+                    UseSlens = UseSlens,
                     DwellTime = DwellTime,
                     ExportStrategy = ExportStrategy,
                     IgnoreProteins = IgnoreProteins,
@@ -1139,6 +1141,11 @@ namespace pwiz.Skyline
                 else if (IsNameOnly(pair, "exp-add-energy-ramp")) // Not L10N
                 {
                     AddEnergyRamp = true;
+                    RequiresSkylineDocument = true;
+                }
+                else if (IsNameOnly(pair, "exp-use-s-lens")) // Not L10N
+                {
+                    UseSlens = true;
                     RequiresSkylineDocument = true;
                 }
                 else if (IsNameValue(pair, "exp-run-length")) // Not L10N

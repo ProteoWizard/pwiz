@@ -774,7 +774,7 @@ namespace pwiz.Skyline.SettingsUI
                         foreach (TransitionGroupDocNode nodeGroup in peptide.Children)
                         {
                             string sequence = _document.Settings.GetSourceTextId(peptide);
-                            int charge = nodeGroup.PrecursorCharge;
+                            int charge = nodeGroup.TransitionGroup.PrecursorCharge;
                             foreach (TransitionDocNode nodeTran in nodeGroup.Children)
                             {
                                 OptimizationKey key = null;

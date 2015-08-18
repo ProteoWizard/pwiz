@@ -421,9 +421,15 @@ namespace pwiz.Skyline.Model.Databinding
                     if (!docHasCustomIons)
                     {
                         columnsToRemove.Add(PropertyPath.Root.Property("ExplicitCollisionEnergy"));
-                        columnsToRemove.Add(PropertyPath.Root.Property("ExplicitDriftTimeMsec"));
-                        columnsToRemove.Add(PropertyPath.Root.Property("ExplicitDriftTimeHighEnergyOffsetMsec"));
+                        columnsToRemove.Add(PropertyPath.Root.Property("IonName"));
+                        columnsToRemove.Add(PropertyPath.Root.Property("IonFormula"));
                     }
+                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitDriftTimeMsec"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitDriftTimeHighEnergyOffsetMsec"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitCompensationVoltage"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitDeclusteringPotential"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("SLens"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("ConeVoltage"));
                     addRoot = true;
                 }
                 else if (columnDescriptor.PropertyType == typeof(Entities.Transition))

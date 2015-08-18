@@ -55,7 +55,7 @@ namespace pwiz.SkylineTestTutorial
         [TestMethod]
         public void TestTargetedMSMSTutorial()
         {
-            DoTestTargetedMSMSTutorial(false);
+            DoTestTargetedMSMSTutorial(RefinementSettings.ConvertToSmallMoleculesMode.none);
         }
 
         [TestMethod]
@@ -63,12 +63,20 @@ namespace pwiz.SkylineTestTutorial
         // did uncover some issues with the new small molecule work so it is still worthwhile
         public void TestTargetedMSMSTutorialAsSmallMolecules()
         {
-            DoTestTargetedMSMSTutorial(true);
+            DoTestTargetedMSMSTutorial(RefinementSettings.ConvertToSmallMoleculesMode.formulas);
         }
 
-        private bool AsSmallMolecules { get; set; }
+        [TestMethod]
+        // N.B. it's not clear to me that this test makes perfect sense right now, but implementing it
+        // did uncover some issues with the new small molecule work so it is still worthwhile
+        public void TestTargetedMSMSTutorialAsSmallMoleculeMasses()
+        {
+            DoTestTargetedMSMSTutorial(RefinementSettings.ConvertToSmallMoleculesMode.masses_only);
+        }
 
-        public void DoTestTargetedMSMSTutorial(bool asSmallMolecules)
+        private RefinementSettings.ConvertToSmallMoleculesMode AsSmallMoleculesTestMode { get; set; }
+
+        public void DoTestTargetedMSMSTutorial(RefinementSettings.ConvertToSmallMoleculesMode smallMoleculesTestMode)
         {
             // Set true to look at tutorial screenshots.
             //IsPauseForScreenShots = true;
@@ -77,10 +85,10 @@ namespace pwiz.SkylineTestTutorial
 
             ForceMzml = true;   // 2-3x faster than raw files for this test.
 
-            AsSmallMolecules = asSmallMolecules;
+            AsSmallMoleculesTestMode = smallMoleculesTestMode;
 
-            if (asSmallMolecules)
-                TestDirectoryName = "AsSmallMolecules";
+            if (smallMoleculesTestMode !=  RefinementSettings.ConvertToSmallMoleculesMode.none)
+                TestDirectoryName = "AsSmallMolecules_" + smallMoleculesTestMode;
 
             LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/TargetedMSMS-2_5.pdf";
 
@@ -111,15 +119,22 @@ namespace pwiz.SkylineTestTutorial
             string documentFile = GetTestPath(@"Low Res\BSA_Protea_label_free_meth3.sky");
             WaitForCondition(() => File.Exists(documentFile));
             RunUI(() => SkylineWindow.OpenFile(documentFile));
+            bool AsSmallMolecules = AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none;
 
+            const int expectedMoleculeCount = 9;
+            int expectedTransitionGroupCount = 10;
+            int expectedTransitionCount = 78;
+            var document = SkylineWindow.Document;
             if (AsSmallMolecules)
             {
-                ConvertDocumentToSmallMolecules();
+                ConvertDocumentToSmallMolecules(AsSmallMoleculesTestMode);
+                document = SkylineWindow.Document;
+                Assert.AreEqual(document.PeptideTransitionGroupCount, 0);
+                Assert.AreEqual(document.MoleculeTransitionGroupCount, expectedTransitionGroupCount);
+                Assert.AreEqual(document.PeptideTransitionCount, 0);
+                Assert.AreEqual(document.MoleculeTransitionCount, expectedTransitionCount);
             }
-
-            var expectedPeptideCount = AsSmallMolecules ? 10 : 9;
-            var document = SkylineWindow.Document;
-            AssertEx.IsDocumentState(document, null, 3, expectedPeptideCount, 10, 78);
+            AssertEx.IsDocumentState(document, null, 3, expectedMoleculeCount, expectedTransitionGroupCount, expectedTransitionCount);
 
             // p. 3 Select first peptide
             RunUI(() => SkylineWindow.SelectedPath = document.GetPathTo((int) SrmDocument.Level.Molecules, 0));
@@ -204,10 +219,9 @@ namespace pwiz.SkylineTestTutorial
                     }
                 }
             }
-
+            WaitForDocumentLoaded();
             if (!AsSmallMolecules)  // No libraries for small molecules, yet
             {
-                WaitForDocumentLoaded();
                 foreach (var nodeGroup in SkylineWindow.Document.MoleculeTransitionGroups)
                 {
                     Assert.IsFalse(nodeGroup.HasLibInfo && nodeGroup.Transitions.All(nodeTran => !nodeTran.HasLibInfo));
@@ -374,9 +388,11 @@ namespace pwiz.SkylineTestTutorial
             WaitForClosedForm(importPeptideSearchDlg);
             PauseForScreenShot<AllChromatogramsGraph>("Loading chromatograms window", 18);
             WaitForDocumentChangeLoaded(doc, 15 * 60 * 1000); // 15 minutes
-            
-            AssertResult.IsDocumentResultsState(SkylineWindow.Document, shortLowRes20FileName, expectedPeptideCount, 10, 0, 87, 0);
-            AssertResult.IsDocumentResultsState(SkylineWindow.Document, shortLowRes80FileName, expectedPeptideCount, 10, 0, 87, 0);
+
+            expectedTransitionGroupCount = 10; // Expect this many with results
+            expectedTransitionCount = 87; // Expect this many with results
+            AssertResult.IsDocumentResultsState(SkylineWindow.Document, shortLowRes20FileName, expectedMoleculeCount, expectedTransitionGroupCount, 0, expectedTransitionCount, 0);
+            AssertResult.IsDocumentResultsState(SkylineWindow.Document, shortLowRes80FileName, expectedMoleculeCount, expectedTransitionGroupCount, 0, expectedTransitionCount, 0);
 
             RunUI(() =>
             {
@@ -387,7 +403,10 @@ namespace pwiz.SkylineTestTutorial
             });
 
             // Select the first precursor. 
-            FindNode(AsSmallMolecules ? "LVNELTEFAK" : "K.LVNELTEFAK.T [65, 74]");
+            if (AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)
+                FindNode(AsSmallMolecules ? "LVNELTEFAK" : "K.LVNELTEFAK.T [65, 74]");
+            else
+                FindNode(document.MoleculeTransitionGroups.First().CustomIon.DisplayName);
             // Ensure Graphs look like p17. (checked)
             WaitForGraphs();
             RestoreViewOnScreen(18);
@@ -449,7 +468,10 @@ namespace pwiz.SkylineTestTutorial
             // p. 16 screenshot of full 5-point dilution curve
 
             // Select precursor
-            FindNode(AsSmallMolecules ? "DRVYIHPF" : "R.DRVYIHPF.- [34, 41]");  // May be localized " (missed 1)"
+            if (AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)
+                FindNode(AsSmallMolecules ? "DRVYIHPF" : "R.DRVYIHPF.- [34, 41]");  // May be localized " (missed 1)"
+            else
+                FindNode(Resources.CustomIon_DisplayName_Ion + " [1047");
             WaitForGraphs();
             PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas Replicate Comparison graph metafile with split graphs", 24);
             RunUI(() =>
@@ -468,8 +490,13 @@ namespace pwiz.SkylineTestTutorial
                 });
 
             // Ensure graph looks like p20.
-            FindNode(AsSmallMolecules ? "KNLQSLDPSH" : "R.IKNLQSLDPSH.- [80, 90]");
-            FindNode(AsSmallMolecules ? "KNLQSLDPSH" : "R.IKNLQSLDPSH.- [80, 90]");   // Phosphorylated
+            if (AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)
+            {
+                FindNode(AsSmallMolecules ? "KNLQSLDPSH" : "R.IKNLQSLDPSH.- [80, 90]");
+                FindNode(AsSmallMolecules ? "KNLQSLDPSH" : "R.IKNLQSLDPSH.- [80, 90]"); // Phosphorylated
+            }
+            else
+                FindNode(Resources.CustomIon_DisplayName_Ion + " [1333");
             WaitForGraphs();
             PauseForScreenShot<GraphSummary.AreaGraphView>("figure 1a - Area Replicate graph metafile for IKNLQSLDPSH", 26);
             RunUI(() =>
@@ -478,7 +505,10 @@ namespace pwiz.SkylineTestTutorial
                 Assert.AreEqual(9, SkylineWindow.GraphPeakArea.CurveCount);
             });
 
-            FindNode(AsSmallMolecules ? "HLVDEPQNLIK" : "K.HLVDEPQNLIK.Q [401, 411]");
+            if (AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)
+                FindNode(AsSmallMolecules ? "HLVDEPQNLIK" : "K.HLVDEPQNLIK.Q [401, 411]");
+            else
+                FindNode(Resources.CustomIon_DisplayName_Ion + " [1306");
             WaitForGraphs();
             PauseForScreenShot("figure 1b - Area replicate graph metafile for HLVDEPQNLIK", 26);
             RunUI(() =>
@@ -500,6 +530,12 @@ namespace pwiz.SkylineTestTutorial
             string newDocumentFile = GetTestPath(@"TOF\BSA_Agilent.sky");
             WaitForCondition(() => File.Exists(newDocumentFile));
             RunUI(() => SkylineWindow.OpenFile(newDocumentFile));
+
+            bool asSmallMolecules = AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none;
+            if (asSmallMolecules)
+            {
+                ConvertDocumentToSmallMolecules(AsSmallMoleculesTestMode);
+            }
             var docCalibrate1 = SkylineWindow.Document;
             const int pepCount1 = 5, preCount1 = 5, tranCount1 = 30;
             AssertEx.IsDocumentState(docCalibrate1, null, 1, pepCount1, preCount1, tranCount1);
@@ -519,13 +555,12 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 SkylineWindow.Undo();
-                SkylineWindow.Undo();
             });
 
             var document = SkylineWindow.Document;
 
             // Fill out Transition Settings Menu
-            const int tranCount2 = tranCount1 + preCount1*3;
+            int tranCount2 =  (AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.masses_only) ? (tranCount1 + preCount1*3) : (tranCount1 + preCount1); // No iostopes for mass-only document
             using (new CheckDocumentState(1, pepCount1, preCount1, tranCount2))
             {
                 var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
@@ -561,13 +596,13 @@ namespace pwiz.SkylineTestTutorial
                                                tranSettingsHighRes.Filter.IonTypes));
             RunUI(() => SkylineWindow.ExpandPrecursors());
 
-            // Assert each peptide contains 3 precursors transitions.
-            foreach (var nodeGroup in SkylineWindow.Document.PeptideTransitionGroups)
+            // Assert each peptide contains 3 precursors transitions (unless this is a masses-only small molecule doc).
+            foreach (var nodeGroup in SkylineWindow.Document.MoleculeTransitionGroups)
             {
                 for (int i = 0; i < nodeGroup.Children.Count; i++)
                 {
                     var nodeTran = (TransitionDocNode)nodeGroup.Children[i];
-                    if (i < 3)
+                    if (i < ((AsSmallMoleculesTestMode == RefinementSettings.ConvertToSmallMoleculesMode.masses_only) ? 1 : 3))
                         Assert.AreEqual(IonType.precursor, nodeTran.Transition.IonType);
                     else
                         Assert.AreNotEqual(IonType.precursor, nodeTran.Transition.IonType);
@@ -586,7 +621,10 @@ namespace pwiz.SkylineTestTutorial
                 importResultsDlg2.OkDialog();
             });
 
-            FindNode("K.LVNELTEFAK.T [65, 74]");
+            if (AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)
+                FindNode(asSmallMolecules ? "LVNELTEFAK" : "K.LVNELTEFAK.T [65, 74]");
+            else
+                FindNode(document.MoleculeTransitionGroups.First().CustomIon.DisplayName);
             RunUI(() =>
             {
                 SkylineWindow.CollapsePrecursors();
@@ -702,7 +740,7 @@ namespace pwiz.SkylineTestTutorial
             WaitForDotProducts();
             RunUI(() =>
             {
-                Assert.AreEqual(7, SkylineWindow.GraphPeakArea.Categories.Count());
+                Assert.AreEqual((AsSmallMoleculesTestMode == RefinementSettings.ConvertToSmallMoleculesMode.none) ? 7 : 6, SkylineWindow.GraphPeakArea.Categories.Count());
                 Assert.AreEqual(6, SkylineWindow.GraphPeakArea.CurveCount);
             });
             VerifyDotProducts(0.87, 0.67, 0.91, 0.90, 0.90, 0.90);
@@ -730,7 +768,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 Assert.AreEqual(7, SkylineWindow.GraphPeakArea.Categories.Count());
-                Assert.AreEqual(3, SkylineWindow.GraphPeakArea.CurveCount);
+                Assert.AreEqual((AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.masses_only) ? 3 : 1, SkylineWindow.GraphPeakArea.CurveCount);
             });
             VerifyDotProducts(0.99, 0.52, 0.98, 1.00, 1.00, 1.00);
             RunUI(() =>
@@ -749,12 +787,14 @@ namespace pwiz.SkylineTestTutorial
         private void WaitForDotProducts()
         {
             WaitForGraphs();
-            WaitForConditionUI(() => AreaGraphDotProducts.Any(p => p != 0));
+            if (AsSmallMoleculesTestMode == RefinementSettings.ConvertToSmallMoleculesMode.none) // No libraries for small molecules (yet)
+                WaitForConditionUI(() => AreaGraphDotProducts.Any(p => p != 0));
         }
 
         private void VerifyDotProducts(params double[] dotpExpects)
         {
-            RunUI(() =>
+            if (AsSmallMoleculesTestMode == RefinementSettings.ConvertToSmallMoleculesMode.none) // No libraries for small molecules (yet)
+                RunUI(() =>
                       {
                           var dotpActuals = AreaGraphDotProducts;
                           Assert.AreEqual(dotpExpects.Length, dotpActuals.Length);

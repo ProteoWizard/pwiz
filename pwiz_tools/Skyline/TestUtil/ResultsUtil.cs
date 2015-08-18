@@ -171,6 +171,8 @@ namespace pwiz.SkylineTestUtil
             {
                 peptidesActual += nodePep.Results[index].Sum(chromInfo => chromInfo.PeakCountRatio >= 0.5 ? 1 : 0);
             }
+            int transitionsActual = 0;
+            int transitionsHeavyActual = 0;
             int tranGroupsActual = 0;
             int tranGroupsHeavyActual = 0;
             foreach (var nodeGroup in document.MoleculeTransitionGroups.Where(nodeGroup => ( nodeGroup.Results != null && nodeGroup.Results[index] != null)))
@@ -185,20 +187,19 @@ namespace pwiz.SkylineTestUtil
                     else
                         tranGroupsHeavyActual++;
                 }
-            }
-            int transitionsActual = 0;
-            int transitionsHeavyActual = 0;
-            foreach (var nodeTran in document.MoleculeTransitions.Where(nodeTran => (nodeTran.Results != null && nodeTran.Results[index] != null)))
-            {
-                foreach (var chromInfo in nodeTran.Results[index])
+                foreach (var nodeTran in nodeGroup.Children.Cast<TransitionDocNode>().Where(
+                            nodeTran => (nodeTran.Results != null && nodeTran.Results[index] != null)))
                 {
-                    if (chromInfo.Area == 0)
-                        continue;
+                    foreach (var chromInfo in nodeTran.Results[index])
+                    {
+                        if (chromInfo.Area == 0)
+                            continue;
 
-                    if (nodeTran.Transition.Group.LabelType.IsLight)
-                        transitionsActual++;
-                    else
-                        transitionsHeavyActual++;
+                        if (nodeGroup.TransitionGroup.LabelType.IsLight)
+                            transitionsActual++;
+                        else
+                            transitionsHeavyActual++;
+                    }
                 }
             }
             Assert.AreEqual(peptides, peptidesActual);
@@ -253,7 +254,7 @@ namespace pwiz.SkylineTestUtil
             {
                 ChromatogramGroupInfo[] chromGroupInfo1;
                 if (Settings.Default.TestSmallMolecules && pair.NodePep.Peptide.IsCustomIon &&
-                    pair.NodePep.Peptide.CustomIon.ToString().Equals(SrmDocument.TestingNonProteomicMoleculeName))
+                    pair.NodePep.CustomIon.ToString().Equals(SrmDocument.TestingNonProteomicMoleculeName))
                 {
                     Assert.IsFalse(results.TryLoadChromatogram(iChrom1, pair.NodePep, pair.NodeGroup,
                     tolerance, true, out chromGroupInfo1));

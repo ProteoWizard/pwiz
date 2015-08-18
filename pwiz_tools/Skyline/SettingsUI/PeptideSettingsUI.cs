@@ -1181,7 +1181,7 @@ namespace pwiz.Skyline.SettingsUI
 
         #endregion
 
-        private sealed class LabelTypeComboDriver
+        public sealed class LabelTypeComboDriver
         {
             private readonly SettingsListBoxDriver<StaticMod> _driverHeavyMod;
 
@@ -1216,6 +1216,9 @@ namespace pwiz.Skyline.SettingsUI
             {
                 get
                 {
+                    if (ComboIS == null)
+                        return null; // We're using this from the EditCustomMolecule dialog
+
                     if (_singleStandard)
                         return Equals(ComboIS.SelectedItem, Resources.LabelTypeComboDriver_LoadList_none) ? new IsotopeLabelType[0] : new[] { (IsotopeLabelType)ComboIS.SelectedItem };
                     
@@ -1232,38 +1235,46 @@ namespace pwiz.Skyline.SettingsUI
                 try
                 {
                     Combo.BeginUpdate();
-                    ComboIS.BeginUpdate();
+                    if (ComboIS != null)
+                        ComboIS.BeginUpdate();
                     Combo.Items.Clear();
 
-                    _singleStandard = (heavyMods.Count() <= 1);
-                    if (_singleStandard)
+                    if (ComboIS == null) 
                     {
-                        LabelIS.Text = Resources.LabelTypeComboDriver_LoadList_Internal_standard_type;
-                        ComboIS.Items.Clear();
-                        ComboIS.Items.Add(Resources.LabelTypeComboDriver_LoadList_none);
-                        ComboIS.Items.Add(IsotopeLabelType.light);
-                        if (!internalStandardTypes.Any())
-                            ComboIS.SelectedIndex = 0;
-                        if (internalStandardTypes.Contains(IsotopeLabelType.light))
-                            ComboIS.SelectedIndex = 1;
-                        ComboIS.Visible = true;
-                        ListBoxIS.Visible = false;
-                        ComboIS.Parent.Parent.Parent.Height +=
-                            ComboIS.Bottom + BORDER_BOTTOM_HEIGHT - ComboIS.Parent.Height;
+                        // Using this from the Edit Molecule dialog, we want to see Light in this list
+                        Combo.Items.Add(new TypedModifications(IsotopeLabelType.light, new List<StaticMod>()));
                     }
                     else
                     {
-                        LabelIS.Text = Resources.LabelTypeComboDriver_LoadList_Internal_standard_types;
-                        ListBoxIS.Items.Clear();
-                        ListBoxIS.Items.Add(IsotopeLabelType.light);
-                        if (internalStandardTypes.Contains(IsotopeLabelType.light))
-                            ListBoxIS.SetItemChecked(0, true);
-                        ComboIS.Visible = false;
-                        ListBoxIS.Visible = true;
-                        ListBoxIS.Parent.Parent.Parent.Height +=
-                            ListBoxIS.Bottom + BORDER_BOTTOM_HEIGHT - ComboIS.Parent.Height;
+                        _singleStandard = (heavyMods.Count() <= 1);
+                        if (_singleStandard)
+                        {
+                            LabelIS.Text = Resources.LabelTypeComboDriver_LoadList_Internal_standard_type;
+                            ComboIS.Items.Clear();
+                            ComboIS.Items.Add(Resources.LabelTypeComboDriver_LoadList_none);
+                            ComboIS.Items.Add(IsotopeLabelType.light);
+                            if (!internalStandardTypes.Any())
+                                ComboIS.SelectedIndex = 0;
+                            if (internalStandardTypes.Contains(IsotopeLabelType.light))
+                                ComboIS.SelectedIndex = 1;
+                            ComboIS.Visible = true;
+                            ListBoxIS.Visible = false;
+                            ComboIS.Parent.Parent.Parent.Height +=
+                                ComboIS.Bottom + BORDER_BOTTOM_HEIGHT - ComboIS.Parent.Height;
+                        }
+                        else
+                        {
+                            LabelIS.Text = Resources.LabelTypeComboDriver_LoadList_Internal_standard_types;
+                            ListBoxIS.Items.Clear();
+                            ListBoxIS.Items.Add(IsotopeLabelType.light);
+                            if (internalStandardTypes.Contains(IsotopeLabelType.light))
+                                ListBoxIS.SetItemChecked(0, true);
+                            ComboIS.Visible = false;
+                            ListBoxIS.Visible = true;
+                            ListBoxIS.Parent.Parent.Parent.Height +=
+                                ListBoxIS.Bottom + BORDER_BOTTOM_HEIGHT - ComboIS.Parent.Height;
+                        }
                     }
-
                     foreach (var typedMods in heavyMods)
                     {
                         string labelName = typedMods.LabelType.Name;
@@ -1272,17 +1283,20 @@ namespace pwiz.Skyline.SettingsUI
                         if (Equals(typedMods.LabelType.Name, selectedItemLast))
                             Combo.SelectedIndex = i;
 
-                        if (_singleStandard)
+                        if (ComboIS != null) // We may be using this from the Edit Molecule dialog, which is less complex
                         {
-                            i = ComboIS.Items.Add(typedMods.LabelType);
-                            if (internalStandardTypes.Contains(lt => Equals(lt.Name, labelName)))
-                                ComboIS.SelectedIndex = i;
-                        }
-                        else
-                        {
-                            i = ListBoxIS.Items.Add(typedMods.LabelType);
-                            if (internalStandardTypes.Contains(lt => Equals(lt.Name, labelName)))
-                                ListBoxIS.SetItemChecked(i, true);
+                            if (_singleStandard)
+                            {
+                                i = ComboIS.Items.Add(typedMods.LabelType);
+                                if (internalStandardTypes.Contains(lt => Equals(lt.Name, labelName)))
+                                    ComboIS.SelectedIndex = i;
+                            }
+                            else
+                            {
+                                i = ListBoxIS.Items.Add(typedMods.LabelType);
+                                if (internalStandardTypes.Contains(lt => Equals(lt.Name, labelName)))
+                                    ListBoxIS.SetItemChecked(i, true);
+                            }
                         }
                     }
 
@@ -1290,12 +1304,13 @@ namespace pwiz.Skyline.SettingsUI
                     if (Combo.SelectedIndex < 0)
                         Combo.SelectedIndex = 0;
                     // If no internal standard selected yet, use the first heavy mod type
-                    if (_singleStandard && ComboIS.SelectedIndex == -1)
+                    if (ComboIS != null &&_singleStandard && ComboIS.SelectedIndex == -1)
                         ComboIS.SelectedIndex = (ComboIS.Items.Count > 2 ? 2 : 1);
                 }
                 finally
                 {
-                    ComboIS.EndUpdate();
+                    if (ComboIS != null)
+                        ComboIS.EndUpdate();
                     Combo.EndUpdate();
                 }                
             }
@@ -1336,7 +1351,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
             }
 
-            private TypedModifications SelectedMods
+            public TypedModifications SelectedMods
             {
                 get { return (TypedModifications) Combo.SelectedItem; }
             }
@@ -1354,8 +1369,8 @@ namespace pwiz.Skyline.SettingsUI
             public IEnumerable<TypedModifications> GetHeavyModifications()
             {
                 UpdateLastSelected();
-
-                return Combo.Items.OfType<TypedModifications>();
+                // If we are using this in the Add Custom Molecule dialog, we will have added the "light" label to the pick list - ignore here
+                return Combo.Items.OfType<TypedModifications>().Where(x => x.LabelType.Name != IsotopeLabelType.light.Name);
             }
 
             private bool EditListSelected()
@@ -1382,6 +1397,8 @@ namespace pwiz.Skyline.SettingsUI
 
             private void UpdateLastSelected()
             {
+                if (_driverHeavyMod == null) // We may be using this from the less-complicated EditCustomMolecule dialog
+                    return;
                 var lastSelectedMods = SelectedModsLast;
                 var currentMods = _driverHeavyMod.Chosen;
                 if (!ArrayUtil.EqualsDeep(currentMods, lastSelectedMods.Modifications))
@@ -1393,6 +1410,8 @@ namespace pwiz.Skyline.SettingsUI
 
             private void ShowModifications()
             {
+                if (_driverHeavyMod == null) // We may be using this from the less-complicated EditCustomMolecule dialog
+                    return;
                 // Update the heavy modifications check-list to show the new selection
                 _driverHeavyMod.LoadList(SelectedMods.Modifications);
             }

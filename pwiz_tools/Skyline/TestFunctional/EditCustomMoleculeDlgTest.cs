@@ -40,8 +40,13 @@ namespace pwiz.SkylineTestFunctional
         }
 
         const string C12H12 = "C12H12";
-        const string testNametext = "moleculeA";
+        const string testNametext = "Molecule";
+        const string testNametextA = "moleculeA";
         const string COOO13H = "COOO13H";
+        const double averageMass100 = 100;
+        const double monoMass105 = 105;
+        const double testRT = 234.56;
+        const double testRTWindow = 4.56;
 
         protected override void DoTest()
         {
@@ -57,14 +62,19 @@ namespace pwiz.SkylineTestFunctional
                             new PeptideDocNode[0])
                     }, true, IdentityPath.ROOT, out first, out next);
                 }));
-            var doc2 = WaitForDocumentChange(origDoc);
+            var docNext = WaitForDocumentChange(origDoc);
             TestAddingSmallMolecule();
-            var doc3 = WaitForDocumentChange(doc2);
+            docNext = WaitForDocumentChange(docNext);
             TestAddingTransition();
-            var doc4 = WaitForDocumentChange(doc3);
+            docNext = WaitForDocumentChange(docNext);
+            TestEditingTransitionGroup();
+            docNext = WaitForDocumentChange(docNext);
             TestEditingSmallMolecule();
-            WaitForDocumentChange(doc4);
+            docNext = WaitForDocumentChange(docNext);
             TestEditingTransition();
+            docNext = WaitForDocumentChange(docNext);
+            TestAddingSmallMoleculePrecursor();
+            WaitForDocumentChange(docNext);
         }
 
         private static void TestEditingSmallMolecule()
@@ -75,23 +85,12 @@ namespace pwiz.SkylineTestFunctional
             } );
             var docA = SkylineWindow.Document;
 
-            // Verify that Id does not change if you leave the mass and formula alone
-            // This is of interest because custom molecules are an unusual case where a user edit can change the Id of the "Peptide"
             var editMoleculeDlgA = ShowDialog<EditCustomMoleculeDlg>(SkylineWindow.ModifyPeptide);
-            const double testDT = 123.45;
-            const double testOffsetDT = -.45;
-            const double testRT = 234.56;
-            const double testRTWindow = 4.56;
-            const double testCE = 345.67;
+            // Retention time window with no retention time should cause an error
             RunUI(() =>
             {
-                // Test the "set" part of "Issue 371: Small molecules: need to be able to import and/or set CE, RT and DT for individual precursors and products"
-                editMoleculeDlgA.DriftTimeMsec = testDT;
-                editMoleculeDlgA.DriftTimeHighEnergyOffsetMsec = testOffsetDT;
                 editMoleculeDlgA.RetentionTimeWindow = testRTWindow;
-                editMoleculeDlgA.CollisionEnergy = testCE;
             });
-            // Retention time window with no retention time should cause an error
             RunDlg<MessageDlg>(editMoleculeDlgA.OkDialog, dlg =>
             {
                 AssertEx.AreComparableStrings(
@@ -105,30 +104,85 @@ namespace pwiz.SkylineTestFunctional
             var doc = WaitForDocumentChange(docA);
             Assert.IsTrue(doc.Molecules.ElementAt(0).EqualsId(docA.Molecules.ElementAt(0))); // No Id change
             Assert.IsTrue(doc.MoleculeTransitionGroups.ElementAt(0).EqualsId(docA.MoleculeTransitionGroups.ElementAt(0)));  // No change to Id node or its child Ids
-            Assert.AreEqual(testCE, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.CollisionEnergy.Value);
             Assert.AreEqual(testRT, doc.Molecules.ElementAt(0).ExplicitRetentionTime.RetentionTime);
             Assert.AreEqual(testRTWindow, doc.Molecules.ElementAt(0).ExplicitRetentionTime.RetentionTimeWindow);
-            Assert.IsFalse(docA.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.CollisionEnergy.HasValue);
+            Assert.AreEqual(ExplicitTransitionGroupValues.TEST, docA.MoleculeTransitionGroups.ElementAt(0).ExplicitValues);
 
             var editMoleculeDlg = ShowDialog<EditCustomMoleculeDlg>(SkylineWindow.ModifyPeptide);
+            double massPrecisionTolerance = Math.Pow(10, -SequenceMassCalc.MassPrecision);
+            var nameText = "testname";
+            RunUI(() =>
+            {
+                Assert.AreEqual(COOO13H, editMoleculeDlg.NameText);
+                editMoleculeDlg.NameText = nameText;  // Simulate user changing the name
+            });
+            OkDialog(editMoleculeDlg, editMoleculeDlg.OkDialog);
+            var newdoc = WaitForDocumentChange(doc);
+            // Molecule and transitions have independent formulas
+            Assert.AreEqual(253.00979, newdoc.Molecules.ElementAt(0).CustomIon.AverageMass, massPrecisionTolerance);
+            Assert.AreNotEqual(averageMass100, newdoc.Molecules.ElementAt(0).CustomIon.AverageMass, massPrecisionTolerance);
+            Assert.AreEqual(252.931544, newdoc.Molecules.ElementAt(0).CustomIon.MonoisotopicMass, massPrecisionTolerance);
+            Assert.AreNotEqual(monoMass105, newdoc.Molecules.ElementAt(0).CustomIon.MonoisotopicMass, massPrecisionTolerance);
+            Assert.AreEqual(nameText, newdoc.Molecules.ElementAt(0).CustomIon.Name);
+            Assert.AreEqual(testNametext, newdoc.MoleculeTransitionGroups.ElementAt(0).CustomIon.Name);  // Should have no effect on child name
+            Assert.IsNull(newdoc.MoleculeTransitionGroups.ElementAt(0).CustomIon.Formula);
+            Assert.AreEqual(monoMass105 - BioMassCalc.MassElectron, newdoc.MoleculeTransitionGroups.ElementAt(0).PrecursorMz, massPrecisionTolerance);
+
+            // Verify that RT overrides work
+            Assert.AreEqual(testRT, newdoc.Molecules.ElementAt(0).ExplicitRetentionTime.RetentionTime, massPrecisionTolerance);
+            Assert.AreEqual(testRTWindow, newdoc.Molecules.ElementAt(0).ExplicitRetentionTime.RetentionTimeWindow.Value, massPrecisionTolerance);
+
+        }
+
+        private static void TestEditingTransitionGroup()
+        {
+            RunUI(() =>
+            {
+                // Select the first precursor
+                SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0].FirstNode.Nodes[0];
+            });
+            var docA = SkylineWindow.Document;
+
+            var editMoleculeDlgA = ShowDialog<EditCustomMoleculeDlg>(SkylineWindow.ModifySmallMoleculeTransitionGroup);
+            RunUI(() =>
+            {
+                // Test the "set" part of "Issue 371: Small molecules: need to be able to import and/or set CE, RT and DT for individual precursors and products"
+                editMoleculeDlgA.DriftTimeMsec = ExplicitTransitionGroupValues.TEST.DriftTimeMsec.Value;
+                editMoleculeDlgA.DriftTimeHighEnergyOffsetMsec = ExplicitTransitionGroupValues.TEST.DriftTimeHighEnergyOffsetMsec.Value;
+                editMoleculeDlgA.CollisionEnergy = ExplicitTransitionGroupValues.TEST.CollisionEnergy.Value;
+                editMoleculeDlgA.SLens = ExplicitTransitionGroupValues.TEST.SLens.Value;
+                editMoleculeDlgA.ConeVoltage = ExplicitTransitionGroupValues.TEST.ConeVoltage;
+                editMoleculeDlgA.DeclusteringPotential = ExplicitTransitionGroupValues.TEST.DeclusteringPotential;
+                editMoleculeDlgA.CompensationVoltage = ExplicitTransitionGroupValues.TEST.CompensationVoltage;
+            });
+            OkDialog(editMoleculeDlgA, editMoleculeDlgA.OkDialog);
+            var doc = WaitForDocumentChange(docA);
+            var peptideDocNode = doc.Molecules.ElementAt(0);
+            Assert.IsNotNull(peptideDocNode);
+            Assert.IsTrue(peptideDocNode.EqualsId(docA.Molecules.ElementAt(0))); // No Id change
+            Assert.IsTrue(doc.MoleculeTransitionGroups.ElementAt(0).EqualsId(docA.MoleculeTransitionGroups.ElementAt(0)));  // No change to Id node or its child Ids
+            Assert.AreEqual(ExplicitTransitionGroupValues.TEST, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues);
+            Assert.IsNull(peptideDocNode.ExplicitRetentionTime);
+            var editMoleculeDlg = ShowDialog<EditCustomMoleculeDlg>(SkylineWindow.ModifySmallMoleculeTransitionGroup);
             double massPrecisionTolerance = Math.Pow(10, -SequenceMassCalc.MassPrecision);
             double massAverage = 0;
             double massMono = 0;
             RunUI(() =>
             {
+                Assert.AreEqual(COOO13H, editMoleculeDlg.NameText); // Comes from the docnode
                 Assert.AreEqual(COOO13H, editMoleculeDlg.FormulaBox.Formula); // Comes from the docnode
                 Assert.AreEqual(BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(COOO13H), editMoleculeDlg.FormulaBox.MonoMass ?? -1, massPrecisionTolerance);
                 Assert.AreEqual(BioMassCalc.AVERAGE.CalculateMassFromFormula(COOO13H), editMoleculeDlg.FormulaBox.AverageMass ?? -1, massPrecisionTolerance);
                 // Now try something crazy
                 editMoleculeDlg.FormulaBox.Formula = "H500000000";
             });
-            for (int loop=0; loop < 2; loop++)
+            for (int loop = 0; loop < 2; loop++)
             {
                 // Trying to exit the dialog should cause a warning about mass
                 RunDlg<MessageDlg>(editMoleculeDlg.OkDialog, dlg =>
                 {
                     AssertEx.AreComparableStrings(
-                        string.Format(Resources.EditCustomMoleculeDlg_OkDialog_Custom_molecules_must_have_a_mass_less_than_or_equal_to__0__, CustomIon.MAX_MASS), 
+                        string.Format(Resources.EditCustomMoleculeDlg_OkDialog_Custom_molecules_must_have_a_mass_less_than_or_equal_to__0__, CustomIon.MAX_MASS),
                         dlg.Message);
                     dlg.OkDialog(); // Dismiss the warning
                 });
@@ -137,6 +191,21 @@ namespace pwiz.SkylineTestFunctional
                     editMoleculeDlg.FormulaBox.Formula = ""; // Should leave ridiculous mz values in place, those should also trigger warning
                 });
             }
+
+            // Less extreme values should trigger a warning about instrument limits
+            RunUI(() =>
+            {
+                editMoleculeDlg.FormulaBox.MonoMass = CustomIon.MAX_MASS - 100;
+                editMoleculeDlg.FormulaBox.AverageMass = editMoleculeDlg.FormulaBox.MonoMass;
+            });
+            RunDlg<MessageDlg>(editMoleculeDlg.OkDialog, dlg =>
+            {
+                AssertEx.AreComparableStrings(
+                    Resources.SkylineWindow_AddMolecule_The_precursor_m_z_for_this_molecule_is_out_of_range_for_your_instrument_settings_,
+                    dlg.Message);
+                dlg.OkDialog(); // Dismiss the warning
+            });
+
             RunUI(() =>
             {
                 // Verify the interaction of explicitly set formula, mz and charge
@@ -181,12 +250,12 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(mono, editMoleculeDlg.FormulaBox.MonoMass); // Leaves masses untouched
                 Assert.AreEqual(average, editMoleculeDlg.FormulaBox.AverageMass);
 
-                editMoleculeDlg.FormulaBox.AverageMass = 100;
-                editMoleculeDlg.FormulaBox.MonoMass = 105;
-                editMoleculeDlg.NameText = "Molecule";
+                editMoleculeDlg.FormulaBox.AverageMass = averageMass100;
+                editMoleculeDlg.FormulaBox.MonoMass = monoMass105;
+                editMoleculeDlg.NameText = testNametext;
                 Assert.IsTrue(string.IsNullOrEmpty(editMoleculeDlg.FormulaBox.Formula));
-                Assert.AreEqual(100, editMoleculeDlg.FormulaBox.AverageMass);
-                Assert.AreEqual(105, editMoleculeDlg.FormulaBox.MonoMass);
+                Assert.AreEqual(averageMass100, editMoleculeDlg.FormulaBox.AverageMass);
+                Assert.AreEqual(monoMass105, editMoleculeDlg.FormulaBox.MonoMass);
                 var monoText = editMoleculeDlg.FormulaBox.MonoText;
                 var averageText = editMoleculeDlg.FormulaBox.AverageText;
                 double oldMzMono = double.Parse(monoText);
@@ -194,16 +263,16 @@ namespace pwiz.SkylineTestFunctional
                 editMoleculeDlg.Charge = 3;
                 Assert.AreEqual(monoText, editMoleculeDlg.FormulaBox.MonoText); // m/z readout should not change
                 Assert.AreEqual(averageText, editMoleculeDlg.FormulaBox.AverageText);
-                Assert.AreEqual(3*(oldMzAverage + BioMassCalc.MassElectron),
+                Assert.AreEqual(3 * (oldMzAverage + BioMassCalc.MassElectron),
                     editMoleculeDlg.FormulaBox.AverageMass.Value, massPrecisionTolerance);
                 // Mass should change, since mz is what the user is declaring
-                Assert.AreEqual(3*(oldMzMono + BioMassCalc.MassElectron), editMoleculeDlg.FormulaBox.MonoMass.Value,
+                Assert.AreEqual(3 * (oldMzMono + BioMassCalc.MassElectron), editMoleculeDlg.FormulaBox.MonoMass.Value,
                     massPrecisionTolerance);
                 editMoleculeDlg.Charge = 1;
                 massAverage = editMoleculeDlg.FormulaBox.AverageMass.Value;
                 massMono = editMoleculeDlg.FormulaBox.MonoMass.Value;
-                Assert.AreEqual(100, massAverage, massPrecisionTolerance); // Mass should change back
-                Assert.AreEqual(105, massMono, massPrecisionTolerance);
+                Assert.AreEqual(averageMass100, massAverage, massPrecisionTolerance); // Mass should change back
+                Assert.AreEqual(monoMass105, massMono, massPrecisionTolerance);
             });
 
             // Test charge state limits
@@ -240,30 +309,35 @@ namespace pwiz.SkylineTestFunctional
                 editMoleculeDlg.Charge = 1;
                 massAverage = editMoleculeDlg.FormulaBox.AverageMass.Value;
                 massMono = editMoleculeDlg.FormulaBox.MonoMass.Value;
-                Assert.AreEqual(100, massAverage, massPrecisionTolerance); // Mass should change back
-                Assert.AreEqual(105, massMono, massPrecisionTolerance);
+                Assert.AreEqual(averageMass100, massAverage, massPrecisionTolerance); // Mass should change back
+                Assert.AreEqual(monoMass105, massMono, massPrecisionTolerance);
             });
-            OkDialog(editMoleculeDlg,editMoleculeDlg.OkDialog);
+            OkDialog(editMoleculeDlg, editMoleculeDlg.OkDialog);
             var newdoc = WaitForDocumentChange(doc);
-            Assert.AreEqual(massAverage, newdoc.Molecules.ElementAt(0).Peptide.CustomIon.AverageMass, massPrecisionTolerance);
-            Assert.AreEqual(massMono, newdoc.Molecules.ElementAt(0).Peptide.CustomIon.MonoisotopicMass, massPrecisionTolerance);
-            Assert.IsNull(newdoc.Molecules.ElementAt(0).Peptide.CustomIon.Formula);
+            Assert.AreEqual(massAverage, newdoc.MoleculeTransitionGroups.ElementAt(0).CustomIon.AverageMass, massPrecisionTolerance);
+            Assert.AreEqual(massMono, newdoc.MoleculeTransitionGroups.ElementAt(0).CustomIon.MonoisotopicMass, massPrecisionTolerance);
+            Assert.IsNotNull(newdoc.Molecules.ElementAt(0).CustomIon.Formula); // Molecule and children do not share formula
+            Assert.IsNull(newdoc.MoleculeTransitionGroups.ElementAt(0).CustomIon.Formula);
             Assert.AreEqual(massMono - BioMassCalc.MassElectron, newdoc.MoleculeTransitionGroups.ElementAt(0).PrecursorMz);
-            Assert.IsFalse(newdoc.Molecules.ElementAt(0).EqualsId(doc.Molecules.ElementAt(0)));  // Changing the mass changes the Id node
-            Assert.IsFalse(newdoc.MoleculeTransitionGroups.ElementAt(0).EqualsId(doc.MoleculeTransitionGroups.ElementAt(0)));  // Changing the mass changes the Id node and its children
-
-            // Verify that RT and CE overrides work
-            Assert.AreEqual(testCE, newdoc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.CollisionEnergy.Value);
-            Assert.AreEqual(testRT, newdoc.Molecules.ElementAt(0).ExplicitRetentionTime.RetentionTime);
-            Assert.AreEqual(testRTWindow, newdoc.Molecules.ElementAt(0).ExplicitRetentionTime.RetentionTimeWindow.Value);
+            Assert.IsFalse(newdoc.MoleculeTransitionGroups.ElementAt(0).EqualsId(peptideDocNode));  // Changing the mass changes the Id node
+            // Verify that CE overrides work
+            Assert.AreEqual(ExplicitTransitionGroupValues.TEST, newdoc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues);
+            Assert.IsNull(newdoc.Molecules.ElementAt(0).ExplicitRetentionTime);  // Not set yet
 
             // Verify that the explicitly set drift time overides any calculations
             double windowDT;
             var centerDriftTime = newdoc.Settings.PeptideSettings.Prediction.GetDriftTime(
                                        newdoc.Molecules.First(), newdoc.MoleculeTransitionGroups.First(), null, out windowDT);
-            Assert.AreEqual(testDT, centerDriftTime.DriftTimeMsec(false) ?? 0, .0001);
-            Assert.AreEqual(testDT+testOffsetDT, centerDriftTime.DriftTimeMsec(true) ?? 0, .0001);
+            Assert.AreEqual(ExplicitTransitionGroupValues.TEST.DriftTimeMsec.Value, centerDriftTime.DriftTimeMsec(false) ?? 0, .0001);
+            Assert.AreEqual(ExplicitTransitionGroupValues.TEST.DriftTimeMsec.Value + ExplicitTransitionGroupValues.TEST.DriftTimeHighEnergyOffsetMsec.Value, centerDriftTime.DriftTimeMsec(true) ?? 0, .0001);
             Assert.AreEqual(0, windowDT, .0001);
+
+            // Verify that tree selection doesn't change just because we changed an ID object
+            // (formerly the tree node would collapse and focus would jump up a level)
+            RunUI(() =>
+            {
+                Assert.AreEqual(SkylineWindow.SequenceTree.SelectedNode, SkylineWindow.SequenceTree.Nodes[0].FirstNode);
+            });
         }
 
         private static void TestEditingTransition()
@@ -295,6 +369,13 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(BioMassCalc.CalculateIonMz(805, 2), newdoc.MoleculeTransitions.ElementAt(0).Mz, massPrecisionTolerance);
             Assert.IsFalse(ReferenceEquals(doc.MoleculeTransitions.ElementAt(0).Id, newdoc.MoleculeTransitions.ElementAt(0).Id)); // Changing the mass changes the Id
 
+            // Verify that tree selection doesn't change just because we changed an ID object
+            // (formerly the tree node would collapse and focus would jump up a level)
+            RunUI(() =>
+            {
+                Assert.AreEqual(SkylineWindow.SequenceTree.SelectedNode, SkylineWindow.SequenceTree.Nodes[0].FirstNode.FirstNode.FirstNode);
+            });
+
             // And test undo/redo
             RunUI(() => SkylineWindow.Undo());
             newdoc = WaitForDocumentChange(newdoc);
@@ -306,6 +387,12 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual("Fragment", newdoc.MoleculeTransitions.ElementAt(0).Transition.CustomIon.ToString());
             Assert.AreEqual(BioMassCalc.CalculateIonMz(805, 2), newdoc.MoleculeTransitions.ElementAt(0).Mz, massPrecisionTolerance);
 
+            // Verify that tree selection doesn't change just because we changed an ID object
+            // (formerly the tree node would collapse and focus would jump up a level)
+            RunUI(() =>
+            {
+                Assert.AreEqual(SkylineWindow.SequenceTree.SelectedNode, SkylineWindow.SequenceTree.Nodes[0].FirstNode.FirstNode.FirstNode);
+            });
         }
 
         private static void TestAddingTransition()
@@ -320,14 +407,21 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 moleculeDlg.FormulaBox.Formula = C12H12;
-                moleculeDlg.NameText = testNametext;
+                moleculeDlg.NameText = testNametextA;
                 moleculeDlg.Charge = 1;
             });
             OkDialog(moleculeDlg, moleculeDlg.OkDialog);
             var newDoc = SkylineWindow.Document;
-            var compareIon = new DocNodeCustomIon(C12H12, testNametext);
+            var compareIon = new DocNodeCustomIon(C12H12, testNametextA);
             Assert.AreEqual(compareIon,newDoc.MoleculeTransitions.ElementAt(0).Transition.CustomIon);
             Assert.AreEqual(1,newDoc.MoleculeTransitions.ElementAt(0).Transition.Charge);
+
+            // Verify that tree selection doesn't change just because we changed an ID object
+            // (formerly the tree node would collapse and focus would jump up a level)
+            RunUI(() =>
+            {
+                Assert.AreEqual(SkylineWindow.SequenceTree.SelectedNode, SkylineWindow.SequenceTree.Nodes[0].FirstNode.FirstNode);
+            });
         }
 
         private static void TestAddingSmallMolecule()
@@ -337,17 +431,110 @@ namespace pwiz.SkylineTestFunctional
             const int charge = 1;
             RunUI(() =>
             {
+                moleculeDlg.NameText = COOO13H;
                 moleculeDlg.FormulaBox.Formula = COOO13H;
                 moleculeDlg.Charge = charge;
             });
             OkDialog(moleculeDlg, moleculeDlg.OkDialog);
-            var compareIon = new DocNodeCustomIon(COOO13H, "");
+            var compareIon = new DocNodeCustomIon(COOO13H, COOO13H);
             var newDoc = SkylineWindow.Document;
-            Assert.AreEqual(compareIon, newDoc.Molecules.ElementAt(0).Peptide.CustomIon);
+            Assert.AreEqual(compareIon, newDoc.Molecules.ElementAt(0).CustomIon);
+            Assert.AreEqual(compareIon, newDoc.MoleculeTransitionGroups.ElementAt(0).CustomIon);
             Assert.AreEqual(charge, newDoc.MoleculeTransitionGroups.ElementAt(0).PrecursorCharge);
             var predictedMz = BioMassCalc.MONOISOTOPIC.CalculateIonMz(COOO13H, charge);
             var actualMz = newDoc.MoleculeTransitionGroups.ElementAt(0).PrecursorMz;
-            Assert.AreEqual(predictedMz, actualMz, Math.Pow(10,-SequenceMassCalc.MassPrecision));
+            Assert.AreEqual(predictedMz, actualMz, Math.Pow(10, -SequenceMassCalc.MassPrecision));
+        }
+
+        private void TestAddingSmallMoleculePrecursor()
+        {
+            // Position ourselves on the first molecule
+            var newDoc = SkylineWindow.Document;
+            SelectNode(SrmDocument.Level.Molecules, 0);
+            var moleculeDlg = ShowDialog<EditCustomMoleculeDlg>(SkylineWindow.AddSmallMolecule);
+            const int charge = 1;
+            var heavyFormula = COOO13H.Replace("O13", "O12O'");
+            RunUI(() =>
+            {
+                moleculeDlg.NameText = heavyFormula;
+                moleculeDlg.FormulaBox.Formula = heavyFormula;
+                moleculeDlg.IsotopeLabelType = IsotopeLabelType.light; // This should provoke a failure - can't have two of the same label and charge
+            });
+            RunDlg<MessageDlg>(moleculeDlg.OkDialog, dlg =>
+            {
+                // Trying to exit the dialog should cause a warning about charge
+                Assert.AreEqual(
+                Resources.EditCustomMoleculeDlg_OkDialog_A_precursor_with_that_charge_and_label_type_already_exists_, dlg.Message);
+                dlg.OkDialog(); // Dismiss the warning
+            });
+            RunUI(() =>
+            {
+                moleculeDlg.IsotopeLabelType = IsotopeLabelType.heavy; 
+            });
+            OkDialog(moleculeDlg, moleculeDlg.OkDialog);
+
+            var compareIonHeavy = new DocNodeCustomIon(heavyFormula, heavyFormula);
+            newDoc = WaitForDocumentChange(newDoc);
+            Assert.AreEqual(heavyFormula, newDoc.MoleculeTransitionGroups.ElementAt(1).CustomIon.Name);
+            Assert.AreEqual(compareIonHeavy, newDoc.MoleculeTransitionGroups.ElementAt(1).CustomIon);
+            Assert.AreEqual(charge, newDoc.MoleculeTransitionGroups.ElementAt(1).TransitionGroup.PrecursorCharge);
+            var predictedMz = BioMassCalc.MONOISOTOPIC.CalculateIonMz(heavyFormula, charge);
+            var actualMz = newDoc.MoleculeTransitionGroups.ElementAt(1).PrecursorMz;
+            Assert.AreEqual(predictedMz, actualMz, Math.Pow(10, -SequenceMassCalc.MassPrecision));
+
+            // Now verify that we are OK with different charge same label
+            SelectNode(SrmDocument.Level.Molecules, 0);
+            var moleculeDlg2 = ShowDialog<EditCustomMoleculeDlg>(SkylineWindow.AddSmallMolecule);
+            RunUI(() =>
+            {
+                moleculeDlg2.FormulaBox.Formula = COOO13H + "H";
+                moleculeDlg2.Charge = charge + 1;
+                moleculeDlg2.IsotopeLabelType = IsotopeLabelType.light; // This should not provoke a failure
+            });
+            OkDialog(moleculeDlg2, moleculeDlg2.OkDialog);
+
+            // Verify that the transition group sort order is enforced in the document
+            // Select the last precursor, bump its charge state to drop its mz - should result in doc node reordering
+            CheckTransitionGroupSortOrder(newDoc);
+            RunUI(() =>
+            {
+                SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0].FirstNode.LastNode;
+            });
+            var editMoleculeDlgB = ShowDialog<EditCustomMoleculeDlg>(SkylineWindow.ModifySmallMoleculeTransitionGroup);
+            RunUI(() =>
+            {
+                editMoleculeDlgB.Charge = 5;
+            });
+            OkDialog(editMoleculeDlgB, editMoleculeDlgB.OkDialog);
+            newDoc = WaitForDocumentChange(newDoc);
+            CheckTransitionGroupSortOrder(newDoc);
+            RunUI(SkylineWindow.Undo);
+            newDoc = WaitForDocumentChange(newDoc);
+            CheckTransitionGroupSortOrder(newDoc);
+
+        }
+
+        private static void CheckTransitionGroupSortOrder(SrmDocument newDoc)
+        {
+            foreach (var mol in newDoc.Molecules)
+            {
+                double mz = -1;
+                int charge = -99999;
+                foreach (var group in mol.TransitionGroups)
+                {
+                    if (charge != @group.PrecursorCharge)
+                    {
+                        Assert.IsTrue(@group.PrecursorCharge > charge, "Transition groups should be sorted on charge");
+                        charge = @group.PrecursorCharge;
+                        mz = -1;
+                    }
+                    else
+                    {
+                        Assert.IsTrue(@group.PrecursorMz > mz, "Transition groups should be sorted on m/z");
+                        mz = @group.PrecursorMz;
+                    }
+                }
+            }
         }
     }
 }

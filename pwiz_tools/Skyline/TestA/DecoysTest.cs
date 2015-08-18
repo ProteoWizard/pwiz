@@ -117,7 +117,7 @@ namespace pwiz.SkylineTestA
                     if (nodePepSource != null && nodeGroup.TransitionGroup.DecoyMassShift.HasValue)
                     {
                         nodeGroupSource = nodePepSource.TransitionGroups.ElementAt(i);
-                        Assert.AreEqual(nodeGroupSource.PrecursorMz + shift, nodeGroup.PrecursorMz, 1E-07);
+                        Assert.AreEqual(nodeGroupSource.PrecursorMz + shift, nodeGroup.PrecursorMz, SequenceMassCalc.MassTolerance);
                     }
                     for (int j = 0; j < nodeGroup.TransitionCount; j++)
                     {
@@ -128,7 +128,7 @@ namespace pwiz.SkylineTestA
                             Assert.AreEqual(nodeGroup.TransitionGroup.DecoyMassShift, nodeTran.Transition.DecoyMassShift);
                             if (nodeGroupSource != null)
                             {
-                                Assert.AreEqual(nodeGroupSource.Transitions.ElementAt(j).Mz + shift, nodeTran.Mz, 1E-07);
+                                Assert.AreEqual(nodeGroupSource.Transitions.ElementAt(j).Mz + shift, nodeTran.Mz, SequenceMassCalc.MassTolerance);
                             }
                         }
                     }

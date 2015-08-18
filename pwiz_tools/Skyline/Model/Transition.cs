@@ -269,7 +269,7 @@ namespace pwiz.Skyline.Model
         /// <param name="customIon">Non-null if this is a custom transition</param>
         public Transition(TransitionGroup group, int massIndex, CustomIon customIon = null)
             :this(group, IonType.precursor, group.Peptide.Length - 1, massIndex, group.PrecursorCharge, null, customIon)
-        {            
+        {
         }
 
         public Transition(TransitionGroup group, IonType type, int offset, int massIndex, int charge)
@@ -291,8 +291,9 @@ namespace pwiz.Skyline.Model
             MassIndex = massIndex ?? 0;
             Charge = charge;
             DecoyMassShift = decoyMassShift;
-            if (customIon == null && IsCustom(type, group) && IsPrecursor(type))
-                CustomIon = group.Peptide.CustomIon;
+            // Small molecule precursor transition should have same custom ion as parent
+            if (IsPrecursor(type) && group.IsCustomIon)
+                CustomIon = group.CustomIon;
             else
                 CustomIon = customIon;
             // Derived values
@@ -366,9 +367,14 @@ namespace pwiz.Skyline.Model
             return IsCustom(IonType, Group);
         }
 
-        public bool IsCustomAndEditable()
+        public bool IsNonPrecursorNonReporterCustomIon()
         {
-            return !IsPrecursor() && IsCustom() && CustomIon is DocNodeCustomIon;
+            return !IsPrecursor() && IsNonReporterCustomIon();
+        }
+
+        public bool IsNonReporterCustomIon()
+        {
+            return IsCustom() && CustomIon is DocNodeCustomIon;
         }
 
         public char FragmentNTermAA
@@ -485,9 +491,9 @@ namespace pwiz.Skyline.Model
                 obj.CleavageOffset == t.CleavageOffset &&
                 obj.Charge == t.Charge &&
                 obj.MassIndex == t.MassIndex &&
-                Equals(obj.CustomIon, t.CustomIon) &&
+                CustomIon.Equivalent(obj.CustomIon, t.CustomIon) && // Looks at unlabeled formula or name only
                 (obj.DecoyMassShift.Equals(t.DecoyMassShift) || 
-                // Deal with strange case of mProphet golden standard data set
+                // Deal with strange case of mProphet golden standard data set - only a concern for peptides, not small molecules
                 (obj.DecoyMassShift.HasValue && t.DecoyMassShift.HasValue &&
                     (obj.Group.LabelType.IsLight && obj.DecoyMassShift == 0 && !t.Group.LabelType.IsLight && t.DecoyMassShift != 0) ||
                     (!obj.Group.LabelType.IsLight && obj.DecoyMassShift != 0 && t.Group.LabelType.IsLight && t.DecoyMassShift == 0)));
@@ -501,8 +507,8 @@ namespace pwiz.Skyline.Model
                 result = (result * 397) ^ t.CleavageOffset;
                 result = (result * 397) ^ t.MassIndex;
                 result = (result * 397) ^ t.Charge;
-                result = (result * 397) ^ (t.DecoyMassShift.HasValue ? t.DecoyMassShift.Value : 0);
-                result = (result * 397) ^ (t.CustomIon != null ? t.CustomIon.GetHashCode() : 0);
+                result = (result * 397) ^ (t.DecoyMassShift ?? 0);
+                result = (result * 397) ^ (t.CustomIon != null ? t.CustomIon.GetEquivalentHashCode() : 0);
                 return result;
             }
         }
@@ -513,13 +519,14 @@ namespace pwiz.Skyline.Model
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return Equals(obj._group, _group) &&
+            var equal = Equals(obj._group, _group) &&
                 obj.IonType == IonType &&
                 Equals(obj.CustomIon, CustomIon) && 
                 obj.CleavageOffset == CleavageOffset &&
                 obj.MassIndex == MassIndex &&
                 obj.Charge == Charge && 
                 obj.DecoyMassShift.Equals(DecoyMassShift);
+            return equal; // For debugging convenience
         }
 
         public override bool Equals(object obj)
@@ -580,18 +587,35 @@ namespace pwiz.Skyline.Model
 
     public sealed class TransitionLossKey
     {
-        public TransitionLossKey(Transition transition, TransitionLosses losses)
+
+        public TransitionLossKey(TransitionGroupDocNode parent, TransitionDocNode transition, TransitionLosses losses)
         {
-            Transition = transition;
+            Transition = transition.Transition;
             Losses = losses;
+            if (Transition.IsNonReporterCustomIon())
+            {
+                if (!string.IsNullOrEmpty(transition.PrimaryCustomIonEquivalenceKey))
+                    CustomIonEquivalenceTestValue = transition.PrimaryCustomIonEquivalenceKey;
+                else if (!string.IsNullOrEmpty(transition.SecondaryCustomIonEquivalenceKey))
+                    CustomIonEquivalenceTestValue = transition.SecondaryCustomIonEquivalenceKey;
+                else
+                    CustomIonEquivalenceTestValue = "_mzSortIndex_" + parent.Children.IndexOf(transition); // Not L10N
+            }
+            else
+            {
+               CustomIonEquivalenceTestValue = null;
+            }
         }
 
         public Transition Transition { get; private set; }
         public TransitionLosses Losses { get; private set; }
+        public string CustomIonEquivalenceTestValue { get; private set;  }
 
         public bool Equivalent(TransitionLossKey other)
         {
-            return other.Transition.Equivalent(Transition) && Equals(other.Losses, Losses);
+            return Equals(CustomIonEquivalenceTestValue, other.CustomIonEquivalenceTestValue) &&
+                other.Transition.Equivalent(Transition) &&
+                Equals(other.Losses, Losses);
         }
 
         #region object overrides
@@ -624,9 +648,13 @@ namespace pwiz.Skyline.Model
 
     public sealed class TransitionLossEquivalentKey
     {
-        public TransitionLossEquivalentKey(Transition transition, TransitionLosses losses)
+        /// <summary>
+        /// In the case of small molecule transitions specified by mass only, position within 
+        /// the parent's list of transitions is the only meaningful key.  So we need to know our parent.
+        /// </summary>
+        public TransitionLossEquivalentKey(TransitionGroupDocNode parent, TransitionDocNode transition, TransitionLosses losses)
         {
-            Key = new TransitionEquivalentKey(transition);
+            Key = new TransitionEquivalentKey(parent, transition);
             Losses = losses;
         }
 
@@ -664,17 +692,20 @@ namespace pwiz.Skyline.Model
     public sealed class TransitionEquivalentKey
     {
         private readonly Transition _nodeTran;
+        private readonly string _customIonEquivalenceTestText; // For use with small molecules
 
-        public TransitionEquivalentKey(Transition nodeTran)
+        public TransitionEquivalentKey(TransitionGroupDocNode parent, TransitionDocNode nodeTran)
         {
-            _nodeTran = nodeTran;
+            _nodeTran = nodeTran.Transition;
+            _customIonEquivalenceTestText = new TransitionLossKey(parent, nodeTran, null).CustomIonEquivalenceTestValue; 
         }
 
         #region object overrides
 
         private bool Equals(TransitionEquivalentKey other)
         {
-            return Transition.Equivalent(_nodeTran, other._nodeTran);
+            return Equals(_customIonEquivalenceTestText, other._customIonEquivalenceTestText) &&
+                Transition.Equivalent(_nodeTran, other._nodeTran);
         }
 
         public override bool Equals(object obj)
@@ -686,7 +717,10 @@ namespace pwiz.Skyline.Model
 
         public override int GetHashCode()
         {
-            return Transition.GetEquivalentHashCode(_nodeTran);
+            unchecked
+            {
+                return (_customIonEquivalenceTestText == null ? 0 : _customIonEquivalenceTestText.GetHashCode() * 397) ^ Transition.GetEquivalentHashCode(_nodeTran);
+            }
         }
 
         #endregion

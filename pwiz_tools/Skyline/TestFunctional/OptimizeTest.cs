@@ -25,6 +25,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
@@ -44,7 +45,7 @@ namespace pwiz.SkylineTestFunctional
     /// Functional test for CE Optimization.
     /// </summary>
     [TestClass]
-    public class OptimizeTest : AbstractFunctionalTest
+    public class OptimizeTest : AbstractFunctionalTestEx
     {
         [TestMethod]
         public void TestOptimization()
@@ -287,24 +288,27 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.SaveDocument());
 
             // Make sure imported data is of the expected shape.
-            foreach (var nodeTran in SkylineWindow.Document.MoleculeTransitions)
+            foreach (var nodeGroup in SkylineWindow.Document.MoleculeTransitionGroups)
             {
-                Assert.IsTrue(nodeTran.HasResults);
-                Assert.AreEqual(2, nodeTran.Results.Count);
-                foreach (var chromInfoList in nodeTran.Results)
+                foreach (TransitionDocNode nodeTran in nodeGroup.Children)
                 {
-                    if (nodeTran.Transition.Group.LabelType.IsLight)
+                    Assert.IsTrue(nodeTran.HasResults);
+                    Assert.AreEqual(2, nodeTran.Results.Count);
+                    foreach (var chromInfoList in nodeTran.Results)
                     {
-                        Assert.IsNotNull(chromInfoList,
-                            string.Format("Peptide {0}{1}, fragment {2}{3} missing results",
-                                nodeTran.Transition.Group.Peptide.Sequence,
-                                Transition.GetChargeIndicator(nodeTran.Transition.Group.PrecursorCharge),
-                                nodeTran.Transition.FragmentIonName,
-                                Transition.GetChargeIndicator(nodeTran.Transition.Charge)));
-                        Assert.AreEqual(11, chromInfoList.Count);
+                        if (nodeGroup.TransitionGroup.LabelType.IsLight)
+                        {
+                            Assert.IsNotNull(chromInfoList,
+                                string.Format("Peptide {0}{1}, fragment {2}{3} missing results",
+                                    nodeTran.Transition.Group.Peptide.Sequence,
+                                    Transition.GetChargeIndicator(nodeGroup.TransitionGroup.PrecursorCharge),
+                                    nodeTran.Transition.FragmentIonName,
+                                    Transition.GetChargeIndicator(nodeTran.Transition.Charge)));
+                            Assert.AreEqual(11, chromInfoList.Count);
+                        }
+                        else
+                            Assert.IsNull(chromInfoList);
                     }
-                    else
-                        Assert.IsNull(chromInfoList);
                 }
             }
 
@@ -670,14 +674,45 @@ namespace pwiz.SkylineTestFunctional
 
             // Remove all results and export again, relying on the values in the library (3 values will be missing)
             RunUI(() => SkylineWindow.ModifyDocument("Remove results", document => document.ChangeMeasuredResults(null)));
-            var dlgExportFinal3 = ShowDialog<ExportMethodDlg>(SkylineWindow.ShowExportTransitionListDlg);
-            RunUI(() => dlgExportFinal3.OptimizeType = ExportOptimize.NONE);
-            var errorDlgMissingFineCovs = ShowDialog<MultiButtonMsgDlg>(() => dlgExportFinal3.OkDialog(outTransitionsFinalWithOptLib2));
-            RunUI(() => Assert.IsTrue(errorDlgMissingFineCovs.Message.Contains(Resources.ExportMethodDlg_OkDialog_You_are_missing_fine_tune_optimized_compensation_voltages_for_the_following_)));
-            OkDialog(errorDlgMissingFineCovs, errorDlgMissingFineCovs.BtnYesClick);
-            AssertEx.FileEquals(outTransitionsFinalWithOptLib2, TestFilesDir.GetTestPath(@"covdata\cov_final_expected3.csv"));
+            var covdataCovFinalExpected3Csv = @"covdata\cov_final_expected3.csv";
 
-            RunUI(() => SkylineWindow.SaveDocument());
+            for (var loop = 2; loop-- > 0;)
+            {
+                var dlgExportFinal3 = ShowDialog<ExportMethodDlg>(SkylineWindow.ShowExportTransitionListDlg);
+                RunUI(() => dlgExportFinal3.OptimizeType = ExportOptimize.NONE);
+                var lib2 = outTransitionsFinalWithOptLib2;
+                var errorDlgMissingFineCovs = ShowDialog<MultiButtonMsgDlg>(() => dlgExportFinal3.OkDialog(lib2));
+                RunUI(() => Assert.IsTrue(errorDlgMissingFineCovs.Message.Contains(Resources.ExportMethodDlg_OkDialog_You_are_missing_fine_tune_optimized_compensation_voltages_for_the_following_)));
+                OkDialog(errorDlgMissingFineCovs, errorDlgMissingFineCovs.BtnYesClick);
+                AssertEx.FileEquals(outTransitionsFinalWithOptLib2, TestFilesDir.GetTestPath(covdataCovFinalExpected3Csv));
+
+                RunUI(() => SkylineWindow.SaveDocument());
+
+                // Try exporting with an explicitly set compensation voltage value and declustering potential
+                ConvertDocumentToSmallMolecules();
+                RunUI(() => SkylineWindow.ShowDocumentGrid(true));
+                var documentGrid = WaitForOpenForm<DocumentGridForm>();
+                EnableDocumentGridColumns(documentGrid, Resources.SkylineViewContext_GetTransitionListReportSpec_Mixed_Transition_List, 5,
+                    new[] { 
+                        "Proteins!*.Peptides!*.Precursors!*.ExplicitCompensationVoltage", 
+                        "Proteins!*.Peptides!*.Precursors!*.ExplicitDeclusteringPotential", 
+                    });
+                const double explicitCV = 13.45;
+                const double explicitDP = 14.32;
+                var colCV = FindDocumentGridColumn(documentGrid, "Precursor.ExplicitCompensationVoltage");
+                RunUI(() => documentGrid.DataGridView.Rows[0].Cells[colCV.Index].Value = explicitCV);
+                WaitForCondition(() => (SkylineWindow.Document.MoleculeTransitionGroups.Any() &&
+                                        SkylineWindow.Document.MoleculeTransitionGroups.First()
+                                            .ExplicitValues.CompensationVoltage.Equals(explicitCV)));
+                var colDP = FindDocumentGridColumn(documentGrid, "Precursor.ExplicitDeclusteringPotential");
+                RunUI(() => documentGrid.DataGridView.Rows[0].Cells[colDP.Index].Value = explicitDP);
+                WaitForCondition(() => (SkylineWindow.Document.MoleculeTransitionGroups.Any() &&
+                                        SkylineWindow.Document.MoleculeTransitionGroups.First()
+                                            .ExplicitValues.DeclusteringPotential.Equals(explicitDP)));
+                RunUI(() => documentGrid.Close());
+                outTransitionsFinalWithOptLib2 = outTransitionsFinalWithOptLib2.Replace(".", "_sm.");
+                covdataCovFinalExpected3Csv = covdataCovFinalExpected3Csv.Replace(".", "_sm.");
+            }
         }
 
         private static string GetPasteLine(string seq, int charge, string product, int productCharge, double ce)
@@ -874,8 +909,8 @@ namespace pwiz.SkylineTestFunctional
                                 // If there is an optimized value, CE should be equal to it
                                 DbOptimization optimization =
                                     optLib.GetOptimization(OptimizationType.collision_energy,
-                                        document.Settings.GetSourceTextId(nodePep), nodeGroup.PrecursorCharge,
-                                        //nodeGroup.TransitionGroup.Peptide.Sequence, nodeGroup.PrecursorCharge,
+                                        document.Settings.GetSourceTextId(nodePep), nodeGroup.TransitionGroup.PrecursorCharge,
+                                        //nodeGroup.TransitionGroup.Peptide.Sequence, nodeGroup.TransitionGroup.PrecursorCharge,
                                         nodeTran.FragmentIonName, nodeTran.Transition.Charge);
                                 if (optimization != null)
                                     Assert.AreEqual(optimization.Value, tranCE, 0.05);

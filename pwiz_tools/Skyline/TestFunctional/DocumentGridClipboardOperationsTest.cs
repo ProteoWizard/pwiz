@@ -16,10 +16,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
-using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.EditUI;
@@ -83,31 +83,24 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsNull(molecule.Note);
                 Assert.IsNull(molecule.ExplicitRetentionTime);
             }
+            // Test ability to set explicit retention time for peptides and small molecules
+            var explicitRetentionTime = 10.0;
             RunUI(() =>
             {
                 var colExplicitRetentionTime =
                     documentGrid.FindColumn(PropertyPath.Root.Property("ExplicitRetentionTime"));
                 documentGrid.DataGridView.CurrentCell =  documentGrid.DataGridView.Rows[0].Cells[colExplicitRetentionTime.Index];
-                documentGrid.DataGridView.CurrentCell.Value = 10.0;
+                documentGrid.DataGridView.CurrentCell.Value = explicitRetentionTime;
                 for (int iRow = 0; iRow < documentGrid.DataGridView.RowCount; iRow++)
                 {
                     documentGrid.DataGridView.Rows[iRow].Cells[colExplicitRetentionTime.Index].Selected = true;
                 }
             });
-            // When we do a fill down, an error message is expected to be displayed, and the current cell should be in the third row.
-            RunDlg<MessageDlg>(() => documentGrid.DataboundGridControl.FillDown(), messageDlg => messageDlg.OkDialog());
-            Assert.AreEqual(2, documentGrid.DataGridView.CurrentCellAddress.Y);
+            RunUI(() => documentGrid.DataboundGridControl.FillDown());
             foreach (var molecule in SkylineWindow.Document.Molecules)
             {
                 Assert.IsNull(molecule.Note);
-                if (molecule.IsProteomic)
-                {
-                    Assert.IsNull(molecule.ExplicitRetentionTime);
-                }
-                else
-                {
-                    Assert.AreEqual(10.0, molecule.ExplicitRetentionTime.RetentionTime);    
-                }
+                Assert.AreEqual(explicitRetentionTime, molecule.ExplicitRetentionTime.RetentionTime);    
             }
             RunUI(() =>
             {
@@ -123,14 +116,7 @@ namespace pwiz.SkylineTestFunctional
             foreach (var molecule in SkylineWindow.Document.Molecules)
             {
                 Assert.AreEqual("PeptideNote", molecule.Note);
-                if (molecule.IsProteomic)
-                {
-                    Assert.IsNull(molecule.ExplicitRetentionTime);
-                }
-                else
-                {
-                    Assert.AreEqual(10.0, molecule.ExplicitRetentionTime.RetentionTime);
-                }
+                Assert.AreEqual(explicitRetentionTime, molecule.ExplicitRetentionTime.RetentionTime);
             }
             // Undoing the fill down operation will take us back to just the first peptide having
             // a note.
@@ -146,14 +132,7 @@ namespace pwiz.SkylineTestFunctional
                 {
                     Assert.IsNull(molecule.Note);
                 }
-                if (molecule.IsProteomic)
-                {
-                    Assert.IsNull(molecule.ExplicitRetentionTime);
-                }
-                else
-                {
-                    Assert.AreEqual(10.0, molecule.ExplicitRetentionTime.RetentionTime);
-                }
+                Assert.AreEqual(explicitRetentionTime, molecule.ExplicitRetentionTime.RetentionTime);
             }
         }
     }

@@ -342,7 +342,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             if (null != peptideStandards)
             {
                 TransitionChromInfo chromInfoStandard;
-                if (!peptideStandards.TryGetValue(transition.EquivalentKey, out chromInfoStandard))
+                if (!peptideStandards.TryGetValue(transition.EquivalentKey(transitionGroup), out chromInfoStandard))
                 {
                     return;
                 }
@@ -438,7 +438,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                     var chromInfo = chromInfoList.FirstOrDefault(chrom => 0 == chrom.OptimizationStep);
                     if (null != chromInfo)
                     {
-                        result[transition.EquivalentKey] = chromInfo;
+                        result[transition.EquivalentKey(transitionGroup)] = chromInfo;
                     }
                 }
             }

@@ -61,7 +61,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 TransitionGroup transitionGroup = TransitionGroupNode.TransitionGroup;
                 string sequence = transitionGroup.Peptide.IsCustomIon
-                    ? transitionGroup.Peptide.CustomIon.DisplayName
+                    ? TransitionGroupNode.CustomIon.DisplayName
                     : transitionGroup.Peptide.Sequence;
                 int charge = transitionGroup.PrecursorCharge;
                 var labelType = SpectrumInfo.LabelType;
