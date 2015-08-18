@@ -49,14 +49,12 @@ namespace pwiz.Skyline.FileUI
                                                                   "VEATFGVDESNAK",  // Not L10N
                                                                   "YILAGVENSK"};    // Not L10N
 
-        public List<SpectrumMzInfo> LibrarySpectra { get { return _librarySpectra; } } 
-        public List<DbIrtPeptide> DbIrtPeptides { get { return _dbIrtPeptides; } } 
         public string IrtFile { get; private set; }
 
         /// <summary>
         /// In the case where we specify one of the imported proteins as the iRT protein, make a list of its peptides
         /// </summary>
-        public List<string> IrtPeptideSequences { get; private set; }
+        private HashSet<string> _irtPeptideSequences;
 
         private List<SpectrumMzInfo> _librarySpectra;
         private List<DbIrtPeptide> _dbIrtPeptides;
@@ -79,7 +77,6 @@ namespace pwiz.Skyline.FileUI
             InitializeComponent();
             _librarySpectra = new List<SpectrumMzInfo>();
             _dbIrtPeptides = new List<DbIrtPeptide>();
-            IrtPeptideSequences = new List<string>();
             var possibleStandardProteins = peptideGroups.Where(group => group.PeptideCount > CalibrateIrtDlg.MIN_STANDARD_PEPTIDES).ToList();
             var proteinsContainingCommonIrts = possibleStandardProteins.Where(ContainsCommonIrts);
             var proteinsNotContainingCommonIrts = possibleStandardProteins.Where(group => !ContainsCommonIrts(group));
@@ -185,27 +182,16 @@ namespace pwiz.Skyline.FileUI
                         MessageDlg.Show(this, Resources.CreateIrtCalculatorDlg_OkDialog_Transition_list_field_must_contain_a_path_to_a_valid_file_);
                         return;
                     }
-                    IFormatProvider provider;
-                    char sep;
-                    using (var readerLine = new StreamReader(textImportText.Text))
+                    IdentityPath selectPath;
+                    List<MeasuredRetentionTime> irtPeptides;
+                    List<TransitionImportErrorInfo> errorList;
+                    var inputs = new MassListInputs(textImportText.Text);
+                    docNew = docNew.ImportMassList(inputs, null, out selectPath, out irtPeptides, out _librarySpectra, out errorList);
+                    if (errorList.Any())
                     {
-                        Type[] columnTypes;
-                        string line = readerLine.ReadLine();
-                        if (!MassListImporter.IsColumnar(line, out provider, out sep, out columnTypes))
-                            throw new IOException(Resources.SkylineWindow_importMassListMenuItem_Click_Data_columns_not_found_in_first_line);
+                        throw new InvalidDataException(errorList[0].ErrorMessage);
                     }
-                    using (var readerList = new StreamReader(textImportText.Text))
-                    {
-                        IdentityPath selectPath;
-                        List<KeyValuePair<string, double>> irtPeptides;
-                        List<TransitionImportErrorInfo> errorList;
-                        docNew = docNew.ImportMassList(readerList, provider, sep, null, out selectPath, out irtPeptides, out _librarySpectra, out errorList);
-                        if (errorList.Any())
-                        {
-                            throw new InvalidDataException(errorList[0].ErrorMessage);
-                        }
-                        _dbIrtPeptides = irtPeptides.Select(pair => new DbIrtPeptide(pair.Key, pair.Value, true, TimeSource.scan)).ToList();
-                    }
+                    _dbIrtPeptides = irtPeptides.Select(rt => new DbIrtPeptide(rt.PeptideSequence, rt.RetentionTime, true, TimeSource.scan)).ToList();
                     IrtFile = textImportText.Text;
                 }
                 catch (Exception x)
@@ -218,11 +204,19 @@ namespace pwiz.Skyline.FileUI
             {
                 PeptideGroupDocNode selectedGroup = comboBoxProteins.SelectedItem as PeptideGroupDocNode;
 // ReSharper disable PossibleNullReferenceException
-                IrtPeptideSequences = selectedGroup.Peptides.Select(pep => pep.ModifiedSequence).ToList();
+                _irtPeptideSequences = new HashSet<string>(selectedGroup.Peptides.Select(pep => pep.ModifiedSequence));
 // ReSharper restore PossibleNullReferenceException
             }
             Document = docNew;
             DialogResult = DialogResult.OK;
+        }
+
+        public void UpdateLists(List<SpectrumMzInfo> librarySpectra, List<DbIrtPeptide> dbIrtPeptidesFilter)
+        {
+            librarySpectra.AddRange(_librarySpectra);
+            dbIrtPeptidesFilter.AddRange(_dbIrtPeptides);
+            if (_irtPeptideSequences != null)
+                dbIrtPeptidesFilter.ForEach(pep => pep.Standard = _irtPeptideSequences.Contains(pep.PeptideModSeq));
         }
 
         public bool CreateDatabase(string path)

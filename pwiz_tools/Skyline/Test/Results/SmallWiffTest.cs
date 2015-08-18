@@ -155,29 +155,32 @@ namespace pwiz.SkylineTest.Results
 
             IdentityPath selectPath;
             string path = testFilesDir.GetTestPath("051309_transition list.csv");
-            IFormatProvider provider = CultureInfo.InvariantCulture;
-            using (var reader = new StreamReader(path))
+            // Product m/z out of range
+            var docError = doc;
+            List<MeasuredRetentionTime> irtPeptides;
+            List<SpectrumMzInfo> librarySpectra;
+            List<TransitionImportErrorInfo> errorList;
+            var inputs = new MassListInputs(path)
             {
-                // Product m/z out of range
-                var docError = doc;
-                List<KeyValuePair<string, double>> irtPeptides;
-                List<SpectrumMzInfo> librarySpectra;
-                List<TransitionImportErrorInfo> errorList;
-                docError.ImportMassList(reader, provider, ',', null, out selectPath, out irtPeptides, out librarySpectra, out errorList);
-                Assert.AreEqual(errorList.Count, 1);
-                AssertEx.AreComparableStrings(TextUtil.SpaceSeparate(Resources.MassListRowReader_CalcTransitionExplanations_The_product_m_z__0__is_out_of_range_for_the_instrument_settings__in_the_peptide_sequence__1_,
-                                                    Resources.MassListRowReader_CalcPrecursorExplanations_Check_the_Instrument_tab_in_the_Transition_Settings),
-                                             errorList[0].ErrorMessage,
-                                             2);
-                Assert.AreEqual(errorList[0].Column, 1);
-                Assert.AreEqual(errorList[0].Row, 19);
-            }
+                FormatProvider = CultureInfo.InvariantCulture,
+                Separator = TextUtil.SEPARATOR_CSV
+            };
+            docError.ImportMassList(inputs, null, out selectPath, out irtPeptides, out librarySpectra, out errorList);
+            Assert.AreEqual(errorList.Count, 1);
+            AssertEx.AreComparableStrings(TextUtil.SpaceSeparate(Resources.MassListRowReader_CalcTransitionExplanations_The_product_m_z__0__is_out_of_range_for_the_instrument_settings__in_the_peptide_sequence__1_,
+                                                Resources.MassListRowReader_CalcPrecursorExplanations_Check_the_Instrument_tab_in_the_Transition_Settings),
+                                            errorList[0].ErrorMessage,
+                                            2);
+            Assert.AreEqual(errorList[0].Column, 1);
+            Assert.AreEqual(errorList[0].Row, 19);
 
-            using (var reader = new StreamReader(path))
+            doc = doc.ChangeSettings(settings.ChangeTransitionInstrument(inst => inst.ChangeMaxMz(1800)));
+            inputs = new MassListInputs(path)
             {
-                doc = doc.ChangeSettings(settings.ChangeTransitionInstrument(inst => inst.ChangeMaxMz(1800)));
-                doc = doc.ImportMassList(reader, provider, ',', null, out selectPath);
-            }
+                FormatProvider = CultureInfo.InvariantCulture,
+                Separator = TextUtil.SEPARATOR_CSV
+            };
+            doc = doc.ImportMassList(inputs, null, out selectPath);
 
             AssertEx.IsDocumentState(doc, 2, 9, 9, 18, 54);
             return doc;

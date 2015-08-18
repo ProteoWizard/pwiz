@@ -32,6 +32,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -407,12 +408,10 @@ namespace pwiz.SkylineTestUtil
             var docExport = exporter.Document;
             var docImport = new SrmDocument(docExport.Settings);
             string transitionList = exporter.MemoryOutput.Values.ToArray()[0].ToString();
-            using (var readerImport = new StringReader(DuplicateAndReverseLines(transitionList, exporter.HasHeaders)))
-            {
-                IdentityPath pathAdded;
-                IFormatProvider provider = CultureInfo.InvariantCulture;
-                docImport = docImport.ImportMassList(readerImport, provider, ',', IdentityPath.ROOT, out pathAdded);
-            }
+            IdentityPath pathAdded;
+            var inputs = new MassListInputs(DuplicateAndReverseLines(transitionList, exporter.HasHeaders),
+                CultureInfo.InvariantCulture, TextUtil.SEPARATOR_CSV);
+            docImport = docImport.ImportMassList(inputs, IdentityPath.ROOT, out pathAdded);
 
             IsDocumentState(docImport, 1,
                                      docExport.MoleculeGroupCount,

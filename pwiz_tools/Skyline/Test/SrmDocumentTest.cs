@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Xml;
 using pwiz.Skyline.Model;
@@ -28,6 +27,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.V01;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest
@@ -319,12 +319,9 @@ namespace pwiz.SkylineTest
                     AssertEx.NoDiff(targetList, actualList);
 
                 // Import the exported list
-                using (var readerImport = new StringReader(actualList))
-                {
-                    IdentityPath pathAdded;
-                    IFormatProvider provider = CultureInfo.InvariantCulture;
-                    docImport = docImport.ImportMassList(readerImport, provider, ',', IdentityPath.ROOT, out pathAdded);
-                }
+                IdentityPath pathAdded;
+                var inputs = new MassListInputs(actualList, CultureInfo.InvariantCulture, TextUtil.SEPARATOR_CSV);
+                docImport = docImport.ImportMassList(inputs, IdentityPath.ROOT, out pathAdded);
             }
 
             if (minTransition < 2)
@@ -370,12 +367,9 @@ namespace pwiz.SkylineTest
                 string actualList = exportedActual[key].ToString();
 
                 // Import the exported list
-                using (var readerImport = new StringReader(actualList))
-                {
-                    IdentityPath pathAdded;
-                    IFormatProvider provider = CultureInfo.InvariantCulture;
-                    docImport = docImport.ImportMassList(readerImport, provider, ',', IdentityPath.ROOT, out pathAdded);
-                }
+                IdentityPath pathAdded;
+                var inputs = new MassListInputs(actualList, CultureInfo.InvariantCulture, TextUtil.SEPARATOR_CSV);
+                docImport = docImport.ImportMassList(inputs, IdentityPath.ROOT, out pathAdded);
             }
             return exportedActual.Count;
         }

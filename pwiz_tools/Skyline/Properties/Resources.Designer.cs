@@ -3439,6 +3439,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error: Invalid value &apos;{0}&apos; for {1}, use &apos;reversed&apos; or &apos;shuffled&apos;..
+        /// </summary>
+        public static string CommandArgs_ParseArgsInternal_Error__Invalid_value___0___for__1___use__reversed__or__shuffled__ {
+            get {
+                return ResourceManager.GetString("CommandArgs_ParseArgsInternal_Error__Invalid_value___0___for__1___use__reversed__" +
+                        "or__shuffled__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error: Regular expression &apos;{0}&apos; does not have any groups.  One group is required. The part of the file or sub-directory name that matches the first group in the regular expression is used as the replicate name..
         /// </summary>
         public static string CommandArgs_ParseArgsInternal_Error__Regular_expression___0___does_not_have_any_groups___String {
@@ -3464,6 +3474,15 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("CommandArgs_ParseArgsInternal_Error__The_specified_working_directory__0__does_not" +
                         "_exist_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: The value &apos;{0}&apos; for {1} must be an integer..
+        /// </summary>
+        public static string CommandArgs_ParseArgsInternal_Error__The_value___0___for__1__must_be_an_integer_ {
+            get {
+                return ResourceManager.GetString("CommandArgs_ParseArgsInternal_Error__The_value___0___for__1__must_be_an_integer_", resourceCulture);
             }
         }
         
@@ -4489,6 +4508,15 @@ namespace pwiz.Skyline.Properties {
         public static string CommandLine_ImportToolsFromZip_Installing_tools_from__0_ {
             get {
                 return ResourceManager.GetString("CommandLine_ImportToolsFromZip_Installing_tools_from__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Importing transiton list {0}....
+        /// </summary>
+        public static string CommandLine_ImportTransitionList_Importing_transiton_list__0____ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportTransitionList_Importing_transiton_list__0____", resourceCulture);
             }
         }
         

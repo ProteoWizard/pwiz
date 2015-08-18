@@ -899,47 +899,40 @@ namespace pwiz.Skyline.Model
             return AddPeptideGroups(imported, true, to, out firstAdded, out nextAdded);
         }
 
-        public SrmDocument ImportMassList(TextReader reader,
-                                          IFormatProvider provider,
-                                          char separator,
+        public SrmDocument ImportMassList(MassListInputs inputs,
                                           IdentityPath to,
                                           out IdentityPath firstAdded)
         {
-            List<KeyValuePair<string, double>> irtPeptides;
+            List<MeasuredRetentionTime> irtPeptides;
             List<SpectrumMzInfo> librarySpectra;
             List<TransitionImportErrorInfo> errorList;
             List<PeptideGroupDocNode> peptideGroups;
-            return ImportMassList(reader, null, -1, provider, separator, to, out firstAdded, out irtPeptides, out librarySpectra, out errorList, out peptideGroups);
+            return ImportMassList(inputs, null, to, out firstAdded, out irtPeptides, out librarySpectra, out errorList, out peptideGroups);
         }
 
-        public SrmDocument ImportMassList(TextReader reader,
-                                          IFormatProvider provider,
-                                          char separator,
+        public SrmDocument ImportMassList(MassListInputs inputs,
                                           IdentityPath to,
                                           out IdentityPath firstAdded,
-                                          out List<KeyValuePair<string, double>> irtPeptides,
+                                          out List<MeasuredRetentionTime> irtPeptides,
                                           out List<SpectrumMzInfo> librarySpectra,
                                           out List<TransitionImportErrorInfo> errorList)
         {
             List<PeptideGroupDocNode> peptideGroups;
-            return ImportMassList(reader, null, -1, provider, separator, to, out firstAdded, out irtPeptides, out librarySpectra, out errorList, out peptideGroups);
+            return ImportMassList(inputs, null, to, out firstAdded, out irtPeptides, out librarySpectra, out errorList, out peptideGroups);
         }
 
-        public SrmDocument ImportMassList(TextReader reader, 
-                                          ILongWaitBroker longWaitBroker,
-                                          long lines,
-                                          IFormatProvider provider, 
-                                          char separator,
+        public SrmDocument ImportMassList(MassListInputs inputs, 
+                                          IProgressMonitor progressMonitor,
                                           IdentityPath to,
                                           out IdentityPath firstAdded,
-                                          out List<KeyValuePair<string, double>> irtPeptides,
+                                          out List<MeasuredRetentionTime> irtPeptides,
                                           out List<SpectrumMzInfo> librarySpectra,
                                           out List<TransitionImportErrorInfo> errorList,
                                           out List<PeptideGroupDocNode> peptideGroups)
         {
-            MassListImporter importer = new MassListImporter(this, provider, separator);
+            MassListImporter importer = new MassListImporter(this, inputs);
             IdentityPath nextAdd;
-            peptideGroups = importer.Import(reader, longWaitBroker, lines, out irtPeptides, out librarySpectra, out errorList).ToList();
+            peptideGroups = importer.Import(progressMonitor, out irtPeptides, out librarySpectra, out errorList).ToList();
             var docNew = AddPeptideGroups(peptideGroups, false, to, out firstAdded, out nextAdd);
             var pepModsNew = importer.GetModifications(docNew);
             if (!ReferenceEquals(pepModsNew, Settings.PeptideSettings.Modifications))

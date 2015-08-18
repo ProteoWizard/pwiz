@@ -95,7 +95,7 @@ namespace pwiz.Skyline.Model
                 if (progressMonitor != null)
                 {
                     // TODO when changing from ILongWaitBroker to IProgressMonitor, the old code was:
-                    // if (longWaitBroker.IsCanceled || longWaitBroker.IsDocumentChanged(Document))
+                    // if (progressMonitor.IsCanceled || progressMonitor.IsDocumentChanged(Document))
                     // IProgressMonitor does not have IsDocumentChangesd.
                     if (progressMonitor.IsCanceled)
                         return new PeptideGroupDocNode[0];
@@ -216,6 +216,75 @@ namespace pwiz.Skyline.Model
         #endregion
     }
 
+    public class MassListInputs
+    {
+        private readonly string _inputFilename;
+        private readonly string _inputText;
+        private IList<string> _lines; 
+
+        public MassListInputs(string initText, bool fullText = false)
+        {
+            if (fullText)
+                _inputText = initText;
+            else
+                _inputFilename = initText;
+        }
+
+        public MassListInputs(string inputText, IFormatProvider formatProvider, char separator)
+        {
+            _inputText = inputText;
+
+            FormatProvider = formatProvider;
+            Separator = separator;
+        }
+
+        public IList<string> ReadLines()
+        {
+            return _lines ?? (_lines = _inputFilename != null ? ReadLinesFromFile() : ReadLinesFromText());
+        }
+
+        private IList<string> ReadLinesFromFile()
+        {
+            var inputLines = File.ReadAllLines(_inputFilename);
+            if (inputLines.Length == 0)
+                throw new InvalidDataException(Resources.MassListImporter_Import_Empty_transition_list);
+            InitFormat(inputLines);
+            return inputLines;
+        }
+
+        private IList<string> ReadLinesFromText()
+        {
+            var inputLines = new List<string>();
+            using (var readerLines = new StringReader(_inputText))
+            {
+                string line;
+                while ((line = readerLines.ReadLine()) != null)
+                    inputLines.Add(line);
+            }
+            if (inputLines.Count == 0)
+                throw new InvalidDataException(Resources.MassListImporter_Import_Empty_transition_list);
+            InitFormat(inputLines);
+            return inputLines;
+        }
+
+        private void InitFormat(IList<string> inputLines)
+        {
+            if (FormatProvider == null)
+            {
+                char sep;
+                IFormatProvider provider;
+                Type[] columnTypes;
+                if (!MassListImporter.IsColumnar(inputLines[0], out provider, out sep, out columnTypes))
+                    throw new IOException(Resources.SkylineWindow_importMassListMenuItem_Click_Data_columns_not_found_in_first_line);
+                FormatProvider = provider;
+                Separator = sep;
+            }
+        }
+
+        public IFormatProvider FormatProvider { get; set; }
+        public char Separator { get; set; }
+    }
+
     public class MassListImporter
     {
         private const int INSPECT_LINES = 50;
@@ -228,27 +297,25 @@ namespace pwiz.Skyline.Model
 
         private MassListRowReader _rowReader;
 
-        public MassListImporter(SrmDocument document, IFormatProvider provider, char separator)
+        public MassListImporter(SrmDocument document, MassListInputs inputs)
         {
             Document = document;
-            FormatProvider = provider;
-            Separator = separator;
+            Inputs = inputs;
         }
 
         public SrmDocument Document { get; private set; }
         public SrmSettings Settings { get { return Document.Settings; } }
-        public IFormatProvider FormatProvider { get; private set; }
-        public char Separator { get; private set; }
+        public MassListInputs Inputs { get; private set; }
+        public IFormatProvider FormatProvider { get { return Inputs.FormatProvider; } }
+        public char Separator { get { return Inputs.Separator; } }
 
         public PeptideModifications GetModifications(SrmDocument document)
         {
             return _rowReader != null ? _rowReader.GetModifications(document) : document.Settings.PeptideSettings.Modifications;
         }
 
-        public IEnumerable<PeptideGroupDocNode> Import(TextReader reader,
-                                                       ILongWaitBroker longWaitBroker,
-                                                       long lineCount,
-                                                       out List<KeyValuePair<string, double>> irtPeptides,
+        public IEnumerable<PeptideGroupDocNode> Import(IProgressMonitor progressMonitor,
+                                                       out List<MeasuredRetentionTime> irtPeptides,
                                                        out List<SpectrumMzInfo> librarySpectra,
                                                        out List<TransitionImportErrorInfo> errorList)
         {
@@ -264,7 +331,7 @@ namespace pwiz.Skyline.Model
 
             try
             {
-                return Import(reader, longWaitBroker, lineCount, null, dictNameSeqAll, out irtPeptides, out librarySpectra, out errorList);
+                return Import(progressMonitor, null, dictNameSeqAll, out irtPeptides, out librarySpectra, out errorList);
             }
             catch (LineColNumberedIoException x)
             {
@@ -272,49 +339,42 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public IEnumerable<PeptideGroupDocNode> Import(TextReader reader,
-                                                       ILongWaitBroker longWaitBroker,
-                                                       long lineCount,
+        public IEnumerable<PeptideGroupDocNode> Import(IProgressMonitor progressMonitor,
                                                        ColumnIndices indices,
                                                        IDictionary<string, FastaSequence> dictNameSeq)
         {
-            List<KeyValuePair<string, double>> irtPeptides;
+            List<MeasuredRetentionTime> irtPeptides;
             List<SpectrumMzInfo> librarySpectra;
             List<TransitionImportErrorInfo> errorList;
-            return Import(reader, longWaitBroker, lineCount, indices, dictNameSeq, out irtPeptides, out librarySpectra, out errorList);
+            return Import(progressMonitor, indices, dictNameSeq, out irtPeptides, out librarySpectra, out errorList);
         }
 
-        public IEnumerable<PeptideGroupDocNode> Import(TextReader reader,
-                                                       ILongWaitBroker longWaitBroker,
-                                                       long lineCount,
+        public IEnumerable<PeptideGroupDocNode> Import(IProgressMonitor progressMonitor,
                                                        ColumnIndices indices,
                                                        IDictionary<string, FastaSequence> dictNameSeq,
-                                                       out List<KeyValuePair<string, double>> irtPeptides,
+                                                       out List<MeasuredRetentionTime> irtPeptides,
                                                        out List<SpectrumMzInfo> librarySpectra,
                                                        out List<TransitionImportErrorInfo> errorList)
         {
-            irtPeptides = new List<KeyValuePair<string, double>>();
+            irtPeptides = new List<MeasuredRetentionTime>();
             librarySpectra = new List<SpectrumMzInfo>();
             errorList = new List<TransitionImportErrorInfo>();
+            var status = new ProgressStatus(string.Empty);
             // Get the lines used to guess the necessary columns and create the row reader
-            if (longWaitBroker != null)
+            if (progressMonitor != null)
             {
-                if (longWaitBroker.IsCanceled)
+                if (progressMonitor.IsCanceled)
                     return new PeptideGroupDocNode[0];
-                longWaitBroker.Message = Resources.MassListImporter_Import_Reading_transition_list;
-            }
-            string line;
-            List<string> lines = new List<string>();
-            while ((line = reader.ReadLine()) != null)
-            {
-                lines.Add(line);
+                status = status.ChangeMessage(Resources.MassListImporter_Import_Reading_transition_list);
             }
 
-            if (longWaitBroker != null)
+            var lines = new List<string>(Inputs.ReadLines());
+
+            if (progressMonitor != null)
             {
-                if (longWaitBroker.IsCanceled)
+                if (progressMonitor.IsCanceled)
                     return new PeptideGroupDocNode[0];
-                longWaitBroker.Message = Resources.MassListImporter_Import_Inspecting_peptide_sequence_information;
+                status = status.ChangeMessage(Resources.MassListImporter_Import_Inspecting_peptide_sequence_information);
             }
             if (indices != null)
             {
@@ -323,8 +383,7 @@ namespace pwiz.Skyline.Model
             else
             {
                 // Check first line for validity
-                if ((line = lines.FirstOrDefault()) == null)
-                    throw new InvalidDataException(Resources.MassListImporter_Import_Empty_transition_list);
+                var line = lines.FirstOrDefault();
                 string[] fields = line.ParseDsvFields(Separator);
                 string[] headers = fields.All(field => GetColumnType(field.Trim(), FormatProvider) != typeof (double))
                                        ? fields
@@ -383,9 +442,9 @@ namespace pwiz.Skyline.Model
                     continue;
                 }
 
-                if (longWaitBroker != null)
+                if (progressMonitor != null)
                 {
-                    if (longWaitBroker.IsCanceled)
+                    if (progressMonitor.IsCanceled)
                     {
                         irtPeptides.Clear();
                         librarySpectra.Clear();
@@ -393,13 +452,13 @@ namespace pwiz.Skyline.Model
                         return new PeptideGroupDocNode[0];
                     }
 
-                    int percentComplete = (int)(lineIndex * 100 / lineCount);
+                    int percentComplete = (int)(lineIndex * 100 / lines.Count);
 
-                    if (longWaitBroker.ProgressValue != percentComplete)
+                    if (status.PercentComplete != percentComplete)
                     {
-                        longWaitBroker.ProgressValue = percentComplete;
-                        longWaitBroker.Message = string.Format(Resources.MassListImporter_Import_Importing__0__,
+                        string message = string.Format(Resources.MassListImporter_Import_Importing__0__,
                             _rowReader.TransitionInfo.ProteinName ?? _rowReader.TransitionInfo.PeptideSequence);
+                        status = status.ChangePercentComplete(percentComplete).ChangeMessage(message);
                     }
                 }
 
@@ -462,7 +521,7 @@ namespace pwiz.Skyline.Model
                                            IDictionary<string, FastaSequence> dictNameSeq,
                                            ICollection<PeptideGroupDocNode> peptideGroupsNew,
                                            long lineNum,
-                                           List<KeyValuePair<string, double>> irtPeptides,
+                                           List<MeasuredRetentionTime> irtPeptides,
                                            List<SpectrumMzInfo> librarySpectra,
                                            List<TransitionImportErrorInfo> errorList)
         {
@@ -523,7 +582,7 @@ namespace pwiz.Skyline.Model
 
         private void AddPeptideGroup(ICollection<PeptideGroupDocNode> listGroups,
                                      PeptideGroupBuilder builder,
-                                     List<KeyValuePair<string, double>> irtPeptides, 
+                                     List<MeasuredRetentionTime> irtPeptides, 
                                      List<SpectrumMzInfo> librarySpectra,
                                      List<TransitionImportErrorInfo> errorList)
         {
@@ -1774,7 +1833,7 @@ namespace pwiz.Skyline.Model
         private double _activePrecursorMz;
         private readonly List<ExTransitionInfo> _activeTransitionInfos;
         private double? _irtValue;
-        private readonly List<KeyValuePair<string, double>> _irtPeptides;
+        private readonly List<MeasuredRetentionTime> _irtPeptides;
         private readonly List<TransitionImportErrorInfo> _peptideGroupErrorInfo;
         private readonly List<TransitionGroupLibraryIrtTriple> _groupLibTriples;
         private readonly List<SpectrumMzInfo> _librarySpectra;
@@ -1799,7 +1858,7 @@ namespace pwiz.Skyline.Model
             _charges = new Dictionary<int, int>();
             _groupLibTriples = new List<TransitionGroupLibraryIrtTriple>();
             _activeTransitionInfos = new List<ExTransitionInfo>();
-            _irtPeptides = new List<KeyValuePair<string, double>>();
+            _irtPeptides = new List<MeasuredRetentionTime>();
             _librarySpectra = new List<SpectrumMzInfo>();
             _activeLibraryIntensities = new List<SpectrumPeaksInfo.MI>();
             _peptideGroupErrorInfo = new List<TransitionImportErrorInfo>();
@@ -1864,7 +1923,7 @@ namespace pwiz.Skyline.Model
         /// </summary>
         public string BaseName { get; set; }
 
-        public List<KeyValuePair<string, double>> IrtPeptides { get { return _irtPeptides; } }
+        public List<MeasuredRetentionTime> IrtPeptides { get { return _irtPeptides; } }
         public List<SpectrumMzInfo> LibrarySpectra { get { return _librarySpectra; } } 
         public List<TransitionImportErrorInfo> PeptideGroupErrorInfo { get { return _peptideGroupErrorInfo; } } 
 
@@ -2089,7 +2148,7 @@ namespace pwiz.Skyline.Model
             _peptides.Add(docNode);
             if (peptideIrt.HasValue)
             {
-                _irtPeptides.Add(new KeyValuePair<string, double>(docNode.ModifiedSequence, peptideIrt.Value));
+                _irtPeptides.Add(new MeasuredRetentionTime(docNode.ModifiedSequence, peptideIrt.Value, true));
             }
             _groupLibTriples.Clear();
 

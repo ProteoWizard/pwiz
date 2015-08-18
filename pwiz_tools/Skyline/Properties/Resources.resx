@@ -8615,4 +8615,13 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="CommandArgs_ParseArgsInternal_Error__The_specified_working_directory__0__does_not_exist_" xml:space="preserve">
     <value>Error: The specified working directory {0} does not exist.</value>
   </data>
+  <data name="CommandArgs_ParseArgsInternal_Error__Invalid_value___0___for__1___use__reversed__or__shuffled__" xml:space="preserve">
+    <value>Error: Invalid value '{0}' for {1}, use 'reversed' or 'shuffled'.</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Error__The_value___0___for__1__must_be_an_integer_" xml:space="preserve">
+    <value>Error: The value '{0}' for {1} must be an integer.</value>
+  </data>
+  <data name="CommandLine_ImportTransitionList_Importing_transiton_list__0____" xml:space="preserve">
+    <value>Importing transiton list {0}...</value>
+  </data>
 </root>

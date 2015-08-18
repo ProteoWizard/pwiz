@@ -1142,7 +1142,7 @@ namespace pwiz.Skyline
         {
             bool peptideList = false;
             Type[] columnTypes;
-            IFormatProvider provider;
+            IFormatProvider formatProvider;
             char separator;
 
             // Check for a FASTA header
@@ -1182,7 +1182,7 @@ namespace pwiz.Skyline
             // It is definitly not a sequence, if it has numbers.  Whereas, sequences do
             // allow internal white space including tabs.
             else if (MassListImporter.IsColumnar(Transition.StripChargeIndicators(text, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE),
-                     out provider, out separator, out columnTypes))
+                     out formatProvider, out separator, out columnTypes))
             {
                 // If no numeric type is found, try the second line.  Ther first may be
                 // a header row.
@@ -1192,12 +1192,12 @@ namespace pwiz.Skyline
                     if (endLine != -1)
                     {
                         MassListImporter.IsColumnar(text.Substring(endLine + 1),
-                            out provider, out separator, out columnTypes);
+                            out formatProvider, out separator, out columnTypes);
                     }
                 }
 
                 if (MassListImporter.HasNumericColumn(columnTypes))
-                    ImportMassList(text, provider, separator, Resources.SkylineWindow_Paste_Paste_transition_list);
+                    ImportMassList(new MassListInputs(text, formatProvider, separator), Resources.SkylineWindow_Paste_Paste_transition_list);
                 // Handle unusual corner case where data is found to be columnar and contains numbers, 
                 // but first line is missing
                 else if (columnTypes.Length == 0)

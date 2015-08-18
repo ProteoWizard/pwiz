@@ -1134,13 +1134,12 @@ namespace pwiz.Skyline.EditUI
                 try
                 {
                     List<TransitionImportErrorInfo> errorList;
-                    List<KeyValuePair<string, double>> irtPeptides;
+                    List<MeasuredRetentionTime> irtPeptides;
                     List<SpectrumMzInfo> librarySpectra;
-                    var importer = new MassListImporter(document, LocalizationHelper.CurrentCulture, TRANSITION_LIST_SEPARATOR);
+                    var inputs = new MassListInputs(sbTransitionList.ToString(), LocalizationHelper.CurrentCulture, TRANSITION_LIST_SEPARATOR);
+                    var importer = new MassListImporter(document, inputs);
                     // TODO: support long-wait broker
-                    peptideGroupDocNodes = importer.Import(new StringReader(sbTransitionList.ToString()),
-                        null,
-                        -1,
+                    peptideGroupDocNodes = importer.Import(null,
                         TRANSITION_LIST_COL_INDICES,
                         dictNameSeq,
                         out irtPeptides,
