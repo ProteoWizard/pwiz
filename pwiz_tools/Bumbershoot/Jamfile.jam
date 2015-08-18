@@ -24,6 +24,7 @@ build-project-if-exists greazy ;
 build-project-if-exists myrimatch ;
 build-project-if-exists pepitome ;
 build-project-if-exists idpicker ;
+build-project-if-exists quameter ;
 
 .common-location = $(PWIZ_BUILD_PATH) ;
 
@@ -68,7 +69,14 @@ rule binary-tarball-requirements ( properties * )
     if <link>shared in $(properties) { linkage = "-shared" ; }
     local name = [ common.format-name <base> <property:target-os> <property:architecture> <toolset> <property:variant> $(linkage) -$(version-tag:J=_)
                                       : bumbershoot-bin : TBZ2 : [ property-set.create $(properties) ] ] ;
-    result += <name>$(name) <dependency>greazy//install <dependency>myrimatch//install <dependency>idpicker//install <location>$(.common-location) <dependency>VERSION ;
+    result += <name>$(name)
+              <dependency>greazy//install
+              <dependency>myrimatch//install
+              <dependency>idpicker//install
+              <dependency>pepitome//install
+              <dependency>quameter//install
+              <location>$(.common-location)
+              <dependency>VERSION ;
     return $(result) ;
 }
 
