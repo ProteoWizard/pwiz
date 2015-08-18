@@ -24,6 +24,7 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
@@ -74,7 +75,7 @@ namespace pwiz.SkylineTestFunctional
             
             RunUI(() => SkylineWindow.ShowDocumentGrid(true));
             var documentGrid = FindOpenForm<DocumentGridForm>();
-            RunUI(()=>documentGrid.ChooseView("Peptides"));
+            RunUI(() => documentGrid.ChooseView(Resources.SkylineViewContext_GetDocumentGridRowSources_Peptides));
             WaitForConditionUI(() => documentGrid.IsComplete);
             Assert.AreEqual(4, documentGrid.DataGridView.Rows.Count);
             foreach (var molecule in SkylineWindow.Document.Molecules)
