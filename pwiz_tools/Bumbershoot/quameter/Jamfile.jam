@@ -76,6 +76,7 @@ exe $(application-name:L)
   : # requirements
       <library>../freicore//freicore
       <library>crawdad//crawdad
+      <library>$(PWIZ_LIBRARIES_PATH)/SQLite//sqlite3pp
   ;
 
 
