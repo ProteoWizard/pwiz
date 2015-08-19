@@ -610,7 +610,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private ChromGraphItem RTGraphItem
         {
-            get { return (ChromGraphItem) graphControl.GraphPane.CurveList.Last().Tag; }
+            get { return GetGraphItems(graphControl.GraphPane).Last(); }
         }
         public GraphPane GraphItem
         {
@@ -621,8 +621,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get
             {
-                var graphItem = graphControl.GraphPane.CurveList.Select(c => c.Tag).OfType<ChromGraphItem>()
-                    .First(g => g.BestPeakTime > 0);
+                var graphItem = GetGraphItems(graphControl.GraphPane).First(g => g.BestPeakTime > 0);
                 return graphItem.BestPeakTime;
             }
         }
@@ -1040,7 +1039,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private CurveItem GetTransitionCurve(GraphPane graphPane)
         {
-            foreach (var curve in graphPane.CurveList)
+            foreach (var curve in GetCurves(graphPane))
             {
                 var graphItem = curve.Tag as ChromGraphItem;
                 if (graphItem != null && graphItem.TransitionNode != null &&
@@ -1435,11 +1434,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 int step = numSteps != 0 ? i - numSteps : 0;
 
                 Color color;
+                bool shade = false;
                 int width = lineWidth;
                 if ((numSteps == 0 && ReferenceEquals(nodeTran, nodeTranSelected) ||
-                        (numSteps > 0 && step == 0)))
+                     (numSteps > 0 && step == 0)))
                 {
                     color = ChromGraphItem.ColorSelected;
+                    shade = true;
                     width++;
                 }
                 else
@@ -1464,21 +1465,25 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (fullScanInfo.ChromInfo != null && fullScanInfo.ChromInfo.ExtractionWidth > 0)
                     _enableTrackingDot = true;
                 var graphItem = new ChromGraphItem(nodeGroup,
-                                                    nodeTran,
-                                                    info,
-                                                    tranPeakInfoGraph,
-                                                    timeRegressionFunction,
-                                                    GetAnnotationFlags(i, maxPeakTrans, maxPeakHeights),
-                                                    dotProducts,
-                                                    bestProduct,
-                                                    isFullScanMs,
-                                                    false,
-                                                    step,
-                                                    color,
-                                                    fontSize,
-                                                    width,
-                                                    fullScanInfo);
+                    nodeTran,
+                    info,
+                    tranPeakInfoGraph,
+                    timeRegressionFunction,
+                    GetAnnotationFlags(i, maxPeakTrans, maxPeakHeights),
+                    dotProducts,
+                    bestProduct,
+                    isFullScanMs,
+                    false,
+                    step,
+                    color,
+                    fontSize,
+                    width,
+                    fullScanInfo);
                 _graphHelper.AddChromatogram(graphPaneKey, graphItem);
+                if (shade)
+                {
+                    ShadeGraph(tranPeakInfo,info,timeRegressionFunction,dotProducts,bestProduct,isFullScanMs,step,fontSize,width,fullScanInfo,graphPaneKey);
+                }
                 iColor++;
             }
 
@@ -1489,6 +1494,86 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 graphPane.CurveList.Insert(FULLSCAN_TRACKING_INDEX, CreateScanPoint(Color.Black));
                 graphPane.CurveList.Insert(FULLSCAN_SELECTED_INDEX, CreateScanPoint(Color.Red));
+            }
+        }
+
+        private void ShadeGraph(TransitionChromInfo tranPeakInfo, ChromatogramInfo info,
+            IRegressionFunction timeRegressionFunction, double[] dotProducts, double bestProduct, bool isFullScanMs,
+            int step, float fontSize, int width, FullScanInfo fullScanInfo, PaneKey graphPaneKey)
+        {
+            float end = tranPeakInfo.EndRetentionTime;
+            float start = tranPeakInfo.StartRetentionTime;
+            double[] allTimes;
+            double[] allIntensities;
+            info.AsArrays(out allTimes, out allIntensities);
+
+            var peakTimes = new List<float>();
+            var peakIntensities = new List<float>();
+            for (int j = 0; j < allTimes.Length; j++)
+            {
+                if (start > allTimes[j])
+                    continue;
+                if (end < allTimes[j])
+                    break;
+                peakTimes.Add((float) allTimes[j]);
+                peakIntensities.Add((float) allIntensities[j]);
+            }
+            if (peakIntensities.Count == 0)
+                return;
+
+            // Add peak area shading
+            float[] peakTimesArray = peakTimes.ToArray();
+            info = new ChromatogramInfo(peakTimesArray, peakIntensities.ToArray());
+            var peakShadeItem = new ChromGraphItem(null,
+                null,
+                info,
+                null,
+                timeRegressionFunction,
+                new bool[info.NumPeaks],
+                dotProducts,
+                bestProduct,
+                isFullScanMs,
+                false,
+                step,
+                ChromGraphItem.ColorSelected,
+                fontSize,
+                width,
+                fullScanInfo);
+            var peakShadeCurveItem = _graphHelper.AddChromatogram(graphPaneKey, peakShadeItem);
+            peakShadeCurveItem.Label.IsVisible = false;
+            var lineItem = peakShadeCurveItem as LineItem;
+            if (lineItem != null)
+            {
+                const int fillAlpha = 50;
+                lineItem.Line.Fill = new Fill(Color.FromArgb(fillAlpha, lineItem.Color));
+            }
+
+            // Add peak background shading
+            float min = Math.Min(peakIntensities.First(), peakIntensities.Last());
+            info = new ChromatogramInfo(peakTimesArray,
+                peakIntensities.Select(intensity => Math.Min(intensity, min)).ToArray());
+            var backgroundShadeItem = new ChromGraphItem(null,
+                null,
+                info,
+                null,
+                timeRegressionFunction,
+                new bool[info.NumPeaks],
+                dotProducts,
+                bestProduct,
+                isFullScanMs,
+                false,
+                step,
+                Color.DarkGray,
+                fontSize,
+                2,
+                fullScanInfo);
+            var backgroundShadeCurveItem = _graphHelper.AddChromatogram(graphPaneKey, backgroundShadeItem);
+            backgroundShadeCurveItem.Label.IsVisible = false;
+            var lineItem2 = backgroundShadeCurveItem as LineItem;
+            if (lineItem2 != null)
+            {
+                const int fillAlpha = 70;
+                lineItem2.Line.Fill = new Fill(Color.FromArgb(fillAlpha, Color.Black));
             }
         }
 
@@ -2641,11 +2726,8 @@ namespace pwiz.Skyline.Controls.Graphs
             double maxInten = 0;
             ChromGraphItem maxItem = null;
 
-            foreach (var curveCurr in graphPane.CurveList)
+            foreach (ChromGraphItem graphItemCurr in GetGraphItems(graphPane))
             {
-                var graphItemCurr = curveCurr.Tag as ChromGraphItem;
-                if (graphItemCurr == null)
-                    continue;
                 double inten = graphItemCurr.GetMaxIntensity(startTime.MeasuredTime, endTime.MeasuredTime);
                 if (inten > maxInten)
                 {
@@ -2701,13 +2783,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 double time, yTemp;
                 graphPane.ReverseTransform(pt, out time, out yTemp);
 
-                foreach (var curve in graphPane.CurveList)
+                foreach (var graphItemNext in GetGraphItems(graphPane))
                 {
-                    var graphItemNext = curve.Tag as ChromGraphItem;
-                    if (null == graphItemNext)
-                    {
-                        continue;
-                    }
                     var transitionChromInfo = graphItemNext.TransitionChromInfo;
                     if (transitionChromInfo == null)
                     {
@@ -2741,7 +2818,12 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public IEnumerable<ChromGraphItem> GraphItems
         {
-            get { return GraphPanes.SelectMany(pane=>pane.CurveList.Select(curve=>(ChromGraphItem) curve.Tag)).Where(graphItem => graphItem != null); }
+            get { return GraphPanes.SelectMany(GetGraphItems); }
+        }
+
+        public static IEnumerable<ChromGraphItem> GetGraphItems(GraphPane pane)
+        {
+            return GetCurves(pane).Select(c => c.Tag).Cast<ChromGraphItem>();
         }
 
         /// <summary>
@@ -2749,7 +2831,7 @@ namespace pwiz.Skyline.Controls.Graphs
         /// </summary>
         public static IEnumerable<CurveItem> GetCurves(GraphPane pane)
         {
-            return pane.CurveList.Where(curve => curve.Tag is ChromGraphItem);
+            return pane.CurveList.Where(curve => curve.Tag is ChromGraphItem && ((ChromGraphItem)curve.Tag).TransitionGroupNode != null);
         }
 
         /// <summary>
@@ -2927,7 +3009,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (graphPane != null && showPoint)
             {
                 // Find the closest curve point to the cursor.
-                graphPane.FindClosestCurve(GetCurvesExcludingDots(graphPane), pt, 20, out _closestCurve, out _fullScanTrackingPointLocation);
+                graphPane.FindClosestCurve(GetCurves(graphPane), pt, 20, out _closestCurve, out _fullScanTrackingPointLocation);
 
                 // Display the highlight point.
                 if (_closestCurve != null && graphPane.CurveList.Count > FULLSCAN_TRACKING_INDEX)
@@ -2950,12 +3032,6 @@ namespace pwiz.Skyline.Controls.Graphs
             Refresh();
         }
 
-        private IEnumerable<CurveItem> GetCurvesExcludingDots(GraphPane graphPane)
-        {
-            for (int i = FULLSCAN_SELECTED_INDEX + 1; i < graphPane.CurveList.Count; i++)
-                yield return graphPane.CurveList[i];
-        }
-       
         private bool graphControl_MouseDownEvent(ZedGraphControl sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Left)

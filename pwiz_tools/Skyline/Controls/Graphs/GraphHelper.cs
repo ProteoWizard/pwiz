@@ -58,7 +58,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 return new KeyValuePair<PaneKey, ChromGraphItem>[0];
             }
-            return chromDisplayState.ChromGraphItems.Where(kvp => kvp.Value.Chromatogram != null)
+            return chromDisplayState.ChromGraphItems.Where(kvp => kvp.Value.Chromatogram != null && kvp.Value.TransitionGroupNode != null)
                                                     .ToLookup(kvp => kvp.Key)
                                                     .Select(grouping => grouping.Last());
         }
