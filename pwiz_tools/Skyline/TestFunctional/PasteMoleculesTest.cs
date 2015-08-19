@@ -30,6 +30,7 @@ using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
@@ -275,6 +276,39 @@ namespace pwiz.SkylineTestFunctional
 
             // Does that produce the expected transition list file?
             TestTransitionListOutput(importDoc, "PasteMoleculeTest.csv", "PasteMoleculeTestExpected.csv", ExportFileType.List);
+
+            // Verify that MS1 filtering works properly
+            var pasteText =
+            "Steryl esters [ST0102],12:0 Cholesteryl ester,C39H68O2NH4,1\r\n" +
+            "Steryl esters [ST0102],14:0 Cholesteryl ester,C41H72O2NH4,1\r\n" +
+            "Steryl esters [ST0102],14:1 Cholesteryl ester,C41H70O2NH4,1\r\n" +
+            "Steryl esters [ST0102],15:1 Cholesteryl ester,C42H72O2NH4,1";
+
+            var columnOrderB = new[]
+                {
+                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
+                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.namePrecursor,
+                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
+                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
+                };
+
+            // Doc is set for MS1 filtering, precursor transitions, charge=1, two peaks, should show M and M+1, M+2 after filter is invoked by changing to 3 peaks
+            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("small_molecule_missing_m1.sky")));
+            WaitForDocumentLoaded();
+            TestError(pasteText, String.Empty, columnOrderB);
+            var docB = SkylineWindow.Document;
+            Assert.AreEqual(4, docB.MoleculeTransitionCount); // Initial import is faithful to what's pasted
+
+            var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
+            RunUI(() =>
+            {
+                transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.FullScan;
+                transitionSettingsUI.Peaks = 3;
+            });
+            OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
+            docB = WaitForDocumentChange(docB);
+            Assert.AreEqual(12, docB.MoleculeTransitionCount);
+
         }
 
         private void TestTransitionListArrangementAndReporting()
