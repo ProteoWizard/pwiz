@@ -2792,9 +2792,9 @@ namespace pwiz.Skyline.Model
 
         public string GetHeader(char fieldSeparator)
         {
-            var hdr = "Mass [m/z],Formula [M],Species,CS [z],Polarity,Start [min],End [min],NCE,";
+            var hdr = "Mass [m/z],Formula [M],Species,CS [z],Polarity,Start [min],End [min],NCE,";  // Not L10N
             if (UseSlens)
-                hdr += "S-lens,";
+                hdr += "S-lens,";  // Not L10N
             return (hdr+"Comment").Replace(',', fieldSeparator); // Not L10N
         }
 
@@ -2874,9 +2874,9 @@ namespace pwiz.Skyline.Model
 
         public string GetHeader(char fieldSeparator)
         {
-            var hdr = "m/z,z,t start (min),t end (min),CID Collision Energy (%)";
+            var hdr = "m/z,z,t start (min),t end (min),CID Collision Energy (%)";  // Not L10N
             if (UseSlens)
-                hdr += ",S-lens";
+                hdr += ",S-lens";  // Not L10N
             return hdr.Replace(',', fieldSeparator); // Not L10N
         }
 

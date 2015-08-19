@@ -98,7 +98,7 @@ namespace pwiz.Skyline.Model
             {
                 _cultureInfo = value;
                 FieldSeparator = TextUtil.GetCsvSeparator(_cultureInfo);
-                FieldSeparatorReplacement = "_";  // For use in formats where quoting the value does not suffice, as reportedly in xcalibur
+                FieldSeparatorReplacement = "_";  // For use in formats where quoting the value does not suffice, as reportedly in xcalibur  // Not L10N
             }
         }
         public char FieldSeparator { get; private set; }
