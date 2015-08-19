@@ -3907,10 +3907,19 @@ namespace pwiz.Skyline
                 // Try to show the error message, but the SkylineWindow may be disposed by the test thread, so ignore the exception.
                 try
                 {
-                    var result = e.Progress.SegmentCount < 3    // 2 files and 1 for joining
-                        ? MultiButtonMsgDlg.Show(this, message, Resources.SkylineWindow_ShowProgressErrorUI_Retry, true)
-                        : MultiButtonMsgDlg.Show(this, message, Resources.SkylineWindow_ShowProgressErrorUI_Retry,
-                                                                Resources.SkylineWindow_ShowProgressErrorUI_Skip, true);
+                    MultiButtonMsgDlg dlg;
+                    if (e.Progress.SegmentCount < 3)
+                    {
+                        // 2 files and 1 for joining
+                        dlg = new MultiButtonMsgDlg(message, Resources.SkylineWindow_ShowProgressErrorUI_Retry);
+                    }
+                    else
+                    {
+                        dlg = new MultiButtonMsgDlg(message, Resources.SkylineWindow_ShowProgressErrorUI_Retry,
+                            Resources.SkylineWindow_ShowProgressErrorUI_Skip, true);
+                    }
+                    dlg.Exception = xImport;
+                    var result = dlg.ShowAndDispose(this);
                     switch (result)
                     {
                         case DialogResult.OK:

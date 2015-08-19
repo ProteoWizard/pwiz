@@ -1469,11 +1469,11 @@ namespace pwiz.Skyline.SettingsUI
                                         : Resources.ViewLibraryDlg_AddAllPeptides__0__1__library__2__will_be_ignored,
                                     duplicatePeptides, unmatchedPeptides, entrySuffix));
             }
-            if (DialogResult.Cancel == MultiButtonMsgDlg.Show(
-                this,
-                msg,
-                Resources.ViewLibraryDlg_AddAllPeptides_Add_All,
-                numUnmatchedPeptides))
+            var dlg = new MultiButtonMsgDlg(msg, Resources.ViewLibraryDlg_AddAllPeptides_Add_All)
+            {
+                Tag = numUnmatchedPeptides
+            };
+            if (DialogResult.Cancel == dlg.ShowAndDispose(this))
             {
                 return;
             }

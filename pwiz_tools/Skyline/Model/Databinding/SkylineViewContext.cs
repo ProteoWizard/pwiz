@@ -203,7 +203,7 @@ namespace pwiz.Skyline.Model.Databinding
 
         public override DialogResult ShowMessageBox(Control owner, string message, MessageBoxButtons messageBoxButtons)
         {
-            return MessageBox.Show(FormUtil.FindTopLevelOwner(owner), message, Program.Name, messageBoxButtons);
+            return new AlertDlg(message, messageBoxButtons).ShowAndDispose(FormUtil.FindTopLevelOwner(owner));
         }
 
         public override bool RunLongJob(Control owner, Action<IProgressMonitor> job)

@@ -994,6 +994,69 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &amp;Abort.
+        /// </summary>
+        public static string AlertDlg_GetDefaultButtonText__Abort {
+            get {
+                return ResourceManager.GetString("AlertDlg_GetDefaultButtonText__Abort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &amp;Ignore.
+        /// </summary>
+        public static string AlertDlg_GetDefaultButtonText__Ignore {
+            get {
+                return ResourceManager.GetString("AlertDlg_GetDefaultButtonText__Ignore", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &amp;No.
+        /// </summary>
+        public static string AlertDlg_GetDefaultButtonText__No {
+            get {
+                return ResourceManager.GetString("AlertDlg_GetDefaultButtonText__No", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &amp;Retry.
+        /// </summary>
+        public static string AlertDlg_GetDefaultButtonText__Retry {
+            get {
+                return ResourceManager.GetString("AlertDlg_GetDefaultButtonText__Retry", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &amp;Yes.
+        /// </summary>
+        public static string AlertDlg_GetDefaultButtonText__Yes {
+            get {
+                return ResourceManager.GetString("AlertDlg_GetDefaultButtonText__Yes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cancel.
+        /// </summary>
+        public static string AlertDlg_GetDefaultButtonText_Cancel {
+            get {
+                return ResourceManager.GetString("AlertDlg_GetDefaultButtonText_Cancel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to OK.
+        /// </summary>
+        public static string AlertDlg_GetDefaultButtonText_OK {
+            get {
+                return ResourceManager.GetString("AlertDlg_GetDefaultButtonText_OK", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0}:{1}.
         /// </summary>
         public static string AlignedFile_AlignLibraryRetentionTimes__0__1__ {
@@ -14268,33 +14331,6 @@ namespace pwiz.Skyline.Properties {
         public static string MsxDemultiplexer_FindStartStop_MsxDemultiplexer_MS_MS_index__0__not_found {
             get {
                 return ResourceManager.GetString("MsxDemultiplexer_FindStartStop_MsxDemultiplexer_MS_MS_index__0__not_found", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to &amp;No.
-        /// </summary>
-        public static string MultiButtonMsgDlg_BUTTON_NO__No {
-            get {
-                return ResourceManager.GetString("MultiButtonMsgDlg_BUTTON_NO__No", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to OK.
-        /// </summary>
-        public static string MultiButtonMsgDlg_BUTTON_OK_OK {
-            get {
-                return ResourceManager.GetString("MultiButtonMsgDlg_BUTTON_OK_OK", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to &amp;Yes.
-        /// </summary>
-        public static string MultiButtonMsgDlg_BUTTON_YES__Yes {
-            get {
-                return ResourceManager.GetString("MultiButtonMsgDlg_BUTTON_YES__Yes", resourceCulture);
             }
         }
         

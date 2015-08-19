@@ -3839,12 +3839,6 @@ Are you sure you want to continue?</value>
   <data name="BackgroundProteomeSpec_Digest_Digesting__0__" xml:space="preserve">
     <value>Digesting {0}</value>
   </data>
-  <data name="MultiButtonMsgDlg_BUTTON_YES__Yes" xml:space="preserve">
-    <value>&amp;Yes</value>
-  </data>
-  <data name="MultiButtonMsgDlg_BUTTON_NO__No" xml:space="preserve">
-    <value>&amp;No</value>
-  </data>
   <data name="SettingsList_ELEMENT_NONE_None" xml:space="preserve">
     <value>None</value>
   </data>
@@ -3862,9 +3856,6 @@ Are you sure you want to continue?</value>
   </data>
   <data name="BuildLibraryDlg_btnPrevious_Click__Next__" xml:space="preserve">
     <value>&amp;Next &gt;</value>
-  </data>
-  <data name="MultiButtonMsgDlg_BUTTON_OK_OK" xml:space="preserve">
-    <value>OK</value>
   </data>
   <data name="EditStaticModDlg_OkDialog_Click__Unimod__to_use_the_name___0___" xml:space="preserve">
     <value>Click 'Unimod' to use the name '{0}'.</value>
@@ -8620,6 +8611,27 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   </data>
   <data name="CommandArgs_ParseArgsInternal_Error__The_specified_working_directory__0__does_not_exist_" xml:space="preserve">
     <value>Error: The specified working directory {0} does not exist.</value>
+  </data>
+  <data name="AlertDlg_GetDefaultButtonText_OK" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="AlertDlg_GetDefaultButtonText_Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="AlertDlg_GetDefaultButtonText__Yes" xml:space="preserve">
+    <value>&amp;Yes</value>
+  </data>
+  <data name="AlertDlg_GetDefaultButtonText__No" xml:space="preserve">
+    <value>&amp;No</value>
+  </data>
+  <data name="AlertDlg_GetDefaultButtonText__Abort" xml:space="preserve">
+    <value>&amp;Abort</value>
+  </data>
+  <data name="AlertDlg_GetDefaultButtonText__Retry" xml:space="preserve">
+    <value>&amp;Retry</value>
+  </data>
+  <data name="AlertDlg_GetDefaultButtonText__Ignore" xml:space="preserve">
+    <value>&amp;Ignore</value>
   </data>
   <data name="CommandArgs_ParseArgsInternal_Error__Invalid_value___0___for__1___use__reversed__or__shuffled__" xml:space="preserve">
     <value>Error: Invalid value '{0}' for {1}, use 'reversed' or 'shuffled'.</value>

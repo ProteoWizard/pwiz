@@ -348,7 +348,7 @@ namespace pwiz.Skyline.ToolsUI
                             Resources.ConfigureToolsDlg_CheckPassTool__The_command_for__0__may_not_exist_in_that_location__Would_you_like_to_edit_it__,
                             Resources.ConfigureToolsDlg_CheckPassTool__Note__if_you_would_like_the_command_to_launch_a_link__make_sure_to_include_http____or_https___),
                             tool.Title), 
-                        Resources.MultiButtonMsgDlg_BUTTON_YES__Yes, Resources.MultiButtonMsgDlg_BUTTON_NO__No, false))
+                        MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false))
                     {
                         textCommand.Focus();
                         return false;
@@ -616,7 +616,7 @@ namespace pwiz.Skyline.ToolsUI
                 DialogResult result = MultiButtonMsgDlg.Show(
                     this,
                     Resources.ConfigureToolsDlg_Cancel_Do_you_wish_to_Save_changes_,
-                    Resources.MultiButtonMsgDlg_BUTTON_YES__Yes, Resources.MultiButtonMsgDlg_BUTTON_NO__No, true);
+                    MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, true);
                 switch (result)
                 {
                     case DialogResult.Yes:

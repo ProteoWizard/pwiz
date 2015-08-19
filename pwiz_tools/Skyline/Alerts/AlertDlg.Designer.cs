@@ -1,6 +1,6 @@
 ﻿namespace pwiz.Skyline.Alerts
 {
-    partial class MessageDlg
+    partial class AlertDlg
     {
         /// <summary>
         /// Required designer variable.
@@ -28,8 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MessageDlg));
-            this.btnOk = new System.Windows.Forms.Button();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(AlertDlg));
             this.labelMessage = new System.Windows.Forms.Label();
             this.panelMessageLabel = new System.Windows.Forms.Panel();
             this.buttonPanel = new System.Windows.Forms.FlowLayoutPanel();
@@ -40,14 +39,6 @@
             this.buttonPanel.SuspendLayout();
             this.panelMessageBox.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // btnOk
-            // 
-            resources.ApplyResources(this.btnOk, "btnOk");
-            this.btnOk.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnOk.Name = "btnOk";
-            this.btnOk.UseVisualStyleBackColor = true;
-            this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
             // 
             // labelMessage
             // 
@@ -64,7 +55,6 @@
             // buttonPanel
             // 
             this.buttonPanel.Controls.Add(this.btnMoreInfo);
-            this.buttonPanel.Controls.Add(this.btnOk);
             resources.ApplyResources(this.buttonPanel, "buttonPanel");
             this.buttonPanel.Name = "buttonPanel";
             // 
@@ -88,19 +78,17 @@
             this.tbxDetail.Name = "tbxDetail";
             this.tbxDetail.ReadOnly = true;
             // 
-            // MessageDlg
+            // AlertDlg
             // 
-            this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.CancelButton = this.btnOk;
             this.Controls.Add(this.panelMessageBox);
             this.Controls.Add(this.tbxDetail);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.KeyPreview = true;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.Name = "MessageDlg";
+            this.Name = "AlertDlg";
             this.ShowInTaskbar = false;
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.MessageDlg_KeyDown);
             this.panelMessageLabel.ResumeLayout(false);
@@ -114,7 +102,6 @@
 
         #endregion
 
-        private System.Windows.Forms.Button btnOk;
         private System.Windows.Forms.Label labelMessage;
         private System.Windows.Forms.Panel panelMessageLabel;
         private System.Windows.Forms.FlowLayoutPanel buttonPanel;

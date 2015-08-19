@@ -17,36 +17,27 @@
  * limitations under the License.
  */
 
-using System;
-using System.Text;
+using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Forms;
-using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Alerts
 {
-    public sealed partial class MultiButtonMsgDlg : FormEx
+    public sealed class MultiButtonMsgDlg : AlertDlg
     {
-        public static string BUTTON_OK { get { return Resources.MultiButtonMsgDlg_BUTTON_OK_OK; } }
-        public static string BUTTON_YES { get { return Resources.MultiButtonMsgDlg_BUTTON_YES__Yes; } }
-        public static string BUTTON_NO { get { return Resources.MultiButtonMsgDlg_BUTTON_NO__No; } }
+        public static string BUTTON_OK { get { return GetDefaultButtonText(DialogResult.OK); } }
+        public static string BUTTON_YES { get { return GetDefaultButtonText(DialogResult.Yes); } }
+        public static string BUTTON_NO { get { return GetDefaultButtonText(DialogResult.No); } }
 
-        private const int MAX_HEIGHT = 500;
-
-        public static DialogResult Show(IWin32Window parent, string message, string btnText, object tag = null)
+        public static DialogResult Show(IWin32Window parent, string message, string btnText)
         {
-            using (var dlg = new MultiButtonMsgDlg(message, btnText) {Tag = tag})
-            {
-                return dlg.ShowWithTimeout(parent, message);
-            }
+            return new MultiButtonMsgDlg(message, btnText).ShowAndDispose(parent);
         }
 
-        public static DialogResult Show(IWin32Window parent, string message, string btnYesText, string btnNoText, bool allowCancel, object tag = null)
+        public static DialogResult Show(IWin32Window parent, string message, string btnYesText, string btnNoText, bool allowCancel)
         {
-            using (var dlg = new MultiButtonMsgDlg(message, btnYesText, btnNoText, allowCancel) {Tag = tag})
-            {
-                return dlg.ShowWithTimeout(parent, message);
-            }
+            return new MultiButtonMsgDlg(message, btnYesText, btnNoText, allowCancel)
+                .ShowAndDispose(parent);
         }
 
         /// <summary>
@@ -54,9 +45,10 @@ namespace pwiz.Skyline.Alerts
         /// </summary>
         /// <param name="message">The message to show</param>
         /// <param name="btnText">The text to show in the non-Cancel button (DialogResult.OK)</param>
-        private MultiButtonMsgDlg(string message, string btnText)
-            : this(message, null, btnText, true)
+        public MultiButtonMsgDlg(string message, string btnText) : base(message)
         {
+            AddButton(DialogResult.Cancel);
+            AddButton(DialogResult.OK, btnText);
         }
 
         /// <summary>
@@ -67,49 +59,24 @@ namespace pwiz.Skyline.Alerts
         /// <param name="btnNoText">The text to show in the second, non-default button (DialogResult.No)</param>
         /// <param name="allowCancel">When this is true a Cancel button is the button furthest to the
         /// right. Otherwise, only the two named buttons are visible.</param>
-        private MultiButtonMsgDlg(string message, string btnYesText, string btnNoText, bool allowCancel)
+        public MultiButtonMsgDlg(string message, string btnYesText, string btnNoText, bool allowCancel) 
+            : base(message)
         {
-            InitializeComponent();
-
-            Text = Program.Name;
             if (allowCancel)
-                btn1.Text = btnNoText;
-            else
             {
-                btn1.Text = btnYesText;
-                btnCancel.Text = btnNoText;
+                AddButton(DialogResult.Cancel);
             }
-
-            if (allowCancel && btnYesText != null)
-                btn0.Text = btnYesText;
-            else
-            {
-                btn0.Visible = false;
-                AcceptButton = btn1;
-                if (allowCancel)
-                    btn1.DialogResult = DialogResult.OK;
-                else
-                {
-                    btn1.DialogResult = DialogResult.Yes;
-                    btnCancel.DialogResult = DialogResult.No;
-                    CancelButton = null;
-                }
-            }
-            int height = labelMessage.Height;
-            labelMessage.Text = message;
-            Height += Math.Min(MAX_HEIGHT, Math.Max(0, labelMessage.Height - height * 3));
+            AddButton(DialogResult.No, btnNoText);
+            AddButton(DialogResult.Yes, btnYesText);
         }
 
         /// <summary>
-        /// Click the left-most button
+        /// Click the left-most button (actually the third-to-last button).
         /// </summary>
         public void Btn0Click()
         {
-            // Tests shouldn't call this function when the button is not visible
-            if (!btn0.Visible)
-                throw new NotSupportedException();
-            CheckDisposed();
-            btn0.PerformClick();
+            var buttons = DialogResultButtons.ToArray();
+            ClickButton(buttons[buttons.Length - 3]);
         }
 
         /// <summary>
@@ -117,8 +84,8 @@ namespace pwiz.Skyline.Alerts
         /// </summary>
         public void Btn1Click()
         {
-            CheckDisposed();
-            btn1.PerformClick();
+            var buttons = DialogResultButtons.ToArray();
+            ClickButton(buttons[buttons.Length - 2]);
         }
 
         /// <summary>
@@ -126,10 +93,7 @@ namespace pwiz.Skyline.Alerts
         /// </summary>
         public void BtnYesClick()
         {
-            if (btn0.Visible)
-                Btn0Click();
-            else
-                Btn1Click();
+            ClickButton(DialogResultButtons.First());
         }
 
         /// <summary>
@@ -137,41 +101,15 @@ namespace pwiz.Skyline.Alerts
         /// </summary>
         public void BtnCancelClick()
         {
-            CheckDisposed();
-            btnCancel.PerformClick();
+            ClickButton(DialogResultButtons.Last());
         }
 
-        public string Message
+        /// <summary>
+        /// Returns all the buttons on the button bar except the "More Info" button.
+        /// </summary>
+        private IEnumerable<Button> DialogResultButtons
         {
-            get { return labelMessage.Text; }
-            set { labelMessage.Text = value;}
-        }
-
-        private void MultiButtonMsgDlg_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.C && e.Control)
-            {
-                CopyMessage();
-            }
-        }
-
-        private void CopyMessage()
-        {
-            const string formatMessage =
-@"---------------------------
-{0}
----------------------------
-{1}
----------------------------
-{2}
----------------------------
-"; // Not L10N
-            var sbButtons = new StringBuilder();
-            if (btn0.Visible)
-                sbButtons.Append(btn0.Text).Append("    "); // Not L10N
-            sbButtons.Append(btn1.Text).Append("    "); // Not L10N
-            sbButtons.Append(btnCancel.Text);
-            ClipboardEx.SetText(string.Format(formatMessage, Text, Message, sbButtons));
+            get { return VisibleButtons.Where(button => DialogResult.None != button.DialogResult); }
         }
     }
 }

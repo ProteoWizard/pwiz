@@ -164,6 +164,9 @@
     <Compile Include="Alerts\AlertLinkDlg.Designer.cs">
       <DependentUpon>AlertLinkDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="Alerts\MessageDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Alerts\PathChooserDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -194,9 +197,6 @@
     <Compile Include="Alerts\MultiButtonMsgDlg.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Alerts\MultiButtonMsgDlg.Designer.cs">
-      <DependentUpon>MultiButtonMsgDlg.cs</DependentUpon>
-    </Compile>
     <Compile Include="Alerts\EmptyProteinsDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -221,11 +221,11 @@
     <Compile Include="Alerts\ShareTypeDlg.Designer.cs">
       <DependentUpon>ShareTypeDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="Alerts\MessageDlg.cs">
+    <Compile Include="Alerts\AlertDlg.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Alerts\MessageDlg.Designer.cs">
-      <DependentUpon>MessageDlg.cs</DependentUpon>
+    <Compile Include="Alerts\AlertDlg.Designer.cs">
+      <DependentUpon>AlertDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="Alerts\PasteFilteredPeptidesDlg.cs">
       <SubType>Form</SubType>
@@ -1435,25 +1435,11 @@
     <EmbeddedResource Include="Alerts\LocateFileDlg.zh-CHS.resx">
       <DependentUpon>LocateFileDlg.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Alerts\MessageDlg.ja.resx">
-      <DependentUpon>MessageDlg.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Alerts\MessageDlg.zh-CHS.resx">
-      <DependentUpon>MessageDlg.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
     <EmbeddedResource Include="Alerts\MissingFileDlg.ja.resx">
       <DependentUpon>MissingFileDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\MissingFileDlg.zh-CHS.resx">
       <DependentUpon>MissingFileDlg.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Alerts\MultiButtonMsgDlg.ja.resx">
-      <DependentUpon>MultiButtonMsgDlg.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Alerts\MultiButtonMsgDlg.zh-CHS.resx">
-      <DependentUpon>MultiButtonMsgDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\PasteFilteredPeptidesDlg.ja.resx">
       <DependentUpon>PasteFilteredPeptidesDlg.cs</DependentUpon>
@@ -3226,10 +3212,6 @@
       <DependentUpon>ImportDocResultsDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Alerts\MultiButtonMsgDlg.resx">
-      <DependentUpon>MultiButtonMsgDlg.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
     <EmbeddedResource Include="Alerts\EmptyProteinsDlg.resx">
       <DependentUpon>EmptyProteinsDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -3250,8 +3232,8 @@
       <DependentUpon>ShareTypeDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Alerts\MessageDlg.resx">
-      <DependentUpon>MessageDlg.cs</DependentUpon>
+    <EmbeddedResource Include="Alerts\AlertDlg.resx">
+      <DependentUpon>AlertDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\PasteFilteredPeptidesDlg.resx">

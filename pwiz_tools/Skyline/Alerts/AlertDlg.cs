@@ -1,0 +1,304 @@
+﻿/*
+ * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2009 University of Washington - Seattle, WA
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Windows.Forms;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
+
+namespace pwiz.Skyline.Alerts
+{
+    /// <summary>
+    /// Use for a <see cref="MessageBox"/> substitute that can be
+    /// detected and closed by automated functional tests.
+    /// </summary>
+    public partial class AlertDlg : FormEx
+    {
+        private const int MAX_HEIGHT = 500;
+        private readonly int _originalFormHeight;
+        private readonly int _originalMessageHeight;
+
+        public AlertDlg(string message)
+        {
+            InitializeComponent();
+            _originalFormHeight = Height;
+            _originalMessageHeight = labelMessage.Height;
+            Message = message;
+            btnMoreInfo.Parent.Controls.Remove(btnMoreInfo);
+        }
+
+        public AlertDlg(string message, MessageBoxButtons messageBoxButtons) : this(message)
+        {
+            AddMessageBoxButtons(messageBoxButtons);
+        }
+
+        protected override void CreateHandle()
+        {
+            base.CreateHandle();
+
+            Text = Program.Name;
+        }
+
+        public string Message
+        {
+            get { return labelMessage.Text; }
+            set
+            {
+                labelMessage.Text = value;
+                int formGrowth = Math.Max(labelMessage.Height - _originalMessageHeight*3, 0);
+                formGrowth = Math.Max(formGrowth, 0);
+                formGrowth = Math.Min(formGrowth, MAX_HEIGHT);
+                Height = _originalFormHeight + formGrowth;
+            }
+        }
+
+        public string DetailMessage 
+        {
+            get
+            {
+                return tbxDetail.Text;
+            }
+            set
+            {
+                tbxDetail.Text = value ?? string.Empty;
+                if (string.IsNullOrEmpty(DetailMessage))
+                {
+                    if (btnMoreInfo.Parent != null)
+                    {
+                        btnMoreInfo.Parent.Controls.Remove(btnMoreInfo);
+                    }
+                }
+                else
+                {
+                    if (null == btnMoreInfo.Parent)
+                    {
+                        buttonPanel.Controls.Add(btnMoreInfo);
+                        buttonPanel.Controls.SetChildIndex(btnMoreInfo, 0);
+                    }
+                }
+            }
+        }
+
+        public Exception Exception
+        {
+            set
+            {
+                if (null == value)
+                {
+                    DetailMessage = null;
+                }
+                else
+                {
+                    DetailMessage = value.ToString();
+                }
+            }
+        }
+
+        public DialogResult ShowAndDispose(IWin32Window parent)
+        {
+            using (this)
+            {
+                return ShowWithTimeout(parent, Message);
+            }
+        }
+
+        public void OkDialog()
+        {
+            DialogResult = DialogResult.OK;
+        }
+
+        private void MessageDlg_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.C && e.Control)
+            {
+                CopyMessage();
+            }
+        }
+
+        public void CopyMessage()
+        {
+            const string separator = "---------------------------"; // Not L10N
+            List<string> lines = new List<String>();
+            lines.Add(separator);
+            lines.Add(Text);
+            lines.Add(separator);
+            lines.Add(Message);
+            lines.Add(separator);
+            lines.Add(TextUtil.SpaceSeparate(VisibleButtons.Select(btn => btn.Text)));
+            if (null != DetailMessage)
+            {
+                lines.Add(separator);
+                lines.Add(DetailMessage);
+            }
+            lines.Add(separator);
+            lines.Add(string.Empty);
+            ClipboardEx.SetText(TextUtil.LineSeparate(lines));
+        }
+
+        private void btnMoreInfo_Click(object sender, EventArgs e)
+        {
+            if (!tbxDetail.Visible)
+            {
+                Height += tbxDetail.Height;
+                tbxDetail.Dock = DockStyle.Bottom;
+                tbxDetail.Visible = true;
+            }
+        }
+
+        public void AddMessageBoxButtons(MessageBoxButtons messageBoxButtons) 
+        {
+            foreach (var dialogResult in GetDialogResults(messageBoxButtons).Reverse())
+            {
+                AddButton(dialogResult);
+            }
+        }
+
+        /// <summary>
+        /// Returns the buttons on the button bar from LEFT to RIGHT.
+        /// </summary>
+        public IEnumerable<Button> VisibleButtons
+        {
+            get
+            {
+                // return the buttons in reverse order because buttonPanel is a right-to-left FlowPanel.
+                return buttonPanel.Controls.OfType<Button>().Reverse();
+            }
+        }
+
+        public void ClickButton(DialogResult dialogResult)
+        {
+            ClickButton(FindButton(dialogResult));
+        }
+
+        public Button AddButton(DialogResult dialogResult)
+        {
+            return AddButton(dialogResult, GetDefaultButtonText(dialogResult));
+        }
+
+        /// <summary>
+        /// Adds a button to the button bar, to the LEFT of any buttons which are already on the button bar.
+        /// </summary>
+        public Button AddButton(DialogResult dialogResult, string text)
+        {
+            var button = new Button
+            {
+                Text = text,
+                DialogResult = dialogResult,
+                Margin = btnMoreInfo.Margin
+            };
+            buttonPanel.Controls.Add(button);
+            var visibleButtons = VisibleButtons.ToArray();
+            if (visibleButtons.Length == 1)
+            {
+                CancelButton = VisibleButtons.First();
+            }
+            else
+            {
+                CancelButton = FindButton(DialogResult.Cancel);
+            }
+            AcceptButton = visibleButtons.First();
+            int tabIndex = 0;
+            foreach (Button btn in visibleButtons)
+            {
+                btn.TabIndex = tabIndex++;
+            }
+            return button;
+        }
+
+        public Button FindButton(DialogResult buttonDialogResult)
+        {
+            return VisibleButtons.FirstOrDefault(button => button.DialogResult == buttonDialogResult);
+        }
+
+        public void ClickButton(Button button)
+        {
+            if (!button.Visible)
+            {
+                throw new NotSupportedException();
+            }
+            CheckDisposed();
+            button.PerformClick();
+        }
+
+        public void ClickOk()
+        {
+            ClickButton(DialogResult.OK);
+        }
+
+        public void ClickCancel()
+        {
+            ClickButton(DialogResult.Cancel);
+        }
+
+        public void ClickYes()
+        {
+            ClickButton(DialogResult.Yes);
+        }
+
+        public void ClickNo()
+        {
+            ClickButton(DialogResult.No);
+        }
+
+        private static DialogResult[] GetDialogResults(MessageBoxButtons messageBoxButtons)
+        {
+            switch (messageBoxButtons)
+            {
+                case MessageBoxButtons.OK:
+                    return new[] {DialogResult.OK};
+                case MessageBoxButtons.OKCancel:
+                    return new[] {DialogResult.OK, DialogResult.Cancel};
+                case MessageBoxButtons.AbortRetryIgnore:
+                    return new[] {DialogResult.Abort, DialogResult.Retry, DialogResult.Ignore};
+                case MessageBoxButtons.RetryCancel:
+                    return new[] {DialogResult.Retry, DialogResult.Cancel};
+                case MessageBoxButtons.YesNo:
+                    return new[] {DialogResult.Yes, DialogResult.No};
+                case MessageBoxButtons.YesNoCancel:
+                    return new[] {DialogResult.Yes, DialogResult.No, DialogResult.Cancel};
+            }
+            return new DialogResult[0];
+        }
+
+        public static string GetDefaultButtonText(DialogResult dialogResult)
+        {
+            switch (dialogResult)
+            {
+                case DialogResult.OK:
+                    return Resources.AlertDlg_GetDefaultButtonText_OK;
+                case DialogResult.Cancel:
+                    return Resources.AlertDlg_GetDefaultButtonText_Cancel;
+                case DialogResult.Yes:
+                    return Resources.AlertDlg_GetDefaultButtonText__Yes;
+                case DialogResult.No:
+                    return Resources.AlertDlg_GetDefaultButtonText__No;
+                case DialogResult.Abort:
+                    return Resources.AlertDlg_GetDefaultButtonText__Abort;
+                case DialogResult.Retry:
+                    return Resources.AlertDlg_GetDefaultButtonText__Retry;
+                case DialogResult.Ignore:
+                    return Resources.AlertDlg_GetDefaultButtonText__Ignore;
+                default:
+                    throw new ArgumentException();
+            }
+        }
+    }
+}
