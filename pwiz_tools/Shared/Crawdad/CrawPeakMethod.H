@@ -40,7 +40,7 @@ enum BackgroundEstimationMethod { PEAK_BOUNDARY_ESTIMATE, LOWER_BOUNDARY, MEAN_B
 enum ChromSmoothMethod { GAUSS_SMOOTHER, SAVITZKY_GOLAY_SMOOTHER };
 
 ///Area calculation method
-enum AreaCalculationMethod { FULL_WIDTH, HALF_HEIGHT_WIDTH };
+enum AreaCalculationMethod { FULL_WIDTH, HALF_HEIGHT_WIDTH, HEIGHT_AS_AREA };
 
 const double FHWM_TO_SD_CONV = 2.35482;
 class CrawPeakMethod {

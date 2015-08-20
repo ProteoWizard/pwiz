@@ -243,7 +243,7 @@ namespace pwiz.Skyline.Model.Results
             }
 
             peak = CalcPeak(peakMax.StartIndex, peakMax.EndIndex);
-            return new ChromPeak(peak, flags, Times, Intensities, MassErrors10X);
+            return new ChromPeak(Finder, peak, flags, Times, Intensities, MassErrors10X);
         }
 
         public void Interpolate(float[] timesNew, double intervalDelta, bool inferZeros)

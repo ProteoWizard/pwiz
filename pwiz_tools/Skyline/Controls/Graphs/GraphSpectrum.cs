@@ -769,7 +769,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 crawPeakFinder.GetPeak(
                     FindNearestIndex(chromGroup.Times, (float) chromGroup.StartTime),
                     FindNearestIndex(chromGroup.Times, (float) chromGroup.EndTime));
-            var chromPeak = new ChromPeak(crawdadPeak, 0, chromGroup.Times, chromData.Intensities, null);
+            var chromPeak = new ChromPeak(crawPeakFinder, crawdadPeak, 0, chromGroup.Times, chromData.Intensities, null);
             transitionChromInfo = new TransitionChromInfo(null, 0, chromPeak, new float?[0], Annotations.EMPTY,
                                                             UserSet.FALSE);
             var peaks = new[] {chromPeak};

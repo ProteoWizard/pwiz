@@ -117,7 +117,7 @@ namespace Crawdad {
             _pPeakFinder->slim = true;
             _pPeakFinder->method.peak_location_meth = MAXIMUM_PEAK;
             _pPeakFinder->method.background_estimation_method = LOWER_BOUNDARY;
-            // _pPeakFinder->method.area_calc_method = HALF_HEIGHT_WIDTH; // Demonstrated only nominal benefit
+            // _pPeakFinder->method.area_calc_method = HEIGHT_AS_AREA; // For testing other options for quantitative metrics
         }
 
         ~CrawdadPeakFinder()
@@ -126,6 +126,11 @@ namespace Crawdad {
 
         void SetChromatogram(IList<double>^ times, IList<double>^ intensities);
         void SetChromatogram(IList<float>^ times, IList<float>^ intensities);
+
+        property bool IsHeightAsArea
+        {
+            bool get() { return _pPeakFinder->method.area_calc_method == HEIGHT_AS_AREA; }
+        }
 
         property float FullWidthHalfMax
         {

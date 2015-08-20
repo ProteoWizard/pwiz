@@ -462,20 +462,24 @@ void CrawPeakAnnotator::get_all_areas( int start_idx, int stop_idx, int peak_idx
         bg_scratch.resize(len);
     }
     set_bg_scratch(start_idx, stop_idx);
-    bg_sub_height = get_active_chrom()->at(peak_idx) - bg_scratch[peak_idx - start_idx];
     raw_height = get_active_chrom()->at(peak_idx);
+    bg_sub_height = raw_height - bg_scratch[peak_idx - start_idx];
 
     // Calculate areas with widths appropriate to the area calculation method
     if (this->pf->method.area_calc_method == FULL_WIDTH) {
         raw_area = (float)get_area(start_idx, stop_idx);
         bg_area = (float)crawutils::area_under_curve(bg_scratch, 0, len - 1);
     }
-    else /* if(this->pf->method.area_calc_method == HALF_HEIGHT_WIDTH) */ {
+    else if(this->pf->method.area_calc_method == HALF_HEIGHT_WIDTH) {
         float lh_hm, rh_hm;
         bool calculated_ok;
         calc_fwhm_extents(start_idx, stop_idx, peak_idx, raw_height, lh_hm, rh_hm, calculated_ok);
         raw_area = (float)get_area_f(lh_hm, rh_hm);
         bg_area = (float)crawutils::area_under_curve_f(bg_scratch, lh_hm - start_idx, rh_hm - start_idx);
+    }
+    else /* if(this->pf->method.area_calc_method == HEIGHT_AS_AREA) */ {
+        raw_area = (float)raw_height;
+        bg_area = (float)(raw_height - bg_sub_height);
     }
     bg_sub_area = raw_area - bg_area;
 }

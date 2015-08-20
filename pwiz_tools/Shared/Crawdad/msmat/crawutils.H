@@ -805,6 +805,8 @@ void mydelete ( T* & in_arg ) {
     }
 }
 
+// void OutputString(const char* str);
+
 };
 
 namespace crawstats {

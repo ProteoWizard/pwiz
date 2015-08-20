@@ -1005,7 +1005,8 @@ namespace pwiz.Skyline.Model.Results
             return (short) Math.Round(f*10);
         }
 
-        public ChromPeak(CrawdadPeak peak,
+        public ChromPeak(CrawdadPeakFinder finder,
+                         CrawdadPeak peak,
                          FlagValues flags,
                          IList<float> times,
                          IList<float> intensities,
@@ -1020,7 +1021,7 @@ namespace pwiz.Skyline.Model.Results
             StartTime = times[peak.StartIndex];
             EndTime = times[peak.EndIndex];
 
-            if ((flags & FlagValues.time_normalized) == 0)
+            if ((flags & FlagValues.time_normalized) == 0 || finder.IsHeightAsArea)
             {
                 Area = peak.Area;
                 BackgroundArea = peak.BackgroundArea;
@@ -2231,7 +2232,7 @@ namespace pwiz.Skyline.Model.Results
             CrawdadPeakFinder finder = new CrawdadPeakFinder();
             finder.SetChromatogram(Times, Intensities);
             var peak = finder.GetPeak(startIndex, endIndex);
-            return new ChromPeak(peak, flags, Times, Intensities, MassError10Xs);
+            return new ChromPeak(finder, peak, flags, Times, Intensities, MassError10Xs);
         }
 
         public int IndexOfPeak(double retentionTime)
