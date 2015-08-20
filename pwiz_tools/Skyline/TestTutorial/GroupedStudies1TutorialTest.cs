@@ -24,6 +24,7 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -1471,37 +1472,59 @@ namespace pwiz.SkylineTestTutorial
         private static void TestApplyToAll()
         {
             // Apply to all
-            SelectAndApplyPeak("GILAADESVGSMAK", "D_103_REP1", 19.0987);
+            SelectAndApplyPeak("GILAADESVGSMAK", "D_103_REP1", false, 19.0987);
             VerifyPeaks(MakeVerificationDictionary(
                 19.09872, 18.53870, 18.38107, 18.98798, 18.80227, 18.76315,
                 19.10433, 19.03328, 18.83977, 19.10928, 18.65008, 18.45997,
                 19.44880, 18.57200, 18.79917, 18.73012, 18.64647, 18.72783,
                 18.84278, 18.35188, 18.72457, 18.80247, 18.57477, 18.30993));
-            SelectAndApplyPeak("LNDGSQITFEK", "D_138_REP1", 23.5299);
+            SelectAndApplyPeak("LNDGSQITFEK", "D_138_REP1", false, 23.5299);
             VerifyPeaks(MakeVerificationDictionary(
                 23.45410, 22.77782, 23.11210, 23.19398, 22.88790, 23.00840,
                 23.52992, 23.57400, 23.19233, 23.45998, 22.81207, 22.81960,
                 23.87478, 23.68238, 23.03755, 22.89255, 22.69688, 23.04172,
                 22.85375, 23.04702, 22.85068, 22.88932, 22.70258, 23.19258));
             // Apply to subsequent
-            SelectAndApplyPeak("DLTGFPQGADQR", "H_159_REP2", 24.7955, true);
+            SelectAndApplyPeak("DLTGFPQGADQR", "H_159_REP2", true, 24.7955);
             VerifyPeaks(MakeVerificationDictionary(
                 24.02537, 23.31307, 24.60460, 23.61628, 23.12335, 25.40152,
                 23.99268, 23.95832, 25.69842, 24.07185, 23.27097, 25.12858,
                 24.41210, 26.79822, 25.46880, 23.08690, 26.87400, 25.36023,
                 23.05053, 24.79552, 25.24442, 23.38800, 25.08665, 24.63885));
-            SelectAndApplyPeak("GATYAFSGSHYWR", "D_103_REP3", 16.4223, true);
+            SelectAndApplyPeak("GATYAFSGSHYWR", "D_103_REP3", true, 16.4223);
             VerifyPeaks(MakeVerificationDictionary(
                 17.38182, 17.08060, 16.42228, 17.19397, 17.21502, 16.66367,
                 17.23210, 17.45838, 16.66472, 17.39735, 17.00417, 16.43715,
                 17.61817, 17.00378, 16.64450, 17.15165, 17.00528, 16.54887,
                 17.20048, 16.88772, 16.51452, 17.14997, 17.04057, 16.47637));
+
+            // Test apply to all on a case with an obvious reference point
+            // with two small (sometimes non-existent) peaks on either side
+            SelectAndApplyPeak("LGGEEVSVAC[+57.0]K", "H_148_REP1", false, 13.1616);
+            VerifyPeaks(MakeVerificationDictionary(
+                13.16143, 13.12685, 13.12692, 13.09358, 13.16153, 13.16042,
+                13.12773, 13.26173, 13.19442, 13.12825, 13.09322, 13.12713,
+                13.22888, 13.12702, 13.19365, 13.16158, 13.12768, 13.12695,
+                13.09430, 13.06082, 13.16077, 13.12740, 13.12707, 13.09500));
+            SelectAndApplyPeak("LGGEEVSVAC[+57.0]K", "H_148_REP1", false, 13.4631);
+            VerifyPeaks(MakeVerificationDictionary(
+                13.46293, 13.39485, 13.39492, 13.42858, 13.39603, 13.46192,
+                13.42923, 13.46273, 13.46242, 13.42975, 13.42822, 13.42863,
+                13.46338, 13.42852, 13.46165, 13.46308, 13.46268, 13.42845,
+                13.42930, 13.36232, 13.42877, 13.42890, 13.39507, 13.43000));
+            SelectAndApplyPeak("LGGEEVSVAC[+57.0]K", "H_148_REP1", false, 13.6641);
+            VerifyPeaks(MakeVerificationDictionary(
+                14.30043, 13.79685, 13.79692, 13.79708, 14.33403, 13.96442,
+                13.83123, 14.03223, 13.66342, 13.76475, 13.83022, 13.73013,
+                14.33438, 13.83052, 13.93065, 13.66408, 13.63018, 13.69645,
+                13.56330, 13.52982, 13.69677, 13.83090, 13.56257, 13.76500));
+
             // For each test, a peak was picked and applied - undo two actions per test
-            for (int i = 0; i < 2*4; i++)
+            for (int i = 0; i < 2*7; i++)
                 RunUI(() => SkylineWindow.Undo());
         }
 
-        private static void SelectAndApplyPeak(string modifiedSequence, string resultsName, double rt, bool subsequent = false)
+        private static void SelectAndApplyPeak(string modifiedSequence, string resultsName, bool subsequent, double rt)
         {
             bool found = false;
             var doc = SkylineWindow.Document;
@@ -1565,10 +1588,14 @@ namespace pwiz.SkylineTestTutorial
 
         private static void VerifyPeaks(IReadOnlyDictionary<string, double> expected)
         {
+            bool fail = false;
+            TransitionGroupDocNode nodeTranGroup = null;
+            var expectedBuilder = new StringBuilder();
+            var observedBuilder = new StringBuilder();
             RunUI(() =>
             {
                 var selectedTreeNode = SkylineWindow.SelectedNode as PeptideTreeNode;
-                TransitionGroupDocNode nodeTranGroup = selectedTreeNode != null
+                nodeTranGroup = selectedTreeNode != null
                     ? selectedTreeNode.DocNode.TransitionGroups.First(g => g.Results[SkylineWindow.SelectedResultsIndex] != null)
                     : SkylineWindow.SequenceTree.GetNodeOfType<TransitionGroupTreeNode>().DocNode;
 
@@ -1587,12 +1614,19 @@ namespace pwiz.SkylineTestTutorial
                     var chromName = chromSet.Name;
                     Assert.IsTrue(expected.ContainsKey(chromName));
                     var expectedRt = expected[chromName];
+                    expectedBuilder.AppendLine(string.Format("{0}", expectedRt));
+                    observedBuilder.AppendLine(string.Format("{0}", rt.Value));
                     if (Math.Abs(expectedRt - rt.Value) > 0.01)
-                    {
-                        Assert.Fail("{0}: expected RT of {1} for {2}, but was {3}", nodeTranGroup, expectedRt, chromName, rt.Value);
-                    }
+                        fail = true;
                 }
             });
+            Assert.IsFalse(fail, TextUtil.LineSeparate(
+                string.Format("{0}", nodeTranGroup),
+                "Expected RTs:",
+                expectedBuilder.ToString(),
+                "but found RTs:",
+                observedBuilder.ToString())
+            );
         }
     }
 }

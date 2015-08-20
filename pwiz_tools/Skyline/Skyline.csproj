@@ -844,6 +844,7 @@
     <Compile Include="Model\Optimization\OptimizationDb.cs" />
     <Compile Include="Model\Optimization\OptimizationDbManager.cs" />
     <Compile Include="Model\Optimization\OptimizationLibrary.cs" />
+    <Compile Include="Model\PeakMatcher.cs" />
     <Compile Include="Model\PeptideDocNode.cs" />
     <Compile Include="Model\PeptideGroupDocNode.cs" />
     <Compile Include="Model\PersistedViews.cs" />
