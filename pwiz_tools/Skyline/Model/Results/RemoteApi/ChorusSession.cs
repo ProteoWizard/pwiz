@@ -498,17 +498,20 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
 
         public static ChorusServerException WrapWebException(WebException webException)
         {
+            string httpErrorMessage = Resources.ChorusSession_WrapWebException_An_error_occurred_communicating_with_the_server___The_server_return_HTTP_error_response_code__0__;
             try
             {
                 if (null == webException.Response)
                 {
-                    return new ChorusServerException(string.Format("HTTP error response code {0}", webException.Status), webException); // Not L10N
+                    return new ChorusServerException(string.Format(httpErrorMessage, webException.Status), webException); // Not L10N
                 }
                 using (var responseStream = webException.Response.GetResponseStream())
                 {
                     if (null == responseStream)
                     {
-                        return new ChorusServerException(string.Format("HTTP error response code {0}", webException.Status), webException); // Not L10N
+                        return
+                            new ChorusServerException(
+                                string.Format(httpErrorMessage, webException.Status), webException);
                     }
                     MemoryStream memoryStream = new MemoryStream();
                     int count;
@@ -519,7 +522,20 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
                     }
                     String fullMessage = Encoding.UTF8.GetString(memoryStream.ToArray());
                     var xmlSerializer = new XmlSerializer(typeof (ChorusErrorResponse));
-                    ChorusErrorResponse chorusErrorResponse = (ChorusErrorResponse) xmlSerializer.Deserialize(new StringReader(fullMessage));
+                    ChorusErrorResponse chorusErrorResponse;
+                    try
+                    {
+                        chorusErrorResponse =
+                            (ChorusErrorResponse) xmlSerializer.Deserialize(new StringReader(fullMessage));
+                    }
+                    catch (Exception)
+                    {
+                        // If there is an error in the XML of the response, then put the full text of the response in an inner exception,
+                        // and return them an error.
+                        var innerException = new ChorusServerException(fullMessage, webException);
+                        return new ChorusServerException(string.Format(Resources.ChorusSession_WrapWebException_An_error_occurred_communicating_with_the_server___The_server_returned_the_HTTP_error_response_code__0__but_the_error_message_could_not_be_parsed_, webException.Status), innerException);
+                    }
+
                     if (!string.IsNullOrEmpty(chorusErrorResponse.StackTrace))
                     {
                         Trace.TraceWarning(chorusErrorResponse.StackTrace);
