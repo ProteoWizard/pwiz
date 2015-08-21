@@ -1,0 +1,122 @@
+#
+# $Id$
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+#
+# The Original Code is the TagRecon build system.
+#
+# The Initial Developer of the Original Code is Matt Chambers.
+#
+# Copyright 2009 Vanderbilt University
+#
+# Contributor(s): Surendra Dasari
+#
+
+# Usage:
+#
+#   bjam [options] [install]
+#
+#   Builds and installs TagRecon, a peptide sequence tag reconciler.
+#
+# Targets and Related Options:
+#
+#   build                   Build Bumbershoot libraries and applications
+#   =====
+#
+#   --with-mpi              For MPI-enabled applications, compile with
+#                           support for running the application in parallel
+#                           across multiple nodes. This support depends on
+#                           a working MPI implementation being available
+#                           at compile-time (and if using shared linkage,
+#                           at run-time as well).
+#
+#
+#   install                 Install executable files to certain locations
+#   =======
+#
+#   --prefix=<PREFIX>       Install architecture independent files here.
+#                           Default: "C:\Program Files\Bumbershoot" for Windows
+#                           Default: "/usr/local/bumbershoot" for Linux
+#
+#   --exec-prefix=<EPREFIX> Install architecture dependent files here.
+#                           Default: <PREFIX>
+#
+
+
+import os ;
+import modules ;
+import common ;
+import package ;
+import errors : error ;
+import feature ;
+import path ;
+
+
+local application-name = "TagRecon" ;
+
+constant MAJOR : 1 ;
+constant MINOR : 4 ;
+
+path-constant TAGRECON_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Bumbershoot/tagrecon ;
+
+# set version info (used for tarball filenames)
+import generate-version ;
+local version-file = $(application-name:L)Version.cpp ;
+local revision-info = [ generate-version.cpp $(TAGRECON_PATH)/$(version-file) : freicore $(application-name:L) : $(MAJOR) : $(MINOR) :
+                                             [ path.glob $(TAGRECON_PATH) : *.?pp *.h Jamroot.jam : $(version-file) ] :
+                                             warn-on-missing ] ;
+
+# revision-info is a sequence: <max revision> <max year> <max month> <max day> <number of modified files in working copy>
+
+
+using expat : 2.0.1 : $(EXPAT_SOURCE) ;
+
+install data-files
+    : # sources
+        $(TAGRECON_PATH)/unimod.xml
+        $(TAGRECON_PATH)/blosum62.fas
+    : # requirements
+        <conditional>@install-location
+    ;
+
+rule with-mpi ( properties * )
+{
+    local result ;
+    if --with-mpi in [ modules.peek : ARGV ]
+    {
+        # gcc 4.6 (at least) pukes with its default 128 template depth 
+        if <toolset>gcc in $(properties) { result += <cxxflags>-ftemplate-depth-256 ; }
+        result += <location-prefix>with-mpi <library>/mpi//mpi <define>USE_MPI ;
+    }
+    return $(result) ;
+}
+
+
+exe $(application-name:L)
+  : # sources
+    [ glob *.cpp ../freicore/UniModXMLParser*.cpp ]
+  : # requirements
+      <conditional>@with-mpi
+      <library>../freicore//freicore
+      <library>/ext/expat//expat
+      <define>XML_LARGE_SIZE
+  ;
+
+install install
+    : $(application-name:L)
+    : <conditional>@install-type
+      <conditional>@install-location
+      <conditional>@install-vendor-api-dependencies
+      <conditional>@install-identdata-dependencies
+      <dependency>data-files
+    ;

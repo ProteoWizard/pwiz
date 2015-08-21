@@ -1,0 +1,94 @@
+#
+# $Id$
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+#
+# The Original Code is the DirecTag build system.
+#
+# The Initial Developer of the Original Code is Matt Chambers.
+#
+# Copyright 2009 Vanderbilt University
+#
+# Contributor(s): Surendra Dasari
+#
+
+# Usage:
+#
+#   bjam [options] [install]
+#
+#   Builds and installs DirecTag, a sequence tagging engine.
+#
+# Targets and Related Options:
+#
+#   build                   Build Bumbershoot libraries and applications
+#   =====
+#
+#
+#   install                 Install executable files to certain locations
+#   =======
+#
+#   --prefix=<PREFIX>       Install architecture independent files here.
+#                           Default: "C:\Program Files\Bumbershoot" for Windows
+#                           Default: "/usr/local/bumbershoot" for Linux
+#
+#   --exec-prefix=<EPREFIX> Install architecture dependent files here.
+#                           Default: <PREFIX>
+#
+
+
+import os ;
+import modules ;
+import common ;
+import package ;
+import errors : error ;
+import feature ;
+import path ;
+
+local application-name = "DirecTag" ;
+
+constant MAJOR : 1 ;
+constant MINOR : 4 ;
+
+path-constant DIRECTAG_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Bumbershoot/directag ;
+
+
+# set version info (used for tarball filenames)
+import generate-version ;
+local version-file = $(application-name:L)Version.cpp ;
+local revision-info = [ generate-version.cpp $(DIRECTAG_PATH)/$(version-file) : freicore $(application-name:L) : $(MAJOR) : $(MINOR) :
+                                             [ path.glob $(DIRECTAG_PATH) : *.?pp *.h Jamfile.jam : $(version-file) ] :
+                                             warn-on-missing ] ;
+
+# revision-info is a sequence: <max revision> <max year> <max month> <max day> <number of modified files in working copy>
+
+exe $(application-name:L)
+  : # sources
+    directag.cpp directagSpectrum.cpp directagVersion.cpp 
+  : # requirements
+    <library>../freicore//freicore
+  ;
+  
+exe adjustScanRankerScoreByGroup
+   : # sources
+     adjustScanRankerScoreByGroup.cpp
+   : # requirements
+     <use>../freicore//freicore
+   ;
+
+install install
+    : $(application-name:L) adjustScanRankerScoreByGroup
+    : <conditional>@install-type
+      <conditional>@install-location
+      <conditional>@install-vendor-api-dependencies
+      <conditional>@install-identdata-dependencies
+    ;

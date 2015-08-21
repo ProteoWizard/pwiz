@@ -72,6 +72,8 @@ rule binary-tarball-requirements ( properties * )
     result += <name>$(name)
               <dependency>greazy//install
               <dependency>myrimatch//install
+              <dependency>directag//install
+              <dependency>tagrecon//install
               <dependency>idpicker//install
               <dependency>pepitome//install
               <dependency>quameter//install

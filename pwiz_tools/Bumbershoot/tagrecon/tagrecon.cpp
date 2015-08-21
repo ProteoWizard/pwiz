@@ -30,14 +30,14 @@
 #include "pwiz/data/msdata/Version.hpp"
 #include "pwiz/data/proteome/Version.hpp"
 #include "tagreconVersion.hpp"
-#include "boost/lockfree/fifo.hpp"
+#include "boost/lockfree/queue.hpp"
 
 namespace freicore
 {
 namespace tagrecon
 {
     proteinStore                    proteins;
-    boost::lockfree::fifo<size_t>   proteinTasks;
+    boost::lockfree::queue<size_t>   proteinTasks;
     SearchStatistics                searchStatistics;
 
     SpectraList                        spectra;
@@ -71,7 +71,7 @@ namespace tagrecon
     {
         int numSpectra = 0;
 
-        string filenameAsScanName = basename( MAKE_PATH_FOR_BOOST(dataFilename) );
+        string filenameAsScanName = path(dataFilename).filename().string();
 
         // Make histograms of scores by charge state
         map< int, Histogram<float> > meanScoreHistogramsByChargeState;
@@ -1441,7 +1441,7 @@ namespace tagrecon
             size_t proteinTask;
             while( true )
             {
-                if (!proteinTasks.dequeue(&proteinTask))
+                if (!proteinTasks.pop(proteinTask))
                     break;
 
                 ++ searchStatistics.numProteinsDigested;
@@ -1477,7 +1477,7 @@ namespace tagrecon
         boost::uint32_t numProteins = (boost::uint32_t) proteins.size();
 
         for (size_t i=0; i < numProteins; ++i)
-            proteinTasks.enqueue(i);
+            proteinTasks.push(i);
 
         bpt::ptime start = bpt::microsec_clock::local_time();
 
@@ -1767,14 +1767,14 @@ namespace tagrecon
                 // Try to find the source next to the tags
                 if( !bfs::exists(sourceFilepath) )
                 {
-                    string sourceFilename = bfs::path(sourceFilepath).filename();
+                    string sourceFilename = bfs::path(sourceFilepath).filename().string();
                     bfs::path tagsFilepath = bfs::path(*fItr);
                     bfs::path adjacentSourceFilepath = tagsFilepath.parent_path() / sourceFilename;
                     if( bfs::exists(adjacentSourceFilepath) )
                         sourceFilepath = adjacentSourceFilepath.string();
                     else
                     {
-                        cerr << "Error: could not find source \"" + sourceFilename + "\" for tags file \"" + tagsFilepath.filename() + "\"" << endl;
+                        cerr << "Error: could not find source \"" + sourceFilename + "\" for tags file \"" + tagsFilepath.filename().string() + "\"" << endl;
                         continue;
                     }
                 }

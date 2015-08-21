@@ -31,8 +31,8 @@
 #include "AhoCorasickTrie.hpp"
 #include <boost/atomic.hpp>
 #include <boost/cstdint.hpp>
-#include <boost/interprocess/containers/container/flat_map.hpp>
-#include <boost/interprocess/containers/container/flat_set.hpp>
+#include <boost/container/flat_map.hpp>
+#include <boost/container/flat_set.hpp>
 
 #define TAGRECON_LICENSE            COMMON_LICENSE
 
