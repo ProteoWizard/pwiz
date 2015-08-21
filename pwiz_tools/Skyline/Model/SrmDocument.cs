@@ -484,20 +484,34 @@ namespace pwiz.Skyline.Model
         }
 
         /// <summary>
+        /// Returns non-localized strings describing any unloadedness in the document
+        /// TODO: there are still issues with this, like errors importing results
+        /// </summary>
+        public IEnumerable<string> NonLoadedStateDescriptions
+        {
+            get
+            {
+                if (Settings.HasResults && !Settings.MeasuredResults.IsLoaded)
+                    yield return "Settings.MeasuredResults"; // Not L10N
+                if (Settings.HasLibraries && !Settings.PeptideSettings.Libraries.IsLoaded)
+                    yield return "Settings.PeptideSettings.Libraries"; // Not L10N
+                if (!IrtDbManager.IsLoadedDocument(this))
+                    yield return "IrtDbManager"; // Not L10N
+                if (!OptimizationDbManager.IsLoadedDocument(this))
+                    yield return "OptimizationDbManager"; // Not L10N
+                if (!DocumentRetentionTimes.IsLoaded(Settings))
+                    yield return "DocumentRetentionTimes"; // Not L10N
+                // BackgroundProteome?
+            }
+        }
+
+        /// <summary>
         /// True if all parts of the document loaded by background loaders have completed loading
         /// TODO: there are still issues with this, like errors importing results
         /// </summary>
         public bool IsLoaded
         {
-            get
-            {
-                return (!Settings.HasResults || Settings.MeasuredResults.IsLoaded) &&
-                        (!Settings.HasLibraries || Settings.PeptideSettings.Libraries.IsLoaded) &&
-                        IrtDbManager.IsLoadedDocument(this) &&
-                        OptimizationDbManager.IsLoadedDocument(this) &&
-                        DocumentRetentionTimes.IsLoaded(Settings);
-                        // BackgroundProteome?
-            }
+            get { return !NonLoadedStateDescriptions.Any(); }
         }
 
         public PeptideGroupDocNode FindPeptideGroup(PeptideGroup fastaSequence)
