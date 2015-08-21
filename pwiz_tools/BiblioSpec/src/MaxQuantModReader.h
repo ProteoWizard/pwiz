@@ -181,7 +181,7 @@ private:
         LABELS_TAG, READING_LABEL
     };
 
-    double aaMasses_[128];
+    map<string, double> elementMasses_;
     MaxQuantModification curMod_;
     set<MaxQuantModification>* modBank_;
     set<string>* fixedMods_;

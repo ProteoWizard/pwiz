@@ -34,15 +34,20 @@ MaxQuantModReader::MaxQuantModReader(const char* xmlfilename,
 {
     this->setFileName(xmlfilename); // this is for the saxhandler
    
-    // initialize amino acid masses
-    fill(aaMasses_, aaMasses_ + sizeof(aaMasses_)/sizeof(double), 0);
-    AminoAcidMasses::initializeMass(aaMasses_, 1);
+    elementMasses_ = map<string, double>();
 
-    // set heavy masses
-    aaMasses_['H'] = 2.01355321270;
-    aaMasses_['O'] = 16.9991322;
-    aaMasses_['C'] = 13.0033548378;
-    aaMasses_['N'] = 15.0001088984;
+    elementMasses_["H"] = 1.00782503521;
+    elementMasses_["O"] = 15.9949146221;
+    elementMasses_["C"] = 12.0000000;
+    elementMasses_["N"] = 14.0030740052;
+    elementMasses_["P"] = 30.97376151;
+    elementMasses_["S"] = 31.97207069;
+    elementMasses_["Na"] = 22.98976966;
+    // heavy masses
+    elementMasses_["Hx"] = 2.01355321270;
+    elementMasses_["Ox"] = 16.9991322;
+    elementMasses_["Cx"] = 13.0033548378;
+    elementMasses_["Nx"] = 15.0001088984;
 }
 
 /**
@@ -156,7 +161,10 @@ void MaxQuantModReader::endElement(const XML_Char* name)
     {
         if (isIElement("modification", name))
         {
-            modBank_->insert(curMod_);
+            if (curMod_.massDelta != 0.0)
+            {
+                modBank_->insert(curMod_);
+            }
             state_ = ROOT_STATE;
         }
         else if (state_ == READING_POSITION)
@@ -294,72 +302,58 @@ double MaxQuantModReader::parseComposition(string composition)
 {
     double deltaMass = 0.0;
 
-    char curElement = '\0';
-    string curAmount;
-
-    for (size_t i = 0; i < composition.length(); i++)
+    vector<string> components;
+    boost::algorithm::split(components, composition, is_any_of("\t "), boost::token_compress_on);
+    
+    for (vector<string>::iterator i = components.begin(); i != components.end(); i++)
     {
-        char curChar = composition[i];
-        switch (curChar)
+        boost::trim(*i);
+        if (i->empty())
         {
-        case 'H':
-        case 'O':
-        case 'C':
-        case 'N':
-        case 'P':
-        case 'S':
-            curElement = tolower(curChar);
-            curAmount.clear();
-            break;
-        case 'x':
-            // heavy
-            curElement = toupper(curElement);
-            break;
-        case ' ':
-            if (curElement != '\0')
+            continue;
+        }
+
+        string element;
+        int quantity;
+
+        size_t openQuantity = i->find('(');
+        if (openQuantity != string::npos)
+        {
+            element = i->substr(0, openQuantity);
+            size_t closeQuantity = i->find(')', ++openQuantity);
+            if (closeQuantity == string::npos)
             {
-                deltaMass += aaMasses_[curElement];
-                curElement = '\0';
+                // open parenthesis without closing
+                Verbosity::warn("Invalid composition '%s': '(' without ')'", composition.c_str());
+                return 0.0;
             }
-            break;
-        case '-':
-        case '0':
-        case '1':
-        case '2':
-        case '3':
-        case '4':
-        case '5':
-        case '6':
-        case '7':
-        case '8':
-        case '9':
-            curAmount += curChar;
-            break;
-        case '(':
-            break;
-        case ')':
+            string quantityStr = i->substr(openQuantity, closeQuantity - openQuantity);
             try
             {
-                int convertedAmount = lexical_cast<int>(curAmount);
-                deltaMass += aaMasses_[curElement] * convertedAmount;
+                quantity = boost::lexical_cast<int>(quantityStr);
             }
-            catch (bad_lexical_cast e)
+            catch (boost::bad_lexical_cast&)
             {
-                throw BlibException(false, "Could not convert \"%s\" to int", curAmount.c_str());
+                // invalid quantity
+                Verbosity::warn("Invalid quantity for '%s': '%s'", composition.c_str(), quantityStr.c_str());
+                return 0.0;
             }
-            curElement = '\0';
-            break;
-        default:
-            throw BlibException(false, "Invalid character '%c' in modification string %s", 
-                                curChar, composition.c_str());
-            break;
         }
-    }
+        else
+        {
+            element = *i;
+            quantity = 1;
+        }
 
-    // handle case where last character was element
-    if (curElement != '\0')
-    {
-        deltaMass += aaMasses_[curElement];
+        map<string, double>::const_iterator j = elementMasses_.find(element);
+        if (j == elementMasses_.end())
+        {
+            // element unknown
+            Verbosity::warn("Unknown element for '%s': '%s'", composition.c_str(), element.c_str());
+            return 0.0;
+        }
+
+        deltaMass += quantity * j->second;
     }
 
     return deltaMass;
