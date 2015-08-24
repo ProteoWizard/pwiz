@@ -68,7 +68,6 @@ namespace pwiz.Skyline.Controls
         private int _resultsIndex;
         private int _ratioIndex;
         private StatementCompletionTextBox _editTextBox;
-        private readonly Dictionary<int, PeptideGraphInfo> _peptideGraphInfos = new Dictionary<int, PeptideGraphInfo>();
         private bool _inhibitAfterSelect;
 
         private readonly MoveThreshold _moveThreshold = new MoveThreshold(5, 5);
@@ -353,33 +352,6 @@ namespace pwiz.Skyline.Controls
                 if (cover != null)
                     cover.Dispose();
             }
-
-            // Generate colors for each peptide.
-            if (IsPeptideMissingColor)
-            {
-                _peptideGraphInfos.Clear();
-                foreach (var peptideGroup in Document.MoleculeGroups)
-                {
-                    foreach (var peptideNode in peptideGroup.Children)
-                    {
-                        var peptideDocNode = peptideNode as PeptideDocNode;
-                        if (peptideDocNode == null)
-                            continue;
-                        _peptideGraphInfos[peptideNode.Id.GlobalIndex] = new PeptideGraphInfo
-                        {
-                            Color = ColorGenerator.GetColor(peptideGroup.Name, peptideDocNode.RawTextId)
-                        };
-                    }
-                }
-            }
-        }
-
-        public bool IsPeptideMissingColor
-        {
-            get
-            {
-                return Document.Molecules.Any(nodePep => !_peptideGraphInfos.ContainsKey(nodePep.Peptide.GlobalIndex));
-            }
         }
 
         private static readonly PeptideGraphInfo SELECTED_PEPTIDE_GRAPH_INFO = new PeptideGraphInfo
@@ -390,11 +362,13 @@ namespace pwiz.Skyline.Controls
 
         public PeptideGraphInfo GetPeptideGraphInfo(DocNode docNode)
         {
-            var selectedNode = SelectedNode as PeptideTreeNode;
             var thisNode = docNode as PeptideDocNode;
-            return (selectedNode != null && thisNode != null && Equals(selectedNode.DocNode.Key, thisNode.Key))
+            if (thisNode == null)
+                return new PeptideGraphInfo {Color = PeptideDocNode.UNKNOWN_COLOR};
+            var selectedNode = SelectedNode as PeptideTreeNode;
+            return (selectedNode != null && Equals(selectedNode.DocNode.Key, thisNode.Key))
                 ? SELECTED_PEPTIDE_GRAPH_INFO
-                : _peptideGraphInfos[docNode.Id.GlobalIndex];
+                : new PeptideGraphInfo { Color = thisNode.Color };
         }
 
         [Browsable(false)]

@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using pwiz.ProteomeDatabase.API;
@@ -411,6 +412,40 @@ namespace pwiz.Skyline.Model
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             return base.Equals(obj) && Equals(obj._proteinMetadata, _proteinMetadata); 
+        }
+
+        protected override IList<DocNode> OnChangingChildren(DocNodeParent clone)
+        {
+            return GenerateColors(clone.Children);
+        }
+
+        private IList<DocNode> GenerateColors(IList<DocNode> children)
+        {
+            var newChildren = new List<DocNode>(children.Count);
+            var colorList = new List<Color>(children.Count);
+
+            // To avoid color collisions, create a list of all colors
+            // assigned to peptides so far.
+            foreach (PeptideDocNode peptideDocNode in children)
+            {
+                if (peptideDocNode.Color.A != 0)
+                    colorList.Add(peptideDocNode.Color);
+            }
+
+            // Generate colors for peptides without colors, avoiding
+            // collisions with already assigned colors.
+            foreach (PeptideDocNode peptideDocNode in children)
+            {
+                if (peptideDocNode.Color.A != 0)
+                    newChildren.Add(peptideDocNode);
+                else
+                {
+                    var color = ColorGenerator.GetColor(peptideDocNode.RawTextId, colorList);
+                    newChildren.Add(peptideDocNode.ChangeColor(color));
+                    colorList.Add(color);
+                }
+            }
+            return newChildren;
         }
 
         public override bool Equals(object obj)

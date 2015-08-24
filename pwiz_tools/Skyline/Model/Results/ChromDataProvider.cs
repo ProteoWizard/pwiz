@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 
@@ -80,7 +81,7 @@ namespace pwiz.Skyline.Model.Results
 
         public virtual void SetRequestOrder(IList<IList<int>> orderedSets) { }
 
-        public abstract bool GetChromatogram(int id, string modifiedSequence, out ChromExtra extra,
+        public abstract bool GetChromatogram(int id, string modifiedSequence, Color color, out ChromExtra extra,
             out float[] times, out int[] scanIds, out float[] intensities, out float[] massErrors);
 
         public abstract double? MaxRetentionTime { get; }
@@ -260,7 +261,7 @@ namespace pwiz.Skyline.Model.Results
             get { return _chromIds; }
         }
 
-        public override bool GetChromatogram(int id, string modifiedSequence, out ChromExtra extra, out float[] times, out int[] scanIds, out float[] intensities, out float[] massErrors)
+        public override bool GetChromatogram(int id, string modifiedSequence, Color color, out ChromExtra extra, out float[] times, out int[] scanIds, out float[] intensities, out float[] massErrors)
         {
             // No mass errors in SRM
             massErrors = null;
@@ -295,6 +296,7 @@ namespace pwiz.Skyline.Model.Results
             // Display in AllChromatogramsGraph
             LoadingStatus.Transitions.AddTransition(
                 modifiedSequence,
+                color,
                 index, -1,
                 times,
                 intensities);

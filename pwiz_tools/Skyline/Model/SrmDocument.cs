@@ -581,6 +581,9 @@ namespace pwiz.Skyline.Model
         /// <param name="clone">The new copy of the document</param>
         protected override IList<DocNode> OnChangingChildren(DocNodeParent clone)
         {
+            if (ReferenceEquals(clone, this))
+                return Children;
+
             SrmDocument docClone = (SrmDocument)clone;
             docClone.RevisionIndex = RevisionIndex + 1;
 

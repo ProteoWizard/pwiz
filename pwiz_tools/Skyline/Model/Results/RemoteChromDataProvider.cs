@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results.RemoteApi;
@@ -71,6 +72,7 @@ namespace pwiz.Skyline.Model.Results
         public override bool GetChromatogram(
             int id, 
             string modifiedSequence,
+            Color peptideColor,
             out ChromExtra extra,
             out float[] times, 
             out int[] scanIds, 
@@ -106,6 +108,7 @@ namespace pwiz.Skyline.Model.Results
                     {
                         LoadingStatus.Transitions.AddTransition(
                                 modifiedSequence,
+                                peptideColor,
                                 extra.StatusId,
                                 extra.StatusRank,
                                 times,

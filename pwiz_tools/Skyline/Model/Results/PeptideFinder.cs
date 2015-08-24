@@ -49,10 +49,10 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
-        /// Return an identifying string for a peptide associated with a given precursor Mz.  May return
+        /// Return doc node for a peptide associated with a given precursor Mz.  May return
         /// null if the precursor Mz lies outside the matching tolerance setting.
         /// </summary>
-        public string GetColorSeed(double precursorMz)
+        public PeptideDocNode FindPeptide(double precursorMz)
         {
             if (_precursorMzPeptideList.Count == 0)
                 return null;
@@ -75,7 +75,7 @@ namespace pwiz.Skyline.Model.Results
             // Return color seed only if the match is within allowed tolerance.
             return Math.Abs(closestMatch.PrecursorMz - precursorMz) > _mzMatchTolerance
                 ? null
-                : closestMatch.NodePeptide.RawTextId;
+                : closestMatch.NodePeptide;
         }
 
         private sealed class PeptidePrecursorMz

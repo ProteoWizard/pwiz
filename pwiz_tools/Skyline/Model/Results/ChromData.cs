@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Drawing;
 using System.Linq;
 using pwiz.Crawdad;
 using pwiz.Skyline.Model.Results.Scoring;
@@ -52,14 +53,14 @@ namespace pwiz.Skyline.Model.Results
             return clone;
         }
 
-        public bool Load(ChromDataProvider provider, string modifiedSequence)
+        public bool Load(ChromDataProvider provider, string modifiedSequence, Color peptideColor)
         {
             ChromExtra extra;
             float[] times, intensities;
             float[] massErrors;
             int[] scanIds;
             bool result = provider.GetChromatogram(
-                ProviderId, modifiedSequence, 
+                ProviderId, modifiedSequence, peptideColor,
                 out extra, out times, out scanIds, out intensities, out massErrors);
             Extra = extra;
             RawTimes = Times = times;

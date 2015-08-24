@@ -433,7 +433,7 @@
       <DependentUpon>ColumnChooser.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\ResultsGridForm.cs" />
-    <Compile Include="Controls\ColorGenerator.cs" />
+    <Compile Include="Model\ColorGenerator.cs" />
     <Compile Include="Controls\SeqNode\PeptideGroupTreeNode.cs" />
     <Compile Include="Controls\SeqNode\PeptideTreeNode.cs" />
     <Compile Include="Controls\PopupPickList.cs">

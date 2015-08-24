@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Drawing;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.Results
@@ -86,19 +87,32 @@ namespace pwiz.Skyline.Model.Results
             /// <summary>
             /// Add transition points (partial data for multiple transitions) to AllChromatogramsGraph.
             /// </summary>
-            public void Add(string modifiedSequence, int filterIndex, float time, float[] intensities)
+            public void Add(string modifiedSequence, Color color, int filterIndex, float time, float[] intensities)
             {
                 MaxRetentionTime = Math.Max(MaxRetentionTime, time);
                 float intensity = 0;
                 for (int i = 0; i < intensities.Length; i++)
                     intensity += intensities[i];
-                AddIntensity(modifiedSequence, filterIndex, time, intensity);
+                AddIntensity(modifiedSequence, color, filterIndex, time, intensity);
+            }
+
+            /// <summary>
+            /// Finish display of peaks for a file.
+            /// </summary>
+            public void Flush()
+            {
+                if (_bin != null)
+                {
+                    BinnedPeaks.Enqueue(_bin);
+                    _bin = null;
+                }
+                BinnedPeaks.Enqueue(null);  // Signal change of graph.
             }
 
             /// <summary>
             /// Add a complete transition to AllChromatogramsGraph.
             /// </summary>
-            public void AddTransition(string modifiedSequence, int index, int rank, float[] times, float[] intensities)
+            public void AddTransition(string modifiedSequence, Color color, int index, int rank, float[] times, float[] intensities)
             {
                 if (rank == 0 || times.Length == 0)
                     return;
@@ -107,10 +121,10 @@ namespace pwiz.Skyline.Model.Results
                 MaxRetentionTime = Math.Max(MaxRetentionTime, maxTime);
 
                 for (int i = 0; i < times.Length; i++)
-                    AddIntensity(modifiedSequence, index, times[i], intensities[i]);
+                    AddIntensity(modifiedSequence, color, index, times[i], intensities[i]);
             }
 
-            private void AddIntensity(string modifiedSequence, int filterIndex, float time, float intensity)
+            private void AddIntensity(string modifiedSequence, Color color, int filterIndex, float time, float intensity)
             {
                 // Filter out small intensities quickly.
                 if (intensity < _maxImportedIntensity*DISPLAY_FILTER_PERCENT)
@@ -131,7 +145,7 @@ namespace pwiz.Skyline.Model.Results
                 // Create a new bin of peaks.
                 if (_bin == null)
                 {
-                    _bin = new List<Peak>(MAX_PEAKS_PER_BIN) {new Peak(intensity, modifiedSequence, filterIndex, binIndex)};
+                    _bin = new List<Peak>(MAX_PEAKS_PER_BIN) {new Peak(intensity, modifiedSequence, color, filterIndex, binIndex)};
                     _maxImportedIntensity = Math.Max(_maxImportedIntensity, intensity);
                     return;
                 }
@@ -150,7 +164,7 @@ namespace pwiz.Skyline.Model.Results
                 // If bin isn't full yet, add this peak.
                 if (_bin.Count < MAX_PEAKS_PER_BIN)
                 {
-                    _bin.Add(new Peak(intensity, modifiedSequence, filterIndex, binIndex));
+                    _bin.Add(new Peak(intensity, modifiedSequence, color, filterIndex, binIndex));
                     _maxImportedIntensity = Math.Max(_maxImportedIntensity, intensity);
                     return;
                 }
@@ -170,6 +184,7 @@ namespace pwiz.Skyline.Model.Results
                 // Overwrite lowest peak with new higher intensity peak.
                 minPeak.Intensity = intensity;
                 minPeak.ModifiedSequence = modifiedSequence;
+                minPeak.Color = color;
                 minPeak.FilterIndex = filterIndex;
                 minPeak.BinIndex = binIndex;
                 _maxImportedIntensity = Math.Max(_maxImportedIntensity, intensity);
@@ -183,15 +198,17 @@ namespace pwiz.Skyline.Model.Results
 
             public class Peak
             {
-                public Peak(float intensity, string modifiedSequence, int filterIndex, int binIndex)
+                public Peak(float intensity, string modifiedSequence, Color color, int filterIndex, int binIndex)
                 {
                     Intensity = intensity;
                     ModifiedSequence = modifiedSequence;
+                    Color = color;
                     FilterIndex = filterIndex;
                     BinIndex = binIndex;
                 }
 
                 public string ModifiedSequence;
+                public Color Color;
                 public int FilterIndex;
                 public int BinIndex;
                 public float Intensity;

@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
@@ -66,7 +67,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public override bool GetChromatogram(
-            int id, string modifiedSequence,
+            int id, string modifiedSequence, Color peptideColor,
             out ChromExtra extra, out float[] times, out int[] scanIds, out float[] intensities, out float[] massErrors)
         {
             var chromKeyIndices = _chromKeyIndices[id];
@@ -95,6 +96,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 LoadingStatus.Transitions.AddTransition(
                     modifiedSequence,
+                    peptideColor,
                     chromKeyIndices.StatusId,
                     chromKeyIndices.StatusRank,
                     times,

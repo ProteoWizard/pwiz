@@ -16,11 +16,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 
-namespace pwiz.Skyline.Controls
+namespace pwiz.Skyline.Model
 {
     /// <summary>
     /// Generate peptide colors that are maximally distinguishable from each other,
@@ -29,71 +30,47 @@ namespace pwiz.Skyline.Controls
     public static class ColorGenerator
     {
         private const int CollisionThreshold = 30;
-        private static readonly Color UNKNOWN_PEPTIDE_COLOR = Color.FromArgb(170, 170, 170);
 
-        private static readonly Dictionary<string, Dictionary<string, int>> _colorDictionary =
-            new Dictionary<string, Dictionary<string, int>>();
- 
         /// <summary>
         /// Generate a color for the given protein.  We try to make colors within a 
         /// protein distinguishable, worrying less about differentiation between colors 
         /// from different proteins.
         /// </summary>
-        public static Color GetColor(string proteinName, string peptideName)
+        public static Color GetColor(string peptideName, IList<Color> siblingColors)
         {
             if (peptideName == null)
-                return UNKNOWN_PEPTIDE_COLOR;
+                return PeptideDocNode.UNKNOWN_COLOR;
 
-            // Names may be null, but we can't look up a null value in a dictionary.
-            proteinName = proteinName ?? string.Empty;
+            // Get hashed color index for this peptide
+            int index = GetColorIndex(peptideName);
 
-            // Get dictionary of peptide colors for this protein, or create it.
-            Dictionary<string, int> colorsPerPeptide;
-            if (!_colorDictionary.TryGetValue(proteinName, out colorsPerPeptide))
-                colorsPerPeptide = _colorDictionary[proteinName] = new Dictionary<string, int>();
-
-            // Get hashed color index for this peptide, or create it.
-            int index;
-            if (!colorsPerPeptide.TryGetValue(peptideName, out index))
+            // Check for collision with other peptides in this protein.  A collision happens
+            // when two colors are close enough that they would be hard to distinguish.
+            if (siblingColors.Count < _colors.Length)    // collisions can't be avoided beyond the size of the color array
             {
-                index = GetColorIndex(peptideName);
-
-                // Check for collision with other peptides in this protein.  A collision happens
-                // when two colors are close enough that they would be hard to distinguish.
-                if (colorsPerPeptide.Count < _colors.Length)    // collisions can't be avoided beyond the size of the color array
+                for (int i = 0; i < _colors.Length; i++)
                 {
-                    for (int i = 0; i < _colors.Length; i++)
+                    var color = _colors[index];
+                    bool collision = false;
+                    foreach (var existingColor in siblingColors)
                     {
-                        var color = _colors[index];
-                        bool collision = false;
-                        foreach (var colorIndex in colorsPerPeptide.Values)
+                        if (Math.Abs(color.R - existingColor.R) < CollisionThreshold &&
+                            Math.Abs(color.G - existingColor.G) < CollisionThreshold &&
+                            Math.Abs(color.B - existingColor.B) < CollisionThreshold)
                         {
-                            var existingColor = _colors[colorIndex];
-                            if (Math.Abs(color.R - existingColor.R) < CollisionThreshold &&
-                                Math.Abs(color.G - existingColor.G) < CollisionThreshold &&
-                                Math.Abs(color.B - existingColor.B) < CollisionThreshold)
-                            {
-                                collision = true;
-                                break;
-                            }
-                        }
-                        if (!collision)
+                            collision = true;
                             break;
-
-                        // Step to next index value and re-check for collisions.
-                        index = (index + 1)%_colors.Length;
+                        }
                     }
-                }
+                    if (!collision)
+                        break;
 
-                colorsPerPeptide[peptideName] = index;
+                    // Step to next index value and re-check for collisions.
+                    index = (index + 1)%_colors.Length;
+                }
             }
 
             return _colors[index];
-        }
-
-        public static Color GetColor(string peptideName)
-        {
-            return peptideName == null ? UNKNOWN_PEPTIDE_COLOR : _colors[GetColorIndex(peptideName)];
         }
 
         private static int GetColorIndex(string peptideName)

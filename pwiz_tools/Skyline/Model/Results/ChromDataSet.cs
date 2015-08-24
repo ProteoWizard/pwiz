@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using pwiz.Crawdad;
@@ -215,11 +216,11 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public bool Load(ChromDataProvider provider, string modifiedSequence)
+        public bool Load(ChromDataProvider provider, string modifiedSequence, Color peptideColor)
         {
             foreach (var chromData in _listChromData.ToArray())
             {
-                if (!chromData.Load(provider, modifiedSequence))
+                if (!chromData.Load(provider, modifiedSequence, peptideColor))
                     _listChromData.Remove(chromData);
             }
             return _listChromData.Count > 0;

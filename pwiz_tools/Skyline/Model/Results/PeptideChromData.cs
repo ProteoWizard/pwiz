@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Drawing;
 using System.Linq;
 using pwiz.Crawdad;
 using pwiz.Skyline.Model.DocSettings;
@@ -125,7 +126,8 @@ namespace pwiz.Skyline.Model.Results
             //Console.Out.WriteLine("Starting {0} {1} {2}", this.NodePep, _dataSets.Count, RuntimeHelpers.GetHashCode(this));
             foreach (var set in _dataSets.ToArray())
             {
-                if (!set.Load(provider, NodePep != null ? NodePep.RawTextId : null))
+                Color peptideColor = NodePep != null ? NodePep.Color : PeptideDocNode.UNKNOWN_COLOR;
+                if (!set.Load(provider, NodePep != null ? NodePep.ModifiedSequence : null, peptideColor))
                     _dataSets.Remove(set);
             }
             //Console.Out.WriteLine("Ending {0} {1} {2}", NodePep, _dataSets.Count, RuntimeHelpers.GetHashCode(this));

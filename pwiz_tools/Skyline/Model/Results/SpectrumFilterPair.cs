@@ -20,6 +20,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.Results.RemoteApi.GeneratedCode;
@@ -31,11 +32,12 @@ namespace pwiz.Skyline.Model.Results
     {
         private static readonly SpectrumProductFilter[] EMPTY_FILTERS = new SpectrumProductFilter[0];
 
-        public SpectrumFilterPair(PrecursorTextId precursorTextId, int id, double? minTime, double? maxTime,
+        public SpectrumFilterPair(PrecursorTextId precursorTextId, Color peptideColor, int id, double? minTime, double? maxTime,
             double? minDriftTimeMsec, double? maxDriftTimeMsec, double highEnergyDriftTimeOffsetMsec, bool highAccQ1, bool highAccQ3)
         {
             Id = id;
             ModifiedSequence = precursorTextId.TextId;
+            PeptideColor = peptideColor;
             Q1 = precursorTextId.PrecursorMz;
             Extractor = precursorTextId.Extractor;
             MinTime = minTime;
@@ -95,6 +97,7 @@ namespace pwiz.Skyline.Model.Results
         public bool HighAccQ1 { get; private set; }
         public bool HighAccQ3 { get; private set; }
         public string ModifiedSequence { get; private set; }
+        public Color PeptideColor { get; private set; }
         public double Q1 { get; private set; }
         public double? MinTime { get; private set; }
         public double? MaxTime { get; private set; }
@@ -292,6 +295,7 @@ namespace pwiz.Skyline.Model.Results
             double dtCenter, dtWidth;
             GetDriftTimeWindow(out dtCenter, out dtWidth, useDriftTimeHighEnergyOffset);
             return new ExtractedSpectrum(ModifiedSequence,
+                PeptideColor,
                 Q1,
                 dtCenter,
                 dtWidth,

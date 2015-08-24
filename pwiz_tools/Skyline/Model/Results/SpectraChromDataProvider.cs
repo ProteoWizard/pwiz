@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -220,10 +221,11 @@ namespace pwiz.Skyline.Model.Results
                     }
 
                     // Process the one SRM spectrum
-                    var colorSeed = peptideFinder != null ? peptideFinder.GetColorSeed(precursorMz) : string.Empty;
+                    var peptideNode = peptideFinder != null ? peptideFinder.FindPeptide(precursorMz) : null;
                     ProcessSrmSpectrum(
                         dataSpectrum.RetentionTime.Value,
-                        colorSeed,
+                        peptideNode != null ? peptideNode.ModifiedSequence : string.Empty,
+                        peptideNode != null ? peptideNode.Color : PeptideDocNode.UNKNOWN_COLOR,
                         precursorMz,
                         filterIndex,
                         dataSpectrum.Mzs,
@@ -437,6 +439,7 @@ namespace pwiz.Skyline.Model.Results
 
         private void ProcessSrmSpectrum(double time,
                                                string modifiedSequence,
+                                               Color peptideColor,
                                                double precursorMz,
                                                int filterIndex,
                                                double[] mzs,
@@ -449,7 +452,7 @@ namespace pwiz.Skyline.Model.Results
             for (int i = 0; i < intensities.Length; i++)
                 intensityFloats[i] = (float) intensities[i];
             var productFilters = mzs.Select(mz => new SpectrumProductFilter(mz, 0)).ToArray();
-            var spectrum = new ExtractedSpectrum(modifiedSequence, precursorMz, ionMobilityValue, ionMobilityExtractionWidth,
+            var spectrum = new ExtractedSpectrum(modifiedSequence, peptideColor, precursorMz, ionMobilityValue, ionMobilityExtractionWidth,
                 ChromExtractor.summed, filterIndex, productFilters, intensityFloats, null);
             chromMap.ProcessExtractedSpectrum((float)time, _collectors, -1, spectrum, null);
         }
@@ -503,7 +506,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public override bool GetChromatogram(
-            int id, string modifiedSequence,
+            int id, string modifiedSequence, Color peptideColor,
             out ChromExtra extra, out float[] times, out int[] scanIds, out float[] intensities, out float[] massErrors)
         {
             var statusId = _collectors.ReleaseChromatogram(id, _chromGroups,
@@ -1330,7 +1333,7 @@ namespace pwiz.Skyline.Model.Results
 
             // Add data for chromatogram graph.
             if (_allChromData != null && spectrum.PrecursorMz != 0) // Exclude TIC and BPC
-                _allChromData.Add(spectrum.TextId, spectrum.FilterIndex, time, spectrum.Intensities);
+                _allChromData.Add(spectrum.TextId, spectrum.PeptideColor, spectrum.FilterIndex, time, spectrum.Intensities);
 
             // If this was a multiple ion scan and not all ions had measurements,
             // make sure missing ions have zero intensities in the chromatogram.

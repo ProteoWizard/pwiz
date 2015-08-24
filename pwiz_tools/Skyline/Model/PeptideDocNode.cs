@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using pwiz.Skyline.Controls.SeqNode;
@@ -47,7 +48,7 @@ namespace pwiz.Skyline.Model
                 case STANDARD_TYPE_NORMALIZAITON:
                     return Resources.PeptideDocNode_GetStandardTypeDisplayName_Normalization;
             }
-            return string.Empty;
+            return String.Empty;
         }
 
         public PeptideDocNode(Peptide id, ExplicitMods mods = null, ExplicitRetentionTimeInfo explicitRetentionTime = null)
@@ -124,6 +125,9 @@ namespace pwiz.Skyline.Model
         public string ModifiedSequence { get; private set; }
 
         public string ModifiedSequenceDisplay { get; private set; }
+
+        public Color Color { get; private set; }
+        public static readonly Color UNKNOWN_COLOR = Color.FromArgb(170, 170, 170);
 
         public string RawTextId { get { return CustomInvariantNameOrText(ModifiedSequence); } }
 
@@ -224,7 +228,7 @@ namespace pwiz.Skyline.Model
 
         public float GetRankValue(PeptideRankId rankId)
         {
-            float value = float.MinValue;
+            float value = Single.MinValue;
             foreach (TransitionGroupDocNode nodeGroup in Children)
                 value = Math.Max(value, nodeGroup.GetRankValue(rankId));
             return value;
@@ -389,7 +393,7 @@ namespace pwiz.Skyline.Model
                 return -1;
 
             int iBest = -1;
-            double bestArea = double.MinValue;
+            double bestArea = Double.MinValue;
             for (int i = 0; i < Results.Count; i++)
             {
                 double combinedScore = 0;
@@ -447,8 +451,8 @@ namespace pwiz.Skyline.Model
             var calcPre = settingsNew.GetPrecursorCalc(IsotopeLabelType.light, ExplicitMods);
             string modifiedSequence = calcPre.GetModifiedSequence(Peptide.Sequence, false);
             string modifiedSequenceDisplay = calcPre.GetModifiedSequence(Peptide.Sequence, true);
-            if (string.Equals(modifiedSequence, ModifiedSequence) &&
-                string.Equals(modifiedSequenceDisplay, ModifiedSequenceDisplay))
+            if (String.Equals(modifiedSequence, ModifiedSequence) &&
+                String.Equals(modifiedSequenceDisplay, ModifiedSequenceDisplay))
             {
                 return this;
             }
@@ -477,6 +481,11 @@ namespace pwiz.Skyline.Model
         public PeptideDocNode ChangeRank(int? prop)
         {
             return ChangeProp(ImClone(this), im => im.Rank = prop);
+        }
+
+        public PeptideDocNode ChangeColor(Color prop)
+        {
+            return ChangeProp(ImClone(this), im => im.Color = prop);
         }
 
         public PeptideDocNode ChangeResults(Results<PeptideChromInfo> prop)
@@ -952,7 +961,7 @@ namespace pwiz.Skyline.Model
             if (childrenNew.Count < 2)
                 return childrenNew;
             int maxCharge = 0;
-            float maxValue = float.MinValue;
+            float maxValue = Single.MinValue;
             foreach (TransitionGroupDocNode nodeGroup in childrenNew)
             {
                 float rankValue = nodeGroup.GetRankValue(rankId);
@@ -1327,7 +1336,7 @@ namespace pwiz.Skyline.Model
 
                 var key = new TransitionKey(nodeGroup, nodeTran.Key(nodeGroup), nodeGroup.TransitionGroup.LabelType);
                 if (TranAreas.ContainsKey(key))
-                    throw new InvalidDataException(string.Format(Resources.PeptideChromInfoCalculator_AddChromInfo_Duplicate_transition___0___found_for_peak_areas, nodeTran.Transition));
+                    throw new InvalidDataException(String.Format(Resources.PeptideChromInfoCalculator_AddChromInfo_Duplicate_transition___0___found_for_peak_areas, nodeTran.Transition));
                 TranAreas.Add(key, info.Area);
             }
 
@@ -1589,7 +1598,7 @@ namespace pwiz.Skyline.Model
         public override string ToString()
         {
             return Rank.HasValue
-                       ? string.Format(Resources.PeptideDocNodeToString__0__rank__1__, Peptide, Rank)
+                       ? String.Format(Resources.PeptideDocNodeToString__0__rank__1__, Peptide, Rank)
                        : Peptide.ToString();
         }
 

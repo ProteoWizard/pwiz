@@ -84,7 +84,7 @@ namespace pwiz.Skyline.Model.Results
             // peaks
             // CONSIDER: Mass accuracy information is not calculated here
             var key = new PrecursorTextId(q1FilterValues[monoMassIndex], null, ChromExtractor.summed);
-            var filter = new SpectrumFilterPair(key, 0, null, null, null, null, 0, false, false);
+            var filter = new SpectrumFilterPair(key, PeptideDocNode.UNKNOWN_COLOR, 0, null, null, null, null, 0, false, false);
             filter.AddQ1FilterValues(q1FilterValues, calcFilterWindow);
 
             var expectedSpectrum = filter.FilterQ1SpectrumList(new[] { new MsDataSpectrum
