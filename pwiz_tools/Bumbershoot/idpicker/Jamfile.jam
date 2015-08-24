@@ -461,4 +461,5 @@ install install
         <conditional>@install-identdata-dependencies
     ;
 
-build-project Deploy ;
+# TODO: figure out why this hangs on TeamCity 64-bit builds, but works fine with 32-bit builds
+#build-project Deploy ;
