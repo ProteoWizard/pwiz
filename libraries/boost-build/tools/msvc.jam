@@ -579,8 +579,10 @@ rule copy-assemblies ( target : properties * )
             }
             assembly-path = [ path.native $(assembly-path) ] ;
             local assembly-at-target-filepath = [ path.native [ path.join $(target-path) $(assembly-path:D=) ] ] ;
-            if $(assembly-at-target-filepath) != $(assembly-path)
+            if $(assembly-at-target-filepath) != $(assembly-path) &&
+               ! ( $(assembly-at-target-filepath) in $(.unique-targets) )
             {
+                .unique-targets += $(assembly-at-target-filepath) ;
                 common.copy $(assembly-at-target-filepath) : $(assembly-path) ;
                 DEPENDS $(assembly-at-target-filepath) : $(target-path) [ $(assembly).actualize ] ;
                 DEPENDS $(target) : $(assembly-at-target-filepath) ;
@@ -602,8 +604,10 @@ rule copy-assemblies ( target : properties * )
         }
         configuration-file-path = [ path.native $(configuration-file-path) ] ;
         local target-filepath = [ path.native [ path.join $(target-path) $(configuration-file-path:D=) ] ] ;
-        if $(target-filepath) != $(configuration-file-path)
+        if $(target-filepath) != $(configuration-file-path) &&
+           ! ( $(configuration-file-path) in $(.unique-targets) )
         {
+            .unique-targets += $(configuration-file-path) ;
             common.copy $(target-filepath) : $(configuration-file-path) ;
             DEPENDS $(target-filepath) : $(target-path) ;
             DEPENDS $(target) : $(target-filepath) ;
