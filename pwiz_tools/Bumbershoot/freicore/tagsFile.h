@@ -216,7 +216,7 @@ namespace freicore
 
             for( size_t i=0; i < trimmedItrs.size(); ++i )
             {
-                erase( trimmedItrs[i], deleteTrimmedSpectra );
+                this->erase( trimmedItrs[i], deleteTrimmedSpectra );
             }
 
             return int( sizeBefore - TaggingBaseList::size() );
