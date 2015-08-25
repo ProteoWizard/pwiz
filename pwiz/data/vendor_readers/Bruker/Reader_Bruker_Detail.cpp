@@ -199,6 +199,7 @@ std::vector<InstrumentConfiguration> createInstrumentConfigurations(CompassDataP
                     break;
 
                 case InstrumentFamily_FTMS:
+                case InstrumentFamily_solariX:
                     configurations.push_back(InstrumentConfiguration());
                     if (parameterMap["Mobile Hexapole Position"] == "MALDI") // HACK: I haven't seen enough data to know whether this is robust.
                         configurations.back().componentList.push_back(Component(MS_MALDI, 1));
