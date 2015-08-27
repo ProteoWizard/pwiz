@@ -15,7 +15,7 @@ namespace CommonTest.DataBinding
     public class FilterOperationTest : AbstractUnitTest
     {
         [TestMethod]
-        public void TestDataBindingChar()
+        public void TestCharFilterOperations()
         {
             var alphabet = Enumerable.Range(0, 26).Select(i => (char) ('a' + i)).ToArray();
             VerifyFilterCountStructs(alphabet, FilterOperations.OP_IS_BLANK, null, 0);
@@ -32,7 +32,7 @@ namespace CommonTest.DataBinding
         }
 
         [TestMethod]
-        public void TestDataBindingInt()
+        public void TestIntFilterOperations()
         {
             var ints = Enumerable.Range(-10, 21).ToArray();
             VerifyFilterCountStructs(ints, FilterOperations.OP_IS_BLANK, null, 0);
@@ -51,7 +51,7 @@ namespace CommonTest.DataBinding
         }
 
         [TestMethod]
-        public void TestDataBindingObject()
+        public void TestObjectFilterOperations()
         {
             var strings = new[] {"urn:one", "urn:two", "urn:three"};
             var uris = strings.Select(s => new Uri(s)).ToArray();
@@ -71,7 +71,7 @@ namespace CommonTest.DataBinding
         }
 
         [TestMethod]
-        public void TestDataBindingDate()
+        public void TestDateFilterOperations()
         {
             var dates = new[]
             {
@@ -87,8 +87,36 @@ namespace CommonTest.DataBinding
             VerifyFilterCountStructs(dates, FilterOperations.OP_IS_LESS_THAN_OR_EQUAL, "1969-07-20", 2);
             VerifyFilterCountStructs(dates, FilterOperations.OP_IS_GREATER_THAN, "1969-07-20", 1);
             VerifyFilterCountStructs(dates, FilterOperations.OP_IS_GREATER_THAN_OR_EQUAL, "1969-07-20", 2);
+            Assert.IsFalse(IsValidForType<DateTime>(FilterOperations.OP_STARTS_WITH));
+            Assert.IsFalse(IsValidForType<DateTime>(FilterOperations.OP_CONTAINS));
             Assert.IsNull(GetOperandError<DateTime>("1969-07-20"));
             Assert.IsNotNull(GetOperandError<DateTime>("invalid date"));
+        }
+
+        [TestMethod]
+        public void TestBoolFilterOperations()
+        {
+            var bools = new[]
+            {
+                true,
+                false,
+            };
+            VerifyFilterCountStructs(bools, FilterOperations.OP_IS_BLANK, null, 0);
+            VerifyFilterCountStructs(bools, FilterOperations.OP_IS_NOT_BLANK, null, 2);
+            VerifyFilterCountStructs(bools, FilterOperations.OP_EQUALS, "True", 1);
+            VerifyFilterCountStructs(bools, FilterOperations.OP_EQUALS, "False", 1);
+            VerifyFilterCountStructs(bools, FilterOperations.OP_NOT_EQUALS, "True", 1);
+            VerifyFilterCountStructs(bools, FilterOperations.OP_NOT_EQUALS, "False", 1);
+            Assert.IsFalse(IsValidForType<Boolean>(FilterOperations.OP_STARTS_WITH));
+            Assert.IsFalse(IsValidForType<Boolean>(FilterOperations.OP_CONTAINS));
+            Assert.IsFalse(IsValidForType<Boolean>(FilterOperations.OP_NOT_CONTAINS));
+            Assert.IsFalse(IsValidForType<Boolean>(FilterOperations.OP_IS_LESS_THAN));
+            Assert.IsFalse(IsValidForType<Boolean>(FilterOperations.OP_IS_LESS_THAN_OR_EQUAL));
+            Assert.IsFalse(IsValidForType<Boolean>(FilterOperations.OP_IS_GREATER_THAN));
+            Assert.IsFalse(IsValidForType<Boolean>(FilterOperations.OP_IS_GREATER_THAN_OR_EQUAL));
+            Assert.IsNull(GetOperandError<Boolean>("True"));
+            Assert.IsNull(GetOperandError<Boolean>("False"));
+            Assert.IsNotNull(GetOperandError<Boolean>("t"));
         }
 
         private List<TItem> ApplyFilter<TItem>(IFilterOperation filterOperation, string operand, IEnumerable<TItem> items)

@@ -59,7 +59,8 @@ namespace pwiz.Common.DataBinding
             {typeof (float), typeof (double)},
             {typeof (double), typeof (double)},
             {typeof (Decimal), typeof (double)},
-            {typeof (DateTime), typeof (DateTime)}
+            {typeof (DateTime), typeof (DateTime)},
+            {typeof (bool), typeof(bool)},
         };
 
         // ReSharper disable NonLocalizedString
@@ -354,7 +355,7 @@ namespace pwiz.Common.DataBinding
                 }
                 var columnType = dataSchema.GetWrappedValueType(propertyType);
                 columnType = Nullable.GetUnderlyingType(columnType) ?? columnType;
-                return convertibleTypes.ContainsKey(columnType) && columnType != typeof (string);
+                return convertibleTypes.ContainsKey(columnType) && columnType != typeof (string) && columnType != typeof(bool);
             }
         }
 
