@@ -913,8 +913,6 @@ namespace pwiz.Skyline.Model.Lib
                         if (reader.Read())
                         {
                             int numPeaks = reader.GetInt32(RefSpectra.numPeaks);
-                            if (numPeaks > Int32.MaxValue)
-                                throw new IOException(string.Format(Resources.BiblioSpecLiteLibrary_ReadRedundantSpectrum_Spectrum_peaks__0__excede_the_maximum_allowed__1__, numPeaks, Int32.MaxValue));
                             return ReadPeaks(reader, numPeaks);
                         }
                     }
