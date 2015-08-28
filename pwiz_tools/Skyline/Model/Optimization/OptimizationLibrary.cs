@@ -109,7 +109,7 @@ namespace pwiz.Skyline.Model.Optimization
                                     DbOptimization dbOptimization;
                                     if (dictOptimizations.TryGetValue(optimizationKey, out dbOptimization))
                                     {
-                                        persistOptimizations.Add(new DbOptimization(dbOptimization));
+                                        persistOptimizations.Add(new DbOptimization(dbOptimization.Key, dbOptimization.Value));
                                         // Only add once
                                         dictOptimizations.Remove(optimizationKey);
                                     }
