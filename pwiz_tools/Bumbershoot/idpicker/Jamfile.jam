@@ -454,6 +454,7 @@ install install
         Qonverter//idpQonvert
         Qonverter//idpQuery
         Qonverter//idpAssemble
+        Qonverter//gene2protein.db3
     : # requirements
         <conditional>@dotNET-dependencies
         <conditional>@install-location
