@@ -1455,7 +1455,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var scanName = nodeTran.FragmentIonName;
                 if (nodeTran.Transition.Charge != 1)  // Positive singly charged is uninteresting
                     scanName += Transition.GetChargeIndicator(nodeTran.Transition.Charge);
-                if (nodeTran.Transition.MassIndex > 0)
+                if (nodeTran.Transition.MassIndex != 0)
                     scanName += Environment.NewLine + Transition.GetMassIndexText(nodeTran.Transition.MassIndex);
                 var fullScanInfo = new FullScanInfo
                 {
@@ -1501,6 +1501,8 @@ namespace pwiz.Skyline.Controls.Graphs
             IRegressionFunction timeRegressionFunction, double[] dotProducts, double bestProduct, bool isFullScanMs,
             int step, float fontSize, int width, FullScanInfo fullScanInfo, PaneKey graphPaneKey)
         {
+            if (tranPeakInfo == null)
+                return; // Nothing to shade
             float end = tranPeakInfo.EndRetentionTime;
             float start = tranPeakInfo.StartRetentionTime;
             double[] allTimes;
