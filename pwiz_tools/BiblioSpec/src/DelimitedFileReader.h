@@ -232,12 +232,15 @@ template <typename STORAGE_TYPE> class DelimitedFileReader {
     void readRemainingLines(){
         // read the first non-header line
         std::string line;
-        getline(delimFile_, line);
-        curLineNumber_++;
         bool parseSuccess = true;
         std::string errorMsg;
         
         while( ! delimFile_.eof() ){
+            getline(delimFile_, line);
+            curLineNumber_++;
+
+            if (line.empty() && delimFile_.eof())
+                break;
 
             size_t colListIdx = 0;  // go through all target columns
             int lineColNumber = 0;  // compare to all file columns
@@ -284,10 +287,6 @@ template <typename STORAGE_TYPE> class DelimitedFileReader {
                                 lineColNumber + 1);
                 throw e;
             }
-
-            // read next line in file
-            getline(delimFile_, line);
-            curLineNumber_++;
         }
     }
 
