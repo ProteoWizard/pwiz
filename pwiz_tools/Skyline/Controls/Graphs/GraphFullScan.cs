@@ -269,9 +269,14 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             if (useHeatMap)
+            {
+                ZoomYAxis(); // Call this again now that cues are there to indicate need for drift scale
                 CreateDriftTimeHeatmap();
+            }
             else
+            {
                 CreateSingleScan();
+            }
 
             // Add extraction boxes.
             for (int i = 0; i < _scanProvider.Transitions.Length; i++)
