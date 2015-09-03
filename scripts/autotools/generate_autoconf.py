@@ -167,7 +167,7 @@ pkgname = "libpwiz"
 versionDotted = "%s.%s.%s"%(version[0],version[1],version[2])
 
 # boost libs stuff -  putting "threads" first matters
-boostlibs=["THREADS","FILESYSTEM","REGEX","SERIALIZATION","SYSTEM","IOSTREAMS","DATE_TIME","PROGRAM_OPTIONS"]
+boostlibs=["THREADS","FILESYSTEM","REGEX","SERIALIZATION","SYSTEM","IOSTREAMS","DATE_TIME","PROGRAM_OPTIONS","CHRONO"]
 
 f = open('%s/configure.ac'%logdir, 'w')
 for configac in open("%s/pwiz/configure.scan"%ac.get_pwizroot()) :
