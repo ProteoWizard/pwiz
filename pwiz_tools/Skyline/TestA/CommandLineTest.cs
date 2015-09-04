@@ -957,7 +957,9 @@ namespace pwiz.SkylineTestA
                        "--import-file=" + rawPath,
                        "--out=" + outPath);
 
-            Assert.IsTrue(msg.Contains(string.Format(Resources.CommandLine_ImportResultsFile_Warning__Failed_importing_the_results_file__0____Ignoring___,rawPath)), msg);
+            var expectedErrorMessage = string.Format(Resources.CommandLine_ImportResultsFile_Warning__Failed_importing_the_results_file__0____Ignoring___, rawPath);
+            Assert.IsTrue(msg.Contains(expectedErrorMessage),
+                string.Format("Expected RunCommand result message containing \"{0}\", got \"{1}\" instead.", expectedErrorMessage, msg));
             // Read the saved document. FullScan.RAW|mzML should not have been imported
             SrmDocument doc = ResultsUtil.DeserializeDocument(outPath);
             Assert.IsFalse(doc.Settings.HasResults);
@@ -966,7 +968,9 @@ namespace pwiz.SkylineTestA
             msg = RunCommand("--in=" + outPath,
                              "--import-all=" + testFilesDir.FullPath,
                              "--save");
-            Assert.IsTrue(msg.Contains(string.Format(Resources.CommandLine_ImportResultsFile_Warning__Failed_importing_the_results_file__0____Ignoring___, rawPath)), msg);
+            expectedErrorMessage = string.Format(Resources.CommandLine_ImportResultsFile_Warning__Failed_importing_the_results_file__0____Ignoring___, rawPath);
+            Assert.IsTrue(msg.Contains(expectedErrorMessage),
+                string.Format("Expected RunCommand result message containing \"{0}\", got \"{1}\" instead.", expectedErrorMessage, msg));
 
 
             doc = ResultsUtil.DeserializeDocument(outPath);
