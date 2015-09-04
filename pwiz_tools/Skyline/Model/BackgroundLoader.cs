@@ -129,11 +129,23 @@ namespace pwiz.Skyline.Model
 
         /// <summary>
         /// Indicates when a document needs this loader to perform background
+        /// loading by returning a non null string.
+        /// </summary>
+        /// <param name="document">The document in question</param>
+        /// <returns>Non-null explaining the document requirements of external data to be loaded</returns>
+        protected abstract string IsNotLoadedExplained(SrmDocument document);
+
+        /// <summary>
+        /// Indicates when a document needs this loader to perform background
         /// loading.
         /// </summary>
         /// <param name="document">The document in question</param>
         /// <returns>True if the document requires external data to be loaded</returns>
-        protected abstract bool IsLoaded(SrmDocument document);
+        protected bool IsLoaded(SrmDocument document)
+        {
+            return IsNotLoadedExplained(document) == null;
+        }
+
 
         /// <summary>
         /// Gets the set of streams open in the specified document for this background

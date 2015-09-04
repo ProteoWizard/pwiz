@@ -56,23 +56,28 @@ namespace pwiz.Skyline.Model.Proteome
         }
 
         /// <summary>
-        /// Returns true if the document's PeptideGroupDocNodes have fully resolved
-        /// protein metadata (as evidenced by them claiming not to need a web search)
+        /// Returns null if the document's PeptideGroupDocNodes have fully resolved
+        /// protein metadata (as evidenced by them claiming not to need a web search).
+        /// Otherwise, a string describing how the doc is not loaded in this regard.
         /// </summary>
         /// <param name="document">the document to inspect</param>
-        /// <returns>true if document contains no PeptideGroupDocNodes needing a web search for protein metadata</returns>
-        public static bool IsLoadedDocument(SrmDocument document)
+        /// <returns>null if document contains no PeptideGroupDocNodes needing a web search for protein metadata</returns>
+        protected override string IsNotLoadedExplained(SrmDocument document)
+        {
+            return IsNotLoadedExplainedHelper(document);
+        }
+
+        private static string IsNotLoadedExplainedHelper(SrmDocument document)
         {
             if (document == null)
-                return false;  // This is called from functional tests 
-            return !document.IsProteinMetadataPending;
+                return "no document"; // Not L10N
+            return !document.IsProteinMetadataPending ? null : "ProteinMetadataManager: document.IsProteinMetadataPending";
         }
-      
 
-        protected override bool IsLoaded(SrmDocument document)
+        public static bool IsLoadedDocument(SrmDocument document)
         {
-            return IsLoadedDocument(document);
-        }
+            return IsNotLoadedExplainedHelper(document) == null;
+        }      
 
         protected override IEnumerable<IPooledStream> GetOpenStreams(SrmDocument document)
         {

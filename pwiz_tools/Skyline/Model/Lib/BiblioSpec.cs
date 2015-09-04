@@ -236,9 +236,9 @@ namespace pwiz.Skyline.Model.Lib
             return ReadStream.Stream;
         }
 
-        public override bool IsLoaded
+        public override string IsNotLoadedExplained
         {
-            get { return _dictLibrary != null; }
+            get { return (_dictLibrary != null) ? null : "BiblioSpec: no dictionary"; } // Not L10N
         }
 
         public override bool IsSameLibrary(Library library)

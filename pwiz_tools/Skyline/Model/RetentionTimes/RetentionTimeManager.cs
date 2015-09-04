@@ -33,9 +33,9 @@ namespace pwiz.Skyline.Model.RetentionTimes
             return true;
         }
 
-        protected override bool IsLoaded(SrmDocument document)
+        protected override string IsNotLoadedExplained(SrmDocument document)
         {
-            return DocumentRetentionTimes.IsLoaded(document);
+            return DocumentRetentionTimes.IsNotLoadedExplained(document);
         }
 
         protected override IEnumerable<IPooledStream> GetOpenStreams(SrmDocument document)

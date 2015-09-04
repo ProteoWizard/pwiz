@@ -24,13 +24,16 @@ namespace pwiz.Skyline.Model.Optimization
 {
     public sealed class OptimizationDbManager : BackgroundLoader
     {
-        public static bool IsLoadedDocument(SrmDocument document)
+        public static string IsNotLoadedDocumentExplained(SrmDocument document)
         {
             // Not loaded if the library is not usable
             var lib = GetOptimizationLibrary(document);
-            return lib == null || lib.IsUsable || lib.IsNone;
+            if (lib == null || lib.IsUsable || lib.IsNone)
+            {
+                return null;
+            }
+            return "OptimizationDbManager: GetOptimizationLibrary(document) not usable and not none"; // Not L10N
         }
-
         private readonly Dictionary<string, OptimizationLibrary> _loadedLibraries =
             new Dictionary<string, OptimizationLibrary>();
 
@@ -43,9 +46,9 @@ namespace pwiz.Skyline.Model.Optimization
             return !ReferenceEquals(GetOptimizationLibrary(document), GetOptimizationLibrary(previous));
         }
 
-        protected override bool IsLoaded(SrmDocument document)
+        protected override string IsNotLoadedExplained(SrmDocument document)
         {
-            return IsLoadedDocument(document);
+            return IsNotLoadedDocumentExplained(document);
         }
 
         protected override IEnumerable<IPooledStream> GetOpenStreams(SrmDocument document)
