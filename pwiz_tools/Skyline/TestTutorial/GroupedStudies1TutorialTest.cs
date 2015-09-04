@@ -258,8 +258,9 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(() => SkylineWindow.SetIntegrateAll(true));
 
-            PauseForScreenShot("Retention Times graph with integrat all (zoomed to show only healthy)", 11);
+            PauseForScreenShot("Retention Times graph with integrate all (zoomed to show only healthy)", 11);
 
+            SelectNode(SrmDocument.Level.Molecules, 0);
             RunUI(SkylineWindow.EditDelete); // Delete first peptide
 
             PauseForScreenShot("Retention Times graph for second peptide", 11);
