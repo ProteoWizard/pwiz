@@ -71,7 +71,7 @@ namespace pwiz.Skyline.Model.Proteome
         {
             if (document == null)
                 return "no document"; // Not L10N
-            return !document.IsProteinMetadataPending ? null : "ProteinMetadataManager: document.IsProteinMetadataPending";
+            return !document.IsProteinMetadataPending ? null : "ProteinMetadataManager: document.IsProteinMetadataPending"; // Not L10N
         }
 
         public static bool IsLoadedDocument(SrmDocument document)
