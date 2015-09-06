@@ -491,17 +491,16 @@ namespace pwiz.Skyline.Model
         {
             get
             {
-                string whyNot;
-                if (Settings.HasResults && (whyNot = Settings.MeasuredResults.IsNotLoadedExplained) != null)
-                    yield return "Settings.MeasuredResults " + whyNot; // Not L10N
-                if (Settings.HasLibraries && (whyNot = Settings.PeptideSettings.Libraries.IsNotLoadedExplained)!=null)
-                    yield return "Settings.PeptideSettings.Libraries: " + whyNot; // Not L10N
-                if ((whyNot = IrtDbManager.IsNotLoadedDocumentExplained(this)) != null)
-                    yield return whyNot; // Not L10N
-                if ((whyNot = OptimizationDbManager.IsNotLoadedDocumentExplained(this)) != null)
-                    yield return whyNot; // Not L10N
-                if ((whyNot = DocumentRetentionTimes.IsNotLoadedExplained(Settings)) != null)
-                    yield return whyNot; // Not L10N
+                if (Settings.HasResults && !Settings.MeasuredResults.IsLoaded)
+                    yield return "Settings.MeasuredResults"; // Not L10N
+                if (Settings.HasLibraries && !Settings.PeptideSettings.Libraries.IsLoaded)
+                    yield return "Settings.PeptideSettings.Libraries"; // Not L10N
+                if (!IrtDbManager.IsLoadedDocument(this))
+                    yield return "IrtDbManager"; // Not L10N
+                if (!OptimizationDbManager.IsLoadedDocument(this))
+                    yield return "OptimizationDbManager"; // Not L10N
+                if (!DocumentRetentionTimes.IsLoaded(Settings))
+                    yield return "DocumentRetentionTimes"; // Not L10N
                 // BackgroundProteome?
             }
         }

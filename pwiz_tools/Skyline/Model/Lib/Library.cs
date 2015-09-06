@@ -57,10 +57,11 @@ namespace pwiz.Skyline.Model.Lib
                                     previous.Settings.PeptideSettings.Libraries);
         }
 
-        protected override string IsNotLoadedExplained(SrmDocument document)
+        protected override bool IsLoaded(SrmDocument document)
         {
             PeptideLibraries libraries = document.Settings.PeptideSettings.Libraries;
-            return !libraries.HasLibraries ? null : libraries.IsNotLoadedExplained;
+
+            return (!libraries.HasLibraries || libraries.IsLoaded);
         }
 
         protected override IEnumerable<IPooledStream> GetOpenStreams(SrmDocument document)
@@ -413,16 +414,7 @@ namespace pwiz.Skyline.Model.Lib
         /// data.  False if it is merely a placeholder loaded from a document
         /// which has not yet been connected to the actual library data.
         /// </summary>
-        public bool IsLoaded
-        {
-            get { return IsNotLoadedExplained == null; }
-        }
-
-        /// <summary>
-        /// Same as IsLoaded property, but returns a non-null and hopefully useful message 
-        /// for test purposes when not loaded.
-        /// </summary>
-        public abstract string IsNotLoadedExplained { get; }
+        public abstract bool IsLoaded { get; }
 
         /// <summary>
         /// Determines if this library identifies itself as being the same
@@ -691,9 +683,9 @@ namespace pwiz.Skyline.Model.Lib
 
         protected string CachePath { get; set; }
 
-        public override string IsNotLoadedExplained
+        public override bool IsLoaded
         {
-            get { return (_libraryEntries != null) ? null : "no library entries"; } // Not L10N
+            get { return _libraryEntries != null; }
         }
 
         public override bool ContainsAny(LibSeqKey key)

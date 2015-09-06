@@ -1730,26 +1730,14 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public bool IsLoaded
         {
-            get { return IsNotLoadedExplained == null; }
-        }
-
-        public string IsNotLoadedExplained
-        {
             get
             {
-                foreach (var lib in _libraries)
+                foreach (Library lib in _libraries)
                 {
-                    if (lib == null)
-                    {
-                        return "null library"; // Not L10N
-                    }
-                    string whyNot;
-                    if ((whyNot = lib.IsNotLoadedExplained) != null)
-                    {
-                        return whyNot;
-                    }
+                    if (lib == null || !lib.IsLoaded)
+                        return false;
                 }
-                return null;
+                return true;
             }
         }
 

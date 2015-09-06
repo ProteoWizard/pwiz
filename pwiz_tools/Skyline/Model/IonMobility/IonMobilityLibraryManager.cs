@@ -27,13 +27,11 @@ namespace pwiz.Skyline.Model.IonMobility
     /// </summary>
     public sealed class IonMobilityLibraryManager : BackgroundLoader
     {
-        public static string IsNotLoadedDocumentExplained(SrmDocument document)
+        public static bool IsLoadedDocument(SrmDocument document)
         {
             // Not loaded if the predictor is not usable
             var calc = GetIonMobilityLibrary(document);
-            if (calc == null || calc.IsNone || calc.IsUsable)
-                return null;
-            return "IonMobilityLibraryManager : GetIonMobilityLibrary(document) not usable and not none"; // Not L10N
+            return (calc == null || calc.IsNone || calc.IsUsable);
         }
 
         private readonly Dictionary<string, IonMobilityLibrary> _loadedIonMobilityeLibraries =
@@ -44,11 +42,10 @@ namespace pwiz.Skyline.Model.IonMobility
             return !ReferenceEquals(GetIonMobilityLibrary(document), GetIonMobilityLibrary(previous));
         }
 
-        protected override string IsNotLoadedExplained(SrmDocument document)
+        protected override bool IsLoaded(SrmDocument document)
         {
-            return IsNotLoadedDocumentExplained(document);
+            return IsLoadedDocument(document);
         }
-
 
         protected override IEnumerable<IPooledStream> GetOpenStreams(SrmDocument document)
         {

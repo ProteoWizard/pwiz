@@ -50,21 +50,21 @@ namespace pwiz.Skyline.Model.Results
             return !ReferenceEquals(document.Settings.MeasuredResults, previous.Settings.MeasuredResults);
         }
 
-        protected override string IsNotLoadedExplained(SrmDocument document)
+        protected override bool IsLoaded(SrmDocument document)
         {
             SrmSettings settings = document.Settings;
-
+            
             // If using full-scan filtering, then the chromatograms may not be loaded
             // until the libraries are loaded, since they are used for peak picking.
             if (!IsReadyToLoad(document))
             {
-                return null;
+                return true;
             } 
             if (!settings.HasResults)
             {
-                return null;
+                return true;
             } 
-            return settings.MeasuredResults.IsNotLoadedExplained;
+            return settings.MeasuredResults.IsLoaded;
         }
 
         protected override IEnumerable<IPooledStream> GetOpenStreams(SrmDocument document)
@@ -95,7 +95,7 @@ namespace pwiz.Skyline.Model.Results
                 {
                     return false;
                 }
-                if (DocumentRetentionTimes.IsNotLoadedExplained(document) != null)
+                if (!DocumentRetentionTimes.IsLoaded(document))
                 {
                     return false;
                 }
@@ -262,11 +262,6 @@ namespace pwiz.Skyline.Model.Results
         public IEnumerable<MsDataFileUri> MSDataFilePaths { get { return MSDataFileInfos.Select(info => info.FilePath); } }
 
         public bool IsLoaded { get { return !MSDataFileInfos.Contains(info => !info.FileWriteTime.HasValue); } }
-
-        public string IsLoadedExplained() // For test and debug purposes, gives a descriptive string for IsLoaded failure
-        {
-            return IsLoaded ? string.Empty : "No ChromFileInfo.FileWriteTime for " + string.Join(",", MSDataFileInfos.Where(info => !info.FileWriteTime.HasValue).Select(f => f.FilePath)); // Not L10N
-        }
 
         public Annotations Annotations { get; private set; }
 

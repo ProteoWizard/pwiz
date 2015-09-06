@@ -55,38 +55,33 @@ namespace pwiz.Skyline.Model.RetentionTimes
             get { return RetentionTimeSources.IsEmpty && FileAlignments.IsEmpty; }
         }
 
-        public static string IsNotLoadedExplained(SrmSettings srmSettings)
+        public static bool IsLoaded(SrmSettings srmSettings)
         {
             if (!srmSettings.PeptideSettings.Libraries.IsLoaded)
             {
-                return null;
+                return true;
             }
             var documentRetentionTimes = srmSettings.DocumentRetentionTimes;
             var availableSources = ListAvailableRetentionTimeSources(srmSettings);
             var resultSources = ListSourcesForResults(srmSettings.MeasuredResults, availableSources);
             if (!Equals(resultSources.Keys, documentRetentionTimes.FileAlignments.Keys))
             {
-                return "DocumentRetentionTimes: !Equals(resultSources.Keys, documentRetentionTimes.FileAlignments.Keys)"; // Not L10N
+                return false;
             }
             if (documentRetentionTimes.FileAlignments.IsEmpty)
             {
-                return null;
+                return true;
             }
             if (!Equals(availableSources, documentRetentionTimes.RetentionTimeSources))
             {
-                return "DocumentRetentionTimes: !Equals(availableSources, documentRetentionTimes.RetentionTimeSources)"; // Not L10N
+                return false;
             }
-            return null;
-        }
-
-        public static string IsNotLoadedExplained(SrmDocument document)
-        {
-            return IsNotLoadedExplained(document.Settings);
+            return true;
         }
 
         public static bool IsLoaded(SrmDocument document)
         {
-            return IsNotLoadedExplained(document) == null;
+            return IsLoaded(document.Settings);
         }
 
         public static SrmDocument RecalculateAlignments(SrmDocument document, IProgressMonitor progressMonitor)

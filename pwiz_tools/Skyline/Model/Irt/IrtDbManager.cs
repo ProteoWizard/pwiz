@@ -26,22 +26,18 @@ namespace pwiz.Skyline.Model.Irt
 {
     public sealed class IrtDbManager : BackgroundLoader
     {
-        public static string IsNotLoadedDocumentExplained(SrmDocument document)
+        public static bool IsLoadedDocument(SrmDocument document)
         {
             // Not loaded if the calculator is not usable
             var calc = GetIrtCalculator(document);
             if (calc != null && !calc.IsUsable)
-                return "IrtDbManager: GetIrtCalculator(document) not usable"; // Not L10N
+                return false;
             // Auto-calc of all replicates can wait until the bulk load completes
             if (document.Settings.IsResultsJoiningDisabled)
-                return null;
+                return true;
             // Not loaded if the regression requires re-calculating of auto-calc regressions
             var rtRegression = document.Settings.PeptideSettings.Prediction.RetentionTime;
-            if (rtRegression == null)
-                return null;
-            if (rtRegression.IsAutoCalcRequired(document, null))
-                return "IrtDbManager: rtRegression IsAutoCalcRequired"; // Not L10N
-            return null;
+            return rtRegression == null || !rtRegression.IsAutoCalcRequired(document, null);
         }
 
         private readonly Dictionary<string, RCalcIrt> _loadedCalculators =
@@ -65,9 +61,9 @@ namespace pwiz.Skyline.Model.Irt
             return false;
         }
 
-        protected override string IsNotLoadedExplained(SrmDocument document)
+        protected override bool IsLoaded(SrmDocument document)
         {
-            return IsNotLoadedDocumentExplained(document);
+            return IsLoadedDocument(document);
         }
 
         protected override IEnumerable<IPooledStream> GetOpenStreams(SrmDocument document)
