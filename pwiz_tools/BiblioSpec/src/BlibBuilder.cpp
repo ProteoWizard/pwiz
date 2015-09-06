@@ -28,6 +28,8 @@
  */
 
 #include "BlibBuilder.h"
+#include "SqliteRoutine.h"
+#include <boost/algorithm/string/predicate.hpp>
 
 using namespace std;
 
@@ -321,6 +323,81 @@ int BlibBuilder::transferLibrary(int iLib,
     int numberProcessed =  progress->processed();
     delete progress;
     return numberProcessed;
+}
+
+void BlibBuilder::collapseSources() {
+    // gather all mzXML files from SpectrumSourceFiles table
+    sqlite3_stmt* getFilesStmt;
+    if (sqlite3_prepare(getDb(), "SELECT id, filename FROM SpectrumSourceFiles", -1, &getFilesStmt, NULL) != SQLITE_OK) {
+        return;
+    }
+
+    const string reqExt = ".mzXML";
+    map<string, int> fileIds;
+    while (sqlite3_step(getFilesStmt) == SQLITE_ROW) {
+        int id = sqlite3_column_int(getFilesStmt, 0);
+        string name = boost::lexical_cast<string>(sqlite3_column_text(getFilesStmt, 1));
+        if (name.length() >= reqExt.length() && boost::iequals(name.substr(name.length() - reqExt.length()), reqExt)) {
+            fileIds[name] = id;
+        }
+    }
+    sqlite3_finalize(getFilesStmt);
+
+    // look for complete pattern groups
+    vector< vector<string> > patternGrps;
+    string grp1[] = { "_Q1.", "_Q2.", "_Q3." };
+    string grp2[] = { ".ForLibQ1.", ".ForLibQ2.", ".ForLibQ3." };
+    patternGrps.push_back(vector<string>(grp1, grp1 + sizeof(grp1)/sizeof(string)));
+    patternGrps.push_back(vector<string>(grp2, grp2 + sizeof(grp2)/sizeof(string)));
+
+    for (map<string, int>::const_iterator i = fileIds.begin(); i != fileIds.end(); i++) {
+        string sourceFile = i->first;
+        int sourceId = i->second;
+        for (vector< vector<string> >::const_iterator grp = patternGrps.begin(); grp != patternGrps.end(); grp++) {
+            // check if the file contains the first pattern in the group
+            vector<string>::const_iterator pattern = grp->begin();
+            size_t pos = sourceFile.find(*pattern);
+            if (pos == string::npos)
+                continue;
+
+            // check if there is a file for each other pattern in the group
+            vector<int> groupIds;
+            for (++pattern; pattern != grp->end(); pattern++) {
+                string expected = sourceFile;
+                expected.replace(pos, grp->front().length(), *pattern);
+                map<string, int>::const_iterator expectedLookup = fileIds.find(expected);
+                if (expectedLookup == fileIds.end())
+                    break;
+
+                groupIds.push_back(expectedLookup->second);
+            }
+            if (groupIds.size() != grp->size() - 1)
+                continue;
+
+            // found entire pattern group
+            stringstream updateBuilder, deleteBuilder;
+            updateBuilder << "UPDATE RefSpectra SET fileID = " << sourceId << " WHERE";
+            deleteBuilder << "DELETE FROM SpectrumSourceFiles WHERE";
+            for (vector<int>::const_iterator groupId = groupIds.begin(); groupId != groupIds.end(); groupId++) {
+                if (groupId != groupIds.begin()) {
+                    updateBuilder << " OR";
+                    deleteBuilder << " OR";
+                }
+                updateBuilder << " fileID = " << *groupId;
+                deleteBuilder << " id = " << *groupId;
+            }
+            sqlite3_exec(getDb(), updateBuilder.str().c_str(), NULL, NULL, NULL);
+            sqlite3_exec(getDb(), deleteBuilder.str().c_str(), NULL, NULL, NULL);
+
+            updateBuilder.str("");
+            sourceFile.replace(pos, grp->front().length(), ".");
+            updateBuilder << "UPDATE SpectrumSourceFiles SET fileName = '"
+                          << SqliteRoutine::ESCAPE_APOSTROPHES(sourceFile) << "'"
+                          << " WHERE id = " << sourceId;
+            sqlite3_exec(getDb(), updateBuilder.str().c_str(), NULL, NULL, NULL);
+            break;
+        }
+    }
 }
 
 void BlibBuilder::commit()

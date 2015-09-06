@@ -185,6 +185,7 @@ int main(int argc, char* argv[])
             Verbosity::error("No spectra were found for the new library.");
         }
     } else {
+        builder.collapseSources();
         builder.commit();
     }
     

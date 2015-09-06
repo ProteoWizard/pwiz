@@ -103,6 +103,7 @@ class BlibBuilder : public BlibMaker
   virtual int parseCommandArgs(int argc, char* argv[]);
   virtual void attachAll();
   int transferLibrary(int iLib, const ProgressIndicator* parentProgress);
+  void collapseSources();
   virtual void commit();
   void insertPeaks(int spectraID, 
                    int peaksCount, 
