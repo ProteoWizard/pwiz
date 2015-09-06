@@ -13,14 +13,14 @@
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ApplicationIcon>Skyline.ico</ApplicationIcon>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <IsWebBootstrapper>true</IsWebBootstrapper>
     <ManifestCertificateThumbprint>5B66EC1291281681132D9C769FED5A1F42BD4A76</ManifestCertificateThumbprint>
     <ManifestKeyFile>
     </ManifestKeyFile>
     <GenerateManifests>true</GenerateManifests>
     <TargetZone>LocalIntranet</TargetZone>
     <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
-    <SignManifests>true</SignManifests>
+    <SignManifests>false</SignManifests>
     <SignAssembly>false</SignAssembly>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
@@ -28,9 +28,9 @@
     <UpgradeBackupLocation />
     <TargetFrameworkProfile />
     <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
-    <PublishUrl>M:\brendanx\tools\Skyline-daily\Skyline-daily_3_1_1_8740\</PublishUrl>
+    <PublishUrl>S:\webapps\ROOT\software\Skyline-daily13-64\</PublishUrl>
     <Install>true</Install>
-    <InstallFrom>Disk</InstallFrom>
+    <InstallFrom>Web</InstallFrom>
     <UpdateEnabled>false</UpdateEnabled>
     <UpdateMode>Background</UpdateMode>
     <UpdateInterval>7</UpdateInterval>
@@ -38,13 +38,15 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>false</MapFileExtensions>
+    <InstallUrl>https://skyline.gs.washington.edu/software/Skyline-daily13-64/</InstallUrl>
+    <UpdateUrl>https://skyline.gs.washington.edu/software/Skyline-daily13-64/</UpdateUrl>
     <SupportUrl>https://skyline.gs.washington.edu/labkey/project/home/support/begin.view%3f</SupportUrl>
     <ProductName>Skyline-daily</ProductName>
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>8740</ApplicationRevision>
-    <ApplicationVersion>3.1.1.8740</ApplicationVersion>
+    <ApplicationRevision>8669</ApplicationRevision>
+    <ApplicationVersion>3.1.1.8669</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -3665,7 +3667,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterPublish">
-    <Exec Command="SignAfterPublish.bat &quot;$(ProjectDir)University of Washington (MacCoss Lab).pfx&quot; Skyline! &quot;$(ProjectDir)bin\$(Platform)\$(ConfigurationName)\app.publish&quot; $(TargetName)" />
+    <Exec Command="SignAfterPublish.bat &quot;$(ProjectDir)University of Washington (MacCoss Lab).pfx&quot; password &quot;$(ProjectDir)bin\$(Platform)\$(ConfigurationName)\app.publish&quot; $(TargetName)" />
   </Target>
   <PropertyGroup>
     <PostBuildEvent>
