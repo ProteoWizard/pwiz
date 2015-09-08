@@ -1048,11 +1048,11 @@ namespace pwiz.Skyline.EditUI
                                 // (we don't just check mass since we don't have a tolerance value for that)
                                 // Or same name If any) and identical formula when stripped of labels
                                 if (Equals(pep.CustomIon.Name, precursor.Name) &&
-                                    (Equals(pep.CustomIon.Formula, precursor.Formula) &&
+                                    ((Equals(pep.CustomIon.Formula, precursor.Formula) &&
                                     Math.Abs(ionMonoMz - precursorMonoMz) <= document.Settings.TransitionSettings.Instrument.MzMatchTolerance &&
                                     Math.Abs(ionAverageMz - precursorAverageMz) <= document.Settings.TransitionSettings.Instrument.MzMatchTolerance) ||
                                     (!Equals(pep.CustomIon.Formula, precursor.Formula) && 
-                                    Equals(pep.CustomIon.UnlabeledFormula, BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula(precursor.Formula))))
+                                    Equals(pep.CustomIon.UnlabeledFormula, BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula(precursor.Formula)))))
                                 {
                                     pepFound = true;
                                     bool tranGroupFound = false;
