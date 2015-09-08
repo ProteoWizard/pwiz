@@ -176,6 +176,7 @@ namespace pwiz.Skyline
                 Size = size;
 
             // Restore window placement.
+            bool maximize = Settings.Default.MainWindowMaximized || Program.DemoMode;
             Point location = Settings.Default.MainWindowLocation;
             if (!location.IsEmpty)
             {
@@ -184,7 +185,6 @@ namespace pwiz.Skyline
                 Location = location;
                 ForceOnScreen();
             }
-            bool maximize = Settings.Default.MainWindowMaximized || Program.DemoMode;
             if (maximize)
                 WindowState = FormWindowState.Maximized;
 
