@@ -85,6 +85,8 @@ namespace pwiz.Skyline.SettingsUI
                 textCollisionEnergy.Visible = false;
                 labelSLens.Visible = false;
                 textSLens.Visible = false;
+                labelCompensationVoltage.Visible = false;
+                textCompensationVoltage.Visible = false;
                 labelConeVoltage.Visible = false;
                 textConeVoltage.Visible = false;
                 labelDriftTimeHighEnergyOffsetMsec.Visible = false;
