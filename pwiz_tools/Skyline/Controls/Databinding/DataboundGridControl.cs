@@ -183,44 +183,8 @@ namespace pwiz.Skyline.Controls.Databinding
                 propertyDescriptor = GetPropertyDescriptor(column);
             }
             e.ContextMenuStrip = contextMenuStrip;
-            clearAllFiltersToolStripMenuItem.Enabled = !BindingListSource.RowFilter.IsEmpty;
             _columnFilterPropertyDescriptor = propertyDescriptor;
-            if (null != _columnFilterPropertyDescriptor)
-            {
-
-                clearFilterToolStripMenuItem.Enabled =
-                    BindingListSource.RowFilter.ColumnFilters.Any(
-                        filter => Equals(_columnFilterPropertyDescriptor.DisplayName, filter.ColumnCaption));
-                filterToolStripMenuItem.Enabled = true;
-                ListSortDirection? sortDirection = null;
-                if (null != BindingListSource.SortDescriptions && BindingListSource.SortDescriptions.Count > 0)
-                {
-                    var sortDescription = BindingListSource.SortDescriptions.OfType<ListSortDescription>().First();
-                    if (sortDescription.PropertyDescriptor.Name == _columnFilterPropertyDescriptor.Name)
-                    {
-                        sortDirection = sortDescription.SortDirection;
-                    }
-                    clearSortToolStripMenuItem.Enabled = true;
-                }
-                else
-                {
-                    clearSortToolStripMenuItem.Enabled = false;
-                }
-                sortAscendingToolStripMenuItem.Enabled = true;
-                sortDescendingToolStripMenuItem.Enabled = true;
-                sortAscendingToolStripMenuItem.Checked = ListSortDirection.Ascending == sortDirection;
-                sortDescendingToolStripMenuItem.Checked = ListSortDirection.Descending == sortDirection;
-            }
-            else
-            {
-                clearFilterToolStripMenuItem.Enabled = false;
-                filterToolStripMenuItem.Enabled = false;
-                sortAscendingToolStripMenuItem.Enabled = false;
-                sortDescendingToolStripMenuItem.Enabled = false;
-                sortAscendingToolStripMenuItem.Checked = false;
-                sortDescendingToolStripMenuItem.Checked = false;
-            }
-            fillDownToolStripMenuItem.Enabled = IsEnableFillDown();
+            UpdateContextMenuItems();
         }
 
         public bool IsEnableFillDown()
@@ -306,6 +270,10 @@ namespace pwiz.Skyline.Controls.Databinding
 
         private void filterToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (null == _columnFilterPropertyDescriptor)
+            {
+                return;
+            }
             using (var quickFilterForm = new QuickFilterForm())
             {
                 quickFilterForm.SetFilter(BindingListSource.ViewInfo.DataSchema, _columnFilterPropertyDescriptor, BindingListSource.RowFilter);
@@ -435,6 +403,52 @@ namespace pwiz.Skyline.Controls.Databinding
                 }
             }
             return anyChanges;
+        }
+
+        private void contextMenuStrip_Opening(object sender, CancelEventArgs e)
+        {
+            UpdateContextMenuItems();
+        }
+
+        private void UpdateContextMenuItems()
+        {
+            clearAllFiltersToolStripMenuItem.Enabled = !BindingListSource.RowFilter.IsEmpty;
+            if (null != _columnFilterPropertyDescriptor)
+            {
+
+                clearFilterToolStripMenuItem.Enabled =
+                    BindingListSource.RowFilter.ColumnFilters.Any(
+                        filter => Equals(_columnFilterPropertyDescriptor.DisplayName, filter.ColumnCaption));
+                filterToolStripMenuItem.Enabled = true;
+                ListSortDirection? sortDirection = null;
+                if (null != BindingListSource.SortDescriptions && BindingListSource.SortDescriptions.Count > 0)
+                {
+                    var sortDescription = BindingListSource.SortDescriptions.OfType<ListSortDescription>().First();
+                    if (sortDescription.PropertyDescriptor.Name == _columnFilterPropertyDescriptor.Name)
+                    {
+                        sortDirection = sortDescription.SortDirection;
+                    }
+                    clearSortToolStripMenuItem.Enabled = true;
+                }
+                else
+                {
+                    clearSortToolStripMenuItem.Enabled = false;
+                }
+                sortAscendingToolStripMenuItem.Enabled = true;
+                sortDescendingToolStripMenuItem.Enabled = true;
+                sortAscendingToolStripMenuItem.Checked = ListSortDirection.Ascending == sortDirection;
+                sortDescendingToolStripMenuItem.Checked = ListSortDirection.Descending == sortDirection;
+            }
+            else
+            {
+                clearFilterToolStripMenuItem.Enabled = false;
+                filterToolStripMenuItem.Enabled = false;
+                sortAscendingToolStripMenuItem.Enabled = false;
+                sortDescendingToolStripMenuItem.Enabled = false;
+                sortAscendingToolStripMenuItem.Checked = false;
+                sortDescendingToolStripMenuItem.Checked = false;
+            }
+            fillDownToolStripMenuItem.Enabled = IsEnableFillDown();
         }
     }
 }

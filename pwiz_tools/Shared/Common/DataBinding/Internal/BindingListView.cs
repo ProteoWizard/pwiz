@@ -288,7 +288,7 @@ namespace pwiz.Common.DataBinding.Internal
                 OnListChanged(new ListChangedEventArgs(ListChangedType.PropertyDescriptorChanged, 0));
                 ResetBindings();
             }
-            else if (rowCountChanged)
+            else if (rowCountChanged || 0 == Count)
             {
                 ResetBindings();
             }

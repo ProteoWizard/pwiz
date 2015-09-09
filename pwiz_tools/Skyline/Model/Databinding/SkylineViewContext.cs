@@ -261,12 +261,14 @@ namespace pwiz.Skyline.Model.Databinding
                             broker.UpdateProgress(status);
                             using (var writer = new StreamWriter(saver.SafeName))
                             {
-                                Export(broker, ref status, viewInfo, writer, dsvWriter);
+                                success = Export(broker, ref status, viewInfo, writer, dsvWriter);
                                 writer.Close();
                             }
-                            saver.Commit();
-                            broker.UpdateProgress(status.Complete());
-                            success = true;
+                            if (success)
+                            {
+                                saver.Commit();
+                                broker.UpdateProgress(status.Complete());
+                            }
                         });
                         longWait.PerformWork(owner, 1500, action);
                     }

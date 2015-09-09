@@ -43,8 +43,8 @@
             this.filterToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.clearFilterToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.clearAllFiltersToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.fillDownToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.fillDownToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.boundDataGridView = new pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx();
             ((System.ComponentModel.ISupportInitialize)(this.bindingListSource)).BeginInit();
             this.contextMenuStrip.SuspendLayout();
@@ -76,6 +76,7 @@
             this.fillDownToolStripMenuItem});
             this.contextMenuStrip.Name = "contextMenuStrip";
             resources.ApplyResources(this.contextMenuStrip, "contextMenuStrip");
+            this.contextMenuStrip.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStrip_Opening);
             // 
             // sortAscendingToolStripMenuItem
             // 
@@ -118,16 +119,16 @@
             resources.ApplyResources(this.clearAllFiltersToolStripMenuItem, "clearAllFiltersToolStripMenuItem");
             this.clearAllFiltersToolStripMenuItem.Click += new System.EventHandler(this.clearAllFiltersToolStripMenuItem_Click);
             // 
+            // toolStripSeparator2
+            // 
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            resources.ApplyResources(this.toolStripSeparator2, "toolStripSeparator2");
+            // 
             // fillDownToolStripMenuItem
             // 
             this.fillDownToolStripMenuItem.Name = "fillDownToolStripMenuItem";
             resources.ApplyResources(this.fillDownToolStripMenuItem, "fillDownToolStripMenuItem");
             this.fillDownToolStripMenuItem.Click += new System.EventHandler(this.fillDownToolStripMenuItem_Click);
-            // 
-            // toolStripSeparator2
-            // 
-            this.toolStripSeparator2.Name = "toolStripSeparator2";
-            resources.ApplyResources(this.toolStripSeparator2, "toolStripSeparator2");
             // 
             // boundDataGridView
             // 
@@ -188,12 +189,12 @@
         private System.Windows.Forms.ToolStripMenuItem sortAscendingToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem sortDescendingToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem clearSortToolStripMenuItem;
-        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripMenuItem filterToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem clearFilterToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem clearAllFiltersToolStripMenuItem;
         public System.Windows.Forms.ContextMenuStrip contextMenuStrip;
-        private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
         private System.Windows.Forms.ToolStripMenuItem fillDownToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
     }
 }
