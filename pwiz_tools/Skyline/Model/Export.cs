@@ -3095,6 +3095,10 @@ namespace pwiz.Skyline.Model
     public class WatersIsolationListExporter : AbstractMassListExporter
     {
         public const string EXT_WATERS_ISOLATION_LIST = ".mrm"; // Not L10N
+
+        public const string RETENTION_TIME_FORMAT = "0.0"; // Not L10N
+        public const string MASS_FORMAT = "0.0000"; // Not L10N
+        public const string CE_FORMAT = "0.0"; // Not L10N
         
         public bool ExportEdcMass { get; set; }
 
@@ -3206,12 +3210,12 @@ namespace pwiz.Skyline.Model
                 rtStart = 0;
                 rtEnd = RunLength;
             }
-            writer.Write(Math.Round(rtStart, 6).ToString(CultureInfo));
+            writer.Write(rtStart.ToString(RETENTION_TIME_FORMAT, CultureInfo));
             writer.Write(FieldSeparator);
-            writer.Write(Math.Round(rtEnd, 6).ToString(CultureInfo));
+            writer.Write(rtEnd.ToString(RETENTION_TIME_FORMAT, CultureInfo));
             writer.Write(FieldSeparator);
             // Set Mass
-            writer.Write(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo));
+            writer.Write(nodeTranGroup.PrecursorMz.ToString(MASS_FORMAT, CultureInfo));
             writer.Write(FieldSeparator);
             // Mass Fragments 1-6
             for (int i = 0; i < 6; i++)
@@ -3219,22 +3223,22 @@ namespace pwiz.Skyline.Model
                 var mz = i < transitions.Count()
                     ? GetProductMz(SequenceMassCalc.PersistentMZ(((TransitionDocNode) transitions[i]).Mz), step)
                     : 0;
-                writer.Write(mz.ToString(CultureInfo));
+                writer.Write(mz.ToString(MASS_FORMAT, CultureInfo));
                 writer.Write(FieldSeparator);
             }
             // Trap CE Start, Trap CE End, Transfer CE Start, Transfer CE End
             double trapStart, trapEnd;
             double? transferStart, transferEnd;
             GetCEValues(nodeTranGroup.PrecursorMz, out trapStart, out trapEnd, out transferStart, out transferEnd);
-            writer.Write(Math.Round(trapStart, 6).ToString(CultureInfo));
+            writer.Write(trapStart.ToString(CE_FORMAT, CultureInfo));
             writer.Write(FieldSeparator);
-            writer.Write(Math.Round(trapEnd, 6).ToString(CultureInfo));
+            writer.Write(trapEnd.ToString(CE_FORMAT, CultureInfo));
             writer.Write(FieldSeparator);
             if (transferStart.HasValue && transferEnd.HasValue)
             {
-                writer.Write(Math.Round(transferStart.Value, 6).ToString(CultureInfo));
+                writer.Write(transferStart.Value.ToString(CE_FORMAT, CultureInfo));
                 writer.Write(FieldSeparator);
-                writer.Write(Math.Round(transferEnd.Value, 6).ToString(CultureInfo));
+                writer.Write(transferEnd.Value.ToString(CE_FORMAT, CultureInfo));
                 writer.Write(FieldSeparator);
             }
             // CV
@@ -3244,7 +3248,7 @@ namespace pwiz.Skyline.Model
             var edcMass = ExportEdcMass && transitions.Any()
                 ? GetProductMz(SequenceMassCalc.PersistentMZ(((TransitionDocNode) transitions.First()).Mz), step)
                 : 0;
-            writer.Write(edcMass.ToString(CultureInfo));
+            writer.Write(edcMass.ToString(MASS_FORMAT, CultureInfo));
             writer.Write(FieldSeparator);
             // DT Start, DT End
             writer.Write(0);
