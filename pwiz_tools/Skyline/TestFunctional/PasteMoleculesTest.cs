@@ -315,19 +315,18 @@ namespace pwiz.SkylineTestFunctional
                     PasteDlg.SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
                     PasteDlg.SmallMoleculeTransitionListColumnHeaders.namePrecursor,
                     PasteDlg.SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.mzPrecursor,
                     PasteDlg.SmallMoleculeTransitionListColumnHeaders.mzProduct,
                     PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
                     PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargeProduct,
                     PasteDlg.SmallMoleculeTransitionListColumnHeaders.labelType,
                 };
             pasteText =
-                "A,27-HC,C36H57N2O3,565.43637,135.1,1,1,light\r\n" +
-                "A,27-HC,C36H57N2O3,565.43637,181.1,1,1,light\r\n" +
-                "A,27-HC,C36H57N2O3,565.43637,367.4,1,1,light\r\n" +
-                "A,27-HC,C36H51H'6N2O3,571.47403,135.1,1,1,heavy\r\n" +
-                "A,27-HC,C36H51H'6N2O3,571.47403,181.1,1,1,heavy\r\n" +
-                "A,27-HC,C36H51H'6N2O3,571.47403,215.2,1,1,heavy\r\n";
+                "A,27-HC,C36H57N2O3,135,1,1,light\r\n" +
+                "A,27-HC,C36H57N2O3,181,1,1,light\r\n" +
+                "A,27-HC,C36H57N2O3,367,1,1,light\r\n" +
+                "A,27-HC,C36H51H'6N2O3,135,1,1,heavy\r\n" +
+                "A,27-HC,C36H51H'6N2O3,181,1,1,heavy\r\n" +
+                "A,27-HC,C36H51H'6N2O3,215,1,1,heavy\r\n";
             RunUI(() =>
             {
                 SkylineWindow.NewDocument(true);
