@@ -552,26 +552,32 @@ namespace pwiz.Skyline.EditUI
         private static readonly ColumnIndices TRANSITION_LIST_COL_INDICES = new ColumnIndices(
             0, 1, 2, 3);
 
-        private const int INDEX_MOLECULE_GROUP = 0;
-        private const int INDEX_MOLECULE_NAME = 1;
-        private const int INDEX_PRODUCT_NAME = 2;
-        private const int INDEX_MOLECULE_FORMULA = 3;
-        private const int INDEX_PRODUCT_FORMULA = 4;
-        private const int INDEX_MOLECULE_MZ = 5;
-        private const int INDEX_PRODUCT_MZ = 6;
-        private const int INDEX_MOLECULE_CHARGE = 7;
-        private const int INDEX_PRODUCT_CHARGE = 8;
-        private const int INDEX_LABEL_TYPE = 9;
-        private const int INDEX_RETENTION_TIME = 10;
-        private const int INDEX_RETENTION_TIME_WINDOW = 11;
-        private const int INDEX_COLLISION_ENERGY = 12;
-        private const int INDEX_NOTE = 13;
-        private const int INDEX_MOLECULE_DRIFT_TIME_MSEC = 14;
-        private const int INDEX_HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC = 15;
-        private const int INDEX_SLENS = 16;
-        private const int INDEX_CONE_VOLTAGE = 17;
-        private const int INDEX_COMPENSATION_VOLTAGE = 18;
-        private const int INDEX_DECLUSTERING_POTENTIAL = 19;
+        private int ColumnIndex(string name)
+        {
+            var col = gridViewTransitionList.Columns[name];
+            return col == null ? -1: gridViewTransitionList.Columns.IndexOf(col);
+        }
+
+        private int INDEX_MOLECULE_GROUP { get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.moleculeGroup); } } 
+        private int INDEX_MOLECULE_NAME { get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.namePrecursor); } }
+        private int INDEX_PRODUCT_NAME { get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.nameProduct); } }
+        private int INDEX_MOLECULE_FORMULA { get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.formulaPrecursor); } }
+        private int INDEX_PRODUCT_FORMULA { get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.formulaProduct); } }
+        private int INDEX_MOLECULE_MZ { get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.mzPrecursor); } }
+        private int INDEX_PRODUCT_MZ { get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.mzProduct); } }
+        private int INDEX_MOLECULE_CHARGE { get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.chargePrecursor); } }
+        private int INDEX_PRODUCT_CHARGE { get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.chargeProduct); } }
+        private int INDEX_LABEL_TYPE { get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.labelType); } }
+        private int INDEX_RETENTION_TIME { get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.rtPrecursor); } }
+        private int INDEX_RETENTION_TIME_WINDOW { get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.rtWindowPrecursor); } }
+        private int INDEX_COLLISION_ENERGY { get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.cePrecursor); } }
+        private int INDEX_NOTE { get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.note); } }
+        private int INDEX_MOLECULE_DRIFT_TIME_MSEC { get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.dtPrecursor); } }
+        private int INDEX_HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC { get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.dtHighEnergyOffset); } }
+        private int INDEX_SLENS { get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.slens); } }
+        private int INDEX_CONE_VOLTAGE { get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.coneVoltage); } }
+        private int INDEX_COMPENSATION_VOLTAGE { get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.compensationVoltage); } }
+        private int INDEX_DECLUSTERING_POTENTIAL { get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.declusteringPotential); } }
 
         private static int? ValidateFormulaWithMz(SrmDocument document, ref string moleculeFormula, double mz, int? charge, out double monoMass, out double averageMass)
         {

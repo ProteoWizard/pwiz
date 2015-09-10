@@ -143,10 +143,10 @@ namespace pwiz.SkylineTestFunctional
                     PasteDlg.SmallMoleculeTransitionListColumnHeaders.rtWindowPrecursor,
                     PasteDlg.SmallMoleculeTransitionListColumnHeaders.cePrecursor,
                     PasteDlg.SmallMoleculeTransitionListColumnHeaders.note,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.slens,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.coneVoltage,
                     PasteDlg.SmallMoleculeTransitionListColumnHeaders.dtPrecursor,
                     PasteDlg.SmallMoleculeTransitionListColumnHeaders.dtHighEnergyOffset,
+                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.slens,
+                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.coneVoltage,
                     PasteDlg.SmallMoleculeTransitionListColumnHeaders.compensationVoltage,
                     PasteDlg.SmallMoleculeTransitionListColumnHeaders.declusteringPotential,
                 };
