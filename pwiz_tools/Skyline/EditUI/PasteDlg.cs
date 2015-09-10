@@ -173,10 +173,12 @@ namespace pwiz.Skyline.EditUI
             {
                 tbxError.Text = string.Empty;
                 tbxError.Visible = false;
+                Text = Description;
                 return;
             }
             tbxError.BackColor = Color.Red;
             tbxError.Text = pasteError.Message;
+            Text = Description + " (" + pasteError.Message + ")";  // Useful for debugging if this hangs in a test - it appears in the timeout report
         }
 
         public void ShowNoErrors()
@@ -185,6 +187,7 @@ namespace pwiz.Skyline.EditUI
             panelError.Visible = true;
             tbxError.Text = Resources.PasteDlg_ShowNoErrors_No_errors;
             tbxError.BackColor = Color.LightGreen;
+            Text = Description;  // Clear any error info
         }
 
         public void HideNoErrors()
@@ -194,6 +197,7 @@ namespace pwiz.Skyline.EditUI
                 return;
             }
             panelError.Visible = false;
+            Text = Description;  // Clear any error info
         }
 
         private void btnValidate_Click(object sender, EventArgs e)
