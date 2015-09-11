@@ -340,7 +340,7 @@ namespace pwiz.SkylineTestTutorial
                 refineDlg.DotProductThreshold = Statistics.AngleToNormalizedContrastAngle(0.95);    // Convert from original cos(angle) dot-product
                 refineDlg.OkDialog();
             });
-            WaitForCondition(() => SkylineWindow.Document.PeptideCount < 75);
+            WaitForCondition(() => SkylineWindow.Document.PeptideCount < 73);
 //            foreach (var peptideDocNode in SkylineWindow.Document.Peptides)
 //            {
 //                var nodeGroup = ((TransitionGroupDocNode) peptideDocNode.Children[0]);
