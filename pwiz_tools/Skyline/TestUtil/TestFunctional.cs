@@ -422,7 +422,7 @@ namespace pwiz.SkylineTestUtil
 
                 Thread.Sleep(SLEEP_INTERVAL);
                 if (i == waitCycles - 1)
-                    Assert.Fail("Timeout {0} seconds exceeded in WaitForOpenForm. Open forms: {1}", waitCycles * SLEEP_INTERVAL / 1000, GetOpenFormsString()); // Not L10N
+                    Assert.Fail("Timeout {0} seconds exceeded in WaitForOpenForm({1}). Open forms: {2}", waitCycles * SLEEP_INTERVAL / 1000, typeof(TDlg).Name, GetOpenFormsString()); // Not L10N
             }
             return null;
         }
