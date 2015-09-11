@@ -183,7 +183,7 @@ namespace pwiz.SkylineTestFunctional
                 editPepModsDlg.SetModification(heavyRPeptide.Length - 1, IsotopeLabelType.heavy, heavyR);
                 editPepModsDlg.OkDialog();
             });
-            WaitForDocumentChange(docCurrent);
+            WaitForCondition(() => (SkylineWindow.Document.Molecules.First().TransitionGroupCount == 2));
 
             // The peptide should now match the spectrum in the library, and have
             // both heavy and light precursors, with ranked transitions
