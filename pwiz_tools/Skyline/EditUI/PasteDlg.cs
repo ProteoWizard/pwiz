@@ -904,6 +904,7 @@ namespace pwiz.Skyline.EditUI
                 var explicitTransitionGroupValues = new ExplicitTransitionGroupValues(collisionEnergy, driftTimePrecursorMsec, driftTimeHighEnergyOffsetMsec, slens, 
                     coneVoltage, declusteringPotential, compensationVoltage);
                 var massOk = true;
+                var massTooLow = false;
                 string massErrMsg = null;
                 var absCharge = Math.Abs(charge ?? 0);
                 if (getPrecursorColumns && absCharge != 0 && (absCharge < TransitionGroup.MIN_PRECURSOR_CHARGE || absCharge > TransitionGroup.MAX_PRECURSOR_CHARGE))
@@ -928,7 +929,8 @@ namespace pwiz.Skyline.EditUI
                             // Is the ion's formula the old style where user expected us to add a hydrogen? 
                             charge = ValidateFormulaWithMz(document, ref formula, mz, charge, out monoMass, out averageMmass);
                             row.Cells[indexFormula].Value = formula;
-                            massOk = monoMass < CustomIon.MAX_MASS && averageMmass < CustomIon.MAX_MASS;
+                            massOk = monoMass < CustomIon.MAX_MASS && averageMmass < CustomIon.MAX_MASS &&
+                                     !(massTooLow = charge.HasValue && (monoMass < CustomIon.MIN_MASS || averageMmass < CustomIon.MIN_MASS)); // Null charge => masses are 0 but meaningless
                             if (massOk)
                             {
                                 if (charge.HasValue)
@@ -945,7 +947,8 @@ namespace pwiz.Skyline.EditUI
                         {
                             // Get the mass from the formula, and mz from that and charge
                             mz = ValidateFormulaWithCharge(document, formula, charge.Value, out monoMass, out averageMmass);
-                            massOk = monoMass < CustomIon.MAX_MASS && averageMmass < CustomIon.MAX_MASS;
+                            massOk = !((monoMass >= CustomIon.MAX_MASS || averageMmass >= CustomIon.MAX_MASS)) &&
+                                     !(massTooLow = (monoMass < CustomIon.MIN_MASS || averageMmass < CustomIon.MIN_MASS));
                             row.Cells[indexMz].Value = mz;
                             if (massOk)
                                 return new MoleculeInfo(name, formula, charge.Value, mz, monoMass, averageMmass, isotopeLabelType, retentionTimeInfo, explicitTransitionGroupValues, note);
@@ -961,12 +964,20 @@ namespace pwiz.Skyline.EditUI
                 {
                     // No formula, just use charge and m/z
                     monoMass = averageMmass = BioMassCalc.CalculateIonMassFromMz(mz, charge.Value);
-                    massOk = monoMass < CustomIon.MAX_MASS && averageMmass < CustomIon.MAX_MASS;
+                    massOk = monoMass < CustomIon.MAX_MASS && averageMmass < CustomIon.MAX_MASS &&
+                             !(massTooLow = (monoMass < CustomIon.MIN_MASS || averageMmass < CustomIon.MIN_MASS));
                     errColumn = indexMz;
                     if (massOk)
                         return new MoleculeInfo(name, formula, charge.Value, mz, monoMass, averageMmass, isotopeLabelType, retentionTimeInfo, explicitTransitionGroupValues, note);
                 }
-                if (!massOk)
+                if (massTooLow)
+                {
+                    errMessage = massErrMsg ?? string.Format(
+                        Resources
+                            .EditCustomMoleculeDlg_OkDialog_Custom_molecules_must_have_a_mass_greater_than_or_equal_to__0__,
+                        CustomIon.MIN_MASS);
+                }
+                else if (!massOk)
                 {
                     errMessage = massErrMsg ?? string.Format(
                         Resources

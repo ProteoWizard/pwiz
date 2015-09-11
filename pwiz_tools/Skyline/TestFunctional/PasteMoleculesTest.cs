@@ -102,6 +102,7 @@ namespace pwiz.SkylineTestFunctional
                 "\t" + compensationVoltage + "\t" + declusteringPotential; // Legit
             const string line2start = "\r\nMyMolecule2\tMyMol2\tMyFrag2\tCH12O4\tCH3O\t";
             const string line3 = "\r\nMyMolecule2\tMyMol2\tMyFrag2\tCH12O4\tCHH500000000\t\t\t1\t1";
+            const string line4 = "\r\nMyMolecule3\tMyMol3\tMyFrag3\tH2\tH\t\t\t1\t1";
 
             // Provoke some errors
             var badcharge = Transition.MAX_PRODUCT_CHARGE + 1;
@@ -122,7 +123,9 @@ namespace pwiz.SkylineTestFunctional
                 String.Format(Resources.PasteDlg_ValidateEntry_Error_on_line__0___Precursor_needs_values_for_any_two_of__Formula__m_z_or_Charge_, 2));
             TestError(line1 + line3, // Insanely large molecule
                 string.Format(Resources.CustomIon_Validate_The_mass_of_the_custom_ion_exceeeds_the_maximum_of__0_, CustomIon.MAX_MASS));
-            TestError(line1 +line2start+ + precursorMzAtZNeg2 + "\t" + productMzAtZNeg2 + "\t-2\t-2\t\t\t" + precursorRTWindow + "\t" + precursorCE + "\t" + precursorDT + "\t" + highEnergyDtOffset , // Explicit retention time window without retention time
+            TestError(line1 + line4, // Insanely small molecule
+                string.Format(Resources.CustomIon_Validate_The_mass_of_the_custom_ion_is_less_than_the_minimum_of__0__, CustomIon.MIN_MASS));
+            TestError(line1 + line2start + +precursorMzAtZNeg2 + "\t" + productMzAtZNeg2 + "\t-2\t-2\t\t\t" + precursorRTWindow + "\t" + precursorCE + "\t" + precursorDT + "\t" + highEnergyDtOffset, // Explicit retention time window without retention time
                 Resources.Peptide_ExplicitRetentionTimeWindow_Explicit_retention_time_window_requires_an_explicit_retention_time_value_);
             for (int withSpecials = 2; withSpecials-- > 0; )
             {
