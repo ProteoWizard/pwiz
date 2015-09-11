@@ -17,10 +17,12 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
@@ -113,7 +115,17 @@ namespace pwiz.SkylineTestA
             if (modListPath == null) // don't update mod list if running under SkylineTester
                 return;
 
-            FileStream fileStream = File.Create(modListPath);
+            FileStream fileStream;
+            try
+            {
+                fileStream = File.Create(modListPath);
+            }
+            catch (Exception)
+            {
+                // Retry. Most likely we are in a quality run and this test is being re-run in quick succession.  Give the OS a chance to close the previous file properly.
+                Thread.Sleep(1000);
+                fileStream = File.Create(modListPath);
+            }
 
             XmlWriterSettings settings = new XmlWriterSettings
             {
