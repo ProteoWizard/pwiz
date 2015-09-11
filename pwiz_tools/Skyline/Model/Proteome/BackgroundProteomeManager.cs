@@ -60,23 +60,25 @@ namespace pwiz.Skyline.Model.Proteome
         }
 
         /// <summary>
-        /// returns true if the background proteome is loaded -
+        /// Returns null if the background proteome is loaded -
         /// this means either that the doc does not have one, or
         /// the one it has exists and has the digest completed 
         /// and that the proteins in the db have
         /// had their protein metadata (accession, gene etc) resolved.
+        /// Otherwise returns a string describing the unloaded state.
         /// </summary>
         /// <param name="document">the document whose background proteome we're checking</param>
-        /// <returns>true if doc has no background proteome, or if the one 
-        /// it does have is loaded and digested with all proten metadata ready to go</returns>
-        protected override bool IsLoaded(SrmDocument document)
+        /// <returns>null if doc has no background proteome, or if the one 
+        /// it does have is loaded and digested with all proten metadata ready to go.
+        /// Otherwise, a string describing the current unloaded state.</returns>
+        protected override string IsNotLoadedExplained(SrmDocument document)
         {
-            return IsLoaded(document, GetBackgroundProteome(document), true);
+            return IsNotLoadedExplained(document, GetBackgroundProteome(document), true);
         }
 
-        private static bool IsLoaded(SrmDocument document, BackgroundProteome backgroundProteome, bool requireResolvedProteinMetadata)
+        private static string IsNotLoadedExplained(SrmDocument document, BackgroundProteome backgroundProteome, bool requireResolvedProteinMetadata)
         {
-            return DocumentHasLoadedBackgroundProteomeOrNone(document, backgroundProteome, requireResolvedProteinMetadata);
+            return DocumentHasLoadedBackgroundProteomeOrNoneExplained(document, backgroundProteome, requireResolvedProteinMetadata);
         }
 
         /// <summary>
@@ -94,29 +96,39 @@ namespace pwiz.Skyline.Model.Proteome
         /// proten metadata ready to go</returns>
         public static bool DocumentHasLoadedBackgroundProteomeOrNone(SrmDocument document, bool requireResolvedProteinMetadata)
         {
-            return DocumentHasLoadedBackgroundProteomeOrNone(document, GetBackgroundProteome(document), requireResolvedProteinMetadata);
+            return DocumentHasLoadedBackgroundProteomeOrNoneExplained(document, GetBackgroundProteome(document), requireResolvedProteinMetadata) == null;
         }
 
-        private static bool DocumentHasLoadedBackgroundProteomeOrNone(SrmDocument document, BackgroundProteome backgroundProteome, bool requireResolvedProteinMetadata)
+        private static string DocumentHasLoadedBackgroundProteomeOrNoneExplained(SrmDocument document, BackgroundProteome backgroundProteome, bool requireResolvedProteinMetadata)
         {
             if (backgroundProteome.IsNone)
             {
-                return true;
+                return null;
             }
             if (!backgroundProteome.DatabaseValidated)
             {
-                return false;
+                return "BackgroundProteomeManager: !backgroundProteome.DatabaseValidated"; // Not L10N
             }
             if (backgroundProteome.DatabaseInvalid)
             {
-                return true;
+                return null;
             }
             var peptideSettings = document.Settings.PeptideSettings;
 
             if (!backgroundProteome.HasDigestion(peptideSettings))
-                return false;
+            {
+                return "BackgroundProteomeManager: !backgroundProteome.HasDigestion(peptideSettings)"; // Not L10N
+            }
+            if (!requireResolvedProteinMetadata || (!backgroundProteome.NeedsProteinMetadataSearch))
+            {
+                return null;
+            }
+            if (backgroundProteome.NeedsProteinMetadataSearch)
+            {
+                return "BackgroundProteomeManager: NeedsProteinMetadataSearch"; // Not L10N
+            }
+            return "BackgroundProteomeManager: requireResolvedProteinMetadata"; // Not L10N
 
-            return !requireResolvedProteinMetadata || (!backgroundProteome.NeedsProteinMetadataSearch);
         }
 
 
@@ -158,14 +170,14 @@ namespace pwiz.Skyline.Model.Proteome
                 BackgroundProteome originalBackgroundProteome = GetBackgroundProteome(docCurrent);
                 // Check to see whether the Digestion already exists but has not been queried yet.
                 BackgroundProteome backgroundProteomeWithDigestions = new BackgroundProteome(originalBackgroundProteome, true);
-                if (IsLoaded(docCurrent, backgroundProteomeWithDigestions, true))
+                if (IsNotLoadedExplained(docCurrent, backgroundProteomeWithDigestions, true) == null)
                 {
                     // digest is ready, and protein metdata is resolved
                     CompleteProcessing(container, backgroundProteomeWithDigestions);
                     return true;
                 }
                 // are we here to do the digest, or to resolve the protein metadata?
-                bool getMetadata = IsLoaded(docCurrent, backgroundProteomeWithDigestions, false) &&
+                bool getMetadata = (IsNotLoadedExplained(docCurrent, backgroundProteomeWithDigestions, false) == null) &&
                     backgroundProteomeWithDigestions.NeedsProteinMetadataSearch; 
 
                 string name = originalBackgroundProteome.Name;

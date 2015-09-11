@@ -71,9 +71,24 @@ namespace pwiz.Skyline.Model.Results
         {
             get
             {
+                return IsNotLoadedExplained == null;
+            }
+        }
+
+        public string IsNotLoadedExplained
+        {
+            get
+            {
                 // All the chromatogram sets are loaded, and the cache has not been modified
-                return !Chromatograms.Contains(c => !c.IsLoaded) &&
-                    (IsJoiningDisabled || (_cacheFinal != null && !_cacheFinal.ReadStream.IsModified));
+                if (Chromatograms.Contains(c => !c.IsLoaded))
+                {
+                    return "Not all chromatogram sets are loaded - " + string.Join(";", Chromatograms.Where(c => !c.IsLoaded).Select(i => i.IsLoadedExplained()));  // Not L10N
+                }
+                if ((IsJoiningDisabled || (_cacheFinal != null && !_cacheFinal.ReadStream.IsModified)))
+                {
+                    return null;
+                }
+                return "Cache has been modifed";  // Not L10N
             }
         }
 

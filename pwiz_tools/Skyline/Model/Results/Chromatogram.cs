@@ -50,7 +50,7 @@ namespace pwiz.Skyline.Model.Results
             return !ReferenceEquals(document.Settings.MeasuredResults, previous.Settings.MeasuredResults);
         }
 
-        protected override bool IsLoaded(SrmDocument document)
+        protected override string IsNotLoadedExplained(SrmDocument document)
         {
             SrmSettings settings = document.Settings;
             
@@ -58,13 +58,13 @@ namespace pwiz.Skyline.Model.Results
             // until the libraries are loaded, since they are used for peak picking.
             if (!IsReadyToLoad(document))
             {
-                return true;
+                return null;
             } 
             if (!settings.HasResults)
             {
-                return true;
+                return null;
             } 
-            return settings.MeasuredResults.IsLoaded;
+            return settings.MeasuredResults.IsNotLoadedExplained;
         }
 
         protected override IEnumerable<IPooledStream> GetOpenStreams(SrmDocument document)
@@ -95,7 +95,7 @@ namespace pwiz.Skyline.Model.Results
                 {
                     return false;
                 }
-                if (!DocumentRetentionTimes.IsLoaded(document))
+                if (DocumentRetentionTimes.IsNotLoadedExplained(document) != null)
                 {
                     return false;
                 }
@@ -262,6 +262,11 @@ namespace pwiz.Skyline.Model.Results
         public IEnumerable<MsDataFileUri> MSDataFilePaths { get { return MSDataFileInfos.Select(info => info.FilePath); } }
 
         public bool IsLoaded { get { return !MSDataFileInfos.Contains(info => !info.FileWriteTime.HasValue); } }
+
+        public string IsLoadedExplained() // For test and debug purposes, gives a descriptive string for IsLoaded failure
+        {
+            return IsLoaded ? string.Empty : "No ChromFileInfo.FileWriteTime for " + string.Join(",", MSDataFileInfos.Where(info => !info.FileWriteTime.HasValue).Select(f => f.FilePath)); // Not L10N
+        }
 
         public Annotations Annotations { get; private set; }
 
