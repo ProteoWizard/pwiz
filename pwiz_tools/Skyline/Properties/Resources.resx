@@ -8693,4 +8693,10 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="ChorusSession_WrapWebException_An_error_occurred_communicating_with_the_server___The_server_returned_the_HTTP_error_response_code__0__but_the_error_message_could_not_be_parsed_" xml:space="preserve">
     <value>An error occurred while communicating with the Chorus server.  The server returned the HTTP error response code {0} but the error message could not be parsed.</value>
   </data>
+  <data name="GraphData_GraphResiduals_Time_from_Prediction" xml:space="preserve">
+    <value>Time from Prediction</value>
+  </data>
+  <data name="GraphData_GraphResiduals_Time_from_Regression" xml:space="preserve">
+    <value>Time from Regression</value>
+  </data>
 </root>

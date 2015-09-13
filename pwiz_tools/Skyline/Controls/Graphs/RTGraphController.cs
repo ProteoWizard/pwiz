@@ -30,12 +30,20 @@ namespace pwiz.Skyline.Controls.Graphs
 {
     public enum GraphTypeRT { regression, replicate, schedule, peptide }
 
+    public enum PlotTypeRT { correlation, residuals }
+
     public sealed class RTGraphController : GraphSummary.IController
     {
         public static GraphTypeRT GraphType
         {
             get { return Helpers.ParseEnum(Settings.Default.RTGraphType, GraphTypeRT.replicate); }
             set { Settings.Default.RTGraphType = value.ToString(); }
+        }
+
+        public static PlotTypeRT PlotType
+        {
+            get { return Helpers.ParseEnum(Settings.Default.RTPlotType, PlotTypeRT.correlation); }
+            set { Settings.Default.RTPlotType = value.ToString(); }
         }
 
         public static double OutThreshold { get { return Settings.Default.RTResidualRThreshold; } }

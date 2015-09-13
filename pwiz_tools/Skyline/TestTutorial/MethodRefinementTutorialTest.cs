@@ -196,6 +196,8 @@ namespace pwiz.SkylineTestTutorial
             WaitForGraphs();
             PauseForScreenShot("Retention Times Regression plot metafile with 0.95 threshold", 9); // Not L10N
 
+            TestRTResidualsSwitch();
+
             RunDlg<EditRTDlg>(SkylineWindow.CreateRegression, editRTDlg => editRTDlg.OkDialog());
 
             RunUI(() => SkylineWindow.ShowGraphRetentionTime(false));
@@ -406,6 +408,8 @@ namespace pwiz.SkylineTestTutorial
             Assert.AreEqual(86, SkylineWindow.Document.PeptideCount);
             Assert.AreEqual(255, SkylineWindow.Document.PeptideTransitionCount);
 
+            TestRTResidualsSwitch();
+
             // Measuring Retention Times, p. 17
             {
                 var exportDlg = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List));
@@ -504,6 +508,27 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(() => SkylineWindow.SaveDocument());
             RunUI(SkylineWindow.NewDocument);
+        }
+
+        private static void TestRTResidualsSwitch()
+        {
+            RunUI(() => SkylineWindow.ShowPlotType(PlotTypeRT.residuals));
+            WaitForGraphs();
+            RTLinearRegressionGraphPane pane;
+            RunUI(() =>
+            {
+                Assert.IsTrue(SkylineWindow.RTGraphController.GraphSummary.TryGetGraphPane(out pane));
+                Assert.AreEqual(Resources.GraphData_GraphResiduals_Time_from_Regression,
+                    pane.YAxis.Title.Text);
+                SkylineWindow.ShowPlotType(PlotTypeRT.correlation);
+            });
+            WaitForGraphs();
+            RunUI(() =>
+            {
+                Assert.IsTrue(SkylineWindow.RTGraphController.GraphSummary.TryGetGraphPane(out pane));
+                Assert.AreEqual(Resources.RTLinearRegressionGraphPane_RTLinearRegressionGraphPane_Measured_Time,
+                    pane.YAxis.Title.Text);
+            });
         }
     }
 }

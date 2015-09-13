@@ -428,6 +428,9 @@ namespace pwiz.Skyline
             this.issuesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator29 = new System.Windows.Forms.ToolStripSeparator();
             this.aboutMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.timePlotContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.timeCorrelationContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.timeResidualsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenuTreeNode.SuspendLayout();
             this.contextMenuSpectrum.SuspendLayout();
             this.contextMenuChromatogram.SuspendLayout();
@@ -1165,6 +1168,7 @@ namespace pwiz.Skyline
             this.contextMenuRetentionTimes.AllowMerge = false;
             this.contextMenuRetentionTimes.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.timeGraphContextMenuItem,
+            this.timePlotContextMenuItem,
             this.rtValueMenuItem,
             this.showRTLegendContextMenuItem,
             this.selectionContextMenuItem,
@@ -1661,27 +1665,27 @@ namespace pwiz.Skyline
             this.buttonShowAllChromatograms.ButtonClick += new System.EventHandler(this.buttonShowAllChromatograms_ButtonClick);
             // 
             // statusSequences
-            //  
-            resources.ApplyResources(this.statusSequences, "statusSequences");
+            // 
             this.statusSequences.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.statusSequences.Name = "statusSequences";
+            resources.ApplyResources(this.statusSequences, "statusSequences");
             // 
             // statusPeptides
             // 
-            resources.ApplyResources(this.statusPeptides, "statusPeptides");
             this.statusPeptides.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.statusPeptides.Name = "statusPeptides";
+            resources.ApplyResources(this.statusPeptides, "statusPeptides");
             // 
             // statusPrecursors
             // 
-            resources.ApplyResources(this.statusPrecursors, "statusPrecursors");
             this.statusPrecursors.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.statusPrecursors.Name = "statusPrecursors";
+            resources.ApplyResources(this.statusPrecursors, "statusPrecursors");
             // 
             // statusIons
             // 
-            resources.ApplyResources(this.statusIons, "statusIons");
             this.statusIons.Name = "statusIons";
+            resources.ApplyResources(this.statusIons, "statusIons");
             // 
             // mainToolStrip
             // 
@@ -2991,7 +2995,7 @@ namespace pwiz.Skyline
             this.addGroupComparisonMenuItem.Name = "addGroupComparisonMenuItem";
             resources.ApplyResources(this.addGroupComparisonMenuItem, "addGroupComparisonMenuItem");
             this.addGroupComparisonMenuItem.Click += new System.EventHandler(this.addFoldChangeMenuItem_Click);
-           // 
+            // 
             // editGroupComparisonListMenuItem
             // 
             this.editGroupComparisonListMenuItem.Name = "editGroupComparisonListMenuItem";
@@ -3239,6 +3243,26 @@ namespace pwiz.Skyline
             this.aboutMenuItem.Name = "aboutMenuItem";
             resources.ApplyResources(this.aboutMenuItem, "aboutMenuItem");
             this.aboutMenuItem.Click += new System.EventHandler(this.aboutMenuItem_Click);
+            // 
+            // timePlotContextMenuItem
+            // 
+            this.timePlotContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.timeCorrelationContextMenuItem,
+            this.timeResidualsContextMenuItem});
+            this.timePlotContextMenuItem.Name = "timePlotContextMenuItem";
+            resources.ApplyResources(this.timePlotContextMenuItem, "timePlotContextMenuItem");
+            // 
+            // timeCorrelationContextMenuItem
+            // 
+            this.timeCorrelationContextMenuItem.Name = "timeCorrelationContextMenuItem";
+            resources.ApplyResources(this.timeCorrelationContextMenuItem, "timeCorrelationContextMenuItem");
+            this.timeCorrelationContextMenuItem.Click += new System.EventHandler(this.timeCorrelationContextMenuItem_Click);
+            // 
+            // timeResidualsContextMenuItem
+            // 
+            this.timeResidualsContextMenuItem.Name = "timeResidualsContextMenuItem";
+            resources.ApplyResources(this.timeResidualsContextMenuItem, "timeResidualsContextMenuItem");
+            this.timeResidualsContextMenuItem.Click += new System.EventHandler(this.timeResidualsContextMenuItem_Click);
             // 
             // SkylineWindow
             // 
@@ -3667,6 +3691,9 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem acceptProteinsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem editGroupComparisonListMenuItem;
         private System.Windows.Forms.ToolStripMenuItem addSmallMoleculePrecursorContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem timePlotContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem timeCorrelationContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem timeResidualsContextMenuItem;
     }
 }
 

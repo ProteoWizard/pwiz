@@ -2652,6 +2652,17 @@ namespace pwiz.Skyline
             GraphTypeRT graphType = RTGraphController.GraphType;
             if (graphType == GraphTypeRT.regression)
             {
+                menuStrip.Items.Insert(iInsert++, timePlotContextMenuItem);
+                if (timePlotContextMenuItem.DropDownItems.Count == 0)
+                {
+                    timePlotContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
+                    {
+                        timeCorrelationContextMenuItem,
+                        timeResidualsContextMenuItem
+                    });
+                }
+                timeCorrelationContextMenuItem.Checked = RTGraphController.PlotType == PlotTypeRT.correlation;
+                timeResidualsContextMenuItem.Checked = RTGraphController.PlotType == PlotTypeRT.residuals;
                 refineRTContextMenuItem.Checked = set.RTRefinePeptides;
                 menuStrip.Items.Insert(iInsert++, refineRTContextMenuItem);
                 predictionRTContextMenuItem.Checked = set.RTPredictorVisible;
@@ -2835,6 +2846,22 @@ namespace pwiz.Skyline
         {
             Settings.Default.RTGraphType = GraphTypeRT.regression.ToString();
             ShowGraphRetentionTime(true);
+            UpdateRetentionTimeGraph();
+        }
+
+        private void timeCorrelationContextMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowPlotType(PlotTypeRT.correlation);
+        }
+
+        private void timeResidualsContextMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowPlotType(PlotTypeRT.residuals);
+        }
+
+        public void ShowPlotType(PlotTypeRT plotTypeRT)
+        {
+            RTGraphController.PlotType = plotTypeRT;
             UpdateRetentionTimeGraph();
         }
 

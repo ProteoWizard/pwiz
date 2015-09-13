@@ -512,5 +512,8 @@
     <Setting Name="ExportEdcMass" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
+    <Setting Name="RTPlotType" Type="System.String" Scope="User">
+      <Value Profile="(Default)">correlation</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

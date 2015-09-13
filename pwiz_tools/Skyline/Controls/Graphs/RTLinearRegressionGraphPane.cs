@@ -34,7 +34,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    internal sealed class RTLinearRegressionGraphPane : SummaryGraphPane, IDisposable
+    public sealed class RTLinearRegressionGraphPane : SummaryGraphPane, IDisposable
     {
         public static ReplicateDisplay ShowReplicate
         {
@@ -58,9 +58,6 @@ namespace pwiz.Skyline.Controls.Graphs
             : base(graphSummary)
         {
             XAxis.Title.Text = Resources.RTLinearRegressionGraphPane_RTLinearRegressionGraphPane_Score;
-            YAxis.Title.Text = Resources.RTLinearRegressionGraphPane_RTLinearRegressionGraphPane_Measured_Time;
-            YAxis.Scale.MinAuto = false;
-            YAxis.Scale.Min = 0;
 
             Settings.Default.RTScoreCalculatorList.ListChanged += RTScoreCalculatorList_ListChanged;
         }
@@ -252,7 +249,7 @@ namespace pwiz.Skyline.Controls.Graphs
             GraphObjList.Clear();
 
             var data = Data;
-            if (data != null)
+            if (data != null && RTGraphController.PlotType == PlotTypeRT.correlation)
             {
                 // Force Axes to recalculate to ensure proper layout of labels
                 AxisChange(g);
@@ -636,23 +633,37 @@ namespace pwiz.Skyline.Controls.Graphs
 
             public PeptideDocumentIndex PeptideIndexFromPoint(RTLinearRegressionGraphPane graphPane, PointF point)
             {
-                int iRefined = 0, iOut = 0;
-                for (int i = 0; i < _peptidesIndexes.Count; i++)
+                var regression = ResidualsRegression;
+                if (RTGraphController.PlotType == PlotTypeRT.correlation)
+                    regression = null;
+                if (RTGraphController.PlotType == PlotTypeRT.correlation || regression != null)
                 {
-                    if (_outlierIndexes != null && _outlierIndexes.Contains(i))
+                    int iRefined = 0, iOut = 0;
+                    for (int i = 0; i < _peptidesIndexes.Count; i++)
                     {
-                        if (graphPane.PointIsOver(point, _scoresOutliers[iOut], _timesOutliers[iOut]))
-                            return _peptidesIndexes[i];
-                        iOut++;
-                    }
-                    else if (_scoresRefined != null && _timesRefined != null)
-                    {
-                        if (graphPane.PointIsOver(point, _scoresRefined[iRefined], _timesRefined[iRefined]))
-                            return _peptidesIndexes[i];
-                        iRefined++;
+                        if (_outlierIndexes != null && _outlierIndexes.Contains(i))
+                        {
+                            if (PointIsOverEx(graphPane, point, regression, _scoresOutliers[iOut], _timesOutliers[iOut]))
+                                return _peptidesIndexes[i];
+                            iOut++;
+                        }
+                        else if (_scoresRefined != null && _timesRefined != null)
+                        {
+                            if (PointIsOverEx(graphPane, point, regression, _scoresRefined[iRefined], _timesRefined[iRefined]))
+                                return _peptidesIndexes[i];
+                            iRefined++;
+                        }
                     }
                 }
                 return null;
+            }
+
+            private bool PointIsOverEx(RTLinearRegressionGraphPane graphPane, PointF point,
+                RetentionTimeRegression regression, double x, double y)
+            {
+                if (regression != null)
+                    y = GetResidual(regression, x, y);
+                return graphPane.PointIsOver(point, x, y);
             }
 
             private bool PointFromPeptide(PeptideDocNode nodePeptide, out double score, out double time)
@@ -711,6 +722,20 @@ namespace pwiz.Skyline.Controls.Graphs
             public void Graph(GraphPane graphPane, PeptideDocNode nodeSelected)
             {
                 graphPane.CurveList.Clear();
+                if (RTGraphController.PlotType == PlotTypeRT.correlation)
+                    GraphCorrelation(graphPane, nodeSelected);
+                else
+                    GraphResiduals(graphPane, nodeSelected);
+            }
+
+            private void GraphCorrelation(GraphPane graphPane, PeptideDocNode nodeSelected)
+            {
+                graphPane.YAxis.Title.Text = Resources.RTLinearRegressionGraphPane_RTLinearRegressionGraphPane_Measured_Time;
+                if (graphPane.YAxis.Scale.MinAuto)
+                {
+                    graphPane.YAxis.Scale.MinAuto = false;
+                    graphPane.YAxis.Scale.Min = 0;
+                }
 
                 double scoreSelected, timeSelected;
                 if (PointFromPeptide(nodeSelected, out scoreSelected, out timeSelected))
@@ -754,6 +779,79 @@ namespace pwiz.Skyline.Controls.Graphs
                     curveOut.Symbol.Border.IsVisible = false;
                     curveOut.Symbol.Fill = new Fill(COLOR_OUTLIERS);
                 }
+            }
+
+            private void GraphResiduals(GraphPane graphPane, PeptideDocNode nodeSelected)
+            {
+                if (!graphPane.YAxis.Scale.MinAuto && graphPane.ZoomStack.Count == 0)
+                {
+                    graphPane.YAxis.Scale.MinAuto = true;
+                    graphPane.YAxis.Scale.MaxAuto = true;
+                }
+
+                var regression = ResidualsRegression;
+                if (regression == null)
+                    return;
+
+                graphPane.YAxis.Title.Text = ResidualsLabel;
+
+                double scoreSelected, timeSelected;
+                if (PointFromPeptide(nodeSelected, out scoreSelected, out timeSelected))
+                {
+                    timeSelected = GetResidual(regression, scoreSelected, timeSelected);
+
+                    Color colorSelected = GraphSummary.ColorSelected;
+                    var curveOut = graphPane.AddCurve(null, new[] { scoreSelected }, new[] { timeSelected },
+                                                      colorSelected, SymbolType.Diamond);
+                    curveOut.Line.IsVisible = false;
+                    curveOut.Symbol.Fill = new Fill(colorSelected);
+                    curveOut.Symbol.Size = 8f;
+                }
+
+                string labelPoints = _refine ? Resources.GraphData_Graph_Peptides_Refined : Resources.GraphData_Graph_Peptides;
+                var curve = graphPane.AddCurve(labelPoints, _scoresRefined, GetResiduals(regression, _scoresRefined, _timesRefined),
+                                               Color.Black, SymbolType.Diamond);
+                curve.Line.IsVisible = false;
+                curve.Symbol.Border.IsVisible = false;
+                curve.Symbol.Fill = new Fill(COLOR_REFINED);
+
+                if (_scoresOutliers != null)
+                {
+                    var curveOut = graphPane.AddCurve(Resources.GraphData_Graph_Outliers, _scoresOutliers, 
+                                                      GetResiduals(regression, _scoresOutliers, _timesOutliers),
+                                                      Color.Black, SymbolType.Diamond);
+                    curveOut.Line.IsVisible = false;
+                    curveOut.Symbol.Border.IsVisible = false;
+                    curveOut.Symbol.Fill = new Fill(COLOR_OUTLIERS);
+                }
+            }
+
+            private RetentionTimeRegression ResidualsRegression
+            {
+                get { return _regressionPredict ?? _regressionRefined ?? _regressionAll; }
+            }
+
+            private string ResidualsLabel
+            {
+                get
+                {
+                    return _regressionPredict != null
+                        ? Resources.GraphData_GraphResiduals_Time_from_Prediction
+                        : Resources.GraphData_GraphResiduals_Time_from_Regression;
+                }
+            }
+
+            private double[] GetResiduals(RetentionTimeRegression regression, double[] scores, double[] times)
+            {
+                var residualsRefined = new double[times.Length];
+                for (int i = 0; i < residualsRefined.Length; i++)
+                    residualsRefined[i] = GetResidual(regression, scores[i], times[i]);
+                return residualsRefined;
+            }
+
+            private double GetResidual(RetentionTimeRegression regression, double score, double time)
+            {
+                return time - regression.Conversion.GetY(score);
             }
 
             private static void GraphRegression(GraphPane graphPane,
@@ -870,7 +968,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
     }
 
-    internal sealed class PeptideDocumentIndex
+    public sealed class PeptideDocumentIndex
     {
         public PeptideDocumentIndex(PeptideDocNode docNode, int indexDoc)
         {
