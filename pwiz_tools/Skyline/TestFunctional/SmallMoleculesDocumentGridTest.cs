@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Controls.Databinding;
