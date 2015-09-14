@@ -22,6 +22,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -382,32 +383,38 @@ namespace SkylineNightly
         /// <summary>
         /// Post data to the given link URL.
         /// </summary>
-        private static void PostToLink(string link, string postData)
+        private void PostToLink(string link, string postData)
         {
-//            var client = new WebClient { Encoding = Encoding.UTF8 };
-//            string reply = client.UploadString(link, postData);
-//            Console.WriteLine(reply);
-
-            string javaScript = string.Format(
-@"<script type=""text/javascript"">
-function submitForm()
-{{
-    document.getElementById(""my_form"").submit();
-}}
-window.onload = submitForm;
-</script>
-<form id=""my_form"" action=""{0}"" method=""post"" enctype=""multipart/form-data"" style=""visibility: hidden;"">
-<textarea name=""xml"">{1}</textarea>
-</form>", // Not L10N
-                link, WebUtility.HtmlEncode(postData));
-
-            string filePath = Path.GetTempFileName() + ".html"; // Not L10N
-            File.WriteAllText(filePath, javaScript);
-            Process.Start(filePath);
-
-            // Allow time for browser to load file.
-            Thread.Sleep(30000);
-            File.Delete(filePath);
+            Log("Posting results to " + link); // Not L10N
+            for (var retry = 5; retry > 0; retry--)
+            {
+                try
+                {
+                    var client = new HttpClient();
+                    var content = new MultipartFormDataContent { { new StringContent(postData), "xml" } }; // Not L10N
+                    var result = client.PostAsync(link, content);
+                    if (result == null)
+                    {
+                        Log("no response"); // Not L10N
+                    }
+                    else
+                    {
+                        if (result.Result.IsSuccessStatusCode)
+                            return;
+                        Log(result.Result.ToString());
+                    }
+                }
+                catch (Exception e)
+                {
+                    Log(e.ToString());
+                }
+                if (retry > 1)
+                {
+                    Thread.Sleep(30000);
+                    Log("Retrying post"); // Not L10N
+                }
+            }
+            Log("Failed to post results"); // Not L10N
         }
 
         private static string GetNightlyDir()
@@ -475,6 +482,8 @@ window.onload = submitForm;
 
         private void Log(string message)
         {
+            if (_logFile == null)
+                return;
             var time = DateTime.Now;
             File.AppendAllText(_logFile, string.Format(
                 "[{0}:{1}:{2}] {3}",
