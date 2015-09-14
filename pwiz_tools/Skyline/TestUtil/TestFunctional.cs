@@ -493,9 +493,9 @@ namespace pwiz.SkylineTestUtil
             var result =  string.Join(", ", OpenForms.Select(form => string.Format("{0} ({1})", form.GetType().Name, GetTextForForm(form))));
             if (SkylineWindow.Document != null)
             {
-                var state = string.Join(",", SkylineWindow.Document.NonLoadedStateDescriptions);
+                var state = string.Join("\", \"", SkylineWindow.Document.NonLoadedStateDescriptions);
                 if (!string.IsNullOrEmpty(state))
-                   result += " Also, document is not fully loaded: " + state;
+                   result += " Also, document is not fully loaded: \"" + state + "\"";
             }
             return result;
         }
