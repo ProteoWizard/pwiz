@@ -90,6 +90,7 @@ namespace pwiz.Skyline.Model
         public ProteinSpecType AcceptProteinType { get; set; }
         public bool AcceptModified { get; set; }
         public bool RemoveRepeatedPeptides { get; set; }
+        public int? MinPrecursorsPerPeptide { get; set; }
         public int? MinTransitionsPepPrecursor { get; set; }
         public IsotopeLabelType RefineLabelType { get; set; }
         public bool AddLabelType { get; set; }
@@ -243,6 +244,7 @@ namespace pwiz.Skyline.Model
                                            SrmSettingsChangeMonitor progressMonitor)
         {
             var listPeptides = new List<PeptideDocNode>();
+            int minPrecursors = MinPrecursorsPerPeptide ?? 0;
             foreach (PeptideDocNode nodePep in nodePepGroup.Children)
             {
                 if (progressMonitor != null)
@@ -295,6 +297,8 @@ namespace pwiz.Skyline.Model
                 nodePepRefined = Refine(nodePepRefined, document, bestResultIndex, acceptedCharges);
                 // Always remove peptides if all precursors have been removed by refinement
                 if (!ReferenceEquals(nodePep, nodePepRefined) && nodePepRefined.Children.Count == 0)
+                    continue;
+                if (nodePepRefined.Children.Count < minPrecursors)
                     continue;
 
                 if (includedPeptides != null)

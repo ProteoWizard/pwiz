@@ -108,6 +108,17 @@ namespace pwiz.Skyline.Model
         public static readonly IonType[] ALL_TYPES =
             {IonType.y, IonType.b, IonType.z, IonType.c, IonType.x, IonType.a};
 
+        public static readonly int[] ALL_TYPE_ORDERS;
+
+        static Transition()
+        {
+            ALL_TYPE_ORDERS = new int[ALL_TYPES.Length];
+            for (int i = 0; i < ALL_TYPES.Length; i++)
+            {
+                ALL_TYPE_ORDERS[(int) ALL_TYPES[i]] = i;
+            }
+        }
+
         public static bool IsNTerminal(IonType type)
         {
             return type == IonType.a || type == IonType.b || type == IonType.c || type == IonType.precursor;

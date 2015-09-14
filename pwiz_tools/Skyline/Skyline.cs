@@ -2127,6 +2127,12 @@ namespace pwiz.Skyline
             ModifyDocument(Resources.SkylineWindow_removeEmptyProteinsMenuItem_Click_Remove_empty_proteins, refinementSettings.Refine); 
         }
 
+        private void removeEmptyPeptidesMenuItem_Click(object sender, EventArgs e)
+        {
+            var refinementSettings = new RefinementSettings { MinPrecursorsPerPeptide = 1 };
+            ModifyDocument(Resources.SkylineWindow_removeEmptyPeptidesMenuItem_Click_Remove_empty_peptides, refinementSettings.Refine);
+        }
+
         private void removeDuplicatePeptidesMenuItem_Click(object sender, EventArgs e)
         {
             var refinementSettings = new RefinementSettings { RemoveDuplicatePeptides = true };

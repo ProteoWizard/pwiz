@@ -396,6 +396,8 @@ namespace pwiz.Skyline.Model.Databinding
                     columnsToRemove.Add(PropertyPath.Root.Property("Sequence"));
                     columnsToRemove.Add(PropertyPath.Root.Property("PreviousAa"));
                     columnsToRemove.Add(PropertyPath.Root.Property("NextAa"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("RetentionTimeCalculatorScore"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("DocumentLocation"));
                     if (docHasOnlyCustomIons)
                     {
                         // Peptide-oriented fields that make no sense in a small molecule context
@@ -426,6 +428,13 @@ namespace pwiz.Skyline.Model.Databinding
                         columnsToRemove.Add(PropertyPath.Root.Property("IonName"));
                         columnsToRemove.Add(PropertyPath.Root.Property("IonFormula"));
                     }
+                    columnsToRemove.Add(PropertyPath.Root.Property("TransitionCount"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("DeclusteringPotential"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("LibraryScore1"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("LibraryScore2"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("LibraryScore3"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("IsDecoy"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("DecoyMzShift"));
                     columnsToRemove.Add(PropertyPath.Root.Property("ExplicitDriftTimeMsec"));
                     columnsToRemove.Add(PropertyPath.Root.Property("ExplicitDriftTimeHighEnergyOffsetMsec"));
                     columnsToRemove.Add(PropertyPath.Root.Property("ExplicitCompensationVoltage"));
@@ -436,16 +445,18 @@ namespace pwiz.Skyline.Model.Databinding
                 }
                 else if (columnDescriptor.PropertyType == typeof(Entities.Transition))
                 {
+                    columnsToRemove.Add(PropertyPath.Root.Property("FragmentIonType"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("FragmentIonOrdinal"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("CleavageAa"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("LossNeutralMass"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("IsDecoy"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("ProductDecoyMzShift"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("IsotopeDistIndex"));
+
                     if (docHasOnlyCustomIons)
                     {
-                        columnsToRemove.Add(PropertyPath.Root.Property("FragmentIonType"));  // Not interesting - always "custom"
                         columnsToRemove.Add(PropertyPath.Root.Property("FragmentIon")); // Not interesting - only one product per precursor for small molecules
-                        columnsToRemove.Add(PropertyPath.Root.Property("FragmentIonOrdinal")); // Doesn't mean anything for non-peptides
-                        columnsToRemove.Add(PropertyPath.Root.Property("CleavageAa")); // Doesn't mean anything for non-peptides
-                        columnsToRemove.Add(PropertyPath.Root.Property("LossNeutralMass")); // Doesn't mean anything for non-peptides
                         columnsToRemove.Add(PropertyPath.Root.Property("Losses")); // Doesn't mean anything for non-peptides
-                        columnsToRemove.Add(PropertyPath.Root.Property("IsDecoy")); // Doesn't mean anything for non-peptides
-                        columnsToRemove.Add(PropertyPath.Root.Property("ProductDecoyMzShift")); // Doesn't mean anything for non-peptides
                     }
                     if (!docHasCustomIons)
                     {

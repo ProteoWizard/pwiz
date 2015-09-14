@@ -7387,9 +7387,6 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="Icojam-Blueberry-Basic-Arrow-left" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Icojam-Blueberry-Basic-Arrow-left.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="LibraryManager_LoadBackground_Updating_settings_for_loaded_libraries" xml:space="preserve">
-    <value>Updating settings for loaded libraries</value>
-  </data>
   <data name="GraphFullScan_CreateDriftTimeHeatmap_Drift_Time__ms_" xml:space="preserve">
     <value>Drift Time (ms)</value>
   </data>
@@ -8698,5 +8695,11 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   </data>
   <data name="GraphData_GraphResiduals_Time_from_Regression" xml:space="preserve">
     <value>Time from Regression</value>
+  </data>
+  <data name="SkylineWindow_removeEmptyPeptidesMenuItem_Click_Remove_empty_peptides" xml:space="preserve">
+    <value>Remove empty peptides</value>
+  </data>
+  <data name="LibraryManager_LoadBackground_Updating_library_settings_for__0_" xml:space="preserve">
+    <value>Updating library settings for {0}</value>
   </data>
 </root>

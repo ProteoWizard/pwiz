@@ -141,6 +141,9 @@ namespace pwiz.Skyline
             this.timePeptideComparisonContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.linearRegressionContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.schedulingContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.timePlotContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.timeCorrelationContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.timeResidualsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.rtValueMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.allRTValueContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.timeRTValueContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -278,6 +281,7 @@ namespace pwiz.Skyline
             this.insertTransitionListMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.refineToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removeEmptyProteinsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.removeEmptyPeptidesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removeDuplicatePeptidesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removeRepeatedPeptidesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removeMissingResultsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -428,9 +432,6 @@ namespace pwiz.Skyline
             this.issuesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator29 = new System.Windows.Forms.ToolStripSeparator();
             this.aboutMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.timePlotContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.timeCorrelationContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.timeResidualsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenuTreeNode.SuspendLayout();
             this.contextMenuSpectrum.SuspendLayout();
             this.contextMenuChromatogram.SuspendLayout();
@@ -1226,6 +1227,26 @@ namespace pwiz.Skyline
             this.schedulingContextMenuItem.Name = "schedulingContextMenuItem";
             resources.ApplyResources(this.schedulingContextMenuItem, "schedulingContextMenuItem");
             this.schedulingContextMenuItem.Click += new System.EventHandler(this.schedulingMenuItem_Click);
+            // 
+            // timePlotContextMenuItem
+            // 
+            this.timePlotContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.timeCorrelationContextMenuItem,
+            this.timeResidualsContextMenuItem});
+            this.timePlotContextMenuItem.Name = "timePlotContextMenuItem";
+            resources.ApplyResources(this.timePlotContextMenuItem, "timePlotContextMenuItem");
+            // 
+            // timeCorrelationContextMenuItem
+            // 
+            this.timeCorrelationContextMenuItem.Name = "timeCorrelationContextMenuItem";
+            resources.ApplyResources(this.timeCorrelationContextMenuItem, "timeCorrelationContextMenuItem");
+            this.timeCorrelationContextMenuItem.Click += new System.EventHandler(this.timeCorrelationContextMenuItem_Click);
+            // 
+            // timeResidualsContextMenuItem
+            // 
+            this.timeResidualsContextMenuItem.Name = "timeResidualsContextMenuItem";
+            resources.ApplyResources(this.timeResidualsContextMenuItem, "timeResidualsContextMenuItem");
+            this.timeResidualsContextMenuItem.Click += new System.EventHandler(this.timeResidualsContextMenuItem_Click);
             // 
             // rtValueMenuItem
             // 
@@ -2186,6 +2207,7 @@ namespace pwiz.Skyline
             // 
             this.refineToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.removeEmptyProteinsMenuItem,
+            this.removeEmptyPeptidesMenuItem,
             this.removeDuplicatePeptidesMenuItem,
             this.removeRepeatedPeptidesMenuItem,
             this.removeMissingResultsMenuItem,
@@ -2208,6 +2230,12 @@ namespace pwiz.Skyline
             this.removeEmptyProteinsMenuItem.Name = "removeEmptyProteinsMenuItem";
             resources.ApplyResources(this.removeEmptyProteinsMenuItem, "removeEmptyProteinsMenuItem");
             this.removeEmptyProteinsMenuItem.Click += new System.EventHandler(this.removeEmptyProteinsMenuItem_Click);
+            // 
+            // removeEmptyPeptidesMenuItem
+            // 
+            this.removeEmptyPeptidesMenuItem.Name = "removeEmptyPeptidesMenuItem";
+            resources.ApplyResources(this.removeEmptyPeptidesMenuItem, "removeEmptyPeptidesMenuItem");
+            this.removeEmptyPeptidesMenuItem.Click += new System.EventHandler(this.removeEmptyPeptidesMenuItem_Click);
             // 
             // removeDuplicatePeptidesMenuItem
             // 
@@ -3244,26 +3272,6 @@ namespace pwiz.Skyline
             resources.ApplyResources(this.aboutMenuItem, "aboutMenuItem");
             this.aboutMenuItem.Click += new System.EventHandler(this.aboutMenuItem_Click);
             // 
-            // timePlotContextMenuItem
-            // 
-            this.timePlotContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.timeCorrelationContextMenuItem,
-            this.timeResidualsContextMenuItem});
-            this.timePlotContextMenuItem.Name = "timePlotContextMenuItem";
-            resources.ApplyResources(this.timePlotContextMenuItem, "timePlotContextMenuItem");
-            // 
-            // timeCorrelationContextMenuItem
-            // 
-            this.timeCorrelationContextMenuItem.Name = "timeCorrelationContextMenuItem";
-            resources.ApplyResources(this.timeCorrelationContextMenuItem, "timeCorrelationContextMenuItem");
-            this.timeCorrelationContextMenuItem.Click += new System.EventHandler(this.timeCorrelationContextMenuItem_Click);
-            // 
-            // timeResidualsContextMenuItem
-            // 
-            this.timeResidualsContextMenuItem.Name = "timeResidualsContextMenuItem";
-            resources.ApplyResources(this.timeResidualsContextMenuItem, "timeResidualsContextMenuItem");
-            this.timeResidualsContextMenuItem.Click += new System.EventHandler(this.timeResidualsContextMenuItem_Click);
-            // 
             // SkylineWindow
             // 
             resources.ApplyResources(this, "$this");
@@ -3694,6 +3702,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem timePlotContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem timeCorrelationContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem timeResidualsContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem removeEmptyPeptidesMenuItem;
     }
 }
 

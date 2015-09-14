@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Controls.Databinding;
@@ -55,11 +56,11 @@ namespace pwiz.SkylineTestFunctional
 
             CheckDocumentGridAndColumns(mixedSky,
                 Resources.SkylineViewContext_GetDocumentGridRowSources_Precursors,
-                4, 21);
+                4, 15);
 
             CheckDocumentGridAndColumns(mixedSky,
                 Resources.SkylineViewContext_GetDocumentGridRowSources_Peptides,
-                2, 16);
+                2, 14);
 
         }
 
@@ -73,11 +74,11 @@ namespace pwiz.SkylineTestFunctional
 
             CheckDocumentGridAndColumns(smallMoleculeSky,
                 Resources.SkylineViewContext_GetDocumentGridRowSources_Precursors,
-                1, 19);
+                1, 14);
 
             CheckDocumentGridAndColumns(smallMoleculeSky,
                 Resources.SkylineViewContext_GetDocumentGridRowSources_Peptides,
-                1, 12);
+                1, 10);
 
         }
 
@@ -91,11 +92,11 @@ namespace pwiz.SkylineTestFunctional
 
             CheckDocumentGridAndColumns(peptideSky,
                             Resources.SkylineViewContext_GetDocumentGridRowSources_Precursors,
-                            3, 18);
+                            3, 12);
 
             CheckDocumentGridAndColumns(peptideSky,
                             Resources.SkylineViewContext_GetDocumentGridRowSources_Peptides,
-                            1, 12);
+                            1, 10);
 
         }
 
@@ -112,7 +113,14 @@ namespace pwiz.SkylineTestFunctional
             var documentGrid = WaitForOpenForm<DocumentGridForm>();
             RunUI(() => documentGrid.ChooseView(viewName));
             WaitForCondition(() => (documentGrid.RowCount == rowCount)); // Let it initialize
-            WaitForCondition(() => (documentGrid.ColumnCount == colCount)); // Let it initialize
+            int iteration = 0;
+            WaitForCondition(() =>
+            {
+                bool result = documentGrid.ColumnCount == colCount;
+                if (!result && iteration++ > 9)
+                    Assert.AreNotEqual(colCount, documentGrid.ColumnCount);   // Put breakpoint on this line, if you have changed columns and need to update the numbers
+                return result;
+            }); // Let it initialize
 
             var colProductIonFormula = documentGrid.FindColumn(PropertyPath.Parse("ProductIonFormula"));
             var colFragmentIon = documentGrid.FindColumn(PropertyPath.Parse("FragmentIonType"));

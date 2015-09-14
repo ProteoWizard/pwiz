@@ -654,6 +654,9 @@
   <data name="TotalBackgroundMs1">
     <value>Total Background MS1</value>
   </data>
+  <data name="TransitionCount">
+    <value>Transition Count</value>
+  </data>
   <data name="Transition">
     <value>Transition</value>
   </data>

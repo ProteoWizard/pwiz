@@ -104,6 +104,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        public int TransitionCount
+        {
+            get { return DocNode.TransitionCount; }
+        }
+
         private bool IsSmallMolecule()
         {
             return DocNode.TransitionGroup.IsCustomIon;

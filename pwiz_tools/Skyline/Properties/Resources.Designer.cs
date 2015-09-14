@@ -12972,11 +12972,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Updating settings for loaded libraries.
+        ///   Looks up a localized string similar to Updating library settings for {0}.
         /// </summary>
-        public static string LibraryManager_LoadBackground_Updating_settings_for_loaded_libraries {
+        public static string LibraryManager_LoadBackground_Updating_library_settings_for__0_ {
             get {
-                return ResourceManager.GetString("LibraryManager_LoadBackground_Updating_settings_for_loaded_libraries", resourceCulture);
+                return ResourceManager.GetString("LibraryManager_LoadBackground_Updating_library_settings_for__0_", resourceCulture);
             }
         }
         
@@ -21587,6 +21587,15 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_removeDuplicatePeptidesMenuItem_Click_Remove_duplicate_peptides {
             get {
                 return ResourceManager.GetString("SkylineWindow_removeDuplicatePeptidesMenuItem_Click_Remove_duplicate_peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove empty peptides.
+        /// </summary>
+        public static string SkylineWindow_removeEmptyPeptidesMenuItem_Click_Remove_empty_peptides {
+            get {
+                return ResourceManager.GetString("SkylineWindow_removeEmptyPeptidesMenuItem_Click_Remove_empty_peptides", resourceCulture);
             }
         }
         

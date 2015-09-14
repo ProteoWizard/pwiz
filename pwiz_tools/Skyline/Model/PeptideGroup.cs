@@ -117,6 +117,9 @@ namespace pwiz.Skyline.Model
 
     public class FastaSequence : PeptideGroup
     {
+        public static readonly char[] OPEN_MOD = { '[', '{', '(' }; // Not L10N
+        public static readonly char[] CLOSE_MOD = { ']', '}', ')' }; // Not L10N
+
         public const string PEPTIDE_SEQUENCE_SEPARATOR = "::"; // Not L10N
         public static readonly Regex RGX_ALL = new Regex(@"(\[.*?\]|\{.*?\}|\(.*?\))"); // Not L10N
         public static readonly Regex RGX_LIGHT = new Regex(@"\[.*?\]"); // Not L10N
@@ -152,9 +155,9 @@ namespace pwiz.Skyline.Model
 
         public static string StripModifications(string seq, Regex rgx)
         {
-            // If the sequence begins with anything other than an AA, 
+            // If the sequence begins with anything other than an AA or mod, 
             // it is not a valid modified sequence.
-            if(seq.Length == 0 || !AminoAcid.IsExAA(seq[0]))
+            if(seq.Length == 0 || (!AminoAcid.IsExAA(seq[0]) && !OPEN_MOD.Contains(seq[0])))
                 return seq;
             return rgx.Replace(seq, string.Empty);
         }

@@ -132,19 +132,24 @@ namespace pwiz.Skyline.Model.Lib
                         return false;
                     }
                     libraries = libraries.ChangeLibraries(list.ToArray());
-                    ProgressStatus status = new ProgressStatus(Resources.LibraryManager_LoadBackground_Updating_settings_for_loaded_libraries);
-                    UpdateProgress(status);
-                    try
+                    using (var settingsChangeMonitor = new SrmSettingsChangeMonitor(
+                            new LoadMonitor(this, container, null), Resources.LibraryManager_LoadBackground_Updating_library_settings_for__0_, container, docCurrent))
                     {
-                        docNew = docCurrent.ChangeSettings(docCurrent.Settings.ChangePeptideSettings(
-                            docCurrent.Settings.PeptideSettings.ChangeLibraries(libraries)));
+                        try
+                        {
+                            docNew = docCurrent.ChangeSettings(docCurrent.Settings.ChangePeptideSettings(
+                                docCurrent.Settings.PeptideSettings.ChangeLibraries(libraries)), settingsChangeMonitor);
+                        }
+                        catch (InvalidDataException x)
+                        {
+                            UpdateProgress(new ProgressStatus(string.Empty).ChangeErrorException(x));
+                            break;
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            docNew = docCurrent;    // Just continue
+                        }
                     }
-                    catch (InvalidDataException x)
-                    {
-                        UpdateProgress(status.ChangeErrorException(x));
-                        break;
-                    }
-                    UpdateProgress(status.Complete());
                 }
                 while (!CompleteProcessing(container, docNew, docCurrent));
             }
@@ -204,6 +209,15 @@ namespace pwiz.Skyline.Model.Lib
                 _loadedLibraries.Remove(name);
 
                 ForDocumentLibraryReload(container, name);
+            }
+        }
+
+        public void ReleaseLibrary(LibrarySpec spec)
+        {
+            lock (_loadedLibraries)
+            {
+                string name = spec.Name;
+                _loadedLibraries.Remove(name);
             }
         }
 

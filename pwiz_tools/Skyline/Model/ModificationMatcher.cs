@@ -37,9 +37,6 @@ namespace pwiz.Skyline.Model
 
         private const int DEFAULT_ROUNDING_DIGITS = 6;
 
-        private static readonly char[] OPEN_PAREN = { '[', '{', '(' }; // Not L10N
-        private static readonly char[] CLOSE_PAREN = { ']', '}', ')' }; // Not L10N
-
         public void CreateMatches(SrmSettings settings, IEnumerable<string> sequences,
             MappedList<string, StaticMod> defSetStatic, MappedList<string, StaticMod> defSetHeavy)
         {
@@ -94,7 +91,7 @@ namespace pwiz.Skyline.Model
         private IEnumerable<AAModInfo> EnumerateSequenceInfos(string seq, bool includeUnmod)
         {
             string aas = FastaSequence.StripModifications(seq);
-            bool isSpecificHeavy = OPEN_PAREN.All(paren => aas.Length > seq.Count(c => c == paren));
+            bool isSpecificHeavy = FastaSequence.OPEN_MOD.All(paren => aas.Length > seq.Count(c => c == paren));
             int indexAA = 0;
             int indexAAInSeq = 0;
             int i = 0;
@@ -102,11 +99,11 @@ namespace pwiz.Skyline.Model
             {
                 var aa = aas[indexAA];
                 int indexBracket = i + 1;
-                if (indexBracket < seq.Length && (OPEN_PAREN.Contains(seq[indexBracket]))) // Not L10N
+                if (indexBracket < seq.Length && (FastaSequence.OPEN_MOD.Contains(seq[indexBracket]))) // Not L10N
                 {
                     char openBracket = seq[indexBracket];
                     bool isHeavy = openBracket == '{'; // Not L10N
-                    char closeBracket = CLOSE_PAREN[OPEN_PAREN.IndexOf(c => c == openBracket)];
+                    char closeBracket = FastaSequence.CLOSE_MOD[FastaSequence.OPEN_MOD.IndexOf(c => c == openBracket)];
                     int indexStart = indexBracket + 1;
                     int indexClose = seq.IndexOf(closeBracket, indexBracket);
                     string mod = seq.Substring(indexStart, indexClose - indexStart);
@@ -174,7 +171,7 @@ namespace pwiz.Skyline.Model
                 // If the next character is a bracket, continue using the same amino
                 // acid and leave i where it is.
                 int iNext = i + 1;
-                if (iNext >= seq.Length || !OPEN_PAREN.Contains(seq[iNext])) // Not L10N
+                if (iNext >= seq.Length || !FastaSequence.OPEN_MOD.Contains(seq[iNext])) // Not L10N
                 {
                     i = indexAAInSeq = iNext;
                     indexAA++;
@@ -258,10 +255,10 @@ namespace pwiz.Skyline.Model
             {
                 var aa = aas[indexAA];
                 int indexBracket = i + 1;
-                if (indexBracket < seq.Length && (OPEN_PAREN.Contains(seq[indexBracket]))) // Not L10N
+                if (indexBracket < seq.Length && (FastaSequence.OPEN_MOD.Contains(seq[indexBracket]))) // Not L10N
                 {
                     char openBracket = seq[indexBracket];
-                    char closeBracket = CLOSE_PAREN[OPEN_PAREN.IndexOf(c => c == openBracket)];
+                    char closeBracket = FastaSequence.CLOSE_MOD[FastaSequence.OPEN_MOD.IndexOf(c => c == openBracket)];
                     int indexStart = indexBracket + 1;
                     int indexClose = seq.IndexOf(closeBracket, indexBracket);
                     string mod = seq.Substring(indexStart, indexClose - indexStart);
@@ -288,7 +285,7 @@ namespace pwiz.Skyline.Model
                 // If the next character is a bracket, continue using the same amino
                 // acid and leave i where it is.
                 int iNext = i + 1;
-                if (iNext >= seq.Length || !OPEN_PAREN.Contains(seq[iNext])) // Not L10N
+                if (iNext >= seq.Length || !FastaSequence.OPEN_MOD.Contains(seq[iNext])) // Not L10N
                 {
                     indexAA++;
                     i++;
@@ -305,9 +302,9 @@ namespace pwiz.Skyline.Model
             for (int i = startIndex + 1; i < sequence.Length; i++)
             {
                 char c = sequence[i];
-                if (parenExpected && !OPEN_PAREN.Contains(c))
+                if (parenExpected && !FastaSequence.OPEN_MOD.Contains(c))
                     return result.ToString();
-                parenExpected = CLOSE_PAREN.Contains(c);
+                parenExpected = FastaSequence.CLOSE_MOD.Contains(c);
                 result.Append(c);
             }
             return result.ToString();

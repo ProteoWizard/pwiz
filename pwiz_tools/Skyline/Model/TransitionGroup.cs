@@ -101,10 +101,7 @@ namespace pwiz.Skyline.Model
         public static int CompareTransitions(TransitionDocNode node1, TransitionDocNode node2)
         {
             Transition tran1 = node1.Transition, tran2 = node2.Transition;
-            // TODO: To generate the same ordering as GetTransitions, some attention
-            //       would have to be paid to the ordering in the SrmSettings.TransitionSettings
-            //       At least this groups the types, and orders by ion ordinal...
-            int diffType = ((int) tran1.IonType) - ((int) tran2.IonType);
+            int diffType = GetOrder(tran1.IonType) - GetOrder(tran2.IonType);
             if (diffType != 0)
                 return diffType;
             int diffCharge = tran1.Charge - tran2.Charge;
@@ -114,6 +111,12 @@ namespace pwiz.Skyline.Model
             if (diffOffset != 0)
                 return diffOffset;
             return Comparer<double>.Default.Compare(node1.LostMass, node2.LostMass);
+        }
+
+        private static int GetOrder(IonType ionType)
+        {
+            int i = (int) ionType;
+            return i < 0 ? i : Transition.ALL_TYPE_ORDERS[i];
         }
 
         public TransitionDocNode[] GetMatchingTransitions(SrmSettings settings,
