@@ -232,6 +232,19 @@ rule mz5-build ( itemname )
     }
 }
 
+
+if ! [ modules.peek : NT ]
+{
+    PREDEF_CHECKS = 
+    # starting with gcc 4.8, gcc is extremely verbose about unused typedefs; heavily used in Boost concept checks
+    [ predef-check "BOOST_COMP_GNUC >= 4.8" : : <cxxflags>-Wno-unused-local-typedefs ]
+
+    # starting with gcc 4.9, gcc offers colored diagnostic messages, helpful when looking for an elusive "error" message in a sea of warning spam
+    [ predef-check "BOOST_COMP_GNUC >= 4.9" : : <cxxflags>-fdiagnostics-color=always ]
+    ;
+}
+
+
 project pwiz 
     : requirements 
         <include>$(PWIZ_ROOT_PATH)
@@ -274,12 +287,8 @@ project pwiz
         # warning: '__cur' might be used uninitialized in this function 
         <toolset>gcc:<cxxflags>-Wno-uninitialized
 
-        # starting with gcc 4.8, gcc is extremely verbose about unused typedefs; heavily used in Boost concept checks
-        [ predef-check "BOOST_COMP_GNUC >= 4.8" : : <cxxflags>-Wno-unused-local-typedefs ]
-
-        # starting with gcc 4.9, gcc offers colored diagnostic messages, helpful when looking for an elusive "error" message in a sea of warning spam
-        [ predef-check "BOOST_COMP_GNUC >= 4.9" : : <cxxflags>-fdiagnostics-color=always ]
-
+        $(PREDEF_CHECKS)
+        
         # special Cygwin gcc-3.4.4 hack
         # linker "multiple definition" error on inclusion of boost-1.34.1 filesystem headers  
         <toolset>gcc-3.4.4:<linkflags>-Wl,--allow-multiple-definition
