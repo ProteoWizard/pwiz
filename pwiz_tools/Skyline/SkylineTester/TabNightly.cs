@@ -254,7 +254,7 @@ namespace SkylineTester
                 ? @"https://svn.code.sf.net/p/proteowizard/code/trunk/pwiz"
                 : MainWindow.NightlyBranchUrl.Text;
             var buildRoot = Path.Combine(MainWindow.GetNightlyRoot(), "pwiz");
-            TabBuild.CreateBuildCommands(branchUrl, buildRoot, architectureList, true, false, true);
+            TabBuild.CreateBuildCommands(branchUrl, buildRoot, architectureList, true, false, false); // Just build Skyline.exe without testing it - that's about to happen anyway
 
             MainWindow.AddTestRunner("offscreen=on quality=on pass0=on pass1=on loop=-1 random=off" + (MainWindow.NightlyRunPerfTests.Checked ? " perftests=on" : "") + (MainWindow.NightlyTestSmallMolecules.Checked ? " testsmallmolecules=on" : ""));
             MainWindow.CommandShell.Add("# Nightly finished.");
