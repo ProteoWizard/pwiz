@@ -459,9 +459,13 @@ namespace SkylineNightly
             return revision;
         }
 
+        /// <summary>
+        /// Delete a file or directory, with quite a lot of retry on the expectation that 
+        /// it's probably the TortoiseSVN windows explorer icon plugin getting in your way
+        /// </summary>
         private void Delete(string fileOrDir)
         {
-            for (int i = 0; i < 5; i++)
+            for (int i = 60; i >0; i--)
             {
                 try
                 {
@@ -472,10 +476,11 @@ namespace SkylineNightly
                 }
                 catch (Exception ex)
                 {
-                    Log("Problem deleting " + fileOrDir + ": " + ex.Message);
-                    if (i == 4)
+                    if (i == 1)
                         throw;
-                    Thread.Sleep(1000);
+                    Log("Retrying failed delete of " + fileOrDir + ": " + ex.Message);
+                    var random = new Random();
+                    Thread.Sleep(1000 + random.Next(0, 5000)); // A little stutter-step to avoid unlucky sync with TortoiseSVN icon update
                 }
             }
         }
