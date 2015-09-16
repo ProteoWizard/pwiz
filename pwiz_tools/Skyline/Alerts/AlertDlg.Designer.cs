@@ -29,31 +29,18 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(AlertDlg));
-            this.labelMessage = new System.Windows.Forms.Label();
-            this.panelMessageLabel = new System.Windows.Forms.Panel();
             this.buttonPanel = new System.Windows.Forms.FlowLayoutPanel();
             this.btnMoreInfo = new System.Windows.Forms.Button();
-            this.panelMessageBox = new System.Windows.Forms.Panel();
             this.tbxDetail = new System.Windows.Forms.TextBox();
-            this.panelMessageLabel.SuspendLayout();
+            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this.textBox1 = new System.Windows.Forms.TextBox();
             this.buttonPanel.SuspendLayout();
-            this.panelMessageBox.SuspendLayout();
+            this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // labelMessage
-            // 
-            resources.ApplyResources(this.labelMessage, "labelMessage");
-            this.labelMessage.Name = "labelMessage";
-            // 
-            // panelMessageLabel
-            // 
-            this.panelMessageLabel.BackColor = System.Drawing.SystemColors.Window;
-            this.panelMessageLabel.Controls.Add(this.labelMessage);
-            resources.ApplyResources(this.panelMessageLabel, "panelMessageLabel");
-            this.panelMessageLabel.Name = "panelMessageLabel";
             // 
             // buttonPanel
             // 
+            this.buttonPanel.BackColor = System.Drawing.SystemColors.Control;
             this.buttonPanel.Controls.Add(this.btnMoreInfo);
             resources.ApplyResources(this.buttonPanel, "buttonPanel");
             this.buttonPanel.Name = "buttonPanel";
@@ -65,48 +52,54 @@
             this.btnMoreInfo.UseVisualStyleBackColor = true;
             this.btnMoreInfo.Click += new System.EventHandler(this.btnMoreInfo_Click);
             // 
-            // panelMessageBox
-            // 
-            this.panelMessageBox.Controls.Add(this.panelMessageLabel);
-            this.panelMessageBox.Controls.Add(this.buttonPanel);
-            resources.ApplyResources(this.panelMessageBox, "panelMessageBox");
-            this.panelMessageBox.Name = "panelMessageBox";
-            // 
             // tbxDetail
             // 
             resources.ApplyResources(this.tbxDetail, "tbxDetail");
             this.tbxDetail.Name = "tbxDetail";
             this.tbxDetail.ReadOnly = true;
             // 
+            // tableLayoutPanel1
+            // 
+            this.tableLayoutPanel1.BackColor = System.Drawing.SystemColors.Window;
+            resources.ApplyResources(this.tableLayoutPanel1, "tableLayoutPanel1");
+            this.tableLayoutPanel1.Controls.Add(this.buttonPanel, 0, 1);
+            this.tableLayoutPanel1.Controls.Add(this.tbxDetail, 0, 2);
+            this.tableLayoutPanel1.Controls.Add(this.textBox1, 0, 0);
+            this.tableLayoutPanel1.GrowStyle = System.Windows.Forms.TableLayoutPanelGrowStyle.FixedSize;
+            this.tableLayoutPanel1.Name = "tableLayoutPanel1";
+            // 
+            // textBox1
+            // 
+            this.textBox1.BackColor = System.Drawing.SystemColors.Window;
+            this.textBox1.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            resources.ApplyResources(this.textBox1, "textBox1");
+            this.textBox1.Name = "textBox1";
+            this.textBox1.ReadOnly = true;
+            // 
             // AlertDlg
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this.panelMessageBox);
-            this.Controls.Add(this.tbxDetail);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+            this.Controls.Add(this.tableLayoutPanel1);
             this.KeyPreview = true;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "AlertDlg";
             this.ShowInTaskbar = false;
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.MessageDlg_KeyDown);
-            this.panelMessageLabel.ResumeLayout(false);
-            this.panelMessageLabel.PerformLayout();
             this.buttonPanel.ResumeLayout(false);
-            this.panelMessageBox.ResumeLayout(false);
+            this.tableLayoutPanel1.ResumeLayout(false);
+            this.tableLayoutPanel1.PerformLayout();
             this.ResumeLayout(false);
-            this.PerformLayout();
 
         }
 
         #endregion
 
-        private System.Windows.Forms.Label labelMessage;
-        private System.Windows.Forms.Panel panelMessageLabel;
         private System.Windows.Forms.FlowLayoutPanel buttonPanel;
         private System.Windows.Forms.Button btnMoreInfo;
-        private System.Windows.Forms.Panel panelMessageBox;
         private System.Windows.Forms.TextBox tbxDetail;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
+        private System.Windows.Forms.TextBox textBox1;
     }
 }

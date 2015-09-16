@@ -32,15 +32,18 @@ namespace pwiz.Skyline.Alerts
     /// </summary>
     public partial class AlertDlg : FormEx
     {
-        private const int MAX_HEIGHT = 500;
-        private readonly int _originalFormHeight;
-        private readonly int _originalMessageHeight;
+        private readonly float _originalDetailHeight;
+
+        public AlertDlg() : this("Alert dialog for Forms designer") // Not L10N
+        {
+        }
 
         public AlertDlg(string message)
         {
             InitializeComponent();
-            _originalFormHeight = Height;
-            _originalMessageHeight = labelMessage.Height;
+            _originalDetailHeight = tableLayoutPanel1.RowStyles[2].Height;
+            tableLayoutPanel1.RowStyles[2].Height = 0;
+            tbxDetail.Visible = false;
             Message = message;
             btnMoreInfo.Parent.Controls.Remove(btnMoreInfo);
         }
@@ -59,15 +62,8 @@ namespace pwiz.Skyline.Alerts
 
         public string Message
         {
-            get { return labelMessage.Text; }
-            set
-            {
-                labelMessage.Text = value;
-                int formGrowth = Math.Max(labelMessage.Height - _originalMessageHeight*3, 0);
-                formGrowth = Math.Max(formGrowth, 0);
-                formGrowth = Math.Min(formGrowth, MAX_HEIGHT);
-                Height = _originalFormHeight + formGrowth;
-            }
+            get { return textBox1.Text; }
+            set { textBox1.Text = value; }
         }
 
         public string DetailMessage 
@@ -157,8 +153,8 @@ namespace pwiz.Skyline.Alerts
         {
             if (!tbxDetail.Visible)
             {
-                Height += tbxDetail.Height;
-                tbxDetail.Dock = DockStyle.Bottom;
+                Height += 100;
+                tableLayoutPanel1.RowStyles[2].Height = _originalDetailHeight;
                 tbxDetail.Visible = true;
             }
         }
