@@ -42,6 +42,7 @@ lib pwiz_analysis_spectrum_processing_basic
         SpectrumList_TitleMaker.cpp
 		SpectrumList_PrecursorRefine.cpp
         SpectrumList_ZeroSamplesFilter.cpp
+        SpectrumList_LockmassRefiner.cpp
         SpectrumList_3D.cpp
 		MS2NoiseFilter.cpp
 		MS2Deisotoper.cpp

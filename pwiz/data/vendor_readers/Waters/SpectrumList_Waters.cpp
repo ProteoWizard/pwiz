@@ -72,10 +72,20 @@ PWIZ_API_DECL size_t SpectrumList_Waters::find(const string& id) const
 
 PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBinaryData) const
 {
-    return spectrum(index, getBinaryData ? DetailLevel_FullData : DetailLevel_FullMetadata);
+    return spectrum(index, getBinaryData ? DetailLevel_FullData : DetailLevel_FullMetadata, 0.0, 0.0);
 }
 
 PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLevel detailLevel) const
+{
+    return spectrum(index, detailLevel, 0.0, 0.0);
+}
+
+PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBinaryData, double lockmassMz, double lockmassTolerance) const
+{
+    return spectrum(index, getBinaryData ? DetailLevel_FullData : DetailLevel_FullMetadata, lockmassMz, lockmassTolerance);
+}
+
+PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLevel detailLevel, double lockmassMz, double lockmassTolerance) const
 {
     boost::lock_guard<boost::mutex> lock(readMutex);  // lock_guard will unlock mutex when out of scope or when exception thrown (during destruction)
     if (index >= size_)
@@ -283,8 +293,10 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
         }
 
         vector<float> masses, intensities;
-        if (detailLevel != DetailLevel_FullMetadata)
+        if (detailLevel != DetailLevel_FullMetadata && lockmassMz == 0.0)
             rawdata_->ScanReader.readSpectrum(ie.function, ie.scan, masses, intensities);
+        else
+            rawdata_->ScanReader.readSpectrum(ie.function, ie.scan, (float)lockmassMz, (float)lockmassTolerance, masses, intensities);
 
 	    vector<double> mzArray(masses.begin(), masses.end());
         vector<double> intensityArray(intensities.begin(), intensities.end());
@@ -438,6 +450,12 @@ PWIZ_API_DECL void SpectrumList_Waters::createIndex()
             spectrumType == MS_constant_neutral_gain_spectrum)
             continue;
 
+        int scanCount = rawdata_->Info.GetScansInFunction(function);
+
+        const vector<MSScanStats>& scanStats = rawdata_->GetAllScanStatsForFunction(function);
+        if (scanStats.size() != scanCount)
+            throw runtime_error("[SpectrumList_Waters::createIndex] scanStats.size() not equal to scanCount");
+
         if (!config_.combineIonMobilitySpectra && rawdata_->IonMobilityByFunctionIndex()[function])
         {
             const CompressedDataCluster& cdc = rawdata_->GetCompressedDataClusterForBlock(function, 0);
@@ -445,18 +463,16 @@ PWIZ_API_DECL void SpectrumList_Waters::createIndex()
 	        cdc.getNumberOfBlocks(numBlocks);
             cdc.getScansInBlock(numScansInBlock);
 
+            if (scanCount != numBlocks)
+                throw runtime_error("[SpectrumList_Waters::createIndex] numBlocks from CDC is not equal to scanCount from MassLynxRaw");
+
             scanTimeToFunctionAndBlockMap_.reserve(numBlocks);
 
             for (int i=0; i < numBlocks; ++i)
-                scanTimeToFunctionAndBlockMap_[rawdata_->GetScanStats(function, i).rt * 60].push_back(make_pair(function, i));
+                scanTimeToFunctionAndBlockMap_[scanStats[i].rt * 60].push_back(make_pair(function, i));
         }
         else
         {
-            int scanCount = rawdata_->Info.GetScansInFunction(function);
-            const vector<MSScanStats>& scanStats = rawdata_->GetAllScanStatsForFunction(function);
-            if (scanStats.size() != scanCount)
-                throw runtime_error("[SpectrumList_Waters::createIndex] scanStats.size() not equal to scanCount");
-
             for (int i=0; i < scanCount; ++i)
                 functionAndScanByRetentionTime[scanStats[i].rt] = make_pair(function, i);
         }
@@ -528,6 +544,8 @@ const SpectrumIdentity& SpectrumList_Waters::spectrumIdentity(size_t index) cons
 size_t SpectrumList_Waters::find(const std::string& id) const {return 0;}
 SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBinaryData) const {return SpectrumPtr();}
 SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLevel detailLevel) const { return SpectrumPtr(); }
+SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBinaryData, double lockmassMz, double lockmassTolerance) const { return SpectrumPtr(); }
+SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLevel detailLevel, double lockmassMz, double lockmassTolerance) const { return SpectrumPtr(); }
 PWIZ_API_DECL pwiz::analysis::Spectrum3DPtr SpectrumList_Waters::spectrum3d(double scanStartTime, const boost::icl::interval_set<double>& driftTimeRanges) const { return pwiz::analysis::Spectrum3DPtr(); }
 
 } // detail

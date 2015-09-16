@@ -484,4 +484,66 @@ namespace seems
             }
         }
     }
+
+    public class LockmassRefinerProcessor : ProcessingBase
+    {
+        Panel panel = processingPanels.lockmassRefinerPanel;
+        private double mz;
+        private double tolerance;
+
+        public LockmassRefinerProcessor()
+        {
+            mz = 0;
+            tolerance = 0.1;
+            processingPanels.lockmassMzTextBox.TextChanged += new EventHandler(optionsChanged);
+            processingPanels.lockmassToleranceTextBox.TextChanged += new EventHandler(optionsChanged);
+        }
+
+        void optionsChanged(object sender, EventArgs e)
+        {
+            if (panel.Tag != this)
+                return;
+
+            mz = Convert.ToDouble(processingPanels.lockmassMzTextBox.Text);
+            tolerance = Convert.ToDouble(processingPanels.lockmassToleranceTextBox.Text);
+
+            OnOptionsChanged(sender, e);
+        }
+
+        public override string ToString()
+        {
+            return String.Format("Lockmass Refiner (m/z {0} ± {1}", mz, tolerance);
+        }
+
+        public override ProcessingMethod ToProcessingMethod()
+        {
+            ProcessingMethod pm = new ProcessingMethod();
+            pm.userParams.Add(new UserParam("mz", mz.ToString(), "SeeMS"));
+            pm.userParams.Add(new UserParam("tolerance", tolerance.ToString(), "SeeMS"));
+            return pm;
+        }
+
+        public override CVID CVID { get { return CVID.MS_peak_picking; } }
+
+        public override ProcessableListType ProcessList<ProcessableListType>(ProcessableListType innerList)
+        {
+            if (innerList is SpectrumList)
+                return new SpectrumList_LockmassRefiner(innerList as SpectrumList, mz, tolerance) as ProcessableListType;
+            else //if( innerList is ChromatogramList )
+                return innerList;
+        }
+
+        public override Panel OptionsPanel
+        {
+            get
+            {
+                panel.Tag = null;
+                processingPanels.lockmassMzTextBox.Text = mz.ToString();
+                processingPanels.lockmassToleranceTextBox.Text = tolerance.ToString();
+                panel.Tag = this;
+
+                return panel;
+            }
+        }
+    }
 }

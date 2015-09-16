@@ -41,6 +41,7 @@
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Sorter.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Smoother.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_PeakPicker.hpp"
+#include "pwiz/analysis/spectrum_processing/SpectrumList_LockmassRefiner.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_ChargeStateCalculator.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_3D.hpp"
 #include "pwiz/analysis/chromatogram_processing/ChromatogramList_XICGenerator.hpp"
@@ -289,6 +290,21 @@ public ref class SpectrumList_PeakPicker : public msdata::SpectrumList
                             PeakDetector^ algorithm,
                             bool preferVendorPeakPicking,
                             System::Collections::Generic::IEnumerable<int>^ msLevelsToPeakPick);
+
+    static bool accept(msdata::SpectrumList^ inner);
+};
+
+
+/// <summary>
+/// SpectrumList implementation to refine m/z accuracy using external lockmass scans.
+/// </summary>
+public ref class SpectrumList_LockmassRefiner : public msdata::SpectrumList
+{
+    DEFINE_INTERNAL_LIST_WRAPPER_CODE(SpectrumList_LockmassRefiner, pwiz::analysis::SpectrumList_LockmassRefiner)
+
+    public:
+
+    SpectrumList_LockmassRefiner(msdata::SpectrumList^ inner, double lockmassMz, double lockmassTolerance);
 
     static bool accept(msdata::SpectrumList^ inner);
 };

@@ -51,6 +51,8 @@ class PWIZ_API_DECL SpectrumList_Waters : public SpectrumListBase
     virtual size_t find(const string& id) const;
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData) const;
     virtual SpectrumPtr spectrum(size_t index, DetailLevel detailLevel) const;
+    virtual SpectrumPtr spectrum(size_t index, bool getBinaryData, double lockmassMz, double lockmassTolerance) const;
+    virtual SpectrumPtr spectrum(size_t index, DetailLevel detailLevel, double lockmassMz, double lockmassTolerance) const;
 
     virtual pwiz::analysis::Spectrum3DPtr spectrum3d(double scanStartTime, const boost::icl::interval_set<double>& driftTimeRanges) const;
 

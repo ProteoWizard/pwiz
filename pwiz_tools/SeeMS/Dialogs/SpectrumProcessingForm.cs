@@ -264,6 +264,13 @@ namespace seems
             OnProcessingChanged( sender, e );
         }
 
+        private void lockmassRefinerToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            currentSpectrum.ProcessingList.Add(new LockmassRefinerProcessor());
+            selectIndex(processingListView.VirtualListSize++);
+            OnProcessingChanged(sender, e);
+        }
+
         void processingListView_MouseClick( object sender, MouseEventArgs e )
         {
             ListViewItem item = processingListView.GetItemAt( e.X, e.Y );

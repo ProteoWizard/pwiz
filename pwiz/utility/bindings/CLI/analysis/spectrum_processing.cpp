@@ -325,6 +325,21 @@ bool SpectrumList_PeakPicker::accept(msdata::SpectrumList^ inner)
 
 
 
+SpectrumList_LockmassRefiner::SpectrumList_LockmassRefiner(msdata::SpectrumList^ inner, double lockmassMz, double lockmassTolerance)
+    : msdata::SpectrumList(0)
+{
+    base_ = new b::SpectrumList_LockmassRefiner(*inner->base_, lockmassMz, lockmassTolerance);
+    msdata::SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
+}
+
+bool SpectrumList_LockmassRefiner::accept(msdata::SpectrumList^ inner)
+{
+    return b::SpectrumList_LockmassRefiner::accept(*inner->base_);
+}
+
+
+
+
 SpectrumList_ChargeStateCalculator::SpectrumList_ChargeStateCalculator(
                                    msdata::SpectrumList^ inner,
                                    bool overrideExistingChargeState,

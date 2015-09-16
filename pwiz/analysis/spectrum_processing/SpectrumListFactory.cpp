@@ -36,6 +36,7 @@
 #include "pwiz/analysis/spectrum_processing/SpectrumList_PrecursorRefine.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_MZWindow.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_MZRefiner.hpp"
+#include "pwiz/analysis/spectrum_processing/SpectrumList_LockmassRefiner.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_MetadataFixer.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_TitleMaker.hpp"
 #include "pwiz/analysis/spectrum_processing/PrecursorMassFilter.hpp"
@@ -760,6 +761,28 @@ UsageInfo usage_mzRefine = { "mzRefiner input1.pepXML input2.mzid [msLevels=<1->
 "It does not use any 3rd party (vendor DLL) code. "
 "Recommended Scores and thresholds: MS-GF:SpecEValue,-1e-10 (<1e-10); MyriMatch:MVH,35- (>35); xcorr,3- (>3)" };
 
+SpectrumListPtr filterCreator_lockmassRefiner(const MSData& msd, const string& carg, pwiz::util::IterationListenerRegistry* ilr)
+{
+    const string mzToken("mz=");
+    const string toleranceToken("tol=");
+
+    string arg = carg;
+    double lockmassMz = parseKeyValuePair<double>(arg, mzToken, 0);
+    double lockmassTolerance = parseKeyValuePair<double>(arg, toleranceToken, 1.0);
+    bal::trim(arg);
+    if (!arg.empty())
+        throw runtime_error("[lockmassRefiner] unhandled text remaining in argument string: \"" + arg + "\"");
+
+    if (lockmassMz <= 0 || lockmassTolerance <= 0)
+    {
+        cerr << "lockmassMz and lockmassTolerance must be postive real numbers" << endl;
+        return SpectrumListPtr();
+    }
+
+    return SpectrumListPtr(new SpectrumList_LockmassRefiner(msd.run.spectrumListPtr, lockmassMz, lockmassTolerance));
+}
+UsageInfo usage_lockmassRefiner = { "mz=<real> tol=<real (1.0 Daltons)>", "For Waters data, adjusts m/z values according to the specified lockmass m/z and tolerance. For other data, currently does nothing." };
+
 SpectrumListPtr filterCreator_precursorRefine(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
 {
     return SpectrumListPtr(new SpectrumList_PrecursorRefine(msd));
@@ -1360,6 +1383,7 @@ JumpTableEntry jumpTable_[] =
     {"chargeState", usage_chargeState, filterCreator_chargeState},
     {"precursorRecalculation", usage_precursorRecalculation, filterCreator_precursorRecalculation},
     {"mzRefiner", usage_mzRefine, filterCreator_mzRefine},
+    {"lockmassRefiner", usage_lockmassRefiner, filterCreator_lockmassRefiner},
     {"precursorRefine", usage_precursorRefine, filterCreator_precursorRefine},
     {"peakPicking", usage_nativeCentroid, filterCreator_nativeCentroid},
     {"scanNumber", usage_scanNumber, filterCreator_scanNumber},
