@@ -28,7 +28,6 @@ using Microsoft.Win32;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Results
@@ -44,60 +43,6 @@ namespace pwiz.Skyline.Model.Results
         private const string EXE_GROUP_FILE_EXTRACTOR = "GroupFileExtractor.exe";
         private const string KEY_PROTEIN_PILOT = @"SOFTWARE\Classes\groFile\shell\open\command";
         // ReSharper restore NonLocalizedString
-
-        public static string CreateTempFileSubstitute(string filePath, int sampleIndex,
-            LoadingTooSlowlyException slowlyException, ILoadMonitor loader, ref ProgressStatus status)
-        {
-            string tempFileSubsitute = Path.GetTempFileName();
-            // Bruker CompassXport may append .mzML to the name we give it
-            string tempFileMzml = tempFileSubsitute + ".mzML"; // Not L10N
-
-            try
-            {
-                switch (slowlyException.WorkAround)
-                {
-                    case LoadingTooSlowlyException.Solution.local_file:
-                        loader.UpdateProgress(
-                            status = status.ChangeMessage(
-                                string.Format(Resources.VendorIssueHelper_CreateTempFileSubstitute_Local_copy_work_around_for__0__,
-                                              Path.GetFileName(filePath))));
-                        File.Copy(filePath, tempFileSubsitute, true);
-                        break;
-                    case LoadingTooSlowlyException.Solution.bruker_conversion:
-                        ConvertBrukerToMzml(filePath, tempFileSubsitute, loader, status);
-                        loader.UpdateProgress(status = status.ChangeMessage(
-                            string.Format(Resources.SkylineWindow_ImportResults_Import__0__,    // Bruker prefers the conversion go unnoted
-                                          filePath)));
-                        if (File.Exists(tempFileMzml))
-                        {
-                            // Handle the case where bruker refuses to export to the name it is given
-                            // and insists on appending .mzML
-                            FileEx.SafeDelete(tempFileSubsitute, true);
-                            tempFileSubsitute = tempFileMzml;
-                        }
-                        break;
-                    // This is a legacy solution that should no longer ever be invoked.  The mzWiff.exe has
-                    // been removed from the installation.
-                    // TODO: This code should be removed also.
-                    case LoadingTooSlowlyException.Solution.mzwiff_conversion:
-                        loader.UpdateProgress(
-                            status = status.ChangeMessage(
-                                string.Format(Resources.VendorIssueHelper_CreateTempFileSubstitute_Convert_to_mzXML_work_around_for__0__,
-                                              Path.GetFileName(filePath))));
-                        ConvertWiffToMzxml(filePath, sampleIndex, tempFileSubsitute, slowlyException, loader);
-                        break;
-                }
-
-                return tempFileSubsitute;
-            }
-            catch (Exception)
-            {
-                FileEx.SafeDelete(tempFileSubsitute, true);
-                if (slowlyException.WorkAround == LoadingTooSlowlyException.Solution.bruker_conversion)
-                    FileEx.SafeDelete(tempFileMzml, true);
-                throw;
-            }
-        }
 
         public static List<string> ConvertPilotFiles(IList<string> inputFiles, IProgressMonitor progress, ProgressStatus status)
         {
@@ -224,38 +169,6 @@ namespace pwiz.Skyline.Model.Results
             }
             progress.UpdateProgress(status.ChangePercentComplete(100));
             return inputFilesPilotConverted;
-        }
-
-        private static void ConvertWiffToMzxml(string filePathWiff, int sampleIndex,
-            string outputPath, LoadingTooSlowlyException slowlyException, IProgressMonitor monitor)
-        {
-            if (AdvApi.GetPathFromProgId("Analyst.ChromData") == null) // Not L10N
-            {
-                var message = TextUtil.LineSeparate(string.Format(Resources.VendorIssueHelper_ConvertWiffToMzxml_The_file__0__cannot_be_imported_by_the_AB_SCIEX_WiffFileDataReader_library_in_a_reasonable_time_frame_1_F02_min,
-                                                                  filePathWiff, slowlyException.PredictedMinutes),
-                                                    string.Format(Resources.VendorIssueHelper_ConvertWiffToMzxml_To_work_around_this_issue_requires_Analyst_to_be_installed_on_the_computer_running__0__,
-                                                                  Program.Name),
-                                                    Resources.VendorIssueHelper_ConvertWiffToMzxml_Please_install_Analyst__or_run_this_import_on_a_computure_with_Analyst_installed);
-                throw new IOException(message);
-            }
-
-            // The WIFF file needs to be on the local file system for the conversion
-            // to work.  So, just in case it is on a network share, copy it to the
-            // temp directory.
-            string tempFileSource = Path.GetTempFileName();
-            try
-            {
-                File.Copy(filePathWiff, tempFileSource, true);
-                string filePathScan = GetWiffScanPath(filePathWiff);
-                if (File.Exists(filePathScan))
-                    File.Copy(filePathScan, GetWiffScanPath(tempFileSource));
-                ConvertLocalWiffToMzxml(tempFileSource, sampleIndex, outputPath, monitor);
-            }
-            finally
-            {
-                FileEx.SafeDelete(tempFileSource, true);
-                FileEx.SafeDelete(GetWiffScanPath(tempFileSource), true);
-            }
         }
 
         private static string GetWiffScanPath(string filePathWiff)
@@ -434,25 +347,5 @@ namespace pwiz.Skyline.Model.Results
                     filePathBruker), string.Empty, sbOut.ToString()));
             }
         }
-    }
-
-    internal class LoadingTooSlowlyException : IOException
-    {
-        public enum Solution { local_file, mzwiff_conversion, bruker_conversion }
-
-        public LoadingTooSlowlyException(Solution solution, ProgressStatus status, double predictedMinutes, double maximumMinutes)
-            : base(string.Format(Resources.LoadingTooSlowlyException_LoadingTooSlowlyException_Data_import_expected_to_consume__0__minutes_with_maximum_of__1__mintues,
-                                 predictedMinutes, maximumMinutes))
-        {
-            WorkAround = solution;
-            Status = status;
-            PredictedMinutes = predictedMinutes;
-            MaximumMinutes = maximumMinutes;
-        }
-
-        public Solution WorkAround { get; private set; }
-        public ProgressStatus Status { get; private set; }
-        public double PredictedMinutes { get; private set; }
-        public double MaximumMinutes { get; private set; }
     }
 }

@@ -2694,6 +2694,17 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to This import appears to be taking longer than expected. If importing from a network drive, consider canceling this import, copying to local disk and retrying..
+        /// </summary>
+        public static string ChromatogramDataProvider_GetChromatogram_This_import_appears_to_be_taking_longer_than_expected__If_importing_from_a_network_drive__consider_canceling_this_import__copying_to_local_disk_and_retrying_ {
+            get {
+                return ResourceManager.GetString("ChromatogramDataProvider_GetChromatogram_This_import_appears_to_be_taking_longer_" +
+                        "than_expected__If_importing_from_a_network_drive__consider_canceling_this_import" +
+                        "__copying_to_local_disk_and_retrying_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Bad chromatogram data for charge {0} state of peptide {1}.
         /// </summary>
         public static string ChromatogramExporter_Export_Bad_chromatogram_data_for_charge__0__state_of_peptide__1_ {

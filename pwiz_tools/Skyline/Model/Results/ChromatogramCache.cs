@@ -581,12 +581,12 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public static void Build(SrmDocument document, ChromatogramCache cacheRecalc,
-            string cachePath, IList<MsDataFileUri> listResultPaths, ProgressStatus status, ILoadMonitor loader,
+            string cachePath, MsDataFileUri msDataFileUri, ProgressStatus status, ILoadMonitor loader,
             Action<ChromatogramCache, Exception> complete)
         {
             try
             {
-                var builder = new ChromCacheBuilder(document, cacheRecalc, cachePath, listResultPaths, loader, status, complete);
+                var builder = new ChromCacheBuilder(document, cacheRecalc, cachePath, msDataFileUri, loader, status, complete);
                 builder.BuildCache();
             }
             catch (Exception x)
