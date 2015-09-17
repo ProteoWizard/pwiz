@@ -136,7 +136,6 @@
     <Compile Include="SystemUtil\ProcessStreamReader.cs" />
     <Compile Include="SystemUtil\ProcessRunner.cs" />
     <Compile Include="SystemUtil\ProgressStatus.cs" />
-    <Compile Include="SystemUtil\QueueWorker.cs" />
     <Compile Include="SystemUtil\TaskbarProgress.cs" />
   </ItemGroup>
   <ItemGroup>

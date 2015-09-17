@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
-using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -72,7 +71,7 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromFileInfo FileInfo { get; private set; }
 
-        public ProgressStatus Status { get; protected set; }
+        public ProgressStatus Status { get; private set; }
 
         public ChromatogramLoadingStatus LoadingStatus { get { return (ChromatogramLoadingStatus) Status; } }
 
@@ -119,12 +118,18 @@ namespace pwiz.Skyline.Model.Results
 
         /// <summary>
         /// If the predicted time to load this file ever exceeds this threshold,
-        /// a warning is shown.
+        /// a <see cref="LoadingTooSlowlyException"/> is thrown.
         /// </summary>
         private readonly double _readMaxMinutes;
 
+        /// <summary>
+        /// Possible work-around for a <see cref="LoadingTooSlowlyException"/>
+        /// </summary>
+        private readonly LoadingTooSlowlyException.Solution _slowLoadWorkAround;
+
         public ChromatogramDataProvider(MsDataFileImpl dataFile,
                                         ChromFileInfo fileInfo,
+                                        bool throwIfSlow,
                                         ProgressStatus status,
                                         int startPercent,
                                         int endPercent,
@@ -133,9 +138,23 @@ namespace pwiz.Skyline.Model.Results
         {
             _dataFile = dataFile;
 
-            if (_dataFile.IsThermoFile)
+            if (throwIfSlow)
             {
-                _readMaxMinutes = 4;
+                // Both WIFF files and Thermo Raw files have potential performance bugs
+                // that have work-arounds.  WIFF files tend to take longer to load early
+                // chromatograms, while Thermo files remain fairly consistent.
+                if (_dataFile.IsThermoFile)
+                {
+                    _readMaxMinutes = 4;
+                    _slowLoadWorkAround = LoadingTooSlowlyException.Solution.local_file;
+                }
+                // WIFF file issues have been fixed with new WIFF reader library, and mzWiff.exe
+                // has been removed from the installation.
+//                else if (_dataFile.IsABFile)
+//                {
+//                    _readMaxMinutes = 4;
+//                    _slowLoadWorkAround = LoadingTooSlowlyException.Solution.mzwiff_conversion;
+//                }
             }
 
             int len = dataFile.ChromatogramCount;
@@ -264,9 +283,7 @@ namespace pwiz.Skyline.Model.Results
                 double predictedMinutes = ExpectedReadDurationMinutes;
                 if (_readMaxMinutes > 0 && predictedMinutes > _readMaxMinutes)
                 {
-                    // TODO: This warning isn't checked in the command line version of Skyline.  Maybe we should do that.
-                    Status =
-                        Status.ChangeWarningMessage(Resources.ChromatogramDataProvider_GetChromatogram_This_import_appears_to_be_taking_longer_than_expected__If_importing_from_a_network_drive__consider_canceling_this_import__copying_to_local_disk_and_retrying_);
+                    throw new LoadingTooSlowlyException(_slowLoadWorkAround, Status, predictedMinutes, _readMaxMinutes);
                 }
             }
 

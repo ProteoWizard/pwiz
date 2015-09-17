@@ -1190,7 +1190,7 @@ namespace pwiz.Skyline.Model.Results
                     ChromatogramCache.Build(_document,
                                             _resultsClone._cacheRecalc,
                                             uncached.Value,
-                                            MsDataFileUri.Parse(uncached.Key),
+                                            new[] {MsDataFileUri.Parse(uncached.Key)},
                                             _status,
                                             _loader,
                                             FinishCacheBuild);

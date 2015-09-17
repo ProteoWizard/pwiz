@@ -57,8 +57,6 @@ namespace pwiz.Skyline.Model.Results
         private ChromGroups _chromGroups;
         private BlockWriter _blockWriter;
         private bool _isSrm;
-        private readonly object _disposeLock = new object();
-        private bool _isDisposing;
 
         private const int LOAD_PERCENT = 10;
         private const int BUILD_PERCENT = 70 - LOAD_PERCENT;
@@ -194,14 +192,6 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         private void ExtractChromatograms()
         {
-            lock (_disposeLock)
-            {
-                ExtractChromatogramsLocked();
-            }
-        }
-
-        private void ExtractChromatogramsLocked()
-        {
             // First read all of the spectra, building chromatogram time, intensity lists
             var fragmentTimeSharing = _spectra.HasSrmSpectra ? TimeSharing.single : TimeSharing.grouped;
             var chromMap = new ChromDataCollectorSet(ChromSource.fragment, fragmentTimeSharing, _allChromData, _blockWriter);
@@ -216,12 +206,6 @@ namespace pwiz.Skyline.Model.Results
 
             while (_spectra.NextSpectrum())
             {
-                if (_isDisposing)
-                {
-                    CompleteChromatograms(chromMaps);
-                    return;
-                }
-
                 UpdatePercentComplete();
 
                 if (_spectra.HasSrmSpectra)
@@ -586,17 +570,13 @@ namespace pwiz.Skyline.Model.Results
 
         public override void Dispose()
         {
-            _isDisposing = true;
-            lock (_disposeLock)
+            _spectra.Dispose();
+            _scanIdList = null;
+            _collectors = null;
+            if (_chromGroups != null)
             {
-                _spectra.Dispose();
-                _scanIdList = null;
-                _collectors = null;
-                if (_chromGroups != null)
-                {
-                    _chromGroups.Dispose();
-                    _chromGroups = null;
-                }
+                _chromGroups.Dispose();
+                _chromGroups = null;
             }
         }
 

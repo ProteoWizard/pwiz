@@ -163,19 +163,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 progressBarAllFiles.Value = status.PercentComplete;
             }
 
-            // Show warning message if necessary.
-            if (status.WarningMessage != null)
-            {
-                lblWarning.Text = status.WarningMessage;
-                lblWarning.Visible = true;
-                asyncGraph.Height = lblWarning.Top - 7;
-            }
-            else
-            {
-                lblWarning.Visible = false;
-                asyncGraph.Height = panelFileProgress.Top - 7;
-            }
-
             lblDuration.Text = _stopwatch.Elapsed.ToString(@"hh\:mm\:ss"); // Not L10N
         }
 

@@ -44,7 +44,6 @@ namespace pwiz.Skyline.Controls.Graphs
             this.panelFileProgress = new System.Windows.Forms.Panel();
             this.progressBarFile = new System.Windows.Forms.ProgressBar();
             this.lblFileName = new System.Windows.Forms.Label();
-            this.lblWarning = new System.Windows.Forms.Label();
             this.panelMultifileProgress.SuspendLayout();
             this.panel2.SuspendLayout();
             this.panelGraph.SuspendLayout();
@@ -107,7 +106,6 @@ namespace pwiz.Skyline.Controls.Graphs
             // panelGraph
             // 
             resources.ApplyResources(this.panelGraph, "panelGraph");
-            this.panelGraph.Controls.Add(this.lblWarning);
             this.panelGraph.Controls.Add(this.asyncGraph);
             this.panelGraph.Name = "panelGraph";
             // 
@@ -132,12 +130,6 @@ namespace pwiz.Skyline.Controls.Graphs
             // 
             resources.ApplyResources(this.lblFileName, "lblFileName");
             this.lblFileName.Name = "lblFileName";
-            // 
-            // lblWarning
-            // 
-            resources.ApplyResources(this.lblWarning, "lblWarning");
-            this.lblWarning.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.lblWarning.Name = "lblWarning";
             // 
             // AllChromatogramsGraph
             // 
@@ -179,6 +171,5 @@ namespace pwiz.Skyline.Controls.Graphs
         private System.Windows.Forms.Label lblFileName;
         private AsyncChromatogramsGraph asyncGraph;
         private System.Windows.Forms.Label lblDuration;
-        private System.Windows.Forms.Label lblWarning;
     }
 }

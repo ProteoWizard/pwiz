@@ -39,7 +39,6 @@ namespace pwiz.Common.SystemUtil
 
         public ProgressState State { get; private set; }
         public string Message { get; private set; }
-        public string WarningMessage { get; private set; }
         public int PercentComplete { get; private set; }
         public int ZoomedPercentComplete { get; private set; }
         public int PercentZoomStart { get; private set; }
@@ -165,11 +164,6 @@ namespace pwiz.Common.SystemUtil
         public ProgressStatus ChangeMessage(string prop)
         {
             return ChangeProp(ImClone(this), s => s.Message = prop);
-        }
-
-        public ProgressStatus ChangeWarningMessage(string prop)
-        {
-            return ChangeProp(ImClone(this), s => s.WarningMessage = prop);
         }
 
         public ProgressStatus Cancel()

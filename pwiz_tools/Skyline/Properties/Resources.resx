@@ -8702,7 +8702,4 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="LibraryManager_LoadBackground_Updating_library_settings_for__0_" xml:space="preserve">
     <value>Updating library settings for {0}</value>
   </data>
-  <data name="ChromatogramDataProvider_GetChromatogram_This_import_appears_to_be_taking_longer_than_expected__If_importing_from_a_network_drive__consider_canceling_this_import__copying_to_local_disk_and_retrying_" xml:space="preserve">
-    <value>This import appears to be taking longer than expected. If importing from a network drive, consider canceling this import, copying to local disk and retrying.</value>
-  </data>
 </root>

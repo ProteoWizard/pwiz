@@ -19,8 +19,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
@@ -39,29 +41,41 @@ namespace pwiz.Skyline.Model.Results
         // Lock on this to access these variables
         private readonly SrmDocument _document;
         private LibraryRetentionTimes _libraryRetentionTimes;
+        private int _currentFileIndex = -1;
         private FileBuildInfo _currentFileInfo;
 
         private readonly ChromatogramCache _cacheRecalc;
         
+        // Temporary file used as substitute for the current file for vendor-specific
+        // issues in file reading
+        private string _tempFileSubsitute;
+        // True if write thread was started before temporary file substitution was
+        // made
+        private bool _tempFileWriteStarted;
+
         // Lock on _chromDataSets to access these variables
-        private readonly QueueWorker<PeptideChromDataSets> _chromDataSets;
-        private readonly object _writeLock = new object();
+        private readonly List<PeptideChromDataSets> _chromDataSets = new List<PeptideChromDataSets>();
+        private bool _writerStarted;
+        private bool _writerCompleted;
+        private bool _readCompleted;
+        private bool _writerIsWaitingForChromDataSets;
+        private Exception _writeException;
 
         // Accessed only on the write thread
         private readonly RetentionTimePredictor _retentionTimePredictor;
         private readonly Dictionary<string, int> _dictSequenceToByteIndex = new Dictionary<string, int>();
 
-        private const int SCORING_THREADS = 4;
-        //private static readonly Log LOG = new Log<ChromCacheBuilder>();
-
         public ChromCacheBuilder(SrmDocument document, ChromatogramCache cacheRecalc,
-            string cachePath, MsDataFileUri msDataFilePath, ILoadMonitor loader, ProgressStatus status,
+            string cachePath, IList<MsDataFileUri> msDataFilePaths, ILoadMonitor loader, ProgressStatus status,
             Action<ChromatogramCache, Exception> complete)
             : base(cachePath, loader, status, complete)
         {
             _document = document;
             _cacheRecalc = cacheRecalc;
-            MSDataFilePath = msDataFilePath;
+            MSDataFilePaths = msDataFilePaths;
+
+            // Reserve an array for caching retention time alignment information, if needed
+            FileAlignmentIndices = new RetentionTimeAlignmentIndices[msDataFilePaths.Count];
 
             // Initialize retention time prediction
             _retentionTimePredictor = new RetentionTimePredictor(document.Settings.PeptideSettings.Prediction.RetentionTime);
@@ -82,31 +96,11 @@ namespace pwiz.Skyline.Model.Results
             }
             DetailedPeakFeatureCalculators = calcEnum.Cast<DetailedPeakFeatureCalculator>().ToArray();
             _listScoreTypes.AddRange(DetailedPeakFeatureCalculators.Select(c => c.GetType()));
-
-            string basename = MSDataFilePath.GetFileNameWithoutExtension();
-            var fileAlignments = _document.Settings.DocumentRetentionTimes.FileAlignments.Find(basename);
-            FileAlignmentIndices = new RetentionTimeAlignmentIndices(fileAlignments);
-
-            _chromDataSets = new QueueWorker<PeptideChromDataSets>(null, ScoreWriteChromDataSets);
-            _chromDataSets.RunAsync(SCORING_THREADS, "Scoring/writing", MAX_CHROM_READ_AHEAD); // Not L10N
         }
 
-        private void ScoreWriteChromDataSets(PeptideChromDataSets chromDataSets, int threadIndex)
-        {
-            // Score peaks.
-            GetPeptideRetentionTimes(chromDataSets);
-            chromDataSets.PickChromatogramPeaks();
-            StorePeptideRetentionTime(chromDataSets);
-
-            // Only one writer at a time.
-            lock (_writeLock)
-            {
-                WriteChromDataSets(chromDataSets);
-            }
-        }
-
-        private MsDataFileUri MSDataFilePath { get; set; }
-        private RetentionTimeAlignmentIndices FileAlignmentIndices { get; set; }
+        private IList<MsDataFileUri> MSDataFilePaths { get; set; }
+        private MsDataFileUri CurrentFilePath { get { return MSDataFilePaths[_currentFileIndex]; } }
+        private IList<RetentionTimeAlignmentIndices> FileAlignmentIndices { get; set; }
 
         private IList<DetailedPeakFeatureCalculator> DetailedPeakFeatureCalculators { get; set; }
 
@@ -119,9 +113,76 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        public override void Dispose()
+        {
+            RemoveTempFile();
+
+            base.Dispose();
+        }
+
+        private void RemoveTempFile()
+        {
+            if (_tempFileSubsitute != null)
+            {
+                FileEx.SafeDelete(_tempFileSubsitute, true);
+                _tempFileSubsitute = null;
+                _tempFileWriteStarted = false;
+            }
+        }
+
         public void BuildCache()
         {
-            //LOG.InfoFormat("Start file import: {0}", MSDataFilePath.GetFileName());  // Not L10N
+            lock (this)
+            {
+                if (_currentFileIndex != -1)
+                    return;
+                _currentFileIndex = 0;
+                BuildNextFile();
+            }
+        }
+
+        private void BuildNextFile()
+        {
+            // Called on a new UI thread.
+            LocalizationHelper.InitThread();
+            lock (this)
+            {
+                try
+                {
+                    BuildNextFileInner();
+                }
+                finally
+                {
+                    lock (_chromDataSets)
+                    {
+                        // Release any writer thread.
+                        if (!_writerStarted)
+                            Monitor.Pulse(_chromDataSets);
+                    }
+                }
+            }
+        }
+
+        private void BuildNextFileInner()
+        {
+            // If there is a temp file, rewind and retry last file
+            if (_tempFileWriteStarted)
+            {
+                _listCachedFiles.RemoveAt(--_currentFileIndex);
+                if (_fs.Stream != null)
+                {
+                    try { _loader.StreamManager.Finish(_fs.Stream); }
+                    catch (IOException) { }
+
+                    _fs.Stream = null;
+                }
+            }
+
+            if (_currentFileIndex >= MSDataFilePaths.Count)
+            {
+                ExitRead(null);
+                return;
+            }
 
             // Check for cancellation on every chromatogram, because there
             // have been some files that load VERY slowly, and appear to hang
@@ -134,39 +195,51 @@ namespace pwiz.Skyline.Model.Results
             }
 
             // If not cancelled, update progress.
-            ChromFileInfo fileInfo = _document.Settings.MeasuredResults.GetChromFileInfo(MSDataFilePath);
+            var dataFilePath = CurrentFilePath;
+            ChromFileInfo fileInfo = _document.Settings.MeasuredResults.GetChromFileInfo(dataFilePath);
             Assume.IsNotNull(fileInfo);
             string dataFilePathPart;
-            MsDataFileUri dataFilePathRecalc = GetRecalcDataFilePath(MSDataFilePath, out dataFilePathPart);
+            MsDataFileUri dataFilePathRecalc = GetRecalcDataFilePath(dataFilePath, out dataFilePathPart);
 
-            string format = dataFilePathRecalc == null
-                                ? Resources.ChromCacheBuilder_BuildNextFileInner_Importing__0__
-                                : Resources.ChromCacheBuilder_BuildNextFileInner_Recalculating_scores_for__0_;
-            string message = string.Format(format, MSDataFilePath.GetSampleOrFileName());
-            LoadingStatus.Transitions.Flush();
-            _status = _status.ChangeMessage(message).ChangePercentComplete(0);
-            _status = LoadingStatus.ChangeFilePath(MSDataFilePath).ChangeImporting(true);
-            var allChromData = LoadingStatus.Transitions;
-            allChromData.MaxIntensity = 0;
-            allChromData.MaxRetentionTime = 0;
-            allChromData.MaxRetentionTimeKnown = false;
-            _loader.UpdateProgress(_status);
+            if (_tempFileSubsitute == null)
+            {
+                string format = dataFilePathRecalc == null
+                                    ? Resources.ChromCacheBuilder_BuildNextFileInner_Importing__0__
+                                    : Resources.ChromCacheBuilder_BuildNextFileInner_Recalculating_scores_for__0_;
+                string message = string.Format(format, dataFilePath.GetSampleOrFileName());
+                int percent = _currentFileIndex * 100 / MSDataFilePaths.Count;
+                LoadingStatus.Transitions.Flush();
+                _status = _status.ChangeMessage(message).ChangePercentComplete(percent);
+                _status = LoadingStatus.ChangeFilePath(dataFilePath).ChangeImporting(true);
+                var allChromData = LoadingStatus.Transitions;
+                allChromData.MaxIntensity = 0;
+                allChromData.MaxRetentionTime = 0;
+                allChromData.MaxRetentionTimeKnown = false;
+                _loader.UpdateProgress(_status);
+            }
 
             try
             {
-                var dataFilePath = MSDataFilePath;
-                var msDataFilePath = MSDataFilePath as MsDataFilePath;
+                var msDataFilePath = dataFilePath as MsDataFilePath;
                 if (msDataFilePath != null)
                 {
-                    dataFilePath = dataFilePathRecalc ??
-                                   ChromatogramSet.GetExistingDataFilePath(CachePath, msDataFilePath,
-                                       out dataFilePathPart);
+                    dataFilePath = dataFilePathRecalc ?? ChromatogramSet.GetExistingDataFilePath(CachePath, msDataFilePath, out dataFilePathPart);
                     if (dataFilePath == null)
-                        throw new FileNotFoundException(
-                            string.Format(Resources.ChromCacheBuilder_BuildNextFileInner_The_file__0__does_not_exist,
-                                dataFilePathPart), dataFilePathPart);
+                        throw new FileNotFoundException(string.Format(Resources.ChromCacheBuilder_BuildNextFileInner_The_file__0__does_not_exist, dataFilePathPart), dataFilePathPart);
                 }
-                MSDataFilePath = dataFilePath;
+                MSDataFilePaths[_currentFileIndex] = dataFilePath;
+
+                if (_tempFileSubsitute != null)
+                    dataFilePath = MsDataFileUri.Parse(_tempFileSubsitute);
+
+                // HACK: Force the thread that the writer will use into existence
+                // This allowed teh DACServer Reader_Waters to function normally the first time through.
+                // It is no longer necessary for the MassLynxRaw version of Reader_Waters,
+                // but is kept to avoid destabilizing code changes.
+                //
+                // This does not actually start the loop, but calling the function once,
+                // seems to reserve a thread somehow, so that the next call works.
+                ActionUtil.RunAsync(() => WriteLoop(_currentFileIndex, true), "Init write loop"); // Not L10N
 
                 // Read the instrument data indexes
                 int sampleIndex = dataFilePath.GetSampleIndex();
@@ -178,7 +251,7 @@ namespace pwiz.Skyline.Model.Results
                 ChromDataProvider provider = null;
                 try
                 {
-
+                    
                     if (dataFilePathRecalc == null && !RemoteChromDataProvider.IsRemoteChromFile(dataFilePath))
                     {
                         // Always use SIM as spectra, if any full-scan chromatogram extraction is enabled
@@ -201,8 +274,7 @@ namespace pwiz.Skyline.Model.Results
                     {
                         if (null == inFile)
                         {
-                            _currentFileInfo = new FileBuildInfo(fileInfo.RunStartTime,
-                                fileInfo.FileWriteTime ?? DateTime.Now, new MsInstrumentConfigInfo[0], null);
+                            _currentFileInfo = new FileBuildInfo(fileInfo.RunStartTime, fileInfo.FileWriteTime ?? DateTime.Now, new MsInstrumentConfigInfo[0], null);
                         }
                         else
                         {
@@ -215,23 +287,23 @@ namespace pwiz.Skyline.Model.Results
                     if (dataFilePathRecalc != null)
                     {
                         provider = CreateChromatogramRecalcProvider(dataFilePathRecalc, fileInfo);
-                        allChromData.MaxIntensity = (float) (provider.MaxIntensity ?? 0);
-                        allChromData.MaxRetentionTime = (float) (provider.MaxRetentionTime ?? 0);
+                        var allChromData = LoadingStatus.Transitions;
+                        allChromData.MaxIntensity = (float)(provider.MaxIntensity ?? 0);
+                        allChromData.MaxRetentionTime = (float)(provider.MaxRetentionTime ?? 0);
                         allChromData.MaxRetentionTimeKnown = provider.MaxRetentionTime.HasValue;
                     }
                     else if (ChorusResponseChromDataProvider.IsChorusResponse(dataFilePath))
                     {
-                        provider = new ChorusResponseChromDataProvider(_document, fileInfo, _status, 0, 100, _loader);
+                        provider = new ChorusResponseChromDataProvider(_document, fileInfo, _status, StartPercent, EndPercent, _loader);
                     }
                     else if (RemoteChromDataProvider.IsRemoteChromFile(dataFilePath))
                     {
-                        provider = new RemoteChromDataProvider(_document, _retentionTimePredictor, fileInfo, _status, 0,
-                            100, _loader);
+                        provider = new RemoteChromDataProvider(_document, _retentionTimePredictor, fileInfo, _status, StartPercent, EndPercent, _loader);
                     }
                     else if (ChromatogramDataProvider.HasChromatogramData(inFile))
-                        provider = CreateChromatogramProvider(inFile, fileInfo);
+                        provider = CreateChromatogramProvider(inFile, fileInfo, _tempFileSubsitute == null);
                     else if (SpectraChromDataProvider.HasSpectrumData(inFile))
-                    {
+                    {                            
                         if (_document.Settings.TransitionSettings.FullScan.IsEnabled && _libraryRetentionTimes == null)
                             _libraryRetentionTimes = _document.Settings.GetRetentionTimes(dataFilePath);
 
@@ -252,8 +324,27 @@ namespace pwiz.Skyline.Model.Results
                     if (_status.IsCanceled)
                         ExitRead(null);
 
-                    if ((inFile != null) && (inFile.GetLog() != null)) // in case perf logging is enabled
+                    if ((inFile!=null) && (inFile.GetLog() != null)) // in case perf logging is enabled
                         DebugLog.Info(inFile.GetLog());
+
+                    RemoveTempFile();
+                }
+                catch (LoadingTooSlowlyException x)
+                {
+                    _status = x.Status;
+                    _tempFileSubsitute = VendorIssueHelper.CreateTempFileSubstitute(dataFilePathPart,
+                        sampleIndex, x, _loader, ref _status);
+                    _tempFileWriteStarted = _writerStarted;
+                    if (_tempFileWriteStarted)
+                    {
+                        // Trigger next call to BuildNextFile from the write thread
+                        PostChromDataSet(null, true);
+                    }
+                    else
+                    {
+                        // Just call this function again with the temp file subsitute
+                        BuildNextFileInner();
+                    }
                 }
                 finally
                 {
@@ -262,8 +353,6 @@ namespace pwiz.Skyline.Model.Results
                     else if (inFile != null)
                         inFile.Dispose();
                 }
-
-                ActionUtil.RunAsync(() => ExitRead(null));
             }
             catch (LoadCanceledException x)
             {
@@ -272,7 +361,7 @@ namespace pwiz.Skyline.Model.Results
             }
             catch (MissingDataException x)
             {
-                ExitRead(new MissingDataException(x.MessageFormat, MSDataFilePath.GetSampleOrFileName(), x));
+                ExitRead(new MissingDataException(x.MessageFormat, CurrentFilePath.GetSampleOrFileName(), x));
             }
             catch (Exception x)
             {
@@ -280,7 +369,7 @@ namespace pwiz.Skyline.Model.Results
                 // be fairly unintelligible to the user, but keep the exception
                 // message, because ProteoWizard "Unsupported file format" comes
                 // in on this channel.
-                x = x as ChromCacheBuildException ?? new ChromCacheBuildException(MSDataFilePath, x);
+                x = x as ChromCacheBuildException ?? new ChromCacheBuildException(CurrentFilePath, x);
                 ExitRead(x);
             }
         }
@@ -313,16 +402,32 @@ namespace pwiz.Skyline.Model.Results
 
         private MsDataFileImpl GetMsDataFile(string dataFilePathPart, int sampleIndex, bool enableSimSpectrum)
         {
+//            if (Directory.Exists(dataFilePathPart))
+//            {
+//                DirectoryInfo directoryInfo = new DirectoryInfo(dataFilePathPart);
+//                var type = DataSourceUtil.GetSourceType(directoryInfo);
+//                if (type == DataSourceUtil.TYPE_BRUKER)
+//                    throw new LoadingTooSlowlyException(LoadingTooSlowlyException.Solution.bruker_conversion, _status, 0, 0);
+//            }
             return new MsDataFileImpl(dataFilePathPart, sampleIndex, enableSimSpectrum);
         }
 
         private void ExitRead(Exception x)
         {
             Complete(x);
+            lock (_chromDataSets)
+            {
+                _writerStarted = false;
+            }
         }
 
         private void Read(ChromDataProvider provider)
         {
+            lock (_chromDataSets)
+            {
+                _readCompleted = false;
+            }
+
             var listMzPrecursors = new List<PeptidePrecursorMz>(Precursors);
             listMzPrecursors.Sort((p1, p2) => p1.PrecursorMz.CompareTo(p2.PrecursorMz));
 
@@ -346,18 +451,23 @@ namespace pwiz.Skyline.Model.Results
                     if (IsFirstPassPeptide(pepChromData))
                     {
                         if (pepChromData.Load(provider))
-                            PostChromDataSet(pepChromData);
+                            PostChromDataSet(pepChromData, false);
 
                         // Release the reference to the chromatogram data set so that
                         // it can be garbage collected after it has been written
                         listChromData[i] = null;
                     }
                 }
-
-                // All threads must complete scoring before we complete the first pass.
-                _chromDataSets.Wait();
-                _retentionTimePredictor.CreateConversion();
-
+                // When we finished with the standard peptides, we need to wait until the writer thread is
+                // finished processing _chromDataSets so that _retentionTimePredictor can provide
+                // times for the rest of the peptides.
+                lock (_chromDataSets)
+                {
+                    while (_chromDataSets.Any() || (_writerStarted && !_writerIsWaitingForChromDataSets))
+                    {
+                        Monitor.Wait(_chromDataSets, 100);
+                    }
+                }
                 // Let the provider know that it is now safe to use retention time prediction
                 if (provider.CompleteFirstPass())
                 {
@@ -377,7 +487,7 @@ namespace pwiz.Skyline.Model.Results
                 if (!IsFirstPassPeptide(pepChromData))
                 {
                     if (pepChromData.Load(provider))
-                        PostChromDataSet(pepChromData);
+                        PostChromDataSet(pepChromData, false);
                 }
 
                 // Release the reference to the chromatogram data set so that
@@ -396,20 +506,7 @@ namespace pwiz.Skyline.Model.Results
 
             // Release all provider memory before waiting for write completion
             provider.ReleaseMemory();
-
-            //LOG.InfoFormat("Scans read: {0}", MSDataFilePath.GetFileName());  // Not L10N
-            _chromDataSets.DoneAdding(true);
-            //LOG.InfoFormat("Peak scoring/writing finished: {0}", MSDataFilePath.GetFileName());  // Not L10N
-
-            _listCachedFiles.Add(new ChromCachedFile(MSDataFilePath,
-                                     _currentFileInfo.Flags,
-                                     _currentFileInfo.LastWriteTime,
-                                     _currentFileInfo.StartTime,
-                                     LoadingStatus.Transitions.MaxRetentionTime,
-                                     LoadingStatus.Transitions.MaxIntensity,
-                                     _currentFileInfo.SizeScanIds,
-                                     _currentFileInfo.LocationScanIds,
-                                     _currentFileInfo.InstrumentInfoList));
+            PostChromDataSet(null, true);
         }
 
         private bool IsFirstPassPeptide(PeptideChromDataSets pepChromData)
@@ -617,11 +714,20 @@ namespace pwiz.Skyline.Model.Results
                 return;
             string lookupSequence = nodePep.SourceUnmodifiedTextId;
             var lookupMods = nodePep.SourceExplicitMods;
-            double[] retentionTimes = _document.Settings.GetRetentionTimes(MSDataFilePath, lookupSequence, lookupMods);
+            double[] retentionTimes = _document.Settings.GetRetentionTimes(CurrentFilePath, lookupSequence, lookupMods);
             bool isAlignedTimes = (retentionTimes.Length == 0);
             if (isAlignedTimes)
             {
-                retentionTimes = _document.Settings.GetAlignedRetentionTimes(FileAlignmentIndices,
+                RetentionTimeAlignmentIndices alignmentIndices = FileAlignmentIndices[_currentFileIndex];
+                if (alignmentIndices == null)
+                {
+                    string basename = CurrentFilePath.GetFileNameWithoutExtension();
+                    var fileAlignments = _document.Settings.DocumentRetentionTimes.FileAlignments.Find(basename);
+                    alignmentIndices = new RetentionTimeAlignmentIndices(fileAlignments);
+                    FileAlignmentIndices[_currentFileIndex] = alignmentIndices;
+                }
+
+                retentionTimes = _document.Settings.GetAlignedRetentionTimes(alignmentIndices,
                                                                              lookupSequence,
                                                                              lookupMods);
             }
@@ -704,7 +810,7 @@ namespace pwiz.Skyline.Model.Results
             private readonly RetentionScoreCalculatorSpec _calculator;
             private readonly double _timeWindow;
             private RegressionLineElement _conversion;
-            private readonly Dictionary<string, double> _dictSeqToTime;
+            private Dictionary<string, double> _dictSeqToTime;
 
             public RetentionTimePredictor(RetentionTimeRegression rtSettings)
             {
@@ -738,12 +844,7 @@ namespace pwiz.Skyline.Model.Results
             public void AddPeptideTime(PeptideDocNode nodePep, double time)
             {
                 if (_conversion == null && _dictSeqToTime != null)
-                {
-                    lock (_dictSeqToTime)
-                    {
-                        _dictSeqToTime.Add(nodePep.ModifiedSequence, time);
-                    }
-                }
+                    _dictSeqToTime.Add(nodePep.ModifiedSequence, time);
             }
 
             /// <summary>
@@ -751,41 +852,48 @@ namespace pwiz.Skyline.Model.Results
             /// </summary>
             public double? GetPredictedRetentionTime(PeptideDocNode nodePep)
             {
-                if (_calculator == null || _conversion == null)
+                if (_calculator == null)
                     return null;
 
-                double? score = _calculator.ScoreSequence(nodePep.SourceTextId);
-                if (!score.HasValue)
-                    return null;
-                return _conversion.GetY(score.Value);
-            }
-
-            public void CreateConversion()
-            {
-                lock (_dictSeqToTime)   // not necessary, but make Resharper happy
+                if (_conversion != null)
                 {
-                    if (_dictSeqToTime == null)
-                        return;
-
-                    try
-                    {
-                        var listTimes = new List<double>();
-                        var listScores = new List<double>();
-                        foreach (string sequence in _calculator.GetStandardPeptides(_dictSeqToTime.Keys))
-                        {
-                            listTimes.Add(_dictSeqToTime[sequence]);
-                            listScores.Add(_calculator.ScoreSequence(sequence).Value);
-                        }
-                        var statTime = new Statistics(listTimes);
-                        var statScore = new Statistics(listScores);
-
-                        _conversion = new RegressionLineElement(
-                            new RegressionLine(statTime.Slope(statScore), statTime.Intercept(statScore)));
-                    }
-                    catch (IncompleteStandardException)
-                    {
-                    }
+                    double? score = _calculator.ScoreSequence(nodePep.SourceTextId);
+                    if (!score.HasValue)
+                        return null;
+                    return _conversion.GetY(score.Value);
                 }
+
+                if (string.Equals(nodePep.GlobalStandardType, PeptideDocNode.STANDARD_TYPE_IRT))
+                    return null;
+
+                if (_dictSeqToTime == null)
+                    return null;
+
+                // Calculate the conversion, ensuring that this is only done once, even if
+                // something below throws unexpectedly.
+                var dictSeqToTime = _dictSeqToTime;
+                _dictSeqToTime = null;
+
+                try
+                {
+                    var listTimes = new List<double>();
+                    var listScores = new List<double>();
+                    foreach (string sequence in _calculator.GetStandardPeptides(dictSeqToTime.Keys))
+                    {
+                        listTimes.Add(dictSeqToTime[sequence]);
+                        listScores.Add(_calculator.ScoreSequence(sequence).Value);
+                    }
+                    var statTime = new Statistics(listTimes);
+                    var statScore = new Statistics(listScores);
+
+                    _conversion = new RegressionLineElement(new RegressionLine(statTime.Slope(statScore), statTime.Intercept(statScore)));
+                }
+                catch (IncompleteStandardException)
+                {
+                    return null;
+                }
+
+                return GetPredictedRetentionTime(nodePep);
             }
 
             public bool IsFirstPassPeptide(PeptideDocNode nodePep)
@@ -1101,6 +1209,9 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        private int StartPercent { get { return _currentFileIndex*100/MSDataFilePaths.Count; } }
+        private int EndPercent { get { return (_currentFileIndex + 1)*100/MSDataFilePaths.Count; } }
+
         private ChromDataProvider CreateChromatogramRecalcProvider(MsDataFileUri dataFilePathRecalc, ChromFileInfo fileInfo)
         {
             return new CachedChromatogramDataProvider(_cacheRecalc,
@@ -1109,8 +1220,8 @@ namespace pwiz.Skyline.Model.Results
                                                       fileInfo,
                                                       IsSingleMatchMzFile,
                                                       _status,
-                                                      0,
-                                                      100,
+                                                      StartPercent,
+                                                      EndPercent,
                                                       _loader);
         }
 
@@ -1124,13 +1235,26 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        private ChromDataProvider CreateChromatogramProvider(MsDataFileImpl dataFile, ChromFileInfo fileInfo)
+        private ChromDataProvider CreateChromatogramProvider(MsDataFileImpl dataFile, ChromFileInfo fileInfo, bool throwIfSlow)
         {
-            return new ChromatogramDataProvider(dataFile, fileInfo, _status, 0, 100, _loader);
+            return new ChromatogramDataProvider(dataFile, fileInfo, throwIfSlow, _status, StartPercent, EndPercent, _loader);
         }
 
         private SpectraChromDataProvider CreateSpectraChromProvider(MsDataFileImpl dataFile, ChromFileInfo fileInfo)
         {
+            // New WIFF reader library no longer needs this, and mzWiff.exe has been removed from the installation
+            // The old WiffFileDataReader messed up the precursor m/z values for targeted
+            // spectra.  The mzWiff mzXML converter must be used instead.
+//            if (dataFile.IsABFile && !dataFile.IsMzWiffXml)
+//            {
+                // This will show an error about the import taking 10 hours, which is not really true, if the computer running Skyline does not have Analyst installed
+//                throw new LoadingTooSlowlyException(LoadingTooSlowlyException.Solution.mzwiff_conversion, _status,
+//                    10*60, 4);
+//            }
+            // If this is a performance work-around, then make sure the progress indicator
+            // does not jump backward perceptibly.
+            int startPercent = (_tempFileSubsitute != null ? (StartPercent + EndPercent)/2 : StartPercent);
+
             // Give retention time predictor to provider if it may be necessary for 2 phase extraction
             IRetentionTimePredictor retentionTimePredictor = null;
             var predict = _document.Settings.PeptideSettings.Prediction;
@@ -1138,135 +1262,298 @@ namespace pwiz.Skyline.Model.Results
                 retentionTimePredictor = _retentionTimePredictor;
 
             return new SpectraChromDataProvider(dataFile, fileInfo, _document, retentionTimePredictor,
-                CachePath, _status, 0, 100, _loader);
+                CachePath, _status, startPercent, EndPercent, _loader);
         }
 
         private const int MAX_CHROM_READ_AHEAD = 20;
-
-        private void PostChromDataSet(PeptideChromDataSets chromDataSet)
+        
+        private void PostChromDataSet(PeptideChromDataSets chromDataSet, bool complete)
         {
-            // First check for any errors on the writer thread
-            if (_chromDataSets.Exception != null)
-                throw new ChromCacheBuildException(MSDataFilePath, _chromDataSets.Exception);
+            lock (_chromDataSets)
+            {
+                // First check for any errors on the writer thread
+                if (_writeException != null)
+                    throw new ChromCacheBuildException(CurrentFilePath, _writeException);
 
-            // Add new chromatogram data set, if not empty
-            if (chromDataSet != null)
-                _chromDataSets.Add(chromDataSet);
+                // Add new chromatogram data set, if not empty
+                if (chromDataSet != null)
+                {
+                    _chromDataSets.Add(chromDataSet);
+                }
+                // Update completion status
+                _readCompleted = _readCompleted || complete;
+                // Notify the writer thread, if necessary
+                if (_readCompleted || _chromDataSets.Count > 0)
+                {
+                    if (_writerStarted)
+                    {
+                        Monitor.Pulse(_chromDataSets);
+                        while (!_writerCompleted && _chromDataSets.Count >= MAX_CHROM_READ_AHEAD)
+                            Monitor.Wait(_chromDataSets);
+                    }
+                    else
+                    {
+                        // Start the writer thread
+                        _writerStarted = true;
+                        ActionUtil.RunAsync(() => WriteLoop(_currentFileIndex, false), "Write loop"); // Not L10N
+                    }
+
+                    // If this is the last read, then wait for the
+                    // writer to complete, in case of an exception.
+                    if (_readCompleted)
+                    {
+                        if (!_writerCompleted)
+                        {
+                            // Wait while work is being accomplished by the writer, but not
+                            // if it is hung.
+                            bool completed;
+                            int countSets;
+                            do
+                            {
+                                countSets = _chromDataSets.Count;
+                                // Wait 10 seconds for some work to complete.  In debug mode,
+                                // a shorter time may not be enough to load DLLs necessary
+                                // for the first iteration.
+                                completed = Monitor.Wait(_chromDataSets, Debugger.IsAttached ? -1 : 10*1000);
+                            }
+                            while (!completed && countSets != _chromDataSets.Count);
+
+                            // Try calling the write loop directly on this thread.
+                            if (!completed && _chromDataSets.Count > 0)
+                                WriteLoop(_currentFileIndex, false);                                
+                        }
+
+                        if (_writeException != null)
+                            throw new ChromCacheBuildException(CurrentFilePath, _writeException);
+                    }
+                }
+            }
         }
 
+        /// <summary>
+        /// List of write threads for debugging write thread leaks.
+        /// </summary>
+        private static readonly List<Thread> WRITE_THREADS = new List<Thread>() ;
 
-        private void WriteChromDataSets(PeptideChromDataSets chromDataSets)
+        private void WriteLoop(int currentFileIndex, bool primeThread)
         {
-            var dictScoresToIndex = new Dictionary<IList<float>, int>();
-            foreach (var chromDataSet in chromDataSets.DataSets)
+            // Called in a new thread
+            LocalizationHelper.InitThread();
+            // HACK: This is a huge hack, for a temporary work-around to the problem
+            // of Reader_Waters (or DACServer.dll) killing the ThreadPool.  WriteLoop
+            // is called once as a no-op to force the thread it will use during
+            // processing into existence before the file is opened.
+            if (primeThread)
+                return;
+
+            try
             {
-                if (_fs.Stream == null)
-                    throw new InvalidDataException(
-                        Resources.ChromCacheBuilder_WriteLoop_Failure_writing_cache_file);
-
-                long location = _fs.Stream.Position;
-
-                float[] times = chromDataSet.Times;
-                float[][] intensities = chromDataSet.Intensities;
-                // Assign mass errors only it the cache is allowed to store them
-                short[][] massErrors = null;
-                if (ChromatogramCache.FORMAT_VERSION_CACHE > ChromatogramCache.FORMAT_VERSION_CACHE_4)
-                    massErrors = chromDataSet.MassErrors10X;
-                int[][] scanIds = chromDataSet.ScanIds;
-                // Write the raw chromatogram points
-                byte[] points = ChromatogramCache.TimeIntensitiesToBytes(times, intensities, massErrors, scanIds);
-                // Compress the data (can be huge for AB data with lots of zeros)
-                byte[] pointsCompressed = points.Compress(3);
-                int lenCompressed = pointsCompressed.Length;
-                _fs.Stream.Write(pointsCompressed, 0, lenCompressed);
-
-                // Use existing scores, if they have already been added
-                int scoresIndex;
-                var startPeak = chromDataSet.PeakSets.FirstOrDefault();
-                if (startPeak == null || startPeak.DetailScores == null)
+                for (;;)
                 {
-                    // CONSIDER: Should unscored peak sets be kept?
-                    scoresIndex = -1;
-                }
-                else if (!dictScoresToIndex.TryGetValue(startPeak.DetailScores, out scoresIndex))
-                {
-                    scoresIndex = _listScores.Count;
-                    dictScoresToIndex.Add(startPeak.DetailScores, scoresIndex);
-
-                    // Add scores to the scores list
-                    foreach (var peakSet in chromDataSet.PeakSets)
-                        _listScores.AddRange(peakSet.DetailScores);
-                }
-
-                // Add to header list
-                ChromGroupHeaderInfo5.FlagValues flags = 0;
-                if (massErrors != null)
-                    flags |= ChromGroupHeaderInfo5.FlagValues.has_mass_errors;
-                if (chromDataSet.HasCalculatedMzs)
-                    flags |= ChromGroupHeaderInfo5.FlagValues.has_calculated_mzs;
-                if (chromDataSet.Extractor == ChromExtractor.base_peak)
-                    flags |= ChromGroupHeaderInfo5.FlagValues.extracted_base_peak;
-                if (scanIds != null)
-                {
-                    if (scanIds[(int) ChromSource.ms1] != null)
-                        flags |= ChromGroupHeaderInfo5.FlagValues.has_ms1_scan_ids;
-                    if (scanIds[(int) ChromSource.fragment] != null)
-                        flags |= ChromGroupHeaderInfo5.FlagValues.has_frag_scan_ids;
-                    if (scanIds[(int) ChromSource.sim] != null)
-                        flags |= ChromGroupHeaderInfo5.FlagValues.has_sim_scan_ids;
-                }
-                var header = new ChromGroupHeaderInfo5(chromDataSet.PrecursorMz,
-                    0,
-                    chromDataSet.Count,
-                    _listTransitions.Count,
-                    chromDataSet.CountPeaks,
-                    _peakCount,
-                    scoresIndex,
-                    chromDataSet.MaxPeakIndex,
-                    times.Length,
-                    lenCompressed,
-                    location,
-                    flags,
-                    chromDataSet.StatusId,
-                    chromDataSet.StatusRank);
-
-                header.CalcTextIdIndex(chromDataSet.ModifiedSequence, _dictSequenceToByteIndex, _listTextIdBytes);
-
-                int? transitionPeakCount = null;
-                foreach (var chromData in chromDataSet.Chromatograms)
-                {
-                    var chromTran = new ChromTransition(chromData.Key.Product,
-                        chromData.Key.ExtractionWidth,
-                        chromData.Key.IonMobilityValue,
-                        chromData.Key.IonMobilityExtractionWidth,
-                        chromData.Key.Source);
-                    _listTransitions.Add(chromTran);
-
-                    // Make sure all transitions have the same number of peaks, as this is a cache requirement
-                    if (!transitionPeakCount.HasValue)
-                        transitionPeakCount = chromData.Peaks.Count;
-                    else if (transitionPeakCount.Value != chromData.Peaks.Count)
+                    PeptideChromDataSets chromDataSetNext;
+                    lock (_chromDataSets)
                     {
-                        throw new InvalidDataException(
-                            string.Format(
-                                Resources
-                                    .ChromCacheBuilder_WriteLoop_Transitions_of_the_same_precursor_found_with_different_peak_counts__0__and__1__,
-                                transitionPeakCount, chromData.Peaks.Count));
+                        try
+                        {
+                            if (WRITE_THREADS.Count > 0 && !_readCompleted)
+// ReSharper disable LocalizableElement
+                                Console.WriteLine("Existing write threads: {0}", string.Join(", ", WRITE_THREADS.Select(t => t.ManagedThreadId))); // Not L10N: Debugging purposes
+// ReSharper restore LocalizableElement
+                            WRITE_THREADS.Add(Thread.CurrentThread);
+                            while (_writerStarted && !_readCompleted && _chromDataSets.Count == 0)
+                            {
+                                try
+                                {
+                                    _writerIsWaitingForChromDataSets = true;
+                                    Monitor.Wait(_chromDataSets);
+                                }
+                                finally
+                                {
+                                    _writerIsWaitingForChromDataSets = false;
+                                }
+                            }
+
+                            if (!_writerStarted)
+                                return;
+
+                            // If reading is complete, and there are no more sets to process,
+                            // begin next file.
+                            if (_readCompleted && _chromDataSets.Count == 0)
+                            {
+                                // Once inside here, the thread is going to exit.
+                                _writerStarted = false;
+
+                                // Write loop completion may have already been executed
+                                if (_currentFileIndex != currentFileIndex)
+                                    return;
+
+                                _listCachedFiles.Add(new ChromCachedFile(CurrentFilePath,
+                                                                         _currentFileInfo.Flags,
+                                                                         _currentFileInfo.LastWriteTime,
+                                                                         _currentFileInfo.StartTime,
+                                                                         LoadingStatus.Transitions.MaxRetentionTime,
+                                                                         LoadingStatus.Transitions.MaxIntensity,
+                                                                         _currentFileInfo.SizeScanIds,
+                                                                         _currentFileInfo.LocationScanIds,
+                                                                         _currentFileInfo.InstrumentInfoList));
+                                _currentFileIndex++;
+
+                                // Allow the reader thread to exit
+                                Monitor.Pulse(_chromDataSets);
+
+                                ActionUtil.RunAsync(BuildNextFile);
+                                return;
+                            }
+
+                            chromDataSetNext = _chromDataSets[0];
+                            _chromDataSets.RemoveAt(0);
+
+                            // Wake up read thread, if it is waiting because it is too far ahead
+                            Monitor.Pulse(_chromDataSets);
+                        }
+                        finally
+                        {
+                            WRITE_THREADS.Remove(Thread.CurrentThread);
+                        }
                     }
 
-                    // Add to peaks list
-                    _peakCount += chromData.Peaks.Count;
-                    if (ChromatogramCache.FORMAT_VERSION_CACHE <= ChromatogramCache.FORMAT_VERSION_CACHE_4)
-                    {
-                        // Zero out the mass error bits in the peaks to make sure mass errors
-                        // do not show up until after they are officially released
-                        for (int i = 0; i < chromData.Peaks.Count; i++)
-                            chromData.Peaks[i] = chromData.Peaks[i].RemoveMassError();
-                    }
-                    ChromPeak.WriteArray(_fsPeaks.FileStream.SafeFileHandle, chromData.Peaks.ToArray());
-                }
+                    GetPeptideRetentionTimes(chromDataSetNext);
+                    chromDataSetNext.PickChromatogramPeaks();
+                    StorePeptideRetentionTime(chromDataSetNext);
 
-                _listGroups.Add(header);
+                    var dictScoresToIndex = new Dictionary<IList<float>, int>();
+                    foreach (var chromDataSet in chromDataSetNext.DataSets)
+                    {
+                        if (_fs.Stream == null)
+                            throw new InvalidDataException(
+                                Resources.ChromCacheBuilder_WriteLoop_Failure_writing_cache_file);
+
+                        long location = _fs.Stream.Position;
+
+                        float[] times = chromDataSet.Times;
+                        float[][] intensities = chromDataSet.Intensities;
+                        // Assign mass errors only it the cache is allowed to store them
+                        short[][] massErrors = null;
+                        if (ChromatogramCache.FORMAT_VERSION_CACHE > ChromatogramCache.FORMAT_VERSION_CACHE_4)
+                            massErrors = chromDataSet.MassErrors10X;
+                        int[][] scanIds = chromDataSet.ScanIds;
+                        // Write the raw chromatogram points
+                        byte[] points = ChromatogramCache.TimeIntensitiesToBytes(times, intensities, massErrors, scanIds);
+                        // Compress the data (can be huge for AB data with lots of zeros)
+                        byte[] pointsCompressed = points.Compress(3);
+                        int lenCompressed = pointsCompressed.Length;
+                        _fs.Stream.Write(pointsCompressed, 0, lenCompressed);
+
+                        // Use existing scores, if they have already been added
+                        int scoresIndex;
+                        var startPeak = chromDataSet.PeakSets.FirstOrDefault();
+                        if (startPeak == null || startPeak.DetailScores == null)
+                        {
+                            // CONSIDER: Should unscored peak sets be kept?
+                            scoresIndex = -1;
+                        }
+                        else if (!dictScoresToIndex.TryGetValue(startPeak.DetailScores, out scoresIndex))
+                        {
+                            scoresIndex = _listScores.Count;
+                            dictScoresToIndex.Add(startPeak.DetailScores, scoresIndex);
+
+                            // Add scores to the scores list
+                            foreach (var peakSet in chromDataSet.PeakSets)
+                                _listScores.AddRange(peakSet.DetailScores);
+                        }
+
+                        // Add to header list
+                        ChromGroupHeaderInfo5.FlagValues flags = 0;
+                        if (massErrors != null)
+                            flags |= ChromGroupHeaderInfo5.FlagValues.has_mass_errors;
+                        if (chromDataSet.HasCalculatedMzs)
+                            flags |= ChromGroupHeaderInfo5.FlagValues.has_calculated_mzs;
+                        if (chromDataSet.Extractor == ChromExtractor.base_peak)
+                            flags |= ChromGroupHeaderInfo5.FlagValues.extracted_base_peak;
+                        if (scanIds != null)
+                        {
+                            if (scanIds[(int)ChromSource.ms1] != null)
+                                flags |= ChromGroupHeaderInfo5.FlagValues.has_ms1_scan_ids;
+                            if (scanIds[(int)ChromSource.fragment] != null)
+                                flags |= ChromGroupHeaderInfo5.FlagValues.has_frag_scan_ids;
+                            if (scanIds[(int)ChromSource.sim] != null)
+                                flags |= ChromGroupHeaderInfo5.FlagValues.has_sim_scan_ids;
+                        }
+                        var header = new ChromGroupHeaderInfo5(chromDataSet.PrecursorMz,
+                                                               currentFileIndex,
+                                                               chromDataSet.Count,
+                                                               _listTransitions.Count,
+                                                               chromDataSet.CountPeaks,
+                                                               _peakCount,
+                                                               scoresIndex,
+                                                               chromDataSet.MaxPeakIndex,
+                                                               times.Length,
+                                                               lenCompressed,
+                                                               location,
+                                                               flags,
+                                                               chromDataSet.StatusId,
+                                                               chromDataSet.StatusRank);
+
+                        header.CalcTextIdIndex(chromDataSet.ModifiedSequence, _dictSequenceToByteIndex, _listTextIdBytes);
+
+                        int? transitionPeakCount = null;
+                        foreach (var chromData in chromDataSet.Chromatograms)
+                        {
+                            var chromTran = new ChromTransition(chromData.Key.Product,
+                                                                chromData.Key.ExtractionWidth,
+                                                                chromData.Key.IonMobilityValue,
+                                                                chromData.Key.IonMobilityExtractionWidth,
+                                                                chromData.Key.Source);
+                            _listTransitions.Add(chromTran);
+
+                            // Make sure all transitions have the same number of peaks, as this is a cache requirement
+                            if (!transitionPeakCount.HasValue)
+                                transitionPeakCount = chromData.Peaks.Count;
+                            else if (transitionPeakCount.Value != chromData.Peaks.Count)
+                            {
+                                throw new InvalidDataException(
+                                    string.Format(
+                                        Resources
+                                            .ChromCacheBuilder_WriteLoop_Transitions_of_the_same_precursor_found_with_different_peak_counts__0__and__1__,
+                                        transitionPeakCount, chromData.Peaks.Count));
+                            }
+
+                            // Add to peaks list
+                            _peakCount += chromData.Peaks.Count;
+                            if (ChromatogramCache.FORMAT_VERSION_CACHE <= ChromatogramCache.FORMAT_VERSION_CACHE_4)
+                            {
+                                // Zero out the mass error bits in the peaks to make sure mass errors
+                                // do not show up until after they are officially released
+                                for (int i = 0; i < chromData.Peaks.Count; i++)
+                                    chromData.Peaks[i] = chromData.Peaks[i].RemoveMassError();
+                            }
+                            ChromPeak.WriteArray(_fsPeaks.FileStream.SafeFileHandle, chromData.Peaks.ToArray());
+                        }
+
+                        _listGroups.Add(header);
+                    }
+                }
+            }
+            catch (Exception x)
+            {
+                lock (_chromDataSets)
+                {
+                    _writerCompleted = true;
+                    _writeException = x;
+                    // Make sure the reader thread can exit
+                    Monitor.Pulse(_chromDataSets);
+                }
+            }
+            finally
+            {
+                lock (_chromDataSets)
+                {
+                    if (!_writerCompleted)
+                    {
+                        _writerCompleted = true;
+                        Monitor.Pulse(_chromDataSets);
+                    }
+                }
             }
         }
     }
