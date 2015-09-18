@@ -306,18 +306,25 @@ namespace pwiz.Skyline.Model.Results
             get { return _isWatersFile; }
         }
 
+        public bool IsWatersMse
+        {
+            get { return _isWatersMse; }
+        }
+
         public bool IsAgilentFile
         {
             get { return _isAgilentMse; }
         }
 
         /// <summary>
-        /// Until ProteoWizard implementation of Waters spectrum list can be fixed, it does not
-        /// support time ordered extraction. First MS1 then MS/MS scans are traversed.
+        /// Returns true if ProteoWizard implementation of spectrum list does not support time ordered 
+        /// extraction.  This used to be the case, for example, with Waters where MS1 then MS/MS scans were 
+        /// traversed due to the nature of the underlying raw data.  For now no vendor data is presented by
+        /// ProteoWizard in anything other than time order.
         /// </summary>
         public bool IsTimeOrderedExtraction
         {
-            get { return !_isWatersFile; }
+            get { return true; }
         }
 
         public IList<ChromKey> ProductChromKeys
