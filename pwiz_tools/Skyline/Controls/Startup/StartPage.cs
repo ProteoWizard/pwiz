@@ -372,7 +372,7 @@ namespace pwiz.Skyline.Controls.Startup
         // Click Actions
         public void OpenRecentFile(String path)
         {
-            DoAction(new ActionOpenDocument(path).DoStartupAction);
+            DoAction(skylineWindow => skylineWindow.LoadFile(path, this));
         }
         private void openFile_Click(object sender, EventArgs e)
         {
@@ -392,7 +392,7 @@ namespace pwiz.Skyline.Controls.Startup
 
             DialogResult = DialogResult.OK;
 
-            DoAction(new ActionOpenDocument(fileToOpen).DoStartupAction);
+            DoAction(skylineWindow => skylineWindow.LoadFile(fileToOpen, this));
         }
 
         private void Import(ActionImport.DataType type)

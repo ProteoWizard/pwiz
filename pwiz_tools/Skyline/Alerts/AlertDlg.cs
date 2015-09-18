@@ -32,7 +32,9 @@ namespace pwiz.Skyline.Alerts
     /// </summary>
     public partial class AlertDlg : FormEx
     {
-        private readonly float _originalDetailHeight;
+        private const int MAX_HEIGHT = 500;
+        private readonly int _originalFormHeight;
+        private readonly int _originalMessageHeight;
 
         public AlertDlg() : this("Alert dialog for Forms designer") // Not L10N
         {
@@ -41,11 +43,11 @@ namespace pwiz.Skyline.Alerts
         public AlertDlg(string message)
         {
             InitializeComponent();
-            _originalDetailHeight = tableLayoutPanel1.RowStyles[2].Height;
-            tableLayoutPanel1.RowStyles[2].Height = 0;
-            tbxDetail.Visible = false;
+            _originalFormHeight = Height;
+            _originalMessageHeight = labelMessage.Height;
             Message = message;
             btnMoreInfo.Parent.Controls.Remove(btnMoreInfo);
+            Text = Program.Name;
         }
 
         public AlertDlg(string message, MessageBoxButtons messageBoxButtons) : this(message)
@@ -53,17 +55,17 @@ namespace pwiz.Skyline.Alerts
             AddMessageBoxButtons(messageBoxButtons);
         }
 
-        protected override void CreateHandle()
-        {
-            base.CreateHandle();
-
-            Text = Program.Name;
-        }
-
         public string Message
         {
-            get { return textBox1.Text; }
-            set { textBox1.Text = value; }
+            get { return labelMessage.Text; }
+            set
+            {
+                labelMessage.Text = value;
+                int formGrowth = Math.Max(labelMessage.Height - _originalMessageHeight * 3, 0);
+                formGrowth = Math.Max(formGrowth, 0);
+                formGrowth = Math.Min(formGrowth, MAX_HEIGHT);
+                Height = _originalFormHeight + formGrowth;
+            }
         }
 
         public string DetailMessage 
@@ -151,11 +153,12 @@ namespace pwiz.Skyline.Alerts
 
         private void btnMoreInfo_Click(object sender, EventArgs e)
         {
-            if (!tbxDetail.Visible)
+            if (splitContainer.Panel2Collapsed)
             {
+                int panel1Height = splitContainer.Panel1.Height;
                 Height += 100;
-                tableLayoutPanel1.RowStyles[2].Height = _originalDetailHeight;
-                tbxDetail.Visible = true;
+                splitContainer.Panel2Collapsed = false;
+                splitContainer.SplitterDistance = panel1Height;
             }
         }
 

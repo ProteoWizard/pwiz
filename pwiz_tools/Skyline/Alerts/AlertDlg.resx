@@ -117,16 +117,59 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="&gt;&gt;btnMoreInfo.Name" xml:space="preserve">
+    <value>btnMoreInfo</value>
+  </data>
+  <data name="&gt;&gt;btnMoreInfo.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnMoreInfo.Parent" xml:space="preserve">
+    <value>buttonPanel</value>
+  </data>
+  <data name="&gt;&gt;btnMoreInfo.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="buttonPanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Bottom</value>
+  </data>
+  <data name="buttonPanel.FlowDirection" type="System.Windows.Forms.FlowDirection, System.Windows.Forms">
+    <value>RightToLeft</value>
+  </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="buttonPanel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 91</value>
+  </data>
+  <data name="buttonPanel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>0, 0, 0, 0</value>
+  </data>
+  <data name="buttonPanel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>398, 35</value>
+  </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="buttonPanel.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;buttonPanel.Name" xml:space="preserve">
+    <value>buttonPanel</value>
+  </data>
+  <data name="&gt;&gt;buttonPanel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;buttonPanel.Parent" xml:space="preserve">
+    <value>splitContainer.Panel1</value>
+  </data>
+  <data name="&gt;&gt;buttonPanel.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
   <data name="btnMoreInfo.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
   <data name="btnMoreInfo.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnMoreInfo.Location" type="System.Drawing.Point, System.Drawing">
-    <value>342, 7</value>
+    <value>319, 7</value>
   </data>
   <data name="btnMoreInfo.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>4, 7, 4, 7</value>
@@ -134,7 +177,6 @@
   <data name="btnMoreInfo.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnMoreInfo.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
   </data>
@@ -153,41 +195,74 @@
   <data name="&gt;&gt;btnMoreInfo.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="buttonPanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+  <data name="splitContainer.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
-  <data name="buttonPanel.FlowDirection" type="System.Windows.Forms.FlowDirection, System.Windows.Forms">
-    <value>RightToLeft</value>
+  <data name="splitContainer.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
   </data>
-  <data name="buttonPanel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 59</value>
+  <data name="splitContainer.Orientation" type="System.Windows.Forms.Orientation, System.Windows.Forms">
+    <value>Horizontal</value>
   </data>
-  <data name="buttonPanel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>0, 0, 0, 0</value>
+  <data name="messageScrollPanel.AutoScroll" type="System.Boolean, mscorlib">
+    <value>True</value>
   </data>
-  <data name="buttonPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>421, 35</value>
+  <data name="&gt;&gt;labelMessage.Name" xml:space="preserve">
+    <value>labelMessage</value>
   </data>
-  <data name="buttonPanel.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+  <data name="&gt;&gt;labelMessage.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;buttonPanel.Name" xml:space="preserve">
-    <value>buttonPanel</value>
+  <data name="&gt;&gt;labelMessage.Parent" xml:space="preserve">
+    <value>messageScrollPanel</value>
   </data>
-  <data name="&gt;&gt;buttonPanel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;buttonPanel.Parent" xml:space="preserve">
-    <value>tableLayoutPanel1</value>
-  </data>
-  <data name="&gt;&gt;buttonPanel.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;labelMessage.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="tbxDetail.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
+  <data name="messageScrollPanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="messageScrollPanel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="messageScrollPanel.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="messageScrollPanel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>398, 91</value>
+  </data>
+  <data name="messageScrollPanel.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;messageScrollPanel.Name" xml:space="preserve">
+    <value>messageScrollPanel</value>
+  </data>
+  <data name="&gt;&gt;messageScrollPanel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;messageScrollPanel.Parent" xml:space="preserve">
+    <value>splitContainer.Panel1</value>
+  </data>
+  <data name="&gt;&gt;messageScrollPanel.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;splitContainer.Panel1.Name" xml:space="preserve">
+    <value>splitContainer.Panel1</value>
+  </data>
+  <data name="&gt;&gt;splitContainer.Panel1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;splitContainer.Panel1.Parent" xml:space="preserve">
+    <value>splitContainer</value>
+  </data>
+  <data name="&gt;&gt;splitContainer.Panel1.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="tbxDetail.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
   </data>
   <data name="tbxDetail.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 94</value>
+    <value>0, 0</value>
   </data>
   <data name="tbxDetail.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 0, 0, 0</value>
@@ -199,13 +274,10 @@
     <value>Both</value>
   </data>
   <data name="tbxDetail.Size" type="System.Drawing.Size, System.Drawing">
-    <value>421, 111</value>
+    <value>398, 25</value>
   </data>
   <data name="tbxDetail.TabIndex" type="System.Int32, mscorlib">
     <value>100</value>
-  </data>
-  <data name="tbxDetail.Visible" type="System.Boolean, mscorlib">
-    <value>False</value>
   </data>
   <data name="tbxDetail.WordWrap" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -217,79 +289,70 @@
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tbxDetail.Parent" xml:space="preserve">
-    <value>tableLayoutPanel1</value>
+    <value>splitContainer.Panel2</value>
   </data>
   <data name="&gt;&gt;tbxDetail.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="tableLayoutPanel1.ColumnCount" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="textBox1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
-  </data>
-  <data name="textBox1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>10, 10</value>
-  </data>
-  <data name="textBox1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>10, 10, 10, 10</value>
-  </data>
-  <data name="textBox1.Multiline" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="textBox1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>401, 39</value>
-  </data>
-  <data name="textBox1.TabIndex" type="System.Int32, mscorlib">
-    <value>101</value>
-  </data>
-  <data name="textBox1.Text" xml:space="preserve">
-    <value>Warning message.</value>
-  </data>
-  <data name="&gt;&gt;textBox1.Name" xml:space="preserve">
-    <value>textBox1</value>
-  </data>
-  <data name="&gt;&gt;textBox1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textBox1.Parent" xml:space="preserve">
-    <value>tableLayoutPanel1</value>
-  </data>
-  <data name="&gt;&gt;textBox1.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="tableLayoutPanel1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
-  </data>
-  <data name="tableLayoutPanel1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
-  </data>
-  <data name="tableLayoutPanel1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>0, 0, 0, 0</value>
-  </data>
-  <data name="tableLayoutPanel1.RowCount" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="tableLayoutPanel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>421, 205</value>
-  </data>
-  <data name="tableLayoutPanel1.TabIndex" type="System.Int32, mscorlib">
-    <value>101</value>
-  </data>
-  <data name="&gt;&gt;tableLayoutPanel1.Name" xml:space="preserve">
-    <value>tableLayoutPanel1</value>
-  </data>
-  <data name="&gt;&gt;tableLayoutPanel1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TableLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tableLayoutPanel1.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;tableLayoutPanel1.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="tableLayoutPanel1.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
-    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="buttonPanel" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="tbxDetail" Row="2" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="textBox1" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Percent,100" /&gt;&lt;Rows Styles="Percent,35,Absolute,35,Percent,65" /&gt;&lt;/TableLayoutSettings&gt;</value>
+  <data name="&gt;&gt;splitContainer.Panel2.Name" xml:space="preserve">
+    <value>splitContainer.Panel2</value>
+  </data>
+  <data name="&gt;&gt;splitContainer.Panel2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;splitContainer.Panel2.Parent" xml:space="preserve">
+    <value>splitContainer</value>
+  </data>
+  <data name="&gt;&gt;splitContainer.Panel2.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="splitContainer.Size" type="System.Drawing.Size, System.Drawing">
+    <value>398, 126</value>
+  </data>
+  <data name="splitContainer.SplitterDistance" type="System.Int32, mscorlib">
+    <value>97</value>
+  </data>
+  <data name="splitContainer.TabIndex" type="System.Int32, mscorlib">
+    <value>102</value>
+  </data>
+  <data name="&gt;&gt;splitContainer.Name" xml:space="preserve">
+    <value>splitContainer</value>
+  </data>
+  <data name="&gt;&gt;splitContainer.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitContainer, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;splitContainer.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;splitContainer.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="labelMessage.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelMessage.Location" type="System.Drawing.Point, System.Drawing">
+    <value>24, 21</value>
+  </data>
+  <data name="labelMessage.Size" type="System.Drawing.Size, System.Drawing">
+    <value>50, 13</value>
+  </data>
+  <data name="labelMessage.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="labelMessage.Text" xml:space="preserve">
+    <value>Message</value>
+  </data>
+  <data name="&gt;&gt;labelMessage.Name" xml:space="preserve">
+    <value>labelMessage</value>
+  </data>
+  <data name="&gt;&gt;labelMessage.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelMessage.Parent" xml:space="preserve">
+    <value>messageScrollPanel</value>
+  </data>
+  <data name="&gt;&gt;labelMessage.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -298,7 +361,7 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>421, 205</value>
+    <value>398, 126</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterScreen</value>

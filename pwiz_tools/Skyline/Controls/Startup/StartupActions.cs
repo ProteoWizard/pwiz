@@ -110,19 +110,4 @@ namespace pwiz.Skyline.Controls.Startup
             }
         }
     }
-
-    public class ActionOpenDocument
-    {
-        public ActionOpenDocument(string path)
-        {
-             FilePath = path;
-        }
-
-        public string FilePath { get; private set; }
-
-        public bool DoStartupAction(SkylineWindow skylineWindow)
-        {
-            return skylineWindow.LoadFile(FilePath);
-        }
-    }
 }

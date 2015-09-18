@@ -31,11 +31,16 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(AlertDlg));
             this.buttonPanel = new System.Windows.Forms.FlowLayoutPanel();
             this.btnMoreInfo = new System.Windows.Forms.Button();
+            this.splitContainer = new System.Windows.Forms.SplitContainer();
+            this.messageScrollPanel = new System.Windows.Forms.Panel();
+            this.labelMessage = new System.Windows.Forms.Label();
             this.tbxDetail = new System.Windows.Forms.TextBox();
-            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this.textBox1 = new System.Windows.Forms.TextBox();
             this.buttonPanel.SuspendLayout();
-            this.tableLayoutPanel1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer)).BeginInit();
+            this.splitContainer.Panel1.SuspendLayout();
+            this.splitContainer.Panel2.SuspendLayout();
+            this.splitContainer.SuspendLayout();
+            this.messageScrollPanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // buttonPanel
@@ -52,44 +57,60 @@
             this.btnMoreInfo.UseVisualStyleBackColor = true;
             this.btnMoreInfo.Click += new System.EventHandler(this.btnMoreInfo_Click);
             // 
+            // splitContainer
+            // 
+            resources.ApplyResources(this.splitContainer, "splitContainer");
+            this.splitContainer.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
+            this.splitContainer.Name = "splitContainer";
+            // 
+            // splitContainer.Panel1
+            // 
+            this.splitContainer.Panel1.BackColor = System.Drawing.SystemColors.Window;
+            this.splitContainer.Panel1.Controls.Add(this.messageScrollPanel);
+            this.splitContainer.Panel1.Controls.Add(this.buttonPanel);
+            // 
+            // splitContainer.Panel2
+            // 
+            this.splitContainer.Panel2.Controls.Add(this.tbxDetail);
+            this.splitContainer.Panel2Collapsed = true;
+            // 
+            // messageScrollPanel
+            // 
+            resources.ApplyResources(this.messageScrollPanel, "messageScrollPanel");
+            this.messageScrollPanel.Controls.Add(this.labelMessage);
+            this.messageScrollPanel.Name = "messageScrollPanel";
+            // 
+            // labelMessage
+            // 
+            resources.ApplyResources(this.labelMessage, "labelMessage");
+            this.labelMessage.Name = "labelMessage";
+            // 
             // tbxDetail
             // 
             resources.ApplyResources(this.tbxDetail, "tbxDetail");
             this.tbxDetail.Name = "tbxDetail";
             this.tbxDetail.ReadOnly = true;
             // 
-            // tableLayoutPanel1
-            // 
-            this.tableLayoutPanel1.BackColor = System.Drawing.SystemColors.Window;
-            resources.ApplyResources(this.tableLayoutPanel1, "tableLayoutPanel1");
-            this.tableLayoutPanel1.Controls.Add(this.buttonPanel, 0, 1);
-            this.tableLayoutPanel1.Controls.Add(this.tbxDetail, 0, 2);
-            this.tableLayoutPanel1.Controls.Add(this.textBox1, 0, 0);
-            this.tableLayoutPanel1.GrowStyle = System.Windows.Forms.TableLayoutPanelGrowStyle.FixedSize;
-            this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            // 
-            // textBox1
-            // 
-            this.textBox1.BackColor = System.Drawing.SystemColors.Window;
-            this.textBox1.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            resources.ApplyResources(this.textBox1, "textBox1");
-            this.textBox1.Name = "textBox1";
-            this.textBox1.ReadOnly = true;
-            // 
             // AlertDlg
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this.tableLayoutPanel1);
+            this.Controls.Add(this.splitContainer);
             this.KeyPreview = true;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "AlertDlg";
+            this.ShowIcon = false;
             this.ShowInTaskbar = false;
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.MessageDlg_KeyDown);
             this.buttonPanel.ResumeLayout(false);
-            this.tableLayoutPanel1.ResumeLayout(false);
-            this.tableLayoutPanel1.PerformLayout();
+            this.splitContainer.Panel1.ResumeLayout(false);
+            this.splitContainer.Panel2.ResumeLayout(false);
+            this.splitContainer.Panel2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer)).EndInit();
+            this.splitContainer.ResumeLayout(false);
+            this.messageScrollPanel.ResumeLayout(false);
+            this.messageScrollPanel.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -98,8 +119,9 @@
 
         private System.Windows.Forms.FlowLayoutPanel buttonPanel;
         private System.Windows.Forms.Button btnMoreInfo;
+        private System.Windows.Forms.SplitContainer splitContainer;
         private System.Windows.Forms.TextBox tbxDetail;
-        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
-        private System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.Panel messageScrollPanel;
+        private System.Windows.Forms.Label labelMessage;
     }
 }
