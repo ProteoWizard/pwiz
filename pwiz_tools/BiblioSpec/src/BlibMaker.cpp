@@ -581,7 +581,7 @@ int BlibMaker::transferSpectrum(const char* schemaTmp,
     int newFileID = getNewFileId(schemaTmp, spectraTmpID);
 
     // find out if the source library has the same columns as the new
-    string alternate_cols = "'0', '0', '0', '0', '0', '0'";
+    string alternate_cols = "'0', '0', '0', '0', '0', '0', '0'";
     if (tableVersion > 0) {
         if (tableVersion == 2) 
             alternate_cols = "ionMobilityValue, ionMobilityType, '0'"; // Handle missing ion mobility info
