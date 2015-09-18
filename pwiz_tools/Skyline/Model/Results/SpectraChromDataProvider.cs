@@ -591,13 +591,13 @@ namespace pwiz.Skyline.Model.Results
             {
                 _spectra.Dispose();
                 _scanIdList = null;
-                _collectors = null;
                 if (_chromGroups != null)
                 {
                     _chromGroups.Dispose();
                     _chromGroups = null;
                 }
             }
+            _collectors = null;
         }
 
         public static bool HasSpectrumData(MsDataFileImpl dataFile)

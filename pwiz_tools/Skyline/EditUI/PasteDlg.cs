@@ -178,7 +178,8 @@ namespace pwiz.Skyline.EditUI
             }
             tbxError.BackColor = Color.Red;
             tbxError.Text = pasteError.Message;
-            Text = Description + " (" + pasteError.Message + ")";  // Useful for debugging if this hangs in a test - it appears in the timeout report  // Not L10N
+            // Useful for debugging if this hangs in a test - it appears in the timeout report  
+            Text = Description + " (" + pasteError.Message + ")";  // Not L10N
         }
 
         public void ShowNoErrors()
