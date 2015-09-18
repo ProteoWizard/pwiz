@@ -37,6 +37,7 @@ namespace pwiz.Skyline.Model.Results
         public static MeasuredResults EMPTY = new MeasuredResults(new ChromatogramSet[0]);
 
         private ImmutableList<ChromatogramSet> _chromatograms;
+        private int _countUnloaded;
 
         private ChromatogramCache _cacheFinal;
         private ChromatogramCache _cacheRecalc;
@@ -57,7 +58,11 @@ namespace pwiz.Skyline.Model.Results
         public IList<ChromatogramSet> Chromatograms
         {
             get { return _chromatograms; }
-            private set { _chromatograms = MakeReadOnly(value.ToArray()); }
+            private set
+            {
+                _chromatograms = MakeReadOnly(value.ToArray());
+                _countUnloaded = _chromatograms.Count(c => !c.IsLoaded);
+            }
         }
 
         public bool IsTimeNormalArea { get; private set; }
@@ -71,7 +76,9 @@ namespace pwiz.Skyline.Model.Results
         {
             get
             {
-                return IsNotLoadedExplained == null;
+                if (_countUnloaded > 0)
+                    return false;
+                return (IsJoiningDisabled || (_cacheFinal != null && !_cacheFinal.ReadStream.IsModified));
             }
         }
 
