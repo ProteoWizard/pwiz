@@ -114,7 +114,17 @@ namespace SkylineNightly
             // Delete source tree and old SkylineTester.
             Delete(skylineNightlySkytr);
             Log("Delete SkylineTester");
-            Delete(skylineTesterDir);
+            try
+            {
+                Delete(skylineTesterDir);
+            }
+            catch (Exception e)
+            {
+                // Work around undeletable file that sometimes appears under Windows 10
+                string newDir = skylineTesterDir + "_" +  DateTime.Now.ToLocalTime().ToString("s").Replace(":", ".");
+                Log("Unable to delete " + skylineTesterDir + "(" + e + "),  using " + newDir + " instead.");
+                skylineTesterDir = newDir;
+            }
             Log("Delete pwiz folder");
             Delete(_pwizDir);
 
