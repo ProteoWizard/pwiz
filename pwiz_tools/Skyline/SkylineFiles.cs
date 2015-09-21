@@ -2146,9 +2146,22 @@ namespace pwiz.Skyline
             }
 
             var arrayChrom = listChrom.ToArray();
-            return doc.ChangeMeasuredResults(results == null
-                ? new MeasuredResults(arrayChrom)
-                : results.ChangeChromatograms(arrayChrom));
+            if (arrayChrom.Length == 0)
+            {
+                results = null;
+            }
+            else
+            {
+                if (results == null)
+                {
+                    results = new MeasuredResults(arrayChrom);
+                }
+                else
+                {
+                    results = results.ChangeChromatograms(arrayChrom);
+                }
+            }
+            return doc.ChangeMeasuredResults(results);
         }
 
         private SrmDocument ImportResults(SrmDocument doc, string nameResult, IEnumerable<MsDataFileUri> dataSources,
