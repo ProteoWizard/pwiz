@@ -601,7 +601,7 @@ namespace pwiz.Skyline.Model.Results
         /// Scores computed using available <see cref="DetailedPeakFeatureCalculator"/>
         /// implementations
         /// </summary>
-        public IList<float> DetailScores { get; set; }
+        public float[] DetailScores { get; set; }
         
         /// <summary>
         /// Use proportion of total peaks found to avoid picking super small peaks

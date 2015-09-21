@@ -1858,14 +1858,14 @@ namespace pwiz.Skyline.Model.Results
         protected readonly IList<ChromCachedFile> _allFiles;
         protected readonly ChromTransition[] _allTransitions;
         protected readonly IReadOnlyList<ChromPeak> _allPeaks;
-        protected readonly float[] _allScores;
+        protected readonly IReadOnlyList<float> _allScores;
 
         public ChromatogramGroupInfo(ChromGroupHeaderInfo5 groupHeaderInfo,
                                      IDictionary<Type, int> scoreTypeIndices,
                                      IList<ChromCachedFile> allFiles,
                                      ChromTransition[] allTransitions,
                                      IReadOnlyList<ChromPeak> allPeaks,
-                                     float[] allScores)
+                                     IReadOnlyList<float> allScores)
         {
             _groupHeaderInfo = groupHeaderInfo;
             _scoreTypeIndices = scoreTypeIndices;
@@ -2127,7 +2127,7 @@ namespace pwiz.Skyline.Model.Results
                                 IList<ChromCachedFile> allFiles,
                                 ChromTransition[] allTransitions,
                                 IReadOnlyList<ChromPeak> allPeaks,
-                                float[] allScores,
+                                IReadOnlyList<float> allScores,
                                 float[] times,
                                 float[][] intensities,
                                 short[][] massError10Xs,

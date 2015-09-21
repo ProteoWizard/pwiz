@@ -1047,8 +1047,11 @@ namespace pwiz.Skyline.Util
         /// <param name="writeAction">Action to write one array block.</param>
         public void WriteArray(Action<TItem[]> writeAction)
         {
-            foreach (var block in _blocks)
-                writeAction(block);
+            if (_blocks != null)
+            {
+                foreach (var block in _blocks)
+                    writeAction(block);
+            }
         }
 
         /// <summary>

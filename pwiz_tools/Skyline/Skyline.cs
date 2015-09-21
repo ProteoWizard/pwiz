@@ -3775,7 +3775,7 @@ namespace pwiz.Skyline
                     pos++;
                 else
                     pos = count;
-                tag = pos + "/" + count; // Not L10N
+                tag = string.Format("{0:#,0}", pos) + "/" + string.Format("{0:#,0}", count); // Not L10N
             }
 
             if (!Equals(label.Tag, tag))

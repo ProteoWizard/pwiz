@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -29,7 +30,7 @@ namespace pwiz.Skyline.Model.Results
     internal sealed class ChromCacheJoiner : ChromCacheWriter
     {
         private int _currentPartIndex = -1;
-        private int _scoreCount = -1;
+        private int _scoreTypesCount = -1;
         private long _copyBytes;
         private Stream _inStream;
 
@@ -102,7 +103,7 @@ namespace pwiz.Skyline.Model.Results
                     int offsetFiles = _listCachedFiles.Count;
                     int offsetTransitions = _listTransitions.Count;
                     int offsetPeaks = _peakCount;
-                    int offsetScores = _listScores.Count;
+                    int offsetScores = _scoreCount;
                     long offsetPoints = _fs.Stream.Position;
 
                     // Scan ids
@@ -118,10 +119,10 @@ namespace pwiz.Skyline.Model.Results
                     rawData.ChromatogramPeaks.WriteArray(block => ChromPeak.WriteArray(_fsPeaks.FileStream.SafeFileHandle, block));
                     _listTransitions.AddRange(rawData.ChromTransitions);
                     // Initialize the score types the first time through
-                    if (_scoreCount == -1)
+                    if (_scoreTypesCount == -1)
                     {
                         _listScoreTypes.AddRange(rawData.ScoreTypes);
-                        _scoreCount = _listScoreTypes.Count;
+                        _scoreTypesCount = _listScoreTypes.Count;
                     }
                     else if (!ArrayUtil.EqualsDeep(_listScoreTypes, rawData.ScoreTypes))
                     {
@@ -129,7 +130,8 @@ namespace pwiz.Skyline.Model.Results
                         if (_listScoreTypes.Intersect(rawData.ScoreTypes).Count() != _listScoreTypes.Count)
                             throw new InvalidDataException("Data cache files with different score types cannot be joined.");    // Not L10N
                     }
-                    _listScores.AddRange(rawData.Scores);
+                    _scoreCount += rawData.Scores.Length;
+                    rawData.Scores.WriteArray(block => PrimitiveArrays.Write(_fsScores.Stream, block));
 
                     for (int i = 0; i < rawData.ChromatogramEntries.Length; i++)
                     {

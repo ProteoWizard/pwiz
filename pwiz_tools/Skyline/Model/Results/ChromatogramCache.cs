@@ -44,11 +44,15 @@ namespace pwiz.Skyline.Model.Results
         public const string EXT = ".skyd"; // Not L10N
         public const string PEAKS_EXT = ".peaks"; // Not L10N
         public const string SCANS_EXT = ".scans"; // Not L10N
+        public const string SCORES_EXT = ".scores"; // Not L10N
 
         public static int FORMAT_VERSION_CACHE
         {
             get { return FORMAT_VERSION_CACHE_9; }
         }
+
+        // Set default block size for scoures BlockedArray<float>
+        public const int DEFAULT_SCORES_BLOCK_SIZE = 100*1024*1024;  // 100 megabytes
 
         /// <summary>
         /// Construct path to a final data cache from the document path.
@@ -109,7 +113,7 @@ namespace pwiz.Skyline.Model.Results
         private readonly ChromTransition[] _chromTransitions;
         private readonly BlockedArray<ChromPeak> _chromatogramPeaks;
         private readonly Dictionary<Type, int> _scoreTypeIndices;
-        private readonly float[] _scores;
+        private readonly BlockedArray<float> _scores;
         private readonly byte[] _textIdBytes;
         private readonly long _locationScanIds;
         private readonly long _countBytesScanIds;
@@ -492,7 +496,7 @@ namespace pwiz.Skyline.Model.Results
                     ChromTransitions = new ChromTransition[0],
                     ChromatogramPeaks = new BlockedArray<ChromPeak>(),
                     ScoreTypes = new Type[0],
-                    Scores = new float[0],
+                    Scores = new BlockedArray<float>(),
                 };
 
             public int FormatVersion { get; set; }
@@ -501,7 +505,7 @@ namespace pwiz.Skyline.Model.Results
             public ChromTransition[] ChromTransitions { get; set; }
             public BlockedArray<ChromPeak> ChromatogramPeaks { get; set; }
             public Type[] ScoreTypes { get; set; }
-            public float[] Scores { get; set; }
+            public BlockedArray<float> Scores { get; set; }
             public byte[] TextIdBytes { get; set; }
             public long LocationScanIds { get; set; }
             public long CountBytesScanIds { get; set; }
@@ -546,7 +550,7 @@ namespace pwiz.Skyline.Model.Results
                 readStream = loader.StreamManager.CreatePooledStream(cachePath, false);
 
                 RawData raw;
-                LoadStructs(readStream.Stream, out raw);
+                LoadStructs(readStream.Stream, status, loader, out raw);
 
                 var result = new ChromatogramCache(cachePath, raw, readStream);
                 loader.UpdateProgress(status.Complete());
@@ -596,6 +600,11 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public static long LoadStructs(Stream stream, out RawData raw)
+        {
+            return LoadStructs(stream, null, null, out raw);
+        }
+
+        public static long LoadStructs(Stream stream, ProgressStatus status, IProgressMonitor progressMonitor, out RawData raw)
         {
             // Read library header from the end of the cache
             const int countHeader = (int)Header.count * 4;
@@ -710,6 +719,9 @@ namespace pwiz.Skyline.Model.Results
                                                              instrumentInfoList);
             }
 
+            if (progressMonitor != null)
+                progressMonitor.UpdateProgress(status = status.ChangePercentComplete(20));
+
             // Read list of chromatogram group headers
             stream.Seek(locationHeaders, SeekOrigin.Begin);
             raw.ChromatogramEntries = ChromGroupHeaderInfo5.ReadArray(stream, numChrom, formatVersion);
@@ -739,17 +751,27 @@ namespace pwiz.Skyline.Model.Results
                     ReadComplete(stream, typeNameBuffer, lenTypeName);
                     raw.ScoreTypes[i] = Type.GetType(Encoding.UTF8.GetString(typeNameBuffer, 0, lenTypeName));
                 }
-                raw.Scores = PrimitiveArrays.Read<float>(stream, numScores);
+                raw.Scores = new BlockedArray<float>(
+                    count => PrimitiveArrays.Read<float>(stream, count),
+                    numScores,
+                    sizeof(float),
+                    DEFAULT_SCORES_BLOCK_SIZE);
             }
             else
             {
                 raw.ScoreTypes = new Type[0];
-                raw.Scores = new float[0];
+                raw.Scores = new BlockedArray<float>();
             }
+
+            if (progressMonitor != null)
+                progressMonitor.UpdateProgress(status = status.ChangePercentComplete(50));
 
             // Read list of transitions
             stream.Seek(locationTrans, SeekOrigin.Begin);
             raw.ChromTransitions = ChromTransition.ReadArray(stream, numTrans, formatVersion);
+
+            if (progressMonitor != null)
+                progressMonitor.UpdateProgress(status.ChangePercentComplete(30));
 
             // Read list of peaks
             stream.Seek(locationPeaks, SeekOrigin.Begin);
@@ -814,35 +836,38 @@ namespace pwiz.Skyline.Model.Results
         public static void WriteStructs(Stream outStream,
                                         Stream outStreamScans,
                                         Stream outStreamPeaks,
+                                        Stream outStreamScores,
                                         ICollection<ChromCachedFile> chromCachedFiles,
                                         List<ChromGroupHeaderInfo5> chromatogramEntries,
                                         ICollection<ChromTransition> chromTransitions,
                                         ICollection<Type> scoreTypes,
-                                        float[] scores,
+                                        int scoureCount,
                                         int peakCount,
                                         ChromatogramCache originalCache)
         {
             WriteStructs(outStream,
                          outStreamScans,
                          outStreamPeaks,
+                         outStreamScores,
                          chromCachedFiles,
                          chromatogramEntries,
                          chromTransitions,
                          originalCache._textIdBytes,   // Cached sequence and custom ion id bytes remain unchanged
                          scoreTypes,
-                         scores,
+                         scoureCount,
                          peakCount);
         }
 
         public static void WriteStructs(Stream outStream,
                                         Stream outStreamScans,
                                         Stream outStreamPeaks,
+                                        Stream outStreamScores,
                                         ICollection<ChromCachedFile> chromCachedFiles,
                                         List<ChromGroupHeaderInfo5> chromatogramEntries,
                                         ICollection<ChromTransition> chromTransitions,
                                         ICollection<byte> textIdBytes,
                                         ICollection<Type> scoreTypes,
-                                        float[] scores,
+                                        int scoreCount,
                                         int peakCount)
         {
             long locationScans = outStream.Position;
@@ -882,6 +907,7 @@ namespace pwiz.Skyline.Model.Results
 
             long locationScores = outStream.Position;
             long locationTextIdBytes = outStream.Position;
+            int countScores = (int) (outStreamScores.Position/sizeof (float));
             if (FORMAT_VERSION_CACHE > FORMAT_VERSION_CACHE_4)
             {
                 // Write the scores
@@ -897,7 +923,8 @@ namespace pwiz.Skyline.Model.Results
                     byte[] typesBuffer = new byte[len];
                     Encoding.UTF8.GetBytes(sbTypes.ToString(), 0, sbTypes.Length, typesBuffer, 0);
                     outStream.Write(typesBuffer, 0, len);
-                    PrimitiveArrays.Write(outStream, scores);
+                    outStreamScores.Seek(0, SeekOrigin.Begin);
+                    outStreamScores.CopyTo(outStream);
                 }
 
                 // Write sequence or custom ion id bytes
@@ -1016,7 +1043,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 // scores
                 outStream.Write(BitConverter.GetBytes(scoreTypes.Count), 0, sizeof(int));
-                outStream.Write(BitConverter.GetBytes(scores.Length), 0, sizeof(int));
+                outStream.Write(BitConverter.GetBytes(countScores), 0, sizeof(int));
                 outStream.Write(BitConverter.GetBytes(locationScores), 0, sizeof(long));
                 // sequence or custom ion id bytes
                 int countTextIdBytes = (textIdBytes != null ? textIdBytes.Count : 0);
@@ -1235,16 +1262,17 @@ namespace pwiz.Skyline.Model.Results
             var listKeepTransitions = new List<ChromTransition>();
             var listKeepTextIdBytes = new List<byte>();
             var dictKeepTextIdIndices = new Dictionary<int, int>();
-            var listKeepScores = new List<float>();
             var scoreTypes = ScoreTypes.ToArray();
 
-            using (FileSaver fsPeaks = new FileSaver(cachePathOpt + PEAKS_EXT, true))
-            using (FileSaver fsScans = new FileSaver(cachePathOpt + SCANS_EXT, true))
-            using (FileSaver fs = new FileSaver(cachePathOpt))
+            // TODO: Make these first 3 temporary files that delete on close
+            using (var fsPeaks = new FileSaver(cachePathOpt + PEAKS_EXT, true))
+            using (var fsScans = new FileSaver(cachePathOpt + SCANS_EXT, true))
+            using (var fsScores = new FileSaver(cachePathOpt + SCORES_EXT, true))
+            using (var fs = new FileSaver(cachePathOpt))
             {
                 var inStream = ReadStream.Stream;
                 fs.Stream = streamManager.CreateStream(fs.SafeName, FileMode.Create, true);
-                var peakCount = 0;
+                int peakCount = 0, scoreCount = 0;
 
                 byte[] buffer = new byte[0x40000];  // 256K
 
@@ -1280,7 +1308,7 @@ namespace pwiz.Skyline.Model.Results
                                                                       listKeepTransitions.Count,
                                                                       lastEntry.NumPeaks,
                                                                       peakCount,
-                                                                      listKeepScores.Count,
+                                                                      scoreCount,
                                                                       lastEntry.MaxPeakIndex,
                                                                       lastEntry.NumPoints,
                                                                       lastEntry.CompressedSize,
@@ -1308,8 +1336,15 @@ namespace pwiz.Skyline.Model.Results
 
                         start = lastEntry.StartScoreIndex;
                         end = start + lastEntry.NumPeaks*scoreTypes.Length;
-                        for (int j = start; j < end; j++)
-                            listKeepScores.Add(_scores[j]);
+                        scoreCount += end - start;
+                        if (scoreCount > 0)
+                        {
+                            _scores.WriteArray(
+                                (scores, startIndex, count) =>
+                                FastWrite.WriteFloats(fsScores.FileStream.SafeFileHandle, scores, startIndex, count),
+                                start,
+                                end - start);
+                        }
                     }
 
                     if (keepFile)
@@ -1346,17 +1381,19 @@ namespace pwiz.Skyline.Model.Results
                 WriteStructs(fs.Stream,
                     fsScans.Stream,
                     fsPeaks.Stream,
+                    fsScores.Stream,
                     listKeepCachedFiles,
                     listKeepEntries,
                     listKeepTransitions,
                     listKeepTextIdBytes,
                     scoreTypes,
-                    listKeepScores.ToArray(),
+                    scoreCount,
                     peakCount);
 
                 CommitCache(fs);
 
                 fsPeaks.Stream.Seek(0, SeekOrigin.Begin);
+                fsScores.Stream.Seek(0, SeekOrigin.Begin);
                 var rawData = new RawData
                     {
                         FormatVersion = FORMAT_VERSION_CACHE,
@@ -1368,7 +1405,9 @@ namespace pwiz.Skyline.Model.Results
                             ChromPeak.SizeOf, ChromPeak.DEFAULT_BLOCK_SIZE),
                         TextIdBytes = listKeepTextIdBytes.ToArray(),
                         ScoreTypes = scoreTypes,
-                        Scores = listKeepScores.ToArray(),
+                        Scores = new BlockedArray<float>(
+                            count => PrimitiveArrays.Read<float>(fsScores.FileStream, count), scoreCount,
+                            sizeof(float), DEFAULT_SCORES_BLOCK_SIZE),
                         LocationScanIds = locationAllScanIds,
                         CountBytesScanIds = countBytesAllScanIds,
                     };

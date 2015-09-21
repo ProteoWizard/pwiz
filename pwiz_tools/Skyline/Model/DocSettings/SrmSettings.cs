@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
@@ -1782,13 +1783,13 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             _status = _status.ChangeMessage(string.Format(_formatString, nodeGroup.Name));
             UpdateProgress(true);
-            _seenGroupCount++;
+            Interlocked.Increment(ref _seenGroupCount);
         }
 
         public void ProcessMolecule(PeptideDocNode nodePep)
         {
             UpdateProgress(false);
-            _seenMoleculeCount++;
+            Interlocked.Increment(ref _seenMoleculeCount);
         }
 
         private void UpdateProgress(bool forceUpdate)
@@ -1799,9 +1800,17 @@ namespace pwiz.Skyline.Model.DocSettings
 
             int percentComplete = (_seenMoleculeCount * 100) / MoleculeCount ?? (_seenGroupCount * 100) / GroupCount;
             if (_status.PercentComplete != percentComplete)
-                _progressMonitor.UpdateProgress(_status = _status.ChangePercentComplete(percentComplete));
+                ChangeProgress(status => status.ChangePercentComplete(percentComplete));
             else if (forceUpdate)
-                _progressMonitor.UpdateProgress(_status);
+                ChangeProgress(status => status);
+        }
+
+        public void ChangeProgress(Func<ProgressStatus, ProgressStatus> change)
+        {
+            var status = _status;
+            var statusNew = change(status);
+            if (ReferenceEquals(status, Interlocked.CompareExchange(ref _status, statusNew, status)))
+                _progressMonitor.UpdateProgress(statusNew);
         }
 
         public void Dispose()

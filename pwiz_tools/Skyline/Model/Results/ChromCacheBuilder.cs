@@ -21,6 +21,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
@@ -1192,12 +1193,15 @@ namespace pwiz.Skyline.Model.Results
                 }
                 else if (!dictScoresToIndex.TryGetValue(startPeak.DetailScores, out scoresIndex))
                 {
-                    scoresIndex = _listScores.Count;
+                    scoresIndex = _scoreCount;
                     dictScoresToIndex.Add(startPeak.DetailScores, scoresIndex);
 
                     // Add scores to the scores list
                     foreach (var peakSet in chromDataSet.PeakSets)
-                        _listScores.AddRange(peakSet.DetailScores);
+                    {
+                        PrimitiveArrays.Write(_fsScores.Stream, peakSet.DetailScores);
+                        _scoreCount += peakSet.DetailScores.Length;
+                    }
                 }
 
                 // Add to header list

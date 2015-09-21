@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
 
@@ -33,13 +34,14 @@ namespace pwiz.Skyline.Model.Results
         protected readonly List<ChromGroupHeaderInfo5> _listGroups = new List<ChromGroupHeaderInfo5>();
         protected readonly List<byte> _listTextIdBytes = new List<byte>();
         protected readonly List<Type> _listScoreTypes = new List<Type>();
-        protected readonly List<float> _listScores = new List<float>();
         protected readonly FileSaver _fs;
         protected readonly FileSaver _fsScans;
         protected readonly FileSaver _fsPeaks;
+        protected readonly FileSaver _fsScores;
         protected readonly ILoadMonitor _loader;
         protected ProgressStatus _status;
         protected int _peakCount;
+        protected int _scoreCount;
         protected IPooledStream _destinationStream;
 
         protected ChromCacheWriter(string cachePath, ILoadMonitor loader, ProgressStatus status,
@@ -49,6 +51,7 @@ namespace pwiz.Skyline.Model.Results
             _fs = new FileSaver(CachePath);
             _fsScans = new FileSaver(CachePath + ChromatogramCache.SCANS_EXT, true);
             _fsPeaks = new FileSaver(CachePath + ChromatogramCache.PEAKS_EXT, true);
+            _fsScores = new FileSaver(CachePath + ChromatogramCache.SCORES_EXT, true);
             _loader = loader;
             _status = status;
             _completed = completed;
@@ -76,12 +79,13 @@ namespace pwiz.Skyline.Model.Results
                             ChromatogramCache.WriteStructs(_fs.Stream,
                                                            _fsScans.Stream,
                                                            _fsPeaks.Stream,
+                                                           _fsScores.Stream,
                                                            _listCachedFiles,
                                                            _listGroups,
                                                            _listTransitions,
                                                            _listTextIdBytes,
                                                            _listScoreTypes,
-                                                           _listScores.ToArray(),
+                                                           _scoreCount,
                                                            _peakCount);
 
                             _loader.StreamManager.Finish(_fs.Stream);
@@ -94,6 +98,7 @@ namespace pwiz.Skyline.Model.Results
                         var readStream = _loader.StreamManager.CreatePooledStream(CachePath, false);
 
                         _fsPeaks.Stream.Seek(0, SeekOrigin.Begin);
+                        _fsScores.Stream.Seek(0, SeekOrigin.Begin);
                         var rawData = new ChromatogramCache.RawData
                             {
                                 FormatVersion = ChromatogramCache.FORMAT_VERSION_CACHE,
@@ -101,9 +106,12 @@ namespace pwiz.Skyline.Model.Results
                                 ChromatogramEntries = _listGroups.ToArray(),
                                 ChromTransitions = _listTransitions.ToArray(),
                                 ChromatogramPeaks = new BlockedArray<ChromPeak>(
-                                    count => ChromPeak.ReadArray(_fsPeaks.FileStream.SafeFileHandle, count), _peakCount, ChromPeak.SizeOf, ChromPeak.DEFAULT_BLOCK_SIZE),
+                                    count => ChromPeak.ReadArray(_fsPeaks.FileStream.SafeFileHandle, count), _peakCount,
+                                    ChromPeak.SizeOf, ChromPeak.DEFAULT_BLOCK_SIZE),
                                 ScoreTypes = _listScoreTypes.ToArray(),
-                                Scores = _listScores.ToArray(),
+                                Scores = new BlockedArray<float>(
+                                    count => PrimitiveArrays.Read<float>(_fsScores.FileStream, count), _scoreCount,
+                                    sizeof(float), ChromatogramCache.DEFAULT_SCORES_BLOCK_SIZE),
                                 TextIdBytes = _listTextIdBytes.ToArray(),
                                 LocationScanIds = locationScanIds,
                                 CountBytesScanIds = countBytesScanIds,
@@ -143,6 +151,7 @@ namespace pwiz.Skyline.Model.Results
             _fs.Dispose();
             _fsPeaks.Dispose();
             _fsScans.Dispose();
+            _fsScores.Dispose();
         }
     }
 }
