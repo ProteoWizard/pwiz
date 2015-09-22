@@ -740,7 +740,7 @@ TYPEDEF_SHARED_PTR(SpectrumIdentificationResult);
 ///
 /// Represents the set of all search results from
 /// SpectrumIdentification.
-struct PWIZ_API_DECL SpectrumIdentificationList : public Identifiable
+struct PWIZ_API_DECL SpectrumIdentificationList : public IdentifiableParamContainer
 {
     SpectrumIdentificationList(const std::string& id_ = "",
                                const std::string& name_ = "");

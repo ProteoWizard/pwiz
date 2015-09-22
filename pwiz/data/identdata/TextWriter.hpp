@@ -380,7 +380,7 @@ class PWIZ_API_DECL TextWriter
     TextWriter& operator()(const SpectrumIdentificationList& sil)
     {
         (*this)("SpectrumIdentificationList: ");
-        (*this)((Identifiable)sil);
+        (*this)((const IdentifiableParamContainer&)sil);
         if (!sil.empty())
             child()("numSequencesSearched: ", sil.numSequencesSearched);
         if (!sil.fragmentationTable.empty())

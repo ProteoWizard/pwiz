@@ -4103,7 +4103,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificati
 }
 
 
-struct HandlerSpectrumIdentificationList : public HandlerIdentifiable
+struct HandlerSpectrumIdentificationList : public HandlerIdentifiableParamContainer
 {
     SpectrumIdentificationList* silp;
     HandlerSpectrumIdentificationList(SequenceIndex& sequenceIndex,
@@ -4123,12 +4123,12 @@ struct HandlerSpectrumIdentificationList : public HandlerIdentifiable
         {
             getAttribute(attributes, "numSequencesSearched", silp->numSequencesSearched);
             
-            HandlerIdentifiable::id = silp;
-            return HandlerIdentifiable::startElement(name, attributes, position);
+            HandlerIdentifiableParamContainer::id = silp;
         }
         else if (name == "FragmentationTable")
         {
             // Ignore
+            return Status::Ok;
         }
         else if (name == "Measure")
         {
@@ -4151,10 +4151,8 @@ struct HandlerSpectrumIdentificationList : public HandlerIdentifiable
             handlerSpectrumIdentificationResult_.sirp = silp->spectrumIdentificationResult.back().get();
             return Status(Status::Delegate, &handlerSpectrumIdentificationResult_);
         }
-        else
-            throw runtime_error("[IO::HandlerSpectrumIdentificationList] Unexpected element name: " + name);
 
-        return Status::Ok;
+        return HandlerIdentifiableParamContainer::startElement(name, attributes, position);
     }
 
     virtual Status endElement(const string& name,

@@ -420,13 +420,13 @@ PWIZ_API_DECL bool Provider::empty() const
 
 PWIZ_API_DECL SpectrumIdentificationList::SpectrumIdentificationList(
     const string& id_, const string& name_)
-    : Identifiable(id_, name_), numSequencesSearched(0)
+    : IdentifiableParamContainer(id_, name_), numSequencesSearched(0)
 {
 }
 
 PWIZ_API_DECL bool SpectrumIdentificationList::empty() const
 {
-    return Identifiable::empty() &&
+    return IdentifiableParamContainer::empty() &&
            numSequencesSearched == 0 &&
            fragmentationTable.empty() &&
            spectrumIdentificationResult.empty();
