@@ -52,8 +52,9 @@ namespace SkylineNightly
         private readonly Xml _leaks;
         private Xml _pass;
         private readonly string _logDir;
-        private string _pwizDir;
         private TimeSpan _duration;
+        private string _pwizDir;
+        private string _skylineTesterDir;
 
         public Nightly()
         {
@@ -64,7 +65,8 @@ namespace SkylineNightly
             // Locate relevant directories.
             var nightlyDir = GetNightlyDir();
             _logDir = Path.Combine(nightlyDir, "Logs");
-            _pwizDir = Path.Combine(nightlyDir, "pwiz");
+            _skylineTesterDir = Path.Combine(nightlyDir, "SkylineTester");
+            _pwizDir = Path.Combine(_skylineTesterDir, "pwiz");
 
             // Default duration.
             _duration = TimeSpan.FromHours(9);
@@ -77,7 +79,6 @@ namespace SkylineNightly
         {
             // Locate relevant directories.
             var nightlyDir = GetNightlyDir();
-            var skylineTesterDir = Path.Combine(nightlyDir, "SkylineTester");
             var skylineNightlySkytr = Path.Combine(nightlyDir, "SkylineNightly.skytr");
 
             // Kill any other instance of SkylineNightly.
@@ -114,42 +115,38 @@ namespace SkylineNightly
             // Delete source tree and old SkylineTester.
             Delete(skylineNightlySkytr);
             Log("Delete SkylineTester");
-            var skylineTesterDirBasis = skylineTesterDir;
+            var skylineTesterDirBasis = _skylineTesterDir;
             const int maxRetry = 1000;  // Something would have to be very wrong to get here, but better not to risk a hang
             for (var retry = 1; retry < maxRetry; retry++)
             {
                 try
                 {
-                    Delete(skylineTesterDir);
+                    Delete(_skylineTesterDir);
                     break;
                 }
                 catch (Exception e)
                 {
                     // Work around undeletable file that sometimes appears under Windows 10
                     var newDir = skylineTesterDirBasis + "_" +  retry;
-                    Log("Unable to delete " + skylineTesterDir + "(" + e + "),  using " + newDir + " instead.");
-                    skylineTesterDir = newDir;
+                    Log("Unable to delete " + _skylineTesterDir + "(" + e + "),  using " + newDir + " instead.");
+                    _skylineTesterDir = newDir;
                 }
             }
-            Log("Delete pwiz folder");
-            var pwizDirBasis = _pwizDir;
-            for (var retry = 1; retry < maxRetry; retry++)
+            _pwizDir = Path.Combine(_skylineTesterDir, "pwiz");
+            Log("buildRoot is "+_pwizDir);
+
+            // We used to put source tree alongside SkylineTesterDir instead of under it
+            try
             {
-                try
-                {
-                    Delete(_pwizDir);
-                    break;
-                }
-                catch (Exception e)
-                {
-                    // Work around undeletable file that can happen if an old TestRunner is still lurking (we try to kill them but some won't die)
-                    var newDir = pwizDirBasis + "_" + retry;
-                    Log("Unable to delete " + _pwizDir + "(" + e + "),  using " + newDir + " instead.");
-                    _pwizDir = newDir;
-                }
+                Delete(nightlyDir + "\\pwiz");
             }
+            // ReSharper disable once EmptyGeneralCatchClause
+            catch
+            {
+            }
+
             // Download most recent build of SkylineTester.
-            var skylineTesterZip = skylineTesterDir + ".zip";
+            var skylineTesterZip = skylineTesterDirBasis + ".zip";
             const int attempts = 30;
             for (int i = 0; i < attempts; i++)
             {
@@ -171,11 +168,11 @@ namespace SkylineNightly
             }
 
             // Install SkylineTester.
-            if (!InstallSkylineTester(skylineTesterZip, skylineTesterDir))
+            if (!InstallSkylineTester(skylineTesterZip, _skylineTesterDir))
                 return;
 
             // Delete zip file.
-            Log("Delete zip file");
+            Log("Delete zip file " + skylineTesterZip);
             File.Delete(skylineTesterZip);
 
             // Create ".skytr" file to execute nightly build in SkylineTester.
@@ -194,6 +191,7 @@ namespace SkylineNightly
                     var skylineTester = Xml.FromString(reader.ReadToEnd());
                     skylineTester.GetChild("nightlyStartTime").Set(DateTime.Now.ToShortTimeString());
                     skylineTester.GetChild("nightlyRoot").Set(nightlyDir);
+                    skylineTester.GetChild("buildRoot").Set(_pwizDir);
                     skylineTester.Save(skylineNightlySkytr);
                     var durationHours = double.Parse(skylineTester.GetChild("nightlyDuration").Value);
                     durationSeconds = (int) (durationHours*60*60) + 30*60;  // 30 minutes grace before we kill SkylineTester
@@ -201,7 +199,7 @@ namespace SkylineNightly
             }
 
             // Start SkylineTester to do the build.
-            var skylineTesterExe = Path.Combine(skylineTesterDir, "SkylineTester Files", "SkylineTester.exe");
+            var skylineTesterExe = Path.Combine(_skylineTesterDir, "SkylineTester Files", "SkylineTester.exe");
 
             var processInfo = new ProcessStartInfo(skylineTesterExe, skylineNightlySkytr)
             {
@@ -284,7 +282,8 @@ namespace SkylineNightly
 
             _nightly["id"] = Environment.MachineName;
             _nightly["os"] = Environment.OSVersion;
-            _nightly["revision"] = GetRevision(_pwizDir);
+            var buildroot = ParseBuildRoot(log);
+            _nightly["revision"] = GetRevision(buildroot);
             _nightly["start"] = _startTime;
             _nightly["duration"] = (int)_duration.TotalMinutes;
             _nightly["testsrun"] = testCount;
@@ -374,6 +373,19 @@ namespace SkylineNightly
                 leak["bytes"] = match.Groups[2].Value;
             }
         }
+
+        private string ParseBuildRoot(string log)
+        {
+            var brPattern = new Regex(@"Deleting Build directory\.\.\.\r\n\> rmdir /s ""(\S+)""", RegexOptions.Compiled);
+            var match = brPattern.Match(log); 
+            if (match.Success)
+            {
+                return match.Groups[1].Value;
+            }
+            return _pwizDir;
+        }
+
+
 
         /// <summary>
         /// Post the latest results to the server.
@@ -495,7 +507,7 @@ namespace SkylineNightly
         /// </summary>
         private void Delete(string fileOrDir)
         {
-            for (int i = 60; i >0; i--)
+            for (int i = 5; i >0; i--)
             {
                 try
                 {

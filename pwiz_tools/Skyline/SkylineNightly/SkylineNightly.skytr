@@ -8,4 +8,5 @@
   <nightlyRunPerfTests>false</nightlyRunPerfTests>
   <nightlyBranch>false</nightlyBranch>
   <nightlyExit>true</nightlyExit>
+  <buildRoot></buildRoot>
 </SkylineTester>
