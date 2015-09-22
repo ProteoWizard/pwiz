@@ -987,7 +987,11 @@ namespace pwiz.Skyline.Model
                                                 TransitionDocNode nodeTran,
                                                 int step)
         {
-            string compound = string.Concat(GetCompound(nodePep, nodeTranGroup), nodeTranGroup.TransitionGroup.LabelTypeText);
+            string compound = string.Format("{0}{1}({2}{3})", //  Not L10N
+                                            GetCompound(nodePep, nodeTranGroup),
+                                            nodeTranGroup.TransitionGroup.LabelTypeText,
+                                            nodeTranGroup.PrecursorCharge >= 0 ? '+' : '-',
+                                            nodeTranGroup.PrecursorCharge);
             if (!_compoundCounts.ContainsKey(compound))
             {
                 _compoundCounts[compound] = 0;
