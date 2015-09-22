@@ -52,7 +52,7 @@ namespace SkylineNightly
         private readonly Xml _leaks;
         private Xml _pass;
         private readonly string _logDir;
-        private readonly string _pwizDir;
+        private string _pwizDir;
         private TimeSpan _duration;
 
         public Nightly()
@@ -114,20 +114,40 @@ namespace SkylineNightly
             // Delete source tree and old SkylineTester.
             Delete(skylineNightlySkytr);
             Log("Delete SkylineTester");
-            try
+            var skylineTesterDirBasis = skylineTesterDir;
+            const int maxRetry = 1000;  // Something would have to be very wrong to get here, but better not to risk a hang
+            for (var retry = 1; retry < maxRetry; retry++)
             {
-                Delete(skylineTesterDir);
-            }
-            catch (Exception e)
-            {
-                // Work around undeletable file that sometimes appears under Windows 10
-                string newDir = skylineTesterDir + "_" +  DateTime.Now.ToLocalTime().ToString("s").Replace(":", ".");
-                Log("Unable to delete " + skylineTesterDir + "(" + e + "),  using " + newDir + " instead.");
-                skylineTesterDir = newDir;
+                try
+                {
+                    Delete(skylineTesterDir);
+                    break;
+                }
+                catch (Exception e)
+                {
+                    // Work around undeletable file that sometimes appears under Windows 10
+                    var newDir = skylineTesterDirBasis + "_" +  retry;
+                    Log("Unable to delete " + skylineTesterDir + "(" + e + "),  using " + newDir + " instead.");
+                    skylineTesterDir = newDir;
+                }
             }
             Log("Delete pwiz folder");
-            Delete(_pwizDir);
-
+            var pwizDirBasis = _pwizDir;
+            for (var retry = 1; retry < maxRetry; retry++)
+            {
+                try
+                {
+                    Delete(_pwizDir);
+                    break;
+                }
+                catch (Exception e)
+                {
+                    // Work around undeletable file that can happen if an old TestRunner is still lurking (we try to kill them but some won't die)
+                    var newDir = pwizDirBasis + "_" + retry;
+                    Log("Unable to delete " + _pwizDir + "(" + e + "),  using " + newDir + " instead.");
+                    _pwizDir = newDir;
+                }
+            }
             // Download most recent build of SkylineTester.
             var skylineTesterZip = skylineTesterDir + ".zip";
             const int attempts = 30;
