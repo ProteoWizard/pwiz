@@ -19,26 +19,15 @@
 
 using System;
 using System.Collections.Generic;
+using pwiz.Skyline.Model;
 
 namespace pwiz.Skyline.FileUI.PeptideSearch
 {
     public interface IImportResultsControl
     {
-        List<FoundResultsFile> FoundResultsFiles { get; set; } // Name --> Path
+        List<ImportPeptideSearch.FoundResultsFile> FoundResultsFiles { get; set; } // Name --> Path
         bool ResultsFilesMissing { get; }
 
         event EventHandler<ImportResultsControl.ResultsFilesEventArgs> ResultsFilesChanged;
-    }
-
-    public class FoundResultsFile
-    {
-        public string Name { get; set; }
-        public string Path { get; set; }
-
-        public FoundResultsFile(string name, string path)
-        {
-            Name = name;
-            Path = path;
-        }
     }
 }

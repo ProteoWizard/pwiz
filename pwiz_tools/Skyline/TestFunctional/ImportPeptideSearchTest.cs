@@ -343,7 +343,7 @@ namespace pwiz.SkylineTestFunctional
                 
                 // Exclude spectrum source files is unchecked, so the control should match
                 // the two spectrum source files that match exactly: modless.mzXML and mods.mzXML
-                List<FoundResultsFile> foundResults = importResultsControl.FoundResultsFiles;
+                List<ImportPeptideSearch.FoundResultsFile> foundResults = importResultsControl.FoundResultsFiles;
                 string[] missingResults = importResultsControl.MissingResultsFiles.ToArray();
                 Assert.AreEqual(2, foundResults.Count);
                 Assert.AreEqual("modless", foundResults[0].Name);

@@ -122,7 +122,7 @@ namespace pwiz.Skyline
                     _out.WriteLine(Resources.CommandLine_Run_Not_setting_library_);
             }
 
-            if (commandArgs.ImportingFasta)
+            if (commandArgs.ImportingFasta && !commandArgs.ImportingSearch)
             {
                 try
                 {
@@ -200,6 +200,14 @@ namespace pwiz.Skyline
             if (commandArgs.RemovingResults && commandArgs.RemoveBeforeDate.HasValue)
             {
                 RemoveResults(commandArgs.RemoveBeforeDate);
+            }
+
+            if (commandArgs.ImportingSearch)
+            {
+                if (!ImportSearch(commandArgs))
+                {
+                    return;
+                }
             }
 
             if (commandArgs.Reintegrating)
@@ -952,6 +960,135 @@ namespace pwiz.Skyline
                     _doc.Settings.MeasuredResults.ChangeChromatograms(filteredChroms) : null;
 
                 _doc = _doc.ChangeMeasuredResults(newMeasuredResults);
+            }
+        }
+
+        private bool ImportSearch(CommandArgs commandArgs)
+        {
+            var doc = Document;
+            try
+            {
+                return ImportSearchInternal(commandArgs, ref doc);
+            }
+            finally
+            {
+                if (doc != null)
+                    ImportPeptideSearch.ClosePeptideSearchLibraryStreams(doc);
+            }
+        }
+
+        private bool ImportSearchInternal(CommandArgs commandArgs, ref SrmDocument doc)
+        {
+            var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(String.Empty));
+            var import = new ImportPeptideSearch
+            {
+                SearchFilenames = commandArgs.SearchResultsFiles.ToArray(),
+                CutoffScore = commandArgs.CutoffScore.GetValueOrDefault()
+            };
+
+            // Build library
+            var builder = import.GetLibBuilder(doc, commandArgs.Saving ? commandArgs.SaveFile : commandArgs.SkylineFile);
+            ImportPeptideSearch.ClosePeptideSearchLibraryStreams(doc);
+            _out.WriteLine(Resources.CommandLine_ImportSearch_Creating_spectral_library_from_files_);
+            foreach (var file in commandArgs.SearchResultsFiles)
+                _out.WriteLine(Path.GetFileName(file));
+            if (!builder.BuildLibrary(progressMonitor))
+                return false;
+
+            var docLibSpec = builder.LibrarySpec.ChangeDocumentLibrary(true);
+
+            _out.WriteLine(Resources.CommandLine_ImportSearch_Loading_library);
+            var libraryManager = new LibraryManager();
+            if (!import.LoadPeptideSearchLibrary(libraryManager, docLibSpec, progressMonitor))
+                return false;
+
+            doc = import.AddDocumentSpectralLibrary(doc, docLibSpec);
+            if (doc == null)
+                return false;
+
+            if (!import.VerifyRetentionTimes(import.GetFoundResultsFiles().Select(f => f.Path)))
+            {
+                _out.WriteLine(TextUtil.LineSeparate(
+                    Resources.ImportPeptideSearchDlg_NextPage_The_document_specific_spectral_library_does_not_have_valid_retention_times_,
+                    Resources.ImportPeptideSearchDlg_NextPage_Please_check_your_peptide_search_pipeline_or_contact_Skyline_support_to_ensure_retention_times_appear_in_your_spectral_libraries_));
+                return false;
+            }
+
+            // Look for results files to import
+            import.InitializeSpectrumSourceFiles(doc);
+            import.UpdateSpectrumSourceFilesFromDirs(import.GetDirsToSearch(Path.GetDirectoryName(commandArgs.SkylineFile)), false, null);
+            var missingResultsFiles = import.GetMissingResultsFiles().ToArray();
+            if (missingResultsFiles.Any())
+            {
+                foreach (var file in missingResultsFiles)
+                {
+                    if (doc.Settings.HasResults && doc.Settings.MeasuredResults.FindMatchingMSDataFile(new MsDataFilePath(file)) != null)
+                        continue;
+
+                    _out.WriteLine(Resources.CommandLine_ImportSearch_Warning__Unable_to_locate_results_file___0__, Path.GetFileName(file));
+                }
+            }
+
+            // Add all modifications, if requested
+            if (commandArgs.AcceptAllModifications)
+            {
+                import.InitializeModifications(doc);
+                var foundMods = import.GetMatchedMods().Count();
+                var newModifications = new PeptideModifications(import.MatcherPepMods.StaticModifications,
+                    new[] {new TypedModifications(IsotopeLabelType.heavy, import.MatcherHeavyMods)});
+                var newSettings = import.AddModifications(doc, newModifications);
+                if (!ReferenceEquals(doc.Settings, newSettings))
+                {
+                    if (foundMods != 1)
+                        _out.WriteLine(Resources.CommandLine_ImportSearch_Adding__0__modifications_, foundMods);
+                    else
+                        _out.WriteLine(Resources.CommandLine_ImportSearch_Adding_1_modification_);
+                    doc = doc.ChangeSettings(newSettings);
+                    doc.Settings.UpdateDefaultModifications(false);
+                }
+            }
+
+            // Import FASTA
+            if (commandArgs.ImportingFasta)
+            {
+                _out.WriteLine(Resources.CommandLine_ImportFasta_Importing_FASTA_file__0____, Path.GetFileName(commandArgs.FastaPath));
+                doc = ImportPeptideSearch.PrepareImportFasta(doc);
+                int emptyProteins;
+                try
+                {
+                    IdentityPath firstAdded, nextAdd;
+                    doc = ImportPeptideSearch.ImportFasta(doc, commandArgs.FastaPath, progressMonitor, null,
+                        out firstAdded, out nextAdd, out emptyProteins);
+                }
+                catch (Exception x)
+                {
+                    _out.WriteLine(Resources.CommandLine_Run_Error__Failed_importing_the_file__0____1_, commandArgs.FastaPath, x.Message);
+                    _doc = doc;
+                    return true;  // So that document will be saved with the new library
+                }
+
+                if (emptyProteins > 0 && !commandArgs.KeepEmptyProteins)
+                {
+                    doc = ImportPeptideSearch.RemoveEmptyProteins(doc);
+                }
+            }
+
+            // Import results
+            _doc = doc;
+            ImportFoundResultsFiles(import);
+            return true;
+        }
+
+        private void ImportFoundResultsFiles(ImportPeptideSearch import)
+        {
+            foreach (var resultFile in import.GetFoundResultsFiles())
+            {
+                var filePath = new MsDataFilePath(resultFile.Path);
+                if (!_doc.Settings.HasResults || _doc.Settings.MeasuredResults.FindMatchingMSDataFile(filePath) == null)
+                {
+                    if (!ImportResultsFile(filePath, resultFile.Name, null, null, null))
+                        break; // Lots of work completed, still want to save
+                }
             }
         }
 

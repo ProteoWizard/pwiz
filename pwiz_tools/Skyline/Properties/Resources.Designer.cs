@@ -3668,6 +3668,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Warning: The cutoff score {0} is invalid. It must be a value between 0 and 1..
+        /// </summary>
+        public static string CommandArgs_ParseArgsInternal_Warning__The_cutoff_score__0__is_invalid__It_must_be_a_value_between_0_and_1_ {
+            get {
+                return ResourceManager.GetString("CommandArgs_ParseArgsInternal_Warning__The_cutoff_score__0__is_invalid__It_must_b" +
+                        "e_a_value_between_0_and_1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Warning: The dwell time {0} is invalid. it must be a number between {1} and {2}..
         /// </summary>
         public static string CommandArgs_ParseArgsInternal_Warning__The_dwell_time__0__is_invalid__it_must_be_a_number_between__1__and__2__ {
@@ -4432,6 +4442,51 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("CommandLine_ImportResultsInDir_Error__Could_not_get_last_write_time_for_file__0__" +
                         "", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Adding {0} modifications..
+        /// </summary>
+        public static string CommandLine_ImportSearch_Adding__0__modifications_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportSearch_Adding__0__modifications_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Adding 1 modification..
+        /// </summary>
+        public static string CommandLine_ImportSearch_Adding_1_modification_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportSearch_Adding_1_modification_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Creating spectral library from files:.
+        /// </summary>
+        public static string CommandLine_ImportSearch_Creating_spectral_library_from_files_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportSearch_Creating_spectral_library_from_files_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Loading library.
+        /// </summary>
+        public static string CommandLine_ImportSearch_Loading_library {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportSearch_Loading_library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Warning: Unable to locate results file &apos;{0}&apos;.
+        /// </summary>
+        public static string CommandLine_ImportSearch_Warning__Unable_to_locate_results_file___0__ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportSearch_Warning__Unable_to_locate_results_file___0__", resourceCulture);
             }
         }
         

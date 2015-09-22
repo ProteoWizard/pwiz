@@ -168,6 +168,19 @@ namespace pwiz.Skyline
         }
         public bool? ResolveToolConflictsBySkipping { get; private set; }
 
+        // For importing a peptide search
+        public const string ARG_IMPORT_PEPTIDE_SEARCH_FILE = "import-search-file"; // Not L10N
+        public const string ARG_IMPORT_PEPTIDE_SEARCH_CUTOFF = "import-search-cutoff-score"; // Not L10N
+        public const string ARG_IMPORT_PEPTIDE_SEARCH_MODS = "import-search-add-mods"; // Not L10N
+
+        public List<string> SearchResultsFiles { get; private set; }
+        public double? CutoffScore { get; private set; }
+        public bool AcceptAllModifications { get; private set; }
+        public bool ImportingSearch
+        {
+            get { return SearchResultsFiles.Count > 0; }
+        }
+
         // For adjusting full-scan settings
         private const string ARG_FULL_SCAN_PRECURSOR_RES = "full-scan-precursor-res"; // Not L10N
         private const string ARG_FULL_SCAN_PRECURSOR_RES_MZ = "full-scan-precursor-res-mz"; // Not L10N
@@ -417,6 +430,8 @@ namespace pwiz.Skyline
             DwellTime = AbstractMassListExporter.DWELL_TIME_DEFAULT;
             RunLength = AbstractMassListExporter.RUN_LENGTH_DEFAULT;
 
+            SearchResultsFiles = new List<string>();
+
             ImportBeforeDate = null;
             ImportOnOrAfterDate = null;
         }
@@ -438,6 +453,7 @@ namespace pwiz.Skyline
             public string Name { get; private set; }
             public string Value { get; private set; }
             public int ValueInt { get { return int.Parse(Value); } }
+            public double ValueDouble { get { return double.Parse(Value); } }
         }
 
         public bool ParseArgs(string[] args)
@@ -674,6 +690,43 @@ namespace pwiz.Skyline
                     {
                         ResolveToolConflictsBySkipping = true;
                     }
+                }
+                else if (IsNameValue(pair, ARG_IMPORT_PEPTIDE_SEARCH_FILE))
+                {
+                    RequiresSkylineDocument = true;
+                    SearchResultsFiles.Add(GetFullPath(pair.Value));
+                    CutoffScore = CutoffScore ?? Settings.Default.LibraryResultCutOff;
+                }
+                else if (IsNameValue(pair, ARG_IMPORT_PEPTIDE_SEARCH_CUTOFF))
+                {
+                    double? cutoff;
+                    try
+                    {
+                        cutoff = pair.ValueDouble;
+                        if (cutoff < 0 || cutoff > 1)
+                        {
+                            cutoff = null;
+                        }
+                    }
+                    catch
+                    {
+                        cutoff = null;
+                    }
+                    if (cutoff.HasValue)
+                    {
+                        CutoffScore = cutoff.Value;
+                    }
+                    else
+                    {
+                        var defaultScore = Settings.Default.LibraryResultCutOff;
+                        _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Warning__The_cutoff_score__0__is_invalid__It_must_be_a_value_between_0_and_1_, pair.Value);
+                        _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Defaulting_to__0__, defaultScore);
+                        CutoffScore = defaultScore;
+                    }
+                }
+                else if (IsNameOnly(pair, ARG_IMPORT_PEPTIDE_SEARCH_MODS))
+                {
+                    AcceptAllModifications = true;
                 }
 
                 // Run each line of a text file like a SkylineRunner command
@@ -1266,6 +1319,13 @@ namespace pwiz.Skyline
 
                 RequiresSkylineDocument = true;
                 PublishingToPanorama = true;
+            }
+            if (!ImportingSearch)
+            {
+                if (CutoffScore.HasValue)
+                    WarnArgRequirment(ARG_IMPORT_PEPTIDE_SEARCH_FILE, ARG_IMPORT_PEPTIDE_SEARCH_CUTOFF);
+                if (AcceptAllModifications)
+                    WarnArgRequirment(ARG_IMPORT_PEPTIDE_SEARCH_FILE, ARG_IMPORT_PEPTIDE_SEARCH_MODS);
             }
            
             // If skylineFile isn't set and one of the commands that requires --in is called, complain.

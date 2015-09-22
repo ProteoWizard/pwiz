@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 
@@ -37,20 +38,20 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             InitializeComponent();
 
-            _foundResultsFiles = new BindingList<FoundResultsFile>();
+            _foundResultsFiles = new BindingList<ImportPeptideSearch.FoundResultsFile>();
             listResultsFiles.DataSource = _foundResultsFiles;
             listResultsFiles.DisplayMember = "Name"; // Not L10N
         }
 
-        private BindingList<FoundResultsFile> _foundResultsFiles;
+        private BindingList<ImportPeptideSearch.FoundResultsFile> _foundResultsFiles;
         private SkylineWindow SkylineWindow { get; set; }
 
-        public List<FoundResultsFile> FoundResultsFiles
+        public List<ImportPeptideSearch.FoundResultsFile> FoundResultsFiles
         {
             get { return _foundResultsFiles.ToList(); }
             set
             {
-                _foundResultsFiles = new BindingList<FoundResultsFile>(value);
+                _foundResultsFiles = new BindingList<ImportPeptideSearch.FoundResultsFile>(value);
                 listResultsFiles.DataSource = _foundResultsFiles;
             }
         }
@@ -88,7 +89,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
                 foreach (var dataSource in dataSources.Where(d => !_foundResultsFiles.Select(f => f.Path).Contains(d.ToString())))
                 {
-                    _foundResultsFiles.Add(new FoundResultsFile(dataSource.GetFileNameWithoutExtension(), dataSource.ToString()));
+                    _foundResultsFiles.Add(new ImportPeptideSearch.FoundResultsFile(dataSource.GetFileNameWithoutExtension(), dataSource.ToString()));
                 }
 
                 if (ResultsFilesChanged != null)

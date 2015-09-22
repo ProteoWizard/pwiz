@@ -187,7 +187,7 @@ namespace pwiz.SkylineTestTutorial
                 {
                     Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page);
                     importPeptideSearchDlg.ImportResultsControl.FoundResultsFiles =
-                        _importFiles.Select(f => new FoundResultsFile(f, GetTestPath(f + ExtensionTestContext.ExtThermoRaw))).ToList();
+                        _importFiles.Select(f => new ImportPeptideSearch.FoundResultsFile(f, GetTestPath(f + ExtensionTestContext.ExtThermoRaw))).ToList();
                 });
                 var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
                 RunUI(() =>

@@ -8705,4 +8705,22 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="ChromatogramDataProvider_GetChromatogram_This_import_appears_to_be_taking_longer_than_expected__If_importing_from_a_network_drive__consider_canceling_this_import__copying_to_local_disk_and_retrying_" xml:space="preserve">
     <value>This import appears to be taking longer than expected. If importing from a network drive, consider canceling this import, copying to local disk and retrying.</value>
   </data>
+  <data name="CommandLine_ImportSearch_Warning__Unable_to_locate_results_file___0__" xml:space="preserve">
+    <value>Warning: Unable to locate results file '{0}'</value>
+  </data>
+  <data name="CommandLine_ImportSearch_Creating_spectral_library_from_files_" xml:space="preserve">
+    <value>Creating spectral library from files:</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Warning__The_cutoff_score__0__is_invalid__It_must_be_a_value_between_0_and_1_" xml:space="preserve">
+    <value>Warning: The cutoff score {0} is invalid. It must be a value between 0 and 1.</value>
+  </data>
+  <data name="CommandLine_ImportSearch_Loading_library" xml:space="preserve">
+    <value>Loading library</value>
+  </data>
+  <data name="CommandLine_ImportSearch_Adding__0__modifications_" xml:space="preserve">
+    <value>Adding {0} modifications.</value>
+  </data>
+  <data name="CommandLine_ImportSearch_Adding_1_modification_" xml:space="preserve">
+    <value>Adding 1 modification.</value>
+  </data>
 </root>

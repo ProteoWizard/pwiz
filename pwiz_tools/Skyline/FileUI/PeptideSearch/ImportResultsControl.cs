@@ -25,7 +25,7 @@ using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
-using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -35,46 +35,36 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 {
     public partial class ImportResultsControl : UserControl, IImportResultsControl
     {
-        public ImportResultsControl(SkylineWindow skylineWindow)
+        public ImportResultsControl(ImportPeptideSearch importPeptideSearch, string documentPath)
         {
-            SkylineWindow = skylineWindow;
+            ImportPeptideSearch = importPeptideSearch;
+            DocumentDirectory = Path.GetDirectoryName(documentPath);
 
             InitializeComponent();
         }
 
         public event EventHandler<ResultsFilesEventArgs> ResultsFilesChanged;
-        private SkylineWindow SkylineWindow { get; set; }
         private Form WizardForm { get { return FormEx.GetParentForm(this); } }
 
-        public List<FoundResultsFile> FoundResultsFiles
+        public List<ImportPeptideSearch.FoundResultsFile> FoundResultsFiles
         {
-            get
-            {
-                return !ExcludeSpectrumSourceFiles
-                    ? SpectrumSourceFiles.Values.Where(s => s.HasMatch).Select(s => new FoundResultsFile(s.Name, s.ExactMatch ?? s.AlternateMatch)).ToList()
-                    : SpectrumSourceFiles.Values.Where(s => s.HasAlternateMatch).Select(s => new FoundResultsFile(s.Name, s.AlternateMatch)).ToList();
-            }
+            get { return ImportPeptideSearch.GetFoundResultsFiles(ExcludeSpectrumSourceFiles).ToList(); }
             set
             {
-                SpectrumSourceFiles = value.ToDictionary(v => v.Name, v => new FoundResultsFilePossibilities(v.Name, v.Path));
+                ImportPeptideSearch.SpectrumSourceFiles = value.ToDictionary(v => v.Name,
+                    v => new ImportPeptideSearch.FoundResultsFilePossibilities(v.Name, v.Path));
             }
         }
 
         public IEnumerable<string> MissingResultsFiles
         {
-            get
-            {
-                return !ExcludeSpectrumSourceFiles
-                    ? SpectrumSourceFiles.Where(s => !s.Value.HasMatch).Select(s => s.Key)
-                    : SpectrumSourceFiles.Where(s => !s.Value.HasAlternateMatch).Select(s => s.Key);
-            }
+            get { return ImportPeptideSearch.GetMissingResultsFiles(ExcludeSpectrumSourceFiles); }
         }
 
         public bool ResultsFilesMissing { get { return MissingResultsFiles.Any(); } }
 
-        private Dictionary<string, FoundResultsFilePossibilities> SpectrumSourceFiles { get; set; }
-
-        private string DocumentDirectory { get { return Path.GetDirectoryName(SkylineWindow.DocumentFilePath); } }
+        private ImportPeptideSearch ImportPeptideSearch { get; set; }
+        private string DocumentDirectory { get; set; }
         public bool ExcluedSpectrumSourceFilesVisible { get { return cbExcludeSourceFiles.Visible; } }
         public bool ExcludeSpectrumSourceFiles
         {
@@ -82,52 +72,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             set { cbExcludeSourceFiles.Checked = value; }
         }
 
-        public void InitializeChromatogramsPage(Library docLib, string[] searchFileNames)
+        public void InitializeChromatogramsPage(SrmDocument document)
         {
-            SpectrumSourceFiles = new Dictionary<string, FoundResultsFilePossibilities>();
-
-            if (null != docLib)
-            {
-                var measuredResults = SkylineWindow.DocumentUI.Settings.MeasuredResults;
-
-                foreach (var dataFile in docLib.LibraryDetails.DataFiles)
-                {
-                    var msDataFilePath = new MsDataFilePath(dataFile);
-                    SpectrumSourceFiles[dataFile] = new FoundResultsFilePossibilities(msDataFilePath.GetFileNameWithoutExtension());
-
-                    // If a matching file is already in the document, then don't include
-                    // this library spectrum source in the set of files to find.
-                    if (measuredResults != null && measuredResults.FindMatchingMSDataFile(MsDataFileUri.Parse(dataFile)) != null)
-                        continue;
-
-                    if (File.Exists(dataFile) && DataSourceUtil.IsDataSource(dataFile))
-                    {
-                        // We've found the dataFile in the exact location
-                        // specified in the document library, so just add it
-                        // to the "FOUND" list.
-                        SpectrumSourceFiles[dataFile].ExactMatch = msDataFilePath.ToString();
-                    }
-                }
-
-                docLib.ReadStream.CloseStream();
-            }
-
-            // Search the directory of the document and its parent
-            var dirsToSearch = new List<string> {DocumentDirectory};
-            DirectoryInfo parentDir = Directory.GetParent(DocumentDirectory);
-            if (parentDir != null)
-            {
-                dirsToSearch.Add(parentDir.ToString());
-            }
-            if (searchFileNames != null)
-            {
-                // Search the directories of the search files
-                dirsToSearch.AddRange(searchFileNames.Select(Path.GetDirectoryName));
-            }
-            // Search each subdirectory of the document directory
-            dirsToSearch.AddRange(GetSubdirectories(DocumentDirectory));
-
-            UpdateResultsFiles(dirsToSearch, false);
+            ImportPeptideSearch.InitializeSpectrumSourceFiles(document);
+            UpdateResultsFiles(ImportPeptideSearch.GetDirsToSearch(DocumentDirectory), false);
         }
 
         private void browseToResultsFileButton_Click(object sender, EventArgs e)
@@ -156,7 +104,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 return;
             }
 
-            Array.ForEach(dataSources, d => CheckMatch(d.ToString(), true));
+            Array.ForEach(dataSources, d => ImportPeptideSearch.TryMatch(d.ToString(), true));
             UpdateResultsFilesUI();
         }
 
@@ -175,7 +123,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
                 // See if we're still missing any files, and update UI accordingly
                 var dirsToSearch = new List<string> {dlg.SelectedPath};
-                dirsToSearch.AddRange(GetSubdirectories(dlg.SelectedPath));
+                dirsToSearch.AddRange(ImportPeptideSearch.GetSubdirectories(dlg.SelectedPath));
                 if (!UpdateResultsFiles(dirsToSearch, true))
                 {
                     MessageDlg.Show(WizardForm, Resources.ImportResultsControl_findResultsFilesButton_Click_Could_not_find_all_the_missing_results_files_);
@@ -183,90 +131,29 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
-        private static IEnumerable<string> GetSubdirectories(string dir)
-        {
-            try
-            {
-                return Directory.EnumerateDirectories(dir);
-            }
-            catch (Exception)
-            {
-                // No permissions on folder
-                return new string[0];
-            }
-        }
-
         public bool UpdateResultsFiles(IEnumerable<string> dirPaths, bool overwrite)
         {
-            if (overwrite || !SpectrumSourceFiles.Values.All(s => s.HasMatches))
+            using (var longWaitDlg = new LongWaitDlg
+                {
+                    Text = Resources.ImportResultsControl_FindResultsFiles_Searching_for_Results_Files
+                })
             {
-                var longWaitDlg = new LongWaitDlg {Text = Resources.ImportResultsControl_FindResultsFiles_Searching_for_Results_Files};
                 try
                 {
-                    longWaitDlg.PerformWork(WizardForm, 1000, longWaitBroker => Array.ForEach(dirPaths.Distinct().ToArray(), dir => FindDataFiles(longWaitBroker, dir, overwrite)));
+                    longWaitDlg.PerformWork(WizardForm, 1000, longWaitBroker =>
+                        ImportPeptideSearch.UpdateSpectrumSourceFilesFromDirs(dirPaths, overwrite, longWaitBroker));
                 }
                 catch (Exception x)
                 {
-                    MessageDlg.ShowWithException(WizardForm,
-                        TextUtil.LineSeparate(Resources.ImportResultsControl_FindResultsFiles_An_error_occurred_attempting_to_find_results_files_, x.Message), x);
+                    MessageDlg.ShowWithException(WizardForm, TextUtil.LineSeparate(
+                        Resources.ImportResultsControl_FindResultsFiles_An_error_occurred_attempting_to_find_results_files_,
+                        x.Message), x);
                 }
             }
 
             UpdateResultsFilesUI();
 
             return !MissingResultsFiles.Any();
-        }
-
-        private void FindDataFiles(ILongWaitBroker longWaitBroker, string directory, bool overwrite)
-        {
-            // Don't search if every spectrum source file has an exact match and an alternate match
-            if (directory == null || !Directory.Exists(directory) || (!overwrite && SpectrumSourceFiles.Values.All(s => s.HasMatches)))
-                return;
-
-            longWaitBroker.Message = string.Format(Resources.ImportResultsControl_FindResultsFiles_Searching_for_matching_results_files_in__0__, directory);
-
-            try
-            {
-                foreach (string entry in Directory.EnumerateFileSystemEntries(directory))
-                {
-                    if (longWaitBroker.IsCanceled)
-                        return;
-
-                    if (entry != null && DataSourceUtil.IsDataSource(entry))
-                        CheckMatch(entry, overwrite);
-                }
-            }
-            // ReSharper disable once EmptyGeneralCatchClause
-            catch (Exception)
-            {
-                // No permissions on folder
-            }
-        }
-
-        private void CheckMatch(string potentialMatch, bool overwrite)
-        {
-            if (string.IsNullOrEmpty(potentialMatch))
-                return;
-
-            foreach (var spectrumSourceFile in SpectrumSourceFiles.Keys)
-            {
-                if (spectrumSourceFile == null || (!overwrite && SpectrumSourceFiles[spectrumSourceFile].HasMatches))
-                    continue;
-
-                if (Path.GetFileName(spectrumSourceFile).Equals(Path.GetFileName(potentialMatch)))
-                {
-                    if (overwrite || !SpectrumSourceFiles[spectrumSourceFile].HasExactMatch)
-                    {
-                        SpectrumSourceFiles[spectrumSourceFile].ExactMatch = potentialMatch;
-                    }
-                }
-                else if (MeasuredResults.IsBaseNameMatch(Path.GetFileNameWithoutExtension(spectrumSourceFile),
-                    Path.GetFileNameWithoutExtension(potentialMatch)) &&
-                    (overwrite || !SpectrumSourceFiles[spectrumSourceFile].HasAlternateMatch))
-                {
-                    SpectrumSourceFiles[spectrumSourceFile].AlternateMatch = potentialMatch;
-                }
-            }
         }
 
         private void UpdateResultsFilesUI()
@@ -280,7 +167,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             resultsSplitContainer.Panel2.Visible = !allFilesFound;
 
             // If any match has an exact match, the "Exclude spectrum source files" checkbox should be visible
-            cbExcludeSourceFiles.Visible = SpectrumSourceFiles.Values.Any(s => s.HasExactMatch);
+            cbExcludeSourceFiles.Visible = ImportPeptideSearch.SpectrumSourceFiles.Values.Any(s => s.HasExactMatch);
 
             // Fire ResultsFilesChanged, if it has been set
             if (ResultsFilesChanged != null)
@@ -305,56 +192,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private void cbExcludeSourceFiles_CheckedChanged(object sender, EventArgs e)
         {
             UpdateResultsFilesUI();
-        }
-
-        /// <summary>
-        /// Stores possible matches for spectrum source files.
-        /// </summary>
-        private class FoundResultsFilePossibilities
-        {
-            /// <summary>
-            /// The name of the spectrum source file without extension.
-            /// </summary>
-            public string Name { get; private set; }
-
-            /// <summary>
-            /// The path to a match for the spectrum source file where the filename matches exactly.
-            /// </summary>
-            public string ExactMatch
-            {
-                get { return _exactMatch; }
-                set { _exactMatch = value != null ? Path.GetFullPath(value) : null; }
-            }
-            private string _exactMatch;
-
-            /// <summary>
-            /// The path to a match for the spectrum source file where the filestem matches, but the extension doesn't.
-            /// </summary>
-            public string AlternateMatch
-            {
-                get { return _alternateMatch; }
-                set { _alternateMatch = value != null ? Path.GetFullPath(value) : null; }
-            }
-            private string _alternateMatch;
-
-            public FoundResultsFilePossibilities(string name)
-            {
-                Name = name;
-                ExactMatch = null;
-                AlternateMatch = null;
-            }
-
-            public FoundResultsFilePossibilities(string name, string path)
-            {
-                Name = name;
-                ExactMatch = path;
-                AlternateMatch = path;
-            }
-
-            public bool HasMatch { get { return HasExactMatch || HasAlternateMatch; } }
-            public bool HasMatches { get { return HasExactMatch && HasAlternateMatch; } }
-            public bool HasExactMatch { get { return ExactMatch != null; } }
-            public bool HasAlternateMatch { get { return AlternateMatch != null; } }
         }
 
         public class ResultsFilesEventArgs : EventArgs

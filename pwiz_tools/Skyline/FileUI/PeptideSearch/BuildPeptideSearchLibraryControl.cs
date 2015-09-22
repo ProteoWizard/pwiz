@@ -24,14 +24,11 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
-using pwiz.BiblioSpec;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -41,16 +38,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 {
     public partial class BuildPeptideSearchLibraryControl : UserControl
     {
-        private const string LAB_AUTHORITY = "proteome.gs.washington.edu";  // Not L10N
-
-        public BuildPeptideSearchLibraryControl(SkylineWindow skylineWindow, LibraryManager libraryManager)
+        public BuildPeptideSearchLibraryControl(SkylineWindow skylineWindow, ImportPeptideSearch importPeptideSearch, LibraryManager libraryManager)
         {
             SkylineWindow = skylineWindow;
+            ImportPeptideSearch = importPeptideSearch;
             LibraryManager = libraryManager;
 
             InitializeComponent();
 
-            textCutoff.Text = Settings.Default.LibraryResultCutOff.ToString(LocalizationHelper.CurrentCulture);
+            textCutoff.Text = ImportPeptideSearch.CutoffScore.ToString(LocalizationHelper.CurrentCulture);
 
             if (SkylineWindow.Document.PeptideCount == 0)
                 cbFilterForDocumentPeptides.Hide();
@@ -68,10 +64,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private SkylineWindow SkylineWindow { get; set; }
         private LibraryManager LibraryManager { get; set; }
+        private ImportPeptideSearch ImportPeptideSearch { get; set; }
         private Form WizardForm { get { return FormEx.GetParentForm(this); } }
-
-        public Library DocLib { get; private set; }
-        private LibrarySpec DocLibrarySpec { get; set; }
 
         public ImportPeptideSearchDlg.Workflow WorkflowType
         {
@@ -106,26 +100,25 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             set { cbFilterForDocumentPeptides.Checked = value; }
         }
 
-        private string[] _searchFileNames = new string[0];
-        public string[] SearchFileNames
+        public string[] SearchFilenames
         {
-            get { return _searchFileNames; }
+            get { return ImportPeptideSearch.SearchFilenames; }
 
             private set
             {
                 // Set new value
-                _searchFileNames = value;
+                ImportPeptideSearch.SearchFilenames = value;
 
                 // Always show sorted list of files
-                Array.Sort(_searchFileNames);
+                Array.Sort(ImportPeptideSearch.SearchFilenames);
 
                 // Calculate the common root directory
-                string dirInputRoot = PathEx.GetCommonRoot(_searchFileNames);
+                string dirInputRoot = PathEx.GetCommonRoot(ImportPeptideSearch.SearchFilenames);
 
                 // Populate the input files list
                 listSearchFiles.BeginUpdate();
                 listSearchFiles.Items.Clear();
-                foreach (string fileName in _searchFileNames)
+                foreach (string fileName in ImportPeptideSearch.SearchFilenames)
                 {
                     listSearchFiles.Items.Add(fileName.Substring(dirInputRoot.Length));
                 }
@@ -143,14 +136,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public void RemoveFiles()
         {
             var selectedIndices = listSearchFiles.SelectedIndices;
-            var listSearchFileNames = SearchFileNames.ToList();
+            var listSearchFilenames = SearchFilenames.ToList();
             for (int i = selectedIndices.Count - 1; i >= 0; i--)
             {
                 listSearchFiles.Items.RemoveAt(i);
-                listSearchFileNames.RemoveAt(i);
+                listSearchFilenames.RemoveAt(i);
             }
-
-            _searchFileNames = listSearchFileNames.ToArray();
+            SearchFilenames = listSearchFilenames.ToArray();
 
             FireInputFilesChanged(new InputFilesChangedEventArgs(listSearchFiles.Items.Count));
         }
@@ -171,7 +163,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public void AddSearchFiles(IEnumerable<string> fileNames)
         {
-            SearchFileNames = BuildLibraryDlg.AddInputFiles(WizardForm, SearchFileNames, fileNames);
+            SearchFilenames = BuildLibraryDlg.AddInputFiles(WizardForm, SearchFilenames, fileNames);
         }
 
         public double CutOffScore
@@ -183,15 +175,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public bool BuildPeptideSearchLibrary(CancelEventArgs e)
         {
             // Nothing to build, if now search files were specified
-            if (_searchFileNames.Length == 0)
+            if (!SearchFilenames.Any())
             {
                 var libraries = SkylineWindow.Document.Settings.PeptideSettings.Libraries;
                 if (!libraries.HasLibraries)
                     return false;
-                DocLibrarySpec = libraries.LibrarySpecs.FirstOrDefault(s => s.IsDocumentLibrary);
-                if (DocLibrarySpec == null || !LoadPeptideSearchLibrary())
-                    return false;
-                return true;
+                var libSpec = libraries.LibrarySpecs.FirstOrDefault(s => s.IsDocumentLibrary);
+                return libSpec != null && LoadPeptideSearchLibrary(libSpec);
             }
 
             double cutOffScore;
@@ -201,43 +191,18 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 e.Cancel = true;
                 return false;
             }
+            ImportPeptideSearch.CutoffScore = cutOffScore;
 
-            string outputPath = BiblioSpecLiteSpec.GetLibraryFileName(SkylineWindow.DocumentFilePath);
-
-            // Check to see if the library is already there, and if it is, 
-            // "Append" instead of "Create"
-            bool libraryExists = File.Exists(outputPath);
-            var libraryBuildAction = LibraryBuildAction.Create;
-            if (libraryExists)
+            BiblioSpecLiteBuilder builder;
+            try
             {
-                if (SkylineWindow.Document.Settings.HasDocumentLibrary)
-                    libraryBuildAction = LibraryBuildAction.Append;
-                else
-                {
-                    // If the document does not have a document library, then delete the one that we have found
-                    try
-                    {
-                        // CONSIDER: it may be that user is trying to re-import, in which case this file is probably in use
-                        FileEx.SafeDelete(outputPath);
-                        FileEx.SafeDelete(Path.ChangeExtension(outputPath, BiblioSpecLiteSpec.EXT_REDUNDANT));
-                    }
-                    catch (FileEx.DeleteException de)
-                    {
-                        MessageDlg.ShowException(this, de);
-                        return false;
-                    }
-                }
+                builder = ImportPeptideSearch.GetLibBuilder(SkylineWindow.Document, SkylineWindow.DocumentFilePath);
             }
-
-            string name = Path.GetFileNameWithoutExtension(SkylineWindow.DocumentFilePath);
-            var builder = new BiblioSpecLiteBuilder(name, outputPath, SearchFileNames)
+            catch (FileEx.DeleteException de)
             {
-                Action = libraryBuildAction,
-                KeepRedundant = true,
-                CutOffScore = cutOffScore,
-                Authority = LAB_AUTHORITY,
-                Id = Helpers.MakeId(name)
-            };
+                MessageDlg.ShowException(this, de);
+                return false;
+            }
 
             using (var longWaitDlg = new LongWaitDlg
                 {
@@ -248,7 +213,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 // Disable the wizard, because the LongWaitDlg does not
                 try
                 {
-                    ClosePeptideSearchLibraryStreams();
+                    ImportPeptideSearch.ClosePeptideSearchLibraryStreams(SkylineWindow.DocumentUI);
                     var status = longWaitDlg.PerformWork(WizardForm, 800,
                         monitor => LibraryManager.BuildLibraryBackground(SkylineWindow, builder, monitor));
                     if (status.IsError)
@@ -260,98 +225,51 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 catch (Exception x)
                 {
                     MessageDlg.ShowWithException(WizardForm, TextUtil.LineSeparate(string.Format(Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Failed_to_build_the_library__0__,
-                                                                                    Path.GetFileName(outputPath)), x.Message), x);
+                                                                                    Path.GetFileName(BiblioSpecLiteSpec.GetLibraryFileName(SkylineWindow.DocumentFilePath))), x.Message), x);
                     return false;
                 }
             }
 
-            DocLibrarySpec = builder.LibrarySpec.ChangeDocumentLibrary(true);
-
-            Settings.Default.SpectralLibraryList.Insert(0, DocLibrarySpec);
+            var docLibSpec = builder.LibrarySpec.ChangeDocumentLibrary(true);
+            Settings.Default.SpectralLibraryList.Insert(0, docLibSpec);
 
             // Go ahead and load the library - we'll need it for 
             // the modifications and chromatograms page.
-            if (!LoadPeptideSearchLibrary())
-            {
+            if (!LoadPeptideSearchLibrary(docLibSpec))
                 return false;
-            }
 
-            SkylineWindow.ModifyDocument(Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_document_spectral_library, doc =>
-                        doc.ChangeSettings(doc.Settings.ChangePeptideLibraries(lib =>
-            {
-                int skipCount = lib.HasDocumentLibrary ? 1 : 0;
-                var libSpecs = new List<LibrarySpec> {DocLibrarySpec};
-                libSpecs.AddRange(lib.LibrarySpecs.Skip(skipCount));
-                var libs = new List<Library> {DocLib};
-                libs.AddRange(lib.Libraries.Skip(skipCount));
-                return lib.ChangeDocumentLibrary(true).ChangeLibraries(libSpecs, libs);
-            })));
+            var docNew = ImportPeptideSearch.AddDocumentSpectralLibrary(SkylineWindow.Document, docLibSpec);
+            if (docNew == null)
+                return false;
 
+            SkylineWindow.ModifyDocument(Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_document_spectral_library, doc => docNew);
             return true;
         }
 
-        private bool LoadPeptideSearchLibrary()
+        private bool LoadPeptideSearchLibrary(LibrarySpec docLibSpec)
         {
-            if (null == DocLibrarySpec)
+            using (var longWait = new LongWaitDlg
             {
-                return false;
-            }
-
-            DocLib = LibraryManager.TryGetLibrary(DocLibrarySpec);
-            if (null == DocLib)
+                Text = Resources.BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_Loading_Library
+            })
             {
-                using (var longWait = new LongWaitDlg
-                        {
-                            Text = Resources.BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_Loading_Library
-                        })
+                try
                 {
-                    try
+                    var status = longWait.PerformWork(WizardForm, 800, monitor => ImportPeptideSearch.LoadPeptideSearchLibrary(LibraryManager, docLibSpec, monitor));
+                    if (status.IsError)
                     {
-                        var status = longWait.PerformWork(WizardForm, 800, monitor =>
-                            DocLib = LibraryManager.LoadLibrary(DocLibrarySpec, () => new DefaultFileLoadMonitor(monitor)));
-                        if (status.IsError)
-                        {
-                            MessageDlg.ShowException(WizardForm, status.ErrorException);
-                            return false;
-                        }
-                    }
-                    catch (Exception x)
-                    {
-                        MessageDlg.ShowWithException(WizardForm,
-                                        TextUtil.LineSeparate(string.Format(Resources.BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_An_error_occurred_attempting_to_import_the__0__library_,
-                                                                            DocLibrarySpec.Name), x.Message), x);
+                        MessageDlg.ShowException(WizardForm, status.ErrorException);
                         return false;
                     }
                 }
-            }
-
-            return true;
-        }
-
-        public void ClosePeptideSearchLibraryStreams()
-        {
-            BiblioSpecLiteLibrary docLib;
-            if (!SkylineWindow.DocumentUI.Settings.PeptideSettings.Libraries.TryGetDocumentLibrary(out docLib))
-                return;
-
-            foreach (var stream in docLib.ReadStreams)
-                stream.CloseStream();
-        }
-
-        public bool VerifyRetentionTimes(IEnumerable<string> resultsFiles)
-        {
-            foreach (var resultsFile in resultsFiles)
-            {
-                LibraryRetentionTimes retentionTimes;
-                if (DocLib.TryGetRetentionTimes(MsDataFileUri.Parse(resultsFile), out retentionTimes))
+                catch (Exception x)
                 {
-                    if (retentionTimes.PeptideRetentionTimes.Any(t => t.RetentionTime <= 0))
-                    {
-                        return false;
-                    }
+                    MessageDlg.ShowWithException(WizardForm,
+                        TextUtil.LineSeparate(string.Format(Resources.BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_An_error_occurred_attempting_to_import_the__0__library_,
+                                                            docLibSpec.Name), x.Message), x);
+                    return false;
                 }
             }
-
             return true;
         }
 
@@ -372,6 +290,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
 
             public int NumInputFiles { get; private set; }
-        }    
+        }
     }
 }

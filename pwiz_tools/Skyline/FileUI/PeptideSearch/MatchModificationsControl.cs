@@ -23,8 +23,6 @@ using System.Text;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.DocSettings.Extensions;
-using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.FileUI.PeptideSearch
@@ -54,18 +52,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
-        public MatchModificationsControl(SkylineWindow skylineWindow)
+        public MatchModificationsControl(SkylineWindow skylineWindow, ImportPeptideSearch importPeptideSearch)
         {
             SkylineWindow = skylineWindow;
+            ImportPeptideSearch = importPeptideSearch;
 
             InitializeComponent();
         }
 
         private SkylineWindow SkylineWindow { get; set; }
-        private Library _docLib;
-        private LibKeyModificationMatcher _matcher;
-        private HashSet<StaticMod> _userDefinedTypedMods;
-        private IsotopeLabelType _defaultHeavyLabelType;
+        private ImportPeptideSearch ImportPeptideSearch { get; set; }
 
         public IEnumerable<string> CheckedModifications
         {
@@ -102,109 +98,50 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
-        public bool Initialize(Library docLib)
+        public bool Initialize(SrmDocument document)
         {
-            if (docLib == null)
-                return false;
-
-            _docLib = docLib;
-            _userDefinedTypedMods = new HashSet<StaticMod>();
-
-            InitializeUserDefinedTypedMods();
-            GetModificationMatches();
-            
-            FillLists();
+            ImportPeptideSearch.InitializeModifications(document);
+            FillLists(document);
             return (modificationsListBox.Items.Count > 1 || unmatchedListBox.Items.Count > 1);
         }
 
-        private void InitializeUserDefinedTypedMods()
+        public SrmSettings AddCheckedModifications(SrmDocument document)
         {
-            var mods = SkylineWindow.Document.Settings.PeptideSettings.Modifications;
-            foreach (var type in mods.GetModificationTypes())
-            {
-                // Set the default heavy type to the first heavy type encountered.
-                if (!ReferenceEquals(type, IsotopeLabelType.light) && _defaultHeavyLabelType == null)
-                    _defaultHeavyLabelType = type;
-
-                foreach (StaticMod mod in mods.GetModificationsByName(type.Name).Modifications.Where(m => !m.IsUserSet))
-                    _userDefinedTypedMods.Add(mod);
-            }
-
-            var staticMods = new TypedModifications(IsotopeLabelType.light, mods.StaticModifications);
-            var heavyMods = new TypedModifications(_defaultHeavyLabelType, mods.GetModifications(_defaultHeavyLabelType));
-
-            foreach (StaticMod mod in staticMods.Modifications.Union(heavyMods.Modifications))
-                _userDefinedTypedMods.Add(mod);
-        }
-
-        public void AddCheckedModifications()
-        {
-            if (_matcher == null || modificationsListBox.CheckedItems.Count == 0)
-                return;
-
-            // Get checked modifications
-            PeptideModifications pepMods = _matcher.MatcherPepMods;
+            if (modificationsListBox.CheckedItems.Count == 0)
+                return document.Settings;
 
             // Find checked static mods
-            var newStructuralMods = (from mod in pepMods.StaticModifications
+            var newStructuralMods = (from mod in ImportPeptideSearch.MatcherPepMods.StaticModifications
                                      from ListBoxModification checkedMod in modificationsListBox.CheckedItems
                                      where mod.Equivalent(checkedMod.Mod)
                                      select mod).ToList();
 
             // Find checked heavy mods
-            var newHeavyMods = (from mod in pepMods.GetModifications(_defaultHeavyLabelType)
+            var newHeavyMods = (from mod in ImportPeptideSearch.MatcherHeavyMods
                                 from ListBoxModification checkedMod in modificationsListBox.CheckedItems
                                 where mod.Equivalent(checkedMod.Mod)
                                 select mod).ToList();
 
             // Update document modifications
-            _matcher.MatcherPepMods = new PeptideModifications(newStructuralMods, new[] {new TypedModifications(IsotopeLabelType.heavy, newHeavyMods)} );
-            SrmSettings newSettings = SkylineWindow.Document.Settings.ChangePeptideModifications(
-                mods => _matcher.SafeMergeImplicitMods(SkylineWindow.Document));
-            SkylineWindow.ChangeSettings(newSettings, true, Resources.MatchModificationsControl_AddCheckedModifications_Add_checked_modifications);
-            SkylineWindow.Document.Settings.UpdateDefaultModifications(false);
+            return ImportPeptideSearch.AddModifications(document,
+                new PeptideModifications(newStructuralMods, new[] {new TypedModifications(IsotopeLabelType.heavy, newHeavyMods)}));
         }
 
-        private void GetModificationMatches()
+        private void FillLists(SrmDocument document)
         {
-            if (_matcher == null)
-                _matcher = new LibKeyModificationMatcher();
-            else
-                _matcher.ClearMatches();
-
-            _matcher.CreateMatches(SkylineWindow.Document.Settings, _docLib.Keys, Settings.Default.StaticModList, Settings.Default.HeavyModList);
-        }
-
-        private void FillLists()
-        {
-            GetModificationMatches();
+            ImportPeptideSearch.UpdateModificationMatches(document);
 
             modificationsListBox.Items.Clear();
             unmatchedListBox.Items.Clear();
 
-            PeptideModifications pepMods = _matcher.MatcherPepMods;
-            IEnumerable<StaticMod> allMods = pepMods.StaticModifications.Union(pepMods.GetModifications(_defaultHeavyLabelType));
-            foreach (var mod in allMods)
-            {
-                bool skipThis = false;
-                foreach (var userMod in _userDefinedTypedMods)
-                {
-                    if (mod.Equivalent(userMod))
-                    {
-                        skipThis = true;
-                        break;
-                    }
-                }
-                if (skipThis)
-                    continue;
+            foreach (var match in ImportPeptideSearch.GetMatchedMods())
+                modificationsListBox.Items.Add(new ListBoxModification(match), CheckState.Unchecked);
 
-                modificationsListBox.Items.Add(new ListBoxModification(mod), CheckState.Unchecked);
-            }
-
-            if (_matcher.UnmatchedSequences.Any())
+            var unmatched = ImportPeptideSearch.GetUnmatchedSequences();
+            if (unmatched.Any())
             {
                 splitContainer.Panel2Collapsed = false;
-                foreach (var uninterpretedMod in _matcher.UnmatchedSequences)
+                foreach (var uninterpretedMod in unmatched)
                     unmatchedListBox.Items.Add(uninterpretedMod);
             }
             else
@@ -243,7 +180,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (mod == null)
                 return;
 
-            _userDefinedTypedMods.Add(mod);
+            ImportPeptideSearch.UserDefinedTypedMods.Add(mod);
 
             PeptideSettings newPeptideSettings = SkylineWindow.Document.Settings.PeptideSettings;
             var newMods = new List<StaticMod>(
@@ -257,7 +194,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 string.Format(Resources.MatchModificationsControl_AddModification_Add__0__modification__1_, type, mod.Name));
             SkylineWindow.Document.Settings.UpdateDefaultModifications(false);
 
-            FillLists();
+            FillLists(SkylineWindow.Document);
         }
 
         public void AddModification(ModType type)

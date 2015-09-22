@@ -2581,7 +2581,7 @@ namespace pwiz.Skyline.EditUI
                         return null;
                     // Remove all empty proteins, if requested by the user.
                     if (!dlg.IsKeepEmptyProteins)
-                        docNew = new RefinementSettings { MinPeptidesPerProtein = 1 }.Refine(docNew);
+                        docNew = ImportPeptideSearch.RemoveEmptyProteins(docNew);
                 }
             }
             return docNew;

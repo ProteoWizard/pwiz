@@ -184,12 +184,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             return doc.PeptideTransitions.Any(nodeTran => nodeTran.Transition.IonType == IonType.precursor);
         }
 
-        private static SrmDocument ChangeAutoManageChildren(SrmDocument doc, PickLevel which, bool autoPick)
-        {
-            var refine = new RefinementSettings { AutoPickChildrenAll = which, AutoPickChildrenOff = !autoPick };
-            return refine.Refine(doc);
-        }
-
         public bool ImportFasta()
         {
             var settings = SkylineWindow.Document.Settings;
@@ -224,25 +218,18 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                                     Program.Name, MessageBoxButtons.OKCancel) != DialogResult.OK)
                     return false;
 
-                SkylineWindow.ModifyDocument(Resources.ImportFastaControl_ImportFasta_Change_settings_to_add_precursors, doc => ChangeAutoManageChildren(doc, PickLevel.transitions, true));
+                SkylineWindow.ModifyDocument(Resources.ImportFastaControl_ImportFasta_Change_settings_to_add_precursors, doc => ImportPeptideSearch.ChangeAutoManageChildren(doc, PickLevel.transitions, true));
             }
             else // The user specified some FASTA content
             {
                 // If the user is about to add any new transitions by importing
                 // FASTA, set FragmentType='p' and AutoSelect=true
                 var docCurrent = SkylineWindow.Document;
-                var docNew = docCurrent;
-                // First preserve the state of existing document nodes in the tree
-                // Todo: There are better ways to do this than this brute force method; revisit later.
-                if (docNew.PeptideGroupCount > 0)
-                    docNew = ChangeAutoManageChildren(docNew, PickLevel.all, false);
-                var pick = docNew.Settings.PeptideSettings.Libraries.Pick;
-                if (pick != PeptidePick.library && pick != PeptidePick.both)
-                    docNew = docNew.ChangeSettings(docNew.Settings.ChangePeptideLibraries(lib => lib.ChangePick(PeptidePick.library)));
+                var docNew = ImportPeptideSearch.PrepareImportFasta(docCurrent);
 
                 var nodeInsert = SkylineWindow.SequenceTree.SelectedNode as SrmTreeNode;
                 IdentityPath selectedPath = nodeInsert != null ? nodeInsert.Path : null;
-                int emptyPeptideGroups;
+                int emptyPeptideGroups = 0;
 
                 if (!_fastaFile)
                 {
@@ -255,11 +242,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 else
                 {
                     // Import FASTA as file
-                    var importer = new FastaImporter(docNew, false);
                     var fastaPath = tbxFasta.Text;
                     try
                     {
-                        using (TextReader reader = File.OpenText(fastaPath))
                         using (var longWaitDlg = new LongWaitDlg(SkylineWindow) { Text = Resources.ImportFastaControl_ImportFasta_Insert_FASTA })
                         {
                             IdentityPath to = selectedPath;
@@ -267,11 +252,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                             longWaitDlg.PerformWork(WizardForm, 1000, longWaitBroker =>
                                 {
                                     IdentityPath nextAdd;
-                                    docImportFasta = docImportFasta.AddPeptideGroups(importer.Import(reader, longWaitBroker, Helpers.CountLinesInFile(fastaPath)), false, to, out selectedPath, out nextAdd);
+                                    docImportFasta = ImportPeptideSearch.ImportFasta(docImportFasta, fastaPath,
+                                        longWaitBroker, to, out selectedPath, out nextAdd, out emptyPeptideGroups);
                                 });
                             docNew = docImportFasta;
                         }
-                        emptyPeptideGroups = importer.EmptyPeptideGroupCount;
                     }
                     catch (Exception x)
                     {
