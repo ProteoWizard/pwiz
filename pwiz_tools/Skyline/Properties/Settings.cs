@@ -2007,9 +2007,11 @@ namespace pwiz.Skyline.Properties
         {
             using (var editModel = new EditPeakScoringModelDlg(existing ?? this))
             {
-                editModel.SetScoringModel(owner, item);
-                if (editModel.ShowDialog(owner) == DialogResult.OK)
-                    return (PeakScoringModelSpec) editModel.PeakScoringModel;
+                if (editModel.SetScoringModel(owner, item))
+                {
+                    if (editModel.ShowDialog(owner) == DialogResult.OK)
+                        return (PeakScoringModelSpec)editModel.PeakScoringModel;
+                }
 
                 return null;
             }

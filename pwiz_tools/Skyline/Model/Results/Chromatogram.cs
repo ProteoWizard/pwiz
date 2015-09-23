@@ -175,7 +175,7 @@ namespace pwiz.Skyline.Model.Results
                     try
                     {
                         using (var settingsChangeMonitor = new SrmSettingsChangeMonitor(new LoadMonitor(_manager, _container, null),
-                                                                                        Resources.Loader_FinishLoad_Updating_peak_statistics_for__0_,
+                                                                                        Resources.Loader_FinishLoad_Updating_peak_statistics,
                                                                                         _container, docCurrent))
                         {
                             if (changeSets)

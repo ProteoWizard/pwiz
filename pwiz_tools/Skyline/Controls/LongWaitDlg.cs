@@ -18,8 +18,6 @@
  */
 
 using System;
-using System.IO;
-using System.Reflection;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
@@ -160,20 +158,7 @@ namespace pwiz.Skyline.Controls
 
                 if (x != null)
                 {
-                    
-                    // TODO: Clean this up.  The thrown exception needs to be preserved to preserve
-                    //       the original stack trace from which it was thrown.  In some cases,
-                    //       its type must also be preserved, because existing code handles certain
-                    //       exception types.  If this case threw only TargetInvocationException,
-                    //       then more frequently the code would just have to have a blanket catch
-                    //       of the base exception type, which could hide coding errors.
-                    if (x is InvalidDataException)
-                        throw new InvalidDataException(x.Message, x);
-                    if (x is IOException)
-                        throw new IOException(x.Message, x);
-                    if (x is OperationCanceledException)
-                        throw new OperationCanceledException(x.Message, x);
-                    throw new TargetInvocationException(x.Message, x);
+                    Helpers.WrapAndThrowException(x);
                 }
             }
         }

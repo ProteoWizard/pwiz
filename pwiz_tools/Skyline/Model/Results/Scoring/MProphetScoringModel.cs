@@ -208,9 +208,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
                         progressMonitor.UpdateProgress(status);
                     for (int iteration = 0; iteration < MAX_ITERATIONS; iteration++)
                     {
-                        // CONSIDER: Support cancelling
                         if (progressMonitor != null)
                         {
+                            if (progressMonitor.IsCanceled)
+                                throw new OperationCanceledException();
+
                             progressMonitor.UpdateProgress(status =
                                 status.ChangeMessage(string.Format(Resources.MProphetPeakScoringModel_Train_Training_peak_scoring_model__iteration__0__of__1__, iteration + 1, MAX_ITERATIONS))
                                       .ChangePercentComplete((iteration + 1) * 100 / (MAX_ITERATIONS + 1)));

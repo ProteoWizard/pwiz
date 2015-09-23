@@ -94,8 +94,7 @@ namespace pwiz.Skyline.Model
         {
             if (_features == null)
             {
-                _features = Document.GetPeakFeatures(_calcs, progressMonitor)
-                    .Where(groupFeatures => groupFeatures.PeakGroupFeatures.Any()).ToList();
+                _features = Document.GetPeakFeatures(_calcs, progressMonitor);
             }
             if (ScoringModel == null)
                 return;
@@ -175,7 +174,7 @@ namespace pwiz.Skyline.Model
                 Document = (SrmDocument) Document.StripAnnotationValues(annotationNamesToKeep);
             }
             var settingsChangeMonitor = progressMonitor != null
-                ? new SrmSettingsChangeMonitor(progressMonitor, Resources.MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries_for__0_)
+                ? new SrmSettingsChangeMonitor(progressMonitor, Resources.MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries)
                 : null;
             using (settingsChangeMonitor)
             {
@@ -208,7 +207,6 @@ namespace pwiz.Skyline.Model
             else
             {
                 features = Document.GetPeakFeatures(calcs, progressMonitor, IsFilterTestData);
-                features = features.Where(groupFeatures => groupFeatures.PeakGroupFeatures.Any());
             }
             WriteHeaderRow(writer, calcs, cultureInfo);
             foreach (var peakTransitionGroupFeatures in features)

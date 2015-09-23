@@ -1774,15 +1774,22 @@ namespace pwiz.Skyline.Model.DocSettings
             _documentContainer = documentContainer;
             _startDocument = startDocument;
 
-            _formatString = formatString;
-            // Set status string to empty, since it should be reset very quickly
-            _status = new ProgressStatus(string.Empty);
+            if (!formatString.Contains('{'))
+                _status = new ProgressStatus(formatString);
+            else
+            {
+                _formatString = formatString;
+                // Set status string to empty, since it should be reset very quickly
+                _status = new ProgressStatus(string.Empty);
+            }
         }
 
         public void ProcessGroup(PeptideGroupDocNode nodeGroup)
         {
-            _status = _status.ChangeMessage(string.Format(_formatString, nodeGroup.Name));
-            UpdateProgress(true);
+            bool messageChange = _formatString != null;
+            if (messageChange)
+                _status = _status.ChangeMessage(string.Format(_formatString, nodeGroup.Name));
+            UpdateProgress(messageChange);
             Interlocked.Increment(ref _seenGroupCount);
         }
 
@@ -2226,6 +2233,17 @@ namespace pwiz.Skyline.Model.DocSettings
                        DiffTransitionGroups || DiffTransitionGroupProps ||
                        DiffTransitions || DiffTransitionProps ||
                        DiffResults;
+            }
+        }
+
+        public bool IsResultsOnly
+        {
+            get
+            {
+                return DiffResults &&
+                    !(DiffPeptides || DiffPeptideProps || DiffExplicit ||
+                      DiffTransitionGroups || DiffTransitionGroupProps ||
+                      DiffTransitions || DiffTransitionProps);
             }
         }
 

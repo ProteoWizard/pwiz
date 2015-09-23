@@ -609,7 +609,7 @@ namespace pwiz.Skyline.Model
                     dictPeptideIdPeptide.Add(nodePeptide.Peptide.GlobalIndex, nodePeptide);
             }
 
-            return docClone.UpdateResultsSummaries(docClone.MoleculeGroups, dictPeptideIdPeptide);
+            return docClone.UpdateResultsSummaries(docClone.Children, dictPeptideIdPeptide);
         }
 
         /// <summary>
@@ -617,29 +617,105 @@ namespace pwiz.Skyline.Model
         /// at the peptide level, because peptides have useful peak picking information
         /// like predicted retention time, and multiple measured precursors.
         /// </summary>
-        private IList<DocNode> UpdateResultsSummaries(IEnumerable<PeptideGroupDocNode> peptideGroups,
-            IDictionary<int, PeptideDocNode> dictPeptideIdPeptide)
+        private IList<DocNode> UpdateResultsSummaries(IList<DocNode> children, IDictionary<int, PeptideDocNode> dictPeptideIdPeptide)
         {
+            // Perform main processing for peptides in parallel
             var diffResults = new SrmSettingsDiff(Settings, true);
-            var listPeptideGroups = new List<DocNode>();
-            var listPeptides = new List<DocNode>();
-            foreach (var nodeGroup in peptideGroups)
+            var moleculeGroupPairs = GetMoleculeGroupPairs(children);
+            var moleculeNodes = new PeptideDocNode[moleculeGroupPairs.Length];
+            ParallelEx.For(0, moleculeGroupPairs.Length, i =>
             {
-                listPeptides.Clear();
-                foreach (PeptideDocNode nodePeptide in nodeGroup.Children)
-                {
-                    int index = nodePeptide.Peptide.GlobalIndex;
+                var pair = moleculeGroupPairs[i];
+                var nodePep = pair.NodeMolecule;
+                int index = nodePep.Peptide.GlobalIndex;
 
-                    PeptideDocNode nodeExisting;
-                    if (dictPeptideIdPeptide.TryGetValue(index, out nodeExisting) &&
-                        ReferenceEquals(nodeExisting, nodePeptide))
-                        listPeptides.Add(nodePeptide);
-                    else
-                        listPeptides.Add(nodePeptide.ChangeSettings(Settings, diffResults));
+                PeptideDocNode nodeExisting;
+                if (dictPeptideIdPeptide.TryGetValue(index, out nodeExisting) &&
+                        ReferenceEquals(nodeExisting, nodePep))
+                    moleculeNodes[i] = nodePep;
+                else
+                    moleculeNodes[i] = nodePep.ChangeSettings(Settings, diffResults);
+            });
+
+            return RegroupMolecules(children, moleculeNodes);
+        }
+
+        /// <summary>
+        /// Returns a flat list of <see cref="MoleculeGroupPair"/> in the document for use in parallel
+        /// processing of all molecules in the document.
+        /// </summary>
+        public MoleculeGroupPair[] GetMoleculeGroupPairs()
+        {
+            return GetMoleculeGroupPairs(Children, MoleculeCount);
+        }
+
+        /// <summary>
+        /// Returns a flat list of <see cref="MoleculeGroupPair"/>, given a list of <see cref="PeptideGroupDocNode"/>
+        /// children, for use in parallel processing of all molecules in the children.
+        /// </summary>
+        private static MoleculeGroupPair[] GetMoleculeGroupPairs(IList<DocNode> children)
+        {
+            return GetMoleculeGroupPairs(children, children.Cast<PeptideGroupDocNode>().Sum(g => g.MoleculeCount));
+        }
+
+        /// <summary>
+        /// Returns a flat list of <see cref="MoleculeGroupPair"/>, given a list of <see cref="PeptideGroupDocNode"/>
+        /// children and the total number of molecules they contain, for use in parallel processing of all molecules
+        /// in the children.
+        /// </summary>
+        private static MoleculeGroupPair[] GetMoleculeGroupPairs(IList<DocNode> children, int moleculeCount)
+        {
+            var result = new MoleculeGroupPair[moleculeCount];
+            int currentMolecule = 0;
+            foreach (PeptideGroupDocNode nodeMoleculeGroup in children)
+            {
+                foreach (var nodeMolecule in nodeMoleculeGroup.Molecules)
+                {
+                    result[currentMolecule++] = new MoleculeGroupPair(nodeMoleculeGroup, nodeMolecule);
                 }
-                listPeptideGroups.Add(nodeGroup.ChangeChildrenChecked(listPeptides.ToArray()));
             }
-            return listPeptideGroups.ToArray();
+            return result;
+        }
+
+        /// <summary>
+        /// Regroup a flat list of molecules produced by iterating over the results of
+        /// <see cref="GetMoleculeGroupPairs"/>
+        /// </summary>
+        /// <param name="children">A starting children of <see cref="PeptideGroupDocNode"/> objects</param>
+        /// <param name="moleculeNodes">A flat list of <see cref="PeptideDocNode"/> objects</param>
+        /// <returns>A list of <see cref="PeptideGroupDocNode"/> objects with the original structure and the new <see cref="PeptideDocNode"/> objects</returns>
+        private static IList<DocNode> RegroupMolecules(IList<DocNode> children, PeptideDocNode[] moleculeNodes)
+        {
+            var newMoleculeGroups = new DocNode[children.Count];
+            int moleculeNodeIndex = 0;
+            for (int i = 0; i < newMoleculeGroups.Length; i++)
+            {
+                var nodeGroup = (PeptideGroupDocNode)children[i];
+                var newChildren = new PeptideDocNode[nodeGroup.Children.Count];
+                for (int childIndex = 0; childIndex < newChildren.Length; childIndex++)
+                {
+                    newChildren[childIndex] = moleculeNodes[moleculeNodeIndex++];
+                }
+                newMoleculeGroups[i] = nodeGroup.ChangeChildrenChecked(newChildren);
+            }
+            return newMoleculeGroups;
+        }
+
+        /// <summary>
+        /// Struct that pairs <see cref="PeptideGroupDocNode"/> with <see cref="PeptideDocNode"/> for
+        /// use in a flat list that enables parallel processing.
+        /// </summary>
+        public struct MoleculeGroupPair
+        {
+            public MoleculeGroupPair(PeptideGroupDocNode nodeMoleculeGroup, PeptideDocNode nodeMolecule)
+                : this()
+            {
+                NodeMoleculeGroup = nodeMoleculeGroup;
+                NodeMolecule = nodeMolecule;
+            }
+
+            public PeptideGroupDocNode NodeMoleculeGroup { get; private set; }
+            public PeptideDocNode NodeMolecule { get; private set; }
         }
 
         /// <summary>
@@ -706,11 +782,30 @@ namespace pwiz.Skyline.Model
                 return ChangeSettingsNoDiff(settingsNew);
             else
             {
-                IList<DocNode> childrenNew = new List<DocNode>();
+                IList<DocNode> childrenNew;
+                if (!diff.IsResultsOnly)
+                {
+                    childrenNew = new List<DocNode>();
 
-                // Enumerate the nodes making necessary changes.
-                foreach (PeptideGroupDocNode group in Children)
-                    childrenNew.Add(group.ChangeSettings(settingsNew, diff));
+                    // Enumerate the nodes making necessary changes.
+                    foreach (PeptideGroupDocNode group in Children)
+                        childrenNew.Add(group.ChangeSettings(settingsNew, diff));                    
+                }
+                else
+                {
+                    // Results only changes should not impact the proteins, other than
+                    // changing the peptides
+                    var moleculeGroupPairs = GetMoleculeGroupPairs(Children);
+                    var moleculeNodes = new PeptideDocNode[moleculeGroupPairs.Length];
+                    var settingsParallel = settingsNew;
+                    ParallelEx.For(0, moleculeGroupPairs.Length, i =>
+                    {
+                        var nodePep = moleculeGroupPairs[i].NodeMolecule;
+                        moleculeNodes[i] = nodePep.ChangeSettings(settingsParallel, diff);
+                    });
+
+                    childrenNew = RegroupMolecules(Children, moleculeNodes);
+                }
 
                 // Don't change the children, if the resulting list contains
                 // only reference equal children of the same length and in the

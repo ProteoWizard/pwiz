@@ -40,9 +40,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             // Determine which calculators will be used to score peaks in this document.
             FeatureCalculators = scoringModel.PeakFeatureCalculators.ToArray();
-            _peakTransitionGroupFeaturesList = document.GetPeakFeatures(FeatureCalculators, progressMonitor)
-                .Where(feature => feature.PeakGroupFeatures.Any())
-                .ToArray();
+            _peakTransitionGroupFeaturesList = document.GetPeakFeatures(FeatureCalculators, progressMonitor);
             PopulateDictionary();
 
             EligibleScores = new bool[FeatureCalculators.Count];

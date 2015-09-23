@@ -1213,7 +1213,7 @@ namespace pwiz.Skyline.Model
         /// <param name="children">Deserialized list of children for this node</param>
         protected void SetChildren(IList<DocNode> children)
         {
-            Debug.Assert(Children == null); // Children must not have been
+            Assume.IsTrue(Children == null); // Children must not have been
 
             Children = children;
             _nodeCountStack = GetCounts(children);

@@ -5657,9 +5657,6 @@
   <data name="SkylineWindow_ShowReintegrateDialog_Reintegration_of_results_requires_a_trained_peak_scoring_model_" xml:space="preserve">
     <value>結果の再統合には、トレーニングされたピークスコアモデルが必要です。</value>
   </data>
-  <data name="PeakFeatureEnumerator_GetPeakFeatures_Calculating_peak_group_scores_for__0_" xml:space="preserve">
-    <value>{0}のピークグループスコアを計算中</value>
-  </data>
   <data name="TestToolStoreClient_GetToolZipFile_Error_downloading_tool" xml:space="preserve">
     <value>ツールのダウンロードエラー</value>
   </data>

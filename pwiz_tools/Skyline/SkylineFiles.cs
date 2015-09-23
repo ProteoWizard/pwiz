@@ -231,10 +231,13 @@ namespace pwiz.Skyline
 
             try
             {
-                using (var longWaitDlg = new LongWaitDlg(this))
+                using (var longWaitDlg = new LongWaitDlg(this)
                 {
-                    longWaitDlg.Text = Resources.SkylineWindow_OpenFile_Loading___;
-                    longWaitDlg.Message = Path.GetFileName(path);
+                    Text = Resources.SkylineWindow_OpenFile_Loading___,
+                    Message = Path.GetFileName(path),
+                    ProgressValue = 0
+                })
+                {
                     longWaitDlg.PerformWork(parentWindow ?? this, 500, progressMonitor =>
                     {
                         using (var reader = new StreamReaderWithProgress(path, progressMonitor))

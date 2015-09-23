@@ -26,8 +26,10 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Collections.ObjectModel;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.FileUI;
@@ -1561,6 +1563,23 @@ namespace pwiz.Skyline.Util
             action();
         }
 
+        public static void WrapAndThrowException(Exception x)
+        {
+            // The thrown exception needs to be preserved to preserve
+            // the original stack trace from which it was thrown.  In some cases,
+            // its type must also be preserved, because existing code handles certain
+            // exception types.  If this case threw only TargetInvocationException,
+            // then more frequently the code would just have to have a blanket catch
+            // of the base exception type, which could hide coding errors.
+            if (x is InvalidDataException)
+                throw new InvalidDataException(x.Message, x);
+            if (x is IOException)
+                throw new IOException(x.Message, x);
+            if (x is OperationCanceledException)
+                throw new OperationCanceledException(x.Message, x);
+            throw new TargetInvocationException(x.Message, x);            
+        }
+
         public static double? ParseNullableDouble(string s)
         {
             double d;
@@ -1640,6 +1659,52 @@ namespace pwiz.Skyline.Util
                     return rounded;
             }
             return 0;
+        }
+    }
+
+    public static class ParallelEx
+    {
+        public static void For(int fromInclusive, int toExclusive, Action<int> body, Action<AggregateException> catchClause = null)
+        {
+            LoopWithExceptionHandling(() => Parallel.For(fromInclusive, toExclusive, body), catchClause);
+        }
+
+        public static void ForEach<TSource>(IEnumerable<TSource> source, Action<TSource> body, Action<AggregateException> catchClause = null)
+        {
+            LoopWithExceptionHandling(() => Parallel.ForEach(source, body), catchClause);
+        }
+
+        private static void LoopWithExceptionHandling(Action loop, Action<AggregateException> catchClause)
+        {
+            try
+            {
+                loop();
+            }
+            catch (AggregateException x)
+            {
+                Exception ex = null;
+                x.Handle(inner =>
+                {
+                    if (inner is OperationCanceledException)
+                    {
+                        if (!(ex is OperationCanceledException))
+                            ex = inner;
+                        return true;
+                    }
+                    if (catchClause == null)
+                    {
+                        if (ex == null)
+                            ex = inner;
+                        return true;
+                    }
+                    return false;
+                });
+
+                if (ex != null)
+                    Helpers.WrapAndThrowException(ex);
+                if (catchClause != null)
+                    catchClause(x);
+            }
         }
     }
 }

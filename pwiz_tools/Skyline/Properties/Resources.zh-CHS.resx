@@ -5657,9 +5657,6 @@
   <data name="SkylineWindow_ShowReintegrateDialog_Reintegration_of_results_requires_a_trained_peak_scoring_model_" xml:space="preserve">
     <value>结果的重新合并需要训练过的峰排名模型。</value>
   </data>
-  <data name="PeakFeatureEnumerator_GetPeakFeatures_Calculating_peak_group_scores_for__0_" xml:space="preserve">
-    <value>针对{0}计算峰组分数</value>
-  </data>
   <data name="TestToolStoreClient_GetToolZipFile_Error_downloading_tool" xml:space="preserve">
     <value>下载工具出错</value>
   </data>

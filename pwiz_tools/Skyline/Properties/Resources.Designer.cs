@@ -8425,11 +8425,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Calculating contribution of {0}.
+        ///   Looks up a localized string similar to Calculating score contributions.
         /// </summary>
-        public static string EditPeakScoringModelDlg_TrainModel_Calculating_contribution_of__0_ {
+        public static string EditPeakScoringModelDlg_TrainModel_Calculating_score_contributions {
             get {
-                return ResourceManager.GetString("EditPeakScoringModelDlg_TrainModel_Calculating_contribution_of__0_", resourceCulture);
+                return ResourceManager.GetString("EditPeakScoringModelDlg_TrainModel_Calculating_score_contributions", resourceCulture);
             }
         }
         
@@ -13166,11 +13166,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Updating peak statistics for {0}.
+        ///   Looks up a localized string similar to Updating peak statistics.
         /// </summary>
-        public static string Loader_FinishLoad_Updating_peak_statistics_for__0_ {
+        public static string Loader_FinishLoad_Updating_peak_statistics {
             get {
-                return ResourceManager.GetString("Loader_FinishLoad_Updating_peak_statistics_for__0_", resourceCulture);
+                return ResourceManager.GetString("Loader_FinishLoad_Updating_peak_statistics", resourceCulture);
             }
         }
         
@@ -14199,11 +14199,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Adjusting peak boundaries for {0}.
+        ///   Looks up a localized string similar to Adjusting peak boundaries.
         /// </summary>
-        public static string MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries_for__0_ {
+        public static string MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries {
             get {
-                return ResourceManager.GetString("MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries_for__0_", resourceCulture);
+                return ResourceManager.GetString("MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries", resourceCulture);
             }
         }
         
@@ -16340,11 +16340,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Calculating peak group scores for {0}.
+        ///   Looks up a localized string similar to Calculating peak group scores.
         /// </summary>
-        public static string PeakFeatureEnumerator_GetPeakFeatures_Calculating_peak_group_scores_for__0_ {
+        public static string PeakFeatureEnumerator_GetPeakFeatures_Calculating_peak_group_scores {
             get {
-                return ResourceManager.GetString("PeakFeatureEnumerator_GetPeakFeatures_Calculating_peak_group_scores_for__0_", resourceCulture);
+                return ResourceManager.GetString("PeakFeatureEnumerator_GetPeakFeatures_Calculating_peak_group_scores", resourceCulture);
             }
         }
         

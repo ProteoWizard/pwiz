@@ -5651,9 +5651,6 @@ Are you sure you want to continue?</value>
   <data name="SkylineWindow_ShowReintegrateDialog_Reintegration_of_results_requires_a_trained_peak_scoring_model_" xml:space="preserve">
     <value>Reintegration of results requires a trained peak scoring model.</value>
   </data>
-  <data name="PeakFeatureEnumerator_GetPeakFeatures_Calculating_peak_group_scores_for__0_" xml:space="preserve">
-    <value>Calculating peak group scores for {0}</value>
-  </data>
   <data name="TestToolStoreClient_GetToolZipFile_Error_downloading_tool" xml:space="preserve">
     <value>Error downloading tool</value>
   </data>
@@ -8510,16 +8507,7 @@ Please contact the Panorama server administrator to upgrade the server.</value>
     <data name="EditPeakScoringModelDlg_TrainModel_Calculating" xml:space="preserve">
     <value>Calculating</value>
   </data>
-    <data name="EditPeakScoringModelDlg_TrainModel_Calculating_contribution_of__0_" xml:space="preserve">
-    <value>Calculating contribution of {0}</value>
-  </data>
-    <data name="MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries_for__0_" xml:space="preserve">
-    <value>Adjusting peak boundaries for {0}</value>
-  </data>
-    <data name="Loader_FinishLoad_Updating_peak_statistics_for__0_" xml:space="preserve">
-    <value>Updating peak statistics for {0}</value>
-  </data>
-    <data name="MassListImporter_Import_Reading_transition_list" xml:space="preserve">
+  <data name="MassListImporter_Import_Reading_transition_list" xml:space="preserve">
     <value>Reading transition list</value>
   </data>
     <data name="MassListImporter_Import_Inspecting_peptide_sequence_information" xml:space="preserve">
@@ -8722,5 +8710,17 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   </data>
   <data name="CommandLine_ImportSearch_Adding_1_modification_" xml:space="preserve">
     <value>Adding 1 modification.</value>
+  </data>
+  <data name="PeakFeatureEnumerator_GetPeakFeatures_Calculating_peak_group_scores" xml:space="preserve">
+    <value>Calculating peak group scores</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_TrainModel_Calculating_score_contributions" xml:space="preserve">
+    <value>Calculating score contributions</value>
+  </data>
+  <data name="MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries" xml:space="preserve">
+    <value>Adjusting peak boundaries</value>
+  </data>
+  <data name="Loader_FinishLoad_Updating_peak_statistics" xml:space="preserve">
+    <value>Updating peak statistics</value>
   </data>
 </root>

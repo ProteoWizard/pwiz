@@ -22,15 +22,17 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results.Scoring
 {
     public static class PeakFeatureEnumerator
     {
-        public static IEnumerable<PeakTransitionGroupFeatures> GetPeakFeatures(this SrmDocument document,
+        public static PeakTransitionGroupFeatures[] GetPeakFeatures(this SrmDocument document,
                                                                                IList<IPeakFeatureCalculator> calcs,
                                                                                IProgressMonitor progressMonitor = null,
                                                                                bool includeMzFilters = false)
@@ -38,7 +40,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             // Get features for each peptide
             int totalPeptides = document.MoleculeCount;
             int currentPeptide = 0;
-            var status = new ProgressStatus(string.Empty);
+            var status = new ProgressStatus(Resources.PeakFeatureEnumerator_GetPeakFeatures_Calculating_peak_group_scores);
 
             // Set up run ID dictionary
             var runEnumDict = new Dictionary<int, int>();
@@ -48,42 +50,59 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 runEnumDict.Add(fileInfo.FileIndex, runEnumDict.Count + 1);
             }
 
-            PeptideGroupDocNode nodePepGroupLast = null;
-            foreach (var nodePepGroup in document.MoleculeGroups)
+            // Using Parallel.For is quicker, but order needs to be maintained
+            var moleculeGroupPairs = document.GetMoleculeGroupPairs();
+            var peakFeatureLists = new List<PeakTransitionGroupFeatures>[moleculeGroupPairs.Length];
+            int peakFeatureCount = 0;
+            ParallelEx.For(0, moleculeGroupPairs.Length, i =>
             {
-                foreach (var nodePep in nodePepGroup.Molecules)
+                var pair = moleculeGroupPairs[i];
+                var nodePepGroup = pair.NodeMoleculeGroup;
+                var nodePep = pair.NodeMolecule;
+                if (nodePep.TransitionGroupCount == 0)
+                    return;
+
+                // Exclude standard peptides
+                if (nodePep.GlobalStandardType != null)
+                    return;
+
+                if (progressMonitor != null)
                 {
-                    if (nodePep.TransitionGroupCount == 0)
-                        continue;
+                    if (progressMonitor.IsCanceled)
+                        throw new OperationCanceledException();
 
-                    // Exclude standard peptides
-                    if (nodePep.GlobalStandardType != null)
-                        continue;
+                    int percentComplete = currentPeptide*100/totalPeptides;
+                    Interlocked.Increment(ref currentPeptide);
+                    if (percentComplete < 100)
+                        progressMonitor.UpdateProgress(status = status.ChangePercentComplete(percentComplete));
+                }
 
-                    if (progressMonitor != null)
+                var peakFeatureList = new List<PeakTransitionGroupFeatures>();
+                peakFeatureLists[i] = peakFeatureList;
+                foreach (var peakFeature in document.GetPeakFeatures(nodePepGroup, nodePep, calcs, runEnumDict, includeMzFilters))
+                {
+                    if (peakFeature.PeakGroupFeatures.Any())
                     {
-                        int percentComplete = currentPeptide++*100/totalPeptides;
-                        if (percentComplete < 100)
-                        {
-                            if (!ReferenceEquals(nodePepGroup, nodePepGroupLast))
-                            {
-                                status = status.ChangeMessage(string.Format(Resources.PeakFeatureEnumerator_GetPeakFeatures_Calculating_peak_group_scores_for__0_,
-                                    nodePepGroup.Name));
-                                nodePepGroupLast = nodePepGroup;
-                            }
-                            progressMonitor.UpdateProgress(status = status.ChangePercentComplete(percentComplete));
-                        }
-                    }
-
-                    foreach (var peakFeature in document.GetPeakFeatures(nodePepGroup, nodePep, calcs, runEnumDict, includeMzFilters))
-                    {
-                        yield return peakFeature;
+                        peakFeatureList.Add(peakFeature);
+                        Interlocked.Increment(ref peakFeatureCount);
                     }
                 }
+            });
+
+            var result = new PeakTransitionGroupFeatures[peakFeatureCount];
+            int peakFeatureCurrent = 0;
+            foreach (var peakFeatureList in peakFeatureLists)
+            {
+                if (peakFeatureList == null)
+                    continue;
+
+                foreach (var peakFeature in peakFeatureList)
+                    result[peakFeatureCurrent++] = peakFeature;
             }
 
             if (progressMonitor != null)
                 progressMonitor.UpdateProgress(status.ChangePercentComplete(100));
+            return result;
         }
 
         private static IEnumerable<PeakTransitionGroupFeatures> GetPeakFeatures(this SrmDocument document,
