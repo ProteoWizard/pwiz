@@ -141,6 +141,16 @@ namespace SkylineTester
             return root;
         }
 
+        public string GetNightlyBuildRoot()
+        {
+            var nRoot = GetNightlyRoot();
+            // Only use GetBuildRoot() if it's obviously been set by SkylineNightly.exe
+            // - in which case it's going to be below GetNightlyRoot()
+            if (!string.IsNullOrEmpty(buildRoot.Text) && GetBuildRoot().StartsWith(nRoot) && GetBuildRoot().Contains("SkylineTesterForNightly"))
+                return GetBuildRoot();
+            return nRoot;
+        }
+
         public string GetLogsDir()
         {
             return Path.Combine(GetNightlyRoot(), "Logs");

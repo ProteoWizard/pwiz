@@ -485,8 +485,8 @@ namespace SkylineTester
                 Path.GetFullPath(Path.Combine(ExeDir, @"..\..\x64\Release")),
                 Path.Combine(GetBuildRoot(), @"pwiz\pwiz_tools\Skyline\bin\x86\Release"),
                 Path.Combine(GetBuildRoot(), @"pwiz\pwiz_tools\Skyline\bin\x64\Release"),
-                Path.Combine(GetNightlyRoot(), @"pwiz\pwiz_tools\Skyline\bin\x86\Release"),
-                Path.Combine(GetNightlyRoot(), @"pwiz\pwiz_tools\Skyline\bin\x64\Release"),
+                Path.Combine(GetNightlyBuildRoot(), @"pwiz\pwiz_tools\Skyline\bin\x86\Release"),
+                Path.Combine(GetNightlyBuildRoot(), @"pwiz\pwiz_tools\Skyline\bin\x64\Release"),
                 GetZipPath(32),
                 GetZipPath(64),
             };

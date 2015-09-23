@@ -198,7 +198,7 @@ namespace SkylineTester
                     MainWindow.BuildRoot.Text = dlg.SelectedPath;
             }
 
-            MainWindow.ButtonDeleteBuild.Enabled = Directory.Exists(MainWindow.GetNightlyRoot());
+            MainWindow.ButtonDeleteBuild.Enabled = Directory.Exists(MainWindow.GetBuildRoot()); // MainWindow.GetBuildRoot() is the directory that actually gets deleted in DeleteBuild()
         }
     }
 }
