@@ -65,11 +65,8 @@ namespace pwiz.SkylineTestFunctional
                 openDataSourceDialog.SelectFile("2013_03_13_UWash_S2_MSE_Adj_001.raw.zip");
             });
             OkDialog(openDataSourceDialog, openDataSourceDialog.Open);
-            ImportResultsNameDlg importResultsNameDlg = FindOpenForm<ImportResultsNameDlg>();
-            if (null != importResultsNameDlg)
-            {
-                OkDialog(importResultsNameDlg, importResultsNameDlg.NoDialog);
-            }
+            ImportResultsNameDlg importResultsNameDlg = WaitForOpenForm<ImportResultsNameDlg>();
+            OkDialog(importResultsNameDlg, importResultsNameDlg.NoDialog);
             WaitForConditionUI(() =>
                 SkylineWindow.DocumentUI.Settings.HasResults &&
                 SkylineWindow.DocumentUI.Settings.MeasuredResults.IsLoaded
