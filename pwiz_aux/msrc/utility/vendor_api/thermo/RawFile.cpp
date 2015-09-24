@@ -333,7 +333,8 @@ blt::local_date_time RawFileImpl::getCreationDate()
     DATE oadate;
     checkResult(raw_->GetCreationDate(&oadate), "[RawFileImpl::getCreationDate(), GetCreationDate()] ");
     bpt::ptime pt(bdt::time_from_OADATE<bpt::ptime>(oadate));
-    return blt::local_date_time(pt, blt::time_zone_ptr()); // keep time as UTC
+    bpt::time_duration tzOffset = bpt::second_clock::universal_time() - bpt::second_clock::local_time();
+    return blt::local_date_time(pt + tzOffset, blt::time_zone_ptr()); // treat time as if it came from host's time zone; actual time zone is not provided by Thermo
 }
 
 
