@@ -86,7 +86,7 @@ namespace SkylineNightly
         /// <summary>
         /// Run nightly build/test and report results to server.
         /// </summary>
-        public void Run()
+        public void Run(bool withPerfTests)
         {
             // Locate relevant directories.
             var nightlyDir = GetNightlyDir();
@@ -203,6 +203,7 @@ namespace SkylineNightly
                     skylineTester.GetChild("nightlyStartTime").Set(DateTime.Now.ToShortTimeString());
                     skylineTester.GetChild("nightlyRoot").Set(nightlyDir);
                     skylineTester.GetChild("buildRoot").Set(_skylineTesterDir);
+                    skylineTester.GetChild("nightlyRunPerfTests").Set(withPerfTests?"true":"false");
                     skylineTester.Save(skylineNightlySkytr);
                     var durationHours = double.Parse(skylineTester.GetChild("nightlyDuration").Value);
                     durationSeconds = (int) (durationHours*60*60) + 30*60;  // 30 minutes grace before we kill SkylineTester

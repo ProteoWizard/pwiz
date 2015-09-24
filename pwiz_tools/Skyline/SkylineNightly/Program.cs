@@ -26,6 +26,7 @@ namespace SkylineNightly
     static class Program
     {
         public const string SCHEDULED_ARG = "scheduled"; // Not L10N
+        public const string SCHEDULED_PERFTESTS_ARG = SCHEDULED_ARG + "_with_perftests"; // Not L10N
         public const string PARSE_ARG = "parse"; // Not L10N
         public const string POST_ARG = "post"; // Not L10N
 
@@ -47,8 +48,14 @@ namespace SkylineNightly
 
             switch (args[0].ToLower())
             {
+                case SCHEDULED_PERFTESTS_ARG:
+                    nightly.Run(true);  // Include perf tests
+                    nightly.Parse();
+                    nightly.Post();
+                    break;
+
                 case SCHEDULED_ARG:
-                    nightly.Run();
+                    nightly.Run(false); // No perf tests
                     nightly.Parse();
                     nightly.Post();
                     break;
