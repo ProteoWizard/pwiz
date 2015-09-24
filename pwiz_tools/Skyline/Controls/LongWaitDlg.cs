@@ -199,6 +199,7 @@ namespace pwiz.Skyline.Controls
                 }
                 _windowShown = false;
             }
+            UpdateTaskbarProgress(null);
             base.OnFormClosing(e);
         }
 
@@ -279,8 +280,19 @@ namespace pwiz.Skyline.Controls
             {
                 progressBar.Value = _progressValue;
             }
+
+            UpdateTaskbarProgress(progressBar.Value);
+
             if (_message != null && !Equals(_message, labelMessage.Text))
                 labelMessage.Text = _message + (_clickedCancel ? _cancelMessage : string.Empty);
+        }
+
+        private void UpdateTaskbarProgress(int? percentComplete)
+        {
+            if (Program.MainWindow != null)
+                Program.MainWindow.UpdateTaskbarProgress(percentComplete);
+            else if (Program.StartWindow != null)
+                Program.StartWindow.UpdateTaskbarProgress(percentComplete);
         }
 
         private void timerClose_Tick(object sender, EventArgs e)

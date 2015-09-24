@@ -221,11 +221,21 @@ namespace pwiz.Skyline
                     }
                     else
                     {
-                        MainWindow = StartPage.ShowStartupFormDialog();
-                        if (null == MainWindow)
+                        StartWindow = new StartPage();
+                        try
                         {
-                            Application.Exit();
-                            return;
+                            if (StartWindow.ShowDialog() != DialogResult.OK)
+                            {
+                                Application.Exit();
+                                return;
+                            }
+
+                            MainWindow = StartWindow.MainWindow;
+                        }
+                        finally
+                        {
+                            StartWindow.Dispose();
+                            StartWindow = null;
                         }
                     }
                 }
@@ -431,6 +441,7 @@ namespace pwiz.Skyline
         }
 
         public static SkylineWindow MainWindow { get; private set; }
+        public static StartPage StartWindow { get; private set; }
         public static SrmDocument ActiveDocument { get { return MainWindow.Document; } }
         public static SrmDocument ActiveDocumentUI { get { return MainWindow.DocumentUI; } }
 

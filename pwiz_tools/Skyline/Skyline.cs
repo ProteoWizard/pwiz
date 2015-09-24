@@ -1389,6 +1389,45 @@ namespace pwiz.Skyline
             return sb.ToString();
         }
 
+        private Control _activeClipboardControl;
+        private string _fileToOpen;
+
+        public void ClipboardControlGotFocus(Control clipboardControl)
+        {
+            _activeClipboardControl = clipboardControl;
+            UpdateClipboardMenuItems();
+        }
+
+        public void ClipboardControlLostFocus(Control clipboardControl)
+        {
+            if (_activeClipboardControl == clipboardControl)
+            {
+                _activeClipboardControl = null;
+            }
+            UpdateClipboardMenuItems();
+        }
+
+        private void UpdateClipboardMenuItems()
+        {
+            if (_activeClipboardControl != null)
+            {
+                // If some other control wants to handle these commands, then we disable
+                // the menu items so the keystrokes don't get eaten up by TranslateMessage
+                cutToolBarButton.Enabled = cutMenuItem.Enabled = false;
+                copyToolBarButton.Enabled = copyMenuItem.Enabled = false;
+                pasteToolBarButton.Enabled = pasteMenuItem.Enabled = false;
+                deleteMenuItem.Enabled = false;
+                return;
+            }
+
+            // Allow deletion, copy/paste for any selection that contains a tree node.
+            bool enabled = SequenceTree != null && SequenceTree.SelectedNodes.Any(n => n is SrmTreeNode);
+            cutToolBarButton.Enabled = cutMenuItem.Enabled = enabled;
+            copyToolBarButton.Enabled = copyMenuItem.Enabled = enabled;
+            pasteToolBarButton.Enabled = pasteMenuItem.Enabled = true;
+            deleteMenuItem.Enabled = enabled;
+        }
+
         private void deleteMenuItem_Click(object sender, EventArgs e) { EditDelete(); }
         public void EditDelete()
         {
@@ -2436,6 +2475,262 @@ namespace pwiz.Skyline
             mainToolStrip.Visible = show;
         }
 
+        private void addFoldChangeMenuItem_Click(object sender, EventArgs e)
+        {
+            AddGroupComparison();
+        }
+
+        public void AddGroupComparison()
+        {
+            using (var editDlg = new EditGroupComparisonDlg(this, GroupComparisonDef.EMPTY.ChangeSumTransitions(true),
+                Settings.Default.GroupComparisonDefList))
+            {
+                if (editDlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    Settings.Default.GroupComparisonDefList.Add(editDlg.GroupComparisonDef);
+                    ModifyDocument(Resources.SkylineWindow_AddGroupComparison_Add_Fold_Change,
+                        doc => doc.ChangeSettings(
+                            doc.Settings.ChangeDataSettings(
+                                doc.Settings.DataSettings.AddGroupComparisonDef(
+                                editDlg.GroupComparisonDef))));
+                }
+            }
+        }
+
+        private void editGroupComparisonListMenuItem_Click(object sender, EventArgs e)
+        {
+            DisplayDocumentSettingsDialogPage(1);
+        }
+
+        private void groupComparisonsMenuItem_DropDownOpening(object sender, EventArgs e)
+        {
+            groupComparisonsMenuItem.DropDownItems.Clear();
+            if (DocumentUI.Settings.DataSettings.GroupComparisonDefs.Any())
+            {
+                foreach (var groupComparisonDef in DocumentUI.Settings.DataSettings.GroupComparisonDefs)
+                {
+                    groupComparisonsMenuItem.DropDownItems.Add(MakeToolStripMenuItem(groupComparisonDef));
+                }
+                groupComparisonsMenuItem.DropDownItems.Add(new ToolStripSeparator());
+            }
+            groupComparisonsMenuItem.DropDownItems.AddRange(new ToolStripItem[]
+            {
+                addGroupComparisonMenuItem,
+                editGroupComparisonListMenuItem
+            });
+        }
+
+        private ToolStripMenuItem MakeToolStripMenuItem(GroupComparisonDef groupComparisonDef)
+        {
+            return new ToolStripMenuItem(groupComparisonDef.Name, null, (sender, args) =>
+            {
+                ShowGroupComparisonWindow(groupComparisonDef.Name);
+            });
+        }
+
+        public void ShowGroupComparisonWindow(string groupComparisonName)
+        {
+            FoldChangeGrid.ShowFoldChangeGrid(dockPanel, GetFloatingRectangleForNewWindow(), this, groupComparisonName);
+        }
+
+        public void UpdateTargetsDisplayMode(ProteinDisplayMode mode)
+        {
+            Settings.Default.ShowPeptidesDisplayMode = mode.ToString();
+            Settings.Default.ShowPeptides = true;
+            ShowSequenceTreeForm(true, true);
+        }
+
+        private void showTargetsByNameToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            UpdateTargetsDisplayMode(ProteinDisplayMode.ByName);
+        }
+
+        private void showTargetsByAccessionToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            UpdateTargetsDisplayMode(ProteinDisplayMode.ByAccession);
+        }
+
+        private void showTargetsByPreferredNameToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            UpdateTargetsDisplayMode(ProteinDisplayMode.ByPreferredName);
+        }
+
+        private void showTargetsByGeneToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            UpdateTargetsDisplayMode(ProteinDisplayMode.ByGene);
+        }
+
+        private void peptidesMenuItem_DropDownOpening(object sender, EventArgs e)
+        {
+            showTargetsByNameToolStripMenuItem.Checked =
+                (Settings.Default.ShowPeptidesDisplayMode == ProteinDisplayMode.ByName.ToString());
+            showTargetsByAccessionToolStripMenuItem.Checked =
+                (Settings.Default.ShowPeptidesDisplayMode == ProteinDisplayMode.ByAccession.ToString());
+            showTargetsByPreferredNameToolStripMenuItem.Checked =
+                (Settings.Default.ShowPeptidesDisplayMode == ProteinDisplayMode.ByPreferredName.ToString());
+            showTargetsByGeneToolStripMenuItem.Checked =
+                (Settings.Default.ShowPeptidesDisplayMode == ProteinDisplayMode.ByGene.ToString());
+        }
+
+        private void PerformSort(string title, Comparison<PeptideGroupDocNode> comparison)
+        {
+            ModifyDocument(title, doc =>
+            {
+                var listProteins = new List<PeptideGroupDocNode>(doc.MoleculeGroups);
+                listProteins.Sort(comparison);
+                return (SrmDocument)doc.ChangeChildrenChecked(listProteins.Cast<DocNode>().ToArray());
+            });
+        }
+
+        public void sortProteinsByNameToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            PerformSort(Resources.SkylineWindow_sortProteinsMenuItem_Click_Sort_proteins_by_name, PeptideGroupDocNode.CompareNames);
+        }
+
+        public void sortProteinsByAccessionToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            PerformSort(Resources.SkylineWindow_sortProteinsByAccessionToolStripMenuItem_Click_Sort_proteins_by_accession, PeptideGroupDocNode.CompareAccessions);
+        }
+
+        public void sortProteinsByPreferredNameToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            PerformSort(Resources.SkylineWindow_sortProteinsByPreferredNameToolStripMenuItem_Click_Sort_proteins_by_preferred_name, PeptideGroupDocNode.ComparePreferredNames);
+        }
+
+        public void sortProteinsByGeneToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            PerformSort(Resources.SkylineWindow_sortProteinsByGeneToolStripMenuItem_Click_Sort_proteins_by_gene, PeptideGroupDocNode.CompareGenes);
+        }
+
+        private void addMoleculeContextMenuItem_Click(object sender, EventArgs e)
+        {
+            AddSmallMolecule();
+        }
+
+        private void addSmallMoleculePrecursorContextMenuItem_Click(object sender, EventArgs e)
+        {
+            AddSmallMolecule();
+        }
+
+        private void addTransitionMoleculeContextMenuItem_Click(object sender, EventArgs e)
+        {
+            AddSmallMolecule();
+        }
+
+        private TransitionDocNode[] GetDefaultPrecursorTransitions(SrmDocument doc, TransitionGroup tranGroup)
+        {
+            // TODO(bspratt):
+            // You might want to prepoluate one or more precursor transitions, if full scan MS1 "Isotope peaks include"=="count" 
+            // (in which case you'd want more than one), or Transition Settings ion types filter includes "p"
+            // var transition = new Transition(tranGroup, tranGroup.PrecursorCharge, null, tranGroup.CustomMolecule);
+            // var massType = doc.Settings.TransitionSettings.Prediction.FragmentMassType;
+            // double mass = transition.CustomIon.GetMass(massType);
+            // var nodeTran = new TransitionDocNode(transition, null, mass, null, null); // Precursor transition
+            // return new[] { nodeTran };
+            return new TransitionDocNode[0];
+        }
+
+        public void AddSmallMolecule()
+        {
+            var nodeGroupTree = SequenceTree.SelectedNode as TransitionGroupTreeNode;
+            var nodePepGroupTree = SequenceTree.SelectedNode as PeptideGroupTreeNode;
+            var nodePepTree = SequenceTree.SelectedNode as PeptideTreeNode;
+            if (nodeGroupTree != null)
+            {
+                // Adding a transition - just want charge and formula/mz
+                var nodeGroup = nodeGroupTree.DocNode;
+                var groupPath = nodeGroupTree.Path;
+                // List of existing transitions to avoid duplication
+                var existingIons = nodeGroup.Transitions.Select(child => child.Transition)
+                                                        .Where(c => c.CustomIon is DocNodeCustomIon).ToArray();
+                using (var dlg = new EditCustomMoleculeDlg(this, Resources.SkylineWindow_AddMolecule_Add_Transition, null, existingIons,
+                    Transition.MIN_PRODUCT_CHARGE,
+                    Transition.MAX_PRODUCT_CHARGE,
+                    Document.Settings, null, null, nodeGroup.Transitions.Any() ? nodeGroup.Transitions.Last().Transition.Charge : 1, null, null, null))
+                {
+                    if (dlg.ShowDialog(this) == DialogResult.OK)
+                    {
+                        ModifyDocument(string.Format(Resources.SkylineWindow_AddMolecule_Add_custom_product_ion__0_, dlg.ResultCustomIon.DisplayName), doc =>
+                        {
+                            // Okay to use TransitionGroup identity object, if it has been removed from the 
+                            // tree, then the Add below with the path will throw
+                            var transitionGroup = nodeGroup.TransitionGroup;
+                            var transition = new Transition(transitionGroup, dlg.Charge, null, dlg.ResultCustomIon);
+                            var massType = doc.Settings.TransitionSettings.Prediction.FragmentMassType;
+                            double mass = transition.CustomIon.GetMass(massType);
+                            var nodeTran = new TransitionDocNode(transition, null, mass, null, null);
+                            return (SrmDocument)doc.Add(groupPath, nodeTran);
+                        });
+                    }
+                }
+            }
+            else if (nodePepTree != null)
+            {
+                // Adding a precursor - appends a transition group to the current peptide's existing list
+                var nodePep = nodePepTree.DocNode;
+                var pepPath = nodePepTree.Path;
+                var notFirst = nodePep.TransitionGroups.Any();
+                // Get a list of existing precursors - likely basis for adding a heavy version
+                var existingIons = notFirst ? nodePep.TransitionGroups.Select(child => child.CustomIon).Where(x => x != null).ToArray() : null;
+                var existingPrecursors = nodePep.TransitionGroups.Select(child => child.TransitionGroup).Where(c => c.IsCustomIon).ToArray();
+                using (var dlg = new EditCustomMoleculeDlg(this, Resources.SkylineWindow_AddSmallMolecule_Add_Precursor,
+                    null, existingPrecursors,
+                    TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE, Document.Settings,
+                    (existingIons == null) ? nodePep.Peptide.CustomIon.Name : existingIons.First().Name,
+                    (existingIons == null) ? nodePep.Peptide.CustomIon.Formula : existingIons.First().Formula,
+                    notFirst ? nodePep.TransitionGroups.First().TransitionGroup.PrecursorCharge : 1,
+                    notFirst ? nodePep.TransitionGroups.First().ExplicitValues : ExplicitTransitionGroupValues.EMPTY,
+                    null,
+                    IsotopeLabelType.heavy))
+                {
+                    if (dlg.ShowDialog(this) == DialogResult.OK)
+                    {
+                        ModifyDocument(string.Format(Resources.SkylineWindow_AddSmallMolecule_Add_small_molecule_precursor__0_, dlg.ResultCustomIon.DisplayName), doc =>
+                        {
+                            var tranGroup = new TransitionGroup(nodePep.Peptide, dlg.ResultCustomIon, dlg.Charge, dlg.IsotopeLabelType);
+                            var tranGroupDocNode = new TransitionGroupDocNode(tranGroup, Annotations.EMPTY,
+                                doc.Settings, null, null, dlg.ResultExplicitTransitionGroupValues, null, GetDefaultPrecursorTransitions(doc, tranGroup), true);
+                            return (SrmDocument)doc.Add(pepPath, tranGroupDocNode);
+                        });
+                    }
+                }
+            }
+            else if (nodePepGroupTree != null)
+            {
+                var nodePepGroup = nodePepGroupTree.DocNode;
+                if (!nodePepGroup.IsPeptideList)
+                {
+                    MessageDlg.Show(this, Resources.SkylineWindow_AddMolecule_Custom_molecules_cannot_be_added_to_a_protein_);
+                    return;
+                }
+                else if (!nodePepGroup.IsEmpty && nodePepGroup.IsProteomic) // N.B. : An empty PeptideGroup will return True for IsProteomic, the assumption being that it's in the early stages of being populated from a protein
+                {
+                    MessageDlg.Show(this, Resources.SkylineWindow_AddMolecule_Custom_molecules_cannot_be_added_to_a_peptide_list_);
+                    return;
+                }
+
+                var pepGroupPath = nodePepGroupTree.Path;
+                using (var dlg = new EditCustomMoleculeDlg(this, Resources.SkylineWindow_AddSmallMolecule_Add_Small_Molecule, null, null,
+                    TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE, Document.Settings, null, string.Empty, 1,
+                    ExplicitTransitionGroupValues.EMPTY, ExplicitRetentionTimeInfo.EMPTY, IsotopeLabelType.light))
+                {
+                    if (dlg.ShowDialog(this) == DialogResult.OK)
+                    {
+                        ModifyDocument(string.Format(Resources.SkylineWindow_AddSmallMolecule_Add_small_molecule__0_, dlg.ResultCustomIon.DisplayName), doc =>
+                        {
+                            var peptide = new Peptide(dlg.ResultCustomIon);
+                            var tranGroup = new TransitionGroup(peptide, dlg.Charge, dlg.IsotopeLabelType, true, null);
+                            var tranGroupDocNode = new TransitionGroupDocNode(tranGroup, Annotations.EMPTY,
+                                doc.Settings, null, null, dlg.ResultExplicitTransitionGroupValues, null,
+                                GetDefaultPrecursorTransitions(doc, tranGroup), true);
+                            var nodePepNew = new PeptideDocNode(peptide, Document.Settings, null, null,
+                                dlg.ResultRetentionTimeInfo, new[] { tranGroupDocNode }, true);
+                            return (SrmDocument)doc.Add(pepGroupPath, nodePepNew);
+                        });
+                    }
+                }
+            }
+        }
 
         #endregion
 
@@ -3221,7 +3516,7 @@ namespace pwiz.Skyline
                 // Keep the empty node around always
                 if (!string.IsNullOrEmpty(labelText))
                 {
-                    // TODO(brendanx) Move document access inside ModifyDocument delegate
+                    // CONSIDER: Careful with document access outside ModifyDocument delegate
                     var document = DocumentUI;
                     var settings = document.Settings;
                     var backgroundProteome = settings.PeptideSettings.BackgroundProteome;
@@ -3234,7 +3529,7 @@ namespace pwiz.Skyline
                         string proteinName;
                         if (ichPeptideSeparator >= 0)
                         {
-                            // TODO(nicksh) If they've selected a single peptide, then see if the protein has already
+                            // TODO(nicksh): If they've selected a single peptide, then see if the protein has already
                             // been added, and, if so, just add the single peptide to the existing protein.
                             peptideSequence = labelText.Substring(0, ichPeptideSeparator);
                             proteinName = labelText.Substring(ichPeptideSeparator +
@@ -3376,8 +3671,7 @@ namespace pwiz.Skyline
                             oldPeptideGroupDocNode.Description, peptideDocNodes.ToArray(), false);
                         ModifyDocument(modifyMessage, doc =>
                         {
-                            var docNew =
-                            (SrmDocument) doc.ReplaceChild(newPeptideGroupDocNode);
+                            var docNew = (SrmDocument) doc.ReplaceChild(newPeptideGroupDocNode);
                             if (matcher != null)
                             {
                                 var pepModsNew = matcher.GetDocModifications(docNew);
@@ -3794,10 +4088,13 @@ namespace pwiz.Skyline
             return ReferenceEquals(listResult, listOriginal);
         }
 
-        // TODO: Something better after demoing library building
         bool IProgressMonitor.IsCanceled
         {
-            get { return false; }
+            get
+            {
+                // CONSIDER: Add a generic cancel button to the status bar that allows cancelling operations with progress?
+                return false;
+            }
         }
 
         UpdateProgressResponse IProgressMonitor.UpdateProgress(ProgressStatus status)
@@ -3960,6 +4257,17 @@ namespace pwiz.Skyline
             return true;
         }
 
+        public void UpdateTaskbarProgress(int? percentComplete)
+        {
+            if (!percentComplete.HasValue)
+                _taskbarProgress.SetState(Handle, TaskbarProgress.TaskbarStates.NoProgress);
+            else
+            {
+                _taskbarProgress.SetState(Handle, TaskbarProgress.TaskbarStates.Normal);
+                _taskbarProgress.SetValue(Handle, percentComplete.Value, 100);                
+            }
+        }
+
         private void UpdateProgressUI(object sender, EventArgs e)
         {
             if (statusStrip.IsDisposed)
@@ -3969,7 +4277,7 @@ namespace pwiz.Skyline
             if (listProgress.Count == 0)
             {
                 statusProgress.Visible = false;
-                _taskbarProgress.SetState(Handle, TaskbarProgress.TaskbarStates.NoProgress);
+                UpdateTaskbarProgress(null);
                 buttonShowAllChromatograms.Visible = false;
                 statusGeneral.Text = Resources.SkylineWindow_UpdateProgressUI_Ready;
                 _timerProgress.Stop();
@@ -3987,8 +4295,7 @@ namespace pwiz.Skyline
                 ProgressStatus status = listProgress[0];
                 statusProgress.Value = status.PercentComplete;
                 statusProgress.Visible = true;
-                _taskbarProgress.SetState(Handle, TaskbarProgress.TaskbarStates.Normal);
-                _taskbarProgress.SetValue(Handle, status.PercentComplete, 100);
+                UpdateTaskbarProgress(status.PercentComplete);
                 statusGeneral.Text = status.Message;
 
                 if (!SHOW_LOADING_CHROMATOGRAMS)
@@ -4087,45 +4394,6 @@ namespace pwiz.Skyline
                 Invoke(act, arg);
             else
                 act(arg);
-        }
-
-        private Control _activeClipboardControl;
-        private string _fileToOpen;
-
-        public void ClipboardControlGotFocus(Control clipboardControl)
-        {
-            _activeClipboardControl = clipboardControl;
-            UpdateClipboardMenuItems();
-        }
-
-        public void ClipboardControlLostFocus(Control clipboardControl)
-        {
-            if (_activeClipboardControl == clipboardControl)
-            {
-                _activeClipboardControl = null;
-            }
-            UpdateClipboardMenuItems();
-        }
-
-        private void UpdateClipboardMenuItems()
-        {
-            if (_activeClipboardControl != null)
-            {
-                // If some other control wants to handle these commands, then we disable
-                // the menu items so the keystrokes don't get eaten up by TranslateMessage
-                cutToolBarButton.Enabled = cutMenuItem.Enabled = false;
-                copyToolBarButton.Enabled = copyMenuItem.Enabled = false;
-                pasteToolBarButton.Enabled = pasteMenuItem.Enabled = false;
-                deleteMenuItem.Enabled = false;
-                return;
-            }
-
-            // Allow deletion, copy/paste for any selection that contains a tree node.
-            bool enabled = SequenceTree != null && SequenceTree.SelectedNodes.Any(n => n is SrmTreeNode);
-            cutToolBarButton.Enabled = cutMenuItem.Enabled = enabled;
-            copyToolBarButton.Enabled = copyMenuItem.Enabled = enabled;
-            pasteToolBarButton.Enabled = pasteMenuItem.Enabled = true;
-            deleteMenuItem.Enabled = enabled;
         }
 
         #region Implementation of IToolMacroProvider
@@ -4265,268 +4533,6 @@ namespace pwiz.Skyline
         public bool IsPasteKeys(Keys keys)
         {
             return Equals(pasteMenuItem.ShortcutKeys, keys);
-        }
-
-        public void UpdateTargetsDisplayMode(ProteinDisplayMode mode)
-        {
-            Settings.Default.ShowPeptidesDisplayMode = mode.ToString();
-            Settings.Default.ShowPeptides = true;
-            ShowSequenceTreeForm(true, true);
-        }
-
-        private void showTargetsByNameToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-             UpdateTargetsDisplayMode(ProteinDisplayMode.ByName);
-        }
-
-        private void showTargetsByAccessionToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-             UpdateTargetsDisplayMode(ProteinDisplayMode.ByAccession);
-        }
-
-        private void showTargetsByPreferredNameToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-             UpdateTargetsDisplayMode(ProteinDisplayMode.ByPreferredName);
-        }
-
-        private void showTargetsByGeneToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-             UpdateTargetsDisplayMode(ProteinDisplayMode.ByGene);
-        }
-
-        private void peptidesMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            showTargetsByNameToolStripMenuItem.Checked =
-                (Settings.Default.ShowPeptidesDisplayMode == ProteinDisplayMode.ByName.ToString());
-            showTargetsByAccessionToolStripMenuItem.Checked =
-                (Settings.Default.ShowPeptidesDisplayMode == ProteinDisplayMode.ByAccession.ToString());
-            showTargetsByPreferredNameToolStripMenuItem.Checked =
-                (Settings.Default.ShowPeptidesDisplayMode == ProteinDisplayMode.ByPreferredName.ToString());
-            showTargetsByGeneToolStripMenuItem.Checked =
-                (Settings.Default.ShowPeptidesDisplayMode == ProteinDisplayMode.ByGene.ToString());
-        }
-
-        private void PerformSort(string title, Comparison<PeptideGroupDocNode> comparison)
-        {
-            ModifyDocument(title, doc =>
-            {
-                var listProteins = new List<PeptideGroupDocNode>(doc.MoleculeGroups);
-                listProteins.Sort(comparison);
-                return (SrmDocument)doc.ChangeChildrenChecked(listProteins.Cast<DocNode>().ToArray());
-            });
-        }
-
-        public void sortProteinsByNameToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            PerformSort(Resources.SkylineWindow_sortProteinsMenuItem_Click_Sort_proteins_by_name, PeptideGroupDocNode.CompareNames);
-        }
-
-        public void sortProteinsByAccessionToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            PerformSort(Resources.SkylineWindow_sortProteinsByAccessionToolStripMenuItem_Click_Sort_proteins_by_accession, PeptideGroupDocNode.CompareAccessions);
-        }
-
-        public void sortProteinsByPreferredNameToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            PerformSort(Resources.SkylineWindow_sortProteinsByPreferredNameToolStripMenuItem_Click_Sort_proteins_by_preferred_name, PeptideGroupDocNode.ComparePreferredNames);
-        }
-
-        public void sortProteinsByGeneToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            PerformSort(Resources.SkylineWindow_sortProteinsByGeneToolStripMenuItem_Click_Sort_proteins_by_gene, PeptideGroupDocNode.CompareGenes);
-        }
-
-        private void addMoleculeContextMenuItem_Click(object sender, EventArgs e)
-        {
-            AddSmallMolecule();
-        }
-
-        private void addSmallMoleculePrecursorContextMenuItem_Click(object sender, EventArgs e)
-        {
-            AddSmallMolecule();
-        }
-
-        private void addTransitionMoleculeContextMenuItem_Click(object sender, EventArgs e)
-        {
-            AddSmallMolecule();
-        }
-
-        private TransitionDocNode[] GetDefaultPrecursorTransitions(SrmDocument doc, TransitionGroup tranGroup)
-        {
-            // TODO bspratt :
-            // You might want to prepoluate one or more precursor transitions, if full scan MS1 "Isotope peaks include"=="count" 
-            // (in which case you'd want more than one), or Transition Settings ion types filter includes "p"
-            // var transition = new Transition(tranGroup, tranGroup.PrecursorCharge, null, tranGroup.CustomMolecule);
-            // var massType = doc.Settings.TransitionSettings.Prediction.FragmentMassType;
-            // double mass = transition.CustomIon.GetMass(massType);
-            // var nodeTran = new TransitionDocNode(transition, null, mass, null, null); // Precursor transition
-            // return new[] { nodeTran };
-            return new TransitionDocNode[0];
-        }
-
-        public void AddSmallMolecule()
-        {
-            var nodeGroupTree = SequenceTree.SelectedNode as TransitionGroupTreeNode;
-            var nodePepGroupTree = SequenceTree.SelectedNode as PeptideGroupTreeNode;
-            var nodePepTree = SequenceTree.SelectedNode as PeptideTreeNode;
-            if (nodeGroupTree != null)
-            {
-                // Adding a transition - just want charge and formula/mz
-                var nodeGroup = nodeGroupTree.DocNode;
-                var groupPath = nodeGroupTree.Path;
-                // List of existing transitions to avoid duplication
-                var existingIons = nodeGroup.Transitions.Select(child => child.Transition)
-                                                        .Where(c => c.CustomIon is DocNodeCustomIon).ToArray();
-                using (var dlg = new EditCustomMoleculeDlg(this, Resources.SkylineWindow_AddMolecule_Add_Transition, null, existingIons,
-                    Transition.MIN_PRODUCT_CHARGE,
-                    Transition.MAX_PRODUCT_CHARGE,
-                    Document.Settings, null, null, nodeGroup.Transitions.Any()?nodeGroup.Transitions.Last().Transition.Charge:1, null, null, null))
-                {
-                    if (dlg.ShowDialog(this) == DialogResult.OK)
-                    {
-                        ModifyDocument(string.Format(Resources.SkylineWindow_AddMolecule_Add_custom_product_ion__0_, dlg.ResultCustomIon.DisplayName), doc =>
-                        {
-                            // Okay to use TransitionGroup identity object, if it has been removed from the 
-                            // tree, then the Add below with the path will throw
-                            var transitionGroup = nodeGroup.TransitionGroup;
-                            var transition = new Transition(transitionGroup, dlg.Charge, null, dlg.ResultCustomIon);
-                            var massType = doc.Settings.TransitionSettings.Prediction.FragmentMassType;
-                            double mass = transition.CustomIon.GetMass(massType);
-                            var nodeTran = new TransitionDocNode(transition, null, mass, null, null);
-                            return (SrmDocument)doc.Add(groupPath, nodeTran);
-                        });
-                    }
-                }
-            }
-            else if (nodePepTree != null)
-            {
-                // Adding a precursor - appends a transition group to the current peptide's existing list
-                var nodePep = nodePepTree.DocNode;
-                var pepPath = nodePepTree.Path;
-                var notFirst = nodePep.TransitionGroups.Any();
-                // Get a list of existing precursors - likely basis for adding a heavy version
-                var existingIons = notFirst ? nodePep.TransitionGroups.Select(child => child.CustomIon).Where(x => x != null).ToArray() : null;
-                var existingPrecursors = nodePep.TransitionGroups.Select(child => child.TransitionGroup).Where(c => c.IsCustomIon).ToArray();
-                using (var dlg = new EditCustomMoleculeDlg(this, Resources.SkylineWindow_AddSmallMolecule_Add_Precursor, 
-                    null, existingPrecursors,
-                    TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE, Document.Settings,
-                    (existingIons == null) ? nodePep.Peptide.CustomIon.Name : existingIons.First().Name,
-                    (existingIons == null) ? nodePep.Peptide.CustomIon.Formula : existingIons.First().Formula,
-                    notFirst ? nodePep.TransitionGroups.First().TransitionGroup.PrecursorCharge : 1, 
-                    notFirst ? nodePep.TransitionGroups.First().ExplicitValues :  ExplicitTransitionGroupValues.EMPTY, 
-                    null, 
-                    IsotopeLabelType.heavy))
-                {
-                    if (dlg.ShowDialog(this) == DialogResult.OK)
-                    {
-                        ModifyDocument(string.Format(Resources.SkylineWindow_AddSmallMolecule_Add_small_molecule_precursor__0_, dlg.ResultCustomIon.DisplayName), doc =>
-                        {
-                            var tranGroup = new TransitionGroup(nodePep.Peptide, dlg.ResultCustomIon, dlg.Charge, dlg.IsotopeLabelType);
-                            var tranGroupDocNode = new TransitionGroupDocNode(tranGroup, Annotations.EMPTY,
-                                doc.Settings, null, null, dlg.ResultExplicitTransitionGroupValues, null, GetDefaultPrecursorTransitions(doc, tranGroup), true);
-                            return (SrmDocument)doc.Add(pepPath, tranGroupDocNode);
-                        });
-                    }
-                }
-            }
-            else if (nodePepGroupTree != null)
-            {
-                var nodePepGroup = nodePepGroupTree.DocNode;
-                if (!nodePepGroup.IsPeptideList)
-                {
-                    MessageDlg.Show(this, Resources.SkylineWindow_AddMolecule_Custom_molecules_cannot_be_added_to_a_protein_);
-                    return;
-                }
-                else if (!nodePepGroup.IsEmpty && nodePepGroup.IsProteomic) // N.B. : An empty PeptideGroup will return True for IsProteomic, the assumption being that it's in the early stages of being populated from a protein
-                {
-                    MessageDlg.Show(this, Resources.SkylineWindow_AddMolecule_Custom_molecules_cannot_be_added_to_a_peptide_list_);
-                    return;
-                }
-
-                var pepGroupPath = nodePepGroupTree.Path;
-                using (var dlg = new EditCustomMoleculeDlg(this, Resources.SkylineWindow_AddSmallMolecule_Add_Small_Molecule, null, null,
-                    TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE, Document.Settings, null, string.Empty, 1, 
-                    ExplicitTransitionGroupValues.EMPTY, ExplicitRetentionTimeInfo.EMPTY, IsotopeLabelType.light))
-                {
-                    if (dlg.ShowDialog(this) == DialogResult.OK)
-                    {
-                        ModifyDocument(string.Format(Resources.SkylineWindow_AddSmallMolecule_Add_small_molecule__0_, dlg.ResultCustomIon.DisplayName), doc =>
-                        {
-                            var peptide = new Peptide(dlg.ResultCustomIon);
-                            var tranGroup = new TransitionGroup(peptide, dlg.Charge, dlg.IsotopeLabelType, true, null);
-                            var tranGroupDocNode = new TransitionGroupDocNode(tranGroup, Annotations.EMPTY,
-                                doc.Settings, null, null, dlg.ResultExplicitTransitionGroupValues, null,
-                                GetDefaultPrecursorTransitions(doc, tranGroup), true);
-                            var nodePepNew = new PeptideDocNode(peptide, Document.Settings, null, null,
-                                dlg.ResultRetentionTimeInfo, new[] { tranGroupDocNode }, true);
-                            return (SrmDocument) doc.Add(pepGroupPath, nodePepNew);
-                        });
-                    }
-                }
-            }
-        }
-
-        private void addFoldChangeMenuItem_Click(object sender, EventArgs e)
-        {
-            AddGroupComparison();
-        }
-
-        public void AddGroupComparison()
-        {
-            using (var editDlg = new EditGroupComparisonDlg(this, GroupComparisonDef.EMPTY.ChangeSumTransitions(true),
-                Settings.Default.GroupComparisonDefList))
-            {
-                if (editDlg.ShowDialog(this) == DialogResult.OK)
-                {
-                    Settings.Default.GroupComparisonDefList.Add(editDlg.GroupComparisonDef);
-                    ModifyDocument(Resources.SkylineWindow_AddGroupComparison_Add_Fold_Change,
-                        doc => doc.ChangeSettings(
-                            doc.Settings.ChangeDataSettings(
-                                doc.Settings.DataSettings.AddGroupComparisonDef(
-                                editDlg.GroupComparisonDef))));
-                }
-            }
-        }
-
-        private void editGroupComparisonListMenuItem_Click(object sender, EventArgs e)
-        {
-            DisplayDocumentSettingsDialogPage(1);
-        }
-
-        private void groupComparisonsMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            groupComparisonsMenuItem.DropDownItems.Clear();
-            if (DocumentUI.Settings.DataSettings.GroupComparisonDefs.Any())
-            {
-                foreach (var groupComparisonDef in DocumentUI.Settings.DataSettings.GroupComparisonDefs)
-                {
-                    groupComparisonsMenuItem.DropDownItems.Add(MakeToolStripMenuItem(groupComparisonDef));
-                }
-                groupComparisonsMenuItem.DropDownItems.Add(new ToolStripSeparator());
-            }
-            groupComparisonsMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-            {
-                addGroupComparisonMenuItem,
-                editGroupComparisonListMenuItem
-            });
-        }
-
-        private ToolStripMenuItem MakeToolStripMenuItem(GroupComparisonDef groupComparisonDef)
-        {
-            return new ToolStripMenuItem(groupComparisonDef.Name, null, (sender, args) =>
-            {
-                ShowGroupComparisonWindow(groupComparisonDef.Name);
-            });
-        }
-
-        public void ShowGroupComparisonWindow(string groupComparisonName)
-        {
-            FoldChangeGrid.ShowFoldChangeGrid(dockPanel, GetFloatingRectangleForNewWindow(), this, groupComparisonName);
-        }
-
-        private void openContainingFolderMenuItem_Click(object sender, EventArgs e)
-        {
-            Process.Start("explorer.exe", @"/select, " + DocumentFilePath); // Not L10N
         }
     }
 }

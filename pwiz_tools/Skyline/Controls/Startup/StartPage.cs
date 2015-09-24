@@ -52,6 +52,8 @@ namespace pwiz.Skyline.Controls.Startup
         public static readonly Color _darkHoverColor = Color.FromArgb(144, 176, 220); // Hover color for Blank Doc action box item.
         public static readonly Color _darkestHoverColor = Color.FromArgb(25, 85, 157); // Hover color for items on left userControl.
 
+        private readonly TaskbarProgress _taskbarProgress = new TaskbarProgress();
+
         // Double buffer to reduce fo rm-resize flicker.
         protected override CreateParams CreateParams
         {
@@ -532,19 +534,18 @@ namespace pwiz.Skyline.Controls.Startup
             DialogResult = DialogResult.OK;
         }
 
-        public static SkylineWindow ShowStartupFormDialog()
+        public SkylineWindow MainWindow { get; private set; }
+
+        public void UpdateTaskbarProgress(int? percentComplete)
         {
-            using (var startupForm = new StartPage())
+            if (!percentComplete.HasValue)
+                _taskbarProgress.SetState(Handle, TaskbarProgress.TaskbarStates.NoProgress);
+            else
             {
-                if (startupForm.ShowDialog() == DialogResult.OK)
-                {
-                    return startupForm.MainWindow;
-                }
-                return null;
+                _taskbarProgress.SetState(Handle, TaskbarProgress.TaskbarStates.Normal);
+                _taskbarProgress.SetValue(Handle, percentComplete.Value, 100);
             }
         }
-
-        private SkylineWindow MainWindow { get; set; }
 
         public void TestImportAction(ActionImport.DataType type, string filePath = null)
         {

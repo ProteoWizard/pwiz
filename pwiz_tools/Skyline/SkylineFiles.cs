@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -150,6 +151,11 @@ namespace pwiz.Skyline
 
             // Switch over to the new document
             SwitchDocument(document, null);
+        }
+
+        private void openContainingFolderMenuItem_Click(object sender, EventArgs e)
+        {
+            Process.Start("explorer.exe", @"/select, " + DocumentFilePath); // Not L10N
         }
 
         private void openMenuItem_Click(object sender, EventArgs e)
