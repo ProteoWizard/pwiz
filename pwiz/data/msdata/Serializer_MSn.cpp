@@ -101,7 +101,7 @@ namespace
     // if no accurate mass, compute it from mz and charge
     double calculateMass(double mz, int charge)
     {
-        return (mz * charge) - (charge * Proton);
+        return (mz * charge) - ((charge - 1) * Proton);
     }
 
     size_t getChargeStates(const SelectedIon& si, vector<int>& charges, vector<double>& masses)
