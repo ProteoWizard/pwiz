@@ -27,10 +27,10 @@ using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
 {
-    [TestClass]
+    //[TestClass]
     public class ChorusFunctionalTest : AbstractFunctionalTest
     {
-        [TestMethod]
+        //[TestMethod]
         public void TestChorus()
         {
             Settings.Default.EnableChorus = true;
