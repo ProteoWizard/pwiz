@@ -1666,12 +1666,22 @@ namespace pwiz.Skyline.Util
     {
         public static void For(int fromInclusive, int toExclusive, Action<int> body, Action<AggregateException> catchClause = null)
         {
-            LoopWithExceptionHandling(() => Parallel.For(fromInclusive, toExclusive, body), catchClause);
+            Action<int> localBody = i =>
+            {
+                LocalizationHelper.InitThread(); // Ensure appropriate culture
+                body(i);
+            };
+            LoopWithExceptionHandling(() => Parallel.For(fromInclusive, toExclusive, localBody), catchClause);
         }
 
         public static void ForEach<TSource>(IEnumerable<TSource> source, Action<TSource> body, Action<AggregateException> catchClause = null)
         {
-            LoopWithExceptionHandling(() => Parallel.ForEach(source, body), catchClause);
+            Action<TSource> localBody = o =>
+            {
+                LocalizationHelper.InitThread(); // Ensure appropriate culture
+                body(o);
+            };
+            LoopWithExceptionHandling(() => Parallel.ForEach(source, localBody), catchClause);
         }
 
         private static void LoopWithExceptionHandling(Action loop, Action<AggregateException> catchClause)
