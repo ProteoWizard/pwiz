@@ -97,7 +97,6 @@ int main(int argc, const char* argv[])
                 for (int i=0; i < (int) thermo::ValueID_String_Count; ++i)
                     if (!rawfile->value((thermo::ValueID_String) i).empty())
                         cout << rawfile->name((thermo::ValueID_String) i) << ": " << rawfile->value((thermo::ValueID_String) i) << "\n";
-                cout << "CreationDate: " << rawfile->getCreationDate().to_string() << endl;
                 cout << " ==== " << endl << endl;
 
                 if (!scanTrailers)
