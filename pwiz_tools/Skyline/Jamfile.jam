@@ -205,7 +205,6 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             <dependency>../../pwiz/utility/bindings/CLI//pwiz_data_cli.xml/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
             <dependency>../../pwiz_tools/BiblioSpec/src//BlibBuild/<runtime-debugging>off/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)
             <dependency>../../pwiz_tools/BiblioSpec/src//BlibFilter/<runtime-debugging>off/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)
-            <dependency>../../pwiz_tools/BiblioSpec/src//install_msparser/<runtime-debugging>off/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)
     ;
 
     make InspectCode
@@ -224,7 +223,6 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             <dependency>../../pwiz_aux/msrc/utility/vendor_api/Waters//install_pwiz_vendor_api_waters/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
             <dependency>../../pwiz_tools/BiblioSpec/src//BlibBuild/<runtime-debugging>off/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)
             <dependency>../../pwiz_tools/BiblioSpec/src//BlibFilter/<runtime-debugging>off/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)
-            <dependency>../../pwiz_tools/BiblioSpec/src//install_msparser/<runtime-debugging>off/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)
     ;
         
     
