@@ -188,10 +188,17 @@ namespace SkylineTester
                 // Run a command in a separate process.
                 else
                 {
-                    StartProcess(
-                        command,
-                        args,
-                        _workingDirectory);
+                    try
+                    {
+                        StartProcess(
+                            command,
+                            args,
+                            _workingDirectory);
+                    }
+                    catch (Exception e)
+                    {
+                        Log(Environment.NewLine + "!!!! COMMAND FAILED !!!! " + e);
+                    }
                     _workingDirectory = DefaultDirectory;
                     return;
                 }
