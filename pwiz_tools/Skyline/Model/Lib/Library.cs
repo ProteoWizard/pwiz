@@ -77,6 +77,8 @@ namespace pwiz.Skyline.Model.Lib
 
         protected override bool IsCanceled(IDocumentContainer container, object tag)
         {
+            if (tag == null)
+                return false;
             PeptideLibraries libraries = container.Document.Settings.PeptideSettings.Libraries;
             return !libraries.LibrarySpecs.Contains((LibrarySpec)tag);
         }

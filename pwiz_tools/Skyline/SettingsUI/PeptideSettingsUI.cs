@@ -384,7 +384,7 @@ namespace pwiz.Skyline.SettingsUI
             if (!Equals(settings, _peptideSettings))
             {
                 SrmSettings newSettings = _parent.DocumentUI.Settings.ChangePeptideSettings(settings);
-                if (!_parent.ChangeSettings(newSettings, true))
+                if (!_parent.ChangeSettingsMonitored(this, newSettings, Resources.PeptideSettingsUI_OkDialog_Changing_peptide_settings))
                 {
                     return;
                 }

@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -47,7 +48,7 @@ namespace pwiz.Skyline.Model
 
         protected Identity()
         {
-            GlobalIndex = _globalIndexCounter++;
+            GlobalIndex = Interlocked.Increment(ref _globalIndexCounter);
         }
 
         /// <summary>
@@ -56,7 +57,7 @@ namespace pwiz.Skyline.Model
         public Identity Copy()
         {
             var copy = (Identity) MemberwiseClone();
-            copy.GlobalIndex = _globalIndexCounter++;
+            copy.GlobalIndex = Interlocked.Increment(ref _globalIndexCounter);
             return copy;
         }
 

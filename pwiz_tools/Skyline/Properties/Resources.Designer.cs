@@ -6323,6 +6323,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Paste.
+        /// </summary>
+        public static string DataGridViewPasteHandler_DataGridViewOnKeyDown_Paste {
+            get {
+                return ResourceManager.GetString("DataGridViewPasteHandler_DataGridViewOnKeyDown_Paste", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error converting &apos;{0}&apos; to required type: {1}.
         /// </summary>
         public static string DataGridViewPasteHandler_TryConvertValue_Error_converting___0___to_required_type___1_ {
@@ -17170,6 +17179,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Changing peptide settings.
+        /// </summary>
+        public static string PeptideSettingsUI_OkDialog_Changing_peptide_settings {
+            get {
+                return ResourceManager.GetString("PeptideSettingsUI_OkDialog_Changing_peptide_settings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Peptide settings have been changed. Save changes?.
         /// </summary>
         public static string PeptideSettingsUI_ShowViewLibraryDlg_Peptide_settings_have_been_changed_Save_changes {
@@ -25276,6 +25294,15 @@ namespace pwiz.Skyline.Properties {
                 return ResourceManager.GetString("TransitionSettingsUI_OkDialog_Cannot_use_DIA_window_for_precusor_exclusion_when__" +
                         "All_Ions__is_selected_as_the_isolation_scheme___To_use_the_DIA_window_for_precus" +
                         "or_exclusion__change_the_isolation_scheme_in_the_Full_Scan_settings_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Changing transition settings.
+        /// </summary>
+        public static string TransitionSettingsUI_OkDialog_Changing_transition_settings {
+            get {
+                return ResourceManager.GetString("TransitionSettingsUI_OkDialog_Changing_transition_settings", resourceCulture);
             }
         }
         

@@ -124,9 +124,10 @@ namespace pwiz.Skyline
             InitializeComponent();
             
             _undoManager = new UndoManager(this);
-            UndoRedoButtons undoRedoButtons = new UndoRedoButtons(_undoManager,
+            var undoRedoButtons = new UndoRedoButtons(_undoManager,
                 undoMenuItem, undoToolBarButton,
-                redoMenuItem, redoToolBarButton);
+                redoMenuItem, redoToolBarButton,
+                RunUIAction);
             undoRedoButtons.AttachEventHandlers();
 
             _graphSpectrumSettings = new GraphSpectrumSettings(UpdateSpectrumGraph);
@@ -425,7 +426,7 @@ namespace pwiz.Skyline
         {
             get
             {
-                return !DiscardChanges && _documentUI != null && _savedVersion != _documentUI.RevisionIndex;
+                return !DiscardChanges && _documentUI != null && _savedVersion != _documentUI.UserRevisionIndex;
             }
         }
 
@@ -458,15 +459,6 @@ namespace pwiz.Skyline
                 // Clear the UndoManager, if this is a different document.
                 if (!ReferenceEquals(_documentUI.Id, documentPrevious.Id))
                     _undoManager.Clear();
-                // If this is not happening inside an undoable action, and the
-                // document is not currently dirty, make sure it stays that way.
-                // Otherwise, try to undo to a clean document will be impossible.
-                // This should only happen when the new document represents the
-                // fulfilling of an IOU on the current document (e.g. loading
-                // spectral libraries)
-                else if (!_undoManager.Recording && _savedVersion == documentPrevious.RevisionIndex)
-                    _savedVersion = _documentUI.RevisionIndex;
-
             }
 
             // Call the even handler for this window directly, since it may
@@ -556,9 +548,14 @@ namespace pwiz.Skyline
 
         public void ModifyDocument(string description, Func<SrmDocument, SrmDocument> act)
         {
+            ModifyDocument(description, null, act);
+        }
+
+        public void ModifyDocument(string description, IUndoState undoState, Func<SrmDocument, SrmDocument> act)
+        {
             try
             {
-                using (var undo = BeginUndo(description))
+                using (var undo = BeginUndo(description, undoState))
                 {
                     SrmDocument docOriginal;
                     SrmDocument docNew;
@@ -571,6 +568,9 @@ namespace pwiz.Skyline
                         // new undo record to the undo stack.
                         if (ReferenceEquals(docOriginal, docNew))
                             return;
+
+                        // And mark the document as changed by the user.
+                        docNew = docNew.IncrementUserRevisionIndex();
                     }
                     while (!SetDocument(docNew, docOriginal));
                     
@@ -624,16 +624,16 @@ namespace pwiz.Skyline
                 // document, no matter whether an exception was thrown or not
                 else
                 {
-                    _savedVersion = document.RevisionIndex;
+                    _savedVersion = document.UserRevisionIndex;
 
                     SetActiveFile(pathOnDisk);                    
                 }
             }
         }
 
-        public IUndoTransaction BeginUndo(string description)
+        public IUndoTransaction BeginUndo(string description, IUndoState undoState = null)
         {
-            return _undoManager.BeginTransaction(description);
+            return _undoManager.BeginTransaction(description, undoState);
         }
 
         public bool InUndoRedo { get { return _undoManager.InUndoRedo; } }
@@ -664,7 +664,7 @@ namespace pwiz.Skyline
 
         #region Implementation of IUndoable
 
-        IUndoState IUndoable.GetUndoState()
+        public IUndoState GetUndoState()
         {
             return new UndoState(this);
         }
@@ -2868,12 +2868,13 @@ namespace pwiz.Skyline
             editSettingsMenuItem.Enabled = enable;
             shareSettingsMenuItem.Enabled = enable;
 
+            // Add the true default settings, as these can be useful for getting everyone using the
+            // same settings in an instructional context
+            var listItems = new List<SrmSettings> { SrmSettingsList.GetDefault() };
+            listItems.AddRange(list.Skip(1));
             int i = 0;
-            foreach (SrmSettings settings in list)
+            foreach (var settings in listItems)
             {
-                if (settings.Name == SrmSettingsList.DefaultName)
-                    continue;
-
                 ToolStripMenuItem item = menu.DropDownItems[i] as ToolStripMenuItem;
                 if (item == null || settings.Name != item.Name)
                 {
@@ -2887,7 +2888,7 @@ namespace pwiz.Skyline
                     menu.DropDownItems.Insert(i, item);
                 }
 
-                if (selected == item.Text)
+                if (Equals(settings, DocumentUI.Settings))
                     item.Checked = true;
                 i++;
             }
@@ -2983,7 +2984,33 @@ namespace pwiz.Skyline
                 ChangeSettings(defaultSettings, false, Resources.SkylineWindow_ResetDefaultSettings_Reset_default_settings);
         }
 
-        public bool ChangeSettings(SrmSettings newSettings, bool store, string message = null)
+        public bool ChangeSettingsMonitored(Control parent, SrmSettings newSettings, string message)
+        {
+            bool success = false;
+            using (var longWaitDlg = new LongWaitDlg(this)
+            {
+                Text = Text,    // Same as dialog box
+                Message = message,
+                ProgressValue = 0
+            })
+            {
+                var undoState = GetUndoState();
+                longWaitDlg.PerformWork(this, 800, progressMonitor =>
+                {
+                    using (var settingsChangeMonitor = new SrmSettingsChangeMonitor(progressMonitor, message, this))
+                    {
+                        success = ChangeSettings(newSettings, true, null, undoState, settingsChangeMonitor);
+                    }
+                });
+                if (!success || longWaitDlg.IsCanceled)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        public bool ChangeSettings(SrmSettings newSettings, bool store, string message = null, IUndoState undoState = null, SrmSettingsChangeMonitor monitor = null)
         {
             if (store)
             {
@@ -2998,7 +3025,8 @@ namespace pwiz.Skyline
                     newSettings = (SrmSettings)newSettings.ChangeName(defaultName);
             }
 
-            ModifyDocument(message ?? Resources.SkylineWindow_ChangeSettings_Change_settings, doc => doc.ChangeSettings(newSettings));
+            ModifyDocument(message ?? Resources.SkylineWindow_ChangeSettings_Change_settings, undoState,
+                doc => doc.ChangeSettings(newSettings, monitor));
             return true;
         }
 

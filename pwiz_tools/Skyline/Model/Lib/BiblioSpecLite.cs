@@ -869,17 +869,20 @@ namespace pwiz.Skyline.Model.Lib
         {
             try
             {
-                using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
+                lock (_sqliteConnection)
                 {
-                    select.CommandText = "SELECT * FROM [RefSpectraPeaks] WHERE [RefSpectraID] = ?"; // Not L10N
-                    select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long)info.Id));
-
-                    using (SQLiteDataReader reader = select.ExecuteReader())
+                    using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
                     {
-                        if (reader.Read())
+                        select.CommandText = "SELECT * FROM [RefSpectraPeaks] WHERE [RefSpectraID] = ?"; // Not L10N
+                        select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long)info.Id));
+
+                        using (SQLiteDataReader reader = select.ExecuteReader())
                         {
-                            int numPeaks = info.NumPeaks;
-                            return ReadPeaks(reader, numPeaks);
+                            if (reader.Read())
+                            {
+                                int numPeaks = info.NumPeaks;
+                                return ReadPeaks(reader, numPeaks);
+                            }
                         }
                     }
                 }

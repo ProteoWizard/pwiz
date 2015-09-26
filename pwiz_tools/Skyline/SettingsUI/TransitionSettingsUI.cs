@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
@@ -293,8 +292,6 @@ namespace pwiz.Skyline.SettingsUI
 
         public void OkDialog()
         {
-            // TODO: Remove this
-            var e = new CancelEventArgs();
             var helper = new MessageBoxHelper(this);
 
             // Validate and store prediction settings
@@ -558,9 +555,8 @@ namespace pwiz.Skyline.SettingsUI
             if (!Equals(settings, _transitionSettings))
             {
                 SrmSettings newSettings = _parent.DocumentUI.Settings.ChangeTransitionSettings(settings);
-                if (!_parent.ChangeSettings(newSettings, true))
+                if (!_parent.ChangeSettingsMonitored(this, newSettings, Resources.TransitionSettingsUI_OkDialog_Changing_transition_settings))
                 {
-                    e.Cancel = true;
                     return;
                 }
                 _transitionSettings = settings;

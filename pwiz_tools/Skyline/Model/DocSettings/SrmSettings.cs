@@ -1773,6 +1773,8 @@ namespace pwiz.Skyline.Model.DocSettings
             _progressMonitor = progressMonitor;
             _documentContainer = documentContainer;
             _startDocument = startDocument;
+            if (_startDocument == null && documentContainer != null)
+                _startDocument = documentContainer.Document;
 
             if (!formatString.Contains('{'))
                 _status = new ProgressStatus(formatString);
@@ -1802,7 +1804,7 @@ namespace pwiz.Skyline.Model.DocSettings
         private void UpdateProgress(bool forceUpdate)
         {
             // Stop processing if the document changes, since the SetDocument call will fail
-            if (_documentContainer != null && !ReferenceEquals(_startDocument, _documentContainer.Document))
+            if (_progressMonitor.IsCanceled || (_documentContainer != null && !ReferenceEquals(_startDocument, _documentContainer.Document)))
                 throw new OperationCanceledException();
 
             int percentComplete = (_seenMoleculeCount * 100) / MoleculeCount ?? (_seenGroupCount * 100) / GroupCount;
@@ -1971,7 +1973,7 @@ namespace pwiz.Skyline.Model.DocSettings
                                   // Also changing auto-select could change precursors
                                   newTran.Filter.AutoSelect != oldTran.Filter.AutoSelect ||
                                   // And changing DIA isolation scheme could change precursors
-                                  !ReferenceEquals(newTran.FullScan.IsolationScheme, oldTran.FullScan.IsolationScheme);
+                                  !Equals(newTran.FullScan.IsolationScheme, oldTran.FullScan.IsolationScheme);
 
             // Change peptides if enzyme, digestion or filter settings changed
             DiffPeptides = !newPep.Enzyme.Equals(oldPep.Enzyme) ||

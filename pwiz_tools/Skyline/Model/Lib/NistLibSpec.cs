@@ -1025,15 +1025,18 @@ namespace pwiz.Skyline.Model.Lib
 
         protected override SpectrumPeaksInfo.MI[] ReadSpectrum(NistSpectrumInfo info)
         {
-            Stream fs = ReadStream.Stream;
-          
-            // Seek to stored location
-            fs.Seek(info.Location, SeekOrigin.Begin);
-
-            // Single read to get all the peaks
             byte[] peaksCompressed = new byte[info.CompressedSize];
-            if (fs.Read(peaksCompressed, 0, peaksCompressed.Length) < peaksCompressed.Length)
-                throw new IOException(Resources.NistLibraryBase_ReadSpectrum_Failure_trying_to_read_peaks);
+            lock (ReadStream)
+            {
+                Stream fs = ReadStream.Stream;
+
+                // Seek to stored location
+                fs.Seek(info.Location, SeekOrigin.Begin);
+
+                // Single read to get all the peaks
+                if (fs.Read(peaksCompressed, 0, peaksCompressed.Length) < peaksCompressed.Length)
+                    throw new IOException(Resources.NistLibraryBase_ReadSpectrum_Failure_trying_to_read_peaks);
+            }
 
             int mzBytes = sizeof(float)*info.NumPeaks;
             byte[] peaks = peaksCompressed.Uncompress(mzBytes*2);

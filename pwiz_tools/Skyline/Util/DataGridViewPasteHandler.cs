@@ -68,14 +68,12 @@ namespace pwiz.Skyline.Util
                     return;
                 }
                 using (var reader = new StringReader(clipboardText))
+                using (var undoTransaction = SkylineWindow.BeginUndo(Resources.DataGridViewPasteHandler_DataGridViewOnKeyDown_Paste))
                 {
-                    using (var undoTransaction = SkylineWindow.BeginUndo("Paste")) // Not L10N? Does user see this
+                    if (Paste(reader))
                     {
-                        if (Paste(reader))
-                        {
-                            undoTransaction.Commit();
-                            e.Handled = true;
-                        }
+                        undoTransaction.Commit();
+                        e.Handled = true;
                     }
                 }
             }

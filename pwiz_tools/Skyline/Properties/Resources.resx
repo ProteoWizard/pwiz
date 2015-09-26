@@ -8723,4 +8723,13 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="Loader_FinishLoad_Updating_peak_statistics" xml:space="preserve">
     <value>Updating peak statistics</value>
   </data>
+  <data name="DataGridViewPasteHandler_DataGridViewOnKeyDown_Paste" xml:space="preserve">
+    <value>Paste</value>
+  </data>
+  <data name="TransitionSettingsUI_OkDialog_Changing_transition_settings" xml:space="preserve">
+    <value>Changing transition settings</value>
+  </data>
+  <data name="PeptideSettingsUI_OkDialog_Changing_peptide_settings" xml:space="preserve">
+    <value>Changing peptide settings</value>
+  </data>
 </root>

@@ -35,16 +35,19 @@ namespace pwiz.Skyline.Controls
         private readonly ToolStripSplitButton _undoButton;
         private readonly ToolStripMenuItem _redoMenuItem;
         private readonly ToolStripSplitButton _redoButton;
+        private readonly Action<Action> _runUIAction;
 
         public UndoRedoButtons(UndoManager undoManager,
             ToolStripMenuItem undoMenuItem, ToolStripSplitButton undoButton, 
-            ToolStripMenuItem redoMenuItem, ToolStripSplitButton redoButton)
+            ToolStripMenuItem redoMenuItem, ToolStripSplitButton redoButton,
+            Action<Action> runUIAction)
         {
             _undoManager = undoManager;
             _undoMenuItem = undoMenuItem;
             _undoButton = undoButton;
             _redoMenuItem = redoMenuItem;
             _redoButton = redoButton;
+            _runUIAction = runUIAction;
         }
 
         public void AttachEventHandlers()
@@ -62,7 +65,7 @@ namespace pwiz.Skyline.Controls
 
         void undoManager_StacksChanged(object sender, EventArgs e)
         {
-            UpdateButtons();
+            _runUIAction(UpdateButtons);
         }
 
         void UpdateButtons()

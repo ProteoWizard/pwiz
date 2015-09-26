@@ -36,7 +36,6 @@ namespace pwiz.Skyline.Model
 {
     public class TransitionGroupDocNode : DocNodeParent
     {
-        // TODO: Trying 3 as minimum for Jacob Kennedy (used to be 4)
         public const int MIN_DOT_PRODUCT_TRANSITIONS = 3;
         public const int MIN_DOT_PRODUCT_MS1_TRANSITIONS = 3;
 

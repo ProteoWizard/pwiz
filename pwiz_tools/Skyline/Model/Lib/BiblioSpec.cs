@@ -605,16 +605,19 @@ namespace pwiz.Skyline.Model.Lib
 
         private SpectrumPeaksInfo.MI[] ReadSpectrum(BiblioSpectrumInfo info)
         {
-            Stream fs = ReadStream.Stream;
-
-            // Seek to stored location
-            fs.Seek(info.Location, SeekOrigin.Begin);
-
-            // Single read to get all the peaks
             const int lenPair = sizeof(float) + sizeof(float);
             byte[] peaks = new byte[info.NumPeaks * lenPair];
-            if (fs.Read(peaks, 0, peaks.Length) < peaks.Length)
-                throw new IOException(Resources.BiblioSpecLibrary_ReadSpectrum_Failure_trying_to_read_peaks);
+            lock (ReadStream)
+            {
+                Stream fs = ReadStream.Stream;
+
+                // Seek to stored location
+                fs.Seek(info.Location, SeekOrigin.Begin);
+
+                // Single read to get all the peaks
+                if (fs.Read(peaks, 0, peaks.Length) < peaks.Length)
+                    throw new IOException(Resources.BiblioSpecLibrary_ReadSpectrum_Failure_trying_to_read_peaks);
+            }
 
             // Build the list
             var arrayMI = new SpectrumPeaksInfo.MI[info.NumPeaks];

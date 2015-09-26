@@ -709,16 +709,20 @@ namespace pwiz.Skyline.Model.Lib
 
         protected override SpectrumPeaksInfo.MI[] ReadSpectrum(XHunterSpectrumInfo info)
         {
-            Stream fs = ReadStream.Stream;
-
-            // Seek to stored location
-            fs.Seek(info.Location, SeekOrigin.Begin);
-
-            // Single read to get all the peaks
             const int lenPair = sizeof(byte) + sizeof(float);
             byte[] peaks = new byte[info.NumPeaks * lenPair];
-            if (fs.Read(peaks, 0, peaks.Length) < peaks.Length)
-                throw new IOException(Resources.XHunterLibrary_ReadSpectrum_Failure_trying_to_read_peaks);
+
+            lock (ReadStream)
+            {
+                Stream fs = ReadStream.Stream;
+
+                // Seek to stored location
+                fs.Seek(info.Location, SeekOrigin.Begin);
+
+                // Single read to get all the peaks
+                if (fs.Read(peaks, 0, peaks.Length) < peaks.Length)
+                    throw new IOException(Resources.XHunterLibrary_ReadSpectrum_Failure_trying_to_read_peaks);
+            }
 
             // Build the list
             var arrayMI = new SpectrumPeaksInfo.MI[info.NumPeaks];

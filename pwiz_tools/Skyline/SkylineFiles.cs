@@ -896,7 +896,7 @@ namespace pwiz.Skyline
             }
 
             DocumentFilePath = fileName;
-            _savedVersion = document.RevisionIndex;
+            _savedVersion = document.UserRevisionIndex;
             SetActiveFile(fileName);
 
             // Make sure settings lists contain correct values for this document.

@@ -236,8 +236,9 @@ namespace pwiz.Skyline.Model
         /// automatically, if it is not commited within the scope.
         /// </summary>
         /// <param name="description">Description of the action to be performed</param>
+        /// <param name="undoState">An undo state snapshot from the UI thread, in case the transation is begun on another thread</param>
         /// <returns>Transaction instance</returns>
-        public IUndoTransaction BeginTransaction(string description)
+        public IUndoTransaction BeginTransaction(string description, IUndoState undoState = null)
         {
             if (InUndoRedo)
                 throw new InvalidOperationException(Resources.UndoManager_BeginTransaction_Undo_transaction_may_not_be_started_in_undo_redo);
@@ -247,7 +248,7 @@ namespace pwiz.Skyline.Model
             if (_pendingRecord != null)
                 return new NoOpTransaction();
 
-            _pendingRecord = new UndoRecord(description, _client.GetUndoState());
+            _pendingRecord = new UndoRecord(description, undoState ?? _client.GetUndoState());
             return new UndoTransaction(this);
         }
 

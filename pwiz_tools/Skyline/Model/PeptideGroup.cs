@@ -57,6 +57,8 @@ namespace pwiz.Skyline.Model
         {
             // If no rank ID is set, just return the input list
             PeptideRankId rankId = settings.PeptideSettings.Libraries.RankId;
+            if (!IsUpdateNeeded(rankId, listPeptides))
+                return listPeptides;
 
             // Transfer input list to a typed array
             var listRanks = new List<KeyValuePair<PeptideDocNode, float>>();
@@ -112,6 +114,19 @@ namespace pwiz.Skyline.Model
             peptidesNew.Sort(FastaSequence.ComparePeptides);
 
             return peptidesNew.ToArray();
+        }
+
+        private static bool IsUpdateNeeded(PeptideRankId rankId, IList<DocNode> listPeptides)
+        {
+            if (rankId != null)
+                return true;
+
+            foreach (PeptideDocNode nodePep in listPeptides)
+            {
+                if (nodePep.Rank.HasValue)
+                    return true;
+            }
+            return false;
         }
     }
 

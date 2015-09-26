@@ -259,6 +259,7 @@ namespace pwiz.Skyline.Model
         {
             FormatVersion = doc.FormatVersion;
             RevisionIndex = doc.RevisionIndex + 1;
+            UserRevisionIndex = doc.UserRevisionIndex;
             Settings = settings;
             CheckIsProteinMetadataComplete();
         }
@@ -283,6 +284,12 @@ namespace pwiz.Skyline.Model
         /// equality: unit testing.
         /// </summary>
         public int RevisionIndex { get; private set; }
+
+        /// <summary>
+        /// Much like RevisionIndex, only it is incremented each time the user
+        /// changes the document. i.e. any time an Undo/Redo record is created.
+        /// </summary>
+        public int UserRevisionIndex { get; private set; }
 
         /// <summary>
         /// Document-wide settings information
@@ -575,6 +582,11 @@ namespace pwiz.Skyline.Model
             IsProteinMetadataPending = unsearched.Any();
         }
 
+        public SrmDocument IncrementUserRevisionIndex()
+        {
+            return ChangeProp(ImClone(this), im => im.UserRevisionIndex++);
+        }
+
         /// <summary>
         /// Make sure every new copy of a document gets an incremented value
         /// for <see cref="RevisionIndex"/>.
@@ -683,19 +695,23 @@ namespace pwiz.Skyline.Model
         /// </summary>
         /// <param name="children">A starting children of <see cref="PeptideGroupDocNode"/> objects</param>
         /// <param name="moleculeNodes">A flat list of <see cref="PeptideDocNode"/> objects</param>
+        /// <param name="rankChildren">Function to rank peptides in their final list</param>
         /// <returns>A list of <see cref="PeptideGroupDocNode"/> objects with the original structure and the new <see cref="PeptideDocNode"/> objects</returns>
-        private static IList<DocNode> RegroupMolecules(IList<DocNode> children, PeptideDocNode[] moleculeNodes)
+        private static IList<DocNode> RegroupMolecules(IList<DocNode> children, PeptideDocNode[] moleculeNodes,
+            Func<PeptideGroupDocNode, IList<DocNode>, IList<DocNode>> rankChildren = null)
         {
             var newMoleculeGroups = new DocNode[children.Count];
             int moleculeNodeIndex = 0;
             for (int i = 0; i < newMoleculeGroups.Length; i++)
             {
                 var nodeGroup = (PeptideGroupDocNode)children[i];
-                var newChildren = new PeptideDocNode[nodeGroup.Children.Count];
-                for (int childIndex = 0; childIndex < newChildren.Length; childIndex++)
+                IList<DocNode> newChildren = new DocNode[nodeGroup.Children.Count];
+                for (int childIndex = 0; childIndex < newChildren.Count; childIndex++)
                 {
                     newChildren[childIndex] = moleculeNodes[moleculeNodeIndex++];
                 }
+                if (rankChildren != null)
+                    newChildren = rankChildren(nodeGroup, newChildren);
                 newMoleculeGroups[i] = nodeGroup.ChangeChildrenChecked(newChildren);
             }
             return newMoleculeGroups;
@@ -783,18 +799,24 @@ namespace pwiz.Skyline.Model
             else
             {
                 IList<DocNode> childrenNew;
-                if (!diff.IsResultsOnly)
+                if (diff.DiffPeptides)
                 {
-                    childrenNew = new List<DocNode>();
-
-                    // Enumerate the nodes making necessary changes.
-                    foreach (PeptideGroupDocNode group in Children)
-                        childrenNew.Add(group.ChangeSettings(settingsNew, diff));                    
+                    // Changes on peptides need to be done on the peptide groups, which
+                    // may not achieve that great parallelism, if there is a very large
+                    // peptide group, like Decoys
+                    var childrenParallel = new DocNode[Children.Count];
+                    var settingsParallel = settingsNew;
+                    ParallelEx.For(0, Children.Count, i =>
+                    {
+                        var nodeGroup = (PeptideGroupDocNode) Children[i];
+                        childrenParallel[i] = nodeGroup.ChangeSettings(settingsParallel, diff);
+                    });
+                    childrenNew = childrenParallel;
                 }
                 else
                 {
-                    // Results only changes should not impact the proteins, other than
-                    // changing the peptides
+                    // Changes that do not change the peptides can be done quicker with
+                    // parallel enumeration of the peptides
                     var moleculeGroupPairs = GetMoleculeGroupPairs(Children);
                     var moleculeNodes = new PeptideDocNode[moleculeGroupPairs.Length];
                     var settingsParallel = settingsNew;
@@ -804,7 +826,8 @@ namespace pwiz.Skyline.Model
                         moleculeNodes[i] = nodePep.ChangeSettings(settingsParallel, diff);
                     });
 
-                    childrenNew = RegroupMolecules(Children, moleculeNodes);
+                    childrenNew = RegroupMolecules(Children, moleculeNodes,
+                        (nodeGroup, children) => nodeGroup.RankChildren(settingsParallel, children));
                 }
 
                 // Don't change the children, if the resulting list contains

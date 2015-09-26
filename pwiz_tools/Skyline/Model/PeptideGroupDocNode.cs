@@ -235,16 +235,19 @@ namespace pwiz.Skyline.Model
                     foreach (PeptideDocNode nodePeptide in nodeResult.Children)
                         childrenNew.Add(nodePeptide.ChangeSettings(settingsNew, diff));
 
-                    if (PeptideGroup.Sequence != null)
-                        childrenNew = PeptideGroup.RankPeptides(childrenNew, settingsNew, false);
-
-                    if (ArrayUtil.ReferencesEqual(childrenNew, Children))
-                        childrenNew = Children;
+                    childrenNew = RankChildren(settingsNew, childrenNew);
 
                     nodeResult = (PeptideGroupDocNode)nodeResult.ChangeChildrenChecked(childrenNew);
                 }
                 return nodeResult;
             }
+        }
+
+        public IList<DocNode> RankChildren(SrmSettings settingsNew, IList<DocNode> childrenNew)
+        {
+            if (PeptideGroup.Sequence != null)
+                childrenNew = PeptideGroup.RankPeptides(childrenNew, settingsNew, false);
+            return childrenNew;
         }
 
         public PeptideGroupDocNode Merge(PeptideGroupDocNode nodePepGroup)
