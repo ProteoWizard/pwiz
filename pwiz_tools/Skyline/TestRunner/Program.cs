@@ -447,9 +447,10 @@ namespace TestRunner
                 runTests.Log("# Pass 2+: Run tests in each selected language.\r\n");
             }
 
-            int perfPass = pass; // We'll run perf tests just once per language
+            int perfPass = pass; // We'll run perf tests just once per language, and only in one language (french) if english and french (along with any others) are both enabled
             bool warnedPass2PerfTest = false;
             bool flip=true;
+            var perfTestsFrenchOnly = perftests && languages.Any(l => l.StartsWith("en")) && languages.Any(l => l.StartsWith("fr"));
 
             for (; pass < passEnd; pass++)
             {
@@ -462,10 +463,18 @@ namespace TestRunner
                 {
                     var test = testPass[testNumber];
 
-                    // Run once (or repeat times) for each language.
-                    for (int i = 0; i < languages.Length; i++)
+                    // Perf Tests are generally too lengthy to run multiple times (but non-english format check is useful)
+                    var languagesThisTest = (test.IsPerfTest && perfTestsFrenchOnly) ? new[] { "fr" } : languages;
+                    if (perfTestsFrenchOnly && !warnedPass2PerfTest)
                     {
-                        runTests.Language = new CultureInfo(languages[i]);
+                        runTests.Log("# Perf tests will be run only once, and only in French.  To run perf tests in other languages, enable all but English.\r\n");
+                        warnedPass2PerfTest = true;
+                    }
+
+                    // Run once (or repeat times) for each language.
+                    for (int i = 0; i < languagesThisTest.Length; i++)
+                    {
+                        runTests.Language = new CultureInfo(languagesThisTest[i]);
                         for (int repeatCounter = 1; repeatCounter <= repeat; repeatCounter++)
                         {
                             if (test.IsPerfTest && ((pass > perfPass) || (repeatCounter > 1)))
