@@ -670,7 +670,7 @@ namespace pwiz.Skyline.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("10")]
+        [global::System.Configuration.DefaultSettingValueAttribute("12")]
         public float ChromatogramFontSize {
             get {
                 return ((float)(this["ChromatogramFontSize"]));
@@ -694,7 +694,7 @@ namespace pwiz.Skyline.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("10")]
+        [global::System.Configuration.DefaultSettingValueAttribute("12")]
         public float SpectrumFontSize {
             get {
                 return ((float)(this["SpectrumFontSize"]));
@@ -2059,6 +2059,18 @@ namespace pwiz.Skyline.Properties {
             }
             set {
                 this["RTPlotType"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool TransitionListInsertPeptides {
+            get {
+                return ((bool)(this["TransitionListInsertPeptides"]));
+            }
+            set {
+                this["TransitionListInsertPeptides"] = value;
             }
         }
     }

@@ -51,7 +51,7 @@ namespace pwiz.SkylineTestA
             if (ExtensionTestContext.CanImportAbWiff)
             {
                 VerifyInstrumentInfo(testFilesDir.GetTestPath("051309_digestion.wiff"),
-                    "Applied Biosystems instrument model", "", "", "");
+                    "4000 QTRAP", "electrospray ionization", "quadrupole/quadrupole/axial ejection linear ion trap", "electron multiplier");
             }
 
             // MzWiff generated mzXML files

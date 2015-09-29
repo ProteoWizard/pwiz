@@ -356,12 +356,6 @@ namespace pwiz.Skyline.Properties
         }
 
         [UserScopedSettingAttribute]
-        public bool TransitionListInsertPeptides
-        {
-            get { return ((bool?)this["TransitionListInsertPeptides"]) ?? false; } // Not L10N
-            set { this["TransitionListInsertPeptides"] = value; }   // Not L10N
-        }
-        [UserScopedSettingAttribute]
         public List<string> CustomMoleculeTransitionInsertColumnsList
         {
             get

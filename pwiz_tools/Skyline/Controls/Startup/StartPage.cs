@@ -421,7 +421,7 @@ namespace pwiz.Skyline.Controls.Startup
         {
             using (var openNewFileDlg = new OpenFileDialog
             {
-                Filter = TextUtil.FileDialogFiltersAll(SrmDocument.FILTER_DOC_AND_SKY_ZIP),
+                Filter = TextUtil.FileDialogFiltersAll(SrmDocument.FILTER_DOC_AND_SKY_ZIP, SrmDocumentSharing.FILTER_SHARING),
                 FilterIndex = 1
             })
             {
