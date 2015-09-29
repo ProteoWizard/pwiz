@@ -26,6 +26,10 @@
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 
+#ifdef PWIZ_READER_ABI
+#include "Reader_ABI_Detail.hpp"
+#endif
+
 struct IsWiffFile : public pwiz::util::TestPathPredicate
 {
     bool operator() (const string& rawpath) const
@@ -46,6 +50,39 @@ int main(int argc, char* argv[])
 
     try
     {
+        #ifdef PWIZ_READER_ABI
+
+        using namespace pwiz::msdata;
+        using namespace pwiz::msdata::detail;
+        using namespace pwiz::msdata::detail::ABI;
+        using namespace pwiz::util;
+
+        // test that all instrument types are handled by translation functions (skipping the 'Unknown' type)
+        bool allInstrumentTestsPassed = true;
+        for (int i = 1; i < (int) InstrumentModel_Count; ++i)
+        {
+            InstrumentModel model = (InstrumentModel) i;
+
+            try
+            {
+                unit_assert(translateAsInstrumentModel(model) != CVID_Unknown);
+
+                InstrumentConfigurationPtr configuration = translateAsInstrumentConfiguration(model, IonSourceType_Unknown);
+
+                unit_assert(configuration->componentList.source(0).hasCVParam(MS_ionization_type));
+                unit_assert(configuration->componentList.analyzer(0).hasCVParam(MS_quadrupole));
+                unit_assert(configuration->componentList.detector(0).hasCVParam(MS_electron_multiplier));
+            }
+            catch (runtime_error& e)
+            {
+                cerr << "Unit test failed for instrument model " << lexical_cast<string>(model) << ":\n" << e.what() << endl;
+                allInstrumentTestsPassed = false;
+            }
+        }
+
+        unit_assert(allInstrumentTestsPassed);
+        #endif
+
         bool requireUnicodeSupport = true;
         pwiz::util::testReader(pwiz::msdata::Reader_ABI(), testArgs, testAcceptOnly, requireUnicodeSupport, IsWiffFile());
     }

@@ -33,6 +33,8 @@
 #include "pwiz/utility/misc/DateTime.hpp"
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/misc/Container.hpp"
+#include <boost/icl/interval_set.hpp>
+#include <boost/icl/continuous_interval.hpp>
 
 #pragma managed
 #include "pwiz/utility/misc/cpp_cli_utilities.hpp"
@@ -70,7 +72,6 @@ class WiffFileImpl : public WiffFile
     virtual const vector<string>& getSampleNames() const;
 
     virtual InstrumentModel getInstrumentModel() const;
-    virtual InstrumentType getInstrumentType() const;
     virtual IonSourceType getIonSourceType() const;
     virtual blt::local_date_time getSampleAcquisitionTime(int sample) const;
 
@@ -107,10 +108,16 @@ struct ExperimentImpl : public Experiment
     virtual void getSIC(size_t index, std::vector<double>& times, std::vector<double>& intensities,
                         double& basePeakX, double& basePeakY) const;
 
+    virtual bool getHasIsolationInfo() const;
+    virtual void getIsolationInfo(double& centerMz, double& lowerLimit, double& upperLimit) const;
+
     virtual void getAcquisitionMassRange(double& startMz, double& stopMz) const;
     virtual ScanType getScanType() const;
     virtual ExperimentType getExperimentType() const;
     virtual Polarity getPolarity() const;
+
+    virtual double convertCycleToRetentionTime(int cycle) const;
+    virtual double convertRetentionTimeToCycle(double rt) const;
 
     virtual void getTIC(std::vector<double>& times, std::vector<double>& intensities) const;
     virtual void getBPC(std::vector<double>& times, std::vector<double>& intensities) const;
@@ -303,12 +310,44 @@ const vector<string>& WiffFileImpl::getSampleNames() const
 
 InstrumentModel WiffFileImpl::getInstrumentModel() const
 {
-    try {return (InstrumentModel) 0;} CATCH_AND_FORWARD
-}
+    try
+    {
+        String^ modelName = sample->Details->InstrumentName->ToUpperInvariant()->Replace(" ", "")->Replace("API", "");
+        if (modelName == "UNKNOWN")                 return InstrumentModel_Unknown;
+        if (modelName->Contains("2000QTRAP"))       return API2000QTrap; // predicted
+        if (modelName->Contains("2000"))            return API2000;
+        if (modelName->Contains("2500QTRAP"))       return API2000QTrap; // predicted
+        if (modelName->Contains("3000"))            return API3000; // predicted
+        if (modelName->Contains("3200QTRAP"))       return API3200QTrap;
+        if (modelName->Contains("3200"))            return API3200; // predicted
+        if (modelName->Contains("3500QTRAP"))       return API3500QTrap; // predicted
+        if (modelName->Contains("4000QTRAP"))       return API4000QTrap;
+        if (modelName->Contains("4000"))            return API4000; // predicted
+        if (modelName->Contains("5000"))            return API5000; // predicted
+        if (modelName->Contains("5500QTRAP"))       return API5500QTrap; // predicted
+        if (modelName->Contains("5500"))            return API5500; // predicted
+        if (modelName->Contains("6500QTRAP"))       return API6500QTrap; // predicted
+        if (modelName->Contains("6500"))            return API6500; // predicted
+        if (modelName->Contains("QSTARPULSAR"))     return QStarPulsarI; // also covers variants like "API QStar Pulsar i, 0, Qstar"
+        if (modelName->Contains("QSTARXL"))         return QStarXL;
+        if (modelName->Contains("QSTARELITE"))      return QStarElite;
+        if (modelName->Contains("QSTAR"))           return QStar; // predicted
+        if (modelName->Contains("TRIPLETOF4600"))   return API4600TripleTOF; // predicted
+        if (modelName->Contains("TRIPLETOF5600"))   return API5600TripleTOF;
+        if (modelName->Contains("TRIPLETOF6600"))   return API6600TripleTOF; // predicted
+        if (modelName->Contains("NLXTOF"))          return NlxTof; // predicted
+        if (modelName->Contains("100LC"))           return API100LC; // predicted
+        if (modelName->Contains("100"))             return API100; // predicted
+        if (modelName->Contains("150MCA"))          return API150MCA; // predicted
+        if (modelName->Contains("150EX"))           return API150EX; // predicted
+        if (modelName->Contains("165"))             return API165; // predicted
+        if (modelName->Contains("300"))             return API300; // predicted
+        if (modelName->Contains("350"))             return API350; // predicted
+        if (modelName->Contains("365"))             return API365; // predicted
 
-InstrumentType WiffFileImpl::getInstrumentType() const
-{
-    try {return (InstrumentType) 0;} CATCH_AND_FORWARD
+        throw gcnew Exception("unknown instrument type: " + sample->Details->InstrumentName);
+    }
+    CATCH_AND_FORWARD
 }
 
 IonSourceType WiffFileImpl::getIonSourceType() const
@@ -505,6 +544,16 @@ Polarity ExperimentImpl::getPolarity() const
     try {return (Polarity) msExperiment->Details->Polarity;} CATCH_AND_FORWARD
 }
 
+double ExperimentImpl::convertCycleToRetentionTime(int cycle) const
+{
+    try {return msExperiment->GetRTFromExperimentScanIndex(cycle);} CATCH_AND_FORWARD
+}
+
+double ExperimentImpl::convertRetentionTimeToCycle(double rt) const
+{
+    try {return msExperiment->RetentionTimeToExperimentScan(rt);} CATCH_AND_FORWARD
+}
+
 void ExperimentImpl::getTIC(std::vector<double>& times, std::vector<double>& intensities) const
 {
     try
@@ -524,6 +573,29 @@ void ExperimentImpl::getBPC(std::vector<double>& times, std::vector<double>& int
     }
     CATCH_AND_FORWARD
 }
+
+bool ExperimentImpl::getHasIsolationInfo() const
+{
+    return (ExperimentType)msExperiment->Details->ExperimentType == Product &&
+           msExperiment->Details->MassRangeInfo->Length > 0;
+}
+
+void ExperimentImpl::getIsolationInfo(double& centerMz, double& lowerLimit, double& upperLimit) const
+{
+    if (!getHasIsolationInfo())
+        return;
+
+    try
+    {
+        double isolationWidth = ((FragmentBasedScanMassRange^)(msExperiment->Details->MassRangeInfo[0]))->IsolationWindow;
+
+        centerMz = (double)((FragmentBasedScanMassRange^)(msExperiment->Details->MassRangeInfo[0]))->FixedMasses[0];
+        lowerLimit = centerMz - isolationWidth / 2;
+        upperLimit = centerMz + isolationWidth / 2;
+    }
+    CATCH_AND_FORWARD
+}
+
 
 SpectrumImpl::SpectrumImpl(ExperimentImplPtr experiment, int cycle)
 : experiment(experiment), cycle(cycle), selectedMz(0), bpY(-1), bpX(-1)
@@ -553,25 +625,20 @@ int SpectrumImpl::getMSLevel() const
     try {return spectrumInfo->MSLevel == 0 ? 1 : spectrumInfo->MSLevel;} CATCH_AND_FORWARD
 }
 
-bool SpectrumImpl::getHasIsolationInfo() const
-{
-    return (ExperimentType)this->experiment->msExperiment->Details->ExperimentType == Product &&
-        this->experiment->msExperiment->Details->MassRangeInfo->Length > 0;
-}
+bool SpectrumImpl::getHasIsolationInfo() const { return experiment->getHasIsolationInfo(); }
 
 void SpectrumImpl::getIsolationInfo(double& centerMz, double& lowerLimit, double& upperLimit) const
 {
-    if (!this->getHasIsolationInfo())
+    if (!getHasIsolationInfo())
         return;
 
-    try 
+    try
     {
-        double isolationWidth = ((FragmentBasedScanMassRange ^)(this->experiment->msExperiment->Details->MassRangeInfo[0]))->IsolationWindow;
-
-        centerMz = getHasPrecursorInfo() ? this->selectedMz : ((FragmentBasedScanMassRange ^)(this->experiment->msExperiment->Details->MassRangeInfo[0]))->FixedMasses[0];
+        double isolationWidth = ((FragmentBasedScanMassRange^)(experiment->msExperiment->Details->MassRangeInfo[0]))->IsolationWindow;
+        centerMz = getHasPrecursorInfo() ? selectedMz : (double)((FragmentBasedScanMassRange^)(experiment->msExperiment->Details->MassRangeInfo[0]))->FixedMasses[0];
         lowerLimit = centerMz - isolationWidth / 2;
         upperLimit = centerMz + isolationWidth / 2;
-    } 
+    }
     CATCH_AND_FORWARD
 }
 

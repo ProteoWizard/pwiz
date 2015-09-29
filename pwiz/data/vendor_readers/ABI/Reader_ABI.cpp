@@ -142,7 +142,7 @@ void fillInMetadata(const string& wiffpath, MSData& msd, WiffFilePtr wifffile,
     if (sl) sl->setDataProcessingPtr(dpPwiz);
     if (cl) cl->setDataProcessingPtr(dpPwiz);
 
-    InstrumentConfigurationPtr ic = translateAsInstrumentConfiguration(wifffile);
+    InstrumentConfigurationPtr ic = translateAsInstrumentConfiguration(wifffile->getInstrumentModel(), IonSpray);
     ic->softwarePtr = acquisitionSoftware;
     msd.instrumentConfigurationPtrs.push_back(ic);
     msd.run.defaultInstrumentConfigurationPtr = ic;

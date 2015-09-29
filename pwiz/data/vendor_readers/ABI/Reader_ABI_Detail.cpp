@@ -23,7 +23,7 @@
 #define PWIZ_SOURCE
 
 #include "Reader_ABI_Detail.hpp"
-#include "pwiz/utility/misc/Container.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 
 #ifdef PWIZ_READER_ABI
 using namespace pwiz::vendor_api::ABI;
@@ -36,18 +36,18 @@ namespace ABI {
 
 
 PWIZ_API_DECL
-InstrumentConfigurationPtr translateAsInstrumentConfiguration(WiffFilePtr wifffile)
+InstrumentConfigurationPtr translateAsInstrumentConfiguration(InstrumentModel instrumentModel, IonSourceType ionSource)
 {
     InstrumentConfigurationPtr icPtr(new InstrumentConfiguration);
     InstrumentConfiguration& ic = *icPtr;
 
     ic.id = "IC1";
-    ic.set(translateAsInstrumentModel(wifffile->getInstrumentModel()));
+    ic.set(translateAsInstrumentModel(instrumentModel));
 
     Component source(ComponentType_Source, 1);
-    source.set(translateAsIonSource(wifffile->getIonSourceType()));
+    source.set(translateAsIonSource(ionSource));
 
-    switch (wifffile->getInstrumentModel())
+    switch (instrumentModel)
     {
         // QqQ
         case API150MCA:
@@ -57,6 +57,8 @@ InstrumentConfigurationPtr translateAsInstrumentConfiguration(WiffFilePtr wifffi
         case API3200:
         case API4000:
         case API5000:
+        case API5500:
+        case API6500:
         case API100:
         case API100LC:
         case API165:
@@ -72,10 +74,12 @@ InstrumentConfigurationPtr translateAsInstrumentConfiguration(WiffFilePtr wifffi
 
         // QqLIT
         case API2000QTrap:
+        case API2500QTrap:
         case API3200QTrap:
+        case API3500QTrap:
         case API4000QTrap:
         case API5500QTrap:
-        case CaribouQTrap:
+        case API6500QTrap:
             ic.componentList.push_back(source);
             ic.componentList.push_back(Component(MS_quadrupole, 2));
             ic.componentList.push_back(Component(MS_quadrupole, 3));
@@ -88,7 +92,9 @@ InstrumentConfigurationPtr translateAsInstrumentConfiguration(WiffFilePtr wifffi
         case QStarPulsarI:
         case QStarXL:
         case QStarElite:
+        case API4600TripleTOF:
         case API5600TripleTOF:
+        case API6600TripleTOF:
         case NlxTof:
             ic.componentList.push_back(source);
             ic.componentList.push_back(Component(MS_quadrupole, 2));
@@ -97,11 +103,11 @@ InstrumentConfigurationPtr translateAsInstrumentConfiguration(WiffFilePtr wifffi
             ic.componentList.push_back(Component(MS_electron_multiplier, 5));
             break;
 
-        case GenericSingleQuad:
-            ic.componentList.push_back(source);
-            ic.componentList.push_back(Component(MS_quadrupole, 2));
-            ic.componentList.push_back(Component(MS_electron_multiplier, 3));
+        case InstrumentModel_Unknown:
             break;
+
+        default:
+            throw runtime_error("[translateAsInstrumentConfiguration] unhandled instrument model: " + lexical_cast<string>(instrumentModel));
     }
 
     return icPtr;
@@ -117,18 +123,21 @@ PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModel instrumentModel)
         case API2000:           return MS_API_2000;
         case API3000:           return MS_API_3000;
         case API3200:           return MS_API_3200;
-        case API3200QTrap:      return MS_3200_QTRAP;
         case API4000:           return MS_API_4000;
-        case API4000QTrap:      return MS_4000_QTRAP;
         case API5000:           return MS_API_5000;
-        case API5600TripleTOF:  return MS_TripleTOF_5600;
+        case API2000QTrap:      return MS_Q_TRAP;
+        case API2500QTrap:      return MS_Q_TRAP;
+        case API3200QTrap:      return MS_3200_QTRAP;
+        case API3500QTrap:      return MS_Q_TRAP;
+        case API4000QTrap:      return MS_4000_QTRAP;
         case API5500QTrap:      return MS_QTRAP_5500;
+        case API5600TripleTOF:  return MS_TripleTOF_5600;
+        case API6600TripleTOF:  return MS_TripleTOF_6600;
         case QStar:             return MS_QSTAR;
         case QStarPulsarI:      return MS_QSTAR_Pulsar;
         case QStarXL:           return MS_QSTAR_XL;
         case QStarElite:        return MS_QSTAR_Elite;
 
-        case CaribouQTrap:
         case NlxTof:
         case API100:
         case API100LC:
@@ -136,10 +145,15 @@ PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModel instrumentModel)
         case API300:
         case API350:
         case API365:
-        case API2000QTrap:
-        case GenericSingleQuad:
-        default:
+        case API5500:
+        case API6500:
+        case API6500QTrap:
+        case API4600TripleTOF:
+        case InstrumentModel_Unknown:
             return MS_Applied_Biosystems_instrument_model;
+
+        default:
+            throw runtime_error("[translateAsInstrumentModel] unhandled instrument model: " + lexical_cast<string>(instrumentModel));
     }
 }
 
@@ -147,18 +161,21 @@ PWIZ_API_DECL CVID translateAsIonSource(IonSourceType ionSourceType)
 {
     switch (ionSourceType)
     {
-        case FlowNanoSpray:     return MS_nanoelectrospray;
-        case HeatedNebulizer:   return MS_atmospheric_pressure_chemical_ionization;
-        case TurboSpray:        return MS_electrospray_ionization;
-        case IonSpray:          return MS_electrospray_ionization;
-        case Maldi:             return MS_matrix_assisted_laser_desorption_ionization;
-        case PhotoSpray:        return MS_atmospheric_pressure_photoionization;
+        case IonSourceType_Unknown: return MS_ionization_type;
+        case FlowNanoSpray:         return MS_nanoelectrospray;
+        case HeatedNebulizer:       return MS_atmospheric_pressure_chemical_ionization;
+        case TurboSpray:            return MS_electrospray_ionization;
+        case IonSpray:              return MS_electrospray_ionization;
+        case Maldi:                 return MS_matrix_assisted_laser_desorption_ionization;
+        case PhotoSpray:            return MS_atmospheric_pressure_photoionization;
 
         case Medusa:
         case Duo:
         case None:
-        default:
             return CVID_Unknown;
+
+        default:
+            throw runtime_error("[translateAsIonSource] unhandled ion source: " + lexical_cast<string>(ionSourceType));
     }
 }
 

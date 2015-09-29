@@ -44,7 +44,7 @@ namespace ABI {
 
 PWIZ_API_DECL enum ScanType
 {
-    Unknown = 0,
+    ScanType_Unknown = 0,
     MRMScan,
     SIMScan,
     FullScan
@@ -52,44 +52,43 @@ PWIZ_API_DECL enum ScanType
 
 PWIZ_API_DECL enum InstrumentModel
 {
-    API100 = 1,
-    API100LC = 2,
-    API150MCA = 3,
-    API150EX = 4,
-    API165 = 5,
-    API300 = 6,
-    API350 = 7,
-    API365 = 8,
-    API2000 = 9,
-    API3000 = 10,
-    API4000 = 11,
-    GenericSingleQuad = 12,
-    API2000QTrap = 13,
-    API4000QTrap = 14,
-    API3200 = 15,
-    API3200QTrap = 16,
-    API5000 = 17,
-    CaribouQTrap = 21,
-    API5500QTrap = 22,
-    QStar = 2001,
-    NlxTof = 2002,
-    QStarPulsarI = 2003,
-    QStarXL = 2004,
-    QStarElite = 2005,
-    API5600TripleTOF = 2006,
-};
-
-PWIZ_API_DECL enum InstrumentType
-{
-    SingleQuad = 0,
-    TripleQuad = 1,
-    Trap = 2,
-    CaribouTrap = 3,
-    Tof = 4
+    InstrumentModel_Unknown,
+    API100,
+    API100LC,
+    API150MCA,
+    API150EX,
+    API165,
+    API300,
+    API350,
+    API365,
+    API2000,
+    API2000QTrap,
+    API2500QTrap,
+    API3000,
+    API3200,
+    API3200QTrap,
+    API3500QTrap,
+    API4000,
+    API4000QTrap,
+    API5000,
+    API5500,
+    API5500QTrap,
+    API6500,
+    API6500QTrap,
+    NlxTof,
+    QStar,
+    QStarPulsarI,
+    QStarXL,
+    QStarElite,
+    API4600TripleTOF,
+    API5600TripleTOF,
+    API6600TripleTOF,
+    InstrumentModel_Count
 };
 
 PWIZ_API_DECL enum IonSourceType
 {
+    IonSourceType_Unknown = 0,
     Medusa = 1,
     Duo = 2,
     FlowNanoSpray = 3,
@@ -98,7 +97,8 @@ PWIZ_API_DECL enum IonSourceType
     IonSpray = 6,
     None = 7,
     Maldi = 8,
-    PhotoSpray = 9
+    PhotoSpray = 9,
+    IonSourceType_Count
 };
 
 PWIZ_API_DECL enum ExperimentType
@@ -183,10 +183,16 @@ struct PWIZ_API_DECL Experiment
     virtual void getSIC(size_t index, std::vector<double>& times, std::vector<double>& intensities,
                         double& basePeakX, double& basePeakY) const = 0;
 
+    virtual bool getHasIsolationInfo() const = 0;
+    virtual void getIsolationInfo(double& centerMz, double& lowerLimit, double& upperLimit) const = 0;
+
     virtual void getAcquisitionMassRange(double& startMz, double& stopMz) const = 0;
     virtual ScanType getScanType() const = 0;
     virtual ExperimentType getExperimentType() const = 0;
     virtual Polarity getPolarity() const = 0;
+
+    virtual double convertCycleToRetentionTime(int cycle) const = 0;
+    virtual double convertRetentionTimeToCycle(double rt) const = 0;
 
     virtual void getTIC(std::vector<double>& times, std::vector<double>& intensities) const = 0;
     virtual void getBPC(std::vector<double>& times, std::vector<double>& intensities) const = 0;
@@ -212,7 +218,6 @@ class PWIZ_API_DECL WiffFile
     virtual const std::vector<std::string>& getSampleNames() const = 0;
 
     virtual InstrumentModel getInstrumentModel() const = 0;
-    virtual InstrumentType getInstrumentType() const = 0;
     virtual IonSourceType getIonSourceType() const = 0;
     virtual boost::local_time::local_date_time getSampleAcquisitionTime(int sample) const = 0;
 

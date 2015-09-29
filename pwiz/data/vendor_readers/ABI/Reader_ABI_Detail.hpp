@@ -38,7 +38,7 @@ namespace ABI {
 using namespace pwiz::vendor_api::ABI;
 
 PWIZ_API_DECL
-InstrumentConfigurationPtr translateAsInstrumentConfiguration(WiffFilePtr wifffile);
+InstrumentConfigurationPtr translateAsInstrumentConfiguration(InstrumentModel instrumentModel, IonSourceType ionSource);
 
 PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModel instrumentModel);
 PWIZ_API_DECL CVID translateAsIonSource(IonSourceType ionSourceType);
