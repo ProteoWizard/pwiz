@@ -228,7 +228,7 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd, const
     }
 
     msd.run.id = msd.id;
-    msd.run.startTimeStamp = encode_xml_datetime(rawfile.getCreationDate());
+    msd.run.startTimeStamp = encode_xml_datetime(rawfile.getCreationDate(config.adjustUnknownTimeZonesToHostTimeZone));
 }
 
 } // namespace

@@ -245,10 +245,13 @@ void testRead(const Reader& reader, const string& rawpath, bool requireUnicodeSu
 {
     if (os_) *os_ << "testRead(): " << rawpath << endl;
 
+    Reader::Config readerConfig;
+    readerConfig.adjustUnknownTimeZonesToHostTimeZone = false; // do not adjust times, because we don't want the test to depend on the time zone of the test agent
+
     // read file into MSData object
     vector<MSDataPtr> msds;
     string rawheader = pwiz::util::read_file_header(rawpath, 512);
-    reader.read(rawpath, rawheader, msds);
+    reader.read(rawpath, rawheader, msds, readerConfig);
 
     string sourceName = BFS_STRING(bfs::path(rawpath).filename());
 
@@ -354,7 +357,7 @@ void testRead(const Reader& reader, const string& rawpath, bool requireUnicodeSu
     for (size_t i = 0; i < msdCount; ++i)
     {
         MSData msd_reverse;
-        reader.read(rawpath, rawheader, msd_reverse, i);
+        reader.read(rawpath, rawheader, msd_reverse, i, readerConfig);
 
         if (msd_reverse.run.spectrumListPtr.get())
             for (size_t j = 0, end = msd_reverse.run.spectrumListPtr->size(); j < end; ++j)
@@ -398,7 +401,7 @@ void testRead(const Reader& reader, const string& rawpath, bool requireUnicodeSu
     try
     {
         rawheader = pwiz::util::read_file_header(newRawPath.string(), 512);
-        reader.read(newRawPath.string(), rawheader, msds);
+        reader.read(newRawPath.string(), rawheader, msds, readerConfig);
         msdCount = msds.size();
 
         bfs::path sourceNameAsPath(sourceName);

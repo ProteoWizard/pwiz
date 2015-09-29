@@ -42,6 +42,7 @@ Reader::Config::Config()
     , acceptZeroLengthSpectra(false)
     , combineIonMobilitySpectra(false)
     , unknownInstrumentIsError(false)
+    , adjustUnknownTimeZonesToHostTimeZone(true)
 {
 }
 

@@ -55,6 +55,10 @@ class PWIZ_API_DECL Reader
         /// when true, if a reader cannot identify an instrument, an exception will be thrown asking users to report it
         bool unknownInstrumentIsError;
 
+        /// when true, if a reader does not know what time zone was used to record a time, it will assume the time refers to the host's local time;
+        /// when false, the reader will treat times with unknown time zone as UTC
+        bool adjustUnknownTimeZonesToHostTimeZone;
+
         Config();
         Config(const Config& rhs);
     };
