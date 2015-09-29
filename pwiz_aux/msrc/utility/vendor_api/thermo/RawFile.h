@@ -432,7 +432,7 @@ class PWIZ_API_DECL RawFile
     virtual std::string value(ValueID_String id) = 0;
 
     virtual std::string getFilename() = 0;
-    virtual boost::local_time::local_date_time getCreationDate() = 0;
+    virtual boost::local_time::local_date_time getCreationDate(bool adjustToHostTime = true) = 0;
     virtual std::auto_ptr<LabelValueArray> getSequenceRowUserInfo() = 0;
 
     virtual ControllerInfo getCurrentController() = 0;
