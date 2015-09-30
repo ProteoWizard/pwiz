@@ -73,7 +73,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(Settings.Default.StaticModList.Contains(mod));
                 StaticMod uniMod;
                 Assert.IsTrue(UniMod.DictStructuralModNames.TryGetValue(mod.Name, out uniMod));
-                Assert.AreEqual(mod, uniMod);
+                Assert.AreEqual(mod, uniMod.ChangeVariable(true));
             });
             // Repeat for heavy modifications.
             var editModsDlg2 = ShowEditHeavyModsDlg(peptideSettingsUI);

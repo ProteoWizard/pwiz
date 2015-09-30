@@ -724,15 +724,16 @@ namespace pwiz.Skyline.SettingsUI
 
         public void SetModification(string modName)
         {
-            SetModification(modName, false);
+            // Make all but Cysteine modifications default to variable
+            SetModification(modName, !modName.Contains("(C)")); // Not L10N
         }
 
         public void SetModification(string modName, bool isVariable)
         {
-            Modification = UniMod.GetModification(modName, IsStructural);
-
+            var modification = UniMod.GetModification(modName, IsStructural);
             if (IsStructural && isVariable)
-                cbVariableMod.Checked = true;
+                modification = modification.ChangeVariable(true);
+            Modification = modification;
         }
 
         private void comboMod_SelectedIndexChanged(object sender, EventArgs e)

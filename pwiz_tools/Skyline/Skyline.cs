@@ -3660,7 +3660,9 @@ namespace pwiz.Skyline
                                         return;
                                     }
                                 }
-                                peptideDocNodes.Add(matcher.GetModifiedNode(labelText).ChangeSettings(settings, SrmSettingsDiff.ALL));
+                                var peptideGroupDocNode = new PeptideGroupDocNode(peptideGroup, Annotations.EMPTY, peptideGroupName, null,
+                                    new[] {matcher.GetModifiedNode(labelText)}, peptideSequence == null);
+                                peptideDocNodes.AddRange(peptideGroupDocNode.ChangeSettings(settings, SrmSettingsDiff.ALL).Molecules);
                             }
                             catch (FormatException)
                             {
