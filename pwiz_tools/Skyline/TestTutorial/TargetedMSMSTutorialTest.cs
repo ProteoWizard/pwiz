@@ -622,7 +622,7 @@ namespace pwiz.SkylineTestTutorial
                 importResultsDlg2.NamedPathSets = importResultsDlg2.GetDataSourcePathsFileReplicates(filePaths.Select(MsDataFileUri.Parse));
                 importResultsDlg2.OkDialog();
             });
-
+            WaitForDocumentChangeLoaded(docHighRes);
             if (AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)
                 FindNode(asSmallMolecules ? "LVNELTEFAK" : "K.LVNELTEFAK.T [65, 74]");
             else

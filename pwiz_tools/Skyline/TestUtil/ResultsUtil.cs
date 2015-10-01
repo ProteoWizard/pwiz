@@ -27,6 +27,7 @@ using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -164,7 +165,8 @@ namespace pwiz.SkylineTestUtil
             int index;
             ChromatogramSet chromatogramSet;
             document.Settings.MeasuredResults.TryGetChromatogramSet(replicateName, out chromatogramSet, out index);
-            Assert.AreNotEqual(-1, index, string.Format("Replicate {0} not found", replicateName));
+            Assert.AreNotEqual(-1, index, string.Format("Replicate {0} not found among -> {1} <-", replicateName,
+                TextUtil.LineSeparate(document.Settings.MeasuredResults.Chromatograms.Select(c => c.Name))));
             int peptidesActual = 0;
 
             foreach (var nodePep in document.Molecules.Where(nodePep => (nodePep.Results != null && nodePep.Results[index] != null)))

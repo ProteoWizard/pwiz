@@ -256,6 +256,9 @@ namespace pwiz.SkylineTestFunctional
                           {
                               // Attempt to report more information when the test fails here
                               AssertEx.DocsEqual(docInitial, docCurrent);
+                              Assert.AreEqual(docInitial.UserRevisionIndex, docCurrent.UserRevisionIndex);
+                              Assert.AreEqual(docInitial.RevisionIndex, docCurrent.RevisionIndex);
+                              Assert.AreEqual(docInitial.Id.GlobalIndex, docCurrent.Id.GlobalIndex);
                               Assert.AreSame(docInitial, docCurrent);
                           }
                       });
