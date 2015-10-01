@@ -144,6 +144,7 @@ namespace pwiz.SkylineTestTutorial
             });
 
             WaitForConditionUI(() => gridView.Rows[80].Cells[columnLibraryName.Index].Value == null);
+            WaitForConditionUI(() => Equals(gridView.Rows[48].Cells[columnLibraryName.Index].Value, "Rat (NIST) (Rat_plasma2)"));
 
             RunUI(() => Assert.AreEqual(137, documentGrid.RowCount));
 
@@ -1404,8 +1405,9 @@ namespace pwiz.SkylineTestTutorial
                     foldChangeGrid.DataboundGridControl.FindColumn(PropertyPath.Root.Property("FoldChangeResult"));
                 foldChangeGrid.DataboundGridControl.DataGridView.Sort(foldChangeResultColumn, ListSortDirection.Ascending);
             });
-            WaitForConditionUI(() => 0 != foldChangeGrid.DataboundGridControl.RowCount && foldChangeGrid.DataboundGridControl.IsComplete);
-            Assert.AreEqual(48, foldChangeGrid.DataboundGridControl.RowCount);
+            WaitForConditionUI(() => foldChangeGrid.DataboundGridControl.IsComplete);
+            WaitForConditionUI(() => 48 == foldChangeGrid.DataboundGridControl.RowCount);
+            RunUI(() => Assert.AreEqual(48, foldChangeGrid.DataboundGridControl.RowCount));
             {
                 var quickFilterForm = ShowDialog<QuickFilterForm>(() =>
                 {
@@ -1422,7 +1424,8 @@ namespace pwiz.SkylineTestTutorial
                 OkDialog(quickFilterForm, quickFilterForm.OkDialog);
             }
             WaitForConditionUI(() => foldChangeGrid.DataboundGridControl.IsComplete);
-            Assert.AreEqual(14, foldChangeGrid.DataboundGridControl.RowCount);
+            WaitForConditionUI(() => 14 == foldChangeGrid.DataboundGridControl.RowCount);
+            RunUI(() => Assert.AreEqual(14, foldChangeGrid.DataboundGridControl.RowCount));
             PauseForScreenShot<FoldChangeBarGraph>("Right click on the graph and choose Copy", 67);
             WaitForConditionUI(() => foldChangeGrid.DataboundGridControl.IsComplete);
             var settingsForm = ShowDialog<GroupComparisonSettingsForm>(foldChangeGrid.ShowChangeSettings);

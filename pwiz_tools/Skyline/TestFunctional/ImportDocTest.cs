@@ -251,7 +251,13 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
                       {
                           SkylineWindow.Undo();
-                          Assert.AreSame(docInitial, SkylineWindow.Document);
+                          var docCurrent = SkylineWindow.Document;
+                          if (!ReferenceEquals(docInitial, docCurrent))
+                          {
+                              // Attempt to report more information when the test fails here
+                              AssertEx.DocsEqual(docInitial, docCurrent);
+                              Assert.AreSame(docInitial, docCurrent);
+                          }
                       });
             Assert.AreSame(docInitial, SkylineWindow.Document);
             RunDlg<ImportDocResultsDlg>(() => SkylineWindow.ImportFiles(_documentPaths[3]), dlg =>

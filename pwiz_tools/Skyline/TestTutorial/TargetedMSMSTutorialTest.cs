@@ -666,7 +666,12 @@ namespace pwiz.SkylineTestTutorial
             }
 
             var chooseSchedulingReplicateDlg = ShowDialog<ChooseSchedulingReplicatesDlg>(SkylineWindow.ImportResults);
-            RunUI(()=>chooseSchedulingReplicateDlg.SelectOrDeselectAll(true));
+            RunUI(() =>
+            {
+                // Make sure UI is up to date to avoid race condition
+                chooseSchedulingReplicateDlg.UpdateUi();
+                chooseSchedulingReplicateDlg.SelectOrDeselectAll(true);
+            });
             RunDlg<ImportResultsDlg>(chooseSchedulingReplicateDlg.OkDialog, importResultsDlg2 =>
             {
                 string[] filePaths =
