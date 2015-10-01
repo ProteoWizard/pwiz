@@ -16,7 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
+
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.SkylineTestUtil;
@@ -43,8 +43,9 @@ namespace pwiz.SkylineTestFunctional
             // Open the .sky file, and and a version 0.0 protdb file that needs digesting and metadata lookup
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("backgroundtest.sky")));
             int millis = (AllowInternetAccess ? 300 : 60) *1000;
-            WaitForCondition(millis, () => SkylineWindow.Document.PeptideGroupCount > 0); // doc loaded
-            WaitForCondition(millis, () => (!(SkylineWindow.Document.PeptideGroups.Where(node => String.IsNullOrEmpty(node.ProteinMetadata.Accession))).Any())); // easy protein metadata loaded
+            WaitForCondition(millis, () => SkylineWindow.Document.PeptideGroupCount > 0); // Doc loaded
+            WaitForCondition(millis, () => (!(SkylineWindow.Document.PeptideGroups.Where(node => string.IsNullOrEmpty(node.ProteinMetadata.Accession))).Any())); // Easy protein metadata loaded
+            WaitForBackgroundProteomeLoaderCompleted();  // Make sure we're done with yeast.protdb (may still be loading protein metadata) so test exits cleanly
         }
     }
 
@@ -67,8 +68,9 @@ namespace pwiz.SkylineTestFunctional
             // The background loaders should actually hit the web services if SkylineTestRunner has enabled internet access.
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("backgroundtest.sky")));
             WaitForCondition(180 * 1000, () => SkylineWindow.Document.PeptideGroupCount > 0); // doc loaded
-            WaitForCondition(6 * 60 * 1000, () => (!(SkylineWindow.Document.PeptideGroups.Where(node => String.IsNullOrEmpty(node.ProteinMetadata.Accession))).Any())); // easy protein metadata loaded
-            WaitForCondition(6 * 60 * 1000, () => (!(SkylineWindow.Document.PeptideGroups.Where(node => String.IsNullOrEmpty(node.ProteinMetadata.Gene))).Any())); // Uniprot search metadata loaded
+            WaitForCondition(6 * 60 * 1000, () => (!(SkylineWindow.Document.PeptideGroups.Where(node => string.IsNullOrEmpty(node.ProteinMetadata.Accession))).Any())); // Easy protein metadata loaded
+            WaitForCondition(6 * 60 * 1000, () => (!(SkylineWindow.Document.PeptideGroups.Where(node => string.IsNullOrEmpty(node.ProteinMetadata.Gene))).Any())); // Uniprot search metadata loaded
+            WaitForBackgroundProteomeLoaderCompleted();  // Make sure we're done with yeast.protdb (may still be loading protein metadata) so test exits cleanly
         }
     }
 }
