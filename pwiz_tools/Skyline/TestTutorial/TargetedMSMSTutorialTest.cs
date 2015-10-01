@@ -362,12 +362,13 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page));
             var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(() => importPeptideSearchDlg.ClickNextButton());
 
-            RunUI(importResultsNameDlg.YesDialog);
+            OkDialog(importResultsNameDlg, importResultsNameDlg.YesDialog);
 
             // Modifications are already set up, so that page should get skipped.
 
             // We're on the "Configure Transition Settings" page of the wizard.
             // We've already set up these settings, so just click next.
+            WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.transition_settings_page);
@@ -376,6 +377,7 @@ namespace pwiz.SkylineTestTutorial
 
             // We're on the "Configure Full-Scan Settings" page of the wizard.
             // We've already set up these settings, so just click next.
+            WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
