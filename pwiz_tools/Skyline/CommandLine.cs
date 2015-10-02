@@ -2234,7 +2234,7 @@ namespace pwiz.Skyline
         public CommandStatusWriter(TextWriter writer)
             : base(writer.FormatProvider)
         {
-            _writer = writer;
+            _writer = Synchronized(writer); // Make this thread safe for more predicitable console output
         }
 
         public bool IsTimeStamped { get; set; }

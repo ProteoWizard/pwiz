@@ -173,25 +173,25 @@ namespace pwiz.SkylineTestA
             string output = RunCommand("--in=" + docPath,
                                 "--add-library-name=" + libName,
                                 "--out=" + outPath);
-            Assert.IsTrue(output.Contains(Resources.CommandLine_SetLibrary_Error__Cannot_set_library_name_without_path_));
+            CheckRunCommandOutputContains(Resources.CommandLine_SetLibrary_Error__Cannot_set_library_name_without_path_, output);
 
             // Test error (file does not exist)
             output = RunCommand("--in=" + docPath,
                                 "--add-library-path=" + fakePath,
                                 "--out=" + outPath);
-            Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_SetLibrary_Error__The_file__0__does_not_exist_, fakePath)));
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_SetLibrary_Error__The_file__0__does_not_exist_, fakePath), output);
 
             // Test error (file does not exist)
             output = RunCommand("--in=" + docPath,
                                 "--add-library-path=" + libPathRedundant,
                                 "--out=" + outPath);
-            Assert.IsTrue(output.Contains(Resources.CommandLineTest_ConsoleAddFastaTest_Error));
+            CheckRunCommandOutputContains(Resources.CommandLineTest_ConsoleAddFastaTest_Error, output);
 
             // Test error (unsupported library format)
             output = RunCommand("--in=" + docPath,
                                 "--add-library-path=" + docPath,
                                 "--out=" + outPath);
-            Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_SetLibrary_Error__The_file__0__is_not_a_supported_spectral_library_file_format_,docPath)));
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_SetLibrary_Error__The_file__0__is_not_a_supported_spectral_library_file_format_,docPath), output);
 
             // Test add library without name
             output = RunCommand("--in=" + docPath,
@@ -232,7 +232,7 @@ namespace pwiz.SkylineTestA
             output = RunCommand("--in=" + outPath,
                                 "--add-library-path=" + libPath,
                                 "--out=" + outPath);
-            Assert.IsTrue(output.Contains(Resources.CommandLine_SetLibrary_Error__The_library_you_are_trying_to_add_conflicts_with_a_library_already_in_the_file_));
+            CheckRunCommandOutputContains(Resources.CommandLine_SetLibrary_Error__The_library_you_are_trying_to_add_conflicts_with_a_library_already_in_the_file_, output);
         }
 
         [TestMethod]
@@ -337,7 +337,7 @@ namespace pwiz.SkylineTestA
                                        "--exp-translist-instrument=" + ExportInstrumentType.THERMO,
                                        "--exp-file=" + thermoPath);
 
-            Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_ExportInstrumentFile_List__0__exported_successfully_, "Thermo_test.csv")));
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportInstrumentFile_List__0__exported_successfully_, "Thermo_test.csv"), output);
             Assert.IsTrue(File.Exists(thermoPath));
             Assert.AreEqual(doc.MoleculeTransitionCount, File.ReadAllLines(thermoPath).Length);
 
@@ -353,7 +353,7 @@ namespace pwiz.SkylineTestA
                                 "--exp-dwell-time=20");
 
             //check for success
-            Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_ExportInstrumentFile_List__0__exported_successfully_, "Agilent_test.csv")));
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportInstrumentFile_List__0__exported_successfully_, "Agilent_test.csv"), output);
             Assert.IsTrue(File.Exists(agilentPath));
             Assert.AreEqual(doc.MoleculeTransitionCount + 1, File.ReadAllLines(agilentPath).Length);
 
@@ -369,7 +369,7 @@ namespace pwiz.SkylineTestA
                                 "--exp-dwell-time=20");
 
             //check for success
-            Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_ExportInstrumentFile_List__0__exported_successfully_, "AB_Sciex_test.csv")));
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportInstrumentFile_List__0__exported_successfully_, "AB_Sciex_test.csv"), output);
             Assert.IsTrue(File.Exists(sciexPath));
             Assert.AreEqual(doc.MoleculeTransitionCount, File.ReadAllLines(sciexPath).Length);
 
@@ -384,7 +384,7 @@ namespace pwiz.SkylineTestA
                                 "--exp-run-length=100");
 
             //check for success
-            Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_ExportInstrumentFile_List__0__exported_successfully_, "Waters_test.csv")));
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportInstrumentFile_List__0__exported_successfully_, "Waters_test.csv"), output);
             Assert.IsTrue(File.Exists(watersPath));
             Assert.AreEqual(doc.MoleculeTransitionCount + 1, File.ReadAllLines(watersPath).Length);
         }
@@ -412,7 +412,7 @@ namespace pwiz.SkylineTestA
 //                               "--exp-full-scans");
 //
             // check for success
-//            Assert.IsTrue(output.Contains("successfully."));
+//            CheckRunCommandOutputContains("successfully.", output);
 
             
             /////////////////////////
@@ -471,7 +471,7 @@ namespace pwiz.SkylineTestA
 
             //check for warning and error
             Assert.AreEqual(2, CountInstances(Resources.CommandLineTest_ConsoleAddFastaTest_Warning, output));  // exp-primary-count and CE not Waters
-            Assert.IsTrue(output.Contains(Resources.CommandLineTest_ConsoleAddFastaTest_Error));    // Waters
+            CheckRunCommandOutputContains(Resources.CommandLineTest_ConsoleAddFastaTest_Error, output);    // Waters
             Assert.AreEqual(2, CountInstances(ExportInstrumentType.WATERS, output));
 
             var commandFilesDir = new TestFilesDir(TestContext, COMMAND_FILE);
@@ -957,9 +957,7 @@ namespace pwiz.SkylineTestA
                        "--import-file=" + rawPath,
                        "--out=" + outPath);
 
-            var expectedErrorMessage = string.Format(Resources.CommandLine_ImportResultsFile_Warning__Failed_importing_the_results_file__0____Ignoring___, rawPath);
-            Assert.IsTrue(msg.Contains(expectedErrorMessage),
-                string.Format("Expected RunCommand result message containing \"{0}\", got \"{1}\" instead.", expectedErrorMessage, msg));
+             CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ImportResultsFile_Warning__Failed_importing_the_results_file__0____Ignoring___, rawPath), msg);
             // Read the saved document. FullScan.RAW|mzML should not have been imported
             SrmDocument doc = ResultsUtil.DeserializeDocument(outPath);
             Assert.IsFalse(doc.Settings.HasResults);
@@ -968,9 +966,7 @@ namespace pwiz.SkylineTestA
             msg = RunCommand("--in=" + outPath,
                              "--import-all=" + testFilesDir.FullPath,
                              "--save");
-            expectedErrorMessage = string.Format(Resources.CommandLine_ImportResultsFile_Warning__Failed_importing_the_results_file__0____Ignoring___, rawPath);
-            Assert.IsTrue(msg.Contains(expectedErrorMessage),
-                string.Format("Expected RunCommand result message containing \"{0}\", got \"{1}\" instead.", expectedErrorMessage, msg));
+             CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ImportResultsFile_Warning__Failed_importing_the_results_file__0____Ignoring___, rawPath), msg);
 
 
             doc = ResultsUtil.DeserializeDocument(outPath);
@@ -1843,6 +1839,12 @@ namespace pwiz.SkylineTestA
             return ExtensionTestContext.CanImportThermoRaw && ExtensionTestContext.CanImportWatersRaw
                 ? pathToRaw.SetFilePath(Path.ChangeExtension(pathToRaw.FilePath, "raw"))
                 : pathToRaw;
+        }
+
+        private static void CheckRunCommandOutputContains(string expectedMessage, string actualMessage)
+        {
+            Assert.IsTrue(actualMessage.Contains(expectedMessage),
+                string.Format("Expected RunCommand result message containing \n\"{0}\",\ngot\n\"{1}\"\ninstead.", expectedMessage, actualMessage));
         }
 
         private class TestPanoramaClient : IPanoramaClient
