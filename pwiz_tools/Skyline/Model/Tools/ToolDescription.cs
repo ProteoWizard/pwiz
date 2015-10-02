@@ -25,6 +25,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using System.Xml;
@@ -372,6 +373,8 @@ namespace pwiz.Skyline.Model.Tools
                     startInfo.RedirectStandardError = true;
                     startInfo.CreateNoWindow = true;
                     startInfo.UseShellExecute = false;
+                    startInfo.StandardOutputEncoding = Encoding.UTF8;
+                    startInfo.StandardErrorEncoding = Encoding.UTF8;
                 }
 
                 // if it has a selected report title and its doesn't have a InputReportTempPath macro then the report needs to be piped to stdin.

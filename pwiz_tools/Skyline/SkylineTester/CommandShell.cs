@@ -268,6 +268,8 @@ namespace SkylineTester
         {
             _process = CreateProcess(exe, workingDirectory);
             _process.StartInfo.Arguments = arguments;
+            _process.StartInfo.StandardOutputEncoding = Encoding.UTF8; // So we can read Japanese from TestRunner's console
+            _process.StartInfo.StandardErrorEncoding = Encoding.UTF8; // So we can read Japanese from TestRunner's console
             _process.OutputDataReceived += HandleOutput;
             _process.ErrorDataReceived += HandleOutput;
             _process.Exited += ProcessExit;
