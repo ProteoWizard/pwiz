@@ -110,7 +110,6 @@
       <?endif?>
     </ComponentGroup>
     <ComponentGroup Id="SkylineComponents" Directory="INSTALLFOLDER">
-      <!-- TODO: Remove the comments around this Component element and the ComponentRef below in order to add resources to this installer. -->
       <Component Id="agtsampleinforw.dll">
         <File Source="$(var.Skyline.TargetDir)/agtsampleinforw.dll" KeyPath="yes"/>
       </Component>
@@ -134,6 +133,9 @@
       </Component>
       <Component Id="BiblioSpec.dll">
         <File Source="$(var.Skyline.TargetDir)/BiblioSpec.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="BiblioSpec.pdb">
+        <File Source="$(var.Skyline.TargetDir)/BiblioSpec.pdb" KeyPath="yes"/>
       </Component>
       <Component Id="BlibBuild.exe">
         <File Source="$(var.Skyline.TargetDir)/BlibBuild.exe" KeyPath="yes"/>
@@ -186,6 +188,14 @@
       <Component Id="DigitalRune.Windows.Docking.dll">
         <File Source="$(var.Skyline.TargetDir)/DigitalRune.Windows.Docking.dll" KeyPath="yes"/>
       </Component>
+      <?if $(sys.BUILDARCH) = x64?>
+      <Component Id="fileio_x64.dll">
+        <File Source="$(var.Skyline.TargetDir)/fileio_x64.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="fregistry_x64.dll">
+        <File Source="$(var.Skyline.TargetDir)/fregistry_x64.dll" KeyPath="yes"/>
+      </Component>
+      <?endif?>
       <Component Id="Iesi.Collections.dll">
         <File Source="$(var.Skyline.TargetDir)/Iesi.Collections.dll" KeyPath="yes"/>
       </Component>
@@ -229,11 +239,17 @@
       <Component Id="modifications.xml">
         <File Source="$(var.Skyline.TargetDir)/modifications.xml" KeyPath="yes"/>
       </Component>
+      <Component Id="MSFileReader.XRawfile2.dll">
+        <File Source="$(var.Skyline.TargetDir)/MSFileReader.XRawfile2.dll" KeyPath="yes"/>
+      </Component>
       <Component Id="MSFileReader.XRawfile2.SxS.manifest">
         <File Source="$(var.Skyline.TargetDir)/MSFileReader.XRawfile2.SxS.manifest" KeyPath="yes"/>
       </Component>
       <Component Id="MSGraph.dll">
         <File Source="$(var.Skyline.TargetDir)/MSGraph.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="MSGraph.pdb">
+        <File Source="$(var.Skyline.TargetDir)/MSGraph.pdb" KeyPath="yes"/>
       </Component>
       <Component Id="msparser.dll">
         <File Source="$(var.Skyline.TargetDir)/msparser.dll" KeyPath="yes"/>
@@ -268,14 +284,26 @@
       <Component Id="ProteomeDb.dll">
         <File Source="$(var.Skyline.TargetDir)/ProteomeDb.dll" KeyPath="yes"/>
       </Component>
+      <Component Id="ProteomeDb.pdb">
+        <File Source="$(var.Skyline.TargetDir)/ProteomeDb.pdb" KeyPath="yes"/>
+      </Component>
       <Component Id="ProteowizardWrapper.dll">
         <File Source="$(var.Skyline.TargetDir)/ProteowizardWrapper.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="ProteowizardWrapper.pdb">
+        <File Source="$(var.Skyline.TargetDir)/ProteowizardWrapper.pdb" KeyPath="yes"/>
       </Component>
       <Component Id="pwiz.Common.dll">
         <File Source="$(var.Skyline.TargetDir)/pwiz.Common.dll" KeyPath="yes"/>
       </Component>
+      <Component Id="pwiz.Common.pdb">
+        <File Source="$(var.Skyline.TargetDir)/pwiz.Common.pdb" KeyPath="yes"/>
+      </Component>
       <Component Id="pwiz.CommonUtil.dll">
         <File Source="$(var.Skyline.TargetDir)/pwiz.CommonUtil.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="pwiz.CommonUtil.pdb">
+        <File Source="$(var.Skyline.TargetDir)/pwiz.CommonUtil.pdb" KeyPath="yes"/>
       </Component>
       <Component Id="pwiz_data_cli.dll">
         <File Source="$(var.Skyline.TargetDir)/pwiz_data_cli.dll" KeyPath="yes"/>
@@ -326,6 +354,9 @@
       </Component>
       <Component Id="SkylineTool.dll">
         <File Source="$(var.Skyline.TargetDir)/SkylineTool.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="SkylineTool.pdb">
+        <File Source="$(var.Skyline.TargetDir)/SkylineTool.pdb" KeyPath="yes"/>
       </Component>
       <Component Id="System.Data.SQLite.dll">
         <File Source="$(var.Skyline.TargetDir)/System.Data.SQLite.dll" KeyPath="yes"/>
