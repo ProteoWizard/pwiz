@@ -51,6 +51,7 @@ namespace pwiz.Skyline.Model
         private Library DocLib { get; set; }
         public Dictionary<string, FoundResultsFilePossibilities> SpectrumSourceFiles { get; set; }
 
+        public bool HasDocLib { get { return DocLib != null; } }
         private readonly LibKeyModificationMatcher _matcher;
         private IsotopeLabelType DefaultHeavyLabelType { get; set; }
         public HashSet<StaticMod> UserDefinedTypedMods { get; private set; }
@@ -108,17 +109,10 @@ namespace pwiz.Skyline.Model
                 return false;
             }
 
-            DocLib = libraryManager.TryGetLibrary(libSpec);
-            if (DocLib == null)
-            {
-                DocLib = libraryManager.LoadLibrary(libSpec, () => new DefaultFileLoadMonitor(monitor));
-                if (DocLib == null)
-                {
-                    return false;
-                }
-            }
+            DocLib = libraryManager.TryGetLibrary(libSpec) ??
+                     libraryManager.LoadLibrary(libSpec, () => new DefaultFileLoadMonitor(monitor));
 
-            return true;
+            return DocLib != null;
         }
 
         public SrmDocument AddDocumentSpectralLibrary(SrmDocument doc, LibrarySpec libSpec)

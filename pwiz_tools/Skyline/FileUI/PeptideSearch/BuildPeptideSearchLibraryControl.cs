@@ -248,6 +248,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private bool LoadPeptideSearchLibrary(LibrarySpec docLibSpec)
         {
+            if (docLibSpec == null)
+                return false;
+
             using (var longWait = new LongWaitDlg
             {
                 Text = Resources.BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_Loading_Library
@@ -259,7 +262,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     if (status.IsError)
                     {
                         MessageDlg.ShowException(WizardForm, status.ErrorException);
-                        return false;
                     }
                 }
                 catch (Exception x)
@@ -267,10 +269,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     MessageDlg.ShowWithException(WizardForm,
                         TextUtil.LineSeparate(string.Format(Resources.BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_An_error_occurred_attempting_to_import_the__0__library_,
                                                             docLibSpec.Name), x.Message), x);
-                    return false;
                 }
             }
-            return true;
+            return ImportPeptideSearch.HasDocLib;
         }
 
         public void ForceWorkflow(ImportPeptideSearchDlg.Workflow workflowType)

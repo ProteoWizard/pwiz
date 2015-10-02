@@ -100,6 +100,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public bool Initialize(SrmDocument document)
         {
+            if (!ImportPeptideSearch.HasDocLib)
+                return false;
+
             ImportPeptideSearch.InitializeModifications(document);
             FillLists(document);
             return (modificationsListBox.Items.Count > 1 || unmatchedListBox.Items.Count > 1);

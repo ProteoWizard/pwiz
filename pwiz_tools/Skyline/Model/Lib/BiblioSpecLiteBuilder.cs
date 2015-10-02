@@ -98,7 +98,8 @@ namespace pwiz.Skyline.Model.Lib
             }
 
             string message = string.Format(Resources.BiblioSpecLiteBuilder_BuildLibrary_Building__0__library,
-                                           Path.GetFileName(OutputPath));            progress.UpdateProgress(status = status.ChangeMessage(message));
+                                           Path.GetFileName(OutputPath));
+            progress.UpdateProgress(status = status.ChangeMessage(message));
             string redundantLibrary = BiblioSpecLiteSpec.GetRedundantName(OutputPath);
             var blibBuilder = new BlibBuild(redundantLibrary, InputFiles, TargetSequences)
             {
