@@ -222,14 +222,16 @@ namespace pwiz.Common.DataBinding
                         return;
                     }
                     var dataFormat = dataFormats[saveFileDialog.FilterIndex - 1];
-                    using (var writer = new StreamWriter(File.OpenWrite(saveFileDialog.FileName),
-                        new UTF8Encoding(false)))
+                    SafeWriteToFile(owner, saveFileDialog.FileName, stream =>
                     {
+                        var writer = new StreamWriter(stream, new UTF8Encoding(false));
                         var cloneableRowSource = bindingListSource.RowSource as ICloneableList;
+                        bool finished = false;
                         if (null == cloneableRowSource)
                         {
                             var progressMonitor = new UncancellableProgressMonitor();
                             WriteData(progressMonitor, writer, bindingListSource, dataFormat.GetDsvWriter());
+                            finished = true;
                         }
                         else
                         {
@@ -240,10 +242,16 @@ namespace pwiz.Common.DataBinding
                                 {
                                     SetViewFrom(bindingListSource, clonedList, clonedBindingList);
                                     WriteData(progressMonitor, writer, clonedBindingList, dataFormat.GetDsvWriter());
+                                    finished = !progressMonitor.IsCanceled;
                                 }
                             });
                         }
-                    }
+                        if (finished)
+                        {
+                            writer.Flush();
+                        }
+                        return finished;
+                    });
                     SetExportDirectory(Path.GetDirectoryName(saveFileDialog.FileName));
                 }
             }
@@ -251,6 +259,20 @@ namespace pwiz.Common.DataBinding
             {
                 ShowMessageBox(owner, Resources.AbstractViewContext_Export_There_was_an_error_writing_to_the_file__ + exception.Message,
                     MessageBoxButtons.OK);
+            }
+        }
+
+        /// <summary>
+        /// Open a file stream, and call the provided function.
+        /// If that function returns true, then commit the file stream.
+        /// The default implementation of this method always commits the file stream, but this method
+        /// can be overridden by other ViewContext's that need transactional filesystem support.
+        /// </summary>
+        protected virtual bool SafeWriteToFile(Control owner, string fileName, Func<Stream, bool> writeFunc)
+        {
+            using (var stream = File.OpenWrite(fileName))
+            {
+                return writeFunc(stream);
             }
         }
 
@@ -631,7 +653,7 @@ namespace pwiz.Common.DataBinding
             }
         }
 
-        private class UncancellableProgressMonitor : IProgressMonitor
+        protected class UncancellableProgressMonitor : IProgressMonitor
         {
             public bool IsCanceled
             {

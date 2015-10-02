@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Properties;
@@ -35,6 +36,7 @@ namespace pwiz.Skyline.Alerts
         private const int MAX_HEIGHT = 500;
         private readonly int _originalFormHeight;
         private readonly int _originalMessageHeight;
+        private readonly int _labelPadding;
 
         public AlertDlg() : this("Alert dialog for Forms designer") // Not L10N
         {
@@ -45,6 +47,7 @@ namespace pwiz.Skyline.Alerts
             InitializeComponent();
             _originalFormHeight = Height;
             _originalMessageHeight = labelMessage.Height;
+            _labelPadding = messageScrollPanel.Width - labelMessage.MaximumSize.Width;
             Message = message;
             btnMoreInfo.Parent.Controls.Remove(btnMoreInfo);
             Text = Program.Name;
@@ -298,6 +301,13 @@ namespace pwiz.Skyline.Alerts
                 default:
                     throw new ArgumentException();
             }
+        }
+
+        private void messageScrollPanel_Resize(object sender, EventArgs e)
+        {
+            int newMaxWidth = messageScrollPanel.Width - _labelPadding;
+            newMaxWidth = Math.Max(newMaxWidth, 100);
+            labelMessage.MaximumSize = new Size(newMaxWidth, 0);
         }
     }
 }

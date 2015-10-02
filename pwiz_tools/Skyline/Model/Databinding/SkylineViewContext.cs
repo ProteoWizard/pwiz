@@ -24,6 +24,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Windows.Forms;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
@@ -240,15 +241,11 @@ namespace pwiz.Skyline.Model.Databinding
 
         public bool ExportToFile(Control owner, ViewInfo viewInfo, string fileName, DsvWriter dsvWriter)
         {
-            bool success = false;
             try
             {
-                using (var saver = new FileSaver(fileName))
+                return SafeWriteToFile(owner, fileName, stream =>
                 {
-                    if (!saver.CanSave(owner))
-                        return false;
-
-
+                    bool success = false;
                     using (
                         var longWait = new LongWaitDlg
                         {
@@ -259,25 +256,20 @@ namespace pwiz.Skyline.Model.Databinding
                         {
                             var status = new ProgressStatus(Resources.ExportReportDlg_ExportReport_Building_report);
                             broker.UpdateProgress(status);
-                            using (var writer = new StreamWriter(saver.SafeName))
+                            using (var writer = new StreamWriter(stream, Encoding.UTF8))
                             {
                                 success = Export(broker, ref status, viewInfo, writer, dsvWriter);
                                 writer.Close();
                             }
                             if (success)
                             {
-                                saver.Commit();
                                 broker.UpdateProgress(status.Complete());
                             }
                         });
                         longWait.PerformWork(owner, 1500, action);
                     }
-                    if (success)
-                    {
-                        SetExportDirectory(Path.GetDirectoryName(fileName));
-                    }
                     return success;
-                }
+                });
             }
             catch (Exception x)
             {
@@ -290,7 +282,7 @@ namespace pwiz.Skyline.Model.Databinding
 
         public bool Export(IProgressMonitor progressMonitor, ref ProgressStatus status, ViewInfo viewInfo, TextWriter writer, DsvWriter dsvWriter)
         {
-            progressMonitor = progressMonitor ?? new CommandProgressMonitor(new StringWriter(), status);
+            progressMonitor = progressMonitor ?? new UncancellableProgressMonitor();
             using (var bindingListSource = new BindingListSource())
             {
                 bindingListSource.SetViewContext(this, viewInfo);
@@ -310,6 +302,24 @@ namespace pwiz.Skyline.Model.Databinding
             }
             return true;
         }
+
+        protected override bool SafeWriteToFile(Control owner, string fileName, Func<Stream, bool> writeFunc)
+        {
+            using (var fileSaver = new FileSaver(fileName, true))
+            {
+                if (!fileSaver.CanSave(owner))
+                {
+                    return false;
+                }
+                if (writeFunc(fileSaver.Stream))
+                {
+                    fileSaver.Commit();
+                    return true;
+                }
+            }
+            return false;
+        }
+
         // ReSharper disable NonLocalizedString
         public static ViewInfo GetDefaultViewInfo(ColumnDescriptor columnDescriptor)
         {
@@ -522,18 +532,11 @@ namespace pwiz.Skyline.Model.Databinding
         public override void ExportViewsToFile(Control owner, ViewSpecList viewSpecList, string fileName)
         {
             XmlSerializer xmlSerializer = new XmlSerializer(typeof(ViewSpecList));
-            using (FileSaver fs = new FileSaver(fileName))
+            SafeWriteToFile(owner, fileName, stream =>
             {
-                if (!fs.CanSave(owner))
-                    return;
-
-                using (FileStream stream = File.OpenWrite(fs.SafeName))
-                {
-                    xmlSerializer.Serialize(stream, viewSpecList);
-                    stream.Close();
-                    fs.Commit();
-                }
-            }
+                xmlSerializer.Serialize(stream, viewSpecList);
+                return true;
+            });
         }
 
         public override void ImportViews(Control owner, ViewGroup group)

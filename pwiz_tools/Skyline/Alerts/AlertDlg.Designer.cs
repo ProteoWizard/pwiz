@@ -79,6 +79,7 @@
             resources.ApplyResources(this.messageScrollPanel, "messageScrollPanel");
             this.messageScrollPanel.Controls.Add(this.labelMessage);
             this.messageScrollPanel.Name = "messageScrollPanel";
+            this.messageScrollPanel.Resize += new System.EventHandler(this.messageScrollPanel_Resize);
             // 
             // labelMessage
             // 

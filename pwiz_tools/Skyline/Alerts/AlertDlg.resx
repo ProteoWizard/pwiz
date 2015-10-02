@@ -202,7 +202,7 @@
     <value>24, 21</value>
   </data>
   <data name="labelMessage.MaximumSize" type="System.Drawing.Size, System.Drawing">
-    <value>362, 0</value>
+    <value>356, 0</value>
   </data>
   <data name="labelMessage.Size" type="System.Drawing.Size, System.Drawing">
     <value>50, 13</value>
