@@ -42,10 +42,25 @@ namespace pwiz.SkylineTestTutorial
     [TestClass]
     public class CEOptimizationTutorialTest : AbstractFunctionalTest
     {
+        private bool AsSmallMolecules { get; set; }
+
         [TestMethod]
         public void TestCEOptimizationTutorial()
         {
-            // Set true to look at tutorial screenshots.
+            AsSmallMolecules = false;
+            RunCEOptimizationTutorialTest();
+        }
+
+        [TestMethod]
+        public void TestCEOptimizationTutorialAsSmallMolecules()
+        {
+            AsSmallMolecules = true;
+            RunCEOptimizationTutorialTest();
+        }
+
+        private void RunCEOptimizationTutorialTest()
+        {
+        // Set true to look at tutorial screenshots.
             //IsPauseForScreenShots = true;
 
             ForceMzml = true;   // Mzml is ~2x faster for this test.
@@ -75,6 +90,13 @@ namespace pwiz.SkylineTestTutorial
 
             // Skyline Collision Energy Optimization
             RunUI(() => SkylineWindow.OpenFile(GetTestPath("CE_Vantage_15mTorr.sky"))); // Not L10N
+
+            if (AsSmallMolecules)
+            {
+                var doc = WaitForDocumentLoaded();
+                var refine = new RefinementSettings();
+                SkylineWindow.SetDocument(refine.ConvertToSmallMolecules(doc), doc);
+            }
 
             // Deriving a New Linear Equation, p. 2
             var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
@@ -137,9 +159,9 @@ namespace pwiz.SkylineTestTutorial
             var docUnsched = SkylineWindow.Document;
             AssertResult.IsDocumentResultsState(SkylineWindow.Document,
                                                 unscheduledName,
-                                                docUnsched.PeptideCount,
-                                                docUnsched.PeptideTransitionGroupCount, 0,
-                                                docUnsched.PeptideTransitionCount - 1, 0);
+                                                docUnsched.MoleculeCount,
+                                                docUnsched.MoleculeTransitionGroupCount, 0,
+                                                docUnsched.MoleculeTransitionCount - 1, 0);
 
             RunUI(() =>
             {
@@ -190,6 +212,12 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.AutoZoomBestPeak();
                 SkylineWindow.ShowPeakAreaReplicateComparison();
             });
+
+            if (AsSmallMolecules)
+            {
+                return;  // Too peptide-centric from here to end of test
+            }
+
             FindNode("IHGFDLAAINLQR");
             RestoreViewOnScreen(8);
             WaitForCondition(15*60*1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded); // 10 minutes

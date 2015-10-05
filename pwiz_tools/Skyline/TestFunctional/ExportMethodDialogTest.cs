@@ -502,6 +502,8 @@ namespace pwiz.SkylineTestFunctional
 
             AssertEx.NoDiff(File.ReadAllText(thermoExpected), File.ReadAllText(thermoActual));
 
+            ExportWithExplicitCollisionEnergyValues(thermoActual);
+
             // Agilent method
             {
                 var exportMethodDlg = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.Method));
@@ -712,6 +714,65 @@ namespace pwiz.SkylineTestFunctional
             });
 
             WaitForClosedForm(exportMethodDlg);
+        }
+
+        private void ExportWithExplicitCollisionEnergyValues(string pathList)
+        {
+            var original = SkylineWindow.Document;
+            var refine = new RefinementSettings();
+            var document = refine.ConvertToSmallMolecules(original);
+            for (var loop = 0; loop < 2; loop++)
+            {
+                SkylineWindow.SetDocument(document, SkylineWindow.Document);
+                var exportMethodDlg = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List));
+                RunUI(() =>
+                {
+                    exportMethodDlg.InstrumentType = ExportInstrumentType.THERMO_QUANTIVA;
+                    exportMethodDlg.OptimizeType = ExportOptimize.CE;
+                    exportMethodDlg.MethodType = ExportMethodType.Standard;
+                });
+                RunUI(() => exportMethodDlg.OkDialog(pathList));
+                WaitForClosedForm(exportMethodDlg);
+                var actual = File.ReadAllLines(pathList);
+                if (loop == 1)
+                {
+                    // Explicit CE values
+                    Assert.AreEqual(document.MoleculeTransitionCount+1, actual.Length); // Should be just one line per transition, and a header
+                    break;
+                }
+                else
+                {
+                    Assert.AreEqual(document.MoleculeTransitionCount*11 + 1, actual.Length); // Multiple steps, and a header
+                }
+                // Change the current document to use explicit CE values, verify that this changes the output
+                var ce = 1;
+                for (bool changing = true; changing; )
+                {
+                    changing = false;
+                    foreach (var peptideGroupDocNode in document.MoleculeGroups)
+                    {
+                        var pepGroupPath = new IdentityPath(IdentityPath.ROOT, peptideGroupDocNode.Id);
+                        foreach (var nodePep in peptideGroupDocNode.Molecules)
+                        {
+                            var pepPath = new IdentityPath(pepGroupPath, nodePep.Id);
+                            foreach (var nodeTransitionGroup in nodePep.TransitionGroups)
+                            {
+                                if (!nodeTransitionGroup.ExplicitValues.CollisionEnergy.HasValue)
+                                {
+                                    var tgPath = new IdentityPath(pepPath, nodeTransitionGroup.Id);
+                                    document = (SrmDocument)document.ReplaceChild(tgPath.Parent,
+                                        nodeTransitionGroup.ChangeExplicitValues(nodeTransitionGroup.ExplicitValues.ChangeCollisionEnergy(ce++)));
+                                    changing = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (changing)
+                            break;
+                    }
+                }
+            }
+            SkylineWindow.SetDocument(original, SkylineWindow.Document);
         }
 
         private string ReadAllNonSmallMoleculeText(string pathList)

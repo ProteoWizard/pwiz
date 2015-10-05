@@ -515,17 +515,20 @@ namespace pwiz.Skyline.Model
                 else if (!SkipTransition(nodePepGroup, nodePep, nodeGroup, nodeGroupPrimary, nodeTran))
                 {
                     // -step through step
+                    bool transitionWritten = false;
                     for (int i = -OptimizeStepCount; i <= OptimizeStepCount; i++)
                     {
                         // But avoid writing zero or negative CE values, which will just mess up actuisition
-                        // Always write the highest CE, even if it is negative, since not doing so makes it
-                        // a lot harder to understand why a particular transition did not get written at all.
+                        // Always write the highest CE if no other transition has been written, even if it is
+                        // negative, since not doing so makes it a lot harder to understand why a particular
+                        // transition did not get written at all.
                         if (Equals(OptimizeType, ExportOptimize.CE) && GetCollisionEnergy(nodePep, nodeGroup, nodeTran, i) <= 0)
                         {
-                            if (i < OptimizeStepCount)
+                            if (transitionWritten || i < OptimizeStepCount)
                                 continue;
                         }
                         fileIterator.WriteTransition(this, nodePepGroup, nodePep, nodeGroup, nodeGroupPrimary, nodeTran, i);
+                        transitionWritten = true;
                     }
                 }
             }
