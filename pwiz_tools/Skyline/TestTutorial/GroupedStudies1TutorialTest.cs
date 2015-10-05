@@ -1399,6 +1399,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 foldChangeGraph.Show(foldChangeGraph.DockPanel, DockState.Floating);
             });
+            WaitForConditionUI(() => 0 != foldChangeGrid.DataboundGridControl.RowCount && foldChangeGrid.DataboundGridControl.IsComplete);
             RunUI(() =>
             {
                 var foldChangeResultColumn =
