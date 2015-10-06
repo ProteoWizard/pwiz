@@ -17,8 +17,6 @@
  * limitations under the License.
  */
 
-using System.Globalization;
-using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Skyline.Controls.Databinding;
@@ -72,7 +70,6 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsNotNull(peptideReplicatesForm);
             });
             OkDialog(exportLiveReportDlg, exportLiveReportDlg.CancelClick);
-            WaitForCondition(() => peptideReplicatesForm.IsComplete);
             AssertRowCount(SkylineWindow.Document.MoleculeCount, peptideReplicatesForm);
             Assert.IsFalse(SkylineWindow.Document.Settings.HasResults);
 
@@ -101,7 +98,6 @@ namespace pwiz.SkylineTestFunctional
             WaitForResultsImport();
             Assert.AreEqual(2, SkylineWindow.Document.Settings.MeasuredResults.Chromatograms.Count);
 
-            WaitForCondition(() => peptideReplicatesForm.IsComplete);
             // The DocumentGrid which is showing "PeptideReplicates" should be showing the Cartesian product 
             // of peptides and replicates
             AssertRowCount(SkylineWindow.Document.PeptideCount * 2 + (TestSmallMolecules ? 1 : 0), peptideReplicatesForm);
@@ -124,14 +120,8 @@ namespace pwiz.SkylineTestFunctional
 
         private void AssertRowCount(int expectedRowCount, DataboundGridForm databoundGridForm)
         {
-            string message = string.Format("Row Source Count: {0} BindingListSource Count: {1} IsComplete: {2} Column Count: {3}", 
-                databoundGridForm.BindingListSource.RowSource == null ? "null" 
-                    : databoundGridForm.BindingListSource.RowSource.Cast<object>().Count().ToString(CultureInfo.InvariantCulture),
-                databoundGridForm.BindingListSource.Count,
-                databoundGridForm.IsComplete,
-                databoundGridForm.DataGridView.ColumnCount);
-//            Console.Out.WriteLine(message);
-            Assert.AreEqual(expectedRowCount, databoundGridForm.BindingListSource.Count, message);
+            if (!TryWaitForCondition(() =>databoundGridForm.IsComplete && (expectedRowCount == databoundGridForm.BindingListSource.Count)))
+                Assert.AreEqual(expectedRowCount, databoundGridForm.BindingListSource.Count, "wrong row count in databoundGridForm");
         }
     }
 }
