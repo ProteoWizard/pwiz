@@ -2984,29 +2984,45 @@ namespace pwiz.Skyline
                 ChangeSettings(defaultSettings, false, Resources.SkylineWindow_ResetDefaultSettings_Reset_default_settings);
         }
 
-        public bool ChangeSettingsMonitored(Control parent, SrmSettings newSettings, string message)
+        public bool ChangeSettingsMonitored(Control parent, string message, Func<SrmSettings, SrmSettings> changeSettings)
         {
-            bool success = false;
-            using (var longWaitDlg = new LongWaitDlg(this)
+            bool documentChanged;
+            do
             {
-                Text = Text,    // Same as dialog box
-                Message = message,
-                ProgressValue = 0
-            })
-            {
-                var undoState = GetUndoState();
-                longWaitDlg.PerformWork(this, 800, progressMonitor =>
+                documentChanged = false;
+                try
                 {
-                    using (var settingsChangeMonitor = new SrmSettingsChangeMonitor(progressMonitor, message, this))
+                    var newSettings = changeSettings(Document.Settings);
+                    bool success = false;
+                    using (var longWaitDlg = new LongWaitDlg(this)
                     {
-                        success = ChangeSettings(newSettings, true, null, undoState, settingsChangeMonitor);
+                        Text = Text,    // Same as dialog box
+                        Message = message,
+                        ProgressValue = 0
+                    })
+                    {
+                        var undoState = GetUndoState();
+                        longWaitDlg.PerformWork(this, 800, progressMonitor =>
+                        {
+                            using (var settingsChangeMonitor = new SrmSettingsChangeMonitor(progressMonitor, message, this))
+                            {
+                                success = ChangeSettings(newSettings, true, null, undoState, settingsChangeMonitor);
+                            }
+                        });
+                        if (!success || longWaitDlg.IsCanceled)
+                        {
+                            return false;
+                        }
                     }
-                });
-                if (!success || longWaitDlg.IsCanceled)
+                }
+                catch (OperationCanceledException)
                 {
-                    return false;
+                    // Canceled mid-change due to background document change
+                    documentChanged = true;
                 }
             }
+            while (documentChanged);
+
             return true;
         }
 

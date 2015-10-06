@@ -554,8 +554,8 @@ namespace pwiz.Skyline.SettingsUI
             // Only update, if anything changed
             if (!Equals(settings, _transitionSettings))
             {
-                SrmSettings newSettings = _parent.DocumentUI.Settings.ChangeTransitionSettings(settings);
-                if (!_parent.ChangeSettingsMonitored(this, newSettings, Resources.TransitionSettingsUI_OkDialog_Changing_transition_settings))
+                if (!_parent.ChangeSettingsMonitored(this, Resources.TransitionSettingsUI_OkDialog_Changing_transition_settings,
+                                                     s => s.ChangeTransitionSettings(settings)))
                 {
                     return;
                 }

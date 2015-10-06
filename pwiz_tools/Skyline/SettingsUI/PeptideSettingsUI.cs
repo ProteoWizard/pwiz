@@ -383,8 +383,8 @@ namespace pwiz.Skyline.SettingsUI
             // Only update, if anything changed
             if (!Equals(settings, _peptideSettings))
             {
-                SrmSettings newSettings = _parent.DocumentUI.Settings.ChangePeptideSettings(settings);
-                if (!_parent.ChangeSettingsMonitored(this, newSettings, Resources.PeptideSettingsUI_OkDialog_Changing_peptide_settings))
+                if (!_parent.ChangeSettingsMonitored(this, Resources.PeptideSettingsUI_OkDialog_Changing_peptide_settings,
+                                                     s => s.ChangePeptideSettings(settings)))
                 {
                     return;
                 }
