@@ -1857,11 +1857,13 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
         switch (cvidBinaryDataType)
         {
             case MS_32_bit_float:
-                config.precision = BinaryDataEncoder::Precision_32;
+                if (BinaryDataEncoder::Numpress_None == config.numpress)
+                    config.precision = BinaryDataEncoder::Precision_32;
                 break;
             case MS_64_bit_float:
                 config.precision = BinaryDataEncoder::Precision_64;
                 break;
+            case MS_32_bit_integer:
             case CVID_Unknown:
                 if (BinaryDataEncoder::Numpress_None == config.numpress) // 32 vs 64 bit is meaningless in numpress
                     throw runtime_error("[IO::HandlerBinaryDataArray] Missing binary data type.");
