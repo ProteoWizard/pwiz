@@ -1661,12 +1661,15 @@ void write(minimxml::XMLWriter& writer, const BinaryDataArray& binaryDataArray,
     }
     switch (usedConfig.numpress) {
         case BinaryDataEncoder::Numpress_Linear:
+            write(writer, MS_32_bit_float); // This should actually be ignored by any reader since numpress defines word size and format, but it makes output standards-compliant and is pretty close to true anyway
             write(writer, MS_MS_Numpress_linear_prediction_compression);
             break;
         case BinaryDataEncoder::Numpress_Pic:
+            write(writer, MS_32_bit_integer); // This should actually be ignored by any reader since numpress defines word size and format, but it makes output standards-compliant and is pretty close to true anyway
             write(writer, MS_MS_Numpress_positive_integer_compression);
             break;
         case BinaryDataEncoder::Numpress_Slof:
+            write(writer, MS_32_bit_float); // This should actually be ignored by any reader since numpress defines word size and format, but it makes output standards-compliant and is pretty close to true anyway
             write(writer, MS_MS_Numpress_short_logged_float_compression);
             break;
         case BinaryDataEncoder::Numpress_None:
