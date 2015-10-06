@@ -254,17 +254,23 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Nodes[0].Nodes[0];
             });
             WaitForGraphPanesToUpdate();
+            var docBeforeEdit = SkylineWindow.Document;
             RunUI(() =>
             {
                 var transitionNoteColumn =
-                    resultsGrid.Columns.Cast<DataGridViewColumn>().First(col => GetLocalizedCaption("TransitionReplicateNote") == col.HeaderText);
+                    resultsGrid.Columns.Cast<DataGridViewColumn>()
+                        .First(col => GetLocalizedCaption("TransitionReplicateNote") == col.HeaderText);
                 // Since only transitions are selected, transition _note column should be visible.
                 cell = resultsGrid.Rows[0].Cells[transitionNoteColumn.Index];
                 Assert.IsTrue(cell.Visible);
                 resultsGrid.CurrentCell = cell;
                 resultsGrid.BeginEdit(true);
-                resultsGrid.EditingControl.Text = "Test2";  // Not L10N
+                resultsGrid.EditingControl.Text = "Test2"; // Not L10N
                 resultsGrid.EndEdit();
+            });
+            WaitForDocumentChange(docBeforeEdit);
+            RunUI(() =>
+            {
                 // Check all nodes have received the correct values.
                 foreach (TransitionTreeNode nodeTree in SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Nodes[0].Nodes)
                 {
