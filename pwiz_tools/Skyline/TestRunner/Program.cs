@@ -255,6 +255,9 @@ namespace TestRunner
             var pauseDialogs = (string.IsNullOrEmpty(formList)) ? null : formList.Split(',');
             var results = commandLineArgs.ArgAsString("results");
 
+            // Check to see if we actually have any perf tests, so we don't chat about them consfusingly in the log
+            perftests &= testList.Any(t => t.IsPerfTest);
+
             if (buildMode)
             {
                 randomOrder = false;
