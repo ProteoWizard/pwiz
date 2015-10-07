@@ -354,7 +354,7 @@ namespace SkylineNightly
         {
             var startFailure = new Regex(@"\r\n!!! (\S+) FAILED\r\n", RegexOptions.Compiled);
             var endFailure = new Regex(@"\r\n!!!\r\n", RegexOptions.Compiled);
-            var failureTest = new Regex(@"\r\n\[\d\d:\d\d\] +(\d+).(\d+) +(\S+) \(+(\S+)\)",
+            var failureTest = new Regex(@"\r\n\[\d\d:\d\d\] +(\d+).(\d+) +(\S+)\s+\(+(\S+)\)",
                 RegexOptions.Compiled | RegexOptions.RightToLeft);
 
             for (var startMatch = startFailure.Match(log); startMatch.Success; startMatch = startMatch.NextMatch())
