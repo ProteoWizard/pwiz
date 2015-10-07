@@ -535,7 +535,12 @@ namespace pwiz.SkylineTestUtil
 
         public static bool TryWaitForCondition(Func<bool> func)
         {
-            return WaitForCondition(WAIT_TIME, func, null, false);
+            return TryWaitForCondition(WAIT_TIME, func);
+        }
+
+        public static bool TryWaitForCondition(int millis, Func<bool> func)
+        {
+            return WaitForCondition(millis, func, null, false);
         }
 
         public static bool WaitForCondition(int millis, Func<bool> func, string timeoutMessage = null, bool failOnTimeout = true)
@@ -571,7 +576,12 @@ namespace pwiz.SkylineTestUtil
 
         public static bool TryWaitForConditionUI(Func<bool> func)
         {
-            return WaitForConditionUI(WAIT_TIME, func, null, false);
+            return TryWaitForConditionUI(WAIT_TIME, func);
+        }
+
+        public static bool TryWaitForConditionUI(int millis, Func<bool> func)
+        {
+            return WaitForConditionUI(millis, func, null, false);
         }
 
         public static bool WaitForConditionUI(int millis, Func<bool> func, string timeoutMessage = null, bool failOnTimeout = true)

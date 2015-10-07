@@ -116,16 +116,21 @@ namespace pwiz.SkylineTestTutorial
 
             OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
 
-            Assert.IsTrue(WaitForCondition(() =>
+            if (!TryWaitForCondition(() =>
                 SkylineWindow.Document.Settings.PeptideSettings.Libraries.IsLoaded &&
-                SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries.Count > 0));
-
-            Assert.IsTrue(WaitForCondition(() =>
+                SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries.Count > 0))
             {
-                var peptideSettings = Program.ActiveDocument.Settings.PeptideSettings;
+                Assert.Fail("Timed out loading libraries: libCount={0}, NotLoadedExplained={1}",
+                    SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries.Count,
+                    SkylineWindow.Document.Settings.PeptideSettings.Libraries.IsNotLoadedExplained ?? "<null>");
+            }
+
+            WaitForCondition(() =>
+            {
+                var peptideSettings = SkylineWindow.Document.Settings.PeptideSettings;
                 var backgroundProteome = peptideSettings.BackgroundProteome;
                 return (backgroundProteome.HasDigestion(peptideSettings));
-            }));
+            }, "backgroundProteome.HasDigestion");
 
             // Wait a bit in case web access is turned on and backgroundProteome is actually resolving protein metadata
             int millis = (AllowInternetAccess ? 300 : 60) * 1000; 
