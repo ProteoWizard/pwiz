@@ -142,7 +142,7 @@ namespace pwiz.Skyline
                 return;
 
             // Create a new document with the default settings.
-            SrmDocument document = ConnectDocument(new SrmDocument(Settings.Default.SrmSettingsList[0]), null) ??
+            SrmDocument document = ConnectDocument(this, new SrmDocument(Settings.Default.SrmSettingsList[0]), null) ??
                                    new SrmDocument(SrmSettingsList.GetDefault());
 
             // Make sure settings lists contain correct values for
@@ -269,7 +269,7 @@ namespace pwiz.Skyline
 
                 try
                 {
-                    document = ConnectDocument(document, path);
+                    document = ConnectDocument(parentWindow ?? this, document, path);
                     if (document == null || !CheckResults(document, path))
                         return false;
 
@@ -314,21 +314,21 @@ namespace pwiz.Skyline
             return true;
         }
 
-        private SrmDocument ConnectDocument(SrmDocument document, string path)
+        private SrmDocument ConnectDocument(IWin32Window parent, SrmDocument document, string path)
         {
-            document = ConnectLibrarySpecs(document, path);
+            document = ConnectLibrarySpecs(parent, document, path);
             if (document != null)
-                document = ConnectBackgroundProteome(document, path);
+                document = ConnectBackgroundProteome(parent, document, path);
             if (document != null)
-                document = ConnectIrtDatabase(document, path);
+                document = ConnectIrtDatabase(parent, document, path);
             if (document != null)
-                document = ConnectOptimizationDatabase(document, path);
+                document = ConnectOptimizationDatabase(parent, document, path);
             if (document != null)
-                document = ConnectIonMobilityLibrary(document, path);
+                document = ConnectIonMobilityLibrary(parent, document, path);
             return document;
         }
 
-        private SrmDocument ConnectLibrarySpecs(SrmDocument document, string documentPath)
+        private SrmDocument ConnectLibrarySpecs(IWin32Window parent, SrmDocument document, string documentPath)
         {
             string docLibFile = null;
             if (!string.IsNullOrEmpty(documentPath) && document.Settings.PeptideSettings.Libraries.HasDocumentLibrary)
@@ -374,7 +374,7 @@ namespace pwiz.Skyline
                                       Title = Resources.SkylineWindow_ConnectLibrarySpecs_Find_Spectral_Library
                                   })
                     {
-                        if (dlg.ShowDialog(this) == DialogResult.OK)
+                        if (dlg.ShowDialog(parent) == DialogResult.OK)
                         {
                             Settings.Default.LibraryDirectory = Path.GetDirectoryName(dlg.FilePath);
                             return library.CreateSpec(dlg.FilePath);
@@ -399,9 +399,9 @@ namespace pwiz.Skyline
             return document.ChangeSettings(settings);
         }
 
-        private SrmDocument ConnectIrtDatabase(SrmDocument document, string documentPath)
+        private SrmDocument ConnectIrtDatabase(IWin32Window parent, SrmDocument document, string documentPath)
         {
-            var settings = document.Settings.ConnectIrtDatabase(calc => FindIrtDatabase(documentPath, calc));
+            var settings = document.Settings.ConnectIrtDatabase(calc => FindIrtDatabase(parent, documentPath, calc));
             if (settings == null)
                 return null;
             if (ReferenceEquals(settings, document.Settings))
@@ -410,7 +410,7 @@ namespace pwiz.Skyline
         }
 
 
-        private RCalcIrt FindIrtDatabase(string documentPath, RCalcIrt irtCalc)
+        private RCalcIrt FindIrtDatabase(IWin32Window parent, string documentPath, RCalcIrt irtCalc)
         {
 
             RetentionScoreCalculatorSpec result;
@@ -451,7 +451,7 @@ namespace pwiz.Skyline
                              Title = Resources.SkylineWindow_FindIrtDatabase_Find_iRT_Calculator
                          })
                 {
-                    if (dlg.ShowDialog(this) == DialogResult.OK)
+                    if (dlg.ShowDialog(parent) == DialogResult.OK)
                     {
                         if (dlg.FilePath == null)
                             return RCalcIrt.NONE;
@@ -477,9 +477,9 @@ namespace pwiz.Skyline
             while (true);
         }
 
-        private SrmDocument ConnectOptimizationDatabase(SrmDocument document, string documentPath)
+        private SrmDocument ConnectOptimizationDatabase(IWin32Window parent, SrmDocument document, string documentPath)
         {
-            var settings = document.Settings.ConnectOptimizationDatabase(lib => FindOptimizationDatabase(documentPath, lib));
+            var settings = document.Settings.ConnectOptimizationDatabase(lib => FindOptimizationDatabase(parent, documentPath, lib));
             if (settings == null)
                 return null;
             if (ReferenceEquals(settings, document.Settings))
@@ -488,7 +488,7 @@ namespace pwiz.Skyline
         }
 
 
-        private OptimizationLibrary FindOptimizationDatabase(string documentPath, OptimizationLibrary optLib)
+        private OptimizationLibrary FindOptimizationDatabase(IWin32Window parent, string documentPath, OptimizationLibrary optLib)
         {
             if (optLib.IsNone)
                 return optLib;
@@ -531,7 +531,7 @@ namespace pwiz.Skyline
                     Title = Resources.SkylineWindow_FindOptimizationDatabase_Find_Optimization_Library
                 })
                 {
-                    if (dlg.ShowDialog(this) == DialogResult.OK)
+                    if (dlg.ShowDialog(parent) == DialogResult.OK)
                     {
                         if (dlg.FilePath == null)
                             return OptimizationLibrary.NONE;
@@ -557,9 +557,9 @@ namespace pwiz.Skyline
             while (true);
         }
 
-        private SrmDocument ConnectIonMobilityLibrary(SrmDocument document, string documentPath)
+        private SrmDocument ConnectIonMobilityLibrary(IWin32Window parent, SrmDocument document, string documentPath)
         {
-            var settings = document.Settings.ConnectIonMobilityLibrary(imdb => FindIonMobilityLibrary(documentPath, imdb));
+            var settings = document.Settings.ConnectIonMobilityLibrary(imdb => FindIonMobilityLibrary(parent, documentPath, imdb));
             if (settings == null)
                 return null;
             if (ReferenceEquals(settings, document.Settings))
@@ -567,7 +567,7 @@ namespace pwiz.Skyline
             return document.ChangeSettings(settings);
         }
 
-        private IonMobilityLibrarySpec FindIonMobilityLibrary(string documentPath, IonMobilityLibrarySpec ionMobilityLibrarySpec)
+        private IonMobilityLibrarySpec FindIonMobilityLibrary(IWin32Window parent, string documentPath, IonMobilityLibrarySpec ionMobilityLibrarySpec)
         {
 
             IonMobilityLibrarySpec result;
@@ -610,7 +610,7 @@ namespace pwiz.Skyline
                     Title = Resources.SkylineWindow_FindIonMobilityLibrary_Find_Ion_Mobility_Library
                 })
                 {
-                    if (dlg.ShowDialog(this) == DialogResult.OK)
+                    if (dlg.ShowDialog(parent) == DialogResult.OK)
                     {
                         if (dlg.FilePath == null)
                             return IonMobilityLibrary.NONE;
@@ -638,10 +638,10 @@ namespace pwiz.Skyline
             while (true);
         }
 
-        private SrmDocument ConnectBackgroundProteome(SrmDocument document, string documentPath)
+        private SrmDocument ConnectBackgroundProteome(IWin32Window parent ,SrmDocument document, string documentPath)
         {
             var settings = document.Settings.ConnectBackgroundProteome(backgroundProteomeSpec =>
-                FindBackgroundProteome(documentPath, backgroundProteomeSpec));
+                FindBackgroundProteome(parent, documentPath, backgroundProteomeSpec));
             if (settings == null)
                 return null;
             if (ReferenceEquals(settings, document.Settings))
@@ -649,7 +649,7 @@ namespace pwiz.Skyline
             return document.ChangeSettings(settings);
         }
 
-        private BackgroundProteomeSpec FindBackgroundProteome(string documentPath, BackgroundProteomeSpec backgroundProteomeSpec)
+        private BackgroundProteomeSpec FindBackgroundProteome(IWin32Window parent, string documentPath, BackgroundProteomeSpec backgroundProteomeSpec)
         {
             var result = Settings.Default.BackgroundProteomeList.GetBackgroundProteomeSpec(backgroundProteomeSpec.Name);
             if (result != null)
@@ -683,7 +683,7 @@ namespace pwiz.Skyline
                         Title = Resources.SkylineWindow_FindBackgroundProteome_Find_Background_Proteome
                     })
             {
-                if (dlg.ShowDialog(this) == DialogResult.OK)
+                if (dlg.ShowDialog(parent) == DialogResult.OK)
                 {
                     if (dlg.FilePath == null)
                     {
