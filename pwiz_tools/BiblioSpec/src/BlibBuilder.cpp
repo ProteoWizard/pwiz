@@ -53,7 +53,7 @@ forcedPusherInterval(-1)
     scoreThresholds[MAXQUANT] = 0.05; // MaxQuant PEP
     scoreThresholds[MORPHEUS] = 0.01; // Morpheus PSM q-value
     scoreThresholds[MSGF] = 0.01; // MSGF+ PSM q-value
-    scoreThresholds[PEAKS] = 0.95;  // PEAKS confidence
+    scoreThresholds[PEAKS] = 0.05;  // PEAKS p-value
     scoreThresholds[BYONIC] = 0.05;  // ByOnic PEP
     scoreThresholds[PEPTIDE_SHAKER] = 0.95; // PeptideShaker PSM confidence
 }

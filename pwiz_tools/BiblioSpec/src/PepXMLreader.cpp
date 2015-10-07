@@ -26,6 +26,7 @@
 #include "PepXMLreader.h"
 #include "BlibMaker.h"
 #include <boost/algorithm/string.hpp>
+#include <cmath>
 
 using namespace std;
 namespace bal = boost::algorithm;
@@ -249,14 +250,14 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
            SeqMod curmod;
            curmod.position = 1;
            curmod.deltaMass = getDoubleRequiredAttrValue("mod_nterm_mass", attr) -
-		       aminoacidmass['h']; // H
+               aminoacidmass['h']; // H
            mods.push_back(curmod);
        }
        if (strcmp(getAttrValue("mod_cterm_mass", attr), "") != 0) {
            SeqMod curmod;
            curmod.position = (int)strlen(pepSeq);
            curmod.deltaMass = getDoubleRequiredAttrValue("mod_cterm_mass", attr) -
-		       aminoacidmass['o'] - aminoacidmass['h']; // OH
+               aminoacidmass['o'] - aminoacidmass['h']; // OH
            mods.push_back(curmod);
        }
    } else if(isElement("mod_aminoacid_mass", name) && state == STATE_SEARCH_HIT_BEST) {
@@ -272,28 +273,26 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
                                pepSeq, modPosition-1, strlen(pepSeq));
        }
        
-       curmod.deltaMass = modMass;
-       // workaround for Proteome Discoverer mod masses being incorrect
-       if (analysisType_ != PROTEOME_DISCOVERER_ANALYSIS) {
-           curmod.deltaMass -= aminoacidmass[(int)pepSeq[modPosition-1]];
-       }
-       
+       curmod.deltaMass = modMass - aminoacidmass[(int)pepSeq[modPosition-1]];
+
        mods.push_back(curmod);
    } else if((analysisType_ == PEPTIDE_PROPHET_ANALYSIS && isElement("peptideprophet_result", name)) ||
              (analysisType_ == INTER_PROPHET_ANALYSIS && isElement("interprophet_result", name))) {
        pepProb = getDoubleRequiredAttrValue("probability",attr);
    } else if(state == STATE_SEARCH_HIT_BEST && isElement("search_score", name)) {
        string score_name = getAttrValue("name", attr);
-	   bal::to_lower(score_name);
+       bal::to_lower(score_name);
 
        if (score_name == "expect" ||
            (analysisType_ == PROTEOME_DISCOVERER_ANALYSIS && scoreType_ == SEQUEST_XCORR && score_name == "q-value") ||
            (analysisType_ == PROTEOME_DISCOVERER_ANALYSIS && scoreType_ == MASCOT_IONS_SCORE && score_name == "exp-value") ||
            (analysisType_ == MORPHEUS_ANALYSIS && score_name == "psm q-value") ||
-           (analysisType_ == MSGF_ANALYSIS && score_name == "qvalue") ||
-           (analysisType_ == PEAKS_ANALYSIS && score_name == "confidence"))
-       {
+           (analysisType_ == MSGF_ANALYSIS && score_name == "qvalue")) {
            pepProb = getDoubleRequiredAttrValue("value", attr);
+       } else if (analysisType_ == PEAKS_ANALYSIS && score_name == "-10lgP") {
+           pepProb = getDoubleRequiredAttrValue("value", attr);
+           // Reverse -10 log p transform
+           pepProb = pow(10, pepProb / -10.0);
        }
    }
    // no score for spectrum mill
@@ -400,7 +399,6 @@ bool PepXMLreader::scorePasses(double score){
     switch(analysisType_){
     case PEPTIDE_PROPHET_ANALYSIS:
     case INTER_PROPHET_ANALYSIS:
-    case PEAKS_ANALYSIS:
         if(score >= probCutOff){
             return true;
         }
@@ -415,6 +413,7 @@ bool PepXMLreader::scorePasses(double score){
     case XTANDEM_ANALYSIS:
     case MORPHEUS_ANALYSIS:
     case MSGF_ANALYSIS:
+    case PEAKS_ANALYSIS:
         if(score < probCutOff){
             return true;
         }
