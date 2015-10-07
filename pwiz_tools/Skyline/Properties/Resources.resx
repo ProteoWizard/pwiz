@@ -8732,4 +8732,7 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="PeptideSettingsUI_OkDialog_Changing_peptide_settings" xml:space="preserve">
     <value>Changing peptide settings</value>
   </data>
+  <data name="BiblioSpecLiteBuilder_AmbiguousMatches_Peptide_spectrum_matches_containing_the_following_peptides_were_discarded_because_the_spectrum_had_multiple_matches_" xml:space="preserve">
+    <value>Peptide-spectrum matches containing the following peptides were discarded because the spectrum had multiple matches:</value>
+  </data>
 </root>

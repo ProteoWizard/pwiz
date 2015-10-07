@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
@@ -24,7 +26,7 @@ namespace pwiz.Common.SystemUtil
 {
     public interface IProcessRunner
     {
-        string MessagePrefix { get; set; }
+        string StatusPrefix { get; set; }
         string HideLinePrefix { get; set; }
         void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref ProgressStatus status);
         void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref ProgressStatus status,
@@ -33,7 +35,10 @@ namespace pwiz.Common.SystemUtil
 
     public class ProcessRunner : IProcessRunner
     {
+        public string StatusPrefix { get; set; }
+
         public string MessagePrefix { get; set; }
+        private readonly List<string> _messageLog = new List<string>();
 
         /// <summary>
         /// Used in R package installation. We print progress % for processRunner progress
@@ -53,6 +58,8 @@ namespace pwiz.Common.SystemUtil
             // Make sure required streams are redirected.
             psi.RedirectStandardOutput = true;
             psi.RedirectStandardError = true;
+
+            _messageLog.Clear();
 
             var proc = Process.Start(psi);
             if (proc == null)
@@ -91,7 +98,11 @@ namespace pwiz.Common.SystemUtil
                         return;
                     }
 
-                    if (line.EndsWith("%")) // Not L10N
+                    if (!string.IsNullOrEmpty(MessagePrefix) && line.StartsWith(MessagePrefix))
+                    {
+                        _messageLog.Add(line.Substring(MessagePrefix.Length));
+                    }
+                    else if (line.EndsWith("%")) // Not L10N
                     {
                         double percent;
                         string[] parts = line.Split(' ');
@@ -105,15 +116,15 @@ namespace pwiz.Common.SystemUtil
                             progress.UpdateProgress(status);
                         }
                     }
-                    else if (MessagePrefix == null || line.StartsWith(MessagePrefix))
+                    else if (StatusPrefix == null || line.StartsWith(StatusPrefix))
                     {
                         // Remove prefix, if there is one.
-                        if (MessagePrefix != null)
-                            line = line.Substring(MessagePrefix.Length);
+                        if (StatusPrefix != null)
+                            line = line.Substring(StatusPrefix.Length);
 
                         status = status.ChangeMessage(line);
                         progress.UpdateProgress(status);
-                    }                    
+                    }
                 }
             }
             proc.WaitForExit();
@@ -139,12 +150,17 @@ namespace pwiz.Common.SystemUtil
             }
         }
 
+        public IEnumerable<string> MessageLog()
+        {
+            return _messageLog;
+        }
+
         public class ProcessRunnerTester: IProcessRunner
         {
             public string stringToWriteToWriter { get; set; }
             public ProgressStatus progressStatus { get; set; }
             public bool shouldCancel { get; set; }
-            public string MessagePrefix { get; set; }
+            public string StatusPrefix { get; set; }
             public string HideLinePrefix { get; set; }
             public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref ProgressStatus status)
             {

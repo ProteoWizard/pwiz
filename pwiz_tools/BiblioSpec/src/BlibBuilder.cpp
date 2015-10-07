@@ -474,6 +474,8 @@ int BlibBuilder::parseNextSwitch(int i, int argc, char* argv[])
         stdinput.push(MODIFIED_SEQUENCES);
     } else if (switchName == 'L') {
         Verbosity::open_logfile();
+    } else if (switchName == 'A') {
+        ambiguityMessages_ = true;
     } else {
         return BlibMaker::parseNextSwitch(i, argc, argv);
     }

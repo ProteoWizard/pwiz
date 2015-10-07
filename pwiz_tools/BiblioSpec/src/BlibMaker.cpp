@@ -57,6 +57,7 @@ BlibMaker::BlibMaker(void)
     overwrite = false;
     verbose = false;
     unknown_file_id = -1; // none entered yet
+    ambiguityMessages_ = false;
 }
 
 BlibMaker::~BlibMaker(void)

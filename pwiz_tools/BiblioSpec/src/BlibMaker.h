@@ -79,6 +79,8 @@ public:
     void beginTransaction();
     void endTransaction();
     void undoActiveTransaction();
+    
+    bool ambiguityMessages() const { return ambiguityMessages_; }
 
 protected:
     virtual int parseNextSwitch(int i, int argc, char* argv[]);
@@ -121,6 +123,7 @@ protected:
 protected:
     char zSql[8192];
     bool verbose;
+    bool ambiguityMessages_;
 
 private:
     const char* libIdFromName(const char* name);

@@ -21,6 +21,7 @@
 
 #include "BuildParser.h"
 #include <boost/algorithm/string.hpp>
+#include <iostream>
 
 namespace BiblioSpec {
 
@@ -579,6 +580,9 @@ void BuildParser::removeDuplicates() {
                 Verbosity::comment(V_DEBUG,
                        "Removing duplicate spectrum id '%s' with sequence %s.",
                                    id.c_str(), psm->modifiedSeq.c_str());
+                if (blibMaker_.ambiguityMessages()) {
+                    cout << "AMBIGUOUS:" << psm->modifiedSeq << endl;
+                }
                 // delete current
                 delete psms_.at(i);
                 psms_.at(i) = NULL;
@@ -599,6 +603,10 @@ void BuildParser::removeDuplicates() {
                                    "'%s', sequences %s and %s.",
                                    id.c_str(), psm->modifiedSeq.c_str(),
                                    dupPSM->modifiedSeq.c_str());
+                if (blibMaker_.ambiguityMessages()) {
+                    cout << "AMBIGUOUS:" << psm->modifiedSeq << endl
+                         << "AMBIGUOUS:" << dupPSM->modifiedSeq << endl;
+                }
                 // delete current
                 delete psms_.at(i);
                 psms_.at(i) = NULL;

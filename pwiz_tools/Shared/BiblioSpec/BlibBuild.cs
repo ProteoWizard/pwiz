@@ -23,6 +23,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 using pwiz.BiblioSpec.Properties;
 using pwiz.Common.SystemUtil;
@@ -103,11 +104,11 @@ namespace pwiz.BiblioSpec
 
         public IList<string> TargetSequences { get; private set; }
 
-        public bool BuildLibrary(LibraryBuildAction libraryBuildAction, IProgressMonitor progressMonitor, ref ProgressStatus status)
+        public bool BuildLibrary(LibraryBuildAction libraryBuildAction, IProgressMonitor progressMonitor, ref ProgressStatus status, out string[] ambiguous)
         {
             // Arguments for BlibBuild
             // ReSharper disable NonLocalizedString
-            List<string> argv = new List<string> { "-s" };  // Read from stdin
+            List<string> argv = new List<string> { "-s", "-A" };  // Read from stdin, get ambiguous match messages
             if (libraryBuildAction == LibraryBuildAction.Create)
                 argv.Add("-o");
             if (CutOffScore.HasValue)
@@ -157,11 +158,14 @@ namespace pwiz.BiblioSpec
                                          RedirectStandardInput = true
                                      };
             bool isComplete = false;
+            ambiguous = new string[0];
             try
             {
-                var processRunner = new ProcessRunner();
+                var processRunner = new ProcessRunner {MessagePrefix = "AMBIGUOUS:"}; // Not L10N
                 processRunner.Run(psiBlibBuilder, stdinBuilder.ToString(), progressMonitor, ref status);
                 isComplete = status.IsComplete;
+                if (isComplete)
+                    ambiguous = processRunner.MessageLog().Distinct().OrderBy(s => s).ToArray();
             }
             finally 
             {

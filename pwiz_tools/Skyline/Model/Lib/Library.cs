@@ -235,7 +235,8 @@ namespace pwiz.Skyline.Model.Lib
 
         public delegate bool BuildFunction(IDocumentContainer documentContainer,
                                            ILibraryBuilder libraryBuilder,
-                                           IProgressMonitor monitor);
+                                           IProgressMonitor monitor,
+                                           BuildState buildState);
 
         public sealed class BuildState
         {
@@ -247,16 +248,18 @@ namespace pwiz.Skyline.Model.Lib
 
             public LibrarySpec LibrarySpec { get; private set; }
             public BuildFunction BuildFunc { get; private set; }
+            public string ExtraMessage { get; set; }
         }
 
         public void BuildLibrary(IDocumentContainer container, ILibraryBuilder builder, AsyncCallback callback)
         {
             BuildFunction buildFunc = BuildLibraryBackground;
             var monitor = new LibraryBuildMonitor(this, container);
-            buildFunc.BeginInvoke(container, builder, monitor, callback, new BuildState(builder.LibrarySpec, buildFunc));
+            BuildState buildState = new BuildState(builder.LibrarySpec, buildFunc);
+            buildFunc.BeginInvoke(container, builder, monitor, buildState, callback, buildState);
         }
 
-        public bool BuildLibraryBackground(IDocumentContainer container, ILibraryBuilder builder, IProgressMonitor monitor)
+        public bool BuildLibraryBackground(IDocumentContainer container, ILibraryBuilder builder, IProgressMonitor monitor, BuildState buildState)
         {
             LocalizationHelper.InitThread();
             // Avoid building a library that is loading or allowing the library to be loaded
@@ -276,6 +279,11 @@ namespace pwiz.Skyline.Model.Lib
             lock (loadLock)
             {
                 success = builder.BuildLibrary(monitor);
+                var biblioSpecLiteBuilder = builder as BiblioSpecLiteBuilder;
+                if (null != biblioSpecLiteBuilder && !string.IsNullOrEmpty(biblioSpecLiteBuilder.AmbiguousMatchesMessage))
+                {
+                    buildState.ExtraMessage = biblioSpecLiteBuilder.AmbiguousMatchesMessage;
+                }
             }
 
             lock (_loadedLibraries)

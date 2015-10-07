@@ -126,9 +126,12 @@ namespace pwiz.Skyline.Model.Lib
 
         public static BiblioSpecLiteLibrary Load(BiblioSpecLiteSpec spec, ILoadMonitor loader)
         {
-            var library = new BiblioSpecLiteLibrary(spec);
-            if (library.Load(loader))
-                return library;
+            if (File.Exists(spec.FilePath) && new FileInfo(spec.FilePath).Length > 0)
+            {
+                var library = new BiblioSpecLiteLibrary(spec);
+                if (library.Load(loader))
+                    return library;
+            }
             return null;
         }
 

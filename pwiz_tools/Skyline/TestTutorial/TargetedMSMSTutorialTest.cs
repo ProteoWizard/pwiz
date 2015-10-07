@@ -343,7 +343,8 @@ namespace pwiz.SkylineTestTutorial
             });
             PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search Build Spectral Library with files page", 16);
             
-            RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
+            var ambiguousDlg = ShowDialog<MessageDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
+            RunUI(ambiguousDlg.OkDialog);
             doc = WaitForDocumentChange(doc);
 
             // Verify document library was built

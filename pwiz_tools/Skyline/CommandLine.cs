@@ -995,6 +995,9 @@ namespace pwiz.Skyline
             if (!builder.BuildLibrary(progressMonitor))
                 return false;
 
+            if (!string.IsNullOrEmpty(builder.AmbiguousMatchesMessage))
+                _out.WriteLine(builder.AmbiguousMatchesMessage);
+
             var docLibSpec = builder.LibrarySpec.ChangeDocumentLibrary(true);
 
             _out.WriteLine(Resources.CommandLine_ImportSearch_Loading_library);

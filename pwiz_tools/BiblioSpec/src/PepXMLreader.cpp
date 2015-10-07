@@ -25,6 +25,7 @@
 
 #include "PepXMLreader.h"
 #include "BlibMaker.h"
+#include <algorithm>
 #include <boost/algorithm/string.hpp>
 #include <cmath>
 
@@ -115,7 +116,8 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
        if (analysisType_ == UNKNOWN_ANALYSIS ||
            analysisType_ == PROTEOME_DISCOVERER_ANALYSIS) {
            string search_engine = getAttrValue("search_engine", attr);
-           if(search_engine.find("Spectrum Mill") == 0) {
+           std::transform(search_engine.begin(), search_engine.end(), search_engine.begin(), ::tolower);
+           if(search_engine.find("spectrum mill") == 0) {
                Verbosity::comment(V_DEBUG, "Pepxml file is from Spectrum Mill.");
                analysisType_ = SPECTRUM_MILL_ANALYSIS;
                scoreType_ = SPECTRUM_MILL;
@@ -123,17 +125,17 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
 
                lookUpBy_ = INDEX_ID; 
                specReader_->setIdType(INDEX_ID);
-           } else if(search_engine.find("OMSSA") == 0) {
-               Verbosity::debug("Pepxml file is from OMSAA.");
+           } else if(search_engine.find("omssa") == 0) {
+               Verbosity::debug("Pepxml file is from OMSSA.");
                analysisType_ = OMSSA_ANALYSIS;
                scoreType_ = OMSSA_EXPECTATION_SCORE;
                probCutOff = getScoreThreshold(OMSSA);
-           } else if(search_engine.find("Protein Prospector Search Compare") == 0) {
+           } else if(search_engine.find("protein prospector search compare") == 0) {
                Verbosity::comment(V_DEBUG, "Pepxml file is from Protein Prospector.");
                analysisType_ = PROTEIN_PROSPECTOR_ANALYSIS;
                scoreType_ = PROTEIN_PROSPECTOR_EXPECT;
                probCutOff = getScoreThreshold(PROT_PROSPECT);
-           } else if(search_engine.find("Morpheus") == 0) {
+           } else if(search_engine.find("morpheus") == 0) {
                Verbosity::comment(V_DEBUG, "Pepxml file is from Morpheus.");
                analysisType_ = MORPHEUS_ANALYSIS;
                scoreType_ = MORPHEUS_SCORE;
@@ -141,7 +143,7 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
 
                lookUpBy_ = INDEX_ID; 
                specReader_->setIdType(INDEX_ID);
-           } else if(search_engine.find("MS-GFDB") == 0) {
+           } else if(search_engine.find("ms-gfdb") == 0) {
                Verbosity::comment(V_DEBUG, "Pepxml file is from MS-GFDB.");
                analysisType_ = MSGF_ANALYSIS;
                scoreType_ = MSGF_SCORE;
@@ -149,22 +151,22 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
 
                lookUpBy_ = NAME_ID;
                specReader_->setIdType(NAME_ID);
-           } else if (search_engine.find("PEAKS DB") == 0) {
+           } else if (search_engine.find("peaks db") == 0) {
                Verbosity::comment(V_DEBUG, "Pepxml file is from PEAKS");
                analysisType_ = PEAKS_ANALYSIS;
                scoreType_ = PEAKS_CONFIDENCE_SCORE;
                probCutOff = getScoreThreshold(PEAKS);
-           } else if(search_engine.find("SEQUEST") == 0 &&
+           } else if(search_engine.find("sequest") == 0 &&
                      analysisType_ == PROTEOME_DISCOVERER_ANALYSIS) {
                Verbosity::comment(V_DEBUG, "Pepxml file is from SEQUEST Proteome Discoverer.");
                scoreType_ = PERCOLATOR_QVALUE;
                probCutOff = getScoreThreshold(SQT);
-           } else if(search_engine.find("MASCOT") == 0 &&
+           } else if(search_engine.find("mascot") == 0 &&
                      analysisType_ == PROTEOME_DISCOVERER_ANALYSIS) {
                Verbosity::comment(V_DEBUG, "Pepxml file is from Mascot Proteome Discoverer.");
                scoreType_ = MASCOT_IONS_SCORE;
                probCutOff = getScoreThreshold(MASCOT);
-           } else if(search_engine.find("X! Tandem") == 0 &&
+           } else if(search_engine.find("x! tandem") == 0 &&
                      analysisType_ != PEPTIDE_PROPHET_ANALYSIS) {
                Verbosity::comment(V_DEBUG, "Pepxml file is from X! Tandem.");
                analysisType_ = XTANDEM_ANALYSIS;

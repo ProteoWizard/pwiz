@@ -81,7 +81,7 @@ namespace pwiz.SkylineTestFunctional
             _libraryName = libraryBaseName + "mascot";
             string libraryMascot = _libraryName + BiblioSpecLiteSpec.EXT;
             BuildLibraryValid(TestFilesDir.GetTestPath("mascot"), new[] { "F027319.dat" },
-                true, false, false, 121);
+                true, false, false, 121, 4);
             Assert.IsTrue(File.Exists(TestFilesDir.GetTestPath(libraryMascot)));
 
             // Test successful builds
@@ -257,7 +257,7 @@ namespace pwiz.SkylineTestFunctional
 
             _libraryName = libraryBaseName + "_cpas2";
             BuildLibraryValid(TestFilesDir.GetTestPath("cpas"), null,
-                false, false, false, 100);
+                false, false, false, 100, 100);
 
             // And, since the spectra are really poor, allow lots of
             // possibilities for fragment ions.
@@ -377,10 +377,20 @@ namespace pwiz.SkylineTestFunctional
         }
 
         private void BuildLibraryValid(string inputDir, IEnumerable<string> inputFiles,
-            bool keepRedundant, bool filterPeptides, bool append, int expectedSpectra)
+            bool keepRedundant, bool filterPeptides, bool append, int expectedSpectra, int expectedAmbiguous = 0)
         {
             BuildLibrary(inputDir, inputFiles,
                 null, null, keepRedundant, filterPeptides, append);
+
+            if (expectedAmbiguous > 0)
+            {
+                var ambiguousDlg = WaitForOpenForm<MessageDlg>();
+                RunUI(() =>
+                {
+                    Assert.AreEqual(expectedAmbiguous, ambiguousDlg.Message.Split('\n').Count() - 1);
+                    ambiguousDlg.OkDialog();
+                });
+            }
 
             Assert.IsTrue(WaitForCondition(() =>
                 PeptideSettingsUI.AvailableLibraries.Contains(_libraryName)));

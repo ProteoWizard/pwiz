@@ -26,6 +26,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Lib
 {
@@ -78,8 +79,22 @@ namespace pwiz.Skyline.Model.Lib
 
         public IList<string> TargetSequences { get; private set; }
 
+        public string AmbiguousMatchesMessage
+        {
+            get
+            {
+                return _ambiguousMatches != null && _ambiguousMatches.Any()
+                    ? TextUtil.LineSeparate(
+                        Resources.BiblioSpecLiteBuilder_AmbiguousMatches_Peptide_spectrum_matches_containing_the_following_peptides_were_discarded_because_the_spectrum_had_multiple_matches_,
+                        string.Join(Environment.NewLine, _ambiguousMatches))
+                    : string.Empty;
+            }
+        }
+        private string[] _ambiguousMatches;
+
         public bool BuildLibrary(IProgressMonitor progress)
         {
+            _ambiguousMatches = null;
             ProgressStatus status = new ProgressStatus(Resources.BiblioSpecLiteBuilder_BuildLibrary_Preparing_to_build_library);
             progress.UpdateProgress(status);
             if (InputFiles.Any(f => f.EndsWith(EXT_PILOT)))
@@ -110,7 +125,7 @@ namespace pwiz.Skyline.Model.Lib
             };
             try
             {
-                if (!blibBuilder.BuildLibrary(Action, progress, ref status))
+                if (!blibBuilder.BuildLibrary(Action, progress, ref status, out _ambiguousMatches))
                 {
                     return false;
                 }

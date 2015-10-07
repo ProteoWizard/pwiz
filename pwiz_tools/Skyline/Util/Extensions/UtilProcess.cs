@@ -39,7 +39,7 @@ namespace pwiz.Skyline.Util.Extensions
         {
             var processRunner = new ProcessRunner
                                     {
-                                        MessagePrefix = messagePrefix,
+                                        StatusPrefix = messagePrefix,
                                     };
             processRunner.Run(psi, stdin, progress, ref status);
         }

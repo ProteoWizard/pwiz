@@ -23,6 +23,7 @@ using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -322,6 +323,10 @@ namespace pwiz.Skyline.SettingsUI
                     Point anchor = NotificationAnchor;
                     frm.Left = anchor.X;
                     frm.Top = anchor.Y - frm.Height;
+                    if (!string.IsNullOrEmpty(buildState.ExtraMessage))
+                    {
+                        NotificationContainerForm.BeginInvoke(new Action(() => MessageDlg.Show(NotificationContainerForm, buildState.ExtraMessage)));
+                    }
 
                     Thread th = new Thread(frm.Notify) { Name = "BuildLibraryNotification", IsBackground = true }; // Not L10N
                     th.SetApartmentState(ApartmentState.STA);

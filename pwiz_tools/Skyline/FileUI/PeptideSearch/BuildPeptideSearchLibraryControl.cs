@@ -215,7 +215,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 {
                     ImportPeptideSearch.ClosePeptideSearchLibraryStreams(SkylineWindow.DocumentUI);
                     var status = longWaitDlg.PerformWork(WizardForm, 800,
-                        monitor => LibraryManager.BuildLibraryBackground(SkylineWindow, builder, monitor));
+                        monitor => LibraryManager.BuildLibraryBackground(SkylineWindow, builder, monitor, new LibraryManager.BuildState(null, null)));
                     if (status.IsError)
                     {
                         MessageDlg.ShowException(WizardForm, status.ErrorException);
@@ -243,6 +243,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 return false;
 
             SkylineWindow.ModifyDocument(Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_document_spectral_library, doc => docNew);
+
+            if (!string.IsNullOrEmpty(builder.AmbiguousMatchesMessage))
+            {
+                MessageDlg.Show(WizardForm, builder.AmbiguousMatchesMessage);
+            }
             return true;
         }
 
