@@ -69,6 +69,8 @@ namespace pwiz.Skyline
         public static int PauseSeconds { get; set; }                // Positive to pause when displaying dialogs for unit test, <0 to pause for mouse click
         public static IList<string> PauseForms { get; set; }        // List of forms to pause after displaying.
         public static List<Exception> TestExceptions { get; set; }
+        public static bool DisableJoining { get; set; }
+        public static bool NoAllChromatogramsGraph { get; set; }
  
         private static bool _initialized;                           // Flag to do some initialization just once per process.
         private static string _name;                                // Program name.
@@ -91,12 +93,25 @@ namespace pwiz.Skyline
                 return;
             }
 
+            CommonFormEx.TestMode = FunctionalTest;
+            CommonFormEx.Offscreen = SkylineOffscreen;
+            CommonFormEx.ShowFormNames = FormEx.ShowFormNames = ShowFormNames;
+
             // For testing and debugging Skyline command-line interface
-            if (args != null && args.Length > 0 && !args[0].Equals("--ui", StringComparison.InvariantCultureIgnoreCase)) // Not L10N
+            if (args != null && args.Length > 0) 
             {
                 if (!CommandLineRunner.HasCommandPrefix(args[0]))
                 {
-                    CommandLineRunner.RunCommand(args, new CommandStatusWriter(new DebugWriter()));
+                    var writer = new CommandStatusWriter(new DebugWriter());
+                    if (args[0].Equals("--ui", StringComparison.InvariantCultureIgnoreCase)) // Not L10N
+                    {
+                        // ReSharper disable once ObjectCreationAsStatement
+                        new CommandLineUI(args, writer);
+                    }
+                    else
+                    {
+                        CommandLineRunner.RunCommand(args, writer);
+                    }
                 }
                 else
                 {
@@ -120,10 +135,6 @@ namespace pwiz.Skyline
                 Process.GetCurrentProcess().Kill();
                 return;
             }
-
-            CommonFormEx.TestMode = FunctionalTest;
-            CommonFormEx.Offscreen = SkylineOffscreen;
-            CommonFormEx.ShowFormNames = FormEx.ShowFormNames = ShowFormNames;
 
             try
             {
@@ -243,6 +254,8 @@ namespace pwiz.Skyline
                 {
                     ReportExceptionUI(x, new StackTrace(1, true));
                 }
+
+                ConcurrencyVisualizer.StartEvents(MainWindow);
 
                 // Position window offscreen for stress testing.
                 if (SkylineOffscreen)

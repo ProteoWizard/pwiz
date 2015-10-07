@@ -266,7 +266,7 @@ namespace pwiz.Skyline.Model.Results
                         inFile.Dispose();
                 }
 
-                ActionUtil.RunAsync(() => ExitRead(null));
+                ActionUtil.RunAsync(() => ExitRead(null), "Exit read"); // Not L10N
             }
             catch (LoadCanceledException x)
             {

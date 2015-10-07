@@ -125,6 +125,10 @@
     <Reference Condition="'$(Platform)' == 'x64'" Include="MethodConverter">
       <HintPath>Method\Shimadzu\x64\MethodConverter.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.ConcurrencyVisualizer.Markers, Version=12.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Shared\Lib\Microsoft.ConcurrencyVisualizer.Markers.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\Shared\Lib\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -262,6 +266,7 @@
     <Compile Include="AlgLib\statistics.cs" />
     <Compile Include="CommandArgs.cs" />
     <Compile Include="CommandLine.cs" />
+    <Compile Include="CommandLineUI.cs" />
     <Compile Include="Controls\Databinding\BoundDataGridViewEx.cs">
       <SubType>Component</SubType>
     </Compile>

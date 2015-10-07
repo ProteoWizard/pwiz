@@ -80,7 +80,7 @@ namespace pwiz.Skyline.Model.Results
 
                 // If not cancelled, update progress.
                 string cacheFilePath = CacheFilePaths[_currentPartIndex];
-                string message = String.Format(Resources.ChromCacheJoiner_JoinNextPart_Joining_file__0__, cacheFilePath);
+                string message = string.Format(Resources.ChromCacheJoiner_JoinNextPart_Joining_file__0__, cacheFilePath);
                 int percent = _currentPartIndex * 100 / CacheFilePaths.Count;
                 _status = _status.ChangeMessage(message).ChangePercentComplete(percent);
                 _loader.UpdateProgress(_status);

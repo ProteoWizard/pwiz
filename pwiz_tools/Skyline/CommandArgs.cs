@@ -45,6 +45,8 @@ namespace pwiz.Skyline
         public bool KeepEmptyProteins { get; private set; }
         public string LibraryName { get; private set; }
         public string LibraryPath { get; private set; }
+        public bool HideAllChromatogramsGraph { get; private set; }
+        public bool NoAllChromatogramsGraph { get; private set; }
 
         // Transition list and assay library import
         private const string ARG_IMPORT_TRANSITION_LIST = "import-transition-list"; // Not L10N
@@ -485,7 +487,19 @@ namespace pwiz.Skyline
                 if (string.IsNullOrEmpty(pair.Name))
                     continue;
 
-                if (IsNameValue(pair, "in")) // Not L10N
+                if (IsNameOnly(pair, "ui")) // Not L10N
+                {
+                    // Handled by Program
+                }
+                else if (IsNameOnly(pair, "hideacg")) // Not L10N
+                {
+                    HideAllChromatogramsGraph = true;
+                }
+                else if (IsNameOnly(pair, "noacg")) // Not L10N
+                {
+                    NoAllChromatogramsGraph = true;
+                }
+                else if (IsNameValue(pair, "in")) // Not L10N
                 {
                     SkylineFile = GetFullPath(pair.Value);
                     // Set requiresInCommand to be true so if SkylineFile is null or empty it still complains.

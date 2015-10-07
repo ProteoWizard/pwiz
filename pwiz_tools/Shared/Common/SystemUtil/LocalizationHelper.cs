@@ -36,6 +36,7 @@ namespace pwiz.Common.SystemUtil
             InitThread(Thread.CurrentThread);
             if (threadName != null)
                 Thread.CurrentThread.Name = threadName;
+            ConcurrencyVisualizer.AddThreadName();
         }
 
         public static void InitThread(Thread thread)

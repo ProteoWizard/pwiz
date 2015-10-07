@@ -2170,6 +2170,10 @@ namespace pwiz.Skyline
                     results = results.ChangeChromatograms(arrayChrom);
                 }
             }
+
+            if (results != null && Program.DisableJoining)
+                results = results.ChangeIsJoiningDisabled(true);
+
             return doc.ChangeMeasuredResults(results);
         }
 
@@ -2214,6 +2218,10 @@ namespace pwiz.Skyline
 
                 results = results.ChangeChromatograms(arrayChrom);
             }
+
+            if (results != null && Program.DisableJoining)
+                results = results.ChangeIsJoiningDisabled(true);
+
             return doc.ChangeMeasuredResults(results);
         }
 

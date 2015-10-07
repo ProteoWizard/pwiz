@@ -67,8 +67,6 @@ namespace pwiz.Skyline.Controls.Startup
 
         public StartPage()
         {
-            LocalizationHelper.InitThread();
-
             Point location = Settings.Default.StartPageLocation;
             Size size = Settings.Default.StartPageSize;
             bool maximize = Settings.Default.StartPageMaximized;

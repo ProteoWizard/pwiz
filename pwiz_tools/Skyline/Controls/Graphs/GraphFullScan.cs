@@ -764,7 +764,7 @@ namespace pwiz.Skyline.Controls.Graphs
             int[][] scanIds = GetScanIds();
             var sourceScanIds = scanIds[(int) _source];
             int scanId = sourceScanIds[_scanIndex];
-            while ((delta < 0 && _scanIndex >= 0) || (delta > 0 && _scanIndex < sourceScanIds.Length))
+            while ((delta < 0 && _scanIndex > 0) || (delta > 0 && _scanIndex < sourceScanIds.Length-1))
             {
                 _scanIndex += delta;
                 int newScanId = sourceScanIds[_scanIndex];
@@ -977,7 +977,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 _oldScanProviders = new List<IScanProvider>();
                 _cachedScanProviders = new List<IScanProvider>();
-                _backgroundThread = new Thread(Work) { Name = GetType().Name, Priority = ThreadPriority.BelowNormal };
+                _backgroundThread = new Thread(Work) { Name = GetType().Name, Priority = ThreadPriority.BelowNormal, IsBackground = true };
                 _backgroundThread.Start();
 
                 _form = form;

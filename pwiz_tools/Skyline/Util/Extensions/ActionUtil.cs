@@ -51,7 +51,7 @@ namespace pwiz.Skyline.Util.Extensions
             {
                 try
                 {
-                    LocalizationHelper.InitThread(threadName ?? "Unnamed"); // Not L10N
+                    LocalizationHelper.InitThread(threadName);
                     action();
                 }
                 catch (OperationCanceledException) {}

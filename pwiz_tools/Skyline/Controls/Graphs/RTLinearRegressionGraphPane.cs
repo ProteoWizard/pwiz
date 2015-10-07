@@ -323,7 +323,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         if (refine && !IsRefined)
                         {
                             // Do refinement on a background thread.
-                            ActionUtil.RunAsync(RefineData);
+                            ActionUtil.RunAsync(RefineData, "Refine data"); // Not L10N
                         }
                     }
                 }

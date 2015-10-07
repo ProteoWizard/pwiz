@@ -185,7 +185,7 @@ namespace pwiz.Skyline.FileUI
                 _statisticsCollector = value;
                 if (StatisticsCollector != null)
                 {
-                    ActionUtil.RunAsync(StatisticsCollector.CollectStatistics);
+                    ActionUtil.RunAsync(StatisticsCollector.CollectStatistics, "Collect statistics");   // Not L10N
                 }
             }
         }

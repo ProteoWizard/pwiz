@@ -111,16 +111,11 @@ namespace pwiz.Skyline
         private readonly Timer _timerProgress;
         private readonly Timer _timerGraphs;
 
-        // Set false to disable the "Loading chromatograms" progress window.
-        private static bool SHOW_LOADING_CHROMATOGRAMS { get { return true; }}
-
         /// <summary>
         /// Constructor for the main window of the Skyline program.
         /// </summary>
         public SkylineWindow(string[] args = null)
         {
-            LocalizationHelper.InitThread();
-
             InitializeComponent();
             
             _undoManager = new UndoManager(this);
@@ -146,7 +141,7 @@ namespace pwiz.Skyline
             _backgroundProteomeManager = new BackgroundProteomeManager();
             _backgroundProteomeManager.ProgressUpdateEvent += UpdateProgress;
             _backgroundProteomeManager.Register(this);
-            _chromatogramManager = new ChromatogramManager { SupportAllGraphs = SHOW_LOADING_CHROMATOGRAMS };
+            _chromatogramManager = new ChromatogramManager { SupportAllGraphs = !Program.NoAllChromatogramsGraph };
             _chromatogramManager.ProgressUpdateEvent += UpdateProgress;
             _chromatogramManager.Register(this);
             _irtDbManager = new IrtDbManager();
@@ -167,7 +162,7 @@ namespace pwiz.Skyline
 
 
             // Begin ToolStore check for updates to currently installed tools
-            ActionUtil.RunAsync(() => ToolStoreUtil.CheckForUpdates(Settings.Default.ToolList.ToArray()));
+            ActionUtil.RunAsync(() => ToolStoreUtil.CheckForUpdates(Settings.Default.ToolList.ToArray()), "Check for tool updates");    // Not L10N
 
             ToolReportCache.Instance.Register(this);
 
@@ -4344,7 +4339,7 @@ namespace pwiz.Skyline
                 UpdateTaskbarProgress(status.PercentComplete);
                 statusGeneral.Text = status.Message;
 
-                if (!SHOW_LOADING_CHROMATOGRAMS)
+                if (Program.NoAllChromatogramsGraph)
                     return;
 
                 // Update chromatogram graph if we are importing a data file.

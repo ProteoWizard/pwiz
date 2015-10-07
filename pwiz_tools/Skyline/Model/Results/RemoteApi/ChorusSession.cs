@@ -204,7 +204,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
                     return false;
                 }
             }
-            ActionUtil.RunAsync(() => FetchAndStoreContents(chorusAccount, requestUri));
+            ActionUtil.RunAsync(() => FetchAndStoreContents(chorusAccount, requestUri), "Fetch from Chorus");   // Not L10N
             return false;
         }
 
