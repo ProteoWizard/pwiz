@@ -1210,7 +1210,7 @@ namespace pwiz.Skyline.Model.Results
                 if (_resultsClone._listPartialCaches == null)
                     return;
 
-                // If joining is allowed just finish
+                // If joining is not allowed just finish
                 if (_resultsClone.IsJoiningDisabled)
                 {
                     _loader.UpdateProgress(_status.ChangeSegments(0, 0).Complete());
