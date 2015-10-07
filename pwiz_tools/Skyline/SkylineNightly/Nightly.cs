@@ -354,7 +354,7 @@ namespace SkylineNightly
         {
             var startFailure = new Regex(@"\r\n!!! (\S+) FAILED\r\n", RegexOptions.Compiled);
             var endFailure = new Regex(@"\r\n!!!\r\n", RegexOptions.Compiled);
-            var failureTest = new Regex(@"\r\n\[\d\d:\d\d\] +(\d+).(\d+) +(\S+) ",
+            var failureTest = new Regex(@"\r\n\[\d\d:\d\d\] +(\d+).(\d+) +(\S+) \(+(\S+)\)",
                 RegexOptions.Compiled | RegexOptions.RightToLeft);
 
             for (var startMatch = startFailure.Match(log); startMatch.Success; startMatch = startMatch.NextMatch())
@@ -364,6 +364,7 @@ namespace SkylineNightly
                 var failureTestMatch = failureTest.Match(log, startMatch.Index);
                 var passId = failureTestMatch.Groups[1].Value;
                 var testId = failureTestMatch.Groups[2].Value;
+                var language = failureTestMatch.Groups[4].Value;
                 if (string.IsNullOrEmpty(passId) || string.IsNullOrEmpty(testId))
                     continue;
                 var failureDescription = log.Substring(startMatch.Index + startMatch.Length,
@@ -372,6 +373,7 @@ namespace SkylineNightly
                 failure["name"] = name;
                 failure["pass"] = passId;
                 failure["test"] = testId;
+                failure["language"] = language;
                 failure.Set(Environment.NewLine + failureDescription + Environment.NewLine);
             }
         }
@@ -417,6 +419,7 @@ namespace SkylineNightly
         {
             var directory = new DirectoryInfo(_logDir);
             var logFile = directory.GetFiles()
+                .Where(f => f.Name.EndsWith(".log"))
                 .OrderByDescending(f => f.LastWriteTime)
                 .SkipWhile(f => f.Name == "Summary.log")
                 .First();
