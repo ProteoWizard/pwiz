@@ -158,10 +158,15 @@ namespace pwiz.SkylineTestUtil
     public static class AssertResult
     {
 
+        private static string CompareValues(int expected, int actual, string description)
+        {
+            return expected != actual ? string.Format("Expected {0} count {1}, got {2} instead. ", description, expected, actual) : string.Empty;
+        }
+
         public static void IsDocumentResultsState(SrmDocument document, string replicateName,
             int peptides, int tranGroups, int tranGroupsHeavy, int transitions, int transitionsHeavy)
         {
-            Assert.IsTrue(document.Settings.HasResults);
+            Assert.IsTrue(document.Settings.HasResults,"Expected document to have results.");
             int index;
             ChromatogramSet chromatogramSet;
             document.Settings.MeasuredResults.TryGetChromatogramSet(replicateName, out chromatogramSet, out index);
@@ -204,11 +209,13 @@ namespace pwiz.SkylineTestUtil
                     }
                 }
             }
-            Assert.AreEqual(peptides, peptidesActual);
-            Assert.AreEqual(tranGroups, tranGroupsActual);
-            Assert.AreEqual(tranGroupsHeavy, tranGroupsHeavyActual);
-            Assert.AreEqual(transitions, transitionsActual);
-            Assert.AreEqual(transitionsHeavy, transitionsHeavyActual);
+            var failMessage = CompareValues(peptides, peptidesActual, "peptide");
+            failMessage += CompareValues(tranGroups, tranGroupsActual, "transition group");
+            failMessage += CompareValues(tranGroupsHeavy, tranGroupsHeavyActual,"heavy transition group");
+            failMessage += CompareValues(transitions, transitionsActual, "transition");
+            failMessage += CompareValues(transitionsHeavy, transitionsHeavyActual, "heavy transition");
+            if (failMessage.Length > 0)
+                Assert.Fail("IsDocumentResultsState failed: "+failMessage);
         }
 
         public static void MatchChromatograms(ResultsTestDocumentContainer docContainer,
