@@ -1160,7 +1160,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 if (File.Exists(outputPath))
                 {
                     string docFileName = Path.GetFileNameWithoutExtension(documentFilePath);
-                    var documentLibSpec = new BiblioSpecLibSpec(docFileName, outputPath);
+                    var documentLibSpec = new BiblioSpecLiteSpec(docFileName, outputPath);
                     if (!defSet.SpectralLibraryList.Contains(documentLibSpec))
                     {
                         defSet.SpectralLibraryList.Add(documentLibSpec.ChangeDocumentLibrary(true));
