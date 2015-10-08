@@ -293,10 +293,13 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
         }
 
         vector<float> masses, intensities;
-        if (detailLevel != DetailLevel_FullMetadata && lockmassMz == 0.0)
-            rawdata_->ScanReader.readSpectrum(ie.function, ie.scan, masses, intensities);
-        else
-            rawdata_->ScanReader.readSpectrum(ie.function, ie.scan, (float)lockmassMz, (float)lockmassTolerance, masses, intensities);
+        if (detailLevel != DetailLevel_FullMetadata)
+        {
+            if (lockmassMz == 0.0)
+                rawdata_->ScanReader.readSpectrum(ie.function, ie.scan, masses, intensities);
+            else
+                rawdata_->ScanReader.readSpectrum(ie.function, ie.scan, (float)lockmassMz, (float)lockmassTolerance, masses, intensities);
+        }
 
 	    vector<double> mzArray(masses.begin(), masses.end());
         vector<double> intensityArray(intensities.begin(), intensities.end());

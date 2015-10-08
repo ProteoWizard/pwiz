@@ -106,6 +106,10 @@ void fillInMetadata(const string& rawpath, RawDataPtr rawdata, MSData& msd)
         if (find(functionFilepaths.begin(), functionFilepaths.end(), itr->path()) != functionFilepaths.end())
             continue;
 
+        // skip lockmass cache
+        if (bal::iends_with(itr->path().string(), "lmgt.inf"))
+            continue;
+
         bfs::path sourcePath = itr->path();
         SourceFilePtr sourceFile(new SourceFile);
         sourceFile->id = BFS_STRING(sourcePath.leaf());
