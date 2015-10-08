@@ -54,7 +54,8 @@ namespace pwiz.Topograph.Search
                                     };
                 var status = new ProgressStatus("");
                 var progressMonitorImpl = ProgressMonitorImpl.NewProgressMonitorImpl(status, progressMonitor);
-                blibBuild.BuildLibrary(LibraryBuildAction.Create, progressMonitorImpl, ref status);
+                string[] ambiguousPeptides;
+                blibBuild.BuildLibrary(LibraryBuildAction.Create, progressMonitorImpl, ref status, out ambiguousPeptides);
                 return ReadBiblioSpecDatabase(tempFile, progressMonitor);
             }
             finally
