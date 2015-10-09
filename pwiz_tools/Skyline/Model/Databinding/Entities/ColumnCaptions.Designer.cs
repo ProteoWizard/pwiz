@@ -160,6 +160,24 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Calculated Concentration.
+        /// </summary>
+        internal static string CalculatedConcentration {
+            get {
+                return ResourceManager.GetString("CalculatedConcentration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calibration Curve.
+        /// </summary>
+        internal static string CalibrationCurve {
+            get {
+                return ResourceManager.GetString("CalibrationCurve", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cleavage Aa.
         /// </summary>
         public static string CleavageAa {
@@ -174,6 +192,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string CollisionEnergy {
             get {
                 return ResourceManager.GetString("CollisionEnergy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Concentration Units.
+        /// </summary>
+        internal static string ConcentrationUnits {
+            get {
+                return ResourceManager.GetString("ConcentrationUnits", resourceCulture);
             }
         }
         
@@ -340,6 +367,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Dilution Factor.
+        /// </summary>
+        internal static string DilutionFactor {
+            get {
+                return ResourceManager.GetString("DilutionFactor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to End Pos.
         /// </summary>
         public static string EndPos {
@@ -354,6 +390,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string EndTime {
             get {
                 return ResourceManager.GetString("EndTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error Message.
+        /// </summary>
+        internal static string ErrorMessage {
+            get {
+                return ResourceManager.GetString("ErrorMessage", resourceCulture);
             }
         }
         
@@ -543,6 +588,24 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string Identified {
             get {
                 return ResourceManager.GetString("Identified", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Intercept.
+        /// </summary>
+        internal static string Intercept {
+            get {
+                return ResourceManager.GetString("Intercept", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Internal Standard Concentration.
+        /// </summary>
+        internal static string InternalStandardConcentration {
+            get {
+                return ResourceManager.GetString("InternalStandardConcentration", resourceCulture);
             }
         }
         
@@ -1006,6 +1069,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Normalized Intensity.
+        /// </summary>
+        internal static string NormalizedIntensity {
+            get {
+                return ResourceManager.GetString("NormalizedIntensity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Opt Collision Energy.
         /// </summary>
         public static string OptCollisionEnergy {
@@ -1146,6 +1218,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string PeptideSequence {
             get {
                 return ResourceManager.GetString("PeptideSequence", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point Count.
+        /// </summary>
+        internal static string PointCount {
+            get {
+                return ResourceManager.GetString("PointCount", resourceCulture);
             }
         }
         
@@ -1438,6 +1519,24 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Quadratic Coefficient.
+        /// </summary>
+        internal static string QuadraticCoefficient {
+            get {
+                return ResourceManager.GetString("QuadraticCoefficient", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Quantification.
+        /// </summary>
+        internal static string Quantification {
+            get {
+                return ResourceManager.GetString("Quantification", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Range.
         /// </summary>
         public static string Range {
@@ -1573,6 +1672,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to R Squared.
+        /// </summary>
+        internal static string RSquared {
+            get {
+                return ResourceManager.GetString("RSquared", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Sample Name.
         /// </summary>
         public static string SampleName {
@@ -1582,11 +1690,29 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Sample Type.
+        /// </summary>
+        internal static string SampleType {
+            get {
+                return ResourceManager.GetString("SampleType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to S-Lens.
         /// </summary>
         public static string SLens {
             get {
                 return ResourceManager.GetString("SLens", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Slope.
+        /// </summary>
+        internal static string Slope {
+            get {
+                return ResourceManager.GetString("Slope", resourceCulture);
             }
         }
         
@@ -1722,6 +1848,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string StdevTotalAreaRatio {
             get {
                 return ResourceManager.GetString("StdevTotalAreaRatio", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Stock Concentration.
+        /// </summary>
+        internal static string StockConcentration {
+            get {
+                return ResourceManager.GetString("StockConcentration", resourceCulture);
             }
         }
         

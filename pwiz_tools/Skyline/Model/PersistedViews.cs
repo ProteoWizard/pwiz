@@ -112,7 +112,7 @@ namespace pwiz.Skyline.Model
         }
 
         public int RevisionIndex { get; private set; }
-        public int RevisionIndexCurrent { get { return 4; } }
+        public int RevisionIndexCurrent { get { return 5; } }
         public override void ReadXml(XmlReader reader)
         {
             RevisionIndex = reader.GetIntAttribute(Attr.revision);
@@ -145,6 +145,10 @@ namespace pwiz.Skyline.Model
             {
                 reportStrings.Add(REPORTS_V4);
             }
+            if (revisionIndex >= 5)
+            {
+                reportStrings.Add(REPORTS_V5);
+            }
             var list = new List<KeyValuePair<ViewGroupId, ViewSpec>>();
             var xmlSerializer = new XmlSerializer(typeof(ViewSpecList));
             foreach (var reportString in reportStrings)
@@ -154,6 +158,7 @@ namespace pwiz.Skyline.Model
             // ReSharper disable NonLocalizedString
             var nameMap = new Dictionary<string, ViewName>{
                 {"Peptide Ratio Results", MainGroup.Id.ViewName(Resources.ReportSpecList_GetDefaults_Peptide_Ratio_Results)},
+                {"Peptide Quantification", MainGroup.Id.ViewName(Resources.Resources_ReportSpecList_GetDefaults_Peptide_Quantification)},
                 {"Peptide RT Results", MainGroup.Id.ViewName(Resources.ReportSpecList_GetDefaults_Peptide_RT_Results)},
                 {"Transition Results", MainGroup.Id.ViewName(Resources.ReportSpecList_GetDefaults_Transition_Results)},
                 {"Peak Boundaries", MainGroup.Id.ViewName(Resources.ReportSpecList_GetDefaults_Peak_Boundaries)},
@@ -326,6 +331,30 @@ namespace pwiz.Skyline.Model
     <column name='ProductIonFormula' />
   </view>
 </views>";
+        private const string REPORTS_V5 = @"<views>
+<view name='Peptide Ratio Results' rowsource='pwiz.Skyline.Model.Databinding.Entities.Peptide' sublist='Results!*'>
+    <column name='Sequence' />
+    <column name='Protein.Name' />
+    <column name='Results!*.Value.ResultFile.Replicate.Name' />
+    <column name='Results!*.Value.PeptidePeakFoundRatio' />
+    <column name='Results!*.Value.PeptideRetentionTime' />
+    <column name='Results!*.Value.RatioToStandard' />
+    <column name='Results!*.Value.Quantification' />
+    <filter column='Results!*.Value' opname='isnotnullorblank' />
+  </view>
+  <view name='Peptide Quantification' rowsource='pwiz.Skyline.Model.Databinding.Entities.Peptide' sublist='Results!*'>
+    <column name='' />
+    <column name='Protein' />
+    <column name='ModifiedSequence' />
+    <column name='StandardType' />
+    <column name='StockConcentration' />
+    <column name='InternalStandardConcentration' />
+    <column name='ConcentrationUnits' />
+    <column name='CalibrationCurve' />
+    <column name='Note' />
+  </view>
+</views>
+";
         // ReSharper restore NonLocalizedString
 
         #region XML Serialization

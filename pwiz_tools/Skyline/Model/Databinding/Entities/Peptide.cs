@@ -20,9 +20,12 @@
 using System.Collections.Generic;
 using System.IO;
 using pwiz.Common.DataBinding.Attributes;
+using pwiz.Common.DataBinding;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
@@ -275,6 +278,54 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get
             {
                 return new DocumentLocation(IdentityPath.ToGlobalIndexList());
+            }
+        }
+
+        public double? StockConcentration
+        {
+            get { return DocNode.StockConcentration; }
+            set
+            {
+                ChangeDocNode(EditDescription.SetColumn("StockConcentration", value), // Not L10N
+                    DocNode.ChangeStockConcentration(value));
+            }
+        }
+
+        public double? InternalStandardConcentration
+        {
+            get { return DocNode.InternalStandardConcentration; }
+            set
+            {
+                ChangeDocNode(EditDescription.SetColumn("InternalStandardConcentration", value), // Not L10N
+                    DocNode.ChangeInternalStandardKnownConcentration(value));
+            }
+        }
+
+        public string ConcentrationUnits
+        {
+            get { return DocNode.ConcentrationUnits; }
+            set
+            {
+                ChangeDocNode(EditDescription.SetColumn("ConcentrationUnits", value), // Not L10N
+                    DocNode.ChangeConcentrationUnits(value));
+            }
+        }
+
+        public LinkValue<CalibrationCurve> CalibrationCurve
+        {
+            get
+            {
+                var quantifier = PeptideQuantifier.GetPeptideQuantifier(SrmDocument.Settings, Protein.DocNode, DocNode);
+                CalibrationCurveFitter curveFitter = new CalibrationCurveFitter(quantifier, SrmDocument.Settings);
+                CalibrationCurve calibrationCurve = curveFitter.GetCalibrationCurve(null);
+                return new LinkValue<CalibrationCurve>(calibrationCurve, (sender, args) =>
+                {
+                    if (null != DataSchema.SkylineWindow)
+                    {
+                        DataSchema.SkylineWindow.ShowCalibrationForm();
+                        DataSchema.SkylineWindow.SelectedPath = IdentityPath;
+                    }
+                });
             }
         }
     }

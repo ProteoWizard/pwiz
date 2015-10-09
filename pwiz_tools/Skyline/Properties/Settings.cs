@@ -46,6 +46,7 @@ using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using System.Windows.Forms;
+using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Util.Extensions;
 
@@ -1018,6 +1019,24 @@ namespace pwiz.Skyline.Properties
         {
             get { return true; } // Not L10N
             set { this["EnableChorus"] = value; }   // Not L10N
+        }
+
+        [UserScopedSetting]
+        public CalibrationCurveOptions CalibrationCurveOptions
+        {
+            get { 
+                var calibrationCurveOptions = (CalibrationCurveOptions) this["CalibrationCurveOptions"]; // Not L10N
+                if (calibrationCurveOptions == null)
+                {
+                    calibrationCurveOptions = new CalibrationCurveOptions();
+                    CalibrationCurveOptions = calibrationCurveOptions;
+                }
+                return calibrationCurveOptions;
+            }
+            set
+            {
+                this["CalibrationCurveOptions"] = value; // Not L10N
+            }
         }
     }
 

@@ -19,7 +19,10 @@
 
 using System.ComponentModel;
 using System.Linq;
+using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
+using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util.Extensions;
@@ -30,9 +33,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     public class PeptideResult : Result
     {
         private readonly CachedValue<PeptideChromInfo> _chromInfo;
+        private readonly CachedValue<QuantificationResult> _quantificationResult;
         public PeptideResult(Peptide peptide, ResultFile file) : base(peptide, file)
         {
             _chromInfo = CachedValue.Create(DataSchema, () => ResultFile.FindChromInfo(peptide.DocNode.Results));
+            _quantificationResult = CachedValue.Create(DataSchema, GetQuantification);
         }
 
         [HideWhen(AncestorOfType = typeof(Peptide))]
@@ -70,7 +75,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 var mods = SrmDocument.Settings.PeptideSettings.Modifications;
                 var standardType = mods.RatioInternalStandardTypes.FirstOrDefault();
-                var labelType = mods.GetModificationTypes().FirstOrDefault();
+                var labelType = mods.GetModificationTypes().Except(new[]{standardType}).FirstOrDefault();
                 foreach (var labelRatio in ChromInfo.LabelRatios)
                 {
                     if (ReferenceEquals(labelType, labelRatio.LabelType) &&
@@ -95,6 +100,50 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 return new DocumentLocation(Peptide.IdentityPath.ToGlobalIndexList()).SetChromFileId(ResultFile.ChromFileInfoId.GlobalIndex);
             }
+        }
+
+        public QuantificationResult Quantification
+        {
+            get { return _quantificationResult.Value; }
+        }
+
+        public QuantificationResult GetQuantification()
+        {
+            var quantifier = PeptideQuantifier.GetPeptideQuantifier(SrmDocument.Settings, Peptide.Protein.DocNode, Peptide.DocNode);
+            CalibrationCurveFitter curveFitter = new CalibrationCurveFitter(quantifier, SrmDocument.Settings);
+            QuantificationResult result = new QuantificationResult();
+
+            int replicateIndex = ResultFile.Replicate.ReplicateIndex;
+            CalibrationCurve calibrationCurve = curveFitter.GetCalibrationCurve(replicateIndex);
+            result = result.ChangeCalibrationCurve(new LinkValue<CalibrationCurve>(calibrationCurve, (sender, args) =>
+            {
+                SkylineWindow skylineWindow = DataSchema.SkylineWindow;
+                if (skylineWindow != null)
+                {
+                    skylineWindow.ShowCalibrationForm();
+                    skylineWindow.SelectedResultsIndex = ResultFile.Replicate.ReplicateIndex;
+                    skylineWindow.SelectedPath = Peptide.IdentityPath;
+                }
+            }));
+            if (calibrationCurve.PointCount.GetValueOrDefault() == 0)
+            {
+                result = result.ChangeNormalizedIntensity(curveFitter.GetReplicateIntensity(replicateIndex, null));
+            }
+            else
+            {
+                result = result.ChangeNormalizedIntensity(curveFitter.GetReplicateIntensity(replicateIndex,
+                    curveFitter.GetCompleteTransitions()));
+            }
+            if (curveFitter.GetStandardConcentrations().Any())
+            {
+                result = result.ChangeCalculatedConcentration(calibrationCurve.GetX(result.NormalizedIntensity));
+            }
+            else
+            {
+                result = result.ChangeCalculatedConcentration(result.NormalizedIntensity);
+            }
+            result = result.ChangeUnits(Peptide.ConcentrationUnits);
+            return result;
         }
     }
 }

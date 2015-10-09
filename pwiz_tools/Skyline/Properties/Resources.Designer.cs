@@ -18634,6 +18634,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Peptide Quantification.
+        /// </summary>
+        public static string Resources_ReportSpecList_GetDefaults_Peptide_Quantification {
+            get {
+                return ResourceManager.GetString("Resources.ReportSpecList_GetDefaults_Peptide_Quantification", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to DocNode peak info found for file with no match in document results..
         /// </summary>
         public static string Results_Validate_DocNode_peak_info_found_for_file_with_no_match_in_document_results {

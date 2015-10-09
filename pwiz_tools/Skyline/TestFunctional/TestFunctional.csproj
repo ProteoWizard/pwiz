@@ -146,6 +146,7 @@
   <ItemGroup>
     <Compile Include="AccessServerTest.cs" />
     <Compile Include="AddLibraryTest.cs" />
+    <Compile Include="CalibrationTest.cs" />
     <Compile Include="ChorusFunctionalTest.cs" />
     <Compile Include="DocumentGridClipboardOperationsTest.cs" />
     <Compile Include="DocumentReportTest.cs" />
@@ -286,6 +287,7 @@
     <None Include="AnnotationTest.zip" />
     <None Include="AssayLibraryImportTest.zip" />
     <None Include="BackgroundProteomeTest.zip" />
+    <None Include="CalibrationTest.zip" />
     <None Include="ChorusFunctionalTest.zip" />
     <None Include="ConfigureToolsDlgTest.zip" />
     <None Include="CopyPasteTest.zip" />

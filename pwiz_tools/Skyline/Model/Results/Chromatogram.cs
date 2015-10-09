@@ -26,6 +26,7 @@ using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -245,6 +246,7 @@ namespace pwiz.Skyline.Model.Results
 
             OptimizationFunction = optimizationFunction;
             Annotations = annotations;
+            SampleType = SampleType.DEFAULT;
         }
 
         public IList<ChromFileInfo> MSDataFileInfos
@@ -323,6 +325,10 @@ namespace pwiz.Skyline.Model.Results
         {
             return (ChromFileInfoId) (ordinalIndex != -1 ? MSDataFileInfos[ordinalIndex].Id : null);
         }
+
+        public double? DilutionFactor { get; private set; }
+
+        public SampleType SampleType { get; private set; }
 
         #region Property change methods
 
@@ -426,6 +432,16 @@ namespace pwiz.Skyline.Model.Results
             return ChangeProp(ImClone(this), im => im._rescoreCount++);
         }
 
+        public ChromatogramSet ChangeDilutionFactor(double? concentration)
+        {
+            return ChangeProp(ImClone(this), im => im.DilutionFactor = concentration);
+        }
+
+        public ChromatogramSet ChangeSampleType(SampleType sampleType)
+        {
+            return ChangeProp(ImClone(this), im => im.SampleType = sampleType ?? SampleType.DEFAULT);
+        }
+
         #endregion
 
         public static MsDataFileUri GetExistingDataFilePath(string cachePath, MsDataFileUri msDataFileUri)
@@ -509,6 +525,8 @@ namespace pwiz.Skyline.Model.Results
             name,
             value,
             use_for_retention_time_prediction,
+            dilution_factor,
+            sample_type
         }
 
         private static readonly IXmlElementHelper<OptimizableRegression>[] OPTIMIZATION_HELPERS =
@@ -525,6 +543,8 @@ namespace pwiz.Skyline.Model.Results
             // Read tag attributes
             base.ReadXml(reader);
             UseForRetentionTimeFilter = reader.GetBoolAttribute(ATTR.use_for_retention_time_prediction, false);
+            DilutionFactor = reader.GetNullableDoubleAttribute(ATTR.dilution_factor);
+            SampleType = SampleType.FromName(reader.GetAttribute(ATTR.sample_type));
             // Consume tag
             reader.Read();
 
@@ -565,6 +585,11 @@ namespace pwiz.Skyline.Model.Results
             // Write tag attributes
             base.WriteXml(writer);
             writer.WriteAttribute(ATTR.use_for_retention_time_prediction, false);
+            writer.WriteAttributeNullable(ATTR.dilution_factor, DilutionFactor);
+            if (null != SampleType && !Equals(SampleType, SampleType.DEFAULT))
+            {
+                writer.WriteAttribute(ATTR.sample_type, SampleType.Name);
+            }
 
             // Write optimization element, if present
             if (OptimizationFunction != null)
@@ -656,7 +681,9 @@ namespace pwiz.Skyline.Model.Results
                 && Equals(obj.Annotations, Annotations)
                 && obj.UseForRetentionTimeFilter == UseForRetentionTimeFilter
                 && Equals(obj.OptimizationFunction, OptimizationFunction)
-                && obj._rescoreCount == _rescoreCount;
+                && obj._rescoreCount == _rescoreCount
+                && Equals(obj.DilutionFactor, DilutionFactor)
+                && Equals(obj.SampleType, SampleType);
         }
 
         public override bool Equals(object obj)
@@ -676,6 +703,7 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ UseForRetentionTimeFilter.GetHashCode();
                 result = (result*397) ^ (OptimizationFunction != null ? OptimizationFunction.GetHashCode() : 0);
                 result = (result*397) ^ _rescoreCount;
+                result = (result*397) ^ DilutionFactor.GetHashCode();
                 return result;
             }
         }

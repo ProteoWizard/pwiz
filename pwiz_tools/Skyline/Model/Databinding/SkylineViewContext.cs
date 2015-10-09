@@ -408,6 +408,10 @@ namespace pwiz.Skyline.Model.Databinding
                     columnsToRemove.Add(PropertyPath.Root.Property("NextAa"));
                     columnsToRemove.Add(PropertyPath.Root.Property("RetentionTimeCalculatorScore"));
                     columnsToRemove.Add(PropertyPath.Root.Property("DocumentLocation"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("StockConcentration"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("InternalStandardConcentration"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("ConcentrationUnits"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("CalibrationCurve"));
                     if (docHasOnlyCustomIons)
                     {
                         // Peptide-oriented fields that make no sense in a small molecule context

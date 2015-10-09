@@ -295,6 +295,13 @@
           </xs:attribute>
         </xs:complexType>
       </xs:element>
+      <xs:element name="quantification" minOccurs="0" maxOccurs="1">
+        <xs:complexType>
+          <xs:attribute name="weighting" type="xs:string"/>
+          <xs:attribute name="fit" type="xs:string" />
+          <xs:attribute name="normalization" type="xs:string" />
+        </xs:complexType>
+      </xs:element>
     </xs:sequence>
   </xs:complexType>
   <!-- Transition Settings -->
@@ -775,6 +782,9 @@
             </xs:documentation>
           </xs:annotation>
         </xs:attribute>
+        <xs:attribute name="stock_concentration" type="xs:double" />
+        <xs:attribute name="internal_standard_concentration" type="xs:double" />
+        <xs:attribute name="concentration_units" type="xs:string" />
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>

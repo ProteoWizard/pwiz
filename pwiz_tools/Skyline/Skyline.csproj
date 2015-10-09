@@ -312,6 +312,12 @@
     <Compile Include="Controls\FindResultsForm.Designer.cs">
       <DependentUpon>FindResultsForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Graphs\Calibration\CalibrationForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\Graphs\Calibration\CalibrationForm.Designer.cs">
+      <DependentUpon>CalibrationForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Controls\Graphs\GraphFontSize.cs" />
     <Compile Include="Controls\GroupComparison\BaseGroupComparisonSettings.cs">
       <SubType>Form</SubType>
@@ -725,6 +731,7 @@
     </Compile>
     <Compile Include="Model\Databinding\Entities\Protein.cs" />
     <Compile Include="Model\Databinding\Entities\ProteinResult.cs" />
+    <Compile Include="Model\Databinding\Entities\RegressionResult.cs" />
     <Compile Include="Model\Databinding\Entities\Replicate.cs" />
     <Compile Include="Model\Databinding\Entities\Result.cs" />
     <Compile Include="Model\Databinding\Entities\ResultFile.cs" />
@@ -741,11 +748,26 @@
     <Compile Include="Model\Databinding\ReportSharing.cs" />
     <Compile Include="Model\Databinding\ReportSpecConverter.cs" />
     <Compile Include="Model\Databinding\ResultsGridViewContext.cs" />
+    <Compile Include="Model\Databinding\SampleTypeDataGridViewColumn.cs" />
     <Compile Include="Model\Databinding\SkylineDataSchema.cs" />
     <Compile Include="Model\Databinding\SkylineRowSource.cs" />
     <Compile Include="Model\Databinding\SkylineViewContext.cs" />
     <Compile Include="Model\Databinding\DocumentViewTransformer.cs" />
     <Compile Include="Model\DocNodeChildren.cs" />
+    <Compile Include="Model\DocSettings\AbsoluteQuantification\CalibrationCurve.cs" />
+    <Compile Include="Model\DocSettings\AbsoluteQuantification\CalibrationCurveFitter.cs" />
+    <Compile Include="Model\DocSettings\AbsoluteQuantification\CalibrationCurveOptions.cs" />
+    <Compile Include="Model\DocSettings\AbsoluteQuantification\QuantificationResult.cs" />
+    <Compile Include="Model\DocSettings\AbsoluteQuantification\QuantificationSettings.cs" />
+    <Compile Include="Model\DocSettings\AbsoluteQuantification\QuantificationStrings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>QuantificationStrings.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\DocSettings\AbsoluteQuantification\RegressionFit.cs" />
+    <Compile Include="Model\DocSettings\AbsoluteQuantification\RegressionWeighting.cs" />
+    <Compile Include="Model\DocSettings\AbsoluteQuantification\SampleType.cs" />
+    <Compile Include="Model\DocSettings\AbsoluteQuantification\WeightedPoint.cs" />
     <Compile Include="Model\Esp\EspFeatureCalc.cs" />
     <Compile Include="Model\Esp\EspFeatureDb.cs" />
     <Compile Include="Model\Esp\GasPhaseBasicityCalc.cs" />
@@ -774,6 +796,7 @@
     </Compile>
     <Compile Include="Model\GroupComparison\NormalizationMethod.cs" />
     <Compile Include="Model\ExplicitTransitionGroupValues.cs" />
+    <Compile Include="Model\GroupComparison\PeptideQuantifier.cs" />
     <Compile Include="Model\GroupComparison\SummarizationMethod.cs" />
     <Compile Include="Model\ImportPeakBoundaries.cs" />
     <Compile Include="Model\ImportPeptideSearch.cs" />
@@ -1521,6 +1544,9 @@
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Databinding\EditGroupComparisonDlg.zh-CHS.resx" />
+    <EmbeddedResource Include="Controls\Graphs\Calibration\CalibrationForm.resx">
+      <DependentUpon>CalibrationForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\EditGroupComparisonDlg.ja.resx">
       <DependentUpon>EditGroupComparisonDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -2082,6 +2108,11 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Model\Databinding\Entities\ColumnCaptions.zh-CHS.resx">
       <DependentUpon>ColumnCaptions.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\DocSettings\AbsoluteQuantification\QuantificationStrings.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>QuantificationStrings.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\GroupComparison\GroupComparisonStrings.ja.resx" />

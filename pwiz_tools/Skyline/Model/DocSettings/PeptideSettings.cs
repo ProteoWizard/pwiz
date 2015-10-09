@@ -27,6 +27,7 @@ using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.ChromLib;
 using pwiz.Skyline.Model.Proteome;
@@ -59,6 +60,7 @@ namespace pwiz.Skyline.Model.DocSettings
             Modifications = modifications;
             Integration = integration;
             BackgroundProteome = backgroundProteome;
+            Quantification = QuantificationSettings.DEFAULT;
         }
 
         public Enzyme Enzyme { get; private set; }
@@ -76,6 +78,8 @@ namespace pwiz.Skyline.Model.DocSettings
         public PeptideModifications Modifications { get; private set; }
 
         public PeptideIntegration Integration { get; private set; }
+
+        public QuantificationSettings Quantification { get; private set; }
 
         #region Property change methods
 
@@ -119,6 +123,30 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeProp(ImClone(this), im => im.Integration = prop);
         }
 
+        public PeptideSettings ChangeAbsoluteQuantification(QuantificationSettings prop)
+        {
+            prop = prop ?? QuantificationSettings.DEFAULT;
+            if (Equals(prop, Quantification))
+            {
+                return this;
+            }
+            return ChangeProp(ImClone(this), im => im.Quantification = prop);
+        }
+
+        public PeptideSettings MergeDefaults(PeptideSettings defPep)
+        {
+            PeptideSettings newPeptideSettings = ImClone(this);
+            newPeptideSettings.Enzyme = newPeptideSettings.Enzyme ?? defPep.Enzyme;
+            newPeptideSettings.DigestSettings = newPeptideSettings.DigestSettings ?? defPep.DigestSettings;
+            newPeptideSettings.Prediction = newPeptideSettings.Prediction ?? defPep.Prediction;
+            newPeptideSettings.Filter = newPeptideSettings.Filter ?? defPep.Filter;
+            newPeptideSettings.Libraries = newPeptideSettings.Libraries ?? defPep.Libraries;
+            newPeptideSettings.BackgroundProteome = newPeptideSettings.BackgroundProteome ?? defPep.BackgroundProteome;
+            newPeptideSettings.Modifications = newPeptideSettings.Modifications ?? defPep.Modifications;
+            newPeptideSettings.Integration = newPeptideSettings.Integration ?? defPep.Integration;
+            return Equals(newPeptideSettings, this) ? this : newPeptideSettings;
+        }
+
         #endregion
 
         #region Implementation of IXmlSerializable
@@ -158,9 +186,11 @@ namespace pwiz.Skyline.Model.DocSettings
                 Libraries = reader.DeserializeElement<PeptideLibraries>();
                 Modifications = reader.DeserializeElement<PeptideModifications>();
                 Integration = reader.DeserializeElement<PeptideIntegration>();
+                Quantification = reader.DeserializeElement<QuantificationSettings>();
                 reader.ReadEndElement();
             }
 
+            Quantification = Quantification ?? QuantificationSettings.DEFAULT;
             // Defer validation to the SrmSettings object
         }
 
@@ -177,6 +207,7 @@ namespace pwiz.Skyline.Model.DocSettings
             writer.WriteElement(Modifications);
             if (Integration.IsSerializable)
                 writer.WriteElement(Integration);
+            writer.WriteElement(Quantification);
         }
 
         #endregion
@@ -194,7 +225,8 @@ namespace pwiz.Skyline.Model.DocSettings
                    Equals(obj.Libraries, Libraries) &&
                    Equals(obj.Modifications, Modifications) &&
                    Equals(obj.Integration, Integration) &&
-                   Equals(obj.BackgroundProteome, BackgroundProteome);
+                   Equals(obj.BackgroundProteome, BackgroundProteome) &&
+                   Equals(obj.Quantification, Quantification);
         }
 
         public override bool Equals(object obj)
@@ -217,6 +249,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result*397) ^ Modifications.GetHashCode();
                 result = (result*397) ^ Integration.GetHashCode();
                 result = (result*397) ^ BackgroundProteome.GetHashCode();
+                result = (result*397) ^ Quantification.GetHashCode();
                 return result;
             }
         }

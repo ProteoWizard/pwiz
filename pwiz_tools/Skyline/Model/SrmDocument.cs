@@ -1746,6 +1746,9 @@ namespace pwiz.Skyline.Model
             public const string explicit_compensation_voltage = "explicit_compensation_voltage";
             public const string standard_type = "standard_type";
             public const string measured_ion_name = "measured_ion_name";
+            public const string stock_concentration = "stock_concentration";
+            public const string internal_standard_concentration = "internal_standard_known_concentration";
+            public const string concentration_units = "concentration_units";
 
             // Results
             public const string replicate = "replicate";
@@ -2123,6 +2126,10 @@ namespace pwiz.Skyline.Model
             int missedCleavages = reader.GetIntAttribute(ATTR.num_missed_cleavages);
             // CONSIDER: Trusted value
             int? rank = reader.GetNullableIntAttribute(ATTR.rank);
+            double? stockConcentration = reader.GetNullableDoubleAttribute(ATTR.stock_concentration);
+            double? internalStandardKnownConcentration =
+                reader.GetNullableDoubleAttribute(ATTR.internal_standard_concentration);
+            string concentrationUnits = reader.GetAttribute(ATTR.concentration_units);
             bool autoManageChildren = reader.GetBoolAttribute(ATTR.auto_manage_children, true);
             bool isDecoy = reader.GetBoolAttribute(ATTR.decoy);
             string standardType = reader.GetAttribute(ATTR.standard_type);
@@ -2179,8 +2186,13 @@ namespace pwiz.Skyline.Model
             if (lookupSequence != null)
                 sourceKey = new ModifiedSequenceMods(lookupSequence, lookupMods);
 
-            return new PeptideDocNode(peptide, Settings, mods, sourceKey, standardType, rank,
+            PeptideDocNode peptideDocNode = new PeptideDocNode(peptide, Settings, mods, sourceKey, standardType, rank,
                 importedRetentionTime, annotations, results, children ?? new TransitionGroupDocNode[0], autoManageChildren);
+            peptideDocNode = peptideDocNode
+                .ChangeStockConcentration(stockConcentration)
+                .ChangeInternalStandardKnownConcentration(internalStandardKnownConcentration)
+                .ChangeConcentrationUnits(concentrationUnits);
+            return peptideDocNode;
         }
 
         private ExplicitMods ReadLookupMods(XmlReader reader, string lookupSequence)
@@ -3081,6 +3093,9 @@ namespace pwiz.Skyline.Model
                 writer.WriteAttribute(ATTR.standard_type, node.GlobalStandardType);
 
             writer.WriteAttributeNullable(ATTR.rank, node.Rank);
+            writer.WriteAttributeNullable(ATTR.stock_concentration, node.StockConcentration);
+            writer.WriteAttributeNullable(ATTR.internal_standard_concentration, node.InternalStandardConcentration);
+            writer.WriteAttributeIfString(ATTR.concentration_units, node.ConcentrationUnits);
 
             if (isCustomIon)
             {

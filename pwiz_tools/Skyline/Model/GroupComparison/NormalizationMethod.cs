@@ -71,6 +71,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         }
 
         public string IsotopeLabelTypeName { get; private set; }
+        public bool AllowTruncatedTransitions { get { return !string.IsNullOrEmpty(IsotopeLabelTypeName); } }
 
         // ReSharper disable NonLocalizedString
         public static readonly NormalizationMethod NONE = new NormalizationMethod("none", ()=>GroupComparisonStrings.NormalizationMethod_NONE_None);

@@ -179,7 +179,9 @@ namespace pwiz.Skyline.EditUI
             tbxError.BackColor = Color.Red;
             tbxError.Text = pasteError.Message;
             // Useful for debugging if this hangs in a test - it appears in the timeout report  
+            // ReSharper disable LocalizableElement
             Text = Description + " (" + pasteError.Message + ")";  // Not L10N
+            // ReSharper restore LocalizableElement
         }
 
         public void ShowNoErrors()

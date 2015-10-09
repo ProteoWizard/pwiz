@@ -22,12 +22,15 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Collections;
 using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results.Scoring;
@@ -75,6 +78,7 @@ namespace pwiz.Skyline.SettingsUI
         private readonly SettingsListBoxDriver<StaticMod> _driverHeavyMod;
         private readonly SettingsListComboDriver<PeakScoringModelSpec> _driverPeakScoringModel;
         private readonly LabelTypeComboDriver _driverLabelType;
+        private static readonly IList<int?> _quantMsLevels = ImmutableList.ValueOf(new int?[] {null, 1, 2});
 
         public PeptideSettingsUI(SkylineWindow parent, LibraryManager libraryManager)
         {
@@ -156,6 +160,14 @@ namespace pwiz.Skyline.SettingsUI
 
             IsShowLibraryExplorer = false;
             tabControl1.TabPages.Remove(tabIntegration);
+            comboNormalizationMethod.Items.AddRange(
+                NormalizationMethod.ListNormalizationMethods(parent.DocumentUI).ToArray());
+            comboNormalizationMethod.SelectedItem = _peptideSettings.Quantification.NormalizationMethod;
+            comboWeighting.Items.AddRange(RegressionWeighting.All.Cast<object>().ToArray());
+            comboWeighting.SelectedItem = _peptideSettings.Quantification.RegressionWeighting;
+            comboRegressionFit.Items.AddRange(RegressionFit.All.Cast<object>().ToArray());
+            comboRegressionFit.SelectedItem = _peptideSettings.Quantification.RegressionFit;
+            comboQuantMsLevel.SelectedIndex = Math.Max(0, _quantMsLevels.IndexOf(_peptideSettings.Quantification.MsLevel));
         }
 
         public DigestSettings Digest { get { return _peptideSettings.DigestSettings; } }
@@ -370,8 +382,14 @@ namespace pwiz.Skyline.SettingsUI
             PeptideIntegration integration = new PeptideIntegration(_driverPeakScoringModel.SelectedItem);
             Helpers.AssignIfEquals(ref integration, Integration);
 
-            return new PeptideSettings(enzyme, digest, prediction,
-                    filter, libraries, modifications, integration, backgroundProteome);
+            QuantificationSettings quantification = QuantificationSettings.DEFAULT
+                .ChangeNormalizationMethod(comboNormalizationMethod.SelectedItem as NormalizationMethod ?? NormalizationMethod.NONE) 
+                .ChangeRegressionWeighting(comboWeighting.SelectedItem as RegressionWeighting)
+                .ChangeRegressionFit(comboRegressionFit.SelectedItem as RegressionFit)
+                .ChangeMsLevel(_quantMsLevels[comboQuantMsLevel.SelectedIndex]);
+
+            return new PeptideSettings(enzyme, digest, prediction, filter, libraries, modifications, integration, backgroundProteome)
+                    .ChangeAbsoluteQuantification(quantification);
         }
 
         public void OkDialog()
@@ -1177,6 +1195,30 @@ namespace pwiz.Skyline.SettingsUI
         public void AddBackgroundProteome()
         {
             _driverBackgroundProteome.AddItem();    
+        }
+
+        public NormalizationMethod QuantNormalizationMethod
+        {
+            get { return comboNormalizationMethod.SelectedItem as NormalizationMethod; }
+            set { comboNormalizationMethod.SelectedItem = value; }
+        }
+
+        public RegressionFit QuantRegressionFit
+        {
+            get { return comboRegressionFit.SelectedItem as RegressionFit; }
+            set { comboRegressionFit.SelectedItem = value; }
+        }
+
+        public RegressionWeighting QuantRegressionWeighting
+        {
+            get { return comboWeighting.SelectedItem as RegressionWeighting; }
+            set { comboWeighting.SelectedItem = value; }
+        }
+
+        public int? QuantMsLevel
+        {
+            get { return _quantMsLevels[comboQuantMsLevel.SelectedIndex]; }
+            set { comboQuantMsLevel.SelectedIndex = _quantMsLevels.IndexOf(value); }
         }
 
         #endregion

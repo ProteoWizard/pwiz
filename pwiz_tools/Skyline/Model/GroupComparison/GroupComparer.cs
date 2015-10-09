@@ -22,7 +22,6 @@ using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataAnalysis.FoldChange;
 using pwiz.Common.DataAnalysis.Matrices;
-using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.GroupComparison
 {
@@ -280,169 +279,27 @@ namespace pwiz.Skyline.Model.GroupComparison
             {
                 foreach (var peptide in selector.ListPeptides())
                 {
-                    var transitionsToNormalizeAgainst = GetTransitionsForLabel(
-                        peptide, replicateEntry.Key, ComparisonDef.NormalizationMethod.IsotopeLabelTypeName);
-                    foreach (var precursor in peptide.TransitionGroups)
+                    var peptideQuantifier = new PeptideQuantifier(selector.Protein, peptide, ComparisonDef.NormalizationMethod)
                     {
-                        if (!selector.IncludePrecursor(precursor))
+                        IsotopeLabelType = selector.LabelType,
+                        MsLevel = selector.MsLevel
+                    };
+                    foreach (var quantityEntry in peptideQuantifier.GetTransitionIntensities(SrmDocument.Settings, 
+                                replicateEntry.Key))
+                    {
+                        var dataRowDetails = new DataRowDetails()
                         {
-                            continue;
-                        }
-                        if (!string.IsNullOrEmpty(ComparisonDef.NormalizationMethod.IsotopeLabelTypeName))
-                        {
-                            if (Equals(ComparisonDef.NormalizationMethod.IsotopeLabelTypeName,
-                                precursor.TransitionGroup.LabelType.Name))
-                            {
-                                continue;
-                            }
-                        }
-                        foreach (var transition in precursor.Transitions)
-                        {
-                            if (!selector.IncludeTransition(transition))
-                            {
-                                continue;
-                            }
-                            var identityPath = new IdentityPath(selector.Protein.Id, peptide.Id, precursor.Id, transition.Id);
-
-                            AddDataRows(foldChangeDetails, replicateEntry, transitionsToNormalizeAgainst, identityPath,
-                                precursor, transition);
-                        }
+                            BioReplicate = replicateEntry.Value.BioReplicate,
+                            Control = replicateEntry.Value.IsControl,
+                            IdentityPath = quantityEntry.Key,
+                            Intensity = Math.Max(1.0, quantityEntry.Value.Intensity),
+                            Denominator = Math.Max(1.0, quantityEntry.Value.Denominator),
+                            ReplicateIndex = replicateEntry.Key,
+                        };
+                        foldChangeDetails.Add(dataRowDetails);
                     }
                 }
             }
-        }
-
-        private void AddDataRows(
-            IList<DataRowDetails> foldChangeDetails,
-            KeyValuePair<int, ReplicateDetails> replicateEntry,
-            IDictionary<TransitionLossEquivalentKey, TransitionChromInfo> peptideStandards,
-            IdentityPath identityPath, TransitionGroupDocNode transitionGroup, TransitionDocNode transition)
-        {
-            if (null == transition.Results)
-            {
-                return;
-            }
-            if (replicateEntry.Key >= transition.Results.Count)
-            {
-                return;
-            }
-            var chromInfos = transition.Results[replicateEntry.Key];
-            if (null == chromInfos)
-            {
-                return;
-            }
-            var chromInfo = GetTransitionChromInfo(transition, replicateEntry);
-            if (null == chromInfo || chromInfo.IsEmpty)
-            {
-                return;
-            }
-            double normalizedArea = chromInfo.Area;
-            double denominator = 1.0;
-
-            if (null != peptideStandards)
-            {
-                TransitionChromInfo chromInfoStandard;
-                if (!peptideStandards.TryGetValue(transition.EquivalentKey(transitionGroup), out chromInfoStandard))
-                {
-                    return;
-                }
-                else
-                {
-                    denominator = chromInfoStandard.Area;
-                }
-            }
-            else
-            {
-                if (chromInfo.IsTruncated.GetValueOrDefault())
-                {
-                    return;
-                }
-                if (Equals(ComparisonDef.NormalizationMethod, NormalizationMethod.GLOBAL_STANDARDS))
-                {
-                    denominator = SrmDocument.Settings.CalcGlobalStandardArea(replicateEntry.Key, chromInfo.FileId);
-                }
-            }
-            foldChangeDetails.Add(new DataRowDetails
-            {
-                IdentityPath = identityPath,
-                BioReplicate = replicateEntry.Value.BioReplicate,
-                Control = replicateEntry.Value.IsControl,
-                ReplicateIndex = replicateEntry.Key,
-                Intensity = Math.Max(normalizedArea, 1.0),
-                Denominator = Math.Max(denominator, 1.0),
-            });
-        }
-
-        private TransitionChromInfo GetTransitionChromInfo(TransitionDocNode transitionDocNode,
-            KeyValuePair<int, ReplicateDetails> replicateEntry)
-        {
-            var chromInfos = transitionDocNode.Results[replicateEntry.Key];
-            if (null == chromInfos)
-            {
-                return null;
-            }
-            foreach (var chromInfo in chromInfos)
-            {
-                if (0 != chromInfo.OptimizationStep)
-                {
-                    continue;
-                }
-                if (chromInfo.IsEmpty)
-                {
-                    continue;
-                }
-                return chromInfo;
-            }
-            return null;
-        }
-
-        private bool IsTruncated(TransitionGroupDocNode transitionGroupDocNode,
-            KeyValuePair<int, ReplicateDetails> replicateEntry)
-        {
-            foreach (var transition in transitionGroupDocNode.Transitions)
-            {
-                var chromInfo = GetTransitionChromInfo(transition, replicateEntry);
-                if (null != chromInfo && chromInfo.IsTruncated.GetValueOrDefault())
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        private Dictionary<TransitionLossEquivalentKey, TransitionChromInfo> GetTransitionsForLabel(
-            PeptideDocNode peptideDocNode, int replicateIndex, string isotopeLabelName)
-        {
-            if (string.IsNullOrEmpty(isotopeLabelName))
-            {
-                return null;
-            }
-            var result = new Dictionary<TransitionLossEquivalentKey, TransitionChromInfo>();
-            foreach (var transitionGroup in peptideDocNode.TransitionGroups)
-            {
-                if (!Equals(isotopeLabelName, transitionGroup.TransitionGroup.LabelType.Name))
-                {
-                    continue;
-                }
-                foreach (var transition in transitionGroup.Transitions)
-                {
-                    if (null == transition.Results || transition.Results.Count <= replicateIndex)
-                    {
-                        continue;
-                    }
-                    var chromInfoList = transition.Results[replicateIndex];
-                    if (null == chromInfoList)
-                    {
-                        continue;
-                    }
-                    var chromInfo = chromInfoList.FirstOrDefault(chrom => 0 == chrom.OptimizationStep);
-                    if (null != chromInfo)
-                    {
-                        result[transition.EquivalentKey(transitionGroup)] = chromInfo;
-                    }
-                }
-            }
-            return result;
         }
 
         public struct RunAbundance

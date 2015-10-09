@@ -37,6 +37,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.Graphs.Calibration;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -58,6 +59,7 @@ namespace pwiz.Skyline
         private GraphSummary _graphPeakArea;
         private DockableForm _resultsGridForm;
         private DocumentGridForm _documentGridForm;
+        private CalibrationForm _calibrationForm;
         private readonly List<GraphChromatogram> _listGraphChrom = new List<GraphChromatogram>();
         private bool _inGraphUpdate;
         private ChromFileInfoId _alignToFile;
@@ -432,6 +434,7 @@ namespace pwiz.Skyline
             DestroyGraphPeakArea();
             DestroyResultsGrid();
             DestroyDocumentGrid();
+            DestroyCalibrationForm();
 
             DestroyImmediateWindow();
             HideFindResults(true);
@@ -516,6 +519,10 @@ namespace pwiz.Skyline
             {
                 return _documentGridForm ?? CreateDocumentGrid();
             }
+            if (Equals(persistentString, typeof (CalibrationForm).ToString()))
+            {
+                return _calibrationForm ?? CreateCalibrationForm();
+            }
             if (Equals(persistentString, typeof(ImmediateWindow).ToString()))
             {
                  return _immediateWindow ?? CreateImmediateWindow();
@@ -575,6 +582,8 @@ namespace pwiz.Skyline
                 listUpdateGraphs.Add(_graphRetentionTime);
             if (_graphPeakArea != null && _graphPeakArea.Visible)
                 listUpdateGraphs.Add(_graphPeakArea);
+            if (_calibrationForm != null && _calibrationForm.Visible)
+                listUpdateGraphs.Add(_calibrationForm);
 
             UpdateGraphPanes(listUpdateGraphs);
         }
@@ -3910,7 +3919,50 @@ namespace pwiz.Skyline
         }
         #endregion
 
+        #region Calibration Curves
+        private void calibrationCurvesMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowCalibrationForm();
+        }
 
+        private CalibrationForm CreateCalibrationForm()
+        {
+            Assume.IsNull(_calibrationForm);
+            _calibrationForm = new CalibrationForm(this);
+            _calibrationForm.FormClosed += calibrationForm_FormClosed;
+            return _calibrationForm;
+        }
+
+        void calibrationForm_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            _calibrationForm = null;
+        }
+
+        private void DestroyCalibrationForm()
+        {
+            if (null != _calibrationForm)
+            {
+                _calibrationForm.FormClosed -= calibrationForm_FormClosed;
+                _calibrationForm.Close();
+                _calibrationForm = null;
+            }
+
+        }
+
+        public CalibrationForm ShowCalibrationForm()
+        {
+            if (null != _calibrationForm)
+            {
+                _calibrationForm.Activate();
+            }
+            else
+            {
+                var rectFloat = GetFloatingRectangleForNewWindow();
+                CreateCalibrationForm().Show(dockPanel, rectFloat);
+            }
+            return _calibrationForm;
+        }
+        #endregion
         #region Document Grid
         private void documentGridMenuItem_Click(object sender, EventArgs e)
         {

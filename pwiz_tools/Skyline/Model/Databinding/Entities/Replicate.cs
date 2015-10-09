@@ -24,6 +24,7 @@ using System.Linq;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
@@ -120,6 +121,30 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 return ChromatogramSet.MSDataFileInfos.Select(
                     chromFileInfo => new ResultFile(this, chromFileInfo.FileId, 0)).ToArray();
+            }
+        }
+
+        [DataGridViewColumnType(typeof(SampleTypeDataGridViewColumn))]
+        public SampleType SampleType
+        {
+            get
+            {
+                return ChromatogramSet.SampleType;
+            }
+            set
+            {
+                ChangeChromatogramSet(EditDescription.SetColumn("SampleType", value), // Not L10N
+                    ChromatogramSet.ChangeSampleType(value));
+            }
+        }
+
+        public double? DilutionFactor
+        {
+            get { return ChromatogramSet.DilutionFactor; }
+            set
+            {
+                ChangeChromatogramSet(EditDescription.SetColumn("DilutionFactor", value), // Not L10N
+                    ChromatogramSet.ChangeDilutionFactor(value));
             }
         }
     }

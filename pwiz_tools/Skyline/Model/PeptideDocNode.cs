@@ -441,6 +441,10 @@ namespace pwiz.Skyline.Model
             return iBest;            
         }
 
+        public double? StockConcentration { get; private set; }
+        public double? InternalStandardConcentration { get; private set; }
+        public string ConcentrationUnits { get; private set; }
+
         #region Property change methods
 
         private PeptideDocNode UpdateModifiedSequence(SrmSettings settingsNew)
@@ -529,6 +533,25 @@ namespace pwiz.Skyline.Model
                 }
                 return new PeptideDocNode(newPeptide, settings, ExplicitMods, SourceKey, explicitRetentionTime, children.ToArray(), AutoManageChildren);
             }
+        }
+
+        public PeptideDocNode ChangeStockConcentration(double? stockConcentration)
+        {
+            return ChangeProp(ImClone(this), im => im.StockConcentration = stockConcentration);
+        }
+
+        public PeptideDocNode ChangeInternalStandardKnownConcentration(double? internalStandardKnownConcentration)
+        {
+            return ChangeProp(ImClone(this), im => im.InternalStandardConcentration = internalStandardKnownConcentration);
+        }
+
+        public PeptideDocNode ChangeConcentrationUnits(string concentrationUnits)
+        {
+            if (string.IsNullOrEmpty(concentrationUnits))
+            {
+                concentrationUnits = null;
+            }
+            return ChangeProp(ImClone(this), im => im.ConcentrationUnits = concentrationUnits);
         }
 
         #endregion
@@ -1569,7 +1592,10 @@ namespace pwiz.Skyline.Model
                 other.Rank.Equals(Rank) &&
                 Equals(other.Results, Results) &&
                 Equals(other.ExplicitRetentionTime, ExplicitRetentionTime) &&
-                other.BestResult == BestResult;
+                other.BestResult == BestResult &&
+                Equals(other.StockConcentration, StockConcentration) &&
+                Equals(other.InternalStandardConcentration, InternalStandardConcentration) &&
+                Equals(other.ConcentrationUnits, ConcentrationUnits);
             return equal; // For debugging convenience
         }
 
@@ -1591,6 +1617,9 @@ namespace pwiz.Skyline.Model
                 result = (result*397) ^ (ExplicitRetentionTime != null ? ExplicitRetentionTime.GetHashCode() : 0);
                 result = (result*397) ^ (Results != null ? Results.GetHashCode() : 0);
                 result = (result*397) ^ BestResult;
+                result = (result * 397) ^ StockConcentration.GetHashCode();
+                result = (result * 397) ^ InternalStandardConcentration.GetHashCode();
+                result = (result * 397) ^ (ConcentrationUnits != null ? ConcentrationUnits.GetHashCode() : 0);
                 return result;
             }
         }

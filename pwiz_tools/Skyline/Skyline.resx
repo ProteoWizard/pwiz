@@ -1705,25 +1705,25 @@
     <value>204, 6</value>
   </data>
   <data name="insertFASTAMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>157, 22</value>
+    <value>156, 22</value>
   </data>
   <data name="insertFASTAMenuItem.Text" xml:space="preserve">
     <value>&amp;FASTA...</value>
   </data>
   <data name="insertProteinsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>157, 22</value>
+    <value>156, 22</value>
   </data>
   <data name="insertProteinsMenuItem.Text" xml:space="preserve">
     <value>Pr&amp;oteins...</value>
   </data>
   <data name="insertPeptidesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>157, 22</value>
+    <value>156, 22</value>
   </data>
   <data name="insertPeptidesMenuItem.Text" xml:space="preserve">
     <value>&amp;Peptides...</value>
   </data>
   <data name="insertTransitionListMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>157, 22</value>
+    <value>156, 22</value>
   </data>
   <data name="insertTransitionListMenuItem.Text" xml:space="preserve">
     <value>&amp;Transition List...</value>
@@ -2062,7 +2062,7 @@
     <value>Ctrl+T</value>
   </data>
   <data name="arrangeTiledMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>187, 22</value>
+    <value>186, 22</value>
   </data>
   <data name="arrangeTiledMenuItem.Text" xml:space="preserve">
     <value>&amp;Tiled</value>
@@ -2071,7 +2071,7 @@
     <value>False</value>
   </data>
   <data name="arrangeColumnMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>187, 22</value>
+    <value>186, 22</value>
   </data>
   <data name="arrangeColumnMenuItem.Text" xml:space="preserve">
     <value>&amp;Column</value>
@@ -2080,7 +2080,7 @@
     <value>False</value>
   </data>
   <data name="arrangeRowMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>187, 22</value>
+    <value>186, 22</value>
   </data>
   <data name="arrangeRowMenuItem.Text" xml:space="preserve">
     <value>&amp;Row</value>
@@ -2089,13 +2089,13 @@
     <value>Ctrl+Shift+T</value>
   </data>
   <data name="arrangedTabbedMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>187, 22</value>
+    <value>186, 22</value>
   </data>
   <data name="arrangedTabbedMenuItem.Text" xml:space="preserve">
     <value>T&amp;abbed</value>
   </data>
   <data name="groupedMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>187, 22</value>
+    <value>186, 22</value>
   </data>
   <data name="groupedMenuItem.Text" xml:space="preserve">
     <value>&amp;Grouped...</value>
@@ -2514,6 +2514,12 @@
   <data name="peakAreasMenuItem.Text" xml:space="preserve">
     <value>Pea&amp;k Areas</value>
   </data>
+  <data name="calibrationCurveMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>183, 22</value>
+  </data>
+  <data name="calibrationCurveMenuItem.Text" xml:space="preserve">
+    <value>Calibration Curve</value>
+  </data>
   <data name="addGroupComparisonMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>124, 22</value>
   </data>
@@ -2692,7 +2698,7 @@
     <value>&amp;Options...</value>
   </data>
   <data name="toolsMenu.Size" type="System.Drawing.Size, System.Drawing">
-    <value>48, 20</value>
+    <value>47, 20</value>
   </data>
   <data name="toolsMenu.Text" xml:space="preserve">
     <value>&amp;Tools</value>
@@ -4870,6 +4876,12 @@
     <value>areaPeptideComparisonMenuItem</value>
   </data>
   <data name="&gt;&gt;areaPeptideComparisonMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;calibrationCurveMenuItem.Name" xml:space="preserve">
+    <value>calibrationCurveMenuItem</value>
+  </data>
+  <data name="&gt;&gt;calibrationCurveMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;groupComparisonsMenuItem.Name" xml:space="preserve">

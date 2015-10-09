@@ -1,0 +1,725 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<srm_settings format_version="3.12" software_version="Skyline (64-bit) ">
+  <settings_summary name="Default">
+    <peptide_settings>
+      <enzyme name="Trypsin" cut="KR" no_cut="P" sense="C" />
+      <digest_settings max_missed_cleavages="0" />
+      <peptide_prediction use_measured_rts="true" measured_rt_window="2" use_spectral_library_drift_times="false" />
+      <peptide_filter start="25" min_length="8" max_length="25" auto_select="true">
+        <peptide_exclusions />
+      </peptide_filter>
+      <peptide_libraries pick="library" />
+      <peptide_modifications max_variable_mods="3" max_neutral_losses="1">
+        <static_modifications>
+          <static_modification name="Carbamidomethyl Cysteine" aminoacid="C" formula="C2H3ON" />
+        </static_modifications>
+        <heavy_modifications>
+          <static_modification name="heavy I" aminoacid="I" label_13C="true" label_15N="true" explicit_decl="true" />
+        </heavy_modifications>
+      </peptide_modifications>
+      <quantification weighting="none" fit="linear" normalization="ratio_to_heavy" />
+    </peptide_settings>
+    <transition_settings>
+      <transition_prediction precursor_mass_type="Monoisotopic" fragment_mass_type="Monoisotopic" optimize_by="Transition">
+        <predict_collision_energy name="System11" step_size="1" step_count="5">
+          <regression_ce charge="2" slope="0.0497" intercept="-1.6048" />
+          <regression_ce charge="3" slope="0.0473" intercept="-3.6765" />
+        </predict_collision_energy>
+        <predict_declustering_potential name="System11" step_size="5" step_count="5" slope="0.1" intercept="3.4569" />
+      </transition_prediction>
+      <transition_filter precursor_charges="2,3" product_charges="1,2,3" fragment_types="a,b,c,x,y,z" fragment_range_first="m/z &gt; precursor" fragment_range_last="3 ions" precursor_mz_window="0">
+        <measured_ion name="N-terminal to Proline" cut="P" sense="N" min_length="3" />
+      </transition_filter>
+      <transition_libraries ion_match_tolerance="0.5" ion_count="3" pick_from="all" />
+      <transition_integration integrate_all="true" />
+      <transition_instrument min_mz="50" max_mz="1250" mz_match_tolerance="0.055" />
+    </transition_settings>
+    <data_settings>
+      <views>
+        <view name="PeptidesWithCalibration" rowsource="pwiz.Skyline.Model.Databinding.Entities.Peptide" sublist="Results!*">
+          <column name="" />
+          <column name="Protein" />
+          <column name="ModifiedSequence" />
+          <column name="AverageMeasuredRetentionTime" />
+          <column name="Note" />
+          <column name="StockConcentration" />
+          <column name="InternalStandardConcentration" />
+          <column name="ConcentrationUnits" />
+          <column name="CalibrationCurve" />
+        </view>
+        <view name="PeptideResultsWithQuantification" rowsource="pwiz.Skyline.Model.Databinding.Entities.Peptide" sublist="Results!*">
+          <column name="" />
+          <column name="Protein" />
+          <column name="ModifiedSequence" />
+          <column name="Note" />
+          <column name="StockConcentration" />
+          <column name="InternalStandardConcentration" />
+          <column name="ConcentrationUnits" />
+          <column name="CalibrationCurve" />
+          <column name="Results!*.Value.Quantification" />
+          <column name="Results!*.Value.Quantification.NormalizedIntensity" />
+          <column name="Results!*.Value.Quantification.CalculatedConcentration" />
+          <column name="Results!*.Value.Quantification.CalibrationCurve" />
+          <column name="Results!*.Value.Quantification.CalibrationCurve.Slope" />
+          <column name="Results!*.Value.Quantification.CalibrationCurve.Intercept" />
+          <column name="Results!*.Value.Quantification.CalibrationCurve.PointCount" />
+          <column name="Results!*.Value.Quantification.CalibrationCurve.TransitionCount" />
+          <column name="Results!*.Value.Quantification.CalibrationCurve.QuadraticCoefficient" />
+          <column name="Results!*.Value.Quantification.CalibrationCurve.RSquared" />
+          <column name="Results!*.Value.Quantification.CalibrationCurve.ErrorMessage" />
+        </view>
+      </views>
+    </data_settings>
+    <measured_results time_normal_area="true">
+      <replicate name="Solvent_" sample_type="solvent">
+        <sample_file id="Solvent__f0" file_path="D:\Analyst Data\Projects\THYG R&amp;D\Data\2015-08-19 - LCA Skyline Example.wiff|Solvent_|0" sample_name="Solvent_" acquired_time="2015-08-21T04:03:41" modified_time="2015-08-21T08:54:20">
+          <instrument_info_list>
+            <instrument_info>
+              <model>Applied Biosystems instrument model</model>
+            </instrument_info>
+          </instrument_info_list>
+        </sample_file>
+      </replicate>
+      <replicate name="Double Blank__VIFonly" sample_type="double_blank">
+        <sample_file id="Double_Blank__VIFonly_f0" file_path="D:\Analyst Data\Projects\THYG R&amp;D\Data\2015-08-19 - LCA Skyline Example.wiff|Double Blank__VIFonly|1" sample_name="Double Blank__VIFonly" acquired_time="2015-08-21T04:05:42" modified_time="2015-08-21T08:54:20">
+          <instrument_info_list>
+            <instrument_info>
+              <model>Applied Biosystems instrument model</model>
+            </instrument_info>
+          </instrument_info_list>
+        </sample_file>
+      </replicate>
+      <replicate name="Blank+IS__VIFonly" sample_type="blank">
+        <sample_file id="Blank-IS__VIFonly_f0" file_path="D:\Analyst Data\Projects\THYG R&amp;D\Data\2015-08-19 - LCA Skyline Example.wiff|Blank+IS__VIFonly|2" sample_name="Blank+IS__VIFonly" acquired_time="2015-08-21T04:07:45" modified_time="2015-08-21T08:54:20">
+          <instrument_info_list>
+            <instrument_info>
+              <model>Applied Biosystems instrument model</model>
+            </instrument_info>
+          </instrument_info_list>
+        </sample_file>
+      </replicate>
+      <replicate name="Cal 1_0_20 ng_mL_VIFonly" dilution_factor="0.02" sample_type="standard">
+        <sample_file id="Cal_1_0_20_ng_mL_VIFonly_f0" file_path="D:\Analyst Data\Projects\THYG R&amp;D\Data\2015-08-19 - LCA Skyline Example.wiff|Cal 1_0_20 ng_mL_VIFonly|3" sample_name="Cal 1_0_20 ng_mL_VIFonly" acquired_time="2015-08-21T04:09:49" modified_time="2015-08-21T08:54:20">
+          <instrument_info_list>
+            <instrument_info>
+              <model>Applied Biosystems instrument model</model>
+            </instrument_info>
+          </instrument_info_list>
+        </sample_file>
+      </replicate>
+      <replicate name="Cal 2_0_5 ng_mL_VIFonly" dilution_factor="0.05" sample_type="standard">
+        <sample_file id="Cal_2_0_5_ng_mL_VIFonly_f0" file_path="D:\Analyst Data\Projects\THYG R&amp;D\Data\2015-08-19 - LCA Skyline Example.wiff|Cal 2_0_5 ng_mL_VIFonly|4" sample_name="Cal 2_0_5 ng_mL_VIFonly" acquired_time="2015-08-21T04:11:52" modified_time="2015-08-21T08:54:20">
+          <instrument_info_list>
+            <instrument_info>
+              <model>Applied Biosystems instrument model</model>
+            </instrument_info>
+          </instrument_info_list>
+        </sample_file>
+      </replicate>
+      <replicate name="Cal 3_1 ng_mL_VIFonly" dilution_factor="0.1" sample_type="standard">
+        <sample_file id="Cal_3_1_ng_mL_VIFonly_f0" file_path="D:\Analyst Data\Projects\THYG R&amp;D\Data\2015-08-19 - LCA Skyline Example.wiff|Cal 3_1 ng_mL_VIFonly|5" sample_name="Cal 3_1 ng_mL_VIFonly" acquired_time="2015-08-21T04:13:54" modified_time="2015-08-21T08:54:20">
+          <instrument_info_list>
+            <instrument_info>
+              <model>Applied Biosystems instrument model</model>
+            </instrument_info>
+          </instrument_info_list>
+        </sample_file>
+      </replicate>
+      <replicate name="Cal 4_2 ng_mL_VIFonly" dilution_factor="0.2" sample_type="standard">
+        <sample_file id="Cal_4_2_ng_mL_VIFonly_f0" file_path="D:\Analyst Data\Projects\THYG R&amp;D\Data\2015-08-19 - LCA Skyline Example.wiff|Cal 4_2 ng_mL_VIFonly|6" sample_name="Cal 4_2 ng_mL_VIFonly" acquired_time="2015-08-21T04:15:57" modified_time="2015-08-21T08:54:20">
+          <instrument_info_list>
+            <instrument_info>
+              <model>Applied Biosystems instrument model</model>
+            </instrument_info>
+          </instrument_info_list>
+        </sample_file>
+      </replicate>
+      <replicate name="Cal 5_5 ng_mL_VIFonly" dilution_factor="0.5" sample_type="standard">
+        <sample_file id="Cal_5_5_ng_mL_VIFonly_f0" file_path="D:\Analyst Data\Projects\THYG R&amp;D\Data\2015-08-19 - LCA Skyline Example.wiff|Cal 5_5 ng_mL_VIFonly|7" sample_name="Cal 5_5 ng_mL_VIFonly" acquired_time="2015-08-21T04:17:58" modified_time="2015-08-21T08:54:20">
+          <instrument_info_list>
+            <instrument_info>
+              <model>Applied Biosystems instrument model</model>
+            </instrument_info>
+          </instrument_info_list>
+        </sample_file>
+      </replicate>
+      <replicate name="Cal 6_10 ng_mL_VIFonly" dilution_factor="1" sample_type="standard">
+        <sample_file id="Cal_6_10_ng_mL_VIFonly_f0" file_path="D:\Analyst Data\Projects\THYG R&amp;D\Data\2015-08-19 - LCA Skyline Example.wiff|Cal 6_10 ng_mL_VIFonly|8" sample_name="Cal 6_10 ng_mL_VIFonly" acquired_time="2015-08-21T04:20:00" modified_time="2015-08-21T08:54:20">
+          <instrument_info_list>
+            <instrument_info>
+              <model>Applied Biosystems instrument model</model>
+            </instrument_info>
+          </instrument_info_list>
+        </sample_file>
+      </replicate>
+      <replicate name="Cal 7_25 ng_mL_VIFonly" dilution_factor="2.5" sample_type="standard">
+        <sample_file id="Cal_7_25_ng_mL_VIFonly_f0" file_path="D:\Analyst Data\Projects\THYG R&amp;D\Data\2015-08-19 - LCA Skyline Example.wiff|Cal 7_25 ng_mL_VIFonly|9" sample_name="Cal 7_25 ng_mL_VIFonly" acquired_time="2015-08-21T04:22:05" modified_time="2015-08-21T08:54:20">
+          <instrument_info_list>
+            <instrument_info>
+              <model>Applied Biosystems instrument model</model>
+            </instrument_info>
+          </instrument_info_list>
+        </sample_file>
+      </replicate>
+      <replicate name="Cal 8_100 ng_mL_VIFonly" dilution_factor="10" sample_type="standard">
+        <sample_file id="Cal_8_100_ng_mL_VIFonly_f0" file_path="D:\Analyst Data\Projects\THYG R&amp;D\Data\2015-08-19 - LCA Skyline Example.wiff|Cal 8_100 ng_mL_VIFonly|10" sample_name="Cal 8_100 ng_mL_VIFonly" acquired_time="2015-08-21T04:24:07" modified_time="2015-08-21T08:54:20">
+          <instrument_info_list>
+            <instrument_info>
+              <model>Applied Biosystems instrument model</model>
+            </instrument_info>
+          </instrument_info_list>
+        </sample_file>
+      </replicate>
+      <replicate name="Blank+IS__VIFonly (2)" sample_type="blank">
+        <sample_file id="Blank-IS__VIFonly_:2:_f0" file_path="D:\Analyst Data\Projects\THYG R&amp;D\Data\2015-08-19 - LCA Skyline Example.wiff|Blank+IS__VIFonly (2)|11" sample_name="Blank+IS__VIFonly (2)" acquired_time="2015-08-21T04:26:10" modified_time="2015-08-21T08:54:20">
+          <instrument_info_list>
+            <instrument_info>
+              <model>Applied Biosystems instrument model</model>
+            </instrument_info>
+          </instrument_info_list>
+        </sample_file>
+      </replicate>
+      <replicate name="QC1__VIFonly" sample_type="qc">
+        <sample_file id="QC1__VIFonly_f0" file_path="D:\Analyst Data\Projects\THYG R&amp;D\Data\2015-08-19 - LCA Skyline Example.wiff|QC1__VIFonly|12" sample_name="QC1__VIFonly" acquired_time="2015-08-21T04:28:14" modified_time="2015-08-21T08:54:20">
+          <instrument_info_list>
+            <instrument_info>
+              <model>Applied Biosystems instrument model</model>
+            </instrument_info>
+          </instrument_info_list>
+        </sample_file>
+      </replicate>
+      <replicate name="QC2__VIFonly" sample_type="qc">
+        <sample_file id="QC2__VIFonly_f0" file_path="D:\Analyst Data\Projects\THYG R&amp;D\Data\2015-08-19 - LCA Skyline Example.wiff|QC2__VIFonly|13" sample_name="QC2__VIFonly" acquired_time="2015-08-21T04:30:18" modified_time="2015-08-21T08:54:20">
+          <instrument_info_list>
+            <instrument_info>
+              <model>Applied Biosystems instrument model</model>
+            </instrument_info>
+          </instrument_info_list>
+        </sample_file>
+      </replicate>
+      <replicate name="QC3__VIFonly" sample_type="qc">
+        <sample_file id="QC3__VIFonly_f0" file_path="D:\Analyst Data\Projects\THYG R&amp;D\Data\2015-08-19 - LCA Skyline Example.wiff|QC3__VIFonly|14" sample_name="QC3__VIFonly" acquired_time="2015-08-21T04:32:19" modified_time="2015-08-21T08:54:20">
+          <instrument_info_list>
+            <instrument_info>
+              <model>Applied Biosystems instrument model</model>
+            </instrument_info>
+          </instrument_info_list>
+        </sample_file>
+      </replicate>
+      <replicate name="QC4__VIFonly" sample_type="qc">
+        <sample_file id="QC4__VIFonly_f0" file_path="D:\Analyst Data\Projects\THYG R&amp;D\Data\2015-08-19 - LCA Skyline Example.wiff|QC4__VIFonly|15" sample_name="QC4__VIFonly" acquired_time="2015-08-21T04:34:22" modified_time="2015-08-21T08:54:20">
+          <instrument_info_list>
+            <instrument_info>
+              <model>Applied Biosystems instrument model</model>
+            </instrument_info>
+          </instrument_info_list>
+        </sample_file>
+      </replicate>
+      <replicate name="Unknown 1__VIFonly">
+        <sample_file id="Unknown_1__VIFonly_f0" file_path="D:\Analyst Data\Projects\THYG R&amp;D\Data\2015-08-19 - LCA Skyline Example.wiff|Unknown 1__VIFonly|16" sample_name="Unknown 1__VIFonly" acquired_time="2015-08-21T04:36:26" modified_time="2015-08-21T08:54:20">
+          <instrument_info_list>
+            <instrument_info>
+              <model>Applied Biosystems instrument model</model>
+            </instrument_info>
+          </instrument_info_list>
+        </sample_file>
+      </replicate>
+      <replicate name="Unknown 2__VIFonly">
+        <sample_file id="Unknown_2__VIFonly_f0" file_path="D:\Analyst Data\Projects\THYG R&amp;D\Data\2015-08-19 - LCA Skyline Example.wiff|Unknown 2__VIFonly|17" sample_name="Unknown 2__VIFonly" acquired_time="2015-08-21T04:38:27" modified_time="2015-08-21T08:54:20">
+          <instrument_info_list>
+            <instrument_info>
+              <model>Applied Biosystems instrument model</model>
+            </instrument_info>
+          </instrument_info_list>
+        </sample_file>
+      </replicate>
+      <replicate name="Unknown 3__VIFonly">
+        <sample_file id="Unknown_3__VIFonly_f0" file_path="D:\Analyst Data\Projects\THYG R&amp;D\Data\2015-08-19 - LCA Skyline Example.wiff|Unknown 3__VIFonly|18" sample_name="Unknown 3__VIFonly" acquired_time="2015-08-21T04:40:29" modified_time="2015-08-21T08:54:20">
+          <instrument_info_list>
+            <instrument_info>
+              <model>Applied Biosystems instrument model</model>
+            </instrument_info>
+          </instrument_info_list>
+        </sample_file>
+      </replicate>
+      <replicate name="Unknown 4__VIFonly">
+        <sample_file id="Unknown_4__VIFonly_f0" file_path="D:\Analyst Data\Projects\THYG R&amp;D\Data\2015-08-19 - LCA Skyline Example.wiff|Unknown 4__VIFonly|19" sample_name="Unknown 4__VIFonly" acquired_time="2015-08-21T04:42:32" modified_time="2015-08-21T08:54:20">
+          <instrument_info_list>
+            <instrument_info>
+              <model>Applied Biosystems instrument model</model>
+            </instrument_info>
+          </instrument_info_list>
+        </sample_file>
+      </replicate>
+      <replicate name="Unknown 5__VIFonly">
+        <sample_file id="Unknown_5__VIFonly_f0" file_path="D:\Analyst Data\Projects\THYG R&amp;D\Data\2015-08-19 - LCA Skyline Example.wiff|Unknown 5__VIFonly|20" sample_name="Unknown 5__VIFonly" acquired_time="2015-08-21T04:44:36" modified_time="2015-08-21T08:54:20">
+          <instrument_info_list>
+            <instrument_info>
+              <model>Applied Biosystems instrument model</model>
+            </instrument_info>
+          </instrument_info_list>
+        </sample_file>
+      </replicate>
+      <replicate name="Unknown 6__VIFonly">
+        <sample_file id="Unknown_6__VIFonly_f0" file_path="D:\Analyst Data\Projects\THYG R&amp;D\Data\2015-08-19 - LCA Skyline Example.wiff|Unknown 6__VIFonly|21" sample_name="Unknown 6__VIFonly" acquired_time="2015-08-21T04:46:39" modified_time="2015-08-21T08:54:20">
+          <instrument_info_list>
+            <instrument_info>
+              <model>Applied Biosystems instrument model</model>
+            </instrument_info>
+          </instrument_info_list>
+        </sample_file>
+      </replicate>
+      <replicate name="Unknown 7__VIFonly">
+        <sample_file id="Unknown_7__VIFonly_f0" file_path="D:\Analyst Data\Projects\THYG R&amp;D\Data\2015-08-19 - LCA Skyline Example.wiff|Unknown 7__VIFonly|22" sample_name="Unknown 7__VIFonly" acquired_time="2015-08-21T04:48:43" modified_time="2015-08-21T08:54:20">
+          <instrument_info_list>
+            <instrument_info>
+              <model>Applied Biosystems instrument model</model>
+            </instrument_info>
+          </instrument_info_list>
+        </sample_file>
+      </replicate>
+      <replicate name="Unknown 8__VIFonly">
+        <sample_file id="Unknown_8__VIFonly_f0" file_path="D:\Analyst Data\Projects\THYG R&amp;D\Data\2015-08-19 - LCA Skyline Example.wiff|Unknown 8__VIFonly|23" sample_name="Unknown 8__VIFonly" acquired_time="2015-08-21T04:50:45" modified_time="2015-08-21T08:54:20">
+          <instrument_info_list>
+            <instrument_info>
+              <model>Applied Biosystems instrument model</model>
+            </instrument_info>
+          </instrument_info_list>
+        </sample_file>
+      </replicate>
+      <replicate name="Unknown 9__VIFonly">
+        <sample_file id="Unknown_9__VIFonly_f0" file_path="D:\Analyst Data\Projects\THYG R&amp;D\Data\2015-08-19 - LCA Skyline Example.wiff|Unknown 9__VIFonly|24" sample_name="Unknown 9__VIFonly" acquired_time="2015-08-21T04:52:48" modified_time="2015-08-21T08:54:20">
+          <instrument_info_list>
+            <instrument_info>
+              <model>Applied Biosystems instrument model</model>
+            </instrument_info>
+          </instrument_info_list>
+        </sample_file>
+      </replicate>
+    </measured_results>
+  </settings_summary>
+  <peptide_list label_name="TG|1578-1589|z2" websearch_status="X">
+    <peptide auto_manage_children="false" stock_concentration="100" internal_standard_known_concentration="80" concentration_units="ng/mL" sequence="VIFDANAPVAVR" modified_sequence="VIFDANAPVAVR" calc_neutral_pep_mass="1270.703371" num_missed_cleavages="0" avg_measured_retention_time="0.2071873">
+      <explicit_modifications>
+        <explicit_heavy_modifications>
+          <explicit_modification index_aa="1" modification_name="heavy I" mass_diff="+7" />
+        </explicit_heavy_modifications>
+      </explicit_modifications>
+      <peptide_results>
+        <peptide_result replicate="Solvent_" peak_count_ratio="1" retention_time="0.1338917" />
+        <peptide_result replicate="Double Blank__VIFonly" peak_count_ratio="0.9" retention_time="0.02385" />
+        <peptide_result replicate="Blank+IS__VIFonly" peak_count_ratio="1" retention_time="0.2292667" />
+        <peptide_result replicate="Cal 1_0_20 ng_mL_VIFonly" peak_count_ratio="1" retention_time="0.2090917" />
+        <peptide_result replicate="Cal 2_0_5 ng_mL_VIFonly" peak_count_ratio="1" retention_time="0.2201" />
+        <peptide_result replicate="Cal 3_1 ng_mL_VIFonly" peak_count_ratio="0.9" retention_time="0.2146" />
+        <peptide_result replicate="Cal 4_2 ng_mL_VIFonly" peak_count_ratio="1" retention_time="0.2182667" />
+        <peptide_result replicate="Cal 5_5 ng_mL_VIFonly" peak_count_ratio="1" retention_time="0.2164333" />
+        <peptide_result replicate="Cal 6_10 ng_mL_VIFonly" peak_count_ratio="1" retention_time="0.2182667" />
+        <peptide_result replicate="Cal 7_25 ng_mL_VIFonly" peak_count_ratio="1" retention_time="0.2219333" />
+        <peptide_result replicate="Cal 8_100 ng_mL_VIFonly" peak_count_ratio="1" retention_time="0.2201" />
+        <peptide_result replicate="Blank+IS__VIFonly (2)" peak_count_ratio="1" retention_time="0.2072583" />
+        <peptide_result replicate="QC1__VIFonly" peak_count_ratio="1" retention_time="0.2072583" />
+        <peptide_result replicate="QC2__VIFonly" peak_count_ratio="1" retention_time="0.2182667" />
+        <peptide_result replicate="QC3__VIFonly" peak_count_ratio="1" retention_time="0.2219333" />
+        <peptide_result replicate="QC4__VIFonly" peak_count_ratio="1" retention_time="0.2201" />
+        <peptide_result replicate="Unknown 1__VIFonly" peak_count_ratio="1" retention_time="0.2219333" />
+        <peptide_result replicate="Unknown 2__VIFonly" peak_count_ratio="1" retention_time="0.2146" />
+        <peptide_result replicate="Unknown 3__VIFonly" peak_count_ratio="1" retention_time="0.2201" />
+        <peptide_result replicate="Unknown 4__VIFonly" peak_count_ratio="1" retention_time="0.2201" />
+        <peptide_result replicate="Unknown 5__VIFonly" peak_count_ratio="1" retention_time="0.2256" />
+        <peptide_result replicate="Unknown 6__VIFonly" peak_count_ratio="1" retention_time="0.2182667" />
+        <peptide_result replicate="Unknown 7__VIFonly" peak_count_ratio="1" retention_time="0.2182667" />
+        <peptide_result replicate="Unknown 8__VIFonly" peak_count_ratio="1" retention_time="0.2201" />
+        <peptide_result replicate="Unknown 9__VIFonly" peak_count_ratio="1" retention_time="0.2201" />
+      </peptide_results>
+      <precursor charge="2" calc_neutral_mass="1270.703371" precursor_mz="636.358962" auto_manage_children="false" collision_energy="30.02224" declustering_potential="67.092796" modified_sequence="VIFDANAPVAVR">
+        <precursor_results>
+          <precursor_peak replicate="Solvent_" peak_count_ratio="1" retention_time="0.1467333" start_time="0.1173833" end_time="0.1614" fwhm="0.02310582" area="3531.002" background="1342.001" height="1550" truncated="0" identified="false" user_set="FALSE" />
+          <precursor_peak replicate="Double Blank__VIFonly" peak_count_ratio="0.8" retention_time="0.02568333" end_time="0.05135" fwhm="0.022" area="2541" background="440" height="800" truncated="0" identified="false" user_set="FALSE" />
+          <precursor_peak replicate="Blank+IS__VIFonly" peak_count_ratio="1" retention_time="0.2384333" start_time="0.19075" end_time="0.26045" fwhm="0.0476667" area="1716.001" background="1430.001" height="600" truncated="0" identified="false" user_set="FALSE" />
+          <precursor_peak replicate="Cal 1_0_20 ng_mL_VIFonly" peak_count_ratio="1" retention_time="0.20175" start_time="0.17975" end_time="0.2787833" fwhm="0.06966671" area="2480.502" background="1452.001" height="550" truncated="0" identified="false" user_set="TRUE" />
+          <precursor_peak replicate="Cal 2_0_5 ng_mL_VIFonly" peak_count_ratio="1" retention_time="0.2274333" start_time="0.1870833" end_time="0.2641167" fwhm="0.03988893" area="2288.002" background="627.0004" height="600" truncated="0" identified="false" user_set="FALSE" />
+          <precursor_peak replicate="Cal 3_1 ng_mL_VIFonly" peak_count_ratio="0.8" retention_time="0.2091" start_time="0.1870833" end_time="0.27145" fwhm="0.02828574" area="2634.502" background="1375.001" height="750" truncated="0" identified="false" user_set="FALSE" />
+          <precursor_peak replicate="Cal 4_2 ng_mL_VIFonly" peak_count_ratio="1" retention_time="0.2201" start_time="0.1870833" end_time="0.2567833" fwhm="0.01647092" area="3080.002" background="682.0005" height="950" truncated="0" identified="false" user_set="FALSE" />
+          <precursor_peak replicate="Cal 5_5 ng_mL_VIFonly" peak_count_ratio="1" retention_time="0.2164333" start_time="0.19075" end_time="0.2677833" fwhm="0.02291668" area="6462.504" background="1749.001" height="1250" truncated="0" identified="false" user_set="FALSE" />
+          <precursor_peak replicate="Cal 6_10 ng_mL_VIFonly" peak_count_ratio="1" retention_time="0.2201" start_time="0.1870833" end_time="0.26045" fwhm="0.0234167" area="12221.01" background="638.0004" height="3100" truncated="0" identified="false" user_set="FALSE" />
+          <precursor_peak replicate="Cal 7_25 ng_mL_VIFonly" peak_count_ratio="1" retention_time="0.2237667" start_time="0.19075" end_time="0.26045" fwhm="0.02543911" area="27945.52" background="836.0005" height="5200" truncated="0" identified="false" user_set="FALSE" />
+          <precursor_peak replicate="Cal 8_100 ng_mL_VIFonly" peak_count_ratio="1" retention_time="0.2237667" start_time="0.19075" end_time="0.2677833" fwhm="0.02666848" area="135910.6" background="913.0006" height="32150" truncated="0" identified="false" user_set="TRUE" />
+          <precursor_peak replicate="Blank+IS__VIFonly (2)" peak_count_ratio="1" retention_time="0.19075" start_time="0.19075" end_time="0.2787833" fwhm="0.007333338" area="1952.501" background="440.0003" height="400" truncated="0" identified="false" user_set="FALSE" />
+          <precursor_peak replicate="QC1__VIFonly" peak_count_ratio="1" retention_time="0.19075" start_time="0.1834167" end_time="0.2641167" fwhm="0.03611669" area="2238.501" background="990.0006" height="450" truncated="0" identified="false" user_set="FALSE" />
+          <precursor_peak replicate="QC2__VIFonly" peak_count_ratio="1" retention_time="0.2164333" start_time="0.19075" end_time="0.26045" fwhm="0.02552116" area="11396.01" background="3256.002" height="3050" truncated="0" identified="false" user_set="FALSE" />
+          <precursor_peak replicate="QC3__VIFonly" peak_count_ratio="1" retention_time="0.2237667" start_time="0.1834167" end_time="0.2567833" fwhm="0.02402265" area="22324.51" background="1298.001" height="5000" truncated="0" identified="false" user_set="FALSE" />
+          <precursor_peak replicate="QC4__VIFonly" peak_count_ratio="1" retention_time="0.2201" start_time="0.1944167" end_time="0.27145" fwhm="0.02362048" area="103735.1" background="1550.995" height="24550" truncated="0" identified="false" user_set="FALSE" />
+          <precursor_peak replicate="Unknown 1__VIFonly" peak_count_ratio="1" retention_time="0.2237667" start_time="0.1870833" end_time="0.2641167" fwhm="0.02422622" area="31344.52" background="451.0003" height="8450" truncated="0" identified="false" user_set="FALSE" />
+          <precursor_peak replicate="Unknown 2__VIFonly" peak_count_ratio="1" retention_time="0.2164333" start_time="0.1834167" end_time="0.2677833" fwhm="0.0260741" area="40210.53" background="1628.001" height="10450" truncated="0" identified="false" user_set="FALSE" />
+          <precursor_peak replicate="Unknown 3__VIFonly" peak_count_ratio="1" retention_time="0.2274333" start_time="0.19075" end_time="0.2567833" fwhm="0.03004094" area="24634.52" background="374.0002" height="4850" truncated="0" identified="false" user_set="FALSE" />
+          <precursor_peak replicate="Unknown 4__VIFonly" peak_count_ratio="1" retention_time="0.2237667" start_time="0.1834167" end_time="0.2531167" fwhm="0.02057144" area="10065.01" background="0" height="2250" truncated="0" identified="false" user_set="FALSE" />
+          <precursor_peak replicate="Unknown 5__VIFonly" peak_count_ratio="1" retention_time="0.2274333" start_time="0.1870833" end_time="0.26045" fwhm="0.03703335" area="5951.004" background="220.0002" height="1150" truncated="0" identified="false" user_set="FALSE" />
+          <precursor_peak replicate="Unknown 6__VIFonly" peak_count_ratio="1" retention_time="0.2237667" start_time="0.1760833" end_time="0.27145" fwhm="0.02392063" area="22649.02" background="0" height="4850" truncated="0" identified="false" user_set="FALSE" />
+          <precursor_peak replicate="Unknown 7__VIFonly" peak_count_ratio="1" retention_time="0.2164333" start_time="0.19075" end_time="0.27145" fwhm="0.02327143" area="688358.4" background="6534.004" height="136900" truncated="0" identified="false" user_set="FALSE" />
+          <precursor_peak replicate="Unknown 8__VIFonly" peak_count_ratio="1" retention_time="0.2201" start_time="0.1944167" end_time="0.2677833" fwhm="0.03070823" area="8106.973" background="516.9982" height="1700" truncated="0" identified="false" user_set="FALSE" />
+          <precursor_peak replicate="Unknown 9__VIFonly" peak_count_ratio="1" retention_time="0.2237667" start_time="0.19075" end_time="0.2641167" fwhm="0.02466934" area="499048.3" background="3718.002" height="110100" truncated="0" identified="false" user_set="FALSE" />
+        </precursor_results>
+        <transition fragment_type="y" fragment_ordinal="10" calc_neutral_mass="1058.550893" product_charge="1" cleavage_aa="F" loss_neutral_mass="0">
+          <precursor_mz>636.358962</precursor_mz>
+          <product_mz>1059.558169</product_mz>
+          <collision_energy>30.02224</collision_energy>
+          <declustering_potential>67.092796</declustering_potential>
+          <transition_results>
+            <transition_peak replicate="Solvent_" retention_time="0.1504" start_time="0.1173833" end_time="0.1614" area="247.5002" background="0" height="250" fwhm="0.01222224" truncated="false" identified="false" rank="3" user_set="FALSE" />
+            <transition_peak replicate="Double Blank__VIFonly" retention_time="0" start_time="0" end_time="0.05135" area="0" background="0" height="0" fwhm="0" fwhm_degenerate="true" truncated="false" identified="false" rank="0" user_set="FALSE" />
+            <transition_peak replicate="Blank+IS__VIFonly" retention_time="0.2127667" start_time="0.19075" end_time="0.26045" area="44.00003" background="0" height="100" fwhm="0.02016668" truncated="false" identified="false" rank="5" user_set="FALSE" />
+            <transition_peak replicate="Cal 1_0_20 ng_mL_VIFonly" retention_time="0.2127667" start_time="0.17975" end_time="0.2787833" area="55.00004" background="0" height="150" fwhm="0.004583336" truncated="false" identified="false" rank="5" user_set="TRUE" />
+            <transition_peak replicate="Cal 2_0_5 ng_mL_VIFonly" retention_time="0.2237667" start_time="0.1870833" end_time="0.2641167" area="110.0001" background="0" height="200" fwhm="0.02077778" truncated="false" identified="false" rank="5" user_set="FALSE" />
+            <transition_peak replicate="Cal 3_1 ng_mL_VIFonly" retention_time="0.2237667" start_time="0.1870833" end_time="0.27145" area="308.0002" background="0" height="250" fwhm="0.01145834" truncated="false" identified="false" rank="3" user_set="FALSE" />
+            <transition_peak replicate="Cal 4_2 ng_mL_VIFonly" retention_time="0.2164333" start_time="0.1870833" end_time="0.2567833" area="429.0003" background="0" height="350" fwhm="0.01164169" truncated="false" identified="false" rank="4" user_set="FALSE" />
+            <transition_peak replicate="Cal 5_5 ng_mL_VIFonly" retention_time="0.2164333" start_time="0.19075" end_time="0.2677833" area="1452.001" background="0" height="1150" fwhm="0.009886904" truncated="false" identified="false" rank="3" user_set="FALSE" />
+            <transition_peak replicate="Cal 6_10 ng_mL_VIFonly" retention_time="0.2164333" start_time="0.1870833" end_time="0.26045" area="2112.001" background="0" height="1850" fwhm="0.01877778" truncated="false" identified="false" rank="4" user_set="FALSE" />
+            <transition_peak replicate="Cal 7_25 ng_mL_VIFonly" retention_time="0.2237667" start_time="0.19075" end_time="0.26045" area="5654.004" background="0" height="5200" fwhm="0.01389841" truncated="false" identified="false" rank="4" user_set="FALSE" />
+            <transition_peak replicate="Cal 8_100 ng_mL_VIFonly" retention_time="0.2164333" start_time="0.19075" end_time="0.2677833" area="27483.52" background="0" height="18850" fwhm="0.02282484" truncated="false" identified="false" rank="2" user_set="TRUE" />
+            <transition_peak replicate="Blank+IS__VIFonly (2)" retention_time="0.24945" start_time="0.19075" end_time="0.2787833" area="38.50003" background="0" height="150" fwhm="0.003666669" truncated="false" identified="false" rank="5" user_set="FALSE" />
+            <transition_peak replicate="QC1__VIFonly" retention_time="0.2127667" start_time="0.1834167" end_time="0.2641167" area="242.0002" background="0" height="200" fwhm="0.01833335" truncated="false" identified="false" rank="4" user_set="FALSE" />
+            <transition_peak replicate="QC2__VIFonly" retention_time="0.2164333" start_time="0.19075" end_time="0.26045" area="2200.001" background="0" height="1550" fwhm="0.02070259" truncated="false" identified="false" rank="3" user_set="FALSE" />
+            <transition_peak replicate="QC3__VIFonly" retention_time="0.2201" start_time="0.1834167" end_time="0.2567833" area="4141.503" background="0" height="3100" fwhm="0.02169445" truncated="false" identified="false" rank="3" user_set="FALSE" />
+            <transition_peak replicate="QC4__VIFonly" retention_time="0.2237667" start_time="0.1944167" end_time="0.27145" area="20690.93" background="0" height="15550" fwhm="0.0180897" truncated="false" identified="false" rank="3" user_set="FALSE" />
+            <transition_peak replicate="Unknown 1__VIFonly" retention_time="0.2201" start_time="0.1870833" end_time="0.2641167" area="6517.504" background="0" height="4350" fwhm="0.02422622" truncated="false" identified="false" rank="2" user_set="FALSE" />
+            <transition_peak replicate="Unknown 2__VIFonly" retention_time="0.2201" start_time="0.1834167" end_time="0.2677833" area="7667.005" background="0" height="5050" fwhm="0.0260741" truncated="false" identified="false" rank="4" user_set="FALSE" />
+            <transition_peak replicate="Unknown 3__VIFonly" retention_time="0.2237667" start_time="0.19075" end_time="0.2567833" area="4752.003" background="0" height="3200" fwhm="0.02775864" truncated="false" identified="false" rank="4" user_set="FALSE" />
+            <transition_peak replicate="Unknown 4__VIFonly" retention_time="0.2274333" start_time="0.1834167" end_time="0.2531167" area="1721.501" background="0" height="1200" fwhm="0.02057144" truncated="false" identified="false" rank="4" user_set="FALSE" />
+            <transition_peak replicate="Unknown 5__VIFonly" retention_time="0.2274333" start_time="0.1870833" end_time="0.26045" area="1094.501" background="0" height="1150" fwhm="0.01581251" truncated="false" identified="false" rank="4" user_set="FALSE" />
+            <transition_peak replicate="Unknown 6__VIFonly" retention_time="0.2237667" start_time="0.1760833" end_time="0.27145" area="4466.003" background="0" height="2700" fwhm="0.02392063" truncated="false" identified="false" rank="4" user_set="FALSE" />
+            <transition_peak replicate="Unknown 7__VIFonly" retention_time="0.2237667" start_time="0.19075" end_time="0.27145" area="140129.1" background="484.0003" height="93450" fwhm="0.02323033" truncated="false" identified="false" rank="3" user_set="FALSE" />
+            <transition_peak replicate="Unknown 8__VIFonly" retention_time="0.2164333" start_time="0.1944167" end_time="0.2677833" area="1550.995" background="0" height="1050" fwhm="0.008083301" truncated="false" identified="false" rank="4" user_set="FALSE" />
+            <transition_peak replicate="Unknown 9__VIFonly" retention_time="0.2237667" start_time="0.19075" end_time="0.2641167" area="99115.57" background="0" height="71200" fwhm="0.02241446" truncated="false" identified="false" rank="4" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="5" calc_neutral_mass="540.338381" product_charge="1" cleavage_aa="P" loss_neutral_mass="0">
+          <precursor_mz>636.358962</precursor_mz>
+          <product_mz>541.345657</product_mz>
+          <collision_energy>30.02224</collision_energy>
+          <declustering_potential>67.092796</declustering_potential>
+          <transition_results>
+            <transition_peak replicate="Solvent_" retention_time="0.1394" start_time="0.1173833" end_time="0.1614" area="231.0002" background="847.0005" height="300" fwhm="0.02108335" truncated="false" identified="false" rank="4" user_set="FALSE" />
+            <transition_peak replicate="Double Blank__VIFonly" retention_time="0.01833333" start_time="0" end_time="0.05135" area="489.5" background="440" height="300" fwhm="0.022" truncated="false" identified="false" rank="3" user_set="FALSE" />
+            <transition_peak replicate="Blank+IS__VIFonly" retention_time="0.2384333" start_time="0.19075" end_time="0.26045" area="770.0005" background="616.0004" height="600" fwhm="0.0476667" truncated="false" identified="false" rank="1" user_set="FALSE" />
+            <transition_peak replicate="Cal 1_0_20 ng_mL_VIFonly" retention_time="0.20175" start_time="0.17975" end_time="0.2787833" area="1204.501" background="572.0004" height="550" fwhm="0.004257434" truncated="false" identified="false" rank="1" user_set="TRUE" />
+            <transition_peak replicate="Cal 2_0_5 ng_mL_VIFonly" retention_time="0.2274333" start_time="0.1870833" end_time="0.2641167" area="1078.001" background="220.0002" height="600" fwhm="0.03988893" truncated="false" identified="false" rank="1" user_set="FALSE" />
+            <transition_peak replicate="Cal 3_1 ng_mL_VIFonly" retention_time="0.2091" start_time="0.1870833" end_time="0.27145" area="1683.001" background="0" height="750" fwhm="0.009243071" truncated="false" identified="false" rank="1" user_set="FALSE" />
+            <transition_peak replicate="Cal 4_2 ng_mL_VIFonly" retention_time="0.2164333" start_time="0.1870833" end_time="0.2567833" area="792.0005" background="407.0003" height="650" fwhm="0.01647092" truncated="false" identified="false" rank="2" user_set="FALSE" />
+            <transition_peak replicate="Cal 5_5 ng_mL_VIFonly" retention_time="0.2164333" start_time="0.19075" end_time="0.2677833" area="1006.501" background="1034.001" height="1250" fwhm="0.004495637" truncated="false" identified="false" rank="4" user_set="FALSE" />
+            <transition_peak replicate="Cal 6_10 ng_mL_VIFonly" retention_time="0.2164333" start_time="0.1870833" end_time="0.26045" area="2310.001" background="638.0004" height="2050" fwhm="0.008631941" truncated="false" identified="false" rank="3" user_set="FALSE" />
+            <transition_peak replicate="Cal 7_25 ng_mL_VIFonly" retention_time="0.2237667" start_time="0.19075" end_time="0.26045" area="6110.504" background="0" height="4400" fwhm="0.01990627" truncated="false" identified="false" rank="2" user_set="FALSE" />
+            <transition_peak replicate="Cal 8_100 ng_mL_VIFonly" retention_time="0.2274333" start_time="0.19075" end_time="0.2677833" area="24513.52" background="913.0006" height="15750" fwhm="0.02666848" truncated="false" identified="false" rank="4" user_set="TRUE" />
+            <transition_peak replicate="Blank+IS__VIFonly (2)" retention_time="0.19075" start_time="0.19075" end_time="0.2787833" area="539.0004" background="440.0003" height="400" fwhm="0.003666669" fwhm_degenerate="true" truncated="false" identified="false" rank="2" user_set="FALSE" />
+            <transition_peak replicate="QC1__VIFonly" retention_time="0.19075" start_time="0.1834167" end_time="0.2641167" area="759.0005" background="429.0003" height="450" fwhm="0.007654177" truncated="false" identified="false" rank="1" user_set="FALSE" />
+            <transition_peak replicate="QC2__VIFonly" retention_time="0.2127667" start_time="0.19075" end_time="0.26045" area="1694.001" background="1122.001" height="1200" fwhm="0.02294021" truncated="false" identified="false" rank="4" user_set="FALSE" />
+            <transition_peak replicate="QC3__VIFonly" retention_time="0.2164333" start_time="0.1834167" end_time="0.2567833" area="3789.502" background="396.0003" height="2700" fwhm="0.01380758" truncated="false" identified="false" rank="4" user_set="FALSE" />
+            <transition_peak replicate="QC4__VIFonly" retention_time="0.2164333" start_time="0.1944167" end_time="0.27145" area="19376.43" background="0" height="12500" fwhm="0.02317667" truncated="false" identified="false" rank="4" user_set="FALSE" />
+            <transition_peak replicate="Unknown 1__VIFonly" retention_time="0.2164333" start_time="0.1870833" end_time="0.2641167" area="6237.004" background="231.0002" height="4900" fwhm="0.01792984" truncated="false" identified="false" rank="3" user_set="FALSE" />
+            <transition_peak replicate="Unknown 2__VIFonly" retention_time="0.2164333" start_time="0.1834167" end_time="0.2677833" area="8321.506" background="506.0003" height="5550" fwhm="0.02016523" truncated="false" identified="false" rank="3" user_set="FALSE" />
+            <transition_peak replicate="Unknown 3__VIFonly" retention_time="0.2274333" start_time="0.19075" end_time="0.2567833" area="5747.504" background="187.0001" height="4850" fwhm="0.01597191" truncated="false" identified="false" rank="2" user_set="FALSE" />
+            <transition_peak replicate="Unknown 4__VIFonly" retention_time="0.2201" start_time="0.1834167" end_time="0.2531167" area="2288.001" background="0" height="1900" fwhm="0.01260418" truncated="false" identified="false" rank="2" user_set="FALSE" />
+            <transition_peak replicate="Unknown 5__VIFonly" retention_time="0.2237667" start_time="0.1870833" end_time="0.26045" area="1320.001" background="220.0002" height="750" fwhm="0.03703335" truncated="false" identified="false" rank="2" user_set="FALSE" />
+            <transition_peak replicate="Unknown 6__VIFonly" retention_time="0.2201" start_time="0.1760833" end_time="0.27145" area="5142.503" background="0" height="3750" fwhm="0.01660187" truncated="false" identified="false" rank="2" user_set="FALSE" />
+            <transition_peak replicate="Unknown 7__VIFonly" retention_time="0.2164333" start_time="0.19075" end_time="0.27145" area="120362.1" background="1694.001" height="84450" fwhm="0.02182853" truncated="false" identified="false" rank="4" user_set="FALSE" />
+            <transition_peak replicate="Unknown 8__VIFonly" retention_time="0.2274333" start_time="0.1944167" end_time="0.2677833" area="1842.494" background="0" height="1300" fwhm="0.02182531" truncated="false" identified="false" rank="3" user_set="FALSE" />
+            <transition_peak replicate="Unknown 9__VIFonly" retention_time="0.2274333" start_time="0.19075" end_time="0.2641167" area="101079.1" background="880.0006" height="86150" fwhm="0.01638148" truncated="false" identified="false" rank="3" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="10" calc_neutral_mass="1058.550893" product_charge="2" cleavage_aa="F" loss_neutral_mass="0">
+          <precursor_mz>636.358962</precursor_mz>
+          <product_mz>530.282723</product_mz>
+          <collision_energy>30.02224</collision_energy>
+          <declustering_potential>67.092796</declustering_potential>
+          <transition_results>
+            <transition_peak replicate="Solvent_" retention_time="0.1173833" start_time="0.1173833" end_time="0.1614" area="38.50003" background="231.0002" height="50" fwhm="0.004125003" fwhm_degenerate="true" truncated="false" identified="false" rank="5" user_set="FALSE" />
+            <transition_peak replicate="Double Blank__VIFonly" retention_time="0.01466667" start_time="0" end_time="0.05135" area="423.5" background="0" height="400" fwhm="0.009166666" truncated="false" identified="false" rank="4" user_set="FALSE" />
+            <transition_peak replicate="Blank+IS__VIFonly" retention_time="0.1944167" start_time="0.19075" end_time="0.26045" area="170.5001" background="132.0001" height="250" fwhm="0.005347235" truncated="false" identified="false" rank="3" user_set="FALSE" />
+            <transition_peak replicate="Cal 1_0_20 ng_mL_VIFonly" retention_time="0.2567833" start_time="0.17975" end_time="0.2787833" area="539.0004" background="0" height="350" fwhm="0.06966671" truncated="false" identified="false" rank="3" user_set="TRUE" />
+            <transition_peak replicate="Cal 2_0_5 ng_mL_VIFonly" retention_time="0.2274333" start_time="0.1870833" end_time="0.2641167" area="148.5001" background="231.0002" height="200" fwhm="0.03556668" truncated="false" identified="false" rank="4" user_set="FALSE" />
+            <transition_peak replicate="Cal 3_1 ng_mL_VIFonly" retention_time="0.1870833" start_time="0.1870833" end_time="0.27145" area="0" background="451.0003" height="0" fwhm="0" fwhm_degenerate="true" truncated="false" identified="false" rank="0" user_set="FALSE" />
+            <transition_peak replicate="Cal 4_2 ng_mL_VIFonly" retention_time="0.2237667" start_time="0.1870833" end_time="0.2567833" area="209.0001" background="275.0002" height="300" fwhm="0.01283334" truncated="false" identified="false" rank="5" user_set="FALSE" />
+            <transition_peak replicate="Cal 5_5 ng_mL_VIFonly" retention_time="0.2201" start_time="0.19075" end_time="0.2677833" area="594.0004" background="341.0002" height="550" fwhm="0.01100001" truncated="false" identified="false" rank="5" user_set="FALSE" />
+            <transition_peak replicate="Cal 6_10 ng_mL_VIFonly" retention_time="0.2127667" start_time="0.1870833" end_time="0.26045" area="1507.001" background="0" height="1000" fwhm="0.02253335" truncated="false" identified="false" rank="5" user_set="FALSE" />
+            <transition_peak replicate="Cal 7_25 ng_mL_VIFonly" retention_time="0.2201" start_time="0.19075" end_time="0.26045" area="3410.002" background="0" height="3600" fwhm="0.005640016" truncated="false" identified="false" rank="5" user_set="FALSE" />
+            <transition_peak replicate="Cal 8_100 ng_mL_VIFonly" retention_time="0.2164333" start_time="0.19075" end_time="0.2677833" area="14668.51" background="0" height="12350" fwhm="0.01298776" truncated="false" identified="false" rank="5" user_set="TRUE" />
+            <transition_peak replicate="Blank+IS__VIFonly (2)" retention_time="0.1980833" start_time="0.19075" end_time="0.2787833" area="385.0002" background="0" height="250" fwhm="0.004888901" truncated="false" identified="false" rank="4" user_set="FALSE" />
+            <transition_peak replicate="QC1__VIFonly" retention_time="0.2054167" start_time="0.1834167" end_time="0.2641167" area="225.5002" background="363.0002" height="350" fwhm="0.003116663" truncated="false" identified="false" rank="5" user_set="FALSE" />
+            <transition_peak replicate="QC2__VIFonly" retention_time="0.2201" start_time="0.19075" end_time="0.26045" area="841.5005" background="506.0003" height="800" fwhm="0.0132" truncated="false" identified="false" rank="5" user_set="FALSE" />
+            <transition_peak replicate="QC3__VIFonly" retention_time="0.2201" start_time="0.1834167" end_time="0.2567833" area="2557.502" background="0" height="2100" fwhm="0.01894448" truncated="false" identified="false" rank="5" user_set="FALSE" />
+            <transition_peak replicate="QC4__VIFonly" retention_time="0.2237667" start_time="0.1944167" end_time="0.27145" area="9927.467" background="857.9971" height="7500" fwhm="0.02362048" truncated="false" identified="false" rank="5" user_set="FALSE" />
+            <transition_peak replicate="Unknown 1__VIFonly" retention_time="0.2237667" start_time="0.1870833" end_time="0.2641167" area="3432.002" background="0" height="2650" fwhm="0.02139563" truncated="false" identified="false" rank="5" user_set="FALSE" />
+            <transition_peak replicate="Unknown 2__VIFonly" retention_time="0.2274333" start_time="0.1834167" end_time="0.2677833" area="4191.003" background="0" height="3900" fwhm="0.01453335" truncated="false" identified="false" rank="5" user_set="FALSE" />
+            <transition_peak replicate="Unknown 3__VIFonly" retention_time="0.2237667" start_time="0.19075" end_time="0.2567833" area="2249.501" background="187.0001" height="2050" fwhm="0.008283966" truncated="false" identified="false" rank="5" user_set="FALSE" />
+            <transition_peak replicate="Unknown 4__VIFonly" retention_time="0.2201" start_time="0.1834167" end_time="0.2531167" area="1551.001" background="0" height="1900" fwhm="0.006246922" truncated="false" identified="false" rank="5" user_set="FALSE" />
+            <transition_peak replicate="Unknown 5__VIFonly" retention_time="0.2201" start_time="0.1870833" end_time="0.26045" area="825.0005" background="0" height="600" fwhm="0.008642851" truncated="false" identified="false" rank="5" user_set="FALSE" />
+            <transition_peak replicate="Unknown 6__VIFonly" retention_time="0.2164333" start_time="0.1760833" end_time="0.27145" area="2222.001" background="0" height="1700" fwhm="0.01883333" truncated="false" identified="false" rank="5" user_set="FALSE" />
+            <transition_peak replicate="Unknown 7__VIFonly" retention_time="0.2201" start_time="0.19075" end_time="0.27145" area="77539.05" background="242.0002" height="56300" fwhm="0.02214473" truncated="false" identified="false" rank="5" user_set="FALSE" />
+            <transition_peak replicate="Unknown 8__VIFonly" retention_time="0.2347667" start_time="0.1944167" end_time="0.2677833" area="368.4987" background="516.9982" height="350" fwhm="0.03070823" truncated="false" identified="false" rank="5" user_set="FALSE" />
+            <transition_peak replicate="Unknown 9__VIFonly" retention_time="0.2201" start_time="0.19075" end_time="0.2641167" area="49533.04" background="858.0005" height="41700" fwhm="0.01412752" truncated="false" identified="false" rank="5" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="b" fragment_ordinal="2" calc_neutral_mass="212.152478" product_charge="1" cleavage_aa="I" loss_neutral_mass="0">
+          <precursor_mz>636.358962</precursor_mz>
+          <product_mz>213.159754</product_mz>
+          <collision_energy>30.02224</collision_energy>
+          <declustering_potential>67.092796</declustering_potential>
+          <transition_results>
+            <transition_peak replicate="Solvent_" retention_time="0.1504" start_time="0.1173833" end_time="0.1614" area="1193.501" background="132.0001" height="800" fwhm="0.02310582" truncated="false" identified="false" rank="2" user_set="FALSE" />
+            <transition_peak replicate="Double Blank__VIFonly" retention_time="0.02568333" start_time="0" end_time="0.05135" area="808.5" background="0" height="800" fwhm="0.01026666" truncated="false" identified="false" rank="2" user_set="FALSE" />
+            <transition_peak replicate="Blank+IS__VIFonly" retention_time="0.2421" start_time="0.19075" end_time="0.26045" area="88.00006" background="484.0003" height="150" fwhm="0.04262503" truncated="false" identified="false" rank="4" user_set="FALSE" />
+            <transition_peak replicate="Cal 1_0_20 ng_mL_VIFonly" retention_time="0.2127667" start_time="0.17975" end_time="0.2787833" area="555.5004" background="220.0002" height="250" fwhm="0.03422223" truncated="false" identified="false" rank="2" user_set="TRUE" />
+            <transition_peak replicate="Cal 2_0_5 ng_mL_VIFonly" retention_time="0.2311" start_time="0.1870833" end_time="0.2641167" area="489.5003" background="176.0001" height="400" fwhm="0.01996297" truncated="false" identified="false" rank="2" user_set="FALSE" />
+            <transition_peak replicate="Cal 3_1 ng_mL_VIFonly" retention_time="0.2201" start_time="0.1870833" end_time="0.27145" area="159.5001" background="550.0004" height="250" fwhm="0.006187504" truncated="false" identified="false" rank="4" user_set="FALSE" />
+            <transition_peak replicate="Cal 4_2 ng_mL_VIFonly" retention_time="0.2127667" start_time="0.1870833" end_time="0.2567833" area="687.5005" background="0" height="850" fwhm="0.006630564" truncated="false" identified="false" rank="3" user_set="FALSE" />
+            <transition_peak replicate="Cal 5_5 ng_mL_VIFonly" retention_time="0.2201" start_time="0.19075" end_time="0.2677833" area="1518.001" background="374.0002" height="1000" fwhm="0.02291668" truncated="false" identified="false" rank="2" user_set="FALSE" />
+            <transition_peak replicate="Cal 6_10 ng_mL_VIFonly" retention_time="0.2164333" start_time="0.1870833" end_time="0.26045" area="2920.502" background="0" height="2050" fwhm="0.0234167" truncated="false" identified="false" rank="2" user_set="FALSE" />
+            <transition_peak replicate="Cal 7_25 ng_mL_VIFonly" retention_time="0.2237667" start_time="0.19075" end_time="0.26045" area="5989.504" background="627.0004" height="4250" fwhm="0.02005406" truncated="false" identified="false" rank="3" user_set="FALSE" />
+            <transition_peak replicate="Cal 8_100 ng_mL_VIFonly" retention_time="0.2237667" start_time="0.19075" end_time="0.2677833" area="26928.02" background="0" height="18500" fwhm="0.02198054" truncated="false" identified="false" rank="3" user_set="TRUE" />
+            <transition_peak replicate="Blank+IS__VIFonly (2)" retention_time="0.2164333" start_time="0.19075" end_time="0.2787833" area="566.5004" background="0" height="350" fwhm="0.004277799" truncated="false" identified="false" rank="1" user_set="FALSE" />
+            <transition_peak replicate="QC1__VIFonly" retention_time="0.2237667" start_time="0.1834167" end_time="0.2641167" area="616.0004" background="0" height="450" fwhm="0.03611669" truncated="false" identified="false" rank="2" user_set="FALSE" />
+            <transition_peak replicate="QC2__VIFonly" retention_time="0.2201" start_time="0.19075" end_time="0.26045" area="2376.002" background="792.0005" height="1500" fwhm="0.02552116" truncated="false" identified="false" rank="2" user_set="FALSE" />
+            <transition_peak replicate="QC3__VIFonly" retention_time="0.2201" start_time="0.1834167" end_time="0.2567833" area="5054.503" background="198.0001" height="4450" fwhm="0.01215846" truncated="false" identified="false" rank="2" user_set="FALSE" />
+            <transition_peak replicate="QC4__VIFonly" retention_time="0.2274333" start_time="0.1944167" end_time="0.27145" area="24551.92" background="461.9984" height="17350" fwhm="0.02299408" truncated="false" identified="false" rank="2" user_set="FALSE" />
+            <transition_peak replicate="Unknown 1__VIFonly" retention_time="0.2164333" start_time="0.1870833" end_time="0.2641167" area="5824.504" background="220.0002" height="4650" fwhm="0.01675153" truncated="false" identified="false" rank="4" user_set="FALSE" />
+            <transition_peak replicate="Unknown 2__VIFonly" retention_time="0.2201" start_time="0.1834167" end_time="0.2677833" area="9647.007" background="693.0005" height="7050" fwhm="0.01840437" truncated="false" identified="false" rank="2" user_set="FALSE" />
+            <transition_peak replicate="Unknown 3__VIFonly" retention_time="0.2237667" start_time="0.19075" end_time="0.2567833" area="5186.503" background="0" height="3900" fwhm="0.01877271" truncated="false" identified="false" rank="3" user_set="FALSE" />
+            <transition_peak replicate="Unknown 4__VIFonly" retention_time="0.2274333" start_time="0.1834167" end_time="0.2531167" area="1991.001" background="0" height="1750" fwhm="0.01910653" truncated="false" identified="false" rank="3" user_set="FALSE" />
+            <transition_peak replicate="Unknown 5__VIFonly" retention_time="0.2201" start_time="0.1870833" end_time="0.26045" area="1138.501" background="0" height="1050" fwhm="0.007425011" truncated="false" identified="false" rank="3" user_set="FALSE" />
+            <transition_peak replicate="Unknown 6__VIFonly" retention_time="0.2127667" start_time="0.1760833" end_time="0.27145" area="4488.003" background="0" height="3000" fwhm="0.01208335" truncated="false" identified="false" rank="3" user_set="FALSE" />
+            <transition_peak replicate="Unknown 7__VIFonly" retention_time="0.2237667" start_time="0.19075" end_time="0.27145" area="147510.1" background="1452.001" height="104550" fwhm="0.01997539" truncated="false" identified="false" rank="2" user_set="FALSE" />
+            <transition_peak replicate="Unknown 8__VIFonly" retention_time="0.2127667" start_time="0.1944167" end_time="0.2677833" area="2034.993" background="0" height="1500" fwhm="0.006901944" truncated="false" identified="false" rank="2" user_set="FALSE" />
+            <transition_peak replicate="Unknown 9__VIFonly" retention_time="0.2201" start_time="0.19075" end_time="0.2641167" area="102415.6" background="1320.001" height="65500" fwhm="0.02466934" truncated="false" identified="false" rank="2" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="a" fragment_ordinal="2" calc_neutral_mass="184.157563" product_charge="1" cleavage_aa="I" loss_neutral_mass="0">
+          <precursor_mz>636.358962</precursor_mz>
+          <product_mz>185.164839</product_mz>
+          <collision_energy>30.02224</collision_energy>
+          <declustering_potential>67.092796</declustering_potential>
+          <transition_results>
+            <transition_peak replicate="Solvent_" retention_time="0.1467333" start_time="0.1173833" end_time="0.1614" area="1820.501" background="132.0001" height="1550" fwhm="0.009385433" truncated="false" identified="false" rank="1" user_set="FALSE" />
+            <transition_peak replicate="Double Blank__VIFonly" retention_time="0.01466667" start_time="0" end_time="0.05135" area="819.5" background="0" height="650" fwhm="0.01191667" truncated="false" identified="false" rank="1" user_set="FALSE" />
+            <transition_peak replicate="Blank+IS__VIFonly" retention_time="0.2347667" start_time="0.19075" end_time="0.26045" area="643.5004" background="198.0001" height="400" fwhm="0.02016668" truncated="false" identified="false" rank="2" user_set="FALSE" />
+            <transition_peak replicate="Cal 1_0_20 ng_mL_VIFonly" retention_time="0.1944167" start_time="0.17975" end_time="0.2787833" area="126.5001" background="660.0004" height="150" fwhm="0.001604168" truncated="false" identified="false" rank="4" user_set="TRUE" />
+            <transition_peak replicate="Cal 2_0_5 ng_mL_VIFonly" retention_time="0.2201" start_time="0.1870833" end_time="0.2641167" area="462.0003" background="0" height="300" fwhm="0.03300002" truncated="false" identified="false" rank="3" user_set="FALSE" />
+            <transition_peak replicate="Cal 3_1 ng_mL_VIFonly" retention_time="0.2347667" start_time="0.1870833" end_time="0.27145" area="484.0003" background="374.0002" height="400" fwhm="0.02828574" truncated="false" identified="false" rank="2" user_set="FALSE" />
+            <transition_peak replicate="Cal 4_2 ng_mL_VIFonly" retention_time="0.2201" start_time="0.1870833" end_time="0.2567833" area="962.5007" background="0" height="950" fwhm="0.007906255" truncated="false" identified="false" rank="1" user_set="FALSE" />
+            <transition_peak replicate="Cal 5_5 ng_mL_VIFonly" retention_time="0.2237667" start_time="0.19075" end_time="0.2677833" area="1892.001" background="0" height="1250" fwhm="0.02128574" truncated="false" identified="false" rank="1" user_set="FALSE" />
+            <transition_peak replicate="Cal 6_10 ng_mL_VIFonly" retention_time="0.2201" start_time="0.1870833" end_time="0.26045" area="3371.502" background="0" height="3100" fwhm="0.01227315" truncated="false" identified="false" rank="1" user_set="FALSE" />
+            <transition_peak replicate="Cal 7_25 ng_mL_VIFonly" retention_time="0.2164333" start_time="0.19075" end_time="0.26045" area="6781.504" background="209.0001" height="4700" fwhm="0.02543911" truncated="false" identified="false" rank="1" user_set="FALSE" />
+            <transition_peak replicate="Cal 8_100 ng_mL_VIFonly" retention_time="0.2237667" start_time="0.19075" end_time="0.2677833" area="42317.03" background="0" height="32150" fwhm="0.02195805" truncated="false" identified="false" rank="1" user_set="TRUE" />
+            <transition_peak replicate="Blank+IS__VIFonly (2)" retention_time="0.20175" start_time="0.19075" end_time="0.2787833" area="423.5003" background="0" height="250" fwhm="0.007333338" truncated="false" identified="false" rank="3" user_set="FALSE" />
+            <transition_peak replicate="QC1__VIFonly" retention_time="0.2384333" start_time="0.1834167" end_time="0.2641167" area="396.0003" background="198.0001" height="300" fwhm="0.03300002" truncated="false" identified="false" rank="3" user_set="FALSE" />
+            <transition_peak replicate="QC2__VIFonly" retention_time="0.2164333" start_time="0.19075" end_time="0.26045" area="4284.503" background="836.0005" height="3050" fwhm="0.0149742" truncated="false" identified="false" rank="1" user_set="FALSE" />
+            <transition_peak replicate="QC3__VIFonly" retention_time="0.2237667" start_time="0.1834167" end_time="0.2567833" area="6781.504" background="704.0005" height="5000" fwhm="0.02402265" truncated="false" identified="false" rank="1" user_set="FALSE" />
+            <transition_peak replicate="QC4__VIFonly" retention_time="0.2201" start_time="0.1944167" end_time="0.27145" area="29188.4" background="230.9992" height="24550" fwhm="0.01709499" truncated="false" identified="false" rank="1" user_set="FALSE" />
+            <transition_peak replicate="Unknown 1__VIFonly" retention_time="0.2237667" start_time="0.1870833" end_time="0.2641167" area="9333.506" background="0" height="8450" fwhm="0.01446644" truncated="false" identified="false" rank="1" user_set="FALSE" />
+            <transition_peak replicate="Unknown 2__VIFonly" retention_time="0.2164333" start_time="0.1834167" end_time="0.2677833" area="10384.01" background="429.0003" height="10450" fwhm="0.01049115" truncated="false" identified="false" rank="1" user_set="FALSE" />
+            <transition_peak replicate="Unknown 3__VIFonly" retention_time="0.2237667" start_time="0.19075" end_time="0.2567833" area="6699.004" background="0" height="4300" fwhm="0.03004094" truncated="false" identified="false" rank="1" user_set="FALSE" />
+            <transition_peak replicate="Unknown 4__VIFonly" retention_time="0.2237667" start_time="0.1834167" end_time="0.2531167" area="2513.502" background="0" height="2250" fwhm="0.01562379" truncated="false" identified="false" rank="1" user_set="FALSE" />
+            <transition_peak replicate="Unknown 5__VIFonly" retention_time="0.2164333" start_time="0.1870833" end_time="0.26045" area="1573.001" background="0" height="1150" fwhm="0.009421324" truncated="false" identified="false" rank="1" user_set="FALSE" />
+            <transition_peak replicate="Unknown 6__VIFonly" retention_time="0.2237667" start_time="0.1760833" end_time="0.27145" area="6330.504" background="0" height="4850" fwhm="0.01623059" truncated="false" identified="false" rank="1" user_set="FALSE" />
+            <transition_peak replicate="Unknown 7__VIFonly" retention_time="0.2164333" start_time="0.19075" end_time="0.27145" area="202818.1" background="2662.002" height="136900" fwhm="0.02327143" truncated="false" identified="false" rank="1" user_set="FALSE" />
+            <transition_peak replicate="Unknown 8__VIFonly" retention_time="0.2201" start_time="0.1944167" end_time="0.2677833" area="2309.992" background="0" height="1700" fwhm="0.02505548" truncated="false" identified="false" rank="1" user_set="FALSE" />
+            <transition_peak replicate="Unknown 9__VIFonly" retention_time="0.2237667" start_time="0.19075" end_time="0.2641167" area="146905.1" background="660.0004" height="110100" fwhm="0.02092445" truncated="false" identified="false" rank="1" user_set="FALSE" />
+          </transition_results>
+        </transition>
+      </precursor>
+      <precursor charge="2" isotope_label="heavy" calc_neutral_mass="1277.720535" precursor_mz="639.867544" auto_manage_children="false" collision_energy="30.02224" declustering_potential="67.092796" modified_sequence="VI[+7]FDANAPVAVR">
+        <precursor_results>
+          <precursor_peak replicate="Solvent_" peak_count_ratio="1" retention_time="0.12105" start_time="0.1173833" end_time="0.1614" fwhm="0.03923335" area="2359.501" background="1551.001" height="1150" truncated="0" identified="false" user_set="FALSE" />
+          <precursor_peak replicate="Double Blank__VIFonly" peak_count_ratio="1" retention_time="0.02201667" end_time="0.05135" fwhm="0.01959259" area="2634.5" background="517" height="800" truncated="2" identified="false" user_set="FALSE" />
+          <precursor_peak replicate="Blank+IS__VIFonly" peak_count_ratio="1" retention_time="0.2201" start_time="0.19075" end_time="0.26045" fwhm="0.02556192" area="94649.56" background="2090.001" height="21350" truncated="0" identified="false" user_set="FALSE" />
+          <precursor_peak replicate="Cal 1_0_20 ng_mL_VIFonly" peak_count_ratio="1" retention_time="0.2164333" start_time="0.17975" end_time="0.2787833" fwhm="0.02159869" area="82164.55" background="297.0002" height="17550" truncated="0" identified="false" user_set="FALSE" />
+          <precursor_peak replicate="Cal 2_0_5 ng_mL_VIFonly" peak_count_ratio="1" retention_time="0.2127667" start_time="0.1870833" end_time="0.2641167" fwhm="0.02228219" area="102404.6" background="924.0006" height="24300" truncated="0" identified="false" user_set="FALSE" />
+          <precursor_peak replicate="Cal 3_1 ng_mL_VIFonly" peak_count_ratio="1" retention_time="0.2201" start_time="0.1870833" end_time="0.27145" fwhm="0.02640001" area="103735.6" background="451.0003" height="23700" truncated="0" identified="false" user_set="FALSE" />
+          <precursor_peak replicate="Cal 4_2 ng_mL_VIFonly" peak_count_ratio="1" retention_time="0.2164333" start_time="0.1870833" end_time="0.2567833" fwhm="0.02392522" area="93731.06" background="1254.001" height="22150" truncated="0" identified="false" user_set="FALSE" />
+          <precursor_peak replicate="Cal 5_5 ng_mL_VIFonly" peak_count_ratio="1" retention_time="0.2164333" start_time="0.19075" end_time="0.2677833" fwhm="0.02420194" area="110973.6" background="913.0006" height="27900" truncated="0" identified="false" user_set="FALSE" />
+          <precursor_peak replicate="Cal 6_10 ng_mL_VIFonly" peak_count_ratio="1" retention_time="0.2164333" start_time="0.1870833" end_time="0.26045" fwhm="0.02696473" area="95557.06" background="660.0004" height="24250" truncated="0" identified="false" user_set="FALSE" />
+          <precursor_peak replicate="Cal 7_25 ng_mL_VIFonly" peak_count_ratio="1" retention_time="0.2201" start_time="0.19075" end_time="0.26045" fwhm="0.02414107" area="93214.06" background="2046.001" height="22400" truncated="0" identified="false" user_set="FALSE" />
+          <precursor_peak replicate="Cal 8_100 ng_mL_VIFonly" peak_count_ratio="1" retention_time="0.2164333" start_time="0.19075" end_time="0.2677833" fwhm="0.02320664" area="114031.6" background="2387.001" height="24300" truncated="0" identified="false" user_set="FALSE" />
+          <precursor_peak replicate="Blank+IS__VIFonly (2)" peak_count_ratio="1" retention_time="0.2237667" start_time="0.19075" end_time="0.2787833" fwhm="0.02693451" area="90667.56" background="1320.001" height="20900" truncated="0" identified="false" user_set="FALSE" />
+          <precursor_peak replicate="QC1__VIFonly" peak_count_ratio="1" retention_time="0.2237667" start_time="0.1834167" end_time="0.2641167" fwhm="0.02685297" area="103312.1" background="0" height="26050" truncated="0" identified="false" user_set="FALSE" />
+          <precursor_peak replicate="QC2__VIFonly" peak_count_ratio="1" retention_time="0.2201" start_time="0.19075" end_time="0.26045" fwhm="0.02354437" area="102696.1" background="1661.001" height="22600" truncated="0" identified="false" user_set="FALSE" />
+          <precursor_peak replicate="QC3__VIFonly" peak_count_ratio="1" retention_time="0.2201" start_time="0.1834167" end_time="0.2567833" fwhm="0.03340744" area="88737.06" background="1474.001" height="23200" truncated="0" identified="false" user_set="FALSE" />
+          <precursor_peak replicate="QC4__VIFonly" peak_count_ratio="1" retention_time="0.2201" start_time="0.1944167" end_time="0.27145" fwhm="0.02556422" area="98917.17" background="3343.989" height="23000" truncated="0" identified="false" user_set="FALSE" />
+          <precursor_peak replicate="Unknown 1__VIFonly" peak_count_ratio="1" retention_time="0.2201" start_time="0.1870833" end_time="0.2641167" fwhm="0.02317858" area="94479.06" background="616.0004" height="22100" truncated="0" identified="false" user_set="FALSE" />
+          <precursor_peak replicate="Unknown 2__VIFonly" peak_count_ratio="1" retention_time="0.2127667" start_time="0.1834167" end_time="0.2677833" fwhm="0.02756464" area="101381.6" background="484.0003" height="19250" truncated="0" identified="false" user_set="FALSE" />
+          <precursor_peak replicate="Unknown 3__VIFonly" peak_count_ratio="1" retention_time="0.2127667" start_time="0.19075" end_time="0.2567833" fwhm="0.02937702" area="92125.06" background="1320.001" height="20400" truncated="0" identified="false" user_set="FALSE" />
+          <precursor_peak replicate="Unknown 4__VIFonly" peak_count_ratio="1" retention_time="0.2164333" start_time="0.1834167" end_time="0.2531167" fwhm="0.02055091" area="94550.56" background="814.0005" height="24100" truncated="0" identified="false" user_set="FALSE" />
+          <precursor_peak replicate="Unknown 5__VIFonly" peak_count_ratio="1" retention_time="0.2237667" start_time="0.1870833" end_time="0.26045" fwhm="0.02711912" area="104604.6" background="660.0004" height="24300" truncated="0" identified="false" user_set="FALSE" />
+          <precursor_peak replicate="Unknown 6__VIFonly" peak_count_ratio="1" retention_time="0.2127667" start_time="0.1760833" end_time="0.27145" fwhm="0.01987245" area="106601.1" background="561.0004" height="28050" truncated="0" identified="false" user_set="FALSE" />
+          <precursor_peak replicate="Unknown 7__VIFonly" peak_count_ratio="1" retention_time="0.2201" start_time="0.19075" end_time="0.27145" fwhm="0.02280736" area="125411.1" background="1144.001" height="33300" truncated="0" identified="false" user_set="FALSE" />
+          <precursor_peak replicate="Unknown 8__VIFonly" peak_count_ratio="1" retention_time="0.2201" start_time="0.1944167" end_time="0.2677833" fwhm="0.02716343" area="101612.2" background="1748.994" height="23700" truncated="0" identified="false" user_set="FALSE" />
+          <precursor_peak replicate="Unknown 9__VIFonly" peak_count_ratio="1" retention_time="0.2164333" start_time="0.19075" end_time="0.2641167" fwhm="0.02488818" area="115032.6" background="2838.002" height="24500" truncated="0" identified="false" user_set="FALSE" />
+        </precursor_results>
+        <transition fragment_type="y" fragment_ordinal="10" calc_neutral_mass="1058.550893" product_charge="1" cleavage_aa="F" loss_neutral_mass="0">
+          <precursor_mz>639.867544</precursor_mz>
+          <product_mz>1059.558169</product_mz>
+          <collision_energy>30.02224</collision_energy>
+          <declustering_potential>67.092796</declustering_potential>
+          <transition_results>
+            <transition_peak replicate="Solvent_" retention_time="0.12105" start_time="0.1173833" end_time="0.1614" area="77.00005" background="0" height="150" fwhm="0.003666669" truncated="false" identified="false" rank="5" user_set="FALSE" />
+            <transition_peak replicate="Double Blank__VIFonly" retention_time="0.01466667" start_time="0" end_time="0.05135" area="38.5" background="0" height="50" fwhm="0.003666667" truncated="false" identified="false" rank="5" user_set="FALSE" />
+            <transition_peak replicate="Blank+IS__VIFonly" retention_time="0.2201" start_time="0.19075" end_time="0.26045" area="26493.52" background="0" height="21350" fwhm="0.01798671" truncated="false" identified="false" rank="2" user_set="FALSE" />
+            <transition_peak replicate="Cal 1_0_20 ng_mL_VIFonly" retention_time="0.2091" start_time="0.17975" end_time="0.2787833" area="23320.02" background="0" height="16850" fwhm="0.01981375" truncated="false" identified="false" rank="2" user_set="FALSE" />
+            <transition_peak replicate="Cal 2_0_5 ng_mL_VIFonly" retention_time="0.2164333" start_time="0.1870833" end_time="0.2641167" area="26378.02" background="0" height="20850" fwhm="0.01857745" truncated="false" identified="false" rank="3" user_set="FALSE" />
+            <transition_peak replicate="Cal 3_1 ng_mL_VIFonly" retention_time="0.2237667" start_time="0.1870833" end_time="0.27145" area="27852.02" background="0" height="18500" fwhm="0.02153477" truncated="false" identified="false" rank="3" user_set="FALSE" />
+            <transition_peak replicate="Cal 4_2 ng_mL_VIFonly" retention_time="0.2164333" start_time="0.1870833" end_time="0.2567833" area="27346.02" background="0" height="22150" fwhm="0.02036519" truncated="false" identified="false" rank="1" user_set="FALSE" />
+            <transition_peak replicate="Cal 5_5 ng_mL_VIFonly" retention_time="0.2201" start_time="0.19075" end_time="0.2677833" area="29760.52" background="231.0002" height="20850" fwhm="0.02345301" truncated="false" identified="false" rank="2" user_set="FALSE" />
+            <transition_peak replicate="Cal 6_10 ng_mL_VIFonly" retention_time="0.2164333" start_time="0.1870833" end_time="0.26045" area="26625.52" background="0" height="24250" fwhm="0.01601351" truncated="false" identified="false" rank="2" user_set="FALSE" />
+            <transition_peak replicate="Cal 7_25 ng_mL_VIFonly" retention_time="0.2201" start_time="0.19075" end_time="0.26045" area="28187.52" background="0" height="22400" fwhm="0.01755484" truncated="false" identified="false" rank="1" user_set="FALSE" />
+            <transition_peak replicate="Cal 8_100 ng_mL_VIFonly" retention_time="0.2201" start_time="0.19075" end_time="0.2677833" area="30101.52" background="231.0002" height="24100" fwhm="0.0149606" truncated="false" identified="false" rank="3" user_set="FALSE" />
+            <transition_peak replicate="Blank+IS__VIFonly (2)" retention_time="0.2201" start_time="0.19075" end_time="0.2787833" area="23369.52" background="0" height="14450" fwhm="0.02693451" truncated="false" identified="false" rank="3" user_set="FALSE" />
+            <transition_peak replicate="QC1__VIFonly" retention_time="0.2237667" start_time="0.1834167" end_time="0.2641167" area="29524.02" background="0" height="26050" fwhm="0.01541603" truncated="false" identified="false" rank="2" user_set="FALSE" />
+            <transition_peak replicate="QC2__VIFonly" retention_time="0.2201" start_time="0.19075" end_time="0.26045" area="28770.52" background="627.0004" height="19600" fwhm="0.02354437" truncated="false" identified="false" rank="2" user_set="FALSE" />
+            <transition_peak replicate="QC3__VIFonly" retention_time="0.2164333" start_time="0.1834167" end_time="0.2567833" area="24513.52" background="0" height="16950" fwhm="0.02486513" truncated="false" identified="false" rank="2" user_set="FALSE" />
+            <transition_peak replicate="QC4__VIFonly" retention_time="0.2237667" start_time="0.1944167" end_time="0.27145" area="26938.91" background="923.9969" height="16750" fwhm="0.02556422" truncated="false" identified="false" rank="2" user_set="FALSE" />
+            <transition_peak replicate="Unknown 1__VIFonly" retention_time="0.2201" start_time="0.1870833" end_time="0.2641167" area="28171.02" background="0" height="22100" fwhm="0.01336444" truncated="false" identified="false" rank="2" user_set="FALSE" />
+            <transition_peak replicate="Unknown 2__VIFonly" retention_time="0.2201" start_time="0.1834167" end_time="0.2677833" area="26565.02" background="0" height="17000" fwhm="0.02756464" truncated="false" identified="false" rank="3" user_set="FALSE" />
+            <transition_peak replicate="Unknown 3__VIFonly" retention_time="0.2201" start_time="0.19075" end_time="0.2567833" area="24684.02" background="0" height="15600" fwhm="0.02441813" truncated="false" identified="false" rank="2" user_set="FALSE" />
+            <transition_peak replicate="Unknown 4__VIFonly" retention_time="0.2201" start_time="0.1834167" end_time="0.2531167" area="27439.52" background="0" height="23800" fwhm="0.01281983" truncated="false" identified="false" rank="2" user_set="FALSE" />
+            <transition_peak replicate="Unknown 5__VIFonly" retention_time="0.2237667" start_time="0.1870833" end_time="0.26045" area="28902.52" background="0" height="24300" fwhm="0.0118372" truncated="false" identified="false" rank="2" user_set="FALSE" />
+            <transition_peak replicate="Unknown 6__VIFonly" retention_time="0.2127667" start_time="0.1760833" end_time="0.27145" area="27472.52" background="0" height="22350" fwhm="0.01735441" truncated="false" identified="false" rank="3" user_set="FALSE" />
+            <transition_peak replicate="Unknown 7__VIFonly" retention_time="0.2201" start_time="0.19075" end_time="0.27145" area="36822.52" background="242.0002" height="33300" fwhm="0.01522754" truncated="false" identified="false" rank="1" user_set="FALSE" />
+            <transition_peak replicate="Unknown 8__VIFonly" retention_time="0.2201" start_time="0.1944167" end_time="0.2677833" area="27345.91" background="219.9993" height="20400" fwhm="0.01867548" truncated="false" identified="false" rank="2" user_set="FALSE" />
+            <transition_peak replicate="Unknown 9__VIFonly" retention_time="0.2164333" start_time="0.19075" end_time="0.2641167" area="32989.02" background="440.0003" height="24500" fwhm="0.01311325" truncated="false" identified="false" rank="2" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="5" calc_neutral_mass="540.338381" product_charge="1" cleavage_aa="P" loss_neutral_mass="0">
+          <precursor_mz>639.867544</precursor_mz>
+          <product_mz>541.345657</product_mz>
+          <collision_energy>30.02224</collision_energy>
+          <declustering_potential>67.092796</declustering_potential>
+          <transition_results>
+            <transition_peak replicate="Solvent_" retention_time="0.1504" start_time="0.1173833" end_time="0.1614" area="313.5002" background="605.0004" height="300" fwhm="0.03666669" fwhm_degenerate="true" truncated="false" identified="false" rank="3" user_set="FALSE" />
+            <transition_peak replicate="Double Blank__VIFonly" retention_time="0.02201667" start_time="0" end_time="0.05135" area="1078" background="0" height="800" fwhm="0.01959259" truncated="false" identified="false" rank="1" user_set="FALSE" />
+            <transition_peak replicate="Blank+IS__VIFonly" retention_time="0.2201" start_time="0.19075" end_time="0.26045" area="25454.02" background="627.0004" height="17600" fwhm="0.02148987" truncated="false" identified="false" rank="3" user_set="FALSE" />
+            <transition_peak replicate="Cal 1_0_20 ng_mL_VIFonly" retention_time="0.2127667" start_time="0.17975" end_time="0.2787833" area="22308.02" background="297.0002" height="15600" fwhm="0.02025967" truncated="false" identified="false" rank="3" user_set="FALSE" />
+            <transition_peak replicate="Cal 2_0_5 ng_mL_VIFonly" retention_time="0.2237667" start_time="0.1870833" end_time="0.2641167" area="28721.02" background="462.0003" height="20650" fwhm="0.02228219" truncated="false" identified="false" rank="2" user_set="FALSE" />
+            <transition_peak replicate="Cal 3_1 ng_mL_VIFonly" retention_time="0.2201" start_time="0.1870833" end_time="0.27145" area="28809.02" background="0" height="23700" fwhm="0.01818676" truncated="false" identified="false" rank="2" user_set="FALSE" />
+            <transition_peak replicate="Cal 4_2 ng_mL_VIFonly" retention_time="0.2274333" start_time="0.1870833" end_time="0.2567833" area="25333.02" background="1254.001" height="16000" fwhm="0.02392522" truncated="false" identified="false" rank="3" user_set="FALSE" />
+            <transition_peak replicate="Cal 5_5 ng_mL_VIFonly" retention_time="0.2201" start_time="0.19075" end_time="0.2677833" area="29441.52" background="462.0003" height="21500" fwhm="0.02203456" truncated="false" identified="false" rank="3" user_set="FALSE" />
+            <transition_peak replicate="Cal 6_10 ng_mL_VIFonly" retention_time="0.2127667" start_time="0.1870833" end_time="0.26045" area="25833.52" background="660.0004" height="17150" fwhm="0.02246719" truncated="false" identified="false" rank="3" user_set="FALSE" />
+            <transition_peak replicate="Cal 7_25 ng_mL_VIFonly" retention_time="0.2164333" start_time="0.19075" end_time="0.26045" area="23501.52" background="627.0004" height="16700" fwhm="0.02414107" truncated="false" identified="false" rank="3" user_set="FALSE" />
+            <transition_peak replicate="Cal 8_100 ng_mL_VIFonly" retention_time="0.2164333" start_time="0.19075" end_time="0.2677833" area="31020.02" background="924.0006" height="24300" fwhm="0.02239286" truncated="false" identified="false" rank="2" user_set="FALSE" />
+            <transition_peak replicate="Blank+IS__VIFonly (2)" retention_time="0.2201" start_time="0.19075" end_time="0.2787833" area="23985.52" background="792.0005" height="16450" fwhm="0.02165173" truncated="false" identified="false" rank="2" user_set="FALSE" />
+            <transition_peak replicate="QC1__VIFonly" retention_time="0.2127667" start_time="0.1834167" end_time="0.2641167" area="27731.02" background="0" height="20400" fwhm="0.02238013" truncated="false" identified="false" rank="3" user_set="FALSE" />
+            <transition_peak replicate="QC2__VIFonly" retention_time="0.2201" start_time="0.19075" end_time="0.26045" area="25960.02" background="418.0003" height="19750" fwhm="0.02002787" truncated="false" identified="false" rank="3" user_set="FALSE" />
+            <transition_peak replicate="QC3__VIFonly" retention_time="0.2164333" start_time="0.1834167" end_time="0.2567833" area="21136.51" background="869.0006" height="14450" fwhm="0.02150856" truncated="false" identified="false" rank="3" user_set="FALSE" />
+            <transition_peak replicate="QC4__VIFonly" retention_time="0.2164333" start_time="0.1944167" end_time="0.27145" area="25008.42" background="1528.995" height="16500" fwhm="0.02400916" truncated="false" identified="false" rank="3" user_set="FALSE" />
+            <transition_peak replicate="Unknown 1__VIFonly" retention_time="0.2237667" start_time="0.1870833" end_time="0.2641167" area="23347.52" background="231.0002" height="18850" fwhm="0.01783828" truncated="false" identified="false" rank="3" user_set="FALSE" />
+            <transition_peak replicate="Unknown 2__VIFonly" retention_time="0.2127667" start_time="0.1834167" end_time="0.2677833" area="28297.52" background="0" height="19250" fwhm="0.02162412" truncated="false" identified="false" rank="1" user_set="FALSE" />
+            <transition_peak replicate="Unknown 3__VIFonly" retention_time="0.2237667" start_time="0.19075" end_time="0.2567833" area="23980.02" background="198.0001" height="19300" fwhm="0.01717076" truncated="false" identified="false" rank="3" user_set="FALSE" />
+            <transition_peak replicate="Unknown 4__VIFonly" retention_time="0.2201" start_time="0.1834167" end_time="0.2531167" area="22704.02" background="418.0003" height="17750" fwhm="0.01698428" truncated="false" identified="false" rank="3" user_set="FALSE" />
+            <transition_peak replicate="Unknown 5__VIFonly" retention_time="0.2237667" start_time="0.1870833" end_time="0.26045" area="28589.02" background="660.0004" height="19900" fwhm="0.01942967" truncated="false" identified="false" rank="3" user_set="FALSE" />
+            <transition_peak replicate="Unknown 6__VIFonly" retention_time="0.2164333" start_time="0.1760833" end_time="0.27145" area="27483.52" background="0" height="19350" fwhm="0.01987245" truncated="false" identified="false" rank="2" user_set="FALSE" />
+            <transition_peak replicate="Unknown 7__VIFonly" retention_time="0.2164333" start_time="0.19075" end_time="0.27145" area="32340.02" background="242.0002" height="20800" fwhm="0.02280736" truncated="false" identified="false" rank="3" user_set="FALSE" />
+            <transition_peak replicate="Unknown 8__VIFonly" retention_time="0.2127667" start_time="0.1944167" end_time="0.2677833" area="25783.91" background="1099.996" height="15500" fwhm="0.02716343" truncated="false" identified="false" rank="3" user_set="FALSE" />
+            <transition_peak replicate="Unknown 9__VIFonly" retention_time="0.2237667" start_time="0.19075" end_time="0.2641167" area="34182.52" background="1320.001" height="23150" fwhm="0.02488818" truncated="false" identified="false" rank="1" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="10" calc_neutral_mass="1058.550893" product_charge="2" cleavage_aa="F" loss_neutral_mass="0">
+          <precursor_mz>639.867544</precursor_mz>
+          <product_mz>530.282723</product_mz>
+          <collision_energy>30.02224</collision_energy>
+          <declustering_potential>67.092796</declustering_potential>
+          <transition_results>
+            <transition_peak replicate="Solvent_" retention_time="0.1577333" start_time="0.1173833" end_time="0.1614" area="484.0003" background="121.0001" height="400" fwhm="0.03923335" truncated="false" identified="false" rank="2" user_set="FALSE" />
+            <transition_peak replicate="Double Blank__VIFonly" retention_time="0.01466667" start_time="0" end_time="0.05135" area="407" background="517" height="700" fwhm="0.005092594" truncated="false" identified="false" rank="3" user_set="FALSE" />
+            <transition_peak replicate="Blank+IS__VIFonly" retention_time="0.2127667" start_time="0.19075" end_time="0.26045" area="13480.51" background="627.0004" height="11150" fwhm="0.01671989" truncated="false" identified="false" rank="4" user_set="FALSE" />
+            <transition_peak replicate="Cal 1_0_20 ng_mL_VIFonly" retention_time="0.2164333" start_time="0.17975" end_time="0.2787833" area="12028.51" background="0" height="8250" fwhm="0.02159869" truncated="false" identified="false" rank="4" user_set="FALSE" />
+            <transition_peak replicate="Cal 2_0_5 ng_mL_VIFonly" retention_time="0.2164333" start_time="0.1870833" end_time="0.2641167" area="14536.51" background="231.0002" height="11600" fwhm="0.01938924" truncated="false" identified="false" rank="4" user_set="FALSE" />
+            <transition_peak replicate="Cal 3_1 ng_mL_VIFonly" retention_time="0.2164333" start_time="0.1870833" end_time="0.27145" area="14058.01" background="451.0003" height="10250" fwhm="0.02213852" truncated="false" identified="false" rank="4" user_set="FALSE" />
+            <transition_peak replicate="Cal 4_2 ng_mL_VIFonly" retention_time="0.2164333" start_time="0.1870833" end_time="0.2567833" area="14289.01" background="0" height="10500" fwhm="0.01848838" truncated="false" identified="false" rank="4" user_set="FALSE" />
+            <transition_peak replicate="Cal 5_5 ng_mL_VIFonly" retention_time="0.2201" start_time="0.19075" end_time="0.2677833" area="15356.01" background="220.0002" height="9700" fwhm="0.02420194" truncated="false" identified="false" rank="4" user_set="FALSE" />
+            <transition_peak replicate="Cal 6_10 ng_mL_VIFonly" retention_time="0.2164333" start_time="0.1870833" end_time="0.26045" area="12237.51" background="0" height="7250" fwhm="0.02696473" truncated="false" identified="false" rank="4" user_set="FALSE" />
+            <transition_peak replicate="Cal 7_25 ng_mL_VIFonly" retention_time="0.2127667" start_time="0.19075" end_time="0.26045" area="13618.01" background="792.0005" height="10700" fwhm="0.02025483" truncated="false" identified="false" rank="4" user_set="FALSE" />
+            <transition_peak replicate="Cal 8_100 ng_mL_VIFonly" retention_time="0.2127667" start_time="0.19075" end_time="0.2677833" area="15449.51" background="891.0006" height="9850" fwhm="0.02320664" truncated="false" identified="false" rank="4" user_set="FALSE" />
+            <transition_peak replicate="Blank+IS__VIFonly (2)" retention_time="0.2201" start_time="0.19075" end_time="0.2787833" area="12688.51" background="528.0004" height="9750" fwhm="0.01729804" truncated="false" identified="false" rank="4" user_set="FALSE" />
+            <transition_peak replicate="QC1__VIFonly" retention_time="0.2201" start_time="0.1834167" end_time="0.2641167" area="13535.51" background="0" height="8400" fwhm="0.02685297" truncated="false" identified="false" rank="4" user_set="FALSE" />
+            <transition_peak replicate="QC2__VIFonly" retention_time="0.2127667" start_time="0.19075" end_time="0.26045" area="15812.51" background="0" height="10550" fwhm="0.02300044" truncated="false" identified="false" rank="4" user_set="FALSE" />
+            <transition_peak replicate="QC3__VIFonly" retention_time="0.2201" start_time="0.1834167" end_time="0.2567833" area="13469.51" background="0" height="11400" fwhm="0.01539368" truncated="false" identified="false" rank="4" user_set="FALSE" />
+            <transition_peak replicate="QC4__VIFonly" retention_time="0.2201" start_time="0.1944167" end_time="0.27145" area="14761.95" background="230.9992" height="10200" fwhm="0.02461651" truncated="false" identified="false" rank="4" user_set="FALSE" />
+            <transition_peak replicate="Unknown 1__VIFonly" retention_time="0.2201" start_time="0.1870833" end_time="0.2641167" area="13684.01" background="385.0002" height="10100" fwhm="0.02154168" truncated="false" identified="false" rank="4" user_set="FALSE" />
+            <transition_peak replicate="Unknown 2__VIFonly" retention_time="0.2201" start_time="0.1834167" end_time="0.2677833" area="17490.01" background="253.0002" height="14600" fwhm="0.0163788" truncated="false" identified="false" rank="4" user_set="FALSE" />
+            <transition_peak replicate="Unknown 3__VIFonly" retention_time="0.2164333" start_time="0.19075" end_time="0.2567833" area="15669.51" background="924.0006" height="13750" fwhm="0.01692704" truncated="false" identified="false" rank="4" user_set="FALSE" />
+            <transition_peak replicate="Unknown 4__VIFonly" retention_time="0.2237667" start_time="0.1834167" end_time="0.2531167" area="14041.51" background="0" height="11400" fwhm="0.02055091" truncated="false" identified="false" rank="4" user_set="FALSE" />
+            <transition_peak replicate="Unknown 5__VIFonly" retention_time="0.2274333" start_time="0.1870833" end_time="0.26045" area="14663.01" background="0" height="11300" fwhm="0.02250087" truncated="false" identified="false" rank="4" user_set="FALSE" />
+            <transition_peak replicate="Unknown 6__VIFonly" retention_time="0.2201" start_time="0.1760833" end_time="0.27145" area="14685.01" background="561.0004" height="11800" fwhm="0.01316154" truncated="false" identified="false" rank="4" user_set="FALSE" />
+            <transition_peak replicate="Unknown 7__VIFonly" retention_time="0.2201" start_time="0.19075" end_time="0.27145" area="18744.01" background="418.0003" height="16250" fwhm="0.01808798" truncated="false" identified="false" rank="4" user_set="FALSE" />
+            <transition_peak replicate="Unknown 8__VIFonly" retention_time="0.2201" start_time="0.1944167" end_time="0.2677833" area="15949.95" background="208.9993" height="11150" fwhm="0.02266966" truncated="false" identified="false" rank="4" user_set="FALSE" />
+            <transition_peak replicate="Unknown 9__VIFonly" retention_time="0.2237667" start_time="0.19075" end_time="0.2641167" area="18474.51" background="220.0002" height="14200" fwhm="0.01938555" truncated="false" identified="false" rank="4" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="b" fragment_ordinal="2" calc_neutral_mass="219.169642" product_charge="1" cleavage_aa="I" loss_neutral_mass="0">
+          <precursor_mz>639.867544</precursor_mz>
+          <product_mz>220.176918</product_mz>
+          <collision_energy>30.02224</collision_energy>
+          <declustering_potential>67.092796</declustering_potential>
+          <transition_results>
+            <transition_peak replicate="Solvent_" retention_time="0.12105" start_time="0.1173833" end_time="0.1614" area="1397.001" background="627.0004" height="1150" fwhm="0.01014446" fwhm_degenerate="true" truncated="false" identified="false" rank="1" user_set="FALSE" />
+            <transition_peak replicate="Double Blank__VIFonly" retention_time="0.04768333" start_time="0" end_time="0.05135" area="236.5" background="0" height="350" fwhm="0.003666667" truncated="true" identified="false" rank="4" user_set="FALSE" />
+            <transition_peak replicate="Blank+IS__VIFonly" retention_time="0.2201" start_time="0.19075" end_time="0.26045" area="28275.52" background="836.0005" height="18550" fwhm="0.0239622" truncated="false" identified="false" rank="1" user_set="FALSE" />
+            <transition_peak replicate="Cal 1_0_20 ng_mL_VIFonly" retention_time="0.2164333" start_time="0.17975" end_time="0.2787833" area="23914.02" background="0" height="17550" fwhm="0.01508627" truncated="false" identified="false" rank="1" user_set="FALSE" />
+            <transition_peak replicate="Cal 2_0_5 ng_mL_VIFonly" retention_time="0.2127667" start_time="0.1870833" end_time="0.2641167" area="32087.02" background="231.0002" height="24300" fwhm="0.02109585" truncated="false" identified="false" rank="1" user_set="FALSE" />
+            <transition_peak replicate="Cal 3_1 ng_mL_VIFonly" retention_time="0.2127667" start_time="0.1870833" end_time="0.27145" area="31861.52" background="0" height="20450" fwhm="0.02175569" truncated="false" identified="false" rank="1" user_set="FALSE" />
+            <transition_peak replicate="Cal 4_2 ng_mL_VIFonly" retention_time="0.2164333" start_time="0.1870833" end_time="0.2567833" area="25795.02" background="0" height="18850" fwhm="0.021141" truncated="false" identified="false" rank="2" user_set="FALSE" />
+            <transition_peak replicate="Cal 5_5 ng_mL_VIFonly" retention_time="0.2164333" start_time="0.19075" end_time="0.2677833" area="35502.52" background="0" height="27900" fwhm="0.02149824" truncated="false" identified="false" rank="1" user_set="FALSE" />
+            <transition_peak replicate="Cal 6_10 ng_mL_VIFonly" retention_time="0.2201" start_time="0.1870833" end_time="0.26045" area="30090.52" background="0" height="20750" fwhm="0.02448107" truncated="false" identified="false" rank="1" user_set="FALSE" />
+            <transition_peak replicate="Cal 7_25 ng_mL_VIFonly" retention_time="0.2164333" start_time="0.19075" end_time="0.26045" area="27148.02" background="627.0004" height="19900" fwhm="0.02312199" truncated="false" identified="false" rank="2" user_set="FALSE" />
+            <transition_peak replicate="Cal 8_100 ng_mL_VIFonly" retention_time="0.2237667" start_time="0.19075" end_time="0.2677833" area="36542.02" background="0" height="23400" fwhm="0.02243933" truncated="false" identified="false" rank="1" user_set="FALSE" />
+            <transition_peak replicate="Blank+IS__VIFonly (2)" retention_time="0.2237667" start_time="0.19075" end_time="0.2787833" area="29491.02" background="0" height="20900" fwhm="0.02130451" truncated="false" identified="false" rank="1" user_set="FALSE" />
+            <transition_peak replicate="QC1__VIFonly" retention_time="0.2201" start_time="0.1834167" end_time="0.2641167" area="31630.52" background="0" height="21950" fwhm="0.0206496" truncated="false" identified="false" rank="1" user_set="FALSE" />
+            <transition_peak replicate="QC2__VIFonly" retention_time="0.2201" start_time="0.19075" end_time="0.26045" area="31157.52" background="616.0004" height="22600" fwhm="0.02094423" truncated="false" identified="false" rank="1" user_set="FALSE" />
+            <transition_peak replicate="QC3__VIFonly" retention_time="0.2201" start_time="0.1834167" end_time="0.2567833" area="28627.52" background="605.0004" height="23200" fwhm="0.01987717" truncated="false" identified="false" rank="1" user_set="FALSE" />
+            <transition_peak replicate="QC4__VIFonly" retention_time="0.2201" start_time="0.1944167" end_time="0.27145" area="31338.89" background="659.9977" height="23000" fwhm="0.02157659" truncated="false" identified="false" rank="1" user_set="FALSE" />
+            <transition_peak replicate="Unknown 1__VIFonly" retention_time="0.2164333" start_time="0.1870833" end_time="0.2641167" area="28275.52" background="0" height="20800" fwhm="0.02158132" truncated="false" identified="false" rank="1" user_set="FALSE" />
+            <transition_peak replicate="Unknown 2__VIFonly" retention_time="0.2201" start_time="0.1834167" end_time="0.2677833" area="28204.02" background="231.0002" height="18200" fwhm="0.02559059" truncated="false" identified="false" rank="2" user_set="FALSE" />
+            <transition_peak replicate="Unknown 3__VIFonly" retention_time="0.2127667" start_time="0.19075" end_time="0.2567833" area="26999.52" background="198.0001" height="20400" fwhm="0.01812152" truncated="false" identified="false" rank="1" user_set="FALSE" />
+            <transition_peak replicate="Unknown 4__VIFonly" retention_time="0.2164333" start_time="0.1834167" end_time="0.2531167" area="29683.52" background="396.0003" height="24100" fwhm="0.01407037" truncated="false" identified="false" rank="1" user_set="FALSE" />
+            <transition_peak replicate="Unknown 5__VIFonly" retention_time="0.2201" start_time="0.1870833" end_time="0.26045" area="31570.02" background="0" height="18600" fwhm="0.02711912" truncated="false" identified="false" rank="1" user_set="FALSE" />
+            <transition_peak replicate="Unknown 6__VIFonly" retention_time="0.2127667" start_time="0.1760833" end_time="0.27145" area="36085.52" background="0" height="28050" fwhm="0.01893712" truncated="false" identified="false" rank="1" user_set="FALSE" />
+            <transition_peak replicate="Unknown 7__VIFonly" retention_time="0.2237667" start_time="0.19075" end_time="0.27145" area="36613.52" background="242.0002" height="27300" fwhm="0.02022325" truncated="false" identified="false" rank="2" user_set="FALSE" />
+            <transition_peak replicate="Unknown 8__VIFonly" retention_time="0.2201" start_time="0.1944167" end_time="0.2677833" area="31844.89" background="219.9993" height="23700" fwhm="0.0211236" truncated="false" identified="false" rank="1" user_set="FALSE" />
+            <transition_peak replicate="Unknown 9__VIFonly" retention_time="0.2201" start_time="0.19075" end_time="0.2641167" area="28446.02" background="858.0005" height="23850" fwhm="0.01646555" truncated="false" identified="false" rank="3" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="a" fragment_ordinal="2" calc_neutral_mass="191.174727" product_charge="1" cleavage_aa="I" loss_neutral_mass="0">
+          <precursor_mz>639.867544</precursor_mz>
+          <product_mz>192.182003</product_mz>
+          <collision_energy>30.02224</collision_energy>
+          <declustering_potential>67.092796</declustering_potential>
+          <transition_results>
+            <transition_peak replicate="Solvent_" retention_time="0.1247167" start_time="0.1173833" end_time="0.1614" area="88.00006" background="198.0001" height="100" fwhm="0.0021389" truncated="false" identified="false" rank="4" user_set="FALSE" />
+            <transition_peak replicate="Double Blank__VIFonly" retention_time="0.011" start_time="0" end_time="0.05135" area="874.5" background="0" height="650" fwhm="0.0226875" fwhm_degenerate="true" truncated="true" identified="false" rank="2" user_set="FALSE" />
+            <transition_peak replicate="Blank+IS__VIFonly" retention_time="0.2311" start_time="0.19075" end_time="0.26045" area="946.0006" background="0" height="800" fwhm="0.02556192" truncated="false" identified="false" rank="5" user_set="FALSE" />
+            <transition_peak replicate="Cal 1_0_20 ng_mL_VIFonly" retention_time="0.2201" start_time="0.17975" end_time="0.2787833" area="594.0004" background="0" height="750" fwhm="0.01403205" truncated="false" identified="false" rank="5" user_set="FALSE" />
+            <transition_peak replicate="Cal 2_0_5 ng_mL_VIFonly" retention_time="0.2164333" start_time="0.1870833" end_time="0.2641167" area="682.0005" background="0" height="850" fwhm="0.007497017" truncated="false" identified="false" rank="5" user_set="FALSE" />
+            <transition_peak replicate="Cal 3_1 ng_mL_VIFonly" retention_time="0.2201" start_time="0.1870833" end_time="0.27145" area="1155.001" background="0" height="750" fwhm="0.02640001" truncated="false" identified="false" rank="5" user_set="FALSE" />
+            <transition_peak replicate="Cal 4_2 ng_mL_VIFonly" retention_time="0.2201" start_time="0.1870833" end_time="0.2567833" area="968.0007" background="0" height="900" fwhm="0.01853706" truncated="false" identified="false" rank="5" user_set="FALSE" />
+            <transition_peak replicate="Cal 5_5 ng_mL_VIFonly" retention_time="0.2201" start_time="0.19075" end_time="0.2677833" area="913.0006" background="0" height="1050" fwhm="0.01038891" truncated="false" identified="false" rank="5" user_set="FALSE" />
+            <transition_peak replicate="Cal 6_10 ng_mL_VIFonly" retention_time="0.2127667" start_time="0.1870833" end_time="0.26045" area="770.0005" background="0" height="850" fwhm="0.005430571" truncated="false" identified="false" rank="5" user_set="FALSE" />
+            <transition_peak replicate="Cal 7_25 ng_mL_VIFonly" retention_time="0.2201" start_time="0.19075" end_time="0.26045" area="759.0005" background="0" height="650" fwhm="0.01420834" truncated="false" identified="false" rank="5" user_set="FALSE" />
+            <transition_peak replicate="Cal 8_100 ng_mL_VIFonly" retention_time="0.2164333" start_time="0.19075" end_time="0.2677833" area="918.5006" background="341.0002" height="1100" fwhm="0.005733646" truncated="false" identified="false" rank="5" user_set="FALSE" />
+            <transition_peak replicate="Blank+IS__VIFonly (2)" retention_time="0.2274333" start_time="0.19075" end_time="0.2787833" area="1133.001" background="0" height="850" fwhm="0.01871528" truncated="false" identified="false" rank="5" user_set="FALSE" />
+            <transition_peak replicate="QC1__VIFonly" retention_time="0.2127667" start_time="0.1834167" end_time="0.2641167" area="891.0006" background="0" height="900" fwhm="0.006666679" truncated="false" identified="false" rank="5" user_set="FALSE" />
+            <transition_peak replicate="QC2__VIFonly" retention_time="0.2127667" start_time="0.19075" end_time="0.26045" area="995.5007" background="0" height="750" fwhm="0.01737086" truncated="false" identified="false" rank="5" user_set="FALSE" />
+            <transition_peak replicate="QC3__VIFonly" retention_time="0.2164333" start_time="0.1834167" end_time="0.2567833" area="990.0007" background="0" height="800" fwhm="0.03340744" truncated="false" identified="false" rank="5" user_set="FALSE" />
+            <transition_peak replicate="QC4__VIFonly" retention_time="0.2164333" start_time="0.1944167" end_time="0.27145" area="868.9971" background="0" height="900" fwhm="0.00707449" truncated="false" identified="false" rank="5" user_set="FALSE" />
+            <transition_peak replicate="Unknown 1__VIFonly" retention_time="0.2201" start_time="0.1870833" end_time="0.2641167" area="1001.001" background="0" height="800" fwhm="0.02317858" truncated="false" identified="false" rank="5" user_set="FALSE" />
+            <transition_peak replicate="Unknown 2__VIFonly" retention_time="0.2091" start_time="0.1834167" end_time="0.2677833" area="825.0005" background="0" height="600" fwhm="0.01169842" truncated="false" identified="false" rank="5" user_set="FALSE" />
+            <transition_peak replicate="Unknown 3__VIFonly" retention_time="0.2311" start_time="0.19075" end_time="0.2567833" area="792.0005" background="0" height="650" fwhm="0.02937702" truncated="false" identified="false" rank="5" user_set="FALSE" />
+            <transition_peak replicate="Unknown 4__VIFonly" retention_time="0.2091" start_time="0.1834167" end_time="0.2531167" area="682.0005" background="0" height="750" fwhm="0.00501985" truncated="false" identified="false" rank="5" user_set="FALSE" />
+            <transition_peak replicate="Unknown 5__VIFonly" retention_time="0.2201" start_time="0.1870833" end_time="0.26045" area="880.0006" background="0" height="750" fwhm="0.01122917" truncated="false" identified="false" rank="5" user_set="FALSE" />
+            <transition_peak replicate="Unknown 6__VIFonly" retention_time="0.2054167" start_time="0.1760833" end_time="0.27145" area="874.5006" background="0" height="600" fwhm="0.006844428" truncated="false" identified="false" rank="5" user_set="FALSE" />
+            <transition_peak replicate="Unknown 7__VIFonly" retention_time="0.2164333" start_time="0.19075" end_time="0.27145" area="891.0006" background="0" height="1200" fwhm="0.004788221" truncated="false" identified="false" rank="5" user_set="FALSE" />
+            <transition_peak replicate="Unknown 8__VIFonly" retention_time="0.2237667" start_time="0.1944167" end_time="0.2677833" area="687.4977" background="0" height="600" fwhm="0.01780948" truncated="false" identified="false" rank="5" user_set="FALSE" />
+            <transition_peak replicate="Unknown 9__VIFonly" retention_time="0.2164333" start_time="0.19075" end_time="0.2641167" area="940.5006" background="0" height="650" fwhm="0.01573611" truncated="false" identified="false" rank="5" user_set="FALSE" />
+          </transition_results>
+        </transition>
+      </precursor>
+    </peptide>
+  </peptide_list>
+</srm_settings>

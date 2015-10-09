@@ -444,7 +444,6 @@ namespace pwiz.Skyline
         {
             // Can only be accessed from the UI thread.
             Debug.Assert(!InvokeRequired);
-
             SrmDocument documentPrevious = _documentUI;
             _documentUI = Document;
 
@@ -454,7 +453,7 @@ namespace pwiz.Skyline
                 // Clear the UndoManager, if this is a different document.
                 if (!ReferenceEquals(_documentUI.Id, documentPrevious.Id))
                     _undoManager.Clear();
-            }
+			}
 
             // Call the even handler for this window directly, since it may
             // close other listeners, and it is not possible to remove a listener
@@ -4039,6 +4038,10 @@ namespace pwiz.Skyline
             if (null != liveResultsGrid)
             {
                 liveResultsGrid.SetReplicateIndex(ComboResults.SelectedIndex);
+            }
+            if (null != _calibrationForm)
+            {
+                _calibrationForm.UpdateUI(true);
             }
 
             if (SequenceTree.ResultsIndex != ComboResults.SelectedIndex)

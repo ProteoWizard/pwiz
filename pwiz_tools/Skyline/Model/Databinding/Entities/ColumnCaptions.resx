@@ -150,11 +150,20 @@
   <data name="BestRetentionTime">
     <value>Best Retention Time</value>
   </data>
+  <data name="CalculatedConcentration">
+    <value>Calculated Concentration</value>
+  </data>
+  <data name="CalibrationCurve">
+    <value>Calibration Curve</value>
+  </data>
   <data name="CleavageAa">
     <value>Cleavage Aa</value>
   </data>
   <data name="CollisionEnergy">
     <value>Collision Energy</value>
+  </data>
+  <data name="ConcentrationUnits">
+    <value>Concentration Units</value>
   </data>
   <data name="ConfidenceLevel">
     <value>Confidence Level</value>
@@ -207,11 +216,17 @@
   <data name="DegreesOfFreedom">
     <value>Degrees Of Freedom</value>
   </data>
+  <data name="DilutionFactor">
+    <value>Dilution Factor</value>
+  </data>
   <data name="EndPos">
     <value>End Pos</value>
   </data>
   <data name="EndTime">
     <value>End Time</value>
+  </data>
+  <data name="ErrorMessage">
+    <value>Error Message</value>
   </data>
   <data name="EstimatedValue">
     <value>Estimated Value</value>
@@ -254,6 +269,12 @@
   </data>
   <data name="Identified">
     <value>Identified</value>
+  </data>
+  <data name="Intercept">
+    <value>Intercept</value>
+  </data>
+  <data name="InternalStandardConcentration">
+    <value>Internal Standard Concentration</value>
   </data>
   <data name="IsDecoy">
     <value>Is Decoy</value>
@@ -402,6 +423,9 @@
   <data name="NextAa">
     <value>Next Aa</value>
   </data>
+  <data name="NormalizedIntensity">
+    <value>Normalized Intensity</value>
+  </data>
   <data name="OptCollisionEnergy">
     <value>Opt Collision Energy</value>
   </data>
@@ -449,6 +473,9 @@
   </data>
   <data name="PeptideSequence">
     <value>Peptide Sequence</value>
+  </data>
+  <data name="PointCount">
+    <value>Point Count</value>
   </data>
   <data name="Precursor">
     <value>Precursor</value>
@@ -537,6 +564,12 @@
   <data name="PValue">
     <value>P-Value</value>
   </data>
+  <data name="QuadraticCoefficient">
+    <value>Quadratic Coefficient</value>
+  </data>
+  <data name="Quantification">
+    <value>Quantification</value>
+  </data>
   <data name="Range">
     <value>Range</value>
   </data>
@@ -582,8 +615,17 @@
   <data name="RetentionTimeCalculatorScore">
     <value>Retention Time Calculator Score</value>
   </data>
+  <data name="RSquared">
+    <value>R Squared</value>
+  </data>
   <data name="SampleName">
     <value>Sample Name</value>
+  </data>
+  <data name="SampleType">
+    <value>Sample Type</value>
+  </data>
+  <data name="Slope">
+    <value>Slope</value>
   </data>
   <data name="StandardError">
     <value>Standard Error</value>
@@ -629,6 +671,9 @@
   </data>
   <data name="StdevTotalAreaRatio">
     <value>Stdev Total Area Ratio</value>
+  </data>
+  <data name="StockConcentration">
+    <value>Stock Concentration</value>
   </data>
   <data name="TotalArea">
     <value>Total Area</value>

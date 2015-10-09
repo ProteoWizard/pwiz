@@ -27,6 +27,7 @@ using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Proteome;
@@ -1556,21 +1557,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 PeptideSettings = defPep;
             else
             {
-                Enzyme enzyme = PeptideSettings.Enzyme ?? defPep.Enzyme;
-                DigestSettings digestSettings = PeptideSettings.DigestSettings ?? defPep.DigestSettings;
-                PeptidePrediction prediction = PeptideSettings.Prediction ?? defPep.Prediction;
-                PeptideFilter filter = PeptideSettings.Filter ?? defPep.Filter;
-                PeptideLibraries libraries = PeptideSettings.Libraries ?? defPep.Libraries;
-                BackgroundProteome backgroundProteome = PeptideSettings.BackgroundProteome ?? defPep.BackgroundProteome;
-                PeptideModifications modifications = PeptideSettings.Modifications ?? defPep.Modifications;
-                PeptideIntegration integration = PeptideSettings.Integration ?? defPep.Integration;
-
-                PeptideSettings peptideSettings = new PeptideSettings(enzyme, digestSettings, prediction, filter,
-                    libraries, modifications, integration, backgroundProteome);
-                // If the above null checks result in a changed PeptideSettings object,
-                // then use the changed version.
-                if (!Equals(PeptideSettings, peptideSettings))
-                    PeptideSettings = peptideSettings;
+                PeptideSettings = PeptideSettings.MergeDefaults(defPep);
             }
 
             TransitionSettings defTran = defaults.TransitionSettings;
@@ -1588,14 +1575,8 @@ namespace pwiz.Skyline.Model.DocSettings
                     if (PeptideSettings.Prediction != null && // Make Resharper happy
                         PeptideSettings.Prediction.RetentionTime == null)
                     {
-                        PeptideSettings = new PeptideSettings(PeptideSettings.Enzyme,
-                                                              PeptideSettings.DigestSettings,
-                                                              new PeptidePrediction(prediction.RetentionTime),
-                                                              PeptideSettings.Filter,
-                                                              PeptideSettings.Libraries,
-                                                              PeptideSettings.Modifications,
-                                                              PeptideSettings.Integration,
-                                                              PeptideSettings.BackgroundProteome);
+                        PeptideSettings = PeptideSettings.ChangePrediction(
+                            new PeptidePrediction(prediction.RetentionTime));
                     }
                     prediction = new TransitionPrediction(prediction);
                 }
@@ -2172,8 +2153,10 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             for (int i = 0; i < measuredResultsNew.Chromatograms.Count; i++)
             {
-                var chromatogramSetNew = measuredResultsNew.Chromatograms[i].ChangeAnnotations(Annotations.EMPTY).ChangeUseForRetentionTimeFilter(false);
-                var chromatogramSetOld = measuredResultsOld.Chromatograms[i].ChangeAnnotations(Annotations.EMPTY).ChangeUseForRetentionTimeFilter(false);
+                var chromatogramSetNew = measuredResultsNew.Chromatograms[i].ChangeAnnotations(Annotations.EMPTY).ChangeUseForRetentionTimeFilter(false)
+                    .ChangeDilutionFactor(null).ChangeSampleType(SampleType.DEFAULT);
+                var chromatogramSetOld = measuredResultsOld.Chromatograms[i].ChangeAnnotations(Annotations.EMPTY).ChangeUseForRetentionTimeFilter(false)
+                    .ChangeDilutionFactor(null).ChangeSampleType(SampleType.DEFAULT);
                 if (!chromatogramSetNew.Equals(chromatogramSetOld))
                 {
                     return false;

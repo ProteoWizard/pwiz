@@ -1949,6 +1949,234 @@ W = 2T/R</value>
   <data name="&gt;&gt;tabIntegration.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
+  <data name="comboQuantMsLevel.Items" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="comboQuantMsLevel.Items1" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="comboQuantMsLevel.Items2" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="comboQuantMsLevel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 141</value>
+  </data>
+  <data name="comboQuantMsLevel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>121, 21</value>
+  </data>
+  <data name="comboQuantMsLevel.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="&gt;&gt;comboQuantMsLevel.Name" xml:space="preserve">
+    <value>comboQuantMsLevel</value>
+  </data>
+  <data name="&gt;&gt;comboQuantMsLevel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboQuantMsLevel.Parent" xml:space="preserve">
+    <value>tabQuantification</value>
+  </data>
+  <data name="&gt;&gt;comboQuantMsLevel.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="label23.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label23.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 125</value>
+  </data>
+  <data name="label23.Size" type="System.Drawing.Size, System.Drawing">
+    <value>52, 13</value>
+  </data>
+  <data name="label23.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="label23.Text" xml:space="preserve">
+    <value>MS Level</value>
+  </data>
+  <data name="&gt;&gt;label23.Name" xml:space="preserve">
+    <value>label23</value>
+  </data>
+  <data name="&gt;&gt;label23.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label23.Parent" xml:space="preserve">
+    <value>tabQuantification</value>
+  </data>
+  <data name="&gt;&gt;label23.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="comboNormalizationMethod.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 19</value>
+  </data>
+  <data name="comboNormalizationMethod.Size" type="System.Drawing.Size, System.Drawing">
+    <value>239, 21</value>
+  </data>
+  <data name="comboNormalizationMethod.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="&gt;&gt;comboNormalizationMethod.Name" xml:space="preserve">
+    <value>comboNormalizationMethod</value>
+  </data>
+  <data name="&gt;&gt;comboNormalizationMethod.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboNormalizationMethod.Parent" xml:space="preserve">
+    <value>tabQuantification</value>
+  </data>
+  <data name="&gt;&gt;comboNormalizationMethod.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="label20.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label20.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 3</value>
+  </data>
+  <data name="label20.Size" type="System.Drawing.Size, System.Drawing">
+    <value>112, 13</value>
+  </data>
+  <data name="label20.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="label20.Text" xml:space="preserve">
+    <value>Normalization Method:</value>
+  </data>
+  <data name="&gt;&gt;label20.Name" xml:space="preserve">
+    <value>label20</value>
+  </data>
+  <data name="&gt;&gt;label20.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label20.Parent" xml:space="preserve">
+    <value>tabQuantification</value>
+  </data>
+  <data name="&gt;&gt;label20.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="comboRegressionFit.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 59</value>
+  </data>
+  <data name="comboRegressionFit.Size" type="System.Drawing.Size, System.Drawing">
+    <value>127, 21</value>
+  </data>
+  <data name="comboRegressionFit.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="&gt;&gt;comboRegressionFit.Name" xml:space="preserve">
+    <value>comboRegressionFit</value>
+  </data>
+  <data name="&gt;&gt;comboRegressionFit.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboRegressionFit.Parent" xml:space="preserve">
+    <value>tabQuantification</value>
+  </data>
+  <data name="&gt;&gt;comboRegressionFit.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="label22.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label22.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 43</value>
+  </data>
+  <data name="label22.Size" type="System.Drawing.Size, System.Drawing">
+    <value>77, 13</value>
+  </data>
+  <data name="label22.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="label22.Text" xml:space="preserve">
+    <value>Regression Fit:</value>
+  </data>
+  <data name="&gt;&gt;label22.Name" xml:space="preserve">
+    <value>label22</value>
+  </data>
+  <data name="&gt;&gt;label22.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label22.Parent" xml:space="preserve">
+    <value>tabQuantification</value>
+  </data>
+  <data name="&gt;&gt;label22.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="comboWeighting.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 101</value>
+  </data>
+  <data name="comboWeighting.Size" type="System.Drawing.Size, System.Drawing">
+    <value>127, 21</value>
+  </data>
+  <data name="comboWeighting.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;comboWeighting.Name" xml:space="preserve">
+    <value>comboWeighting</value>
+  </data>
+  <data name="&gt;&gt;comboWeighting.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboWeighting.Parent" xml:space="preserve">
+    <value>tabQuantification</value>
+  </data>
+  <data name="&gt;&gt;comboWeighting.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="label21.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label21.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 85</value>
+  </data>
+  <data name="label21.Size" type="System.Drawing.Size, System.Drawing">
+    <value>114, 13</value>
+  </data>
+  <data name="label21.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="label21.Text" xml:space="preserve">
+    <value>Regression Weighting:</value>
+  </data>
+  <data name="&gt;&gt;label21.Name" xml:space="preserve">
+    <value>label21</value>
+  </data>
+  <data name="&gt;&gt;label21.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label21.Parent" xml:space="preserve">
+    <value>tabQuantification</value>
+  </data>
+  <data name="&gt;&gt;label21.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="tabQuantification.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabQuantification.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="tabQuantification.Size" type="System.Drawing.Size, System.Drawing">
+    <value>363, 460</value>
+  </data>
+  <data name="tabQuantification.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="tabQuantification.Text" xml:space="preserve">
+    <value>Quantification</value>
+  </data>
+  <data name="&gt;&gt;tabQuantification.Name" xml:space="preserve">
+    <value>tabQuantification</value>
+  </data>
+  <data name="&gt;&gt;tabQuantification.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabQuantification.Parent" xml:space="preserve">
+    <value>tabControl1</value>
+  </data>
+  <data name="&gt;&gt;tabQuantification.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
   <data name="tabControl1.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 12</value>
   </data>
@@ -2091,6 +2319,6 @@ W = 2T/R</value>
     <value>PeptideSettingsUI</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

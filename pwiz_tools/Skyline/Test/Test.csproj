@@ -100,6 +100,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\log4net.dll</HintPath>
     </Reference>
+    <Reference Include="MathNet.Numerics, Version=3.2.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Shared\Lib\MathNet.Numerics.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="NHibernate">
       <SpecificVersion>False</SpecificVersion>
@@ -126,6 +130,8 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PropertySettingsTest.cs" />
     <Compile Include="Proteome\ProteomeDbTest.cs" />
+    <Compile Include="Quantification\CalibrationCurveFitterTest.cs" />
+    <Compile Include="Quantification\WeightedRegressionTest.cs" />
     <Compile Include="RandomTest.cs" />
     <Compile Include="Reporting\DocumentViewTransformerTest.cs" />
     <Compile Include="Reporting\DsvWriterTest.cs" />
@@ -189,6 +195,7 @@
     <EmbeddedResource Include="Reporting\PivotIsotopeLabel.skyr" />
     <EmbeddedResource Include="Reporting\ResultSummaryPivot.skyr" />
     <EmbeddedResource Include="Reporting\LiveReportPivots.skyr" />
+    <EmbeddedResource Include="Quantification\CalibrationCurveFitterTest.sky" />
     <EmbeddedResource Include="Reporting\DsvWriterTest.sky" />
     <None Include="Results\AgilentMix.zip" />
     <None Include="Results\AgilentMse.zip" />
@@ -223,6 +230,7 @@
       <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

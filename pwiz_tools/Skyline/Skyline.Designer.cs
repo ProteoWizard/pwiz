@@ -393,6 +393,7 @@ namespace pwiz.Skyline
             this.peakAreasMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaReplicateComparisonMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaPeptideComparisonMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.calibrationCurveMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.groupComparisonsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.addGroupComparisonMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editGroupComparisonListMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -2491,6 +2492,7 @@ namespace pwiz.Skyline
             this.toolStripSeparator10,
             this.retentionTimesMenuItem,
             this.peakAreasMenuItem,
+            this.calibrationCurveMenuItem,
             this.groupComparisonsMenuItem,
             this.resultsGridMenuItem,
             this.documentGridMenuItem,
@@ -3008,6 +3010,12 @@ namespace pwiz.Skyline
             this.areaPeptideComparisonMenuItem.Name = "areaPeptideComparisonMenuItem";
             resources.ApplyResources(this.areaPeptideComparisonMenuItem, "areaPeptideComparisonMenuItem");
             this.areaPeptideComparisonMenuItem.Click += new System.EventHandler(this.areaPeptideComparisonMenuItem_Click);
+            // 
+            // calibrationCurveMenuItem
+            // 
+            this.calibrationCurveMenuItem.Name = "calibrationCurveMenuItem";
+            resources.ApplyResources(this.calibrationCurveMenuItem, "calibrationCurveMenuItem");
+            this.calibrationCurveMenuItem.Click += new System.EventHandler(this.calibrationCurvesMenuItem_Click);
             // 
             // groupComparisonsMenuItem
             // 
@@ -3698,6 +3706,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator53;
         private System.Windows.Forms.ToolStripMenuItem acceptProteinsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem editGroupComparisonListMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem calibrationCurveMenuItem;
         private System.Windows.Forms.ToolStripMenuItem addSmallMoleculePrecursorContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem timePlotContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem timeCorrelationContextMenuItem;
