@@ -89,10 +89,12 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         TransitionGroupDocNode[] transitionGroups;
                         bool transitionSelected = false;
+                        // ReSharper disable once CanBeReplacedWithTryCastAndCheckForNull
                         if (selectedTreeNode.Model is PeptideDocNode)
                         {
                             transitionGroups = ((PeptideDocNode) selectedTreeNode.Model).TransitionGroups.ToArray();
                         }
+                        // ReSharper disable once CanBeReplacedWithTryCastAndCheckForNull
                         else if (selectedTreeNode.Model is TransitionGroupDocNode)
                         {
                             transitionGroups = new[] {(TransitionGroupDocNode) selectedTreeNode.Model};

@@ -298,6 +298,10 @@ namespace pwiz.Skyline.Controls.Graphs
                                               PaneKey);
 
             var aggregateOp = replicateGroupOp.AggregateOp;
+            // Avoid stacking CVs
+            if (aggregateOp.Cv || aggregateOp.CvDecimal)
+                BarSettings.Type = BarType.Cluster;
+
             int countNodes = graphData.DocNodes.Count;
             if (countNodes == 0)
                 ExpectedVisible = AreaExpectedValue.none;
@@ -453,13 +457,20 @@ namespace pwiz.Skyline.Controls.Graphs
                                      });
             }
             // Reset the scale when the parent node changes
-            if (_parentNode == null || !ReferenceEquals(_parentNode.Id, parentNode.Id))
+            bool resetAxes = (_parentNode == null || !ReferenceEquals(_parentNode.Id, parentNode.Id));
+            _parentNode = parentNode;
+
+            UpdateAxes(resetAxes, aggregateOp, normalizeData, areaView, standardType);
+        }
+
+        private void UpdateAxes(bool resetAxes, GraphValues.AggregateOp aggregateOp, AreaNormalizeToData normalizeData,
+            AreaNormalizeToView areaView, IsotopeLabelType standardType)
+        {
+            if (resetAxes)
             {
                 XAxis.Scale.MaxAuto = XAxis.Scale.MinAuto = true;
                 YAxis.Scale.MaxAuto = true;
             }
-            _parentNode = parentNode;
-
             if (BarSettings.Type == BarType.PercentStack)
             {
                 YAxis.Scale.Max = 100;
@@ -547,20 +558,16 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             Legend.IsVisible = Settings.Default.ShowPeakAreaLegend;
             AxisChange();
+
             // Reformat Y-Axis for labels and whiskers
             var maxY = GraphHelper.GetMaxY(CurveList,this);
-            double myMaxY;
-            if (IsDotProductVisible )
+            if (IsDotProductVisible)
             {
-                var extraSpace = _lableHeight*(maxY/(Chart.Rect.Height-_lableHeight*2))*2;
-                myMaxY = maxY+extraSpace;
-            }
-            else
-            {
-                myMaxY = maxY;
+                var extraSpace = _lableHeight*(maxY/(Chart.Rect.Height - _lableHeight*2))*2;
+                maxY += extraSpace;
             }
        
-            GraphHelper.ReformatYAxis(this,myMaxY);
+            GraphHelper.ReformatYAxis(this, maxY);
         }
 
         private void AddAreasToSums(PointPairList pointPairList, IList<double> sumAreas)
@@ -1046,8 +1053,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             protected override bool IsMissingValue(TransitionChromInfoData chromInfo)
             {
-                // TODO: Understand why chromInfo.IsEmpty breaks the area graphs
-                return false; // chromInfo.IsEmpty;
+                return false;
             }
 
             protected override PointPair CreatePointPair(int iResult, ICollection<TransitionChromInfoData> chromInfoDatas)
