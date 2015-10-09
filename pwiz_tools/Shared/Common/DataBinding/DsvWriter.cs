@@ -19,7 +19,9 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.IO;
+using System.Threading;
 using pwiz.Common.DataBinding.Attributes;
 
 namespace pwiz.Common.DataBinding
@@ -29,13 +31,13 @@ namespace pwiz.Common.DataBinding
     /// </summary>
     public class DsvWriter
     {
-        public DsvWriter(IFormatProvider formatProvider, char separator)
+        public DsvWriter(CultureInfo cultureInfo, char separator)
         {
-            FormatProvider = formatProvider;
+            CultureInfo = cultureInfo;
             Separator = separator;
         }
 
-        public IFormatProvider FormatProvider { get; private set; }
+        public CultureInfo CultureInfo { get; private set; }
         public char Separator { get; private set; }
 
         /// <summary>
@@ -76,34 +78,45 @@ namespace pwiz.Common.DataBinding
 
         protected virtual string GetFormattedValue(RowItem rowItem, PropertyDescriptor propertyDescriptor)
         {
-            object value = GetValue(rowItem, propertyDescriptor);
-            if (null == value)
+            CultureInfo oldCulture = Thread.CurrentThread.CurrentCulture;
+            CultureInfo oldUiCulture = Thread.CurrentThread.CurrentUICulture;
+            try
             {
-                var formatAttribute = (FormatAttribute)propertyDescriptor.Attributes[typeof(FormatAttribute)];
-                if (null == formatAttribute)
+                Thread.CurrentThread.CurrentUICulture = Thread.CurrentThread.CurrentCulture = CultureInfo;
+                object value = GetValue(rowItem, propertyDescriptor);
+                if (null == value)
                 {
-                    return string.Empty;
-                }
-                return formatAttribute.NullValue;
-            }
-            if (value is double || value is float)
-            {
-                var formatAttribute = (FormatAttribute)propertyDescriptor.Attributes[typeof(FormatAttribute)];
-                try
-                {
-                    var doubleValue = Convert.ToDouble(value);
-                    if (null == formatAttribute || null == formatAttribute.Format)
+                    var formatAttribute = (FormatAttribute) propertyDescriptor.Attributes[typeof (FormatAttribute)];
+                    if (null == formatAttribute)
                     {
-                        return doubleValue.ToString(FormatProvider);
+                        return string.Empty;
                     }
-                    return doubleValue.ToString(formatAttribute.Format, FormatProvider);
+                    return formatAttribute.NullValue;
                 }
-                catch (Exception)
+                if (value is double || value is float)
                 {
-                    return value.ToString();
+                    var formatAttribute = (FormatAttribute) propertyDescriptor.Attributes[typeof (FormatAttribute)];
+                    try
+                    {
+                        var doubleValue = Convert.ToDouble(value);
+                        if (null == formatAttribute || null == formatAttribute.Format)
+                        {
+                            return doubleValue.ToString(CultureInfo);
+                        }
+                        return doubleValue.ToString(formatAttribute.Format, CultureInfo);
+                    }
+                    catch (Exception)
+                    {
+                        return value.ToString();
+                    }
                 }
+                return value.ToString();
             }
-            return value.ToString();
+            finally
+            {
+                Thread.CurrentThread.CurrentUICulture = oldUiCulture;
+                Thread.CurrentThread.CurrentCulture = oldCulture;
+            }
         }
 
         protected virtual object GetValue(RowItem rowItem, PropertyDescriptor propertyDescriptor)

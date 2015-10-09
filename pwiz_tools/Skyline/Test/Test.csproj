@@ -128,6 +128,7 @@
     <Compile Include="Proteome\ProteomeDbTest.cs" />
     <Compile Include="RandomTest.cs" />
     <Compile Include="Reporting\DocumentViewTransformerTest.cs" />
+    <Compile Include="Reporting\DsvWriterTest.cs" />
     <Compile Include="Reporting\LiveReportPivotTest.cs" />
     <Compile Include="Reporting\ColumnCaptionLocalizationTest.cs" />
     <Compile Include="Reporting\PersistedViewsTest.cs" />
@@ -188,6 +189,7 @@
     <EmbeddedResource Include="Reporting\PivotIsotopeLabel.skyr" />
     <EmbeddedResource Include="Reporting\ResultSummaryPivot.skyr" />
     <EmbeddedResource Include="Reporting\LiveReportPivots.skyr" />
+    <EmbeddedResource Include="Reporting\DsvWriterTest.sky" />
     <None Include="Results\AgilentMix.zip" />
     <None Include="Results\AgilentMse.zip" />
     <None Include="Results\BlibDriftTimeTest.zip" />

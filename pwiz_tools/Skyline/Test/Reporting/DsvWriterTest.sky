@@ -1,0 +1,77 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<srm_settings format_version="3.12" software_version="Skyline (64-bit) ">
+  <settings_summary name="Default">
+    <peptide_settings>
+      <enzyme name="Trypsin" cut="KR" no_cut="P" sense="C" />
+      <digest_settings max_missed_cleavages="0" />
+      <peptide_prediction use_measured_rts="true" measured_rt_window="2" use_spectral_library_drift_times="false" />
+      <peptide_filter start="25" min_length="8" max_length="25" auto_select="true">
+        <peptide_exclusions />
+      </peptide_filter>
+      <peptide_libraries pick="library" />
+      <peptide_modifications max_variable_mods="3" max_neutral_losses="1">
+        <static_modifications>
+          <static_modification name="Carbamidomethyl (C)" aminoacid="C" formula="H3C2NO" unimod_id="4" short_name="CAM" />
+        </static_modifications>
+        <heavy_modifications />
+      </peptide_modifications>
+    </peptide_settings>
+    <transition_settings>
+      <transition_prediction precursor_mass_type="Monoisotopic" fragment_mass_type="Monoisotopic" optimize_by="None">
+        <predict_collision_energy name="Thermo TSQ Vantage" step_size="1" step_count="5">
+          <regression_ce charge="2" slope="0.03" intercept="2.905" />
+          <regression_ce charge="3" slope="0.038" intercept="2.281" />
+        </predict_collision_energy>
+      </transition_prediction>
+      <transition_filter precursor_charges="2" product_charges="1" fragment_types="y" fragment_range_first="m/z &gt; precursor" fragment_range_last="3 ions" precursor_mz_window="0" auto_select="true">
+        <measured_ion name="N-terminal to Proline" cut="P" sense="N" min_length="3" />
+      </transition_filter>
+      <transition_libraries ion_match_tolerance="0.5" ion_count="3" pick_from="all" />
+      <transition_integration />
+      <transition_instrument min_mz="50" max_mz="1500" mz_match_tolerance="0.055" />
+    </transition_settings>
+    <data_settings>
+      <annotation name="Numeric Annotation" targets="peptide" type="number" />
+    </data_settings>
+  </settings_summary>
+  <peptide_list label_name="Protein" websearch_status="X" auto_manage_children="false">
+    <peptide sequence="ELVIS" modified_sequence="ELVIS" calc_neutral_pep_mass="559.321728" num_missed_cleavages="0">
+      <annotation name="Numeric Annotation">1.5</annotation>
+      <precursor charge="2" calc_neutral_mass="559.321728" precursor_mz="280.66814" collision_energy="11.325044" modified_sequence="ELVIS">
+        <transition fragment_type="y" fragment_ordinal="4" calc_neutral_mass="430.279135" product_charge="1" cleavage_aa="L" loss_neutral_mass="0">
+          <precursor_mz>280.66814</precursor_mz>
+          <product_mz>431.286411</product_mz>
+          <collision_energy>11.325044</collision_energy>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="3" calc_neutral_mass="317.195071" product_charge="1" cleavage_aa="V" loss_neutral_mass="0">
+          <precursor_mz>280.66814</precursor_mz>
+          <product_mz>318.202347</product_mz>
+          <collision_energy>11.325044</collision_energy>
+        </transition>
+      </precursor>
+    </peptide>
+  </peptide_list>
+  <peptide_list label_name="Molecules" label_description="" websearch_status="X">
+    <molecule ion_formula="C8H10N4O2 " mass_average="194.1918" mass_monoisotopic="194.080376" custom_ion_name="Caffeine">
+      <annotation name="Numeric Annotation">2.5</annotation>
+      <precursor charge="1" precursor_mz="194.079827" collision_energy="8.727395" ion_formula="C8H10N4O2 " mass_average="194.1918" mass_monoisotopic="194.080376" custom_ion_name="Caffeine">
+        <transition fragment_type="custom" ion_formula="C8H8N4O" mass_average="176.17652" mass_monoisotopic="176.069811" custom_ion_name="Part of Caffeine" product_charge="1">
+          <precursor_mz>194.079827</precursor_mz>
+          <product_mz>176.069262</product_mz>
+          <collision_energy>8.727395</collision_energy>
+        </transition>
+      </precursor>
+    </molecule>
+  </peptide_list>
+  <peptide_list label_name="Custom Ion" label_description="" websearch_status="X">
+    <molecule mass_average="100.00054857990946" mass_monoisotopic="100.00054857990946" custom_ion_name="">
+      <precursor charge="1" precursor_mz="100" collision_energy="5.905" mass_average="100.00054857990946" mass_monoisotopic="100.00054857990946" custom_ion_name="">
+        <transition fragment_type="custom" mass_average="80.000548579909463" mass_monoisotopic="80.000548579909463" product_charge="1">
+          <precursor_mz>100</precursor_mz>
+          <product_mz>80</product_mz>
+          <collision_energy>5.905</collision_energy>
+        </transition>
+      </precursor>
+    </molecule>
+  </peptide_list>
+</srm_settings>
