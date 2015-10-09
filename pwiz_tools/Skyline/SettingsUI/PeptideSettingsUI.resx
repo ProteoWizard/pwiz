@@ -960,7 +960,7 @@ modifications tab.</value>
     <value>6</value>
   </data>
   <data name="comboPeakScoringModel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>22, 36</value>
+    <value>28, 36</value>
   </data>
   <data name="comboPeakScoringModel.Size" type="System.Drawing.Size, System.Drawing">
     <value>169, 21</value>
@@ -1455,7 +1455,7 @@ W = 2T/R</value>
     <value>True</value>
   </data>
   <data name="label4.Location" type="System.Drawing.Point, System.Drawing">
-    <value>26, 20</value>
+    <value>25, 20</value>
   </data>
   <data name="label4.Size" type="System.Drawing.Size, System.Drawing">
     <value>59, 13</value>
@@ -1899,7 +1899,7 @@ W = 2T/R</value>
     <value>NoControl</value>
   </data>
   <data name="label36.Location" type="System.Drawing.Point, System.Drawing">
-    <value>19, 20</value>
+    <value>25, 20</value>
   </data>
   <data name="label36.Size" type="System.Drawing.Size, System.Drawing">
     <value>103, 13</value>
@@ -1959,13 +1959,13 @@ W = 2T/R</value>
     <value>2</value>
   </data>
   <data name="comboQuantMsLevel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 141</value>
+    <value>28, 186</value>
   </data>
   <data name="comboQuantMsLevel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>121, 21</value>
+    <value>127, 21</value>
   </data>
   <data name="comboQuantMsLevel.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
+    <value>7</value>
   </data>
   <data name="&gt;&gt;comboQuantMsLevel.Name" xml:space="preserve">
     <value>comboQuantMsLevel</value>
@@ -1983,16 +1983,16 @@ W = 2T/R</value>
     <value>True</value>
   </data>
   <data name="label23.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 125</value>
+    <value>25, 170</value>
   </data>
   <data name="label23.Size" type="System.Drawing.Size, System.Drawing">
     <value>52, 13</value>
   </data>
   <data name="label23.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
+    <value>6</value>
   </data>
   <data name="label23.Text" xml:space="preserve">
-    <value>MS Level</value>
+    <value>MS &amp;Level</value>
   </data>
   <data name="&gt;&gt;label23.Name" xml:space="preserve">
     <value>label23</value>
@@ -2007,13 +2007,13 @@ W = 2T/R</value>
     <value>1</value>
   </data>
   <data name="comboNormalizationMethod.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 19</value>
+    <value>28, 36</value>
   </data>
   <data name="comboNormalizationMethod.Size" type="System.Drawing.Size, System.Drawing">
     <value>239, 21</value>
   </data>
   <data name="comboNormalizationMethod.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
+    <value>1</value>
   </data>
   <data name="&gt;&gt;comboNormalizationMethod.Name" xml:space="preserve">
     <value>comboNormalizationMethod</value>
@@ -2031,16 +2031,16 @@ W = 2T/R</value>
     <value>True</value>
   </data>
   <data name="label20.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 3</value>
+    <value>25, 20</value>
   </data>
   <data name="label20.Size" type="System.Drawing.Size, System.Drawing">
     <value>112, 13</value>
   </data>
   <data name="label20.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
+    <value>0</value>
   </data>
   <data name="label20.Text" xml:space="preserve">
-    <value>Normalization Method:</value>
+    <value>&amp;Normalization Method:</value>
   </data>
   <data name="&gt;&gt;label20.Name" xml:space="preserve">
     <value>label20</value>
@@ -2055,13 +2055,13 @@ W = 2T/R</value>
     <value>3</value>
   </data>
   <data name="comboRegressionFit.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 59</value>
+    <value>28, 86</value>
   </data>
   <data name="comboRegressionFit.Size" type="System.Drawing.Size, System.Drawing">
     <value>127, 21</value>
   </data>
   <data name="comboRegressionFit.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>3</value>
   </data>
   <data name="&gt;&gt;comboRegressionFit.Name" xml:space="preserve">
     <value>comboRegressionFit</value>
@@ -2079,16 +2079,16 @@ W = 2T/R</value>
     <value>True</value>
   </data>
   <data name="label22.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 43</value>
+    <value>25, 70</value>
   </data>
   <data name="label22.Size" type="System.Drawing.Size, System.Drawing">
     <value>77, 13</value>
   </data>
   <data name="label22.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+    <value>2</value>
   </data>
   <data name="label22.Text" xml:space="preserve">
-    <value>Regression Fit:</value>
+    <value>Regression &amp;Fit:</value>
   </data>
   <data name="&gt;&gt;label22.Name" xml:space="preserve">
     <value>label22</value>
@@ -2103,13 +2103,13 @@ W = 2T/R</value>
     <value>5</value>
   </data>
   <data name="comboWeighting.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 101</value>
+    <value>28, 136</value>
   </data>
   <data name="comboWeighting.Size" type="System.Drawing.Size, System.Drawing">
     <value>127, 21</value>
   </data>
   <data name="comboWeighting.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+    <value>5</value>
   </data>
   <data name="&gt;&gt;comboWeighting.Name" xml:space="preserve">
     <value>comboWeighting</value>
@@ -2127,16 +2127,16 @@ W = 2T/R</value>
     <value>True</value>
   </data>
   <data name="label21.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 85</value>
+    <value>25, 120</value>
   </data>
   <data name="label21.Size" type="System.Drawing.Size, System.Drawing">
     <value>114, 13</value>
   </data>
   <data name="label21.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
+    <value>4</value>
   </data>
   <data name="label21.Text" xml:space="preserve">
-    <value>Regression Weighting:</value>
+    <value>Regression &amp;Weighting:</value>
   </data>
   <data name="&gt;&gt;label21.Name" xml:space="preserve">
     <value>label21</value>

@@ -103,6 +103,8 @@ namespace pwiz.Skyline.SettingsUI
             this.tabIntegration = new System.Windows.Forms.TabPage();
             this.label36 = new System.Windows.Forms.Label();
             this.tabQuantification = new System.Windows.Forms.TabPage();
+            this.comboQuantMsLevel = new System.Windows.Forms.ComboBox();
+            this.label23 = new System.Windows.Forms.Label();
             this.comboNormalizationMethod = new System.Windows.Forms.ComboBox();
             this.label20 = new System.Windows.Forms.Label();
             this.comboRegressionFit = new System.Windows.Forms.ComboBox();
@@ -117,8 +119,6 @@ namespace pwiz.Skyline.SettingsUI
             this.addIonMobilityLibraryContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editIonMobilityLibraryCurrentContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editIonMobilityLibraryListContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.label23 = new System.Windows.Forms.Label();
-            this.comboQuantMsLevel = new System.Windows.Forms.ComboBox();
             this.tabControl1.SuspendLayout();
             this.tabDigestion.SuspendLayout();
             this.tabPrediction.SuspendLayout();
@@ -681,6 +681,22 @@ namespace pwiz.Skyline.SettingsUI
             this.tabQuantification.Name = "tabQuantification";
             this.tabQuantification.UseVisualStyleBackColor = true;
             // 
+            // comboQuantMsLevel
+            // 
+            this.comboQuantMsLevel.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboQuantMsLevel.FormattingEnabled = true;
+            this.comboQuantMsLevel.Items.AddRange(new object[] {
+            resources.GetString("comboQuantMsLevel.Items"),
+            resources.GetString("comboQuantMsLevel.Items1"),
+            resources.GetString("comboQuantMsLevel.Items2")});
+            resources.ApplyResources(this.comboQuantMsLevel, "comboQuantMsLevel");
+            this.comboQuantMsLevel.Name = "comboQuantMsLevel";
+            // 
+            // label23
+            // 
+            resources.ApplyResources(this.label23, "label23");
+            this.label23.Name = "label23";
+            // 
             // comboNormalizationMethod
             // 
             this.comboNormalizationMethod.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
@@ -770,22 +786,6 @@ namespace pwiz.Skyline.SettingsUI
             this.editIonMobilityLibraryListContextMenuItem.Name = "editIonMobilityLibraryListContextMenuItem";
             resources.ApplyResources(this.editIonMobilityLibraryListContextMenuItem, "editIonMobilityLibraryListContextMenuItem");
             this.editIonMobilityLibraryListContextMenuItem.Click += new System.EventHandler(this.editIonMobilityLibraryListContextMenuItem_Click);
-            // 
-            // label23
-            // 
-            resources.ApplyResources(this.label23, "label23");
-            this.label23.Name = "label23";
-            // 
-            // comboMsLevel
-            // 
-            this.comboQuantMsLevel.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboQuantMsLevel.FormattingEnabled = true;
-            this.comboQuantMsLevel.Items.AddRange(new object[] {
-            resources.GetString("comboQuantMsLevel.Items"),
-            resources.GetString("comboQuantMsLevel.Items1"),
-            resources.GetString("comboQuantMsLevel.Items2")});
-            resources.ApplyResources(this.comboQuantMsLevel, "comboQuantMsLevel");
-            this.comboQuantMsLevel.Name = "comboQuantMsLevel";
             // 
             // PeptideSettingsUI
             // 

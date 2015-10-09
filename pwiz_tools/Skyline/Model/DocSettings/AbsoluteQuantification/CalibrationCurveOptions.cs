@@ -29,8 +29,11 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
     {
         public CalibrationCurveOptions()
         {
-            DisplaySampleTypes = new[] {SampleType.STANDARD.Name, SampleType.QC.Name};
+            DisplaySampleTypes = new[] {SampleType.STANDARD.Name, SampleType.QC.Name, SampleType.UNKNOWN.Name};
+            ShowLegend = true;
+            ShowSelection = true;
         }
+
         public bool LogPlot { get; set; }
         public string[] DisplaySampleTypes { get; set; }
 
@@ -38,6 +41,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         {
             return DisplaySampleTypes.Contains(sampleType.Name);
         }
+
         public bool ShowLegend { get; set; }
         public bool ShowSelection { get; set; }
 
