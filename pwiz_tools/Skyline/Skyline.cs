@@ -4360,7 +4360,8 @@ namespace pwiz.Skyline
 
         private void buttonShowAllChromatograms_ButtonClick(object sender, EventArgs e)
         {
-            _allChromatogramsGraph.Show();
+            if (_allChromatogramsGraph != null)
+                _allChromatogramsGraph.Show();
         }
 
         Point INotificationContainer.NotificationAnchor
