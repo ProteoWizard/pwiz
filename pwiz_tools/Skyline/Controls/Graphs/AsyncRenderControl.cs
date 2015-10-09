@@ -32,13 +32,18 @@ namespace pwiz.Skyline.Controls.Graphs
     /// </summary>
     public partial class AsyncRenderControl : UserControl
     {
-        private RenderContext _context = new RenderContext();
+        private readonly RenderContext _context = new RenderContext();
         private readonly AutoResetEvent _startBackgroundRender = new AutoResetEvent(false);
         private readonly string _backgroundThreadName;
 
         //private static readonly Log LOG = new Log<AsyncRenderControl>();
 
-        protected AsyncRenderControl(string backgroundThreadName = "Background render")    // Not L10N
+        protected AsyncRenderControl()
+            : this("Background render") // Not L10N
+        {
+        }
+
+        protected AsyncRenderControl(string backgroundThreadName)
         {
             InitializeComponent();
             _backgroundThreadName = backgroundThreadName;

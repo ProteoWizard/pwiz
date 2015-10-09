@@ -978,198 +978,20 @@ namespace pwiz.Skyline.Model.Results
 
                 // Try loading the final cache from disk, if progressive loading has not started
                 string cachePath = ChromatogramCache.FinalPathForName(_documentPath, null);
-                // If the final cache exists and it is not in the partial caches or partial caches
-                // contain the final cache, but it is not open (Undo-Redo case), then make sure it
-                // is reloaded from scratch, as it may have changed since it was last open.
-                bool cacheExists = File.Exists(cachePath);
-                if (_resultsClone._listPartialCaches != null && _resultsClone._cacheRecalc == null && cacheExists)
-                {
-                    int finalIndex = _resultsClone._listPartialCaches.IndexOf(cache =>
-                        Equals(cache.CachePath, cachePath));
-                    if (finalIndex == -1 || _resultsClone._listPartialCaches[finalIndex].ReadStream.IsModified)
-                    {
-                        foreach (var cache in _resultsClone._listPartialCaches)
-                            cache.ReadStream.CloseStream();
-                        _resultsClone._listPartialCaches = null;
-                    }
-                }
-                if (_resultsClone._listPartialCaches == null && _resultsClone._cacheRecalc == null)
-                {
-                    if (cacheExists)
-                    {
-                        try
-                        {
-                            var cache = ChromatogramCache.Load(cachePath, _status, _loader);
-                            if (_resultsClone.IsValidCache(cache, false))
-                                _resultsClone._listPartialCaches = ImmutableList.Singleton(cache);
-                            else
-                            {
-                                // Otherwise, get rid of this cache, since it will need to be
-                                // replaced.
-                                cache.ReadStream.CloseStream();
-                                FileEx.SafeDelete(cache.CachePath);
-                            }
-                        }
-                        catch (Exception x)
-                        {
-                            string message = TextUtil.LineSeparate(string.Format(Resources.Loader_Load_Failure_reading_the_data_file__0__, cachePath),
-                                                                   x.Message);
-                            Fail(new IOException(message, x));
-                            return;
-                        }
-                    }
-                    // Otherwise, try loading replicate caches from before implementation
-                    // of single cache per replicate.
-                    else
-                    {
-                        var listPartialCaches = new List<ChromatogramCache>();
-                        foreach (var chromSet in _resultsClone.Chromatograms)
-                        {
-                            string replicatePath = ChromatogramCache.FinalPathForName(_documentPath, chromSet.Name);
-                            if (File.Exists(replicatePath))
-                            {
-                                if (!LoadAndAdd(replicatePath, listPartialCaches))
-                                    return;
-                            }
-                            else
-                            {
-                                foreach (var filePath in chromSet.MSDataFilePaths)
-                                {
-                                    string cacheFilePath = ChromatogramCache.PartPathForName(_documentPath, filePath);
-                                    if (File.Exists(cacheFilePath))
-                                    {
-                                        if (!LoadAndAdd(cacheFilePath, listPartialCaches))
-                                            return;
-                                    }
-                                }
-                            }
-                        }
-                        if (listPartialCaches.Count > 0)
-                            _resultsClone._listPartialCaches = ImmutableList.ValueOf(listPartialCaches);
-                    }
-                }
+                if (!CheckFinalCache(cachePath))
+                    return;
 
                 // Attempt to load any shared caches that have not been loaded yet
-                if (_resultsClone._listSharedCachePaths != null)
-                {
-                    var listAddCaches = new List<ChromatogramCache>();
-                    foreach (var sharedCachePath in _resultsClone._listSharedCachePaths)
-                    {
-                        if (_resultsClone.IsCachePath(sharedCachePath))
-                            continue;
-
-                        if (File.Exists(sharedCachePath))
-                        {
-                            try
-                            {
-                                var cache = ChromatogramCache.Load(sharedCachePath, _status, _loader);
-                                if (cache.IsSupportedVersion)
-                                    listAddCaches.Add(cache);
-                            }
-                            catch (UnauthorizedAccessException) {}
-                            catch (IOException) {}
-                            catch (InvalidDataException) {}
-                        }
-                    }
-                    if (listAddCaches.Count > 0)
-                    {
-                        var listPartialCaches = new List<ChromatogramCache>();
-                        if (_resultsClone._listPartialCaches != null)
-                            listPartialCaches.AddRange(_resultsClone._listPartialCaches);
-                        // Add the caches that are not already covered.
-                        listPartialCaches.AddRange(listAddCaches.Where(cache => !cache.IsCovered(listPartialCaches)));
-                        _resultsClone._listPartialCaches = MakeReadOnly(listPartialCaches);
-                    }
-                    // Make sure none of the failed cache paths get tried again
-                    var sharedCachePaths = _resultsClone._listPartialCaches != null
-                           ? _resultsClone._listSharedCachePaths.Intersect(
-                               _resultsClone._listPartialCaches.Select(cache => cache.CachePath)).ToArray()
-                           : _resultsClone._listSharedCachePaths.ToArray();
-                    _resultsClone._listSharedCachePaths = MakeReadOnly(sharedCachePaths);
-                }
+                LoadSharedCaches();
 
                 // Create a set of the paths for which existing caches contain results
-                var cachedPaths = new HashSet<MsDataFileUri>();
-                if (_resultsClone._listPartialCaches != null)
-                {
-                    // Check that all partial caches are valid
-                    var listValidCaches = new List<ChromatogramCache>();
-                    foreach (var cache in _resultsClone._listPartialCaches.ToArray())
-                    {
-                        // Skip modified caches
-                        if (cache.ReadStream.IsModified)
-                            continue;
+                var cachedPaths = GetCachedPaths();
 
-                        listValidCaches.Add(cache);
-
-                        foreach (var cachedFile in cache.CachedFiles)
-                            cachedPaths.Add(cachedFile.FilePath);
-                    }
-
-                    // Update the list if necessary
-                    int countValid = listValidCaches.Count;
-                    if (countValid < _resultsClone._listPartialCaches.Count)
-                        _resultsClone._listPartialCaches = (countValid > 0 ? ImmutableList.ValueOf(listValidCaches) : null);
-                }
-
-                // Keep a record of files which have been found in a new location
-                // on the local system, and need to be updated in these results.
-                Dictionary<MsDataFileUri, MsDataFileUri> dictReplace = null;
-                // Find the next file not represented in the list of partial caches
-                var uncachedPaths = new List<KeyValuePair<string, string>>();
+                // Create a set of paths for nonexistent caches.
                 var msDataFilePaths = _resultsClone.MSDataFilePaths.ToArray();
-                foreach (var path in msDataFilePaths)
-                {
-                    if (!cachedPaths.Contains(path))
-                    {
-                        // First make sure the file wasn't found and loaded locally
-                        if (cachedPaths.Count > 0 && path is MsDataFilePath)
-                        {
-                            string dataFilePathPart;
-                            var dataFilePath = ChromatogramSet.GetExistingDataFilePath(cachePath, (MsDataFilePath) path, out dataFilePathPart);
-                            if (cachedPaths.Contains(dataFilePath))
-                            {
-                                if (dictReplace == null)
-                                    dictReplace = new Dictionary<MsDataFileUri, MsDataFileUri>();
-                                dictReplace.Add(path, dataFilePath);
-                                continue;
-                            }
-                        }
-
-                        string partPath;
-                        // If there is only one result path, then just create the cache directly to its
-                        // final destination.
-                        if (msDataFilePaths.Length == 1 && !_resultsClone.IsJoiningDisabled)
-                            partPath = cachePath;
-                        else
-                        {
-                            partPath = ChromatogramCache.PartPathForName(_documentPath, path);
-                            // If the partial cache exists, try to load it.
-                            if (File.Exists(partPath))
-                            {
-                                try
-                                {
-                                    var cache = ChromatogramCache.Load(partPath, _status, _loader);
-                                    if (cache.IsSupportedVersion)
-                                    {
-                                        var listPartialCaches = new List<ChromatogramCache>();
-                                        if (_resultsClone._listPartialCaches != null)
-                                            listPartialCaches.AddRange(_resultsClone._listPartialCaches);
-                                        listPartialCaches.Add(cache);
-                                        _resultsClone._listPartialCaches = ImmutableList.ValueOf(listPartialCaches);
-                                        continue;
-                                    }
-                                }
-                                catch (Exception x)
-                                {
-                                    Fail(new IOException(string.Format(Resources.Loader_Load_Failure_attempting_to_load_the_data_cache_file__0_, partPath), x));
-                                    return;
-                                }
-                            }
-                        }
-                        uncachedPaths.Add(new KeyValuePair<string, string>(path.ToString(), partPath));
-                    }
-                }
+                var uncachedPaths = GetUncachedPaths(msDataFilePaths, cachedPaths, cachePath);
+                if (uncachedPaths == null)
+                    return;
 
                 // If there are uncached paths, then initialize state for loading them,
                 // and start the load for the first one.
@@ -1249,6 +1071,211 @@ namespace pwiz.Skyline.Model.Results
                     ChromatogramCache.Join(cachePath, streamDestination,
                         listPaths, _status, _loader, FinishCacheJoin);
                 }
+            }
+
+            private bool CheckFinalCache(string cachePath)
+            {
+                // If the final cache exists and it is not in the partial caches or partial caches
+                // contain the final cache, but it is not open (Undo-Redo case), then make sure it
+                // is reloaded from scratch, as it may have changed since it was last open.
+                bool cacheExists = File.Exists(cachePath);
+                if (_resultsClone._listPartialCaches != null && _resultsClone._cacheRecalc == null && cacheExists)
+                {
+                    int finalIndex = _resultsClone._listPartialCaches.IndexOf(cache =>
+                        Equals(cache.CachePath, cachePath));
+                    if (finalIndex == -1 || _resultsClone._listPartialCaches[finalIndex].ReadStream.IsModified)
+                    {
+                        foreach (var cache in _resultsClone._listPartialCaches)
+                            cache.ReadStream.CloseStream();
+                        _resultsClone._listPartialCaches = null;
+                    }
+                }
+                if (_resultsClone._listPartialCaches == null && _resultsClone._cacheRecalc == null)
+                {
+                    if (cacheExists)
+                    {
+                        try
+                        {
+                            var cache = ChromatogramCache.Load(cachePath, _status, _loader);
+                            if (_resultsClone.IsValidCache(cache, false))
+                                _resultsClone._listPartialCaches = ImmutableList.Singleton(cache);
+                            else
+                            {
+                                // Otherwise, get rid of this cache, since it will need to be
+                                // replaced.
+                                cache.ReadStream.CloseStream();
+                                FileEx.SafeDelete(cache.CachePath);
+                            }
+                        }
+                        catch (Exception x)
+                        {
+                            string message = TextUtil.LineSeparate(string.Format(Resources.Loader_Load_Failure_reading_the_data_file__0__, cachePath),
+                                                                   x.Message);
+                            Fail(new IOException(message, x));
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            }
+
+            private HashSet<MsDataFileUri> GetCachedPaths()
+            {
+                var cachedPaths = new HashSet<MsDataFileUri>();
+                if (_resultsClone._listPartialCaches != null)
+                {
+                    // Check that all partial caches are valid
+                    var listValidCaches = new List<ChromatogramCache>();
+                    foreach (var cache in _resultsClone._listPartialCaches.ToArray())
+                    {
+                        // Skip modified caches
+                        if (cache.ReadStream.IsModified)
+                            continue;
+
+                        listValidCaches.Add(cache);
+
+                        foreach (var cachedFile in cache.CachedFiles)
+                            cachedPaths.Add(cachedFile.FilePath);
+                    }
+
+                    // Update the list if necessary
+                    int countValid = listValidCaches.Count;
+                    if (countValid < _resultsClone._listPartialCaches.Count)
+                        _resultsClone._listPartialCaches = (countValid > 0 ? ImmutableList.ValueOf(listValidCaches) : null);
+                }
+                // Otherwise, try loading replicate caches from before implementation
+                // of single cache per replicate.
+                else
+                {
+                    var listPartialCaches = new List<ChromatogramCache>();
+                    foreach (var chromSet in _resultsClone.Chromatograms)
+                    {
+                        string replicatePath = ChromatogramCache.FinalPathForName(_documentPath, chromSet.Name);
+                        if (File.Exists(replicatePath))
+                        {
+                            if (!LoadAndAdd(replicatePath, listPartialCaches))
+                                return null;
+                        }
+                        else
+                        {
+                            foreach (var filePath in chromSet.MSDataFilePaths)
+                            {
+                                string cacheFilePath = ChromatogramCache.PartPathForName(_documentPath, filePath);
+                                if (File.Exists(cacheFilePath))
+                                {
+                                    if (!LoadAndAdd(cacheFilePath, listPartialCaches))
+                                        return null;
+                                }
+                            }
+                        }
+                    }
+                    if (listPartialCaches.Count > 0)
+                        _resultsClone._listPartialCaches = ImmutableList.ValueOf(listPartialCaches);
+                }
+                return cachedPaths;
+            }
+
+            private void LoadSharedCaches()
+            {
+                if (_resultsClone._listSharedCachePaths != null)
+                {
+                    var listAddCaches = new List<ChromatogramCache>();
+                    foreach (var sharedCachePath in _resultsClone._listSharedCachePaths)
+                    {
+                        if (_resultsClone.IsCachePath(sharedCachePath))
+                            continue;
+
+                        if (File.Exists(sharedCachePath))
+                        {
+                            try
+                            {
+                                var cache = ChromatogramCache.Load(sharedCachePath, _status, _loader);
+                                if (cache.IsSupportedVersion)
+                                    listAddCaches.Add(cache);
+                            }
+                            catch (UnauthorizedAccessException) {}
+                            catch (IOException) {}
+                            catch (InvalidDataException) {}
+                        }
+                    }
+                    if (listAddCaches.Count > 0)
+                    {
+                        var listPartialCaches = new List<ChromatogramCache>();
+                        if (_resultsClone._listPartialCaches != null)
+                            listPartialCaches.AddRange(_resultsClone._listPartialCaches);
+                        // Add the caches that are not already covered.
+                        listPartialCaches.AddRange(listAddCaches.Where(cache => !cache.IsCovered(listPartialCaches)));
+                        _resultsClone._listPartialCaches = MakeReadOnly(listPartialCaches);
+                    }
+                    // Make sure none of the failed cache paths get tried again
+                    var sharedCachePaths = _resultsClone._listPartialCaches != null
+                           ? _resultsClone._listSharedCachePaths.Intersect(
+                               _resultsClone._listPartialCaches.Select(cache => cache.CachePath)).ToArray()
+                           : _resultsClone._listSharedCachePaths.ToArray();
+                    _resultsClone._listSharedCachePaths = MakeReadOnly(sharedCachePaths);
+                }
+            }
+
+            private List<KeyValuePair<string, string>> GetUncachedPaths(MsDataFileUri[] msDataFilePaths, HashSet<MsDataFileUri> cachedPaths, string cachePath)
+            {
+                // Keep a record of files which have been found in a new location
+                // on the local system, and need to be updated in these results.
+                Dictionary<MsDataFileUri, MsDataFileUri> dictReplace = null;
+                // Find the next file not represented in the list of partial caches
+                var uncachedPaths = new List<KeyValuePair<string, string>>();
+                foreach (var path in msDataFilePaths)
+                {
+                    if (!cachedPaths.Contains(path))
+                    {
+                        // First make sure the file wasn't found and loaded locally
+                        if (cachedPaths.Count > 0 && path is MsDataFilePath)
+                        {
+                            string dataFilePathPart;
+                            var dataFilePath = ChromatogramSet.GetExistingDataFilePath(cachePath, (MsDataFilePath) path, out dataFilePathPart);
+                            if (cachedPaths.Contains(dataFilePath))
+                            {
+                                if (dictReplace == null)
+                                    dictReplace = new Dictionary<MsDataFileUri, MsDataFileUri>();
+                                dictReplace.Add(path, dataFilePath);
+                                continue;
+                            }
+                        }
+
+                        string partPath;
+                        // If there is only one result path, then just create the cache directly to its
+                        // final destination.
+                        if (msDataFilePaths.Length == 1 && !_resultsClone.IsJoiningDisabled)
+                            partPath = cachePath;
+                        else
+                        {
+                            partPath = ChromatogramCache.PartPathForName(_documentPath, path);
+                            // If the partial cache exists, try to load it.
+                            if (File.Exists(partPath))
+                            {
+                                try
+                                {
+                                    var cache = ChromatogramCache.Load(partPath, _status, _loader);
+                                    if (cache.IsSupportedVersion)
+                                    {
+                                        var listPartialCaches = new List<ChromatogramCache>();
+                                        if (_resultsClone._listPartialCaches != null)
+                                            listPartialCaches.AddRange(_resultsClone._listPartialCaches);
+                                        listPartialCaches.Add(cache);
+                                        _resultsClone._listPartialCaches = ImmutableList.ValueOf(listPartialCaches);
+                                        continue;
+                                    }
+                                }
+                                catch (Exception x)
+                                {
+                                    Fail(new IOException(string.Format(Resources.Loader_Load_Failure_attempting_to_load_the_data_cache_file__0_, partPath), x));
+                                    return null;
+                                }
+                            }
+                        }
+                        uncachedPaths.Add(new KeyValuePair<string, string>(path.ToString(), partPath));
+                    }
+                }
+                return uncachedPaths;
             }
 
             private bool LoadAndAdd(string replicatePath, List<ChromatogramCache> listPartialCaches)
