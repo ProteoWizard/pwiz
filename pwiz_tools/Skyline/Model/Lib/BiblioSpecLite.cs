@@ -1505,6 +1505,16 @@ namespace pwiz.Skyline.Model.Lib
                 }
             }
 
+            public string ModifiedExplanation
+            {
+                get
+                {
+                    if (!IsModified)
+                        return "Unmodified";    // Not L10N
+                    return FileEx.GetElapsedTimeExplanation(FileTime, File.GetLastWriteTime(FilePath));
+                }
+            }
+
             public bool IsOpen
             {
                 get { return ConnectionPool.IsInPool(this); }

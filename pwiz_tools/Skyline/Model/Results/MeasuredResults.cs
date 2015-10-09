@@ -91,11 +91,14 @@ namespace pwiz.Skyline.Model.Results
                 {
                     return "Not all chromatogram sets are loaded - " + string.Join(";", Chromatograms.Where(c => !c.IsLoaded).Select(i => i.IsLoadedExplained()));  // Not L10N
                 }
-                if ((IsJoiningDisabled || (_cacheFinal != null && !_cacheFinal.ReadStream.IsModified)))
+                if (!IsJoiningDisabled)
                 {
-                    return null;
+                    if (_cacheFinal == null)
+                        return "No final cache";  // Not L10N
+                    if (_cacheFinal.ReadStream.IsModified)
+                        return string.Format("Cache has been modified ({0})", _cacheFinal.ReadStream.ModifiedExplanation);  // Not L10N
                 }
-                return "Cache has been modifed";  // Not L10N
+                return null;
             }
         }
 

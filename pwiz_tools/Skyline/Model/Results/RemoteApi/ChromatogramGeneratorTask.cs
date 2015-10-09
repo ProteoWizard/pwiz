@@ -178,6 +178,11 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
                 get { return false; }
             }
 
+            public string ModifiedExplanation
+            {
+                get { return "Unmodified"; }    // Not L10N
+            }
+
             public bool IsOpen
             {
                 get { return Stream != null; }

@@ -322,6 +322,12 @@ namespace pwiz.Skyline.Util
         bool IsModified { get; }
 
         /// <summary>
+        /// An explanation of the modified state of this stream. Useful in
+        /// debugging issues in testing.
+        /// </summary>
+        string ModifiedExplanation { get; }
+
+        /// <summary>
         /// True if the stream is currently open.
         /// </summary>
         bool IsOpen { get; }
@@ -397,6 +403,16 @@ namespace pwiz.Skyline.Util
             }
         }
 
+        public string ModifiedExplanation
+        {
+            get
+            {
+                if (!IsModified)
+                    return "Unmodified";    // Not L10N
+                return FileEx.GetElapsedTimeExplanation(FileTime, File.GetLastWriteTime(FilePath));
+            }
+        }
+
         public bool IsOpen
         {
             get { return ConnectionPool.IsInPool(this); }
@@ -451,6 +467,16 @@ namespace pwiz.Skyline.Util
             {
                 // If it is still in the pool, then it can't have been modified
                 return !IsOpen && !Equals(FileTime, File.GetLastWriteTime(FilePath));
+            }
+        }
+
+        public string ModifiedExplanation
+        {
+            get
+            {
+                if (!IsModified)
+                    return "Unmodified";    // Not L10N
+                return FileEx.GetElapsedTimeExplanation(FileTime, File.GetLastWriteTime(FilePath));
             }
         }
 
@@ -808,6 +834,19 @@ namespace pwiz.Skyline.Util
             }
             while (File.Exists(path));
             return path;
+        }
+
+        public static string GetElapsedTimeExplanation(DateTime startTime, DateTime endTime)
+        {
+            long deltaTicks = endTime.Ticks - startTime.Ticks;
+            var elapsedSpan = new TimeSpan(deltaTicks);
+            if (elapsedSpan.TotalMinutes > 0)
+                return string.Format("{0} minutes, {1} seconds", elapsedSpan.TotalMinutes, elapsedSpan.Seconds);   // Not L10N
+            if (elapsedSpan.TotalSeconds > 0)
+                return elapsedSpan.TotalSeconds + " seconds"; // Not L10N
+            if (elapsedSpan.TotalMilliseconds > 0)
+                return elapsedSpan.TotalMilliseconds + " milliseconds"; // Not L10N
+            return deltaTicks + " ticks"; // Not L10N
         }
     }
 

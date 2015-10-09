@@ -209,6 +209,11 @@ namespace pwiz.SkylineTestUtil
             get { return false; }
         }
 
+        public string ModifiedExplanation
+        {
+            get { return "Unmodified"; }    // Not L10N
+        }
+
         public bool IsOpen { get; private set; }
 
         public void CloseStream()
