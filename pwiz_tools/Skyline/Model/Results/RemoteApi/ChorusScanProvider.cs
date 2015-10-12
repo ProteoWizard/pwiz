@@ -49,11 +49,11 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
         public ChromSource Source { get; private set; }
         public float[] Times { get; private set; }
         public TransitionFullScanInfo[] Transitions { get; private set; }
-        public MsDataSpectrum[] GetScans(int scanId)
+        public MsDataSpectrum[] GetMsDataFileSpectraWithCommonRetentionTime(int dataFileSpectrumStartIndex)
         {
             double precursor = Transitions.Select(transition => transition.PrecursorMz).FirstOrDefault();
             ChorusAccount chorusAccount = ChorusUrl.FindChorusAccount(Settings.Default.ChorusAccountList);
-            var spectrum = _chorusSession.GetSpectrum(chorusAccount, ChorusUrl, Source, precursor, scanId);
+            var spectrum = _chorusSession.GetSpectrum(chorusAccount, ChorusUrl, Source, precursor, dataFileSpectrumStartIndex);
             return new[] {spectrum};
         }
 

@@ -141,9 +141,9 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             times = tranInfo.Times;
             if (times.Length == 0)
                 throw new IOException(Resources.ChromatogramGeneratorTask_GetChromatogram_Unexpected_zero_length_chromatogram_returned_from_Chorus_);
-            if (null != tranInfo.ScanIds)
+            if (null != tranInfo.ScanIndexes)
             {
-                scanIds = tranInfo.ScanIds[(short) chromKeyIndices.Key.Source];
+                scanIds = tranInfo.ScanIndexes[(short) chromKeyIndices.Key.Source];
             }
             else
             {

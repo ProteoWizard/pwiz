@@ -75,14 +75,14 @@ namespace pwiz.Skyline.Model.Results
             Color peptideColor,
             out ChromExtra extra,
             out float[] times, 
-            out int[] scanIds, 
+            out int[] scanIndexes, 
             out float[] intensities,
             out float[] massErrors)
         {
             bool loaded = false;
             extra = null;
             times = null;
-            scanIds = null;
+            scanIndexes = null;
             intensities = null;
             massErrors = null;
             int idRemain = id;
@@ -100,7 +100,7 @@ namespace pwiz.Skyline.Model.Results
                     chromTaskList = _chromTaskLists[iTaskList] = new ChromTaskList(CheckCancelled, _document, _chorusAccount, requestProvider.ChorusUrl, ChromTaskList.ChunkChromatogramRequest(requestProvider.GetChromatogramRequest(), 100));
                 }
                 ChromKey chromKey = requestProvider.ChromKeys[idRemain];
-                loaded = chromTaskList.GetChromatogram(chromKey, out times, out scanIds, out intensities, out massErrors);
+                loaded = chromTaskList.GetChromatogram(chromKey, out times, out scanIndexes, out intensities, out massErrors);
                 if (loaded)
                 {
                     extra = new ChromExtra(id, chromKey.Precursor == 0 ? 0 : -1);

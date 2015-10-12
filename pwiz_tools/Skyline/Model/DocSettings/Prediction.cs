@@ -2530,6 +2530,8 @@ namespace pwiz.Skyline.Model.DocSettings
             Validate();
         }
 
+        public static DriftTimePredictor EMPTY = new DriftTimePredictor();  // For test purposes
+
         public IonMobilityLibrarySpec IonMobilityLibrary { get; private set; }
 
         public double ResolvingPower { get; private set; }
@@ -2605,6 +2607,17 @@ namespace pwiz.Skyline.Model.DocSettings
         public DriftTimePredictor ChangeLibrary(IonMobilityLibrarySpec prop)
         {
             return ChangeProp(ImClone(this), im => im.IonMobilityLibrary = prop);
+        }
+
+        public DriftTimePredictor ChangeMeasuredDriftTimesFromResults(SrmDocument document, string documentFilePath,  IProgressMonitor progressMonitor = null)
+        {
+            // Overwrite any existing measurements with newly derived ones
+            Dictionary<LibKey, DriftTimeInfo> measured;
+            using( var finder = new DriftTimeFinder(document, documentFilePath, this, progressMonitor))
+            {
+                measured = finder.FindDriftTimePeaks(); // Returns null on cancel
+            }
+            return measured == null ? this : ChangeProp(ImClone(this), im => im.MeasuredDriftTimePeptides = measured);
         }
 
         #endregion

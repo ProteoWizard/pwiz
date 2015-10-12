@@ -212,12 +212,12 @@ namespace pwiz.Skyline.Model.Results
             return caches.Any(cache => cache.CachedFilePaths.Contains(path));
         }
 
-        public DataFileScanIds LoadScanIds(int fileIndex)
+        public MsDataFileScanIds LoadMSDataFileScanIds(int fileIndex)
         {
-            return DataFileScanIds.FromBytes(LoadScanIdBytes(fileIndex));
+            return MsDataFileScanIds.FromBytes(LoadMSDataFileScanIdBytes(fileIndex));
         }
 
-        public byte[] LoadScanIdBytes(int fileIndex)
+        public byte[] LoadMSDataFileScanIdBytes(int fileIndex)
         {
             var cachedFile = CachedFiles[fileIndex];
             byte[] scanIdBytes = new byte[cachedFile.SizeScanIds];

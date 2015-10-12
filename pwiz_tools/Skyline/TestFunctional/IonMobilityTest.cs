@@ -36,7 +36,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestFunctional
 {
     [TestClass]
-    public class IonMobilityTest : AbstractFunctionalTest
+    public class IonMobilityTest : AbstractFunctionalTestEx
     {
         [TestMethod]
         public void TestIonMobility()
@@ -387,6 +387,7 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(peptideSettingsDlg5.OkDialog);
                 WaitForClosedForm(peptideSettingsDlg5);
             }
+            TestMeasuredDriftTimes();
         }
 
         private void SetUiDocument(SrmDocument newDocument)
@@ -637,7 +638,85 @@ namespace pwiz.SkylineTestFunctional
 
         }
 
+        /// <summary>
+        /// Tests our ability to discover drift times by inspecting loaded results
+        /// </summary>
+        private void TestMeasuredDriftTimes()
+        {
+            var testFilesDir = new TestFilesDir(TestContext, @"Test\Results\BlibDriftTimeTest.zip"); // Re-used from BlibDriftTimeTest
+            // Open document with some peptides but no results
+            var documentFile = TestFilesDir.GetTestPath(@"..\BlibDriftTimeTest\BlibDriftTimeTest.sky");
+            WaitForCondition(() => File.Exists(documentFile));
+            RunUI(() => SkylineWindow.OpenFile(documentFile));
+            WaitForDocumentLoaded();
+            var doc = SkylineWindow.Document;
 
+            // Import an mz5 file that contains drift info
+            ImportResultsFile(testFilesDir.GetTestPath(@"..\BlibDriftTimeTest\ID12692_01_UCA168_3727_040714.mz5"));
+            // Verify ability to extract predictions from raw data
+            var peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(
+                () => SkylineWindow.ShowPeptideSettingsUI(PeptideSettingsUI.TABS.Prediction));
 
+            // Simulate user picking Add... from the Drift Time Predictor combo control
+            var driftTimePredictorDlg = ShowDialog<EditDriftTimePredictorDlg>(peptideSettingsDlg.AddDriftTimePredictor);
+            const string predictorName = "TestMeasuredDriftTimes";
+            const double resolvingPower = 123.4;
+            RunUI(() =>
+            {
+                driftTimePredictorDlg.SetResolvingPower(resolvingPower);
+                driftTimePredictorDlg.SetPredictorName(predictorName);
+                driftTimePredictorDlg.GetDriftTimesFromResults();
+                driftTimePredictorDlg.OkDialog();
+            });
+            WaitForClosedForm(driftTimePredictorDlg);
+            var pepSetDlg = peptideSettingsDlg;
+            RunUI(() =>
+            {
+                pepSetDlg.OkDialog();
+            });
+            WaitForClosedForm(peptideSettingsDlg);
+            doc = WaitForDocumentChange(doc);
+
+            var result = doc.Settings.PeptideSettings.Prediction.DriftTimePredictor.MeasuredDriftTimePeptides;
+            Assert.AreEqual(2, result.Count);
+            var key3 = new LibKey("GLAGVENVTELKK", 3);
+            var key2 = new LibKey("GLAGVENVTELKK", 2);
+            const double expectedDT3= 4.0709;
+            const double expectedOffset3 = 0.8969;
+            Assert.AreEqual(expectedDT3, result[key3].DriftTimeMsec(false).Value, .001);
+            Assert.AreEqual(expectedOffset3, result[key3].HighEnergyDriftTimeOffsetMsec, .001); // High energy offset
+            const double expectedDT2 = 5.5889;
+            const double expectedOffset2 = -1.1039;
+            Assert.AreEqual(expectedDT2, result[key2].DriftTimeMsec(false).Value, .001);
+            Assert.AreEqual(expectedOffset2, result[key2].HighEnergyDriftTimeOffsetMsec, .001);  // High energy offset
+            WaitForDocumentLoaded();
+
+            // Verify exception handling by deleting the msdata file
+            File.Delete(testFilesDir.GetTestPath(@"..\BlibDriftTimeTest\ID12692_01_UCA168_3727_040714.mz5"));
+            peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(
+                            () => SkylineWindow.ShowPeptideSettingsUI(PeptideSettingsUI.TABS.Prediction));
+            var driftTimePredictorDoomedDlg = ShowDialog<EditDriftTimePredictorDlg>(peptideSettingsDlg.AddDriftTimePredictor);
+            RunUI(() =>
+            {
+                driftTimePredictorDoomedDlg.SetResolvingPower(resolvingPower);
+                driftTimePredictorDoomedDlg.SetPredictorName(predictorName+"_doomed");
+            });
+            RunDlg<MessageDlg>(driftTimePredictorDoomedDlg.GetDriftTimesFromResults,
+                messageDlg =>
+                {
+                    AssertEx.AreComparableStrings(
+                        Resources.DriftTimeFinder_HandleLoadScanException_Problem_using_results_to_populate_drift_time_library__,
+                        messageDlg.Message);
+                    messageDlg.OkDialog();
+                });
+
+            RunUI(() => driftTimePredictorDoomedDlg.CancelDialog());
+            WaitForClosedForm(driftTimePredictorDoomedDlg);
+            RunUI(() =>
+            {
+                peptideSettingsDlg.OkDialog();
+            });
+            WaitForClosedForm(peptideSettingsDlg);
+        }
     }
 }

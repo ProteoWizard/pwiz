@@ -426,13 +426,13 @@ namespace pwiz.Skyline.Model.Results
             return index != -1;            
         }
 
-        public DataFileScanIds LoadScanIds(MsDataFileUri dataFilePath)
+        public MsDataFileScanIds LoadMSDataFileScanIds(MsDataFileUri dataFilePath)
         {
             foreach (var cache in Caches)
             {
                 int fileIndex = cache.CachedFiles.IndexOf(f => Equals(f.FilePath, dataFilePath));
                 if (fileIndex != -1)
-                    return cache.LoadScanIds(fileIndex);
+                    return cache.LoadMSDataFileScanIds(fileIndex);
             }
             return null;
         }

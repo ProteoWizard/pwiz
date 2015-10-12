@@ -66,7 +66,7 @@ namespace pwiz.Skyline.Model.Results
             RawTimes = Times = times;
             RawIntensities = Intensities = intensities;
             RawMassErrors = massErrors;
-            RawScanIds = ScanIds = scanIds;
+            RawScanIds = ScanIndexes = scanIds;
             return result;
         }
 
@@ -109,7 +109,7 @@ namespace pwiz.Skyline.Model.Results
                 Extra = Extra,
             };
             newChromData.Times = newChromData.RawTimes = SubArray(RawTimes, firstIndex, lastIndex);
-            newChromData.ScanIds = newChromData.RawScanIds = SubArray(RawScanIds, firstIndex, lastIndex);
+            newChromData.ScanIndexes = newChromData.RawScanIds = SubArray(RawScanIds, firstIndex, lastIndex);
             newChromData.Intensities = newChromData.RawIntensities = SubArray(RawIntensities, firstIndex, lastIndex);
             newChromData.RawMassErrors = SubArray(RawMassErrors, firstIndex, lastIndex);
             newChromData.DocNode = DocNode;
@@ -214,18 +214,18 @@ namespace pwiz.Skyline.Model.Results
         }
         private short[] _massErrors10X;
 
-        public int[] ScanIds { get; private set; }
+        public int[] ScanIndexes { get; private set; }
 
         public IList<ChromPeak> Peaks { get; private set; }
         public int MaxPeakIndex { get; set; }
         public int OptimizationStep { get; set; }
         public ChromKey PrimaryKey { get; set; }
 
-        public void FixChromatogram(float[] timesNew, float[] intensitiesNew, int[] scanIdsNew)
+        public void FixChromatogram(float[] timesNew, float[] intensitiesNew, int[] scanIndexesNew)
         {
             RawTimes = Times = timesNew;
             RawIntensities = Intensities = intensitiesNew;
-            RawScanIds = ScanIds = scanIdsNew;
+            RawScanIds = ScanIndexes = scanIndexesNew;
         }
 
         public CrawdadPeak CalcPeak(int startIndex, int endIndex)
@@ -369,7 +369,7 @@ namespace pwiz.Skyline.Model.Results
             // Replicate scan ids to match new times.
             if (RawScanIds != null)
             {
-                ScanIds = new int[timesNew.Length];
+                ScanIndexes = new int[timesNew.Length];
                 int rawIndex = 0;
                 for (int i = 0; i < timesNew.Length; i++)
                 {
@@ -381,7 +381,7 @@ namespace pwiz.Skyline.Model.Results
                         rawIndex--;
                     if (rawIndex > 0 && newTime - RawTimes[rawIndex - 1] < RawTimes[rawIndex] - newTime)
                         rawIndex--;
-                    ScanIds[i] = RawScanIds[rawIndex];
+                    ScanIndexes[i] = RawScanIds[rawIndex];
                 }
             }
         }

@@ -144,6 +144,7 @@
     <Compile Include="Results\AgilentMixTest.cs" />
     <Compile Include="Results\AgilentMseTest.cs" />
     <Compile Include="Results\BlibDriftTimeTest.cs" />
+    <Compile Include="Results\MeasuredDriftValuesTest.cs" />
     <Compile Include="Results\MultiplePeptidesSameMzTest.cs" />
     <Compile Include="Results\SmallWiffTest.cs" />
     <Compile Include="Results\ThermoQuantTest.cs" />

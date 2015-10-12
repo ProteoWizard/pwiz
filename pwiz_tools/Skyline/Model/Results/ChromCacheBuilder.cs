@@ -389,7 +389,7 @@ namespace pwiz.Skyline.Model.Results
             }
 
             // Write scan ids
-            var scanIdBytes = provider.ScanIdBytes;
+            var scanIdBytes = provider.MSDataFileScanIdBytes;
             if (scanIdBytes.Length > 0)
             {
                 _currentFileInfo.LocationScanIds = _fsScans.Stream.Position;
@@ -1175,7 +1175,7 @@ namespace pwiz.Skyline.Model.Results
                 short[][] massErrors = null;
                 if (ChromatogramCache.FORMAT_VERSION_CACHE > ChromatogramCache.FORMAT_VERSION_CACHE_4)
                     massErrors = chromDataSet.MassErrors10X;
-                int[][] scanIds = chromDataSet.ScanIds;
+                int[][] scanIds = chromDataSet.ScanIndexes;
                 // Write the raw chromatogram points
                 byte[] points = ChromatogramCache.TimeIntensitiesToBytes(times, intensities, massErrors, scanIds);
                 // Compress the data (can be huge for AB data with lots of zeros)

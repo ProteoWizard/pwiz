@@ -189,9 +189,11 @@ namespace pwiz.ProteowizardWrapper
 
         private static void GetInstrumentConfig(InstrumentConfiguration ic, out string ionSource, out string analyzer, out string detector)
         {
+            // ReSharper disable CollectionNeverQueried.Local  (why does ReSharper warn on this?)
             SortedDictionary<int, string> ionSources = new SortedDictionary<int, string>();
             SortedDictionary<int, string> analyzers = new SortedDictionary<int, string>();
             SortedDictionary<int, string> detectors = new SortedDictionary<int, string>();
+            // ReSharper restore CollectionNeverQueried.Local
 
             foreach (Component c in ic.componentList)
             {
@@ -463,7 +465,7 @@ namespace pwiz.ProteowizardWrapper
             return SpectrumCount;
         }
 
-        public int GetScanIndex(string id)
+        public int GetSpectrumIndex(string id)
         {
             int index = SpectrumList.findAbbreviated(id);
             if (0 > index || index >= SpectrumList.size())
@@ -471,14 +473,14 @@ namespace pwiz.ProteowizardWrapper
             return index;
         }
 
-        public void GetSpectrum(int scanIndex, out double[] mzArray, out double[] intensityArray)
+        public void GetSpectrum(int spectrumIndex, out double[] mzArray, out double[] intensityArray)
         {
-            var spectrum = GetSpectrum(scanIndex);
+            var spectrum = GetSpectrum(spectrumIndex);
             mzArray = spectrum.Mzs;
             intensityArray = spectrum.Intensities;
         }
 
-        public MsDataSpectrum GetSpectrum(int scanIndex)
+        public MsDataSpectrum GetSpectrum(int spectrumIndex)
         {
             using (_perf.CreateTimer("GetSpectrum(index)")) // Not L10N
             {
@@ -486,16 +488,16 @@ namespace pwiz.ProteowizardWrapper
                 {
                     MsDataSpectrum returnSpectrum;
                     // check the scan for this cache
-                    if (!_scanCache.TryGetSpectrum(scanIndex, out returnSpectrum))
+                    if (!_scanCache.TryGetSpectrum(spectrumIndex, out returnSpectrum))
                     {
                         // spectrum not in the cache, pull it from the file
-                        returnSpectrum = GetSpectrum(SpectrumList.spectrum(scanIndex, true));
+                        returnSpectrum = GetSpectrum(SpectrumList.spectrum(spectrumIndex, true));
                         // add it to the cache
-                        _scanCache.Add(scanIndex, returnSpectrum);
+                        _scanCache.Add(spectrumIndex, returnSpectrum);
                     }
                     return returnSpectrum;
                 }
-                using (var spectrum = SpectrumList.spectrum(scanIndex, true))
+                using (var spectrum = SpectrumList.spectrum(spectrumIndex, true))
                 {
                     return GetSpectrum(spectrum);
                 }

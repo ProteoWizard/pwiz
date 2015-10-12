@@ -56,11 +56,11 @@ namespace pwiz.Skyline.Model.Results
 
         public override bool GetChromatogram(
             int id, string modifiedSequence, Color peptideColor,
-            out ChromExtra extra, out float[] times, out int[] scanIds, out float[] intensities, out float[] massErrors)
+            out ChromExtra extra, out float[] times, out int[] scanIndexes, out float[] intensities, out float[] massErrors)
         {
             return _cachedChromatogramDataProvider.GetChromatogram(
                 id, modifiedSequence, peptideColor,
-                out extra, out times, out scanIds, out intensities, out massErrors);
+                out extra, out times, out scanIndexes, out intensities, out massErrors);
         }
 
         public override double? MaxRetentionTime

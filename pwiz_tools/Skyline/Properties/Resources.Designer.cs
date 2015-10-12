@@ -6686,6 +6686,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Problem using results to populate drift time library:.
+        /// </summary>
+        public static string DriftTimeFinder_HandleLoadScanException_Problem_using_results_to_populate_drift_time_library__ {
+            get {
+                return ResourceManager.GetString("DriftTimeFinder_HandleLoadScanException_Problem_using_results_to_populate_drift_t" +
+                        "ime_library__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Drift time predictors using an ion mobility library must include per-charge regression values..
         /// </summary>
         public static string DriftTimePredictor_Validate_Drift_time_predictors_using_an_ion_mobility_library_must_include_per_charge_regression_values_ {
@@ -7121,6 +7131,16 @@ namespace pwiz.Skyline.Properties {
         public static string EditDPDlg_UseCurrentData_Insufficient_data_found_to_calculate_a_new_regression {
             get {
                 return ResourceManager.GetString("EditDPDlg_UseCurrentData_Insufficient_data_found_to_calculate_a_new_regression", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finding drift time values for peaks.
+        /// </summary>
+        public static string EditDriftTimePredictorDlg_btnGenerateFromDocument_Click_Finding_drift_time_values_for_peaks {
+            get {
+                return ResourceManager.GetString("EditDriftTimePredictorDlg_btnGenerateFromDocument_Click_Finding_drift_time_values" +
+                        "_for_peaks", resourceCulture);
             }
         }
         

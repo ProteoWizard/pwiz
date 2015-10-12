@@ -68,7 +68,7 @@ namespace pwiz.Skyline.Model.Results
 
         public override bool GetChromatogram(
             int id, string modifiedSequence, Color peptideColor,
-            out ChromExtra extra, out float[] times, out int[] scanIds, out float[] intensities, out float[] massErrors)
+            out ChromExtra extra, out float[] times, out int[] scanIndexes, out float[] intensities, out float[] massErrors)
         {
             var chromKeyIndices = _chromKeyIndices[id];
             if (_lastChromGroupInfo == null || _lastIndices.GroupIndex != chromKeyIndices.GroupIndex)
@@ -83,9 +83,9 @@ namespace pwiz.Skyline.Model.Results
             massErrors = null;
             if (tranInfo.MassError10Xs != null)
                 massErrors = tranInfo.MassError10Xs.Select(m => m/10.0f).ToArray();
-            scanIds = null;
-            if (tranInfo.ScanIds != null)
-                scanIds = tranInfo.ScanIds[(int) chromKeyIndices.Key.Source];
+            scanIndexes = null;
+            if (tranInfo.ScanIndexes != null)
+                scanIndexes = tranInfo.ScanIndexes[(int) chromKeyIndices.Key.Source];
 
             SetPercentComplete(100 * id / _chromKeyIndices.Length);
 
@@ -105,9 +105,9 @@ namespace pwiz.Skyline.Model.Results
             return true;
         }
 
-        public override byte[] ScanIdBytes
+        public override byte[] MSDataFileScanIdBytes
         {
-            get { return _cache.LoadScanIdBytes(_fileIndex); }
+            get { return _cache.LoadMSDataFileScanIdBytes(_fileIndex); }
         }
 
         public override double? MaxRetentionTime { get { return _maxRetentionTime; } }

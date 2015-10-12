@@ -183,24 +183,23 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public int[][] ScanIds
+        public int[][] ScanIndexes
         {
             get
             {
-                var listScanIds = new int[Helpers.CountEnumValues<ChromSource>() - 1][];
+                var arrayScanIndexes = new int[Helpers.CountEnumValues<ChromSource>() - 1][];
                 foreach (var chromData in _listChromData)
                 {
                     int source = (int) chromData.PrimaryKey.Source;
                     if (source == (int) ChromSource.unknown)
                         continue;
-                    if (listScanIds[source] != null)
+                    if (arrayScanIndexes[source] != null)
                     {
-//                        Assume.IsTrue(!ArrayUtil.EqualsDeep(chromData.ScanIds, listScanIds[source]));
                         continue;
                     }
-                    listScanIds[source] = chromData.ScanIds;
+                    arrayScanIndexes[source] = chromData.ScanIndexes;
                 }
-                return listScanIds;
+                return arrayScanIndexes;
             }
         }
 
@@ -826,7 +825,7 @@ namespace pwiz.Skyline.Model.Results
                 var intensitiesNew = new float[end - start];
                 Array.Copy(times, start, timesNew, 0, timesNew.Length);
                 Array.Copy(intensities, start, intensitiesNew, 0, intensitiesNew.Length);
-                Assume.IsNull(chromData.ScanIds);
+                Assume.IsNull(chromData.ScanIndexes);
                 chromData.FixChromatogram(timesNew, intensitiesNew, null);
             }
             return true;
@@ -860,7 +859,7 @@ namespace pwiz.Skyline.Model.Results
 
         public bool ThermoZerosFix()
         {
-            if (_listChromData.Any(chromData => null != chromData.ScanIds))
+            if (_listChromData.Any(chromData => null != chromData.ScanIndexes))
             {
                 return false;
             }
@@ -879,7 +878,7 @@ namespace pwiz.Skyline.Model.Results
                     timesNew[iNew] = times[i];
                     intensitiesNew[iNew] = intensities[i];
                 }
-                Assume.IsNull(chromData.ScanIds);
+                Assume.IsNull(chromData.ScanIndexes);
                 chromData.FixChromatogram(timesNew, intensitiesNew, null);
             }
             return fixedZeros;

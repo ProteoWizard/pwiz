@@ -8739,4 +8739,10 @@ Please contact the Panorama server administrator to upgrade the server.</value>
     <value>Peptide-spectrum matches containing the following peptides were discarded because the spectrum had multiple matches:</value>
   </data>
 >>>>>>> .r8963
+  <data name="EditDriftTimePredictorDlg_btnGenerateFromDocument_Click_Finding_drift_time_values_for_peaks" xml:space="preserve">
+    <value>Finding drift time values for peaks</value>
+  </data>
+  <data name="DriftTimeFinder_HandleLoadScanException_Problem_using_results_to_populate_drift_time_library__" xml:space="preserve">
+    <value>Problem using results to populate drift time library:</value>
+  </data>
 </root>

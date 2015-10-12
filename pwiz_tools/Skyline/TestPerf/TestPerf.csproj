@@ -140,6 +140,7 @@
     <Compile Include="PerfImportResultsAgilentIMSTest.cs" />
     <Compile Include="PerfImportResultsHugeTest.cs" />
     <Compile Include="PerfImportResultsWatersIMSTest.cs" />
+    <Compile Include="PerfMeasuredDriftTimes.cs" />
     <Compile Include="PerfOpenSwathConvert.cs" />
     <Compile Include="PerfOptimizeCEImportResultsNativeVsMz5Test.cs" />
     <Compile Include="PerfImportResultsNativeVsMz5Test.cs" />

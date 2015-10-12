@@ -29,20 +29,23 @@ namespace pwiz.Skyline.Model.Results
     /// <summary>
     /// Handles storing and retrieving abbreviated scan ids from a <see cref="MsDataFileImpl"/>
     /// </summary>
-    public class DataFileScanIds
+    public class MsDataFileScanIds
     {
         private readonly int[] _startBytes;
         private readonly int[] _lengths;
         private readonly byte[] _idBytes;
 
-        public DataFileScanIds(int[] startBytes, int[] lengths, byte[] idBytes)
+        public MsDataFileScanIds(int[] startBytes, int[] lengths, byte[] idBytes)
         {
             _startBytes = startBytes;
             _lengths = lengths;
             _idBytes = idBytes;
         }
 
-        public string GetId(int index)
+        /// <summary>
+        /// Retrieve an indexed entry from our internal table that MsDataFileImpl can use to retrieve raw scan data
+        /// </summary>
+        public string GetMsDataFileSpectrumId(int index)
         {
             return Encoding.UTF8.GetString(_idBytes, _startBytes[index], _lengths[index]);
         }
@@ -82,7 +85,7 @@ namespace pwiz.Skyline.Model.Results
             return listResultBytes.ToArray();
         }
 
-        public static DataFileScanIds FromBytes(byte[] byteArray)
+        public static MsDataFileScanIds FromBytes(byte[] byteArray)
         {
             if (byteArray.Length == 0)
                 return null;
@@ -109,7 +112,7 @@ namespace pwiz.Skyline.Model.Results
                 0, scanIdBytesCompressedCount);
             var scanIdBytes = scanIdBytesCompressed.Uncompress(scanIdBytesCount);
 
-            return new DataFileScanIds(startBytes, lengths, scanIdBytes);
+            return new MsDataFileScanIds(startBytes, lengths, scanIdBytes);
         }
 
         private static int GetInt(int i, byte[] byteArray)

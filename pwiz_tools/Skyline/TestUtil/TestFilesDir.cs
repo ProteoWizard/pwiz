@@ -138,7 +138,6 @@ namespace pwiz.SkylineTestUtil
             return GetTestPathIntl(relativePath);
         }
 
-
         /// <summary>
         /// Attempts to move the directory to make sure no file handles are open.
         /// Used to delete the directory, but it can be useful to look at test

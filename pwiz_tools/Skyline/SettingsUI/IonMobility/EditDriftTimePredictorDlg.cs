@@ -83,30 +83,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                     textName.Text = _predictor.Name;
 
                     // List any measured drift times
-                    if (_predictor.MeasuredDriftTimePeptides != null)
-                    {
-                        bool hasHighEnergyOffsets =
-                            _predictor.MeasuredDriftTimePeptides.Any(p => p.Value.HighEnergyDriftTimeOffsetMsec != 0);
-                        cbOffsetHighEnergySpectra.Checked = hasHighEnergyOffsets;
-                        foreach (var p in _predictor.MeasuredDriftTimePeptides)
-                        {
-                            if (hasHighEnergyOffsets)
-                                gridMeasuredDriftTimes.Rows.Add(p.Key.Sequence,
-                                    p.Key.Charge.ToString(LocalizationHelper.CurrentCulture),
-                                    (p.Value.DriftTimeMsec(false) ?? 0).ToString(LocalizationHelper.CurrentCulture),
-                                    p.Value.HighEnergyDriftTimeOffsetMsec.ToString(LocalizationHelper.CurrentCulture)
-                                    );
-                            else
-                                gridMeasuredDriftTimes.Rows.Add(p.Key.Sequence,
-                                    p.Key.Charge.ToString(LocalizationHelper.CurrentCulture),
-                                    (p.Value.DriftTimeMsec(false) ?? 0).ToString(LocalizationHelper.CurrentCulture)
-                                    );
-                        }
-                    }
-                    else
-                    {
-                        cbOffsetHighEnergySpectra.Checked = false;
-                    }
+                    UpdateMeasuredDriftTimesControl(_predictor);
 
                     comboLibrary.SelectedItem = (_predictor.IonMobilityLibrary != null) ? _predictor.IonMobilityLibrary.Name : null;
                     if (_predictor.ChargeRegressionLines != null)
@@ -122,6 +99,36 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                     textResolvingPower.Text = string.Format("{0:F04}", _predictor.ResolvingPower); // Not L10N
                 }
                 UpdateControls();
+            }
+        }
+
+        private void UpdateMeasuredDriftTimesControl(DriftTimePredictor predictor)
+        {
+            // List any measured drift times
+            gridMeasuredDriftTimes.Rows.Clear();
+            if (predictor.MeasuredDriftTimePeptides != null)
+            {
+                bool hasHighEnergyOffsets =
+                    predictor.MeasuredDriftTimePeptides.Any(p => p.Value.HighEnergyDriftTimeOffsetMsec != 0);
+                cbOffsetHighEnergySpectra.Checked = hasHighEnergyOffsets;
+                foreach (var p in predictor.MeasuredDriftTimePeptides)
+                {
+                    if (hasHighEnergyOffsets)
+                        gridMeasuredDriftTimes.Rows.Add(p.Key.Sequence,
+                            p.Key.Charge.ToString(LocalizationHelper.CurrentCulture),
+                            (p.Value.DriftTimeMsec(false) ?? 0).ToString(LocalizationHelper.CurrentCulture),
+                            p.Value.HighEnergyDriftTimeOffsetMsec.ToString(LocalizationHelper.CurrentCulture)
+                            );
+                    else
+                        gridMeasuredDriftTimes.Rows.Add(p.Key.Sequence,
+                            p.Key.Charge.ToString(LocalizationHelper.CurrentCulture),
+                            (p.Value.DriftTimeMsec(false) ?? 0).ToString(LocalizationHelper.CurrentCulture)
+                            );
+                }
+            }
+            else
+            {
+                cbOffsetHighEnergySpectra.Checked = false;
             }
         }
 
@@ -142,6 +149,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 Size = new Size(Size.Width, Size.Height + adjust);
                 gridMeasuredDriftTimes.Size = new Size(gridMeasuredDriftTimes.Size.Width, gridMeasuredDriftTimes.Size.Height - adjust);
                 cbOffsetHighEnergySpectra.Location = new Point(cbOffsetHighEnergySpectra.Location.X, gridMeasuredDriftTimes.Location.Y + gridMeasuredDriftTimes.Size.Height + cbOffsetHighEnergySpectra.Size.Height/4);
+                btnUseResults.Location = new Point(btnUseResults.Location.X, cbOffsetHighEnergySpectra.Location.Y);
                 labelIonMobilityLibrary.Location = new Point(labelIonMobilityLibrary.Location.X, labelIonMobilityLibrary.Location.Y - adjust);
                 comboLibrary.Location = new Point(comboLibrary.Location.X, comboLibrary.Location.Y - adjust);
             }
@@ -301,6 +309,35 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             return cbOffsetHighEnergySpectra.Checked;
         }
 
+        public void GetDriftTimesFromResults()
+        {
+            try
+            {
+                var driftTable = new MeasuredDriftTimeTable(gridMeasuredDriftTimes);
+                var tempDriftTimePredictor = new DriftTimePredictor("tmp", driftTable.GetTableMeasuredDriftTimes(cbOffsetHighEnergySpectra.Checked), null, null, 30); // Not L10N
+                using (var longWaitDlg = new LongWaitDlg
+                {
+                    Text = Resources.EditDriftTimePredictorDlg_btnGenerateFromDocument_Click_Finding_drift_time_values_for_peaks,
+                    Message = string.Empty,
+                    ProgressValue = 0
+                })
+                {
+                    longWaitDlg.PerformWork(this, 100, broker =>
+                    {
+                        tempDriftTimePredictor = tempDriftTimePredictor.ChangeMeasuredDriftTimesFromResults(Program.MainWindow.Document, Program.MainWindow.DocumentFilePath, broker);
+                    });
+                    if (!longWaitDlg.IsCanceled && tempDriftTimePredictor != null)
+                    {
+                        UpdateMeasuredDriftTimesControl(tempDriftTimePredictor);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageDlg.ShowException(this, ex);
+            }
+        }
+
         #endregion
 
 
@@ -335,8 +372,16 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             UpdateControls();
         }
 
+        /// <summary>
+        /// Leverage the existing code for displaying raw drift times in chromatogram graphs,
+        /// to obtain plausible drift times for library use.
+        /// </summary>
+        private void btnGenerateFromDocument_Click(object sender, EventArgs e)
+        {
+            GetDriftTimesFromResults();
+        }
     }
-    
+
     public class MeasuredDriftTimeTable
     {
         private readonly DataGridView _gridMeasuredDriftTimePeptides;

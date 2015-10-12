@@ -30,14 +30,14 @@ namespace pwiz.Skyline.Model.Results
     {
         public string Name;
         public ChromSource Source;
-        public int[][] ScanIds;
+        public int[][] ScanIndexes;
         public Color Color;
         public double PrecursorMz;
         public double ProductMz;
         public double? ExtractionWidth;
         public double? IonMobilityValue;
         public double? IonMobilityExtractionWidth;
-        public Identity Id;
+        public Identity Id;  // ID of the associated TransitionDocNode
     }
 
     public interface IScanProvider : IDisposable
@@ -47,18 +47,18 @@ namespace pwiz.Skyline.Model.Results
         ChromSource Source { get; }
         float[] Times { get; }
         TransitionFullScanInfo[] Transitions { get; }
-        MsDataSpectrum[] GetScans(int scanId);
+        MsDataSpectrum[] GetMsDataFileSpectraWithCommonRetentionTime(int dataFileSpectrumStartIndex); // Return a collection of consecutive scans with common retention time and increasing drift times (or a single scan if no drift info in file)
         bool Adopt(IScanProvider scanProvider);
     }
 
     public class ScanProvider : IScanProvider
     {
         private MsDataFileImpl _dataFile;
-        private DataFileScanIds _scanIds;
-        private Func<DataFileScanIds> _getScanIds;
+        private MsDataFileScanIds _msDataFileScanIds; // Indexed container of MsDataFileImpl ids
+        private Func<MsDataFileScanIds> _getMsDataFileScanIds;
 
         public ScanProvider(string docFilePath, MsDataFileUri dataFilePath, ChromSource source,
-            float[] times, TransitionFullScanInfo[] transitions, Func<DataFileScanIds> getScanIds)
+            float[] times, TransitionFullScanInfo[] transitions, Func<MsDataFileScanIds> getMsDataFileScanIds)
         {
             DocFilePath = docFilePath;
             DataFilePath = dataFilePath;
@@ -66,7 +66,7 @@ namespace pwiz.Skyline.Model.Results
             Times = times;
             Transitions = transitions;
 
-            _getScanIds = getScanIds;
+            _getMsDataFileScanIds = getMsDataFileScanIds;
         }
 
         public bool Adopt(IScanProvider other)
@@ -77,8 +77,8 @@ namespace pwiz.Skyline.Model.Results
             if (scanProvider == null)
                 return false;
             _dataFile = scanProvider._dataFile;
-            _scanIds = scanProvider._scanIds;
-            _getScanIds = scanProvider._getScanIds;
+            _msDataFileScanIds = scanProvider._msDataFileScanIds;
+            _getMsDataFileScanIds = scanProvider._getMsDataFileScanIds;
             scanProvider._dataFile = null;
             return true;
         }
@@ -89,39 +89,47 @@ namespace pwiz.Skyline.Model.Results
         public float[] Times { get; private set; }
         public TransitionFullScanInfo[] Transitions { get; private set; }
 
-        public MsDataSpectrum[] GetScans(int scanId)
+        /// <summary>
+        /// Retrieve a run of raw spectra with common retention time and increasing drift times, or a single raw spectrum if no drift info
+        /// </summary>
+        /// <param name="internalScanIndex">an index in pwiz.Skyline.Model.Results space</param>
+        /// <returns>Array of spectra with the same retention time (potentially different drift times for IMS, or just one spectrum)</returns>
+        public MsDataSpectrum[] GetMsDataFileSpectraWithCommonRetentionTime(int internalScanIndex)
         {
-            var fullScans = new List<MsDataSpectrum>();
-            if (_getScanIds != null)
+            var spectra = new List<MsDataSpectrum>();
+            if (_getMsDataFileScanIds != null)
             {
-                _scanIds = _getScanIds();
-                _getScanIds = null;
+                _msDataFileScanIds = _getMsDataFileScanIds();
+                _getMsDataFileScanIds = null;
             }
-            if (_scanIds != null)
+            int dataFileSpectrumStartIndex = internalScanIndex;
+            // For backward compatibility support SKYD files that did not store scan ID bytes
+            if (_msDataFileScanIds != null)
             {
-                var scanIdText = _scanIds.GetId(scanId);
-                scanId = GetDataFile().GetScanIndex(scanIdText);
-                if (scanId == -1)
+                var scanIdText = _msDataFileScanIds.GetMsDataFileSpectrumId(internalScanIndex);
+                dataFileSpectrumStartIndex = GetDataFile().GetSpectrumIndex(scanIdText);
+                if (dataFileSpectrumStartIndex == -1)
                     throw new IOException(string.Format(Resources.ScanProvider_GetScans_The_scan_ID__0__was_not_found_in_the_file__1__, scanIdText, DataFilePath.GetFileName()));
             }
-            var currentScan = GetDataFile().GetSpectrum(scanId);
-            fullScans.Add(currentScan);
-            if (currentScan.DriftTimeMsec.HasValue)
+            var currentSpectrum = GetDataFile().GetSpectrum(dataFileSpectrumStartIndex);
+            spectra.Add(currentSpectrum);
+            if (currentSpectrum.DriftTimeMsec.HasValue)
             {
+                // Look for spectra with identical retention time and increasing drift time
                 while (true)
                 {
-                    scanId++;
-                    var nextScan = GetDataFile().GetSpectrum(scanId);
-                    if (!nextScan.DriftTimeMsec.HasValue ||
-                        nextScan.RetentionTime != currentScan.RetentionTime)
+                    dataFileSpectrumStartIndex++;
+                    var nextSpectrum = GetDataFile().GetSpectrum(dataFileSpectrumStartIndex);
+                    if (!nextSpectrum.DriftTimeMsec.HasValue ||
+                        nextSpectrum.RetentionTime != currentSpectrum.RetentionTime)
                     {
                         break;
                     }
-                    fullScans.Add(nextScan);
-                    currentScan = nextScan;
+                    spectra.Add(nextSpectrum);
+                    currentSpectrum = nextSpectrum;
                 }
             }
-            return fullScans.ToArray();
+            return spectra.ToArray();
         }
 
         private MsDataFileImpl GetDataFile()
@@ -165,10 +173,13 @@ namespace pwiz.Skyline.Model.Results
 
         public void Dispose()
         {
-            if (_dataFile != null)
+            lock (this)
             {
-                _dataFile.Dispose();
-                _dataFile = null;
+                if (_dataFile != null)
+                {
+                    _dataFile.Dispose();
+                    _dataFile = null;
+                }
             }
         }
     }

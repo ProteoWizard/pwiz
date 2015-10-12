@@ -484,9 +484,9 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public override byte[] ScanIdBytes
+        public override byte[] MSDataFileScanIdBytes
         {
-            get { return DataFileScanIds.ToBytes(_scanIdList); }
+            get { return MsDataFileScanIds.ToBytes(_scanIdList); }
         }
 
         public override void SetRequestOrder(IList<IList<int>> chromatogramRequestOrder)
@@ -523,10 +523,10 @@ namespace pwiz.Skyline.Model.Results
 
         public override bool GetChromatogram(
             int id, string modifiedSequence, Color peptideColor,
-            out ChromExtra extra, out float[] times, out int[] scanIds, out float[] intensities, out float[] massErrors)
+            out ChromExtra extra, out float[] times, out int[] scanIndexes, out float[] intensities, out float[] massErrors)
         {
             var statusId = _collectors.ReleaseChromatogram(id, _chromGroups,
-                out times, out intensities, out massErrors, out scanIds);
+                out times, out intensities, out massErrors, out scanIndexes);
             extra = new ChromExtra(statusId, LoadingStatus.Transitions.GetRank(id));  // TODO: Get rank
 
             // Each chromatogram will be read only once!
@@ -875,7 +875,7 @@ namespace pwiz.Skyline.Model.Results
                         // Inexpensive checks are complete, now actually get the spectrum data
                         var nextSpectrum = _lookaheadContext.GetSpectrum(i);
                         // Assertion for testing ID to spectrum index support
-                        //                        int iFromId = dataFile.GetScanIndex(dataSpectrum.Id);
+                        //                        int iFromId = dataFile.GetSpectrumIndex(dataSpectrum.Id);
                         //                        Assume.IsTrue(i == iFromId);
                         if (nextSpectrum.Mzs.Length == 0)
                             continue;

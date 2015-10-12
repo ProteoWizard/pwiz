@@ -1892,7 +1892,7 @@ namespace pwiz.Skyline.Model.Results
         public float[] Times { get; set; }
         public float[][] IntensityArray { get; set; }
         public short[][] MassError10XArray { get; set; }
-        public int[][] ScanIds { get; set; }
+        public int[][] ScanIndexes { get; set; }
 
         public bool HasScore(Type scoreType)
         {
@@ -1928,7 +1928,7 @@ namespace pwiz.Skyline.Model.Results
                                         Times,
                                         IntensityArray,
                                         MassError10XArray,
-                                        ScanIds);
+                                        ScanIndexes);
         }
 
         protected double GetProduct(int index)
@@ -2071,16 +2071,16 @@ namespace pwiz.Skyline.Model.Results
             float[] times;
             float[][] intensities;
             short[][] massErrors;
-            int[][] scanIds;
+            int[][] scanIndexes;
 
             ChromatogramCache.BytesToTimeIntensities(
                 peaks, numPoints, numTrans, hasErrors, hasMs1ScanIds, hasFragmentScanIds, hasSimScanIds,
-                out times, out intensities, out massErrors, out scanIds);
+                out times, out intensities, out massErrors, out scanIndexes);
 
             Times = times;
             IntensityArray = intensities;
             MassError10XArray = massErrors;
-            ScanIds = scanIds;
+            ScanIndexes = scanIndexes;
         }
 
         public class PathEqualityComparer : IEqualityComparer<ChromatogramGroupInfo>
@@ -2131,7 +2131,7 @@ namespace pwiz.Skyline.Model.Results
                                 float[] times,
                                 float[][] intensities,
                                 short[][] massError10Xs,
-                                int[][] scanIds)
+                                int[][] scanIndexes)
             : base(groupHeaderInfo, scoreTypeIndices, allFiles, allTransitions, allPeaks, allScores)
         {
             if (transitionIndex >= _groupHeaderInfo.NumTransitions)
@@ -2149,7 +2149,7 @@ namespace pwiz.Skyline.Model.Results
             MassError10XArray = massError10Xs;
             if (MassError10XArray != null)
                 MassError10Xs = massError10Xs[transitionIndex];
-            ScanIds = scanIds;
+            ScanIndexes = scanIndexes;
         }
 
         public ChromatogramInfo(float[] times, float[] intensities)

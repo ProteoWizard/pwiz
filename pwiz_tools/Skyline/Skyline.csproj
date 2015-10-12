@@ -1046,7 +1046,9 @@
     <Compile Include="Model\Results\ChromDataSet.cs" />
     <Compile Include="Model\Results\ChromHeaderInfo.cs" />
     <Compile Include="Model\Results\ChromInfoData.cs" />
-    <Compile Include="Model\Results\DataFileScanIds.cs" />
+    <Compile Include="Model\Results\DriftTimeFinder.cs" />
+    <Compile Include="Model\Results\MsDataFileScanHelper.cs" />
+    <Compile Include="Model\Results\MsDataFileScanIds.cs" />
     <Compile Include="Model\Results\Demultiplexer.cs" />
     <Compile Include="Model\Results\DocNodeChromInfo.cs" />
     <Compile Include="Model\Results\Exception.cs" />

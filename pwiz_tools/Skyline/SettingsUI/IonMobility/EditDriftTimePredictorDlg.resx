@@ -160,7 +160,7 @@
     <value>534, 117</value>
   </data>
   <data name="gridRegression.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
+    <value>11</value>
   </data>
   <data name="gridRegression.ToolTip" xml:space="preserve">
     <value>Slope and intercept values used to calculate predicted drift times in milliseconds "D" from precursor collisional cross sections "C" in the ion mobility library, with an equation of the form:
@@ -179,7 +179,7 @@ Each precursor charge state requires a different slope and intercept value.  If 
     <value>$this</value>
   </data>
   <data name="&gt;&gt;gridRegression.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="comboLibrary.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
@@ -197,7 +197,7 @@ Each precursor charge state requires a different slope and intercept value.  If 
     <value>325, 24</value>
   </data>
   <data name="comboLibrary.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
+    <value>9</value>
   </data>
   <data name="comboLibrary.ToolTip" xml:space="preserve">
     <value>Select a saved table (or create one) of collisional cross section values or measured drift times for specific peptides and charge states.</value>
@@ -212,7 +212,7 @@ Each precursor charge state requires a different slope and intercept value.  If 
     <value>$this</value>
   </data>
   <data name="&gt;&gt;comboLibrary.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>6</value>
   </data>
   <data name="textResolvingPower.Location" type="System.Drawing.Point, System.Drawing">
     <value>16, 101</value>
@@ -243,7 +243,7 @@ W = 2T/R
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textResolvingPower.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>8</value>
   </data>
   <data name="textName.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -273,7 +273,7 @@ W = 2T/R
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textName.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>10</value>
   </data>
   <data name="gridMeasuredDriftTimes.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
@@ -336,7 +336,7 @@ W = 2T/R
     <value>$this</value>
   </data>
   <data name="&gt;&gt;gridMeasuredDriftTimes.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="cbOffsetHighEnergySpectra.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
@@ -369,6 +369,36 @@ W = 2T/R
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbOffsetHighEnergySpectra.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="btnUseResults.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Right</value>
+  </data>
+  <data name="btnUseResults.Location" type="System.Drawing.Point, System.Drawing">
+    <value>433, 383</value>
+  </data>
+  <data name="btnUseResults.Size" type="System.Drawing.Size, System.Drawing">
+    <value>117, 28</value>
+  </data>
+  <data name="btnUseResults.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="btnUseResults.Text" xml:space="preserve">
+    <value>&amp;Use Results</value>
+  </data>
+  <data name="btnUseResults.ToolTip" xml:space="preserve">
+    <value>Inspect the current document's results for drift time peaks</value>
+  </data>
+  <data name="&gt;&gt;btnUseResults.Name" xml:space="preserve">
+    <value>btnUseResults</value>
+  </data>
+  <data name="&gt;&gt;btnUseResults.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnUseResults.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;btnUseResults.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="bindingChargeRegressionLines.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -390,7 +420,7 @@ W = 2T/R
     <value>100, 28</value>
   </data>
   <data name="btnOk.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
+    <value>12</value>
   </data>
   <data name="btnOk.Text" xml:space="preserve">
     <value>OK</value>
@@ -405,7 +435,7 @@ W = 2T/R
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
-    <value>12</value>
+    <value>13</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -423,7 +453,7 @@ W = 2T/R
     <value>100, 28</value>
   </data>
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
-    <value>12</value>
+    <value>13</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
     <value>Cancel</value>
@@ -438,7 +468,7 @@ W = 2T/R
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>11</value>
+    <value>12</value>
   </data>
   <data name="labelConversionParameters.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
@@ -459,7 +489,7 @@ W = 2T/R
     <value>159, 17</value>
   </data>
   <data name="labelConversionParameters.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
+    <value>10</value>
   </data>
   <data name="labelConversionParameters.Text" xml:space="preserve">
     <value>&amp;Conversion parameters:</value>
@@ -474,7 +504,7 @@ W = 2T/R
     <value>$this</value>
   </data>
   <data name="&gt;&gt;labelConversionParameters.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="labelIonMobilityLibrary.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
@@ -495,7 +525,7 @@ W = 2T/R
     <value>130, 17</value>
   </data>
   <data name="labelIonMobilityLibrary.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
+    <value>8</value>
   </data>
   <data name="labelIonMobilityLibrary.Text" xml:space="preserve">
     <value>&amp;Ion Mobility Library:</value>
@@ -510,7 +540,7 @@ W = 2T/R
     <value>$this</value>
   </data>
   <data name="&gt;&gt;labelIonMobilityLibrary.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>7</value>
   </data>
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -543,7 +573,7 @@ W = 2T/R
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>9</value>
   </data>
   <data name="label4.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -576,7 +606,7 @@ W = 2T/R
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>11</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -609,7 +639,7 @@ W = 2T/R
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -653,12 +683,6 @@ W = 2T/R
   <data name="&gt;&gt;Intercept.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;bindingChargeRegressionLines.Name" xml:space="preserve">
-    <value>bindingChargeRegressionLines</value>
-  </data>
-  <data name="&gt;&gt;bindingChargeRegressionLines.Type" xml:space="preserve">
-    <value>System.Windows.Forms.BindingSource, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;MeasuredDriftTimeSequence.Name" xml:space="preserve">
     <value>MeasuredDriftTimeSequence</value>
   </data>
@@ -682,6 +706,12 @@ W = 2T/R
   </data>
   <data name="&gt;&gt;MeasuredDriftTimeHighEnergyOffsetMsec.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;bindingChargeRegressionLines.Name" xml:space="preserve">
+    <value>bindingChargeRegressionLines</value>
+  </data>
+  <data name="&gt;&gt;bindingChargeRegressionLines.Type" xml:space="preserve">
+    <value>System.Windows.Forms.BindingSource, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>EditDriftTimePredictorDlg</value>

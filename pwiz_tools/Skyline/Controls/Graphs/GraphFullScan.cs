@@ -20,7 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
-using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.MSGraph;
@@ -41,19 +40,13 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private readonly IDocumentUIContainer _documentContainer;
         private readonly GraphHelper _graphHelper;
-        private readonly BackgroundScanProvider _scanProvider;
-        private MsDataSpectrum[] _fullScans;
         private HeatMapData _heatMapData;
         private double _maxMz;
         private double _maxIntensity;
         private double _maxDriftTime;
-        private string _fileName;
-        private int _transitionIndex;
-        private int _scanIndex;
-        private readonly string[] _sourceNames;
-        private ChromSource _source;
         private bool _zoomXAxis;
         private bool _zoomYAxis;
+        private readonly MsDataFileScanHelper _msDataFileScanHelper;
 
         public GraphFullScan(IDocumentUIContainer documentUIContainer)
         {
@@ -69,11 +62,8 @@ namespace pwiz.Skyline.Controls.Graphs
             _graphHelper = GraphHelper.Attach(graphControl);
             _documentContainer = documentUIContainer;
             _documentContainer.ListenUI(OnDocumentUIChanged);
-            _scanProvider = new BackgroundScanProvider(this, SetScans, HandleLoadScanException);
-            _sourceNames = new string[Helpers.CountEnumValues<ChromSource>()];
-            _sourceNames[(int) ChromSource.ms1] = Resources.GraphFullScan_GraphFullScan_MS1;
-            _sourceNames[(int) ChromSource.fragment] = Resources.GraphFullScan_GraphFullScan_MS_MS;
-            _sourceNames[(int) ChromSource.sim] = Resources.GraphFullScan_GraphFullScan_SIM;
+
+            _msDataFileScanHelper = new MsDataFileScanHelper(SetSpectra, HandleLoadScanException);
 
             GraphPane.Title.IsVisible = true;
             GraphPane.Legend.IsVisible = false;
@@ -89,11 +79,16 @@ namespace pwiz.Skyline.Controls.Graphs
             lblScanId.Visible = false;  // you might want to show the scan index for debugging
         }
 
-        private void SetScans(MsDataSpectrum[] scans)
+        private void SetSpectra(MsDataSpectrum[] spectra)
         {
-            _fullScans = scans;
+            Invoke(new Action(() => SetSpectraUI(spectra)));
+        }
+
+        private void SetSpectraUI(MsDataSpectrum[] spectra)
+        {
+            _msDataFileScanHelper.MsDataSpectra = spectra;
             _heatMapData = null;
-            if (_fullScans == null)
+            if (_msDataFileScanHelper.MsDataSpectra == null)
                 return;
 
             // Find max values.
@@ -101,8 +96,8 @@ namespace pwiz.Skyline.Controls.Graphs
             _maxIntensity = 0;
             GetMaxMzIntensity(out _maxMz, out _maxIntensity);
             _maxDriftTime = 0;
-            foreach (var scan in scans)
-                _maxDriftTime = Math.Max(_maxDriftTime, scan.DriftTimeMsec ?? 0);
+            foreach (var spectrum in spectra)
+                _maxDriftTime = Math.Max(_maxDriftTime, spectrum.DriftTimeMsec ?? 0);
 
             if (_zoomXAxis)
             {
@@ -120,6 +115,11 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void HandleLoadScanException(Exception ex)
         {
+            Invoke(new Action(() => HandleLoadScanExceptionUI(ex)));
+        }
+
+        private void HandleLoadScanExceptionUI(Exception ex)
+        {
             GraphPane.Title.Text = Resources.GraphFullScan_LoadScan_Spectrum_unavailable;
             MessageDlg.ShowException(this, ex);
         }
@@ -134,41 +134,27 @@ namespace pwiz.Skyline.Controls.Graphs
             get { return (MSGraphPane) graphControl.MasterPane[0]; }
         }
 
-        private ChromSource SourceFromName(string name)
-        {
-            return (ChromSource) _sourceNames.IndexOf(e => e == name);
-        }
-
-        private string NameFromSource(ChromSource source)
-        {
-            return _sourceNames[(int) source];
-        }
-
         public void ShowSpectrum(IScanProvider scanProvider, int transitionIndex, int scanIndex)
         {
-            _scanProvider.SetScanProvider(scanProvider);
+            _msDataFileScanHelper.UpdateScanProvider(scanProvider, transitionIndex, scanIndex);
 
             if (scanProvider != null)
             {
-                _source = _scanProvider.Source;
-                _transitionIndex = transitionIndex;
-                _scanIndex = scanIndex;
-                _fileName = scanProvider.DataFilePath.GetFileName();
 
                 comboBoxScanType.Items.Clear();
                 foreach (var source in new[] { ChromSource.ms1, ChromSource.fragment, ChromSource.sim })
                 {
-                    foreach (var transition in _scanProvider.Transitions)
+                    foreach (var transition in _msDataFileScanHelper.ScanProvider.Transitions)
                     {
                         if (transition.Source == source)
                         {
-                            comboBoxScanType.Items.Add(NameFromSource(source));
+                            comboBoxScanType.Items.Add(_msDataFileScanHelper.NameFromSource(source));
                             break;
                         }
                     }
                 }
                 comboBoxScanType.SelectedIndexChanged -= comboBoxScanType_SelectedIndexChanged;
-                comboBoxScanType.SelectedItem = NameFromSource(_source);
+                comboBoxScanType.SelectedItem = _msDataFileScanHelper.NameFromSource(_msDataFileScanHelper.Source);
                 comboBoxScanType.SelectedIndexChanged += comboBoxScanType_SelectedIndexChanged;
                 comboBoxScanType.Enabled = true;
 
@@ -176,8 +162,6 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             else
             {
-                _fullScans = null;
-                _fileName = null;
                 ClearGraph();
 
                 // No full scans can be displayed.
@@ -194,10 +178,9 @@ namespace pwiz.Skyline.Controls.Graphs
             _zoomXAxis = zoomXAxis;
             _zoomYAxis = zoomYAxis;
 
-            int scanId = GetScanId();
+            int scanId = _msDataFileScanHelper.GetScanIndex();
             if (scanId < 0)
             {
-                _fullScans = null;
                 GraphPane.CurveList.Clear();
                 GraphPane.GraphObjList.Clear();
                 ClearGraph();
@@ -209,7 +192,7 @@ namespace pwiz.Skyline.Controls.Graphs
             lblScanId.Text = (scanId+1).ToString("D"); // Not L10N
 
             RunBackground(LoadingTextIfNoChange);
-            _scanProvider.GetScans(scanId);
+            _msDataFileScanHelper.ScanProvider.SetScanForBackgroundLoad(scanId);
         }
 
         private void RunBackground(Action action)
@@ -222,14 +205,14 @@ namespace pwiz.Skyline.Controls.Graphs
         private void LoadingTextIfNoChange()
         {
             // Only set the title to Loading... when it takes more than 200 miliseconds to get scans
-            var fullScans = _fullScans;
+            var fullScans = _msDataFileScanHelper.MsDataSpectra;
             Thread.Sleep(200);
-            if (ReferenceEquals(fullScans, _fullScans))
+            if (ReferenceEquals(fullScans, _msDataFileScanHelper.MsDataSpectra))
             {
                 Invoke(new Action(() =>
                 {
                     // Need to check again once on the UI thread
-                    if (ReferenceEquals(fullScans, _fullScans))
+                    if (ReferenceEquals(fullScans, _msDataFileScanHelper.MsDataSpectra))
                     {
                         GraphPane.Title.Text = Resources.GraphFullScan_LoadScan_Loading___;
                         graphControl.Refresh();
@@ -243,13 +226,13 @@ namespace pwiz.Skyline.Controls.Graphs
         /// </summary>
         private void CreateGraph()
         {
-            if (_fullScans == null)
+            if (_msDataFileScanHelper.MsDataSpectra == null)
                 return;
 
             GraphPane.CurveList.Clear();
             GraphPane.GraphObjList.Clear();
 
-            bool hasDriftDimension = _fullScans.Length > 1;
+            bool hasDriftDimension = _msDataFileScanHelper.MsDataSpectra.Length > 1;
             bool useHeatMap = hasDriftDimension && !Settings.Default.SumScansFullScan;
 
             filterBtn.Visible = spectrumBtn.Visible = hasDriftDimension;
@@ -260,7 +243,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 // Is there actually any drift time filtering available?
                 double minDriftTime, maxDriftTime;
-                GetDriftRange(out minDriftTime, out maxDriftTime, ChromSource.unknown); // Get range of drift times for all products and precursors
+                _msDataFileScanHelper.GetDriftRange(out minDriftTime, out maxDriftTime, ChromSource.unknown); // Get range of drift times for all products and precursors
                 if ((minDriftTime == double.MinValue) && (maxDriftTime == double.MaxValue))
                 {
                     filterBtn.Visible = false;
@@ -279,10 +262,10 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             // Add extraction boxes.
-            for (int i = 0; i < _scanProvider.Transitions.Length; i++)
+            for (int i = 0; i < _msDataFileScanHelper.ScanProvider.Transitions.Length; i++)
             {
-                var transition = _scanProvider.Transitions[i];
-                if (transition.Source != _source)
+                var transition = _msDataFileScanHelper.ScanProvider.Transitions[i];
+                if (transition.Source != _msDataFileScanHelper.Source)
                     continue;
                 var color1 = Blend(transition.Color, Color.White, 0.60);
                 var color2 = Blend(transition.Color, Color.White, 0.95);
@@ -304,10 +287,10 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             // Add labels.
-            for (int i = 0; i < _scanProvider.Transitions.Length; i++)
+            for (int i = 0; i < _msDataFileScanHelper.ScanProvider.Transitions.Length; i++)
             {
-                var transition = _scanProvider.Transitions[i];
-                if (transition.Source != _source)
+                var transition = _msDataFileScanHelper.ScanProvider.Transitions[i];
+                if (transition.Source != _msDataFileScanHelper.Source)
                     continue;
                 var label = new TextObj(transition.Name, transition.ProductMz, 0.02, CoordType.XScaleYChartFraction, AlignH.Center, AlignV.Top)
                 {
@@ -322,8 +305,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 GraphPane.GraphObjList.Add(label);
             }
 
-            double retentionTime = _fullScans[0].RetentionTime ?? _scanProvider.Times[_scanIndex];
-            GraphPane.Title.Text = string.Format(Resources.GraphFullScan_CreateGraph__0_____1_F2__min_, _fileName, retentionTime);
+            double retentionTime = _msDataFileScanHelper.MsDataSpectra[0].RetentionTime ?? _msDataFileScanHelper.ScanProvider.Times[_msDataFileScanHelper.ScanIndex];
+            GraphPane.Title.Text = string.Format(Resources.GraphFullScan_CreateGraph__0_____1_F2__min_, _msDataFileScanHelper.FileName, retentionTime);
 
             FireSelectedScanChanged(retentionTime);
         }
@@ -339,7 +322,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (_heatMapData == null)
             {
                 var points = new List<Point3D>(5000);
-                foreach (var scan in _fullScans)
+                foreach (var scan in _msDataFileScanHelper.MsDataSpectra)
                 {
                     if (!scan.DriftTimeMsec.HasValue)
                         continue;
@@ -351,7 +334,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             double minDrift;
             double maxDrift;
-            GetDriftRange(out minDrift, out maxDrift, _source);  // There may be a different drift time filter for products in Waters
+            _msDataFileScanHelper.GetDriftRange(out minDrift, out maxDrift, _msDataFileScanHelper.Source);  // There may be a different drift time filter for products in Waters
 
             if (minDrift > 0 && maxDrift < double.MaxValue)
             {
@@ -406,7 +389,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             // Create a point list for each transition, and a default point list for points not 
             // associated with a transition.
-            var pointLists = new PointPairList[_scanProvider.Transitions.Length];
+            var pointLists = new PointPairList[_msDataFileScanHelper.ScanProvider.Transitions.Length];
             for (int i = 0; i < pointLists.Length; i++)
                 pointLists[i] = new PointPairList();
             var defaultPointList = new PointPairList();
@@ -415,17 +398,17 @@ namespace pwiz.Skyline.Controls.Graphs
             // Assign each point to a transition point list, or else the default point list.
             IList<double> mzs;
             IList<double> intensities;
-            if (_fullScans.Length == 1)
+            if (_msDataFileScanHelper.MsDataSpectra.Length == 1)
             {
-                mzs = _fullScans[0].Mzs;
-                intensities = _fullScans[0].Intensities;
+                mzs = _msDataFileScanHelper.MsDataSpectra[0].Mzs;
+                intensities = _msDataFileScanHelper.MsDataSpectra[0].Intensities;
             }
             else
             {
                 mzs = new List<double>();
                 intensities = new List<double>();
 
-                var fullScans = GetFilteredScans();
+                var fullScans = _msDataFileScanHelper.GetFilteredScans();
 
                 double minMz;
                 var indices = new int[fullScans.Length];
@@ -442,10 +425,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 double intensity = intensities[i];
                 allPointList.Add(mz, intensity);
                 var assignedPointList = defaultPointList;
-                for (int j = 0; j < _scanProvider.Transitions.Length; j++)
+                for (int j = 0; j < _msDataFileScanHelper.ScanProvider.Transitions.Length; j++)
                 {
-                    var transition = _scanProvider.Transitions[j];
-                    if (transition.Source != _source ||
+                    var transition = _msDataFileScanHelper.ScanProvider.Transitions[j];
+                    if (transition.Source != _msDataFileScanHelper.Source ||
                         mz <= transition.ProductMz - transition.ExtractionWidth/2 ||
                         mz > transition.ProductMz + transition.ExtractionWidth/2)
                         continue;
@@ -458,8 +441,8 @@ namespace pwiz.Skyline.Controls.Graphs
             // Create a graph item for each point list with its own color.
             for (int i = 0; i < pointLists.Length; i++)
             {
-                var transition = _scanProvider.Transitions[i];
-                if (transition.Source != _source)
+                var transition = _msDataFileScanHelper.ScanProvider.Transitions[i];
+                if (transition.Source != _msDataFileScanHelper.Source)
                     continue;
                 var item = new SpectrumItem(pointLists[i], transition.Color, 2);
                 var curveItem = _graphHelper.GraphControl.AddGraphItem(GraphPane, item, false);
@@ -474,7 +457,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             // Create curve for all points to provide shading behind stick graph.
-            if (_fullScans.Length > 0 && !_fullScans[0].Centroided)
+            if (_msDataFileScanHelper.MsDataSpectra.Length > 0 && !_msDataFileScanHelper.MsDataSpectra[0].Centroided)
             {
                 var item = new SpectrumShadeItem(allPointList, Color.FromArgb(100, 225, 225, 150));
                 var curveItem = _graphHelper.GraphControl.AddGraphItem(GraphPane, item, false);
@@ -482,40 +465,6 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             GraphPane.SetScale(CreateGraphics());
-        }
-
-        private MsDataSpectrum[] GetFilteredScans()
-        {
-            var fullScans = _fullScans;
-            double minDrift, maxDrift;
-            GetDriftRange(out minDrift, out maxDrift, _source);
-            if (Settings.Default.FilterDriftTimesFullScan)
-                fullScans = fullScans.Where(s => minDrift <= s.DriftTimeMsec && s.DriftTimeMsec <= maxDrift).ToArray();
-            return fullScans;
-        }
-
-        private void GetDriftRange(out double minDrift, out double maxDrift, ChromSource sourceType)
-        {
-            minDrift = double.MaxValue;
-            maxDrift = double.MinValue;
-            foreach (var transition in _scanProvider.Transitions)
-            {
-                if (!transition.IonMobilityValue.HasValue || !transition.IonMobilityExtractionWidth.HasValue)
-                {
-                    // Accept all values
-                    minDrift = double.MinValue;
-                    maxDrift = double.MaxValue;
-                }
-                else if (sourceType == ChromSource.unknown || transition.Source == sourceType)
-                {
-                    // Products and precursors may have different expected drift time values in Waters MsE
-                    double startDrift = transition.IonMobilityValue.Value -
-                                        transition.IonMobilityExtractionWidth.Value / 2;
-                    double endDrift = startDrift + transition.IonMobilityExtractionWidth.Value;
-                    minDrift = Math.Min(minDrift, startDrift);
-                    maxDrift = Math.Max(maxDrift, endDrift);
-                }
-            }
         }
 
         private static double FindMinMz(MsDataSpectrum[] spectra, int[] indices)
@@ -551,7 +500,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void GetMaxMzIntensity(out double maxMz, out double maxIntensity)
         {
-            var fullScans = GetFilteredScans();
+            var fullScans = _msDataFileScanHelper.GetFilteredScans();
             maxMz = 0;
             maxIntensity = 0;
 
@@ -579,7 +528,7 @@ namespace pwiz.Skyline.Controls.Graphs
             comboBoxScanType.Enabled = false;
             lblScanId.Text = string.Empty;
             leftButton.Enabled = rightButton.Enabled = false;
-            graphControl.GraphPane.Title.Text = _fileName;
+            graphControl.GraphPane.Title.Text = _msDataFileScanHelper.FileName;
         }
 
         [Browsable(true)]
@@ -590,8 +539,8 @@ namespace pwiz.Skyline.Controls.Graphs
             IsLoaded = true;
             if (SelectedScanChanged != null)
             {
-                if (_fullScans != null)
-                    SelectedScanChanged(this, new SelectedScanEventArgs(_scanProvider.DataFilePath, retentionTime, _scanProvider.Transitions[_transitionIndex].Id));
+                if (_msDataFileScanHelper.MsDataSpectra != null)
+                    SelectedScanChanged(this, new SelectedScanEventArgs(_msDataFileScanHelper.ScanProvider.DataFilePath, retentionTime, _msDataFileScanHelper.ScanProvider.Transitions[_msDataFileScanHelper.TransitionIndex].Id));
                 else
                     SelectedScanChanged(this, new SelectedScanEventArgs(null, 0, null));
             }
@@ -604,7 +553,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // If document changed, close file.
             if (e.DocumentPrevious == null || !ReferenceEquals(DocumentUI.Id, e.DocumentPrevious.Id))
             {
-                _scanProvider.SetScanProvider(null);
+                _msDataFileScanHelper.ScanProvider.SetScanProvider(null);
 
                 LoadScan(true, true);
             }
@@ -614,7 +563,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (IsHidden)
             {
-                _fullScans = null;
+                _msDataFileScanHelper.MsDataSpectra = null;
                 FireSelectedScanChanged(0);
                 UpdateUI(false);
             }
@@ -622,7 +571,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void ZoomXAxis()
         {
-            if (_scanProvider == null || _scanProvider.Transitions.Length == 0)
+            if (_msDataFileScanHelper.ScanProvider == null || _msDataFileScanHelper.ScanProvider.Transitions.Length == 0)
                 return;
 
             var xScale = GraphPane.XAxis.Scale;
@@ -630,9 +579,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
             if (magnifyBtn.Checked)
             {
-                double mz = _source == ChromSource.ms1
-                    ? _scanProvider.Transitions[_transitionIndex].PrecursorMz
-                    : _scanProvider.Transitions[_transitionIndex].ProductMz;
+                double mz = _msDataFileScanHelper.Source == ChromSource.ms1
+                    ? _msDataFileScanHelper.ScanProvider.Transitions[_msDataFileScanHelper.TransitionIndex].PrecursorMz
+                    : _msDataFileScanHelper.ScanProvider.Transitions[_msDataFileScanHelper.TransitionIndex].ProductMz;
                 xScale.Min = mz - 1.5;
                 xScale.Max = mz + 3.5;
             }
@@ -645,7 +594,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void ZoomYAxis()
         {
-            if (_scanProvider == null || _scanProvider.Transitions.Length == 0)
+            if (_msDataFileScanHelper.ScanProvider == null || _msDataFileScanHelper.ScanProvider.Transitions.Length == 0)
                 return;
 
             var yScale = GraphPane.YAxis.Scale;
@@ -671,7 +620,7 @@ namespace pwiz.Skyline.Controls.Graphs
             else
             {
                 double minDriftTime, maxDriftTime;
-                GetDriftRange(out minDriftTime, out maxDriftTime, _source);
+                _msDataFileScanHelper.GetDriftRange(out minDriftTime, out maxDriftTime, _msDataFileScanHelper.Source);
                 if (minDriftTime > double.MinValue && maxDriftTime < double.MaxValue)
                 {
                     double range = filterBtn.Checked
@@ -693,14 +642,14 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             // Only worry about updates, if the graph is visible
             // And make sure it is not disposed, since rendering happens on a timer
-            if (!Visible || IsDisposed || _scanProvider == null)
+            if (!Visible || IsDisposed || _msDataFileScanHelper.ScanProvider == null)
                 return;
             GraphHelper.FormatGraphPane(graphControl.GraphPane);
-            if (_fullScans != null)
+            if (_msDataFileScanHelper.MsDataSpectra != null)
             {
-                leftButton.Enabled = (_scanIndex > 0);
-                rightButton.Enabled = (_scanIndex < _scanProvider.Times.Length-1);
-                lblScanId.Text = GetScanId().ToString("D"); // Not L10N
+                leftButton.Enabled = (_msDataFileScanHelper.ScanIndex > 0);
+                rightButton.Enabled = (_msDataFileScanHelper.ScanIndex < _msDataFileScanHelper.ScanProvider.Times.Length-1);
+                lblScanId.Text = _msDataFileScanHelper.GetScanIndex().ToString("D"); // Not L10N
                 if (!spectrumBtn.Checked)
                     GraphPane.SetScale(CreateGraphics());
             }
@@ -713,25 +662,6 @@ namespace pwiz.Skyline.Controls.Graphs
             graphControl.Refresh();
         }
 
-        private int[][] GetScanIds()
-        {
-            if (_scanProvider != null)
-            {
-                foreach (var transition in _scanProvider.Transitions)
-                {
-                    if (transition.Source == _scanProvider.Source)
-                        return transition.ScanIds;
-                }
-            }
-            return null;
-        }
-
-        private int GetScanId()
-        {
-            var scanIds = GetScanIds();
-            return scanIds != null ? scanIds[(int)_source][_scanIndex] : -1;
-        }
-
         public void LockYAxis(bool lockY)
         {
             graphControl.IsEnableVPan = graphControl.IsEnableVZoom = !lockY;
@@ -741,7 +671,7 @@ namespace pwiz.Skyline.Controls.Graphs
         protected override void OnClosed(EventArgs e)
         {
             _documentContainer.UnlistenUI(OnDocumentUIChanged);
-            _scanProvider.Dispose();
+            _msDataFileScanHelper.Dispose();
         }
 
         private void leftButton_Click(object sender, EventArgs e)
@@ -756,26 +686,26 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void ChangeScan(int delta)
         {
-            if (_fullScans == null)
+            if (_msDataFileScanHelper.MsDataSpectra == null)
                 return;
-            if (_scanIndex + delta < 0 || _scanIndex + delta >= _scanProvider.Times.Length)
+            if (_msDataFileScanHelper.ScanIndex + delta < 0 || _msDataFileScanHelper.ScanIndex + delta >= _msDataFileScanHelper.ScanProvider.Times.Length)
                 return;
 
-            int[][] scanIds = GetScanIds();
-            var sourceScanIds = scanIds[(int) _source];
-            int scanId = sourceScanIds[_scanIndex];
-            while ((delta < 0 && _scanIndex > 0) || (delta > 0 && _scanIndex < sourceScanIds.Length-1))
+            int[][] scanIds = _msDataFileScanHelper.GetScanIndexes();
+            var sourceScanIds = scanIds[(int) _msDataFileScanHelper.Source];
+            int scanId = sourceScanIds[_msDataFileScanHelper.ScanIndex];
+            while ((delta < 0 && _msDataFileScanHelper.ScanIndex > 0) || (delta > 0 && _msDataFileScanHelper.ScanIndex < sourceScanIds.Length-1))
             {
-                _scanIndex += delta;
-                int newScanId = sourceScanIds[_scanIndex];
+                _msDataFileScanHelper.ScanIndex += delta;
+                int newScanId = sourceScanIds[_msDataFileScanHelper.ScanIndex];
                 if (newScanId != scanId)
                 {
                     if (delta < 0)
                     {
                         // Choose first scan with a particular scanId by continuing backward until another
                         // change in scan ID is found.
-                        while (_scanIndex > 0 && sourceScanIds[_scanIndex - 1] == sourceScanIds[_scanIndex])
-                            _scanIndex--;
+                        while (_msDataFileScanHelper.ScanIndex > 0 && sourceScanIds[_msDataFileScanHelper.ScanIndex - 1] == sourceScanIds[_msDataFileScanHelper.ScanIndex])
+                            _msDataFileScanHelper.ScanIndex--;
                     }
                     break;
                 }
@@ -786,7 +716,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void comboBoxScanType_SelectedIndexChanged(object sender, EventArgs e)
         {
-            _source = SourceFromName(comboBoxScanType.Text);
+            _msDataFileScanHelper.Source = _msDataFileScanHelper.SourceFromName(comboBoxScanType.Text);
             LoadScan(true, true);
         }
 
@@ -842,12 +772,12 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             Settings.Default.FilterDriftTimesFullScan = filterBtn.Checked = filter;
             _zoomYAxis = true;
-            SetScans(_fullScans);
+            SetSpectra(_msDataFileScanHelper.MsDataSpectra);
         }
 
         private void btnIsolationWindow_Click(object sender, EventArgs e)
         {
-            var spectrum = _fullScans[0];
+            var spectrum = _msDataFileScanHelper.MsDataSpectra[0];
             var target = spectrum.Precursors[0].IsolationWindowTargetMz;
             if (!target.HasValue)
                 MessageDlg.Show(this, "No isolation target"); // Not L10N
@@ -871,7 +801,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var nearestLabel = GetNearestLabel(new PointF(e.X, e.Y));
             if (nearestLabel == null)
                 return;
-            _transitionIndex = (int) nearestLabel.Tag;
+            _msDataFileScanHelper.TransitionIndex = (int) nearestLabel.Tag;
             magnifyBtn.Checked = true;
             CreateGraph();
             ZoomXAxis();
@@ -929,7 +859,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void SelectScanType(ChromSource source)
         {
-            comboBoxScanType.SelectedItem = NameFromSource(source);
+            comboBoxScanType.SelectedItem = _msDataFileScanHelper.NameFromSource(source);
         }
 
         public void SetFilter(bool isChecked)
@@ -948,196 +878,6 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         #endregion Test support
-
-
-        /// <summary>
-        /// Provides a constant background thread with responsibility for all interactions
-        /// with <see cref="IScanProvider"/>, necessary because <see cref="MsDataFileImpl"/> objects
-        /// must be accessed on the same thread.
-        /// </summary>
-        private class BackgroundScanProvider : IDisposable
-        {
-            private const int MAX_CACHE_COUNT = 2;
-
-            private bool _disposing;
-            private int _scanIdNext;
-            private IScanProvider _scanProvider;
-            private readonly List<IScanProvider> _cachedScanProviders;
-            private readonly List<IScanProvider> _oldScanProviders;
-            // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
-            private readonly Thread _backgroundThread;
-
-            private readonly Form _form;
-            private readonly Action<MsDataSpectrum[]> _successAction;
-            private readonly Action<Exception> _failureAction;
-
-            public BackgroundScanProvider(Form form, Action<MsDataSpectrum[]> successAction, Action<Exception> failureAction)
-            {
-                _scanIdNext = -1;
-
-                _oldScanProviders = new List<IScanProvider>();
-                _cachedScanProviders = new List<IScanProvider>();
-                _backgroundThread = new Thread(Work) { Name = GetType().Name, Priority = ThreadPriority.BelowNormal, IsBackground = true };
-                _backgroundThread.Start();
-
-                _form = form;
-                _successAction = successAction;
-                _failureAction = failureAction;
-            }
-
-            public MsDataFileUri DataFilePath
-            {
-                get { return GetProviderProperty(p => p.DataFilePath, new MsDataFilePath(string.Empty)); }
-            }
-
-            public ChromSource Source
-            {
-                get { return GetProviderProperty(p => p.Source, ChromSource.unknown); }
-            }
-
-            public TransitionFullScanInfo[] Transitions
-            {
-                get { return GetProviderProperty(p => p.Transitions, new TransitionFullScanInfo[0]); }
-            }
-
-            public float[] Times
-            {
-                get { return GetProviderProperty(p => p.Times, new float[0]); }
-            }
-
-            private TProp GetProviderProperty<TProp>(Func<IScanProvider, TProp> getProp, TProp defaultValue)
-            {
-                lock (this)
-                {
-                    return _scanProvider != null ? getProp(_scanProvider) : defaultValue;
-                }
-            }
-
-            /// <summary>
-            /// Always run on a specific background thread to avoid changing threads when dealing
-            /// with a scan provider, which can mess up data readers used by ProteoWizard.
-            /// </summary>
-            private void Work()
-            {
-                while (!_disposing)
-                {
-                    IScanProvider scanProvider;
-                    int scanId;
-
-                    lock (this)
-                    {
-                        while ((_scanProvider == null || _scanIdNext == -1) && _oldScanProviders.Count == 0)
-                            Monitor.Wait(this);
-
-                        scanProvider = _scanProvider;
-                        scanId = _scanIdNext;
-                        _scanIdNext = -1;
-                    }
-
-                    if (scanProvider != null && scanId != -1)
-                    {
-                        try
-                        {
-                            var fullScans = scanProvider.GetScans(scanId);
-                            _form.Invoke(new Action(() => _successAction(fullScans)));
-                        }
-                        catch (Exception ex)
-                        {
-                            _form.Invoke(new Action(() => _failureAction(ex)));
-                        }
-                    }
-
-                    DisposeAllProviders();
-                }
-
-                lock (this)
-                {
-                    DisposeAllProviders();
-
-                    Monitor.PulseAll(this);
-                }
-            }
-
-            public void SetScanProvider(IScanProvider newScanProvider)
-            {
-                lock (this)
-                {
-                    if (_scanProvider != null)
-                    {
-                        _cachedScanProviders.Insert(0, _scanProvider);
-
-                        if (newScanProvider != null)
-                        {
-                            AdoptCachedProvider(newScanProvider);
-                        }
-
-                        // Queue for disposal
-                        if (_cachedScanProviders.Count > MAX_CACHE_COUNT)
-                        {
-                            _oldScanProviders.Add(_cachedScanProviders[MAX_CACHE_COUNT]);
-                            _cachedScanProviders.RemoveAt(MAX_CACHE_COUNT);
-                        }
-                    }
-                    _scanProvider = newScanProvider;
-                    if (newScanProvider == null)
-                    {
-                        _oldScanProviders.AddRange(_cachedScanProviders);
-                        _cachedScanProviders.Clear();
-                    }
-                    Monitor.PulseAll(this);
-                }
-            }
-
-            private void AdoptCachedProvider(IScanProvider scanProvider)
-            {
-                lock (this)
-                {
-                    for (int i = 0; i < _cachedScanProviders.Count; i++)
-                    {
-                        if (scanProvider.Adopt(_cachedScanProviders[i]))
-                        {
-                            _oldScanProviders.Add(_cachedScanProviders[i]);
-                            _cachedScanProviders.RemoveAt(i);
-                            return;
-                        }
-                    }
-                }
-            }
-
-            public void GetScans(int scanId)
-            {
-                lock (this)
-                {
-                    _scanIdNext = scanId;
-
-                    if (_scanIdNext != -1)
-                        Monitor.PulseAll(this);
-                }
-            }
-
-            private void DisposeAllProviders()
-            {
-                IScanProvider[] disposeScanProviders;
-                lock (this)
-                {
-                    disposeScanProviders = _oldScanProviders.ToArray();
-                    _oldScanProviders.Clear();
-                }
-
-                foreach (var provider in disposeScanProviders)
-                    provider.Dispose();
-            }
-
-            public void Dispose()
-            {
-                // Wait for dispose to happen on the background thread
-                lock (this)
-                {
-                    _disposing = true;
-                    SetScanProvider(null);
-                }
-            }
-        }
     }
 
     public class SpectrumItem : AbstractMSGraphItem

@@ -285,9 +285,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var retentionTime = clickedItem.GetNearestDisplayTime(displayTime);
             if (retentionTime.IsZero)
                 return;
-            int scanIndex = chromatogramGroupInfo.ScanIds != null
-                ? FindScanIndex(chromatogramGroupInfo, retentionTime.MeasuredTime, 0, chromatogramGroupInfo.Times.Length)
-                : -1;
+            int scanIndex = MsDataFileScanHelper.FindScanIndex(chromatogramGroupInfo, retentionTime.MeasuredTime);
             var transitions = new List<TransitionFullScanInfo>(graphPane.CurveList.Count);
             int transitionIndex = 0;
             foreach (var curve in GetCurveList(graphPane))
@@ -300,7 +298,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     Name = fullScanInfo.ScanName,
                     Source = fullScanInfo.ChromInfo.Source,
-                    ScanIds = fullScanInfo.ChromInfo.ScanIds,
+                    ScanIndexes = fullScanInfo.ChromInfo.ScanIndexes,
                     Color = curve.Color,
                     PrecursorMz = fullScanInfo.ChromInfo.PrecursorMz,
                     ProductMz = fullScanInfo.ChromInfo.ProductMz,
@@ -317,7 +315,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var measuredResults = DocumentUI.Settings.MeasuredResults;
                 scanProvider = new ScanProvider(_documentContainer.DocumentFilePath, FilePath,
                     chromatogramGroupInfo.Source, chromatogramGroupInfo.Times, transitions.ToArray(),
-                    () => measuredResults.LoadScanIds(FilePath));
+                    () => measuredResults.LoadMSDataFileScanIds(FilePath));
             }
             else
             {
@@ -329,17 +327,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 transitionIndex, 
                 scanIndex);
             ClickedChromatogram(this, e);
-        }
-
-        private int FindScanIndex(ChromatogramGroupInfo chromatogramGroupInfo, double retentionTime, int startIndex, int endIndex)
-        {
-            if (endIndex - startIndex <= 1)
-                return startIndex;
-
-            int index = (startIndex + endIndex) / 2;
-            return (retentionTime < chromatogramGroupInfo.Times[index])
-                ? FindScanIndex(chromatogramGroupInfo, retentionTime, startIndex, index)
-                : FindScanIndex(chromatogramGroupInfo, retentionTime, index, endIndex);
         }
 
         [Browsable(true)]
