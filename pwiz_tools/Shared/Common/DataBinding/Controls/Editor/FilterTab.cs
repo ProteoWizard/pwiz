@@ -140,6 +140,8 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             return propertyPaths;
         }
 
+        public AvailableFieldsTree AvailableFieldsTree { get { return availableFieldsTreeFilter; } }
+
         private void AvailableFieldsTreeFilterOnAfterSelect(object sender, TreeViewEventArgs e)
         {
             btnAddFilter.Enabled = availableFieldsTreeFilter.SelectedNode != null;

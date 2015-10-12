@@ -164,7 +164,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [Format(NullValue = TextUtil.EXCEL_NA)]
         public int? EndPos
         {
-            get { return DocNode.Peptide.End; }
+            get { return DocNode.Peptide.End - 1; }
         }
 
         [Format(NullValue = TextUtil.EXCEL_NA)]

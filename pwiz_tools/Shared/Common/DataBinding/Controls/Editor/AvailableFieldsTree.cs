@@ -199,10 +199,6 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             foreach (var columnDescriptor in ListChildren(parentColumnDescriptor))
             {
                 var isAdvanced = IsAdvanced(columnDescriptor, parentColumnDescriptor);
-                if (!ShowAdvancedFields && isAdvanced)
-                {
-                    continue;
-                }
                 var child = new TreeNode();
                 if (isAdvanced)
                 {
@@ -309,7 +305,17 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             }
         }
 
-        protected IList<ColumnDescriptor> ListChildren(ColumnDescriptor parent)
+        public IEnumerable<ColumnDescriptor> ListChildren(ColumnDescriptor parent)
+        {
+            var allChildren = ListAllChildren(parent);
+            if (ShowAdvancedFields)
+            {
+                return allChildren;
+            }
+            return allChildren.Where(child => !IsAdvanced(child, parent));
+        }
+
+        private IList<ColumnDescriptor> ListAllChildren(ColumnDescriptor parent)
         {
             var result = new List<ColumnDescriptor>();
             if (parent.CollectionInfo != null && parent.CollectionInfo.IsDictionary)
@@ -318,7 +324,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                 {
                     result.Add(parent.ResolveChild("Key")); // Not L10N
                 }
-                result.AddRange(ListChildren(parent.ResolveChild("Value"))); // Not L10N
+                result.AddRange(ListAllChildren(parent.ResolveChild("Value"))); // Not L10N
                 return result;
             }
             foreach (var child in parent.GetChildColumns())

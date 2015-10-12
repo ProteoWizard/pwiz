@@ -126,6 +126,12 @@
     <Compile Include="DataBinding\Controls\Editor\ChooseViewsControl.Designer.cs">
       <DependentUpon>ChooseViewsControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="DataBinding\Controls\Editor\FindColumnDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DataBinding\Controls\Editor\FindColumnDlg.Designer.cs">
+      <DependentUpon>FindColumnDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="DataBinding\Controls\QuickFilterForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -282,6 +288,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="DataBinding\Controls\Editor\FilterTab.zh-CHS.resx">
       <DependentUpon>FilterTab.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DataBinding\Controls\Editor\FindColumnDlg.resx">
+      <DependentUpon>FindColumnDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="DataBinding\Controls\Editor\ManageViewsForm.ja.resx">
       <DependentUpon>ManageViewsForm.cs</DependentUpon>

@@ -68,6 +68,7 @@ ExportMethodDlg.MethodView,TestExportDiaList
 ExportMethodDlg.TransitionListView,TestExportMethodDlg
 ExportReportDlg,TestReportSummaryWithOldReports
 FilterMatchedPeptidesDlg,TestInsert
+FindColumnDlg,TestFindColumn
 FindNodeDlg,TestCustomReportsTutorial
 FindResultsForm,TestPeakPickingTutorial
 FoldChangeGrid,TestGroupComparison

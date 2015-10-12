@@ -392,6 +392,21 @@ namespace pwiz.Common.DataBinding.Controls.Editor
 
         public TabControl TabControl { get { return tabControl1; }}
 
+        public AvailableFieldsTree ActiveAvailableFieldsTree
+        {
+            get
+            {
+                switch (TabControl.SelectedIndex)
+                {
+                    case 0:
+                        return ChooseColumnsTab.AvailableFieldsTree;
+                    case 1:
+                        return FilterTab.AvailableFieldsTree;
+                }
+                return null;
+            }
+        }
+
         public void OkDialog()
         {
             DialogResult = btnOK.DialogResult;
@@ -406,5 +421,41 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         }
 
         public event EventHandler<PropertyPathEventArgs> PropertyPathActivated;
+
+        private void toolButtonFind_Click(object sender, EventArgs e)
+        {
+            ShowFindDialog();
+        }
+
+        public FindColumnDlg GetFindColumnDlg()
+        {
+            return OwnedForms.OfType<FindColumnDlg>().FirstOrDefault();
+        }
+
+        public void ShowFindDialog()
+        {
+            FindColumnDlg findColumnDlg = GetFindColumnDlg();
+            if (findColumnDlg != null)
+            {
+                findColumnDlg.Activate();
+            }
+            else
+            {
+                findColumnDlg = new FindColumnDlg {ViewEditor = this};
+                findColumnDlg.Show(this);
+            }
+        }
+
+        private void ViewEditor_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (!e.Handled)
+            {
+                if (e.Modifiers == Keys.Control && e.KeyCode == Keys.F)
+                {
+                    e.Handled = true;
+                    ShowFindDialog();
+                }
+            }
+        }
     }
 }

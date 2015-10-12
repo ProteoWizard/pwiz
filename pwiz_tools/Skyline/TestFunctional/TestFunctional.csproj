@@ -164,6 +164,7 @@
     <Compile Include="ExportIsolationListTest.cs" />
     <Compile Include="ExportDiaListTest.cs" />
     <Compile Include="FilterMzTest.cs" />
+    <Compile Include="FindColumnTest.cs" />
     <Compile Include="FullScanGraphTest.cs" />
     <Compile Include="FullScanIdTest.cs" />
     <Compile Include="GroupComparisonTest.cs" />

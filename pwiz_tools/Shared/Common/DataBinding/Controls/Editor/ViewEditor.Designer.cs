@@ -41,6 +41,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             this.toolButtonUndo = new System.Windows.Forms.ToolStripButton();
             this.toolButtonRedo = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolButtonFind = new System.Windows.Forms.ToolStripButton();
             this.toolButtonShowAdvanced = new System.Windows.Forms.ToolStripButton();
             this.panel1 = new System.Windows.Forms.Panel();
             this.btnPreview = new System.Windows.Forms.Button();
@@ -111,6 +112,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             this.toolButtonUndo,
             this.toolButtonRedo,
             this.toolStripSeparator1,
+            this.toolButtonFind,
             this.toolButtonShowAdvanced});
             resources.ApplyResources(this.toolStrip, "toolStrip");
             this.toolStrip.Name = "toolStrip";
@@ -133,6 +135,13 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
             resources.ApplyResources(this.toolStripSeparator1, "toolStripSeparator1");
+            // 
+            // toolButtonFind
+            // 
+            this.toolButtonFind.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            resources.ApplyResources(this.toolButtonFind, "toolButtonFind");
+            this.toolButtonFind.Name = "toolButtonFind";
+            this.toolButtonFind.Click += new System.EventHandler(this.toolButtonFind_Click);
             // 
             // toolButtonShowAdvanced
             // 
@@ -179,11 +188,13 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             this.Controls.Add(this.panelViewEditor);
             this.Controls.Add(this.panelButtons);
             this.Controls.Add(this.toolStrip);
+            this.KeyPreview = true;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "ViewEditor";
             this.ShowInTaskbar = false;
             this.Load += new System.EventHandler(this.OnLoad);
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.ViewEditor_KeyDown);
             this.tabControl1.ResumeLayout(false);
             this.toolStrip.ResumeLayout(false);
             this.toolStrip.PerformLayout();
@@ -215,5 +226,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         private System.Windows.Forms.Panel panelViewEditor;
         private System.Windows.Forms.Panel panelButtons;
         private System.Windows.Forms.Button btnPreview;
+        private System.Windows.Forms.Timer timer1;
+        private System.Windows.Forms.ToolStripButton toolButtonFind;
     }
 }

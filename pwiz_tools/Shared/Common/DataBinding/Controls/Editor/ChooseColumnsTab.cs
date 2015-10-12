@@ -196,6 +196,8 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             }
         }
 
+        public AvailableFieldsTree AvailableFieldsTree { get { return availableFieldsTreeColumns; } }
+
         private void AvailableFieldsTreeColumnsOnAfterCheck(object sender, TreeViewEventArgs e)
         {
             if (InChangeView)
