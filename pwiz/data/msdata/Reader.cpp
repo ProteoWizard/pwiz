@@ -194,7 +194,7 @@ PWIZ_API_DECL CVID identifyFileFormat(const ReaderPtr& reader, const std::string
         else if (type == "Mascot Generic") return MS_Mascot_MGF_format;
         else if (type == "MSn") return MS_MS2_format;
         else if (type == "ABSciex WIFF") return MS_ABI_WIFF_format;
-        else if (type == "ABSciex T2D") return MS_AB_SCIEX_TOF_TOF_T2D_format;
+        else if (type == "ABSciex T2D") return MS_SCIEX_TOF_TOF_T2D_format;
         else if (type == "Agilent MassHunter") return MS_Agilent_MassHunter_format;
         else if (type == "Thermo RAW") return MS_Thermo_RAW_format;
         else if (type == "Waters RAW") return MS_Waters_raw_format;

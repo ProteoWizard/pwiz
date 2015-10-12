@@ -1,5 +1,5 @@
 ' Download psi-ms.obo
-psimsURL = "http://psidev.cvs.sourceforge.net/*checkout*/psidev/psi/psi-ms/mzML/controlledVocabulary/psi-ms.obo"
+psimsURL = "https://raw.githubusercontent.com/HUPO-PSI/mzML/master/cv/psi-ms.obo"
 psimsDestination = "..\..\pwiz\data\common\psi-ms.obo"
 Set objXMLHTTP = CreateObject("MSXML2.XMLHTTP")
 

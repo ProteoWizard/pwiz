@@ -41,8 +41,8 @@
 // [psi-ms.obo]
 #define _PSI_MS_OBO_
 //   format-version: 1.2
-//   data-version: 3.74.0
-//   date: 10:03:2015 16:37
+//   data-version: 3.79.0
+//   date: 07:10:2015 10:15
 //   saved-by: Gerhard Mayer
 //   auto-generated-by: OBO-Edit 2.3
 //   import: http://pato.googlecode.com/svn/trunk/quality.obo
@@ -50,8 +50,8 @@
 //   default-namespace: MS
 //   namespace-id-rule: * MS:$sequence(7,0,9999999)$
 //   remark: namespace: MS
-//   remark: version: 3.74.0
-//   remark: release date: 2015-03-10
+//   remark: version: 3.79.0
+//   remark: release date: 2015-10-07
 //   remark: coverage: Mass spectrometer output files and spectra interpretation
 //   remark: creator: Matt Chambers <matt.chambers <-at-> vanderbilt.edu>
 //   remark: creator: Andreas Bertsch <bertsch <-at-> informatik.uni-tuebingen.de>
@@ -62,15 +62,16 @@
 //   remark: creator: Gerhard Mayer <mayerg97 <-at-> rub.de>
 //   remark: publisher: HUPO Proteomics Standards Initiative Mass Spectrometry Standards Working Group and HUPO Proteomics Standards Initiative Proteomics Informatics Working Group
 //   remark: When appropriate the definition and synonyms of a term are reported exactly as in the chapter 12 of IUPAC orange book. See http://www.iupac.org/projects/2003/2003-056-2-500.html and http://mass-spec.lsu.edu/msterms/index.php/Main_Page
+//   remark: For any queries contact psidev-ms-vocab@lists.sourceforge.net
+//   remark: URL: http://psidev.cvs.sourceforge.net/viewvc/psidev/psi/psi-ms/mzML/controlledVocabulary/psi-ms.obo
 //   remark: This work is licensed under the Creative Commons Attribution 3.0 Unported License.
 //   remark: To view a copy of this license, visit http://creativecommons.org/licenses/by/3.0/ or send a letter to Creative Commons, 444 Castro Street, Suite 900, Mountain View, California, 94041, USA.
-//   ontology: pato
-//   ontology: uo
+//   ontology: ms
 //
 // [unimod.obo]
 #define _UNIMOD_OBO_
 //   format-version: 1.2
-//   date: 2015:01:12 16:11
+//   date: 2015:05:06 10:56
 //
 // [unit.obo]
 #define _UNIT_OBO_
@@ -536,8 +537,8 @@ enum PWIZ_API_DECL CVID
     /// transient recorder: A detector acquisition mode used for detecting transient signals.
     MS_transient_recorder = 1000120,
 
-    /// AB SCIEX instrument model: The brand of instruments from the joint venture between Applied Biosystems and MDS Analytical Technologies (formerly MDS SCIEX). Previously branded as \"Applied Biosystems|MDS SCIEX\".
-    MS_AB_SCIEX_instrument_model = 1000121,
+    /// SCIEX instrument model: The brand of instruments from the joint venture between Applied Biosystems and MDS Analytical Technologies (formerly MDS SCIEX). Previously branded as \"Applied Biosystems|MDS SCIEX\".
+    MS_SCIEX_instrument_model = 1000121,
 
     /// Bruker Daltonics instrument model: Bruker Daltonics' instrument model.
     MS_Bruker_Daltonics_instrument_model = 1000122,
@@ -2105,7 +2106,7 @@ enum PWIZ_API_DECL CVID
     /// time unit: Time Unit.
     MS_time_unit_OBSOLETE = 1000550,
 
-    /// Analyst: AB SCIEX or Applied Biosystems|MDS SCIEX software for data acquisition.
+    /// Analyst: SCIEX or Applied Biosystems|MDS SCIEX software for data acquisition.
     MS_Analyst = 1000551,
 
     /// maldi spot identifier: Maldi Spot Identifier.
@@ -2468,19 +2469,19 @@ enum PWIZ_API_DECL CVID
     /// Proteome Discoverer: Thermo Scientific software for data analysis of peptides and proteins.
     MS_Proteome_Discoverer = 1000650,
 
-    /// 3200 QTRAP: AB SCIEX or Applied Biosystems|MDS SCIEX QTRAP 3200.
+    /// 3200 QTRAP: SCIEX or Applied Biosystems|MDS SCIEX QTRAP 3200.
     MS_3200_QTRAP = 1000651,
 
-    /// 4800 Plus MALDI TOF/TOF: AB SCIEX or Applied Biosystems|MDS SCIEX 4800 Plus MALDI TOF-TOF Analyzer.
+    /// 4800 Plus MALDI TOF/TOF: SCIEX or Applied Biosystems|MDS SCIEX 4800 Plus MALDI TOF-TOF Analyzer.
     MS_4800_Plus_MALDI_TOF_TOF = 1000652,
 
-    /// API 3200: AB SCIEX or Applied Biosystems|MDS SCIEX API 3200 MS.
+    /// API 3200: SCIEX or Applied Biosystems|MDS SCIEX API 3200 MS.
     MS_API_3200 = 1000653,
 
-    /// API 5000: AB SCIEX or Applied Biosystems|MDS SCIEX API 5000 MS.
+    /// API 5000: SCIEX or Applied Biosystems|MDS SCIEX API 5000 MS.
     MS_API_5000 = 1000654,
 
-    /// QSTAR Elite: AB SCIEX or Applied Biosystems|MDS SCIEX QSTAR Elite.
+    /// QSTAR Elite: SCIEX or Applied Biosystems|MDS SCIEX QSTAR Elite.
     MS_QSTAR_Elite = 1000655,
 
     /// QSTAR Pulsar: Applied Biosystems|MDS SCIEX QSTAR Pulsar.
@@ -2492,16 +2493,16 @@ enum PWIZ_API_DECL CVID
     /// 4800 Proteomics Analyzer: Applied Biosystems|MDS SCIEX 4800 Proteomics Analyzer.
     MS_4800_Proteomics_Analyzer = 1000658,
 
-    /// 4000 Series Explorer Software: AB SCIEX or Applied Biosystems software for data acquisition and analysis.
+    /// 4000 Series Explorer Software: SCIEX or Applied Biosystems software for data acquisition and analysis.
     MS_4000_Series_Explorer_Software = 1000659,
 
-    /// GPS Explorer: AB SCIEX or Applied Biosystems software for data acquisition and analysis.
+    /// GPS Explorer: SCIEX or Applied Biosystems software for data acquisition and analysis.
     MS_GPS_Explorer = 1000661,
 
-    /// LightSight Software: AB SCIEX or Applied Biosystems|MDS SCIEX software metabolite identification.
+    /// LightSight Software: SCIEX or Applied Biosystems|MDS SCIEX software metabolite identification.
     MS_LightSight_Software = 1000662,
 
-    /// ProteinPilot Software: AB SCIEX or Applied Biosystems|MDS SCIEX software for protein ID and quant.
+    /// ProteinPilot Software: SCIEX or Applied Biosystems|MDS SCIEX software for protein ID and quant.
     MS_ProteinPilot_Software = 1000663,
 
     /// TissueView Software: Applied Biosystems|MDS SCIEX software for tissue imaging.
@@ -2528,7 +2529,7 @@ enum PWIZ_API_DECL CVID
     /// Pro BLAST: Applied Biosystems|MDS SCIEX software for MS-BLAST identification.
     MS_Pro_BLAST = 1000671,
 
-    /// Cliquid: AB SCIEX Cliquid software for data analysis and quantitation.
+    /// Cliquid: SCIEX Cliquid software for data analysis and quantitation.
     MS_Cliquid = 1000672,
 
     /// MIDAS Workflow Designer: Applied Biosystems|MDS SCIEX software for MRM assay development.
@@ -2582,8 +2583,8 @@ enum PWIZ_API_DECL CVID
     /// Agilent software: Agilent software for data acquisition and analysis.
     MS_Agilent_software = 1000689,
 
-    /// AB SCIEX software: AB SCIEX or Applied Biosystems software for data acquisition and analysis.
-    MS_AB_SCIEX_software = 1000690,
+    /// SCIEX software: SCIEX or Applied Biosystems software for data acquisition and analysis.
+    MS_SCIEX_software = 1000690,
 
     /// Applied Biosystems software: Applied Biosystems|MDS SCIEX software for data acquisition and analysis.
     MS_Applied_Biosystems_software = 1000691,
@@ -3155,7 +3156,7 @@ enum PWIZ_API_DECL CVID
     /// collision gas pressure: The gas pressure of the collision gas used for collisional excitation.
     MS_collision_gas_pressure = 1000869,
 
-    /// 4000 QTRAP: AB SCIEX or Applied Biosystems|MDS SCIEX QTRAP 4000.
+    /// 4000 QTRAP: SCIEX or Applied Biosystems|MDS SCIEX QTRAP 4000.
     MS_4000_QTRAP_OBSOLETE = 1000870,
 
     /// SRM software: Software used to predict, select, or optimize transitions or analyze the results of selected reaction monitoring runs.
@@ -3347,7 +3348,7 @@ enum PWIZ_API_DECL CVID
     /// QTRAP 5500: Applied Biosystems|MDS SCIEX QTRAP 5500.
     MS_QTRAP_5500 = 1000931,
 
-    /// TripleTOF 5600: AB SCIEX TripleTOF 5600, a quadrupole - quadrupole - time-of-flight mass spectrometer.
+    /// TripleTOF 5600: SCIEX TripleTOF 5600, a quadrupole - quadrupole - time-of-flight mass spectrometer.
     MS_TripleTOF_5600 = 1000932,
 
     /// protein modifications: Encoding of modifications of the protein sequence from the specified accession, written in PEFF notation.
@@ -4010,8 +4011,8 @@ enum PWIZ_API_DECL CVID
     /// PerSeptive PKS format: PerSeptive peak list file format.
     MS_PerSeptive_PKS_format = 1001245,
 
-    /// Sciex API III format: PE Sciex peak list file format.
-    MS_Sciex_API_III_format = 1001246,
+    /// SCIEX API III format: PE SCIEX peak list file format.
+    MS_SCIEX_API_III_format = 1001246,
 
     /// Bruker XML format: Bruker data exchange XML format.
     MS_Bruker_XML_format = 1001247,
@@ -4682,17 +4683,17 @@ enum PWIZ_API_DECL CVID
     /// null-terminated ASCII string: Sequence of zero or more non-zero ASCII characters terminated by a single null (0) byte.
     MS_null_terminated_ASCII_string = 1001479,
 
-    /// AB SCIEX TOF/TOF nativeID format: Native format defined by jobRun=xsd:nonNegativeInteger spotLabel=xsd:string spectrum=xsd:nonNegativeInteger.
-    MS_AB_SCIEX_TOF_TOF_nativeID_format = 1001480,
+    /// SCIEX TOF/TOF nativeID format: Native format defined by jobRun=xsd:nonNegativeInteger spotLabel=xsd:string spectrum=xsd:nonNegativeInteger.
+    MS_SCIEX_TOF_TOF_nativeID_format = 1001480,
 
-    /// AB SCIEX TOF/TOF database: Applied Biosystems/MDS Analytical Technologies TOF/TOF instrument database.
-    MS_AB_SCIEX_TOF_TOF_database = 1001481,
+    /// SCIEX TOF/TOF database: Applied Biosystems/MDS Analytical Technologies TOF/TOF instrument database.
+    MS_SCIEX_TOF_TOF_database = 1001481,
 
-    /// TOF/TOF 5800: AB SCIEX or Applied Biosystems|MDS Analytical Technologies AB SCIEX TOF/TOF 5800 Analyzer.
-    MS_TOF_TOF_5800 = 1001482,
+    /// 5800 TOF/TOF: SCIEX 5800 TOF-TOF Analyzer.
+    MS_5800_TOF_TOF = 1001482,
 
-    /// AB SCIEX TOF/TOF Series Explorer Software: AB SCIEX or Applied Biosystems software for TOF/TOF data acquisition and analysis.
-    MS_AB_SCIEX_TOF_TOF_Series_Explorer_Software = 1001483,
+    /// SCIEX TOF/TOF Series Explorer Software: SCIEX or Applied Biosystems software for TOF/TOF data acquisition and analysis.
+    MS_SCIEX_TOF_TOF_Series_Explorer_Software = 1001483,
 
     /// intensity normalization: Normalization of data point intensities.
     MS_intensity_normalization = 1001484,
@@ -4913,11 +4914,11 @@ enum PWIZ_API_DECL CVID
     /// MALDI Solutions: Shimadzu Biotech software for data acquisition, processing, and analysis.
     MS_MALDI_Solutions = 1001558,
 
-    /// AB SCIEX TOF/TOF T2D nativeID format: Native format defined by file=xsd:IDREF.
-    MS_AB_SCIEX_TOF_TOF_T2D_nativeID_format = 1001559,
+    /// SCIEX TOF/TOF T2D nativeID format: Native format defined by file=xsd:IDREF.
+    MS_SCIEX_TOF_TOF_T2D_nativeID_format = 1001559,
 
-    /// AB SCIEX TOF/TOF T2D format: Applied Biosystems/MDS Analytical Technologies TOF/TOF instrument export format.
-    MS_AB_SCIEX_TOF_TOF_T2D_format = 1001560,
+    /// SCIEX TOF/TOF T2D format: Applied Biosystems/MDS Analytical Technologies TOF/TOF instrument export format.
+    MS_SCIEX_TOF_TOF_T2D_format = 1001560,
 
     /// Scaffold: Scaffold analysis software.
     MS_Scaffold = 1001561,
@@ -5762,7 +5763,7 @@ enum PWIZ_API_DECL CVID
     /// spectral counting quantitation analysis: Spectral counting workflow (number of identified MS2 spectra as approximation of peptide / protein quant).
     MS_spectral_counting_quantitation_analysis = 1001836,
 
-    /// iTRAQ quantitation analysis: Quantification analysis using the AB SCIEX iTRAQ isobaric labelling workflow, wherein 2-8 reporter ions are measured in MS2 spectra near 114 m/z.
+    /// iTRAQ quantitation analysis: Quantification analysis using the SCIEX iTRAQ isobaric labelling workflow, wherein 2-8 reporter ions are measured in MS2 spectra near 114 m/z.
     MS_iTRAQ_quantitation_analysis = 1001837,
 
     /// SRM quantitation analysis: Selected Reaction Monitoring workflow (XIC quantitation of precursor / fragment mass pair).
@@ -5855,7 +5856,7 @@ enum PWIZ_API_DECL CVID
     /// Progenesis normalization: Normalization as performed by Progenesis LC-MS.
     MS_Progenesis_normalization = 1001867,
 
-    /// distinct peptide-level q-value: Estimation of the q-value for distinct peptides once redundant identifications of the same peptide have been removed (id est multiple PSMs have been collapsed to one entry).
+    /// distinct peptide-level q-value: Estimation of the q-value for distinct peptides once redundant identifications of the same peptide have been removed (id est multiple PSMs, possibly with different mass modifications, mapping to the same sequence have been collapsed to one entry).
     MS_distinct_peptide_level_q_value = 1001868,
 
     /// protein-level q-value: Estimation of the q-value for proteins.
@@ -7889,7 +7890,7 @@ enum PWIZ_API_DECL CVID
     /// UIMF nativeID format: Native format defined by frame=xsd:nonNegativeInteger scan=xsd:nonNegativeInteger frameType=xsd:nonNegativeInteger.
     MS_UIMF_nativeID_format = 1002532,
 
-    /// TripleTOF 6600: AB SCIEX TripleTOF 6600, a quadrupole - quadrupole - time-of-flight mass spectrometer.
+    /// TripleTOF 6600: SCIEX TripleTOF 6600, a quadrupole - quadrupole - time-of-flight mass spectrometer.
     MS_TripleTOF_6600 = 1002533,
 
     /// ProLuCID:xcorr: The ProLuCID result 'XCorr'.
@@ -8008,6 +8009,72 @@ enum PWIZ_API_DECL CVID
 
     /// spectrum identification statistical threshold: Estimated statistical threshold used for spectrum identification.
     MS_spectrum_identification_statistical_threshold = 1002573,
+
+    /// ASAPRatio: A program in the TPP that calculates PSM, peptide, and protein-level abundances based on 2-channel isotope-labelled data such as ICAT, SILAC, etc.
+    MS_ASAPRatio = 1002574,
+
+    /// Tide: Tide open-source sequence search program developed at the University of Washington.
+    MS_Tide = 1002575,
+
+    /// Andromeda result file: Andromeda result file output format.
+    MS_Andromeda_result_file = 1002576,
+
+    /// 2000 QTRAP: SCIEX 2000 QTRAP.
+    MS_2000_QTRAP = 1002577,
+
+    /// 2500 QTRAP: SCIEX 2500 QTRAP.
+    MS_2500_QTRAP = 1002578,
+
+    /// 3500 QTRAP: SCIEX 3500 QTRAP.
+    MS_3500_QTRAP = 1002579,
+
+    /// QTRAP 4500: SCIEX QTRAP 4500.
+    MS_QTRAP_4500 = 1002580,
+
+    /// QTRAP 6500: SCIEX QTRAP 6500.
+    MS_QTRAP_6500 = 1002581,
+
+    /// QTRAP 6500+: SCIEX QTRAP 6500+.
+    MS_QTRAP_6500_ = 1002582,
+
+    /// TripleTOF 4600: SCIEX TripleTOF 4600 time-of-flight mass spectrometer.
+    MS_TripleTOF_4600 = 1002583,
+
+    /// TripleTOF 5600+: SCIEX TripleTOF 5600+ time-of-flight mass spectrometer.
+    MS_TripleTOF_5600_ = 1002584,
+
+    /// API 100: Applied Biosystems/MDS SCIEX API 100 MS.
+    MS_API_100 = 1002585,
+
+    /// API 100LC: Applied Biosystems/MDS SCIEX API 100LC MS.
+    MS_API_100LC = 1002586,
+
+    /// API 165: Applied Biosystems/MDS SCIEX API 165 MS.
+    MS_API_165 = 1002587,
+
+    /// API 300: Applied Biosystems/MDS SCIEX API 300 MS.
+    MS_API_300 = 1002588,
+
+    /// API 350: Applied Biosystems/MDS SCIEX API 350 MS.
+    MS_API_350 = 1002589,
+
+    /// API 365: Applied Biosystems/MDS SCIEX API 365 MS.
+    MS_API_365 = 1002590,
+
+    /// Triple Quad 3500: SCIEX Triple Quad 3500.
+    MS_Triple_Quad_3500 = 1002591,
+
+    /// Triple Quad 4500: SCIEX Triple Quad 4500.
+    MS_Triple_Quad_4500 = 1002592,
+
+    /// Triple Quad 5500: SCIEX Triple Quad 5500.
+    MS_Triple_Quad_5500 = 1002593,
+
+    /// Triple Quad 6500: SCIEX Triple Quad 6500.
+    MS_Triple_Quad_6500 = 1002594,
+
+    /// Triple Quad 6500+: SCIEX Triple Quad 6500+.
+    MS_Triple_Quad_6500_ = 1002595,
 
     /// DeBunker:score threshold: Threshold for DeBunker PTM site location score.
     MS_DeBunker_score_threshold = 10025560,
@@ -8147,7 +8214,7 @@ enum PWIZ_API_DECL CVID
     /// HNE: 4-hydroxynonenal (HNE).
     UNIMOD_HNE = 100000053,
 
-    /// Glucuronyl: N-glucuronylation.
+    /// Glucuronyl: Hexuronic acid.
     UNIMOD_Glucuronyl = 100000054,
 
     /// Glutathione: Glutathione disulfide.
@@ -8351,8 +8418,8 @@ enum PWIZ_API_DECL CVID
     /// Hex(1)HexNAc(1)NeuAc(2): Hex1HexNAc1NeuAc2.
     UNIMOD_Hex_1_HexNAc_1_NeuAc_2_ = 100000160,
 
-    /// Hex(3)HexNAc(2)P(1): Hex3HexNAc2P1.
-    UNIMOD_Hex_3_HexNAc_2_P_1_ = 100000161,
+    /// Hex(3)HexNAc(2)Phos(1): Hex(3) HexNAc(2) Phos.
+    UNIMOD_Hex_3_HexNAc_2_Phos_1_ = 100000161,
 
     /// Delta:S(-1)Se(1): Selenium replaces sulfur.
     UNIMOD_Delta_S__1_Se_1_ = 100000162,
@@ -8777,7 +8844,7 @@ enum PWIZ_API_DECL CVID
     /// Ser->LacticAcid: Lactic acid from N-term Ser.
     UNIMOD_Ser__LacticAcid = 100000403,
 
-    /// Phosphoadenosine: AMP binding site.
+    /// Phosphoadenosine: AMP.
     UNIMOD_Phosphoadenosine = 100000405,
 
     /// Hydroxycinnamyl: Hydroxycinnamyl.
@@ -10988,13 +11055,13 @@ enum PWIZ_API_DECL CVID
     /// Hex(5)HexNAc(4)NeuAc(2): Hex(5) HexNAc(4) NeuAc(2).
     UNIMOD_Hex_5_HexNAc_4_NeuAc_2_ = 100001408,
 
-    /// Hex(5)HexNAc(4)NeuAc(1): Hex(5) HexNAc(4) NeuAc(1).
+    /// Hex(5)HexNAc(4)NeuAc(1): Hex(5) HexNAc(4) NeuAc.
     UNIMOD_Hex_5_HexNAc_4_NeuAc_1_ = 100001409,
 
-    /// dHex(1)Hex(5)HexNAc(4)NeuAc(1): DHex(1) Hex(5) HexNAc(4) NeuAc(1).
+    /// dHex(1)Hex(5)HexNAc(4)NeuAc(1): DHex Hex(5) HexNAc(4) NeuAc.
     UNIMOD_dHex_1_Hex_5_HexNAc_4_NeuAc_1_ = 100001410,
 
-    /// dHex(1)Hex(5)HexNAc(4)NeuAc(2): DHex(1) Hex(5) HexNAc(4) NeuAc(2).
+    /// dHex(1)Hex(5)HexNAc(4)NeuAc(2): DHex Hex(5) HexNAc(4) NeuAc(2).
     UNIMOD_dHex_1_Hex_5_HexNAc_4_NeuAc_2_ = 100001411,
 
     /// s-GlcNAc: O3S1HexNAc1.
@@ -11014,6 +11081,1059 @@ enum PWIZ_API_DECL CVID
 
     /// spermidine: Spermidine adduct.
     UNIMOD_spermidine = 100001421,
+
+    /// Biotin:Thermo-21330: Biotin_PEG4.
+    UNIMOD_Biotin_Thermo_21330 = 100001423,
+
+    /// Pentose: Pentose.
+    UNIMOD_Pentose = 100001425,
+
+    /// Hex(1)Pent(1): Hex Pent.
+    UNIMOD_Hex_1_Pent_1_ = 100001426,
+
+    /// Hex(1)HexA(1): Hex HexA.
+    UNIMOD_Hex_1_HexA_1_ = 100001427,
+
+    /// Hex(1)Pent(2): Hex Pent(2).
+    UNIMOD_Hex_1_Pent_2_ = 100001428,
+
+    /// Hex(1)HexNAc(1)Phos(1): Hex HexNAc Phos.
+    UNIMOD_Hex_1_HexNAc_1_Phos_1_ = 100001429,
+
+    /// Hex(1)HexNAc(1)Sulf(1): Hex HexNAc Sulf.
+    UNIMOD_Hex_1_HexNAc_1_Sulf_1_ = 100001430,
+
+    /// Hex(1)NeuAc(1): Hex NeuAc.
+    UNIMOD_Hex_1_NeuAc_1_ = 100001431,
+
+    /// Hex(1)NeuGc(1): Hex NeuGc.
+    UNIMOD_Hex_1_NeuGc_1_ = 100001432,
+
+    /// HexNAc(3): HexNAc(3).
+    UNIMOD_HexNAc_3_ = 100001433,
+
+    /// HexNAc(1)NeuAc(1): HexNAc NeuAc.
+    UNIMOD_HexNAc_1_NeuAc_1_ = 100001434,
+
+    /// HexNAc(1)NeuGc(1): HexNAc NeuGc.
+    UNIMOD_HexNAc_1_NeuGc_1_ = 100001435,
+
+    /// Hex(1)HexNAc(1)dHex(1)Me(1): Hex HexNAc dHex Me.
+    UNIMOD_Hex_1_HexNAc_1_dHex_1_Me_1_ = 100001436,
+
+    /// Hex(1)HexNAc(1)dHex(1)Me(2): Hex HexNAc dHex Me(2).
+    UNIMOD_Hex_1_HexNAc_1_dHex_1_Me_2_ = 100001437,
+
+    /// Hex(2)HexNAc(1): Hex(2) HexNAc.
+    UNIMOD_Hex_2_HexNAc_1_ = 100001438,
+
+    /// Hex(1)HexA(1)HexNAc(1): Hex HexA HexNAc.
+    UNIMOD_Hex_1_HexA_1_HexNAc_1_ = 100001439,
+
+    /// Hex(2)HexNAc(1)Me(1): Hex(2) HexNAc Me.
+    UNIMOD_Hex_2_HexNAc_1_Me_1_ = 100001440,
+
+    /// Hex(3)Phos(1): Hex(3) Phos.
+    UNIMOD_Hex_3_Phos_1_ = 100001441,
+
+    /// Hex(1)NeuAc(1)Pent(1): Hex NeuAc Pent.
+    UNIMOD_Hex_1_NeuAc_1_Pent_1_ = 100001442,
+
+    /// Hex(2)HexNAc(1)Sulf(1): Hex(2) HexNAc Sulf.
+    UNIMOD_Hex_2_HexNAc_1_Sulf_1_ = 100001443,
+
+    /// Hex(2)NeuAc(1): Hex(2) NeuAc.
+    UNIMOD_Hex_2_NeuAc_1_ = 100001444,
+
+    /// dHex(2)Hex(2): Hex2 dHex2.
+    UNIMOD_dHex_2_Hex_2_ = 100001445,
+
+    /// dHex(1)Hex(2)HexA(1): DHex Hex(2) HexA.
+    UNIMOD_dHex_1_Hex_2_HexA_1_ = 100001446,
+
+    /// Hex(1)HexNAc(2)Sulf(1): Hex HexNAc(2) Sulf.
+    UNIMOD_Hex_1_HexNAc_2_Sulf_1_ = 100001447,
+
+    /// Hex(4): Hex(4).
+    UNIMOD_Hex_4_ = 100001448,
+
+    /// dHex(1)Hex(2)HexNAc(2)Pent(1): DHex Hex(2) HexNAc(2) Pent.
+    UNIMOD_dHex_1_Hex_2_HexNAc_2_Pent_1_ = 100001449,
+
+    /// Hex(2)HexNAc(2)NeuAc(1): Hex(2) HexNAc(2) NeuAc.
+    UNIMOD_Hex_2_HexNAc_2_NeuAc_1_ = 100001450,
+
+    /// Hex(3)HexNAc(2)Pent(1): Hex(3) HexNAc(2) Pent.
+    UNIMOD_Hex_3_HexNAc_2_Pent_1_ = 100001451,
+
+    /// Hex(4)HexNAc(2): Hex(4) HexNAc(2).
+    UNIMOD_Hex_4_HexNAc_2_ = 100001452,
+
+    /// dHex(1)Hex(4)HexNAc(1)Pent(1): DHex Hex(4) HexNAc Pent.
+    UNIMOD_dHex_1_Hex_4_HexNAc_1_Pent_1_ = 100001453,
+
+    /// dHex(1)Hex(3)HexNAc(2)Pent(1): DHex Hex(3) HexNAc(2) Pent.
+    UNIMOD_dHex_1_Hex_3_HexNAc_2_Pent_1_ = 100001454,
+
+    /// Hex(3)HexNAc(2)NeuAc(1): Hex(3) HexNAc(2) NeuAc.
+    UNIMOD_Hex_3_HexNAc_2_NeuAc_1_ = 100001455,
+
+    /// Hex(4)HexNAc(2)Pent(1): Hex(4) HexNAc(2) Pent.
+    UNIMOD_Hex_4_HexNAc_2_Pent_1_ = 100001456,
+
+    /// Hex(3)HexNAc(3)Pent(1): Hex(3) HexNAc(3) Pent.
+    UNIMOD_Hex_3_HexNAc_3_Pent_1_ = 100001457,
+
+    /// Hex(5)HexNAc(2)Phos(1): Hex(5) HexNAc(2) Phos.
+    UNIMOD_Hex_5_HexNAc_2_Phos_1_ = 100001458,
+
+    /// dHex(1)Hex(4)HexNAc(2)Pent(1): DHex Hex(4) HexNAc(2) Pent.
+    UNIMOD_dHex_1_Hex_4_HexNAc_2_Pent_1_ = 100001459,
+
+    /// Hex(7)HexNAc(1): Hex(7) HexNAc.
+    UNIMOD_Hex_7_HexNAc_1_ = 100001460,
+
+    /// Hex(4)HexNAc(2)NeuAc(1): Hex(4) HexNAc(2) NeuAc.
+    UNIMOD_Hex_4_HexNAc_2_NeuAc_1_ = 100001461,
+
+    /// dHex(1)Hex(5)HexNAc(2): DHex Hex(5) HexNAc(2).
+    UNIMOD_dHex_1_Hex_5_HexNAc_2_ = 100001462,
+
+    /// dHex(1)Hex(3)HexNAc(3)Pent(1): DHex Hex(3) HexNAc(3) Pent.
+    UNIMOD_dHex_1_Hex_3_HexNAc_3_Pent_1_ = 100001463,
+
+    /// Hex(3)HexNAc(4)Sulf(1): Hex(3) HexNAc(4) Sulf.
+    UNIMOD_Hex_3_HexNAc_4_Sulf_1_ = 100001464,
+
+    /// Hex(6)HexNAc(2): Hex(6) HexNAc(2).
+    UNIMOD_Hex_6_HexNAc_2_ = 100001465,
+
+    /// Hex(4)HexNAc(3)Pent(1): Hex(4) HexNAc(3) Pent.
+    UNIMOD_Hex_4_HexNAc_3_Pent_1_ = 100001466,
+
+    /// dHex(1)Hex(4)HexNAc(3): DHex Hex(4) HexNAc(3).
+    UNIMOD_dHex_1_Hex_4_HexNAc_3_ = 100001467,
+
+    /// Hex(5)HexNAc(3): Hex(5) HexNAc(3).
+    UNIMOD_Hex_5_HexNAc_3_ = 100001468,
+
+    /// Hex(3)HexNAc(4)Pent(1): Hex(3) HexNAc(4) Pent.
+    UNIMOD_Hex_3_HexNAc_4_Pent_1_ = 100001469,
+
+    /// Hex(6)HexNAc(2)Phos(1): Hex(6) HexNAc(2) Phos.
+    UNIMOD_Hex_6_HexNAc_2_Phos_1_ = 100001470,
+
+    /// dHex(1)Hex(4)HexNAc(3)Sulf(1): DHex Hex(4) HexNAc(3) Sulf.
+    UNIMOD_dHex_1_Hex_4_HexNAc_3_Sulf_1_ = 100001471,
+
+    /// dHex(1)Hex(5)HexNAc(2)Pent(1): DHex Hex(5) HexNAc(2) Pent.
+    UNIMOD_dHex_1_Hex_5_HexNAc_2_Pent_1_ = 100001472,
+
+    /// Hex(8)HexNAc(1): Hex(8) HexNAc.
+    UNIMOD_Hex_8_HexNAc_1_ = 100001473,
+
+    /// dHex(1)Hex(3)HexNAc(3)Pent(2): DHex Hex(3) HexNAc(3) Pent(2).
+    UNIMOD_dHex_1_Hex_3_HexNAc_3_Pent_2_ = 100001474,
+
+    /// dHex(2)Hex(3)HexNAc(3)Pent(1): DHex(2) Hex(3) HexNAc(3) Pent.
+    UNIMOD_dHex_2_Hex_3_HexNAc_3_Pent_1_ = 100001475,
+
+    /// dHex(1)Hex(3)HexNAc(4)Sulf(1): DHex Hex(3) HexNAc(4) Sulf.
+    UNIMOD_dHex_1_Hex_3_HexNAc_4_Sulf_1_ = 100001476,
+
+    /// dHex(1)Hex(6)HexNAc(2): DHex Hex(6) HexNAc(2).
+    UNIMOD_dHex_1_Hex_6_HexNAc_2_ = 100001477,
+
+    /// dHex(1)Hex(4)HexNAc(3)Pent(1): DHex Hex(4) HexNAc(3) Pent.
+    UNIMOD_dHex_1_Hex_4_HexNAc_3_Pent_1_ = 100001478,
+
+    /// Hex(4)HexNAc(4)Sulf(1): Hex(4) HexNAc(4) Sulf.
+    UNIMOD_Hex_4_HexNAc_4_Sulf_1_ = 100001479,
+
+    /// Hex(7)HexNAc(2): Hex(7) HexNAc(2).
+    UNIMOD_Hex_7_HexNAc_2_ = 100001480,
+
+    /// dHex(2)Hex(4)HexNAc(3): DHex(2) Hex(4) HexNAc(3).
+    UNIMOD_dHex_2_Hex_4_HexNAc_3_ = 100001481,
+
+    /// Hex(5)HexNAc(3)Pent(1): Hex(5) HexNAc(3) Pent.
+    UNIMOD_Hex_5_HexNAc_3_Pent_1_ = 100001482,
+
+    /// Hex(4)HexNAc(3)NeuGc(1): Hex(4) HexNAc(3) NeuGc.
+    UNIMOD_Hex_4_HexNAc_3_NeuGc_1_ = 100001483,
+
+    /// dHex(1)Hex(5)HexNAc(3): DHex Hex(5) HexNAc(3).
+    UNIMOD_dHex_1_Hex_5_HexNAc_3_ = 100001484,
+
+    /// dHex(1)Hex(3)HexNAc(4)Pent(1): DHex Hex(3) HexNAc(4) Pent.
+    UNIMOD_dHex_1_Hex_3_HexNAc_4_Pent_1_ = 100001485,
+
+    /// Hex(3)HexNAc(5)Sulf(1): Hex(3) HexNAc(5) Sulf.
+    UNIMOD_Hex_3_HexNAc_5_Sulf_1_ = 100001486,
+
+    /// Hex(6)HexNAc(3): Hex(6) HexNAc(3).
+    UNIMOD_Hex_6_HexNAc_3_ = 100001487,
+
+    /// Hex(3)HexNAc(4)NeuAc(1): Hex(3) HexNAc(4) NeuAc.
+    UNIMOD_Hex_3_HexNAc_4_NeuAc_1_ = 100001488,
+
+    /// Hex(4)HexNAc(4)Pent(1): Hex(4) HexNAc(4) Pent.
+    UNIMOD_Hex_4_HexNAc_4_Pent_1_ = 100001489,
+
+    /// Hex(7)HexNAc(2)Phos(1): Hex(7) HexNAc(2) Phos.
+    UNIMOD_Hex_7_HexNAc_2_Phos_1_ = 100001490,
+
+    /// Hex(4)HexNAc(4)Me(2)Pent(1): Hex(4) HexNAc(4) Me(2) Pent.
+    UNIMOD_Hex_4_HexNAc_4_Me_2_Pent_1_ = 100001491,
+
+    /// dHex(1)Hex(3)HexNAc(3)Pent(3): DHex Hex(3) HexNAc(3) Pent(3).
+    UNIMOD_dHex_1_Hex_3_HexNAc_3_Pent_3_ = 100001492,
+
+    /// dHex(1)Hex(5)HexNAc(3)Sulf(1): DHex Hex(5) HexNAc(3) Sulf.
+    UNIMOD_dHex_1_Hex_5_HexNAc_3_Sulf_1_ = 100001493,
+
+    /// dHex(2)Hex(3)HexNAc(3)Pent(2): DHex(2) Hex(3) HexNAc(3) Pent(2).
+    UNIMOD_dHex_2_Hex_3_HexNAc_3_Pent_2_ = 100001494,
+
+    /// Hex(6)HexNAc(3)Phos(1): Hex(6) HexNAc(3) Phos.
+    UNIMOD_Hex_6_HexNAc_3_Phos_1_ = 100001495,
+
+    /// Hex(4)HexNAc(5): Hex(4) HexNAc(5).
+    UNIMOD_Hex_4_HexNAc_5_ = 100001496,
+
+    /// dHex(3)Hex(3)HexNAc(3)Pent(1): DHex(3) Hex(3) HexNAc(3) Pent.
+    UNIMOD_dHex_3_Hex_3_HexNAc_3_Pent_1_ = 100001497,
+
+    /// dHex(2)Hex(4)HexNAc(3)Pent(1): DHex(2) Hex(4) HexNAc(3) Pent.
+    UNIMOD_dHex_2_Hex_4_HexNAc_3_Pent_1_ = 100001498,
+
+    /// dHex(1)Hex(4)HexNAc(4)Sulf(1): DHex Hex(4) HexNAc(4) Sulf.
+    UNIMOD_dHex_1_Hex_4_HexNAc_4_Sulf_1_ = 100001499,
+
+    /// dHex(1)Hex(7)HexNAc(2): DHex Hex(7) HexNAc(2).
+    UNIMOD_dHex_1_Hex_7_HexNAc_2_ = 100001500,
+
+    /// dHex(1)Hex(4)HexNAc(3)NeuAc(1): DHex Hex(4) HexNAc(3) NeuAc.
+    UNIMOD_dHex_1_Hex_4_HexNAc_3_NeuAc_1_ = 100001501,
+
+    /// Hex(7)HexNAc(2)Phos(2): Hex(7) HexNAc(2) Phos(2).
+    UNIMOD_Hex_7_HexNAc_2_Phos_2_ = 100001502,
+
+    /// Hex(5)HexNAc(4)Sulf(1): Hex(5) HexNAc(4) Sulf.
+    UNIMOD_Hex_5_HexNAc_4_Sulf_1_ = 100001503,
+
+    /// Hex(8)HexNAc(2): Hex(8) HexNAc(2).
+    UNIMOD_Hex_8_HexNAc_2_ = 100001504,
+
+    /// dHex(1)Hex(3)HexNAc(4)Pent(2): DHex Hex(3) HexNAc(4) Pent(2).
+    UNIMOD_dHex_1_Hex_3_HexNAc_4_Pent_2_ = 100001505,
+
+    /// dHex(1)Hex(4)HexNAc(3)NeuGc(1): DHex Hex(4) HexNAc(3) NeuGc.
+    UNIMOD_dHex_1_Hex_4_HexNAc_3_NeuGc_1_ = 100001506,
+
+    /// dHex(2)Hex(3)HexNAc(4)Pent(1): DHex(2) Hex(3) HexNAc(4) Pent.
+    UNIMOD_dHex_2_Hex_3_HexNAc_4_Pent_1_ = 100001507,
+
+    /// dHex(1)Hex(3)HexNAc(5)Sulf(1): DHex Hex(3) HexNAc(5) Sulf.
+    UNIMOD_dHex_1_Hex_3_HexNAc_5_Sulf_1_ = 100001508,
+
+    /// dHex(1)Hex(6)HexNAc(3): DHex Hex(6) HexNAc(3).
+    UNIMOD_dHex_1_Hex_6_HexNAc_3_ = 100001509,
+
+    /// dHex(1)Hex(3)HexNAc(4)NeuAc(1): DHex Hex(3) HexNAc(4) NeuAc.
+    UNIMOD_dHex_1_Hex_3_HexNAc_4_NeuAc_1_ = 100001510,
+
+    /// dHex(3)Hex(3)HexNAc(4): DHex(3) Hex(3) HexNAc(4).
+    UNIMOD_dHex_3_Hex_3_HexNAc_4_ = 100001511,
+
+    /// dHex(1)Hex(4)HexNAc(4)Pent(1): DHex Hex(4) HexNAc(4) Pent.
+    UNIMOD_dHex_1_Hex_4_HexNAc_4_Pent_1_ = 100001512,
+
+    /// Hex(4)HexNAc(5)Sulf(1): Hex(4) HexNAc(5) Sulf.
+    UNIMOD_Hex_4_HexNAc_5_Sulf_1_ = 100001513,
+
+    /// Hex(7)HexNAc(3): Hex(7) HexNAc(3).
+    UNIMOD_Hex_7_HexNAc_3_ = 100001514,
+
+    /// dHex(1)Hex(4)HexNAc(3)NeuAc(1)Sulf(1): DHex Hex(4) HexNAc(3) NeuAc Sulf.
+    UNIMOD_dHex_1_Hex_4_HexNAc_3_NeuAc_1_Sulf_1_ = 100001515,
+
+    /// Hex(5)HexNAc(4)Me(2)Pent(1): Hex(5) HexNAc(4) Me(2) Pent.
+    UNIMOD_Hex_5_HexNAc_4_Me_2_Pent_1_ = 100001516,
+
+    /// Hex(3)HexNAc(6)Sulf(1): Hex(3) HexNAc(6) Sulf.
+    UNIMOD_Hex_3_HexNAc_6_Sulf_1_ = 100001517,
+
+    /// dHex(1)Hex(6)HexNAc(3)Sulf(1): DHex Hex(6) HexNAc(3) Sulf.
+    UNIMOD_dHex_1_Hex_6_HexNAc_3_Sulf_1_ = 100001518,
+
+    /// dHex(1)Hex(4)HexNAc(5): DHex Hex(4) HexNAc(5).
+    UNIMOD_dHex_1_Hex_4_HexNAc_5_ = 100001519,
+
+    /// dHex(1)Hex(5)HexA(1)HexNAc(3)Sulf(1): DHex Hex(5) HexA HexNAc(3) Sulf.
+    UNIMOD_dHex_1_Hex_5_HexA_1_HexNAc_3_Sulf_1_ = 100001520,
+
+    /// Hex(7)HexNAc(3)Phos(1): Hex(7) HexNAc(3) Phos.
+    UNIMOD_Hex_7_HexNAc_3_Phos_1_ = 100001521,
+
+    /// Hex(6)HexNAc(4)Me(3): Hex(6) HexNAc(4) Me(3).
+    UNIMOD_Hex_6_HexNAc_4_Me_3_ = 100001522,
+
+    /// dHex(2)Hex(4)HexNAc(4)Sulf(1): DHex(2) Hex(4) HexNAc(4) Sulf.
+    UNIMOD_dHex_2_Hex_4_HexNAc_4_Sulf_1_ = 100001523,
+
+    /// Hex(4)HexNAc(3)NeuAc(2): Hex(4) HexNAc(3) NeuAc(2).
+    UNIMOD_Hex_4_HexNAc_3_NeuAc_2_ = 100001524,
+
+    /// dHex(1)Hex(3)HexNAc(4)Pent(3): DHex Hex(3) HexNAc(4) Pent(3).
+    UNIMOD_dHex_1_Hex_3_HexNAc_4_Pent_3_ = 100001525,
+
+    /// dHex(2)Hex(5)HexNAc(3)Pent(1): DHex(2) Hex(5) HexNAc(3) Pent.
+    UNIMOD_dHex_2_Hex_5_HexNAc_3_Pent_1_ = 100001526,
+
+    /// dHex(1)Hex(5)HexNAc(4)Sulf(1): DHex Hex(5) HexNAc(4) Sulf.
+    UNIMOD_dHex_1_Hex_5_HexNAc_4_Sulf_1_ = 100001527,
+
+    /// dHex(2)Hex(3)HexNAc(4)Pent(2): DHex(2) Hex(3) HexNAc(4) Pent(2).
+    UNIMOD_dHex_2_Hex_3_HexNAc_4_Pent_2_ = 100001528,
+
+    /// dHex(1)Hex(5)HexNAc(3)NeuAc(1): DHex Hex(5) HexNAc(3) NeuAc.
+    UNIMOD_dHex_1_Hex_5_HexNAc_3_NeuAc_1_ = 100001529,
+
+    /// Hex(3)HexNAc(6)Sulf(2): Hex(3) HexNAc(6) Sulf(2).
+    UNIMOD_Hex_3_HexNAc_6_Sulf_2_ = 100001530,
+
+    /// Hex(9)HexNAc(2): Hex(9) HexNAc(2).
+    UNIMOD_Hex_9_HexNAc_2_ = 100001531,
+
+    /// Hex(4)HexNAc(6): Hex(4) HexNAc(6).
+    UNIMOD_Hex_4_HexNAc_6_ = 100001532,
+
+    /// dHex(3)Hex(3)HexNAc(4)Pent(1): DHex(3) Hex(3) HexNAc(4) Pent.
+    UNIMOD_dHex_3_Hex_3_HexNAc_4_Pent_1_ = 100001533,
+
+    /// dHex(1)Hex(5)HexNAc(3)NeuGc(1): DHex Hex(5) HexNAc(3) NeuGc.
+    UNIMOD_dHex_1_Hex_5_HexNAc_3_NeuGc_1_ = 100001534,
+
+    /// dHex(2)Hex(4)HexNAc(4)Pent(1): DHex(2) Hex(4) HexNAc(4) Pent.
+    UNIMOD_dHex_2_Hex_4_HexNAc_4_Pent_1_ = 100001535,
+
+    /// dHex(1)Hex(4)HexNAc(5)Sulf(1): DHex Hex(4) HexNAc(5) Sulf.
+    UNIMOD_dHex_1_Hex_4_HexNAc_5_Sulf_1_ = 100001536,
+
+    /// dHex(1)Hex(7)HexNAc(3): DHex Hex(7) HexNAc(3).
+    UNIMOD_dHex_1_Hex_7_HexNAc_3_ = 100001537,
+
+    /// dHex(1)Hex(5)HexNAc(4)Pent(1): DHex Hex(5) HexNAc(4) Pent.
+    UNIMOD_dHex_1_Hex_5_HexNAc_4_Pent_1_ = 100001538,
+
+    /// dHex(1)Hex(5)HexA(1)HexNAc(3)Sulf(2): DHex Hex(5) HexA HexNAc(3) Sulf(2).
+    UNIMOD_dHex_1_Hex_5_HexA_1_HexNAc_3_Sulf_2_ = 100001539,
+
+    /// Hex(3)HexNAc(7): Hex(3) HexNAc(7).
+    UNIMOD_Hex_3_HexNAc_7_ = 100001540,
+
+    /// dHex(2)Hex(5)HexNAc(4): DHex(2) Hex(5) HexNAc(4).
+    UNIMOD_dHex_2_Hex_5_HexNAc_4_ = 100001541,
+
+    /// dHex(2)Hex(4)HexNAc(3)NeuAc(1)Sulf(1): DHex(2) Hex(4) HexNAc(3) NeuAc Sulf.
+    UNIMOD_dHex_2_Hex_4_HexNAc_3_NeuAc_1_Sulf_1_ = 100001542,
+
+    /// dHex(1)Hex(5)HexNAc(4)Sulf(2): DHex Hex(5) HexNAc(4) Sulf(2).
+    UNIMOD_dHex_1_Hex_5_HexNAc_4_Sulf_2_ = 100001543,
+
+    /// dHex(1)Hex(5)HexNAc(4)Me(2)Pent(1): DHex Hex(5) HexNAc(4) Me(2) Pent.
+    UNIMOD_dHex_1_Hex_5_HexNAc_4_Me_2_Pent_1_ = 100001544,
+
+    /// Hex(5)HexNAc(4)NeuGc(1): Hex(5) HexNAc(4) NeuGc.
+    UNIMOD_Hex_5_HexNAc_4_NeuGc_1_ = 100001545,
+
+    /// dHex(1)Hex(3)HexNAc(6)Sulf(1): DHex Hex(3) HexNAc(6) Sulf.
+    UNIMOD_dHex_1_Hex_3_HexNAc_6_Sulf_1_ = 100001546,
+
+    /// dHex(1)Hex(6)HexNAc(4): DHex Hex(6) HexNAc(4).
+    UNIMOD_dHex_1_Hex_6_HexNAc_4_ = 100001547,
+
+    /// dHex(1)Hex(5)HexNAc(3)NeuAc(1)Sulf(1): DHex Hex(5) HexNAc(3) NeuAc Sulf.
+    UNIMOD_dHex_1_Hex_5_HexNAc_3_NeuAc_1_Sulf_1_ = 100001548,
+
+    /// Hex(7)HexNAc(4): Hex(7) HexNAc(4).
+    UNIMOD_Hex_7_HexNAc_4_ = 100001549,
+
+    /// dHex(1)Hex(5)HexNAc(3)NeuGc(1)Sulf(1): DHex Hex(5) HexNAc(3) NeuGc Sulf.
+    UNIMOD_dHex_1_Hex_5_HexNAc_3_NeuGc_1_Sulf_1_ = 100001550,
+
+    /// Hex(4)HexNAc(5)NeuAc(1): Hex(4) HexNAc(5) NeuAc.
+    UNIMOD_Hex_4_HexNAc_5_NeuAc_1_ = 100001551,
+
+    /// Hex(6)HexNAc(4)Me(3)Pent(1): Hex(6) HexNAc(4) Me(3) Pent.
+    UNIMOD_Hex_6_HexNAc_4_Me_3_Pent_1_ = 100001552,
+
+    /// dHex(1)Hex(7)HexNAc(3)Sulf(1): DHex Hex(7) HexNAc(3) Sulf.
+    UNIMOD_dHex_1_Hex_7_HexNAc_3_Sulf_1_ = 100001553,
+
+    /// dHex(1)Hex(7)HexNAc(3)Phos(1): DHex Hex(7) HexNAc(3) Phos.
+    UNIMOD_dHex_1_Hex_7_HexNAc_3_Phos_1_ = 100001554,
+
+    /// dHex(1)Hex(5)HexNAc(5): DHex Hex(5) HexNAc(5).
+    UNIMOD_dHex_1_Hex_5_HexNAc_5_ = 100001555,
+
+    /// dHex(1)Hex(4)HexNAc(4)NeuAc(1)Sulf(1): DHex Hex(4) HexNAc(4) NeuAc Sulf.
+    UNIMOD_dHex_1_Hex_4_HexNAc_4_NeuAc_1_Sulf_1_ = 100001556,
+
+    /// dHex(3)Hex(4)HexNAc(4)Sulf(1): DHex(3) Hex(4) HexNAc(4) Sulf.
+    UNIMOD_dHex_3_Hex_4_HexNAc_4_Sulf_1_ = 100001557,
+
+    /// Hex(3)HexNAc(7)Sulf(1): Hex(3) HexNAc(7) Sulf.
+    UNIMOD_Hex_3_HexNAc_7_Sulf_1_ = 100001558,
+
+    /// Hex(6)HexNAc(5): Hex(6) HexNAc(5).
+    UNIMOD_Hex_6_HexNAc_5_ = 100001559,
+
+    /// Hex(5)HexNAc(4)NeuAc(1)Sulf(1): Hex(5) HexNAc(4) NeuAc Sulf.
+    UNIMOD_Hex_5_HexNAc_4_NeuAc_1_Sulf_1_ = 100001560,
+
+    /// Hex(3)HexNAc(6)NeuAc(1): Hex(3) HexNAc(6) NeuAc.
+    UNIMOD_Hex_3_HexNAc_6_NeuAc_1_ = 100001561,
+
+    /// dHex(2)Hex(3)HexNAc(6): DHex(2) Hex(3) HexNAc(6).
+    UNIMOD_dHex_2_Hex_3_HexNAc_6_ = 100001562,
+
+    /// Hex(1)HexNAc(1)NeuGc(1): Hex HexNAc NeuGc.
+    UNIMOD_Hex_1_HexNAc_1_NeuGc_1_ = 100001563,
+
+    /// dHex(1)Hex(2)HexNAc(1): DHex Hex(2) HexNAc.
+    UNIMOD_dHex_1_Hex_2_HexNAc_1_ = 100001564,
+
+    /// HexNAc(3)Sulf(1): HexNAc(3) Sulf.
+    UNIMOD_HexNAc_3_Sulf_1_ = 100001565,
+
+    /// Hex(3)HexNAc(1): Hex(3) HexNAc.
+    UNIMOD_Hex_3_HexNAc_1_ = 100001566,
+
+    /// Hex(1)HexNAc(1)Kdn(1)Sulf(1): Hex HexNAc Kdn Sulf.
+    UNIMOD_Hex_1_HexNAc_1_Kdn_1_Sulf_1_ = 100001567,
+
+    /// HexNAc(2)NeuAc(1): HexNAc(2) NeuAc.
+    UNIMOD_HexNAc_2_NeuAc_1_ = 100001568,
+
+    /// HexNAc(1)Kdn(2): HexNAc Kdn(2).
+    UNIMOD_HexNAc_1_Kdn_2_ = 100001570,
+
+    /// Hex(3)HexNAc(1)Me(1): Hex(3) HexNAc Me.
+    UNIMOD_Hex_3_HexNAc_1_Me_1_ = 100001571,
+
+    /// Hex(2)HexA(1)Pent(1)Sulf(1): Hex(2) HexA Pent Sulf.
+    UNIMOD_Hex_2_HexA_1_Pent_1_Sulf_1_ = 100001572,
+
+    /// HexNAc(2)NeuGc(1): HexNAc(2) NeuGc.
+    UNIMOD_HexNAc_2_NeuGc_1_ = 100001573,
+
+    /// Hex(4)Phos(1): Hex(4) Phos.
+    UNIMOD_Hex_4_Phos_1_ = 100001575,
+
+    /// Hex(1)HexNAc(1)NeuAc(1)Sulf(1): Hex HexNAc NeuAc Sulf.
+    UNIMOD_Hex_1_HexNAc_1_NeuAc_1_Sulf_1_ = 100001577,
+
+    /// Hex(1)HexA(1)HexNAc(2): Hex HexA HexNAc(2).
+    UNIMOD_Hex_1_HexA_1_HexNAc_2_ = 100001578,
+
+    /// dHex(1)Hex(2)HexNAc(1)Sulf(1): DHex Hex(2) HexNAc Sulf.
+    UNIMOD_dHex_1_Hex_2_HexNAc_1_Sulf_1_ = 100001579,
+
+    /// dHex(1)HexNAc(3): DHex HexNAc(3).
+    UNIMOD_dHex_1_HexNAc_3_ = 100001580,
+
+    /// dHex(1)Hex(1)HexNAc(1)Kdn(1): DHex Hex HexNAc Kdn.
+    UNIMOD_dHex_1_Hex_1_HexNAc_1_Kdn_1_ = 100001581,
+
+    /// Hex(1)HexNAc(3): Hex HexNAc(3).
+    UNIMOD_Hex_1_HexNAc_3_ = 100001582,
+
+    /// HexNAc(2)NeuAc(1)Sulf(1): HexNAc(2) NeuAc Sulf.
+    UNIMOD_HexNAc_2_NeuAc_1_Sulf_1_ = 100001583,
+
+    /// dHex(2)Hex(3): DHex(2) Hex(3).
+    UNIMOD_dHex_2_Hex_3_ = 100001584,
+
+    /// Hex(2)HexA(1)HexNAc(1)Sulf(1): Hex(2) HexA HexNAc Sulf.
+    UNIMOD_Hex_2_HexA_1_HexNAc_1_Sulf_1_ = 100001585,
+
+    /// dHex(2)Hex(2)HexA(1): DHex(2) Hex(2) HexA.
+    UNIMOD_dHex_2_Hex_2_HexA_1_ = 100001586,
+
+    /// dHex(1)Hex(1)HexNAc(2)Sulf(1): DHex Hex HexNAc(2) Sulf.
+    UNIMOD_dHex_1_Hex_1_HexNAc_2_Sulf_1_ = 100001587,
+
+    /// dHex(1)Hex(1)HexNAc(1)NeuAc(1): DHex Hex HexNAc NeuAc.
+    UNIMOD_dHex_1_Hex_1_HexNAc_1_NeuAc_1_ = 100001588,
+
+    /// Hex(2)HexNAc(2)Sulf(1): Hex(2) HexNAc(2) Sulf.
+    UNIMOD_Hex_2_HexNAc_2_Sulf_1_ = 100001589,
+
+    /// Hex(5): Hex(5).
+    UNIMOD_Hex_5_ = 100001590,
+
+    /// HexNAc(4): HexNAc(4).
+    UNIMOD_HexNAc_4_ = 100001591,
+
+    /// HexNAc(1)NeuGc(2): HexNAc NeuGc(2).
+    UNIMOD_HexNAc_1_NeuGc_2_ = 100001592,
+
+    /// dHex(1)Hex(1)HexNAc(1)NeuGc(1): DHex Hex HexNAc NeuGc.
+    UNIMOD_dHex_1_Hex_1_HexNAc_1_NeuGc_1_ = 100001593,
+
+    /// dHex(2)Hex(2)HexNAc(1): DHex(2) Hex(2) HexNAc.
+    UNIMOD_dHex_2_Hex_2_HexNAc_1_ = 100001594,
+
+    /// Hex(2)HexNAc(1)NeuGc(1): Hex(2) HexNAc NeuGc.
+    UNIMOD_Hex_2_HexNAc_1_NeuGc_1_ = 100001595,
+
+    /// dHex(1)Hex(3)HexNAc(1): DHex Hex(3) HexNAc.
+    UNIMOD_dHex_1_Hex_3_HexNAc_1_ = 100001596,
+
+    /// dHex(1)Hex(2)HexA(1)HexNAc(1): DHex Hex(2) HexA HexNAc.
+    UNIMOD_dHex_1_Hex_2_HexA_1_HexNAc_1_ = 100001597,
+
+    /// Hex(1)HexNAc(3)Sulf(1): Hex HexNAc(3) Sulf.
+    UNIMOD_Hex_1_HexNAc_3_Sulf_1_ = 100001598,
+
+    /// Hex(4)HexNAc(1): Hex(4) HexNAc.
+    UNIMOD_Hex_4_HexNAc_1_ = 100001599,
+
+    /// Hex(1)HexNAc(2)NeuAc(1): Hex HexNAc(2) NeuAc.
+    UNIMOD_Hex_1_HexNAc_2_NeuAc_1_ = 100001600,
+
+    /// Hex(1)HexNAc(2)NeuGc(1): Hex HexNAc(2) NeuGc.
+    UNIMOD_Hex_1_HexNAc_2_NeuGc_1_ = 100001602,
+
+    /// Hex(5)Phos(1): Hex(5) Phos.
+    UNIMOD_Hex_5_Phos_1_ = 100001604,
+
+    /// dHex(2)Hex(1)HexNAc(1)Kdn(1): DHex(2) Hex HexNAc Kdn.
+    UNIMOD_dHex_2_Hex_1_HexNAc_1_Kdn_1_ = 100001606,
+
+    /// dHex(1)Hex(3)HexNAc(1)Sulf(1): DHex Hex(3) HexNAc Sulf.
+    UNIMOD_dHex_1_Hex_3_HexNAc_1_Sulf_1_ = 100001607,
+
+    /// dHex(1)Hex(1)HexNAc(3): DHex Hex HexNAc(3).
+    UNIMOD_dHex_1_Hex_1_HexNAc_3_ = 100001608,
+
+    /// dHex(1)Hex(2)HexA(1)HexNAc(1)Sulf(1): DHex Hex(2) HexA HexNAc Sulf.
+    UNIMOD_dHex_1_Hex_2_HexA_1_HexNAc_1_Sulf_1_ = 100001609,
+
+    /// Hex(2)HexNAc(3): Hex(2) HexNAc(3).
+    UNIMOD_Hex_2_HexNAc_3_ = 100001610,
+
+    /// Hex(1)HexNAc(2)NeuAc(1)Sulf(1): Hex HexNAc(2) NeuAc Sulf.
+    UNIMOD_Hex_1_HexNAc_2_NeuAc_1_Sulf_1_ = 100001611,
+
+    /// dHex(2)Hex(4): DHex(2) Hex(4).
+    UNIMOD_dHex_2_Hex_4_ = 100001612,
+
+    /// dHex(2)HexNAc(2)Kdn(1): DHex(2) HexNAc(2) Kdn.
+    UNIMOD_dHex_2_HexNAc_2_Kdn_1_ = 100001614,
+
+    /// dHex(1)Hex(2)HexNAc(2)Sulf(1): DHex Hex(2) HexNAc(2) Sulf.
+    UNIMOD_dHex_1_Hex_2_HexNAc_2_Sulf_1_ = 100001615,
+
+    /// dHex(1)HexNAc(4): DHex HexNAc(4).
+    UNIMOD_dHex_1_HexNAc_4_ = 100001616,
+
+    /// Hex(1)HexNAc(1)NeuAc(1)NeuGc(1): Hex HexNAc NeuAc NeuGc.
+    UNIMOD_Hex_1_HexNAc_1_NeuAc_1_NeuGc_1_ = 100001617,
+
+    /// dHex(1)Hex(1)HexNAc(2)Kdn(1): DHex Hex HexNAc(2) Kdn.
+    UNIMOD_dHex_1_Hex_1_HexNAc_2_Kdn_1_ = 100001618,
+
+    /// Hex(1)HexNAc(1)NeuGc(2): Hex HexNAc NeuGc(2).
+    UNIMOD_Hex_1_HexNAc_1_NeuGc_2_ = 100001619,
+
+    /// Hex(1)HexNAc(1)NeuAc(2)Ac(1): Ac Hex HexNAc NeuAc(2).
+    UNIMOD_Hex_1_HexNAc_1_NeuAc_2_Ac_1_ = 100001620,
+
+    /// dHex(2)Hex(2)HexA(1)HexNAc(1): DHex(2) Hex(2) HexA HexNAc.
+    UNIMOD_dHex_2_Hex_2_HexA_1_HexNAc_1_ = 100001621,
+
+    /// dHex(1)Hex(1)HexNAc(3)Sulf(1): DHex Hex HexNAc(3) Sulf.
+    UNIMOD_dHex_1_Hex_1_HexNAc_3_Sulf_1_ = 100001622,
+
+    /// Hex(2)HexA(1)NeuAc(1)Pent(1)Sulf(1): Hex(2) HexA NeuAc Pent Sulf.
+    UNIMOD_Hex_2_HexA_1_NeuAc_1_Pent_1_Sulf_1_ = 100001623,
+
+    /// dHex(1)Hex(1)HexNAc(2)NeuAc(1): DHex Hex HexNAc(2) NeuAc.
+    UNIMOD_dHex_1_Hex_1_HexNAc_2_NeuAc_1_ = 100001624,
+
+    /// dHex(1)Hex(3)HexA(1)HexNAc(1): DHex Hex(3) HexA HexNAc.
+    UNIMOD_dHex_1_Hex_3_HexA_1_HexNAc_1_ = 100001625,
+
+    /// Hex(2)HexNAc(3)Sulf(1): Hex(2) HexNAc(3) Sulf.
+    UNIMOD_Hex_2_HexNAc_3_Sulf_1_ = 100001626,
+
+    /// Hex(5)HexNAc(1): Hex(5) HexNAc.
+    UNIMOD_Hex_5_HexNAc_1_ = 100001627,
+
+    /// HexNAc(5): HexNAc(5).
+    UNIMOD_HexNAc_5_ = 100001628,
+
+    /// dHex(1)Hex(1)HexNAc(2)NeuGc(1): DHex Hex HexNAc(2) NeuGc.
+    UNIMOD_dHex_1_Hex_1_HexNAc_2_NeuGc_1_ = 100001629,
+
+    /// Hex(1)HexNAc(1)NeuAc(2)Ac(2): Ac(2) Hex HexNAc NeuAc(2).
+    UNIMOD_Hex_1_HexNAc_1_NeuAc_2_Ac_2_ = 100001630,
+
+    /// Hex(2)HexNAc(2)NeuGc(1): Hex(2) HexNAc(2) NeuGc.
+    UNIMOD_Hex_2_HexNAc_2_NeuGc_1_ = 100001631,
+
+    /// Hex(5)Phos(3): Hex(5) Phos(3).
+    UNIMOD_Hex_5_Phos_3_ = 100001632,
+
+    /// Hex(6)Phos(1): Hex(6) Phos.
+    UNIMOD_Hex_6_Phos_1_ = 100001633,
+
+    /// dHex(1)Hex(2)HexA(1)HexNAc(2): DHex Hex(2) HexA HexNAc(2).
+    UNIMOD_dHex_1_Hex_2_HexA_1_HexNAc_2_ = 100001634,
+
+    /// dHex(2)Hex(3)HexNAc(1)Sulf(1): DHex(2) Hex(3) HexNAc Sulf.
+    UNIMOD_dHex_2_Hex_3_HexNAc_1_Sulf_1_ = 100001635,
+
+    /// Hex(1)HexNAc(3)NeuAc(1): Hex HexNAc(3) NeuAc.
+    UNIMOD_Hex_1_HexNAc_3_NeuAc_1_ = 100001636,
+
+    /// dHex(2)Hex(1)HexNAc(3): DHex(2) Hex HexNAc(3).
+    UNIMOD_dHex_2_Hex_1_HexNAc_3_ = 100001637,
+
+    /// Hex(1)HexNAc(3)NeuGc(1): Hex HexNAc(3) NeuGc.
+    UNIMOD_Hex_1_HexNAc_3_NeuGc_1_ = 100001638,
+
+    /// dHex(1)Hex(1)HexNAc(2)NeuAc(1)Sulf(1): DHex Hex HexNAc(2) NeuAc Sulf.
+    UNIMOD_dHex_1_Hex_1_HexNAc_2_NeuAc_1_Sulf_1_ = 100001639,
+
+    /// dHex(1)Hex(3)HexA(1)HexNAc(1)Sulf(1): DHex Hex(3) HexA HexNAc Sulf.
+    UNIMOD_dHex_1_Hex_3_HexA_1_HexNAc_1_Sulf_1_ = 100001640,
+
+    /// dHex(1)Hex(1)HexA(1)HexNAc(3): DHex Hex HexA HexNAc(3).
+    UNIMOD_dHex_1_Hex_1_HexA_1_HexNAc_3_ = 100001641,
+
+    /// Hex(2)HexNAc(2)NeuAc(1)Sulf(1): Hex(2) HexNAc(2) NeuAc Sulf.
+    UNIMOD_Hex_2_HexNAc_2_NeuAc_1_Sulf_1_ = 100001642,
+
+    /// dHex(2)Hex(2)HexNAc(2)Sulf(1): DHex(2) Hex(2) HexNAc(2) Sulf.
+    UNIMOD_dHex_2_Hex_2_HexNAc_2_Sulf_1_ = 100001643,
+
+    /// dHex(2)Hex(1)HexNAc(2)Kdn(1): DHex(2) Hex HexNAc(2) Kdn.
+    UNIMOD_dHex_2_Hex_1_HexNAc_2_Kdn_1_ = 100001644,
+
+    /// dHex(1)Hex(1)HexNAc(4): DHex Hex HexNAc(4).
+    UNIMOD_dHex_1_Hex_1_HexNAc_4_ = 100001645,
+
+    /// Hex(2)HexNAc(4): Hex(2) HexNAc(4).
+    UNIMOD_Hex_2_HexNAc_4_ = 100001646,
+
+    /// Hex(2)HexNAc(1)NeuGc(2): Hex(2) HexNAc NeuGc(2).
+    UNIMOD_Hex_2_HexNAc_1_NeuGc_2_ = 100001647,
+
+    /// dHex(2)Hex(4)HexNAc(1): DHex(2) Hex(4) HexNAc.
+    UNIMOD_dHex_2_Hex_4_HexNAc_1_ = 100001648,
+
+    /// Hex(1)HexNAc(2)NeuAc(2): Hex HexNAc(2) NeuAc(2).
+    UNIMOD_Hex_1_HexNAc_2_NeuAc_2_ = 100001649,
+
+    /// dHex(2)Hex(1)HexNAc(2)NeuAc(1): DHex(2) Hex HexNAc(2) NeuAc.
+    UNIMOD_dHex_2_Hex_1_HexNAc_2_NeuAc_1_ = 100001650,
+
+    /// dHex(1)Hex(2)HexNAc(3)Sulf(1): DHex Hex(2) HexNAc(3) Sulf.
+    UNIMOD_dHex_1_Hex_2_HexNAc_3_Sulf_1_ = 100001651,
+
+    /// dHex(1)HexNAc(5): DHex HexNAc(5).
+    UNIMOD_dHex_1_HexNAc_5_ = 100001652,
+
+    /// dHex(2)Hex(1)HexNAc(2)NeuGc(1): DHex(2) Hex HexNAc(2) NeuGc.
+    UNIMOD_dHex_2_Hex_1_HexNAc_2_NeuGc_1_ = 100001653,
+
+    /// dHex(3)Hex(2)HexNAc(2): DHex(3) Hex(2) HexNAc(2).
+    UNIMOD_dHex_3_Hex_2_HexNAc_2_ = 100001654,
+
+    /// Hex(3)HexNAc(3)Sulf(1): Hex(3) HexNAc(3) Sulf.
+    UNIMOD_Hex_3_HexNAc_3_Sulf_1_ = 100001655,
+
+    /// dHex(2)Hex(2)HexNAc(2)Sulf(2): DHex(2) Hex(2) HexNAc(2) Sulf(2).
+    UNIMOD_dHex_2_Hex_2_HexNAc_2_Sulf_2_ = 100001656,
+
+    /// dHex(1)Hex(2)HexNAc(2)NeuGc(1): DHex Hex(2) HexNAc(2) NeuGc.
+    UNIMOD_dHex_1_Hex_2_HexNAc_2_NeuGc_1_ = 100001657,
+
+    /// dHex(1)Hex(1)HexNAc(3)NeuAc(1): DHex Hex HexNAc(3) NeuAc.
+    UNIMOD_dHex_1_Hex_1_HexNAc_3_NeuAc_1_ = 100001658,
+
+    /// Hex(6)Phos(3): Hex(6) Phos(3).
+    UNIMOD_Hex_6_Phos_3_ = 100001659,
+
+    /// dHex(1)Hex(3)HexA(1)HexNAc(2): DHex Hex(3) HexA HexNAc(2).
+    UNIMOD_dHex_1_Hex_3_HexA_1_HexNAc_2_ = 100001660,
+
+    /// dHex(1)Hex(1)HexNAc(3)NeuGc(1): DHex Hex HexNAc(3) NeuGc.
+    UNIMOD_dHex_1_Hex_1_HexNAc_3_NeuGc_1_ = 100001661,
+
+    /// Hex(1)HexNAc(2)NeuAc(2)Sulf(1): Hex HexNAc(2) NeuAc(2) Sulf.
+    UNIMOD_Hex_1_HexNAc_2_NeuAc_2_Sulf_1_ = 100001662,
+
+    /// dHex(2)Hex(3)HexA(1)HexNAc(1)Sulf(1): DHex(2) Hex(3) HexA HexNAc Sulf.
+    UNIMOD_dHex_2_Hex_3_HexA_1_HexNAc_1_Sulf_1_ = 100001663,
+
+    /// Hex(1)HexNAc(1)NeuAc(3): Hex HexNAc NeuAc(3).
+    UNIMOD_Hex_1_HexNAc_1_NeuAc_3_ = 100001664,
+
+    /// Hex(2)HexNAc(3)NeuGc(1): Hex(2) HexNAc(3) NeuGc.
+    UNIMOD_Hex_2_HexNAc_3_NeuGc_1_ = 100001665,
+
+    /// dHex(1)Hex(2)HexNAc(2)NeuAc(1)Sulf(1): DHex Hex(2) HexNAc(2) NeuAc Sulf.
+    UNIMOD_dHex_1_Hex_2_HexNAc_2_NeuAc_1_Sulf_1_ = 100001666,
+
+    /// dHex(3)Hex(1)HexNAc(2)Kdn(1): DHex(3) Hex HexNAc(2) Kdn.
+    UNIMOD_dHex_3_Hex_1_HexNAc_2_Kdn_1_ = 100001667,
+
+    /// dHex(2)Hex(3)HexNAc(2)Sulf(1): DHex(2) Hex(3) HexNAc(2) Sulf.
+    UNIMOD_dHex_2_Hex_3_HexNAc_2_Sulf_1_ = 100001668,
+
+    /// dHex(2)Hex(2)HexNAc(2)Kdn(1): DHex(2) Hex(2) HexNAc(2) Kdn.
+    UNIMOD_dHex_2_Hex_2_HexNAc_2_Kdn_1_ = 100001669,
+
+    /// dHex(2)Hex(2)HexA(1)HexNAc(2)Sulf(1): DHex(2) Hex(2) HexA HexNAc(2) Sulf.
+    UNIMOD_dHex_2_Hex_2_HexA_1_HexNAc_2_Sulf_1_ = 100001670,
+
+    /// dHex(1)Hex(2)HexNAc(4): DHex Hex(2) HexNAc(4).
+    UNIMOD_dHex_1_Hex_2_HexNAc_4_ = 100001671,
+
+    /// Hex(1)HexNAc(1)NeuGc(3): Hex HexNAc NeuGc(3).
+    UNIMOD_Hex_1_HexNAc_1_NeuGc_3_ = 100001672,
+
+    /// dHex(1)Hex(1)HexNAc(3)NeuAc(1)Sulf(1): DHex Hex HexNAc(3) NeuAc Sulf.
+    UNIMOD_dHex_1_Hex_1_HexNAc_3_NeuAc_1_Sulf_1_ = 100001673,
+
+    /// dHex(1)Hex(3)HexA(1)HexNAc(2)Sulf(1): DHex Hex(3) HexA HexNAc(2) Sulf.
+    UNIMOD_dHex_1_Hex_3_HexA_1_HexNAc_2_Sulf_1_ = 100001674,
+
+    /// dHex(1)Hex(1)HexNAc(2)NeuAc(2): DHex Hex HexNAc(2) NeuAc(2).
+    UNIMOD_dHex_1_Hex_1_HexNAc_2_NeuAc_2_ = 100001675,
+
+    /// dHex(3)HexNAc(3)Kdn(1): DHex(3) HexNAc(3) Kdn.
+    UNIMOD_dHex_3_HexNAc_3_Kdn_1_ = 100001676,
+
+    /// Hex(2)HexNAc(3)NeuAc(1)Sulf(1): Hex(2) HexNAc(3) NeuAc Sulf.
+    UNIMOD_Hex_2_HexNAc_3_NeuAc_1_Sulf_1_ = 100001678,
+
+    /// dHex(2)Hex(2)HexNAc(3)Sulf(1): DHex(2) Hex(2) HexNAc(3) Sulf.
+    UNIMOD_dHex_2_Hex_2_HexNAc_3_Sulf_1_ = 100001679,
+
+    /// dHex(2)HexNAc(5): DHex(2) HexNAc(5).
+    UNIMOD_dHex_2_HexNAc_5_ = 100001680,
+
+    /// Hex(2)HexNAc(2)NeuAc(2): Hex(2) HexNAc(2) NeuAc(2).
+    UNIMOD_Hex_2_HexNAc_2_NeuAc_2_ = 100001681,
+
+    /// dHex(2)Hex(2)HexNAc(2)NeuAc(1): DHex(2) Hex(2) HexNAc(2) NeuAc.
+    UNIMOD_dHex_2_Hex_2_HexNAc_2_NeuAc_1_ = 100001682,
+
+    /// dHex(1)Hex(3)HexNAc(3)Sulf(1): DHex Hex(3) HexNAc(3) Sulf.
+    UNIMOD_dHex_1_Hex_3_HexNAc_3_Sulf_1_ = 100001683,
+
+    /// dHex(2)Hex(2)HexNAc(2)NeuGc(1): DHex(2) Hex(2) HexNAc(2) NeuGc.
+    UNIMOD_dHex_2_Hex_2_HexNAc_2_NeuGc_1_ = 100001684,
+
+    /// Hex(2)HexNAc(5): Hex(2) HexNAc(5).
+    UNIMOD_Hex_2_HexNAc_5_ = 100001685,
+
+    /// dHex(1)Hex(3)HexNAc(2)NeuGc(1): DHex Hex(3) HexNAc(2) NeuGc.
+    UNIMOD_dHex_1_Hex_3_HexNAc_2_NeuGc_1_ = 100001686,
+
+    /// Hex(1)HexNAc(3)NeuAc(2): Hex HexNAc(3) NeuAc(2).
+    UNIMOD_Hex_1_HexNAc_3_NeuAc_2_ = 100001687,
+
+    /// dHex(1)Hex(2)HexNAc(3)NeuAc(1): DHex Hex(2) HexNAc(3) NeuAc.
+    UNIMOD_dHex_1_Hex_2_HexNAc_3_NeuAc_1_ = 100001688,
+
+    /// dHex(3)Hex(2)HexNAc(3): DHex(3) Hex(2) HexNAc(3).
+    UNIMOD_dHex_3_Hex_2_HexNAc_3_ = 100001689,
+
+    /// Hex(7)Phos(3): Hex(7) Phos(3).
+    UNIMOD_Hex_7_Phos_3_ = 100001690,
+
+    /// dHex(1)Hex(4)HexA(1)HexNAc(2): DHex Hex(4) HexA HexNAc(2).
+    UNIMOD_dHex_1_Hex_4_HexA_1_HexNAc_2_ = 100001691,
+
+    /// Hex(3)HexNAc(3)NeuAc(1): Hex(3) HexNAc(3) NeuAc.
+    UNIMOD_Hex_3_HexNAc_3_NeuAc_1_ = 100001692,
+
+    /// dHex(1)Hex(3)HexA(2)HexNAc(2): DHex Hex(3) HexA(2) HexNAc(2).
+    UNIMOD_dHex_1_Hex_3_HexA_2_HexNAc_2_ = 100001693,
+
+    /// Hex(2)HexNAc(2)NeuAc(2)Sulf(1): Hex(2) HexNAc(2) NeuAc(2) Sulf.
+    UNIMOD_Hex_2_HexNAc_2_NeuAc_2_Sulf_1_ = 100001694,
+
+    /// dHex(2)Hex(2)HexNAc(2)NeuAc(1)Sulf(1): DHex(2) Hex(2) HexNAc(2) NeuAc Sulf.
+    UNIMOD_dHex_2_Hex_2_HexNAc_2_NeuAc_1_Sulf_1_ = 100001695,
+
+    /// Hex(3)HexNAc(3)NeuGc(1): Hex(3) HexNAc(3) NeuGc.
+    UNIMOD_Hex_3_HexNAc_3_NeuGc_1_ = 100001696,
+
+    /// dHex(4)Hex(1)HexNAc(2)Kdn(1): DHex(4) Hex HexNAc(2) Kdn.
+    UNIMOD_dHex_4_Hex_1_HexNAc_2_Kdn_1_ = 100001697,
+
+    /// dHex(3)Hex(2)HexNAc(2)Kdn(1): DHex(3) Hex(2) HexNAc(2) Kdn.
+    UNIMOD_dHex_3_Hex_2_HexNAc_2_Kdn_1_ = 100001698,
+
+    /// dHex(3)Hex(2)HexA(1)HexNAc(2)Sulf(1): DHex(3) Hex(2) HexA HexNAc(2) Sulf.
+    UNIMOD_dHex_3_Hex_2_HexA_1_HexNAc_2_Sulf_1_ = 100001699,
+
+    /// Hex(2)HexNAc(4)NeuAc(1): Hex(2) HexNAc(4) NeuAc.
+    UNIMOD_Hex_2_HexNAc_4_NeuAc_1_ = 100001700,
+
+    /// dHex(2)Hex(2)HexNAc(4): DHex(2) Hex(2) HexNAc(4).
+    UNIMOD_dHex_2_Hex_2_HexNAc_4_ = 100001701,
+
+    /// dHex(2)Hex(3)HexA(1)HexNAc(2)Sulf(1): DHex(2) Hex(3) HexA HexNAc(2) Sulf.
+    UNIMOD_dHex_2_Hex_3_HexA_1_HexNAc_2_Sulf_1_ = 100001702,
+
+    /// dHex(4)HexNAc(3)Kdn(1): DHex(4) HexNAc(3) Kdn.
+    UNIMOD_dHex_4_HexNAc_3_Kdn_1_ = 100001703,
+
+    /// Hex(2)HexNAc(1)NeuGc(3): Hex(2) HexNAc NeuGc(3).
+    UNIMOD_Hex_2_HexNAc_1_NeuGc_3_ = 100001705,
+
+    /// dHex(4)Hex(1)HexNAc(1)Kdn(2): DHex(4) Hex HexNAc Kdn(2).
+    UNIMOD_dHex_4_Hex_1_HexNAc_1_Kdn_2_ = 100001706,
+
+    /// dHex(1)Hex(2)HexNAc(3)NeuAc(1)Sulf(1): DHex Hex(2) HexNAc(3) NeuAc Sulf.
+    UNIMOD_dHex_1_Hex_2_HexNAc_3_NeuAc_1_Sulf_1_ = 100001707,
+
+    /// dHex(1)Hex(2)HexNAc(2)NeuAc(2): DHex Hex(2) HexNAc(2) NeuAc(2).
+    UNIMOD_dHex_1_Hex_2_HexNAc_2_NeuAc_2_ = 100001708,
+
+    /// dHex(3)Hex(1)HexNAc(3)Kdn(1): DHex(3) Hex HexNAc(3) Kdn.
+    UNIMOD_dHex_3_Hex_1_HexNAc_3_Kdn_1_ = 100001709,
+
+    /// Hex(3)HexNAc(3)NeuAc(1)Sulf(1): Hex(3) HexNAc(3) NeuAc Sulf.
+    UNIMOD_Hex_3_HexNAc_3_NeuAc_1_Sulf_1_ = 100001711,
+
+    /// Hex(3)HexNAc(2)NeuAc(2): Hex(3) HexNAc(2) NeuAc(2).
+    UNIMOD_Hex_3_HexNAc_2_NeuAc_2_ = 100001712,
+
+    /// Hex(3)HexNAc(3)NeuGc(1)Sulf(1): Hex(3) HexNAc(3) NeuGc Sulf.
+    UNIMOD_Hex_3_HexNAc_3_NeuGc_1_Sulf_1_ = 100001713,
+
+    /// dHex(1)Hex(2)HexNAc(2)NeuGc(2): DHex Hex(2) HexNAc(2) NeuGc(2).
+    UNIMOD_dHex_1_Hex_2_HexNAc_2_NeuGc_2_ = 100001714,
+
+    /// dHex(2)Hex(3)HexNAc(2)NeuGc(1): DHex(2) Hex(3) HexNAc(2) NeuGc.
+    UNIMOD_dHex_2_Hex_3_HexNAc_2_NeuGc_1_ = 100001715,
+
+    /// dHex(1)Hex(3)HexA(1)HexNAc(3)Sulf(1): DHex Hex(3) HexA HexNAc(3) Sulf.
+    UNIMOD_dHex_1_Hex_3_HexA_1_HexNAc_3_Sulf_1_ = 100001716,
+
+    /// Hex(2)HexNAc(3)NeuAc(2): Hex(2) HexNAc(3) NeuAc(2).
+    UNIMOD_Hex_2_HexNAc_3_NeuAc_2_ = 100001717,
+
+    /// dHex(2)Hex(2)HexNAc(3)NeuAc(1): DHex(2) Hex(2) HexNAc(3) NeuAc.
+    UNIMOD_dHex_2_Hex_2_HexNAc_3_NeuAc_1_ = 100001718,
+
+    /// dHex(4)Hex(2)HexNAc(3): DHex(4) Hex(2) HexNAc(3).
+    UNIMOD_dHex_4_Hex_2_HexNAc_3_ = 100001719,
+
+    /// Hex(2)HexNAc(3)NeuAc(1)NeuGc(1): Hex(2) HexNAc(3) NeuAc NeuGc.
+    UNIMOD_Hex_2_HexNAc_3_NeuAc_1_NeuGc_1_ = 100001720,
+
+    /// dHex(2)Hex(2)HexNAc(3)NeuGc(1): DHex(2) Hex(2) HexNAc(3) NeuGc.
+    UNIMOD_dHex_2_Hex_2_HexNAc_3_NeuGc_1_ = 100001721,
+
+    /// dHex(3)Hex(3)HexNAc(3): DHex(3) Hex(3) HexNAc(3).
+    UNIMOD_dHex_3_Hex_3_HexNAc_3_ = 100001722,
+
+    /// Hex(8)Phos(3): Hex(8) Phos(3).
+    UNIMOD_Hex_8_Phos_3_ = 100001723,
+
+    /// dHex(1)Hex(2)HexNAc(2)NeuAc(2)Sulf(1): DHex Hex(2) HexNAc(2) NeuAc(2) Sulf.
+    UNIMOD_dHex_1_Hex_2_HexNAc_2_NeuAc_2_Sulf_1_ = 100001724,
+
+    /// Hex(2)HexNAc(3)NeuGc(2): Hex(2) HexNAc(3) NeuGc(2).
+    UNIMOD_Hex_2_HexNAc_3_NeuGc_2_ = 100001725,
+
+    /// dHex(4)Hex(2)HexNAc(2)Kdn(1): DHex(4) Hex(2) HexNAc(2) Kdn.
+    UNIMOD_dHex_4_Hex_2_HexNAc_2_Kdn_1_ = 100001726,
+
+    /// dHex(1)Hex(2)HexNAc(4)NeuAc(1): DHex Hex(2) HexNAc(4) NeuAc.
+    UNIMOD_dHex_1_Hex_2_HexNAc_4_NeuAc_1_ = 100001727,
+
+    /// dHex(3)Hex(2)HexNAc(4): DHex(3) Hex(2) HexNAc(4).
+    UNIMOD_dHex_3_Hex_2_HexNAc_4_ = 100001728,
+
+    /// Hex(1)HexNAc(1)NeuGc(4): Hex HexNAc NeuGc(4).
+    UNIMOD_Hex_1_HexNAc_1_NeuGc_4_ = 100001729,
+
+    /// dHex(4)Hex(1)HexNAc(3)Kdn(1): DHex(4) Hex HexNAc(3) Kdn.
+    UNIMOD_dHex_4_Hex_1_HexNAc_3_Kdn_1_ = 100001730,
+
+    /// Hex(4)HexNAc(4)Sulf(2): Hex(4) HexNAc(4) Sulf(2).
+    UNIMOD_Hex_4_HexNAc_4_Sulf_2_ = 100001732,
+
+    /// dHex(3)Hex(2)HexNAc(3)Kdn(1): DHex(3) Hex(2) HexNAc(3) Kdn.
+    UNIMOD_dHex_3_Hex_2_HexNAc_3_Kdn_1_ = 100001733,
+
+    /// dHex(2)Hex(2)HexNAc(5): DHex(2) Hex(2) HexNAc(5).
+    UNIMOD_dHex_2_Hex_2_HexNAc_5_ = 100001735,
+
+    /// dHex(2)Hex(3)HexA(1)HexNAc(3)Sulf(1): DHex(2) Hex(3) HexA HexNAc(3) Sulf.
+    UNIMOD_dHex_2_Hex_3_HexA_1_HexNAc_3_Sulf_1_ = 100001736,
+
+    /// dHex(1)Hex(4)HexA(1)HexNAc(3)Sulf(1): DHex Hex(4) HexA HexNAc(3) Sulf.
+    UNIMOD_dHex_1_Hex_4_HexA_1_HexNAc_3_Sulf_1_ = 100001737,
+
+    /// Hex(3)HexNAc(3)NeuAc(2): Hex(3) HexNAc(3) NeuAc(2).
+    UNIMOD_Hex_3_HexNAc_3_NeuAc_2_ = 100001738,
+
+    /// dHex(2)Hex(3)HexNAc(3)NeuAc(1): DHex(2) Hex(3) HexNAc(3) NeuAc.
+    UNIMOD_dHex_2_Hex_3_HexNAc_3_NeuAc_1_ = 100001739,
+
+    /// dHex(4)Hex(3)HexNAc(3): DHex(4) Hex(3) HexNAc(3).
+    UNIMOD_dHex_4_Hex_3_HexNAc_3_ = 100001740,
+
+    /// dHex(2)Hex(3)HexNAc(3)NeuGc(1): DHex(2) Hex(3) HexNAc(3) NeuGc.
+    UNIMOD_dHex_2_Hex_3_HexNAc_3_NeuGc_1_ = 100001741,
+
+    /// Hex(9)Phos(3): Hex(9) Phos(3).
+    UNIMOD_Hex_9_Phos_3_ = 100001742,
+
+    /// dHex(2)HexNAc(7): DHex(2) HexNAc(7).
+    UNIMOD_dHex_2_HexNAc_7_ = 100001743,
+
+    /// Hex(2)HexNAc(1)NeuGc(4): Hex(2) HexNAc NeuGc(4).
+    UNIMOD_Hex_2_HexNAc_1_NeuGc_4_ = 100001744,
+
+    /// Hex(3)HexNAc(3)NeuAc(2)Sulf(1): Hex(3) HexNAc(3) NeuAc(2) Sulf.
+    UNIMOD_Hex_3_HexNAc_3_NeuAc_2_Sulf_1_ = 100001745,
+
+    /// dHex(2)Hex(3)HexNAc(5): DHex(2) Hex(3) HexNAc(5).
+    UNIMOD_dHex_2_Hex_3_HexNAc_5_ = 100001746,
+
+    /// dHex(1)Hex(2)HexNAc(2)NeuGc(3): DHex Hex(2) HexNAc(2) NeuGc(3).
+    UNIMOD_dHex_1_Hex_2_HexNAc_2_NeuGc_3_ = 100001747,
+
+    /// dHex(2)Hex(4)HexA(1)HexNAc(3)Sulf(1): DHex(2) Hex(4) HexA HexNAc(3) Sulf.
+    UNIMOD_dHex_2_Hex_4_HexA_1_HexNAc_3_Sulf_1_ = 100001748,
+
+    /// Hex(2)HexNAc(3)NeuAc(3): Hex(2) HexNAc(3) NeuAc(3).
+    UNIMOD_Hex_2_HexNAc_3_NeuAc_3_ = 100001749,
+
+    /// dHex(1)Hex(3)HexNAc(3)NeuAc(2): DHex Hex(3) HexNAc(3) NeuAc(2).
+    UNIMOD_dHex_1_Hex_3_HexNAc_3_NeuAc_2_ = 100001750,
+
+    /// dHex(3)Hex(3)HexNAc(3)NeuAc(1): DHex(3) Hex(3) HexNAc(3) NeuAc.
+    UNIMOD_dHex_3_Hex_3_HexNAc_3_NeuAc_1_ = 100001751,
+
+    /// Hex(2)HexNAc(3)NeuGc(3): Hex(2) HexNAc(3) NeuGc(3).
+    UNIMOD_Hex_2_HexNAc_3_NeuGc_3_ = 100001752,
+
+    /// Hex(10)Phos(3): Hex(10) Phos(3).
+    UNIMOD_Hex_10_Phos_3_ = 100001753,
+
+    /// dHex(1)Hex(2)HexNAc(4)NeuAc(2): DHex Hex(2) HexNAc(4) NeuAc(2).
+    UNIMOD_dHex_1_Hex_2_HexNAc_4_NeuAc_2_ = 100001754,
+
+    /// Hex(1)HexNAc(1)NeuGc(5): Hex HexNAc NeuGc(5).
+    UNIMOD_Hex_1_HexNAc_1_NeuGc_5_ = 100001755,
+
+    /// Hex(4)HexNAc(4)NeuAc(1)Sulf(2): Hex(4) HexNAc(4) NeuAc Sulf(2).
+    UNIMOD_Hex_4_HexNAc_4_NeuAc_1_Sulf_2_ = 100001756,
+
+    /// Hex(4)HexNAc(4)NeuGc(1)Sulf(2): Hex(4) HexNAc(4) NeuGc Sulf(2).
+    UNIMOD_Hex_4_HexNAc_4_NeuGc_1_Sulf_2_ = 100001757,
+
+    /// dHex(2)Hex(3)HexNAc(3)NeuAc(2): DHex(2) Hex(3) HexNAc(3) NeuAc(2).
+    UNIMOD_dHex_2_Hex_3_HexNAc_3_NeuAc_2_ = 100001758,
+
+    /// Hex(4)HexNAc(4)NeuAc(1)Sulf(3): Hex(4) HexNAc(4) NeuAc Sulf(3).
+    UNIMOD_Hex_4_HexNAc_4_NeuAc_1_Sulf_3_ = 100001759,
+
+    /// dHex(2)Hex(2)HexNAc(2): DHex(2) Hex(2) HexNAc(2).
+    UNIMOD_dHex_2_Hex_2_HexNAc_2_ = 100001760,
+
+    /// dHex(1)Hex(3)HexNAc(2): DHex Hex(3) HexNAc(2).
+    UNIMOD_dHex_1_Hex_3_HexNAc_2_ = 100001761,
+
+    /// dHex(1)Hex(2)HexNAc(3): DHex Hex(2) HexNAc(3).
+    UNIMOD_dHex_1_Hex_2_HexNAc_3_ = 100001762,
+
+    /// Hex(3)HexNAc(3): Hex(3) HexNAc(3).
+    UNIMOD_Hex_3_HexNAc_3_ = 100001763,
+
+    /// dHex(1)Hex(3)HexNAc(2)Sulf(1): DHex Hex(3) HexNAc(2) Sulf.
+    UNIMOD_dHex_1_Hex_3_HexNAc_2_Sulf_1_ = 100001764,
+
+    /// dHex(2)Hex(3)HexNAc(2): DHex(2) Hex(3) HexNAc(2).
+    UNIMOD_dHex_2_Hex_3_HexNAc_2_ = 100001765,
+
+    /// dHex(1)Hex(4)HexNAc(2): DHex Hex(4) HexNAc(2).
+    UNIMOD_dHex_1_Hex_4_HexNAc_2_ = 100001766,
+
+    /// dHex(2)Hex(2)HexNAc(3): DHex(2) Hex(2) HexNAc(3).
+    UNIMOD_dHex_2_Hex_2_HexNAc_3_ = 100001767,
+
+    /// dHex(1)Hex(3)HexNAc(3): DHex Hex(3) HexNAc(3).
+    UNIMOD_dHex_1_Hex_3_HexNAc_3_ = 100001768,
+
+    /// Hex(4)HexNAc(3): Hex(4) HexNAc(3).
+    UNIMOD_Hex_4_HexNAc_3_ = 100001769,
+
+    /// dHex(2)Hex(4)HexNAc(2): DHex(2) Hex(4) HexNAc(2).
+    UNIMOD_dHex_2_Hex_4_HexNAc_2_ = 100001770,
+
+    /// dHex(2)Hex(3)HexNAc(3): DHex(2) Hex(3) HexNAc(3).
+    UNIMOD_dHex_2_Hex_3_HexNAc_3_ = 100001771,
+
+    /// Hex(3)HexNAc(5): Hex(3) HexNAc(5).
+    UNIMOD_Hex_3_HexNAc_5_ = 100001772,
+
+    /// Hex(4)HexNAc(3)NeuAc(1): Hex(4) HexNAc(3) NeuAc.
+    UNIMOD_Hex_4_HexNAc_3_NeuAc_1_ = 100001773,
+
+    /// dHex(2)Hex(3)HexNAc(4): DHex(2) Hex(3) HexNAc(4).
+    UNIMOD_dHex_2_Hex_3_HexNAc_4_ = 100001774,
+
+    /// dHex(1)Hex(3)HexNAc(5): DHex Hex(3) HexNAc(5).
+    UNIMOD_dHex_1_Hex_3_HexNAc_5_ = 100001775,
+
+    /// Hex(3)HexNAc(6): Hex(3) HexNAc(6).
+    UNIMOD_Hex_3_HexNAc_6_ = 100001776,
+
+    /// Hex(4)HexNAc(4)NeuAc(1): Hex(4) HexNAc(4) NeuAc.
+    UNIMOD_Hex_4_HexNAc_4_NeuAc_1_ = 100001777,
+
+    /// dHex(2)Hex(4)HexNAc(4): DHex(2) Hex(4) HexNAc(4).
+    UNIMOD_dHex_2_Hex_4_HexNAc_4_ = 100001778,
+
+    /// Hex(6)HexNAc(4): Hex(6) HexNAc(4).
+    UNIMOD_Hex_6_HexNAc_4_ = 100001779,
+
+    /// Hex(5)HexNAc(5): Hex(5) HexNAc(5).
+    UNIMOD_Hex_5_HexNAc_5_ = 100001780,
+
+    /// dHex(1)Hex(3)HexNAc(6): DHex Hex(3) HexNAc(6).
+    UNIMOD_dHex_1_Hex_3_HexNAc_6_ = 100001781,
+
+    /// dHex(1)Hex(4)HexNAc(4)NeuAc(1): DHex Hex(4) HexNAc(4) NeuAc.
+    UNIMOD_dHex_1_Hex_4_HexNAc_4_NeuAc_1_ = 100001782,
+
+    /// dHex(3)Hex(4)HexNAc(4): DHex(3) Hex(4) HexNAc(4).
+    UNIMOD_dHex_3_Hex_4_HexNAc_4_ = 100001783,
+
+    /// dHex(1)Hex(3)HexNAc(5)NeuAc(1): DHex Hex(3) HexNAc(5) NeuAc.
+    UNIMOD_dHex_1_Hex_3_HexNAc_5_NeuAc_1_ = 100001784,
+
+    /// dHex(2)Hex(4)HexNAc(5): DHex(2) Hex(4) HexNAc(5).
+    UNIMOD_dHex_2_Hex_4_HexNAc_5_ = 100001785,
+
+    /// Hex(1)HexNAc(1)NeuAc(1)Ac(1): Ac Hex HexNAc NeuAc.
+    UNIMOD_Hex_1_HexNAc_1_NeuAc_1_Ac_1_ = 100001786,
 
     /// unit: A unit of measurement is a standardized quantity of a physical quality.
     UO_unit = 200000000,

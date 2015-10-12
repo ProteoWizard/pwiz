@@ -94,8 +94,8 @@ void fillInSources(const string& datapath, MSData& msd, DataPtr t2d_data)
                              BFS_COMPLETE(relativePath); // uses initial path
         sourceFile->location = "file://" + location.branch_path().string();
 
-        sourceFile->set(MS_AB_SCIEX_TOF_TOF_T2D_nativeID_format);
-        sourceFile->set(MS_AB_SCIEX_TOF_TOF_T2D_format);
+        sourceFile->set(MS_SCIEX_TOF_TOF_T2D_nativeID_format);
+        sourceFile->set(MS_SCIEX_TOF_TOF_T2D_format);
         msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
     }
 }

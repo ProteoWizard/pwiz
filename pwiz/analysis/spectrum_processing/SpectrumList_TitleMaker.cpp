@@ -142,7 +142,7 @@ string translate_SourceFileTypeToRunID(const SourceFile& sf, CVID sourceFileType
         // location="file://path/to/source" name="spectrum-id.t2d"
         // location="file://path/to/source/MS" name="spectrum-id.t2d"
         // location="file://path/to/source/MSMS" name="spectrum-id.t2d"
-        case MS_AB_SCIEX_TOF_TOF_T2D_format:
+        case MS_SCIEX_TOF_TOF_T2D_format:
             return (bfs::path(sf.location) / sf.name).string().substr(7);
 
         default:

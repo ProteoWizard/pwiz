@@ -512,7 +512,7 @@ namespace seems
 
         public override string ToString()
         {
-            return String.Format("Lockmass Refiner (m/z {0} ± {1}", mz, tolerance);
+            return String.Format("Lockmass Refiner (m/z {0} ± {1})", mz, tolerance);
         }
 
         public override ProcessingMethod ToProcessingMethod()

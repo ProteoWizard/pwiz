@@ -42,4 +42,4 @@ set BOOST_BUILD_PATH=%PWIZ_ROOT%\libraries\boost-build
 
 REM # build and run cvgen targets
 echo Building and running cvgen and cvgen_cli...
-%PWIZ_BJAM% toolset=msvc %PWIZ_ROOT%\pwiz\data\common//cv.hpp %PWIZ_ROOT%\pwiz\utility\bindings\CLI\common//cv.hpp %*
+%PWIZ_BJAM% %PWIZ_ROOT%\pwiz\data\common//cv.hpp %PWIZ_ROOT%\pwiz\utility\bindings\CLI\common//cv.hpp %*
