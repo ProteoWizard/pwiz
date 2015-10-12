@@ -551,13 +551,13 @@ SpectrumListPtr filterCreator_MS2Deisotope(const MSData& msd, const string& arg,
                 try { lexical_cast<double>(buf); }
                 catch (...) { changeBool = false; }
                 if (changeBool) backwardsCompatible = true;
-    }
+            }
 
             if (backwardsCompatible)
-    {
+            {
                 mzt = lexical_cast<double>(buf);
                 break;
-    }
+            }
 
             if ( string::npos == buf.rfind('=') )
                 throw user_error("[filterCreator_MS2Deisotope] = sign required after keyword argument");
@@ -656,7 +656,7 @@ UsageInfo usage_precursorRecalculation = {"","This filter recalculates the precu
 SpectrumListPtr filterCreator_mzRefine(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
 {
     // Example string:
-    // "mzRefiner input1.pepXML input2.mzid msLevels=1- thresholdScore=specEValue thresholdValue=1e-10 thresholdStep=10 maxSteps=3�
+    // "mzRefiner input1.pepXML input2.mzid msLevels=1- thresholdScore=specEValue thresholdValue=1e-10 thresholdStep=10 maxSteps=3"
 
     istringstream parser(arg);
     // expand the filenames by globbing to handle wildcards
@@ -716,7 +716,6 @@ SpectrumListPtr filterCreator_mzRefine(const MSData& msd, const string& arg, pwi
     BOOST_FOREACH(const bfs::path& filename, globbedFilenames)
         files.push_back(filename.string());
 
-    // Currently this is no used. Do we need to use it?
     IntegerSet msLevelsToRefine;
     msLevelsToRefine.parse(msLevelSets);
 
@@ -753,9 +752,9 @@ SpectrumListPtr filterCreator_mzRefine(const MSData& msd, const string& arg, pwi
         }
     }
 
-    return SpectrumListPtr(new SpectrumList_MZRefiner(msd, identFilePath, thresholdCV, thresholdSet, thresholdStep, maxSteps));
+    return SpectrumListPtr(new SpectrumList_MZRefiner(msd, identFilePath, thresholdCV, thresholdSet, msLevelsToRefine, thresholdStep, maxSteps, ilr));
 }
-UsageInfo usage_mzRefine = { "mzRefiner input1.pepXML input2.mzid [msLevels=<1->] [thresholdScore=<CV_Score_Name>] [thresholdValue=<floatset>] [thresholdStep=<float>] [maxSteps=<count>]", "This filter recalculates the m/z and charges, adjusting precursors for MS2 spectra and spectra masses for MS1 spectra. "
+UsageInfo usage_mzRefine = { "input1.pepXML input2.mzid [msLevels=<1->] [thresholdScore=<CV_Score_Name>] [thresholdValue=<floatset>] [thresholdStep=<float>] [maxSteps=<count>]", "This filter recalculates the m/z and charges, adjusting precursors for MS2 spectra and spectra masses for MS1 spectra. "
 "It uses an ident file with a threshold field and value to calculate the error and will then choose a shifting mechanism to correct masses throughout the file. "
 "It only works on orbitrap, FT, and TOF data. It is designed to work on mzML files created by msconvert from a single dataset (single run), and with an identification file created using that mzML file. "
 "It does not use any 3rd party (vendor DLL) code. "

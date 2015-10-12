@@ -106,7 +106,7 @@ void testShift(const bfs::path& datadir)
     verifyPrecursorInfo(*msd.run.spectrumListPtr->spectrum(551), epsilon, 739.69935, 740.03);
 
     shared_ptr<SpectrumList_MZRefiner> spectrumListMZRefined(
-        new SpectrumList_MZRefiner(msd, (datadir / "JD_06232014_sample4_C.mzid").string(), "specEValue", "-1e-10"));
+        new SpectrumList_MZRefiner(msd, (datadir / "JD_06232014_sample4_C.mzid").string(), "specEValue", "-1e-10", IntegerSet(1, 2)));
 
     unit_assert(spectrumListMZRefined->size() == 610);
     if (os_) *os_ << "refined spectra:\n";

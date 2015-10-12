@@ -73,12 +73,14 @@ lib pwiz_analysis_spectrum_processing
     : # requirements
         <library>pwiz_analysis_spectrum_processing_basic
         <library>../../data/identdata//pwiz_data_identdata
+        <library>../../data/proteome//pwiz_data_proteome
         <library>../peakdetect//pwiz_analysis_peakdetect
         <library>../passive//pwiz_analysis_passive_core
     : # default-build
     : # usage-requirements
         <library>pwiz_analysis_spectrum_processing_basic
         <library>../../data/identdata//pwiz_data_identdata
+        <library>../../data/proteome//pwiz_data_proteome
         <library>../peakdetect//pwiz_analysis_peakdetect
         <library>../passive//pwiz_analysis_passive_core
     ;

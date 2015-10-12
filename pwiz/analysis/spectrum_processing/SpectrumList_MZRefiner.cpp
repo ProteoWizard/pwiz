@@ -28,8 +28,10 @@
 #include "pwiz/data/common/CVTranslator.hpp"
 #include "pwiz/data/identdata/IdentDataFile.hpp"
 #include "pwiz/data/msdata/MSData.hpp"
+#include "pwiz/data/proteome/Peptide.hpp"
 #include "pwiz/utility/misc/optimized_lexical_cast.hpp"
 #include "pwiz/utility/misc/Std.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Singleton.hpp"
 #include <iomanip>
 #include <numeric>
@@ -47,36 +49,67 @@ const unsigned int MINIMUM_RESULTS_FOR_GLOBAL_SHIFT = 100;
 // If there are only 500 data points, there will be very limited shift smoothing.
 const unsigned int MINIMUM_RESULTS_FOR_DEPENDENT_SHIFT = 500;
 
-struct ScanData
+// Forward declarations to allow having the comparison functions contained in the classes.
+class ShiftData;
+class ScanData;
+typedef boost::shared_ptr<ShiftData> ShiftDataPtr;
+typedef boost::shared_ptr<ScanData> ScanDataPtr;
+// Can't use boost::dynamic_pointer_cast<ScanData>(ShiftDataPtr) because there are no virtual members.
+// dynamic_pointer_cast also has higher overhead
+
+// Data necessary to calculate the multiple types of shifts
+class ShiftData
 {
-    size_t scanId;
-    string nativeID;
-    int rank;
+public:
     double scanTime; // In Seconds
     double massError;
     double ppmError;
     double calcMz;
     double experMz;
+
+    // Possible virtual member of msLevel or something similar?
+
+    static bool byScanTime(const ShiftData& i, const ShiftData& j) { return i.scanTime < j.scanTime; }
+    static bool byPpmError(const ShiftData& i, const ShiftData& j) { return i.ppmError < j.ppmError; }
+    static bool byCalcMz(const ShiftData& i, const ShiftData& j) { return i.calcMz < j.calcMz; }
+    static bool byExperMz(const ShiftData& i, const ShiftData& j) { return i.experMz < j.experMz; }
+    static bool byScanTimePtr(ShiftDataPtr i, ShiftDataPtr j) { return i->scanTime < j->scanTime; }
+    static bool byPpmErrorPtr(ShiftDataPtr i, ShiftDataPtr j) { return i->ppmError < j->ppmError; }
+    static bool byCalcMzPtr(ShiftDataPtr i, ShiftDataPtr j) { return i->calcMz < j->calcMz; }
+    static bool byExperMzPtr(ShiftDataPtr i, ShiftDataPtr j) { return i->experMz < j->experMz; }
+};
+
+// Extra data needed for preparing the shifts, but not needed for calculating them
+class ScanData : public ShiftData
+{
+public:
+    size_t scanId;
+    string nativeID;
+    int rank;
+    string peptideSeq;
+    int peptideSeqLength;
+    int msLevel;
     double scoreValue;
     int charge;
 
     // Sorting functions for vector of ScanData
-    static bool byScanId(ScanData i, ScanData j) { return i.scanId < j.scanId; }
-    static bool byScanTime(ScanData i, ScanData j) { return i.scanTime < j.scanTime; }
-    static bool byPpmError(ScanData i, ScanData j) { return i.ppmError < j.ppmError; }
-    static bool byCalcMz(ScanData i, ScanData j) { return i.calcMz < j.calcMz; }
-    static bool byExperMz(ScanData i, ScanData j) { return i.experMz < j.experMz; }
+    static bool byScanId(const ScanData& i, const ScanData& j) { return i.scanId < j.scanId; }
+    static bool byScanIdPtr(ScanDataPtr i, ScanDataPtr j) { return i->scanId < j->scanId; }
+    // TODO: potentially unsafe casting, should fix (how?)
+    static bool byScanIdPtr2(ShiftDataPtr i, ShiftDataPtr j) { return boost::static_pointer_cast<ScanData>(i)->scanId < boost::static_pointer_cast<ScanData>(j)->scanId; }
     // Not particularly useful, I think - depends on score used, and on other functions that would need to be added to CVConditionalFilter
-    static bool byScore(ScanData i, ScanData j) { return i.scoreValue < j.scoreValue; }
+    static bool byScore(const ScanData& i, const ScanData& j) { return i.scoreValue < j.scoreValue; }
+    static bool byScorePtr(ScanDataPtr i, ScanDataPtr j) { return i->scoreValue < j->scoreValue; }
 };
 
-class PWIZ_API_DECL CVConditionalFilter
+class CVConditionalFilter
 {
     public:
     class CVConditionalFilterConfigData
     {
     public:
         CVConditionalFilterConfigData() : software(CVID_Unknown), step(0.0), maxSteps(0) {}
+        CVConditionalFilterConfigData(const string& p_cvTerm, const string& p_rangeSet, double p_step, int p_maxSteps) : software(CVID_Unknown), cvTerm(p_cvTerm), rangeSet(p_rangeSet), step(p_step), maxSteps(p_maxSteps) {}
         CVID software;
         string cvTerm;
         string rangeSet;
@@ -85,20 +118,20 @@ class PWIZ_API_DECL CVConditionalFilter
     };
 
     CVConditionalFilter(CVConditionalFilterConfigData configData);
-    CVConditionalFilter(CVID software, string cvTerm, string rangeSet, double step = 0.0, int maxStep = 0);
-    CVConditionalFilter(CVID software, string cvTerm, double maxValue, double minValue, bool useMax, bool useMin, double step = 0, int maxStep = 0);
-    void updateFilter(CVID software, string cvTerm, double maxValue, double minValue, bool useMax, bool useMin, double step = 0, int maxStep = 0);
-    void updateFilter(CVID software, string cvTerm, string rangeSet, double step = 0.0, int maxStep = 0);
+    CVConditionalFilter(CVID software, const string& cvTerm, const string& rangeSet, double step = 0.0, int maxStep = 0);
+    CVConditionalFilter(CVID software, const string& cvTerm, double maxValue, double minValue, bool useMax, bool useMin, double step = 0, int maxStep = 0);
+    void updateFilter(CVID software, const string& cvTerm, double maxValue, double minValue, bool useMax, bool useMin, double step = 0, int maxStep = 0);
+    void updateFilter(CVID software, const string& cvTerm, const string& rangeSet, double step = 0.0, int maxStep = 0);
     bool passesFilter(identdata::SpectrumIdentificationItemPtr& sii, double& scoreVal) const;
     bool isBetter(double lScoreVal, double rScoreVal) const;
-    bool isBetter(const ScanData& lData, const ScanData& rData) const;
+    bool isBetter(const ScanDataPtr& lData, const ScanDataPtr& rData) const;
     bool adjustFilterByStep();
     cv::CVID getCVID() const { return cvid; }
     double getMax() const { return max; }
     double getMin() const { return min; }
     bool getAnd() const { return isAnd; }
-    string getScoreName() { return scoreName; }
-    string getThreshold() { return threshold; }
+    const string& getScoreName() { return scoreName; }
+    const string& getThreshold() { return threshold; }
 
     private:
     CVConditionalFilter();
@@ -124,7 +157,7 @@ struct sortFilter
 {
     CVConditionalFilterPtr filter;
     sortFilter(CVConditionalFilterPtr& f) : filter(f) {};
-    bool operator() (const ScanData& lData, const ScanData& rData) const
+    bool operator() (const ScanDataPtr& lData, const ScanDataPtr& rData) const
     {
         return filter->isBetter(lData, rData);
     }
@@ -147,7 +180,7 @@ class AdjustmentObject
     double getGlobalStDev() const       { return globalStDev; }
     double getGlobalMAD() const         { return globalMAD; }
     virtual double shift(double scanTime, double mass) const = 0;
-    virtual void calculate(vector<ScanData>& data) = 0;
+    virtual void calculate(vector<ShiftDataPtr>& data) = 0;
     virtual string getShiftRange() const = 0;
     virtual string getShiftOutString() const = 0;
     
@@ -179,7 +212,7 @@ class AdjustSimpleGlobal : public AdjustmentObject
     AdjustSimpleGlobal()    { adjustmentType = "SimpleGlobal"; adjTypeShort = "SG"; prettyAdjustment = "Global Shift"; }
     void setZeroShift()     { shiftError = 0.0;  }
     virtual double shift(double scanTime, double mass) const;
-    virtual void calculate(vector<ScanData>& data);
+    virtual void calculate(vector<ShiftDataPtr>& data);
     virtual string getShiftRange() const     { return lexical_cast<string>(shiftError); }
     virtual string getShiftOutString() const { return "Global PPM Shift"; }
     bool checkForPeak() const;
@@ -204,7 +237,7 @@ class BinnedAdjustmentObject : public AdjustmentObject
     public:
     BinnedAdjustmentObject(double gShift, double gStDev, double gMAD) : AdjustmentObject(gShift, gStDev, gMAD) {}
     virtual double shift(double scanTime, double mass) const = 0;
-    virtual void calculate(vector<ScanData>& data) = 0;
+    virtual void calculate(vector<ShiftDataPtr>& data) = 0;
     virtual string getShiftRange() const;
     virtual string getShiftOutString() const = 0;
     double getRoughStDev() const           { return roughStDev; }
@@ -286,7 +319,7 @@ public:
     // Should probably be made variable, but determining what it should be in the end is the challenge.
     AdjustByScanTime(double gShift, double gStDev, double gMAD) : BinnedAdjustmentObject(gShift, gStDev, gMAD) { adjustmentType = "ByScanTime"; adjTypeShort = "Time"; binSize = 75; prettyAdjustment = "Using scan time dependency"; }
     virtual double shift(double scanTime, double mass) const;
-    virtual void calculate(vector<ScanData>& data);
+    virtual void calculate(vector<ShiftDataPtr>& data);
     virtual string getShiftOutString() const { return "scan time dependent shift"; }
 
 private:
@@ -298,7 +331,7 @@ class AdjustByMassToCharge : public BinnedAdjustmentObject
     public:
     AdjustByMassToCharge(double gShift, double gStDev, double gMAD) : BinnedAdjustmentObject(gShift, gStDev, gMAD) { adjustmentType = "ByMassToCharge"; adjTypeShort = "MZ"; binSize = 25;  prettyAdjustment = "Using mass to charge dependency"; }
     virtual double shift(double scanTime, double mass) const;
-    virtual void calculate(vector<ScanData>& data);
+    virtual void calculate(vector<ShiftDataPtr>& data);
     virtual string getShiftOutString() const { return "m/z dependent shift"; }
     
     private:
@@ -308,10 +341,10 @@ typedef boost::shared_ptr<AdjustByMassToCharge> AdjustByMassToChargePtr;
 /*********************************************************************************************
  * Determine the mode within a specified accuracy for a global shift
  ********************************************************************************************/
-void AdjustSimpleGlobal::calculate(vector<ScanData>& data)
+void AdjustSimpleGlobal::calculate(vector<ShiftDataPtr>& data)
 {
-    std::sort(data.begin(), data.end(), ScanData::byPpmError);
-    medianError = data[data.size() / 2].ppmError;
+    std::sort(data.begin(), data.end(), ShiftData::byPpmErrorPtr);
+    medianError = data[data.size() / 2]->ppmError;
     double sumPpmError = 0.0;
     freqHistBinSize = 0.5;
     /****************************************************************************************
@@ -327,15 +360,15 @@ void AdjustSimpleGlobal::calculate(vector<ScanData>& data)
     // -50 to 50 is 100 values, if we don't count zero
     freqHistBinCount = 100.0 / freqHistBinSize + 1.0;
     freqHistBins.resize(freqHistBinCount, 0); // -50 to 50, with extra for zero
-    BOOST_FOREACH(const ScanData &i, data)
+    BOOST_FOREACH(const ShiftDataPtr &i, data)
     {
-        if (-50 <= i.ppmError && i.ppmError <= 50)
+        if (-50 <= i->ppmError && i->ppmError <= 50)
         {
             // Add 50 to enter valid range, add .5 for rounding purposes, then truncate for valid rounding
             // -50.5+50.5 = 0, -0.5+50.5=50, -0.2+50.5 = 50.7=>50, 50.499+50.5=100.999=>100.
             // 0.5 for rounding is a constant - do not change.
-            freqHistBins[(int)((i.ppmError + 50.0) * (1.0 / freqHistBinSize) + 0.5)]++;
-            sumPpmError += i.ppmError;
+            freqHistBins[(int)((i->ppmError + 50.0) * (1.0 / freqHistBinSize) + 0.5)]++;
+            sumPpmError += i->ppmError;
         }
     }
     
@@ -355,12 +388,12 @@ void AdjustSimpleGlobal::calculate(vector<ScanData>& data)
             modeError = (i * freqHistBinSize) - 50.0;
         }
     }
-    BOOST_FOREACH(const ScanData &i, data)
+    BOOST_FOREACH(const ShiftDataPtr &i, data)
     {
-        sumVariance += pow(i.ppmError - avgError, 2);
-        modeVariance += pow(i.ppmError - modeError, 2);
-        medianVariance += pow(i.ppmError - medianError, 2);
-        madList.push_back(abs(i.ppmError - medianError));
+        sumVariance += pow(i->ppmError - avgError, 2);
+        modeVariance += pow(i->ppmError - modeError, 2);
+        medianVariance += pow(i->ppmError - medianError, 2);
+        madList.push_back(abs(i->ppmError - medianError));
     }
     // variance, average of squared differences from mean
     //double avgVariance = sumVariance / (double)data.size();
@@ -601,6 +634,7 @@ void BinnedAdjustmentObject::processBins()
         }
     }
 
+    // Not sure how to work with this, or if it should just be removed.
     //cleanNoise();
 
     getStats(roughStDev, roughMAD);
@@ -757,23 +791,23 @@ string BinnedAdjustmentObject::getShiftRange() const
 /*********************************************************************************************
 * Configure the shifting object, populate data bins, and run calculations
 ********************************************************************************************/
-void AdjustByScanTime::calculate(vector<ScanData>& data)
+void AdjustByScanTime::calculate(vector<ShiftDataPtr>& data)
 {
     // Sort the data by scan time, and populate the bins
-    std::sort(data.begin(), data.end(), ScanData::byScanTime);
+    std::sort(data.begin(), data.end(), ShiftData::byScanTimePtr);
     // Set the store the highest and lowest valid bins
-    lowestValidBin = data.front().scanTime / binSize;
-    highestValidBin = data.back().scanTime / binSize;
+    lowestValidBin = data.front()->scanTime / binSize;
+    highestValidBin = data.back()->scanTime / binSize;
     // Calculate the number of bins needed; add 3-4 extra bins to avoid going out of bounds
-    bins = (data.back().scanTime + (binSize * 4.0)) / binSize;
+    bins = (data.back()->scanTime + (binSize * 4.0)) / binSize;
     // Resize the data vectors to the appropriate size
     sortBins.resize(bins);
     counts.resize(bins, 0);
     // Populate the data vectors
-    BOOST_FOREACH(const ScanData &i, data)
+    BOOST_FOREACH(const ShiftDataPtr &i, data)
     {
-        int useBin = i.scanTime / binSize;
-        sortBins[useBin].push_back(i.ppmError);
+        int useBin = i->scanTime / binSize;
+        sortBins[useBin].push_back(i->ppmError);
         counts[useBin]++;
     }
 
@@ -792,23 +826,23 @@ double AdjustByScanTime::shift(double scanTime, double mass) const
 /*********************************************************************************************
  * Configure the shifting object, populate data bins, and run calculations
  ********************************************************************************************/ 
-void AdjustByMassToCharge::calculate(vector<ScanData>& data)
+void AdjustByMassToCharge::calculate(vector<ShiftDataPtr>& data)
 {
     // Sort the data by mass, and populate the bins
-    std::sort(data.begin(), data.end(), ScanData::byCalcMz);
+    std::sort(data.begin(), data.end(), ShiftData::byExperMzPtr);
     // Set the store the highest and lowest valid bins
-    lowestValidBin = data.front().experMz / binSize;
-    highestValidBin = data.back().experMz / binSize;
+    lowestValidBin = data.front()->experMz / binSize;
+    highestValidBin = data.back()->experMz / binSize;
     // Calculate the number of bins needed; add 3-4 extra bins to avoid going out of bounds
-    bins = (data.back().experMz + (binSize * 4)) / binSize;
+    bins = (data.back()->experMz + (binSize * 4)) / binSize;
     // Resize the data vectors to the appropriate size
     sortBins.resize(bins);
     counts.resize(bins, 0);
     // Populate the data vectors
-    BOOST_FOREACH(const ScanData &i, data)
+    BOOST_FOREACH(const ShiftDataPtr &i, data)
     {
-        int useBin = i.experMz / binSize;
-        sortBins[useBin].push_back(i.ppmError);
+        int useBin = i->experMz / binSize;
+        sortBins[useBin].push_back(i->ppmError);
         counts[useBin]++;
     }
 
@@ -962,22 +996,22 @@ private:
 // CVConditionalFilter
 //
 
-PWIZ_API_DECL CVConditionalFilter::CVConditionalFilter(CVConditionalFilterConfigData configData)
+CVConditionalFilter::CVConditionalFilter(CVConditionalFilterConfigData configData)
 {
     updateFilter(configData.software, configData.cvTerm, configData.rangeSet, configData.step, configData.maxSteps);
 }
 
-PWIZ_API_DECL CVConditionalFilter::CVConditionalFilter(CVID software, string cvTerm, string rangeSet, double step, int maxStep)
+CVConditionalFilter::CVConditionalFilter(CVID software, const string& cvTerm, const string& rangeSet, double step, int maxStep)
 {
     updateFilter(software, cvTerm, rangeSet, step, maxStep);
 }
 
-PWIZ_API_DECL CVConditionalFilter::CVConditionalFilter(CVID software, string cvTerm, double maxValue, double minValue, bool useMax, bool useMin, double step, int maxStep)
+CVConditionalFilter::CVConditionalFilter(CVID software, const string& cvTerm, double maxValue, double minValue, bool useMax, bool useMin, double step, int maxStep)
 {
     updateFilter(software, cvTerm, maxValue, minValue, useMax, useMin, step, maxStep);
 }
 
-PWIZ_API_DECL void CVConditionalFilter::updateFilter(CVID software, string cvTerm, double maxValue, double minValue, bool useMax, bool useMin, double step, int maxStep)
+void CVConditionalFilter::updateFilter(CVID software, const string& cvTerm, double maxValue, double minValue, bool useMax, bool useMin, double step, int maxStep)
 {
     scoreName = cvTerm;
     useName = false;
@@ -1034,7 +1068,7 @@ PWIZ_API_DECL void CVConditionalFilter::updateFilter(CVID software, string cvTer
     {
         threshold = lexical_cast<string>(minValue) + " <= MME <= " + lexical_cast<string>(maxValue);
     }
-    threshold = threshold;
+    this->threshold = threshold;
     max = maxValue;
     min = minValue;
     this->step = step;
@@ -1052,7 +1086,7 @@ PWIZ_API_DECL void CVConditionalFilter::updateFilter(CVID software, string cvTer
 * If the range was something like "-1" or "1-", the minValue/maxValue (whichever was not specified)
 *     is set to lowest/highest (respectively) possible value for double
 **************************************************************************************/
-vector<double> parseDoubleSet(string rangeSet)
+vector<double> parseDoubleSet(const string& rangeSet)
 {
     double maxValue = numeric_limits<double>::max();
     double minValue = -maxValue;
@@ -1186,7 +1220,7 @@ vector<double> parseDoubleSet(string rangeSet)
 /*************************************************************************************
 * Step in the creation of a filter when using a DoubleSet for the threshold.
 **************************************************************************************/
-PWIZ_API_DECL void CVConditionalFilter::updateFilter(CVID software, string cvTerm, string rangeSet, double step, int maxStep)
+void CVConditionalFilter::updateFilter(CVID software, const string& cvTerm, const string& rangeSet, double step, int maxStep)
 {
     double maxValue;
     double minValue;
@@ -1205,7 +1239,7 @@ PWIZ_API_DECL void CVConditionalFilter::updateFilter(CVID software, string cvTer
 /*****************************************************************************************************************
 * Evaluate if the spectrum identification item passes the filter
 *****************************************************************************************************************/
-PWIZ_API_DECL bool CVConditionalFilter::passesFilter(SpectrumIdentificationItemPtr& sii, double& scoreVal) const
+bool CVConditionalFilter::passesFilter(SpectrumIdentificationItemPtr& sii, double& scoreVal) const
 {
     bool found = false;
     double value = 0;
@@ -1261,7 +1295,7 @@ PWIZ_API_DECL bool CVConditionalFilter::passesFilter(SpectrumIdentificationItemP
 * A function to allow us to sort a set of values from best to worst,
 *   depending on the threshold values definition of "better"
 ***********************************************************************************/
-PWIZ_API_DECL bool CVConditionalFilter::isBetter(double lScoreVal, double rScoreVal) const
+bool CVConditionalFilter::isBetter(double lScoreVal, double rScoreVal) const
 {
     if (!isAnd && isMin)
     {
@@ -1294,19 +1328,19 @@ PWIZ_API_DECL bool CVConditionalFilter::isBetter(double lScoreVal, double rScore
 * Comparison function for sorting by score.
 * Should probably change to prefer rank first, and the sort identical rank by score.
 ***********************************************************************************/
-PWIZ_API_DECL bool CVConditionalFilter::isBetter(const ScanData& lData, const ScanData& rData) const
+bool CVConditionalFilter::isBetter(const ScanDataPtr& lData, const ScanDataPtr& rData) const
 {
     // If rank == 0, probably PMF data, rely on the score used; otherwise, sort by rank unless it is equal
-    if (lData.rank != 0 && rData.rank != 0 && lData.rank != rData.rank)
+    if (lData->rank != 0 && rData->rank != 0 && lData->rank != rData->rank)
     {
         // A lower rank is better
-        if (lData.rank < rData.rank)
+        if (lData->rank < rData->rank)
         {
             return true;
         }
         return false;
     }
-    return isBetter(lData.scoreValue, rData.scoreValue);
+    return isBetter(lData->scoreValue, rData->scoreValue);
 }
 
 /********************************************************************************************
@@ -1314,7 +1348,7 @@ PWIZ_API_DECL bool CVConditionalFilter::isBetter(const ScanData& lData, const Sc
 *   poorer scoring identifications gradually included until you have the required number of data points.
 * (For the record, Sam Payne is against this, and Matt Monroe wants it.)
 ********************************************************************************************/
-PWIZ_API_DECL bool CVConditionalFilter::adjustFilterByStep()
+bool CVConditionalFilter::adjustFilterByStep()
 {
     bool hasStep = false;
     ostringstream oss;
@@ -1358,6 +1392,61 @@ ostream& operator<<(ostream& out, CVConditionalFilter filter)
 }
 
 
+/**********************************************************************************************
+* Check an instrument configuration for a final high-res analyzer
+***********************************************************************************************/
+bool configurationIsHighRes(const InstrumentConfigurationPtr& ic)
+{
+    Component* la = &(ic->componentList.analyzer(0));
+    // Get the last analyzer
+    BOOST_FOREACH(Component &c, ic->componentList)
+    {
+        if (c.type == ComponentType_Analyzer)
+        {
+            la = &c;
+        }
+    }
+    // Look for Orbitrap, FT, or TOF to test for high-res
+    if (la->hasCVParam(MS_orbitrap)
+        || la->hasCVParam(MS_time_of_flight)
+        || la->hasCVParam(MS_fourier_transform_ion_cyclotron_resonance_mass_spectrometer)
+        || la->hasCVParam(MS_stored_waveform_inverse_fourier_transform))
+    {
+        return true;
+    }
+    return false;
+}
+
+/*********************************************************************************************
+* Check a spectrum to determine if it is high res; also, return the first scan start time found.
+* Returns true if spectrum is high-resolution, and changes the start time if the value is available
+*********************************************************************************************/
+bool getSpectrumHighResAndStartTime(const vector<Scan>& scans, double& startTime)
+{
+    bool isHighRes = false;
+    CVParam scanStartTime;
+    BOOST_FOREACH(const Scan &sls, scans)
+    {
+        // Set isHighRes to true, don't allow it to be set back to false after it has been set to true.
+        if (configurationIsHighRes(sls.instrumentConfigurationPtr))
+        {
+            isHighRes = true;
+        }
+
+        if (scanStartTime.empty())
+        {
+            scanStartTime = sls.cvParam(MS_scan_start_time);
+        }
+    }
+    // Only attempt to change the start time if we have a valid CVParam.
+    if (!scanStartTime.empty())
+    {
+        startTime = scanStartTime.timeInSeconds(); // Use seconds
+    }
+    return isHighRes;
+}
+
+
 //
 // SpectrumList_MZRefiner::Impl
 //
@@ -1365,36 +1454,174 @@ ostream& operator<<(ostream& out, CVConditionalFilter filter)
 class SpectrumList_MZRefiner::Impl
 {
 public:
-    Impl() : bad(0), haveAllStartTimes(false) {}
+    Impl(util::IntegerSet p_msLevelsToRefine, CVConditionalFilter::CVConditionalFilterConfigData filterConfigData) : msLevelsToRefine(p_msLevelsToRefine), filterConfigData_(filterConfigData), bad_(0), badByScore_(0), badByMassError_(0) {}
     AdjustmentObjectPtr adjust;
+    AdjustmentObjectPtr ms2Adjust;
     string identFilePath;
-    vector<ScanData> data;
-    CVConditionalFilterPtr filter;
-    bool haveAllStartTimes;
-    void configureShift(const MSData& msd, string identFile, CVConditionalFilter::CVConditionalFilterConfigData filterConfigData, pwiz::util::IterationListenerRegistry* ilr);
+    vector<ShiftDataPtr> data; // Will hold ScanDataPtr, but must be ShiftDataPtr because polymorphism on collections doesn't work (can't pass vector<ScanDataPtr> to vector<ShiftDataPtr> parameter)
+    vector<ShiftDataPtr> ms2Data;
+    SpectrumListPtr spectrumList; // store a reference to the spectrum list for checking precursor information.
+    void configureShift(const MSData& msd, const string& identFile, pwiz::util::IterationListenerRegistry* ilr);
+    bool getPrecursorHighResAndStartTime(const Precursor& p, double& scanStartTime) const;
+    bool containsHighResData(const MSData& msd);
+    bool isAllHighRes() { return allHighRes_; }
+    util::IntegerSet msLevelsToRefine;
+    string getFilterScoreName() { return filterScoreName_; }
+    string getFilterThreshold() { return filterThreshold_; }
 
 private:
-    int bad;
-    void processIdentData(const MSData& msd, CVConditionalFilter::CVConditionalFilterConfigData filterConfigData, pwiz::util::IterationListenerRegistry* ilr);
-    void getScanTimesFromMSData(const MSData& msd, pwiz::util::IterationListenerRegistry* ilr);
-    void shiftCalculator();
-    bool cleanIsotopes(ScanData& sd); // Utility function. Doesn't really need to be a member function, but it isn't used anywhere else than in processIdentData
+    shared_ptr<ofstream> statStream_;
+    int bad_, badByScore_, badByMassError_;
+    bool allHighRes_;
+    CVConditionalFilter::CVConditionalFilterConfigData filterConfigData_;
+    void processIdentData(const MSData& msd, pwiz::util::IterationListenerRegistry* ilr);
+    void getMSDataData(const MSData& msd, pwiz::util::IterationListenerRegistry* ilr);
+    void shiftCalculator(pwiz::util::IterationListenerRegistry* ilr);
+    void shiftCalculator(pwiz::util::IterationListenerRegistry* ilr, vector<ShiftDataPtr>& shiftData,
+                         AdjustSimpleGlobalPtr& globalShift, AdjustByScanTimePtr& scanTimeShift, AdjustByMassToChargePtr& mzShift,
+                         AdjustmentObjectPtr& adjustment, string shiftDataType) const;
+    void fragmentationIonPpmErrors(const string& peptideSeq, const int& peptideSeqLength, const SpectrumPtr& s);
+    bool cleanIsotopes(ScanDataPtr& sd) const; // Utility function. Doesn't really need to be a member function, but it isn't used anywhere else than in processIdentData
+    string filterScoreName_;
+    string filterThreshold_;
+
+    // Identification precision filters; Stored here to facilitate future modification via user input
+    double isotopeScreenAdj_; // Filtering threshold for measurement accuracy/precision: Maximum measurement error where isotopic peak correction will be attempted
+    double isotopeFilter_;    // Filtering threshold for measurement accuracy/precision: Maximum measurement error
+    double ppmErrorLimit_;    // Filtering threshold for measurement accuracy/precision: Maximum PPM error
 };
+
+/*********************************************************************************
+* Checks the instrument configuration data to determine if there are high-resolution spectra in the file.
+* Also checks and sets the allHighRes_ member variable based on if all spectra will be high-resolution.
+* This is a bad, dual-purpose function: the return value and the value stored to the member variable are related, but not the same.
+*********************************************************************************/
+bool SpectrumList_MZRefiner::Impl::containsHighResData(const MSData& msd)
+{
+    bool hasHighRes = false;
+    allHighRes_ = true;
+    BOOST_FOREACH(const InstrumentConfigurationPtr& ic, msd.instrumentConfigurationPtrs)
+    {
+        // Set hasHighRes to true, don't allow it to be set back to false after it has been set to true.
+        if (configurationIsHighRes(ic))
+        {
+            hasHighRes = true;
+        }
+        else
+        {
+            allHighRes_ = false;
+        }
+    }
+    return hasHighRes;
+}
+
+shared_ptr<ofstream> openFilestreamIfWritable(const bfs::path& filepath, bool& fileExists)
+{
+    fileExists = bfs::exists(filepath);
+    shared_ptr<ofstream> tmp = boost::make_shared<ofstream>(filepath.string().c_str(), std::ios::app);
+    if (!*tmp) return shared_ptr<ofstream>(); // return null ptr if open failed (probably because file or path is read-only)
+    return tmp;
+}
 
 /********************************************************************************
 * Primary function for SpectrumList_MZRefiner::Impl
 * Performs the entire workflow for creating the shift.
 *******************************************************************************/
-void SpectrumList_MZRefiner::Impl::configureShift(const MSData& msd, string identFile, CVConditionalFilter::CVConditionalFilterConfigData filterConfigData, pwiz::util::IterationListenerRegistry* ilr)
+void SpectrumList_MZRefiner::Impl::configureShift(const MSData& msd, const string& identFile, pwiz::util::IterationListenerRegistry* ilr)
 {
+    bfs::path statFilepath = bfs::path(identFile).replace_extension("mzRefinement.tsv");
+
+    bool fileExists;
+    statStream_ = openFilestreamIfWritable(statFilepath, fileExists);
+    if (!statStream_) statStream_ = openFilestreamIfWritable(statFilepath.filename(), fileExists);
+    if (!statStream_) statStream_ = openFilestreamIfWritable(bfs::temp_directory_path() / statFilepath.filename(), fileExists);
+    if (!statStream_) throw runtime_error("[SpectrumList_MZRefiner::configureShift] unable to open a writable mzRefinement stats file");
+
+    // if the file was just created, write headers
+    if (!fileExists)
+        *statStream_ << "ThresholdScore\tThresholdValue\tExcluded (score)\tExcluded (mass error)"
+                     << "\tMS1 Included"
+                     //<< "\tMS1 Drift (mean)\tMS1 Drift (median)\tMS1 Global MAD\tMS1 Dependent MAD (scan)\tMS1 Dependent MAD (smoothed scan)\tMS1 Dependent MAD (mz)\tMS1 Dependent MAD (smoothed mz)\tMS1 %Improvement (scan)\tMS1 %Improvement (smoothed scan)\tMS1 %Improvement (mz)\tMS1 %Improvement (smoothed mz)"
+                     << "\tMS1 Shift method\tMS1 Final stDev\tMS1 Tolerance for 99%\tMS1 Final MAD\tMS1 MAD Tolerance for 99%"
+                     << "\tMS2 Included"
+                     //<< "\tMS2 Drift (mean)\tMS2 Drift (median)\tMS2 Global MAD\tMS2 Dependent MAD (scan)\tMS2 Dependent MAD (smoothed scan)\tMS2 Dependent MAD (mz)\tMS2 Dependent MAD (smoothed mz)\tMS2 %Improvement (scan)\tMS2 %Improvement (smoothed scan)\tMS2 %Improvement (mz)\tMS2 %Improvement (smoothed mz)"
+                     << "\tMS2 Shift method\tMS2 Final stDev\tMS2 Tolerance for 99%\tMS2 Final MAD\tMS2 MAD Tolerance for 99%"
+                     << "\n";
+
+    isotopeScreenAdj_ = 0.15; // 0.05 less than charge 5 error
+    isotopeFilter_ = 0.20; // May include charge 5 unadjusted error, but it is not common
+    ppmErrorLimit_ = 50.0; // Used as the negative and positive limit.
+    /*
+        Notes on isotopeFilter_ and ppmErrorLimit:
+        Current values of 0.20 and 50 ppm - 50ppm is more restrictive below 4000 m/z, the 0.20 mass error is more restrictive at and above 4000 m/z
+        Several other examples of where that threshold lies:
+        ppmErrorLimit_  isotopeFilter_   ppmMoreRestrictive < m/z <= massErrorMoreRestrictive
+        50              0.2                                   4000
+        80              0.2                                   2500
+        100             0.2                                   2000
+        125             0.2                                   1600
+        150             0.2                                   1333
+        200             0.2                                   1000
+        50              0.25                                  5000
+        80              0.25                                  3125
+        100             0.25                                  2500
+        125             0.25                                  2000
+        150             0.25                                  1667
+        200             0.25                                  1250
+        50              0.3                                   6000
+        80              0.3                                   3750
+        100             0.3                                   3000
+        125             0.3                                   2400
+        150             0.3                                   2000
+        200             0.3                                   1500
+    */
     identFilePath = identFile;
-    bad = 0;
+    bad_ = 0;
+    containsHighResData(msd); // not worried about return value, just making sure allHighRes_ is set properly.
     adjust.reset();
+    ms2Adjust.reset();
+    spectrumList = SpectrumListPtr(msd.run.spectrumListPtr);
     // Will initialize the filter, using the software cv if necessary
-    processIdentData(msd, filterConfigData, ilr);
-    // Will only read the MSData when the identfile did not contain the scan start time(or corresponding cvParam) for at least one result
-    getScanTimesFromMSData(msd, ilr);
-    shiftCalculator();
+    processIdentData(msd, ilr);
+    // Read data from the MSData to supply missing scan start times and to calculate the MS2 shift, if MS2 are high-resolution
+    getMSDataData(msd, ilr);
+    shiftCalculator(ilr);
+}
+
+
+/*********************************************************************************
+* Try to get precursor high-res and scan start time information.
+* Returns false if the spectrum is unavailable or low resolution, unless there are only high-resolution instrument configurations in the data
+* scanStartTime is only modified if the needed CVParam is available.
+*********************************************************************************/
+bool SpectrumList_MZRefiner::Impl::getPrecursorHighResAndStartTime(const Precursor& p, double& scanStartTime) const
+{
+    if (p.sourceFilePtr != NULL)
+    {
+        // skip it - it's external, and therefore may not be locally available
+        return false;
+    }
+    size_t precursorIndex = spectrumList->find(p.spectrumID);
+    SpectrumPtr precursorData;
+
+    // If the precursor index is present and valid, use the precursor scan time instead of the MSn scan time
+    if (precursorIndex != spectrumList->size())
+    {
+        precursorData = spectrumList->spectrum(precursorIndex, false);
+        // Check to see if the precursor is high resolution, and get the precursor scan start time.
+        if (!getSpectrumHighResAndStartTime(precursorData->scanList.scans, scanStartTime))
+        {
+            // Precursor is not high resolution. Leave as-is.
+            return false;
+        }
+    }
+    else if (!allHighRes_)
+    {
+        // Assume precursor is low-res.
+        return false;
+    }
+    // else: If all high-res and precursor data is not available, use the MSn scan start time, since it should be pretty close (assuming only one high-res analyzer exists in the run)
+    return true;
 }
 
 /****************************************************************************************
@@ -1402,26 +1629,26 @@ void SpectrumList_MZRefiner::Impl::configureShift(const MSData& msd, string iden
 * This gives a way to clean up a good number of the results so they are usable
 * There is undoubtedly room for improvement.
 *****************************************************************************************/
-bool SpectrumList_MZRefiner::Impl::cleanIsotopes(ScanData& sd)
+bool SpectrumList_MZRefiner::Impl::cleanIsotopes(ScanDataPtr& sd) const
 {
     double windowAdj = 0.05;
-    double chargeWithSign = sd.charge;
-    if (sd.massError < 0)
+    double chargeWithSign = sd->charge;
+    if (sd->massError < 0)
     {
         chargeWithSign = -chargeWithSign;
     }
     bool changed = false;
-    if (sd.charge != 0)
+    if (sd->charge != 0)
     {
         for (int i = 1; i <= 5; ++i)
         {
             double adjustment = (double)i / chargeWithSign;
             // Check to see if the adjustment will put the mass error inside of a tight window
-            if ((adjustment - windowAdj) <= sd.massError && sd.massError <= (adjustment + windowAdj))
+            if ((adjustment - windowAdj) <= sd->massError && sd->massError <= (adjustment + windowAdj))
             {
-                sd.experMz = sd.experMz - adjustment;
-                sd.massError = sd.experMz - sd.calcMz;
-                sd.ppmError = (sd.massError / sd.calcMz) * 1.0e6;
+                sd->experMz = sd->experMz - adjustment;
+                sd->massError = sd->experMz - sd->calcMz;
+                sd->ppmError = (sd->massError / sd->calcMz) * 1.0e6;
                 changed = true;
                 break;
             }
@@ -1435,16 +1662,10 @@ bool SpectrumList_MZRefiner::Impl::cleanIsotopes(ScanData& sd)
 *******************************************************************************************
 * There is some console output in this function which may not be very useful in the final version.
 ******************************************************************************************/
-void SpectrumList_MZRefiner::Impl::processIdentData(const MSData& msd, CVConditionalFilter::CVConditionalFilterConfigData filterConfigData, pwiz::util::IterationListenerRegistry* ilr)
+void SpectrumList_MZRefiner::Impl::processIdentData(const MSData& msd, pwiz::util::IterationListenerRegistry* ilr)
 {
-    haveAllStartTimes = true;
-    double isotopeScreenAdj = 0.15; // 0.05 less than charge 5 error
-    double isotopeFilter = 0.20; // May include charge 5 unadjusted error, but it is not common
-    double ppmErrorLimit = 50.0; // Used as the negative and positive limit.
-
     // TODO: log output at a high detail level...
-    cout << "Reading file \"" << identFilePath << "\"..." << endl;
-    //ilr->broadcastUpdateMessage(); ////////////////////////////////////////////////////////////////////////////////////////////////   ADD ILR USAGE  //////////////////////////////////////////////////////////
+    //cout << "Reading file \"" << identFilePath << "\"" << endl;
     IdentDataFile b(identFilePath, 0, ilr);
 
     BOOST_FOREACH(const AnalysisSoftwarePtr &as, b.analysisSoftwareList)
@@ -1453,29 +1674,60 @@ void SpectrumList_MZRefiner::Impl::processIdentData(const MSData& msd, CVConditi
         // If it has a userParam, we don't really care - the identification software probably doesn't have any score cvParams either
         if (!as->softwareName.cvParams.empty())
         {
-            filterConfigData.software = as->softwareName.cvParams.front().cvid; /// Get the analysis software name.....
+            filterConfigData_.software = as->softwareName.cvParams.front().cvid; /// Get the analysis software name.....
             break; // Get the name of the first analysis software only; might need to change to the last one.
         }
     }
 
-    filter = CVConditionalFilterPtr(new CVConditionalFilter(filterConfigData));
+    CVConditionalFilterPtr filter = CVConditionalFilterPtr(new CVConditionalFilter(filterConfigData_));
+    filterScoreName_ = filter->getScoreName();
+    filterThreshold_ = filter->getThreshold();
     sortFilter f(filter); // Make a functor out of the filter.
+
+    // Use the iteration listener registry to provide information to anything that will use it.
+    int totalResults = 0;
+    BOOST_FOREACH(const SpectrumIdentificationListPtr& sil, b.dataCollection.analysisData.spectrumIdentificationList)
+    {
+        totalResults += sil->spectrumIdentificationResult.size();
+    }
+    // Set the total count to the number of results times the max steps; if the progress bar jumps forward, people don't care, but having it move backwards usually isn't appreciated.
+    pwiz::util::IterationListener::UpdateMessage message(0, totalResults * (filterConfigData_.maxSteps > 0 ? filterConfigData_.maxSteps : 1), "Processing and filtering spectrum identifications...");
+    if (ilr && ilr->broadcastUpdateMessage(message) == pwiz::util::IterationListener::Status_Cancel)
+    {
+        // Cancel requested, return.
+        return;
+    }
+    int specCounter = 0;
+    int stepCounter = -1; // Becomes '0' for the first pass.
 
     int lessBad = 0;
     int excess = 0;
     bool adjustedFilter = true;
-    vector<ScanData> tempData;
+    vector<ScanDataPtr> tempData;
     while (adjustedFilter)
     {
+        stepCounter++;
+        specCounter = 0;
         adjustedFilter = false;
         data.clear();
-        bad = 0;
+        bad_ = 0;
         lessBad = 0;
         excess = 0;
         BOOST_FOREACH(const SpectrumIdentificationListPtr& sil, b.dataCollection.analysisData.spectrumIdentificationList)
         {
             BOOST_FOREACH(const SpectrumIdentificationResultPtr& sir, sil->spectrumIdentificationResult)
             {
+                specCounter++;
+                if (ilr)
+                {
+                    message.iterationIndex = specCounter + (stepCounter * totalResults); // Show some form of smooth progress across step iterations.
+                    pwiz::util::IterationListener::Status status = ilr->broadcastUpdateMessage(message);
+                    if (status == pwiz::util::IterationListener::Status_Cancel)
+                    {
+                        return;
+                    }
+                }
+
                 size_t scanId;
                 string nativeID = sir->spectrumID;
                 /********************************************************************************************************
@@ -1500,7 +1752,7 @@ void SpectrumList_MZRefiner::Impl::processIdentData(const MSData& msd, CVConditi
                 *    allow us to match up the identifications with their respective spectra in the data file.
                 *    The mzIdentML output from MS-GF+ currently does not have scan start times, so this has been tested with
                 *    mzML and mzIdentML input for Thermo data and Bruker QqTof data. Will be tested on Agilent QTOF data.
-                *    The scanId/scan number will be a problem with Waters instruments in its current implementation.
+                *    The scanId/scan number will be a problem with older Waters instruments in its current implementation.
                 *********************************************************************************************************/
                 // Backwards compatibility, it is correct on older files (where the spectrumID value is inaccurate)
                 // This is part of the output from MS-GF+; but not reliable for anything else that I know of.
@@ -1514,7 +1766,11 @@ void SpectrumList_MZRefiner::Impl::processIdentData(const MSData& msd, CVConditi
                 if (scanNum.empty())
                 {
                     CVID natIdType = pwiz::msdata::id::getDefaultNativeIDFormat(msd);
-                    scanId = lexical_cast<size_t>(pwiz::msdata::id::translateNativeIDToScanNumber(natIdType, sir->spectrumID));
+                    string scanNumber = pwiz::msdata::id::translateNativeIDToScanNumber(natIdType, sir->spectrumID);
+                    if (!scanNumber.empty())
+                        scanId = lexical_cast<size_t>(scanNumber);
+                    else
+                        scanId = specCounter;
                 }
                 else
                 {
@@ -1534,45 +1790,62 @@ void SpectrumList_MZRefiner::Impl::processIdentData(const MSData& msd, CVConditi
                 {
                     scanTime = sir->cvParam(MS_retention_time_s__OBSOLETE);
                 }
-                if (scanTime.empty())
-                {
-                    haveAllStartTimes = false;
-                }
-                else
+                if (!scanTime.empty())
                 {
                     scanStartTime = scanTime.timeInSeconds(); // Make sure to store it as seconds.
                 }
 
                 BOOST_FOREACH(SpectrumIdentificationItemPtr& sii, sir->spectrumIdentificationItem)
                 {
-                    double calcMz = sii->calculatedMassToCharge;
-                    double experMz = sii->experimentalMassToCharge;
-                    double massError = experMz - calcMz;
-                    double ppmError = (massError / calcMz) * 1.0e6;
                     double scoreVal = 0.0;
 
                     if (filter->passesFilter(sii, scoreVal))
                     {
-                        ScanData sd;
-                        sd.scanId = scanId;
-                        sd.nativeID = nativeID;
-                        sd.scanTime = scanStartTime;
-                        sd.calcMz = calcMz;
-                        sd.experMz = experMz;
-                        sd.charge = sii->chargeState;
-                        sd.rank = sii->rank;
-                        sd.massError = massError;
-                        sd.ppmError = ppmError;
-                        sd.scoreValue = scoreVal;
+                        ScanDataPtr sd(new ScanData);
+                        sd->scanId = scanId;
+                        sd->nativeID = nativeID;
+                        sd->scanTime = scanStartTime;
+                        sd->calcMz = sii->calculatedMassToCharge;
+                        sd->experMz = sii->experimentalMassToCharge;
+                        sd->charge = sii->chargeState;
+                        sd->rank = sii->rank;
+                        sd->massError = sd->experMz - sd->calcMz;
+                        sd->ppmError = (sd->massError / sd->calcMz) * 1.0e6;
+                        sd->scoreValue = scoreVal;
+                        sd->peptideSeq = sii->peptidePtr->peptideSequence;
+                        sd->peptideSeqLength = sd->peptideSeq.length();
+
+                        // Insert modifications
+                        if (sii->peptidePtr->modification.size() > 0)
+                        {
+                            vector<string> mods(sd->peptideSeq.length() + 2, "");
+                            BOOST_FOREACH(const ModificationPtr& m, sii->peptidePtr->modification)
+                            {
+                                if (mods[m->location] != "")
+                                {
+                                    mods[m->location] += ",";
+                                }
+                                mods[m->location] += boost::lexical_cast<std::string>(m->monoisotopicMassDelta);
+                            }
+                            for (int i = mods.size() - 1; i >= 0; i--)
+                            {
+                                if (mods[i] != "")
+                                {
+                                    sd->peptideSeq.insert(i, "(" + mods[i] + ")");
+                                }
+                            }
+                        }
 
                         bool cleaned = false;
                         bool worked = false;
-                        if (sd.massError < -isotopeScreenAdj || isotopeScreenAdj < sd.massError)
+                        // If the isotopeScreenAdj is greater than 0.20, there is increasing likelihood that a false isotopic peak error will be found and corrected.
+                        // Instead, just skip this step, which will reduce the number of threshold-passing spectral identifications.
+                        if (isotopeScreenAdj_ <= 0.20 && abs(sd->massError) >= isotopeScreenAdj_)
                         {
                             cleaned = true;
                             worked = cleanIsotopes(sd);
                         }
-                        if ((-isotopeFilter < sd.massError && sd.massError < isotopeFilter) && (-ppmErrorLimit <= sd.ppmError && sd.ppmError <= ppmErrorLimit))
+                        if (abs(sd->massError) < isotopeFilter_ && abs(sd->ppmError) <= ppmErrorLimit_)
                         {
                             // If there is only one match for the spectrum, use it
                             if (sir->spectrumIdentificationItem.size() == 1)
@@ -1587,13 +1860,13 @@ void SpectrumList_MZRefiner::Impl::processIdentData(const MSData& msd, CVConditi
                         }
                         else
                         {
-                            ++bad;
+                            ++bad_;
                             ++lessBad;
                         }
                     }
                     else
                     {
-                        ++bad;
+                        ++bad_;
                     }
                 } // End BOOST_FOREACH SpectrumIdentificationItem
                 // Sort multiple SpectrumIdentificationItems by score, and only keep the best.
@@ -1601,7 +1874,6 @@ void SpectrumList_MZRefiner::Impl::processIdentData(const MSData& msd, CVConditi
                 {
                     if (tempData.size() == 1)
                     {
-                        //cout << "Ended up with only one item in the tempData vector!" << endl;
                         // Only one of the multiple matches passed the threshold...
                         data.push_back(tempData.front());
                     }
@@ -1640,10 +1912,12 @@ void SpectrumList_MZRefiner::Impl::processIdentData(const MSData& msd, CVConditi
         cout << "Low number of good identifications found. Will not perform dependent shifts." << endl;
         cout << "\tLess than " << MINIMUM_RESULTS_FOR_DEPENDENT_SHIFT << " (" << data.size() << ") results after filtering." << endl;
     }
+
     // Number if identifications that didn't pass the threshold.
-    cout << "\t" << "Filtered out " << bad - lessBad << " identifications because of score." << endl;
+    badByScore_ = bad_ - lessBad;
+
     // Number of identifications that passed the threshold, but the isotope error couldn't be fixed (out of range)
-    cout << "\t" << "Filtered out " << lessBad << " identifications because of mass error." << endl;
+    badByMassError_ = lessBad;
 }
 
 /***************************************************************
@@ -1651,18 +1925,22 @@ void SpectrumList_MZRefiner::Impl::processIdentData(const MSData& msd, CVConditi
 * A good improvement would be to use nativeID indexes to only get the spectra we need.
 * But that improvement would be limited in use to files input from native, mzML, mzXML, and (maybe) text.
 ****************************************************************/
-void SpectrumList_MZRefiner::Impl::getScanTimesFromMSData(const MSData& msd, pwiz::util::IterationListenerRegistry* ilr)
+void SpectrumList_MZRefiner::Impl::getMSDataData(const MSData& msd, pwiz::util::IterationListenerRegistry* ilr)
 {
-    if (haveAllStartTimes || data.size() < MINIMUM_RESULTS_FOR_DEPENDENT_SHIFT)
+    if (data.size() < MINIMUM_RESULTS_FOR_DEPENDENT_SHIFT)
     {
-        // Don't bother reading the scan start times if we don't have enough results to run the dependent shifts
+        // Don't bother reading the scan start times/MS2 data if we don't have enough results to run the dependent shifts
         return;
     }
 
     // TODO: Log at a high detail level
-    cout << "Reading scan start times from the data file...." << endl;
-    // Report what is going on using the iteration listener... /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //ilr->broadcastUpdateMessage()
+    //cout << "Reading scan start times and/or data arrays from the data file...." << endl;
+    // Report what is going on using the iteration listener...
+    pwiz::util::IterationListener::UpdateMessage message(0, msd.run.spectrumListPtr->size(), "Reading scan start times and/or data arrays from data file...");
+    if (ilr && ilr->broadcastUpdateMessage(message) == pwiz::util::IterationListener::Status_Cancel)
+    {
+        return;
+    }
     const SpectrumListPtr& sl = msd.run.spectrumListPtr;
     sl.get();
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1671,36 +1949,393 @@ void SpectrumList_MZRefiner::Impl::getScanTimesFromMSData(const MSData& msd, pwi
     // Searching would be really expensive
     // (Using nativeID indexes would remove this issue) (but would not be applicable to all possible MSData input types)
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    std::sort(data.begin(), data.end(), ScanData::byScanId);
+    std::sort(data.begin(), data.end(), ScanData::byScanIdPtr2);
     size_t dataIndex = 0;
     for (size_t i = 0; i < sl->size() && dataIndex < data.size(); ++i)
     {
-        SpectrumPtr s = sl->spectrum(i, true);
+        if (ilr)
+        {
+            message.iterationIndex = i; // + 1?
+            pwiz::util::IterationListener::Status status = ilr->broadcastUpdateMessage(message);
+            if (status == pwiz::util::IterationListener::Status_Cancel)
+            {
+                return;
+            }
+        }
+
+        // Don't read the binary data right now - it can take a long time to read, and we don't know if we need it until we have other information about the spectrum.
+        // It is significantly faster than reading binary data by default.
+        SpectrumPtr s = sl->spectrum(i, false); // Not interested in the binary data right now.
+
+        // TODO: potentially unsafe casting, should fix (how?)
+        ScanDataPtr datum = boost::static_pointer_cast<ScanData>(data[dataIndex]);
         if (!s)
         {
             continue;
         }
-        if (s->id != data[dataIndex].nativeID)
+        if (s->id != datum->nativeID)
         {
             continue;
         }
-        vector<double> startTimes;
-        BOOST_FOREACH(const Scan &scan, s->scanList.scans)
+
+        double scanStartTime = 0;
+        bool isHighRes = getSpectrumHighResAndStartTime(s->scanList.scans, scanStartTime);
+
+        BOOST_FOREACH(Precursor &p, s->precursors)
         {
-            startTimes.push_back(scan.cvParam(MS_scan_start_time).timeInSeconds()); // Make sure it's in seconds...
+            // Not worried about precursor resolution right now.
+            getPrecursorHighResAndStartTime(p, scanStartTime);
+            // Only worried about the first scan start time.
+            break;
         }
-        std::sort(startTimes.begin(), startTimes.end());
-        while (s->id == data[dataIndex].nativeID)
+
+        int msLevel = 0;
+        if (s->hasCVParam(MS_MS1_spectrum))
         {
-            data[dataIndex].scanTime = startTimes[0];
+            msLevel = 1;
+        }
+        else if (s->hasCVParam(MS_ms_level))
+        {
+            msLevel = s->cvParam(MS_ms_level).valueAs<int>();
+        }
+        while (s->id == datum->nativeID)
+        {
+            datum->scanTime = scanStartTime;
+            datum->msLevel = msLevel;
+            if (isHighRes && msLevel > 1 && msLevelsToRefine.contains(msLevel))
+            {
+                // We need the binary data now, so re-read the spectrum with binary data.
+                if (!s->hasBinaryData())
+                {
+                    s = sl->spectrum(i, true); // Need binary data for MSn error calculation.
+                }
+                // Add fragmentation ion data to the ms2Data for a separate shift.
+                fragmentationIonPpmErrors(datum->peptideSeq, datum->peptideSeqLength, s);
+            }
             ++dataIndex;
             if (dataIndex >= data.size())
             {
                 break;
             }
+            // TODO: potentially unsafe casting, should fix (how?)
+            datum = boost::static_pointer_cast<ScanData>(data[dataIndex]);
         }
     }
 }
+
+
+/********************************************************************************
+* Insert the fragmentation ion and error data into ms2Data for the specified peptide and spectrum
+********************************************************************************/
+void SpectrumList_MZRefiner::Impl::fragmentationIonPpmErrors(const string& peptideSeq, const int& peptideSeqLength, const SpectrumPtr& s)
+{
+    const double mzErrorThreshold = 0.1;
+    const double ppmErrorThreshold = 25;
+    // Get the scan start time. (passed in...)
+    double scanStartTime = 0;
+    if (!getSpectrumHighResAndStartTime(s->scanList.scans, scanStartTime))
+    {
+        // exit out of function - we don't do shifts on low-res data.
+        return;
+    }
+
+    // Stash a reference to the m/z array
+    pwiz::msdata::BinaryDataArrayPtr mzArray = s->getMZArray();
+    double maxMZ = mzArray->data.back();
+    int maxMap = maxMZ + 5;
+
+    // Create a mapping of sorts to decrease search times for close ions
+    vector<int> mapping(maxMap, 0);
+    int j = 0;
+    for (int i = 0; i < mapping.size(); i++)
+    {
+        while (j < mzArray->data.size() && i > mzArray->data[j])
+        {
+            j++;
+        }
+        mapping[i] = j;
+    }
+
+    // Get the dissociation type: HCD, CID, ETD (from spectrum->precursorlist->precursor->activation->cvparams)
+    // Get the likely present ion types
+    /* Dissociation types available in CV:
+        MS_collision_induced_dissociation
+        MS_trap_type_collision_induced_dissociation
+        MS_beam_type_collision_induced_dissociation
+        MS_higher_energy_beam_type_collision_induced_dissociation
+        MS_in_source_collision_induced_dissociation
+        MS_plasma_desorption
+        MS_post_source_decay
+        MS_surface_induced_dissociation
+        MS_blackbody_infrared_radiative_dissociation
+        MS_electron_capture_dissociation
+        MS_electron_transfer_dissociation
+        MS_infrared_multiphoton_dissociation
+        MS_sustained_off_resonance_irradiation
+        MS_low_energy_collision_induced_dissociation
+        MS_photodissociation
+        MS_pulsed_q_dissociation
+        MS_LIFT
+    */
+    // see http://www.matrixscience.com/help/fragmentation_help.html
+    vector<CVParam> cvps;
+    BOOST_FOREACH(const Precursor &p, s->precursors)
+    {
+        vector <CVParam> cvpt = p.activation.cvParamChildren(MS_dissociation_method);
+        BOOST_FOREACH(CVParam& cvp, cvpt)
+        {
+            cvps.push_back(cvp);
+        }
+    }
+    bool hasAIons = false;
+    bool hasBIons = false;
+    bool hasCIons = false;
+    bool hasXIons = false;
+    bool hasYIons = false;
+    bool hasZIons = false;
+
+    BOOST_FOREACH(const CVParam& cvp, cvps)
+    {
+        CVID dissociation = cvp.cvid;
+        if (dissociation == MS_collision_induced_dissociation /*CID*/
+            || dissociation == MS_trap_type_collision_induced_dissociation /*CID*/
+            || dissociation == MS_in_source_collision_induced_dissociation)
+        {
+            //hasAIons = true;
+            hasBIons = true;
+            hasYIons = true;
+            // Notes: fragments with "RKNQ" can have lost ammonia (-17 Da)
+            // Notes: fragments with "STED" can have lost water (-18 Da) (neutral loss)
+        }
+        if (dissociation == MS_beam_type_collision_induced_dissociation /*HCD*/
+            || dissociation == MS_higher_energy_beam_type_collision_induced_dissociation /*HCD*/)
+        {
+            //hasAIons = true;
+            hasBIons = true;
+            hasYIons = true;
+        }
+        if (dissociation == MS_post_source_decay /*PSD*/)
+        {
+            //hasAIons = true;
+            hasBIons = true;
+            hasYIons = true;
+        }
+        if (dissociation == MS_electron_capture_dissociation /*HCD*/
+            || dissociation == MS_electron_transfer_dissociation /*HCD*/)
+        {
+            hasCIons = true;
+            //hasYIons = true;
+            hasZIons = true; // z+1, z+2
+        }
+    }
+
+
+    // Get the proper theoretical ions for the sequence
+    // Include parsing and use of modifications.
+    pwiz::proteome::Peptide pep(peptideSeq, pwiz::proteome::ModificationParsing_ByMass, pwiz::proteome::ModificationDelimiter_Parentheses);
+    pwiz::proteome::Fragmentation frag = pep.fragmentation(true, true);
+
+    vector<double> ions;
+    // frag.type(0, charge) returns the n- or c-term fragmentation, and frag.type(peptideLength, charge) is valid for most types.
+    // No point in using the '0' charge masses, since the mass spectrometer can't detect them anyway.
+    for (int i = 0; i <= peptideSeqLength; i++)
+    {
+        if (hasAIons)
+        {
+            ions.push_back(frag.a(i, 1));
+            ions.push_back(frag.a(i, 2));
+            ions.push_back(frag.a(i, 3));
+        }
+        if (hasBIons)
+        {
+            ions.push_back(frag.b(i, 1));
+            ions.push_back(frag.b(i, 2));
+            ions.push_back(frag.b(i, 3));
+        }
+        if (hasCIons && i != peptideSeqLength)
+        {
+            ions.push_back(frag.c(i, 1));
+            ions.push_back(frag.c(i, 2));
+            ions.push_back(frag.c(i, 3));
+        }
+        if (hasXIons && i != peptideSeqLength)
+        {
+            ions.push_back(frag.x(i, 1));
+            ions.push_back(frag.x(i, 2));
+            ions.push_back(frag.x(i, 3));
+        }
+        if (hasYIons)
+        {
+            ions.push_back(frag.y(i, 1));
+            ions.push_back(frag.y(i, 2));
+            ions.push_back(frag.y(i, 3));
+        }
+        if (hasZIons)
+        {
+            ions.push_back(frag.z(i, 1));
+            ions.push_back(frag.z(i, 2));
+            ions.push_back(frag.z(i, 3));
+        }
+    }
+
+    // Find the best match actual ions for the theoretical ions
+    // Calculate and store the ppm error for each match
+    BOOST_FOREACH(double ion, ions)
+    {
+        if (ion >= 0 && ion < mapping.size())
+        {
+            int closeIndex = mapping[(int)ion];
+            int lowSearch = closeIndex - 10;
+            int highSearch = closeIndex + 10;
+            if (lowSearch < 0)
+            {
+                lowSearch = 0;
+            }
+            if (highSearch > mzArray->data.size())
+            {
+                highSearch = mzArray->data.size();
+            }
+            double closestError = 100;
+            double experMass = 0;
+            double closestPpm = 100;
+            for (int i = lowSearch; i < highSearch; i++)
+            {
+                if (abs(ion - mzArray->data[i]) < abs(closestError))
+                {
+                    experMass = mzArray->data[i];
+                    closestError = ion - mzArray->data[i];
+                    closestPpm = ((mzArray->data[i] - ion) / ion) * 1.0e6;
+                }
+            }
+            if (abs(closestError) <= mzErrorThreshold && abs(closestPpm) <= ppmErrorThreshold)
+            {
+                // Add to the collection of MS2 data points for shift calculation.
+                ShiftDataPtr datum(new ShiftData);
+                datum->calcMz = ion;
+                datum->experMz = experMass;
+                datum->massError = closestError;
+                datum->ppmError = closestPpm;
+                datum->scanTime = scanStartTime;
+                ms2Data.push_back(datum);
+            }
+        }
+    }
+}
+
+
+/********************************************************************************
+* Run the shift calculator for all data sets
+*******************************************************************************/
+void SpectrumList_MZRefiner::Impl::shiftCalculator(pwiz::util::IterationListenerRegistry* ilr)
+{
+    AdjustSimpleGlobalPtr globalShift;
+    AdjustByScanTimePtr scanTimeShift;
+    AdjustByMassToChargePtr mzShift;
+
+    ostringstream statsRow;
+
+    // Output excluded identifications
+    statsRow << filterScoreName_ << '\t'
+             << filterThreshold_ << '\t'
+             << badByScore_ << '\t'
+             << badByMassError_ << '\t';
+
+    if (msLevelsToRefine.contains(1))
+    {
+        //cout << "Calculating MS1 shift" << endl;
+        shiftCalculator(ilr, data, globalShift, scanTimeShift, mzShift, adjust, "MS1");
+
+        // Output MS1 shift stats
+        statsRow << data.size() << '\t';
+
+        /*statsRow << globalShift->getAvgError() << '\t'
+                 << globalShift->getMedianError() << '\t'
+                 << globalShift->getMAD() << '\t';
+
+        if (adjust != globalShift)
+            statsRow << scanTimeShift->getRoughMAD() << '\t'
+                     << scanTimeShift->getSmoothedMAD() << '\t'
+                     << mzShift->getRoughMAD() << '\t'
+                     << mzShift->getSmoothedMAD() << '\t'
+                     << scanTimeShift->getRoughPctImpMAD() << '\t'
+                     << scanTimeShift->getSmoothedPctImpMAD() << '\t'
+                     << mzShift->getRoughPctImpMAD() << '\t'
+                     << mzShift->getSmoothedPctImpMAD() << '\t';
+        else
+            statsRow << "\t\t\t\t\t\t\t\t";*/
+
+        if (adjust == globalShift) statsRow << "global\t";
+        else if (adjust == scanTimeShift) statsRow << "scan time\t";
+        else if (adjust == mzShift) statsRow << "m/z\t";
+        else throw runtime_error("[SpectrumList_MZRefiner::shiftCalculator] could not determine chosen shift method");
+
+        statsRow << adjust->getStDev() << '\t'
+                 << adjust->getStDev() * 3 << '\t'
+                 << adjust->getMAD() << '\t'
+                 << adjust->getMAD() * (3 * 1.4826); // Estimated conversion scale from MAD to StDev, Normal Population: 1 StDev ~= 1.4826 MAD
+    }
+    else
+    {
+        statsRow << "\t" /*\t\t\t\t\t\t\t\t\t\t\t*/ "\t\t\t\t";
+    }
+
+    statsRow << '\t';
+
+    if (msLevelsToRefine.contains(2))
+    {
+        // Only calculate the MS2 shift if there are sufficient results.
+        // if there aren't, default to the MS1 shift, which will not be used for low-res MS2 data shifting anyway.
+        if (ms2Data.size() >= 100)
+        {
+            //cout << "Calculating MS2 shift" << endl;
+            shiftCalculator(ilr, ms2Data, globalShift, scanTimeShift, mzShift, ms2Adjust, "MS2");
+        }
+        else
+        {
+            // use the ms1 adjustment for MS2? 
+            ms2Adjust = adjust;
+        }
+        
+        // Output MS2 shift stats
+        statsRow << ms2Data.size() << '\t';
+
+        /*statsRow << globalShift->getAvgError() << '\t'
+                 << globalShift->getMedianError() << '\t'
+                 << globalShift->getMAD() << '\t';
+        
+        if (ms2Adjust != globalShift)
+            statsRow << scanTimeShift->getRoughMAD() << '\t'
+                     << scanTimeShift->getSmoothedMAD() << '\t'
+                     << mzShift->getRoughMAD() << '\t'
+                     << mzShift->getSmoothedMAD() << '\t'
+                     << scanTimeShift->getRoughPctImpMAD() << '\t'
+                     << scanTimeShift->getSmoothedPctImpMAD() << '\t'
+                     << mzShift->getRoughPctImpMAD() << '\t'
+                     << mzShift->getSmoothedPctImpMAD() << '\t';
+        else
+            statsRow << "\t\t\t\t\t\t\t\t";*/
+
+        if (ms2Adjust == globalShift) statsRow << "global\t";
+        else if (ms2Adjust == scanTimeShift) statsRow << "scan time\t";
+        else if (ms2Adjust == mzShift) statsRow << "m/z\t";
+        else if (ms2Adjust == adjust) statsRow << "same as MS1\t";
+        else throw runtime_error("[SpectrumList_MZRefiner::shiftCalculator] could not determine chosen shift method");
+
+        statsRow << ms2Adjust->getStDev() << '\t'
+                 << ms2Adjust->getStDev() * 3 << '\t'
+                 << ms2Adjust->getMAD() << '\t'
+                 << ms2Adjust->getMAD() * (3 * 1.4826); // Estimated conversion scale from MAD to StDev, Normal Population: 1 StDev ~= 1.4826 MAD
+    }
+    else
+    {
+        statsRow << "\t" /*\t\t\t\t\t\t\t\t\t\t\t*/ "\t\t\t\t";
+    }
+
+    statsRow << endl;
+    *statStream_ << statsRow.str();
+    statStream_->close();
+}
+
 
 /********************************************************************************
 * Calculate statistics, and determine best shifting strategy
@@ -1709,66 +2344,71 @@ void SpectrumList_MZRefiner::Impl::getScanTimesFromMSData(const MSData& msd, pwi
 * most of which will probably be removed from the final version, depending
 * on how useful it is for further analysis.
 *******************************************************************************/
-void SpectrumList_MZRefiner::Impl::shiftCalculator()
+void SpectrumList_MZRefiner::Impl::shiftCalculator(pwiz::util::IterationListenerRegistry* ilr, vector<ShiftDataPtr>& shiftData,
+                                                   AdjustSimpleGlobalPtr& globalShift, AdjustByScanTimePtr& scanTimeShift, AdjustByMassToChargePtr& mzShift,
+                                                   AdjustmentObjectPtr& adjustment, string shiftDataType) const
 {
-    adjust.reset();
-    // TODO: log output at a high detail level...
-    int widths = 50;
-    cout << std::left;
-
-    // Sanity check
-    if (data.size() < MINIMUM_RESULTS_FOR_GLOBAL_SHIFT)
+    pwiz::util::IterationListener::UpdateMessage message(0, 4, "Calculating and comparing possible adjustments");
+    if (ilr && ilr->broadcastUpdateMessage(message) == pwiz::util::IterationListener::Status_Cancel)
     {
+        // Cancel requested, return.
         return;
     }
+    adjustment.reset();
+
+    // Sanity check
+    if (shiftData.size() < MINIMUM_RESULTS_FOR_GLOBAL_SHIFT)
+        return;
+
     // Get the global shift data
-    AdjustSimpleGlobalPtr globalShift(new AdjustSimpleGlobal());
-    globalShift->calculate(data);
+    globalShift.reset(new AdjustSimpleGlobal);
+    globalShift->calculate(shiftData);
 
-    // Output the global shift stats
-    cout << "\t" << setw(widths) << "Good data points: " << data.size() << endl;
-    // Average drift, the mode in histBins
-    cout << "\t" << setw(widths) << "Systematic Drift (mean): " << globalShift->getAvgError() << endl;
-    cout << "\t" << setw(widths) << "Systematic Drift (mode): " << globalShift->getModeError() << endl;
-    cout << "\t" << setw(widths) << "Systematic Drift (median): " << globalShift->getMedianError() << endl;
-    cout << "\t" << setw(widths) << "Measurement Precision (MAD ppm): " << globalShift->getMAD() << endl;
 
-    // Check for a decent peak; if we don't have one, exit/throw exception
-    if (!(globalShift->checkForPeak()))
+    // Check for a decent peak; if we don't have one, exit/throw exception - but only for MS1 shifts.
+    if (!(globalShift->checkForPeak()) && shiftDataType == "MS1")
     {
         // Return null - no shift will be performed
-        cout << "Chose no shift - poor histogram peak." << endl;
+        //cout << "Chose no shift - poor histogram peak." << endl;
         throw runtime_error("[mzRefiner::shiftCalculator] No significant peak (ppm error histogram) found.");
+    }
+
+    message.iterationIndex = 1;
+    if (ilr && ilr->broadcastUpdateMessage(message) == pwiz::util::IterationListener::Status_Cancel)
+    {
+        // Cancel requested, return.
         return;
-        // Better?? - throw an exception
     }
 
     string chosen = "";
 
     // Only calculate the dependent shifts if there is enough data.
-    if (data.size() >= MINIMUM_RESULTS_FOR_DEPENDENT_SHIFT)
+    if (shiftData.size() >= MINIMUM_RESULTS_FOR_DEPENDENT_SHIFT)
     {
         double gShift = globalShift->getShift();
         double gStDev = globalShift->getStDev();
         double gMAD = globalShift->getMAD();
-        AdjustByScanTimePtr scanTimeShift(new AdjustByScanTime(gShift, gStDev, gMAD));
-        AdjustByMassToChargePtr mzShift(new AdjustByMassToCharge(gShift, gStDev, gMAD));
+        scanTimeShift.reset(new AdjustByScanTime(gShift, gStDev, gMAD));
+
+        message.iterationIndex = 2;
+        if (ilr && ilr->broadcastUpdateMessage(message) == pwiz::util::IterationListener::Status_Cancel)
+        {
+            // Cancel requested, return.
+            return;
+        }
+
+        mzShift.reset(new AdjustByMassToCharge(gShift, gStDev, gMAD));
+
+        message.iterationIndex = 3;
+        if (ilr && ilr->broadcastUpdateMessage(message) == pwiz::util::IterationListener::Status_Cancel)
+        {
+            // Cancel requested, return.
+            return;
+        }
 
         // Perform their respective calculations
-        scanTimeShift->calculate(data);
-        mzShift->calculate(data);
-
-        // Dependent shift data
-        cout << endl;
-        cout << "\t" << setw(widths) << "Average BinWise MAD (scan): " << scanTimeShift->getRoughMAD() << endl;
-        cout << "\t" << setw(widths) << "Average BinWise MAD (smoothed scan): " << scanTimeShift->getSmoothedMAD() << endl;
-        cout << "\t" << setw(widths) << "Average BinWise MAD (mz): " << mzShift->getRoughMAD() << endl;
-        cout << "\t" << setw(widths) << "Average BinWise MAD (smoothed mz): " << mzShift->getSmoothedMAD() << endl;
-        cout << endl;
-        cout << "\t" << setw(widths) << "Expected % Improvement (MAD scan): " << scanTimeShift->getRoughPctImpMAD() << endl;
-        cout << "\t" << setw(widths) << "Expected % Improvement (MAD smoothed scan): " << scanTimeShift->getSmoothedPctImpMAD() << endl;
-        cout << "\t" << setw(widths) << "Expected % Improvement (MAD mz): " << mzShift->getRoughPctImpMAD() << endl;
-        cout << "\t" << setw(widths) << "Expected % Improvement (MAD smoothed mz): " << mzShift->getSmoothedPctImpMAD() << endl;
+        scanTimeShift->calculate(shiftData);
+        mzShift->calculate(shiftData);
 
         double improvThreshold = 3.0;
         // Determine the best solution
@@ -1777,54 +2417,27 @@ void SpectrumList_MZRefiner::Impl::shiftCalculator()
         if (scanTimeShift->getPctImp() > improvThreshold && scanTimeShift->getPctImp() > mzShift->getPctImp())
         {
             chosen = "Chose scan time shift...";
-            this->adjust = scanTimeShift;
+            adjustment = scanTimeShift;
         }
         else if (mzShift->getPctImp() > improvThreshold)
         {
             chosen = "Chose mass to charge shift...";
-            this->adjust = mzShift;
+            adjustment = mzShift;
         }
     }
     // If we didn't/couldn't choose a dependent shift, do a global shift
-    if (!this->adjust)
+    if (!adjustment)
     {
         chosen = "Chose global shift...";
-        this->adjust = globalShift;
+        adjustment = globalShift;
     }
 
-    cout << chosen << endl;
-    cout << "\t" << setw(widths) << ("Applied " + this->adjust->getShiftOutString()) << this->adjust->getShiftRange() << endl;
-    cout << "\t" << setw(widths) << "Estimated final stDev: " << this->adjust->getStDev() << endl;
-    cout << "\t" << setw(widths) << "Estimated tolerance for 99% (ppm): 0 +/- " << this->adjust->getStDev() * 3 << endl;
-    cout << "\t" << setw(widths) << "Estimated final MAD: " << this->adjust->getMAD() << endl;
-    // Estimated conversion scale from MAD to StDev, Normal Population: 1 StDev ~= 1.4826 MAD
-    cout << "\t" << setw(widths) << "Estimated MAD tolerance for 99% (ppm): 0 +/- " << this->adjust->getMAD() * (3 * 1.4826) << endl;
-}
-
-
-/**********************************************************************************************
- * Check an instrument configuration for a final high-res analyzer
- ***********************************************************************************************/
-bool configurationIsHighRes(const InstrumentConfigurationPtr& ic)
-{
-    Component* la = &(ic->componentList.analyzer(0));
-    // Get the last analyzer
-    BOOST_FOREACH(Component &c, ic->componentList)
+    message.iterationIndex = 4;
+    if (ilr && ilr->broadcastUpdateMessage(message) == pwiz::util::IterationListener::Status_Cancel)
     {
-        if (c.type == ComponentType_Analyzer)
-        {
-            la = &c;
-        }
+        // Cancel requested, return.
+        return;
     }
-    // Look for Orbitrap, FT, or TOF to test for high-res
-    if (la->hasCVParam(MS_orbitrap)
-        || la->hasCVParam(MS_time_of_flight)
-        || la->hasCVParam(MS_fourier_transform_ion_cyclotron_resonance_mass_spectrometer)
-        || la->hasCVParam(MS_stored_waveform_inverse_fourier_transform))
-    {
-        return true;
-    }
-    return false;
 }
 
 
@@ -1833,34 +2446,19 @@ bool configurationIsHighRes(const InstrumentConfigurationPtr& ic)
 //
 
 PWIZ_API_DECL SpectrumList_MZRefiner::SpectrumList_MZRefiner(
-    const MSData& msd, const string& identFilePath, const string& cvTerm, const string& rangeSet, double step, int maxStep, pwiz::util::IterationListenerRegistry* ilr)
-:   SpectrumListWrapper(msd.run.spectrumListPtr), impl_(new Impl())
+    const MSData& msd, const string& identFilePath, const string& cvTerm, const string& rangeSet, const util::IntegerSet& msLevelsToRefine, double step, int maxStep, pwiz::util::IterationListenerRegistry* ilr)
+    : SpectrumListWrapper(msd.run.spectrumListPtr), impl_(new Impl(msLevelsToRefine, CVConditionalFilter::CVConditionalFilterConfigData(cvTerm, rangeSet, step, maxStep)))
 {
     // Determine if file has High-res scans...
-    bool hasHighRes = false;
-    BOOST_FOREACH(const InstrumentConfigurationPtr& ic, msd.instrumentConfigurationPtrs)
-    {
-        // Set isHighRes to true, don't allow it to be set back to false after it has been set to true.
-        if (configurationIsHighRes(ic))
-        {
-            hasHighRes = true;
-        }
-    }
     // Exit if we don't have any high-res data
-    if (!hasHighRes)
+    if (!impl_->containsHighResData(msd))
     {
         cerr << "\tError: No high-resolution data in input file.\n\tSkipping mzRefiner." << endl;
         throw pwiz::util::user_error("[mzRefiner::ctor] No high-resolution data in input file.");
     }
 
     // Configure and run shift calculations
-    CVConditionalFilter::CVConditionalFilterConfigData filterConfigData;
-    filterConfigData.cvTerm = cvTerm;
-    filterConfigData.rangeSet = rangeSet;
-    filterConfigData.step = step;
-    filterConfigData.maxSteps = maxStep;
-
-    impl_->configureShift(msd, identFilePath, filterConfigData, ilr);
+    impl_->configureShift(msd, identFilePath, ilr);
 
     // Exit if the shift calculations did not succeed for some reason
     if (impl_->data.size() == 0 || !impl_->adjust)
@@ -1878,9 +2476,9 @@ PWIZ_API_DECL SpectrumList_MZRefiner::SpectrumList_MZRefiner(
     // add identfile name, path
     method.userParams.push_back(UserParam("Identification File", identFilePath));
     // filter score param name
-    method.userParams.push_back(UserParam("Filter score name", impl_->filter->getScoreName()));
+    method.userParams.push_back(UserParam("Filter score name", impl_->getFilterScoreName()));
     // filter score threshold
-    method.userParams.push_back(UserParam("Filter score threshold", impl_->filter->getThreshold()));
+    method.userParams.push_back(UserParam("Filter score threshold", impl_->getFilterThreshold()));
     // shift type
     method.userParams.push_back(UserParam("Shift dependency", impl_->adjust->getPrettyAdjustment()));
     // shift range
@@ -1905,56 +2503,56 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_MZRefiner::spectrum(size_t index, bool ge
     }
     SpectrumPtr originalSpectrum = inner_->spectrum(index, getBinaryData);  
     
-    // Determine if is High-res scan...
+    // Determine if is High-res scan, and get the start time as well - they should both be available in the scans
     bool isHighRes = false;
     double scanTime = 0.0;
-    CVParam scanStartTime;
-    BOOST_FOREACH(Scan &sls, originalSpectrum->scanList.scans)
-    {
-        // Set isHighRes to true, don't allow it to be set back to false after it has been set to true.
-        if (configurationIsHighRes(sls.instrumentConfigurationPtr))
-        {
-            isHighRes = true;
-        }
-
-        if (scanStartTime.empty())
-        {
-            scanStartTime = sls.cvParam(MS_scan_start_time);
-        }
-    }
-    scanTime = scanStartTime.timeInSeconds(); // Use seconds
+    isHighRes = getSpectrumHighResAndStartTime(originalSpectrum->scanList.scans, scanTime);
 
     // Commonly used items, declare them only once - each use is atomic:
     //      get a iterator to the desired CVParam, read and store shifted value to 'value',
     //      convert 'value' to string and overwrite the CVParam's value variable.
     vector<CVParam>::iterator it;
     double value = 0;
-    
-    // On a high-res result, we want to adjust more than just precursor data; we can shift the m/z values in the data array
-    if (isHighRes)
+
+    // Get the msLevel to reliably choose the right data shift
+    CVParam msLevel = originalSpectrum->cvParam(MS_ms_level);
+    int msLevelInt = 1;
+    if (!msLevel.empty())
     {
+        msLevelInt = msLevel.valueAs<int>();
+    }
+    // On a high-res result, we want to adjust more than just precursor data; we can shift the m/z values in the data array
+    if (isHighRes && impl_->msLevelsToRefine.contains(msLevelInt))
+    {
+        // use the ms2 shift for MSn scans
+        AdjustmentObjectPtr adjust = impl_->adjust;
+        if (msLevelInt > 1)
+        {
+            adjust = impl_->ms2Adjust;
+        }
+
         double value = 0;
         // Adjust the metadata
         // Using an iterator to allow direct overwrite of the value - other methods return a copy of the CVParam
         it = find_if(originalSpectrum->cvParams.begin(), originalSpectrum->cvParams.end(), CVParamIs(MS_base_peak_m_z));
         if (it != originalSpectrum->cvParams.end())
         {
-            value = impl_->adjust->shift(scanTime, it->valueAs<double>());
+            value = adjust->shift(scanTime, it->valueAs<double>());
             it->value = boost::lexical_cast<std::string>(value);
         }
         it = find_if(originalSpectrum->cvParams.begin(), originalSpectrum->cvParams.end(), CVParamIs(MS_lowest_observed_m_z));
         if (it != originalSpectrum->cvParams.end())
         {
-            value = impl_->adjust->shift(scanTime, it->valueAs<double>());
+            value = adjust->shift(scanTime, it->valueAs<double>());
             it->value = boost::lexical_cast<std::string>(value);
         }
         it = find_if(originalSpectrum->cvParams.begin(), originalSpectrum->cvParams.end(), CVParamIs(MS_highest_observed_m_z));
         if (it != originalSpectrum->cvParams.end())
         {
-            value = impl_->adjust->shift(scanTime, it->valueAs<double>());
+            value = adjust->shift(scanTime, it->valueAs<double>());
             it->value = boost::lexical_cast<std::string>(value);
         }
-        
+
         // Adjust the spectrum data (all m/z values)
         BOOST_FOREACH(BinaryDataArrayPtr &bda, originalSpectrum->binaryDataArrayPtrs)
         {
@@ -1962,24 +2560,32 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_MZRefiner::spectrum(size_t index, bool ge
             {
                 BOOST_FOREACH(double &mass, bda->data)
                 {
-                    mass = impl_->adjust->shift(scanTime, mass);
+                    mass = adjust->shift(scanTime, mass);
                 }
             }
         }
     } // High res adjustments
     
     // return MS1 without precursor adjustments...
-    CVParam msLevel = originalSpectrum->cvParam(MS_ms_level);
-    // MS/MS precursor adjustment : Find and check the precursor for high-res-ness ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    if (!msLevel.empty() && msLevel.valueAs<int>() >= 2)
+    // MS/MS precursor adjustment : Find and check the precursor for high-res-ness, if possible.
+    if (!msLevel.empty() && msLevelInt >= 2 && impl_->msLevelsToRefine.contains(msLevelInt - 1))
     {
-        // MS2 spectrum, with only precursor adjustment right now
+        double pScanTime = scanTime;
+        // MSn spectrum precursor adjustment
         BOOST_FOREACH(Precursor &p, originalSpectrum->precursors)
         {
+            pScanTime = scanTime;
+            // Don't adjust low-resolution precursors, and get the precursor scan time if available.
+            if (!impl_->getPrecursorHighResAndStartTime(p, pScanTime))
+            {
+                continue;
+            }
+            // else: If all high-res and precursor data is not available, use the MSn scan start time, since it should be pretty close (assuming only one high-res analyzer exists in the run)
+
             it = find_if(p.isolationWindow.cvParams.begin(), p.isolationWindow.cvParams.end(), CVParamIs(MS_isolation_window_target_m_z));
             if (it != p.isolationWindow.cvParams.end())
             {
-                value = impl_->adjust->shift(scanTime, it->valueAs<double>());
+                value = impl_->adjust->shift(pScanTime, it->valueAs<double>());
                 it->value = boost::lexical_cast<std::string>(value);
             }
             BOOST_FOREACH(SelectedIon &si, p.selectedIons)
@@ -1987,7 +2593,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_MZRefiner::spectrum(size_t index, bool ge
                 it = find_if(si.cvParams.begin(), si.cvParams.end(), CVParamIs(MS_selected_ion_m_z));
                 if (it != si.cvParams.end())
                 {
-                    value = impl_->adjust->shift(scanTime, it->valueAs<double>());
+                    value = impl_->adjust->shift(pScanTime, it->valueAs<double>());
                     it->value = boost::lexical_cast<std::string>(value);
                 }
             }
@@ -2000,17 +2606,13 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_MZRefiner::spectrum(size_t index, bool ge
             {
                 if (up.name == "[Thermo Trailer Extra]Monoisotopic M/Z:")
                 {
-                    value = impl_->adjust->shift(scanTime, up.valueAs<double>());
+                    value = impl_->adjust->shift(pScanTime, up.valueAs<double>());
                     up.value = boost::lexical_cast<std::string>(value);
                 }
             }
         }
     } // MS/MS precursor adjustment
 
-    // Is this necessary? I'm not sure, I just copied this code from SpectrumList_PrecursorRefine.cpp.
-    // What risks, if any, are there to just returning "originalSpectrum"? (Or will that wipe out all of my changes?)
-    //SpectrumPtr  newSpectrum = SpectrumPtr(new Spectrum(*originalSpectrum));
-    
     return originalSpectrum;
 }
 

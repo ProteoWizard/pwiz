@@ -31,7 +31,7 @@
 ASSUMPTIONS:
 We are assuming that the instrument used to produce the data has at most ONE high-resolution mass analyzer.
 - If an instrument contained TWO high-resolution mass analyzers, two different shifts would be needed, as well as the computations to create those shifts.
-- We don't have such an instrument, and so we have no way to properly test that configuration, much less any reason to write code to ork with it.
+- We don't have such an instrument, and so we have no way to properly test that configuration, much less any reason to write code to work with it.
 ========================================================================================
 LIMITATIONS:
 This feature was created to modify m/z values using a bias generated from peptide identifications consistent with a single run.
@@ -51,6 +51,7 @@ DETERMINE IF THESE SHOULD BE ADDED TO THE USAGE INSTRUCTIONS
 ***************************************************************************************/
 
 #include "pwiz/data/msdata/SpectrumListWrapper.hpp"
+#include "pwiz/utility/misc/IntegerSet.hpp"
 #include "pwiz/utility/misc/IterationListener.hpp"
 
 namespace pwiz {
@@ -60,7 +61,7 @@ namespace analysis {
 class PWIZ_API_DECL SpectrumList_MZRefiner : public msdata::SpectrumListWrapper
 {
     public:
-    SpectrumList_MZRefiner(const msdata::MSData& msd, const std::string& identFilePath, const std::string& cvTerm, const std::string& rangeSet, double step = 0.0, int maxStep = 0, pwiz::util::IterationListenerRegistry* ilr = NULL);
+    SpectrumList_MZRefiner(const msdata::MSData& msd, const std::string& identFilePath, const std::string& cvTerm, const std::string& rangeSet, const util::IntegerSet& msLevelsToRefine, double step = 0.0, int maxStep = 0, pwiz::util::IterationListenerRegistry* ilr = NULL);
 
     /// \name SpectrumList interface
     //@{
