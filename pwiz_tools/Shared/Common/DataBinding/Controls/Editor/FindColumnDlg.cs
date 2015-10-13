@@ -29,10 +29,36 @@ namespace pwiz.Common.DataBinding.Controls.Editor
     public partial class FindColumnDlg : CommonFormEx
     {
         private Searcher _searcher;
+        private Form _owner;
 
         public FindColumnDlg()
         {
             InitializeComponent();
+        }
+
+        protected override void OnShown(EventArgs e)
+        {
+            base.OnShown(e);
+            _owner = Owner;
+            if (null != _owner)
+            {
+                _owner.FormClosed += OwnerFormClosed;
+            }
+        }
+
+        protected override void OnFormClosed(FormClosedEventArgs e)
+        {
+            base.OnFormClosed(e);
+            if (null != _owner)
+            {
+                _owner.FormClosed -= OwnerFormClosed;
+            }
+            Dispose();
+        }
+
+        private void OwnerFormClosed(object sender, EventArgs args)
+        {
+            Close();
         }
 
         public ViewEditor ViewEditor { get; set; }
@@ -218,12 +244,6 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         private void btnCancel_Click(object sender, EventArgs e)
         {
             Close();
-        }
-
-        protected override void OnFormClosed(FormClosedEventArgs e)
-        {
-            base.OnFormClosed(e);
-            Dispose();
         }
 
         private void UpdateButtons()
