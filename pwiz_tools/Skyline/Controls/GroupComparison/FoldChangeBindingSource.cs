@@ -115,7 +115,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             var defaultViewSpec = GetDefaultViewSpec(rows);
             if (!Equals(defaultViewSpec, ViewContext.BuiltInViews.First()))
             {
-                var viewInfo = new ViewInfo(_skylineDataSchema, typeof (FoldChangeRow), defaultViewSpec);
+                var viewInfo = new ViewInfo(_skylineDataSchema, typeof (FoldChangeRow), defaultViewSpec).ChangeViewGroup(ViewGroup.BUILT_IN);
                 ViewContext.SetRowSources(new[]
                 {
                     new RowSourceInfo(
