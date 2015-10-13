@@ -118,19 +118,29 @@ PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModel instrumentModel)
 {
     switch (instrumentModel)
     {
+        case API100:            return MS_API_100;
+        case API100LC:          return MS_API_100LC;
         case API150MCA:         return MS_API_150EX;
         case API150EX:          return MS_API_150EX;
+        case API165:            return MS_API_165;
+        case API300:            return MS_API_300;
+        case API350:            return MS_API_350;
+        case API365:            return MS_API_365;
         case API2000:           return MS_API_2000;
         case API3000:           return MS_API_3000;
         case API3200:           return MS_API_3200;
         case API4000:           return MS_API_4000;
         case API5000:           return MS_API_5000;
-        case API2000QTrap:      return MS_Q_TRAP;
-        case API2500QTrap:      return MS_Q_TRAP;
+        case API5500:           return MS_Triple_Quad_5500;
+        case API6500:           return MS_Triple_Quad_6500;
+        case API2000QTrap:      return MS_2000_QTRAP;
+        case API2500QTrap:      return MS_2500_QTRAP;
         case API3200QTrap:      return MS_3200_QTRAP;
-        case API3500QTrap:      return MS_Q_TRAP;
+        case API3500QTrap:      return MS_3500_QTRAP;
         case API4000QTrap:      return MS_4000_QTRAP;
         case API5500QTrap:      return MS_QTRAP_5500;
+        case API6500QTrap:      return MS_QTRAP_6500;
+        case API4600TripleTOF:  return MS_TripleTOF_4600;
         case API5600TripleTOF:  return MS_TripleTOF_5600;
         case API6600TripleTOF:  return MS_TripleTOF_6600;
         case QStar:             return MS_QSTAR;
@@ -139,16 +149,6 @@ PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModel instrumentModel)
         case QStarElite:        return MS_QSTAR_Elite;
 
         case NlxTof:
-        case API100:
-        case API100LC:
-        case API165:
-        case API300:
-        case API350:
-        case API365:
-        case API5500:
-        case API6500:
-        case API6500QTrap:
-        case API4600TripleTOF:
         case InstrumentModel_Unknown:
             return MS_Applied_Biosystems_instrument_model;
 
