@@ -248,6 +248,7 @@ std::vector<InstrumentConfiguration> createInstrumentConfigurations(CompassDataP
             break;
 
         case InstrumentFamily_FTMS:
+        case InstrumentFamily_solariX:
             configurations.back().componentList.push_back(Component(MS_FT_ICR, 2));
             configurations.back().componentList.push_back(Component(MS_inductive_detector, 3));
             break;
