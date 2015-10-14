@@ -267,7 +267,9 @@ namespace pwiz.Skyline
             }
             if (commandArgs.PublishingToPanorama)
             {
-                if (_importCount > 0)
+                // Publish the document to the given Panorama server if new results were added to the document
+                // OR no results files were given on the command-line for importing to the document. 
+                if (_importCount > 0 || !commandArgs.ImportingResults)
                 {
                     // Publish document to the given folder on the Panorama Server
                     var panoramaHelper = new PanoramaPublishHelper(_out);
