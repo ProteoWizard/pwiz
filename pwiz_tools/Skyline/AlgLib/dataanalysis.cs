@@ -1,3 +1,9 @@
+// N.B. The ALGLIB project is GPL licensed, but the ProteoWizard project has negotiated a separate 
+// license agreement which allows its use without making Skyline also subject to GPL.  
+// Details of the agreement can be found at:
+// https://skyline.gs.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=LicenseAgreement
+// If you wish to use ALGLIB elsewhere, consult the terms of the standard license described below.
+
 /*************************************************************************
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
