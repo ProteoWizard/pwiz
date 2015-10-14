@@ -25,6 +25,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Xml.Serialization;
+using NHibernate.Util;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
@@ -227,6 +228,12 @@ namespace pwiz.Skyline
                     commandArgs.ReportColumnSeparator, commandArgs.IsReportInvariant);
             }
 
+            if (commandArgs.ExportingChromatograms)
+            {
+                ExportChromatograms(commandArgs.ChromatogramsFile, commandArgs.ChromatogramsPrecursors, commandArgs.ChromatogramsProducts,
+                    commandArgs.ChromatogramsBasePeaks, commandArgs.ChromatogramsTics);
+            }
+
             if (!string.IsNullOrEmpty(commandArgs.TransListInstrumentType) &&
                 !string.IsNullOrEmpty(commandArgs.MethodInstrumentType))
             {
@@ -243,6 +250,11 @@ namespace pwiz.Skyline
                 {
                     ExportInstrumentFile(ExportFileType.Method, commandArgs);
                 }
+            }
+
+            if (Document != null && Document.Settings.HasResults)
+            {
+                Document.Settings.MeasuredResults.ReadStreams.ForEach(s => s.CloseStream());
             }
             if (commandArgs.SharingZipFile)
             {
@@ -1452,6 +1464,59 @@ namespace pwiz.Skyline
             catch (Exception x)
             {
                 _out.WriteLine(Resources.CommandLine_ExportLiveReport_Error__Failure_attempting_to_save__0__report_to__1__, reportName, reportFile);
+                _out.WriteLine(x.Message);
+            }
+        }
+
+        public void ExportChromatograms(string chromatogramsFile, bool precursors, bool products, bool basePeaks, bool tics)
+        {
+            _out.WriteLine(Resources.CommandLine_ExportChromatograms_Exporting_chromatograms_file__0____, chromatogramsFile);
+
+            var chromExtractors = new List<ChromExtractor>();
+            if (tics)
+                chromExtractors.Add(ChromExtractor.summed);
+            if (basePeaks)
+                chromExtractors.Add(ChromExtractor.base_peak);
+
+            var chromSources = new List<ChromSource>();
+            if (precursors)
+                chromSources.Add(ChromSource.ms1);
+            if (products)
+                chromSources.Add(ChromSource.fragment);
+
+            if (chromExtractors.Count == 0 && chromSources.Count == 0)
+            {
+                _out.WriteLine(Resources.CommandLine_ExportChromatograms_Error__At_least_one_chromatogram_type_must_be_selected);
+                return;
+            }
+
+            var filesToExport = Document.Settings.HasResults
+                ? Document.Settings.MeasuredResults.MSDataFilePaths.Select(f => f.GetFileName()).ToList()
+                : new List<string>();
+            if (filesToExport.Count == 0)
+            {
+                _out.WriteLine(Resources.CommandLine_ExportChromatograms_Error__The_document_must_have_imported_results);
+                return;
+            }
+
+            try
+            {
+                var chromExporter = new ChromatogramExporter(Document);
+                using (var saver = new FileSaver(chromatogramsFile))
+                using (var writer = new StreamWriter(saver.SafeName))
+                {
+                    var status = new ProgressStatus(string.Empty);
+                    IProgressMonitor broker = new CommandProgressMonitor(_out, status);
+                    chromExporter.Export(writer, broker, filesToExport, LocalizationHelper.CurrentCulture, chromExtractors, chromSources);
+                    writer.Close();
+                    broker.UpdateProgress(status.Complete());
+                    saver.Commit();
+                    _out.WriteLine(Resources.CommandLine_ExportChromatograms_Chromatograms_file__0__exported_successfully_, chromatogramsFile);
+                }
+            }
+            catch (Exception x)
+            {
+                _out.WriteLine(Resources.CommandLine_ExportChromatograms_Error__Failure_attempting_to_save_chromatograms_file__0_, chromatogramsFile);
                 _out.WriteLine(x.Message);
             }
         }

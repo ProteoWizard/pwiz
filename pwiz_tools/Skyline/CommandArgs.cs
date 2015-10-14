@@ -139,6 +139,14 @@ namespace pwiz.Skyline
             get { return !string.IsNullOrEmpty(ReportName); }
         }
 
+        // For exporting chromatograms
+        public string ChromatogramsFile { get; private set; }
+        public bool ChromatogramsPrecursors { get; private set; }
+        public bool ChromatogramsProducts { get; private set; }
+        public bool ChromatogramsBasePeaks { get; private set; }
+        public bool ChromatogramsTics { get; private set; }
+        public bool ExportingChromatograms { get { return !string.IsNullOrEmpty(ChromatogramsFile); } }
+
         // For publishing the document to Panorama
         private const string PANORAMA_SERVER_URI = "panorama-server"; // Not L10N
         private const string PANORAMA_USERNAME = "panorama-username"; // Not L10N
@@ -1036,6 +1044,32 @@ namespace pwiz.Skyline
                 else if (IsName(pair, "report-invariant")) // Not L10N
                 {
                     IsReportInvariant = true;
+                }
+
+                else if (IsNameValue(pair, "chromatogram-file")) // Not L10N
+                {
+                    ChromatogramsFile = GetFullPath(pair.Value);
+                    RequiresSkylineDocument = true;
+                }
+
+                else if (IsNameOnly(pair, "chromatogram-precursors")) // Not L10N
+                {
+                    ChromatogramsPrecursors = true;
+                }
+
+                else if (IsNameOnly(pair, "chromatogram-products")) // Not L10N
+                {
+                    ChromatogramsProducts = true;
+                }
+
+                else if (IsNameOnly(pair, "chromatogram-base-peaks")) // Not L10N
+                {
+                    ChromatogramsBasePeaks = true;
+                }
+
+                else if (IsNameOnly(pair, "chromatogram-tics")) // Not L10N
+                {
+                    ChromatogramsTics = true;
                 }
                 else if (IsNameValue(pair, "exp-translist-instrument")) // Not L10N
                 {

@@ -8274,6 +8274,21 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="ShimadzuNativeMassListExporter_ExportNativeList_Unexpected_response__0__from_Shimadzu_method_converter" xml:space="preserve">
     <value>Unexpected response {0} from Shimadzu method converter</value>
   </data>
+  <data name="CommandLine_ExportChromatograms_Exporting_chromatograms_file__0____" xml:space="preserve">
+    <value>Exporting chromatograms file {0}...</value>
+  </data>
+  <data name="CommandLine_ExportChromatograms_Error__At_least_one_chromatogram_type_must_be_selected" xml:space="preserve">
+    <value>Error: At least one chromatogram type must be selected</value>
+  </data>
+  <data name="CommandLine_ExportChromatograms_Error__The_document_must_have_imported_results" xml:space="preserve">
+    <value>Error: The document must have imported results</value>
+  </data>
+  <data name="CommandLine_ExportChromatograms_Chromatograms_file__0__exported_successfully_" xml:space="preserve">
+    <value>Chromatograms file {0} exported successfully.</value>
+  </data>
+  <data name="CommandLine_ExportChromatograms_Error__Failure_attempting_to_save_chromatograms_file__0_" xml:space="preserve">
+    <value>Error: Failure attempting to save chromatograms file {0}</value>
+  </data>
   <data name="IsolationSchemeList_GetDefaults_SWATH__15_m_z_" xml:space="preserve">
     <value>SWATH (15 m/z)</value>
   </data>

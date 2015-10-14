@@ -25,6 +25,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NHibernate.Util;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
@@ -315,6 +316,51 @@ namespace pwiz.SkylineTestA
 
             string reportLines = File.ReadAllText(outPath);
             AssertEx.NoDiff(reportLines, programmaticReport);
+        }
+
+        [TestMethod]
+        public void ConsoleChromatogramExportTest()
+        {
+            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            string docPath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
+            string outPath = testFilesDir.GetTestPath("Exported_chromatograms.csv");
+
+            // Import the first RAW file (or mzML for international)
+            string rawFile = "ah_20101011y_BSA_MS-MS_only_5-2" + ExtensionTestContext.ExtThermoRaw;
+            string rawPath = testFilesDir.GetTestPath(rawFile);
+            const string replicate = "Single";
+
+            //Attach replicate
+            SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
+            ProgressStatus status;
+            doc = CommandLine.ImportResults(doc, docPath, replicate, MsDataFileUri.Parse(rawPath), null, null, out status);
+            Assert.IsNull(status);
+
+            //First, programmatically generate the report
+            var chromFiles = new[] { rawFile };
+            var chromExporter = new ChromatogramExporter(doc);
+            var chromExtractors = new[] { ChromExtractor.summed, ChromExtractor.base_peak };
+            var chromSources = new[] { ChromSource.ms1, ChromSource.fragment };
+            var chromBuffer = new StringBuilder();
+            using (var chromWriter = new StringWriter(chromBuffer))
+            {
+                chromExporter.Export(chromWriter, null, chromFiles, LocalizationHelper.CurrentCulture, chromExtractors,
+                    chromSources);
+            }
+            doc.Settings.MeasuredResults.ReadStreams.ForEach(s => s.CloseStream());
+            string programmaticReport = chromBuffer.ToString();
+
+            RunCommand("--in=" + docPath,
+                       "--import-file=" + rawPath,
+                       "--import-replicate-name=" + replicate,
+                       "--chromatogram-file=" + outPath,
+                       "--chromatogram-precursors",
+                       "--chromatogram-products",
+                       "--chromatogram-base-peaks",
+                       "--chromatogram-tics");
+
+            string chromLines = File.ReadAllText(outPath);
+            AssertEx.NoDiff(chromLines, programmaticReport);
         }
 
         [TestMethod]

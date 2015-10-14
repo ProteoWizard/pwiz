@@ -3911,6 +3911,53 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Chromatograms file {0} exported successfully..
+        /// </summary>
+        public static string CommandLine_ExportChromatograms_Chromatograms_file__0__exported_successfully_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportChromatograms_Chromatograms_file__0__exported_successfully_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: At least one chromatogram type must be selected.
+        /// </summary>
+        public static string CommandLine_ExportChromatograms_Error__At_least_one_chromatogram_type_must_be_selected {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportChromatograms_Error__At_least_one_chromatogram_type_must_be_sel" +
+                        "ected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: Failure attempting to save chromatograms file {0}.
+        /// </summary>
+        public static string CommandLine_ExportChromatograms_Error__Failure_attempting_to_save_chromatograms_file__0_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportChromatograms_Error__Failure_attempting_to_save_chromatograms_f" +
+                        "ile__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: The document must have imported results.
+        /// </summary>
+        public static string CommandLine_ExportChromatograms_Error__The_document_must_have_imported_results {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportChromatograms_Error__The_document_must_have_imported_results", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Exporting chromatograms file {0}....
+        /// </summary>
+        public static string CommandLine_ExportChromatograms_Exporting_chromatograms_file__0____ {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportChromatograms_Exporting_chromatograms_file__0____", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error: You must specify an output file to write to with the --exp-file=path/to/file parameter. No transition list will be exported..
         /// </summary>
         public static string CommandLine_ExportInstrumentFile_ {
