@@ -641,6 +641,7 @@ namespace pwiz.Skyline.Model.Databinding
             {typeof (Entities.Peptide).FullName, 2},
             {typeof (Entities.Precursor).FullName, 3},
             {typeof (Entities.Transition).FullName, 4},
+            {typeof (Entities.Replicate).FullName, 5}
             // ReSharper restore RedundantNameQualifier
         };
 
@@ -653,6 +654,7 @@ namespace pwiz.Skyline.Model.Databinding
                 Resources.Peptide,
                 Resources.TransitionGroup,
                 Resources.Fragment,
+                Resources.Replicate,
             };
         }
 

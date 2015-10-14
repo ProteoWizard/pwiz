@@ -39,7 +39,7 @@ namespace pwiz.Skyline.Controls
         // The query that is currently executing
         private ProteinMatchQuery _proteinMatcher;
         private readonly IDocumentUIContainer _documentUiContainer;
-        private readonly ImageList _imageList = new ImageList();
+        private readonly ImageList _imageList = new ImageList() {TransparentColor = Color.Magenta};
         private ProteomeDb _proteomeDb;
 
         // Don't let the name take more than half the space for item display

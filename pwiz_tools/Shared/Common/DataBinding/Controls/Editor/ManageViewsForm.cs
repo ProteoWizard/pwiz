@@ -35,7 +35,6 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         {
             InitializeComponent();
             ViewContext = viewContext;
-            imageList1.Images.AddRange(viewContext.GetImageList());
             Icon = ViewContext.ApplicationIcon;
             chooseViewsControl1.ViewContext = viewContext;
             UpdateButtons();

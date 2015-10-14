@@ -39,7 +39,6 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             this.btnAdd = new System.Windows.Forms.Button();
             this.btnCopy = new System.Windows.Forms.Button();
             this.flowLayoutPanel2 = new System.Windows.Forms.FlowLayoutPanel();
-            this.imageList1 = new System.Windows.Forms.ImageList(this.components);
             this.chooseViewsControl1 = new pwiz.Common.DataBinding.Controls.Editor.ChooseViewsControl();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.openViewEditorContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -115,12 +114,6 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             this.flowLayoutPanel2.Controls.Add(this.btnOk);
             this.flowLayoutPanel2.Name = "flowLayoutPanel2";
             // 
-            // imageList1
-            // 
-            this.imageList1.ColorDepth = System.Windows.Forms.ColorDepth.Depth8Bit;
-            resources.ApplyResources(this.imageList1, "imageList1");
-            this.imageList1.TransparentColor = System.Drawing.Color.Transparent;
-            // 
             // chooseViewsControl1
             // 
             this.chooseViewsControl1.AllowEditing = true;
@@ -185,7 +178,6 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel2;
         private System.Windows.Forms.Button btnAdd;
-        private System.Windows.Forms.ImageList imageList1;
         private ChooseViewsControl chooseViewsControl1;
         private System.Windows.Forms.Button btnCopy;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;

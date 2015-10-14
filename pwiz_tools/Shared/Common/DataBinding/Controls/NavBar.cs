@@ -233,7 +233,7 @@ namespace pwiz.Common.DataBinding.Controls
             {
                 image = ViewContext.GetImageList()[imageIndex];
             }
-            ToolStripMenuItem item = new ToolStripMenuItem(viewSpec.Name, image);
+            ToolStripMenuItem item = new ToolStripMenuItem(viewSpec.Name, image) { ImageTransparentColor = Color.Magenta};
 
             item.Click += (sender, args) => ApplyView(viewGroup, viewSpec);
             var currentView = BindingListSource.ViewInfo;

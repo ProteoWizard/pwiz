@@ -136,7 +136,10 @@ namespace pwiz.Skyline.Controls
             
             BeforeExpand += TreeViewMS_BeforeExpand;
 
-            ImageList = new ImageList();
+            ImageList = new ImageList
+            {
+                TransparentColor = Color.Magenta
+            };
             ImageList.Images.Add(Resources.Blank);
             ImageList.Images.Add(Resources.Protein);
             ImageList.Images.Add(Resources.Peptide);

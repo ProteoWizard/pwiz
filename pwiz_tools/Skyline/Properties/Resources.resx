@@ -5813,7 +5813,7 @@ Are you sure you want to continue?</value>
   <data name="ReintegrateDlg_OkDialog_The_current_peak_scoring_model_is_incompatible_with_one_or_more_peptides_in_the_document___Please_train_a_new_model_" xml:space="preserve">
     <value>The current peak scoring model is incompatible with one or more peptides in the document. Please train a new model.</value>
   </data>
-    <data name="MissingScoresFinder_DisplayName_missing_scores" xml:space="preserve">
+  <data name="MissingScoresFinder_DisplayName_missing_scores" xml:space="preserve">
     <value>missing scores</value>
   </data>
   <data name="MissingAllResultsFinder_DisplayName_Missing_all_results" xml:space="preserve">
@@ -8501,16 +8501,16 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="ChromCacheBuildException_GetMessage_Failed_importing_results_file___0____sample__1__" xml:space="preserve">
     <value>Failed importing results file '{0}', sample {1}.</value>
   </data>
-    <data name="MProphetPeakScoringModel_Train_Training_peak_scoring_model__iteration__0__of__1__" xml:space="preserve">
+  <data name="MProphetPeakScoringModel_Train_Training_peak_scoring_model__iteration__0__of__1__" xml:space="preserve">
     <value>Training peak scoring model (iteration {0} of {1})</value>
   </data>
-    <data name="EditPeakScoringModelDlg_TrainModel_Calculating" xml:space="preserve">
+  <data name="EditPeakScoringModelDlg_TrainModel_Calculating" xml:space="preserve">
     <value>Calculating</value>
   </data>
   <data name="MassListImporter_Import_Reading_transition_list" xml:space="preserve">
     <value>Reading transition list</value>
   </data>
-    <data name="MassListImporter_Import_Inspecting_peptide_sequence_information" xml:space="preserve">
+  <data name="MassListImporter_Import_Inspecting_peptide_sequence_information" xml:space="preserve">
     <value>Inspecting peptide sequence information</value>
   </data>
   <data name="SkylineViewContext_ChangeDocumentViewSpec_Change_Document_Reports" xml:space="preserve">
@@ -8738,11 +8738,13 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="BiblioSpecLiteBuilder_AmbiguousMatches_Peptide_spectrum_matches_containing_the_following_peptides_were_discarded_because_the_spectrum_had_multiple_matches_" xml:space="preserve">
     <value>Peptide-spectrum matches containing the following peptides were discarded because the spectrum had multiple matches:</value>
   </data>
->>>>>>> .r8963
   <data name="EditDriftTimePredictorDlg_btnGenerateFromDocument_Click_Finding_drift_time_values_for_peaks" xml:space="preserve">
     <value>Finding drift time values for peaks</value>
   </data>
   <data name="DriftTimeFinder_HandleLoadScanException_Problem_using_results_to_populate_drift_time_library__" xml:space="preserve">
     <value>Problem using results to populate drift time library:</value>
+  </data>
+  <data name="Replicate" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Replicate.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>
