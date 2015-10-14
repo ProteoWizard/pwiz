@@ -88,7 +88,7 @@ namespace pwiz.SkylineTestTutorial
             AsSmallMoleculesTestMode = smallMoleculesTestMode;
 
             if (smallMoleculesTestMode !=  RefinementSettings.ConvertToSmallMoleculesMode.none)
-                TestDirectoryName = "AsSmallMolecules_" + smallMoleculesTestMode;
+                TestDirectoryName = "AsSmMol_" + smallMoleculesTestMode;
 
             LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/TargetedMSMS-2_5.pdf";
 
