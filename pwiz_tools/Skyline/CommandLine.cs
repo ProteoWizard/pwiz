@@ -147,6 +147,14 @@ namespace pwiz.Skyline
                 }
             }
 
+            if (commandArgs.ImportingSearch)
+            {
+                if (!ImportSearch(commandArgs))
+                {
+                    return;
+                }
+            }
+
             if (commandArgs.RemovingResults && !commandArgs.RemoveBeforeDate.HasValue)
             {
                 RemoveResults(null);
@@ -201,14 +209,6 @@ namespace pwiz.Skyline
             if (commandArgs.RemovingResults && commandArgs.RemoveBeforeDate.HasValue)
             {
                 RemoveResults(commandArgs.RemoveBeforeDate);
-            }
-
-            if (commandArgs.ImportingSearch)
-            {
-                if (!ImportSearch(commandArgs))
-                {
-                    return;
-                }
             }
 
             if (commandArgs.Reintegrating)
