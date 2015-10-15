@@ -20018,6 +20018,36 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error copying template file {0} to destination {1}..
+        /// </summary>
+        public static string ShimadzuMethodExporter_ExportMethod_Error_copying_template_file__0__to_destination__1__ {
+            get {
+                return ResourceManager.GetString("ShimadzuMethodExporter_ExportMethod_Error_copying_template_file__0__to_destinatio" +
+                        "n__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The transition count {0} exceeds the maximum allowed for this instrument type..
+        /// </summary>
+        public static string ShimadzuMethodExporter_ExportMethod_The_transition_count__0__exceeds_the_maximum_allowed_for_this_instrument_type_ {
+            get {
+                return ResourceManager.GetString("ShimadzuMethodExporter_ExportMethod_The_transition_count__0__exceeds_the_maximum_" +
+                        "allowed_for_this_instrument_type_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unexpected response {0} from Shimadzu method writer..
+        /// </summary>
+        public static string ShimadzuMethodExporter_ExportMethod_Unexpected_response__0__from_Shimadzu_method_writer_ {
+            get {
+                return ResourceManager.GetString("ShimadzuMethodExporter_ExportMethod_Unexpected_response__0__from_Shimadzu_method_" +
+                        "writer_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failure attempting to save to the temporary file {0}.
         /// </summary>
         public static string ShimadzuNativeMassListExporter_ExportNativeList_Failure_attempting_to_save_to_the_temporary_file__0_ {

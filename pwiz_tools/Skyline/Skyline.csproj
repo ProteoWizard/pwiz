@@ -129,6 +129,12 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Shared\Lib\Microsoft.ConcurrencyVisualizer.Markers.dll</HintPath>
     </Reference>
+    <Reference Condition="'$(Platform)' == 'x86'" Include="MethodWriter">
+      <HintPath>Method\Shimadzu\x86\MethodWriter.dll</HintPath>
+    </Reference>
+    <Reference Condition="'$(Platform)' == 'x64'" Include="MethodWriter">
+      <HintPath>Method\Shimadzu\x64\MethodWriter.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\Shared\Lib\Newtonsoft.Json.dll</HintPath>
     </Reference>

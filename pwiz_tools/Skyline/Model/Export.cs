@@ -37,6 +37,7 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using Shimadzu.LabSolutions.MethodConverter;
+using Shimadzu.LabSolutions.MethodWriter;
 
 namespace pwiz.Skyline.Model
 {
@@ -180,6 +181,7 @@ namespace pwiz.Skyline.Model
         public const string EXT_AB_SCIEX = ".dam";
         public const string EXT_AGILENT = ".m";
         public const string EXT_BRUKER = ".m";
+        public const string EXT_SHIMADZU = ".lcm";
         public const string EXT_THERMO = ".meth";
         public const string EXT_WATERS = ".exp";
         // ReSharper restore NonLocalizedString
@@ -190,6 +192,7 @@ namespace pwiz.Skyline.Model
                 ABI_TOF,
                 AGILENT6400,
                 BRUKER_TOF,
+                SHIMADZU,
                 THERMO_TSQ,
                 THERMO_LTQ,
                 THERMO_QUANTIVA,
@@ -230,6 +233,7 @@ namespace pwiz.Skyline.Model
                                        {ABI_TOF, EXT_AB_SCIEX},
                                        {AGILENT6400, EXT_AGILENT},
                                        {BRUKER_TOF, EXT_BRUKER},
+                                       {SHIMADZU, EXT_SHIMADZU},
                                        {THERMO_TSQ, EXT_THERMO},
                                        {THERMO_LTQ, EXT_THERMO},
                                        {THERMO_QUANTIVA, EXT_THERMO},
@@ -432,7 +436,10 @@ namespace pwiz.Skyline.Model
                     else
                         return ExportThermoFusionMethod(doc, path, template);
                 case ExportInstrumentType.SHIMADZU:
-                    return ExportShimadzuCsv(doc, path);
+                    if (type == ExportFileType.List)
+                        return ExportShimadzuCsv(doc, path);
+                    else
+                        return ExportShimadzuMethod(doc, path, template);
                 case ExportInstrumentType.BRUKER:
                     return ExportBrukerCsv(doc, path);
                 case ExportInstrumentType.THERMO_LTQ:
@@ -585,6 +592,16 @@ namespace pwiz.Skyline.Model
             if (MethodType == ExportMethodType.Standard)
                 exporter.RunLength = RunLength;
             PerformLongExport(m => exporter.ExportNativeList(fileName, m));
+
+            return exporter;
+        }
+
+        public AbstractMassListExporter ExportShimadzuMethod(SrmDocument document, string fileName, string templateName)
+        {
+            var exporter = InitExporter(new ShimadzuMethodExporter(document));
+            if (MethodType == ExportMethodType.Standard)
+                exporter.RunLength = RunLength;
+            PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
 
             return exporter;
         }
@@ -1267,6 +1284,71 @@ namespace pwiz.Skyline.Model
                             break;
                     }
                     fs.Commit();
+                }
+            }
+        }
+    }
+
+    public class ShimadzuMethodExporter : ShimadzuMassListExporter
+    {
+        public ShimadzuMethodExporter(SrmDocument document)
+            : base(document)
+        {
+        }
+
+        public void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
+        {
+            if (!InitExport(fileName, progressMonitor))
+                return;
+
+            string baseName = Path.Combine(Path.GetDirectoryName(fileName) ?? string.Empty,
+                                           Path.GetFileNameWithoutExtension(fileName) ?? string.Empty);
+            string ext = Path.GetExtension(fileName);
+
+            var methodWriter = new MassMethodWriter();
+
+            foreach (KeyValuePair<string, StringBuilder> pair in MemoryOutput)
+            {
+                string suffix = pair.Key.Substring(MEMORY_KEY_ROOT.Length);
+                suffix = Path.GetFileNameWithoutExtension(suffix);
+                string methodName = baseName + suffix + ext;
+
+                try
+                {
+                    // MethodWriter receives the template and overwrites it, so copy template to final output name
+                    // The template is required to have .lcm extension
+                    File.Copy(templateName, methodName, true);
+                }
+                catch (Exception x)
+                {
+                    throw new IOException(TextUtil.LineSeparate(string.Format(Resources.ShimadzuMethodExporter_ExportMethod_Error_copying_template_file__0__to_destination__1__, templateName, methodName), x.Message));
+                }
+
+                string tranList = pair.Value.ToString();
+                var result = methodWriter.WriteMethod(methodName, tranList);
+                if (result != WriterResult.OK)
+                {
+                    // Writing the method failed, delete the copied template file
+                    if (File.Exists(methodName))
+                    {
+                        try
+                        {
+                            File.Delete(methodName);
+                        }
+// ReSharper disable once EmptyGeneralCatchClause
+                        catch
+                        {
+                        }
+                    }
+
+                    switch (result)
+                    {
+                        case WriterResult.MaxTransitionError:
+                            throw new ArgumentException(string.Format(Resources.ShimadzuMethodExporter_ExportMethod_The_transition_count__0__exceeds_the_maximum_allowed_for_this_instrument_type_, tranList.Split('\n').Length));
+                        default:
+                            Assume.Fail(string.Format(Resources.ShimadzuMethodExporter_ExportMethod_Unexpected_response__0__from_Shimadzu_method_writer_,result));
+                            break;
+                    }
                 }
             }
         }

@@ -141,6 +141,7 @@
     <Compile Include="DocLoadLibraryTest.cs" />
     <Compile Include="EspTest.cs" />
     <Compile Include="ExplicitModTest.cs" />
+    <Compile Include="ExportMethodShimadzuTest.cs" />
     <Compile Include="FastaImporterTest.cs" />
     <Compile Include="FindNodeTest.cs" />
     <Compile Include="FullScanPrecursorTest.cs" />
@@ -263,6 +264,7 @@
     <EmbeddedResource Include="Results\HeavyVariable.sky" />
     <EmbeddedResource Include="Results\MultiLabel.sky" />
     <EmbeddedResource Include="Study7.sky" />
+    <None Include="ExportMethodShimadzuTest.zip" />
     <None Include="XmlValidationTest.zip" />
   </ItemGroup>
   <ItemGroup>

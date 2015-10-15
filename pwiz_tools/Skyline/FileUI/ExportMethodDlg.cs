@@ -1631,6 +1631,10 @@ namespace pwiz.Skyline.FileUI
                 {
                     listFileTypes.Add(MethodFilter(ExportInstrumentType.EXT_AB_SCIEX));
                 }
+                else if (Equals(InstrumentType, ExportInstrumentType.SHIMADZU))
+                {
+                    listFileTypes.Add(MethodFilter(ExportInstrumentType.EXT_SHIMADZU));
+                }
                 else if (Equals(InstrumentType, ExportInstrumentType.THERMO_TSQ) ||
                          Equals(InstrumentType, ExportInstrumentType.THERMO_LTQ))
                 {

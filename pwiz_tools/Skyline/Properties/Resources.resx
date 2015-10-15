@@ -8762,4 +8762,13 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="Replicate" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Replicate.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="ShimadzuMethodExporter_ExportMethod_Error_copying_template_file__0__to_destination__1__" xml:space="preserve">
+    <value>Error copying template file {0} to destination {1}.</value>
+  </data>
+  <data name="ShimadzuMethodExporter_ExportMethod_The_transition_count__0__exceeds_the_maximum_allowed_for_this_instrument_type_" xml:space="preserve">
+    <value>The transition count {0} exceeds the maximum allowed for this instrument type.</value>
+  </data>
+  <data name="ShimadzuMethodExporter_ExportMethod_Unexpected_response__0__from_Shimadzu_method_writer_" xml:space="preserve">
+    <value>Unexpected response {0} from Shimadzu method writer.</value>
+  </data>
 </root>

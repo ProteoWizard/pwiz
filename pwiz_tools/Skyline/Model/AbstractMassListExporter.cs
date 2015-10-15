@@ -111,7 +111,7 @@ namespace pwiz.Skyline.Model
         /// </summary>
         protected bool InitExport(string fileName, IProgressMonitor progressMonitor)
         {
-            if (progressMonitor.IsCanceled)
+            if (progressMonitor != null && progressMonitor.IsCanceled)
                 return false;
 
             // First export transition lists to map in memory
@@ -120,7 +120,8 @@ namespace pwiz.Skyline.Model
             // If filename is null, then no more work needs to be done.
             if (fileName == null)
             {
-                progressMonitor.UpdateProgress(new ProgressStatus(string.Empty).Complete());
+                if (progressMonitor != null)
+                    progressMonitor.UpdateProgress(new ProgressStatus(string.Empty).Complete());
                 return false;
             }
 
