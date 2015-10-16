@@ -1325,7 +1325,17 @@ namespace pwiz.Skyline.Model
                 }
 
                 string tranList = pair.Value.ToString();
-                var result = methodWriter.WriteMethod(methodName, tranList);
+                WriterResult result;
+                CultureInfo originalCulture = Thread.CurrentThread.CurrentCulture;
+                try
+                {
+                    Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+                    result = methodWriter.WriteMethod(methodName, tranList);
+                }
+                finally
+                {
+                    Thread.CurrentThread.CurrentCulture = originalCulture;
+                }
                 if (result != WriterResult.OK)
                 {
                     // Writing the method failed, delete the copied template file
