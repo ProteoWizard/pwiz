@@ -42,6 +42,14 @@ class ChromatogramGroupProcessor {
         if (null == retentionTime || !containsTime(retentionTime)) {
             return;
         }
+        if (null != msSpectrum.getDriftTime() && null != chromatogramGroup.getDriftTime() && null != chromatogramGroup.getDriftTimeWindow()) {
+            double driftTime = msSpectrum.getDriftTime();
+            double minDriftTime = chromatogramGroup.getDriftTime() - chromatogramGroup.getDriftTimeWindow() / 2;
+            double maxDriftTime = chromatogramGroup.getDriftTime() + chromatogramGroup.getDriftTimeWindow() / 2;
+            if (driftTime < minDriftTime || driftTime > maxDriftTime) {
+                return;
+            }
+        }
         switch (msSpectrum.getMsLevel()) {
             case 1:
                 if (getChromSource() != ChromSource.MS_1) {

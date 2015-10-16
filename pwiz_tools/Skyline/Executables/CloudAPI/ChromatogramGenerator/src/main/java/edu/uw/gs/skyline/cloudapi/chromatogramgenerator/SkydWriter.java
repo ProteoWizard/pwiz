@@ -68,6 +68,12 @@ public class SkydWriter {
             chromTransition.chromSource = chromatogramGroupInfo.getSource();
             chromTransition.product = transition.getProductMz();
             chromTransition.extractionWidth = (float) transition.getMzWindow();
+            if (null != chromatogramGroupInfo.getDriftTime()) {
+                chromTransition.ionMobilityValue = chromatogramGroupInfo.getDriftTime().floatValue();
+            }
+            if (null != chromatogramGroupInfo.getDriftTimeWindow()) {
+                chromTransition.ionMobilityExtractionWidth = chromatogramGroupInfo.getDriftTimeWindow().floatValue();
+            }
             transitions.add(chromTransition);
         }
         byte[] points = chromatogramPoints.toByteArray();

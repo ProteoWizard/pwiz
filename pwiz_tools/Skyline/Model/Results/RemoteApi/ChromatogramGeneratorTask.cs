@@ -119,12 +119,11 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             if (_chromKeyIndiceses != null)
             {
                 var tolerance = (float)ChromTaskList.SrmDocument.Settings.TransitionSettings.Instrument.MzMatchTolerance;
-                // Null out the OptionalMinTime and OptionalMaxTime of the ChromKey we are looking for.
-                var chromKeyToFind = new ChromKey(chromKey.TextId, chromKey.Precursor, chromKey.IonMobilityValue,
-                    chromKey.IonMobilityExtractionWidth, chromKey.Product, chromKey.CollisionEnergy,
-                    chromKey.ExtractionWidth, chromKey.Source, chromKey.Extractor, chromKey.HasCalculatedMzs,
-                    chromKey.HasScanIds, null, null);
-                keyIndex = _chromKeyIndiceses.IndexOf(entry => entry.Key.CompareTolerant(chromKeyToFind, tolerance) == 0);
+                Assume.IsNull(chromKey.OptionalMinTime);
+                Assume.IsNull(chromKey.OptionalMaxTime);
+                Assume.IsTrue(0 == chromKey.IonMobilityValue);
+                Assume.IsTrue(0 == chromKey.IonMobilityExtractionWidth);
+                keyIndex = _chromKeyIndiceses.IndexOf(entry => entry.Key.CompareTolerant(chromKey, tolerance) == 0);
             }
             if (keyIndex == -1 || _chromKeyIndiceses == null)   // Keep ReSharper from complaining
             {
@@ -153,7 +152,94 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             massErrors = null;
             if (tranInfo.MassError10Xs != null)
                 massErrors = tranInfo.MassError10Xs.Select(m => m / 10.0f).ToArray();
+            CoalesceIntensities(ref times, ref scanIds, ref intensities, ref massErrors);
             return true;
+        }
+
+        /// <summary>
+        /// If the chromatogram contains duplicate times, combine those duplicate times by summing the intensities
+        /// and appropriately averaging the mass errors.
+        /// TODO(nicksh): Remove this once Chorus changes to not have these duplicates.
+        /// </summary>
+        private void CoalesceIntensities(ref float[] times, ref int[] scanIds, ref float[] intensities,
+            ref float[] massErrors)
+        {
+            List<float> newTimes = new List<float>();
+            List<int> newScanIds = new List<int>();
+            List<float> newIntensities = new List<float>();
+            List<float> newMassErrors = new List<float>();
+
+            float? curTime = null;
+            int curScanId = 0;
+            double curIntensity = 0;
+            double curMassError = 0;
+            bool anyCoalescing = false;
+
+            for (int i = 0; i < times.Length; i++)
+            {
+                if (times[i] != curTime)
+                {
+                    if (curTime.HasValue)
+                    {
+                        newTimes.Add(curTime.Value);
+                        newScanIds.Add(curScanId);
+                        newIntensities.Add((float) curIntensity);
+                        newMassErrors.Add((float) curMassError);
+                    }
+                    curTime = times[i];
+                    curIntensity = intensities[i];
+                    if (null != scanIds)
+                    {
+                        curScanId = scanIds[i];
+                    }
+                    if (null != massErrors)
+                    {
+                        curMassError = massErrors[i];
+                    }
+                }
+                else
+                {
+                    anyCoalescing = true;
+                    var newIntensity = curIntensity + intensities[i];
+                    if (newIntensity > 0)
+                    {
+                        if (null != massErrors)
+                        {
+                            curMassError = (curMassError*curIntensity + massErrors[i]*intensities[i])/newIntensity;
+                        }
+                        curIntensity = newIntensity;
+                    }
+                    else
+                    {
+                        curIntensity = intensities[i];
+                        if (null != massErrors)
+                        {
+                            curMassError = massErrors[i];
+                        }
+                    }
+                }
+            }
+            if (curTime.HasValue)
+            {
+                newTimes.Add(curTime.Value);
+                newScanIds.Add(curScanId);
+                newIntensities.Add((float)curIntensity);
+                newMassErrors.Add((float)curMassError);
+            }
+            if (!anyCoalescing)
+            {
+                return;
+            }
+            times = newTimes.ToArray();
+            intensities = newIntensities.ToArray();
+            if (null != scanIds)
+            {
+                scanIds = newScanIds.ToArray();
+            }
+            if (null != massErrors)
+            {
+                massErrors = newMassErrors.ToArray();
+            }
         }
 
         internal class MemoryPooledStream : IPooledStream

@@ -79,6 +79,13 @@ public class MzmlSpectrumIterator implements Iterator<MsSpectrum> {
                 break;
             }
         }
+        for (Scan scan : spectrum.getScanList().getScan()) {
+            Double driftTime = getDoubleValue(scan.getCvParam(), "ion mobility drift time");
+            if (null != driftTime) {
+                msSpectrum.setDriftTime(driftTime);
+                break;
+            }
+        }
         if (0 == mseLevel) {
             Integer msLevel = getIntegerValue(spectrum.getCvParam(), "ms level");
             if (null != msLevel) {
@@ -120,7 +127,6 @@ public class MzmlSpectrumIterator implements Iterator<MsSpectrum> {
             msPrecursor.setIsolationWindowUpper((double) spectrumFilterDocument.getMaxMz());
             msSpectrum.setPrecursors(new MsPrecursor[] {msPrecursor});
         }
-
         return msSpectrum;
     }
 

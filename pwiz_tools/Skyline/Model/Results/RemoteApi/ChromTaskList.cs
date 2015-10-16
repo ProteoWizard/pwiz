@@ -185,41 +185,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
 
         internal static IEnumerable<ChromKey> ListChromKeys(ChromatogramRequestDocument chromatogramRequestDocument)
         {
-            foreach (var chromatogramGroup in chromatogramRequestDocument.ChromatogramGroup)
-            {
-                ChromSource chromSource;
-                switch (chromatogramGroup.Source)
-                {
-                    case GeneratedCode.ChromSource.Ms1:
-                        chromSource = ChromSource.ms1;
-                        break;
-                    case GeneratedCode.ChromSource.Ms2:
-                        chromSource = ChromSource.fragment;
-                        break;
-                    case GeneratedCode.ChromSource.Sim:
-                        chromSource = ChromSource.sim;
-                        break;
-                    default:
-                        chromSource = ChromSource.unknown;
-                        break;
-                }
-                ChromExtractor chromExtractor;
-                switch (chromatogramGroup.Extractor)
-                {
-                    case GeneratedCode.ChromExtractor.BasePeak:
-                        chromExtractor = ChromExtractor.base_peak;
-                        break;
-                    default:
-                        chromExtractor = ChromExtractor.summed;
-                        break;
-                }
-                foreach (var chromatogram in chromatogramGroup.Chromatogram)
-                {
-                    yield return new ChromKey(chromatogramGroup.ModifiedSequence, chromatogramGroup.PrecursorMz, null, 0,
-                        chromatogram.ProductMz, 0, chromatogram.MzWindow, chromSource, chromExtractor, false, false,
-                        null, null);    // Optional times not used in this provider
-                }
-            }
+            return ChromatogramRequestProvider.ListChromKeys(chromatogramRequestDocument);
         }
 
         public static List<ChromatogramRequestDocument> ChunkChromatogramRequest(ChromatogramRequestDocument chromatogramRequestDocument, int targetChromatogramCount)

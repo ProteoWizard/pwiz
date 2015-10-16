@@ -208,7 +208,8 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             return false;
         }
 
-        public MsDataSpectrum GetSpectrum(ChorusAccount chorusAccount, ChorusUrl chorusUrl, ChromSource source, double precursor, int scanId)
+        public MsDataSpectrum[] GetSpectra(ChorusAccount chorusAccount, ChorusUrl chorusUrl, ChromSource source,
+            double precursor, int scanId)
         {
             string strSource;
             int msLevel = 1;
@@ -228,9 +229,9 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
                 default:
                     throw new ArgumentException("Unknown source " + source);
             }
-          
-            string strUri = string.Format(CultureInfo.InvariantCulture, 
-                "{0}/skyline/api/chroextract/file/{1}/source/{2}/precursor/{3}/{4}",
+
+            string strUri = string.Format(CultureInfo.InvariantCulture,
+                "{0}/skyline/api/chroextract-drift/file/{1}/source/{2}/precursor/{3}/{4}",
                 chorusUrl.ServerUrl,
                 chorusUrl.FileId,
                 strSource,
@@ -239,7 +240,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             // ReSharper restore NonLocalizedString
 
             var webRequest = (HttpWebRequest)WebRequest.Create(new Uri(strUri));
-                AddAuthHeader(chorusAccount, webRequest);
+            AddAuthHeader(chorusAccount, webRequest);
             return SendRequest(webRequest, response =>
             {
                 string strResponse = string.Empty;
@@ -249,28 +250,42 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
                     var streamReader = new StreamReader(responseStream);
                     strResponse = streamReader.ReadToEnd();
                 }
-                // ReSharper disable NonLocalizedString
                 JObject jObject = JsonConvert.DeserializeObject<JObject>(strResponse);
-                string strMzs = jObject["mzs-base64"].ToString();
-                string strIntensities = jObject["intensities-base64"].ToString();
-                byte[] mzBytes = Convert.FromBase64String(strMzs);
-                byte[] intensityBytes = Convert.FromBase64String(strIntensities);
-                double[] mzs = PrimitiveArrays.FromBytes<double>(
-                    PrimitiveArrays.ReverseBytesInBlocks(mzBytes, sizeof (double)));
-                float[] intensityFloats = PrimitiveArrays.FromBytes<float>(
-                    PrimitiveArrays.ReverseBytesInBlocks(intensityBytes, sizeof (float)));
-                double[] intensities = intensityFloats.Select(f => (double) f).ToArray();
-                MsDataSpectrum spectrum = new MsDataSpectrum
-                {
-                    Index = jObject["index"].ToObject<int>(),
-                    Level = msLevel,
-                    RetentionTime = jObject["rt"].ToObject<double>(),
-                    Mzs = mzs,
-                    Intensities = intensities,
-                };
-                // ReSharper restore NonLocalizedString
-                return spectrum;
+                JArray array = (JArray) jObject["results"]; // Not L10N
+                return array.OfType<JObject>().Select(obj => GetSpectrumFromJObject(obj, msLevel)).ToArray();
             });
+
+        }
+
+        private MsDataSpectrum GetSpectrumFromJObject(JObject jObject, int msLevel)
+        {
+            // ReSharper disable NonLocalizedString
+            string strMzs = jObject["mzs-base64"].ToString();
+            string strIntensities = jObject["intensities-base64"].ToString();
+
+            byte[] mzBytes = Convert.FromBase64String(strMzs);
+            byte[] intensityBytes = Convert.FromBase64String(strIntensities);
+            double[] mzs = PrimitiveArrays.FromBytes<double>(
+                PrimitiveArrays.ReverseBytesInBlocks(mzBytes, sizeof(double)));
+            float[] intensityFloats = PrimitiveArrays.FromBytes<float>(
+                PrimitiveArrays.ReverseBytesInBlocks(intensityBytes, sizeof(float)));
+            double[] intensities = intensityFloats.Select(f => (double)f).ToArray();
+            double? driftTime = null;
+            JToken jDriftTime;
+            if (jObject.TryGetValue("driftTime", out jDriftTime))
+            {
+                driftTime = jDriftTime.ToObject<double>();
+            }
+            MsDataSpectrum spectrum = new MsDataSpectrum
+            {
+                Index = jObject["index"].ToObject<int>(),
+                RetentionTime = jObject["rt"].ToObject<double>(),
+                Mzs = mzs,
+                Intensities = intensities,
+                DriftTimeMsec = driftTime,
+            };
+            return spectrum;
+            // ReSharper restore NonLocalizedString
         }
 
         private Uri GetContentsUri(ChorusAccount chorusAccount, ChorusUrl chorusUrl)

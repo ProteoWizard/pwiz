@@ -71,6 +71,8 @@ import javax.xml.bind.annotation.XmlType;
  *                 &lt;attribute name="Extractor" use="required" type="{}ChromExtractor" />
  *                 &lt;attribute name="Source" use="required" type="{}ChromSource" />
  *                 &lt;attribute name="MassErrors" type="{http://www.w3.org/2001/XMLSchema}boolean" default="false" />
+ *                 &lt;attribute name="DriftTime" type="{http://www.w3.org/2001/XMLSchema}double" />
+ *                 &lt;attribute name="DriftTimeWindow" type="{http://www.w3.org/2001/XMLSchema}double" />
  *               &lt;/restriction>
  *             &lt;/complexContent>
  *           &lt;/complexType>
@@ -320,6 +322,8 @@ public class ChromatogramRequestDocument {
      *       &lt;attribute name="Extractor" use="required" type="{}ChromExtractor" />
      *       &lt;attribute name="Source" use="required" type="{}ChromSource" />
      *       &lt;attribute name="MassErrors" type="{http://www.w3.org/2001/XMLSchema}boolean" default="false" />
+     *       &lt;attribute name="DriftTime" type="{http://www.w3.org/2001/XMLSchema}double" />
+     *       &lt;attribute name="DriftTimeWindow" type="{http://www.w3.org/2001/XMLSchema}double" />
      *     &lt;/restriction>
      *   &lt;/complexContent>
      * &lt;/complexType>
@@ -349,6 +353,10 @@ public class ChromatogramRequestDocument {
         protected ChromSource source;
         @XmlAttribute(name = "MassErrors")
         protected Boolean massErrors;
+        @XmlAttribute(name = "DriftTime")
+        protected Double driftTime;
+        @XmlAttribute(name = "DriftTimeWindow")
+        protected Double driftTimeWindow;
 
         /**
          * Gets the value of the chromatogram property.
@@ -553,6 +561,54 @@ public class ChromatogramRequestDocument {
          */
         public void setMassErrors(Boolean value) {
             this.massErrors = value;
+        }
+
+        /**
+         * Gets the value of the driftTime property.
+         * 
+         * @return
+         *     possible object is
+         *     {@link Double }
+         *     
+         */
+        public Double getDriftTime() {
+            return driftTime;
+        }
+
+        /**
+         * Sets the value of the driftTime property.
+         * 
+         * @param value
+         *     allowed object is
+         *     {@link Double }
+         *     
+         */
+        public void setDriftTime(Double value) {
+            this.driftTime = value;
+        }
+
+        /**
+         * Gets the value of the driftTimeWindow property.
+         * 
+         * @return
+         *     possible object is
+         *     {@link Double }
+         *     
+         */
+        public Double getDriftTimeWindow() {
+            return driftTimeWindow;
+        }
+
+        /**
+         * Sets the value of the driftTimeWindow property.
+         * 
+         * @param value
+         *     allowed object is
+         *     {@link Double }
+         *     
+         */
+        public void setDriftTimeWindow(Double value) {
+            this.driftTimeWindow = value;
         }
 
 

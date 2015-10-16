@@ -53,8 +53,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
         {
             double precursor = Transitions.Select(transition => transition.PrecursorMz).FirstOrDefault();
             ChorusAccount chorusAccount = ChorusUrl.FindChorusAccount(Settings.Default.ChorusAccountList);
-            var spectrum = _chorusSession.GetSpectrum(chorusAccount, ChorusUrl, Source, precursor, dataFileSpectrumStartIndex);
-            return new[] {spectrum};
+            return _chorusSession.GetSpectra(chorusAccount, ChorusUrl, Source, precursor, dataFileSpectrumStartIndex);
         }
 
         public bool Adopt(IScanProvider scanProvider)

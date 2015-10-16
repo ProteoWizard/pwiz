@@ -435,6 +435,17 @@ namespace pwiz.Skyline.Model.Results
                 docFilterPair.MaxTime = MaxTime.Value;
                 docFilterPair.MaxTimeSpecified = true;
             }
+            if (MinDriftTimeMsec.HasValue && MaxDriftTimeMsec.HasValue)
+            {
+                docFilterPair.DriftTime = (MinDriftTimeMsec.Value + MaxDriftTimeMsec.Value)/2;
+                if (ChromSource.fragment == chromSource && HighEnergyDriftTimeOffsetMsec.HasValue)
+                {
+                    docFilterPair.DriftTime += HighEnergyDriftTimeOffsetMsec.Value;
+                }
+                docFilterPair.DriftTimeSpecified = true;
+                docFilterPair.DriftTimeWindow = MaxDriftTimeMsec.Value - MinDriftTimeMsec.Value;
+                docFilterPair.DriftTimeWindowSpecified = true;
+            }
             switch (chromSource)
             {
                 case ChromSource.ms1:

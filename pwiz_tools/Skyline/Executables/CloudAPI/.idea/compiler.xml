@@ -27,10 +27,5 @@
         <module name="jmzml (1) (uk.ac.ebi.jmzml)" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel>
-      <module name="jmzml" target="1.5" />
-      <module name="jmzml (1) (uk.ac.ebi.jmzml)" target="1.5" />
-    </bytecodeTargetLevel>
   </component>
 </project>
-

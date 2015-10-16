@@ -474,7 +474,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 var scan = spectra[i];
                 int indexMz = indices[i];
-                if (indexMz != -1 && indexMz < scan.Mzs.Length)
+                if (indexMz < scan.Mzs.Length)
                     minMz = Math.Min(minMz, spectra[i].Mzs[indexMz]);
             }
             return minMz;
@@ -486,14 +486,13 @@ namespace pwiz.Skyline.Controls.Graphs
             for (int i = 0; i < indices.Length; i++)
             {
                 var scan = spectra[i];
-                int indexMz = indices[i];
-                // In case of zero length m/z arrays, set index to -1 the first time through
-                if (indexMz >= scan.Mzs.Length)
-                    indexMz = indices[i] = -1;
-                if (indexMz == -1 || mz != scan.Mzs[indexMz])
-                    continue;
-                intensity += scan.Intensities[indexMz++];
-                indices[i] = indexMz < scan.Mzs.Length ? indexMz : -1;
+                int indexMz;
+                // Sometimes spectra have multiple intensities for a given m/z.  Sum all intensities for that m/z
+                for (indexMz = indices[i]; indexMz < scan.Mzs.Length && scan.Mzs[indexMz] == mz; indexMz++)
+                {
+                    intensity += scan.Intensities[indexMz];
+                }
+                indices[i] = indexMz;
             }
             return intensity;
         }

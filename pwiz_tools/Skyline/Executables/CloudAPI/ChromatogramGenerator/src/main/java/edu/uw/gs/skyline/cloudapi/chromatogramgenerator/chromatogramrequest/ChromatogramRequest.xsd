@@ -42,6 +42,8 @@
             <xs:attribute name="Extractor" use="required" type="ChromExtractor"/>
             <xs:attribute name="Source" type="ChromSource" use="required"/>
             <xs:attribute name="MassErrors" type="xs:boolean" use="optional" default="false"/>
+            <xs:attribute name="DriftTime" type="xs:double" use="optional" />
+            <xs:attribute name="DriftTimeWindow" type="xs:double" use="optional" />
           </xs:complexType>
         </xs:element>
       </xs:sequence>
