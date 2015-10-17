@@ -1334,6 +1334,7 @@ namespace pwiz.Skyline.Model
                 }
                 finally
                 {
+                    // ReSharper disable once AssignNullToNotNullAttribute
                     Thread.CurrentThread.CurrentCulture = originalCulture;
                 }
                 if (result != WriterResult.OK)
