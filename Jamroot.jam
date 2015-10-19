@@ -49,6 +49,12 @@ ECHO
 #                           tarballs - useful after your initial build
 #
 #   --without-mz5           Build without mz5 support
+#   --without-agilent       Build without Agilent support
+#   --without-bruker        Build without Bruker support
+#   --without-sciex         Build without Sciex support
+#   --without-shimadzu      Build without Shimadzu support
+#   --without-thermo        Build without Thermo support
+#   --without-waters        Build without Waters support
 #
 #   --without-binary-msdata Build with support for mass spec text formats only
 #                           (mzML, mzXML, MGF, etc - no binary formats
@@ -483,19 +489,20 @@ using ext-boost : $(BOOST_VERSION:J=.) : $(BOOST_SOURCE) : <zlib-src-location>$(
 if [ modules.peek : NT ]
 {
     import path ;
-    
-    if ( ! --incremental in [ modules.peek : ARGV ] ) && ! [ without-binary-msdata ]
+    local args = [ modules.peek : ARGV ] ;
+
+    if ( ! --incremental in $(args) ) && ! [ without-binary-msdata ]
     {
         # extract the vendor APIs if the user agrees to the licenses
-        if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
+        if --i-agree-to-the-vendor-licenses in $(args)
         {
             echo "Extracting vendor APIs..." ;
-            SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility $(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility\\vendor_api_ABI.7z" ;
-            SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility $(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility\\vendor_api_Agilent.7z" ;
-            SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility $(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility\\vendor_api_Bruker.7z" ;
-            SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility $(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility\\vendor_api_Shimadzu.7z" ;
-            SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility $(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility\\vendor_api_Thermo.7z" ;
-            SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility $(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility\\vendor_api_Waters.7z" ;
+            if ! --without-sciex in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility $(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility\\vendor_api_ABI.7z" ; }
+            if ! --without-agilent in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility $(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility\\vendor_api_Agilent.7z" ; }
+            if ! --without-bruker in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility $(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility\\vendor_api_Bruker.7z" ; }
+            if ! --without-shimadzu in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility $(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility\\vendor_api_Shimadzu.7z" ; }
+            if ! --without-thermo in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility $(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility\\vendor_api_Thermo.7z" ; }
+            if ! --without-waters in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility $(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility\\vendor_api_Waters.7z" ; }
             RESCAN ;
         }
         else
