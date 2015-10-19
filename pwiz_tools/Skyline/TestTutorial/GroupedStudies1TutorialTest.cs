@@ -1387,7 +1387,7 @@ namespace pwiz.SkylineTestTutorial
                     foldChangeGrid.DataboundGridControl.FindColumn(PropertyPath.Root.Property("FoldChangeResult"));
                 foldChangeGrid.DataboundGridControl.DataGridView.AutoResizeColumn(foldChangeResultColumn.Index);
             });
-
+            WaitForConditionUI(() => 0 != foldChangeGrid.DataboundGridControl.RowCount && foldChangeGrid.DataboundGridControl.IsComplete);
             PauseForScreenShot<FoldChangeGrid>("Healthy v. Diseased:Grid", 65);
             RunUI(() =>
             {
@@ -1399,7 +1399,6 @@ namespace pwiz.SkylineTestTutorial
             {
                 foldChangeGraph.Show(foldChangeGraph.DockPanel, DockState.Floating);
             });
-            WaitForConditionUI(() => 0 != foldChangeGrid.DataboundGridControl.RowCount && foldChangeGrid.DataboundGridControl.IsComplete);
             RunUI(() =>
             {
                 var foldChangeResultColumn =
