@@ -468,10 +468,11 @@ SpectrumListPtr filterCreator_ETDFilter(const MSData& msd, const string& arg, pw
 }
 UsageInfo usage_ETDFilter = {"[<removePrecursor> [<removeChargeReduced> [<removeNeutralLoss> [<blanketRemoval> [<matchingTolerance> ]]]]]",
     "Filters ETD MSn spectrum data points, removing unreacted precursors, charge-reduced precursors, and neutral losses.\n"
-    "  <removePrecursor> - specify \"true\" to remove unreacted precursor (default is \"false\")\n"
-    "  <removeChargeReduced> - specify \"true\" to remove charge reduced precursor (default is \"false\")\n"
-    "  <removeNeutralLoss> - specify \"true\" to remove neutral loss species from charge reduced precursor (default is \"false\")\n"
-    "  <matchingTolerance> - specify matching tolerance in MZ or PPM (examples: \"3.1 MZ\" (the default) or \"2.2 PPM\")"
+    "  <removePrecursor> - if \"true\", remove unreacted precursor (default is \"true\")\n"
+    "  <removeChargeReduced> - if \"true\", remove charge reduced precursor (default is \"true\")\n"
+    "  <removeNeutralLoss> - if \"true\", remove neutral loss species from charge reduced precursor (default is \"true\")\n"
+    "  <blanketRemoval> - if \"true\", remove neutral losses in a charge-scaled 60 Da swath rather than only around known loss species (default is \"true\")\n"
+    "  <matchingTolerance> - specify matching tolerance in m/z or ppm (examples: \"3.1 mz\" (the default) or \"2.2 ppm\")"
 };
 
 SpectrumListPtr filterCreator_MS2Denoise(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
