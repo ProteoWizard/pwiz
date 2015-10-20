@@ -309,7 +309,7 @@ namespace pwiz.SkylineTestTutorial
             for (int i = 1; i <= transitionCount; i++)
             {
                 string filePath = TestFilesDirs[0].GetTestPath(string.Format(templatePath, i));
-                Assert.IsTrue(File.Exists(filePath));
+                WaitForCondition(() => File.Exists(filePath), "waiting for creation of "+filePath);
                 string[] lines = File.ReadAllLines(filePath);
                 string[] line = lines[0].Split(',');
                 int count = line.Length;
