@@ -74,6 +74,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsFalse(SkylineWindow.Document.Settings.HasResults);
 
             // Import one replicate
+            using (new WaitDocumentChange())
             {
                 var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
                 var openDataSourceDialog = ShowDialog<OpenDataSourceDialog>(importResultsDlg.OkDialog);
@@ -89,6 +90,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(1, liveResultsGrid.RowCount);
 
             // Import a second replicate
+            using (new WaitDocumentChange())
             {
                 var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
                 var openDataSourceDialog = ShowDialog<OpenDataSourceDialog>(importResultsDlg.OkDialog);

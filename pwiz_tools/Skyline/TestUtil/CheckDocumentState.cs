@@ -36,35 +36,32 @@ namespace pwiz.SkylineTestUtil
         }
     }
 
-    /// <summary>
-    /// Helper class to check document state with proper synchronization (wait for document change).
-    /// </summary>
-    public class CheckDocumentState : System.IDisposable
+    public class WaitDocumentChange : System.IDisposable
     {
         private readonly SrmDocument _document;
-        private readonly int _groups;
-        private readonly int _peptides;
-        private readonly int _tranGroups;
-        private readonly int _transitions;
         private readonly int? _revisionIncrement;
         private readonly bool _waitForLoaded;
-
-        public CheckDocumentState(int groups, int peptides, int tranGroups, int transitions, int? revisionIncrement = null, bool waitForLoaded = false)
+        
+        public WaitDocumentChange(int? revisionIncrement = null, bool waitForLoaded = false)
         {
             _document = Program.MainWindow.Document;
-            _groups = groups;
-            _peptides = peptides;
-            _tranGroups = tranGroups;
-            _transitions = transitions;
             _revisionIncrement = revisionIncrement;
             _waitForLoaded = waitForLoaded;
         }
 
-        #region Implementation of IDisposable
-
-        public void Dispose()
+        protected int WaitRevision
         {
-            int revision = _document.RevisionIndex + (_revisionIncrement ?? 1);
+            get { return _document.RevisionIndex + (_revisionIncrement ?? 1); }
+        }
+
+        protected int? ExpectedRevision
+        {
+            get { return _revisionIncrement.HasValue ? WaitRevision : (int?) null; }
+        }
+
+        protected SrmDocument Wait()
+        {
+            int revision = WaitRevision;
             var newDocument = _document;
             do
             {
@@ -73,8 +70,45 @@ namespace pwiz.SkylineTestUtil
                     : AbstractFunctionalTest.WaitForDocumentChange(newDocument);
             }
             while (newDocument.RevisionIndex < revision);
+            return newDocument;
+        }
 
-            AssertEx.IsDocumentState(newDocument, (_revisionIncrement.HasValue ? revision : (int?) null), _groups, _peptides, _tranGroups, _transitions);
+        #region Implementation of IDisposable
+
+        public virtual void Dispose()
+        {
+            Wait();
+        }
+
+        #endregion
+    }
+
+    /// <summary>
+    /// Helper class to check document state with proper synchronization (wait for document change).
+    /// </summary>
+    public class CheckDocumentState : WaitDocumentChange
+    {
+        private readonly int _groups;
+        private readonly int _peptides;
+        private readonly int _tranGroups;
+        private readonly int _transitions;
+
+        public CheckDocumentState(int groups, int peptides, int tranGroups, int transitions, int? revisionIncrement = null, bool waitForLoaded = false)
+            : base(revisionIncrement, waitForLoaded)
+        {
+            _groups = groups;
+            _peptides = peptides;
+            _tranGroups = tranGroups;
+            _transitions = transitions;
+        }
+
+        #region Implementation of IDisposable
+
+        public override void Dispose()
+        {
+            var newDocument = Wait();
+
+            AssertEx.IsDocumentState(newDocument, ExpectedRevision, _groups, _peptides, _tranGroups, _transitions);
         }
 
         #endregion
