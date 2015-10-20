@@ -943,19 +943,22 @@ namespace pwiz.SkylineTestFunctional
                     SkylineWindow.Document.Settings.TransitionSettings.Filter.ChangeIonTypes(new [] {IonType.z});
                     SkylineWindow.Document.Settings.TransitionSettings.Filter.ChangePrecursorCharges(new[] { 5 });
                 }
-                RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textToughCase), importIrt => importIrt.Btn1Click());
-                SkipLibraryDlg();
+                using (new WaitDocumentChange())
+                {
+                    RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textToughCase), importIrt => importIrt.Btn1Click());
+                    SkipLibraryDlg();
+                }
                 WaitForDocumentLoaded();
                 RunUI(() =>
                 {
                     var peptides = SkylineWindow.DocumentUI.Peptides.ToList();
-                    Assert.AreEqual(peptides.Count, 2);
+                    Assert.AreEqual(2, peptides.Count);
                     Assert.AreEqual(peptides[0].ModifiedSequence, "AALIM[+16.0]QVLQLTADQIAMLPPEQR");
                     Assert.AreEqual(peptides[1].ModifiedSequence, "AALIMQVLQLTADQIAM[+16.0]LPPEQR");
-                    Assert.AreEqual(peptides[0].TransitionGroupCount, 1);
-                    Assert.AreEqual(peptides[1].TransitionGroupCount, 1);
-                    Assert.AreEqual(peptides[0].TransitionCount, 6);
-                    Assert.AreEqual(peptides[1].TransitionCount, 6);
+                    Assert.AreEqual(1, peptides[0].TransitionGroupCount);
+                    Assert.AreEqual(1, peptides[1].TransitionGroupCount);
+                    Assert.AreEqual(6, peptides[0].TransitionCount);
+                    Assert.AreEqual(6, peptides[1].TransitionCount);
                 });    
             }
             RunUI(() => SkylineWindow.SaveDocument());
@@ -1054,7 +1057,7 @@ namespace pwiz.SkylineTestFunctional
         public void SkipLibraryDlg()
         {
             var libraryDlg = WaitForOpenForm<MultiButtonMsgDlg>();
-            RunUI(libraryDlg.Btn1Click);
+            OkDialog(libraryDlg, libraryDlg.Btn1Click);
         }
     }
 }
