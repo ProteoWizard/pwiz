@@ -133,8 +133,8 @@ namespace pwiz.SkylineTestTutorial
             }, "backgroundProteome.HasDigestion");
 
             // Wait a bit in case web access is turned on and backgroundProteome is actually resolving protein metadata
-            int millis = (AllowInternetAccess ? 300 : 60) * 1000; 
-            WaitForCondition(millis, () => !Program.ActiveDocument.Settings.PeptideSettings.BackgroundProteome.NeedsProteinMetadataSearch); 
+            int millis = (AllowInternetAccess ? 300 : 60) * 1000;
+            WaitForCondition(millis, () => !SkylineWindow.Document.Settings.PeptideSettings.BackgroundProteome.NeedsProteinMetadataSearch, "backgroundProteome.NeedsProteinMetadataSearch"); 
 
             // Pasting FASTA Sequences, p. 5
             RunUI(() => SetClipboardFileText(@"MethodEdit\FASTA\fasta.txt")); // Not L10N
