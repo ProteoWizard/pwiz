@@ -30,7 +30,7 @@ namespace pwiz.SkylineTestUtil
                 throw LastProgress.ErrorException;
             Assert.Fail(LastProgress.IsCanceled
                             ? "Loader cancelled"
-                            : "Unknown progress state");
+                            : "Unexpected loader progress state \"" + LastProgress.State + "\"");
         }
     }
 }

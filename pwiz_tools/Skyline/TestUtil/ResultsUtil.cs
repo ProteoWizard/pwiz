@@ -109,7 +109,7 @@ namespace pwiz.SkylineTestUtil
 
             Assert.Fail(LastProgress.IsCanceled
                             ? "Loader cancelled"
-                            : "Unknown progress state");
+                            : "Unexpected loader progress state \"" + LastProgress.State + "\"");
         }
 
         public SrmDocument ChangeMeasuredResults(MeasuredResults measuredResults,
