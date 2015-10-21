@@ -128,7 +128,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForGraphs();
             CalibrationCurve calCurveWithoutStockConcentration = calibrationForm.CalibrationCurve;
             Assert.IsNull(calibrationForm.ZedGraphControl.GraphPane.Title.Text);
-            Assert.AreEqual(QuantificationStrings.Dilution_Factor, calibrationForm.ZedGraphControl.GraphPane.XAxis.Title.Text);
+            Assert.AreEqual(QuantificationStrings.Calculated_Concentration, calibrationForm.ZedGraphControl.GraphPane.XAxis.Title.Text);
             RunUI(() =>
             {
                 documentGrid.ChooseView("PeptidesWithCalibration");
@@ -141,7 +141,7 @@ namespace pwiz.SkylineTestFunctional
                 documentGrid.DataGridView.Rows[0].Cells[colStockConcentration.Index].Value = 100.0;
             });
             WaitForGraphs();
-            Assert.AreEqual(TextUtil.SpaceSeparate(QuantificationStrings.Concentration, "(ng/mL)"), 
+            Assert.AreEqual(TextUtil.SpaceSeparate(QuantificationStrings.Calculated_Concentration, "(ng/mL)"), 
                 calibrationForm.ZedGraphControl.GraphPane.XAxis.Title.Text);
             Assert.AreEqual(calCurveWithoutStockConcentration.Slope.Value / 100, calibrationForm.CalibrationCurve.Slope.Value, 0.000001);
             TestAllQuantificationSettings();
@@ -195,14 +195,14 @@ namespace pwiz.SkylineTestFunctional
                     {"Solvent_", new Tuple<SampleType, double?>(SampleType.SOLVENT, null)},
                     {"Double Blank__VIFonly", new Tuple<SampleType, double?>(SampleType.DOUBLE_BLANK, null)},
                     {"Blank+IS__VIFonly", new Tuple<SampleType, double?>(SampleType.BLANK, null)},
-                    {"Cal 1_0_20 ng_mL_VIFonly", new Tuple<SampleType, double?>(SampleType.STANDARD, .02)},
-                    {"Cal 2_0_5 ng_mL_VIFonly", new Tuple<SampleType, double?>(SampleType.STANDARD, .05)},
-                    {"Cal 3_1 ng_mL_VIFonly", new Tuple<SampleType, double?>(SampleType.STANDARD, .1)},
-                    {"Cal 4_2 ng_mL_VIFonly", new Tuple<SampleType, double?>(SampleType.STANDARD, .2)},
-                    {"Cal 5_5 ng_mL_VIFonly", new Tuple<SampleType, double?>(SampleType.STANDARD, .5)},
+                    {"Cal 1_0_20 ng_mL_VIFonly", new Tuple<SampleType, double?>(SampleType.STANDARD, 50)},
+                    {"Cal 2_0_5 ng_mL_VIFonly", new Tuple<SampleType, double?>(SampleType.STANDARD, 20)},
+                    {"Cal 3_1 ng_mL_VIFonly", new Tuple<SampleType, double?>(SampleType.STANDARD, 10)},
+                    {"Cal 4_2 ng_mL_VIFonly", new Tuple<SampleType, double?>(SampleType.STANDARD, 5)},
+                    {"Cal 5_5 ng_mL_VIFonly", new Tuple<SampleType, double?>(SampleType.STANDARD, 2)},
                     {"Cal 6_10 ng_mL_VIFonly", new Tuple<SampleType, double?>(SampleType.STANDARD, 1)},
-                    {"Cal 7_25 ng_mL_VIFonly", new Tuple<SampleType, double?>(SampleType.STANDARD, 2.5)},
-                    {"Cal 8_100 ng_mL_VIFonly", new Tuple<SampleType, double?>(SampleType.STANDARD, 10)},
+                    {"Cal 7_25 ng_mL_VIFonly", new Tuple<SampleType, double?>(SampleType.STANDARD, 0.4)},
+                    {"Cal 8_100 ng_mL_VIFonly", new Tuple<SampleType, double?>(SampleType.STANDARD, 0.1)},
                     {"Blank+IS__VIFonly (2)", new Tuple<SampleType, double?>(SampleType.BLANK, null)},
                     {"QC1__VIFonly", new Tuple<SampleType, double?>(SampleType.QC, null)},
                     {"QC2__VIFonly", new Tuple<SampleType, double?>(SampleType.QC, null)},

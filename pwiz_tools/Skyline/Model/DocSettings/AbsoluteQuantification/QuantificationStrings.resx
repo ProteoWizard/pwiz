@@ -101,7 +101,7 @@
   <data name="Calibration_Curve" xml:space="preserve">
     <value>Calibration Curve</value>
   </data>
-  <data name="Concentration" xml:space="preserve">
+  <data name="Calculated_Concentration" xml:space="preserve">
     <value>Calculated Concentration</value>
   </data>
   <data name="CalibrationCurveFitter_GetCalibrationCurve_All_of_the_external_standards_are_missing_one_or_more_peaks_" xml:space="preserve">
@@ -121,9 +121,6 @@
   </data>
   <data name="CalibrationForm_DisplayCalibrationCurve_Select_a_peptide_to_see_its_calibration_curve" xml:space="preserve">
     <value>Select a peptide to see its calibration curve</value>
-  </data>
-  <data name="Dilution_Factor" xml:space="preserve">
-    <value>Dilution Factor</value>
   </data>
   <data name="Intensity" xml:space="preserve">
     <value>Intensity</value>
