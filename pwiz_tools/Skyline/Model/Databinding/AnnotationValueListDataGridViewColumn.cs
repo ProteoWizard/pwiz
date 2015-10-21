@@ -38,6 +38,7 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 Items.Add(item);
             }
+            FlatStyle = FlatStyle.Flat;
         }
 
         private IList<string> GetDropdownItems()
