@@ -183,7 +183,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 {
                     return null;
                 }
-                return retentionTimeRegression.Calculator.ScoreSequence(ModifiedSequence);
+                return retentionTimeRegression.Calculator.ScoreSequence(DocNode.RawTextId);
             }
         }
 
