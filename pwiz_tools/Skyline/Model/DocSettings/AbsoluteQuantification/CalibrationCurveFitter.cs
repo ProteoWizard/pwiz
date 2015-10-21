@@ -53,7 +53,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         public double? DilutionFactorToConcentration(double? dilutionFactor)
         {
             double stockConcentration = PeptideQuantifier.PeptideDocNode.StockConcentration.GetValueOrDefault(1.0);
-            return stockConcentration/dilutionFactor;
+            return dilutionFactor*stockConcentration;
         }
 
         public IDictionary<int, double> GetStandardConcentrations()
@@ -165,9 +165,9 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             var peptideDocNode = PeptideQuantifier.PeptideDocNode;
             if (!peptideDocNode.StockConcentration.HasValue)
             {
-                return QuantificationStrings.Calculated_Concentration;
+                return QuantificationStrings.Dilution_Factor;
             }
-            return AppendUnits(QuantificationStrings.Calculated_Concentration, peptideDocNode.ConcentrationUnits);
+            return AppendUnits(QuantificationStrings.Concentration, peptideDocNode.ConcentrationUnits);
         }
 
         public string GetYAxisTitle()

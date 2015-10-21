@@ -47,7 +47,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             zedGraphControl.MasterPane.Border.IsVisible = false;
             zedGraphControl.GraphPane.Border.IsVisible = false;
             zedGraphControl.GraphPane.Chart.Border.IsVisible = false;
-            zedGraphControl.GraphPane.XAxis.Title.Text = QuantificationStrings.Calculated_Concentration;
+            zedGraphControl.GraphPane.XAxis.Title.Text = QuantificationStrings.Dilution_Factor;
             zedGraphControl.GraphPane.YAxis.Title.Text = QuantificationStrings.Intensity;
             zedGraphControl.GraphPane.Legend.IsVisible = false;
             zedGraphControl.GraphPane.Title.Text = null;
@@ -270,7 +270,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                         }
 
                         labelLines.Add(string.Format("{0} = {1}", // Not L10N
-                            QuantificationStrings.Calculated_Concentration, strConcentration));
+                            QuantificationStrings.Concentration, strConcentration));
                     }
                 }
             }
