@@ -405,7 +405,7 @@ namespace pwiz.SkylineTestFunctional
                                             int detailsChoices, 
                                             int compareChoices)
         {
-            Assert.AreEqual(Math.Max(comparePeakPickingDlg.CountRocCurves - 1, 0), rocCurves);
+            WaitForConditionUI(() => Equals(Math.Max(comparePeakPickingDlg.CountRocCurves - 1, 0), rocCurves), "unexpected rocCurves count");  // Use WaitForCondition instead of Assert.AreEqual to avoid race conditions
             Assert.AreEqual(Math.Max(comparePeakPickingDlg.CountQCurves - 2, 0), qCurves);
             Assert.AreEqual(comparePeakPickingDlg.CountDetailsItems, detailsChoices);
             Assert.AreEqual(comparePeakPickingDlg.CountCompare1Items, compareChoices);
