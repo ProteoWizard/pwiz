@@ -610,7 +610,7 @@ namespace pwiz.Skyline.Model.Results
             private bool _runningAsync;
             private readonly SrmDocument _document;
             private readonly SpectrumFilter _filter;
-            private object _dataFileLock = new object();
+            private readonly object _dataFileLock = new object();
             private MsDataFileImpl _dataFile;
             private LookaheadContext _lookaheadContext;
             private readonly int _countSpectra;
@@ -781,7 +781,7 @@ namespace pwiz.Skyline.Model.Results
                 {
                     _currentInfo = _pendingInfoList.Take();
                     if (_exception != null)
-                        throw _exception;
+                        Helpers.WrapAndThrowException(_exception);
                 }
                 else
                 {
@@ -1078,7 +1078,8 @@ namespace pwiz.Skyline.Model.Results
                 }
 
                 // Propagate exception from provider thread.
-                throw _exception;
+                Helpers.WrapAndThrowException(_exception);
+                throw _exception;   // Unreachable code, but keeps compiler happy
             }
 
             public void SetException(Exception exception)
