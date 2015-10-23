@@ -165,7 +165,8 @@ namespace pwiz.SkylineTestTutorial
                           SkylineWindow.ArrangeGraphsTiled();
                           SkylineWindow.AutoZoomBestPeak();
                       });
-            Assert.AreEqual(8, SkylineWindow.GraphChromatograms.Count(graphChrom => !graphChrom.IsHidden));
+            WaitForCondition(() => Equals(8, SkylineWindow.GraphChromatograms.Count(graphChrom => !graphChrom.IsHidden)),
+                "unexpected visible graphChromatogram count");
 
             WaitForCondition(10 * 60 * 1000,    // ten minutes
                 () => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
