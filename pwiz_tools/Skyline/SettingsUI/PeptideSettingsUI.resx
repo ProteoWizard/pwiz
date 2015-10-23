@@ -1949,6 +1949,57 @@ W = 2T/R</value>
   <data name="&gt;&gt;tabIntegration.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
+  <data name="tbxQuantUnits.Location" type="System.Drawing.Point, System.Drawing">
+    <value>28, 236</value>
+  </data>
+  <data name="tbxQuantUnits.Size" type="System.Drawing.Size, System.Drawing">
+    <value>100, 20</value>
+  </data>
+  <data name="tbxQuantUnits.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="&gt;&gt;tbxQuantUnits.Name" xml:space="preserve">
+    <value>tbxQuantUnits</value>
+  </data>
+  <data name="&gt;&gt;tbxQuantUnits.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tbxQuantUnits.Parent" xml:space="preserve">
+    <value>tabQuantification</value>
+  </data>
+  <data name="&gt;&gt;tbxQuantUnits.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="lblQuantUnits.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblQuantUnits.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="lblQuantUnits.Location" type="System.Drawing.Point, System.Drawing">
+    <value>25, 220</value>
+  </data>
+  <data name="lblQuantUnits.Size" type="System.Drawing.Size, System.Drawing">
+    <value>31, 13</value>
+  </data>
+  <data name="lblQuantUnits.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="lblQuantUnits.Text" xml:space="preserve">
+    <value>&amp;Units</value>
+  </data>
+  <data name="&gt;&gt;lblQuantUnits.Name" xml:space="preserve">
+    <value>lblQuantUnits</value>
+  </data>
+  <data name="&gt;&gt;lblQuantUnits.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblQuantUnits.Parent" xml:space="preserve">
+    <value>tabQuantification</value>
+  </data>
+  <data name="&gt;&gt;lblQuantUnits.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
   <data name="comboQuantMsLevel.Items" xml:space="preserve">
     <value>All</value>
   </data>
@@ -1977,7 +2028,7 @@ W = 2T/R</value>
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;comboQuantMsLevel.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>2</value>
   </data>
   <data name="label23.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2004,7 +2055,7 @@ W = 2T/R</value>
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;label23.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>3</value>
   </data>
   <data name="comboNormalizationMethod.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 36</value>
@@ -2025,7 +2076,7 @@ W = 2T/R</value>
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;comboNormalizationMethod.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>4</value>
   </data>
   <data name="label20.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2052,7 +2103,7 @@ W = 2T/R</value>
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;label20.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>5</value>
   </data>
   <data name="comboRegressionFit.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 86</value>
@@ -2073,7 +2124,7 @@ W = 2T/R</value>
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;comboRegressionFit.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>6</value>
   </data>
   <data name="label22.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2100,7 +2151,7 @@ W = 2T/R</value>
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;label22.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>7</value>
   </data>
   <data name="comboWeighting.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 136</value>
@@ -2121,7 +2172,7 @@ W = 2T/R</value>
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;comboWeighting.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>8</value>
   </data>
   <data name="label21.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2148,7 +2199,7 @@ W = 2T/R</value>
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;label21.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>9</value>
   </data>
   <data name="tabQuantification.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>

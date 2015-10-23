@@ -81,8 +81,6 @@ namespace pwiz.SkylineTestFunctional
                 var colInternalStandardQuantification =
                     documentGrid.FindColumn(PropertyPath.Root.Property("InternalStandardConcentration"));
                 documentGrid.DataGridView.Rows[0].Cells[colInternalStandardQuantification.Index].Value = 80.0;
-                var colUnits = documentGrid.FindColumn(PropertyPath.Root.Property("ConcentrationUnits"));
-                documentGrid.DataGridView.Rows[0].Cells[colUnits.Index].Value = "ng/mL";
             });
 
             // And specify that Quantification should use the ratio to heavy
@@ -92,6 +90,7 @@ namespace pwiz.SkylineTestFunctional
                 peptideSettingsUI.QuantNormalizationMethod =
                     NormalizationMethod.GetNormalizationMethod(IsotopeLabelType.heavy);
                 peptideSettingsUI.QuantRegressionFit = RegressionFit.LINEAR;
+                peptideSettingsUI.QuantUnits = "ng/mL";
             });
             OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
             RunUI(() => documentGrid.ChooseView("PeptideResultsWithQuantification"));
@@ -126,9 +125,10 @@ namespace pwiz.SkylineTestFunctional
             // Fill in the values for the external standards.
             FillInSampleTypesAndDilutionFactors();
             WaitForGraphs();
-            CalibrationCurve calCurveWithoutStockConcentration = calibrationForm.CalibrationCurve;
+            CalibrationCurve calCurveWithoutMultiplier = calibrationForm.CalibrationCurve;
             Assert.IsNull(calibrationForm.ZedGraphControl.GraphPane.Title.Text);
-            Assert.AreEqual(QuantificationStrings.Dilution_Factor, calibrationForm.ZedGraphControl.GraphPane.XAxis.Title.Text);
+            Assert.AreEqual(CalibrationCurveFitter.AppendUnits(QuantificationStrings.Concentration, "ng/mL"), 
+                calibrationForm.ZedGraphControl.GraphPane.XAxis.Title.Text);
             RunUI(() =>
             {
                 documentGrid.ChooseView("PeptidesWithCalibration");
@@ -137,13 +137,13 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 var colStockConcentration =
-                    documentGrid.FindColumn(PropertyPath.Root.Property("StockConcentration"));
-                documentGrid.DataGridView.Rows[0].Cells[colStockConcentration.Index].Value = 100.0;
+                    documentGrid.FindColumn(PropertyPath.Root.Property("ConcentrationMultiplier"));
+                documentGrid.DataGridView.Rows[0].Cells[colStockConcentration.Index].Value = 2.0;
             });
             WaitForGraphs();
             Assert.AreEqual(TextUtil.SpaceSeparate(QuantificationStrings.Concentration, "(ng/mL)"), 
                 calibrationForm.ZedGraphControl.GraphPane.XAxis.Title.Text);
-            Assert.AreEqual(calCurveWithoutStockConcentration.Slope.Value / 100, calibrationForm.CalibrationCurve.Slope.Value, 0.000001);
+            Assert.AreEqual(calCurveWithoutMultiplier.Slope.Value / 2, calibrationForm.CalibrationCurve.Slope.Value, 0.000001);
             TestAllQuantificationSettings();
         }
 
@@ -217,7 +217,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 var colReplicate = documentGrid.FindColumn(PropertyPath.Root);
                 var colSampleType = documentGrid.FindColumn(PropertyPath.Root.Property("SampleType"));
-                var colDilutionFactor = documentGrid.FindColumn(PropertyPath.Root.Property("DilutionFactor"));
+                var colConcentration = documentGrid.FindColumn(PropertyPath.Root.Property("AnalyteConcentration"));
                 for (int iRow = 0; iRow < documentGrid.RowCount; iRow++)
                 {
                     var row = documentGrid.DataGridView.Rows[iRow];
@@ -226,7 +226,7 @@ namespace pwiz.SkylineTestFunctional
                     if (sampleTypes.TryGetValue(replicateName, out tuple))
                     {
                         row.Cells[colSampleType.Index].Value = tuple.Item1;
-                        row.Cells[colDilutionFactor.Index].Value = tuple.Item2;
+                        row.Cells[colConcentration.Index].Value = tuple.Item2;
                     }
                 }
             });

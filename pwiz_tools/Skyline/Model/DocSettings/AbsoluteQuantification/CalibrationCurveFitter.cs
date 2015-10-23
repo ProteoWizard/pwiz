@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
@@ -50,10 +51,10 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return result;
         }
 
-        public double? DilutionFactorToConcentration(double? dilutionFactor)
+        public double? GetPeptideConcentration(ChromatogramSet chromatogramSet)
         {
-            double stockConcentration = PeptideQuantifier.PeptideDocNode.StockConcentration.GetValueOrDefault(1.0);
-            return dilutionFactor*stockConcentration;
+            double concentrationMultiplier = PeptideQuantifier.PeptideDocNode.ConcentrationMultiplier.GetValueOrDefault(1.0);
+            return chromatogramSet.AnalyteConcentration*concentrationMultiplier;
         }
 
         public IDictionary<int, double> GetStandardConcentrations()
@@ -69,7 +70,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                     {
                         continue;
                     }
-                    double? concentration = DilutionFactorToConcentration(chromatogramSet.DilutionFactor);
+                    double? concentration = GetPeptideConcentration(chromatogramSet);
                     if (concentration.HasValue)
                     {
                         result.Add(replicateIndex, concentration.Value);
@@ -162,12 +163,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         public string GetXAxisTitle()
         {
-            var peptideDocNode = PeptideQuantifier.PeptideDocNode;
-            if (!peptideDocNode.StockConcentration.HasValue)
-            {
-                return QuantificationStrings.Dilution_Factor;
-            }
-            return AppendUnits(QuantificationStrings.Concentration, peptideDocNode.ConcentrationUnits);
+            return AppendUnits(QuantificationStrings.Concentration, QuantificationSettings.Units);
         }
 
         public string GetYAxisTitle()
@@ -183,7 +179,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                     return title;
                 }
                 title = String.Format(QuantificationStrings.CalibrationCurveFitter_GetYAxisTitle_Concentration_from__0_, title);
-                return AppendUnits(title, peptideDocNode.ConcentrationUnits);
+                return AppendUnits(title, QuantificationSettings.Units);
             }
             if (ReferenceEquals(NormalizationMethod.NONE, PeptideQuantifier.NormalizationMethod))
             {
@@ -192,7 +188,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return QuantificationStrings.Normalized_Intensity;
         }
 
-        private String AppendUnits(String title, String units)
+        public static String AppendUnits(String title, String units)
         {
             if (String.IsNullOrEmpty(units))
             {

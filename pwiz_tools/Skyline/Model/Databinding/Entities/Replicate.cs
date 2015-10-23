@@ -138,13 +138,13 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
-        public double? DilutionFactor
+        public double? AnalyteConcentration
         {
-            get { return ChromatogramSet.DilutionFactor; }
+            get { return ChromatogramSet.AnalyteConcentration; }
             set
             {
-                ChangeChromatogramSet(EditDescription.SetColumn("DilutionFactor", value), // Not L10N
-                    ChromatogramSet.ChangeDilutionFactor(value));
+                ChangeChromatogramSet(EditDescription.SetColumn("AnalyteConcentration", value), // Not L10N
+                    ChromatogramSet.ChangeAnalyteConcentration(value));
             }
         }
     }

@@ -281,33 +281,23 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
-        public double? StockConcentration
-        {
-            get { return DocNode.StockConcentration; }
-            set
-            {
-                ChangeDocNode(EditDescription.SetColumn("StockConcentration", value), // Not L10N
-                    DocNode.ChangeStockConcentration(value));
-            }
-        }
-
         public double? InternalStandardConcentration
         {
             get { return DocNode.InternalStandardConcentration; }
             set
             {
                 ChangeDocNode(EditDescription.SetColumn("InternalStandardConcentration", value), // Not L10N
-                    DocNode.ChangeInternalStandardKnownConcentration(value));
+                    DocNode.ChangeInternalStandardConcentration(value));
             }
         }
 
-        public string ConcentrationUnits
+        public double? ConcentrationMultiplier
         {
-            get { return DocNode.ConcentrationUnits; }
+            get { return DocNode.ConcentrationMultiplier; }
             set
             {
-                ChangeDocNode(EditDescription.SetColumn("ConcentrationUnits", value), // Not L10N
-                    DocNode.ChangeConcentrationUnits(value));
+                ChangeDocNode(EditDescription.SetColumn("ConcentrationMultiplier", value), // Not L10N
+                    DocNode.ChangeConcentrationMultiplier(value));
             }
         }
 

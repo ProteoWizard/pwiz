@@ -47,7 +47,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             zedGraphControl.MasterPane.Border.IsVisible = false;
             zedGraphControl.GraphPane.Border.IsVisible = false;
             zedGraphControl.GraphPane.Chart.Border.IsVisible = false;
-            zedGraphControl.GraphPane.XAxis.Title.Text = QuantificationStrings.Dilution_Factor;
+            zedGraphControl.GraphPane.XAxis.Title.Text = QuantificationStrings.Concentration;
             zedGraphControl.GraphPane.YAxis.Title.Text = QuantificationStrings.Intensity;
             zedGraphControl.GraphPane.Legend.IsVisible = false;
             zedGraphControl.GraphPane.Title.Text = null;
@@ -180,7 +180,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                         continue;
                     }
                     double? y = curveFitter.GetReplicateIntensity(iReplicate, transitionIds);
-                    double? x = curveFitter.DilutionFactorToConcentration(chromatogramSet.DilutionFactor);
+                    double? x = curveFitter.GetPeptideConcentration(chromatogramSet);
                     if (!x.HasValue)
                     {
                         x = CalibrationCurve.GetX(y);
@@ -260,17 +260,18 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                         arrow.Line.Color = GraphSummary.ColorSelected;
                         zedGraphControl.GraphPane.GraphObjList.Add(arrow);
                         string strConcentration;
-                        if (string.IsNullOrEmpty(peptide.ConcentrationUnits))
+                        string units = document.Settings.PeptideSettings.Quantification.Units;
+                        if (string.IsNullOrEmpty(units))
                         {
                             strConcentration = estimatedValue.Value.ToString(Formats.CalibrationCurve);
                         }
                         else
                         {
-                            strConcentration = TextUtil.SpaceSeparate(estimatedValue.Value.ToString(Formats.Concentration), peptide.ConcentrationUnits);
+                            strConcentration = TextUtil.SpaceSeparate(estimatedValue.Value.ToString(Formats.Concentration), units);
                         }
 
                         labelLines.Add(string.Format("{0} = {1}", // Not L10N
-                            QuantificationStrings.Concentration, strConcentration));
+                            QuantificationStrings.Calculated_Concentration, strConcentration));
                     }
                 }
             }

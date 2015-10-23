@@ -61,6 +61,15 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Calculated Concentration.
+        /// </summary>
+        public static string Calculated_Concentration {
+            get {
+                return ResourceManager.GetString("Calculated_Concentration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Calibration Curve.
         /// </summary>
         public static string Calibration_Curve {
@@ -182,7 +191,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Calculated Concentration.
+        ///   Looks up a localized string similar to Concentration.
         /// </summary>
         public static string Concentration {
             get {

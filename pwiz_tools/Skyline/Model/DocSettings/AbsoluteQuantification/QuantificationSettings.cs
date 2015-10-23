@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
@@ -39,11 +40,12 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             RegressionWeighting = regressionWeighting;
             RegressionFit = RegressionFit.LINEAR_THROUGH_ZERO;
             NormalizationMethod = NormalizationMethod.NONE;
+            Units = null;
         }
 
         public RegressionWeighting RegressionWeighting { get; private set; }
         public RegressionFit RegressionFit { get; private set; }
-
+        
         public QuantificationSettings ChangeRegressionWeighting(RegressionWeighting weighting)
         {
             return ChangeProp(ImClone(this), im => im.RegressionWeighting = weighting);
@@ -68,6 +70,13 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return ChangeProp(ImClone(this), im => im.MsLevel = level);
         }
 
+        public string Units { get; private set; }
+
+        public QuantificationSettings ChangeUnits(string units)
+        {
+            return ChangeProp(ImClone(this), im => im.Units = string.IsNullOrEmpty(units) ? null : units);
+        }
+
         #region Equality Members
 
         protected bool Equals(QuantificationSettings other)
@@ -75,7 +84,8 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return Equals(RegressionWeighting, other.RegressionWeighting) &&
                    Equals(RegressionFit, other.RegressionFit) && 
                    Equals(NormalizationMethod, other.NormalizationMethod) &&
-                   Equals(MsLevel, other.MsLevel);
+                   Equals(MsLevel, other.MsLevel) &&
+                   Equals(Units, other.Units);
         }
 
         public override bool Equals(object obj)
@@ -94,6 +104,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 hashCode = (hashCode*397) ^ RegressionFit.GetHashCode();
                 hashCode = (hashCode*397) ^ NormalizationMethod.GetHashCode();
                 hashCode = (hashCode*397) ^ MsLevel.GetHashCode();
+                hashCode = (hashCode*397) ^ (Units == null ? 0 : Units.GetHashCode());
                 return hashCode;
             }
         }
@@ -107,6 +118,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             fit,
             normalization,
             ms_level,
+            units
         }
         XmlSchema IXmlSerializable.GetSchema()
         {
@@ -123,6 +135,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             RegressionFit = RegressionFit.Parse(reader.GetAttribute(Attr.fit));
             NormalizationMethod = NormalizationMethod.FromName(reader.GetAttribute(Attr.normalization));
             MsLevel = reader.GetNullableIntAttribute(Attr.ms_level);
+            Units = reader.GetAttribute(Attr.units);
             bool empty = reader.IsEmptyElement;
             reader.Read();
             if (!empty)
@@ -146,6 +159,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 writer.WriteAttributeString(Attr.normalization, NormalizationMethod.Name);
             }
             writer.WriteAttributeNullable(Attr.ms_level, MsLevel);
+            writer.WriteAttributeIfString(Attr.units, Units);
         }
 
         public static QuantificationSettings Deserialize(XmlReader reader)

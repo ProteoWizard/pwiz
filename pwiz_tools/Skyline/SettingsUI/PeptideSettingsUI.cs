@@ -168,6 +168,7 @@ namespace pwiz.Skyline.SettingsUI
             comboRegressionFit.Items.AddRange(RegressionFit.All.Cast<object>().ToArray());
             comboRegressionFit.SelectedItem = _peptideSettings.Quantification.RegressionFit;
             comboQuantMsLevel.SelectedIndex = Math.Max(0, _quantMsLevels.IndexOf(_peptideSettings.Quantification.MsLevel));
+            tbxQuantUnits.Text = _peptideSettings.Quantification.Units;
         }
 
         public DigestSettings Digest { get { return _peptideSettings.DigestSettings; } }
@@ -386,7 +387,8 @@ namespace pwiz.Skyline.SettingsUI
                 .ChangeNormalizationMethod(comboNormalizationMethod.SelectedItem as NormalizationMethod ?? NormalizationMethod.NONE) 
                 .ChangeRegressionWeighting(comboWeighting.SelectedItem as RegressionWeighting)
                 .ChangeRegressionFit(comboRegressionFit.SelectedItem as RegressionFit)
-                .ChangeMsLevel(_quantMsLevels[comboQuantMsLevel.SelectedIndex]);
+                .ChangeMsLevel(_quantMsLevels[comboQuantMsLevel.SelectedIndex])
+                .ChangeUnits(tbxQuantUnits.Text);
 
             return new PeptideSettings(enzyme, digest, prediction, filter, libraries, modifications, integration, backgroundProteome)
                     .ChangeAbsoluteQuantification(quantification);
@@ -1219,6 +1221,12 @@ namespace pwiz.Skyline.SettingsUI
         {
             get { return _quantMsLevels[comboQuantMsLevel.SelectedIndex]; }
             set { comboQuantMsLevel.SelectedIndex = _quantMsLevels.IndexOf(value); }
+        }
+
+        public string QuantUnits
+        {
+            get { return tbxQuantUnits.Text; }
+            set { tbxQuantUnits.Text = value; }
         }
 
         #endregion

@@ -142,7 +142,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 result = result.ChangeCalculatedConcentration(result.NormalizedIntensity);
             }
-            result = result.ChangeUnits(Peptide.ConcentrationUnits);
+            result = result.ChangeUnits(SrmDocument.Settings.PeptideSettings.Quantification.Units);
             return result;
         }
     }

@@ -326,7 +326,7 @@ namespace pwiz.Skyline.Model.Results
             return (ChromFileInfoId) (ordinalIndex != -1 ? MSDataFileInfos[ordinalIndex].Id : null);
         }
 
-        public double? DilutionFactor { get; private set; }
+        public double? AnalyteConcentration { get; private set; }
 
         public SampleType SampleType { get; private set; }
 
@@ -432,9 +432,9 @@ namespace pwiz.Skyline.Model.Results
             return ChangeProp(ImClone(this), im => im._rescoreCount++);
         }
 
-        public ChromatogramSet ChangeDilutionFactor(double? concentration)
+        public ChromatogramSet ChangeAnalyteConcentration(double? concentration)
         {
-            return ChangeProp(ImClone(this), im => im.DilutionFactor = concentration);
+            return ChangeProp(ImClone(this), im => im.AnalyteConcentration = concentration);
         }
 
         public ChromatogramSet ChangeSampleType(SampleType sampleType)
@@ -525,7 +525,7 @@ namespace pwiz.Skyline.Model.Results
             name,
             value,
             use_for_retention_time_prediction,
-            dilution_factor,
+            analyte_concentration,
             sample_type
         }
 
@@ -543,7 +543,7 @@ namespace pwiz.Skyline.Model.Results
             // Read tag attributes
             base.ReadXml(reader);
             UseForRetentionTimeFilter = reader.GetBoolAttribute(ATTR.use_for_retention_time_prediction, false);
-            DilutionFactor = reader.GetNullableDoubleAttribute(ATTR.dilution_factor);
+            AnalyteConcentration = reader.GetNullableDoubleAttribute(ATTR.analyte_concentration);
             SampleType = SampleType.FromName(reader.GetAttribute(ATTR.sample_type));
             // Consume tag
             reader.Read();
@@ -585,7 +585,7 @@ namespace pwiz.Skyline.Model.Results
             // Write tag attributes
             base.WriteXml(writer);
             writer.WriteAttribute(ATTR.use_for_retention_time_prediction, false);
-            writer.WriteAttributeNullable(ATTR.dilution_factor, DilutionFactor);
+            writer.WriteAttributeNullable(ATTR.analyte_concentration, AnalyteConcentration);
             if (null != SampleType && !Equals(SampleType, SampleType.DEFAULT))
             {
                 writer.WriteAttribute(ATTR.sample_type, SampleType.Name);
@@ -682,7 +682,7 @@ namespace pwiz.Skyline.Model.Results
                 && obj.UseForRetentionTimeFilter == UseForRetentionTimeFilter
                 && Equals(obj.OptimizationFunction, OptimizationFunction)
                 && obj._rescoreCount == _rescoreCount
-                && Equals(obj.DilutionFactor, DilutionFactor)
+                && Equals(obj.AnalyteConcentration, AnalyteConcentration)
                 && Equals(obj.SampleType, SampleType);
         }
 
@@ -703,7 +703,8 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ UseForRetentionTimeFilter.GetHashCode();
                 result = (result*397) ^ (OptimizationFunction != null ? OptimizationFunction.GetHashCode() : 0);
                 result = (result*397) ^ _rescoreCount;
-                result = (result*397) ^ DilutionFactor.GetHashCode();
+                result = (result*397) ^ AnalyteConcentration.GetHashCode();
+                result = (result*397) ^ SampleType.GetHashCode();
                 return result;
             }
         }

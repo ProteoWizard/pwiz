@@ -2154,9 +2154,9 @@ namespace pwiz.Skyline.Model.DocSettings
             for (int i = 0; i < measuredResultsNew.Chromatograms.Count; i++)
             {
                 var chromatogramSetNew = measuredResultsNew.Chromatograms[i].ChangeAnnotations(Annotations.EMPTY).ChangeUseForRetentionTimeFilter(false)
-                    .ChangeDilutionFactor(null).ChangeSampleType(SampleType.DEFAULT);
+                    .ChangeAnalyteConcentration(null).ChangeSampleType(SampleType.DEFAULT);
                 var chromatogramSetOld = measuredResultsOld.Chromatograms[i].ChangeAnnotations(Annotations.EMPTY).ChangeUseForRetentionTimeFilter(false)
-                    .ChangeDilutionFactor(null).ChangeSampleType(SampleType.DEFAULT);
+                    .ChangeAnalyteConcentration(null).ChangeSampleType(SampleType.DEFAULT);
                 if (!chromatogramSetNew.Equals(chromatogramSetOld))
                 {
                     return false;

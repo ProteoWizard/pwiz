@@ -123,6 +123,9 @@
   <data name="AdjustedPValue">
     <value>Adjusted P-Value</value>
   </data>
+  <data name="AnalyteConcentration">
+    <value>Analyte Concentration</value>
+  </data>
   <data name="Area">
     <value>Area</value>
   </data>
@@ -162,8 +165,8 @@
   <data name="CollisionEnergy">
     <value>Collision Energy</value>
   </data>
-  <data name="ConcentrationUnits">
-    <value>Concentration Units</value>
+  <data name="ConcentrationMultiplier">
+    <value>Concentration Multiplier</value>
   </data>
   <data name="ConfidenceLevel">
     <value>Confidence Level</value>
@@ -215,9 +218,6 @@
   </data>
   <data name="DegreesOfFreedom">
     <value>Degrees Of Freedom</value>
-  </data>
-  <data name="DilutionFactor">
-    <value>Dilution Factor</value>
   </data>
   <data name="EndPos">
     <value>End Pos</value>
@@ -671,9 +671,6 @@
   </data>
   <data name="StdevTotalAreaRatio">
     <value>Stdev Total Area Ratio</value>
-  </data>
-  <data name="StockConcentration">
-    <value>Stock Concentration</value>
   </data>
   <data name="TotalArea">
     <value>Total Area</value>
