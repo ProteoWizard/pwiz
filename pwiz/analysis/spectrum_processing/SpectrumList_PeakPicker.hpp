@@ -57,6 +57,13 @@ class PWIZ_API_DECL SpectrumList_PeakPicker : public msdata::SpectrumListWrapper
     int mode_;
 };
 
+class PWIZ_API_DECL NoVendorPeakPickingException : public std::runtime_error
+{
+    public:
+    NoVendorPeakPickingException() : std::runtime_error("[PeakDetector::NoVendorPeakPickingException]") {}
+};
+
+
 
 } // namespace analysis 
 } // namespace pwiz

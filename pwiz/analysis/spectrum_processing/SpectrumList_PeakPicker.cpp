@@ -201,6 +201,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_PeakPicker::spectrum(size_t index, bool g
 
     try
     {
+        if (algorithm_ == NULL) // As with VendorOnlyPeakPicker
+            throw NoVendorPeakPickingException();
         vector<double>& mzs = s->getMZArray()->data;
         vector<double>& intensities = s->getIntensityArray()->data;
         vector<double> xPeakValues, yPeakValues;

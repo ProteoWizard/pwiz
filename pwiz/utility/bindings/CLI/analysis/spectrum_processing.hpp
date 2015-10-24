@@ -264,8 +264,20 @@ public ref class SpectrumList_Smoother : public msdata::SpectrumList
 
 public ref class PeakDetector abstract
 {
-    internal:
+internal:
     pwiz::analysis::PeakDetectorPtr* base_;
+};
+
+/// <summary>
+/// For use when you want to use vendor centroiding, and throw if it isn't available
+/// </summary>
+public ref class VendorOnlyPeakDetector : public PeakDetector
+{
+public:
+    VendorOnlyPeakDetector()
+    {
+        base_ = new pwiz::analysis::PeakDetectorPtr(NULL); // No algorithm, so we can throw in the no vendor peak picking case
+    }
 };
 
 public ref class LocalMaximumPeakDetector : public PeakDetector

@@ -24,6 +24,7 @@ using System.Threading;
 using pwiz.CLI.cv;
 using pwiz.CLI.data;
 using pwiz.CLI.msdata;
+using pwiz.CLI.analysis;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.ProteowizardWrapper
@@ -55,10 +56,12 @@ namespace pwiz.ProteowizardWrapper
         private MSData _msDataFile;
         private readonly ReaderConfig _config;
         private SpectrumList _spectrumList;
-        private SpectrumList _spectrumListCentroided;
         private ChromatogramList _chromatogramList;
         private MsDataScanCache _scanCache;
         private readonly IPerfUtil _perf; // for performance measurement, dummied by default
+
+        private readonly bool _requireVendorCentroidedMS1;
+        private readonly bool _requireVendorCentroidedMS2;
 
         private DetailLevel _detailMsLevel = DetailLevel.InstantMetadata;
 
@@ -84,16 +87,20 @@ namespace pwiz.ProteowizardWrapper
             return FULL_READER_LIST.readIds(path);
         }
 
-        public MsDataFileImpl(string path, int sampleIndex = 0, bool simAsSpectra = false, bool srmAsSpectra = false, bool acceptZeroLengthSpectra = true)
+        public MsDataFileImpl(string path, int sampleIndex = 0, bool simAsSpectra = false, bool srmAsSpectra = false, bool acceptZeroLengthSpectra = true, bool requireVendorCentroidedMS1 = false, bool requireVendorCentroidedMS2 = false)
         {
             // see note above on enabling performance measurement
-            _perf = PerfUtilFactory.CreatePerfUtil("MsDataFileImpl " + String.Format("{0},{1},{2},{3},{4}", path, sampleIndex, simAsSpectra, srmAsSpectra, acceptZeroLengthSpectra));  // Not L10N
+            _perf = PerfUtilFactory.CreatePerfUtil("MsDataFileImpl " +
+                string.Format("path:{0},sampleIndex:{1},simAsSpectra:{2},srmAsSpectra:{3},acceptZeroLengthSpectra:{4},requireVendorCentroidedMS1:{5},requireVendorCentroidedMS2:{6}",  // Not L10N
+                path, sampleIndex, simAsSpectra, srmAsSpectra, acceptZeroLengthSpectra, requireVendorCentroidedMS1, requireVendorCentroidedMS2)); 
             using (_perf.CreateTimer("open")) // Not L10N
             {
                 FilePath = path;
                 _msDataFile = new MSData();
                 _config = new ReaderConfig {simAsSpectra = simAsSpectra, srmAsSpectra = srmAsSpectra, acceptZeroLengthSpectra = acceptZeroLengthSpectra};
                 FULL_READER_LIST.read(path, _msDataFile, sampleIndex, _config);
+                _requireVendorCentroidedMS1 = requireVendorCentroidedMS1;
+                _requireVendorCentroidedMS2 = requireVendorCentroidedMS2;
             }
         }
 
@@ -351,8 +358,20 @@ namespace pwiz.ProteowizardWrapper
         {
             get
             {
-                return _spectrumList = _spectrumList ??
-                    _msDataFile.run.spectrumList;
+                if (_spectrumList == null)
+                {
+                    var centroidLevel = new List<int>();
+                    if (_requireVendorCentroidedMS1)
+                        centroidLevel.Add(1);
+                    if (_requireVendorCentroidedMS2)
+                        centroidLevel.Add(2);
+                    _spectrumList = centroidLevel.Any() ?
+                        new SpectrumList_PeakPicker(_msDataFile.run.spectrumList,
+                            new VendorOnlyPeakDetector(), // Throws an exception when no vendor centroiding available
+                            true, centroidLevel.ToArray()) : 
+                        _msDataFile.run.spectrumList;
+                }
+                return _spectrumList;
             }
         }
 
@@ -550,78 +569,6 @@ namespace pwiz.ProteowizardWrapper
                 }
             }
             return msDataSpectrum;
-        }
-
-        public MsDataSpectrum GetCentroidedSpectrum(int scanIndex)
-        {
-            using (_perf.CreateTimer("GetCentroidedSpectrum(index)")) // Not L10N
-            {
-                var msDataSpectrum = GetSpectrum(scanIndex);
-                if (!msDataSpectrum.Centroided && msDataSpectrum.Mzs.Length > 0)
-                {
-                    // Spectra from mzWiff files lack zero intensity m/z values necessary for
-                    // correct centroiding.
-                    if (IsMzWiffXml)
-                        InsertZeros(msDataSpectrum);
-
-                    var centroider = new Centroider(msDataSpectrum.Mzs, msDataSpectrum.Intensities);
-                    double[] mzArray, intensityArray;
-                    centroider.GetCentroidedData(out mzArray, out intensityArray);
-                    msDataSpectrum.Mzs = mzArray;
-                    msDataSpectrum.Intensities = intensityArray;
-                }
-                return msDataSpectrum;
-            }
-        }
-
-        private static void InsertZeros(MsDataSpectrum msDataSpectrum)
-        {
-            double[] mzs = msDataSpectrum.Mzs;
-            double[] intensities = msDataSpectrum.Intensities;
-            int len = mzs.Length;
-            double minDelta = double.MaxValue;
-            for (int i = 0; i < len - 1; i++)
-            {
-                minDelta = Math.Min(minDelta, mzs[i + 1] - mzs[i]);
-            }
-            double maxGap = minDelta*2;
-            var newMzs = new List<double>(len);
-            var newIntensities = new List<double>(len);
-            for (int i = 0; i < len - 1; i++)
-            {
-                double mz = mzs[i];
-                double mzNext = mzs[i + 1];
-                if (i == 0)
-                {
-                    newMzs.Add(mz - minDelta);
-                    newIntensities.Add(0);
-                }
-                newMzs.Add(mz);
-                newIntensities.Add(intensities[i]);
-                // If the distance to the next m/z value is greater than the
-                // maximum gap allowed, insert a flanking zero after this peak.
-                if (mzNext - mz > maxGap)
-                {
-                    mz += minDelta;
-                    newMzs.Add(mz);
-                    newIntensities.Add(0);
-
-                    // If the distance is still greater than the maximum gap,
-                    // insert a flanking zero before the next peak.
-                    if (mzNext - mz > maxGap)
-                    {
-                        mz = mzNext - minDelta;
-                        newMzs.Add(mz);
-                        newIntensities.Add(0);
-                    }
-                }
-            }
-            newMzs.Add(mzs[len - 1]);
-            newIntensities.Add(intensities[len - 1]);
-            newMzs.Add(mzs[len - 1] + minDelta);
-            newIntensities.Add(0);
-            msDataSpectrum.Mzs = newMzs.ToArray();
-            msDataSpectrum.Intensities = newIntensities.ToArray();
         }
 
         public bool HasSrmSpectra
@@ -863,9 +810,6 @@ namespace pwiz.ProteowizardWrapper
             if (_spectrumList != null)
                 _spectrumList.Dispose();
             _spectrumList = null;
-            if (_spectrumListCentroided != null)
-                _spectrumListCentroided.Dispose();
-            _spectrumListCentroided = null;
             if (_chromatogramList != null)
                 _chromatogramList.Dispose();
             _chromatogramList = null;
