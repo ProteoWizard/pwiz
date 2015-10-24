@@ -1125,7 +1125,7 @@ namespace pwiz.SkylineTestUtil
 
         #region Results helpers
 
-        public void ImportResultsFile(string fileName, int waitForLoadSeconds = 420)
+        public void ImportResultsFile(string fileName, int waitForLoadSeconds = 420, string expectedErrorMessage = null)
         {
             var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
             RunDlg<OpenDataSourceDialog>(() => importResultsDlg.NamedPathSets = importResultsDlg.GetDataSourcePathsFile(null),
@@ -1136,8 +1136,17 @@ namespace pwiz.SkylineTestUtil
                });
             WaitForConditionUI(() => importResultsDlg.NamedPathSets != null);
             RunUI(importResultsDlg.OkDialog);
-            WaitForCondition(waitForLoadSeconds * 1000,
-                () => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
+            if (expectedErrorMessage != null)
+            {
+                var dlg = WaitForOpenForm<MessageDlg>();
+                Assert.IsTrue(dlg.DetailMessage.Contains(expectedErrorMessage));
+                dlg.CancelDialog();
+            }
+            else
+            {
+                WaitForCondition(waitForLoadSeconds * 1000,
+                    () => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
+            }
         }
 
         public void ImportResultsReplicatesCE(string replicatesDirName, int waitForLoadSeconds = 420)

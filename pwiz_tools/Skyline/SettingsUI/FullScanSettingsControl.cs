@@ -254,7 +254,8 @@ namespace pwiz.Skyline.SettingsUI
                 textPrecursorRes,
                 labelPrecursorAt,
                 textPrecursorAt,
-                labelPrecursorTh);
+                labelPrecursorTh,
+                labelPrecursorPPM);
 
             // For QIT, only 1 isotope peak is allowed
             if (precursorMassAnalyzer == FullScanMassAnalyzerType.qit)
@@ -426,7 +427,6 @@ namespace pwiz.Skyline.SettingsUI
             FullScanMassAnalyzerType precursorAnalyzerType = PrecursorMassAnalyzer;
             if (precursorIsotopes != FullScanPrecursorIsotopes.None)
             {
-                double minFilt, maxFilt;
                 if (precursorAnalyzerType == FullScanMassAnalyzerType.qit)
                 {
                     if (precursorIsotopes != FullScanPrecursorIsotopes.Count || precursorIsotopeFilter != 1)
@@ -447,14 +447,10 @@ namespace pwiz.Skyline.SettingsUI
 
                         return false;
                     }
-                    minFilt = TransitionFullScan.MIN_LO_RES;
-                    maxFilt = TransitionFullScan.MAX_LO_RES;
                 }
-                else
-                {
-                    minFilt = TransitionFullScan.MIN_HI_RES;
-                    maxFilt = TransitionFullScan.MAX_HI_RES;
-                }
+                double minFilt, maxFilt;
+                GetFilterMinMax(PrecursorMassAnalyzer, out minFilt, out maxFilt);
+
                 double precRes;
                 bool valid;
                 if (null != tabControl)
@@ -480,11 +476,9 @@ namespace pwiz.Skyline.SettingsUI
         {
             precursorResMz = null;
             FullScanPrecursorIsotopes precursorIsotopes = PrecursorIsotopesCurrent;
-            FullScanMassAnalyzerType precursorAnalyzerType = PrecursorMassAnalyzer;
             if (precursorIsotopes != FullScanPrecursorIsotopes.None)
             {
-                if (precursorAnalyzerType != FullScanMassAnalyzerType.qit &&
-                    precursorAnalyzerType != FullScanMassAnalyzerType.tof)
+                if (IsResMzAnalyzer(PrecursorMassAnalyzer))
                 {
                     double precResMz;
                     bool valid;
@@ -509,6 +503,12 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             return true;
+        }
+
+        private static bool IsResMzAnalyzer(FullScanMassAnalyzerType precursorAnalyzerType)
+        {
+            return precursorAnalyzerType == FullScanMassAnalyzerType.orbitrap ||
+                   precursorAnalyzerType == FullScanMassAnalyzerType.ft_icr;
         }
 
         public void EditEnrichmentsList()
@@ -617,7 +617,8 @@ namespace pwiz.Skyline.SettingsUI
                             textProductRes,
                             labelProductAt,
                             textProductAt,
-                            labelProductTh);
+                            labelProductTh,
+                            labelProductPPM);
         }
 
         private void comboIsolationScheme_SelectedIndexChanged(object sender, EventArgs e)
@@ -662,18 +663,8 @@ namespace pwiz.Skyline.SettingsUI
             {
                 double minFilt, maxFilt;
 
-                FullScanMassAnalyzerType productAnalyzerType = ProductMassAnalyzer;
-                if (productAnalyzerType == FullScanMassAnalyzerType.qit)
-                {
-                    minFilt = TransitionFullScan.MIN_LO_RES;
-                    maxFilt = TransitionFullScan.MAX_LO_RES;
-                }
-                else
-                {
-                    minFilt = TransitionFullScan.MIN_HI_RES;
-                    maxFilt = TransitionFullScan.MAX_HI_RES;
-                }
-             
+                GetFilterMinMax(ProductMassAnalyzer, out minFilt, out maxFilt);
+
                 double prodRes;
                 bool valid;
                 if (null != tabControl)
@@ -695,6 +686,25 @@ namespace pwiz.Skyline.SettingsUI
             return true;
         }
 
+        private void GetFilterMinMax(FullScanMassAnalyzerType analyzerType, out double minFilt, out double maxFilt)
+        {
+            if (analyzerType == FullScanMassAnalyzerType.qit)
+            {
+                minFilt = TransitionFullScan.MIN_LO_RES;
+                maxFilt = TransitionFullScan.MAX_LO_RES;
+            }
+            else if (analyzerType == FullScanMassAnalyzerType.centroided)
+            {
+                minFilt = TransitionFullScan.MIN_CENTROID_PPM;
+                maxFilt = TransitionFullScan.MAX_CENTROID_PPM;
+            }
+            else
+            {
+                minFilt = TransitionFullScan.MIN_HI_RES;
+                maxFilt = TransitionFullScan.MAX_HI_RES;
+            }
+        }
+
         public bool ValidateProductResMz(MessageBoxHelper helper, out double? productResMz, TabControl tabControl = null, int tabIndex = -1)
         {
             FullScanAcquisitionMethod acquisitionMethod = AcquisitionMethod;
@@ -702,10 +712,7 @@ namespace pwiz.Skyline.SettingsUI
 
             if (acquisitionMethod != FullScanAcquisitionMethod.None)
             {
-                FullScanMassAnalyzerType productAnalyzerType = ProductMassAnalyzer;
-
-                if (productAnalyzerType != FullScanMassAnalyzerType.qit &&
-                    productAnalyzerType != FullScanMassAnalyzerType.tof)
+                if (IsResMzAnalyzer(ProductMassAnalyzer))
                 {
                     double prodResMz;
                     bool valid;
@@ -821,9 +828,11 @@ namespace pwiz.Skyline.SettingsUI
                                     TextBox textRes,
                                     Label labelAt,
                                     TextBox textAt,
-                                    Label labelTh)
+                                    Label labelTh,
+                                    Label labelPPM)
         {
             string labelText = Resources.TransitionSettingsUI_SetAnalyzerType_Resolution;
+            labelPPM.Visible = false;
             if (analyzerTypeNew == FullScanMassAnalyzerType.none)
             {
                 textRes.Enabled = false;
@@ -831,6 +840,20 @@ namespace pwiz.Skyline.SettingsUI
                 labelAt.Visible = false;
                 textAt.Visible = false;
                 labelTh.Left = textRes.Right;
+            }
+            else if (analyzerTypeNew == FullScanMassAnalyzerType.centroided)
+            {
+                labelAt.Visible = false;
+                labelTh.Visible = false;
+                textAt.Visible = false;
+                textRes.Enabled = true;
+                textRes.Text = resCurrent.HasValue && (analyzerTypeCurrent == analyzerTypeNew)
+                                  ? resCurrent.Value.ToString(LocalizationHelper.CurrentCulture)
+                                  : TransitionFullScan.DEFAULT_CENTROIDED_PPM.ToString(LocalizationHelper.CurrentCulture);
+                labelText = Resources.FullScanSettingsControl_SetAnalyzerType_Mass__Accuracy_;
+                labelPPM.Visible = true;
+                labelPPM.Left = textRes.Right;
+                labelPPM.Top = textRes.Top;
             }
             else
             {

@@ -19,12 +19,18 @@
 
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using log4net;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
+using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
@@ -47,6 +53,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         private string _skyFile;
         private string _dataFile;
+        private bool _centroided;
         private TestFilesDir _testFilesDir;
         private int _loopcount;
 
@@ -66,7 +73,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             NativeVsMz5ChromatogramPerformanceTest(
                 "PerfImportResultsAbIdaVsMz5.zip",
                 "AB\\Hoofnagle_5600_IDA_targeted.sky",
-                "AB\\5600_DDA\\Hoofnagle_01_IDA.wiff");
+                "AB\\5600_DDA\\Hoofnagle_01_IDA.wiff",
+                true); // Also run the raw data as centroided data
         }
 
         public void AbDiaVsMz5ChromatogramPerformanceTest()
@@ -74,7 +82,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             NativeVsMz5ChromatogramPerformanceTest(
                 "PerfImportResultsAbDiaVsMz5.zip",
                 "AB\\Hoofnagle_5600_DIA_targeted.sky",
-                "AB\\5600_DIA\\Hoofnagle_10xDil_SWATH_01.wiff");
+                "AB\\5600_DIA\\Hoofnagle_10xDil_SWATH_01.wiff",
+                true); // Also run the raw data as centroided data
         }
 
         public void ThermoDdaVsMz5ChromatogramPerformanceTest()
@@ -82,7 +91,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             NativeVsMz5ChromatogramPerformanceTest(
                 "PerfImportResultsThermoDDAVsMz5.zip",
                 "Thermo\\Hoofnagle_QE_DDA_targeted.sky",
-                "Thermo\\QE_DDA\\20130311_DDA_Pit01.raw");
+                "Thermo\\QE_DDA\\20130311_DDA_Pit01.raw",
+                true); // Also run the raw data as centroided data
         }
 
         public void ThermoDiaVsMz5ChromatogramPerformanceTest()
@@ -90,7 +100,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             NativeVsMz5ChromatogramPerformanceTest(
                 "PerfImportResultsThermoDiaVsMz5.zip",
                 "Thermo\\Hoofnagle_QE_DIA_targeted.sky",
-                "Thermo\\QE_DIA\\20130311_DIA_Pit01.raw");
+                "Thermo\\QE_DIA\\20130311_DIA_Pit01.raw",
+                true); // Also run the raw data as centroided data
         }
 
         public void AgilentDiaVsMz5ChromatogramPerformanceTest()
@@ -98,7 +109,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             NativeVsMz5ChromatogramPerformanceTest(
                 "PerfImportResultsAgilentDiaVsMz5.zip",
                 "BSA_Agilent_DIA_profile.sky",
-                "BSA_100fmol_SWATH.d");
+                "BSA_100fmol_SWATH.d",
+                true); // Also run the raw data as centroided data
         }
 
         public void AgilentDdaVsMz5ChromatogramPerformanceTest()
@@ -106,7 +118,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             NativeVsMz5ChromatogramPerformanceTest(
                 "PerfImportResultsAgilentDDaVsMz5.zip",
                 "fullscan_data\\BSA_Agilent_MS1.sky",
-                "fullscan_data\\1-10amol-BSA-r001.d");
+                "fullscan_data\\1-10amol-BSA-r001.d",
+                true); // Also run the raw data as centroided data
         }
 
         public void BrukerFullScanMS1filteringPerformanceTest()
@@ -114,7 +127,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             NativeVsMz5ChromatogramPerformanceTest(
                 "PerfImportResultsBrukerFullScanMS1filtering.zip",
                 "MS1 filtering\\MS1 filtering for ID_BSA_minimized.sky",
-                "MS1 filtering\\BSA_50fmol_30min_5sWOthr2000_BA8_01_2360.d");
+                "MS1 filtering\\BSA_50fmol_30min_5sWOthr2000_BA8_01_2360.d",
+                true); // Also run the raw data as centroided data
         }
 
         public void BrukerFullScanMSeDataPerformanceTest()
@@ -122,7 +136,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             NativeVsMz5ChromatogramPerformanceTest(
                 "PerfImportResultsBrukerFullScanMSeData.zip",
                 "MSe data\\MSe_BSA_Skyline 13-test-bsa.sky",
-                "MSe data\\BSA_50fmol_30min_15-30V_1Hz_GA3_01_1097.d");
+                "MSe data\\BSA_50fmol_30min_15-30V_1Hz_GA3_01_1097.d",
+                true); // Also run the raw data as centroided data
         }
 
         public void BrukerFullScanSWATHDataPerformanceTest()
@@ -130,7 +145,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             NativeVsMz5ChromatogramPerformanceTest(
                 "PerfImportResultsBrukerFullScanSWATHData.zip",
                 "SWATH data\\Bruker SWATH Ecoli.sky",
-                "SWATH data\\SWATH_Ecoli+UPS0.5pmol_120min_BC2_01_1919.d");
+                "SWATH data\\SWATH_Ecoli+UPS0.5pmol_120min_BC2_01_1919.d",
+                true); // Also run the raw data as centroided data
         }
 
 
@@ -171,7 +187,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         }
 
-        public void NativeVsMz5ChromatogramPerformanceTest(string zipFile, string skyFile, string rawFile)
+        public void NativeVsMz5ChromatogramPerformanceTest(string zipFile, string skyFile, string rawFile, bool centroided=false)
         {
             for (var loop = 0; loop < _loopcount + 1; loop++) // one extra initial loop for warmup
             {
@@ -182,15 +198,22 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 _testFilesDir = new TestFilesDir(TestContext, TestFilesZip, null, TestFilesPersistent);
                 _skyFile = _testFilesDir.GetTestPath(skyFile);
                 string nativeResults = _testFilesDir.GetTestPath(rawFile);
-                string mz5Results = Path.ChangeExtension(nativeResults, "mz5");
-
-                MsDataFileImpl.PerfUtilFactory.IssueDummyPerfUtils = (loop == 0) && (_loopcount>0); // turn on performance measurement after warmup loop
-
-                foreach (var resultspath in new[] { mz5Results, nativeResults })  //
+                var rawfiles = new List<string>();
+                var mz5Results = Path.ChangeExtension(nativeResults, "mz5");
+                if (centroided)
+                    rawfiles.Add(nativeResults); // First time through is centroided
+                rawfiles.Add(mz5Results);  // Then mz5
+                rawfiles.Add(nativeResults); // Then normal
+                MsDataFileImpl.PerfUtilFactory.IssueDummyPerfUtils = (loop == 0) && (_loopcount > 0); // turn on performance measurement after warmup loop
+                var centroidedThisPass = centroided;
+                foreach (var resultspath in rawfiles) 
                 {
                     _dataFile = resultspath;
+                    _centroided = centroidedThisPass;
                     RunFunctionalTest();
-                    File.Delete(Path.ChangeExtension(_skyFile, "skyd")); // make sure we're clean for next pass
+                    RunUI(() => SkylineWindow.NewDocument(true)); // Make sure we're clean for next pass
+                    File.Delete(Path.ChangeExtension(_skyFile, ChromatogramCache.EXT)); // Make sure we're clean for next pass
+                    centroidedThisPass = false;
                 }
 
             }
@@ -199,10 +222,21 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         protected override void DoTest()
         {
             RunUI(() => SkylineWindow.OpenFile(_skyFile));
-
+            string expectedErrorMessage = null;
+            if (_centroided)
+            {
+                WaitForDocumentLoaded();
+                RunUI(() => SkylineWindow.ModifyDocument("Use vendor centroiding", doc => doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fs =>
+                fs.ChangePrecursorResolution(FullScanMassAnalyzerType.centroided, TransitionFullScan.DEFAULT_CENTROIDED_PPM, null).
+                   ChangeProductResolution(FullScanMassAnalyzerType.centroided, TransitionFullScan.DEFAULT_CENTROIDED_PPM, null)))));
+                if (_dataFile.EndsWith("mz5"))
+                    expectedErrorMessage =
+                        string.Format(
+                            Resources.NoCentroidedDataException_NoCentroidedDataException_No_centroided_data_available_for_file___0_____Adjust_your_Full_Scan_settings_,_dataFile.Split('\\').Last());
+            }
             Stopwatch loadStopwatch = new Stopwatch();
             loadStopwatch.Start();
-            ImportResultsFile(_dataFile, 60 * 60);    // Allow 60 minutes for loading.
+            ImportResultsFile(_dataFile, 60 * 60, expectedErrorMessage);    // Allow 60 minutes for loading.
             loadStopwatch.Stop();
 
             DebugLog.Info("{0} load time = {1}", _dataFile, loadStopwatch.ElapsedMilliseconds);

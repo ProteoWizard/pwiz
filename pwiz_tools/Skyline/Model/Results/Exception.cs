@@ -49,6 +49,14 @@ namespace pwiz.Skyline.Model.Results
         }
     }
 
+    internal class NoCentroidedDataException : IOException
+    {
+        public NoCentroidedDataException(string fileName, Exception innerException)
+            : base(string.Format(Resources.NoCentroidedDataException_NoCentroidedDataException_No_centroided_data_available_for_file___0_____Adjust_your_Full_Scan_settings_, fileName), innerException)
+        {
+        }
+    }
+
     internal class MissingDataException : IOException
     {
         public MissingDataException(string messageFormat, string fileName)

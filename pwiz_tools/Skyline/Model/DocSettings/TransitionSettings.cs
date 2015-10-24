@@ -1863,7 +1863,7 @@ namespace pwiz.Skyline.Model.DocSettings
         #endregion
     }
 
-    public enum FullScanMassAnalyzerType { none = -1, qit, tof, orbitrap, ft_icr } // Not L10N
+    public enum FullScanMassAnalyzerType { none = -1, qit, tof, orbitrap, ft_icr, centroided } // Not L10N
     public enum RetentionTimeFilterType {none, scheduling_windows, ms2_ids} // Not L10N
 
     [XmlRoot("transition_full_scan")]
@@ -1884,6 +1884,8 @@ namespace pwiz.Skyline.Model.DocSettings
         public const double MAX_LO_RES = 2.0;
         public const double MIN_HI_RES = 1000;
         public const double MAX_HI_RES = 10*1000*1000;
+        public const double MIN_CENTROID_PPM = 1;
+        public const double MAX_CENTROID_PPM = 1000;
         public const double DEFAULT_RES_MZ = 400;
         public const double MIN_RES_MZ = 50;
         public const double MAX_RES_MZ = 2000;
@@ -1896,14 +1898,16 @@ namespace pwiz.Skyline.Model.DocSettings
         public const int DEFAULT_ISOTOPE_COUNT = 3;
         public const double ISOTOPE_PEAK_CENTERING_RES = 0.1;
         public const double MIN_ISOTOPE_PEAK_ABUNDANCE = 0.01;
+        public const double DEFAULT_CENTROIDED_PPM = 20;
 
         public const string QIT = "QIT"; // Not L10N
         public const string ORBITRAP = "Orbitrap"; // Not L10N
         public const string TOF = "TOF"; // Not L10N
         public const string FT_ICR = "FT-ICR"; // Not L10N
+        public const string CENTROIDED = "Centroided"; // Not L10N
 
-        public static readonly string[] MASS_ANALYZERS = {QIT, TOF, ORBITRAP, FT_ICR};
-        public static readonly double[] DEFAULT_RES_VALUES = {0.7, 10*1000, 60*1000, 100*1000};
+        public static readonly string[] MASS_ANALYZERS = {QIT, TOF, ORBITRAP, FT_ICR, CENTROIDED};
+        public static readonly double[] DEFAULT_RES_VALUES = { 0.7, 10 * 1000, 60 * 1000, 100 * 1000, DEFAULT_CENTROIDED_PPM };
         public static readonly double DEFAULT_RES_QIT = DEFAULT_RES_VALUES[0];
         public const double DEFAULT_TIME_AROUND_MS2_IDS = 5.0;
 
@@ -1995,7 +1999,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public FullScanMassAnalyzerType ProductMassAnalyzer { get; private set; }
 
-        public double? ProductRes { get; private set; }
+        public double? ProductRes { get; private set; }  // Resolving Power or mass accuracy, depending on ProductMassAnalyzer value
 
         public double? ProductResMz { get; private set; }
 
@@ -2007,7 +2011,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public FullScanMassAnalyzerType PrecursorMassAnalyzer { get; private set; }
 
-        public double? PrecursorRes { get; private set; }
+        public double? PrecursorRes { get; private set; }  // Resolving Power or mass accuracy, depending on PrecursorMassAnalyzer value
 
         public double? PrecursorResMz { get; private set; }
 
@@ -2066,7 +2070,9 @@ namespace pwiz.Skyline.Model.DocSettings
                     return mz / cached;
                 case FullScanMassAnalyzerType.ft_icr:
                     return mz * mz / cached;
-               default:
+                case FullScanMassAnalyzerType.centroided:
+                    return mz * cached;
+                default:
                     return cached;
             }
         }
@@ -2081,6 +2087,8 @@ namespace pwiz.Skyline.Model.DocSettings
                     return Math.Sqrt(resMz) * res / RES_PER_FILTER;
                 case FullScanMassAnalyzerType.ft_icr:
                     return resMz * res / RES_PER_FILTER;
+                case FullScanMassAnalyzerType.centroided:
+                    return res*2 / 1E+6; // 1/PPM
                 default:
                     return res * RES_PER_FILTER;
             }
@@ -2164,7 +2172,10 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 im.ProductMassAnalyzer = typeProp;
                 im.ProductRes = prop;
-                im.ProductResMz = mzProp;
+                if (typeProp != FullScanMassAnalyzerType.centroided)
+                    im.ProductResMz = mzProp;
+                else
+                    im.PrecursorResMz = null;
                 // Make sure the change results in a valid object, or an exception
                 // will be thrown.
                 if (im.AcquisitionMethod == FullScanAcquisitionMethod.None)
@@ -2210,7 +2221,10 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 im.PrecursorMassAnalyzer = typeProp;
                 im.PrecursorRes = prop;
-                im.PrecursorResMz = mzProp;
+                if (typeProp != FullScanMassAnalyzerType.centroided)
+                    im.PrecursorResMz = mzProp;
+                else
+                    im.PrecursorResMz = null;
                 // Make sure the change results in a valid object, or an exception
                 // will be thrown.
                 if (im.PrecursorIsotopes == FullScanPrecursorIsotopes.None)
@@ -2334,8 +2348,16 @@ namespace pwiz.Skyline.Model.DocSettings
                 if (!res.HasValue || MIN_LO_RES > res.Value || res.Value > MAX_LO_RES)
                 {
                     throw new InvalidDataException(
-                        string.Format(Resources.TransitionFullScan_ValidateRes_The_precursor_resolution_must_be_between__0__and__1__for_QIT,
+                        string.Format(Resources.TransitionFullScan_ValidateRes_Resolution_must_be_between__0__and__1__for_QIT_,
                                       MIN_LO_RES, MAX_LO_RES));
+                }
+            }
+            else if (analyzerType == FullScanMassAnalyzerType.centroided)
+            {
+                if (!res.HasValue || MIN_CENTROID_PPM > res.Value || res.Value > MAX_CENTROID_PPM)
+                {
+                    throw new InvalidDataException(string.Format(Resources.TransitionFullScan_ValidateRes_Mass_accuracy_must_be_between__0__and__1__for_centroided_data_,
+                        MIN_CENTROID_PPM, MAX_CENTROID_PPM));
                 }
             }
             else
@@ -2343,7 +2365,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 if (!res.HasValue || MIN_HI_RES > res.Value || res.Value > MAX_HI_RES)
                 {
                     throw new InvalidDataException(
-                        string.Format(Resources.TransitionFullScan_ValidateRes_The_precursor_resolving_power_must_be_between__0__and__1__for__2__,
+                        string.Format(Resources.TransitionFullScan_ValidateRes_Resolving_power_must_be_between__0__and__1__for__2__,
                                       MIN_HI_RES, MAX_HI_RES, MassAnalyzerToString(analyzerType)));
                 }
                 expectMz = (analyzerType != FullScanMassAnalyzerType.tof);

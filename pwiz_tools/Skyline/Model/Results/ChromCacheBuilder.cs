@@ -180,7 +180,18 @@ namespace pwiz.Skyline.Model.Results
                     {
                         // Always use SIM as spectra, if any full-scan chromatogram extraction is enabled
                         var enableSimSpectrum = _document.Settings.TransitionSettings.FullScan.IsEnabled;
-                        inFile = GetMsDataFile(dataFilePathPart, sampleIndex, enableSimSpectrum);
+                        var centroidMS1 = _document.Settings.TransitionSettings.FullScan.IsEnabled &&
+                                          _document.Settings.TransitionSettings.FullScan.IsEnabledMs &&
+                                          _document.Settings.TransitionSettings.FullScan.PrecursorMassAnalyzer ==
+                                          FullScanMassAnalyzerType.centroided;
+
+                        var centroidMS2 = _document.Settings.TransitionSettings.FullScan.IsEnabled &&
+                                          _document.Settings.TransitionSettings.FullScan.IsEnabledMsMs &&
+                                          _document.Settings.TransitionSettings.FullScan.ProductMassAnalyzer ==
+                                          FullScanMassAnalyzerType.centroided;
+
+                        inFile = GetMsDataFile(dataFilePathPart, sampleIndex, enableSimSpectrum, centroidMS1,
+                            centroidMS2);
                     }
 
                     // Check for cancelation
@@ -279,12 +290,19 @@ namespace pwiz.Skyline.Model.Results
             }
             catch (Exception x)
             {
-                // Add a more generic message to an exception message that may
-                // be fairly unintelligible to the user, but keep the exception
-                // message, because ProteoWizard "Unsupported file format" comes
-                // in on this channel.
-                x = x as ChromCacheBuildException ?? new ChromCacheBuildException(MSDataFilePath, x);
-                ExitRead(x);
+                if (x.Message.Contains("PeakDetector::NoVendorPeakPickingException"))
+                {
+                    ExitRead(new NoCentroidedDataException(MSDataFilePath.GetFileName(), x));
+                }
+                else
+                {
+                    // Add a more generic message to an exception message that may
+                    // be fairly unintelligible to the user, but keep the exception
+                    // message, because ProteoWizard "Unsupported file format" comes
+                    // in on this channel.
+                    x = x as ChromCacheBuildException ?? new ChromCacheBuildException(MSDataFilePath, x);
+                    ExitRead(x);
+                }
             }
         }
 
@@ -314,9 +332,9 @@ namespace pwiz.Skyline.Model.Results
                                      cachedFile.IsSingleMatchMz);
         }
 
-        private MsDataFileImpl GetMsDataFile(string dataFilePathPart, int sampleIndex, bool enableSimSpectrum)
+        private MsDataFileImpl GetMsDataFile(string dataFilePathPart, int sampleIndex, bool enableSimSpectrum, bool requireCentroidedMS1, bool requireCentroidedMS2)
         {
-            return new MsDataFileImpl(dataFilePathPart, sampleIndex, enableSimSpectrum);
+            return new MsDataFileImpl(dataFilePathPart, sampleIndex, enableSimSpectrum, requireVendorCentroidedMS1:requireCentroidedMS1, requireVendorCentroidedMS2:requireCentroidedMS2);
         }
 
         private void ExitRead(Exception x)

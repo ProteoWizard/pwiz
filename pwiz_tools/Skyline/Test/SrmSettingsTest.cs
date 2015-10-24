@@ -831,6 +831,7 @@ namespace pwiz.SkylineTest
             string validLoRes = ToXml((TransitionFullScan.MIN_LO_RES + TransitionFullScan.MAX_LO_RES) / 2);
             string validHiRes = ToXml((TransitionFullScan.MIN_HI_RES + TransitionFullScan.MAX_HI_RES) / 2);
             string validHiResMz = ToXml((TransitionFullScan.MIN_RES_MZ + TransitionFullScan.MAX_RES_MZ) / 2);
+            string validPPM = ToXml((TransitionFullScan.MIN_CENTROID_PPM + TransitionFullScan.MAX_CENTROID_PPM) / 2);
 
             // Valid first
             AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan />");
@@ -862,6 +863,10 @@ namespace pwiz.SkylineTest
                 FullScanMassAnalyzerType.orbitrap + "\" precursor_res=\"" + validHiRes + "\" " +
                 "acquisition_method=\"" + FullScanAcquisitionMethod.DIA + "\" precursor_filter=\"2\" product_mass_analyzer=\"" +
                 FullScanMassAnalyzerType.qit + "\" product_res=\"" + validLoRes + "\"/>");  // Use default res mz
+            AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan precursor_mass_analyzer=\"" + FullScanMassAnalyzerType.centroided + "\" " +
+                "precursor_res=\"" + validPPM + "\"/>");
+            AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan product_mass_analyzer=\"" + FullScanMassAnalyzerType.centroided + "\" " +
+                "product_res=\"" + validPPM + "\"/>");
             // Isotope enrichments
             AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan precursor_mass_analyzer=\"" + FullScanMassAnalyzerType.tof + "\" " +
                 "precursor_res=\"" + validHiRes + "\">" + VALID_ISOTOPE_ENRICHMENT_XML + "</transition_full_scan>");
@@ -869,7 +874,9 @@ namespace pwiz.SkylineTest
             // Errors
             string overMaxMulti = ToXml(TransitionFullScan.MAX_PRECURSOR_MULTI_FILTER * 2);
             string underMinMulti = ToXml(TransitionFullScan.MIN_PRECURSOR_MULTI_FILTER / 2);
-            string underMinLoRes = ToXml(TransitionFullScan.MIN_LO_RES/2);
+            string overMaxPPM = ToXml(TransitionFullScan.MAX_CENTROID_PPM * 2);
+            string underMinPPM = ToXml(TransitionFullScan.MIN_CENTROID_PPM / 2);
+            string underMinLoRes = ToXml(TransitionFullScan.MIN_LO_RES / 2);
             string overMaxLoRes = ToXml(TransitionFullScan.MAX_LO_RES * 2);
             string underMinHiRes = ToXml(TransitionFullScan.MIN_HI_RES / 2);
             string overMaxHiRes = ToXml(TransitionFullScan.MAX_HI_RES * 2);
@@ -907,6 +914,18 @@ namespace pwiz.SkylineTest
                 FullScanMassAnalyzerType.orbitrap + "\" precursor_res=\"" + validHiRes + "\" precursor_res_mz=\"" + underMinResMz + "\" " +
                 "acquisition_method=\"" + FullScanAcquisitionMethod.DIA + "\" precursor_filter=\"2\" product_mass_analyzer=\"" +
                 FullScanMassAnalyzerType.qit + "\" product_res=\"" + validLoRes + "\"/>");
+            AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan acquisition_method=\"" +
+                FullScanAcquisitionMethod.Targeted + "\" precursor_mass_analyzer=\"" +
+                FullScanMassAnalyzerType.centroided + "\" precursor_res=\"" + underMinPPM + "\"/>");
+            AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan acquisition_method=\"" +
+                FullScanAcquisitionMethod.Targeted + "\" precursor_mass_analyzer=\"" +
+                FullScanMassAnalyzerType.centroided + "\" precursor_res=\"" + overMaxPPM + "\"/>");
+            AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan acquisition_method=\"" +
+                FullScanAcquisitionMethod.Targeted + "\" product_mass_analyzer=\"" +
+                FullScanMassAnalyzerType.centroided + "\" product_res=\"" + underMinPPM + "\"/>");
+            AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan acquisition_method=\"" +
+                FullScanAcquisitionMethod.Targeted + "\" product_mass_analyzer=\"" +
+                FullScanMassAnalyzerType.centroided + "\" product_res=\"" + overMaxPPM + "\"/>");
 
             // With new isolation scheme tag.
             AssertEx.DeserializeError<TransitionFullScan>(string.Format(@"

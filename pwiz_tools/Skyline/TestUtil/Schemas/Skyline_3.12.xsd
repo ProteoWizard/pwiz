@@ -1101,6 +1101,7 @@
       <xs:enumeration value="tof"/>
       <xs:enumeration value="orbitrap"/>
       <xs:enumeration value="ft_icr"/>
+      <xs:enumeration value="centroided"/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name="data_settings_annotation_type">

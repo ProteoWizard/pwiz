@@ -25,6 +25,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
@@ -206,6 +207,42 @@ namespace pwiz.SkylineTestA.Results
             if (asSmallMolecules == RefinementSettings.ConvertToSmallMoleculesMode.masses_only)
                 return; // Can't work with isotope distributions when we don't have ion formulas
 
+            // Verify handling of bad request for vendor centroided data - out-of-range PPM
+            docPath = testFilesDir.GetTestPath("Yeast_HI3 Peptides_test.sky");
+            expectedPepCount = 2;
+            expectedTransGroupCount = 2;
+            expectedTransCount = 2;
+            doc = InitFullScanDocument(docPath, 2, ref expectedPepCount, ref expectedTransGroupCount, ref expectedTransCount, asSmallMolecules);
+            Assert.AreEqual(FullScanMassAnalyzerType.none, doc.Settings.TransitionSettings.FullScan.ProductMassAnalyzer);
+            Assert.AreEqual(FullScanMassAnalyzerType.none, doc.Settings.TransitionSettings.FullScan.PrecursorMassAnalyzer);
+            var docBad = doc;
+            AssertEx.ThrowsException<InvalidDataException>(() => 
+              docBad.ChangeSettings(docBad.Settings.ChangeTransitionFullScan(fs =>
+                fs.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.Count, 1, IsotopeEnrichments.DEFAULT)
+                  .ChangePrecursorResolution(FullScanMassAnalyzerType.centroided, 50 * 1000, 400))),
+                  string.Format(Resources.TransitionFullScan_ValidateRes_Mass_accuracy_must_be_between__0__and__1__for_centroided_data_,
+                     TransitionFullScan.MIN_CENTROID_PPM,TransitionFullScan.MAX_CENTROID_PPM));
+
+            // Verify relationship between PPM and resolving power
+            const double ppm = 20.0;  // Should yield same filter width as resolving power 50,000 in TOF
+            var docNoCentroid = doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fs =>
+                fs.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.Count, 1, IsotopeEnrichments.DEFAULT)
+                  .ChangePrecursorResolution(FullScanMassAnalyzerType.centroided, ppm, 0)));
+            AssertEx.Serializable(docNoCentroid, AssertEx.DocumentCloned);
+            Assert.IsTrue(docContainer.SetDocument(docNoCentroid, docContainer.Document));
+            const double mzTest = 400.0;
+            var filterWidth = docNoCentroid.Settings.TransitionSettings.FullScan.GetPrecursorFilterWindow(mzTest);
+            Assert.AreEqual(mzTest * 2.0 * ppm * 1E-6, filterWidth);
+
+            // Verify handling of bad request for vendor centroided data - ask for centroiding in mzML
+            const string fileName = "S_2_LVN.mzML";
+            var filePath = testFilesDir.GetTestPath(fileName);
+            AssertEx.ThrowsException<AssertFailedException>(() => 
+                {
+                listResults = new List<ChromatogramSet> { new ChromatogramSet("rep1", new[] {filePath}), };
+                docContainer.ChangeMeasuredResults(new MeasuredResults(listResults.ToArray()), 1, 1, 1);
+                },
+                string.Format(Resources.NoCentroidedDataException_NoCentroidedDataException_No_centroided_data_available_for_file___0_____Adjust_your_Full_Scan_settings_, fileName));
 
             // Import FT data with only MS1
             docPath = testFilesDir.GetTestPath("Yeast_HI3 Peptides_test.sky");
@@ -217,13 +254,17 @@ namespace pwiz.SkylineTestA.Results
             Assert.AreEqual(FullScanMassAnalyzerType.none, doc.Settings.TransitionSettings.FullScan.PrecursorMassAnalyzer);
             var docMs1 = doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fs =>
                 fs.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.Count, 1, IsotopeEnrichments.DEFAULT)
-                  .ChangePrecursorResolution(FullScanMassAnalyzerType.ft_icr, 50 * 1000, 400)));
+                  .ChangePrecursorResolution(FullScanMassAnalyzerType.tof, 50 * 1000, null)));
+            Assert.AreEqual(filterWidth, docMs1.Settings.TransitionSettings.FullScan.GetPrecursorFilterWindow(mzTest));
+            docMs1 = doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fs =>
+                fs.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.Count, 1, IsotopeEnrichments.DEFAULT)
+                  .ChangePrecursorResolution(FullScanMassAnalyzerType.ft_icr, 50 * 1000, mzTest)));
             AssertEx.Serializable(docMs1, AssertEx.DocumentCloned);
             Assert.IsTrue(docContainer.SetDocument(docMs1, docContainer.Document));
             const string rep1 = "rep1";
             listResults = new List<ChromatogramSet>
                                   {
-                                      new ChromatogramSet(rep1, new[] {testFilesDir.GetTestPath("S_2_LVN.mzML")}),
+                                      new ChromatogramSet(rep1, new[] {filePath}),
                                   };
             measuredResults = new MeasuredResults(listResults.ToArray());
             docCheckpoints.Add(docContainer.ChangeMeasuredResults(measuredResults, 1, 1, 1));

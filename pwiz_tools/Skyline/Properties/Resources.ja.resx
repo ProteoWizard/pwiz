@@ -1546,12 +1546,6 @@
   <data name="TransitionFullScan_DoValidate_An_isolation_window_width_value_is_required_in_DIA_mode" xml:space="preserve">
     <value>DIAモードでは単離ウィンドウ幅値が必要です。</value>
   </data>
-  <data name="TransitionFullScan_ValidateRes_The_precursor_resolution_must_be_between__0__and__1__for_QIT" xml:space="preserve">
-    <value>QITのプリカーサー分解能は{0}と{1}の間でなければなりません。</value>
-  </data>
-  <data name="TransitionFullScan_ValidateRes_The_precursor_resolving_power_must_be_between__0__and__1__for__2__" xml:space="preserve">
-    <value>プリカーサー分解能は{2}に対し、{0}と{1}の間でなければなりません。</value>
-  </data>
   <data name="TransitionFullScan_ValidateRes_The_mz_value_at_which_the_resolving_power_is_calibrated_is_required_for__0__" xml:space="preserve">
     <value>{0}に対し、分解能を校正するm/z値が必要です。</value>
   </data>

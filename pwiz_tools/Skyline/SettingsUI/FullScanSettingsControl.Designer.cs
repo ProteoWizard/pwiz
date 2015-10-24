@@ -43,6 +43,7 @@
             this.radioUseSchedulingWindow = new System.Windows.Forms.RadioButton();
             this.radioKeepAllTime = new System.Windows.Forms.RadioButton();
             this.groupBoxMS1 = new System.Windows.Forms.GroupBox();
+            this.labelPrecursorPPM = new System.Windows.Forms.Label();
             this.comboEnrichments = new System.Windows.Forms.ComboBox();
             this.labelEnrichments = new System.Windows.Forms.Label();
             this.labelPrecursorIsotopeFilterPercent = new System.Windows.Forms.Label();
@@ -58,6 +59,7 @@
             this.comboPrecursorAnalyzerType = new System.Windows.Forms.ComboBox();
             this.label32 = new System.Windows.Forms.Label();
             this.groupBoxMS2 = new System.Windows.Forms.GroupBox();
+            this.labelProductPPM = new System.Windows.Forms.Label();
             this.comboIsolationScheme = new System.Windows.Forms.ComboBox();
             this.labelProductAt = new System.Windows.Forms.Label();
             this.textProductAt = new System.Windows.Forms.TextBox();
@@ -162,6 +164,7 @@
             // 
             // groupBoxMS1
             // 
+            this.groupBoxMS1.Controls.Add(this.labelPrecursorPPM);
             this.groupBoxMS1.Controls.Add(this.comboEnrichments);
             this.groupBoxMS1.Controls.Add(this.labelEnrichments);
             this.groupBoxMS1.Controls.Add(this.labelPrecursorIsotopeFilterPercent);
@@ -179,6 +182,11 @@
             resources.ApplyResources(this.groupBoxMS1, "groupBoxMS1");
             this.groupBoxMS1.Name = "groupBoxMS1";
             this.groupBoxMS1.TabStop = false;
+            // 
+            // labelPrecursorPPM
+            // 
+            resources.ApplyResources(this.labelPrecursorPPM, "labelPrecursorPPM");
+            this.labelPrecursorPPM.Name = "labelPrecursorPPM";
             // 
             // comboEnrichments
             // 
@@ -252,6 +260,7 @@
             resources.ApplyResources(this.comboPrecursorAnalyzerType, "comboPrecursorAnalyzerType");
             this.comboPrecursorAnalyzerType.FormattingEnabled = true;
             this.comboPrecursorAnalyzerType.Name = "comboPrecursorAnalyzerType";
+            this.toolTip.SetToolTip(this.comboPrecursorAnalyzerType, resources.GetString("comboPrecursorAnalyzerType.ToolTip"));
             this.comboPrecursorAnalyzerType.SelectedIndexChanged += new System.EventHandler(this.comboPrecursorAnalyzerType_SelectedIndexChanged);
             // 
             // label32
@@ -261,6 +270,7 @@
             // 
             // groupBoxMS2
             // 
+            this.groupBoxMS2.Controls.Add(this.labelProductPPM);
             this.groupBoxMS2.Controls.Add(this.comboIsolationScheme);
             this.groupBoxMS2.Controls.Add(this.labelProductAt);
             this.groupBoxMS2.Controls.Add(this.textProductAt);
@@ -275,6 +285,11 @@
             resources.ApplyResources(this.groupBoxMS2, "groupBoxMS2");
             this.groupBoxMS2.Name = "groupBoxMS2";
             this.groupBoxMS2.TabStop = false;
+            // 
+            // labelProductPPM
+            // 
+            resources.ApplyResources(this.labelProductPPM, "labelProductPPM");
+            this.labelProductPPM.Name = "labelProductPPM";
             // 
             // comboIsolationScheme
             // 
@@ -315,6 +330,7 @@
             resources.ApplyResources(this.comboProductAnalyzerType, "comboProductAnalyzerType");
             this.comboProductAnalyzerType.FormattingEnabled = true;
             this.comboProductAnalyzerType.Name = "comboProductAnalyzerType";
+            this.toolTip.SetToolTip(this.comboProductAnalyzerType, resources.GetString("comboProductAnalyzerType.ToolTip"));
             this.comboProductAnalyzerType.SelectedIndexChanged += new System.EventHandler(this.comboProductAnalyzerType_SelectedIndexChanged);
             // 
             // label22
@@ -420,6 +436,8 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox tbxTimeAroundPrediction;
         private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Label labelPrecursorPPM;
+        private System.Windows.Forms.Label labelProductPPM;
 
     }
 }

@@ -1546,12 +1546,6 @@
   <data name="TransitionFullScan_DoValidate_An_isolation_window_width_value_is_required_in_DIA_mode" xml:space="preserve">
     <value>DIA 模式需要隔离窗口宽度值。</value>
   </data>
-  <data name="TransitionFullScan_ValidateRes_The_precursor_resolution_must_be_between__0__and__1__for_QIT" xml:space="preserve">
-    <value>母离子分辨率必须针对 QIT 在{0}和{1}之间。</value>
-  </data>
-  <data name="TransitionFullScan_ValidateRes_The_precursor_resolving_power_must_be_between__0__and__1__for__2__" xml:space="preserve">
-    <value>针对{2}母离子分辨力必须在{0}和{1}之间。</value>
-  </data>
   <data name="TransitionFullScan_ValidateRes_The_mz_value_at_which_the_resolving_power_is_calibrated_is_required_for__0__" xml:space="preserve">
     <value>{0}需要质荷比值，分辨力将在该值上被校准。</value>
   </data>
