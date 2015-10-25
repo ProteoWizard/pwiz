@@ -10,6 +10,7 @@
     <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\thermo\x64\MSFileReader.XRawfile2.SxS.manifest" />
     <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\thermo\x64\MSFileReader.XRawfile2.dll" />
     <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\Bruker\x64\baf2sql_c.dll" />
+    <DeploymentItem filename="msparser.dll" />
   </Deployment>
   <Execution hostProcessPlatform="MSIL">
     <TestTypeSpecific>
