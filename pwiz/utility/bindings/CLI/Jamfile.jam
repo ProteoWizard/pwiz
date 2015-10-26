@@ -74,10 +74,9 @@ local data_libs =
 
         # analysis
         <library>$(PWIZ_ROOT_PATH)/pwiz/analysis//pwiz_analysis_version/$(bound_lib_requirements)
-        <library>$(PWIZ_ROOT_PATH)/pwiz/analysis/spectrum_processing/$(bound_lib_requirements)
         <library>$(PWIZ_ROOT_PATH)/pwiz/analysis/chromatogram_processing/$(bound_lib_requirements)
 
-         # HACK: not needed when using hacked tss_pe.cpp
+        # HACK: not needed when using hacked tss_pe.cpp
         #<library>/ext/boost//thread/<link>shared/<asynch-exceptions>off # link=shared required for thread specific storage
         #<library>/ext/boost//thread/<link>static
     ;
