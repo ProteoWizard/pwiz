@@ -29,7 +29,6 @@ using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
@@ -196,7 +195,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 var mz5File = Path.ChangeExtension(rawFile, "mz5");
                 TestFilesPersistent = new[] { rawFile, mz5File }; // list of files that we'd like to unzip alongside parent zipFile, and (re)use in place
                 _testFilesDir = new TestFilesDir(TestContext, TestFilesZip, null, TestFilesPersistent);
-                _skyFile = _testFilesDir.GetTestPath(skyFile);
+                var baseSkyFile = _testFilesDir.GetTestPath(skyFile);
                 string nativeResults = _testFilesDir.GetTestPath(rawFile);
                 var rawfiles = new List<string>();
                 var mz5Results = Path.ChangeExtension(nativeResults, "mz5");
@@ -206,13 +205,14 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 rawfiles.Add(nativeResults); // Then normal
                 MsDataFileImpl.PerfUtilFactory.IssueDummyPerfUtils = (loop == 0) && (_loopcount > 0); // turn on performance measurement after warmup loop
                 var centroidedThisPass = centroided;
-                foreach (var resultspath in rawfiles) 
+                var type = 0;
+                foreach (var resultspath in rawfiles)
                 {
+                    _skyFile = baseSkyFile.Replace(".sky", "_" + loop + "_" + type++ + ".sky");
+                    File.Copy(baseSkyFile, _skyFile, true);
                     _dataFile = resultspath;
                     _centroided = centroidedThisPass;
                     RunFunctionalTest();
-                    RunUI(() => SkylineWindow.NewDocument(true)); // Make sure we're clean for next pass
-                    File.Delete(Path.ChangeExtension(_skyFile, ChromatogramCache.EXT)); // Make sure we're clean for next pass
                     centroidedThisPass = false;
                 }
 
@@ -221,6 +221,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         protected override void DoTest()
         {
+            WaitForCondition(() => File.Exists(_skyFile)); // Wait for copy and rename
             RunUI(() => SkylineWindow.OpenFile(_skyFile));
             string expectedErrorMessage = null;
             if (_centroided)
