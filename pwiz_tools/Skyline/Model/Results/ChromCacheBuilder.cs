@@ -290,7 +290,7 @@ namespace pwiz.Skyline.Model.Results
             }
             catch (Exception x)
             {
-                if (x.Message.Contains("PeakDetector::NoVendorPeakPickingException"))
+                if (x.Message.Contains("PeakDetector::NoVendorPeakPickingException")) // Not L10N
                 {
                     ExitRead(new NoCentroidedDataException(MSDataFilePath.GetFileName(), x));
                 }
