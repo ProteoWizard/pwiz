@@ -184,11 +184,17 @@ namespace pwiz.Common.DataBinding
 
         public Icon ApplicationIcon { get; protected set; }
 
-        protected virtual void WriteData(IProgressMonitor progressMonitor, TextWriter writer, BindingListSource bindingListSource, DsvWriter dsvWriter)
+        protected virtual void WriteData(IProgressMonitor progressMonitor, TextWriter writer,
+            BindingListSource bindingListSource, DsvWriter dsvWriter)
+        {
+            ProgressStatus status = new ProgressStatus(string.Format(Resources.AbstractViewContext_WriteData_Writing__0__rows, bindingListSource.Count));
+            WriteDataWithStatus(progressMonitor, ref status, writer, bindingListSource, dsvWriter);
+        }
+
+        protected virtual void WriteDataWithStatus(IProgressMonitor progressMonitor, ref ProgressStatus status, TextWriter writer, BindingListSource bindingListSource, DsvWriter dsvWriter)
         {
             IList<RowItem> rows = Array.AsReadOnly(bindingListSource.Cast<RowItem>().ToArray());
             IList<PropertyDescriptor> properties = bindingListSource.GetItemProperties(new PropertyDescriptor[0]).Cast<PropertyDescriptor>().ToArray();
-            var status = new ProgressStatus(string.Format(Resources.AbstractViewContext_WriteData_Writing__0__rows, rows.Count));
             dsvWriter.WriteHeaderRow(writer, properties);
             var rowCount = rows.Count;
             for (int rowIndex = 0; rowIndex < rowCount; rowIndex++)

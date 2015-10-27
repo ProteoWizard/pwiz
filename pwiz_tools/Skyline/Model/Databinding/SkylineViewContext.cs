@@ -293,12 +293,12 @@ namespace pwiz.Skyline.Model.Databinding
                 progressMonitor.UpdateProgress(status = status.ChangePercentComplete(95)
                     .ChangeMessage(Resources.ExportReportDlg_ExportReport_Writing_report));
 
-                WriteData(progressMonitor, writer, bindingListSource, dsvWriter);
+                WriteDataWithStatus(progressMonitor, ref status, writer, bindingListSource, dsvWriter);
                 if (progressMonitor.IsCanceled)
                     return false;
 
                 writer.Flush();
-                progressMonitor.UpdateProgress(status.Complete());
+                progressMonitor.UpdateProgress(status = status.Complete());
             }
             return true;
         }
