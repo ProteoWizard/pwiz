@@ -24,13 +24,12 @@ namespace MSStatArgsCollector
 {
     public partial class QualityControlUI : Form
     {
-        private enum Args {normalize_to, allow_missing_peaks, summary_method, equal_variance}
+        private enum Args {normalize_to, allow_missing_peaks, feature_selection, width, height}
 
         public string[] Arguments { get; private set; }
         public QualityControlUI(string[] oldArgs)
         {
             InitializeComponent();
-            SummaryMethod.InitCombo(comboBoxSummaryMethod);
             comboBoxNormalizeTo.SelectedIndex = 1;
 
             try
@@ -40,8 +39,9 @@ namespace MSStatArgsCollector
                     comboBoxNormalizeTo.SelectedIndex = int.Parse(oldArgs[(int) Args.normalize_to],
                         CultureInfo.InvariantCulture);
                     cboxAllowMissingPeaks.Checked = TRUESTRING == oldArgs[(int) Args.allow_missing_peaks];
-                    SummaryMethod.SelectValue(comboBoxSummaryMethod, oldArgs[(int) Args.summary_method]);
-                    cboxEqualVariance.Checked = TRUESTRING == oldArgs[(int) Args.equal_variance];
+                    cbxSelectHighQualityFeatures.Checked = TRUESTRING == oldArgs[(int) Args.feature_selection];
+                    tbxWidth.Text = oldArgs[(int) Args.width];
+                    tbxHeight.Text = oldArgs[(int) Args.height];
                 }
             }
             catch
@@ -57,9 +57,10 @@ namespace MSStatArgsCollector
             Arguments = new string[Enum.GetValues(typeof(Args)).Length];
             Arguments[(int)Args.normalize_to] = (comboBoxNormalizeTo.SelectedIndex).ToString(CultureInfo.InvariantCulture);
             Arguments[(int)Args.allow_missing_peaks] = (cboxAllowMissingPeaks.Checked) ? TRUESTRING : FALSESTRING;
-            Arguments[(int) Args.summary_method] =
-                ((comboBoxSummaryMethod.SelectedItem as SummaryMethod) ?? SummaryMethod.Linear).Name;
-            Arguments[(int) Args.equal_variance] = cboxEqualVariance.Checked ? TRUESTRING : FALSESTRING;
+            Arguments[(int) Args.feature_selection] =
+                cbxSelectHighQualityFeatures.Checked ? TRUESTRING : FALSESTRING;
+            Arguments[(int) Args.width] = tbxWidth.Text;
+            Arguments[(int) Args.height] = tbxHeight.Text;
         }
 
         private void btnCancel_Click(object sender, EventArgs e)

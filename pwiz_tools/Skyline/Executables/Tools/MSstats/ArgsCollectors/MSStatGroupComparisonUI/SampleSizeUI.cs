@@ -27,7 +27,7 @@ namespace MSStatArgsCollector
     {
         private enum Args { normalize_to, samples, 
             power, fdr, lower_fold, upper_fold, allow_missing_peaks,
-            summary_method, equal_variance
+            feature_selection,
         }
 
         public string[] Arguments { get; private set; }
@@ -35,8 +35,7 @@ namespace MSStatArgsCollector
         public SampleSizeUi(string[] oldArgs)
         {
             InitializeComponent();
-            SummaryMethod.InitCombo(comboBoxSummaryMethod);
-            comboBoxNoramilzeTo.SelectedIndex = 1;
+            comboNormalizeTo.SelectedIndex = 1;
 
             if (oldArgs != null && oldArgs.Length == 8)
                 Arguments = oldArgs;
@@ -68,8 +67,6 @@ namespace MSStatArgsCollector
                 RestoreDecimalText(Arguments[(int)Args.fdr], numberFDR, Fdr);
                 RestoreDecimalText(Arguments[(int)Args.lower_fold], numberLDFC, Ldfc);
                 RestoreDecimalText(Arguments[(int)Args.upper_fold], numberUDFC, Udfc);
-                SummaryMethod.SelectValue(comboBoxSummaryMethod, Arguments[(int) Args.summary_method]);
-                cboxEqualVariance.Checked = Truestring == Arguments[(int) Args.equal_variance];
             }
 
             if (!rBtnSamples.Checked && !rBtnPower.Checked)
@@ -182,7 +179,7 @@ namespace MSStatArgsCollector
         {
             Arguments = new string[Enum.GetValues(typeof(Args)).Length];
 
-            Arguments[(int) Args.normalize_to] = (comboBoxNoramilzeTo.SelectedIndex).ToString(CultureInfo.InvariantCulture);
+            Arguments[(int) Args.normalize_to] = (comboNormalizeTo.SelectedIndex).ToString(CultureInfo.InvariantCulture);
             Arguments[(int) Args.samples] = (rBtnSamples.Checked) ? Truestring : numberSamples.Value.ToString(CultureInfo.InvariantCulture);
             Arguments[(int) Args.power] = (rBtnPower.Checked) ? Truestring : power.ToString(CultureInfo.InvariantCulture);
 
@@ -190,9 +187,8 @@ namespace MSStatArgsCollector
             Arguments[(int) Args.lower_fold] = ldfc.ToString(CultureInfo.InvariantCulture);
             Arguments[(int) Args.upper_fold] = udfc.ToString(CultureInfo.InvariantCulture);
             Arguments[(int) Args.allow_missing_peaks] = (cboxAllowMissingPeaks.Checked) ? Truestring : Falsestring;
-            Arguments[(int) Args.summary_method] =
-                (comboBoxSummaryMethod.SelectedItem as SummaryMethod ?? SummaryMethod.Linear).Name;
-            Arguments[(int) Args.equal_variance] = cboxEqualVariance.Checked ? Truestring : Falsestring;
+            Arguments[(int) Args.feature_selection] =
+                cbxSelectHighQualityFeatures.Checked ? Truestring : Falsestring;
         }
 
         private void btnCancel_Click(object sender, EventArgs e)
@@ -231,7 +227,7 @@ namespace MSStatArgsCollector
 
         private void RestoreDefaults()
         {
-            comboBoxNoramilzeTo.SelectedIndex = Normalize;
+            comboNormalizeTo.SelectedIndex = Normalize;
             rBtnSamples.Checked = true;
             numberSamples.Value = Samples;
             numberPower.Text = Power.ToString(CultureInfo.CurrentCulture);

@@ -41,8 +41,7 @@
             this.labelControlGroup = new System.Windows.Forms.Label();
             this.argsLayoutPanel = new System.Windows.Forms.FlowLayoutPanel();
             this.cboxEqualVariance = new System.Windows.Forms.CheckBox();
-            this.comboBoxSummaryMethod = new System.Windows.Forms.ComboBox();
-            this.labelSummaryMethod = new System.Windows.Forms.Label();
+            this.cboxSelectHighQualityFeatures = new System.Windows.Forms.CheckBox();
             this.argsLayoutPanel.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -191,24 +190,15 @@
             this.cboxEqualVariance.Text = "&Assume equal variance";
             this.cboxEqualVariance.UseVisualStyleBackColor = true;
             // 
-            // comboBoxSummaryMethod
+            // cbxSelectHighQualityFeatures
             // 
-            this.comboBoxSummaryMethod.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboBoxSummaryMethod.ForeColor = System.Drawing.SystemColors.WindowText;
-            this.comboBoxSummaryMethod.FormattingEnabled = true;
-            this.comboBoxSummaryMethod.Location = new System.Drawing.Point(13, 129);
-            this.comboBoxSummaryMethod.Name = "comboBoxSummaryMethod";
-            this.comboBoxSummaryMethod.Size = new System.Drawing.Size(172, 21);
-            this.comboBoxSummaryMethod.TabIndex = 6;
-            // 
-            // labelSummaryMethod
-            // 
-            this.labelSummaryMethod.AutoSize = true;
-            this.labelSummaryMethod.Location = new System.Drawing.Point(13, 112);
-            this.labelSummaryMethod.Name = "labelSummaryMethod";
-            this.labelSummaryMethod.Size = new System.Drawing.Size(91, 13);
-            this.labelSummaryMethod.TabIndex = 5;
-            this.labelSummaryMethod.Text = "Summary method:";
+            this.cboxSelectHighQualityFeatures.AutoSize = true;
+            this.cboxSelectHighQualityFeatures.Location = new System.Drawing.Point(15, 115);
+            this.cboxSelectHighQualityFeatures.Name = "cboxSelectHighQualityFeatures";
+            this.cboxSelectHighQualityFeatures.Size = new System.Drawing.Size(153, 17);
+            this.cboxSelectHighQualityFeatures.TabIndex = 5;
+            this.cboxSelectHighQualityFeatures.Text = "Select high quality features";
+            this.cboxSelectHighQualityFeatures.UseVisualStyleBackColor = true;
             // 
             // GroupComparisonUi
             // 
@@ -219,8 +209,7 @@
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.CancelButton = this.btnCancel;
             this.ClientSize = new System.Drawing.Size(292, 459);
-            this.Controls.Add(this.comboBoxSummaryMethod);
-            this.Controls.Add(this.labelSummaryMethod);
+            this.Controls.Add(this.cboxSelectHighQualityFeatures);
             this.Controls.Add(this.labelName);
             this.Controls.Add(this.cboxAllowMissingPeaks);
             this.Controls.Add(this.textBoxName);
@@ -261,7 +250,6 @@
         private System.Windows.Forms.Label labelControlGroup;
         private System.Windows.Forms.FlowLayoutPanel argsLayoutPanel;
         private System.Windows.Forms.CheckBox cboxEqualVariance;
-        private System.Windows.Forms.ComboBox comboBoxSummaryMethod;
-        private System.Windows.Forms.Label labelSummaryMethod;
+        private System.Windows.Forms.CheckBox cboxSelectHighQualityFeatures;
     }
 }

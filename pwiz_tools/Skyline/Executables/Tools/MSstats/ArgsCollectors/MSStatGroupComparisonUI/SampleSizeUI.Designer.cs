@@ -43,19 +43,17 @@
             this.rBtnSamples = new System.Windows.Forms.RadioButton();
             this.rBtnPower = new System.Windows.Forms.RadioButton();
             this.groupBoxAuto = new System.Windows.Forms.GroupBox();
-            this.comboBoxNoramilzeTo = new System.Windows.Forms.ComboBox();
+            this.flowLayoutPanel2 = new System.Windows.Forms.FlowLayoutPanel();
+            this.comboNormalizeTo = new System.Windows.Forms.ComboBox();
             this.labelNormalizeTo = new System.Windows.Forms.Label();
             this.cboxAllowMissingPeaks = new System.Windows.Forms.CheckBox();
-            this.cboxEqualVariance = new System.Windows.Forms.CheckBox();
-            this.comboBoxSummaryMethod = new System.Windows.Forms.ComboBox();
-            this.labelSummaryMethod = new System.Windows.Forms.Label();
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
-            this.flowLayoutPanel2 = new System.Windows.Forms.FlowLayoutPanel();
+            this.cbxSelectHighQualityFeatures = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.numberSamples)).BeginInit();
             this.gBoxFoldChange.SuspendLayout();
             this.groupBoxAuto.SuspendLayout();
-            this.flowLayoutPanel1.SuspendLayout();
             this.flowLayoutPanel2.SuspendLayout();
+            this.flowLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // numberSamples
@@ -80,7 +78,7 @@
             // 
             this.labelFDR.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.labelFDR.AutoSize = true;
-            this.labelFDR.Location = new System.Drawing.Point(3, 243);
+            this.labelFDR.Location = new System.Drawing.Point(3, 203);
             this.labelFDR.Margin = new System.Windows.Forms.Padding(3, 0, 3, 8);
             this.labelFDR.Name = "labelFDR";
             this.labelFDR.Size = new System.Drawing.Size(32, 13);
@@ -137,7 +135,7 @@
             this.gBoxFoldChange.Controls.Add(this.numberLDFC);
             this.gBoxFoldChange.Controls.Add(this.labelLowerDesiredFC);
             this.gBoxFoldChange.Controls.Add(this.labelUpperDesiredFC);
-            this.gBoxFoldChange.Location = new System.Drawing.Point(3, 302);
+            this.gBoxFoldChange.Location = new System.Drawing.Point(3, 262);
             this.gBoxFoldChange.Name = "gBoxFoldChange";
             this.gBoxFoldChange.Size = new System.Drawing.Size(154, 74);
             this.gBoxFoldChange.TabIndex = 6;
@@ -184,7 +182,7 @@
             // numberFDR
             // 
             this.numberFDR.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.numberFDR.Location = new System.Drawing.Point(3, 267);
+            this.numberFDR.Location = new System.Drawing.Point(3, 227);
             this.numberFDR.Margin = new System.Windows.Forms.Padding(3, 3, 3, 12);
             this.numberFDR.Name = "numberFDR";
             this.numberFDR.Size = new System.Drawing.Size(60, 20);
@@ -217,27 +215,40 @@
             // 
             this.groupBoxAuto.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.groupBoxAuto.Controls.Add(this.flowLayoutPanel2);
-            this.groupBoxAuto.Location = new System.Drawing.Point(3, 129);
+            this.groupBoxAuto.Location = new System.Drawing.Point(3, 89);
             this.groupBoxAuto.Name = "groupBoxAuto";
             this.groupBoxAuto.Size = new System.Drawing.Size(154, 111);
             this.groupBoxAuto.TabIndex = 3;
             this.groupBoxAuto.TabStop = false;
             this.groupBoxAuto.Text = "Automatically calculate";
             // 
+            // flowLayoutPanel2
+            // 
+            this.flowLayoutPanel2.Controls.Add(this.rBtnSamples);
+            this.flowLayoutPanel2.Controls.Add(this.numberSamples);
+            this.flowLayoutPanel2.Controls.Add(this.rBtnPower);
+            this.flowLayoutPanel2.Controls.Add(this.numberPower);
+            this.flowLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.flowLayoutPanel2.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
+            this.flowLayoutPanel2.Location = new System.Drawing.Point(3, 16);
+            this.flowLayoutPanel2.Name = "flowLayoutPanel2";
+            this.flowLayoutPanel2.Size = new System.Drawing.Size(148, 92);
+            this.flowLayoutPanel2.TabIndex = 15;
+            // 
             // comboBoxNoramilzeTo
             // 
-            this.comboBoxNoramilzeTo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboBoxNoramilzeTo.ForeColor = System.Drawing.SystemColors.WindowText;
-            this.comboBoxNoramilzeTo.FormattingEnabled = true;
-            this.comboBoxNoramilzeTo.Items.AddRange(new object[] {
+            this.comboNormalizeTo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboNormalizeTo.ForeColor = System.Drawing.SystemColors.WindowText;
+            this.comboNormalizeTo.FormattingEnabled = true;
+            this.comboNormalizeTo.Items.AddRange(new object[] {
             "None",
             "Equalize medians",
             "Quantile",
             "Relative to global standards"});
-            this.comboBoxNoramilzeTo.Location = new System.Drawing.Point(3, 16);
-            this.comboBoxNoramilzeTo.Name = "comboBoxNoramilzeTo";
-            this.comboBoxNoramilzeTo.Size = new System.Drawing.Size(144, 21);
-            this.comboBoxNoramilzeTo.TabIndex = 1;
+            this.comboNormalizeTo.Location = new System.Drawing.Point(3, 16);
+            this.comboNormalizeTo.Name = "comboNormalizeTo";
+            this.comboNormalizeTo.Size = new System.Drawing.Size(144, 21);
+            this.comboNormalizeTo.TabIndex = 1;
             // 
             // labelNormalizeTo
             // 
@@ -259,45 +270,12 @@
             this.cboxAllowMissingPeaks.Text = "&Allow missing peaks";
             this.cboxAllowMissingPeaks.UseVisualStyleBackColor = true;
             // 
-            // cboxEqualVariance
-            // 
-            this.cboxEqualVariance.AutoSize = true;
-            this.cboxEqualVariance.Checked = true;
-            this.cboxEqualVariance.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cboxEqualVariance.Location = new System.Drawing.Point(3, 106);
-            this.cboxEqualVariance.Name = "cboxEqualVariance";
-            this.cboxEqualVariance.Size = new System.Drawing.Size(136, 17);
-            this.cboxEqualVariance.TabIndex = 13;
-            this.cboxEqualVariance.Text = "&Assume equal variance";
-            this.cboxEqualVariance.UseVisualStyleBackColor = true;
-            // 
-            // comboBoxSummaryMethod
-            // 
-            this.comboBoxSummaryMethod.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboBoxSummaryMethod.ForeColor = System.Drawing.SystemColors.WindowText;
-            this.comboBoxSummaryMethod.FormattingEnabled = true;
-            this.comboBoxSummaryMethod.Location = new System.Drawing.Point(3, 79);
-            this.comboBoxSummaryMethod.Name = "comboBoxSummaryMethod";
-            this.comboBoxSummaryMethod.Size = new System.Drawing.Size(172, 21);
-            this.comboBoxSummaryMethod.TabIndex = 12;
-            // 
-            // labelSummaryMethod
-            // 
-            this.labelSummaryMethod.AutoSize = true;
-            this.labelSummaryMethod.Location = new System.Drawing.Point(3, 63);
-            this.labelSummaryMethod.Name = "labelSummaryMethod";
-            this.labelSummaryMethod.Size = new System.Drawing.Size(91, 13);
-            this.labelSummaryMethod.TabIndex = 11;
-            this.labelSummaryMethod.Text = "Summary method:";
-            // 
             // flowLayoutPanel1
             // 
             this.flowLayoutPanel1.Controls.Add(this.labelNormalizeTo);
-            this.flowLayoutPanel1.Controls.Add(this.comboBoxNoramilzeTo);
+            this.flowLayoutPanel1.Controls.Add(this.comboNormalizeTo);
             this.flowLayoutPanel1.Controls.Add(this.cboxAllowMissingPeaks);
-            this.flowLayoutPanel1.Controls.Add(this.labelSummaryMethod);
-            this.flowLayoutPanel1.Controls.Add(this.comboBoxSummaryMethod);
-            this.flowLayoutPanel1.Controls.Add(this.cboxEqualVariance);
+            this.flowLayoutPanel1.Controls.Add(this.cbxSelectHighQualityFeatures);
             this.flowLayoutPanel1.Controls.Add(this.groupBoxAuto);
             this.flowLayoutPanel1.Controls.Add(this.labelFDR);
             this.flowLayoutPanel1.Controls.Add(this.numberFDR);
@@ -308,18 +286,15 @@
             this.flowLayoutPanel1.Size = new System.Drawing.Size(200, 385);
             this.flowLayoutPanel1.TabIndex = 14;
             // 
-            // flowLayoutPanel2
+            // cbxSelectHighQualityFeatures
             // 
-            this.flowLayoutPanel2.Controls.Add(this.rBtnSamples);
-            this.flowLayoutPanel2.Controls.Add(this.numberSamples);
-            this.flowLayoutPanel2.Controls.Add(this.rBtnPower);
-            this.flowLayoutPanel2.Controls.Add(this.numberPower);
-            this.flowLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.flowLayoutPanel2.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
-            this.flowLayoutPanel2.Location = new System.Drawing.Point(3, 16);
-            this.flowLayoutPanel2.Name = "flowLayoutPanel2";
-            this.flowLayoutPanel2.Size = new System.Drawing.Size(148, 92);
-            this.flowLayoutPanel2.TabIndex = 15;
+            this.cbxSelectHighQualityFeatures.AutoSize = true;
+            this.cbxSelectHighQualityFeatures.Location = new System.Drawing.Point(3, 66);
+            this.cbxSelectHighQualityFeatures.Name = "cbxSelectHighQualityFeatures";
+            this.cbxSelectHighQualityFeatures.Size = new System.Drawing.Size(153, 17);
+            this.cbxSelectHighQualityFeatures.TabIndex = 7;
+            this.cbxSelectHighQualityFeatures.Text = "Select high quality features";
+            this.cbxSelectHighQualityFeatures.UseVisualStyleBackColor = true;
             // 
             // SampleSizeUi
             // 
@@ -342,10 +317,10 @@
             this.gBoxFoldChange.ResumeLayout(false);
             this.gBoxFoldChange.PerformLayout();
             this.groupBoxAuto.ResumeLayout(false);
-            this.flowLayoutPanel1.ResumeLayout(false);
-            this.flowLayoutPanel1.PerformLayout();
             this.flowLayoutPanel2.ResumeLayout(false);
             this.flowLayoutPanel2.PerformLayout();
+            this.flowLayoutPanel1.ResumeLayout(false);
+            this.flowLayoutPanel1.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -367,13 +342,11 @@
         private System.Windows.Forms.RadioButton rBtnSamples;
         private System.Windows.Forms.RadioButton rBtnPower;
         private System.Windows.Forms.GroupBox groupBoxAuto;
-        private System.Windows.Forms.ComboBox comboBoxNoramilzeTo;
+        private System.Windows.Forms.ComboBox comboNormalizeTo;
         private System.Windows.Forms.Label labelNormalizeTo;
         private System.Windows.Forms.CheckBox cboxAllowMissingPeaks;
-        private System.Windows.Forms.CheckBox cboxEqualVariance;
-        private System.Windows.Forms.ComboBox comboBoxSummaryMethod;
-        private System.Windows.Forms.Label labelSummaryMethod;
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel2;
+        private System.Windows.Forms.CheckBox cbxSelectHighQualityFeatures;
     }
 }

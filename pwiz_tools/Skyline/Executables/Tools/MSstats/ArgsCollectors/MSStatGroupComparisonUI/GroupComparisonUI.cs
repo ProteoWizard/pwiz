@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
@@ -38,7 +39,6 @@ namespace MSStatArgsCollector
         public GroupComparisonUi(string[] groups, string[] oldArgs)
         {
             InitializeComponent();
-            SummaryMethod.InitCombo(comboBoxSummaryMethod);
 
             comboBoxNormalizeTo.SelectedIndex = 1;
             Array.Sort(groups);
@@ -46,7 +46,14 @@ namespace MSStatArgsCollector
             Arguments = oldArgs;
 
             FormatComparisonGroupDisplay();
-            RestoreSettings();
+            try
+            {
+                RestoreSettings();
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceWarning("Exception restoring settings {0}", ex);
+            }
         }
 
         private void MSstatsUI_Load(object sender, EventArgs e)
@@ -71,33 +78,32 @@ namespace MSStatArgsCollector
         private const string TRUESTRING = "TRUE"; // Not L10N
         private const string FALSESTRING = "FALSE"; // Not L10N
 
+        // ReSharper disable InconsistentNaming
+        private enum Args { name, normalize_to, allow_missing_peaks, feature_selection, equal_variance, fixed_argument_count }
+        // ReSharper restore InconsistentNaming
+
+
         // If there is no stored argument string, or if the number of groups has changed, the UI loads the
         // default settings for group comparisons
         private void RestoreSettings()
         {
-            const int nonIndexArguments = 5;
+            const int fixedArgumentCount = (int) Args.fixed_argument_count;
 
             // Restore view only if there are the same number of groups as before 
-            if (Arguments != null && (Arguments.Length - nonIndexArguments == ControlGroupList.Length))
+            if (Arguments != null && (Arguments.Length == ControlGroupList.Length + fixedArgumentCount))
             {
+                var variableArguments = Arguments.Skip(fixedArgumentCount).ToArray();
+                var fixedArguments = Arguments.Take(fixedArgumentCount).ToArray();
                 // Restore the selected control group 
-                int indexControlGroup = Array.IndexOf(Arguments, "-1");
-                if (indexControlGroup >= 0 && indexControlGroup < ControlGroup.Items.Count)
-                {
-                    ControlGroup.SelectedIndex = indexControlGroup;
-                }
-                else
-                {
-                    ControlGroup.SelectedIndex = 0;
-                }
+                ControlGroup.SelectedIndex = Array.IndexOf(variableArguments, "-1"); // Not L10N
 
                 // Restore the selection of comparison groups (if necessary)
                 if (ControlGroupList.Length > 2)
                 {
-                    for (int i = 0; i < Arguments.Length - nonIndexArguments; i++)
+                    for (int i = 0; i < variableArguments.Length; i++)
                     {
                         double groupConstant;
-                        if (!double.TryParse(Arguments[i], NumberStyles.Float, CultureInfo.InvariantCulture, out groupConstant))
+                        if (!double.TryParse(variableArguments[i], NumberStyles.Float, CultureInfo.InvariantCulture, out groupConstant))
                             continue;
 // ReSharper disable CompareOfFloatsByEqualityOperator
                         if (groupConstant != 1.0 && groupConstant != 0.0)
@@ -111,8 +117,11 @@ namespace MSStatArgsCollector
                 }
 
                 // Restore name
-                textBoxName.Text = Arguments[Arguments.Length - 5];
-                SummaryMethod.SelectValue(comboBoxSummaryMethod, Arguments[Arguments.Length - 2]);
+                textBoxName.Text = fixedArguments[(int) Args.name];
+                comboBoxNormalizeTo.SelectedIndex = int.Parse(fixedArguments[(int)Args.normalize_to], CultureInfo.InvariantCulture);
+                cboxAllowMissingPeaks.Checked = TRUESTRING == fixedArguments[(int) Args.allow_missing_peaks];
+                cboxSelectHighQualityFeatures.Checked = TRUESTRING == fixedArguments[(int) Args.feature_selection];
+                cboxEqualVariance.Checked = TRUESTRING == fixedArguments[(int) Args.equal_variance];
             }
             else
             {
@@ -172,33 +181,31 @@ namespace MSStatArgsCollector
             }
         }
 
-        // The argument array for group comparisons is composed of the following elements:
-        // [(-1 <= x <= 1){2,} , Comparison Name , TRUE|FALSE , E|R , E|R , TRUE|FALSE]
-        //
-        // The next n elements is a series of n doubles that represent the constants that will be applied 
-        // to each group, where n is the (2+) total number of groups in the data source. There will
-        // be a single "-1" in this series, which represents the constant applied to the
-        // control group. If there is only one other group for the control to be compared against, it will
-        // have a value of 1, while all other groups will have constants of 0. An example
-        // subarray that might be generated would be: [1 , 0 , -1 , 0]
-        //
-        // In the case that there are k>1 groups to be compared against, each group that the control will
-        // be compared against adopts a value of 1.0/k, while any groups not being compared against the control
-        // again adopt a constant of 0. An example subarray that might be generated would be: [0 , 0 , 0.5 , -1 , 0 , 0.5] 
-        // where k = 2
-        //
-        // The next element of the argument array is its name of the comparison 
-        //
-        // The last four elements of the argument array are as follows:
-        // "TRUE" - the user wants to label data, otherwise "FALSE"
-        // "E" - expanded: the user wants the scope of biological replicates to be expanded, otherwise "R" - RESTRICTED
-        // "E" - expanded: the user wants the scope of technical replicates to be expanded, otherwise "R" - RESTRICTED
-        // "TRUE" - the user wants to include inference transitions, otherwise "FALSE"
-        //
-        // An example of a complete array would be [0 , -1 , 0.5 , 0.5 , 0 , 0 , Disease-Healthy , TRUE , E , R , FALSE]
+
+        /// <summary>
+        /// The first arguments that get passed to the R script are the ones specified in the enum <see cref="Args"/>.
+        /// The next n elements is a series of n doubles that represent the constants that will be applied 
+        /// to each group, where n is the (2+) total number of groups in the data source. There will
+        /// be a single "-1" in this series, which represents the constant applied to the
+        /// control group. If there is only one other group for the control to be compared against, it will
+        /// have a value of 1, while all other groups will have constants of 0. An example
+        /// subarray that might be generated would be: [1 , 0 , -1 , 0]
+        ///
+        /// In the case that there are k>1 groups to be compared against, each group that the control will
+        /// be compared against adopts a value of 1.0/k, while any groups not being compared against the control
+        /// again adopt a constant of 0. An example subarray that might be generated would be: [0 , 0 , 0.5 , -1 , 0 , 0.5] 
+        /// where k = 2
+        /// </summary>
         private void GenerateArguments()
         {
             ICollection<string> commandLineArguments = new Collection<string>();
+
+            // Add fixed arguments
+            commandLineArguments.Add(textBoxName.Text);
+            commandLineArguments.Add(comboBoxNormalizeTo.SelectedIndex.ToString(CultureInfo.InvariantCulture));
+            commandLineArguments.Add(cboxAllowMissingPeaks.Checked ? TRUESTRING : FALSESTRING);
+            commandLineArguments.Add(cboxSelectHighQualityFeatures.Checked ? TRUESTRING : FALSESTRING);
+            commandLineArguments.Add(cboxEqualVariance.Checked ? TRUESTRING : FALSESTRING);
             
             // Generate constants for comparisons
             var constants = new double[ControlGroupList.Length];
@@ -222,21 +229,8 @@ namespace MSStatArgsCollector
                 commandLineArguments.Add(value.ToString(CultureInfo.InvariantCulture));
             }
 
-            // Add name
-            commandLineArguments.Add(textBoxName.Text);
-
-            // Add settings
-            commandLineArguments.Add(comboBoxNormalizeTo.SelectedIndex.ToString(CultureInfo.InvariantCulture));            
-            commandLineArguments.Add(cboxEqualVariance.Checked ? TRUESTRING : FALSESTRING);
-            SummaryMethod summaryMethod = comboBoxSummaryMethod.SelectedItem as SummaryMethod ?? SummaryMethod.Linear;
-            commandLineArguments.Add(summaryMethod.Name);
-            commandLineArguments.Add(cboxAllowMissingPeaks.Checked ? TRUESTRING : FALSESTRING);
-          
-
             Arguments = commandLineArguments.ToArray();
         }
-
-      
     }
 
     public class MSstatsGroupComparisonCollector

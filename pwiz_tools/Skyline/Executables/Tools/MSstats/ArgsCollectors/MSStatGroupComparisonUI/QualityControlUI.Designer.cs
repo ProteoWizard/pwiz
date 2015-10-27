@@ -33,9 +33,13 @@
             this.comboBoxNormalizeTo = new System.Windows.Forms.ComboBox();
             this.labelNormalizeTo = new System.Windows.Forms.Label();
             this.cboxAllowMissingPeaks = new System.Windows.Forms.CheckBox();
-            this.cboxEqualVariance = new System.Windows.Forms.CheckBox();
-            this.comboBoxSummaryMethod = new System.Windows.Forms.ComboBox();
-            this.labelSummaryMethod = new System.Windows.Forms.Label();
+            this.groupBoxPlotSize = new System.Windows.Forms.GroupBox();
+            this.tbxHeight = new System.Windows.Forms.TextBox();
+            this.lblHeight = new System.Windows.Forms.Label();
+            this.tbxWidth = new System.Windows.Forms.TextBox();
+            this.lblWidth = new System.Windows.Forms.Label();
+            this.cbxSelectHighQualityFeatures = new System.Windows.Forms.CheckBox();
+            this.groupBoxPlotSize.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnCancel
@@ -97,36 +101,62 @@
             this.cboxAllowMissingPeaks.Text = "&Allow missing peaks";
             this.cboxAllowMissingPeaks.UseVisualStyleBackColor = true;
             // 
-            // cboxEqualVariance
+            // groupBoxPlotSize
             // 
-            this.cboxEqualVariance.AutoSize = true;
-            this.cboxEqualVariance.Checked = true;
-            this.cboxEqualVariance.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cboxEqualVariance.Location = new System.Drawing.Point(12, 118);
-            this.cboxEqualVariance.Name = "cboxEqualVariance";
-            this.cboxEqualVariance.Size = new System.Drawing.Size(136, 17);
-            this.cboxEqualVariance.TabIndex = 10;
-            this.cboxEqualVariance.Text = "&Assume equal variance";
-            this.cboxEqualVariance.UseVisualStyleBackColor = true;
+            this.groupBoxPlotSize.Controls.Add(this.tbxHeight);
+            this.groupBoxPlotSize.Controls.Add(this.lblHeight);
+            this.groupBoxPlotSize.Controls.Add(this.tbxWidth);
+            this.groupBoxPlotSize.Controls.Add(this.lblWidth);
+            this.groupBoxPlotSize.Location = new System.Drawing.Point(12, 116);
+            this.groupBoxPlotSize.Name = "groupBoxPlotSize";
+            this.groupBoxPlotSize.Size = new System.Drawing.Size(241, 113);
+            this.groupBoxPlotSize.TabIndex = 5;
+            this.groupBoxPlotSize.TabStop = false;
+            this.groupBoxPlotSize.Text = "Size of profile and QC plots";
             // 
-            // comboBoxSummaryMethod
+            // tbxHeight
             // 
-            this.comboBoxSummaryMethod.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboBoxSummaryMethod.ForeColor = System.Drawing.SystemColors.WindowText;
-            this.comboBoxSummaryMethod.FormattingEnabled = true;
-            this.comboBoxSummaryMethod.Location = new System.Drawing.Point(12, 91);
-            this.comboBoxSummaryMethod.Name = "comboBoxSummaryMethod";
-            this.comboBoxSummaryMethod.Size = new System.Drawing.Size(172, 21);
-            this.comboBoxSummaryMethod.TabIndex = 9;
+            this.tbxHeight.Location = new System.Drawing.Point(8, 79);
+            this.tbxHeight.Name = "tbxHeight";
+            this.tbxHeight.Size = new System.Drawing.Size(100, 20);
+            this.tbxHeight.TabIndex = 3;
+            this.tbxHeight.Text = "10";
             // 
-            // labelSummaryMethod
+            // lblHeight
             // 
-            this.labelSummaryMethod.AutoSize = true;
-            this.labelSummaryMethod.Location = new System.Drawing.Point(12, 74);
-            this.labelSummaryMethod.Name = "labelSummaryMethod";
-            this.labelSummaryMethod.Size = new System.Drawing.Size(91, 13);
-            this.labelSummaryMethod.TabIndex = 8;
-            this.labelSummaryMethod.Text = "Summary method:";
+            this.lblHeight.AutoSize = true;
+            this.lblHeight.Location = new System.Drawing.Point(5, 60);
+            this.lblHeight.Name = "lblHeight";
+            this.lblHeight.Size = new System.Drawing.Size(38, 13);
+            this.lblHeight.TabIndex = 2;
+            this.lblHeight.Text = "Height";
+            // 
+            // tbxWidth
+            // 
+            this.tbxWidth.Location = new System.Drawing.Point(8, 37);
+            this.tbxWidth.Name = "tbxWidth";
+            this.tbxWidth.Size = new System.Drawing.Size(100, 20);
+            this.tbxWidth.TabIndex = 1;
+            this.tbxWidth.Text = "10";
+            // 
+            // lblWidth
+            // 
+            this.lblWidth.AutoSize = true;
+            this.lblWidth.Location = new System.Drawing.Point(5, 21);
+            this.lblWidth.Name = "lblWidth";
+            this.lblWidth.Size = new System.Drawing.Size(35, 13);
+            this.lblWidth.TabIndex = 0;
+            this.lblWidth.Text = "Width";
+            // 
+            // cbxSelectHighQualityFeatures
+            // 
+            this.cbxSelectHighQualityFeatures.AutoSize = true;
+            this.cbxSelectHighQualityFeatures.Location = new System.Drawing.Point(12, 77);
+            this.cbxSelectHighQualityFeatures.Name = "cbxSelectHighQualityFeatures";
+            this.cbxSelectHighQualityFeatures.Size = new System.Drawing.Size(153, 17);
+            this.cbxSelectHighQualityFeatures.TabIndex = 6;
+            this.cbxSelectHighQualityFeatures.Text = "Select high quality features";
+            this.cbxSelectHighQualityFeatures.UseVisualStyleBackColor = true;
             // 
             // QualityControlUI
             // 
@@ -134,10 +164,9 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(268, 202);
-            this.Controls.Add(this.cboxEqualVariance);
-            this.Controls.Add(this.comboBoxSummaryMethod);
-            this.Controls.Add(this.labelSummaryMethod);
+            this.ClientSize = new System.Drawing.Size(268, 241);
+            this.Controls.Add(this.cbxSelectHighQualityFeatures);
+            this.Controls.Add(this.groupBoxPlotSize);
             this.Controls.Add(this.cboxAllowMissingPeaks);
             this.Controls.Add(this.comboBoxNormalizeTo);
             this.Controls.Add(this.labelNormalizeTo);
@@ -149,6 +178,8 @@
             this.Name = "QualityControlUI";
             this.ShowInTaskbar = false;
             this.Text = "MSstats QC";
+            this.groupBoxPlotSize.ResumeLayout(false);
+            this.groupBoxPlotSize.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -161,8 +192,11 @@
         private System.Windows.Forms.ComboBox comboBoxNormalizeTo;
         private System.Windows.Forms.Label labelNormalizeTo;
         private System.Windows.Forms.CheckBox cboxAllowMissingPeaks;
-        private System.Windows.Forms.CheckBox cboxEqualVariance;
-        private System.Windows.Forms.ComboBox comboBoxSummaryMethod;
-        private System.Windows.Forms.Label labelSummaryMethod;
+        private System.Windows.Forms.GroupBox groupBoxPlotSize;
+        private System.Windows.Forms.TextBox tbxHeight;
+        private System.Windows.Forms.Label lblHeight;
+        private System.Windows.Forms.TextBox tbxWidth;
+        private System.Windows.Forms.Label lblWidth;
+        private System.Windows.Forms.CheckBox cbxSelectHighQualityFeatures;
     }
 }
