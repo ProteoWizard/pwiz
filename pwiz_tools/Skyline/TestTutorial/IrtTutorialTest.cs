@@ -694,14 +694,16 @@ namespace pwiz.SkylineTestTutorial
             if (multiFile)
                 listNamedPathSets.Add(new KeyValuePair<string, MsDataFileUri[]>(Resources.ImportResultsDlg_DefaultNewName_Default_Name, listPaths.Select(MsDataFileUri.Parse).ToArray()));
 
-            RunDlg<ImportResultsDlg>(SkylineWindow.ImportResults, importResultsDlg =>
+            using (new WaitDocumentChange())
             {
-                importResultsDlg.RadioAddNewChecked = true;
-                importResultsDlg.NamedPathSets = listNamedPathSets.ToArray();
-                importResultsDlg.OkDialog();
-            });
-            WaitForConditionUI(5 * 60 * 1000, () => SkylineWindow.DocumentUI.Settings.HasResults &&
-                SkylineWindow.DocumentUI.Settings.MeasuredResults.IsLoaded);    // 5 minutes
+                RunDlg<ImportResultsDlg>(SkylineWindow.ImportResults, importResultsDlg =>
+                {
+                    importResultsDlg.RadioAddNewChecked = true;
+                    importResultsDlg.NamedPathSets = listNamedPathSets.ToArray();
+                    importResultsDlg.OkDialog();
+                });
+            }
+            WaitForDocumentLoaded(5 * 60 * 1000);    // 5 minutes
         }
 
         private static void VerifyRTRegression(double slope, double intercept, double r)

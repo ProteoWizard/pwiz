@@ -11,6 +11,7 @@
     <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\thermo\x86\MSFileReader.XRawfile2.dll" />
     <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\Bruker\x86\baf2sql_c.dll" />
     <DeploymentItem filename="msparser.dll" />
+    <DeploymentItem filename="msparserD.dll" />
   </Deployment>
   <Execution>
     <TestTypeSpecific>

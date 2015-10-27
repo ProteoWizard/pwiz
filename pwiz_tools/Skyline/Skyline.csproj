@@ -45,8 +45,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>8669</ApplicationRevision>
-    <ApplicationVersion>3.1.1.8669</ApplicationVersion>
+    <ApplicationRevision>9007</ApplicationRevision>
+    <ApplicationVersion>3.1.1.9007</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -3130,12 +3130,20 @@
       <Link>BlibFilter.exe</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\BiblioSpec\obj\x86\msparser.dll">
+    <Content Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' " Include="..\Shared\BiblioSpec\obj\x86\msparser.dll">
       <Link>msparser.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\BiblioSpec\obj\x64\msparser.dll">
+    <Content Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' " Include="..\Shared\BiblioSpec\obj\x86\msparserD.dll">
+      <Link>msparserD.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' " Include="..\Shared\BiblioSpec\obj\x64\msparser.dll">
       <Link>msparser.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' " Include="..\Shared\BiblioSpec\obj\x64\msparserD.dll">
+      <Link>msparserD.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Method\AbSciex\TOF\BuildAnalystFullScanMethod.exe">

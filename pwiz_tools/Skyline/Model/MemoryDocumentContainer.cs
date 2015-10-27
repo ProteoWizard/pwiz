@@ -45,19 +45,6 @@ namespace pwiz.Skyline.Model
 
         public IProgressMonitor ProgressMonitor { get; set; }
 
-        /// <summary>
-        /// Override for background loaders that update the document with
-        /// partially complete results, to keep the container waiting until
-        /// the document is complete.  Default returns true to return control
-        /// to the test on the first document change.
-        /// </summary>
-        /// <param name="docNew">A new document being set to the container</param>
-        /// <returns>True if no more processing is necessary</returns>
-        protected virtual bool IsComplete(SrmDocument docNew)
-        {
-            return true;
-        }
-
         public bool SetDocument(SrmDocument docNew, SrmDocument docOriginal)
         {
             return SetDocument(docNew, docOriginal, false);
@@ -75,10 +62,16 @@ namespace pwiz.Skyline.Model
                 {
                     DocumentChangedEvent(this, new DocumentChangedEventArgs(docOriginal));
 
+                    bool complete = docNew.IsLoaded || (LastProgress != null && LastProgress.IsError);
                     if (wait)
-                        Monitor.Wait(CHANGE_EVENT_LOCK);    // Wait forever
-                    else if (IsComplete(docNew) || (LastProgress != null && LastProgress.IsError))
+                    {
+                        if (!complete)
+                            Monitor.Wait(CHANGE_EVENT_LOCK);    // Wait for completing document changed event
+                    }
+                    else if (complete)
+                    {
                         Monitor.Pulse(CHANGE_EVENT_LOCK);
+                    }
                 }
             }
 
@@ -172,10 +165,5 @@ namespace pwiz.Skyline.Model
         public IonMobilityLibraryManager IonMobilityManager { get; private set; }
 
         public IrtDbManager IrtDbManager { get; private set; }
-
-        protected override bool IsComplete(SrmDocument docNew)
-        {
-            return docNew.IsLoaded;
-        }
     }
 }

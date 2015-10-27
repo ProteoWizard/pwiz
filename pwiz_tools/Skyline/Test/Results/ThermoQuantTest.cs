@@ -125,8 +125,19 @@ namespace pwiz.SkylineTest.Results
             Assert.IsTrue(Directory.GetFiles(dirPath).IndexOf(IsCacheOrTempFile) != -1, "Failed to create cache file");
 
             // Cancel by reverting to the original document
-            Assert.IsTrue(docContainer.SetDocument(doc, docResults, true));
-            Assert.IsTrue(docContainer.LastProgress.IsCanceled);
+            Assert.IsTrue(docContainer.SetDocument(doc, docResults));
+            // Wait up to 5 seconds for cancel to occur
+            for (int i = 0; i < 50; i++)
+            {
+                if (docContainer.LastProgress.IsCanceled)
+                    break;
+                Thread.Sleep(100);
+            }
+            if (!docContainer.LastProgress.IsCanceled)
+            {
+                Assert.Fail("Attempt to cancel results load failed. {0}", docContainer.LastProgress.ErrorException != null
+                    ? docContainer.LastProgress.ErrorException.Message : string.Empty);
+            }
 
             // Wait up to 20 seconds for the cache to be removed
             for (int i = 0; i < 200; i++)
