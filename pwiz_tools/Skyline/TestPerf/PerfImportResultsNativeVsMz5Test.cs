@@ -50,6 +50,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         // model and thus probably isn't what you really want.  
         // Something like ImportAgilentIMSTest probably makes for a better starting point.
 
+        private string _baseSkyFile;
         private string _skyFile;
         private string _dataFile;
         private bool _centroided;
@@ -195,7 +196,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 var mz5File = Path.ChangeExtension(rawFile, "mz5");
                 TestFilesPersistent = new[] { rawFile, mz5File }; // list of files that we'd like to unzip alongside parent zipFile, and (re)use in place
                 _testFilesDir = new TestFilesDir(TestContext, TestFilesZip, null, TestFilesPersistent);
-                var baseSkyFile = _testFilesDir.GetTestPath(skyFile);
+                _baseSkyFile = _testFilesDir.GetTestPath(skyFile);
                 string nativeResults = _testFilesDir.GetTestPath(rawFile);
                 var rawfiles = new List<string>();
                 var mz5Results = Path.ChangeExtension(nativeResults, "mz5");
@@ -208,8 +209,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 var type = 0;
                 foreach (var resultspath in rawfiles)
                 {
-                    _skyFile = baseSkyFile.Replace(".sky", "_" + loop + "_" + type++ + ".sky");
-                    File.Copy(baseSkyFile, _skyFile, true);
+                    _skyFile = _baseSkyFile.Replace(".sky", "_" + loop + "_" + type++ + ".sky");
                     _dataFile = resultspath;
                     _centroided = centroidedThisPass;
                     RunFunctionalTest();
@@ -221,6 +221,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         protected override void DoTest()
         {
+            File.Copy(_baseSkyFile, _skyFile, true);
             WaitForCondition(() => File.Exists(_skyFile)); // Wait for copy and rename
             RunUI(() => SkylineWindow.OpenFile(_skyFile));
             string expectedErrorMessage = null;
