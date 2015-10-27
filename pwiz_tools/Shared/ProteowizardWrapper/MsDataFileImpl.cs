@@ -90,7 +90,7 @@ namespace pwiz.ProteowizardWrapper
         public MsDataFileImpl(string path, int sampleIndex = 0, bool simAsSpectra = false, bool srmAsSpectra = false, bool acceptZeroLengthSpectra = true, bool requireVendorCentroidedMS1 = false, bool requireVendorCentroidedMS2 = false)
         {
             // see note above on enabling performance measurement
-            _perf = PerfUtilFactory.CreatePerfUtil("MsDataFileImpl " +
+            _perf = PerfUtilFactory.CreatePerfUtil("MsDataFileImpl " + // Not L10N
                 string.Format("path:{0},sampleIndex:{1},simAsSpectra:{2},srmAsSpectra:{3},acceptZeroLengthSpectra:{4},requireVendorCentroidedMS1:{5},requireVendorCentroidedMS2:{6}",  // Not L10N
                 path, sampleIndex, simAsSpectra, srmAsSpectra, acceptZeroLengthSpectra, requireVendorCentroidedMS1, requireVendorCentroidedMS2)); 
             using (_perf.CreateTimer("open")) // Not L10N
