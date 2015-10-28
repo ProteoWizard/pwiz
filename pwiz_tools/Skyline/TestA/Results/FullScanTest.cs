@@ -50,6 +50,14 @@ namespace pwiz.SkylineTestA.Results
         }
 
         [TestMethod]
+        public void FullScanFilterTestCentroided()
+        {
+            List<SrmDocument> docCheckpoints;
+            if (ExtensionTestContext.CanImportThermoRaw)
+                DoFullScanFilterTest(RefinementSettings.ConvertToSmallMoleculesMode.none, out docCheckpoints, true);
+        }
+
+        [TestMethod]
         public void FullScanFilterTestAsSmallMolecules()
         {
             List<SrmDocument> docCheckpoints;
@@ -86,7 +94,7 @@ namespace pwiz.SkylineTestA.Results
         }
 
         private void DoFullScanFilterTest(RefinementSettings.ConvertToSmallMoleculesMode asSmallMolecules,
-            out List<SrmDocument> docCheckpoints)
+            out List<SrmDocument> docCheckpoints, bool centroided = false)
         {
             docCheckpoints = new List<SrmDocument>();
             TestSmallMolecules = false;  // We test small molecules explicitly
@@ -97,6 +105,12 @@ namespace pwiz.SkylineTestA.Results
             var expectedTransGroupCount = 7;
             var expectedTransCount = 49;
             var doc = InitFullScanDocument(docPath, 2, ref expectedPepCount, ref expectedTransGroupCount, ref expectedTransCount, asSmallMolecules);
+            if (centroided && ExtensionTestContext.CanImportThermoRaw)
+            {
+                const double ppm20 = 20.0;
+                doc = doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fs =>
+                    fs.ChangePrecursorResolution(FullScanMassAnalyzerType.centroided, ppm20, 0)));
+            }
             var docContainer = new ResultsTestDocumentContainer(doc, docPath);
 
             // Import the first RAW file (or mzML for international)
