@@ -106,7 +106,7 @@ SpectrumList_PeakPicker::SpectrumList_PeakPicker(
         method.userParams.push_back(UserParam("ABI/DataExplorer peak picking"));
     //else
     //    method.userParams.push_back(algorithm->name());
-    if (preferVendorPeakPicking && !mode_)
+    if (preferVendorPeakPicking && !mode_ && (algorithm_ != NULL)) // VendorOnlyPeakPicker sets algorithm null, we deal with this at get binary data time
     {
         cerr << "Warning: vendor peakPicking was requested, but is unavailable";
 #ifdef WIN32
