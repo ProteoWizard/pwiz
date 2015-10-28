@@ -262,6 +262,17 @@ namespace pwiz.Common.SystemUtil
                             if (sline != line)
                                 line = sline + s;
                         }
+                        // Note any special settings like lockmass or centroiding
+                        foreach (var tweak in  new[]
+                                {
+                                    ";lockmassCorrection_True",
+                                    ";requireVendorCentroidedMS1_True",
+                                    ";requireVendorCentroidedMS2_True"
+                                })
+                        {
+                            if (subline.Contains(tweak))
+                                line += tweak;
+                        }
                         // and strip the leading boilerplate
                         line = line.Substring(PerfUtilActual.HEADERLINE_TITLE.Length).Trim();
                         if (!perfItems.ContainsKey(line))
