@@ -22,6 +22,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.IO.Pipes;
+using System.Net;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
@@ -34,6 +35,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 // Once-per-assembly initialization to perform logging with log4net.
 [assembly: log4net.Config.XmlConfigurator(ConfigFile = "SkylineLog4Net.config", Watch = true)]
@@ -81,6 +83,9 @@ namespace pwiz.Skyline
         [STAThread]
         public static void Main(string[] args = null)
         {
+            if (String.IsNullOrEmpty(Settings.Default.InstallationId)) // Each instance to have GUID
+                Settings.Default.InstallationId = Guid.NewGuid().ToString();
+
             // don't allow 64-bit Skyline to run in a 32-bit process
             if (Install.Is64Bit && !Environment.Is64BitProcess)
             {
@@ -261,6 +266,14 @@ namespace pwiz.Skyline
                 if (SkylineOffscreen)
                     FormEx.SetOffscreen(MainWindow);
 
+                ActionUtil.RunAsync(() =>
+                {
+                    try {
+                        SendAnalyticsHit(); 
+                    } catch (Exception ex) {
+                        Trace.TraceWarning("Exception sending analytics hit {0}", ex);  // Not L10N
+                    }
+                });
                 MainToolServiceName = Guid.NewGuid().ToString();
                 Application.Run(MainWindow);
                 StopToolService();
@@ -273,6 +286,39 @@ namespace pwiz.Skyline
             }
 
             MainWindow = null;
+        }
+
+        private static void SendAnalyticsHit()
+        {
+            if (!Install.Version.Equals(String.Empty) && 
+                Install.Type != Install.InstallType.developer) {
+                // ReSharper disable NonLocalizedString
+                var postData = "v=1"; // Version 
+                postData += "&t=event"; // Event hit type
+                postData += "&tid=UA-9194399-1"; // Tracking Id 
+                postData += "&cid=" + Settings.Default.InstallationId; // Anonymous Client Id
+                postData += "&ec=Instance"; // Event Category
+                postData += "&ea="+ Uri.EscapeDataString(Install.Version + "-" + (Install.Is64Bit?"64bit":"32bit")); // Event Action
+                postData += "&el=" + Install.Type; // Event Label
+                postData += "&p=" + "Instance"; // Page
+               
+                var data = Encoding.UTF8.GetBytes(postData);
+                var request = (HttpWebRequest)WebRequest.Create("http://www.google-analytics.com/collect");
+                request.Method = "POST";
+                request.ContentType = "application/x-www-form-urlencoded";
+                request.ContentLength = data.Length;
+                using (Stream stream = request.GetRequestStream())
+                {
+                    stream.Write(data, 0, data.Length);
+                }
+                var response = (HttpWebResponse)request.GetResponse();
+                var responseStream = response.GetResponseStream();
+                if (null != responseStream)
+                {
+                    new StreamReader(responseStream).ReadToEnd();
+                }
+            }
+            // ReSharper restore NonLocalizedString
         }
 
         public static void StartToolService()
