@@ -46,5 +46,17 @@ namespace SkylineNightly.Properties {
                 this["NightlyFolder"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool PerfTests {
+            get {
+                return ((bool)(this["PerfTests"]));
+            }
+            set {
+                this["PerfTests"] = value;
+            }
+        }
     }
 }
