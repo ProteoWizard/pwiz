@@ -79,7 +79,7 @@ namespace MSStatArgsCollector
         private const string FALSESTRING = "FALSE"; // Not L10N
 
         // ReSharper disable InconsistentNaming
-        private enum Args { name, normalize_to, allow_missing_peaks, feature_selection, equal_variance, fixed_argument_count }
+        private enum Args { name, normalize_to, allow_missing_peaks, feature_selection, fixed_argument_count }
         // ReSharper restore InconsistentNaming
 
 
@@ -121,7 +121,6 @@ namespace MSStatArgsCollector
                 comboBoxNormalizeTo.SelectedIndex = int.Parse(fixedArguments[(int)Args.normalize_to], CultureInfo.InvariantCulture);
                 cboxAllowMissingPeaks.Checked = TRUESTRING == fixedArguments[(int) Args.allow_missing_peaks];
                 cboxSelectHighQualityFeatures.Checked = TRUESTRING == fixedArguments[(int) Args.feature_selection];
-                cboxEqualVariance.Checked = TRUESTRING == fixedArguments[(int) Args.equal_variance];
             }
             else
             {
@@ -205,7 +204,6 @@ namespace MSStatArgsCollector
             commandLineArguments.Add(comboBoxNormalizeTo.SelectedIndex.ToString(CultureInfo.InvariantCulture));
             commandLineArguments.Add(cboxAllowMissingPeaks.Checked ? TRUESTRING : FALSESTRING);
             commandLineArguments.Add(cboxSelectHighQualityFeatures.Checked ? TRUESTRING : FALSESTRING);
-            commandLineArguments.Add(cboxEqualVariance.Checked ? TRUESTRING : FALSESTRING);
             
             // Generate constants for comparisons
             var constants = new double[ControlGroupList.Length];

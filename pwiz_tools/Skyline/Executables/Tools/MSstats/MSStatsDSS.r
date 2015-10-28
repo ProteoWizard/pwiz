@@ -93,7 +93,8 @@ runDSS <- function() {
 
 	inputmissingpeaks <- arguments[8]
 	
-	## Nick, here for new option for feature selection
+	
+	
 	## feature selection input
 	
 	optionfeatureselection <- arguments[9]

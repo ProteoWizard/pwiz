@@ -40,7 +40,6 @@
             this.ControlGroup = new System.Windows.Forms.ComboBox();
             this.labelControlGroup = new System.Windows.Forms.Label();
             this.argsLayoutPanel = new System.Windows.Forms.FlowLayoutPanel();
-            this.cboxEqualVariance = new System.Windows.Forms.CheckBox();
             this.cboxSelectHighQualityFeatures = new System.Windows.Forms.CheckBox();
             this.argsLayoutPanel.SuspendLayout();
             this.SuspendLayout();
@@ -170,27 +169,14 @@
             this.argsLayoutPanel.Controls.Add(this.ControlGroup);
             this.argsLayoutPanel.Controls.Add(this.labelComparisonGroups);
             this.argsLayoutPanel.Controls.Add(this.ComparisonGroups);
-            this.argsLayoutPanel.Controls.Add(this.cboxEqualVariance);
             this.argsLayoutPanel.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
             this.argsLayoutPanel.Location = new System.Drawing.Point(12, 155);
             this.argsLayoutPanel.Name = "argsLayoutPanel";
             this.argsLayoutPanel.Padding = new System.Windows.Forms.Padding(0, 0, 0, 10);
-            this.argsLayoutPanel.Size = new System.Drawing.Size(180, 155);
+            this.argsLayoutPanel.Size = new System.Drawing.Size(180, 132);
             this.argsLayoutPanel.TabIndex = 2;
             // 
-            // cboxEqualVariance
-            // 
-            this.cboxEqualVariance.AutoSize = true;
-            this.cboxEqualVariance.Checked = true;
-            this.cboxEqualVariance.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cboxEqualVariance.Location = new System.Drawing.Point(3, 125);
-            this.cboxEqualVariance.Name = "cboxEqualVariance";
-            this.cboxEqualVariance.Size = new System.Drawing.Size(136, 17);
-            this.cboxEqualVariance.TabIndex = 7;
-            this.cboxEqualVariance.Text = "&Assume equal variance";
-            this.cboxEqualVariance.UseVisualStyleBackColor = true;
-            // 
-            // cbxSelectHighQualityFeatures
+            // cboxSelectHighQualityFeatures
             // 
             this.cboxSelectHighQualityFeatures.AutoSize = true;
             this.cboxSelectHighQualityFeatures.Location = new System.Drawing.Point(15, 115);
@@ -249,7 +235,6 @@
         private System.Windows.Forms.ComboBox ControlGroup;
         private System.Windows.Forms.Label labelControlGroup;
         private System.Windows.Forms.FlowLayoutPanel argsLayoutPanel;
-        private System.Windows.Forms.CheckBox cboxEqualVariance;
         private System.Windows.Forms.CheckBox cboxSelectHighQualityFeatures;
     }
 }
