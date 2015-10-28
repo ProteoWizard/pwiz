@@ -2613,7 +2613,7 @@ namespace pwiz.Skyline
 
         private TransitionDocNode[] GetDefaultPrecursorTransitions(SrmDocument doc, TransitionGroup tranGroup)
         {
-            // TODO(bspratt):
+            // CONSIDER(bspratt):
             // You might want to prepoluate one or more precursor transitions, if full scan MS1 "Isotope peaks include"=="count" 
             // (in which case you'd want more than one), or Transition Settings ion types filter includes "p"
             // var transition = new Transition(tranGroup, tranGroup.PrecursorCharge, null, tranGroup.CustomMolecule);
