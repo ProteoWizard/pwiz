@@ -82,7 +82,7 @@ namespace YuvalBoss.L10N
         protected virtual bool ElementLocalized(ICSharpLiteralExpression declaration)
         {
             if (declaration.Literal.NodeType ==
-                        JetBrains.ReSharper.Psi.CSharp.Parsing.CSharpTokenType.STRING_LITERAL)
+                        JetBrains.ReSharper.Psi.CSharp.Parsing.CSharpTokenType.STRING_LITERAL_REGULAR)
             {
                 if (IsLocalizable(declaration) == false)
                     return false;
@@ -93,7 +93,7 @@ namespace YuvalBoss.L10N
                 string str = string.Empty;
                 while (found == false)
                 {
-                    string strSearch = "// Not L10N"; // Not L10N
+                    string strSearch = "// Not L10N";
                     offset = declaration.GetDocumentRange().TextRange.EndOffset + i;
                     if (strSearch.Length + offset >= declaration.GetDocumentRange().Document.GetTextLength())
                     {

@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>YuvalBoss.L10N</id>
-    <version>1.0.1.9</version>
+    <version>1.0.3.0</version>
     <title>L10N</title>
     <authors>Yuval Boss</authors>
     <owners>UW</owners>
@@ -14,7 +14,7 @@
     <copyright>Copyright 2015</copyright>
     <tags></tags>
 	<dependencies>
-      <dependency id="Wave" version="[1.0]" />
+      <dependency id="Wave" version="[3.0]" />
     </dependencies>
 <references>
       <group targetFramework=".NETFramework4.0">
