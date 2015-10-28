@@ -79,7 +79,7 @@
             // 
             this.button1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.button1.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.button1.Location = new System.Drawing.Point(459, 155);
+            this.button1.Location = new System.Drawing.Point(459, 165);
             this.button1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(100, 28);
@@ -92,7 +92,7 @@
             // 
             this.button2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.button2.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.button2.Location = new System.Drawing.Point(351, 155);
+            this.button2.Location = new System.Drawing.Point(351, 165);
             this.button2.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(100, 28);
@@ -180,7 +180,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(575, 268);
+            this.ClientSize = new System.Drawing.Size(575, 215);
             this.ControlBox = false;
             this.Controls.Add(this.includePerfTests);
             this.Controls.Add(this.button3);
@@ -198,7 +198,7 @@
             this.MaximizeBox = false;
             this.MaximumSize = new System.Drawing.Size(1586, 355);
             this.MinimizeBox = false;
-            this.MinimumSize = new System.Drawing.Size(551, 280);
+            this.MinimumSize = new System.Drawing.Size(551, 260);
             this.Name = "SkylineNightly";
             this.Text = "Skyline nightly build";
             this.ResumeLayout(false);
