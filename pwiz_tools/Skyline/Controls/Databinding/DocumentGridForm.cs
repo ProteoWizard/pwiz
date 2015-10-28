@@ -17,19 +17,39 @@
  * limitations under the License.
  */
 
+using System.ComponentModel;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls.Databinding
 {
     public partial class DocumentGridForm : DataboundGridForm
     {
+        private string _originalFormTitle;
         public DocumentGridForm(SkylineViewContext viewContext)
         {
             InitializeComponent();
+            _originalFormTitle = Text;
             BindingListSource.SetViewContext(viewContext);
+            BindingListSource.ListChanged += BindingListSourceOnListChanged;
+        }
+
+        private void BindingListSourceOnListChanged(object sender, ListChangedEventArgs listChangedEventArgs)
+        {
+            ViewInfo view = BindingListSource.ViewInfo;
+            string title;
+            if (null == view)
+            {
+                title = _originalFormTitle;
+            }
+            else
+            {
+                title = TextUtil.SpaceSeparate(_originalFormTitle + ':', view.Name);
+            }
+            Text = TabText = title;
         }
 
         public DocumentGridForm(IDocumentContainer documentContainer) 

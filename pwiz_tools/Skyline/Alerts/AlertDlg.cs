@@ -204,7 +204,8 @@ namespace pwiz.Skyline.Alerts
             {
                 Text = text,
                 DialogResult = dialogResult,
-                Margin = btnMoreInfo.Margin
+                Margin = btnMoreInfo.Margin,
+                Height = btnMoreInfo.Height,
             };
             buttonPanel.Controls.Add(button);
             var visibleButtons = VisibleButtons.ToArray();
