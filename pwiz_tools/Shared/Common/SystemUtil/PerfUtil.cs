@@ -264,11 +264,7 @@ namespace pwiz.Common.SystemUtil
                         }
                         // Note any special settings like lockmass or centroiding
                         foreach (var tweak in  new[]
-                                {
-                                    ";lockmassCorrection_True",
-                                    ";requireVendorCentroidedMS1_True",
-                                    ";requireVendorCentroidedMS2_True"
-                                })
+                            { ";lockmassCorrection_True", ";requireVendorCentroidedMS1_True", ";requireVendorCentroidedMS2_True" })  // Not L10N
                         {
                             if (subline.Contains(tweak))
                                 line += tweak;
