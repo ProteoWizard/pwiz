@@ -161,7 +161,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_PeakPicker::spectrum(size_t index, bool g
 
         case 0:
         default:
-            s = inner_->spectrum(index, getBinaryData);
+            s = inner_->spectrum(index, true); // TODO you'd think this would be "getBinaryData" instead of "true" but that breaks SpectrumListFactoryTest
             break;
     }
 
