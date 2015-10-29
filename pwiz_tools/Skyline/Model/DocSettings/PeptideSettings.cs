@@ -207,7 +207,8 @@ namespace pwiz.Skyline.Model.DocSettings
             writer.WriteElement(Modifications);
             if (Integration.IsSerializable)
                 writer.WriteElement(Integration);
-            writer.WriteElement(Quantification);
+            if (!Equals(Quantification, QuantificationSettings.DEFAULT))
+                writer.WriteElement(Quantification);
         }
 
         #endregion
