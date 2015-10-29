@@ -2181,6 +2181,9 @@
     <EmbeddedResource Include="Resources\StartPage\WizardPeptideSearchDIA.png" />
     <EmbeddedResource Include="Resources\StartPage\WizardPeptideSearchPRM.png" />
     <Content Include="Resources\Replicate.bmp" />
+    <None Include="Resources\StartPage\GroupedStudies_thumb.jpg" />
+    <None Include="Resources\StartPage\DIA_thumb.jpg" />
+    <None Include="Resources\StartPage\SmallMolecule_thumb.jpg" />
     <Content Include="SkylineProcessRunner.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

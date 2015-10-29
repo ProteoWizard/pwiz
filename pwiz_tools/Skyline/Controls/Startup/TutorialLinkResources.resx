@@ -223,4 +223,37 @@
   <data name="MethodRefine_sky" xml:space="preserve">
     <value>WormUnrefined.sky</value>
   </data>
+  <data name="GroupedStudy_zip" xml:space="preserve">
+    <value>https://skyline.gs.washington.edu/tutorials/GroupedStudies1.zip</value>
+  </data>
+  <data name="GroupedStudy_pdf" xml:space="preserve">
+    <value>https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/GroupedStudies1-3_1.pdf</value>
+  </data>
+  <data name="DIA_zip" xml:space="preserve">
+    <value>https://skyline.gs.washington.edu/tutorials/DIASmall.zip</value>
+  </data>
+  <data name="DIA_pdf" xml:space="preserve">
+    <value>https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/DIA-2_6.pdf</value>
+  </data>
+  <data name="SmallMolecule_zip" xml:space="preserve">
+    <value>https://skyline.gs.washington.edu/tutorials/SmallMolecule.zip</value>
+  </data>
+  <data name="SmallMolecule_pdf" xml:space="preserve">
+    <value>https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/SmallMolecule-3_1.pdf</value>
+  </data>
+  <data name="StartPage_getBoxPanels_Grouped_Study_Data_Processing" xml:space="preserve">
+    <value>Grouped Study Data Processing</value>
+  </data>
+  <data name="StartPage_getBoxPanels_Data_Independent_Acquisition" xml:space="preserve">
+    <value>Data Independent Acquisition</value>
+  </data>
+  <data name="StartPage_getBoxPanels_Small_Molecule_Targets" xml:space="preserve">
+    <value>Small Molecule Targets</value>
+  </data>
+  <data name="GroupedStudy_sky" xml:space="preserve">
+    <value>Heart Failure/raw/Rat_plasma.sky</value>
+  </data>
+  <data name="DIA_sky" xml:space="preserve">
+    <value>DIABlank.sky</value>
+  </data>
 </root>

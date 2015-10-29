@@ -45,7 +45,10 @@ namespace pwiz.Skyline.Controls.Startup
             advanced_peak_picking_models,
             irt_retention_time_prediction,
             collision_energy_optimization,
-            spectral_library_explorer
+            spectral_library_explorer,
+            grouped_study_data_processing,
+            data_independent_acquisition,
+            small_molecule_targets
         }
 
         public TutorialType ImportType { get; set; }

@@ -8780,4 +8780,22 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="TransitionFullScan_ValidateRes_Resolving_power_must_be_between__0__and__1__for__2__" xml:space="preserve">
     <value>Resolving power must be between {0} and {1} for {2}.</value>
   </data>
+  <data name="DIA_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\StartPage\DIA_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="GroupedStudies_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\StartPage\GroupedStudies_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="SmallMolecule_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\StartPage\SmallMolecule_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="StartPage_GroupedStudy_Description" xml:space="preserve">
+    <value>Learn how to process multi-replicate study date effectively with Skyline. You will take an initial set of targets already refined as detectable and further refine this set for evidence of differential abundance between healthy and diseased subjects a study of plasma from 14 rats. In the process you will learn to use the powerful Skyline interactive displays to quickly investigate and understand data anomalies. You will also gain experience with the Skyline Group Comparison framework introduced in Skyline version 3.1.</value>
+  </data>
+  <data name="StartPage_DIA_Description" xml:space="preserve">
+    <value>Get hands-on experience working with data independent acquisition (DIA) data, using a workflow that utilizes DIA and DDA runs acquired on the same instrument in series. Define and export a DIA isolation scheme. Build a spectral library from DDA data acquired before the DIA runs for the experiment. Choose peptides and transitions for a target set of proteins based on the spectral library. Import and analyze related DIA runs in Skyline to master a simple workflow for beginning to work with DIA.</value>
+  </data>
+  <data name="StartPage_SmallMolecule_Description" xml:space="preserve">
+    <value>Learn how to target non-proteomic small molecule ions with Skyline. You will import a small molecule transition list used in a metabolomics experiment and import 14 runs from a Waters Xevo TQS. Start learning how to apply the power of the Skyline interface for small molecule experiments.</value>
+  </data>
 </root>

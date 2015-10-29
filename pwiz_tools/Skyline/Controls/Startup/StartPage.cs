@@ -234,6 +234,18 @@ namespace pwiz.Skyline.Controls.Startup
                 },
                 new ActionBoxControl
                 {
+                    Caption = TutorialLinkResources.StartPage_getBoxPanels_Grouped_Study_Data_Processing, 
+                    Icon = Resources.GroupedStudies_thumb, 
+                    EventAction = ()=>Tutorial(
+                        ActionTutorial.TutorialType.grouped_study_data_processing, 
+                        TutorialLinkResources.GroupedStudy_zip,
+                        TutorialLinkResources.GroupedStudy_pdf,
+                        TutorialLinkResources.GroupedStudy_sky
+                        ),
+                    Description = Resources.StartPage_GroupedStudy_Description
+                },
+                new ActionBoxControl
+                {
                     Caption = Resources.StartPage_getBoxPanels_Existing___Quantitative_Experiments, 
                     Icon = Resources.ExistingQuant_thumb, 
                     EventAction = ()=>Tutorial(
@@ -246,15 +258,15 @@ namespace pwiz.Skyline.Controls.Startup
                 },
                 new ActionBoxControl
                 {
-                    Caption = Resources.StartPage_getBoxPanels_Absolute_Quantification, 
-                    Icon = Resources.AbsoluteQuant_thumb, 
+                    Caption = TutorialLinkResources.StartPage_getBoxPanels_Small_Molecule_Targets, 
+                    Icon = Resources.SmallMolecule_thumb, 
                     EventAction = ()=>Tutorial(
-                        ActionTutorial.TutorialType.absolute_quantifiaction, 
-                        TutorialLinkResources.AbsoluteQuant_zip,
-                        TutorialLinkResources.AbsoluteQuant_pdf,
+                        ActionTutorial.TutorialType.small_molecule_targets, 
+                        TutorialLinkResources.SmallMolecule_zip,
+                        TutorialLinkResources.SmallMolecule_pdf,
                         string.Empty
                         ),
-                    Description = Resources.StartPage_getBoxPanels_Get_hands_on_experience_using_Skyline_with_Excel_to_estimate_the_absolute_molecular_quantities_of_peptides_in_your_experiments__,
+                    Description = Resources.StartPage_SmallMolecule_Description
                 },
                 new ActionBoxControl
                 {
@@ -279,6 +291,30 @@ namespace pwiz.Skyline.Controls.Startup
                         TutorialLinkResources.TargetedMSMS_sky
                         ),
                     Description = Resources.StartPage_getBoxPanels_targetedmsms
+                },
+                new ActionBoxControl
+                {
+                    Caption = TutorialLinkResources.StartPage_getBoxPanels_Data_Independent_Acquisition, 
+                    Icon = Resources.DIA_thumb, 
+                    EventAction = ()=>Tutorial(
+                        ActionTutorial.TutorialType.data_independent_acquisition, 
+                        TutorialLinkResources.DIA_zip,
+                        TutorialLinkResources.DIA_pdf,
+                        TutorialLinkResources.DIA_sky
+                        ),
+                    Description = Resources.StartPage_DIA_Description
+                },
+                new ActionBoxControl
+                {
+                    Caption = Resources.StartPage_getBoxPanels_Absolute_Quantification, 
+                    Icon = Resources.AbsoluteQuant_thumb, 
+                    EventAction = ()=>Tutorial(
+                        ActionTutorial.TutorialType.absolute_quantifiaction, 
+                        TutorialLinkResources.AbsoluteQuant_zip,
+                        TutorialLinkResources.AbsoluteQuant_pdf,
+                        string.Empty
+                        ),
+                    Description = Resources.StartPage_getBoxPanels_Get_hands_on_experience_using_Skyline_with_Excel_to_estimate_the_absolute_molecular_quantities_of_peptides_in_your_experiments__,
                 },
                 new ActionBoxControl
                 {
