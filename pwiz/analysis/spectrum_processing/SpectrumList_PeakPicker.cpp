@@ -161,11 +161,11 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_PeakPicker::spectrum(size_t index, bool g
 
         case 0:
         default:
-            s = inner_->spectrum(index, true);
+            s = inner_->spectrum(index, getBinaryData);
             break;
     }
 
-    if (!msLevelsToPeakPick_.contains(s->cvParam(MS_ms_level).valueAs<int>()))
+    if (!getBinaryData || !msLevelsToPeakPick_.contains(s->cvParam(MS_ms_level).valueAs<int>()))
         return s;
 
     vector<CVParam>& cvParams = s->cvParams;
