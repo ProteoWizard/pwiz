@@ -122,10 +122,10 @@
     <value>True</value>
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="label1.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
     <value>9, 13</value>
   </data>
-  <data name="label1.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
     <value>38, 13</value>
   </data>
   <data name="label1.TabIndex" type="System.Int32, mscorlib">
@@ -144,12 +144,12 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>11</value>
+    <value>12</value>
   </data>
-  <data name="textCalculatorName.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="textCalculatorName.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 29</value>
   </data>
-  <data name="textCalculatorName.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="textCalculatorName.Size" type="System.Drawing.Size, System.Drawing">
     <value>176, 20</value>
   </data>
   <data name="textCalculatorName.TabIndex" type="System.Int32, mscorlib">
@@ -165,15 +165,15 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textCalculatorName.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>11</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="label2.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
     <value>9, 71</value>
   </data>
-  <data name="label2.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
     <value>74, 13</value>
   </data>
   <data name="label2.TabIndex" type="System.Int32, mscorlib">
@@ -192,16 +192,16 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>10</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="textDatabase.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
-  <data name="textDatabase.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="textDatabase.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 87</value>
   </data>
-  <data name="textDatabase.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="textDatabase.Size" type="System.Drawing.Size, System.Drawing">
     <value>254, 20</value>
   </data>
   <data name="textDatabase.TabIndex" type="System.Int32, mscorlib">
@@ -217,12 +217,12 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textDatabase.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>9</value>
   </data>
-  <data name="btnBrowseDb.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="btnBrowseDb.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 113</value>
   </data>
-  <data name="btnBrowseDb.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="btnBrowseDb.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
   <data name="btnBrowseDb.TabIndex" type="System.Int32, mscorlib">
@@ -241,15 +241,15 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnBrowseDb.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>8</value>
   </data>
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="label3.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="label3.Location" type="System.Drawing.Point, System.Drawing">
     <value>9, 163</value>
   </data>
-  <data name="label3.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
     <value>96, 13</value>
   </data>
   <data name="label3.TabIndex" type="System.Int32, mscorlib">
@@ -268,19 +268,19 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>7</value>
   </data>
   <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
-  <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
     <value>297, 13</value>
   </data>
-  <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
   <data name="btnOk.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
+    <value>11</value>
   </data>
   <data name="btnOk.Text" xml:space="preserve">
     <value>OK</value>
@@ -295,19 +295,19 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>6</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
-  <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
     <value>297, 43</value>
   </data>
-  <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
+    <value>12</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
     <value>Cancel</value>
@@ -322,15 +322,15 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="btnCalibrate.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
-  <data name="btnCalibrate.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="btnCalibrate.Location" type="System.Drawing.Point, System.Drawing">
     <value>285, 2</value>
   </data>
-  <data name="btnCalibrate.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="btnCalibrate.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
   <data name="btnCalibrate.TabIndex" type="System.Int32, mscorlib">
@@ -345,20 +345,23 @@
   <data name="&gt;&gt;btnCalibrate.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;btnCalibrate.Parent" xml:space="preserve">
+    <value>splitContainer1.Panel2</value>
+  </data>
   <data name="&gt;&gt;btnCalibrate.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <data name="btnAddResults.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
-  <data name="btnAddResults.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="btnAddResults.Location" type="System.Drawing.Point, System.Drawing">
     <value>297, 518</value>
   </data>
-  <data name="btnAddResults.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="btnAddResults.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
   <data name="btnAddResults.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
+    <value>10</value>
   </data>
   <data name="btnAddResults.Text" xml:space="preserve">
     <value>&amp;Add...</value>
@@ -373,15 +376,15 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnAddResults.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="label4.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="label4.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="label4.Location" type="System.Drawing.Point, System.Drawing">
     <value>-3, 15</value>
   </data>
-  <data name="label4.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="label4.Size" type="System.Drawing.Size, System.Drawing">
     <value>100, 13</value>
   </data>
   <data name="label4.TabIndex" type="System.Int32, mscorlib">
@@ -396,6 +399,9 @@
   <data name="&gt;&gt;label4.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;label4.Parent" xml:space="preserve">
+    <value>splitContainer1.Panel2</value>
+  </data>
   <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
@@ -405,14 +411,14 @@
   <data name="labelNumPeptides.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="labelNumPeptides.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="labelNumPeptides.Location" type="System.Drawing.Point, System.Drawing">
     <value>9, 523</value>
   </data>
-  <data name="labelNumPeptides.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="labelNumPeptides.Size" type="System.Drawing.Size, System.Drawing">
     <value>56, 13</value>
   </data>
   <data name="labelNumPeptides.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
+    <value>9</value>
   </data>
   <data name="labelNumPeptides.Text" xml:space="preserve">
     <value>0 peptides</value>
@@ -427,12 +433,12 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;labelNumPeptides.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
-  <data name="btnCreateDb.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="btnCreateDb.Location" type="System.Drawing.Point, System.Drawing">
     <value>93, 113</value>
   </data>
-  <data name="btnCreateDb.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="btnCreateDb.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
   <data name="btnCreateDb.TabIndex" type="System.Int32, mscorlib">
@@ -451,7 +457,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnCreateDb.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <metadata name="bindingSourceLibrary.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>197, 17</value>
@@ -462,25 +468,25 @@
   <metadata name="contextMenuAdd.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>365, 17</value>
   </metadata>
-  <data name="addResultsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="addResultsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>189, 22</value>
   </data>
   <data name="addResultsContextMenuItem.Text" xml:space="preserve">
     <value>Add &amp;Results...</value>
   </data>
-  <data name="addSpectralLibraryContextMenuItem.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="addSpectralLibraryContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>189, 22</value>
   </data>
   <data name="addSpectralLibraryContextMenuItem.Text" xml:space="preserve">
     <value>Add Spectral &amp;Library...</value>
   </data>
-  <data name="addIRTDatabaseContextMenuItem.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="addIRTDatabaseContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>189, 22</value>
   </data>
   <data name="addIRTDatabaseContextMenuItem.Text" xml:space="preserve">
     <value>Add iRT &amp;Database...</value>
   </data>
-  <data name="contextMenuAdd.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="contextMenuAdd.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 70</value>
   </data>
   <data name="&gt;&gt;contextMenuAdd.Name" xml:space="preserve">
@@ -492,10 +498,10 @@
   <data name="btnPeptides.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
-  <data name="btnPeptides.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="btnPeptides.Location" type="System.Drawing.Point, System.Drawing">
     <value>204, 2</value>
   </data>
-  <data name="btnPeptides.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="btnPeptides.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
   <data name="btnPeptides.TabIndex" type="System.Int32, mscorlib">
@@ -513,13 +519,16 @@
   <data name="&gt;&gt;btnPeptides.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;btnPeptides.Parent" xml:space="preserve">
+    <value>splitContainer1.Panel2</value>
+  </data>
   <data name="&gt;&gt;btnPeptides.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="splitContainer1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
-  <data name="splitContainer1.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="splitContainer1.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 179</value>
   </data>
   <data name="splitContainer1.Orientation" type="System.Windows.Forms.Orientation, System.Windows.Forms">
@@ -540,10 +549,10 @@
   <data name="columnStandardIrt.HeaderText" xml:space="preserve">
     <value>iRT Value</value>
   </data>
-  <data name="gridViewStandard.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="gridViewStandard.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
   </data>
-  <data name="gridViewStandard.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="gridViewStandard.Size" type="System.Drawing.Size, System.Drawing">
     <value>360, 148</value>
   </data>
   <data name="gridViewStandard.TabIndex" type="System.Int32, mscorlib">
@@ -553,7 +562,10 @@
     <value>gridViewStandard</value>
   </data>
   <data name="&gt;&gt;gridViewStandard.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;gridViewStandard.Parent" xml:space="preserve">
+    <value>splitContainer1.Panel1</value>
   </data>
   <data name="&gt;&gt;gridViewStandard.ZOrder" xml:space="preserve">
     <value>0</value>
@@ -585,10 +597,10 @@
   <data name="columnLibraryIrt.HeaderText" xml:space="preserve">
     <value>iRT Value</value>
   </data>
-  <data name="gridViewLibrary.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="gridViewLibrary.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 31</value>
   </data>
-  <data name="gridViewLibrary.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="gridViewLibrary.Size" type="System.Drawing.Size, System.Drawing">
     <value>360, 150</value>
   </data>
   <data name="gridViewLibrary.TabIndex" type="System.Int32, mscorlib">
@@ -598,7 +610,10 @@
     <value>gridViewLibrary</value>
   </data>
   <data name="&gt;&gt;gridViewLibrary.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;gridViewLibrary.Parent" xml:space="preserve">
+    <value>splitContainer1.Panel2</value>
   </data>
   <data name="&gt;&gt;gridViewLibrary.ZOrder" xml:space="preserve">
     <value>0</value>
@@ -615,14 +630,14 @@
   <data name="&gt;&gt;splitContainer1.Panel2.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name="splitContainer1.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="splitContainer1.Size" type="System.Drawing.Size, System.Drawing">
     <value>360, 333</value>
   </data>
   <data name="splitContainer1.SplitterDistance" type="System.Int32, mscorlib">
     <value>148</value>
   </data>
   <data name="splitContainer1.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
+    <value>8</value>
   </data>
   <data name="&gt;&gt;splitContainer1.Name" xml:space="preserve">
     <value>splitContainer1</value>
@@ -634,7 +649,31 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;splitContainer1.ZOrder" xml:space="preserve">
-    <value>12</value>
+    <value>13</value>
+  </data>
+  <data name="comboStandards.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="comboStandards.Location" type="System.Drawing.Point, System.Drawing">
+    <value>251, 155</value>
+  </data>
+  <data name="comboStandards.Size" type="System.Drawing.Size, System.Drawing">
+    <value>121, 21</value>
+  </data>
+  <data name="comboStandards.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="&gt;&gt;comboStandards.Name" xml:space="preserve">
+    <value>comboStandards</value>
+  </data>
+  <data name="&gt;&gt;comboStandards.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboStandards.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;comboStandards.ZOrder" xml:space="preserve">
+    <value>1</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -712,6 +751,6 @@
     <value>EditIrtCalcDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

@@ -8798,4 +8798,7 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="StartPage_SmallMolecule_Description" xml:space="preserve">
     <value>Learn how to target non-proteomic small molecule ions with Skyline. You will import a small molecule transition list used in a metabolomics experiment and import 14 runs from a Waters Xevo TQS. Start learning how to apply the power of the Skyline interface for small molecule experiments.</value>
   </data>
+  <data name="EditIrtCalcDlg_comboStandards_SelectedIndexChanged_The_list_of_standard_peptides_must_contain_only_recognized_iRT_C18_standards_to_switch_to_a_predefined_set_of_iRT_C18_standards_" xml:space="preserve">
+    <value>The list of standard peptides must contain only recognized iRT-C18 standards to switch to a predefined set of iRT-C18 standards.</value>
+  </data>
 </root>

@@ -66,6 +66,7 @@
             this.gridViewLibrary = new pwiz.Skyline.Controls.DataGridViewEx();
             this.columnLibrarySequence = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.columnLibraryIrt = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.comboStandards = new System.Windows.Forms.ComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceLibrary)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceStandard)).BeginInit();
             this.contextMenuAdd.SuspendLayout();
@@ -305,12 +306,21 @@
             resources.ApplyResources(this.columnLibraryIrt, "columnLibraryIrt");
             this.columnLibraryIrt.Name = "columnLibraryIrt";
             // 
+            // comboStandards
+            // 
+            resources.ApplyResources(this.comboStandards, "comboStandards");
+            this.comboStandards.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboStandards.FormattingEnabled = true;
+            this.comboStandards.Name = "comboStandards";
+            this.comboStandards.SelectedIndexChanged += new System.EventHandler(this.comboStandards_SelectedIndexChanged);
+            // 
             // EditIrtCalcDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.comboStandards);
             this.Controls.Add(this.btnCreateDb);
             this.Controls.Add(this.labelNumPeptides);
             this.Controls.Add(this.btnAddResults);
@@ -372,5 +382,6 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn columnLibrarySequence;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnLibraryIrt;
         private System.Windows.Forms.SplitContainer splitContainer1;
+        private System.Windows.Forms.ComboBox comboStandards;
     }
 }

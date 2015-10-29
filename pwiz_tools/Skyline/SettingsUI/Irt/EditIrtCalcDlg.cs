@@ -46,11 +46,14 @@ namespace pwiz.Skyline.SettingsUI.Irt
         //private const string STANDARD_TABLE_NAME = "standard";
         //private const string LIBRARY_TABLE_NAME = "library";
 
+        private const double IRT_TOLERANCE = 0.01;
+
         private readonly IEnumerable<RetentionScoreCalculatorSpec> _existingCalcs;
 
         public RetentionScoreCalculatorSpec Calculator { get; private set; }
 
         private DbIrtPeptide[] _originalPeptides;
+        private DbIrtPeptide[] _originalKnownPeptides;
         private readonly StandardGridViewDriver _gridViewStandardDriver;
         private readonly LibraryGridViewDriver _gridViewLibraryDriver;
 
@@ -66,13 +69,16 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             Icon = Resources.Skyline;
 
-            _gridViewStandardDriver = new StandardGridViewDriver(gridViewStandard, bindingSourceStandard,
+            _gridViewStandardDriver = new StandardGridViewDriver(this, gridViewStandard, bindingSourceStandard,
                                                                  new SortableBindingList<DbIrtPeptide>());
             _gridViewLibraryDriver = new LibraryGridViewDriver(gridViewLibrary, bindingSourceLibrary,
                                                                new SortableBindingList<DbIrtPeptide>());
             _gridViewStandardDriver.GridLibrary = gridViewLibrary;
             _gridViewStandardDriver.LibraryPeptideList = _gridViewLibraryDriver.Items;
             _gridViewLibraryDriver.StandardPeptideList = _gridViewStandardDriver.Items;
+
+            foreach (var standard in IrtStandard.ALL)
+                comboStandards.Items.Add(standard);
 
             if (calc != null)
             {
@@ -121,6 +127,15 @@ namespace pwiz.Skyline.SettingsUI.Irt
         private BindingList<DbIrtPeptide> StandardPeptideList { get { return _gridViewStandardDriver.Items; } }
 
         private BindingList<DbIrtPeptide> LibraryPeptideList { get { return _gridViewLibraryDriver.Items; } }
+
+        private IrtStandard CurrentStandard
+        {
+            get
+            {
+                return comboStandards.Items.Cast<IrtStandard>().FirstOrDefault(standard => standard.IsMatch(StandardPeptideList, IRT_TOLERANCE))
+                    ?? IrtStandard.NULL;
+            }
+        }
 
         public IEnumerable<DbIrtPeptide> StandardPeptides
         {
@@ -263,6 +278,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
                 // Clone all of the peptides to use for comparison in OkDialog
                 _originalPeptides = dbPeptides.Select(p => new DbIrtPeptide(p)).ToArray();
+                _originalKnownPeptides = _originalPeptides.Where(p => IrtStandard.AnyContains(p, IRT_TOLERANCE)).ToArray();
 
                 textDatabase.Text = path;
             }
@@ -552,11 +568,13 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         private class StandardGridViewDriver : PeptideGridViewDriver<DbIrtPeptide>
         {
-            public StandardGridViewDriver(DataGridViewEx gridView, BindingSource bindingSource,
-                                          SortableBindingList<DbIrtPeptide> items)
+            public StandardGridViewDriver(EditIrtCalcDlg parent, DataGridViewEx gridView, BindingSource bindingSource,
+                SortableBindingList<DbIrtPeptide> items)
                 : base(gridView, bindingSource, items)
             {
                 AllowNegativeTime = true;
+                GridView.CurrentCellChanged += parent.HandleStandardsChanged;
+                Items.ListChanged += parent.HandleStandardsChanged;
             }
 
             public DataGridView GridLibrary { private get; set; }
@@ -1347,6 +1365,52 @@ namespace pwiz.Skyline.SettingsUI.Irt
             public override IEnumerable<string> GetStandardPeptides(IEnumerable<string> peptides)
             {
                 return _dictStandards.Keys;
+            }
+        }
+
+        private void comboStandards_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            var current = CurrentStandard;
+            var selected = (IrtStandard) comboStandards.SelectedItem;
+
+            if (current == selected)
+            {
+                return;
+            }
+
+            if (!IrtStandard.AllStandards(StandardPeptideList, IRT_TOLERANCE))
+            {
+                comboStandards.SelectedItem = IrtStandard.NULL;
+                MessageDlg.Show(this,
+                    Resources.EditIrtCalcDlg_comboStandards_SelectedIndexChanged_The_list_of_standard_peptides_must_contain_only_recognized_iRT_C18_standards_to_switch_to_a_predefined_set_of_iRT_C18_standards_);
+                return;
+            }
+
+            if (_originalPeptides != null)
+            {
+                foreach (var original in _originalKnownPeptides.Where(peptide =>
+                    !selected.Contains(peptide, IRT_TOLERANCE) &&
+                    IrtStandard.ContainsMatch(StandardPeptides, peptide, IRT_TOLERANCE) &&
+                    !IrtStandard.ContainsMatch(LibraryPeptides, peptide, IRT_TOLERANCE)))
+                {
+                    LibraryPeptideList.Add(new DbIrtPeptide(original) {Standard = false});
+                }
+            }
+
+            LoadStandard(selected.Peptides);
+        }
+
+        private void HandleStandardsChanged(object sender, EventArgs eventArgs)
+        {
+            comboStandards.SelectedItem = CurrentStandard;
+            foreach (var standard in StandardPeptides)
+            {
+                DbIrtPeptide irtPeptide = standard;
+                foreach (var libraryPeptide in LibraryPeptides.Where(peptide => IrtStandard.Match(irtPeptide, peptide, IRT_TOLERANCE)))
+                {
+                    LibraryPeptideList.Remove(libraryPeptide);
+                    break;
+                }
             }
         }
     }

@@ -7642,6 +7642,17 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The list of standard peptides must contain only recognized iRT-C18 standards to switch to a predefined set of iRT-C18 standards..
+        /// </summary>
+        public static string EditIrtCalcDlg_comboStandards_SelectedIndexChanged_The_list_of_standard_peptides_must_contain_only_recognized_iRT_C18_standards_to_switch_to_a_predefined_set_of_iRT_C18_standards_ {
+            get {
+                return ResourceManager.GetString("EditIrtCalcDlg_comboStandards_SelectedIndexChanged_The_list_of_standard_peptides_" +
+                        "must_contain_only_recognized_iRT_C18_standards_to_switch_to_a_predefined_set_of_" +
+                        "iRT_C18_standards_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The file {0} could not be created..
         /// </summary>
         public static string EditIrtCalcDlg_CreateDatabase_The_file__0__could_not_be_created {
