@@ -50,6 +50,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         // model and thus probably isn't what you really want.  
         // Something like ImportAgilentIMSTest probably makes for a better starting point.
 
+        const int LOOPS_AVG = 0;  // Increase this to 3 for proper performance comparisons, but 0 is good for nightly (skips warmup, just runs once)
+
         private string _baseSkyFile;
         private string _skyFile;
         private string _dataFile;
@@ -58,9 +60,12 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         private int _loopcount;
 
         /// <summary>
-        /// compare various raw files and mz5 equivalents.
+        /// compare various raw files and mz5 equivalents, 
+        /// most with and without raw data centroiding with vendor algorithms.
         /// </summary>
-        public void WatersVsMz5ChromatogramPerformanceTest()
+        [TestMethod]
+        [Timeout(6000000)]  // These can take a long time
+        public void AllVsMz5_WatersChromatogramPerformanceTest()
         {
             NativeVsMz5ChromatogramPerformanceTest(
                 "PerfImportResultsWatersVsMz5.zip",
@@ -68,7 +73,9 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 "Waters\\DATA\\2013_03_13_UWash_S1_MSE_Adj_001.raw");
         }
 
-        public void AbIdaVsMz5ChromatogramPerformanceTest()
+        [TestMethod]
+        [Timeout(6000000)]  // These can take a long time
+        public void AllVsMz5_AbIdaChromatogramPerformanceTest()
         {
             NativeVsMz5ChromatogramPerformanceTest(
                 "PerfImportResultsAbIdaVsMz5.zip",
@@ -77,7 +84,9 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 true); // Also run the raw data as centroided data
         }
 
-        public void AbDiaVsMz5ChromatogramPerformanceTest()
+        [TestMethod]
+        [Timeout(6000000)]  // These can take a long time
+        public void AllVsMz5_AbDiaChromatogramPerformanceTest()
         {
             NativeVsMz5ChromatogramPerformanceTest(
                 "PerfImportResultsAbDiaVsMz5.zip",
@@ -86,7 +95,9 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 true); // Also run the raw data as centroided data
         }
 
-        public void ThermoDdaVsMz5ChromatogramPerformanceTest()
+        [TestMethod]
+        [Timeout(6000000)]  // These can take a long time
+        public void AllVsMz5_ThermoDdaVChromatogramPerformanceTest()
         {
             NativeVsMz5ChromatogramPerformanceTest(
                 "PerfImportResultsThermoDDAVsMz5.zip",
@@ -95,7 +106,9 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 true); // Also run the raw data as centroided data
         }
 
-        public void ThermoDiaVsMz5ChromatogramPerformanceTest()
+        [TestMethod]
+        [Timeout(6000000)]  // These can take a long time
+        public void AllVsMz5_ThermoDiaChromatogramPerformanceTest()
         {
             NativeVsMz5ChromatogramPerformanceTest(
                 "PerfImportResultsThermoDiaVsMz5.zip",
@@ -104,7 +117,9 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 true); // Also run the raw data as centroided data
         }
 
-        public void AgilentDiaVsMz5ChromatogramPerformanceTest()
+        [TestMethod]
+        [Timeout(6000000)]  // These can take a long time
+        public void AllVsMz5_AgilentDiaChromatogramPerformanceTest()
         {
             NativeVsMz5ChromatogramPerformanceTest(
                 "PerfImportResultsAgilentDiaVsMz5.zip",
@@ -113,7 +128,9 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 true); // Also run the raw data as centroided data
         }
 
-        public void AgilentDdaVsMz5ChromatogramPerformanceTest()
+        [TestMethod]
+        [Timeout(6000000)]  // These can take a long time
+        public void AllVsMz5_AgilentDdaChromatogramPerformanceTest()
         {
             NativeVsMz5ChromatogramPerformanceTest(
                 "PerfImportResultsAgilentDDaVsMz5.zip",
@@ -122,7 +139,9 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 true); // Also run the raw data as centroided data
         }
 
-        public void BrukerFullScanMS1filteringPerformanceTest()
+        [TestMethod]
+        [Timeout(6000000)]  // These can take a long time
+        public void AllVsMz5_BrukerFullScanMS1filteringPerformanceTest()
         {
             NativeVsMz5ChromatogramPerformanceTest(
                 "PerfImportResultsBrukerFullScanMS1filtering.zip",
@@ -131,7 +150,9 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 true); // Also run the raw data as centroided data
         }
 
-        public void BrukerFullScanMSeDataPerformanceTest()
+        [TestMethod]
+        [Timeout(6000000)]  // These can take a long time
+        public void AllVsMz5_BrukerFullScanMSeDataPerformanceTest()
         {
             NativeVsMz5ChromatogramPerformanceTest(
                 "PerfImportResultsBrukerFullScanMSeData.zip",
@@ -140,7 +161,9 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 true); // Also run the raw data as centroided data
         }
 
-        public void BrukerFullScanSWATHDataPerformanceTest()
+        [TestMethod]
+        [Timeout(6000000)]  // These can take a long time
+        public void AllVsMz5_BrukerFullScanSWATHDataPerformanceTest()
         {
             NativeVsMz5ChromatogramPerformanceTest(
                 "PerfImportResultsBrukerFullScanSWATHData.zip",
@@ -149,46 +172,15 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 true); // Also run the raw data as centroided data
         }
 
-
-        [TestMethod]
-        [Timeout(6000000)]  // These can take a long time
-        public void AllVsMz5ChromatogramPerformanceTests()
+        public void NativeVsMz5ChromatogramPerformanceTest(string zipFile, string skyFile, string rawFile, bool centroided=false)
         {
-            if (!RunPerfTests)
-                return; // PerfTests only run when the global RunPerfTests flag is set
-            _loopcount = 0;  // Increase this to 3 for proper performance comparisons, but 0 is good for nightly (skips warmup, just runs once)
-            
+            _loopcount = LOOPS_AVG;
+
             // Caller may have disabled logging, but we depend on it for data gathering.
             var saveLevel = LogManager.GetRepository().Threshold;
             LogManager.GetRepository().Threshold = LogManager.GetRepository().LevelMap["Info"];
 
             Log.AddMemoryAppender();
-            AbDiaVsMz5ChromatogramPerformanceTest();
-            AbIdaVsMz5ChromatogramPerformanceTest();
-            AgilentDiaVsMz5ChromatogramPerformanceTest();
-            AgilentDdaVsMz5ChromatogramPerformanceTest();
-            BrukerFullScanMS1filteringPerformanceTest();
-            BrukerFullScanMSeDataPerformanceTest();
-            BrukerFullScanSWATHDataPerformanceTest();
-            ThermoDiaVsMz5ChromatogramPerformanceTest();
-            ThermoDdaVsMz5ChromatogramPerformanceTest();
-            WatersVsMz5ChromatogramPerformanceTest();
-            DebugLog.Info("Done.");
-            var logs = Log.GetMemoryAppendedLogEvents();
-            var stats = PerfUtilFactory.SummarizeLogs(logs, TestFilesPersistent); // show summary, combining native per test and mz5 per test
-            var report = stats.Replace(_testFilesDir.PersistentFilesDir.Replace(':', '_'), "");
-            Console.Write(report); // Want this to appear in nightly log
-
-            var log = new Log("Summary");
-            log.Info(report);
-
-            // Restore logging level
-            LogManager.GetRepository().Threshold = saveLevel;
-
-        }
-
-        public void NativeVsMz5ChromatogramPerformanceTest(string zipFile, string skyFile, string rawFile, bool centroided=false)
-        {
             for (var loop = 0; loop < _loopcount + 1; loop++) // one extra initial loop for warmup
             {
                 // compare mz5 and raw import times
@@ -217,6 +209,18 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 }
 
             }
+            DebugLog.Info("Done.");
+            var logs = Log.GetMemoryAppendedLogEvents();
+            var stats = PerfUtilFactory.SummarizeLogs(logs, TestFilesPersistent); // show summary, combining native per test and mz5 per test
+            var report = stats.Replace(_testFilesDir.PersistentFilesDir.Replace(':', '_'), "");
+            Console.Write(report); // Want this to appear in nightly log
+
+            var log = new Log("Summary");
+            log.Info(report);
+
+            // Restore logging level
+            LogManager.GetRepository().Threshold = saveLevel;
+
         }
 
         protected override void DoTest()
