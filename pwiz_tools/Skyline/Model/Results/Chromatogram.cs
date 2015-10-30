@@ -471,18 +471,31 @@ namespace pwiz.Skyline.Model.Results
                 dataFilePathPart = dataFilePath.FilePath;
                 return dataFilePath;
             }
-            // Check the most common case where the file is in the same directory
-            // where the cache is being written.
-            // CONSIDER: Store relative paths instead?
-            string localPath = Path.Combine(Path.GetDirectoryName(cachePath) ?? string.Empty,
-                                            Path.GetFileName(dataFilePath.FilePath) ?? string.Empty);  // Resharper
-            if (!File.Exists(localPath) && !Directory.Exists(localPath))
+
+            string dataFileName = Path.GetFileName(dataFilePath.FilePath);
+            if (null != dataFileName)
             {
-                dataFilePathPart = dataFilePath.FilePath;
-                return null;
+                // Check the most common case where the file is in the same directory
+                // where the cache is being written.
+                // Also, for tests, check Program.ExtraRawFileSearchFolder
+                foreach (string folder in new[] { 
+                    Path.GetDirectoryName(cachePath), 
+                    Program.ExtraRawFileSearchFolder })
+                {
+                    if (null == folder)
+                    {
+                        continue;
+                    }
+                    var pathToCheck = Path.Combine(folder, dataFileName);
+                    if (File.Exists(pathToCheck) || Directory.Exists(pathToCheck))
+                    {
+                        dataFilePathPart = pathToCheck;
+                        return dataFilePath.SetFilePath(pathToCheck);
+                    }
+                }
             }
-            dataFilePathPart = localPath;
-            return dataFilePath.SetFilePath(localPath);
+            dataFilePathPart = dataFilePath.FilePath;
+            return null;
         }
 
         #region Implementation of IXmlSerializable

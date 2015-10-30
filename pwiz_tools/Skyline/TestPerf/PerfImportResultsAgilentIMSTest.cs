@@ -21,10 +21,11 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
+using pwiz.Skyline;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
@@ -44,7 +45,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         {
             Log.AddMemoryAppender();
 
-            TestFilesZip = "https://skyline.gs.washington.edu/perftests/PerfImportResultsAgilentIMS.zip";
+            TestFilesZip = "https://skyline.gs.washington.edu/perftests/PerfImportResultsAgilentIMSv2.zip";
             TestFilesPersistent = new[] { "19pep_1700V_pos_3May14_Legolas.d", "19pep_1700V_CE22_pos_5May14_Legolas.d" }; // list of files that we'd like to unzip alongside parent zipFile, and (re)use in place
 
             MsDataFileImpl.PerfUtilFactory.IssueDummyPerfUtils = false; // turn on performance measurement
@@ -61,16 +62,12 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         protected override void DoTest()
         {
             string skyFile = TestFilesDir.GetTestPath("Erin 19pep test subset.sky");
-
-            // Fix up paths in local copy of skyfile to use the persistent files
-            string text = File.ReadAllText(skyFile);
-            text = text.Replace(@"M:\brendanx\data\IonMobility\Agilent\FromPNNL", TestFilesDir.PersistentFilesDir);
-            File.WriteAllText(skyFile, text);
-
+            Program.ExtraRawFileSearchFolder = TestFilesDir.PersistentFilesDir; // So we don't have to reload the raw files, which have moved relative to skyd file 
             RunUI(() => SkylineWindow.OpenFile(skyFile));
 
             const int chromIndex = 1;
-            var doc0 = WaitForDocumentLoaded(240000);  // If it decides to remake chromatograms this can take awhile
+            const int waitTimeMillis = 10 * 60 * 1000;   // 10 minutes
+            var doc0 = WaitForDocumentLoaded(waitTimeMillis);  // If it decides to remake chromatograms this can take awhile
             AssertEx.IsDocumentState(doc0, null, 19, 19, 28, 607);
             RunUI(() =>
             {
@@ -106,7 +103,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 manageResults.ReimportResults();
                 manageResults.OkDialog();
             });
-            WaitForCondition(10 * 60 * 1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded); // 10 minutes
+            WaitForCondition(waitTimeMillis, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
             loadStopwatch.Stop();
 
             var doc1 = WaitForDocumentLoaded(400000);
@@ -114,7 +111,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
              
             var chroms0 = doc0.Settings.MeasuredResults.Chromatograms[chromIndex];
             var chroms1 = doc1.Settings.MeasuredResults.Chromatograms[chromIndex];
-            Assert.AreEqual(chroms0, chroms1);
+            Assert.AreEqual(StripPathInfo(chroms0), StripPathInfo(chroms1));
 
             int intensityIndex = 0;
             var results1 = doc1.Settings.MeasuredResults;
@@ -135,6 +132,22 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             DebugLog.Info("load time = {1}", loadStopwatch.ElapsedMilliseconds);
 
 
-        }  
+        }
+
+        private ChromatogramSet StripPathInfo(ChromatogramSet chromatogramSet)
+        {
+            return chromatogramSet.ChangeMSDataFileInfos(chromatogramSet.MSDataFileInfos
+                .Select(StripFilePathInfo).ToArray());
+        }
+
+        private ChromFileInfo StripFilePathInfo(ChromFileInfo chromFileInfo)
+        {
+            // Remove the everything but the filename from the FilePath, and zero out the FileModifiedTime.
+            // TODO: Figure out why it's also necessary to zero out the MaxIntensity
+            var chromCachedFile = new ChromCachedFile(new MsDataFilePath(chromFileInfo.FilePath.GetFileName()), 0,
+                new DateTime(0), chromFileInfo.RunStartTime, (float) chromFileInfo.MaxRetentionTime,
+                0 /* (float) chromFileInfo.MaxIntensity */, chromFileInfo.InstrumentInfoList);
+            return chromFileInfo.ChangeInfo(chromCachedFile);
+        }
     }
 }

@@ -19,9 +19,9 @@
 
 
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
@@ -51,11 +51,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         protected override void DoTest()
         {
             string skyFile = TestFilesDir.GetTestPath("test_measured_drift_times_perf.sky");
-
-            // Fix up paths in local copy of skyfile to use the persistent files
-            string text = File.ReadAllText(skyFile);
-            text = text.Replace(@"C:\Users\d3p347\Desktop\SkylineData_headerfixed", TestFilesDir.PersistentFilesDir);
-            File.WriteAllText(skyFile, text);
+            Program.ExtraRawFileSearchFolder = TestFilesDir.PersistentFilesDir; // So we don't have to reload the raw files, which have moved relative to skyd file 
             RunUI(() => SkylineWindow.OpenFile(skyFile));
 
             var document = WaitForDocumentLoaded(240000);  // If it decides to remake chromatograms this can take awhile

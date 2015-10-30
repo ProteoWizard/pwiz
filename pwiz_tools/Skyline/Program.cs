@@ -70,6 +70,7 @@ namespace pwiz.Skyline
         public static int UnitTestTimeoutMultiplier { get; set; }   // Set to positive multiplier for multi-process stress runs.
         public static int PauseSeconds { get; set; }                // Positive to pause when displaying dialogs for unit test, <0 to pause for mouse click
         public static IList<string> PauseForms { get; set; }        // List of forms to pause after displaying.
+        public static string ExtraRawFileSearchFolder { get; set; }
         public static List<Exception> TestExceptions { get; set; }
         public static bool DisableJoining { get; set; }
         public static bool NoAllChromatogramsGraph { get; set; }

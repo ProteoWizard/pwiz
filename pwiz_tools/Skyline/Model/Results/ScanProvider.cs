@@ -168,6 +168,14 @@ namespace pwiz.Skyline.Model.Results
             dataFilePath = Path.Combine(docParentDir, fileName);
             if (File.Exists(dataFilePath) || Directory.Exists(dataFilePath))
                 return dataFilePath;
+            if (!string.IsNullOrEmpty(Program.ExtraRawFileSearchFolder))
+            {
+                // For testing, we may keep raw files in a semi permanent location other than the testdir
+                dataFilePath = Path.Combine(Program.ExtraRawFileSearchFolder, fileName);
+                if (File.Exists(dataFilePath) || Directory.Exists(dataFilePath))
+                    return dataFilePath;
+            }
+                    
             return null;
         }
 
