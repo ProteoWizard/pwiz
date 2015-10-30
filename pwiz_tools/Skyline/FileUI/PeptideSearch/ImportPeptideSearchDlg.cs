@@ -450,8 +450,17 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             var prediction = TransitionSettings.Prediction.ChangePrecursorMassType(precursorMassType);
             Helpers.AssignIfEquals(ref prediction, TransitionSettings.Prediction);
 
-            TransitionSettings settings = new TransitionSettings(prediction, filter,
-                TransitionSettings.Libraries, TransitionSettings.Integration, TransitionSettings.Instrument, fullScan);
+            TransitionSettings settings;
+            try
+            {
+                 settings = new TransitionSettings(prediction, filter,
+                     TransitionSettings.Libraries, TransitionSettings.Integration, TransitionSettings.Instrument, fullScan);
+            }
+            catch (Exception x)
+            {
+                MessageDlg.Show(this, x.Message);
+                return false;
+            }
 
             // Only update, if anything changed
             if (!Equals(settings, TransitionSettings))
