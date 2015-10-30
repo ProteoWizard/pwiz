@@ -140,6 +140,7 @@
     <Compile Include="PauseAndContinueForm.Designer.cs">
       <DependentUpon>PauseAndContinueForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="PeakMatcherTestUtil.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ResultsUtil.cs" />
     <Compile Include="AbstractUnitTest.cs" />

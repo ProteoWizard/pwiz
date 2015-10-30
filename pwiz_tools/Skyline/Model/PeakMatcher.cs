@@ -19,6 +19,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Skyline.Controls.SeqNode;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 
@@ -33,67 +35,63 @@ namespace pwiz.Skyline.Model
         private const double SCORE_RT_WEIGHT           = 0.35;
         private const double SCORE_AREA_WEIGHT         = 0.15;
 
-        private readonly TransitionGroupDocNode _nodeTranGroup;
-        private readonly IdentityPath _groupPath;
-        private readonly TransitionGroupChromInfo _tranGroupChromInfo;
-        private readonly DateTime? _runTime;
-        
-        private readonly List<PeakMatchData> _peakMatchData;
-        private readonly PeakMatchData _origin;
-        private readonly float _timeMin, _timeMax;
-        private readonly float _shiftLeft, _shiftRight;
-
-        public PeakMatcher(SrmDocument document, PeptideDocNode nodePep, TransitionGroupDocNode nodeTranGroup,
-            IdentityPath groupPath, int resultsIndex)
+        private static void GetReferenceData(SrmDocument doc, PeptideDocNode nodePep, TransitionGroupDocNode nodeTranGroup, int resultsIndex, int? resultsFile,
+            out PeakMatchData referenceTarget, out PeakMatchData[] referenceMatchData, out DateTime? runTime)
         {
-            _nodeTranGroup = nodeTranGroup;
-            _groupPath = groupPath;
+            referenceTarget = null;
+            referenceMatchData = new PeakMatchData[0];
+            runTime = null;
 
+            var referenceMatchDataList = new List<PeakMatchData>();
+
+            var mzMatchTolerance = (float) doc.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+                
             if (!nodeTranGroup.HasResults || resultsIndex < 0 || resultsIndex >= nodeTranGroup.Results.Count)
                 return;
 
-            var listChromInfo = _nodeTranGroup.Results[resultsIndex];
-            // CONSIDER: What about multiple files and optimization steps?
-            _tranGroupChromInfo = listChromInfo[0];
-
-            var chromSet = document.Settings.MeasuredResults.Chromatograms[resultsIndex];
-            _runTime = chromSet.MSDataFileInfos[chromSet.IndexOfId(_tranGroupChromInfo.FileId)].RunStartTime;
-
-            if (_tranGroupChromInfo == null || !_tranGroupChromInfo.RetentionTime.HasValue ||
-                !_tranGroupChromInfo.StartRetentionTime.HasValue || !_tranGroupChromInfo.EndRetentionTime.HasValue)
+            var tranGroupChromInfo = nodeTranGroup.Results[resultsIndex][resultsFile ?? 0];
+            if (tranGroupChromInfo == null)
                 return;
 
-            var mzMatchTolerance = (float) document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
-
-            ChromatogramGroupInfo[] chromSetInfos;
-            if (!document.Settings.MeasuredResults.TryLoadChromatogram(chromSet, nodePep, nodeTranGroup, mzMatchTolerance, true, out chromSetInfos))
+            var chromSet = doc.Settings.MeasuredResults.Chromatograms[resultsIndex];
+            ChromatogramGroupInfo[] chromGroupInfos;
+            if (!doc.Settings.MeasuredResults.TryLoadChromatogram(chromSet, nodePep, nodeTranGroup, mzMatchTolerance, true, out chromGroupInfos))
                 return;
 
-            var chromGroupInfo = GetChromGroupInfo(chromSetInfos, chromSet.GetFileInfo(_tranGroupChromInfo.FileId).FilePath);
-            if (chromGroupInfo == null || chromGroupInfo.Times.Count() == 0)
+            var chromGroupInfo = chromGroupInfos.FirstOrDefault(info => Equals(chromSet.GetFileInfo(tranGroupChromInfo.FileId).FilePath, info.FilePath));
+            if (chromGroupInfo == null || chromGroupInfo.NumPeaks == 0 || !chromGroupInfo.Times.Any())
+                return;
+
+            runTime = chromGroupInfo.RunStartTime;
+
+            if (!tranGroupChromInfo.RetentionTime.HasValue || !tranGroupChromInfo.StartRetentionTime.HasValue || !tranGroupChromInfo.EndRetentionTime.HasValue)
                 return;
 
             int peakIndex = -1;
             foreach (var transition in chromGroupInfo.TransitionPointSets)
             {
-                peakIndex = transition.IndexOfPeak(_tranGroupChromInfo.RetentionTime.Value);
+                peakIndex = transition.IndexOfPeak(tranGroupChromInfo.RetentionTime.Value);
                 if (peakIndex != -1)
                     break;
             }
-
+                    
             // Get time information
-            _timeMin = chromGroupInfo.Times.First();
-            _timeMax = chromGroupInfo.Times.Last();
-            
+            float timeMin = chromGroupInfo.Times.First();
+            float timeMax = chromGroupInfo.Times.Last();
+
+            float totalArea = chromGroupInfo.TransitionPointSets.Sum(chromInfo => chromInfo.Peaks.Sum(peak => peak.Area));
+            for (int i = 0; i < chromGroupInfo.NumPeaks; i++)
+                referenceMatchDataList.Add(new PeakMatchData(nodeTranGroup, chromGroupInfo, mzMatchTolerance, i, totalArea));
+
             // Get ion abundance information
             var abundances = new IonAbundances();
-            foreach (var nodeTran in _nodeTranGroup.Transitions)
+            foreach (var nodeTran in nodeTranGroup.Transitions)
             {
-                var chromInfoCached = chromGroupInfo.GetTransitionInfo((float)nodeTran.Mz, mzMatchTolerance);
+                var chromInfoCached = chromGroupInfo.GetTransitionInfo((float) nodeTran.Mz, mzMatchTolerance);
                 if (chromInfoCached == null)
                     continue;
 
-                var tranChromInfo = nodeTran.Results[resultsIndex].First(r => r.FileIndex == _tranGroupChromInfo.FileIndex);
+                var tranChromInfo = nodeTran.Results[resultsIndex].First(r => r.FileIndex == tranGroupChromInfo.FileIndex);
 
                 float area;
                 if (peakIndex != -1)
@@ -102,11 +100,11 @@ namespace pwiz.Skyline.Model
                     var cachedPeak = chromInfoCached.GetPeak(peakIndex);
                     area = cachedPeak.Area;
 
-                    if (cachedPeak.RetentionTime.Equals(_tranGroupChromInfo.RetentionTime.Value))
+                    if (cachedPeak.RetentionTime.Equals(tranGroupChromInfo.RetentionTime.Value))
                     {
                         var range = cachedPeak.EndTime - cachedPeak.StartTime;
-                        _shiftLeft = (tranChromInfo.StartRetentionTime - cachedPeak.StartTime)/range;
-                        _shiftRight = (tranChromInfo.EndRetentionTime - cachedPeak.EndTime)/range;
+                        referenceMatchDataList[peakIndex].ShiftLeft = (tranChromInfo.StartRetentionTime - cachedPeak.StartTime)/range;
+                        referenceMatchDataList[peakIndex].ShiftRight = (tranChromInfo.EndRetentionTime - cachedPeak.EndTime)/range;
                     }
                 }
                 else
@@ -116,182 +114,232 @@ namespace pwiz.Skyline.Model
                 abundances.Add(nodeTran, area);
             }
 
-            // Calculate area of this peak versus area of all found peaks
-            var totalArea = chromGroupInfo.TransitionPointSets.Sum(chromInfo => chromInfo.Peaks.Sum((peak => peak.Area)));
-            var percentArea = abundances.Sum() / totalArea;
+            referenceTarget = peakIndex != -1
+                ? referenceMatchDataList[peakIndex]
+                : new PeakMatchData(abundances, abundances.Sum()/totalArea, tranGroupChromInfo.RetentionTime.Value,
+                    tranGroupChromInfo.StartRetentionTime.Value, tranGroupChromInfo.EndRetentionTime.Value, timeMin, timeMax);
 
-            _peakMatchData = new List<PeakMatchData>();
-            for (int i = 0; i < chromGroupInfo.NumPeaks; i++)
-                _peakMatchData.Add(new PeakMatchData(_nodeTranGroup, chromGroupInfo, mzMatchTolerance, i, totalArea));
-
-            _origin = peakIndex != -1
-                ? _peakMatchData[peakIndex]
-                : new PeakMatchData(abundances, percentArea, _tranGroupChromInfo.RetentionTime.Value,
-                    _tranGroupChromInfo.StartRetentionTime.Value, _tranGroupChromInfo.EndRetentionTime.Value);
-
-            // Sort peak match data by retention times
-            _peakMatchData.Sort(RT_COMPARER);
+            referenceMatchData = referenceMatchDataList.ToArray();
         }
 
-        public SrmDocument ApplyPeak(SrmDocument document, bool subsequent)
+        public static SrmDocument ApplyPeak(SrmDocument doc, PeptideTreeNode nodePepTree, TransitionGroupDocNode nodeTranGroup,
+            int resultsIndex, int? resultsFile, bool subsequent, ILongWaitBroker longWaitBroker)
         {
-            if (_origin == null)
-                return document;
+            nodeTranGroup = nodeTranGroup ?? PickTransitionGroup(doc, nodePepTree, resultsIndex);
 
-            var mzMatchTolerance = (float) document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+            PeakMatchData referenceTarget;
+            PeakMatchData[] referenceMatchData;
+            DateTime? runTime;
+            GetReferenceData(doc, nodePepTree.DocNode, nodeTranGroup, resultsIndex, resultsFile, out referenceTarget, out referenceMatchData, out runTime);
 
-            foreach (var chromSet in document.Settings.MeasuredResults.Chromatograms)
+            var chromatograms = doc.Settings.MeasuredResults.Chromatograms;
+            for (int i = 0; i < chromatograms.Count; i++)
             {
-                ChromatogramGroupInfo[] chromGroupInfos;
-                if (!document.Settings.MeasuredResults.TryLoadChromatogram(chromSet, null, _nodeTranGroup, mzMatchTolerance, true, out chromGroupInfos))
-                    continue;
-
-                foreach (var fileInfo in chromSet.MSDataFileInfos)
+                var chromSet = chromatograms[i];
+                for (int j = 0; j < chromSet.MSDataFileInfos.Count; j++)
                 {
-                    var runTime = fileInfo.RunStartTime;
-                    if (ReferenceEquals(_tranGroupChromInfo.FileId, fileInfo.FileId) ||
-                        (subsequent && _runTime.HasValue && runTime.HasValue && _runTime.Value >= runTime.Value))
+                    var fileInfo = chromSet.MSDataFileInfos[j];
+                    if ((i == resultsIndex && (!resultsFile.HasValue || resultsFile.Value == j)) ||
+                        (subsequent && runTime != null && fileInfo.RunStartTime < runTime))
                     {
                         continue;
                     }
 
-                    var chromGroupInfo = GetChromGroupInfo(chromGroupInfos, fileInfo.FilePath);
-                    if (chromGroupInfo == null)
-                        continue;
-
-                    var bestMatch = GetPeakMatch(document, chromGroupInfo);
+                    var bestMatch = GetPeakMatch(doc, chromSet, fileInfo, nodeTranGroup, referenceTarget, referenceMatchData);
                     if (bestMatch != null)
-                    {
-                        document = bestMatch.ChangePeak(document, _groupPath, chromSet.Name, fileInfo.FilePath);
-                    }
+                        doc = bestMatch.ChangePeak(doc, nodePepTree, nodeTranGroup, chromSet.Name, fileInfo.FilePath);
                 }
+                longWaitBroker.SetProgressCheckCancel(i + 1, chromatograms.Count);
             }
-            return document;
+            return doc;
         }
 
-        private PeakMatch GetPeakMatch(SrmDocument document, ChromatogramGroupInfo chromGroupInfo)
+        private static TransitionGroupDocNode PickTransitionGroup(SrmDocument doc, PeptideTreeNode nodePepTree, int resultsIndex)
         {
-            if (_origin == null || chromGroupInfo.NumPeaks == 0 || chromGroupInfo.Times.Count() == 0)
+            // Determine which transition group to use
+            var nodeTranGroups = nodePepTree.DocNode.TransitionGroups.ToArray();
+
+            if (!nodeTranGroups.Any())
                 return null;
 
-            float mzMatchTolerance = (float) document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
-            double totalArea = chromGroupInfo.TransitionPointSets.Sum(chromInfo => chromInfo.Peaks.Sum(peak => peak.Area));
+            if (nodeTranGroups.Count() == 1)
+                return nodeTranGroups.First();
+
+            var standards = doc.Settings.PeptideSettings.Modifications.InternalStandardTypes;
+            var standardList = nodeTranGroups.Where(tranGroup => standards.Contains(tranGroup.TransitionGroup.LabelType)).ToArray();
+
+            if (standardList.Count() == 1)
+                return standardList.First();
+            
+            if (standardList.Count() > 1)
+                nodeTranGroups = standardList;
+
+            // Still not sure, pick the one with the most peak area
+            TransitionGroupDocNode best = null;
+            float mzMatchTolerance = (float) doc.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+            float highestAreaSum = 0;
+            foreach (var tranGroup in nodeTranGroups)
+            {
+                ChromatogramSet chromSet = doc.Settings.MeasuredResults.Chromatograms[resultsIndex];
+                ChromatogramGroupInfo[] chromGroupInfos;
+                if (!doc.Settings.MeasuredResults.TryLoadChromatogram(chromSet, nodePepTree.DocNode, tranGroup, mzMatchTolerance, false, out chromGroupInfos))
+                    continue;
+
+                float areaSum = chromGroupInfos.Where(info => info != null && info.TransitionPointSets != null)
+                    .Sum(chromGroupInfo => chromGroupInfo.TransitionPointSets.Sum(chromInfo => chromInfo.Peaks.Sum(peak => peak.Area)));
+                if (areaSum > highestAreaSum)
+                {
+                    best = tranGroup;
+                    highestAreaSum = areaSum;
+                }
+            }
+            return best;
+        }
+
+        private static PeakMatch GetPeakMatch(SrmDocument doc, ChromatogramSet chromSet, IPathContainer fileInfo, TransitionGroupDocNode nodeTranGroup,
+            PeakMatchData referenceTarget, IEnumerable<PeakMatchData> referenceMatchData)
+        {
+            if (referenceTarget == null)
+                return new PeakMatch(0, 0);
+
+            var mzMatchTolerance = (float) doc.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+
+            ChromatogramGroupInfo[] loadInfos;
+            if (!nodeTranGroup.HasResults || !doc.Settings.MeasuredResults.TryLoadChromatogram(chromSet, null, nodeTranGroup, mzMatchTolerance, true, out loadInfos))
+                return null;
+
+            var chromGroupInfo = loadInfos.FirstOrDefault(info => Equals(info.FilePath, fileInfo.FilePath));
+            if (chromGroupInfo == null || chromGroupInfo.NumPeaks == 0 || !chromGroupInfo.Times.Any())
+                return null;
 
             var matchData = new List<PeakMatchData>();
+            double totalArea = chromGroupInfo.TransitionPointSets.Sum(chromInfo => chromInfo.Peaks.Sum(peak => peak.Area));
             for (int i = 0; i < chromGroupInfo.NumPeaks; i++)
-                matchData.Add(new PeakMatchData(_nodeTranGroup, chromGroupInfo, mzMatchTolerance, i, totalArea));
+                matchData.Add(new PeakMatchData(nodeTranGroup, chromGroupInfo, mzMatchTolerance, i, totalArea));
 
-            PeakMatchData bestMatch = matchData.First();
-            // Align all peaks in apply to data chromatograms with current chromatograms
-            var alignments = GetPeakAlignments(matchData);
-            var originAlign = alignments.FirstOrDefault(align => align.OriginPeak == _origin);
-            if (originAlign != null)
+            // TODO: Try to improve this. Align peaks in area descending order until peaks do not match
+            var alignments = new List<PeakAlignment>();
+            bool referenceAligned = false;
+            var referenceIter = referenceMatchData.OrderByDescending(d => d.PercentArea).GetEnumerator();
+            var curIter = matchData.OrderByDescending(d => d.PercentArea).GetEnumerator();
+            while (referenceIter.MoveNext() && curIter.MoveNext())
             {
-                // Origin peak aligned, just use the peak it aligned with
-                bestMatch = originAlign.AlignedPeak;
+                var alignAttempt = new PeakAlignment(referenceIter.Current, curIter.Current);
+                if (!TryInsertPeakAlignment(alignments, alignAttempt))
+                    break;
+
+                if (referenceTarget == alignAttempt.ReferencePeak)
+                {
+                    // Reference target aligned
+                    referenceAligned = true;
+                    matchData = new List<PeakMatchData> {alignAttempt.AlignedPeak};
+                    break;
+                }
             }
-            else
+
+            PeakMatch manualMatch = null;
+
+            if (!referenceAligned)
             {
                 PeakAlignment prev, next;
-                GetSurroundingAlignments(alignments, _origin, out prev, out next);
-                float curMinTime = chromGroupInfo.Times.First();
-                float curMaxTime = chromGroupInfo.Times.Last();
-                var minTime = Math.Min(curMinTime, _timeMin);
-                var maxTime = Math.Max(curMaxTime, _timeMax);
+                GetSurroundingAlignments(alignments, referenceTarget, out prev, out next);
                 if (prev != null || next != null)
                 {
-                    minTime = (prev != null) ? prev.AlignedPeak.RetentionTime : minTime;
-                    maxTime = (next != null) ? next.AlignedPeak.RetentionTime : maxTime;
-                    matchData = matchData.Where(data => minTime < data.RetentionTime && data.RetentionTime < maxTime).ToList();
-                }
+                    // At least one alignment occurred
+                    var chromGroupMinTime = chromGroupInfo.Times.First();
+                    var chromGroupMaxTime = chromGroupInfo.Times.Last();
 
-                double bestScore = double.MinValue;
-                foreach (var other in matchData)
-                {
-                    var score = _origin.GetMatchScore(other, minTime, maxTime);
-                    if (score > bestScore)
-                    {
-                        bestScore = score;
-                        bestMatch = other;
-                    }
-                }
+                    float scale = (chromGroupMaxTime - chromGroupMinTime)/(referenceTarget.MaxTime - referenceTarget.MinTime);
+                    manualMatch = MakePeakMatchBetween(scale, referenceTarget, prev, next);
+                    if (chromGroupMinTime >= manualMatch.EndTime || manualMatch.StartTime >= chromGroupMaxTime)
+                        manualMatch = null;
 
-                // If no matching peak with high enough score was found, but there is a matching
-                // peak or some peak with a low score.
-                if (bestScore < INTEGRATE_SCORE_THRESHOLD && (prev != null || next != null))
-                {
-                    float scale = (curMaxTime - curMinTime) / (_timeMax - _timeMin);
-                    var manualMatch = MakePeakMatchBetween(scale, prev, next);
-                    if (curMinTime < manualMatch.EndTime && manualMatch.StartTime < curMaxTime)
-                        return manualMatch;
+                    float curMinTime = prev == null ? chromGroupMinTime : prev.AlignedPeak.RetentionTime;
+                    float curMaxTime = next == null ? chromGroupMaxTime : next.AlignedPeak.RetentionTime;
+
+                    matchData = matchData.Where(d => curMinTime < d.RetentionTime && d.RetentionTime < curMaxTime).ToList();
                 }
             }
 
-            if (_shiftLeft == 0 && _shiftRight == 0)
+            PeakMatchData bestMatch = null;
+            double bestScore = double.MinValue;
+            foreach (var other in matchData)
+            {
+                var score = referenceTarget.GetMatchScore(other);
+                if (bestMatch == null || score > bestScore)
+                {
+                    bestScore = score;
+                    bestMatch = other;
+                }
+            }
+
+            // If no matching peak with high enough score was found, but there is a matching
+            // peak or some peak with a low score.
+            if (bestMatch == null || (!referenceAligned && bestScore < INTEGRATE_SCORE_THRESHOLD && manualMatch != null))
+                return manualMatch;
+
+            if (referenceTarget.ShiftLeft == 0 && referenceTarget.ShiftRight == 0)
                 return new PeakMatch(bestMatch.RetentionTime);
 
             var range = bestMatch.EndTime - bestMatch.StartTime;
-            var startTime = bestMatch.StartTime + (_shiftLeft*range);
-            var endTime = bestMatch.EndTime + (_shiftRight*range);
+            var startTime = bestMatch.StartTime + (referenceTarget.ShiftLeft*range);
+            var endTime = bestMatch.EndTime + (referenceTarget.ShiftRight*range);
             return startTime <= bestMatch.RetentionTime && bestMatch.RetentionTime <= endTime
                 ? new PeakMatch(startTime, endTime)
                 : new PeakMatch(bestMatch.RetentionTime); // If the shifted boundaries exclude the peak itself, don't change the boundaries
         }
 
-        private PeakMatch MakePeakMatchBetween(float scale, PeakAlignment prev, PeakAlignment next)
+        private static ChromPeak GetLargestPeak(TransitionGroupDocNode nodeTranGroup,
+            ChromatogramGroupInfo chromGroupInfo, int peakIndex, float mzMatchTolerance)
+        {
+            var largestPeak = ChromPeak.EMPTY;
+            foreach (var peak in
+                     from transitionDocNode in nodeTranGroup.Transitions
+                     select chromGroupInfo.GetTransitionInfo((float) transitionDocNode.Mz, mzMatchTolerance)
+                     into chromInfo where chromInfo != null
+                     select chromInfo.GetPeak(peakIndex))
+            {
+                if (peak.Height > largestPeak.Height)
+                    largestPeak = peak;
+            }
+            return largestPeak;
+        }
+
+        private static PeakMatch MakePeakMatchBetween(float scale, PeakMatchData referenceTarget, PeakAlignment prev, PeakAlignment next)
         {
             if (prev == null && next == null)
                 return null;
 
             float startTime, endTime;
-            var range = scale*(_origin.EndTime - _origin.StartTime);
+            var range = scale * (referenceTarget.EndTime - referenceTarget.StartTime);
             if (prev != null && next != null)
             {
-                startTime = prev.AlignedPeak.RetentionTime + scale*(_origin.StartTime - prev.OriginPeak.RetentionTime);
-                endTime = next.AlignedPeak.RetentionTime - scale*(next.OriginPeak.RetentionTime - _origin.EndTime);
+                startTime = prev.AlignedPeak.RetentionTime + scale*(referenceTarget.StartTime - prev.ReferencePeak.RetentionTime);
+                endTime = next.AlignedPeak.RetentionTime - scale*(next.ReferencePeak.RetentionTime - referenceTarget.EndTime);
             }
             else if (next != null)
             {
-                endTime = next.AlignedPeak.StartTime - scale*(next.OriginPeak.StartTime - _origin.EndTime);
+                endTime = next.AlignedPeak.StartTime - scale*(next.ReferencePeak.StartTime - referenceTarget.EndTime);
                 startTime = endTime - range;
             }
             else
             {
-                startTime = prev.AlignedPeak.EndTime + scale*(_origin.StartTime - prev.OriginPeak.EndTime);
+                startTime = prev.AlignedPeak.EndTime + scale*(referenceTarget.StartTime - prev.ReferencePeak.EndTime);
                 endTime = startTime + range;
             }
-            return new PeakMatch(startTime + (_shiftLeft*range), endTime + (_shiftRight*range));
-        }
-
-        private List<PeakAlignment> GetPeakAlignments(IEnumerable<PeakMatchData> otherMatchData)
-        {
-            // TODO: Try to improve this. Aligns peaks in area descending order until peaks do not match
-            var alignments = new List<PeakAlignment>();
-            var origin = _peakMatchData.OrderByDescending(data => data.PercentArea).GetEnumerator();
-            var other = otherMatchData.OrderByDescending(data => data.PercentArea).GetEnumerator();
-            while (origin.MoveNext() && other.MoveNext())
-            {
-                if (!TryInsertPeakAlignment(alignments, new PeakAlignment(origin.Current, other.Current)))
-                    break;
-            }
-            return alignments;
-        }
-
-        private static ChromatogramGroupInfo GetChromGroupInfo(IEnumerable<ChromatogramGroupInfo> chromSetInfos, MsDataFileUri filePath)
-        {
-            return chromSetInfos.FirstOrDefault(info => Equals(filePath, info.FilePath));
+            return new PeakMatch(startTime + (referenceTarget.ShiftLeft*range), endTime + (referenceTarget.ShiftRight*range));
         }
 
         private static bool TryInsertPeakAlignment(IList<PeakAlignment> alignList, PeakAlignment alignment)
         {
-            var origin = alignment.OriginPeak;
+            var reference = alignment.ReferencePeak;
             var other = alignment.AlignedPeak;
 
-            if (Math.Min(origin.PercentArea, other.PercentArea) < ALIGN_AREA_MIN || origin.Abundances.Dot(other.Abundances) < ALIGN_DOT_MIN)
+            if (Math.Min(reference.PercentArea, other.PercentArea) < ALIGN_AREA_MIN || reference.Abundances.Dot(other.Abundances) < ALIGN_DOT_MIN)
                 return false;
 
             PeakAlignment prev, next;
-            var insertPos = GetSurroundingAlignments(alignList, origin, out prev, out next);
+            var insertPos = GetSurroundingAlignments(alignList, reference, out prev, out next);
             if ((prev != null && other.RetentionTime < prev.AlignedPeak.RetentionTime) ||
                 (next != null && other.RetentionTime > next.AlignedPeak.RetentionTime))
             {
@@ -302,14 +350,13 @@ namespace pwiz.Skyline.Model
             return true;
         }
 
-        private static int GetSurroundingAlignments(IList<PeakAlignment> alignList, PeakMatchData origin,
-            out PeakAlignment prev, out PeakAlignment next)
+        private static int GetSurroundingAlignments(IList<PeakAlignment> alignList, PeakMatchData target, out PeakAlignment prev, out PeakAlignment next)
         {
             prev = next = null;
             if (!alignList.Any())
                 return 0;
 
-            var insertPos = alignList.Select(align => align.OriginPeak).ToList().BinarySearch(origin, RT_COMPARER);
+            var insertPos = alignList.Select(align => align.ReferencePeak).ToList().BinarySearch(target, RT_COMPARER);
             if (insertPos < 0)
                 insertPos = ~insertPos;
 
@@ -329,6 +376,18 @@ namespace pwiz.Skyline.Model
             return insertPos;
         }
 
+        private class PeakAlignment
+        {
+            public PeakMatchData ReferencePeak { get; private set; }
+            public PeakMatchData AlignedPeak { get; private set; }
+
+            public PeakAlignment(PeakMatchData referencePeak, PeakMatchData alignedPeak)
+            {
+                ReferencePeak = referencePeak;
+                AlignedPeak = alignedPeak;
+            }
+        }
+
         private class PeakMatch
         {
             private readonly float? _retentionTime;
@@ -346,14 +405,34 @@ namespace pwiz.Skyline.Model
                 EndTime = endTime;
             }
 
-            public SrmDocument ChangePeak(SrmDocument document, IdentityPath groupPath, string nameSet, MsDataFileUri filePath)
+            public SrmDocument ChangePeak(SrmDocument doc, SrmTreeNode nodePepTree, TransitionGroupDocNode nodeTranGroup, string nameSet, MsDataFileUri filePath)
             {
                 if ((_retentionTime ?? StartTime) == null)
-                    return document;
+                    return doc;
 
-                return _retentionTime.HasValue
-                    ? document.ChangePeak(groupPath, nameSet, filePath, null, _retentionTime.Value, UserSet.TRUE)
-                    : document.ChangePeak(groupPath, nameSet, filePath, null, StartTime, EndTime, UserSet.TRUE, null, false);
+                var groupPath = new IdentityPath(nodePepTree.Path, nodeTranGroup.Id);
+
+                doc = _retentionTime.HasValue
+                    ? doc.ChangePeak(groupPath, nameSet, filePath, null, _retentionTime.Value, UserSet.TRUE)
+                    : doc.ChangePeak(groupPath, nameSet, filePath, null, StartTime, EndTime, UserSet.TRUE, null, false);
+
+                var activeTransitionGroup = (TransitionGroupDocNode) doc.FindNode(groupPath);
+                if (activeTransitionGroup.RelativeRT != RelativeRT.Matching)
+                    return doc;
+
+                var activeChromInfo = SkylineWindow.FindChromInfo(doc, activeTransitionGroup, nameSet, filePath);
+                var peptide = (PeptideDocNode) doc.FindNode(groupPath.Parent);
+                // See if there are any other transition groups that should have their peak bounds set to the same value
+                foreach (var tranGroup in peptide.TransitionGroups.Where(tranGroup => tranGroup.RelativeRT == RelativeRT.Matching))
+                {
+                    var otherGroupPath = new IdentityPath(groupPath.Parent, tranGroup.TransitionGroup);
+                    if (Equals(groupPath, otherGroupPath) || SkylineWindow.FindChromInfo(doc, tranGroup, nameSet, filePath) == null)
+                        continue;
+
+                    doc = doc.ChangePeak(otherGroupPath, nameSet, filePath, null,
+                        activeChromInfo.StartRetentionTime, activeChromInfo.EndRetentionTime, UserSet.TRUE, activeChromInfo.Identified, false);
+                }
+                return doc;
             }
         }
 
@@ -364,14 +443,23 @@ namespace pwiz.Skyline.Model
             public float RetentionTime { get; private set; }
             public float StartTime { get; private set; }
             public float EndTime { get; private set; }
+            public float ShiftLeft { get; set; }
+            public float ShiftRight { get; set; }
+            public float MinTime { get; private set; }
+            public float MaxTime { get; private set; }
 
-            public PeakMatchData(IonAbundances abundances, double percentArea, float rt, float rtStart, float rtEnd)
+            public PeakMatchData(IonAbundances abundances, double percentArea,
+                float rt, float rtStart, float rtEnd, float rtMin, float rtMax)
             {
                 Abundances = abundances;
                 PercentArea = percentArea;
                 RetentionTime = rt;
                 StartTime = rtStart;
                 EndTime = rtEnd;
+                ShiftLeft = 0;
+                ShiftRight = 0;
+                MinTime = rtMin;
+                MaxTime = rtMax;
             }
 
             public PeakMatchData(TransitionGroupDocNode nodeTranGroup, ChromatogramGroupInfo chromGroupInfo,
@@ -383,47 +471,24 @@ namespace pwiz.Skyline.Model
                 RetentionTime = peak.RetentionTime;
                 StartTime = peak.StartTime;
                 EndTime = peak.EndTime;
+                ShiftLeft = 0;
+                ShiftRight = 0;
+                MinTime = chromGroupInfo.Times.First();
+                MaxTime = chromGroupInfo.Times.Last();
             }
 
-            public double GetMatchScore(PeakMatchData other, float timeMin, float timeMax)
+            public double GetMatchScore(PeakMatchData other)
             {
+                var timeMin = Math.Min(MinTime, other.MinTime);
+                var timeMax = Math.Max(MaxTime, other.MaxTime);
                 return SCORE_DOT_WEIGHT * Abundances.Dot(other.Abundances) +
                        SCORE_RT_WEIGHT * (1 - Math.Abs((RetentionTime - timeMin) - (other.RetentionTime - timeMin)) / (timeMax - timeMin)) +
                        SCORE_AREA_WEIGHT * (1 - Math.Abs(PercentArea - other.PercentArea));
-            }
-
-            private static ChromPeak GetLargestPeak(TransitionGroupDocNode nodeTranGroup,
-                ChromatogramGroupInfo chromGroupInfo, int peakIndex, float mzMatchTolerance)
-            {
-                ChromPeak largestPeak = ChromPeak.EMPTY;
-                foreach (TransitionDocNode transitionDocNode in nodeTranGroup.Transitions)
-                {
-                    ChromatogramInfo chromInfo = chromGroupInfo.GetTransitionInfo((float)transitionDocNode.Mz, mzMatchTolerance);
-                    if (chromInfo == null)
-                        continue;
-
-                    var peak = chromInfo.GetPeak(peakIndex);
-                    if (peak.Height > largestPeak.Height)
-                        largestPeak = peak;
-                }
-                return largestPeak;
             }
         }
 
         private static readonly Comparer<PeakMatchData> RT_COMPARER =
             Comparer<PeakMatchData>.Create((x, y) => x.RetentionTime.CompareTo(y.RetentionTime));
-
-        private class PeakAlignment
-        {
-            public PeakMatchData OriginPeak { get; private set; }
-            public PeakMatchData AlignedPeak { get; private set; }
-            
-            public PeakAlignment(PeakMatchData originPeak, PeakMatchData alignedPeak)
-            {
-                OriginPeak = originPeak;
-                AlignedPeak = alignedPeak;
-            }
-        }
 
         private class IonAbundances
         {
@@ -437,7 +502,7 @@ namespace pwiz.Skyline.Model
             public IonAbundances(TransitionGroupDocNode nodeTranGroup, ChromatogramGroupInfo chromGroupInfo,
                 float mzMatchTolerance, int peakIndex) : this()
             {
-                foreach (TransitionDocNode nodeTran in nodeTranGroup.Children)
+                foreach (var nodeTran in nodeTranGroup.Transitions)
                 {
                     var chromInfoCached = chromGroupInfo.GetTransitionInfo((float) nodeTran.Mz, mzMatchTolerance);
                     if (chromInfoCached == null)
@@ -449,7 +514,9 @@ namespace pwiz.Skyline.Model
 
             public void Add(TransitionDocNode nodeTran, float abundance)
             {
-                _abundances[nodeTran.FragmentIonName] = abundance;
+                string ion = nodeTran.FragmentIonName;
+                float current = !_abundances.ContainsKey(ion) ? 0 : _abundances[ion];
+                _abundances[ion] = current + abundance;
             }
 
             public double Sum()

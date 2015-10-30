@@ -2265,8 +2265,6 @@ namespace pwiz.Skyline.Model
                 startMin = Math.Min(startMin, peakNew.StartTime);
                 endMax = Math.Max(endMax, peakNew.EndTime);
             }
-            // Overlap threshold is 50% of the max peak extents
-            double overlapThreshold = (endMax - startMin)/2;
             // Update all transitions with the new information
             var listChildrenNew = new List<DocNode>();
             foreach (TransitionDocNode nodeTran in Children)
@@ -2288,26 +2286,6 @@ namespace pwiz.Skyline.Model
                         int step = i - numSteps;
 
                         ChromPeak peakNew = chromInfo.GetPeak(indexPeakBest);
-                        // If the peak is empty, but the old peak has sufficient overlap with
-                        // the peaks being added, then keep it.
-                        if (peakNew.IsEmpty || peakNew.IsForcedIntegration)
-                        {
-                            var tranInfoList = nodeTran.Results[indexSet];
-                            if (tranInfoList != null)
-                            {
-                                int iTran = tranInfoList.IndexOf(info =>
-                                    ReferenceEquals(info.FileId, fileId) && info.OptimizationStep == step);
-                                if (iTran != -1)
-                                {
-                                    var tranInfoOld = tranInfoList[iTran];
-                                    if (Math.Min(tranInfoOld.EndRetentionTime, endMax) -
-                                        Math.Max(tranInfoOld.StartRetentionTime, startMin) > overlapThreshold)
-                                    {
-                                        continue;
-                                    }
-                                }
-                            }
-                        }
                         nodeTranNew = (TransitionDocNode) nodeTranNew.ChangePeak(
                                                               indexSet, fileId, step, peakNew, ratioCount, userSet);
                     }

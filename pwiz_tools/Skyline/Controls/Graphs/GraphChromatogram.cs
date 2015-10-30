@@ -237,6 +237,8 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        public int? SelectedFileIndex { get { return comboFiles.SelectedItem != null ? comboFiles.SelectedIndex : (int?) null; } }
+
         [Browsable(true)]
         public event EventHandler<PickedPeakEventArgs> PickedPeak;
 

@@ -25,6 +25,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
+using NHibernate.Util;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
@@ -1279,21 +1280,22 @@ namespace pwiz.Skyline
                 }
                 else if ((selectedTreeNode is TransitionTreeNode && displayType == DisplayTypeChrom.all) ||
                         (selectedTreeNode is TransitionGroupTreeNode) ||
-                        (selectedTreeNode is PeptideTreeNode && ((PeptideTreeNode)selectedTreeNode).DocNode.Children.Count == 1))
+                        (selectedTreeNode is PeptideTreeNode && ((PeptideTreeNode)selectedTreeNode).DocNode.Children.Any()))
                 {
-                    var nodeGroupTree = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>();
-                    var nodeGroup = nodeGroupTree != null
-                        ? nodeGroupTree.DocNode
-                        : SequenceTree.GetNodeOfType<PeptideTreeNode>().DocNode.TransitionGroups.First();
+                    menuStrip.Items.Insert(iInsert++, applyPeakAllGraphMenuItem);
+                    menuStrip.Items.Insert(iInsert++, applyPeakSubsequentGraphMenuItem);
 
-                    if (HasPeak(SelectedResultsIndex, nodeGroup))
+                    var nodeGroupTree = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>();
+                    bool hasPeak = nodeGroupTree != null
+                        ? HasPeak(SelectedResultsIndex, nodeGroupTree.DocNode)
+                        : SequenceTree.GetNodeOfType<PeptideTreeNode>().DocNode.TransitionGroups.Any(tranGroup => HasPeak(SelectedResultsIndex, tranGroup));
+
+                    if (hasPeak)
                     {
-                        menuStrip.Items.Insert(iInsert++, applyPeakAllGraphMenuItem);
-                        menuStrip.Items.Insert(iInsert++, applyPeakSubsequentGraphMenuItem);
                         removePeakGraphMenuItem.DropDownItems.Clear();
                         menuStrip.Items.Insert(iInsert++, removePeakGraphMenuItem);
-                        menuStrip.Items.Insert(iInsert++, toolStripSeparator33);
                     }
+                    menuStrip.Items.Insert(iInsert++, toolStripSeparator33);
                 }
             }
             legendChromContextMenuItem.Checked = set.ShowChromatogramLegend;
@@ -1698,29 +1700,28 @@ namespace pwiz.Skyline
 
         public void ApplyPeak(bool subsequent)
         {
-            PeptideDocNode nodePep;
-            TransitionGroupDocNode nodeTranGroup;
-            IdentityPath groupPath;
-            var selectedTreeNode = SelectedNode as PeptideTreeNode;
-            if (selectedTreeNode != null)
-            {
-                nodePep = selectedTreeNode.DocNode;
-                nodeTranGroup = nodePep.TransitionGroups.First(g => g.Results[SelectedResultsIndex] != null);
-                groupPath = new IdentityPath(selectedTreeNode.Path, nodeTranGroup.Id);
-            }
-            else
-            {
-                var nodeGroupTree = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>();
-                nodePep = nodeGroupTree.PepNode;
-                nodeTranGroup = nodeGroupTree.DocNode;
-                groupPath = nodeGroupTree.Path;
-            }
+            var nodePepTree = SequenceTree.GetNodeOfType<PeptideTreeNode>();
+            var nodeTranGroupTree = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>();
+            var nodeTranGroup = nodeTranGroupTree != null ? nodeTranGroupTree.DocNode : null;
 
-            var matcher = new PeakMatcher(Document, nodePep, nodeTranGroup, groupPath, SelectedResultsIndex);
-            var matchedDoc = matcher.ApplyPeak(Document, subsequent);
-            if (!ReferenceEquals(Document, matchedDoc))
+            using (var longWait = new LongWaitDlg(this) { Text = Resources.SkylineWindow_ApplyPeak_Applying_Peak })
             {
-                ModifyDocument(Resources.SkylineWindow_PickPeakInChromatograms_Apply_picked_peak, doc => matchedDoc);
+                SrmDocument doc = null;
+                try
+                {
+                    var resultsIndex = SelectedResultsIndex;
+                    var resultsFile = _listGraphChrom[resultsIndex].SelectedFileIndex;
+                    longWait.PerformWork(this, 800, monitor => doc = PeakMatcher.ApplyPeak(Document, nodePepTree, nodeTranGroup, resultsIndex, resultsFile, subsequent, monitor));
+                }
+                catch (Exception x)
+                {
+                    MessageDlg.ShowWithException(this, TextUtil.LineSeparate(Resources.SkylineWindow_ApplyPeak_Failed_to_apply_peak_, x.Message), x);
+                }
+
+                if (!longWait.IsCanceled && doc != null && !ReferenceEquals(doc, Document))
+                {
+                    ModifyDocument(Resources.SkylineWindow_PickPeakInChromatograms_Apply_picked_peak, document => doc);
+                }
             }
         }
 
@@ -1731,21 +1732,19 @@ namespace pwiz.Skyline
                 return;
 
             var nodeGroupTree = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>();
-            TransitionGroupDocNode nodeGroup;
-            IdentityPath pathGroup;
+            var nodeGroups = new List<Tuple<TransitionGroupDocNode, IdentityPath>>();
+            var nodePepTree = SelectedNode as PeptideTreeNode;
             if (nodeGroupTree != null)
             {
-                nodeGroup = nodeGroupTree.DocNode;
-                pathGroup = nodeGroupTree.Path;
+                nodeGroups.Add(new Tuple<TransitionGroupDocNode, IdentityPath>(nodeGroupTree.DocNode, nodeGroupTree.Path));
             }
             else
             {
-                var nodePepTree = SelectedNode as PeptideTreeNode;
-                Assume.IsTrue(nodePepTree != null && nodePepTree.Nodes.Count == 1);  // menu item incorrectly enabled
-                if (nodePepTree == null || nodePepTree.Nodes.Count != 1)
+                Assume.IsTrue(nodePepTree != null && nodePepTree.Nodes.Any());  // menu item incorrectly enabled
+                if (nodePepTree == null || !nodePepTree.Nodes.Any())
                     return;
-                nodeGroup = (TransitionGroupDocNode)nodePepTree.DocNode.Children[0];
-                pathGroup = new IdentityPath(nodePepTree.Path, nodeGroup.Id);
+                nodeGroups.AddRange(from TransitionGroupDocNode tranGroup in nodePepTree.DocNode.Children
+                                    select new Tuple<TransitionGroupDocNode, IdentityPath>(tranGroup, new IdentityPath(nodePepTree.Path, tranGroup.Id)));
             }
 
             TransitionDocNode nodeTran = null;
@@ -1758,39 +1757,52 @@ namespace pwiz.Skyline
                 }
             }
 
-            RemovePeak(pathGroup, nodeGroup, nodeTran);
+            if (nodeGroups.Count == 1)
+            {
+                var nodeGroup = nodeGroups.First();
+                RemovePeak(nodeGroup.Item2, nodeGroup.Item1, nodeTran);
+            }
+            else
+            {
+// ReSharper disable once PossibleNullReferenceException
+                ModifyDocument(string.Format(Resources.SkylineWindow_removePeakContextMenuItem_Click_Remove_all_peaks_from__0_, nodePepTree.DocNode.ModifiedSequenceDisplay),
+                    document => nodeGroups.Aggregate(Document, (doc, nodeGroup) => RemovePeakInternal(doc, SelectedResultsIndex, nodeGroup.Item2, nodeGroup.Item1, nodeTran)));
+            }
         }
 
-        public void RemovePeak(IdentityPath groupPath,
+        public void RemovePeak(IdentityPath groupPath, TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran)
+        {
+            string message = nodeTran == null
+                ? string.Format(Resources.SkylineWindow_RemovePeak_Remove_all_peaks_from__0__, ChromGraphItem.GetTitle(nodeGroup))
+                : string.Format(Resources.SkylineWindow_RemovePeak_Remove_peak_from__0__, ChromGraphItem.GetTitle(nodeTran));
+
+            ModifyDocument(message, doc => RemovePeakInternal(doc, SelectedResultsIndex, groupPath, nodeGroup, nodeTran));
+        }
+
+        private SrmDocument RemovePeakInternal(SrmDocument document, int resultsIndex, IdentityPath groupPath,
             TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran)
         {
-            string message;
             ChromInfo chromInfo;
             Transition transition;
 
-            int iResults = SelectedResultsIndex;
             if (nodeTran == null)
             {
-                message = string.Format(Resources.SkylineWindow_RemovePeak_Remove_all_peaks_from__0__, ChromGraphItem.GetTitle(nodeGroup));
-                chromInfo = GetTransitionGroupChromInfo(nodeGroup, iResults);
+                chromInfo = GetTransitionGroupChromInfo(nodeGroup, resultsIndex);
                 transition = null;
             }
             else
             {
-                message = string.Format(Resources.SkylineWindow_RemovePeak_Remove_peak_from__0__, ChromGraphItem.GetTitle(nodeTran));
-                chromInfo = GetTransitionChromInfo(nodeTran, iResults);
+                chromInfo = GetTransitionChromInfo(nodeTran, resultsIndex);
                 transition = nodeTran.Transition;
             }
             if (chromInfo == null)
-                return;
+                return document;
 
             MsDataFileUri filePath;
-            string name = GetGraphChromStrings(iResults, chromInfo.FileId, out filePath);
-            if (name == null)
-                return;
-
-            ModifyDocument(message,
-                doc => doc.ChangePeak(groupPath, name, filePath, transition, 0, 0, UserSet.TRUE, PeakIdentification.FALSE, false));
+            string name = GetGraphChromStrings(resultsIndex, chromInfo.FileId, out filePath);
+            return name == null
+                ? document
+                : document.ChangePeak(groupPath, name, filePath, transition, 0, 0, UserSet.TRUE, PeakIdentification.FALSE, false);
         }
 
         private static TransitionGroupChromInfo GetTransitionGroupChromInfo(TransitionGroupDocNode nodeGroup, int iResults)
@@ -2268,7 +2280,7 @@ namespace pwiz.Skyline
         /// <summary>
         /// Finds the TransitionGroupChromInfo that matches the specified ChromatogramSet name and file path.
         /// </summary>
-        private static TransitionGroupChromInfo FindChromInfo(SrmDocument document,
+        public static TransitionGroupChromInfo FindChromInfo(SrmDocument document,
             TransitionGroupDocNode transitionGroupDocNode, string nameChromatogramSet, MsDataFileUri filePath)
         {
             ChromatogramSet chromatogramSet;

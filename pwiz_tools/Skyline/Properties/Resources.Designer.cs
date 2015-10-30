@@ -20547,6 +20547,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Applying Peak.
+        /// </summary>
+        public static string SkylineWindow_ApplyPeak_Applying_Peak {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ApplyPeak_Applying_Peak", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to apply peak..
+        /// </summary>
+        public static string SkylineWindow_ApplyPeak_Failed_to_apply_peak_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ApplyPeak_Failed_to_apply_peak_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No results found for the precursor {0} in the file {1}..
         /// </summary>
         public static string SkylineWindow_ApplyPeak_No_results_found_for_the_precursor__0__in_the_file__1__ {
@@ -21892,6 +21910,15 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_RemovePeak_Remove_peak_from__0__ {
             get {
                 return ResourceManager.GetString("SkylineWindow_RemovePeak_Remove_peak_from__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove all peaks from {0}.
+        /// </summary>
+        public static string SkylineWindow_removePeakContextMenuItem_Click_Remove_all_peaks_from__0_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_removePeakContextMenuItem_Click_Remove_all_peaks_from__0_", resourceCulture);
             }
         }
         

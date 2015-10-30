@@ -8801,4 +8801,13 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="EditIrtCalcDlg_comboStandards_SelectedIndexChanged_The_list_of_standard_peptides_must_contain_only_recognized_iRT_C18_standards_to_switch_to_a_predefined_set_of_iRT_C18_standards_" xml:space="preserve">
     <value>The list of standard peptides must contain only recognized iRT-C18 standards to switch to a predefined set of iRT-C18 standards.</value>
   </data>
+  <data name="SkylineWindow_ApplyPeak_Applying_Peak" xml:space="preserve">
+    <value>Applying Peak</value>
+  </data>
+  <data name="SkylineWindow_ApplyPeak_Failed_to_apply_peak_" xml:space="preserve">
+    <value>Failed to apply peak.</value>
+  </data>
+  <data name="SkylineWindow_removePeakContextMenuItem_Click_Remove_all_peaks_from__0_" xml:space="preserve">
+    <value>Remove all peaks from {0}</value>
+  </data>
 </root>

@@ -355,6 +355,10 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ShowPeakAreaReplicateComparison();
                 SkylineWindow.ShowGraphRetentionTime(true);
             });
+
+            if (!IsPauseForScreenShots)
+                TestApplyToAll();
+
             PauseForScreenShot<GraphSummary.RTGraphView>("Main window with peaks and retention times showing", 25);
             CheckReportCompatibility.CheckAll(SkylineWindow.Document);
             RunUI(SkylineWindow.EditDelete);
@@ -585,6 +589,38 @@ namespace pwiz.SkylineTestTutorial
             dataGridView.BeginEdit(true);
             dataGridView.CurrentCell.Value = value;
             dataGridView.EndEdit();
+        }
+
+        private static void TestApplyToAll()
+        {
+            RunUI(() =>
+            {
+                PeakMatcherTestUtil.SelectAndApplyPeak("ESDTSYVSLK", 568.7817, "A_01", false, 20.2587);
+                PeakMatcherTestUtil.VerifyPeaks(MakeVerificationDictionary(20.24220, 20.25878, 20.09352, 20.09353));
+            });
+            RunUI(() =>
+            {
+                PeakMatcherTestUtil.SelectAndApplyPeak("ESDTSYVSLK", 564.7746, "A_02", false, 21.4320);
+                PeakMatcherTestUtil.VerifyPeaks(MakeVerificationDictionary(21.49805, 21.43202, 21.26673, 21.3659));
+            });
+            RunUI(() =>
+            {
+                PeakMatcherTestUtil.SelectAndApplyPeak("ESDTSYVSLK", 568.7817, "C_03", false, 18.0611);
+                PeakMatcherTestUtil.VerifyPeaks(MakeVerificationDictionary(18.12708, 18.12713, 18.06105, 18.06107));
+            });
+
+            // For each test, a peak was picked and applied - undo two actions per test
+            for (int i = 0; i < 2 * 3; i++)
+                RunUI(() => SkylineWindow.Undo());
+        }
+
+        private static Dictionary<string, double> MakeVerificationDictionary(params double[] expected)
+        {
+            Assert.AreEqual(4, expected.Length);
+            return new Dictionary<string, double>
+            {
+                {"A_01", expected[0]}, {"A_02", expected[1]}, {"C_03", expected[2]}, {"C_04", expected[3]}
+            };
         }
     }
 }
