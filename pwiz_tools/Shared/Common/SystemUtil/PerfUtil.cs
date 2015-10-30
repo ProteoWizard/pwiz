@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 namespace pwiz.Common.SystemUtil
@@ -193,7 +194,7 @@ namespace pwiz.Common.SystemUtil
                 {
                     key = key.Substring(3);
                 }
-                string info = String.Format(CSVLINE_FORMAT, key,
+                string info = string.Format(CultureInfo.InvariantCulture, CSVLINE_FORMAT, key,
                     (double)(t.Value.Sum() - leaftime) / TimeSpan.TicksPerMillisecond,
                     (t.Value.Sum()!=0) ? 100.0 * (double)(t.Value.Sum() - leaftime) / t.Value.Sum() : 100.0,
                     t.Value.Count(),
@@ -283,7 +284,7 @@ namespace pwiz.Common.SystemUtil
                         var columns = line.Split(',');
                         double duration;
                         if ((columns.Count() == PerfUtilActual.CSVLINE_FORMAT.Split(',').Count()) && // looks like one of ours
-                            Double.TryParse(columns[durationColumn],out duration))
+                            Double.TryParse(columns[durationColumn], NumberStyles.Any, CultureInfo.InvariantCulture, out duration))
                         {
                             string item = columns[nameColumn]; // function name
                             if (curPerfItem.itemStats.ContainsKey(item))
@@ -311,7 +312,7 @@ namespace pwiz.Common.SystemUtil
                     }
                     result += perfItem.Key;
                     foreach (var pair in perfItem.Value.itemStats)
-                        result += ("," + pair.Value.Sum()/perfItem.Value.ReplicateCount); // Not L10N
+                        result += string.Format(CultureInfo.InvariantCulture, ",{0}", pair.Value.Sum() / perfItem.Value.ReplicateCount); // Not L10N
                     result += "\r\n"; // Not L10N
                 }
             }
