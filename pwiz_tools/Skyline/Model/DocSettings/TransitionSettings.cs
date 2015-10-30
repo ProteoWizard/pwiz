@@ -2175,7 +2175,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 if (typeProp != FullScanMassAnalyzerType.centroided)
                     im.ProductResMz = mzProp;
                 else
-                    im.PrecursorResMz = null;
+                    im.ProductResMz = null;
                 // Make sure the change results in a valid object, or an exception
                 // will be thrown.
                 if (im.AcquisitionMethod == FullScanAcquisitionMethod.None)
