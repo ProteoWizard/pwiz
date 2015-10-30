@@ -109,6 +109,15 @@ namespace pwiz.Skyline.Model.Results
             _filter = new SpectrumFilter(_document, FileInfo.FilePath, new DataFileInstrumentInfo(dataFile),
                 _retentionTimePredictor, firstPass);
 
+            if (!_isSrm && (_filter.EnabledMs || _filter.EnabledMsMs))
+            {
+                // Full-scan filtering should always match a single precursor
+                // m/z value to a single precursor node in the document tree,
+                // because that is the way the filters are constructed in the
+                // first place.
+                _isSingleMzMatch = true;
+            }
+
             // Get data object used to graph all of the chromatograms.
             if (_loader.HasUI)
                 _allChromData = LoadingStatus.Transitions;
@@ -253,12 +262,6 @@ namespace pwiz.Skyline.Model.Results
                 {
                     var dataSpectrum = _spectra.CurrentSpectrum;
                     var spectra = _spectra.CurrentSpectra;
-
-                    // Full-scan filtering should always match a single precursor
-                    // m/z value to a single precursor node in the document tree,
-                    // because that is the way the filters are constructed in the
-                    // first place.
-                    _isSingleMzMatch = true;
 
                     float rt = _spectra.CurrentTime;
                     if (_allChromData != null)

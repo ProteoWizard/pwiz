@@ -790,7 +790,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
 
                 var regression = ResidualsRegression;
-                if (regression == null)
+                if (regression == null || regression.Conversion == null)
                     return;
 
                 graphPane.YAxis.Title.Text = ResidualsLabel;
