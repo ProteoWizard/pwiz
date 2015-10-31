@@ -174,6 +174,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         public void NativeVsMz5ChromatogramPerformanceTest(string zipFile, string skyFile, string rawFile, bool centroided=false)
         {
+            if (!RunPerfTests)
+                return; // PerfTests only run when the global RunPerfTests flag is set
             _loopcount = LOOPS_AVG;
 
             // Caller may have disabled logging, but we depend on it for data gathering.
