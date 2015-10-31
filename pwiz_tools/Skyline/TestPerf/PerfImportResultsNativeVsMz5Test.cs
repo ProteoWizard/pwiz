@@ -24,6 +24,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using log4net;
+using log4net.Core;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
@@ -172,6 +173,23 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 true); // Also run the raw data as centroided data
         }
 
+        private class LogInfoLevel : IDisposable
+        {
+            private readonly Level _saveLevel;
+
+            public LogInfoLevel()
+            {
+                _saveLevel = LogManager.GetRepository().Threshold;
+                LogManager.GetRepository().Threshold = LogManager.GetRepository().LevelMap["Info"];
+            }
+
+            public void Dispose()
+            {
+                // Restore logging level
+                LogManager.GetRepository().Threshold = _saveLevel;
+            }
+        }
+
         public void NativeVsMz5ChromatogramPerformanceTest(string zipFile, string skyFile, string rawFile, bool centroided=false)
         {
             if (!RunPerfTests)
@@ -179,50 +197,46 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             _loopcount = LOOPS_AVG;
 
             // Caller may have disabled logging, but we depend on it for data gathering.
-            var saveLevel = LogManager.GetRepository().Threshold;
-            LogManager.GetRepository().Threshold = LogManager.GetRepository().LevelMap["Info"];
-
-            Log.AddMemoryAppender();
-            for (var loop = 0; loop < _loopcount + 1; loop++) // one extra initial loop for warmup
+            using (new LogInfoLevel())
             {
-                // compare mz5 and raw import times
-                TestFilesZip = "https://skyline.gs.washington.edu/perftests/" + zipFile;
-                var mz5File = Path.ChangeExtension(rawFile, "mz5");
-                TestFilesPersistent = new[] { rawFile, mz5File }; // list of files that we'd like to unzip alongside parent zipFile, and (re)use in place
-                _testFilesDir = new TestFilesDir(TestContext, TestFilesZip, null, TestFilesPersistent);
-                _baseSkyFile = _testFilesDir.GetTestPath(skyFile);
-                string nativeResults = _testFilesDir.GetTestPath(rawFile);
-                var rawfiles = new List<string>();
-                var mz5Results = Path.ChangeExtension(nativeResults, "mz5");
-                if (centroided)
-                    rawfiles.Add(nativeResults); // First time through is centroided
-                rawfiles.Add(mz5Results);  // Then mz5
-                rawfiles.Add(nativeResults); // Then normal
-                MsDataFileImpl.PerfUtilFactory.IssueDummyPerfUtils = (loop == 0) && (_loopcount > 0); // turn on performance measurement after warmup loop
-                var centroidedThisPass = centroided;
-                var type = 0;
-                foreach (var resultspath in rawfiles)
+                Log.AddMemoryAppender();
+                for (var loop = 0; loop < _loopcount + 1; loop++) // one extra initial loop for warmup
                 {
-                    _skyFile = _baseSkyFile.Replace(".sky", "_" + loop + "_" + type++ + ".sky");
-                    _dataFile = resultspath;
-                    _centroided = centroidedThisPass;
-                    RunFunctionalTest();
-                    centroidedThisPass = false;
+                    // compare mz5 and raw import times
+                    TestFilesZip = "https://skyline.gs.washington.edu/perftests/" + zipFile;
+                    var mz5File = Path.ChangeExtension(rawFile, "mz5");
+                    TestFilesPersistent = new[] { rawFile, mz5File }; // list of files that we'd like to unzip alongside parent zipFile, and (re)use in place
+                    _testFilesDir = new TestFilesDir(TestContext, TestFilesZip, null, TestFilesPersistent);
+                    _baseSkyFile = _testFilesDir.GetTestPath(skyFile);
+                    string nativeResults = _testFilesDir.GetTestPath(rawFile);
+                    var rawfiles = new List<string>();
+                    var mz5Results = Path.ChangeExtension(nativeResults, "mz5");
+                    if (centroided)
+                        rawfiles.Add(nativeResults); // First time through is centroided
+                    rawfiles.Add(mz5Results);  // Then mz5
+                    rawfiles.Add(nativeResults); // Then normal
+                    MsDataFileImpl.PerfUtilFactory.IssueDummyPerfUtils = (loop == 0) && (_loopcount > 0); // turn on performance measurement after warmup loop
+                    var centroidedThisPass = centroided;
+                    var type = 0;
+                    foreach (var resultspath in rawfiles)
+                    {
+                        _skyFile = _baseSkyFile.Replace(".sky", "_" + loop + "_" + type++ + ".sky");
+                        _dataFile = resultspath;
+                        _centroided = centroidedThisPass;
+                        RunFunctionalTest();
+                        centroidedThisPass = false;
+                    }
+
                 }
+                DebugLog.Info("Done.");
+                var logs = Log.GetMemoryAppendedLogEvents();
+                var stats = PerfUtilFactory.SummarizeLogs(logs, TestFilesPersistent); // show summary, combining native per test and mz5 per test
+                var report = stats.Replace(_testFilesDir.PersistentFilesDir.Replace(':', '_'), "");
+                Console.Write(report); // Want this to appear in nightly log
 
+                var log = new Log("Summary");
+                log.Info(report);
             }
-            DebugLog.Info("Done.");
-            var logs = Log.GetMemoryAppendedLogEvents();
-            var stats = PerfUtilFactory.SummarizeLogs(logs, TestFilesPersistent); // show summary, combining native per test and mz5 per test
-            var report = stats.Replace(_testFilesDir.PersistentFilesDir.Replace(':', '_'), "");
-            Console.Write(report); // Want this to appear in nightly log
-
-            var log = new Log("Summary");
-            log.Info(report);
-
-            // Restore logging level
-            LogManager.GetRepository().Threshold = saveLevel;
-
         }
 
         protected override void DoTest()
