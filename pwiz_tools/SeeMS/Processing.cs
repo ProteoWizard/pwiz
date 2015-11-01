@@ -528,7 +528,7 @@ namespace seems
         public override ProcessableListType ProcessList<ProcessableListType>(ProcessableListType innerList)
         {
             if (innerList is SpectrumList)
-                return new SpectrumList_LockmassRefiner(innerList as SpectrumList, mz, tolerance) as ProcessableListType;
+                return new SpectrumList_LockmassRefiner(innerList as SpectrumList, mz, mz, tolerance) as ProcessableListType; // TODO - seperate value for negative scans
             else //if( innerList is ChromatogramList )
                 return innerList;
         }

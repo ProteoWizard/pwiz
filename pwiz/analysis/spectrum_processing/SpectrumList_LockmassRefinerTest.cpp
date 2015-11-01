@@ -56,8 +56,15 @@ void test(const string& filepath, double lockmassMz, double lockmassTolerance)
 
     Diff<MSData, DiffConfig> diff(msd, targetResult, config);
 
-    if (os_ && diff) *os_ << diff;
-    unit_assert(!diff);
+    if (lockmass == 0)
+    {
+        unit_assert(diff);
+    }
+    else
+    {
+        if (os_ && diff) *os_ << diff;
+        unit_assert(!diff);
+    }
 }
 
 
@@ -85,7 +92,10 @@ int main(int argc, char* argv[])
         BOOST_FOREACH(const string& filepath, rawpaths)
         {
             if (bal::ends_with(filepath, "091204_NFDM_008.raw"))
+            {
                 test(filepath, 615.38, 0.1);
+                test(filepath, 0, 0.1);
+            }
         }
     }
     catch (exception& e)

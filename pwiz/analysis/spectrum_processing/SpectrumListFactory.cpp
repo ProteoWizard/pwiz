@@ -764,24 +764,26 @@ UsageInfo usage_mzRefine = { "input1.pepXML input2.mzid [msLevels=<1->] [thresho
 SpectrumListPtr filterCreator_lockmassRefiner(const MSData& msd, const string& carg, pwiz::util::IterationListenerRegistry* ilr)
 {
     const string mzToken("mz=");
+    const string mzNegIonsToken("mzNegIons=");
     const string toleranceToken("tol=");
 
     string arg = carg;
     double lockmassMz = parseKeyValuePair<double>(arg, mzToken, 0);
+    double lockmassMzNegIons = parseKeyValuePair<double>(arg, mzNegIonsToken, lockmassMz); // Optional
     double lockmassTolerance = parseKeyValuePair<double>(arg, toleranceToken, 1.0);
     bal::trim(arg);
     if (!arg.empty())
         throw runtime_error("[lockmassRefiner] unhandled text remaining in argument string: \"" + arg + "\"");
 
-    if (lockmassMz <= 0 || lockmassTolerance <= 0)
+    if (lockmassMz <= 0 || lockmassTolerance <= 0 || lockmassMzNegIons <= 0)
     {
         cerr << "lockmassMz and lockmassTolerance must be postive real numbers" << endl;
         return SpectrumListPtr();
     }
 
-    return SpectrumListPtr(new SpectrumList_LockmassRefiner(msd.run.spectrumListPtr, lockmassMz, lockmassTolerance));
+    return SpectrumListPtr(new SpectrumList_LockmassRefiner(msd.run.spectrumListPtr, lockmassMz, lockmassMzNegIons, lockmassTolerance));
 }
-UsageInfo usage_lockmassRefiner = { "mz=<real> tol=<real (1.0 Daltons)>", "For Waters data, adjusts m/z values according to the specified lockmass m/z and tolerance. For other data, currently does nothing." };
+UsageInfo usage_lockmassRefiner = { "mz=<real> mzNegIons=<real (mz)> tol=<real (1.0 Daltons)>", "For Waters data, adjusts m/z values according to the specified lockmass m/z and tolerance. Distinct m/z value for negative ions is optional and defaults to the given mz value. For other data, currently does nothing." };
 
 SpectrumListPtr filterCreator_precursorRefine(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
 {

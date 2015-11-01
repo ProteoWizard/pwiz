@@ -316,7 +316,7 @@ public ref class SpectrumList_LockmassRefiner : public msdata::SpectrumList
 
     public:
 
-    SpectrumList_LockmassRefiner(msdata::SpectrumList^ inner, double lockmassMz, double lockmassTolerance);
+        SpectrumList_LockmassRefiner(msdata::SpectrumList^ inner, double lockmassMzPosScans, double lockmassMzNegScans, double lockmassTolerance);
 
     static bool accept(msdata::SpectrumList^ inner);
 };

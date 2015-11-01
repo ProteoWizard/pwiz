@@ -37,7 +37,7 @@ class PWIZ_API_DECL SpectrumList_LockmassRefiner : public msdata::SpectrumListWr
 {
     public:
 
-    SpectrumList_LockmassRefiner(const msdata::SpectrumListPtr& inner, double lockmassMz, double lockmassTolerance);
+        SpectrumList_LockmassRefiner(const msdata::SpectrumListPtr& inner, double lockmassMzPosScans, double lockmassMzNegScans, double lockmassTolerance);
 
 
     static bool accept(const msdata::SpectrumListPtr& inner);
@@ -46,7 +46,7 @@ class PWIZ_API_DECL SpectrumList_LockmassRefiner : public msdata::SpectrumListWr
     virtual msdata::SpectrumPtr spectrum(size_t index, bool getBinaryData = false) const;
 
     private:
-    double mz_, tolerance_;
+    double mzPositiveScans_, mzNegativeScans_, tolerance_;
 };
 
 

@@ -36,8 +36,8 @@ using namespace pwiz::util;
 
 
 PWIZ_API_DECL
-SpectrumList_LockmassRefiner::SpectrumList_LockmassRefiner(const msdata::SpectrumListPtr& inner, double lockmassMz, double lockmassTolerance)
-: SpectrumListWrapper(inner), mz_(lockmassMz), tolerance_(lockmassTolerance)
+SpectrumList_LockmassRefiner::SpectrumList_LockmassRefiner(const msdata::SpectrumListPtr& inner, double lockmassMzPosScans, double lockmassMzNegScans, double lockmassTolerance)
+: SpectrumListWrapper(inner), mzPositiveScans_(lockmassMzPosScans), mzNegativeScans_(lockmassMzNegScans), tolerance_(lockmassTolerance)
 {
 
     // add processing methods to the copy of the inner SpectrumList's data processing
@@ -84,7 +84,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_LockmassRefiner::spectrum(size_t index, b
 
     detail::SpectrumList_Waters* waters = dynamic_cast<detail::SpectrumList_Waters*>(&*inner_);
     if (waters)
-        s = waters->spectrum(index, getBinaryData, mz_, tolerance_);
+        s = waters->spectrum(index, getBinaryData, mzPositiveScans_, mzNegativeScans_, tolerance_);
     else
         s = inner_->spectrum(index, true);
 
