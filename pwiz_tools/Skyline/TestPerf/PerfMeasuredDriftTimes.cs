@@ -132,7 +132,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 Assert.AreEqual(measuredDTs[0][key].HighEnergyDriftTimeOffsetMsec, measuredDTs[1][key].HighEnergyDriftTimeOffsetMsec, 2.0, "averaged measured drift time high energy offset differs for " + key);
             }
             Assert.AreEqual(document.MoleculeTransitionGroupCount, ccount, "did not find drift times for all precursors"); // Expect to find a value for each precursor
-            Assert.AreEqual(11, noChange.Count,"expected most values to shift a little without the nice clean training data");
+            Assert.IsTrue(noChange.Count < ccount/2,"expected most values to shift a little without the nice clean training data");
         }  
     }
 }
