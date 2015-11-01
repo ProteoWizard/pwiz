@@ -47,7 +47,7 @@ void test(const string& filepath, double lockmassMz, double lockmassTolerance)
         throw runtime_error("test result file does not exist: " + targetResultFilename.string());
     MSDataFile targetResult(targetResultFilename.string());
 
-    SpectrumList_LockmassRefiner lmr(msd.run.spectrumListPtr, lockmassMz, lockmassTolerance);
+    SpectrumList_LockmassRefiner lmr(msd.run.spectrumListPtr, lockmassMz, lockmassMz, lockmassTolerance);
     SpectrumListPtr sl(&lmr, boost::null_deleter());
     msd.run.spectrumListPtr = sl;
 
@@ -56,7 +56,7 @@ void test(const string& filepath, double lockmassMz, double lockmassTolerance)
 
     Diff<MSData, DiffConfig> diff(msd, targetResult, config);
 
-    if (lockmass == 0)
+    if (lockmassMz == 0)
     {
         unit_assert(diff);
     }
