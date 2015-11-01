@@ -49,6 +49,7 @@ namespace pwiz.SkylineTest.Results
             using (var msData = new MsDataFileImpl(testFilesDir.GetTestPath("160109_Mix1_calcurve_075" + extRaw)))
             {
                 Assert.IsTrue(msData.IsWatersFile);
+                Assert.AreEqual(Equals(extRaw,".raw"), msData.IsWatersLockmassCorrectionCandidate);
             }
 
             using (var msData = new MsDataFileImpl(testFilesDir.GetTestPath("160109_Mix1_calcurve_070.mzML")))

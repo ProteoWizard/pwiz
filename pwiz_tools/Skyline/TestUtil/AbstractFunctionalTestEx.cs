@@ -25,6 +25,8 @@ using pwiz.Skyline.Controls.Graphs;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
+using pwiz.ProteowizardWrapper;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
@@ -79,26 +81,66 @@ namespace pwiz.SkylineTestUtil
         /// Import results from one or more data files.
         /// </summary>
         /// <param name="dataFiles">List of data file paths</param>
+        /// <param name="lockMassParameters">For Waters lockmass correction</param>
+        /// <param name="waitForLoadSeconds">Timeout in seconds</param>
+        /// <param name="expectedErrorMessage">anticipated error dialog message, if any</param>
+        public void ImportResults(string[] dataFiles, LockMassParameters lockMassParameters, int waitForLoadSeconds = 420, string expectedErrorMessage = null)
+        {
+            ImportResultsAsync(dataFiles, lockMassParameters);
+            WaitForConditionUI(waitForLoadSeconds*1000,
+                () => {
+                    var document = SkylineWindow.DocumentUI;
+                    return document.Settings.HasResults && document.Settings.MeasuredResults.IsLoaded;
+                });
+        }
+
+        public void ImportResults(string dataFile, LockMassParameters lockMassParameters, int waitForLoadSeconds = 420, string expectedErrorMessage = null)
+        {
+            ImportResults(new[] { dataFile }, lockMassParameters, waitForLoadSeconds, expectedErrorMessage);
+        }
+
         public void ImportResults(params string[] dataFiles)
         {
-            ImportResultsAsync(dataFiles);
-
-            WaitForConditionUI(() =>
-            {
-                var document = SkylineWindow.DocumentUI;
-                return document.Settings.HasResults && document.Settings.MeasuredResults.IsLoaded;
-            });
+            ImportResults(dataFiles, null);
         }
 
         public void ImportResultsAsync(params string[] dataFiles)
         {
-            RunDlg<ImportResultsDlg>(SkylineWindow.ImportResults, importResultsDlg =>
+            ImportResultsAsync(dataFiles, null);
+        }
+
+        public void ImportResultsAsync(string[] dataFiles, LockMassParameters lockMassParameters, string expectedErrorMessage = null)
+        {
+            var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
+            RunUI(() =>
             {
                 var filePaths = dataFiles.Select(dataFile => TestFilesDirs[0].GetTestPath(dataFile)).ToArray();
                 importResultsDlg.NamedPathSets =
                     importResultsDlg.GetDataSourcePathsFileReplicates(filePaths.Select(MsDataFileUri.Parse));
-                importResultsDlg.OkDialog();
             });
+            if (expectedErrorMessage != null)
+            {
+                var dlg = WaitForOpenForm<MessageDlg>();
+                Assert.IsTrue(dlg.DetailMessage.Contains(expectedErrorMessage));
+                dlg.CancelDialog();
+            }
+            else if (lockMassParameters == null)
+            {
+                OkDialog(importResultsDlg, importResultsDlg.OkDialog);
+            }
+            else
+            {
+                // Expect a Waters lockmass dialog to appear on OK
+                WaitForConditionUI(() => importResultsDlg.NamedPathSets.Count() == dataFiles.Count());
+                var lockmassDlg = ShowDialog<ImportResultsLockMassDlg>(importResultsDlg.OkDialog);
+                RunUI(() =>
+                {
+                    lockmassDlg.LockmassPositive = lockMassParameters.LockmassPositive ?? 0;
+                    lockmassDlg.LockmassNegative = lockMassParameters.LockmassNegative ?? 0;
+                    lockmassDlg.LockmassTolerance = lockMassParameters.LockmassTolerance ?? 0;
+                });
+                OkDialog(lockmassDlg, lockmassDlg.OkDialog);
+            }
         }
 
         /// <summary>

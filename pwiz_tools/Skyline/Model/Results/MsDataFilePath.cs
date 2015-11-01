@@ -23,6 +23,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Web;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.Results.RemoteApi;
 
 namespace pwiz.Skyline.Model.Results
@@ -57,6 +58,21 @@ namespace pwiz.Skyline.Model.Results
                 SampleHelp.GetPathSampleNamePart(url), 
                 SampleHelp.GetPathSampleIndexPart(url));
         }
+
+        public bool IsWatersLockmassCorrectionCandidate()
+        {
+            string filePath = GetFilePath();
+            // Has to be a Waters .raw file, not just an mzML translation of one
+            if (string.IsNullOrEmpty(filePath))
+                return false; // Not even a file
+            if (!GetFilePath().ToLowerInvariant().EndsWith(".raw"))  // Not L10N
+                return false; // Return without even opening the file
+            if (!Directory.Exists(filePath))
+                return false; // Thermo .raw is a file, Waters .raw is actually a directory
+            using (var f = new MsDataFileImpl(filePath))
+                return f.IsWatersLockmassCorrectionCandidate;
+        }
+
     }
 
     public class MsDataFilePath : MsDataFileUri

@@ -32,6 +32,7 @@ namespace pwiz.Skyline.Model.Results
 {
     public sealed class ChromatogramCache : Immutable, IDisposable
     {
+        public const int FORMAT_VERSION_CACHE_10 = 10; // Introduces waters lockmass correction
         public const int FORMAT_VERSION_CACHE_9 = 9; // Introduces abbreviated scan ids
         public const int FORMAT_VERSION_CACHE_8 = 8; // Introduces ion mobility data
         public const int FORMAT_VERSION_CACHE_7 = 7; // Introduces UTF8 character support
@@ -48,7 +49,7 @@ namespace pwiz.Skyline.Model.Results
 
         public static int FORMAT_VERSION_CACHE
         {
-            get { return FORMAT_VERSION_CACHE_9; }
+            get { return FORMAT_VERSION_CACHE_10; }
         }
 
         // Set default block size for scoures BlockedArray<float>

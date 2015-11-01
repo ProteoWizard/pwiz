@@ -490,16 +490,23 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public void WizardFinish()
         {
             // Import results only on "finish"
-            SkylineWindow.ModifyDocument(Resources.ImportResultsControl_GetPeptideSearchChromatograms_Import_results,
-                doc =>
-                {
-                    KeyValuePair<string, MsDataFileUri[]>[] namedResults =
-                        ImportResultsControl.FoundResultsFiles.Select(
-                            kvp => new KeyValuePair<string, MsDataFileUri[]>(kvp.Name, new[] {new MsDataFilePath(kvp.Path)}))
-                            .ToArray();
-                    return SkylineWindow.ImportResults(doc, namedResults, ExportOptimize.NONE);
-                });
-            CloseWizard(DialogResult.OK);
+
+            KeyValuePair<string, MsDataFileUri[]>[] namedResults =
+                ImportResultsControl.FoundResultsFiles.Select(
+                    kvp => new KeyValuePair<string, MsDataFileUri[]>(kvp.Name, new[] { new MsDataFilePath(kvp.Path) }))
+                    .ToArray();
+
+            // Ask about lockmass correction, if needed - answers written to Settings.Default
+            if (!ImportResultsLockMassDlg.CheckWatersLockmassCorrection(this, SkylineWindow.DocumentUI, namedResults))
+            {
+                CloseWizard(DialogResult.Cancel);  // User cancelled, no change
+            }
+            else
+            {
+                SkylineWindow.ModifyDocument(Resources.ImportResultsControl_GetPeptideSearchChromatograms_Import_results,
+                    doc => SkylineWindow.ImportResults(doc, namedResults, ExportOptimize.NONE, Settings.Default.LockmassParameters));
+                CloseWizard(DialogResult.OK);
+            }
         }
 
         public void WizardEarlyFinish()

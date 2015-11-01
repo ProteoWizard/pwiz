@@ -46,6 +46,7 @@ using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using System.Windows.Forms;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Util.Extensions;
@@ -155,6 +156,20 @@ namespace pwiz.Skyline.Properties
                     }
                     base[propertyName] = value;
                 }
+            }
+        }
+
+        public LockMassParameters LockmassParameters
+        {
+            get
+            {
+                return new LockMassParameters(LockMassPositive, LockMassNegative, LockMassTolerance);
+            }
+            set
+            {
+                LockMassPositive = (value == null) ? 0 : value.LockmassPositive ?? 0;
+                LockMassNegative = (value == null) ? 0 : value.LockmassNegative ?? 0;
+                LockMassTolerance = (value == null) ? 0 : value.LockmassTolerance ?? 0;
             }
         }
 

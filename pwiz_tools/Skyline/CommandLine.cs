@@ -177,6 +177,7 @@ namespace pwiz.Skyline
                 {
                     // If expected results are not imported successfully, terminate
                     if (!ImportResultsFile(MsDataFileUri.Parse(commandArgs.ReplicateFile),
+                                           commandArgs.LockMassParameters,
                                            commandArgs.ReplicateName,
                                            commandArgs.ImportBeforeDate,
                                            commandArgs.ImportOnOrAfterDate,
@@ -190,6 +191,7 @@ namespace pwiz.Skyline
                     // If expected results are not imported successfully, terminate
                     if(!ImportResultsInDir(commandArgs.ImportSourceDirectory,
                                            commandArgs.ImportNamingPattern,
+                                           commandArgs.LockMassParameters,
                                            commandArgs.ImportBeforeDate,
                                            commandArgs.ImportOnOrAfterDate,
                                            optimize,
@@ -600,7 +602,9 @@ namespace pwiz.Skyline
             return BackgroundProteomeList.GetDefault();
         }
 
-        public bool ImportResultsInDir(string sourceDir, Regex namingPattern, DateTime? importBefore, DateTime? importOnOrAfter,
+        public bool ImportResultsInDir(string sourceDir, Regex namingPattern, 
+            LockMassParameters lockMassParameters,
+            DateTime? importBefore, DateTime? importOnOrAfter,
             OptimizableRegression optimize, bool disableJoining)
         {
             var listNamedPaths = GetDataSources(sourceDir, namingPattern);
@@ -623,7 +627,7 @@ namespace pwiz.Skyline
                 var files = namedPaths.Value;
                 foreach (var file in files)
                 {
-                    if (!ImportResultsFile(file, replicateName, importBefore, importOnOrAfter, optimize))
+                    if (!ImportResultsFile(file, lockMassParameters, replicateName, importBefore, importOnOrAfter, optimize))
                         return false;
                 }
             }
@@ -823,7 +827,7 @@ namespace pwiz.Skyline
             return true;
         }
 
-        public bool ImportResultsFile(MsDataFileUri replicateFile, string replicateName, DateTime? importBefore, DateTime? importOnOrAfter,
+        public bool ImportResultsFile(MsDataFileUri replicateFile, LockMassParameters lockMassParameters, string replicateName, DateTime? importBefore, DateTime? importOnOrAfter,
             OptimizableRegression optimize, bool append, bool disableJoining)
         {
             if (string.IsNullOrEmpty(replicateName))
@@ -854,10 +858,10 @@ namespace pwiz.Skyline
                 }
             }
 
-            return ImportResultsFile(replicateFile, replicateName, importBefore, importOnOrAfter, optimize, disableJoining);
+            return ImportResultsFile(replicateFile, lockMassParameters, replicateName, importBefore, importOnOrAfter, optimize, disableJoining);
         }
 
-        public bool ImportResultsFile(MsDataFileUri replicateFile, string replicateName, DateTime? importBefore, DateTime? importOnOrAfter,
+        public bool ImportResultsFile(MsDataFileUri replicateFile, LockMassParameters lockMassParameters, string replicateName, DateTime? importBefore, DateTime? importOnOrAfter,
             OptimizableRegression optimize, bool disableJoining = false)
         {
             // Skip if file write time is after importBefore or before importAfter
@@ -902,7 +906,7 @@ namespace pwiz.Skyline
                 if (disableJoining)
                     _doc = _doc.ChangeSettingsNoDiff(_doc.Settings.ChangeIsResultsJoiningDisabled(true));
 
-                newDoc = ImportResults(_doc, _skylineFile, replicateName, replicateFile, optimize, progressMonitor, out status);
+                newDoc = ImportResults(_doc,_skylineFile, replicateName, replicateFile, lockMassParameters, optimize, progressMonitor, out status);
             }
             catch (Exception x)
             {
@@ -1092,18 +1096,18 @@ namespace pwiz.Skyline
 
             // Import results
             _doc = doc;
-            ImportFoundResultsFiles(import);
+            ImportFoundResultsFiles(commandArgs, import);
             return true;
         }
 
-        private void ImportFoundResultsFiles(ImportPeptideSearch import)
+        private void ImportFoundResultsFiles(CommandArgs commandArgs, ImportPeptideSearch import)
         {
             foreach (var resultFile in import.GetFoundResultsFiles())
             {
                 var filePath = new MsDataFilePath(resultFile.Path);
                 if (!_doc.Settings.HasResults || _doc.Settings.MeasuredResults.FindMatchingMSDataFile(filePath) == null)
                 {
-                    if (!ImportResultsFile(filePath, resultFile.Name, null, null, null))
+                    if (!ImportResultsFile(filePath, commandArgs.LockMassParameters, resultFile.Name, null, null, null))
                         break; // Lots of work completed, still want to save
                 }
             }
@@ -2138,7 +2142,7 @@ namespace pwiz.Skyline
         /// This function will add the given replicate, from dataFile, to the given document. If the replicate
         /// does not exist, it will be added. If it does exist, it will be appended to.
         /// </summary>
-        public static SrmDocument ImportResults(SrmDocument doc, string docPath, string replicate, MsDataFileUri dataFile,
+        public static SrmDocument ImportResults(SrmDocument doc, string docPath, string replicate, MsDataFileUri dataFile, LockMassParameters lockMassParameters,
                                                 OptimizableRegression optimize, IProgressMonitor progressMonitor, out ProgressStatus status)
         {
             var docContainer = new ResultsMemoryDocumentContainer(null, docPath) {ProgressMonitor = progressMonitor};
@@ -2164,11 +2168,11 @@ namespace pwiz.Skyline
                     var paths = chromatogram.MSDataFilePaths;
                     var listFilePaths = paths.ToList();
                     listFilePaths.Add(dataFile);
-                    listChromatograms[indexChrom] = chromatogram.ChangeMSDataFilePaths(listFilePaths);
+                    listChromatograms[indexChrom] = chromatogram.ChangeMSDataFilePaths(listFilePaths, lockMassParameters);
                 }
                 else
                 {
-                    listChromatograms.Add(new ChromatogramSet(replicate, new[] { dataFile.Normalize()}, Annotations.EMPTY, optimize));
+                    listChromatograms.Add(new ChromatogramSet(replicate, new[] { dataFile.Normalize() }, Annotations.EMPTY, optimize, lockMassParameters));
                 }
 
                 var results = doc.Settings.HasResults

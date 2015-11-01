@@ -24,6 +24,7 @@ using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
+using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
@@ -71,86 +72,95 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
             RunUI(() => SkylineWindow.OpenFile(skyfile));
 
-            var doc0 = WaitForDocumentLoaded();
-            AssertEx.IsDocumentState(doc0, null, 4, 218, 429, 3176);
+                var doc0 = WaitForDocumentLoaded();
+                AssertEx.IsDocumentState(doc0, null, 4, 218, 429, 3176);
 
-            Stopwatch loadStopwatch = new Stopwatch();
-            loadStopwatch.Start();
-            // Launch import peptide search wizard
-            var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
+                Stopwatch loadStopwatch = new Stopwatch();
+                loadStopwatch.Start();
+                // Launch import peptide search wizard
+                var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
 
             
-            const string ID12692Base = "ID12692_01_UCA168_3727_040714";
-            string ID12692Search = GetTestPath( ID12692Base + "_IA_final_fragment.csv");
+                const string ID12692Base = "ID12692_01_UCA168_3727_040714";
+                string ID12692Search = GetTestPath( ID12692Base + "_IA_final_fragment.csv");
 
-            string[] searchFiles = { ID12692Search };
-            var doc = SkylineWindow.Document;
-            RunUI(() =>
-            {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage ==
-                            ImportPeptideSearchDlg.Pages.spectra_page);
-                importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(searchFiles);
-                importPeptideSearchDlg.BuildPepSearchLibControl.CutOffScore = 0.95;
-                importPeptideSearchDlg.BuildPepSearchLibControl.FilterForDocumentPeptides = true;
-            });
-
-            RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
-            doc = WaitForDocumentChange(doc);
-
-            // Verify document library was built
-            string docLibPath = BiblioSpecLiteSpec.GetLibraryFileName(skyfile);
-            string redundantDocLibPath = BiblioSpecLiteSpec.GetRedundantName(docLibPath);
-            Assert.IsTrue(File.Exists(docLibPath) && File.Exists(redundantDocLibPath));
-            var librarySettings = SkylineWindow.Document.Settings.PeptideSettings.Libraries;
-            Assert.IsTrue(librarySettings.HasDocumentLibrary);
-
-            // We're on the "Extract Chromatograms" page of the wizard.
-            // All the files should be found, and we should
-            // just be able to move to the next page.
-            RunUI(() => Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page));
-            RunUI(() => importPeptideSearchDlg.ClickNextButton());
-
-            // Modifications are already set up, so that page should get skipped.
-            RunUI(() => importPeptideSearchDlg.ClickNextButton()); // Accept the full scan settings
-
-
-            // Add FASTA also skipped because filter for document peptides was chosen.
-
-            WaitForClosedForm(importPeptideSearchDlg);
-            WaitForDocumentChangeLoaded(doc, 15 * 60 * 1000); // 15 minutes
-
-            var doc1 = WaitForDocumentLoaded(400000);
-            AssertEx.IsDocumentState(doc1, null, 4, 63, 6, 42);  // Was 4, 63, 4, 30 before drift time based charge state detection was added to final_fragments reader
-
-            loadStopwatch.Stop();
-            DebugLog.Info("load time = {0}", loadStopwatch.ElapsedMilliseconds);
-
-            float tolerance = (float)doc1.Settings.TransitionSettings.Instrument.MzMatchTolerance;
-            double maxHeight = 0;
-            var results = doc1.Settings.MeasuredResults;
-
-            var numPeaks = new[] {8, 10, 10, 10, 10, 10, 10};
-            int npIndex = 0;
-            var errmsg = "";
-            foreach (var pair in doc1.PeptidePrecursorPairs)
-            {
-                ChromatogramGroupInfo[] chromGroupInfo;
-                Assert.IsTrue(results.TryLoadChromatogram(0, pair.NodePep, pair.NodeGroup,
-                    tolerance, true, out chromGroupInfo));
-
-                foreach (var chromGroup in chromGroupInfo)
+                string[] searchFiles = { ID12692Search };
+                var doc = SkylineWindow.Document;
+                RunUI(() =>
                 {
-                    if (numPeaks[npIndex] !=  chromGroup.NumPeaks)
-                        errmsg += String.Format("unexpected peak count {0} instead of {1} in chromatogram {2}\r\n", chromGroup.NumPeaks, numPeaks[npIndex], npIndex);
-                    npIndex++;
-                    foreach (var tranInfo in chromGroup.TransitionPointSets)
+                    Assert.IsTrue(importPeptideSearchDlg.CurrentPage ==
+                                  ImportPeptideSearchDlg.Pages.spectra_page);
+                    importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(searchFiles);
+                    importPeptideSearchDlg.BuildPepSearchLibControl.CutOffScore = 0.95;
+                    importPeptideSearchDlg.BuildPepSearchLibControl.FilterForDocumentPeptides = true;
+                });
+
+                RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
+                doc = WaitForDocumentChange(doc);
+
+                // Verify document library was built
+                string docLibPath = BiblioSpecLiteSpec.GetLibraryFileName(skyfile);
+                string redundantDocLibPath = BiblioSpecLiteSpec.GetRedundantName(docLibPath);
+                Assert.IsTrue(File.Exists(docLibPath) && File.Exists(redundantDocLibPath));
+                var librarySettings = SkylineWindow.Document.Settings.PeptideSettings.Libraries;
+                Assert.IsTrue(librarySettings.HasDocumentLibrary);
+
+                // We're on the "Extract Chromatograms" page of the wizard.
+                // All the files should be found, and we should
+                // just be able to move to the next page.
+                RunUI(() => Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page));
+                RunUI(() => importPeptideSearchDlg.ClickNextButton());
+
+                // Modifications are already set up, so that page should get skipped.
+                var lockmassDlg = ShowDialog<ImportResultsLockMassDlg>(() => importPeptideSearchDlg.ClickNextButton()); // Accept the full scan settings, lockmass correction dialog should appear
+                RunUI(() =>
+                {
+                    var mz = 785.8426;  // Glu-Fib ESI 2+, per Will T
+                    lockmassDlg.LockmassPositive = mz;
+                    lockmassDlg.LockmassNegative = mz;
+                    lockmassDlg.LockmassTolerance = 10.0;
+                });
+                RunUI(lockmassDlg.OkDialog);
+                WaitForClosedForm<ImportResultsLockMassDlg>();
+
+
+                // Add FASTA also skipped because filter for document peptides was chosen.
+
+                WaitForClosedForm(importPeptideSearchDlg);
+                WaitForDocumentChangeLoaded(doc, 15 * 60 * 1000); // 15 minutes
+
+                var doc1 = WaitForDocumentLoaded(400000);
+                AssertEx.IsDocumentState(doc1, null, 4, 63, 6, 42);  // Was 4, 63, 4, 30 before drift time based charge state detection was added to final_fragments reader
+
+                loadStopwatch.Stop();
+                DebugLog.Info("load time = {0}", loadStopwatch.ElapsedMilliseconds);
+
+                float tolerance = (float)doc1.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+                double maxHeight = 0;
+                var results = doc1.Settings.MeasuredResults;
+
+                var numPeaks = new[] {8, 10, 10, 10, 10, 10, 10};
+                int npIndex = 0;
+                var errmsg = "";
+                foreach (var pair in doc1.PeptidePrecursorPairs)
+                {
+                    ChromatogramGroupInfo[] chromGroupInfo;
+                    Assert.IsTrue(results.TryLoadChromatogram(0, pair.NodePep, pair.NodeGroup,
+                        tolerance, true, out chromGroupInfo));
+
+                    foreach (var chromGroup in chromGroupInfo)
                     {
-                        maxHeight = Math.Max(maxHeight, tranInfo.MaxIntensity);
+                        if (numPeaks[npIndex] !=  chromGroup.NumPeaks)
+                            errmsg += String.Format("unexpected peak count {0} instead of {1} in chromatogram {2}\r\n", chromGroup.NumPeaks, numPeaks[npIndex], npIndex);
+                        npIndex++;
+                        foreach (var tranInfo in chromGroup.TransitionPointSets)
+                        {
+                            maxHeight = Math.Max(maxHeight, tranInfo.MaxIntensity);
+                        }
                     }
                 }
-            }
-            Assert.IsTrue(errmsg.Length == 0, errmsg);
-            Assert.AreEqual(3617.529, maxHeight, 1); 
+                Assert.IsTrue(errmsg.Length == 0, errmsg);
+                Assert.AreEqual(3617.529, maxHeight, 1);
         }  
     }
 }

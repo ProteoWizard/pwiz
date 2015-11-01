@@ -28,9 +28,11 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestA
@@ -71,8 +73,32 @@ namespace pwiz.SkylineTestA
             var docCurrent = ResultsUtil.DeserializeDocument(docCurrentPath);
             var docContainer = new ResultsTestDocumentContainer(docCurrent, docCurrentPath);
             string replicateName = Path.GetFileNameWithoutExtension(resultsPath);
+            var lockMassParameters = new LockMassParameters(456.78, 567.89, 12.34);
+            var listChromatograms = new List<ChromatogramSet> { new ChromatogramSet(replicateName, new[] { resultsPath }, lockMassParameters) };
 
-            var listChromatograms = new List<ChromatogramSet> { new ChromatogramSet(replicateName, new[] { resultsPath }) };
+            // Lockmass values are Waters only so don't expect them to be saved to the doc which has no Waters results
+            // So test the serialization here
+            var stringBuilder = new StringBuilder();
+            using (var xmlWriter = XmlWriter.Create(stringBuilder))
+            {
+                xmlWriter.WriteStartDocument();
+                xmlWriter.WriteStartElement("TestDocument");
+                xmlWriter.WriteElements(listChromatograms, new XmlElementHelper<ChromatogramSet>());
+                xmlWriter.WriteEndElement();
+                xmlWriter.WriteEndDocument();
+            }
+            var xmlReader = XmlReader.Create(new StringReader(stringBuilder.ToString()));
+            xmlReader.ReadStartElement();
+            var deserializedObjects = new List<ChromatogramSet>();
+            xmlReader.ReadElements(deserializedObjects);
+            Assert.AreEqual(1, deserializedObjects.Count);
+            var compare = deserializedObjects[0];
+            Assert.AreEqual(listChromatograms[0], compare);
+            Assert.AreEqual(456.78, compare.MSDataFileInfos[0].InstrumentInfoList[0].LockmassParameters.LockmassPositive.Value);
+            Assert.AreEqual(567.89, compare.MSDataFileInfos[0].InstrumentInfoList[0].LockmassParameters.LockmassNegative.Value);
+            Assert.AreEqual(12.34, compare.MSDataFileInfos[0].InstrumentInfoList[0].LockmassParameters.LockmassTolerance.Value);
+            Assert.AreEqual(listChromatograms[0], compare);
+            
             // We don't expect any new peptides/precursors/transitions added due to the imported results.
             var docCurrentResults = docContainer.ChangeMeasuredResults(new MeasuredResults(listChromatograms), 0, 0, 0);
 
@@ -101,6 +127,9 @@ namespace pwiz.SkylineTestA
             Assert.AreEqual(1, instrumentList.Count);
             var instrumentInfo = instrumentList.Item(0);
             Assert.IsNotNull(instrumentInfo);
+            Assert.IsNotNull(instrumentInfo.Attributes);
+            Assert.IsNull(instrumentInfo.Attributes.GetNamedItem(ChromatogramSet.ATTR.lockmass_positive.ToString())); // Don't expect these since this is not Waters data
+            Assert.IsNull(instrumentInfo.Attributes.GetNamedItem(ChromatogramSet.ATTR.lockmass_negative.ToString()));
 
             // model
             var model = instrumentInfo.SelectSingleNode(ChromatogramSet.EL.model.ToString());

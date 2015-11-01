@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
@@ -219,20 +220,21 @@ namespace pwiz.SkylineTestUtil
         }
 
         public static void MatchChromatograms(ResultsTestDocumentContainer docContainer,
-            string path1, string path2, int delta, int missing)
+            string path1, string path2, int delta, int missing, LockMassParameters lockMassParameters = null)
         {
-            MatchChromatograms(docContainer, MsDataFileUri.Parse(path1), MsDataFileUri.Parse(path2), delta, missing);
+            MatchChromatograms(docContainer, MsDataFileUri.Parse(path1), MsDataFileUri.Parse(path2), delta, missing, lockMassParameters);
         }
 
         public static void MatchChromatograms(ResultsTestDocumentContainer docContainer,
-            MsDataFileUri path1, MsDataFileUri path2, int delta, int missing)
+            MsDataFileUri path1, MsDataFileUri path2, int delta, int missing,
+            LockMassParameters lockMassParameters = null)
         {
             var doc = docContainer.Document;
             var listChromatograms = new List<ChromatogramSet>();
             foreach (var path in new[] { path1, path2 })
             {
                 listChromatograms.Add(FindChromatogramSet(doc, path) ??
-                    new ChromatogramSet((path.GetFileName() ?? "").Replace('.', '_'), new[] { path }));
+                    new ChromatogramSet((path.GetFileName() ?? "").Replace('.', '_'), new[] { path }, lockMassParameters));
             }
             var docResults = doc.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
             Assert.IsTrue(docContainer.SetDocument(docResults, doc, true));

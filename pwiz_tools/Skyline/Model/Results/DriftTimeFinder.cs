@@ -185,6 +185,8 @@ namespace pwiz.Skyline.Model.Results
             if (resultIndex == -1)
                 return true;
             var chromFileInfo = _document.Settings.MeasuredResults.Chromatograms[resultIndex].GetFileInfo(filePath);
+            var lockMassParameters = chromFileInfo.LockmassParameters;
+
             // Determine apex RT for DT measurement using most intense MS1 peak
             var apexRT = GetApexRT(nodeGroup, resultIndex, chromFileInfo, true) ??
                 GetApexRT(nodeGroup, resultIndex, chromFileInfo, false);
@@ -199,7 +201,7 @@ namespace pwiz.Skyline.Model.Results
 
             for (var msLevel = 1; msLevel <= 2; msLevel++)
             {
-                if (!ProcessMSLevel(filePath, msLevel, transitionPointSets, chromInfo, apexRT, nodeGroup, libKey, tolerance))
+                if (!ProcessMSLevel(filePath, msLevel, transitionPointSets, chromInfo, apexRT, nodeGroup, libKey, tolerance, lockMassParameters))
                     return false; // User cancelled
             }
             return true;
@@ -228,7 +230,8 @@ namespace pwiz.Skyline.Model.Results
         }
 
         private bool ProcessMSLevel(MsDataFileUri filePath, int msLevel, IEnumerable<ChromatogramInfo> transitionPointSets,
-            ChromatogramGroupInfo chromInfo, double? apexRT, TransitionGroupDocNode nodeGroup, LibKey libKey, float tolerance)
+            ChromatogramGroupInfo chromInfo, double? apexRT, TransitionGroupDocNode nodeGroup, LibKey libKey, float tolerance,
+            LockMassParameters lockMassParameters)
         {
             var transitions = new List<TransitionFullScanInfo>();
             var chromSource = (msLevel == 1) ? ChromSource.ms1 : ChromSource.fragment;
@@ -252,7 +255,8 @@ namespace pwiz.Skyline.Model.Results
                 scanProvider = new ScanProvider(_documentFilePath,
                     filePath,
                     chromSource, chromInfo.Times, transitions.ToArray(),
-                    () => _document.Settings.MeasuredResults.LoadMSDataFileScanIds(filePath));
+                    () => _document.Settings.MeasuredResults.LoadMSDataFileScanIds(filePath),
+                    lockMassParameters);
             }
             else
             {

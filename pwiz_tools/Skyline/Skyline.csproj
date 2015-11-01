@@ -450,6 +450,12 @@
       <DependentUpon>ColumnChooser.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\ResultsGridForm.cs" />
+    <Compile Include="FileUI\ImportResultsLockMassDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\ImportResultsLockMassDlg.Designer.cs">
+      <DependentUpon>ImportResultsLockMassDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="Model\ColorGenerator.cs" />
     <Compile Include="Controls\SeqNode\PeptideGroupTreeNode.cs" />
     <Compile Include="Controls\SeqNode\PeptideTreeNode.cs" />
@@ -1682,6 +1688,9 @@
       <DependentUpon>ExportChorusRequestDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\ImportResultsLockMassDlg.resx">
+      <DependentUpon>ImportResultsLockMassDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ImportTransitionListErrorDlg.ja.resx">
       <DependentUpon>ImportTransitionListErrorDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -2680,6 +2689,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\FullScanSettingsControl.resx">
       <DependentUpon>FullScanSettingsControl.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\PeptideSettingsUI.resx">
       <DependentUpon>PeptideSettingsUI.cs</DependentUpon>

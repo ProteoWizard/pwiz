@@ -180,6 +180,7 @@ namespace pwiz.Skyline.Model.Results
                     {
                         // Always use SIM as spectra, if any full-scan chromatogram extraction is enabled
                         var enableSimSpectrum = _document.Settings.TransitionSettings.FullScan.IsEnabled;
+                        var configInfo = fileInfo.InstrumentInfoList.FirstOrDefault();
                         var centroidMS1 = _document.Settings.TransitionSettings.FullScan.IsEnabled &&
                                           _document.Settings.TransitionSettings.FullScan.IsEnabledMs &&
                                           _document.Settings.TransitionSettings.FullScan.PrecursorMassAnalyzer ==
@@ -190,8 +191,8 @@ namespace pwiz.Skyline.Model.Results
                                           _document.Settings.TransitionSettings.FullScan.ProductMassAnalyzer ==
                                           FullScanMassAnalyzerType.centroided;
 
-                        inFile = GetMsDataFile(dataFilePathPart, sampleIndex, enableSimSpectrum, centroidMS1,
-                            centroidMS2);
+                        inFile = GetMsDataFile(dataFilePathPart, sampleIndex, configInfo, enableSimSpectrum, 
+                            centroidMS1, centroidMS2);
                     }
 
                     // Check for cancelation
@@ -237,7 +238,9 @@ namespace pwiz.Skyline.Model.Results
                             100, _loader);
                     }
                     else if (ChromatogramDataProvider.HasChromatogramData(inFile))
+                    {
                         provider = CreateChromatogramProvider(inFile, fileInfo);
+                    }
                     else if (SpectraChromDataProvider.HasSpectrumData(inFile))
                     {
                         if (_document.Settings.TransitionSettings.FullScan.IsEnabled && _libraryRetentionTimes == null)
@@ -332,9 +335,10 @@ namespace pwiz.Skyline.Model.Results
                                      cachedFile.IsSingleMatchMz);
         }
 
-        private MsDataFileImpl GetMsDataFile(string dataFilePathPart, int sampleIndex, bool enableSimSpectrum, bool requireCentroidedMS1, bool requireCentroidedMS2)
+        private MsDataFileImpl GetMsDataFile(string dataFilePathPart, int sampleIndex, MsInstrumentConfigInfo msInstrumentConfigInfo, bool enableSimSpectrum, bool requireCentroidedMS1, bool requireCentroidedMS2)
         {
-            return new MsDataFileImpl(dataFilePathPart, sampleIndex, enableSimSpectrum, requireVendorCentroidedMS1:requireCentroidedMS1, requireVendorCentroidedMS2:requireCentroidedMS2);
+            var lockMassParameters = msInstrumentConfigInfo == null ? null : msInstrumentConfigInfo.LockmassParameters;
+            return new MsDataFileImpl(dataFilePathPart, sampleIndex, lockMassParameters, enableSimSpectrum, requireVendorCentroidedMS1:requireCentroidedMS1, requireVendorCentroidedMS2:requireCentroidedMS2);
         }
 
         private void ExitRead(Exception x)

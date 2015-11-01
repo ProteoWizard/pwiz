@@ -54,11 +54,12 @@ namespace pwiz.Skyline.Model.Results
     public class ScanProvider : IScanProvider
     {
         private MsDataFileImpl _dataFile;
+        private LockMassParameters _lockMassParameters;
         private MsDataFileScanIds _msDataFileScanIds; // Indexed container of MsDataFileImpl ids
         private Func<MsDataFileScanIds> _getMsDataFileScanIds;
 
         public ScanProvider(string docFilePath, MsDataFileUri dataFilePath, ChromSource source,
-            float[] times, TransitionFullScanInfo[] transitions, Func<MsDataFileScanIds> getMsDataFileScanIds)
+            float[] times, TransitionFullScanInfo[] transitions, Func<MsDataFileScanIds> getMsDataFileScanIds, LockMassParameters lockMassParameters)
         {
             DocFilePath = docFilePath;
             DataFilePath = dataFilePath;
@@ -66,6 +67,7 @@ namespace pwiz.Skyline.Model.Results
             Times = times;
             Transitions = transitions;
 
+            _lockMassParameters = lockMassParameters;
             _getMsDataFileScanIds = getMsDataFileScanIds;
         }
 
@@ -77,9 +79,11 @@ namespace pwiz.Skyline.Model.Results
             if (scanProvider == null)
                 return false;
             _dataFile = scanProvider._dataFile;
+            _lockMassParameters = scanProvider._lockMassParameters;
             _msDataFileScanIds = scanProvider._msDataFileScanIds;
             _getMsDataFileScanIds = scanProvider._getMsDataFileScanIds;
             scanProvider._dataFile = null;
+            scanProvider._lockMassParameters = null;
             return true;
         }
 
@@ -143,7 +147,7 @@ namespace pwiz.Skyline.Model.Results
                 if (sampleIndex == -1)
                     sampleIndex = 0;
                 // Full-scan extraction always uses SIM as spectra
-                _dataFile = new MsDataFileImpl(dataFilePath, sampleIndex, true);
+                _dataFile = new MsDataFileImpl(dataFilePath, sampleIndex, _lockMassParameters, true);
             }
             return _dataFile;
         }

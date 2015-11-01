@@ -29,6 +29,7 @@ using System.Xml.Serialization;
 using Ionic.Zip;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
@@ -2056,8 +2057,12 @@ namespace pwiz.Skyline
                     if (namedResults.Length == 1)
                         description = string.Format(Resources.SkylineWindow_ImportResults_Import__0__, namedResults[0].Key); // Not L10N
 
+                    // Check with user for Waters lockmass settings if any, results written to Settings.Default
+                    if (!ImportResultsLockMassDlg.CheckWatersLockmassCorrection(this, DocumentUI, namedResults))
+                        return; // User cancelled, no change
+
                     ModifyDocument(description,
-                                   doc => ImportResults(doc, namedResults, dlg.OptimizationName));
+                                   doc => ImportResults(doc, namedResults, dlg.OptimizationName, Settings.Default.LockmassParameters));
 
                     // Select the first replicate to which results were added.
                     if (ComboResults.Visible)
@@ -2127,12 +2132,13 @@ namespace pwiz.Skyline
             }
         }
 
-        public SrmDocument ImportResults(SrmDocument doc, KeyValuePair<string, MsDataFileUri[]>[] namedResults, string optimize)
+        public SrmDocument ImportResults(SrmDocument doc, KeyValuePair<string, MsDataFileUri[]>[] namedResults, string optimize, LockMassParameters lockMassParameters)
         {
+
             OptimizableRegression optimizationFunction = doc.Settings.TransitionSettings.Prediction.GetOptimizeFunction(optimize);
 
             if (namedResults.Length == 1)
-                return ImportResults(doc, namedResults[0].Key, namedResults[0].Value, optimizationFunction);
+                return ImportResults(doc, namedResults[0].Key, lockMassParameters, namedResults[0].Value, optimizationFunction);
 
             // Add all chosen files as separate result sets.
             var results = doc.Settings.MeasuredResults;
@@ -2151,7 +2157,7 @@ namespace pwiz.Skyline
                 // Delete caches that will be overwritten
                 FileEx.SafeDelete(ChromatogramCache.FinalPathForName(DocumentFilePath, nameResult), true);
 
-                listChrom.Add(new ChromatogramSet(nameResult, namedResult.Value, Annotations.EMPTY, optimizationFunction));
+                listChrom.Add(new ChromatogramSet(nameResult, namedResult.Value, Annotations.EMPTY, optimizationFunction, lockMassParameters));
             }
 
             var arrayChrom = listChrom.ToArray();
@@ -2177,7 +2183,7 @@ namespace pwiz.Skyline
             return doc.ChangeMeasuredResults(results);
         }
 
-        private SrmDocument ImportResults(SrmDocument doc, string nameResult, IEnumerable<MsDataFileUri> dataSources,
+        private SrmDocument ImportResults(SrmDocument doc, string nameResult, LockMassParameters lockMassParameters, IEnumerable<MsDataFileUri> dataSources,
             OptimizableRegression optimizationFunction)
         {
             var results = doc.Settings.MeasuredResults;
@@ -2188,7 +2194,7 @@ namespace pwiz.Skyline
                 // file to make sure it is not on disk before starting.
                 FileEx.SafeDelete(ChromatogramCache.FinalPathForName(DocumentFilePath, nameResult), true);
 
-                chrom = new ChromatogramSet(nameResult, dataSources, Annotations.EMPTY, optimizationFunction);
+                chrom = new ChromatogramSet(nameResult, dataSources, Annotations.EMPTY, optimizationFunction, lockMassParameters);
 
                 if (results == null)
                     results = new MeasuredResults(new[] {chrom});
@@ -2214,7 +2220,7 @@ namespace pwiz.Skyline
 
                 int replaceIndex = results.Chromatograms.IndexOf(chrom);
                 var arrayChrom = results.Chromatograms.ToArray();
-                arrayChrom[replaceIndex] = chrom.ChangeMSDataFilePaths(dataFilePaths);
+                arrayChrom[replaceIndex] = chrom.ChangeMSDataFilePaths(dataFilePaths, lockMassParameters);
 
                 results = results.ChangeChromatograms(arrayChrom);
             }

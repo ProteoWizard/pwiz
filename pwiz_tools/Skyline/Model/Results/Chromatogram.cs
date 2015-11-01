@@ -227,22 +227,29 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         private int _rescoreCount;
 
-        public ChromatogramSet(string name, IEnumerable<MsDataFileUri> msDataFileNames) : this(name, msDataFileNames, Annotations.EMPTY, null)
+        public ChromatogramSet(string name,
+            IEnumerable<MsDataFileUri> msDataFileNames,
+            LockMassParameters lockmassParameters = null) // Waters lockmass correction
+            : this(name, msDataFileNames, Annotations.EMPTY, null, lockmassParameters)
         {
         }
 
-        public ChromatogramSet(string name, IEnumerable<string> msDataFileNames)
-            : this(name, msDataFileNames.Select(file => new MsDataFilePath(file)))
+        public ChromatogramSet(string name,
+            IEnumerable<string> msDataFileNames,
+            LockMassParameters lockmassParameters = null) // Waters lockmass correction
+            : this(name, msDataFileNames.Select(file => new MsDataFilePath(file)), lockmassParameters)
         {
             
         }
 
-        public ChromatogramSet(string name, IEnumerable<MsDataFileUri> msDataFileNames,
+        public ChromatogramSet(string name, 
+                IEnumerable<MsDataFileUri> msDataFileNames,
                 Annotations annotations,
-                OptimizableRegression optimizationFunction)
+                OptimizableRegression optimizationFunction,
+                LockMassParameters lockmassParameters) // Waters lockmass correction
             : base(new ChromatogramSetId(), name)
         {
-            MSDataFileInfos = msDataFileNames.ToList().ConvertAll(path => new ChromFileInfo(path));
+            MSDataFileInfos = msDataFileNames.ToList().ConvertAll(path => new ChromFileInfo(path, lockmassParameters));
 
             OptimizationFunction = optimizationFunction;
             Annotations = annotations;
@@ -337,7 +344,7 @@ namespace pwiz.Skyline.Model.Results
             return ChangeProp(ImClone(this), im => im.MSDataFileInfos = prop);
         }
 
-        public ChromatogramSet ChangeMSDataFilePaths(IList<MsDataFileUri> prop)
+        public ChromatogramSet ChangeMSDataFilePaths(IList<MsDataFileUri> prop, LockMassParameters lockMassParameters)
         {
             var set = ImClone(this);
 
@@ -348,7 +355,9 @@ namespace pwiz.Skyline.Model.Results
             {
                 ChromFileInfo chromFileInfo;
                 if (!dictPathToFileInfo.TryGetValue(filePath, out chromFileInfo))
-                    chromFileInfo = new ChromFileInfo(filePath);
+                {
+                    chromFileInfo = new ChromFileInfo(filePath, lockMassParameters);
+                }
                 listFileInfos.Add(chromFileInfo);
             }
 
@@ -539,7 +548,10 @@ namespace pwiz.Skyline.Model.Results
             value,
             use_for_retention_time_prediction,
             analyte_concentration,
-            sample_type
+            sample_type,
+            lockmass_positive,
+            lockmass_negative,
+            lockmass_tolerance,
         }
 
         private static readonly IXmlElementHelper<OptimizableRegression>[] OPTIMIZATION_HELPERS =
@@ -570,6 +582,7 @@ namespace pwiz.Skyline.Model.Results
 
             var msDataFilePaths = new List<MsDataFileUri>();
             var fileLoadIds = new List<string>();
+            LockMassParameters lockMassParamters = null;
             while (reader.IsStartElement(EL.sample_file) ||
                     reader.IsStartElement(EL.replicate_file) ||
                     reader.IsStartElement(EL.chromatogram_file))
@@ -580,13 +593,24 @@ namespace pwiz.Skyline.Model.Results
                 reader.Read();
                 if (reader.IsStartElement(EL.instrument_info_list))
                 {
-                    reader.Skip();
+                    // See if we recorded any lockmass info
+                    reader.ReadStartElement();
+                    while (reader.IsStartElement(EL.instrument_info))
+                    {
+                        var lockmassPositive = reader.GetNullableDoubleAttribute(ATTR.lockmass_positive);
+                        var lockmassNegative = reader.GetNullableDoubleAttribute(ATTR.lockmass_negative);
+                        var lockmassTolerance = reader.GetNullableDoubleAttribute(ATTR.lockmass_tolerance);
+                        if (lockmassPositive.HasValue || lockmassNegative.HasValue)
+                            lockMassParamters = new LockMassParameters(lockmassPositive, lockmassNegative, lockmassTolerance);
+                        reader.Skip();  // Jump over all the sub elements
+                    }
+                    reader.ReadEndElement();  // Consume the end tag, position at end element of sample_file or replicate_file etc
                     reader.Read();
                 } 
             }
             Annotations = SrmDocument.ReadAnnotations(reader);
 
-            MSDataFileInfos = msDataFilePaths.ConvertAll(path => new ChromFileInfo(path));
+            MSDataFileInfos = msDataFilePaths.ConvertAll(path => new ChromFileInfo(path, lockMassParamters));
             _fileLoadIds = fileLoadIds.ToArray();
 
             // Consume end tag
@@ -649,6 +673,17 @@ namespace pwiz.Skyline.Model.Results
             {
                 writer.WriteStartElement(EL.instrument_info);
 
+                if (instrumentInfo.LockmassParameters != null && !instrumentInfo.LockmassParameters.IsEmpty)
+                {
+                    if ((instrumentInfo.LockmassParameters.LockmassPositive ?? 0) > 0)
+                        writer.WriteAttribute(ATTR.lockmass_positive, instrumentInfo.LockmassParameters.LockmassPositive.Value);
+
+                    if ((instrumentInfo.LockmassParameters.LockmassNegative ?? 0) > 0)
+                        writer.WriteAttribute(ATTR.lockmass_negative, instrumentInfo.LockmassParameters.LockmassNegative.Value);
+
+                    if ((instrumentInfo.LockmassParameters.LockmassTolerance ?? 0) > 0)
+                        writer.WriteAttribute(ATTR.lockmass_tolerance, instrumentInfo.LockmassParameters.LockmassTolerance.Value);
+                }
                 if(!string.IsNullOrWhiteSpace(instrumentInfo.Model))
                     writer.WriteElementString(EL.model, instrumentInfo.Model);
 
@@ -734,7 +769,7 @@ namespace pwiz.Skyline.Model.Results
 
     public sealed class ChromFileInfo : DocNode, IPathContainer
     {
-        public ChromFileInfo(MsDataFileUri filePath)
+        public ChromFileInfo(MsDataFileUri filePath, LockMassParameters lockMassParameters)
             : base(new ChromFileInfoId())
         {
             ChorusUrl chorusUrl = filePath as ChorusUrl;
@@ -745,7 +780,9 @@ namespace pwiz.Skyline.Model.Results
                 filePath = chorusUrl.SetFileWriteTime(null).SetRunStartTime(null);
             }
             FilePath = filePath;
-            InstrumentInfoList = new MsInstrumentConfigInfo[0];
+            InstrumentInfoList = lockMassParameters == null || lockMassParameters.IsEmpty // Any lockmass info?
+                ? new MsInstrumentConfigInfo[0]
+                : new[] {new MsInstrumentConfigInfo(null, null, null, null, lockMassParameters)};
         }
 
         private ImmutableList<MsInstrumentConfigInfo> _instrumentInfoList;
@@ -762,6 +799,26 @@ namespace pwiz.Skyline.Model.Results
         {
             get { return _instrumentInfoList; }
             private set { _instrumentInfoList = MakeReadOnly(value); }
+        }
+
+        public bool HasLockmassCorrection
+        {
+            get
+            {
+                return InstrumentInfoList.Any(i => (i.LockmassParameters != null && !i.LockmassParameters.IsEmpty));
+            }
+        }
+
+        public LockMassParameters LockmassParameters
+        {
+            get
+            {
+                return HasLockmassCorrection
+                    ? InstrumentInfoList.First(i => (i.LockmassParameters != null && !i.LockmassParameters.IsEmpty))
+                        .LockmassParameters
+                    : null;
+
+            }
         }
 
         public override AnnotationDef.AnnotationTarget AnnotationTarget

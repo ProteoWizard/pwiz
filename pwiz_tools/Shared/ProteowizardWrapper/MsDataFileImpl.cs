@@ -59,6 +59,8 @@ namespace pwiz.ProteowizardWrapper
         private ChromatogramList _chromatogramList;
         private MsDataScanCache _scanCache;
         private readonly IPerfUtil _perf; // for performance measurement, dummied by default
+        private readonly LockMassParameters _lockmassParameters; // For Waters lockmass correction
+        private int? _lockmassFunction;  // For Waters lockmass correction
 
         private readonly bool _requireVendorCentroidedMS1;
         private readonly bool _requireVendorCentroidedMS2;
@@ -87,17 +89,18 @@ namespace pwiz.ProteowizardWrapper
             return FULL_READER_LIST.readIds(path);
         }
 
-        public MsDataFileImpl(string path, int sampleIndex = 0, bool simAsSpectra = false, bool srmAsSpectra = false, bool acceptZeroLengthSpectra = true, bool requireVendorCentroidedMS1 = false, bool requireVendorCentroidedMS2 = false)
+        public MsDataFileImpl(string path, int sampleIndex = 0, LockMassParameters lockmassParameters = null, bool simAsSpectra = false, bool srmAsSpectra = false, bool acceptZeroLengthSpectra = true, bool requireVendorCentroidedMS1 = false, bool requireVendorCentroidedMS2 = false)
         {
             // see note above on enabling performance measurement
-            _perf = PerfUtilFactory.CreatePerfUtil("MsDataFileImpl " + // Not L10N
-                string.Format("path:{0},sampleIndex:{1},simAsSpectra:{2},srmAsSpectra:{3},acceptZeroLengthSpectra:{4},requireVendorCentroidedMS1:{5},requireVendorCentroidedMS2:{6}",  // Not L10N
-                path, sampleIndex, simAsSpectra, srmAsSpectra, acceptZeroLengthSpectra, requireVendorCentroidedMS1, requireVendorCentroidedMS2)); 
+            _perf = PerfUtilFactory.CreatePerfUtil("MsDataFileImpl " + // Not L10N 
+                string.Format("{0},sampleIndex:{1},lockmassCorrection:{2},simAsSpectra:{3},srmAsSpectra:{4},acceptZeroLengthSpectra:{5},requireVendorCentroidedMS1:{6},requireVendorCentroidedMS2:{7}",  // Not L10N
+                path, sampleIndex, !(lockmassParameters == null || lockmassParameters.IsEmpty), simAsSpectra, srmAsSpectra, acceptZeroLengthSpectra, requireVendorCentroidedMS1, requireVendorCentroidedMS2));
             using (_perf.CreateTimer("open")) // Not L10N
             {
                 FilePath = path;
                 _msDataFile = new MSData();
                 _config = new ReaderConfig {simAsSpectra = simAsSpectra, srmAsSpectra = srmAsSpectra, acceptZeroLengthSpectra = acceptZeroLengthSpectra};
+                _lockmassParameters = lockmassParameters;
                 FULL_READER_LIST.read(path, _msDataFile, sampleIndex, _config);
                 _requireVendorCentroidedMS1 = requireVendorCentroidedMS1;
                 _requireVendorCentroidedMS2 = requireVendorCentroidedMS2;
@@ -189,7 +192,8 @@ namespace pwiz.ProteowizardWrapper
                                ContentType = contentType,
                                Detector = detector,
                                IonSource = ionSource,
-                               Spectra = spectra
+                               Spectra = spectra,
+                               LockmassParameters = _lockmassParameters
                            };
             }
         }
@@ -269,6 +273,14 @@ namespace pwiz.ProteowizardWrapper
             return false;
         }
 
+        public bool IsWatersLockmassSpectrum(MsDataSpectrum s)
+        {
+            return _lockmassFunction.HasValue && (s.WatersFunctionNumber >= _lockmassFunction.Value);
+        }
+
+        /// <summary>
+        /// Record any instrument info found in the file, along with any Waters lockmass info we have
+        /// </summary>
         public IEnumerable<MsInstrumentConfigInfo> GetInstrumentConfigInfoList()
         {
             using (_perf.CreateTimer("GetInstrumentConfigList")) // Not L10N
@@ -281,6 +293,11 @@ namespace pwiz.ProteowizardWrapper
                     string ionization;
                     string analyzer;
                     string detector;
+
+                    // Lockmass values are not in the raw file, but must be preserved in case of reload
+                    var lockmassParameters = ((_lockmassParameters != null) && IsWatersLockmassCorrectionCandidate) 
+                        ? _lockmassParameters 
+                        : null;
                 
                     CVParam param = ic.cvParamChild(CVID.MS_instrument_model);
                     if (!param.empty() && param.cvid != CVID.MS_instrument_model)
@@ -300,9 +317,9 @@ namespace pwiz.ProteowizardWrapper
                     // get the ionization type, analyzer and detector
                     GetInstrumentConfig(ic, out ionization, out analyzer, out detector);
 
-                    if (instrumentModel != null || ionization != null || analyzer != null || detector != null)
+                    if (instrumentModel != null || ionization != null || analyzer != null || detector != null || lockmassParameters != null)
                     {
-                        configList.Add(new MsInstrumentConfigInfo(instrumentModel, ionization, analyzer, detector));
+                        configList.Add(new MsInstrumentConfigInfo(instrumentModel, ionization, analyzer, detector, lockmassParameters));
                     }
                 }
                 return configList;
@@ -340,6 +357,27 @@ namespace pwiz.ProteowizardWrapper
             get { return _msDataFile.fileDescription.sourceFiles.Any(source => source.hasCVParam(CVID.MS_Waters_raw_format)); }
         }
 
+        public bool IsWatersLockmassCorrectionCandidate
+        {
+            get
+            {
+                try
+                {
+                    // Has to be a .raw file, not just an mzML translation of one
+                    return (FilePath.ToLowerInvariant().EndsWith(".raw")) && // Not L10N
+                        IsWatersFile &&
+                        _msDataFile.run.spectrumList != null &&
+                        !_msDataFile.run.spectrumList.empty() &&
+                        !HasSrmSpectra;
+                }
+                catch (Exception)
+                {
+                    // Whatever that was, it wasn't a Waters file
+                    return false;
+                }
+            }
+        }
+
         public bool IsShimadzuFile
         {
             get { return _msDataFile.fileDescription.sourceFiles.Any(source => source.hasCVParam(CVID.MS_Shimadzu_Biotech_nativeID_format)); }
@@ -360,16 +398,46 @@ namespace pwiz.ProteowizardWrapper
             {
                 if (_spectrumList == null)
                 {
+                    // CONSIDER(bspratt): there is no acceptable wrapping order when both centroiding and lockmass are needed at the same time 
+                    // (For now, this can't happen in practice, as Waters offers no centroiding, but someday this may force pwiz API rework)
                     var centroidLevel = new List<int>();
                     if (_requireVendorCentroidedMS1)
                         centroidLevel.Add(1);
                     if (_requireVendorCentroidedMS2)
                         centroidLevel.Add(2);
-                    _spectrumList = centroidLevel.Any() ?
-                        new SpectrumList_PeakPicker(_msDataFile.run.spectrumList,
+                    if (centroidLevel.Any())
+                    {
+                        _spectrumList = new SpectrumList_PeakPicker(_msDataFile.run.spectrumList,
                             new VendorOnlyPeakDetector(), // Throws an exception when no vendor centroiding available
-                            true, centroidLevel.ToArray()) : 
-                        _msDataFile.run.spectrumList;
+                            true, centroidLevel.ToArray());
+                    }
+                    else
+                    {
+                        _spectrumList = _msDataFile.run.spectrumList;
+                    }
+
+                    _lockmassFunction = null;
+                    if (_lockmassParameters != null && !_lockmassParameters.IsEmpty)
+                    {
+                        _spectrumList = new SpectrumList_LockmassRefiner(_spectrumList,
+                            _lockmassParameters.LockmassPositive ?? 0,
+                            _lockmassParameters.LockmassNegative ?? 0,
+                            _lockmassParameters.LockmassTolerance ?? LockMassParameters.LOCKMASS_TOLERANCE_DEFAULT);
+                        if (_spectrumList.size() > 0 && !HasSrmSpectra)
+                        {
+                            // If the first seen spectrum has MS1 data and function > 1 assume it's the lockspray function, 
+                            // and thus to be omitted from chromatogram extraction.
+                            // N.B. for msE data we will always assume function 3 and greater are to be omitted
+                            // CONSIDER(bspratt) I really wish there was some way to communicate decisions like this to the user
+                            var spectrum = _spectrumList.spectrum(0, DetailLevel.FullMetadata);
+                            if (GetMsLevel(spectrum) == 1)
+                            {
+                                var function = MsDataSpectrum.WatersFunctionNumberFromId(id.abbreviate(spectrum.id));
+                                if (function > 1)
+                                    _lockmassFunction = function; // Ignore all scans in this function for chromatogram extraction purposes
+                            }
+                        }
+                    }
                 }
                 return _spectrumList;
             }
@@ -828,6 +896,66 @@ namespace pwiz.ProteowizardWrapper
         public string IonSource { get; set; }
         public string Analyzer { get; set; }
         public string Detector { get; set; }
+        public LockMassParameters LockmassParameters { get; set; }
+    }
+
+    /// <summary>
+    /// For Waters lockmass correction
+    /// </summary>
+    public sealed class LockMassParameters
+    {
+        public LockMassParameters(double? lockmassPositve, double? lockmassNegative, double? lockmassTolerance)
+        {
+            LockmassPositive = lockmassPositve;
+            LockmassNegative = lockmassNegative;
+            LockmassTolerance = lockmassTolerance;
+        }
+
+        public double? LockmassPositive { get; private set; }
+        public double? LockmassNegative { get; private set; }
+        public double? LockmassTolerance { get; private set; }
+
+        public static double LOCKMASS_TOLERANCE_DEFAULT = 0.1; // Per Will T
+        public static double LOCKMASS_TOLERANCE_MAX = 10.0;
+        public static double LOCKMASS_TOLERANCE_MIN = 0;
+
+        public static LockMassParameters EMPTY = new LockMassParameters(null, null, LOCKMASS_TOLERANCE_DEFAULT);
+
+        public bool IsEmpty
+        {
+            get
+            {
+                return (0 == (LockmassNegative ?? 0)) &&
+                       (0 == (LockmassPositive ?? 0));
+                // Ignoring tolerance here, which means nothing when no mz is given
+            }
+        }
+
+        private bool Equals(LockMassParameters other)
+        {
+            return LockmassPositive.Equals(other.LockmassPositive) && 
+                   LockmassNegative.Equals(other.LockmassNegative) &&
+                   LockmassTolerance.Equals(other.LockmassTolerance);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return obj is LockMassParameters && Equals((LockMassParameters) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var result = LockmassPositive.GetHashCode();
+                result = (result * 397) ^ LockmassNegative.GetHashCode();
+                result = (result * 397) ^ LockmassTolerance.GetHashCode();
+                return result;
+            }
+        }
+
     }
 
     public struct MsPrecursor
@@ -883,6 +1011,19 @@ namespace pwiz.ProteowizardWrapper
         public bool Centroided { get; set; }
         public double[] Mzs { get; set; }
         public double[] Intensities { get; set; }
+
+        public static int WatersFunctionNumberFromId(string id)
+        {
+            return int.Parse(id.Split('.')[0]); // Yes, this will throw if it's not in dotted format - and that's good
+        }
+
+        public int WatersFunctionNumber
+        {
+            get 
+            {
+                return WatersFunctionNumberFromId(Id);
+            }
+        }
     }
 
     public sealed class MsInstrumentConfigInfo
@@ -891,14 +1032,19 @@ namespace pwiz.ProteowizardWrapper
         public string Ionization { get; private set; }
         public string Analyzer { get; private set; }
         public string Detector { get; private set; }
+        public LockMassParameters LockmassParameters { get; private set; }
+
+        public static readonly MsInstrumentConfigInfo EMPTY = new MsInstrumentConfigInfo(null, null, null, null, null);
 
         public MsInstrumentConfigInfo(string model, string ionization,
-                                      string analyzer, string detector)
+                                      string analyzer, string detector,
+                                      LockMassParameters lockMassParameters)
         {
             Model = model != null ? model.Trim() : null;
             Ionization = ionization != null ? ionization.Replace('\n',' ').Trim() : null; // Not L10N
             Analyzer = analyzer != null ? analyzer.Replace('\n', ' ').Trim() : null; // Not L10N
             Detector = detector != null ? detector.Replace('\n', ' ').Trim() : null; // Not L10N
+            LockmassParameters = lockMassParameters;
         }
 
         public bool IsEmpty
@@ -908,7 +1054,9 @@ namespace pwiz.ProteowizardWrapper
                 return (string.IsNullOrEmpty(Model)) &&
                        (string.IsNullOrEmpty(Ionization)) &&
                        (string.IsNullOrEmpty(Analyzer)) &&
-                       (string.IsNullOrEmpty(Detector));
+                       (string.IsNullOrEmpty(Detector)) &&
+                       (LockmassParameters == null || LockmassParameters.IsEmpty)
+                ;
             }
         }
 
@@ -929,6 +1077,7 @@ namespace pwiz.ProteowizardWrapper
             return Equals(other.Model, Model) &&
                 Equals(other.Ionization, Ionization) &&
                 Equals(other.Analyzer, Analyzer) &&
+                Equals(other.LockmassParameters, LockmassParameters) &&
                 Equals(other.Detector, Detector);
         }
 
@@ -939,8 +1088,9 @@ namespace pwiz.ProteowizardWrapper
                 int result = 0;
                 result = (result * 397) ^ (Model != null ? Model.GetHashCode() : 0);
                 result = (result * 397) ^ (Ionization != null ? Ionization.GetHashCode() : 0);
-                result = (result * 397) ^ (Analyzer != null ? Analyzer.GetHashCode() : 0); 
+                result = (result * 397) ^ (Analyzer != null ? Analyzer.GetHashCode() : 0);
                 result = (result * 397) ^ (Detector != null ? Detector.GetHashCode() : 0);
+                result = (result * 397) ^ (LockmassParameters != null ? LockmassParameters.GetHashCode() : 0);
                 return result;
             }
         }

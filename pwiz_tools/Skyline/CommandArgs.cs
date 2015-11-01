@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
@@ -60,6 +61,15 @@ namespace pwiz.Skyline
         public bool IsIgnoreTransitionErrors { get; private set; }
         public string IrtGroupName { get; private set; }
         public string IrtStandardsPath { get; private set; }
+
+        // Waters lockmass correction
+        private const string ARG_IMPORT_LOCKMASS_POSITIVE = "import-lockmass-positive"; // Not L10N
+        private const string ARG_IMPORT_LOCKMASS_NEGATIVE = "import-lockmass-negative"; // Not L10N
+        private const string ARG_IMPORT_LOCKMASS_TOLERANCE = "import-lockmass-tolerance"; // Not L10N
+        public double? LockmassPositive { get; private set; }
+        public double? LockmassNegative { get; private set; }
+        public double? LockmassTolerance { get; private set; }
+        public LockMassParameters LockMassParameters { get { return new LockMassParameters(LockmassPositive, LockmassNegative, LockmassTolerance ?? LockMassParameters.LOCKMASS_TOLERANCE_DEFAULT); } }
 
         // Decoys
         private const string ARG_DECOYS_ADD = "decoys-add"; // Not L10N
@@ -862,6 +872,24 @@ namespace pwiz.Skyline
                 else if (IsNameValue(pair, "import-replicate-name"))
                 {
                     ReplicateName = pair.Value;
+                    RequiresSkylineDocument = true;
+                }
+
+                else if (IsNameValue(pair, ARG_IMPORT_LOCKMASS_POSITIVE))
+                {
+                    LockmassPositive = ParseDouble(pair.Value, ARG_IMPORT_LOCKMASS_POSITIVE);
+                    RequiresSkylineDocument = true;
+                }
+
+                else if (IsNameValue(pair, ARG_IMPORT_LOCKMASS_NEGATIVE))
+                {
+                    LockmassNegative = ParseDouble(pair.Value, ARG_IMPORT_LOCKMASS_NEGATIVE);
+                    RequiresSkylineDocument = true;
+                }
+
+                else if (IsNameValue(pair, ARG_IMPORT_LOCKMASS_TOLERANCE))
+                {
+                    LockmassTolerance = ParseDouble(pair.Value, ARG_IMPORT_LOCKMASS_TOLERANCE);
                     RequiresSkylineDocument = true;
                 }
 

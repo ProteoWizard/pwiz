@@ -292,7 +292,7 @@ namespace pwiz.SkylineTestA
 
             //Attach replicate
             ProgressStatus status;
-            doc = CommandLine.ImportResults(doc, docPath, replicate, MsDataFileUri.Parse(rawPath), null, null, out status);
+            doc = CommandLine.ImportResults(doc, docPath, replicate, MsDataFileUri.Parse(rawPath), null, null, null, out status);
             Assert.IsNull(status);
 
             string programmaticReport;
@@ -333,7 +333,7 @@ namespace pwiz.SkylineTestA
             //Attach replicate
             SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
             ProgressStatus status;
-            doc = CommandLine.ImportResults(doc, docPath, replicate, MsDataFileUri.Parse(rawPath), null, null, out status);
+            doc = CommandLine.ImportResults(doc, docPath, replicate, MsDataFileUri.Parse(rawPath), null, null, null, out status);
             Assert.IsNull(status);
 
             //First, programmatically generate the report

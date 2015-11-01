@@ -888,12 +888,16 @@ namespace pwiz.Skyline.Model.Results
                             continue;
 
                         // For Waters msE skip any lockspray data
-                        // TODO(bspratt): improve this to cover more than just msE when we have proper lockspray correction - but for now at least act as we did in Skyline3.1
-                        // TODO(bspratt): the trick there will be deciding what's lockspray - folk wisdom says "highest numbered MS function" but obviously not if its the only MS function, etc
                         if (_filter.IsWatersMse)
                         {
                             // looking for the 3 in 3.0.1 (or the 10 in 10.0.1)
-                            if (int.Parse(nextSpectrum.Id.Split('.')[0]) > 2) // Yes, this will throw if it's not in dotted format - and that's good
+                            if (nextSpectrum.WatersFunctionNumber > 2)
+                                continue;
+                        }
+                        else if (_filter.IsWatersFile)
+                        {
+                            // looking for the 3 in id string 3.0.1 (or the 10 in 10.0.1)
+                            if ( _dataFile.IsWatersLockmassSpectrum(nextSpectrum))
                                 continue;
                         }
 
