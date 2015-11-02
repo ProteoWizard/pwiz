@@ -66,7 +66,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         /// </summary>
         [TestMethod]
         [Timeout(6000000)]  // These can take a long time
-        public void AllVsMz5_WatersChromatogramPerformanceTest()
+        public void zzzNativeVsMz5_WatersChromatogramPerformanceTest()
         {
             NativeVsMz5ChromatogramPerformanceTest(
                 "PerfImportResultsWatersVsMz5.zip",
@@ -76,7 +76,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         [TestMethod]
         [Timeout(6000000)]  // These can take a long time
-        public void AllVsMz5_AbIdaChromatogramPerformanceTest()
+        public void zzzNativeVsMz5_AbIdaChromatogramPerformanceTest()
         {
             NativeVsMz5ChromatogramPerformanceTest(
                 "PerfImportResultsAbIdaVsMz5.zip",
@@ -87,7 +87,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         [TestMethod]
         [Timeout(6000000)]  // These can take a long time
-        public void AllVsMz5_AbDiaChromatogramPerformanceTest()
+        public void zzzNativeVsMz5_AbDiaChromatogramPerformanceTest()
         {
             NativeVsMz5ChromatogramPerformanceTest(
                 "PerfImportResultsAbDiaVsMz5.zip",
@@ -98,7 +98,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         [TestMethod]
         [Timeout(6000000)]  // These can take a long time
-        public void AllVsMz5_ThermoDdaVChromatogramPerformanceTest()
+        public void zzzNativeVsMz5_ThermoDdaVChromatogramPerformanceTest()
         {
             NativeVsMz5ChromatogramPerformanceTest(
                 "PerfImportResultsThermoDDAVsMz5.zip",
@@ -109,7 +109,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         [TestMethod]
         [Timeout(6000000)]  // These can take a long time
-        public void AllVsMz5_ThermoDiaChromatogramPerformanceTest()
+        public void zzzNativeVsMz5_ThermoDiaChromatogramPerformanceTest()
         {
             NativeVsMz5ChromatogramPerformanceTest(
                 "PerfImportResultsThermoDiaVsMz5.zip",
@@ -120,7 +120,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         [TestMethod]
         [Timeout(6000000)]  // These can take a long time
-        public void AllVsMz5_AgilentDiaChromatogramPerformanceTest()
+        public void zzzNativeVsMz5_AgilentDiaChromatogramPerformanceTest()
         {
             NativeVsMz5ChromatogramPerformanceTest(
                 "PerfImportResultsAgilentDiaVsMz5.zip",
@@ -131,7 +131,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         [TestMethod]
         [Timeout(6000000)]  // These can take a long time
-        public void AllVsMz5_AgilentDdaChromatogramPerformanceTest()
+        public void zzzNativeVsMz5_AgilentDdaChromatogramPerformanceTest()
         {
             NativeVsMz5ChromatogramPerformanceTest(
                 "PerfImportResultsAgilentDDaVsMz5.zip",
@@ -142,7 +142,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         [TestMethod]
         [Timeout(6000000)]  // These can take a long time
-        public void AllVsMz5_BrukerFullScanMS1filteringPerformanceTest()
+        public void zzzNativeVsMz5_BrukerFullScanMS1filteringPerformanceTest()
         {
             NativeVsMz5ChromatogramPerformanceTest(
                 "PerfImportResultsBrukerFullScanMS1filtering.zip",
@@ -153,7 +153,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         [TestMethod]
         [Timeout(6000000)]  // These can take a long time
-        public void AllVsMz5_BrukerFullScanMSeDataPerformanceTest()
+        public void zzzNativeVsMz5_BrukerFullScanMSeDataPerformanceTest()
         {
             NativeVsMz5ChromatogramPerformanceTest(
                 "PerfImportResultsBrukerFullScanMSeData.zip",
@@ -164,7 +164,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         [TestMethod]
         [Timeout(6000000)]  // These can take a long time
-        public void AllVsMz5_BrukerFullScanSWATHDataPerformanceTest()
+        public void zzzNativeVsMz5_BrukerFullScanSWATHDataPerformanceTest()
         {
             NativeVsMz5ChromatogramPerformanceTest(
                 "PerfImportResultsBrukerFullScanSWATHData.zip",

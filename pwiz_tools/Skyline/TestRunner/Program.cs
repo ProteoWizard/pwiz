@@ -283,6 +283,8 @@ namespace TestRunner
             }
             else
             {
+                if (!randomOrder && testList.Any(t => t.IsPerfTest))
+                    runTests.Log("Perf tests will run last, for maximum overall test coverage.\r\n");
                 runTests.Log("Running {0}{1} tests{2}{3}...\r\n",
                     testList.Count,
                     testList.Count < unfilteredTestList.Count ? "/" + unfilteredTestList.Count : "",
@@ -592,8 +594,8 @@ namespace TestRunner
             if (testNames.Count > 0)
                 testList.AddRange(testArray.Where(testInfo => testInfo != null));
 
-            // Sort tests alphabetically.
-            return testList.OrderBy(e => e.TestMethod.Name).ToList();
+            // Sort tests alphabetically, but run perf tests last for best coverage in a fixed amount of time.
+            return testList.OrderBy(e => e.IsPerfTest).ThenBy(e => e.TestMethod.Name).ToList();
         }
 
         private static List<TestInfo> GetTestList(IEnumerable<string> dlls)
