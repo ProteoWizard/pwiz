@@ -26,10 +26,8 @@ using pwiz.Skyline.Controls.Graphs.Calibration;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.GroupComparison;
-using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
-using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -46,104 +44,78 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            Settings.Default.CalibrationCurveOptions.DisplaySampleTypes = new[]
+                {SampleType.UNKNOWN.Name, SampleType.QC.Name, SampleType.STANDARD.Name};
+            RunUI(() => SkylineWindow.ShowCalibrationForm());
+            var calibrationForm = FindOpenForm<CalibrationForm>();
+            Assert.AreEqual(QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_No_results_available,
+                calibrationForm.ZedGraphControl.GraphPane.Title.Text);
+            PauseForScreenShot("Blank document");
             RunUI(() =>
             {
                 SkylineWindow.OpenFile(TestFilesDir.GetTestPath("CalibrationTest.sky"));
-                SkylineWindow.ShowDocumentGrid(true);
             });
-            
-            // First check that the "Quantification" column is all nulls before we have provided any way to do calibration
+            Assert.AreEqual(QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_Select_a_peptide_to_see_its_calibration_curve,
+                GetGraphTitle(calibrationForm));
+            PauseForScreenShot("No peptide selected");
+
+            RunUI(() => SkylineWindow.SequenceTree.SelectedPath = SkylineWindow.DocumentUI.GetPathTo(
+                    (int)SrmDocument.Level.Molecules, 0));
+            WaitForGraphs();
+            Assert.AreEqual(QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_Use_the_Quantification_tab_on_the_Peptide_Settings_dialog_to_control_the_conversion_of_peak_areas_to_concentrations_,
+                GetGraphTitle(calibrationForm));
+            PauseForScreenShot("Quantification not configured");
+            var peptideSettingsUi = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            peptideSettingsUi.QuantNormalizationMethod = NormalizationMethod.GetNormalizationMethod(IsotopeLabelType.heavy);
+            peptideSettingsUi.QuantUnits = "ng/mL";
+            OkDialog(peptideSettingsUi, peptideSettingsUi.OkDialog);
+            PauseForScreenShot("Normalization without Internal Standard Concentration");
+
+            RunUI(() => SkylineWindow.ShowDocumentGrid(true));
             var documentGrid = FindOpenForm<DocumentGridForm>();
-            RunUI(() =>documentGrid.ChooseView("PeptideResultsWithQuantification"));
-            WaitForConditionUI(() => documentGrid.IsComplete);
-            PropertyPath ppQuantification =
-                PropertyPath.Root.Property("Results").LookupAllItems().Property("Value").Property("Quantification");
-            RunUI(() =>
-            {
-                var colQuantification = documentGrid.FindColumn(ppQuantification);
-                for (int iRow = 0; iRow < documentGrid.RowCount; iRow++)
-                {
-                    QuantificationResult quantificationResult =
-                        (QuantificationResult) documentGrid.DataGridView.Rows[iRow].Cells[colQuantification.Index].Value;
-                    Assert.IsNotNull(quantificationResult);
-                    Assert.AreEqual(quantificationResult.NormalizedIntensity, quantificationResult.CalculatedConcentration);
-                    Assert.AreEqual(quantificationResult.ToString(), 
-                        quantificationResult.CalculatedConcentration.Value.ToString(Formats.CalibrationCurve));
-                    Assert.AreEqual(CalibrationCurve.NO_EXTERNAL_STANDARDS, quantificationResult.CalibrationCurve.Value);
-                }
-            });
-            
             // Now, specify an internal standard concentration.
-            RunUI(()=>documentGrid.ChooseView("PeptidesWithCalibration"));
+            RunUI(() => documentGrid.ChooseView("PeptidesWithCalibration"));
             WaitForConditionUI(() => documentGrid.IsComplete);
             RunUI(() =>
             {
                 var colInternalStandardQuantification =
                     documentGrid.FindColumn(PropertyPath.Root.Property("InternalStandardConcentration"));
                 documentGrid.DataGridView.Rows[0].Cells[colInternalStandardQuantification.Index].Value = 80.0;
+                SkylineWindow.ShowCalibrationForm();
             });
 
-            // And specify that Quantification should use the ratio to heavy
-            var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            Assert.IsNull(GetGraphTitle(calibrationForm));
+            PauseForScreenShot("Internal calibration only");
             RunUI(() =>
             {
-                peptideSettingsUI.QuantNormalizationMethod =
-                    NormalizationMethod.GetNormalizationMethod(IsotopeLabelType.heavy);
-                peptideSettingsUI.QuantRegressionFit = RegressionFit.LINEAR;
-                peptideSettingsUI.QuantUnits = "ng/mL";
+                var colInternalStandardQuantification =
+                    documentGrid.FindColumn(PropertyPath.Root.Property("InternalStandardConcentration"));
+                documentGrid.DataGridView.Rows[0].Cells[colInternalStandardQuantification.Index].Value = null;
             });
-            OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
-            RunUI(() => documentGrid.ChooseView("PeptideResultsWithQuantification"));
+            FillInSampleTypesAndConcentrations();
+            WaitForGraphs();
+            peptideSettingsUi = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            peptideSettingsUi.QuantNormalizationMethod = NormalizationMethod.NONE;
+            peptideSettingsUi.QuantRegressionFit = RegressionFit.LINEAR;
+            OkDialog(peptideSettingsUi, peptideSettingsUi.OkDialog);
+            RunUI(() => SkylineWindow.ShowCalibrationForm());
+            PauseForScreenShot("External Calibration Without Internal Standard");
+
+            peptideSettingsUi = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            peptideSettingsUi.QuantNormalizationMethod = NormalizationMethod.GetNormalizationMethod(IsotopeLabelType.heavy);
+            OkDialog(peptideSettingsUi, peptideSettingsUi.OkDialog);
+            PauseForScreenShot("External Calibration normalized to heavy");
+
+            RunUI(() => documentGrid.ChooseView("PeptidesWithCalibration"));
             WaitForConditionUI(() => documentGrid.IsComplete);
             RunUI(() =>
             {
-                var colQuantification = documentGrid.FindColumn(ppQuantification);
-                for (int iRow = 0; iRow < documentGrid.RowCount; iRow++)
-                {
-                    QuantificationResult quantificationResult =
-                        (QuantificationResult)documentGrid.DataGridView.Rows[iRow].Cells[colQuantification.Index].Value;
-                    Assert.IsNotNull(quantificationResult);
-                    Assert.AreEqual(quantificationResult.NormalizedIntensity, quantificationResult.CalculatedConcentration);
-                    Assert.AreEqual(quantificationResult.CalculatedConcentration.Value.ToString(Formats.Concentration) + " ng/mL", 
-                        quantificationResult.ToString());
-                    Assert.AreEqual(CalibrationCurve.NO_EXTERNAL_STANDARDS, quantificationResult.CalibrationCurve.Value);
-                }
+                var colInternalStandardQuantification =
+                    documentGrid.FindColumn(PropertyPath.Root.Property("InternalStandardConcentration"));
+                documentGrid.DataGridView.Rows[0].Cells[colInternalStandardQuantification.Index].Value = 80.0;
+                SkylineWindow.ShowCalibrationForm();
             });
-            RunUI(() =>
-                {
-                    SkylineWindow.ShowCalibrationForm();
-                }
-            );
-            var calibrationForm = FindOpenForm<CalibrationForm>();
-            RunUI(() =>
-            {
-                SkylineWindow.SequenceTree.SelectedPath = SkylineWindow.DocumentUI.GetPathTo(
-                    (int) SrmDocument.Level.Molecules, 0);
-            });
-            WaitForGraphs();
-
-            // Fill in the values for the external standards.
-            FillInSampleTypesAndDilutionFactors();
-            WaitForGraphs();
-            CalibrationCurve calCurveWithoutMultiplier = calibrationForm.CalibrationCurve;
-            Assert.IsNull(calibrationForm.ZedGraphControl.GraphPane.Title.Text);
-            Assert.AreEqual(CalibrationCurveFitter.AppendUnits(QuantificationStrings.Concentration, "ng/mL"), 
-                calibrationForm.ZedGraphControl.GraphPane.XAxis.Title.Text);
-            RunUI(() =>
-            {
-                documentGrid.ChooseView("PeptidesWithCalibration");
-            });
-            WaitForConditionUI(() => documentGrid.IsComplete);
-            RunUI(() =>
-            {
-                var colStockConcentration =
-                    documentGrid.FindColumn(PropertyPath.Root.Property("ConcentrationMultiplier"));
-                documentGrid.DataGridView.Rows[0].Cells[colStockConcentration.Index].Value = 2.0;
-            });
-            WaitForGraphs();
-            Assert.AreEqual(TextUtil.SpaceSeparate(QuantificationStrings.Concentration, "(ng/mL)"), 
-                calibrationForm.ZedGraphControl.GraphPane.XAxis.Title.Text);
-            Assert.AreEqual(calCurveWithoutMultiplier.Slope.Value / 2, calibrationForm.CalibrationCurve.Slope.Value, 0.000001);
+            PauseForScreenShot("External calibration with internal standard concentration specified");
             TestAllQuantificationSettings();
         }
 
@@ -158,14 +130,18 @@ namespace pwiz.SkylineTestFunctional
                         doc.Settings.PeptideSettings.ChangeAbsoluteQuantification(quant)))));
                 WaitForGraphs();
                 CalibrationCurve calibrationCurve = calibrationForm.CalibrationCurve;
-                if (quant.MsLevel == 1)
+                if (quant.MsLevel == 1 && quant.RegressionFit != RegressionFit.NONE)
                 {
                     Assert.IsNotNull(calibrationCurve.ErrorMessage);
                 }
                 else
                 {
                     Assert.IsNull(calibrationCurve.ErrorMessage);
-                    if (quant.RegressionFit == RegressionFit.LINEAR_THROUGH_ZERO)
+                    if (quant.RegressionFit == RegressionFit.NONE)
+                    {
+                        Assert.AreEqual(0, calibrationCurve.PointCount);
+                    }
+                    else if (quant.RegressionFit == RegressionFit.LINEAR_THROUGH_ZERO)
                     {
                         Assert.IsNull(calibrationCurve.Intercept);
                         Assert.IsNotNull(calibrationCurve.Slope);
@@ -187,7 +163,7 @@ namespace pwiz.SkylineTestFunctional
             }
         }
 
-        private void FillInSampleTypesAndDilutionFactors()
+        private void FillInSampleTypesAndConcentrations()
         {
             IDictionary<string, Tuple<SampleType, double?>> sampleTypes =
                 new Dictionary<string, Tuple<SampleType, double?>>
@@ -251,6 +227,10 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
             }
+        }
+        private string GetGraphTitle(CalibrationForm calibrationForm)
+        {
+            return calibrationForm.ZedGraphControl.GraphPane.Title.Text;
         }
     }
 }

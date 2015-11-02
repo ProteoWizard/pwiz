@@ -1343,8 +1343,7 @@ namespace pwiz.Skyline.Model
 
             public void AddChromInfo(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, TransitionChromInfo info)
             {
-                // Only add non-zero areas
-                if (info.Area == 0)
+                if (info.IsEmpty)
                     return;
 
                 var key = new TransitionKey(nodeGroup, nodeTran.Key(nodeGroup), nodeGroup.TransitionGroup.LabelType);

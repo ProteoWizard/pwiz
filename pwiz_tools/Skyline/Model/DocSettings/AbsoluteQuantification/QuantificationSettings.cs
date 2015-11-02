@@ -38,7 +38,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         public QuantificationSettings(RegressionWeighting regressionWeighting)
         {
             RegressionWeighting = regressionWeighting;
-            RegressionFit = RegressionFit.LINEAR_THROUGH_ZERO;
+            RegressionFit = RegressionFit.NONE;
             NormalizationMethod = NormalizationMethod.NONE;
             Units = null;
         }

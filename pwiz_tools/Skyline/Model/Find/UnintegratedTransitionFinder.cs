@@ -47,7 +47,7 @@ namespace pwiz.Skyline.Model.Find
             {
                 return null;
             }
-            if (transitionChromInfo.Area == 0)
+            if (transitionChromInfo.IsEmpty)
             {
                 return new FindMatch(Resources.UnintegratedTransitionFinder_Match_Unintegrated_transition);
             }

@@ -127,20 +127,24 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }));
             if (calibrationCurve.PointCount.GetValueOrDefault() == 0)
             {
-                result = result.ChangeNormalizedIntensity(curveFitter.GetReplicateIntensity(replicateIndex, null));
+                result = result.ChangeNormalizedArea(curveFitter.GetNormalizedPeakArea(replicateIndex, null));
             }
             else
             {
-                result = result.ChangeNormalizedIntensity(curveFitter.GetReplicateIntensity(replicateIndex,
+                result = result.ChangeNormalizedArea(curveFitter.GetNormalizedPeakArea(replicateIndex,
                     curveFitter.GetCompleteTransitions()));
             }
             if (curveFitter.GetStandardConcentrations().Any())
             {
-                result = result.ChangeCalculatedConcentration(calibrationCurve.GetX(result.NormalizedIntensity));
+                double? calculatedConcentration = curveFitter.GetCalculatedConcentration(
+                    calibrationCurve, replicateIndex);
+                result = result.ChangeCalculatedConcentration(calculatedConcentration);
+                double? expectedConcentration = curveFitter.GetPeptideConcentration(ResultFile.Replicate.ChromatogramSet);
+                result = result.ChangeAccuracy(calculatedConcentration/expectedConcentration);
             }
             else
             {
-                result = result.ChangeCalculatedConcentration(result.NormalizedIntensity);
+                result = result.ChangeCalculatedConcentration(result.NormalizedArea);
             }
             result = result.ChangeUnits(SrmDocument.Settings.PeptideSettings.Quantification.Units);
             return result;

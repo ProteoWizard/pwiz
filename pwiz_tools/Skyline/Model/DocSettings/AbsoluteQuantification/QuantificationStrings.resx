@@ -98,14 +98,17 @@
 	<resheader name="writer">
 		<value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
 	</resheader>
+  <data name="Analyte Concentration" xml:space="preserve">
+    <value>Analyte Concentration</value>
+  </data>
+  <data name="Area" xml:space="preserve">
+    <value>Area</value>
+  </data>
   <data name="Calibration_Curve" xml:space="preserve">
     <value>Calibration Curve</value>
   </data>
   <data name="Calculated_Concentration" xml:space="preserve">
     <value>Calculated Concentration</value>
-  </data>
-  <data name="Concentration" xml:space="preserve">
-    <value>Concentration</value>
   </data>
   <data name="CalibrationCurveFitter_GetCalibrationCurve_All_of_the_external_standards_are_missing_one_or_more_peaks_" xml:space="preserve">
     <value>All of the external standards are missing one or more peaks.</value>
@@ -113,23 +116,17 @@
   <data name="CalibrationCurveFitter_GetCalibrationCurve_The_external_standards_and_the_target_replicate_have_no_peaks_in_common_" xml:space="preserve">
     <value>The external standards and the target replicate have no peaks in common.</value>
   </data>
-  <data name="CalibrationCurveFitter_GetYAxisTitle_Ratio_to__0_" xml:space="preserve">
+  <data name="CalibrationCurveFitter_GetXAxisTitle_Ratio_to__0_" xml:space="preserve">
     <value>Ratio to {0}</value>
   </data>
-  <data name="CalibrationCurveFitter_GetYAxisTitle_Concentration_from__0_" xml:space="preserve">
-    <value>Concentration from {0}</value>
+  <data name="CalibrationCurveFitter_GetXAxisTitle_Concentration_from_ratio_to_0_" xml:space="preserve">
+    <value>Concentration from ratio to {0}</value>
   </data>
   <data name="CalibrationForm_DisplayCalibrationCurve_No_results_available" xml:space="preserve">
     <value>No results available</value>
   </data>
   <data name="CalibrationForm_DisplayCalibrationCurve_Select_a_peptide_to_see_its_calibration_curve" xml:space="preserve">
     <value>Select a peptide to see its calibration curve</value>
-  </data>
-  <data name="Dilution_Factor" xml:space="preserve">
-    <value>Dilution Factor</value>
-  </data>
-  <data name="Intensity" xml:space="preserve">
-    <value>Intensity</value>
   </data>
   <data name="Normalized_Intensity" xml:space="preserve">
     <value>Normalized Intensity</value>
@@ -190,5 +187,35 @@
   </data>
   <data name="CalibrationCurve_ToString_Slope___0_" xml:space="preserve">
     <value>Slope: {0}</value>
+  </data>
+  <data name="Concentration_Ratio" xml:space="preserve">
+    <value>Concentration Ratio</value>
+  </data>
+  <data name="CalibrationCurveFitter_GetYAxisTitle_Peak_Area_Ratio" xml:space="preserve">
+    <value>Peak Area Ratio</value>
+  </data>
+  <data name="CalibrationCurveFitter_GetYAxisTitle_Peak_Area" xml:space="preserve">
+    <value>Peak Area</value>
+  </data>
+  <data name="CalibrationCurveFitter_GetYAxisTitle_Normalized_Peak_Area" xml:space="preserve">
+    <value>Normalized Peak Area</value>
+  </data>
+  <data name="CalibrationCurveFitter_PeakAreaRatioText__0___1__Peak_Area_Ratio" xml:space="preserve">
+    <value>{0}:{1} Peak Area Ratio</value>
+  </data>
+  <data name="CalibrationForm_DisplayCalibrationCurve_Use_the_Quantification_tab_on_the_Peptide_Settings_dialog_to_control_the_conversion_of_peak_areas_to_concentrations_" xml:space="preserve">
+    <value>Use the Quantification tab on the Peptide Settings dialog to control the conversion of peak areas to concentrations.</value>
+  </data>
+  <data name="CalibrationForm_DisplayCalibrationCurve_To_convert_peak_area_ratios_to_concentrations__specify_the_internal_standard_concentration_for__0__" xml:space="preserve">
+    <value>To convert peak area ratios to concentrations, specify the internal standard concentration for {0}.</value>
+  </data>
+  <data name="CalibrationForm_DisplayCalibrationCurve_To_fit_a_calibration_curve__set_the_Sample_Type_of_some_replicates_to_Standard__and_specify_their_concentration_" xml:space="preserve">
+    <value>To fit a calibration curve, set the Sample Type of some replicates to Standard, and specify their concentration.</value>
+  </data>
+  <data name="CalibrationCurveFitter_ConcentrationRatioText__0___1__Concentration_Ratio" xml:space="preserve">
+    <value>{0}:{1} Concentration Ratio</value>
+  </data>
+  <data name="RegressionFit_NONE_None" xml:space="preserve">
+    <value>None</value>
   </data>
 </root>

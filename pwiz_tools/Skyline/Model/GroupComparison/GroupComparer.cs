@@ -22,6 +22,7 @@ using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataAnalysis.FoldChange;
 using pwiz.Common.DataAnalysis.Matrices;
+using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 
 namespace pwiz.Skyline.Model.GroupComparison
 {
@@ -279,15 +280,14 @@ namespace pwiz.Skyline.Model.GroupComparison
             {
                 foreach (var peptide in selector.ListPeptides())
                 {
-                    var peptideQuantifier = new PeptideQuantifier(selector.Protein, peptide, ComparisonDef.NormalizationMethod)
-                    {
-                        IsotopeLabelType = selector.LabelType,
-                        MsLevel = selector.MsLevel
-                    };
+                    QuantificationSettings quantificationSettings = QuantificationSettings.DEFAULT
+                        .ChangeNormalizationMethod(ComparisonDef.NormalizationMethod)
+                        .ChangeMsLevel(selector.MsLevel);
+                    var peptideQuantifier = new PeptideQuantifier(selector.Protein, peptide, quantificationSettings);
                     foreach (var quantityEntry in peptideQuantifier.GetTransitionIntensities(SrmDocument.Settings, 
                                 replicateEntry.Key))
                     {
-                        var dataRowDetails = new DataRowDetails()
+                        var dataRowDetails = new DataRowDetails
                         {
                             BioReplicate = replicateEntry.Value.BioReplicate,
                             Control = replicateEntry.Value.IsControl,

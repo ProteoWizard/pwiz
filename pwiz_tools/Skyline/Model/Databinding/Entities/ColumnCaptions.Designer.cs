@@ -61,6 +61,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Accuracy.
+        /// </summary>
+        public static string Accuracy {
+            get {
+                return ResourceManager.GetString("Accuracy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Acquired Time.
         /// </summary>
         public static string AcquiredTime {
@@ -1069,11 +1078,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Normalized Intensity.
+        ///   Looks up a localized string similar to Normalized Area.
         /// </summary>
-        public static string NormalizedIntensity {
+        public static string NormalizedArea {
             get {
-                return ResourceManager.GetString("NormalizedIntensity", resourceCulture);
+                return ResourceManager.GetString("NormalizedArea", resourceCulture);
             }
         }
         

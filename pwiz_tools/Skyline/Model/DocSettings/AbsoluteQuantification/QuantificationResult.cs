@@ -30,14 +30,17 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
     public class QuantificationResult : Immutable, IComparable
     {
         [Format(Formats.GLOBAL_STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
-        public double? NormalizedIntensity { get; private set; }
+        public double? NormalizedArea{ get; private set; }
 
-        public QuantificationResult ChangeNormalizedIntensity(double? intensity)
+        public QuantificationResult ChangeNormalizedArea(double? intensity)
         {
-            return ChangeProp(ImClone(this), im => im.NormalizedIntensity = intensity);
+            return ChangeProp(ImClone(this), im => im.NormalizedArea = intensity);
         }
         [Format(Formats.GLOBAL_STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
         public double? CalculatedConcentration { get; private set; }
+
+        [Format(Formats.CV, NullValue = TextUtil.EXCEL_NA)]
+        public double? Accuracy { get; private set; }
 
         [Browsable(false)]
         public string Units { get; private set; }
@@ -51,6 +54,12 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         {
             return ChangeProp(ImClone(this), im => im.CalculatedConcentration = calculatedConcentration);
         }
+
+        public QuantificationResult ChangeAccuracy(double? accuracy)
+        {
+            return ChangeProp(ImClone(this), im => im.Accuracy = accuracy);
+        }
+
         public LinkValue<CalibrationCurve> CalibrationCurve { get; private set; }
 
         public QuantificationResult ChangeCalibrationCurve(LinkValue<CalibrationCurve> calibrationCurve)

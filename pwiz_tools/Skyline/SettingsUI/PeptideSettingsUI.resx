@@ -2058,13 +2058,13 @@ W = 2T/R</value>
     <value>3</value>
   </data>
   <data name="comboNormalizationMethod.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 36</value>
+    <value>28, 86</value>
   </data>
   <data name="comboNormalizationMethod.Size" type="System.Drawing.Size, System.Drawing">
     <value>239, 21</value>
   </data>
   <data name="comboNormalizationMethod.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+    <value>3</value>
   </data>
   <data name="&gt;&gt;comboNormalizationMethod.Name" xml:space="preserve">
     <value>comboNormalizationMethod</value>
@@ -2082,13 +2082,13 @@ W = 2T/R</value>
     <value>True</value>
   </data>
   <data name="label20.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 20</value>
+    <value>25, 70</value>
   </data>
   <data name="label20.Size" type="System.Drawing.Size, System.Drawing">
     <value>112, 13</value>
   </data>
   <data name="label20.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+    <value>2</value>
   </data>
   <data name="label20.Text" xml:space="preserve">
     <value>&amp;Normalization Method:</value>
@@ -2106,13 +2106,13 @@ W = 2T/R</value>
     <value>5</value>
   </data>
   <data name="comboRegressionFit.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 86</value>
+    <value>28, 36</value>
   </data>
   <data name="comboRegressionFit.Size" type="System.Drawing.Size, System.Drawing">
     <value>127, 21</value>
   </data>
   <data name="comboRegressionFit.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+    <value>1</value>
   </data>
   <data name="&gt;&gt;comboRegressionFit.Name" xml:space="preserve">
     <value>comboRegressionFit</value>
@@ -2130,13 +2130,13 @@ W = 2T/R</value>
     <value>True</value>
   </data>
   <data name="label22.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 70</value>
+    <value>25, 20</value>
   </data>
   <data name="label22.Size" type="System.Drawing.Size, System.Drawing">
     <value>77, 13</value>
   </data>
   <data name="label22.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
+    <value>0</value>
   </data>
   <data name="label22.Text" xml:space="preserve">
     <value>Regression &amp;Fit:</value>

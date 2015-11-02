@@ -1,17 +1,20 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.GroupComparison
 {
     public class PeptideQuantifier
     {
-        public PeptideQuantifier(PeptideGroupDocNode peptideGroup, PeptideDocNode peptideDocNode, NormalizationMethod normalizationMethod)
+        public PeptideQuantifier(PeptideGroupDocNode peptideGroup, PeptideDocNode peptideDocNode,
+            QuantificationSettings quantificationSettings)
         {
             PeptideGroupDocNode = peptideGroup;
             PeptideDocNode = peptideDocNode;
-            NormalizationMethod = normalizationMethod;
+            QuantificationSettings = quantificationSettings;
+
         }
 
         public static PeptideQuantifier GetPeptideQuantifier(SrmSettings srmSettings, PeptideGroupDocNode peptideGroup, PeptideDocNode peptide)
@@ -29,25 +32,37 @@ namespace pwiz.Skyline.Model.GroupComparison
                 labelType = mods.GetModificationTypes()
                     .First(mod => mod.Name != normalizationMethod.IsotopeLabelTypeName);
             }
-            return new PeptideQuantifier(peptideGroup, peptide, normalizationMethod)
+            return new PeptideQuantifier(peptideGroup, peptide, srmSettings.PeptideSettings.Quantification)
             {
-                IsotopeLabelType = labelType,
-                MsLevel = srmSettings.PeptideSettings.Quantification.MsLevel
+                MeasuredLabelType = labelType,
             };
         }
 
         public PeptideGroupDocNode PeptideGroupDocNode { get; private set; }
         public PeptideDocNode PeptideDocNode {get; private set; }
+        public QuantificationSettings QuantificationSettings { get; private set; }
+        public NormalizationMethod NormalizationMethod { get {return QuantificationSettings.NormalizationMethod;} }
+        public IsotopeLabelType MeasuredLabelType { get; set; }
 
-        public NormalizationMethod NormalizationMethod { get; private set; }
-        public IsotopeLabelType IsotopeLabelType { get; set; }
-        public int? MsLevel { get; set; }
+        public IsotopeLabelType RatioLabelType
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(NormalizationMethod.IsotopeLabelTypeName))
+                {
+                    return null;
+                }
+                return new IsotopeLabelType(NormalizationMethod.IsotopeLabelTypeName, 0);
+            }
+        }
+
+        public int? MsLevel { get { return QuantificationSettings.MsLevel; } }
 
         public bool SkipTransitionGroup(TransitionGroupDocNode transitionGroupDocNode)
         {
-            if (null != IsotopeLabelType)
+            if (null != MeasuredLabelType)
             {
-                if (!Equals(IsotopeLabelType, transitionGroupDocNode.TransitionGroup.LabelType))
+                if (!Equals(MeasuredLabelType, transitionGroupDocNode.TransitionGroup.LabelType))
                 {
                     return true;
                 }
@@ -142,10 +157,6 @@ namespace pwiz.Skyline.Model.GroupComparison
                 }
                 else
                 {
-                    if (PeptideDocNode.InternalStandardConcentration.HasValue)
-                    {
-                        normalizedArea *= PeptideDocNode.InternalStandardConcentration.Value;
-                    }
                     denominator = chromInfoStandard.Area;
                 }
             }
@@ -225,7 +236,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             return result;
         }
 
-        public static double? SumQuantities(IEnumerable<Quantity> quantities)
+        public static double? SumQuantities(IEnumerable<Quantity> quantities, NormalizationMethod normalizationMethod)
         {
             double numerator = 0;
             double denominator = 0;
@@ -240,7 +251,11 @@ namespace pwiz.Skyline.Model.GroupComparison
             {
                 return null;
             }
-            return numerator/denominator;
+            if (!string.IsNullOrEmpty(normalizationMethod.IsotopeLabelTypeName))
+            {
+                return numerator/denominator;
+            }
+            return numerator/denominator*count;
         }
 
         public class Quantity

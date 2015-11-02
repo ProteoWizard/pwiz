@@ -61,6 +61,24 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Analyte Concentration.
+        /// </summary>
+        public static string Analyte_Concentration {
+            get {
+                return ResourceManager.GetString("Analyte Concentration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Area.
+        /// </summary>
+        public static string Area {
+            get {
+                return ResourceManager.GetString("Area", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Calculated Concentration.
         /// </summary>
         public static string Calculated_Concentration {
@@ -115,6 +133,15 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0}:{1} Concentration Ratio.
+        /// </summary>
+        public static string CalibrationCurveFitter_ConcentrationRatioText__0___1__Concentration_Ratio {
+            get {
+                return ResourceManager.GetString("CalibrationCurveFitter_ConcentrationRatioText__0___1__Concentration_Ratio", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to All of the external standards are missing one or more peaks..
         /// </summary>
         public static string CalibrationCurveFitter_GetCalibrationCurve_All_of_the_external_standards_are_missing_one_or_more_peaks_ {
@@ -135,20 +162,56 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Concentration from {0}.
+        ///   Looks up a localized string similar to Concentration from ratio to {0}.
         /// </summary>
-        public static string CalibrationCurveFitter_GetYAxisTitle_Concentration_from__0_ {
+        public static string CalibrationCurveFitter_GetXAxisTitle_Concentration_from_ratio_to_0_ {
             get {
-                return ResourceManager.GetString("CalibrationCurveFitter_GetYAxisTitle_Concentration_from__0_", resourceCulture);
+                return ResourceManager.GetString("CalibrationCurveFitter_GetXAxisTitle_Concentration_from_ratio_to_0_", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Ratio to {0}.
         /// </summary>
-        public static string CalibrationCurveFitter_GetYAxisTitle_Ratio_to__0_ {
+        public static string CalibrationCurveFitter_GetXAxisTitle_Ratio_to__0_ {
             get {
-                return ResourceManager.GetString("CalibrationCurveFitter_GetYAxisTitle_Ratio_to__0_", resourceCulture);
+                return ResourceManager.GetString("CalibrationCurveFitter_GetXAxisTitle_Ratio_to__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Normalized Peak Area.
+        /// </summary>
+        public static string CalibrationCurveFitter_GetYAxisTitle_Normalized_Peak_Area {
+            get {
+                return ResourceManager.GetString("CalibrationCurveFitter_GetYAxisTitle_Normalized_Peak_Area", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peak Area.
+        /// </summary>
+        public static string CalibrationCurveFitter_GetYAxisTitle_Peak_Area {
+            get {
+                return ResourceManager.GetString("CalibrationCurveFitter_GetYAxisTitle_Peak_Area", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peak Area Ratio.
+        /// </summary>
+        public static string CalibrationCurveFitter_GetYAxisTitle_Peak_Area_Ratio {
+            get {
+                return ResourceManager.GetString("CalibrationCurveFitter_GetYAxisTitle_Peak_Area_Ratio", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}:{1} Peak Area Ratio.
+        /// </summary>
+        public static string CalibrationCurveFitter_PeakAreaRatioText__0___1__Peak_Area_Ratio {
+            get {
+                return ResourceManager.GetString("CalibrationCurveFitter_PeakAreaRatioText__0___1__Peak_Area_Ratio", resourceCulture);
             }
         }
         
@@ -191,29 +254,41 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Concentration.
+        ///   Looks up a localized string similar to To convert peak area ratios to concentrations, specify the internal standard concentration for {0}..
         /// </summary>
-        public static string Concentration {
+        public static string CalibrationForm_DisplayCalibrationCurve_To_convert_peak_area_ratios_to_concentrations__specify_the_internal_standard_concentration_for__0__ {
             get {
-                return ResourceManager.GetString("Concentration", resourceCulture);
+                return ResourceManager.GetString("CalibrationForm_DisplayCalibrationCurve_To_convert_peak_area_ratios_to_concentrat" +
+                        "ions__specify_the_internal_standard_concentration_for__0__", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Dilution Factor.
+        ///   Looks up a localized string similar to To fit a calibration curve, set the Sample Type of some replicates to Standard, and specify their concentration..
         /// </summary>
-        public static string Dilution_Factor {
+        public static string CalibrationForm_DisplayCalibrationCurve_To_fit_a_calibration_curve__set_the_Sample_Type_of_some_replicates_to_Standard__and_specify_their_concentration_ {
             get {
-                return ResourceManager.GetString("Dilution_Factor", resourceCulture);
+                return ResourceManager.GetString("CalibrationForm_DisplayCalibrationCurve_To_fit_a_calibration_curve__set_the_Sampl" +
+                        "e_Type_of_some_replicates_to_Standard__and_specify_their_concentration_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Intensity.
+        ///   Looks up a localized string similar to Use the Quantification tab on the Peptide Settings dialog to control the conversion of peak areas to concentrations..
         /// </summary>
-        public static string Intensity {
+        public static string CalibrationForm_DisplayCalibrationCurve_Use_the_Quantification_tab_on_the_Peptide_Settings_dialog_to_control_the_conversion_of_peak_areas_to_concentrations_ {
             get {
-                return ResourceManager.GetString("Intensity", resourceCulture);
+                return ResourceManager.GetString("CalibrationForm_DisplayCalibrationCurve_Use_the_Quantification_tab_on_the_Peptide" +
+                        "_Settings_dialog_to_control_the_conversion_of_peak_areas_to_concentrations_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Concentration Ratio.
+        /// </summary>
+        public static string Concentration_Ratio {
+            get {
+                return ResourceManager.GetString("Concentration_Ratio", resourceCulture);
             }
         }
         
@@ -241,6 +316,15 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification {
         public static string RegressionFit_LINEAR_THROUGH_ZERO_Linear_through_zero {
             get {
                 return ResourceManager.GetString("RegressionFit_LINEAR_THROUGH_ZERO_Linear_through_zero", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to None.
+        /// </summary>
+        public static string RegressionFit_NONE_None {
+            get {
+                return ResourceManager.GetString("RegressionFit_NONE_None", resourceCulture);
             }
         }
         

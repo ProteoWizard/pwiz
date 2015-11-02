@@ -26,6 +26,9 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 {
     public class RegressionFit
     {
+        public static readonly RegressionFit NONE = new RegressionFit("none", // Not L10N
+            ()=>QuantificationStrings.RegressionFit_NONE_None, NoExternalStandards);
+
         public static readonly RegressionFit LINEAR = new RegressionFit("linear", // Not L10N
             () => QuantificationStrings.RegressionFit_LINEAR_Linear, LinearFit);
 
@@ -37,7 +40,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         public static readonly ImmutableList<RegressionFit> All = ImmutableList<RegressionFit>.ValueOf(new[]
         {
-            LINEAR_THROUGH_ZERO, LINEAR, QUADRATIC
+            NONE, LINEAR_THROUGH_ZERO, LINEAR, QUADRATIC
         });
 
         private readonly Func<String> _getLabelFunc;
@@ -98,6 +101,11 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return curve.ChangeRSquared(rSquared);
         }
 
+        public static CalibrationCurve NoExternalStandards(IList<WeightedPoint> points)
+        {
+            return CalibrationCurve.NO_EXTERNAL_STANDARDS;
+        }
+
         public static CalibrationCurve LinearFit(IList<WeightedPoint> points)
         {
             CalibrationCurve calibrationCurve = new CalibrationCurve().ChangePointCount(points.Count);
@@ -141,7 +149,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         {
             if (string.IsNullOrEmpty(name))
             {
-                return LINEAR;
+                return NONE;
             }
             return All.FirstOrDefault(fit => fit.Name == name) ?? LINEAR;
         }

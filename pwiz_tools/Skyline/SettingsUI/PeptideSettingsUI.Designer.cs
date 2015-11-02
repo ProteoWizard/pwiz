@@ -103,6 +103,8 @@ namespace pwiz.Skyline.SettingsUI
             this.tabIntegration = new System.Windows.Forms.TabPage();
             this.label36 = new System.Windows.Forms.Label();
             this.tabQuantification = new System.Windows.Forms.TabPage();
+            this.tbxQuantUnits = new System.Windows.Forms.TextBox();
+            this.lblQuantUnits = new System.Windows.Forms.Label();
             this.comboQuantMsLevel = new System.Windows.Forms.ComboBox();
             this.label23 = new System.Windows.Forms.Label();
             this.comboNormalizationMethod = new System.Windows.Forms.ComboBox();
@@ -119,8 +121,6 @@ namespace pwiz.Skyline.SettingsUI
             this.addIonMobilityLibraryContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editIonMobilityLibraryCurrentContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editIonMobilityLibraryListContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.lblQuantUnits = new System.Windows.Forms.Label();
-            this.tbxQuantUnits = new System.Windows.Forms.TextBox();
             this.tabControl1.SuspendLayout();
             this.tabDigestion.SuspendLayout();
             this.tabPrediction.SuspendLayout();
@@ -685,6 +685,16 @@ namespace pwiz.Skyline.SettingsUI
             this.tabQuantification.Name = "tabQuantification";
             this.tabQuantification.UseVisualStyleBackColor = true;
             // 
+            // tbxQuantUnits
+            // 
+            resources.ApplyResources(this.tbxQuantUnits, "tbxQuantUnits");
+            this.tbxQuantUnits.Name = "tbxQuantUnits";
+            // 
+            // lblQuantUnits
+            // 
+            resources.ApplyResources(this.lblQuantUnits, "lblQuantUnits");
+            this.lblQuantUnits.Name = "lblQuantUnits";
+            // 
             // comboQuantMsLevel
             // 
             this.comboQuantMsLevel.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
@@ -790,16 +800,6 @@ namespace pwiz.Skyline.SettingsUI
             this.editIonMobilityLibraryListContextMenuItem.Name = "editIonMobilityLibraryListContextMenuItem";
             resources.ApplyResources(this.editIonMobilityLibraryListContextMenuItem, "editIonMobilityLibraryListContextMenuItem");
             this.editIonMobilityLibraryListContextMenuItem.Click += new System.EventHandler(this.editIonMobilityLibraryListContextMenuItem_Click);
-            // 
-            // lblQuantUnits
-            // 
-            resources.ApplyResources(this.lblQuantUnits, "lblQuantUnits");
-            this.lblQuantUnits.Name = "lblQuantUnits";
-            // 
-            // tbxQuantUnits
-            // 
-            resources.ApplyResources(this.tbxQuantUnits, "tbxQuantUnits");
-            this.tbxQuantUnits.Name = "tbxQuantUnits";
             // 
             // PeptideSettingsUI
             // 

@@ -17,7 +17,7 @@
           <static_modification name="heavy I" aminoacid="I" label_13C="true" label_15N="true" explicit_decl="true" />
         </heavy_modifications>
       </peptide_modifications>
-      <quantification weighting="none" fit="linear" normalization="ratio_to_heavy" />
+      <quantification weighting="none" fit="linear" normalization="ratio_to_heavy" units="ng/mL" />
     </peptide_settings>
     <transition_settings>
       <transition_prediction precursor_mass_type="Monoisotopic" fragment_mass_type="Monoisotopic" optimize_by="Transition">
@@ -98,7 +98,7 @@
           </instrument_info_list>
         </sample_file>
       </replicate>
-      <replicate name="Cal 1_0_20 ng_mL_VIFonly" dilution_factor="0.02" sample_type="standard">
+      <replicate name="Cal 1_0_20 ng_mL_VIFonly" analyte_concentration="0.02" sample_type="standard">
         <sample_file id="Cal_1_0_20_ng_mL_VIFonly_f0" file_path="D:\Analyst Data\Projects\THYG R&amp;D\Data\2015-08-19 - LCA Skyline Example.wiff|Cal 1_0_20 ng_mL_VIFonly|3" sample_name="Cal 1_0_20 ng_mL_VIFonly" acquired_time="2015-08-21T04:09:49" modified_time="2015-08-21T08:54:20">
           <instrument_info_list>
             <instrument_info>
@@ -107,7 +107,7 @@
           </instrument_info_list>
         </sample_file>
       </replicate>
-      <replicate name="Cal 2_0_5 ng_mL_VIFonly" dilution_factor="0.05" sample_type="standard">
+      <replicate name="Cal 2_0_5 ng_mL_VIFonly" analyte_concentration="0.05" sample_type="standard">
         <sample_file id="Cal_2_0_5_ng_mL_VIFonly_f0" file_path="D:\Analyst Data\Projects\THYG R&amp;D\Data\2015-08-19 - LCA Skyline Example.wiff|Cal 2_0_5 ng_mL_VIFonly|4" sample_name="Cal 2_0_5 ng_mL_VIFonly" acquired_time="2015-08-21T04:11:52" modified_time="2015-08-21T08:54:20">
           <instrument_info_list>
             <instrument_info>
@@ -116,7 +116,7 @@
           </instrument_info_list>
         </sample_file>
       </replicate>
-      <replicate name="Cal 3_1 ng_mL_VIFonly" dilution_factor="0.1" sample_type="standard">
+      <replicate name="Cal 3_1 ng_mL_VIFonly" analyte_concentration="0.1" sample_type="standard">
         <sample_file id="Cal_3_1_ng_mL_VIFonly_f0" file_path="D:\Analyst Data\Projects\THYG R&amp;D\Data\2015-08-19 - LCA Skyline Example.wiff|Cal 3_1 ng_mL_VIFonly|5" sample_name="Cal 3_1 ng_mL_VIFonly" acquired_time="2015-08-21T04:13:54" modified_time="2015-08-21T08:54:20">
           <instrument_info_list>
             <instrument_info>
@@ -125,7 +125,7 @@
           </instrument_info_list>
         </sample_file>
       </replicate>
-      <replicate name="Cal 4_2 ng_mL_VIFonly" dilution_factor="0.2" sample_type="standard">
+      <replicate name="Cal 4_2 ng_mL_VIFonly" analyte_concentration="0.2" sample_type="standard">
         <sample_file id="Cal_4_2_ng_mL_VIFonly_f0" file_path="D:\Analyst Data\Projects\THYG R&amp;D\Data\2015-08-19 - LCA Skyline Example.wiff|Cal 4_2 ng_mL_VIFonly|6" sample_name="Cal 4_2 ng_mL_VIFonly" acquired_time="2015-08-21T04:15:57" modified_time="2015-08-21T08:54:20">
           <instrument_info_list>
             <instrument_info>
@@ -134,7 +134,7 @@
           </instrument_info_list>
         </sample_file>
       </replicate>
-      <replicate name="Cal 5_5 ng_mL_VIFonly" dilution_factor="0.5" sample_type="standard">
+      <replicate name="Cal 5_5 ng_mL_VIFonly" analyte_concentration="0.5" sample_type="standard">
         <sample_file id="Cal_5_5_ng_mL_VIFonly_f0" file_path="D:\Analyst Data\Projects\THYG R&amp;D\Data\2015-08-19 - LCA Skyline Example.wiff|Cal 5_5 ng_mL_VIFonly|7" sample_name="Cal 5_5 ng_mL_VIFonly" acquired_time="2015-08-21T04:17:58" modified_time="2015-08-21T08:54:20">
           <instrument_info_list>
             <instrument_info>
@@ -143,7 +143,7 @@
           </instrument_info_list>
         </sample_file>
       </replicate>
-      <replicate name="Cal 6_10 ng_mL_VIFonly" dilution_factor="1" sample_type="standard">
+      <replicate name="Cal 6_10 ng_mL_VIFonly" analyte_concentration="1" sample_type="standard">
         <sample_file id="Cal_6_10_ng_mL_VIFonly_f0" file_path="D:\Analyst Data\Projects\THYG R&amp;D\Data\2015-08-19 - LCA Skyline Example.wiff|Cal 6_10 ng_mL_VIFonly|8" sample_name="Cal 6_10 ng_mL_VIFonly" acquired_time="2015-08-21T04:20:00" modified_time="2015-08-21T08:54:20">
           <instrument_info_list>
             <instrument_info>
@@ -152,7 +152,7 @@
           </instrument_info_list>
         </sample_file>
       </replicate>
-      <replicate name="Cal 7_25 ng_mL_VIFonly" dilution_factor="2.5" sample_type="standard">
+      <replicate name="Cal 7_25 ng_mL_VIFonly" analyte_concentration="2.5" sample_type="standard">
         <sample_file id="Cal_7_25_ng_mL_VIFonly_f0" file_path="D:\Analyst Data\Projects\THYG R&amp;D\Data\2015-08-19 - LCA Skyline Example.wiff|Cal 7_25 ng_mL_VIFonly|9" sample_name="Cal 7_25 ng_mL_VIFonly" acquired_time="2015-08-21T04:22:05" modified_time="2015-08-21T08:54:20">
           <instrument_info_list>
             <instrument_info>
@@ -161,7 +161,7 @@
           </instrument_info_list>
         </sample_file>
       </replicate>
-      <replicate name="Cal 8_100 ng_mL_VIFonly" dilution_factor="10" sample_type="standard">
+      <replicate name="Cal 8_100 ng_mL_VIFonly" analyte_concentration="10" sample_type="standard">
         <sample_file id="Cal_8_100_ng_mL_VIFonly_f0" file_path="D:\Analyst Data\Projects\THYG R&amp;D\Data\2015-08-19 - LCA Skyline Example.wiff|Cal 8_100 ng_mL_VIFonly|10" sample_name="Cal 8_100 ng_mL_VIFonly" acquired_time="2015-08-21T04:24:07" modified_time="2015-08-21T08:54:20">
           <instrument_info_list>
             <instrument_info>
@@ -299,7 +299,7 @@
     </measured_results>
   </settings_summary>
   <peptide_list label_name="TG|1578-1589|z2" websearch_status="X">
-    <peptide auto_manage_children="false" stock_concentration="100" internal_standard_known_concentration="80" concentration_units="ng/mL" sequence="VIFDANAPVAVR" modified_sequence="VIFDANAPVAVR" calc_neutral_pep_mass="1270.703371" num_missed_cleavages="0" avg_measured_retention_time="0.2071873">
+    <peptide auto_manage_children="false" concentration_multiplier="1.3" internal_standard_concentration="80" sequence="VIFDANAPVAVR" modified_sequence="VIFDANAPVAVR" calc_neutral_pep_mass="1270.703371" num_missed_cleavages="0" avg_measured_retention_time="0.2071873">
       <explicit_modifications>
         <explicit_heavy_modifications>
           <explicit_modification index_aa="1" modification_name="heavy I" mass_diff="+7" />
