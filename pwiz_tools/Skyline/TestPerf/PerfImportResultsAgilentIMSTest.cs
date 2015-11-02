@@ -143,10 +143,9 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         private ChromFileInfo StripFilePathInfo(ChromFileInfo chromFileInfo)
         {
             // Remove the everything but the filename from the FilePath, and zero out the FileModifiedTime.
-            // TODO: Figure out why it's also necessary to zero out the MaxIntensity
             var chromCachedFile = new ChromCachedFile(new MsDataFilePath(chromFileInfo.FilePath.GetFileName()), 0,
                 new DateTime(0), chromFileInfo.RunStartTime, (float) chromFileInfo.MaxRetentionTime,
-                0 /* (float) chromFileInfo.MaxIntensity */, chromFileInfo.InstrumentInfoList);
+                (float) chromFileInfo.MaxIntensity, chromFileInfo.InstrumentInfoList);
             return chromFileInfo.ChangeInfo(chromCachedFile);
         }
     }

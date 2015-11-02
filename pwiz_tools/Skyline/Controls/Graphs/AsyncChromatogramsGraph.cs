@@ -191,7 +191,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             // Process bins of peaks queued by the reader thread.
             float maxTime = (float) _xMax;
-            float maxIntensity = (float) _yMax;
+            float maxIntensity = 0;
             while (maxBins-- > 0 && transitions.BinnedPeaks.TryPeek(out bin))
             {
                 if (bin == null && peaksAdded)
@@ -218,11 +218,13 @@ namespace pwiz.Skyline.Controls.Graphs
                     _fullFrame = true;
                     return false;
                 }
-                
+
                 if (transitions.Progressive)
                     ProcessBinProgressive(bin, ref peaksAdded, ref maxTime, ref maxIntensity);
                 else
                     ProcessBinSRM(bin, ref peaksAdded, ref maxTime, ref maxIntensity);
+                
+                transitions.MaxIntensity = Math.Max(transitions.MaxIntensity, maxIntensity);
             }
 
             // Rescale graph if necessary.
