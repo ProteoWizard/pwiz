@@ -221,7 +221,11 @@ namespace pwiz.Skyline
 
             if (commandArgs.Saving)
             {
-                SaveFile(commandArgs.SaveFile ?? _skylineFile);
+                var saveFile = commandArgs.SaveFile ?? _skylineFile;
+                if (!SaveFile(saveFile))
+                    return;
+
+                _skylineFile = saveFile;
             }
 
             if (commandArgs.ExportingReport)
@@ -1401,7 +1405,7 @@ namespace pwiz.Skyline
             return true;
         }
 
-        public void SaveFile(string saveFile)
+        public bool SaveFile(string saveFile)
         {
             _out.WriteLine(Resources.CommandLine_SaveFile_Saving_file___);
             try
@@ -1411,9 +1415,10 @@ namespace pwiz.Skyline
             catch
             {
                 _out.WriteLine(Resources.CommandLine_SaveFile_Error__The_file_could_not_be_saved_to__0____Check_that_the_directory_exists_and_is_not_read_only_, saveFile);
-                return;
+                return false;
             }
             _out.WriteLine(Resources.CommandLine_SaveFile_File__0__saved_, Path.GetFileName(saveFile));
+            return true;
         }
 
         public void ExportReport(string reportName, string reportFile, char reportColSeparator, bool reportInvariant)
