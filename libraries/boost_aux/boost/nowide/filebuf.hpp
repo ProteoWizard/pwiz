@@ -280,20 +280,20 @@ namespace nowide {
             if(fixp() < 0 || fixg() < 0)
                 return EOF;
             if(seekdir == std::ios_base::cur) {
-                if( ::fseek(file_,off,SEEK_CUR) < 0)
+                if (::_fseeki64(file_, off, SEEK_CUR) < 0)
                     return EOF;
             }
             else if(seekdir == std::ios_base::beg) {
-                if( ::fseek(file_,off,SEEK_SET) < 0)
+                if (::_fseeki64(file_, off, SEEK_SET) < 0)
                     return EOF;
             }
             else if(seekdir == std::ios_base::end) {
-                if( ::fseek(file_,off,SEEK_END) < 0)
+                if (::_fseeki64(file_, off, SEEK_END) < 0)
                     return EOF;
             }
             else
                 return -1;
-            return ftell(file_);
+            return _ftelli64(file_);
         }
         std::streampos seekpos(std::streampos off,std::ios_base::openmode m)
         {
@@ -305,7 +305,7 @@ namespace nowide {
             if(gptr()!=egptr()) {
                 std::streamsize off = gptr() - egptr();
                 setg(0,0,0);
-                if(fseek(file_,off,SEEK_CUR) != 0)
+                if (_fseeki64(file_, off, SEEK_CUR) != 0)
                     return -1;
             }
             setg(0,0,0);
