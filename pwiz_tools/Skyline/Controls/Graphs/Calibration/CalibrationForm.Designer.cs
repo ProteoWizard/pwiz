@@ -43,6 +43,7 @@
             // zedGraphControl
             // 
             resources.ApplyResources(this.zedGraphControl, "zedGraphControl");
+            this.zedGraphControl.IsShowCopyMessage = false;
             this.zedGraphControl.Name = "zedGraphControl";
             this.zedGraphControl.ScrollGrace = 0D;
             this.zedGraphControl.ScrollMaxX = 0D;

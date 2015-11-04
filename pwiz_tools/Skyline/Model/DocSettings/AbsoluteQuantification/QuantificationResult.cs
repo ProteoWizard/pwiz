@@ -19,7 +19,6 @@
 using System;
 using System.Collections;
 using System.ComponentModel;
-using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Hibernate;
@@ -60,21 +59,18 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return ChangeProp(ImClone(this), im => im.Accuracy = accuracy);
         }
 
-        public LinkValue<CalibrationCurve> CalibrationCurve { get; private set; }
-
-        public QuantificationResult ChangeCalibrationCurve(LinkValue<CalibrationCurve> calibrationCurve)
-        {
-            return ChangeProp(ImClone(this), im => im.CalibrationCurve = calibrationCurve);
-        }
-
         public int CompareTo(object obj)
         {
             if (null == obj)
             {
                 return 1;
             }
-            return Comparer.Default.Compare(CalculatedConcentration,
-                ((QuantificationResult) obj).CalculatedConcentration);
+            return Comparer.Default.Compare(GetSortKey(), ((QuantificationResult) obj).GetSortKey());
+        }
+
+        private Tuple<double?, double?> GetSortKey()
+        {
+            return new Tuple<double?, double?>(CalculatedConcentration, NormalizedArea);
         }
 
         public override string ToString()
@@ -87,10 +83,12 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 }
                 return TextUtil.SpaceSeparate(CalculatedConcentration.Value.ToString(Formats.Concentration), Units);
             }
-            else
+            else if (NormalizedArea.HasValue)
             {
-                return string.Empty;
+                return string.Format(QuantificationStrings.QuantificationResult_ToString_Normalized_Area___0_, 
+                    NormalizedArea.Value.ToString(Formats.CalibrationCurve));
             }
+            return TextUtil.EXCEL_NA;
         }
     }
 }

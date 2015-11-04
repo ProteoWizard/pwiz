@@ -197,7 +197,7 @@ namespace pwiz.Common.DataBinding
             while (true)
             {
                 var linkValue = o as ILinkValue;
-                if (null == linkValue || ReferenceEquals(linkValue, o))
+                if (null == linkValue || ReferenceEquals(linkValue.Value, o))
                 {
                     return o;
                 }

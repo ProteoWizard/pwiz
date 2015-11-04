@@ -307,7 +307,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 var quantifier = PeptideQuantifier.GetPeptideQuantifier(SrmDocument.Settings, Protein.DocNode, DocNode);
                 CalibrationCurveFitter curveFitter = new CalibrationCurveFitter(quantifier, SrmDocument.Settings);
-                CalibrationCurve calibrationCurve = curveFitter.GetCalibrationCurve(null);
+                CalibrationCurve calibrationCurve = curveFitter.GetCalibrationCurve();
                 return new LinkValue<CalibrationCurve>(calibrationCurve, (sender, args) =>
                 {
                     if (null != DataSchema.SkylineWindow)

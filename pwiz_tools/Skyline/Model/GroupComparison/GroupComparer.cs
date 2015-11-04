@@ -284,6 +284,10 @@ namespace pwiz.Skyline.Model.GroupComparison
                         .ChangeNormalizationMethod(ComparisonDef.NormalizationMethod)
                         .ChangeMsLevel(selector.MsLevel);
                     var peptideQuantifier = new PeptideQuantifier(selector.Protein, peptide, quantificationSettings);
+                    if (null != selector.LabelType)
+                    {
+                        peptideQuantifier.MeasuredLabelTypes = ImmutableList.Singleton(selector.LabelType);
+                    }
                     foreach (var quantityEntry in peptideQuantifier.GetTransitionIntensities(SrmDocument.Settings, 
                                 replicateEntry.Key))
                     {

@@ -142,6 +142,15 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Concentration Ratio to {0}.
+        /// </summary>
+        public static string CalibrationCurveFitter_ConcentrationRatioText_Concentration_Ratio_to__0_ {
+            get {
+                return ResourceManager.GetString("CalibrationCurveFitter_ConcentrationRatioText_Concentration_Ratio_to__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to All of the external standards are missing one or more peaks..
         /// </summary>
         public static string CalibrationCurveFitter_GetCalibrationCurve_All_of_the_external_standards_are_missing_one_or_more_peaks_ {
@@ -158,6 +167,16 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification {
             get {
                 return ResourceManager.GetString("CalibrationCurveFitter_GetCalibrationCurve_The_external_standards_and_the_target_" +
                         "replicate_have_no_peaks_in_common_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to One or more transitions are missing or truncated..
+        /// </summary>
+        public static string CalibrationCurveFitter_GetQuantificationResult_One_or_more_transitions_are_missing_or_truncated_ {
+            get {
+                return ResourceManager.GetString("CalibrationCurveFitter_GetQuantificationResult_One_or_more_transitions_are_missin" +
+                        "g_or_truncated_", resourceCulture);
             }
         }
         
@@ -216,6 +235,15 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Peak Area Ratio to {0}.
+        /// </summary>
+        public static string CalibrationCurveFitter_PeakAreaRatioText_Peak_Area_Ratio_to__0_ {
+            get {
+                return ResourceManager.GetString("CalibrationCurveFitter_PeakAreaRatioText_Peak_Area_Ratio_to__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to R-Squared = .
         /// </summary>
         public static string CalibrationForm_DisplayCalibrationCurve_ {
@@ -240,6 +268,16 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification {
             get {
                 return ResourceManager.GetString("CalibrationForm_DisplayCalibrationCurve_Select_a_peptide_to_see_its_calibration_c" +
                         "urve", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The selected replicate has missing or truncated transitions.
+        /// </summary>
+        public static string CalibrationForm_DisplayCalibrationCurve_The_selected_replicate_has_missing_or_truncated_transitions {
+            get {
+                return ResourceManager.GetString("CalibrationForm_DisplayCalibrationCurve_The_selected_replicate_has_missing_or_tru" +
+                        "ncated_transitions", resourceCulture);
             }
         }
         
@@ -298,6 +336,15 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification {
         public static string Normalized_Intensity {
             get {
                 return ResourceManager.GetString("Normalized_Intensity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Normalized Area: {0}.
+        /// </summary>
+        public static string QuantificationResult_ToString_Normalized_Area___0_ {
+            get {
+                return ResourceManager.GetString("QuantificationResult_ToString_Normalized_Area___0_", resourceCulture);
             }
         }
         

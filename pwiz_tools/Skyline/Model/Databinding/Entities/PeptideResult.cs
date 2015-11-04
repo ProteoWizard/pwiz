@@ -102,52 +102,28 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
-        public QuantificationResult Quantification
+        public LinkValue<QuantificationResult> Quantification
         {
-            get { return _quantificationResult.Value; }
+            get
+            {
+                return new LinkValue<QuantificationResult>(_quantificationResult.Value, (sender, args) =>
+                {
+                    SkylineWindow skylineWindow = DataSchema.SkylineWindow;
+                    if (skylineWindow != null)
+                    {
+                        skylineWindow.ShowCalibrationForm();
+                        skylineWindow.SelectedResultsIndex = ResultFile.Replicate.ReplicateIndex;
+                        skylineWindow.SelectedPath = Peptide.IdentityPath;
+                    }
+                });
+            }
         }
 
         public QuantificationResult GetQuantification()
         {
             var quantifier = PeptideQuantifier.GetPeptideQuantifier(SrmDocument.Settings, Peptide.Protein.DocNode, Peptide.DocNode);
             CalibrationCurveFitter curveFitter = new CalibrationCurveFitter(quantifier, SrmDocument.Settings);
-            QuantificationResult result = new QuantificationResult();
-
-            int replicateIndex = ResultFile.Replicate.ReplicateIndex;
-            CalibrationCurve calibrationCurve = curveFitter.GetCalibrationCurve(replicateIndex);
-            result = result.ChangeCalibrationCurve(new LinkValue<CalibrationCurve>(calibrationCurve, (sender, args) =>
-            {
-                SkylineWindow skylineWindow = DataSchema.SkylineWindow;
-                if (skylineWindow != null)
-                {
-                    skylineWindow.ShowCalibrationForm();
-                    skylineWindow.SelectedResultsIndex = ResultFile.Replicate.ReplicateIndex;
-                    skylineWindow.SelectedPath = Peptide.IdentityPath;
-                }
-            }));
-            if (calibrationCurve.PointCount.GetValueOrDefault() == 0)
-            {
-                result = result.ChangeNormalizedArea(curveFitter.GetNormalizedPeakArea(replicateIndex, null));
-            }
-            else
-            {
-                result = result.ChangeNormalizedArea(curveFitter.GetNormalizedPeakArea(replicateIndex,
-                    curveFitter.GetCompleteTransitions()));
-            }
-            if (curveFitter.GetStandardConcentrations().Any())
-            {
-                double? calculatedConcentration = curveFitter.GetCalculatedConcentration(
-                    calibrationCurve, replicateIndex);
-                result = result.ChangeCalculatedConcentration(calculatedConcentration);
-                double? expectedConcentration = curveFitter.GetPeptideConcentration(ResultFile.Replicate.ChromatogramSet);
-                result = result.ChangeAccuracy(calculatedConcentration/expectedConcentration);
-            }
-            else
-            {
-                result = result.ChangeCalculatedConcentration(result.NormalizedArea);
-            }
-            result = result.ChangeUnits(SrmDocument.Settings.PeptideSettings.Quantification.Units);
-            return result;
+            return curveFitter.GetQuantificationResult(ResultFile.Replicate.ReplicateIndex);
         }
     }
 }

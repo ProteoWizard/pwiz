@@ -41,7 +41,7 @@ namespace pwiz.SkylineTest.Quantification
         {
             var srmDocument = LoadTestDocument();
             var calibrationCurveFitter = GetCalibrationCurveFitter(srmDocument);
-            var calibrationCurve = calibrationCurveFitter.GetCalibrationCurve(null);
+            var calibrationCurve = calibrationCurveFitter.GetCalibrationCurve();
             Assert.AreNotEqual(0, calibrationCurve.PointCount);
             Assert.IsNull(calibrationCurve.QuadraticCoefficient);
             Assert.IsNotNull(calibrationCurve.Slope);
@@ -56,7 +56,7 @@ namespace pwiz.SkylineTest.Quantification
             srmDocument = ChangeQuantificationSettings(srmDocument,
                 QuantificationSettings.DEFAULT.ChangeRegressionFit(RegressionFit.NONE));
             var calibrationCurveFitter = GetCalibrationCurveFitter(srmDocument);
-            var calibrationCurve = calibrationCurveFitter.GetCalibrationCurve(null);
+            var calibrationCurve = calibrationCurveFitter.GetCalibrationCurve();
             Assert.AreEqual(1.0, calibrationCurve.Slope);
             Assert.AreEqual(0, calibrationCurve.PointCount);
         }
@@ -91,8 +91,8 @@ namespace pwiz.SkylineTest.Quantification
             {
                 string msg = string.Format("Replicate {0}", iReplicate);
                 var expectedY = lightPrecursor.Results[iReplicate].First().Area.Value;
-                Assert.AreEqual(expectedY, curveFitter.GetYValue(iReplicate, null).Value, .01, msg);
-                var calibrationCurve = curveFitter.GetCalibrationCurve(iReplicate);
+                Assert.AreEqual(expectedY, curveFitter.GetYValue(iReplicate).Value, .01, msg);
+                var calibrationCurve = curveFitter.GetCalibrationCurve();
                 Assert.IsNotNull(calibrationCurve.Slope);
                 Assert.IsNotNull(calibrationCurve.RSquared);
                 double expectedConcentration = calibrationCurve.GetX(expectedY).Value;
@@ -132,8 +132,8 @@ namespace pwiz.SkylineTest.Quantification
             {
                 string msg = string.Format("Replicate {0}", iReplicate);
                 var expectedY = peptide.Results[iReplicate].First().LabelRatios.First().Ratio.Ratio;
-                Assert.AreEqual(expectedY, curveFitter.GetYValue(iReplicate, null).Value, .01, msg);
-                var calibrationCurve = curveFitter.GetCalibrationCurve(iReplicate);
+                Assert.AreEqual(expectedY, curveFitter.GetYValue(iReplicate).Value, .01, msg);
+                var calibrationCurve = curveFitter.GetCalibrationCurve();
                 Assert.IsNotNull(calibrationCurve.Slope);
                 Assert.IsNotNull(calibrationCurve.RSquared);
                 double expectedConcentration = calibrationCurve.GetX(expectedY).Value;
@@ -176,8 +176,8 @@ namespace pwiz.SkylineTest.Quantification
             {
                 string msg = string.Format("Replicate {0}", iReplicate);
                 var expectedY = peptide.Results[iReplicate].First().LabelRatios.First().Ratio.Ratio;
-                Assert.AreEqual(expectedY, curveFitter.GetYValue(iReplicate, null).Value, .01, msg);
-                var calibrationCurve = curveFitter.GetCalibrationCurve(iReplicate);
+                Assert.AreEqual(expectedY, curveFitter.GetYValue(iReplicate).Value, .01, msg);
+                var calibrationCurve = curveFitter.GetCalibrationCurve();
                 Assert.IsNotNull(calibrationCurve.Slope);
                 Assert.IsNotNull(calibrationCurve.RSquared);
                 double expectedConcentration = calibrationCurve.GetX(expectedY).Value*internalStandardConcentration;
@@ -216,10 +216,10 @@ namespace pwiz.SkylineTest.Quantification
             {
                 string msg = string.Format("Replicate {0}", iReplicate);
                 var expectedY = lightPrecursor.Results[iReplicate].First().Area.Value;
-                double? actualY = curveFitter.GetYValue(iReplicate, null).Value;
+                double? actualY = curveFitter.GetYValue(iReplicate).Value;
                 Assert.IsNotNull(actualY);
                 Assert.AreEqual(expectedY, actualY.Value, .01, msg);
-                var calibrationCurve = curveFitter.GetCalibrationCurve(iReplicate);
+                var calibrationCurve = curveFitter.GetCalibrationCurve();
                 Assert.AreEqual(1, calibrationCurve.PointCount);
                 var expectedConcentration = expectedY / calibrationCurve.Slope.Value;
                 Assert.AreEqual(expectedConcentration,
@@ -262,10 +262,10 @@ namespace pwiz.SkylineTest.Quantification
             {
                 string msg = string.Format("Replicate {0}", iReplicate);
                 var expectedY = peptide.Results[iReplicate].First().LabelRatios.First().Ratio.Ratio;
-                double? actualY = curveFitter.GetYValue(iReplicate, null).Value;
+                double? actualY = curveFitter.GetYValue(iReplicate).Value;
                 Assert.IsNotNull(actualY);
                 Assert.AreEqual(expectedY, actualY.Value, epsilon, msg);
-                var calibrationCurve = curveFitter.GetCalibrationCurve(iReplicate);
+                var calibrationCurve = curveFitter.GetCalibrationCurve();
                 var expectedConcentration = expectedY / calibrationCurve.Slope.Value;
                 Assert.AreEqual(expectedConcentration,
                     curveFitter.GetCalculatedXValue(calibrationCurve, iReplicate).GetValueOrDefault(double.NaN), epsilon, msg);
@@ -308,10 +308,10 @@ namespace pwiz.SkylineTest.Quantification
             {
                 string msg = string.Format("Replicate {0}", iReplicate);
                 var expectedY = peptide.Results[iReplicate].First().LabelRatios.First().Ratio.Ratio;
-                double? actualY = curveFitter.GetYValue(iReplicate, null).Value;
+                double? actualY = curveFitter.GetYValue(iReplicate).Value;
                 Assert.IsNotNull(actualY);
                 Assert.AreEqual(expectedY, actualY.Value, epsilon, msg);
-                var calibrationCurve = curveFitter.GetCalibrationCurve(iReplicate);
+                var calibrationCurve = curveFitter.GetCalibrationCurve();
                 Assert.AreEqual(1, calibrationCurve.PointCount);
                 var expectedConcentration = expectedY*internalStandardConcentration/calibrationCurve.Slope.Value;
                 Assert.AreEqual(expectedConcentration/internalStandardConcentration,
@@ -355,8 +355,8 @@ namespace pwiz.SkylineTest.Quantification
             {
                 string msg = string.Format("Replicate {0}", iReplicate);
                 var expectedY = peptide.Results[iReplicate].First().LabelRatios.First().Ratio.Ratio;
-                Assert.AreEqual(expectedY, curveFitter.GetYValue(iReplicate, null).Value, epsilon, msg);
-                var calibrationCurve = curveFitter.GetCalibrationCurve(iReplicate);
+                Assert.AreEqual(expectedY, curveFitter.GetYValue(iReplicate).Value, epsilon, msg);
+                var calibrationCurve = curveFitter.GetCalibrationCurve();
                 Assert.AreEqual(1 / internalStandardConcentration, calibrationCurve.Slope);
                 Assert.IsNull(calibrationCurve.RSquared);
                 Assert.AreEqual(expectedY * internalStandardConcentration,

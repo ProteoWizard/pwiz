@@ -18,8 +18,6 @@
  */
 using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.ComponentModel;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Hibernate;
@@ -54,26 +52,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         {
             return ChangeProp(ImClone(this), im => im.PointCount = pointCount);
         }
-        [Format(NullValue = TextUtil.EXCEL_NA)]
-        public int? TransitionCount {
-            get
-            {
-                if (TransitionIds == null)
-                {
-                    return null;
-                }
-                return TransitionIds.Count;
-            } 
-        }
-
-        [Browsable(false)]
-        public ICollection<IdentityPath> TransitionIds { get; private set; }
         
-        public CalibrationCurve ChangeTransitionIds(ICollection<IdentityPath> transitionIds)
-        {
-            return ChangeProp(ImClone(this), im => im.TransitionIds = transitionIds);
-        }
-
         [Format(Formats.CalibrationCurve, NullValue=TextUtil.EXCEL_NA)]
         public double? QuadraticCoefficient { get; private set; }
 

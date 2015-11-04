@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using pwiz.Common.Collections;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Results;
@@ -19,22 +20,13 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public static PeptideQuantifier GetPeptideQuantifier(SrmSettings srmSettings, PeptideGroupDocNode peptideGroup, PeptideDocNode peptide)
         {
-            NormalizationMethod normalizationMethod = srmSettings.PeptideSettings.Quantification.NormalizationMethod;
             var mods = srmSettings.PeptideSettings.Modifications;
-            IsotopeLabelType labelType;
-            if (string.IsNullOrEmpty(normalizationMethod.IsotopeLabelTypeName))
-            {
-                labelType = mods.GetModificationTypes()
-                    .Except(mods.InternalStandardTypes.Take(1)).FirstOrDefault();
-            }
-            else
-            {
-                labelType = mods.GetModificationTypes()
-                    .First(mod => mod.Name != normalizationMethod.IsotopeLabelTypeName);
-            }
+            // Quantify on all label types which are not internal standards.
+            ICollection<IsotopeLabelType> labelTypes = ImmutableList.ValueOf(mods.GetModificationTypes()
+                .Except(mods.InternalStandardTypes));
             return new PeptideQuantifier(peptideGroup, peptide, srmSettings.PeptideSettings.Quantification)
             {
-                MeasuredLabelType = labelType,
+                MeasuredLabelTypes = labelTypes
             };
         }
 
@@ -42,7 +34,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         public PeptideDocNode PeptideDocNode {get; private set; }
         public QuantificationSettings QuantificationSettings { get; private set; }
         public NormalizationMethod NormalizationMethod { get {return QuantificationSettings.NormalizationMethod;} }
-        public IsotopeLabelType MeasuredLabelType { get; set; }
+        public ICollection<IsotopeLabelType> MeasuredLabelTypes { get; set; }
 
         public IsotopeLabelType RatioLabelType
         {
@@ -60,9 +52,9 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public bool SkipTransitionGroup(TransitionGroupDocNode transitionGroupDocNode)
         {
-            if (null != MeasuredLabelType)
+            if (null != MeasuredLabelTypes)
             {
-                if (!Equals(MeasuredLabelType, transitionGroupDocNode.TransitionGroup.LabelType))
+                if (!MeasuredLabelTypes.Contains(transitionGroupDocNode.TransitionGroup.LabelType))
                 {
                     return true;
                 }

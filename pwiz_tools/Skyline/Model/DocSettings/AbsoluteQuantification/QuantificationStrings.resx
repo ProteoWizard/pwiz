@@ -218,4 +218,19 @@
   <data name="RegressionFit_NONE_None" xml:space="preserve">
     <value>None</value>
   </data>
+  <data name="CalibrationCurveFitter_PeakAreaRatioText_Peak_Area_Ratio_to__0_" xml:space="preserve">
+    <value>Peak Area Ratio to {0}</value>
+  </data>
+  <data name="CalibrationCurveFitter_ConcentrationRatioText_Concentration_Ratio_to__0_" xml:space="preserve">
+    <value>Concentration Ratio to {0}</value>
+  </data>
+  <data name="CalibrationCurveFitter_GetQuantificationResult_One_or_more_transitions_are_missing_or_truncated_" xml:space="preserve">
+    <value>One or more transitions are missing or truncated.</value>
+  </data>
+  <data name="CalibrationForm_DisplayCalibrationCurve_The_selected_replicate_has_missing_or_truncated_transitions" xml:space="preserve">
+    <value>The selected replicate has missing or truncated transitions</value>
+  </data>
+  <data name="QuantificationResult_ToString_Normalized_Area___0_" xml:space="preserve">
+    <value>Normalized Area: {0}</value>
+  </data>
 </root>
