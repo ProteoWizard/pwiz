@@ -77,7 +77,7 @@ namespace pwiz.Skyline.Model
         public bool IsPeptideList { get { return !(PeptideGroup is FastaSequence); } }
         public bool IsDecoy { get { return PeptideGroup.IsDecoy; } }
 
-        public string Name { get { return _proteinMetadata.Name ?? PeptideGroup.Name; } } // prefer ours over peptidegroup, if set
+        public string Name { get { return _proteinMetadata.Name ?? PeptideGroup.Name ?? string.Empty; } } // prefer ours over peptidegroup, if set
         public string OriginalName { get { return PeptideGroup.Name; } }
         public string Description { get { return _proteinMetadata.Description ?? PeptideGroup.Description; } } // prefer ours over peptidegroup, if set
         public string OriginalDescription { get { return PeptideGroup.Description; } } 

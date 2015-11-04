@@ -1107,10 +1107,15 @@ namespace pwiz.Skyline.Model
 
                     // Check for any user set transitions in the previous node that
                     // should be used to set peak boundaries on any new nodes.
-                    Dictionary<int, TransitionChromInfo> dictUserSetInfoBest =
-                        (keepUserSet && setTranPrevious != null && iResultOld != -1)
-                             ? FindBestUserSetInfo(nodePrevious, iResultOld)
-                             : null;
+                    Dictionary<int, TransitionChromInfo> dictUserSetInfoBest = null;
+                    bool missmatchedEmptyReintegrated = false;
+                    if (keepUserSet && iResultOld != -1)
+                    {
+                        // Or we have reintegrated peaks that are not matching the current integrate all setting
+                        missmatchedEmptyReintegrated = nodePrevious.IsMismatchedEmptyReintegrated(iResultOld, integrateAll);
+                        if (setTranPrevious != null || missmatchedEmptyReintegrated)
+                            dictUserSetInfoBest = nodePrevious.FindBestUserSetInfo(iResultOld);
+                    }
                     
                     bool loadPoints = (dictUserSetInfoBest != null || GetMatchingGroups(nodePep).Any());
                     if (!measuredResults.TryLoadChromatogram(chromatograms, nodePep, this, mzMatchTolerance, loadPoints,
@@ -1196,7 +1201,7 @@ namespace pwiz.Skyline.Model
                                     int step = i - numSteps;
                                     UserSet userSet = UserSet.FALSE;
                                     var chromInfo = FindChromInfo(results, fileId, step);
-                                    if (!keepUserSet || chromInfo == null || chromInfo.UserSet == UserSet.FALSE)
+                                    if (!keepUserSet || chromInfo == null || chromInfo.UserSet == UserSet.FALSE || missmatchedEmptyReintegrated)
                                     {
                                         ChromPeak peak = ChromPeak.EMPTY;
                                         if (info != null)
@@ -1208,7 +1213,7 @@ namespace pwiz.Skyline.Model
                                                     dictUserSetInfoBest.TryGetValue(fileId.GlobalIndex, out chromInfoBest))
                                             {
                                                 peak = CalcPeak(settingsNew, info, chromInfoBest);
-                                                userSet = UserSet.TRUE;
+                                                userSet = chromInfoBest.UserSet;
                                             }
                                             // Or if there is a matching peak on another precursor in the peptide
                                             else if (TryGetMatchingGroupInfo(nodePep, chromIndex, fileId, step, out chromGroupInfoMatch))
@@ -1364,14 +1369,40 @@ namespace pwiz.Skyline.Model
         }
 
         /// <summary>
+        /// Returns true if settings are moving to integrate all and there are empty
+        /// reintegrated peaks.
+        /// </summary>
+        private bool IsMismatchedEmptyReintegrated(int indexResult, bool integrateAll)
+        {
+            foreach (TransitionDocNode nodeTran in Children)
+            {
+                if (!nodeTran.HasResults)
+                    continue;
+
+                var chromInfoList = nodeTran.Results[indexResult];
+                if (chromInfoList == null)
+                    continue;
+
+                foreach (var chromInfo in chromInfoList)
+                {
+                    if (chromInfo == null || chromInfo.UserSet != UserSet.REINTEGRATED || chromInfo.OptimizationStep != 0)
+                        continue;
+                    if (integrateAll && chromInfo.IsEmpty)
+                        return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
         /// Find the <see cref="TransitionChromInfo"/> set by the user with the largest
         /// peak area for each file represented in a specific result set.
         /// </summary>
-        private static Dictionary<int, TransitionChromInfo> FindBestUserSetInfo(TransitionGroupDocNode nodeGroup, int indexResult)
+        private Dictionary<int, TransitionChromInfo> FindBestUserSetInfo(int indexResult)
         {
             Dictionary<int, TransitionChromInfo> dictInfo = null;
 
-            foreach (TransitionDocNode nodeTran in nodeGroup.Children)
+            foreach (TransitionDocNode nodeTran in Children)
             {
                 if (!nodeTran.HasResults)
                     continue;

@@ -2286,7 +2286,7 @@ namespace pwiz.Skyline
                 }
                 catch (Exception x)
                 {
-                    var panoramaEx = x.InnerException as PanoramaImportErrorException;
+                    var panoramaEx = x.InnerException as PanoramaImportErrorException ?? x as PanoramaImportErrorException;
                     if (panoramaEx == null)
                     {
                         _statusWriter.WriteLine(Resources.PanoramaPublishHelper_PublishDocToPanorama_, x.Message);
@@ -2303,7 +2303,6 @@ namespace pwiz.Skyline
                 }
             }
         }
-
     }
 
     public class CommandStatusWriter : TextWriter
