@@ -94,7 +94,7 @@ runQC <- function() {
 	
 	
 	if (optionfeatureselection == "TRUE") { 
-		input_feature_selection <- "highQuality" 
+		input_feature_selection <- "highQuality_Significance" 
 	} else { 
 		input_feature_selection <- "all" 
 	}

@@ -97,10 +97,12 @@ runDSS <- function() {
 	
 	## feature selection input
 	
+	
+	
 	optionfeatureselection <- arguments[9]
 	
 	if (optionfeatureselection == "TRUE") { 
-		input_feature_selection <- "highQuality" 
+		input_feature_selection <- "highQuality_Significance" 
 	} else { 
 		input_feature_selection <- "all" 
 	}
