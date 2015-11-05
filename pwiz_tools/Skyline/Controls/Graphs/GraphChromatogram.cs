@@ -2694,6 +2694,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 var peakRT = graphItem.FindPeakRetentionTime(label);
                 if (!peakRT.IsZero)
                 {
+                    peakRT = GetRetentionTimeOfZeroOptStep(graphItem, peakRT);
+                }
+                if (!peakRT.IsZero) 
+                {
                     nodeGroup = graphItem.TransitionGroupNode;
                     nodeTran = graphItem.TransitionNode;
                     return peakRT;
@@ -2702,6 +2706,25 @@ namespace pwiz.Skyline.Controls.Graphs
             nodeGroup = null;
             nodeTran = null;
             return ScaledRetentionTime.ZERO;
+        }
+
+        private ScaledRetentionTime GetRetentionTimeOfZeroOptStep(ChromGraphItem graphItem, ScaledRetentionTime peakTime)
+        {
+            if (graphItem.OptimizationStep == 0)
+            {
+                return peakTime;
+            }
+            ChromGraphItem mainGraphItem = GraphItems.FirstOrDefault(item =>
+                0 == item.OptimizationStep 
+                && ReferenceEquals(item.TransitionNode, graphItem.TransitionNode)
+                && ReferenceEquals(item.TransitionGroupNode, graphItem.TransitionGroupNode));
+            if (mainGraphItem == null)
+            {
+                return ScaledRetentionTime.ZERO;
+            }
+            int iPeak = graphItem.Chromatogram.IndexOfPeak(peakTime.MeasuredTime);
+            ChromPeak mainPeak = mainGraphItem.Chromatogram.GetPeak(iPeak);
+            return mainGraphItem.ScaleRetentionTime(mainPeak.RetentionTime);
         }
 
         private ScaledRetentionTime FindAnnotatedSpectrumRetentionTime(TextObj label)

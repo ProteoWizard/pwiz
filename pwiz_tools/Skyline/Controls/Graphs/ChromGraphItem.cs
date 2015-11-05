@@ -163,6 +163,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             return new ScaledRetentionTime(measuredTime, MeasuredTimeToDisplayTime(measuredTime));
         }
+        public int OptimizationStep { get { return _step; } }
 
         public double? RetentionPrediction { get; set; }
         public double RetentionWindow { get; set; }

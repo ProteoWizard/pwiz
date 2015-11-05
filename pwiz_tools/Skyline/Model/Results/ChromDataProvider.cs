@@ -197,6 +197,11 @@ namespace pwiz.Skyline.Model.Results
                     indexLast = i;
                 }
             }
+            int finalCount = _chromIds.Count - indexLast;
+            if (HasConstantCEInterval(indexLast, finalCount))
+            {
+                AddCEMzSteps(indexLast, finalCount);
+            }
         }
 
         private float GetCE(int i)

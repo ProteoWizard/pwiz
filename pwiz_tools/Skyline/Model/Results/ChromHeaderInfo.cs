@@ -2004,13 +2004,12 @@ namespace pwiz.Skyline.Model.Results
                     {
                         i++;
                     }
+                    int iMiddle = iBegin + (i - iBegin)/2;
 
-                    i = iBegin + (i - iBegin)/2;
-
-                    double deltaMz = Math.Abs(productMz - GetProduct(i));
+                    double deltaMz = Math.Abs(productMz - GetProduct(iMiddle));
                     if (deltaMz < deltaNearestMz)
                     {
-                        iNearest = i;
+                        iNearest = iMiddle;
                         deltaNearestMz = deltaMz;
                     }
                 }
