@@ -17,6 +17,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
@@ -38,9 +39,9 @@ namespace AutoQC
 
         private DateTime _lastAcquiredFileDate;
 
-        public const int WAIT_5SEC = 5000;
+        public const int WAIT_FOR_NEW_FILE = 5000;
         private const string CANCELLED = "Cancelled";
-        private const string ERROR = "Error";
+        //private const string ERROR = "Error";
         private const string COMPLETED = "Completed";
        
         public AutoQCBackgroundWorker(IAppControl appControl, IProcessControl processControl, IAutoQCLogger logger)
@@ -99,43 +100,68 @@ namespace AutoQC
                 }
 
                 var filePath = _fileWatcher.GetFile();
+               
                 if (filePath != null)
                 {
-                    try
+                    var importContext = new ImportContext(filePath) { TotalImportCount = _totalImportCount };
+                    ImportFile(e, importContext);
+
+                    
+                    if (!_fileWatcher.IsFolderAvailable())
                     {
-                        _fileWatcher.WaitForFileReady(filePath);
-                    }
-                    catch (FileStatusException fse)
-                    {
-                        _logger.LogException(fse);
-                        e.Result = ERROR;
-                        break;
+                        // We may have lost connection to a mapped network drive.
+                        continue;
                     }
 
-                    if (_worker.CancellationPending)
-                    {
-                        e.Result = CANCELLED;
-                        break;
-                    }
+                    // Make one last attempt to import any old files.
+                    TryReimportOldFiles(e, true);
 
-                    var importContext = new ImportContext(filePath) {TotalImportCount = _totalImportCount};
-                    if (!ProcessOneFile(importContext))
-                    {
-                        e.Result = ERROR;
-                        break;
-                    }
                     inWait = false;
                 }
                 else
                 {
+                    // Try to import any older files that resulted in an import error the first time.
+                    TryReimportOldFiles(e, false);
+
                     if (!inWait)
                     {
                         LogWithSpace("Waiting for files...");
                     }
 
                     inWait = true;
-                    Thread.Sleep(WAIT_5SEC);
+                    Thread.Sleep(WAIT_FOR_NEW_FILE);
                 }
+            }
+        }
+
+        private void TryReimportOldFiles(DoWorkEventArgs e, bool forceImport)
+        {
+            var reimportQueue = _fileWatcher.GetFilesToReimport();
+            var failed = new List<RawFile>();
+
+            while (reimportQueue.Count > 0)
+            {
+                var file = reimportQueue.Dequeue();
+                if (forceImport || file.TryReimport())
+                {
+                    var importContext = new ImportContext(file.FilePath) { TotalImportCount = _totalImportCount };
+                    _logger.Log("Attempting to re-import file {0}.", file.FilePath);
+                    if (!ImportFile(e, importContext, false))
+                    {
+                        _logger.Log("Adding file to re-import queue: {0}", file.FilePath);
+                        file.LastImportTime = DateTime.Now;
+                        failed.Add(file);
+                    }
+                }
+                else
+                {
+                    failed.Add(file); // We are going to try to re-import later
+                }
+            }
+
+            foreach (var file in failed)
+            {
+                _fileWatcher.AddToReimportQueue(file);
             }
         }
 
@@ -146,7 +172,7 @@ namespace AutoQC
                 LogError("An exception occurred while importing the file.");
                 _logger.LogException(e.Error);  
             }
-            else if (e.Result == null || ERROR.Equals(e.Result))
+            else if (e.Result == null)
             {
                 Log("Error importing file.");
             }
@@ -174,7 +200,7 @@ namespace AutoQC
         {
             // Queue up any existing data files in the folder
             _logger.Log("Importing existing files...", 1, 0);
-            var files = _fileWatcher.GetAllFiles();
+            var files = _fileWatcher.GetExistingFiles();
 
             // Enable notifications on new files that get added to the folder.
             _fileWatcher.StartWatching();
@@ -215,31 +241,55 @@ namespace AutoQC
                     continue;
                 }
 
-                try
-                {
-                    _fileWatcher.WaitForFileReady(filePath);
-                }
-                catch (FileStatusException fse)
-                {
-                    _logger.LogException(fse);
-                    e.Result = ERROR;
-                    return false;
-                }
-                
-                if (_worker.CancellationPending)
-                {
-                    e.Result = CANCELLED;
-                    return false;
-                }
-
-                if (!ProcessOneFile(importContext))
-                {
-                    e.Result = ERROR;
-                    return false;
-                }
+                ImportFile(e, importContext);
             }
 
             LogWithSpace("Finished importing existing files...");
+            return true;
+        }
+
+        private bool ImportFile(DoWorkEventArgs e, ImportContext importContext, bool addToReimportQueueOnFailure = true)
+        {
+            var filePath = importContext.GetCurrentFile();
+            try
+            {
+                _fileWatcher.WaitForFileReady(filePath);
+            }
+            catch (FileStatusException fse)
+            {
+                if (!FileStatusException.DOES_NOT_EXIST.Equals(fse.Message))
+                {
+                    _logger.LogError("File does not exist: {0}.", filePath);
+                }
+                else
+                {
+                    _logger.LogException(fse);
+                }
+                // Put the file in the re-import queue
+                if (addToReimportQueueOnFailure)
+                {
+                    _logger.Log("Adding file to re-import queue: {0}", filePath);
+                    _fileWatcher.AddToReimportQueue(filePath);
+                }
+                return false;
+            }
+
+            if (_worker.CancellationPending)
+            {
+                e.Result = CANCELLED;
+                return false;
+            }
+
+            if (!ProcessOneFile(importContext))
+            {
+                if (addToReimportQueueOnFailure)
+                {
+                    _logger.Log("Adding file to re-import queue: {0}", filePath);
+                    _fileWatcher.AddToReimportQueue(filePath);
+                }
+                return false;
+            }
+
             return true;
         }
 

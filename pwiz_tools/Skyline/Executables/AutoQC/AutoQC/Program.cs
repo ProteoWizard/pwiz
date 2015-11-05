@@ -32,7 +32,7 @@ namespace AutoQC
             var version = ApplicationDeployment.IsNetworkDeployed
                 ? ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString()
                 : "";
-            form.Text = string.Format("AutoQC-daily {0}", version);
+            form.Text = string.Format("Panorama AutoQC-daily {0}", version);
 
             // Handle exceptions on the UI thread.
             Application.ThreadException += ((sender, e) => form.LogException(e.Exception));

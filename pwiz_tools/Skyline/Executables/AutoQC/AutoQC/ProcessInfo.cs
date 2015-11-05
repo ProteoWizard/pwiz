@@ -177,7 +177,7 @@ namespace AutoQC
         private Boolean DetectError(string message)
         {
             if (message == null || !message.StartsWith("Error")) return false;
-            if (message.Contains("Failed importing the results file"))
+            if (message.Contains("Failed importing"))
             {
                 _tryAgain = true;
             }

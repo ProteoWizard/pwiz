@@ -38,7 +38,7 @@ namespace AutoQC
         private const string STOP_AUTOQC = "Stop AutoQC";
 
         public const string SKYLINE_RUNNER = "SkylineRunner.exe";
-        public const int MAX_TRY_COUNT = 2;
+        public const int MAX_TRY_COUNT = 1;
 
         // Path to SkylineRunner.exe
         // Expect SkylineRunner to be in the same directory as AutoQC
@@ -111,9 +111,6 @@ namespace AutoQC
             GlobalContext.Properties["WorkingDirectory"] = skylineFileDir;
             XmlConfigurator.Configure();
             Log("Logging to directory: {0}", skylineFileDir);
-            
-            Log("Watching folder " + textFolderToWatchPath.Text);
-            Log("Mass spec. files will be imported to " + textSkylinePath.Text);
 
             // Validate on a background thread. Validating Panorama settings can take a few seconds.
             var validSettings = await Task.Run(() => ValidateAllSettings());
@@ -124,6 +121,7 @@ namespace AutoQC
             }
 
             SaveSettings();
+            PrintSettings();
 
             SetRunningControls();
 
@@ -178,6 +176,11 @@ namespace AutoQC
             _settingsTabs.ForEach(settingsTab => settingsTab.SaveSettings());
 
             Settings.Default.Save();
+        }
+
+        private void PrintSettings()
+        {
+            _settingsTabs.ForEach(settingsTab => settingsTab.PrintSettings());
         }
 
         private void SetValidatingControls()

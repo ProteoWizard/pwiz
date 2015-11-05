@@ -126,7 +126,7 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="log4net">
-      <HintPath>..\..\..\..\Shared\Lib\NHibernate\bin\net-2.0\log4net.dll</HintPath>
+      <HintPath>..\..\..\..\Shared\Lib\log4net.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>

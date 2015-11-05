@@ -28,6 +28,7 @@ namespace AutoQC
         public abstract bool IsSelected();
         public abstract bool ValidateSettings();
         public abstract void SaveSettings();
+        public abstract void PrintSettings();
 
         protected SettingsTab(IAppControl appControl, IAutoQCLogger logger)
         {

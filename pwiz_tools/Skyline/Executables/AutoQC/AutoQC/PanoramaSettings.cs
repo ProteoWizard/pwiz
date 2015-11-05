@@ -190,6 +190,17 @@ namespace AutoQC
             Settings.Save();
         }
 
+        public override void PrintSettings()
+        {
+            Logger.Log("Publish to Panorama: {0}", Settings.PublishToPanorama);
+            if (Settings.PublishToPanorama)
+            {
+                Logger.Log("Panorama server: {0}", Settings.PanoramaServerUrl);
+                Logger.Log("Panorama folder: {0}", Settings.PanoramaFolder);
+                Logger.Log("Panorama user: {0}", Settings.PanoramaUserEmail);  
+            }
+        }
+
         public override string SkylineRunnerArgs(ImportContext importContext, bool toPrint = false)
         {
             if (!IsSelected() || (importContext.ImportExisting && !importContext.ImportingLast()))

@@ -43,7 +43,7 @@ namespace AutoQC
         public string SkylineFilePath { get; set; }
         public string SkylineFileDir 
         { 
-            get { return String.IsNullOrEmpty(SkylineFilePath) ? "" : Path.GetDirectoryName(SkylineFilePath); }
+            get { return string.IsNullOrEmpty(SkylineFilePath) ? "" : Path.GetDirectoryName(SkylineFilePath); }
         }
         public string FolderToWatch { get; set; }
 
@@ -60,7 +60,7 @@ namespace AutoQC
         public string InstrumentType { get; set; }
         public DateTime LastAcquiredFileDate { get; set; } // Not saved to Properties.Settings
         public string AcquisitionTimeString { get; set; }
-         public int AcquisitionTime
+        public int AcquisitionTime
         {
             get
             {
@@ -351,6 +351,15 @@ namespace AutoQC
         public override void SaveSettings()
         {
             Settings.Save();
+        }
+
+        public override void PrintSettings()
+        {
+            Logger.Log("Skyline file: {0}", Settings.SkylineFilePath);
+            Logger.Log("Folder to watch: {0}", Settings.FolderToWatch);
+            Logger.Log("Instrument: {0}", Settings.InstrumentType);
+            Logger.Log("Results time window: {0}", Settings.ResultsWindow);
+            Logger.Log("Acquisition time: {0}", Settings.AcquisitionTime);
         }
 
         public override string SkylineRunnerArgs(ImportContext importContext, bool toPrint = false)

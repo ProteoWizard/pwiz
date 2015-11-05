@@ -108,6 +108,11 @@ namespace AutoQC
             Settings.Save();
         }
 
+        public override void PrintSettings()
+        {
+            throw new NotImplementedException();
+        }
+
         public override string SkylineRunnerArgs(ImportContext importContext, bool toPrint = false)
         {
             var exportReportPath = Path.GetDirectoryName(ReportFilePath) + "\\" + "report.csv";
