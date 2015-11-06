@@ -17,9 +17,12 @@
  * limitations under the License.
  */
 
+using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
+using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.GroupComparison
@@ -121,6 +124,32 @@ namespace pwiz.Skyline.Model.GroupComparison
         public GroupComparisonDef ChangePerProtein(bool value)
         {
             return ChangeProp(ImClone(this), im => im.PerProtein = value);
+        }
+
+        public GroupIdentifier GetGroupIdentifier(SrmSettings settings, ChromatogramSet chromatogramSet)
+        {
+            AnnotationDef annotationDef =
+                settings.DataSettings.AnnotationDefs.FirstOrDefault(a => a.Name == ControlAnnotation);
+            if (annotationDef == null)
+            {
+                return default(GroupIdentifier);
+            }
+            return GroupIdentifier.MakeGroupIdentifier(chromatogramSet.Annotations.GetAnnotation(annotationDef));
+        }
+
+        public GroupIdentifier GetControlGroupIdentifier(SrmSettings settings)
+        {
+            if (string.IsNullOrEmpty(ControlAnnotation))
+            {
+                return default(GroupIdentifier);
+            }
+            AnnotationDef annotationDef =
+                settings.DataSettings.AnnotationDefs.FirstOrDefault(a => a.Name == ControlAnnotation);
+            if (annotationDef == null)
+            {
+                return default(GroupIdentifier);
+            }
+            return GroupIdentifier.MakeGroupIdentifier(annotationDef.ParsePersistedString(ControlValue));
         }
 
         #region XML serialization

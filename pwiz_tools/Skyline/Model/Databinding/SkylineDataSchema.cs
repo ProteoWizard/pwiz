@@ -23,6 +23,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using pwiz.Common.DataBinding;
+using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
@@ -49,7 +50,7 @@ namespace pwiz.Skyline.Model.Databinding
 
         protected override bool IsScalar(Type type)
         {
-            return base.IsScalar(type) || type == typeof(IsotopeLabelType) || type == typeof(DocumentLocation) || type == typeof(SampleType);
+            return base.IsScalar(type) || type == typeof(IsotopeLabelType) || type == typeof(DocumentLocation) || type == typeof(SampleType) || type==typeof(GroupIdentifier);
         }
 
         public override bool IsRootTypeSelectable(Type type)

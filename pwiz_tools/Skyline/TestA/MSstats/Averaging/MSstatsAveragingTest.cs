@@ -20,6 +20,7 @@ using System.IO;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataAnalysis.Matrices;
+using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.SkylineTestUtil;
@@ -48,7 +49,7 @@ namespace pwiz.SkylineTestA.MSstats.Averaging
             {
                 foreach (var peptide in protein.Peptides)
                 {
-                    var result = groupComparer.CalculateFoldChange(new GroupComparisonSelector(protein, peptide, IsotopeLabelType.light, null), null);
+                    var result = groupComparer.CalculateFoldChange(new GroupComparisonSelector(protein, peptide, IsotopeLabelType.light, null, new GroupIdentifier("Diseased")), null);
                     var expectedResult = expectedValues[peptide.Peptide.Sequence];
                     Assert.AreEqual(expectedResult.EstimatedValue, result.LinearFitResult.EstimatedValue,
                         (expectedResult.StandardError + result.LinearFitResult.StandardError) * 2, peptide.Peptide.Sequence);

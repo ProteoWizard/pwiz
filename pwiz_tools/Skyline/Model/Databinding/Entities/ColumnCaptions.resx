@@ -267,6 +267,9 @@
   <data name="FwhmDegenerate">
     <value>Fwhm Degenerate</value>
   </data>
+  <data name="Group">
+    <value>Group</value>
+  </data>
   <data name="Height">
     <value>Height</value>
   </data>

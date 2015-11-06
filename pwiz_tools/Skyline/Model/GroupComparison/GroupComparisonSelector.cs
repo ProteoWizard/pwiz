@@ -17,23 +17,26 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
+using pwiz.Skyline.Controls.GroupComparison;
 
 namespace pwiz.Skyline.Model.GroupComparison
 {
     public class GroupComparisonSelector
     {
-        public GroupComparisonSelector(PeptideGroupDocNode protein, PeptideDocNode peptide, IsotopeLabelType labelType,
-            int? msLevel)
+        public GroupComparisonSelector(PeptideGroupDocNode protein, PeptideDocNode peptide, IsotopeLabelType labelType, 
+            int? msLevel, GroupIdentifier groupIdentifier)
         {
             Protein = protein;
             Peptide = peptide;
             LabelType = labelType;
             MsLevel = msLevel;
+            GroupIdentifier = groupIdentifier;
         }
         public PeptideGroupDocNode Protein { get; private set; }
         public PeptideDocNode Peptide { get; private set; }
         public IsotopeLabelType LabelType { get; private set; }
         public int? MsLevel { get; private set; }
+        public GroupIdentifier GroupIdentifier { get; private set; }
 
         public IEnumerable<PeptideDocNode> ListPeptides()
         {

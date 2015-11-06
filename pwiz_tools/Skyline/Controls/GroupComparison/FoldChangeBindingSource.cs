@@ -107,7 +107,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                             new IdentityPath(protein.IdentityPath, resultRow.Selector.Peptide.Id));
                     }
                     rows.Add(new FoldChangeRow(protein, peptide, resultRow.Selector.LabelType,
-                        resultRow.Selector.MsLevel, resultRow.ReplicateCount,
+                        resultRow.Selector.MsLevel, resultRow.Selector.GroupIdentifier, resultRow.ReplicateCount,
                         new FoldChangeResult(groupComparisonDef.ConfidenceLevel,
                             adjustedPValues[iRow], resultRow.LinearFitResult)));
                 }
@@ -135,17 +135,20 @@ namespace pwiz.Skyline.Controls.GroupComparison
             bool showPeptide;
             bool showLabelType;
             bool showMsLevel;
+            bool showGroup;
             if (foldChangeRows.Any())
             {
                 showPeptide = foldChangeRows.Any(row => null != row.Peptide);
                 showLabelType = foldChangeRows.Select(row => row.IsotopeLabelType).Distinct().Count() > 1;
                 showMsLevel = foldChangeRows.Select(row => row.MsLevel).Distinct().Count() > 1;
+                showGroup = foldChangeRows.Select(row => row.Group).Distinct().Count() > 1;
             }
             else
             {
                 showPeptide = !GroupComparisonModel.GroupComparisonDef.PerProtein;
                 showLabelType = false;
                 showMsLevel = false;
+                showGroup = false;
             }
             // ReSharper disable NonLocalizedString
             var columns = new List<PropertyPath>
@@ -163,6 +166,10 @@ namespace pwiz.Skyline.Controls.GroupComparison
             if (showLabelType)
             {
                 columns.Add(PropertyPath.Root.Property("IsotopeLabelType"));
+            }
+            if (showGroup)
+            {
+                columns.Add(PropertyPath.Root.Property("Group"));
             }
             columns.Add(PropertyPath.Root.Property("FoldChangeResult"));
             columns.Add(PropertyPath.Root.Property("FoldChangeResult").Property("AdjustedPValue"));
@@ -197,7 +204,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
         public class FoldChangeRow
         {
             public FoldChangeRow(Protein protein, Model.Databinding.Entities.Peptide peptide, IsotopeLabelType labelType,
-                int? msLevel, int replicateCount, FoldChangeResult foldChangeResult)
+                int? msLevel, GroupIdentifier group, int replicateCount, FoldChangeResult foldChangeResult)
             {
                 Protein = protein;
                 Peptide = peptide;
@@ -205,12 +212,14 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 MsLevel = msLevel;
                 ReplicateCount = replicateCount;
                 FoldChangeResult = foldChangeResult;
+                Group = group;
             }
 
             public Protein Protein { get; private set; }
             public Model.Databinding.Entities.Peptide Peptide { get; private set; }
             public IsotopeLabelType IsotopeLabelType { get; private set; }
             public int? MsLevel { get; private set; }
+            public GroupIdentifier Group { get; private set; }
             public int ReplicateCount { get; private set; }
             public FoldChangeResult FoldChangeResult { get; private set; }
         }

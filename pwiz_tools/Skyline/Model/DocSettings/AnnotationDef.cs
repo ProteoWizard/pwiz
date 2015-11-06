@@ -132,7 +132,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 return null;
             }
             double value;
-            if (double.TryParse(str, NumberStyles.Float, CultureInfo.CurrentCulture, out value))
+            if (double.TryParse(str, NumberStyles.Float, CultureInfo.InvariantCulture, out value))
             {
                 return value;
             }

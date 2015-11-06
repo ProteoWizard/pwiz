@@ -40,6 +40,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
         private CurveItem _barGraph;
         private FoldChangeBindingSource.FoldChangeRow[] _rows;
         private SkylineWindow _skylineWindow;
+        private bool _updatePending;
         public FoldChangeBarGraph()
         {
             InitializeComponent();
@@ -91,7 +92,24 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         private void SequenceTreeOnAfterSelect(object sender, TreeViewEventArgs treeViewEventArgs)
         {
-            UpdateGraph();
+            QueueUpdateGraph();
+        }
+
+        public void QueueUpdateGraph()
+        {
+            if (!IsHandleCreated)
+            {
+                return;
+            }
+            if (!_updatePending)
+            {
+                _updatePending = true;
+                BeginInvoke(new Action(() =>
+                {
+                    _updatePending = false;
+                    UpdateGraph();
+                }));
+            }
         }
 
         private void UpdateGraph()
@@ -119,6 +137,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 .ToArray();
             bool showLabelType = rows.Select(row => row.IsotopeLabelType).Distinct().Count() > 1;
             bool showMsLevel = rows.Select(row => row.MsLevel).Distinct().Count() > 1;
+            bool showGroup = rows.Select(row => row.Group).Distinct().Count() > 1;
             foreach (var row in rows)
             {
                 var foldChangeResult = row.FoldChangeResult;
@@ -141,6 +160,10 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 if (showLabelType && row.IsotopeLabelType != null)
                 {
                     label += " (" + row.IsotopeLabelType.Title + ")"; // Not L10N
+                }
+                if (showGroup && !Equals(row.Group, default(GroupIdentifier)))
+                {
+                    label += " " + row.Group; // Not L10N
                 }
                 textLabels.Add(label);
                 if (IsSelected(row))
@@ -178,7 +201,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         private void BindingListSourceOnListChanged(object sender, ListChangedEventArgs listChangedEventArgs)
         {
-            UpdateGraph();
+            QueueUpdateGraph();
         }
 
         public ZedGraphControl ZedGraphControl { get { return zedGraphControl; } }

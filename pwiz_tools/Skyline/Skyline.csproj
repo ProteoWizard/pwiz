@@ -421,6 +421,7 @@
       <DependentUpon>GraphSpectrum.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\Graphs\UniquePrefixGenerator.cs" />
+    <Compile Include="Controls\GroupComparison\GroupIdentifier.cs" />
     <Compile Include="Controls\GroupComparison\GroupComparisonSettingsForm.cs">
       <SubType>Form</SubType>
     </Compile>

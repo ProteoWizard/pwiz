@@ -22,6 +22,7 @@ using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataAnalysis.FoldChange;
 using pwiz.Common.DataAnalysis.Matrices;
+using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 
 namespace pwiz.Skyline.Model.GroupComparison
@@ -36,41 +37,36 @@ namespace pwiz.Skyline.Model.GroupComparison
             ComparisonDef = comparisonDef;
             _qrFactorizationCache = qrFactorizationCache;
             List<KeyValuePair<int, ReplicateDetails>> replicateIndexes = new List<KeyValuePair<int, ReplicateDetails>>();
+            var controlGroupIdentifier = ComparisonDef.GetControlGroupIdentifier(SrmDocument.Settings);
             if (SrmDocument.Settings.HasResults)
             {
                 var chromatograms = SrmDocument.Settings.MeasuredResults.Chromatograms;
                 for (int i = 0; i < chromatograms.Count; i++)
                 {
                     var chromatogramSet = chromatograms[i];
-                    ReplicateDetails replicateDetails = new ReplicateDetails();
-                    if (null != ComparisonDef.IdentityAnnotation)
+                    ReplicateDetails replicateDetails = new ReplicateDetails()
                     {
-                        replicateDetails.BioReplicate =
-                            chromatogramSet.Annotations.GetAnnotation(ComparisonDef.IdentityAnnotation);
+                        GroupIdentifier = comparisonDef.GetGroupIdentifier(SrmDocument.Settings, chromatogramSet)
+                    };
+                    if (Equals(controlGroupIdentifier, replicateDetails.GroupIdentifier))
+                    {
+                        replicateDetails.IsControl = true;
                     }
-                    if (null != ComparisonDef.ControlAnnotation)
+                    else
                     {
-                        var annotationValue = chromatogramSet.Annotations.GetAnnotation(ComparisonDef.ControlAnnotation);
-                        if (Equals(annotationValue, ComparisonDef.ControlValue))
+                        if (!string.IsNullOrEmpty(ComparisonDef.CaseValue))
                         {
-                            replicateDetails.IsControl = true;
-                        }
-                        else
-                        {
-                            if (string.IsNullOrEmpty(ComparisonDef.CaseValue) ||
-                                Equals(annotationValue, ComparisonDef.CaseValue))
-                            {
-                                replicateDetails.IsControl = false;
-                            }
-                            else
+                            var annotationValue = chromatogramSet.Annotations.GetAnnotation(ComparisonDef.ControlAnnotation);
+                            if (!Equals(annotationValue, ComparisonDef.CaseValue))
                             {
                                 continue;
                             }
                         }
                     }
-                    else
+                    if (null != ComparisonDef.IdentityAnnotation)
                     {
-                        replicateDetails.IsControl = false;
+                        replicateDetails.BioReplicate =
+                            chromatogramSet.Annotations.GetAnnotation(ComparisonDef.IdentityAnnotation);
                     }
                     replicateIndexes.Add(new KeyValuePair<int, ReplicateDetails>(i, replicateDetails));
                 }
@@ -105,17 +101,28 @@ namespace pwiz.Skyline.Model.GroupComparison
             return result;
         }
 
+        public IList<GroupIdentifier> ListGroupsToCompareTo()
+        {
+            var groupIdentifiers = _replicateIndexes.Select(entry => entry.Value.GroupIdentifier).Distinct().ToArray();
+            Array.Sort(groupIdentifiers);
+            return groupIdentifiers;
+        }
+
         public List<GroupComparisonResult> CalculateFoldChanges(PeptideGroupDocNode protein, PeptideDocNode peptide)
         {
             var result = new List<GroupComparisonResult>();
+            var groupsToCompareTo = ListGroupsToCompareTo();
             foreach (var labelType in ListLabelTypes(protein, peptide))
             {
                 for (int msLevel = 1; msLevel <= 2; msLevel++)
                 {
-                    var groupComparisonResult = CalculateFoldChange(new GroupComparisonSelector(protein, peptide, labelType, msLevel), null);
-                    if (null != groupComparisonResult)
+                    foreach (var group in groupsToCompareTo)
                     {
-                        result.Add(groupComparisonResult);
+                        var groupComparisonResult = CalculateFoldChange(new GroupComparisonSelector(protein, peptide, labelType, msLevel, group), null);
+                        if (null != groupComparisonResult)
+                        {
+                            result.Add(groupComparisonResult);
+                        }
                     }
                 }
             }
@@ -278,6 +285,11 @@ namespace pwiz.Skyline.Model.GroupComparison
         {
             foreach (var replicateEntry in _replicateIndexes)
             {
+                if (!replicateEntry.Value.IsControl &&
+                    !Equals(selector.GroupIdentifier, replicateEntry.Value.GroupIdentifier))
+                {
+                    continue;
+                }
                 foreach (var peptide in selector.ListPeptides())
                 {
                     QuantificationSettings quantificationSettings = QuantificationSettings.DEFAULT
@@ -333,6 +345,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         {
             public bool IsControl { get; set; }
             public string BioReplicate { get; set; }
+            public GroupIdentifier GroupIdentifier { get; set; }
         }
 
         private abstract class FoldChangeCalculator : FoldChangeCalculator<int, IdentityPath, string>
