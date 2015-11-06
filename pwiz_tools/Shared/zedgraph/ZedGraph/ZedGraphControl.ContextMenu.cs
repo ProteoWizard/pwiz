@@ -239,15 +239,7 @@ namespace ZedGraph
 		{
 			if ( _masterPane != null )
 			{
-				//Clipboard.SetDataObject( _masterPane.GetImage(), true );
-
-				// Threaded copy mode to avoid crash with MTA
-				// Contributed by Dave Moor
-				Thread ct = new Thread( new ThreadStart( this.ClipboardCopyThread ) );
-				//ct.ApartmentState = ApartmentState.STA;
-				ct.SetApartmentState( ApartmentState.STA );
-				ct.Start();
-				ct.Join();
+				ClipboardCopyThread();
 
 				if ( isShowMessage )
 				{
@@ -288,14 +280,7 @@ namespace ZedGraph
 		{
 			if (_masterPane != null)
 			{
-				// Threaded copy mode to avoid crash with MTA
-				// Contributed by Dave Moor
-				Thread ct = new Thread(new ThreadStart(this.ClipboardCopyThreadEmf));
-				//ct.ApartmentState = ApartmentState.STA;
-				ct.SetApartmentState(ApartmentState.STA);
-				ct.Start();
-				ct.Join();
-
+			    ClipboardCopyThreadEmf();
 				if (isShowMessage)
 				{
 					string str = _resourceManager.GetString("copied_to_clip");
