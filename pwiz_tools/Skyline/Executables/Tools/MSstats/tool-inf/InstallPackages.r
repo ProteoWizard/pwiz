@@ -49,10 +49,13 @@ biocLite("marray")
 install.packages("Rcpp" , repos='http://cran.us.r-project.org')
 #}
 
+install.packages("XML" , repos='http://cran.us.r-project.org')
+
 #if (!is.element("MSnbase",packages)){
 source("http://bioconductor.org/biocLite.R")
 biocLite("MSnbase")
 #}
+
 
 if (!is.element("MSstats",packages) || packageVersion("MSstats") < "3.2.2" ){
 directory <- tempdir()
