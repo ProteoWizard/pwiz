@@ -26,6 +26,7 @@ using System.Linq;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using NHibernate.Util;
+using pwiz.Common.DataBinding;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
@@ -4014,6 +4015,14 @@ namespace pwiz.Skyline
             Assume.IsNull(_documentGridForm);
             _documentGridForm = new DocumentGridForm(this);
             _documentGridForm.FormClosed += documentGrid_FormClosed;
+            if (!string.IsNullOrEmpty(Settings.Default.DocumentGridView))
+            {
+                var viewName = ViewName.Parse(Settings.Default.DocumentGridView);
+                if (viewName.HasValue)
+                {
+                    _documentGridForm.DataboundGridControl.ChooseView(viewName.Value);
+                }
+            }
             return _documentGridForm;
         }
 

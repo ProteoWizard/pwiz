@@ -21,6 +21,7 @@ using System.ComponentModel;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -39,17 +40,24 @@ namespace pwiz.Skyline.Controls.Databinding
 
         private void BindingListSourceOnListChanged(object sender, ListChangedEventArgs listChangedEventArgs)
         {
-            ViewInfo view = BindingListSource.ViewInfo;
-            string title;
-            if (null == view)
+            if (ShowViewsMenu)
             {
-                title = _originalFormTitle;
+                ViewInfo view = BindingListSource.ViewInfo;
+                string title;
+                if (null == view)
+                {
+                    title = _originalFormTitle;
+                }
+                else
+                {
+                    title = TextUtil.SpaceSeparate(_originalFormTitle + ':', view.Name);
+                    if (null != view.ViewGroup)
+                    {
+                        Settings.Default.DocumentGridView = view.ViewGroup.Id.ViewName(view.Name).ToString();
+                    }
+                }
+                Text = TabText = title;
             }
-            else
-            {
-                title = TextUtil.SpaceSeparate(_originalFormTitle + ':', view.Name);
-            }
-            Text = TabText = title;
         }
 
         public DocumentGridForm(IDocumentContainer documentContainer) 

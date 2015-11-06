@@ -68,13 +68,35 @@ namespace pwiz.Skyline.Util
                     return;
                 }
                 using (var reader = new StringReader(clipboardText))
-                using (var undoTransaction = SkylineWindow.BeginUndo(Resources.DataGridViewPasteHandler_DataGridViewOnKeyDown_Paste))
                 {
-                    if (Paste(reader))
+                    e.Handled = PerformUndoableOperation(Resources.DataGridViewPasteHandler_DataGridViewOnKeyDown_Paste, 
+                        () => Paste(reader));
+                }
+            }
+            else if (e.KeyCode == Keys.Delete && 0 == e.Modifiers)
+            {
+                e.Handled = PerformUndoableOperation(Resources.DataGridViewPasteHandler_DataGridViewOnKeyDown_Clear_cells, ClearCells);
+            }
+        }
+
+        private bool PerformUndoableOperation(string description, Func<bool> operation)
+        {
+            using (var undoTransaction = SkylineWindow.BeginUndo(description))
+            {
+                bool resultsGridSynchSelectionOld = Settings.Default.ResultsGridSynchSelection;
+                try
+                {
+                    Settings.Default.ResultsGridSynchSelection = false;
+                    if (operation())
                     {
                         undoTransaction.Commit();
-                        e.Handled = true;
+                        return true;
                     }
+                    return false;
+                }
+                finally
+                {
+                    Settings.Default.ResultsGridSynchSelection = resultsGridSynchSelectionOld;
                 }
             }
         }
@@ -88,90 +110,120 @@ namespace pwiz.Skyline.Util
         /// </summary>
         private bool Paste(TextReader reader)
         {
-            IDataGridViewEditingControl editingControl;
-            DataGridViewEditingControlShowingEventHandler onEditingControlShowing =
-                (sender, args) => editingControl = args.Control as IDataGridViewEditingControl;
-            bool resultsGridSynchSelectionOld = Settings.Default.ResultsGridSynchSelection;
-            try
+            bool anyChanges = false;
+            var columnsByDisplayIndex =
+                DataGridView.Columns.Cast<DataGridViewColumn>().Where(column => column.Visible).ToArray();
+            Array.Sort(columnsByDisplayIndex, (col1, col2) => col1.DisplayIndex.CompareTo(col2.DisplayIndex));
+            int iFirstCol;
+            int iFirstRow;
+            if (null == DataGridView.CurrentCell)
             {
-                DataGridView.EditingControlShowing += onEditingControlShowing;
-                Settings.Default.ResultsGridSynchSelection = false;
-                bool anyChanges = false;
-                var columnsByDisplayIndex =
-                    DataGridView.Columns.Cast<DataGridViewColumn>().Where(column => column.Visible).ToArray();
-                Array.Sort(columnsByDisplayIndex, (col1, col2) => col1.DisplayIndex.CompareTo(col2.DisplayIndex));
-                int iFirstCol;
-                int iFirstRow;
-                if (null == DataGridView.CurrentCell)
-                {
-                    iFirstRow = 0;
-                    iFirstCol = 0;
-                }
-                else
-                {
-                    iFirstCol = columnsByDisplayIndex.IndexOf(col => col.Index == DataGridView.CurrentCell.ColumnIndex);
-                    iFirstRow = DataGridView.CurrentCell.RowIndex;
-                }
+                iFirstRow = 0;
+                iFirstCol = 0;
+            }
+            else
+            {
+                iFirstCol = columnsByDisplayIndex.IndexOf(col => col.Index == DataGridView.CurrentCell.ColumnIndex);
+                iFirstRow = DataGridView.CurrentCell.RowIndex;
+            }
 
-                for (int iRow = iFirstRow; iRow < DataGridView.Rows.Count; iRow++)
+            for (int iRow = iFirstRow; iRow < DataGridView.Rows.Count; iRow++)
+            {
+                string line = reader.ReadLine();
+                if (null == line)
                 {
-                    string line = reader.ReadLine();
-                    if (null == line)
+                    return anyChanges;
+                }
+                var row = DataGridView.Rows[iRow];
+                var values = SplitLine(line).GetEnumerator();
+                for (int iCol = iFirstCol; iCol < columnsByDisplayIndex.Count(); iCol++)
+                {
+                    if (!values.MoveNext())
+                    {
+                        break;
+                    }
+                    var column = columnsByDisplayIndex[iCol];
+                    if (column.ReadOnly)
+                    {
+                        continue;
+                    }
+                    if (!TrySetValue(row.Cells[column.Index], values.Current))
                     {
                         return anyChanges;
                     }
-                    var row = DataGridView.Rows[iRow];
-                    var values = SplitLine(line).GetEnumerator();
-                    for (int iCol = iFirstCol; iCol < columnsByDisplayIndex.Count(); iCol++)
-                    {
-                        if (!values.MoveNext())
-                        {
-                            break;
-                        }
-                        var column = columnsByDisplayIndex[iCol];
-                        if (column.ReadOnly)
-                        {
-                            continue;
-                        }
-                        DataGridView.CurrentCell = row.Cells[column.Index];
-                        string strValue = values.Current;
-                        editingControl = null;
-                        DataGridView.BeginEdit(true);
-// ReSharper disable ConditionIsAlwaysTrueOrFalse
-                        if (null != editingControl)
-// ReSharper restore ConditionIsAlwaysTrueOrFalse
-// ReSharper disable HeuristicUnreachableCode
-                        {
-                            object convertedValue;
-                            if (!TryConvertValue(strValue, DataGridView.CurrentCell.FormattedValueType, out convertedValue))
-                            {
-                                return anyChanges;
-                            }
-                            editingControl.EditingControlFormattedValue = convertedValue;
-                        }
-// ReSharper restore HeuristicUnreachableCode
-                        else
-                        {
-                            object convertedValue;
-                            if (!TryConvertValue(strValue, DataGridView.CurrentCell.ValueType, out convertedValue))
-                            {
-                                return anyChanges;
-                            }
-                            DataGridView.CurrentCell.Value = convertedValue;
-                        }
-                        if (!DataGridView.EndEdit())
-                        {
-                            return anyChanges;
-                        }
-                        anyChanges = true;
-                    }
+                    anyChanges = true;
                 }
-                return anyChanges;
+            }
+            return anyChanges;
+        }
+
+        private bool ClearCells()
+        {
+            if (DataGridView.SelectedRows.Count > 0)
+            {
+                return false;
+            }
+            var columnIndexes = DataGridView.SelectedCells.Cast<DataGridViewCell>().Select(cell => cell.ColumnIndex).Distinct().ToArray();
+            if (columnIndexes.Any(columnIndex => DataGridView.Columns[columnIndex].ReadOnly))
+            {
+                return false;
+            }
+            bool anyChanges = false;
+            var cellsByRow = DataGridView.SelectedCells.Cast<DataGridViewCell>().ToLookup(cell => cell.RowIndex).ToArray();
+            Array.Sort(cellsByRow, (g1,g2)=>g1.Key.CompareTo(g2.Key));
+            foreach (var rowGrouping in cellsByRow)
+            {
+                var cells = rowGrouping.ToArray();
+                Array.Sort(cells, (c1, c2) => c1.ColumnIndex.CompareTo(c2.ColumnIndex));
+                foreach (var cell in cells)
+                {
+                    if (!TrySetValue(cell, string.Empty))
+                    {
+                        return anyChanges;
+                    }
+                    anyChanges = true;
+                }
+            }
+            return anyChanges;
+        }
+
+        private bool TrySetValue(DataGridViewCell cell, string strValue)
+        {
+            IDataGridViewEditingControl editingControl = null;
+            DataGridViewEditingControlShowingEventHandler onEditingControlShowing =
+                (sender, args) => editingControl = args.Control as IDataGridViewEditingControl;
+            try
+            {
+                DataGridView.EditingControlShowing += onEditingControlShowing;
+                DataGridView.CurrentCell = cell;
+                DataGridView.BeginEdit(true);
+                if (null != editingControl)
+                {
+                    object convertedValue;
+                    if (!TryConvertValue(strValue, DataGridView.CurrentCell.FormattedValueType, out convertedValue))
+                    {
+                        return false;
+                    }
+                    editingControl.EditingControlFormattedValue = convertedValue;
+                }
+                else
+                {
+                    object convertedValue;
+                    if (!TryConvertValue(strValue, DataGridView.CurrentCell.ValueType, out convertedValue))
+                    {
+                        return false;
+                    }
+                    DataGridView.CurrentCell.Value = convertedValue;
+                }
+                if (!DataGridView.EndEdit())
+                {
+                    return false;
+                }
+                return true;
             }
             finally
             {
                 DataGridView.EditingControlShowing -= onEditingControlShowing;
-                Settings.Default.ResultsGridSynchSelection = resultsGridSynchSelectionOld;
             }
         }
 

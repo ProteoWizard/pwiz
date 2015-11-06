@@ -8810,4 +8810,7 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="SkylineWindow_removePeakContextMenuItem_Click_Remove_all_peaks_from__0_" xml:space="preserve">
     <value>Remove all peaks from {0}</value>
   </data>
+  <data name="DataGridViewPasteHandler_DataGridViewOnKeyDown_Clear_cells" xml:space="preserve">
+    <value>Clear cells</value>
+  </data>
 </root>

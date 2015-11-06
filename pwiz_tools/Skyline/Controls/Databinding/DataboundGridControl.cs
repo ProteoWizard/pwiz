@@ -134,13 +134,23 @@ namespace pwiz.Skyline.Controls.Databinding
                 {
                     if (viewSpec.Name == viewName)
                     {
-
-                        BindingListSource.SetViewContext(BindingListSource.ViewContext, BindingListSource.ViewContext.GetViewInfo(viewGroup.Id.ViewName(viewSpec.Name)));
+                        ChooseView(viewGroup.Id.ViewName(viewSpec.Name));
                         return;
                     }
                 }
             }
             throw new InvalidOperationException(string.Format("No view named {0}", viewName)); // Not L10N
+        }
+
+        public bool ChooseView(ViewName viewName)
+        {
+            var viewInfo = BindingListSource.ViewContext.GetViewInfo(viewName);
+            if (null == viewInfo)
+            {
+                return false;
+            }
+            BindingListSource.SetViewContext(BindingListSource.ViewContext, viewInfo);
+            return true;
         }
 
         public int RowCount

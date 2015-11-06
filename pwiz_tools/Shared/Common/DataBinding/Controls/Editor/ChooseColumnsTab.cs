@@ -264,7 +264,18 @@ namespace pwiz.Common.DataBinding.Controls.Editor
 
         private void BtnRemoveOnClick(object sender, EventArgs e)
         {
-            ColumnSpecs = ColumnSpecs.Where((columnSpec, index) => !listViewColumns.Items[index].Selected).ToArray();
+            var newColumns = ColumnSpecs.Where((columnSpec, index) => !listViewColumns.Items[index].Selected).ToArray();
+            if (newColumns.Length == ColumnSpecs.Count)
+            {
+                return;
+            }
+            int firstSelection = listViewColumns.SelectedIndices.Cast<int>().Min();
+            ColumnSpecs = newColumns;
+            listViewColumns.SelectedIndices.Clear();
+            if (newColumns.Length > 0)
+            {
+                listViewColumns.SelectedIndices.Add(Math.Min(firstSelection, newColumns.Length - 1));
+            }
         }
 
         private void listViewColumns_BeforeLabelEdit(object sender, LabelEditEventArgs e)
