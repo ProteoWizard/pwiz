@@ -41,7 +41,9 @@ namespace pwiz.Skyline.Model.Results
         public abstract string GetExtension();
         public abstract MsDataFileUri ToLower();
         public abstract MsDataFileUri Normalize();
-
+        public abstract LockMassParameters GetLockMassParameters();
+        public abstract bool IsWatersLockmassCorrectionCandidate();
+        public abstract MsDataFileUri ChangeLockMassParameters(LockMassParameters lockMassParameters); // Return a copy of yourself with updated lockmass settings
 
         public string GetSampleOrFileName()
         {
@@ -56,36 +58,48 @@ namespace pwiz.Skyline.Model.Results
             }
             return new MsDataFilePath(SampleHelp.GetPathFilePart(url), 
                 SampleHelp.GetPathSampleNamePart(url), 
-                SampleHelp.GetPathSampleIndexPart(url));
+                SampleHelp.GetPathSampleIndexPart(url),
+                SampleHelp.GetLockmassParameters(url));
         }
 
-        public bool IsWatersLockmassCorrectionCandidate()
+        public static List<KeyValuePair<string, MsDataFileUri[]>> ChangeLockMassParameters(IList<KeyValuePair<string, MsDataFileUri[]>> namedResults, LockMassParameters lockMassParameters)
         {
-            string filePath = GetFilePath();
-            // Has to be a Waters .raw file, not just an mzML translation of one
-            if (string.IsNullOrEmpty(filePath))
-                return false; // Not even a file
-            if (!GetFilePath().ToLowerInvariant().EndsWith(".raw"))  // Not L10N
-                return false; // Return without even opening the file
-            if (!Directory.Exists(filePath))
-                return false; // Thermo .raw is a file, Waters .raw is actually a directory
-            using (var f = new MsDataFileImpl(filePath))
-                return f.IsWatersLockmassCorrectionCandidate;
+            var result = new List<KeyValuePair<string, MsDataFileUri[]>>();
+            foreach (var namedResult in namedResults)
+            {
+                result.Add(ChangeLockMassParameters(namedResult, lockMassParameters));
+            }
+            return result;
         }
 
+        public static KeyValuePair<string, MsDataFileUri[]> ChangeLockMassParameters(KeyValuePair<string, MsDataFileUri[]> namedResult, LockMassParameters lockMassParameters)
+        {
+            var result = new KeyValuePair<string, MsDataFileUri[]>(namedResult.Key, namedResult.Value);
+            for (var i = 0; i < namedResult.Value.Length; i++)
+            {
+                var msDataFileUri = result.Value[i];
+                if (lockMassParameters == null || lockMassParameters.IsEmpty || !msDataFileUri.IsWatersLockmassCorrectionCandidate())
+                    result.Value[i] = msDataFileUri.ChangeLockMassParameters(LockMassParameters.EMPTY);
+                else
+                    result.Value[i] = msDataFileUri.ChangeLockMassParameters(lockMassParameters);
+            }
+            return result;
+        }
     }
 
     public class MsDataFilePath : MsDataFileUri
     {
         public static readonly MsDataFilePath EMPTY = new MsDataFilePath(string.Empty);
-        public MsDataFilePath(string filePath) : this(filePath, null, -1)
+        public MsDataFilePath(string filePath, LockMassParameters lockMassParameters = null)
+            : this(filePath, null, -1, lockMassParameters)
         {
         }
-        public MsDataFilePath(string filePath, string sampleName, int sampleIndex)
+        public MsDataFilePath(string filePath, string sampleName, int sampleIndex, LockMassParameters lockMassParameters)
         {
             FilePath = filePath;
             SampleName = sampleName;
             SampleIndex = sampleIndex;
+            LockMassParameters = lockMassParameters??LockMassParameters.EMPTY;
         }
 
         protected MsDataFilePath(MsDataFilePath msDataFilePath)
@@ -93,6 +107,7 @@ namespace pwiz.Skyline.Model.Results
             FilePath = msDataFilePath.FilePath;
             SampleName = msDataFilePath.SampleName;
             SampleIndex = msDataFilePath.SampleIndex;
+            LockMassParameters = msDataFilePath.LockMassParameters;
         }
 
         public string FilePath { get; private set; }
@@ -103,6 +118,7 @@ namespace pwiz.Skyline.Model.Results
         }
         public string SampleName { get; private set; }
         public int SampleIndex { get; private set; }
+        public LockMassParameters LockMassParameters { get; private set; }
 
         public override string GetFilePath()
         {
@@ -129,13 +145,33 @@ namespace pwiz.Skyline.Model.Results
             return SampleIndex;
         }
 
+        public override bool IsWatersLockmassCorrectionCandidate()
+        {
+            string filePath = GetFilePath();
+            // Has to be a Waters .raw file, not just an mzML translation of one
+            if (String.IsNullOrEmpty(filePath))
+                return false; // Not even a file
+            if (!GetFilePath().ToLowerInvariant().EndsWith(".raw"))  // Not L10N
+                return false; // Return without even opening the file
+            if (!Directory.Exists(filePath))
+                return false; // Thermo .raw is a file, Waters .raw is actually a directory
+            using (var f = new MsDataFileImpl(filePath))
+                return f.IsWatersLockmassCorrectionCandidate;
+        }
+
+        public override LockMassParameters GetLockMassParameters()
+        {
+            return LockMassParameters;
+        }
+
+        public override MsDataFileUri ChangeLockMassParameters(LockMassParameters lockMassParameters)
+        {
+            return new MsDataFilePath(FilePath, SampleName, SampleIndex, lockMassParameters);
+        }
+
         public override string ToString()
         {
-            if (string.IsNullOrEmpty(SampleName) && -1 == SampleIndex)
-            {
-                return FilePath;
-            }
-            return SampleHelp.EncodePath(FilePath, SampleName, SampleIndex);
+            return SampleHelp.EncodePath(FilePath, SampleName, SampleIndex, LockMassParameters);
         }
 
         public override DateTime GetFileLastWriteTime()
@@ -162,7 +198,8 @@ namespace pwiz.Skyline.Model.Results
         {
             return string.Equals(FilePath, other.FilePath) &&
                 string.Equals(SampleName, other.SampleName) &&
-                SampleIndex == other.SampleIndex;
+                SampleIndex == other.SampleIndex &&
+                LockMassParameters.Equals(other.LockMassParameters);
         }
 
         public override bool Equals(object obj)
@@ -183,7 +220,10 @@ namespace pwiz.Skyline.Model.Results
             result = SampleName.CompareTo(other.SampleName);
             if (result != 0)
                 return result;
-            return SampleIndex.CompareTo(other.SampleIndex);
+            result = SampleIndex.CompareTo(other.SampleIndex);
+            if (result != 0)
+                return result;
+            return LockMassParameters.CompareTo(other.LockMassParameters);
 // ReSharper restore StringCompareToIsCultureSpecific
         }
 
@@ -202,6 +242,7 @@ namespace pwiz.Skyline.Model.Results
                 int hashCode = FilePath.GetHashCode();
                 hashCode = (hashCode*397) ^ (SampleName != null ? SampleName.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ SampleIndex;
+                hashCode = (hashCode*397) ^ (LockMassParameters != null ? LockMassParameters.GetHashCode() : 0);
                 return hashCode;
             }
         }
@@ -348,6 +389,21 @@ namespace pwiz.Skyline.Model.Results
         public ChorusUrl AddPathPart(string part)
         {
             return SetPathParts(GetPathParts().Concat(new[]{part}));
+        }
+
+        public override bool IsWatersLockmassCorrectionCandidate()
+        {
+            return false;  // Chorus will have already performed lockmass correction
+        }
+
+        public override LockMassParameters GetLockMassParameters()
+        {
+            return LockMassParameters.EMPTY;  // Chorus will have already performed lockmass correction
+        }
+
+        public override MsDataFileUri ChangeLockMassParameters(LockMassParameters lockMassParameters)
+        {
+            return this;  // Chorus will have already performed lockmass correction
         }
 
         public override string ToString()

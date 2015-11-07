@@ -337,10 +337,9 @@ namespace pwiz.Skyline.Util
         {
             if (dataIds == null)
                 return null;
-
             // WIFF without at least 2 samples just use its file name.
             if (dataIds.Length < 2)
-                return new[] { new MsDataFilePath(filePath, null, -1),  };
+                return new[] { new MsDataFilePath(filePath, null, -1, LockMassParameters.EMPTY),  };
 
             // Escape all the sample ID names, so that they may be used in file names.
             for (int i = 0; i < dataIds.Length; i++)
@@ -367,7 +366,7 @@ namespace pwiz.Skyline.Util
             // Encode sub-paths
             var listPaths = new List<MsDataFilePath>();
             foreach (int sampleIndex in sampleIndices)
-                listPaths.Add(new MsDataFilePath(filePath, dataIds[sampleIndex], sampleIndex));
+                listPaths.Add(new MsDataFilePath(filePath, dataIds[sampleIndex], sampleIndex, LockMassParameters.EMPTY));
 
             if (listPaths.Count == 0)
                 return null;

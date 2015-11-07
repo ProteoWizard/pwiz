@@ -57,6 +57,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         private string _skyFile;
         private string _dataFile;
         private bool _centroided;
+        private LockMassParameters _lockMassParameters;
         private TestFilesDir _testFilesDir;
         private int _loopcount;
 
@@ -71,7 +72,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             NativeVsMz5ChromatogramPerformanceTest(
                 "PerfImportResultsWatersVsMz5.zip",
                 "Waters\\Hoofnagle_MSe_targeted.sky",
-                "Waters\\DATA\\2013_03_13_UWash_S1_MSE_Adj_001.raw");
+                "Waters\\DATA\\2013_03_13_UWash_S1_MSE_Adj_001.raw",
+                false, LockMassParameters.EMPTY);
         }
 
         [TestMethod]
@@ -190,7 +192,9 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             }
         }
 
-        public void NativeVsMz5ChromatogramPerformanceTest(string zipFile, string skyFile, string rawFile, bool centroided=false)
+        public void NativeVsMz5ChromatogramPerformanceTest(string zipFile, string skyFile, string rawFile, 
+            bool centroided=false,
+            LockMassParameters lockMassParameters = null)
         {
             if (!RunPerfTests)
                 return; // PerfTests only run when the global RunPerfTests flag is set
@@ -225,6 +229,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                         _centroided = centroidedThisPass;
                         RunFunctionalTest();
                         centroidedThisPass = false;
+                        _lockMassParameters = lockMassParameters;
                     }
 
                 }
@@ -258,7 +263,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             }
             Stopwatch loadStopwatch = new Stopwatch();
             loadStopwatch.Start();
-            ImportResultsFile(_dataFile, 60 * 60, expectedErrorMessage);    // Allow 60 minutes for loading.
+            ImportResultsFile(_dataFile, 60 * 60, expectedErrorMessage, _lockMassParameters);    // Allow 60 minutes for loading.
             loadStopwatch.Stop();
 
             DebugLog.Info("{0} load time = {1}", _dataFile, loadStopwatch.ElapsedMilliseconds);

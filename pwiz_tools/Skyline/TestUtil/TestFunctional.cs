@@ -32,6 +32,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.Fasta;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Startup;
@@ -1125,7 +1126,8 @@ namespace pwiz.SkylineTestUtil
 
         #region Results helpers
 
-        public void ImportResultsFile(string fileName, int waitForLoadSeconds = 420, string expectedErrorMessage = null)
+        public void ImportResultsFile(string fileName, int waitForLoadSeconds = 420, string expectedErrorMessage = null,
+            LockMassParameters lockMassParameters = null)
         {
             var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
             RunDlg<OpenDataSourceDialog>(() => importResultsDlg.NamedPathSets = importResultsDlg.GetDataSourcePathsFile(null),
@@ -1136,6 +1138,14 @@ namespace pwiz.SkylineTestUtil
                });
             WaitForConditionUI(() => importResultsDlg.NamedPathSets != null);
             RunUI(importResultsDlg.OkDialog);
+            if (lockMassParameters != null)
+            {
+                var dlg = WaitForOpenForm<ImportResultsLockMassDlg>();
+                dlg.LockmassPositive = lockMassParameters.LockmassPositive ?? 0;
+                dlg.LockmassNegative = lockMassParameters.LockmassNegative ?? 0;
+                dlg.LockmassTolerance = lockMassParameters.LockmassTolerance ?? 0;
+                dlg.OkDialog();
+            } 
             if (expectedErrorMessage != null)
             {
                 var dlg = WaitForOpenForm<MessageDlg>();

@@ -192,8 +192,7 @@ namespace pwiz.ProteowizardWrapper
                                ContentType = contentType,
                                Detector = detector,
                                IonSource = ionSource,
-                               Spectra = spectra,
-                               LockmassParameters = _lockmassParameters
+                               Spectra = spectra
                            };
             }
         }
@@ -294,11 +293,6 @@ namespace pwiz.ProteowizardWrapper
                     string analyzer;
                     string detector;
 
-                    // Lockmass values are not in the raw file, but must be preserved in case of reload
-                    var lockmassParameters = ((_lockmassParameters != null) && IsWatersLockmassCorrectionCandidate) 
-                        ? _lockmassParameters 
-                        : null;
-                
                     CVParam param = ic.cvParamChild(CVID.MS_instrument_model);
                     if (!param.empty() && param.cvid != CVID.MS_instrument_model)
                     {
@@ -317,9 +311,9 @@ namespace pwiz.ProteowizardWrapper
                     // get the ionization type, analyzer and detector
                     GetInstrumentConfig(ic, out ionization, out analyzer, out detector);
 
-                    if (instrumentModel != null || ionization != null || analyzer != null || detector != null || lockmassParameters != null)
+                    if (instrumentModel != null || ionization != null || analyzer != null || detector != null)
                     {
-                        configList.Add(new MsInstrumentConfigInfo(instrumentModel, ionization, analyzer, detector, lockmassParameters));
+                        configList.Add(new MsInstrumentConfigInfo(instrumentModel, ionization, analyzer, detector));
                     }
                 }
                 return configList;
@@ -896,19 +890,25 @@ namespace pwiz.ProteowizardWrapper
         public string IonSource { get; set; }
         public string Analyzer { get; set; }
         public string Detector { get; set; }
-        public LockMassParameters LockmassParameters { get; set; }
     }
 
     /// <summary>
     /// For Waters lockmass correction
     /// </summary>
-    public sealed class LockMassParameters
+    public sealed class LockMassParameters : IComparable
     {
         public LockMassParameters(double? lockmassPositve, double? lockmassNegative, double? lockmassTolerance)
         {
             LockmassPositive = lockmassPositve;
             LockmassNegative = lockmassNegative;
-            LockmassTolerance = lockmassTolerance;
+            if (LockmassPositive.HasValue || LockmassNegative.HasValue)
+            {
+                LockmassTolerance = lockmassTolerance ?? LOCKMASS_TOLERANCE_DEFAULT;
+            }
+            else
+            {
+                LockmassTolerance = null;  // Means nothing when no mz is given
+            }
         }
 
         public double? LockmassPositive { get; private set; }
@@ -919,7 +919,7 @@ namespace pwiz.ProteowizardWrapper
         public static double LOCKMASS_TOLERANCE_MAX = 10.0;
         public static double LOCKMASS_TOLERANCE_MIN = 0;
 
-        public static LockMassParameters EMPTY = new LockMassParameters(null, null, LOCKMASS_TOLERANCE_DEFAULT);
+        public static LockMassParameters EMPTY = new LockMassParameters(null, null, null);
 
         public bool IsEmpty
         {
@@ -956,6 +956,26 @@ namespace pwiz.ProteowizardWrapper
             }
         }
 
+        public int CompareTo(LockMassParameters other)
+        {
+            if (ReferenceEquals(null, other)) 
+                return -1;
+            var result = Nullable.Compare(LockmassPositive, other.LockmassPositive);
+            if (result != 0)
+                return result;
+            result = Nullable.Compare(LockmassNegative, other.LockmassNegative);
+            if (result != 0)
+                return result;
+            return Nullable.Compare(LockmassTolerance, other.LockmassTolerance);
+        }
+
+        public int CompareTo(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return -1;
+            if (ReferenceEquals(this, obj)) return 0;
+            if (obj.GetType() != GetType()) return -1;
+            return CompareTo((LockMassParameters)obj);
+        }
     }
 
     public struct MsPrecursor
@@ -1032,19 +1052,16 @@ namespace pwiz.ProteowizardWrapper
         public string Ionization { get; private set; }
         public string Analyzer { get; private set; }
         public string Detector { get; private set; }
-        public LockMassParameters LockmassParameters { get; private set; }
 
-        public static readonly MsInstrumentConfigInfo EMPTY = new MsInstrumentConfigInfo(null, null, null, null, null);
+        public static readonly MsInstrumentConfigInfo EMPTY = new MsInstrumentConfigInfo(null, null, null, null);
 
         public MsInstrumentConfigInfo(string model, string ionization,
-                                      string analyzer, string detector,
-                                      LockMassParameters lockMassParameters)
+                                      string analyzer, string detector)
         {
             Model = model != null ? model.Trim() : null;
             Ionization = ionization != null ? ionization.Replace('\n',' ').Trim() : null; // Not L10N
             Analyzer = analyzer != null ? analyzer.Replace('\n', ' ').Trim() : null; // Not L10N
             Detector = detector != null ? detector.Replace('\n', ' ').Trim() : null; // Not L10N
-            LockmassParameters = lockMassParameters;
         }
 
         public bool IsEmpty
@@ -1054,9 +1071,7 @@ namespace pwiz.ProteowizardWrapper
                 return (string.IsNullOrEmpty(Model)) &&
                        (string.IsNullOrEmpty(Ionization)) &&
                        (string.IsNullOrEmpty(Analyzer)) &&
-                       (string.IsNullOrEmpty(Detector)) &&
-                       (LockmassParameters == null || LockmassParameters.IsEmpty)
-                ;
+                       (string.IsNullOrEmpty(Detector));
             }
         }
 
@@ -1077,7 +1092,6 @@ namespace pwiz.ProteowizardWrapper
             return Equals(other.Model, Model) &&
                 Equals(other.Ionization, Ionization) &&
                 Equals(other.Analyzer, Analyzer) &&
-                Equals(other.LockmassParameters, LockmassParameters) &&
                 Equals(other.Detector, Detector);
         }
 
@@ -1090,7 +1104,6 @@ namespace pwiz.ProteowizardWrapper
                 result = (result * 397) ^ (Ionization != null ? Ionization.GetHashCode() : 0);
                 result = (result * 397) ^ (Analyzer != null ? Analyzer.GetHashCode() : 0);
                 result = (result * 397) ^ (Detector != null ? Detector.GetHashCode() : 0);
-                result = (result * 397) ^ (LockmassParameters != null ? LockmassParameters.GetHashCode() : 0);
                 return result;
             }
         }

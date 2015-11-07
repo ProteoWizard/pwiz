@@ -491,20 +491,20 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             // Import results only on "finish"
 
-            KeyValuePair<string, MsDataFileUri[]>[] namedResults =
+            var namedResults =
                 ImportResultsControl.FoundResultsFiles.Select(
                     kvp => new KeyValuePair<string, MsDataFileUri[]>(kvp.Name, new[] { new MsDataFilePath(kvp.Path) }))
-                    .ToArray();
+                    .ToList();
 
-            // Ask about lockmass correction, if needed - answers written to Settings.Default
-            if (!ImportResultsLockMassDlg.CheckWatersLockmassCorrection(this, SkylineWindow.DocumentUI, namedResults))
+            // Ask about lockmass correction, if needed - lockmass settings in namedResults will be updated by this call as needed
+            if (!ImportResultsLockMassDlg.CheckWatersLockmassCorrection(this, SkylineWindow.DocumentUI, ref namedResults))
             {
                 CloseWizard(DialogResult.Cancel);  // User cancelled, no change
             }
             else
             {
                 SkylineWindow.ModifyDocument(Resources.ImportResultsControl_GetPeptideSearchChromatograms_Import_results,
-                    doc => SkylineWindow.ImportResults(doc, namedResults, ExportOptimize.NONE, Settings.Default.LockmassParameters));
+                    doc => SkylineWindow.ImportResults(doc, namedResults, ExportOptimize.NONE));
                 CloseWizard(DialogResult.OK);
             }
         }

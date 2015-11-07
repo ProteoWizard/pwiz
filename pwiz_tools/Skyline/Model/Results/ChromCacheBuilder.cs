@@ -153,6 +153,7 @@ namespace pwiz.Skyline.Model.Results
             try
             {
                 var dataFilePath = MSDataFilePath;
+                var lockMassCorrection = MSDataFilePath.GetLockMassParameters();
                 var msDataFilePath = MSDataFilePath as MsDataFilePath;
                 if (msDataFilePath != null)
                 {
@@ -190,8 +191,8 @@ namespace pwiz.Skyline.Model.Results
                                           _document.Settings.TransitionSettings.FullScan.IsEnabledMsMs &&
                                           _document.Settings.TransitionSettings.FullScan.ProductMassAnalyzer ==
                                           FullScanMassAnalyzerType.centroided;
-
-                        inFile = GetMsDataFile(dataFilePathPart, sampleIndex, configInfo, enableSimSpectrum, 
+                        // TODO(bspratt) preserve centroiding info as part of MsDataFileUri string in chromdata
+                        inFile = GetMsDataFile(dataFilePathPart, sampleIndex, lockMassCorrection, configInfo, enableSimSpectrum, 
                             centroidMS1, centroidMS2);
                     }
 
@@ -335,9 +336,8 @@ namespace pwiz.Skyline.Model.Results
                                      cachedFile.IsSingleMatchMz);
         }
 
-        private MsDataFileImpl GetMsDataFile(string dataFilePathPart, int sampleIndex, MsInstrumentConfigInfo msInstrumentConfigInfo, bool enableSimSpectrum, bool requireCentroidedMS1, bool requireCentroidedMS2)
+        private MsDataFileImpl GetMsDataFile(string dataFilePathPart, int sampleIndex, LockMassParameters lockMassParameters, MsInstrumentConfigInfo msInstrumentConfigInfo, bool enableSimSpectrum, bool requireCentroidedMS1, bool requireCentroidedMS2)
         {
-            var lockMassParameters = msInstrumentConfigInfo == null ? null : msInstrumentConfigInfo.LockmassParameters;
             return new MsDataFileImpl(dataFilePathPart, sampleIndex, lockMassParameters, enableSimSpectrum, requireVendorCentroidedMS1:requireCentroidedMS1, requireVendorCentroidedMS2:requireCentroidedMS2);
         }
 

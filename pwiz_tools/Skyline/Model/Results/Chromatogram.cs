@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -228,16 +229,15 @@ namespace pwiz.Skyline.Model.Results
         private int _rescoreCount;
 
         public ChromatogramSet(string name,
-            IEnumerable<MsDataFileUri> msDataFileNames,
-            LockMassParameters lockmassParameters = null) // Waters lockmass correction
-            : this(name, msDataFileNames, Annotations.EMPTY, null, lockmassParameters)
+            IEnumerable<MsDataFileUri> msDataFileNames)
+            : this(name, msDataFileNames, Annotations.EMPTY, null)
         {
         }
 
         public ChromatogramSet(string name,
             IEnumerable<string> msDataFileNames,
-            LockMassParameters lockmassParameters = null) // Waters lockmass correction
-            : this(name, msDataFileNames.Select(file => new MsDataFilePath(file)), lockmassParameters)
+            LockMassParameters lockmassParameters = null) // Waters lockmass correction - applies to all files in list
+            : this(name, msDataFileNames.Select(file => new MsDataFilePath(file, lockmassParameters)))
         {
             
         }
@@ -245,11 +245,10 @@ namespace pwiz.Skyline.Model.Results
         public ChromatogramSet(string name, 
                 IEnumerable<MsDataFileUri> msDataFileNames,
                 Annotations annotations,
-                OptimizableRegression optimizationFunction,
-                LockMassParameters lockmassParameters) // Waters lockmass correction
+                OptimizableRegression optimizationFunction)
             : base(new ChromatogramSetId(), name)
         {
-            MSDataFileInfos = msDataFileNames.ToList().ConvertAll(path => new ChromFileInfo(path, lockmassParameters));
+            MSDataFileInfos = msDataFileNames.ToList().ConvertAll(path => new ChromFileInfo(path));
 
             OptimizationFunction = optimizationFunction;
             Annotations = annotations;
@@ -274,7 +273,7 @@ namespace pwiz.Skyline.Model.Results
 
         public string IsLoadedExplained() // For test and debug purposes, gives a descriptive string for IsLoaded failure
         {
-            return IsLoaded ? string.Empty : "No ChromFileInfo.FileWriteTime for " + string.Join(",", MSDataFileInfos.Where(info => !info.FileWriteTime.HasValue).Select(f => f.FilePath)); // Not L10N
+            return IsLoaded ? string.Empty : "No ChromFileInfo.FileWriteTime for " + string.Join(",", MSDataFileInfos.Where(info => !info.FileWriteTime.HasValue).Select(f => f.FilePath.GetFilePath())); // Not L10N
         }
 
         public Annotations Annotations { get; private set; }
@@ -344,7 +343,7 @@ namespace pwiz.Skyline.Model.Results
             return ChangeProp(ImClone(this), im => im.MSDataFileInfos = prop);
         }
 
-        public ChromatogramSet ChangeMSDataFilePaths(IList<MsDataFileUri> prop, LockMassParameters lockMassParameters)
+        public ChromatogramSet ChangeMSDataFilePaths(IList<MsDataFileUri> prop)
         {
             var set = ImClone(this);
 
@@ -356,7 +355,7 @@ namespace pwiz.Skyline.Model.Results
                 ChromFileInfo chromFileInfo;
                 if (!dictPathToFileInfo.TryGetValue(filePath, out chromFileInfo))
                 {
-                    chromFileInfo = new ChromFileInfo(filePath, lockMassParameters);
+                    chromFileInfo = new ChromFileInfo(filePath);
                 }
                 listFileInfos.Add(chromFileInfo);
             }
@@ -548,10 +547,7 @@ namespace pwiz.Skyline.Model.Results
             value,
             use_for_retention_time_prediction,
             analyte_concentration,
-            sample_type,
-            lockmass_positive,
-            lockmass_negative,
-            lockmass_tolerance,
+            sample_type
         }
 
         private static readonly IXmlElementHelper<OptimizableRegression>[] OPTIMIZATION_HELPERS =
@@ -582,35 +578,24 @@ namespace pwiz.Skyline.Model.Results
 
             var msDataFilePaths = new List<MsDataFileUri>();
             var fileLoadIds = new List<string>();
-            LockMassParameters lockMassParamters = null;
             while (reader.IsStartElement(EL.sample_file) ||
                     reader.IsStartElement(EL.replicate_file) ||
                     reader.IsStartElement(EL.chromatogram_file))
             {
+                // Note that the file path is actually be a URI that encodes things like lockmass correction as well as filename
                 msDataFilePaths.Add(MsDataFileUri.Parse(reader.GetAttribute(ATTR.file_path)));
                 string id = reader.GetAttribute(ATTR.id) ?? GetOrdinalSaveId(fileLoadIds.Count);
                 fileLoadIds.Add(id);
                 reader.Read();
                 if (reader.IsStartElement(EL.instrument_info_list))
                 {
-                    // See if we recorded any lockmass info
-                    reader.ReadStartElement();
-                    while (reader.IsStartElement(EL.instrument_info))
-                    {
-                        var lockmassPositive = reader.GetNullableDoubleAttribute(ATTR.lockmass_positive);
-                        var lockmassNegative = reader.GetNullableDoubleAttribute(ATTR.lockmass_negative);
-                        var lockmassTolerance = reader.GetNullableDoubleAttribute(ATTR.lockmass_tolerance);
-                        if (lockmassPositive.HasValue || lockmassNegative.HasValue)
-                            lockMassParamters = new LockMassParameters(lockmassPositive, lockmassNegative, lockmassTolerance);
-                        reader.Skip();  // Jump over all the sub elements
-                    }
-                    reader.ReadEndElement();  // Consume the end tag, position at end element of sample_file or replicate_file etc
+                    reader.Skip();
                     reader.Read();
                 } 
             }
             Annotations = SrmDocument.ReadAnnotations(reader);
 
-            MSDataFileInfos = msDataFilePaths.ConvertAll(path => new ChromFileInfo(path, lockMassParamters));
+            MSDataFileInfos = msDataFilePaths.ConvertAll(path => new ChromFileInfo(path));
             _fileLoadIds = fileLoadIds.ToArray();
 
             // Consume end tag
@@ -673,17 +658,6 @@ namespace pwiz.Skyline.Model.Results
             {
                 writer.WriteStartElement(EL.instrument_info);
 
-                if (instrumentInfo.LockmassParameters != null && !instrumentInfo.LockmassParameters.IsEmpty)
-                {
-                    if ((instrumentInfo.LockmassParameters.LockmassPositive ?? 0) > 0)
-                        writer.WriteAttribute(ATTR.lockmass_positive, instrumentInfo.LockmassParameters.LockmassPositive.Value);
-
-                    if ((instrumentInfo.LockmassParameters.LockmassNegative ?? 0) > 0)
-                        writer.WriteAttribute(ATTR.lockmass_negative, instrumentInfo.LockmassParameters.LockmassNegative.Value);
-
-                    if ((instrumentInfo.LockmassParameters.LockmassTolerance ?? 0) > 0)
-                        writer.WriteAttribute(ATTR.lockmass_tolerance, instrumentInfo.LockmassParameters.LockmassTolerance.Value);
-                }
                 if(!string.IsNullOrWhiteSpace(instrumentInfo.Model))
                     writer.WriteElementString(EL.model, instrumentInfo.Model);
 
@@ -724,14 +698,23 @@ namespace pwiz.Skyline.Model.Results
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             // Why isn't "OptimizationFunction" included in "Equals"?
-            return base.Equals(obj) 
-                && ArrayUtil.EqualsDeep(obj.MSDataFileInfos, MSDataFileInfos) 
-                && Equals(obj.Annotations, Annotations)
-                && obj.UseForRetentionTimeFilter == UseForRetentionTimeFilter
-                && Equals(obj.OptimizationFunction, OptimizationFunction)
-                && obj._rescoreCount == _rescoreCount
-                && Equals(obj.AnalyteConcentration, AnalyteConcentration)
-                && Equals(obj.SampleType, SampleType);
+            if (!base.Equals(obj))
+                return false;
+            if (!ArrayUtil.EqualsDeep(obj.MSDataFileInfos, MSDataFileInfos))
+                return false; 
+            if (!Equals(obj.Annotations, Annotations))
+                return false;
+            if (!obj.UseForRetentionTimeFilter == UseForRetentionTimeFilter)
+                return false;
+            if (!Equals(obj.OptimizationFunction, OptimizationFunction))
+                return false;
+            if (obj._rescoreCount != _rescoreCount)
+                return false;
+            if (!Equals(obj.AnalyteConcentration, AnalyteConcentration))
+                return false;
+            if (!Equals(obj.SampleType, SampleType))
+                return false;
+            return true;
         }
 
         public override bool Equals(object obj)
@@ -769,7 +752,7 @@ namespace pwiz.Skyline.Model.Results
 
     public sealed class ChromFileInfo : DocNode, IPathContainer
     {
-        public ChromFileInfo(MsDataFileUri filePath, LockMassParameters lockMassParameters)
+        public ChromFileInfo(MsDataFileUri filePath)
             : base(new ChromFileInfoId())
         {
             ChorusUrl chorusUrl = filePath as ChorusUrl;
@@ -780,9 +763,7 @@ namespace pwiz.Skyline.Model.Results
                 filePath = chorusUrl.SetFileWriteTime(null).SetRunStartTime(null);
             }
             FilePath = filePath;
-            InstrumentInfoList = lockMassParameters == null || lockMassParameters.IsEmpty // Any lockmass info?
-                ? new MsInstrumentConfigInfo[0]
-                : new[] {new MsInstrumentConfigInfo(null, null, null, null, lockMassParameters)};
+            InstrumentInfoList = new MsInstrumentConfigInfo[0];
         }
 
         private ImmutableList<MsInstrumentConfigInfo> _instrumentInfoList;
@@ -799,26 +780,6 @@ namespace pwiz.Skyline.Model.Results
         {
             get { return _instrumentInfoList; }
             private set { _instrumentInfoList = MakeReadOnly(value); }
-        }
-
-        public bool HasLockmassCorrection
-        {
-            get
-            {
-                return InstrumentInfoList.Any(i => (i.LockmassParameters != null && !i.LockmassParameters.IsEmpty));
-            }
-        }
-
-        public LockMassParameters LockmassParameters
-        {
-            get
-            {
-                return HasLockmassCorrection
-                    ? InstrumentInfoList.First(i => (i.LockmassParameters != null && !i.LockmassParameters.IsEmpty))
-                        .LockmassParameters
-                    : null;
-
-            }
         }
 
         public override AnnotationDef.AnnotationTarget AnnotationTarget
@@ -865,14 +826,23 @@ namespace pwiz.Skyline.Model.Results
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return Equals(other.Id, Id) &&
-                   Equals(other.FilePath, FilePath) &&
-                   other.FileWriteTime.Equals(FileWriteTime) &&
-                   other.RunStartTime.Equals(RunStartTime) &&
-                   other.MaxIntensity.Equals(MaxIntensity) &&
-                   other.MaxRetentionTime.Equals(MaxRetentionTime) &&
-                   ArrayUtil.EqualsDeep(other.InstrumentInfoList, InstrumentInfoList) &&
-                   ArrayUtil.EqualsDeep(other.RetentionTimeAlignments, RetentionTimeAlignments);
+            if (!Equals(other.Id, Id))
+                return false;
+            if (!Equals(other.FilePath, FilePath))
+                return false;
+            if (!other.FileWriteTime.Equals(FileWriteTime))
+                return false;
+            if (!other.RunStartTime.Equals(RunStartTime))
+                return false;
+            if (!other.MaxIntensity.Equals(MaxIntensity))
+                return false;
+            if (!other.MaxRetentionTime.Equals(MaxRetentionTime))
+                return false;
+            if (!ArrayUtil.EqualsDeep(other.InstrumentInfoList, InstrumentInfoList))
+                return false;
+            if (!ArrayUtil.EqualsDeep(other.RetentionTimeAlignments, RetentionTimeAlignments))
+                return false;
+            return true;
         }
 
         public override bool Equals(object obj)
@@ -924,12 +894,43 @@ namespace pwiz.Skyline.Model.Results
     /// require both XML and cache format changes.  Implemented late in v0.5,
     /// the simplest solution is to encode the necessary information into the
     /// existing path string used to identify a single sample file.
+    /// 
+    /// It's now (v3.5) being expanded to include other information needed to reproducably 
+    /// read raw data - lockmass settings, for example.  Probably ought to be moved out to 
+    /// MSDataFileUri, really
+    /// 
     /// </summary>
     public static class SampleHelp
     {
-        public static string EncodePath(string filePath, string sampleName, int sampleIndex)
+        private const string TAG_LOCKMASS_POS = "lockmass_pos"; // Not L10N
+        private const string TAG_LOCKMASS_NEG = "lockmass_neg"; // Not L10N
+        private const string TAG_LOCKMASS_TOL = "lockmass_tol"; // Not L10N
+
+        public static string EncodePath(string filePath, string sampleName, int sampleIndex, LockMassParameters lockMassParameters)
         {
-            return string.Format("{0}|{1}|{2}", filePath, sampleName, sampleIndex); // Not L10N
+            var parameters = new List<string>();
+            const string pairFormat = "{0}={1}"; // Not L10N
+            string filePart;
+            if (!(string.IsNullOrEmpty(sampleName) && -1 == sampleIndex))
+            {
+                // Info for distinguishing a single sample within a WIFF file.
+                filePart = string.Format("{0}|{1}|{2}", filePath, sampleName ?? string.Empty, sampleIndex); // Not L10N
+            }
+            else
+            {
+                filePart = filePath;
+            }
+
+            if (lockMassParameters != null && !lockMassParameters.IsEmpty)
+            {
+                if (lockMassParameters.LockmassPositive.HasValue)
+                    parameters.Add(string.Format(CultureInfo.InvariantCulture, pairFormat, TAG_LOCKMASS_POS, lockMassParameters.LockmassPositive.Value));
+                if (lockMassParameters.LockmassNegative.HasValue)
+                    parameters.Add(string.Format(CultureInfo.InvariantCulture, pairFormat, TAG_LOCKMASS_NEG, lockMassParameters.LockmassNegative.Value));
+                if (lockMassParameters.LockmassTolerance.HasValue)
+                    parameters.Add(string.Format(CultureInfo.InvariantCulture, pairFormat, TAG_LOCKMASS_TOL, lockMassParameters.LockmassTolerance.Value));
+            }
+            return parameters.Any() ? string.Format("{0}?{1}", filePart, string.Join("&", parameters)) : filePart; // Not L10N
         }
 
         public static string EscapeSampleId(string sampleId)
@@ -947,6 +948,7 @@ namespace pwiz.Skyline.Model.Results
 
         public static string GetPathFilePart(string path)
         {
+            path = path.Split('?')[0]; // Just in case the url args contain '|'  // Not L10N
             if (path.IndexOf('|') == -1) // Not L10N
                 return path;
             return path.Split('|')[0]; // Not L10N
@@ -954,6 +956,7 @@ namespace pwiz.Skyline.Model.Results
 
         public static bool HasSamplePart(string path)
         {
+            path = path.Split('?')[0]; // Just in case the url args contain '|'  // Not L10N
             string[] parts = path.Split('|'); // Not L10N
 
             int sampleIndex;
@@ -962,6 +965,7 @@ namespace pwiz.Skyline.Model.Results
 
         public static string GetPathSampleNamePart(string path)
         {
+            path = path.Split('?')[0]; // Just in case the url args contain '|'  // Not L10N
             if (path.IndexOf('|') == -1) // Not L10N
                 return null;
             return path.Split('|')[1]; // Not L10N
@@ -974,6 +978,7 @@ namespace pwiz.Skyline.Model.Results
 
         public static int GetPathSampleIndexPart(string path)
         {
+            path = path.Split('?')[0]; // Just in case the url args contain '|'  // Not L10N
             int sampleIndex = -1;
             if (path.IndexOf('|') != -1) // Not L10N
             {
@@ -1009,6 +1014,52 @@ namespace pwiz.Skyline.Model.Results
         public static string GetFileSampleName(string path)
         {
             return GetPathSampleNamePart(path) ?? Path.GetFileNameWithoutExtension(path);
+        }
+
+        private static string ParseParameter(string name, string url)
+        {
+            var parts = url.Split('?'); // Not L10N
+            if (parts.Count() > 1)
+            {
+                var parameters = parts[1].Split('&'); // Not L10N
+                var parameter = parameters.FirstOrDefault(p => p.StartsWith(name));
+                if (parameter != null)
+                {
+                    return parameter.Split('=')[1];
+                }
+            }
+            return null;
+        }
+
+        private static double? ParseParameterDouble(string name, string url)
+        {
+            var valStr = ParseParameter(name, url);
+            if (valStr != null)
+            {
+                double dval;
+                if (double.TryParse(valStr, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out dval))
+                    return dval;
+            }
+            return null;
+        }
+
+        private static int? ParseParameterInt(string name, string url) 
+        {
+            var valStr = ParseParameter(name, url);
+            if (valStr != null)
+            {
+                int ival;
+                if (int.TryParse(valStr, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out ival))
+                    return ival;
+            }
+            return null;
+        }
+
+        public static LockMassParameters GetLockmassParameters(string url)
+        {
+            if (url == null || string.IsNullOrEmpty(url))
+                return LockMassParameters.EMPTY;
+            return new LockMassParameters(ParseParameterDouble(TAG_LOCKMASS_POS, url), ParseParameterDouble(TAG_LOCKMASS_NEG, url), ParseParameterDouble(TAG_LOCKMASS_TOL, url));
         }
     }
 }

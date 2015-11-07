@@ -318,8 +318,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var measuredResults = DocumentUI.Settings.MeasuredResults;
                 scanProvider = new ScanProvider(_documentContainer.DocumentFilePath, FilePath,
                     chromatogramGroupInfo.Source, chromatogramGroupInfo.Times, transitions.ToArray(),
-                    () => measuredResults.LoadMSDataFileScanIds(FilePath),
-                    LockMassParameters);
+                    () => measuredResults.LoadMSDataFileScanIds(FilePath));
             }
             else
             {
@@ -638,12 +637,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var filePath = FilePath;
                 if (filePath == null)
                     return null;
-                var document = DocumentUI;
-                var resultIndex = document.Settings.MeasuredResults.Chromatograms.IndexOf(c => c.GetFileInfo(filePath) != null);
-                if (resultIndex == -1)
-                    return null;
-                var chromFileInfo = document.Settings.MeasuredResults.Chromatograms[resultIndex].GetFileInfo(filePath);
-                return (chromFileInfo == null) ? null : chromFileInfo.LockmassParameters;
+                return filePath.GetLockMassParameters();
             }
         }
 

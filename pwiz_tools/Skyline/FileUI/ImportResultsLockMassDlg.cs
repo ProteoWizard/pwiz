@@ -34,13 +34,14 @@ namespace pwiz.Skyline.FileUI
     public partial class ImportResultsLockMassDlg : FormEx
     {
         /// <summary>
-        /// Check to see if any of these are Waters files in potential need of lockmass correction
+        /// Check to see if any of these are Waters files in potential need of lockmass correction.
+        /// If lockmass correction is desired, the MsDataFileUri values in namedResults are modified.
         /// </summary>
         /// <param name="parent">Parent window to make owner of <see cref="ImportResultsLockMassDlg"/></param>
         /// <param name="doc">we only do lockmass correction if doc has full scan settings</param>
-        /// <param name="namedResults">list of files to be checked</param>
+        /// <param name="namedResults">list of files to be checked - lockmass settings may be modified by this call</param>
         /// <returns>false iff cancelled by user</returns>
-        public static bool CheckWatersLockmassCorrection(Control parent, SrmDocument doc, KeyValuePair<string, MsDataFileUri[]>[] namedResults)
+        public static bool CheckWatersLockmassCorrection(Control parent, SrmDocument doc, ref List<KeyValuePair<string, MsDataFileUri[]>> namedResults)
         {
             if (doc.Settings.TransitionSettings.FullScan.IsEnabled &&
                 namedResults.Any(n => n.Value.Any(m => m.IsWatersLockmassCorrectionCandidate())))
@@ -54,6 +55,7 @@ namespace pwiz.Skyline.FileUI
                         return false; // Cancelled
                     }
                 }
+                namedResults = MsDataFileUri.ChangeLockMassParameters(namedResults, Settings.Default.LockmassParameters);
             }
             return true; // Success
         }

@@ -405,7 +405,7 @@ namespace pwiz.Skyline.Model
             public string ExactMatch
             {
                 get { return _exactMatch; }
-                set { _exactMatch = value != null ? Path.GetFullPath(value) : null; }
+                set { _exactMatch = value != null ? Path.GetFullPath(SampleHelp.GetPathFilePart(value)) : null; }  // This may actually be a MsDataFileUri string
             }
             private string _exactMatch;
 
@@ -415,7 +415,7 @@ namespace pwiz.Skyline.Model
             public string AlternateMatch
             {
                 get { return _alternateMatch; }
-                set { _alternateMatch = value != null ? Path.GetFullPath(value) : null; }
+                set { _alternateMatch = value != null ? Path.GetFullPath(SampleHelp.GetPathFilePart(value)) : null; }  // This may actually be a MsDataFileUri string
             }
             private string _alternateMatch;
 

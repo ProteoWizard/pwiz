@@ -471,10 +471,6 @@
                               <xs:element minOccurs="0" name="detector"
                               type="xs:string"/>
                             </xs:sequence>
-                            <!-- Waters lockmass correction -->
-                            <xs:attribute name="lockmass_positive" type="xs:double" use="optional"/>
-                            <xs:attribute name="lockmass_negative" type="xs:double" use="optional"/>
-                            <xs:attribute name="lockmass_tolerance" type="xs:double" use="optional"/>
                           </xs:complexType>
                         </xs:element>
                       </xs:sequence>

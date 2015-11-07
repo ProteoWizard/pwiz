@@ -29,7 +29,6 @@ using System.Xml.Serialization;
 using Ionic.Zip;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
-using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
@@ -2045,24 +2044,25 @@ namespace pwiz.Skyline
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
-                    var namedResults = dlg.NamedPathSets;
                     // No idea how this could happen, but it has caused unexpected errors
                     // so just return and do nothing if it does.
-                    if (namedResults == null)
+                    if (dlg.NamedPathSets == null)
                     {
 //                        throw new NullReferenceException("Unexpected null path sets in ImportResults.");
                         return;
                     }
+                    var namedResults = dlg.NamedPathSets.ToList();
                     string description = Resources.SkylineWindow_ImportResults_Import_results;
-                    if (namedResults.Length == 1)
+                    if (namedResults.Count == 1)
                         description = string.Format(Resources.SkylineWindow_ImportResults_Import__0__, namedResults[0].Key); // Not L10N
 
                     // Check with user for Waters lockmass settings if any, results written to Settings.Default
-                    if (!ImportResultsLockMassDlg.CheckWatersLockmassCorrection(this, DocumentUI, namedResults))
+                    // If lockmass correction is desired, MsDataFileUri values in namedResults are modified by this call.
+                    if (!ImportResultsLockMassDlg.CheckWatersLockmassCorrection(this, DocumentUI, ref namedResults))
                         return; // User cancelled, no change
 
                     ModifyDocument(description,
-                                   doc => ImportResults(doc, namedResults, dlg.OptimizationName, Settings.Default.LockmassParameters));
+                                   doc => ImportResults(doc, namedResults, dlg.OptimizationName));
 
                     // Select the first replicate to which results were added.
                     if (ComboResults.Visible)
@@ -2132,13 +2132,13 @@ namespace pwiz.Skyline
             }
         }
 
-        public SrmDocument ImportResults(SrmDocument doc, KeyValuePair<string, MsDataFileUri[]>[] namedResults, string optimize, LockMassParameters lockMassParameters)
+        public SrmDocument ImportResults(SrmDocument doc, List<KeyValuePair<string, MsDataFileUri[]>> namedResults, string optimize)
         {
 
             OptimizableRegression optimizationFunction = doc.Settings.TransitionSettings.Prediction.GetOptimizeFunction(optimize);
 
-            if (namedResults.Length == 1)
-                return ImportResults(doc, namedResults[0].Key, lockMassParameters, namedResults[0].Value, optimizationFunction);
+            if (namedResults.Count == 1)
+                return ImportResults(doc, namedResults[0].Key, namedResults[0].Value, optimizationFunction);
 
             // Add all chosen files as separate result sets.
             var results = doc.Settings.MeasuredResults;
@@ -2157,7 +2157,7 @@ namespace pwiz.Skyline
                 // Delete caches that will be overwritten
                 FileEx.SafeDelete(ChromatogramCache.FinalPathForName(DocumentFilePath, nameResult), true);
 
-                listChrom.Add(new ChromatogramSet(nameResult, namedResult.Value, Annotations.EMPTY, optimizationFunction, lockMassParameters));
+                listChrom.Add(new ChromatogramSet(nameResult, namedResult.Value, Annotations.EMPTY, optimizationFunction));
             }
 
             var arrayChrom = listChrom.ToArray();
@@ -2183,7 +2183,7 @@ namespace pwiz.Skyline
             return doc.ChangeMeasuredResults(results);
         }
 
-        private SrmDocument ImportResults(SrmDocument doc, string nameResult, LockMassParameters lockMassParameters, IEnumerable<MsDataFileUri> dataSources,
+        private SrmDocument ImportResults(SrmDocument doc, string nameResult, IEnumerable<MsDataFileUri> dataSources,
             OptimizableRegression optimizationFunction)
         {
             var results = doc.Settings.MeasuredResults;
@@ -2194,7 +2194,7 @@ namespace pwiz.Skyline
                 // file to make sure it is not on disk before starting.
                 FileEx.SafeDelete(ChromatogramCache.FinalPathForName(DocumentFilePath, nameResult), true);
 
-                chrom = new ChromatogramSet(nameResult, dataSources, Annotations.EMPTY, optimizationFunction, lockMassParameters);
+                chrom = new ChromatogramSet(nameResult, dataSources, Annotations.EMPTY, optimizationFunction);
 
                 if (results == null)
                     results = new MeasuredResults(new[] {chrom});
@@ -2220,7 +2220,7 @@ namespace pwiz.Skyline
 
                 int replaceIndex = results.Chromatograms.IndexOf(chrom);
                 var arrayChrom = results.Chromatograms.ToArray();
-                arrayChrom[replaceIndex] = chrom.ChangeMSDataFilePaths(dataFilePaths, lockMassParameters);
+                arrayChrom[replaceIndex] = chrom.ChangeMSDataFilePaths(dataFilePaths);
 
                 results = results.ChangeChromatograms(arrayChrom);
             }

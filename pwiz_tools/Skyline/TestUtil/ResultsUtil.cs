@@ -234,7 +234,7 @@ namespace pwiz.SkylineTestUtil
             foreach (var path in new[] { path1, path2 })
             {
                 listChromatograms.Add(FindChromatogramSet(doc, path) ??
-                    new ChromatogramSet((path.GetFileName() ?? "").Replace('.', '_'), new[] { path }, lockMassParameters));
+                    new ChromatogramSet((path.GetFileName() ?? "").Replace('.', '_'), new[] { path }));
             }
             var docResults = doc.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
             Assert.IsTrue(docContainer.SetDocument(docResults, doc, true));

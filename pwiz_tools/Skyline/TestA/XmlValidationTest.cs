@@ -93,10 +93,9 @@ namespace pwiz.SkylineTestA
             xmlReader.ReadElements(deserializedObjects);
             Assert.AreEqual(1, deserializedObjects.Count);
             var compare = deserializedObjects[0];
-            Assert.AreEqual(listChromatograms[0], compare);
-            Assert.AreEqual(456.78, compare.MSDataFileInfos[0].InstrumentInfoList[0].LockmassParameters.LockmassPositive.Value);
-            Assert.AreEqual(567.89, compare.MSDataFileInfos[0].InstrumentInfoList[0].LockmassParameters.LockmassNegative.Value);
-            Assert.AreEqual(12.34, compare.MSDataFileInfos[0].InstrumentInfoList[0].LockmassParameters.LockmassTolerance.Value);
+            Assert.AreEqual(456.78, compare.MSDataFileInfos[0].FilePath.GetLockMassParameters().LockmassPositive.Value);
+            Assert.AreEqual(567.89, compare.MSDataFileInfos[0].FilePath.GetLockMassParameters().LockmassNegative.Value);
+            Assert.AreEqual(12.34, compare.MSDataFileInfos[0].FilePath.GetLockMassParameters().LockmassTolerance.Value);
             Assert.AreEqual(listChromatograms[0], compare);
             
             // We don't expect any new peptides/precursors/transitions added due to the imported results.
@@ -128,8 +127,6 @@ namespace pwiz.SkylineTestA
             var instrumentInfo = instrumentList.Item(0);
             Assert.IsNotNull(instrumentInfo);
             Assert.IsNotNull(instrumentInfo.Attributes);
-            Assert.IsNull(instrumentInfo.Attributes.GetNamedItem(ChromatogramSet.ATTR.lockmass_positive.ToString())); // Don't expect these since this is not Waters data
-            Assert.IsNull(instrumentInfo.Attributes.GetNamedItem(ChromatogramSet.ATTR.lockmass_negative.ToString()));
 
             // model
             var model = instrumentInfo.SelectSingleNode(ChromatogramSet.EL.model.ToString());

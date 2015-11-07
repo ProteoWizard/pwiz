@@ -32,7 +32,7 @@ namespace pwiz.Skyline.Model.Results
 {
     public sealed class ChromatogramCache : Immutable, IDisposable
     {
-        public const int FORMAT_VERSION_CACHE_10 = 10; // Introduces waters lockmass correction
+        public const int FORMAT_VERSION_CACHE_10 = 10; // Introduces waters lockmass correction in MSDataFileUri syntax
         public const int FORMAT_VERSION_CACHE_9 = 9; // Introduces abbreviated scan ids
         public const int FORMAT_VERSION_CACHE_8 = 8; // Introduces ion mobility data
         public const int FORMAT_VERSION_CACHE_7 = 7; // Introduces UTF8 character support

@@ -292,7 +292,7 @@ namespace pwiz.SkylineTestA
 
             //Attach replicate
             ProgressStatus status;
-            doc = CommandLine.ImportResults(doc, docPath, replicate, MsDataFileUri.Parse(rawPath), null, null, null, out status);
+            doc = CommandLine.ImportResults(doc, docPath, replicate, MsDataFileUri.Parse(rawPath), null, null, out status);
             Assert.IsNull(status);
 
             string programmaticReport;
@@ -333,7 +333,7 @@ namespace pwiz.SkylineTestA
             //Attach replicate
             SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
             ProgressStatus status;
-            doc = CommandLine.ImportResults(doc, docPath, replicate, MsDataFileUri.Parse(rawPath), null, null, null, out status);
+            doc = CommandLine.ImportResults(doc, docPath, replicate, MsDataFileUri.Parse(rawPath), null, null, out status);
             Assert.IsNull(status);
 
             //First, programmatically generate the report
@@ -1079,7 +1079,7 @@ namespace pwiz.SkylineTestA
             
             // Test: Cannot use --import-file and --import-all options simultaneously
             var msg = RunCommand("--in=" + docPath,
-                                 "--import-file=" + rawPath,
+                                 "--import-file=" + rawPath.FilePath,
                                  "--import-replicate-name=Unscheduled01",
                                  "--import-all=" + testFilesDir.FullPath,
                                  "--out=" + outPath1);
@@ -1102,7 +1102,7 @@ namespace pwiz.SkylineTestA
 
             // Test: Cannot use --import-naming-pattern with --import-file
             msg = RunCommand("--in=" + docPath,
-                                 "--import-file=" + rawPath,
+                                 "--import-file=" + rawPath.FilePath,
                                  "--import-naming-pattern=prefix_(.*)",
                                  "--out=" + outPath1);
             Assert.IsTrue(msg.Contains(Resources.CommandArgs_ParseArgsInternal_Error____import_naming_pattern_cannot_be_used_with_the___import_file_option_), msg);
@@ -1166,7 +1166,7 @@ namespace pwiz.SkylineTestA
             // Import REP01\CE_Vantage_15mTorr_0001_REP1_01.raw;
             // Use replicate name "REP01"
             msg = RunCommand("--in=" + docPath,
-                       "--import-file=" + rawPath,
+                       "--import-file=" + rawPath.FilePath,
                        "--import-replicate-name=REP01",
                        "--out=" + outPath2);
             Assert.IsTrue(File.Exists(outPath2), msg);
@@ -1181,7 +1181,7 @@ namespace pwiz.SkylineTestA
             // Import another single file. 
             var rawPath2 = MsDataFileUri.Parse(testFilesDir.GetTestPath("160109_Mix1_calcurve_070.mzML"));
             msg = RunCommand("--in=" + outPath2,
-                       "--import-file=" + rawPath2,
+                       "--import-file=" + rawPath2.GetFilePath(),
                        "--import-replicate-name=160109_Mix1_calcurve_070",
                        "--save");
             doc = ResultsUtil.DeserializeDocument(outPath2);

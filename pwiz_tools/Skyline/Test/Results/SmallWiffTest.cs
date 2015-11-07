@@ -19,6 +19,7 @@
 
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
@@ -63,6 +64,34 @@ namespace pwiz.SkylineTest.Results
         }
 
         [TestMethod]
+        public void MsDataFileUriEncodingTest()
+        {
+            var fname = "test.mzML";
+            var pathSample = SampleHelp.EncodePath(fname, null, -1, null);
+            var lockmassParametersA = new LockMassParameters(1.23, 3.45, 4.56);
+            var lockmassParametersB = new LockMassParameters(1.23, null, 4.56);
+
+            Assert.IsTrue(lockmassParametersA.CompareTo(LockMassParameters.EMPTY) > 0);
+            Assert.IsTrue(lockmassParametersA.CompareTo(null) < 0);
+            Assert.IsTrue(lockmassParametersB.CompareTo(lockmassParametersA) < 0);
+            Assert.IsTrue(lockmassParametersA.CompareTo(new LockMassParameters(1.23, 3.45, 4.56)) == 0);
+            
+
+            var c = new ChromatogramSet("test", new[] { MsDataFileUri.Parse(pathSample) });
+            Assert.AreEqual(fname, c.MSDataFilePaths.First().GetFilePath());
+
+            pathSample = SampleHelp.EncodePath(fname, null, -1, lockmassParametersA);
+            c = new ChromatogramSet("test", new[] { MsDataFileUri.Parse(pathSample) });
+            Assert.AreEqual(lockmassParametersA, c.MSDataFilePaths.First().GetLockMassParameters());
+
+            pathSample = SampleHelp.EncodePath(fname, "test_0", 1, lockmassParametersB);
+            c = new ChromatogramSet("test", new[] { MsDataFileUri.Parse(pathSample) });
+            Assert.AreEqual(lockmassParametersB, c.MSDataFilePaths.First().GetLockMassParameters());
+            Assert.AreEqual("test_0", c.MSDataFilePaths.First().GetSampleName());
+            Assert.AreEqual(1, c.MSDataFilePaths.First().GetSampleIndex());
+        }
+
+        [TestMethod]
         public void WiffResultsTest()
         {
             TestFilesDir testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
@@ -84,7 +113,7 @@ namespace pwiz.SkylineTest.Results
                     string nameSample = dataIds[i];
                     if (!Equals(nameSample, "test") && listChromatograms.Count == 0)
                         continue;
-                    string pathSample = SampleHelp.EncodePath(pathWiff, nameSample, i);
+                    string pathSample = SampleHelp.EncodePath(pathWiff, nameSample, i, LockMassParameters.EMPTY);
                     listChromatograms.Add(new ChromatogramSet(nameSample, new[] { MsDataFileUri.Parse(pathSample) }));
                 }
             }

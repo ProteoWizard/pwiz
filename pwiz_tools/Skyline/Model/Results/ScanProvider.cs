@@ -54,12 +54,11 @@ namespace pwiz.Skyline.Model.Results
     public class ScanProvider : IScanProvider
     {
         private MsDataFileImpl _dataFile;
-        private LockMassParameters _lockMassParameters;
         private MsDataFileScanIds _msDataFileScanIds; // Indexed container of MsDataFileImpl ids
         private Func<MsDataFileScanIds> _getMsDataFileScanIds;
 
         public ScanProvider(string docFilePath, MsDataFileUri dataFilePath, ChromSource source,
-            float[] times, TransitionFullScanInfo[] transitions, Func<MsDataFileScanIds> getMsDataFileScanIds, LockMassParameters lockMassParameters)
+            float[] times, TransitionFullScanInfo[] transitions, Func<MsDataFileScanIds> getMsDataFileScanIds)
         {
             DocFilePath = docFilePath;
             DataFilePath = dataFilePath;
@@ -67,7 +66,6 @@ namespace pwiz.Skyline.Model.Results
             Times = times;
             Transitions = transitions;
 
-            _lockMassParameters = lockMassParameters;
             _getMsDataFileScanIds = getMsDataFileScanIds;
         }
 
@@ -79,11 +77,9 @@ namespace pwiz.Skyline.Model.Results
             if (scanProvider == null)
                 return false;
             _dataFile = scanProvider._dataFile;
-            _lockMassParameters = scanProvider._lockMassParameters;
             _msDataFileScanIds = scanProvider._msDataFileScanIds;
             _getMsDataFileScanIds = scanProvider._getMsDataFileScanIds;
             scanProvider._dataFile = null;
-            scanProvider._lockMassParameters = null;
             return true;
         }
 
@@ -141,13 +137,14 @@ namespace pwiz.Skyline.Model.Results
             if (_dataFile == null)
             {
                 string dataFilePath = FindDataFilePath();
+                var lockMassParameters = DataFilePath.GetLockMassParameters();
                 if (dataFilePath == null)
                     throw new FileNotFoundException(string.Format(Resources.ScanProvider_GetScans_The_data_file__0__could_not_be_found__either_at_its_original_location_or_in_the_document_or_document_parent_folder_, DataFilePath));
                 int sampleIndex = SampleHelp.GetPathSampleIndexPart(dataFilePath);
                 if (sampleIndex == -1)
                     sampleIndex = 0;
                 // Full-scan extraction always uses SIM as spectra
-                _dataFile = new MsDataFileImpl(dataFilePath, sampleIndex, _lockMassParameters, true);
+                _dataFile = new MsDataFileImpl(dataFilePath, sampleIndex, lockMassParameters, true); // TODO(bspratt) use encoded centroiding info here too
             }
             return _dataFile;
         }

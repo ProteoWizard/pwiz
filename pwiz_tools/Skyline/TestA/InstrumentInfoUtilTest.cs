@@ -16,8 +16,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -100,17 +98,6 @@ namespace pwiz.SkylineTestA
 
             // check detector 2
             Assert.AreEqual("", instrumentConfigList[1].Detector);
-
-            // Check lockmass values
-            Assert.IsTrue(instrumentConfigList[1].LockmassParameters.IsEmpty);
-
-            instrumentConfigList = InstrumentInfoUtil.GetInstrumentInfo(INFO3_WRITE).ToList();
-            Assert.AreEqual(3, instrumentConfigList.Count(), INFO3_WRITE);
-            Assert.AreEqual(new LockMassParameters(123.45, 234.56, 4.56), instrumentConfigList[2].LockmassParameters);
-
-            // Roundtrip OK?
-            Assert.AreEqual(INFO3_WRITE, InstrumentInfoUtil.GetInstrumentInfoString(instrumentConfigList), "MsInstrumentConfigInfo roundtrip");
-
         }
 
         [TestMethod]
@@ -125,19 +112,6 @@ namespace pwiz.SkylineTestA
             {
                 AssertEx.AreComparableStrings(Resources.InstrumentInfoUtil_ReadInstrumentConfig_Unexpected_line_in_instrument_config__0__, e.Message, 1);
             }
-            try
-            {
-                InstrumentInfoUtil.GetInstrumentInfo(INFO4 + "\n" + InstrumentInfoUtil.LOCKMASSNEG + "fish");
-                Assert.Fail("Expected FormatException parsing invalid instrument info string");
-            }
-            catch (FormatException)
-            {
-                // Ignore
-            }
-            catch (Exception e)
-            {
-                Assert.Fail("Expected FormatException parsing invalid instrument info string, got {0} instead", e);
-            }
         }
 
         [TestMethod]
@@ -149,26 +123,19 @@ namespace pwiz.SkylineTestA
 
             Assert.AreEqual("", InstrumentInfoUtil.GetInstrumentInfoString(instrumentInfoList));
 
-            instrumentInfoList.Add(new MsInstrumentConfigInfo("MS_TSQ_Vantage ", null, null, null, null));
+            instrumentInfoList.Add(new MsInstrumentConfigInfo("MS_TSQ_Vantage ", null, null, null));
             // trailing white space should have been removed from model name.
             Assert.AreEqual(INFO1_WRITE, InstrumentInfoUtil.GetInstrumentInfoString(instrumentInfoList));
 
             // Add an empty instrument info
-            instrumentInfoList.Add(new MsInstrumentConfigInfo("  ", null, null, null, null));
+            instrumentInfoList.Add(new MsInstrumentConfigInfo("  ", null, null, null));
             // The empty instrument info should not have been written
             Assert.AreEqual(INFO1_WRITE, InstrumentInfoUtil.GetInstrumentInfoString(instrumentInfoList));
 
             // Add another instrument info
-            instrumentInfoList.Add(new MsInstrumentConfigInfo("MS_LTQ_FT", "MS ionization\ntype", null, null, null));
+            instrumentInfoList.Add(new MsInstrumentConfigInfo("MS_LTQ_FT", "MS ionization\ntype", null, null));
             // Internal \n in ionization type string should habe been removed
             Assert.AreEqual(INFO2_WRITE, InstrumentInfoUtil.GetInstrumentInfoString(instrumentInfoList));
-
-            // Add another instrument info
-            instrumentInfoList.Add(new MsInstrumentConfigInfo("MS_LTQ_FT", "MS ionization\ntype", null, null, 
-                new LockMassParameters(123.45, 234.56, 4.56)));
-            // lockmass values should be written
-            Assert.AreEqual(INFO3_WRITE, InstrumentInfoUtil.GetInstrumentInfoString(instrumentInfoList));
-
         }
 
         private const string INFO1 =
@@ -195,12 +162,6 @@ namespace pwiz.SkylineTestA
             InstrumentInfoUtil.IONIZATION +
             "\n" +
             InstrumentInfoUtil.ANALYZER +
-            "\n" +
-            InstrumentInfoUtil.LOCKMASSPOS +
-            "\n" +
-            InstrumentInfoUtil.LOCKMASSNEG +
-            "\n" +
-            InstrumentInfoUtil.LOCKMASSTOL +
             "\n";
 
         private const string INFO4 =
@@ -236,20 +197,5 @@ namespace pwiz.SkylineTestA
             "\n" +
             InstrumentInfoUtil.IONIZATION + "MS ionization type" +
             "\n";
-
-        private const string INFO3_WRITE =
-            INFO2_WRITE +
-            "\n" +
-            InstrumentInfoUtil.MODEL + "MS_LTQ_FT" +
-            "\n" +
-            InstrumentInfoUtil.IONIZATION + "MS ionization type" +
-            "\n" +
-            InstrumentInfoUtil.LOCKMASSPOS + "123.45" +
-            "\n" +
-            InstrumentInfoUtil.LOCKMASSNEG + "234.56" +
-            "\n" +
-            InstrumentInfoUtil.LOCKMASSTOL + "4.56" +
-            "\n"
-            ;
     }
 }

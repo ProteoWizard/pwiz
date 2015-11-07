@@ -1358,10 +1358,6 @@ namespace pwiz.Skyline.Model.Results
         public const string ANALYZER = "ANALYZER:"; // Not L10N
         public const string DETECTOR = "DETECTOR:"; // Not L10N
         public const string IONIZATION = "IONIZATION:"; // Not L10N
-        // Lockmass correction, new in FORMAT_VERSION_CACHE_10
-        public const string LOCKMASSPOS = "LOCKMASSPOS:"; // Not L10N
-        public const string LOCKMASSNEG = "LOCKMASSNEG:"; // Not L10N
-        public const string LOCKMASSTOL = "LOCKMASSTOL:"; // Not L10N
 
         public static IEnumerable<MsInstrumentConfigInfo> GetInstrumentInfo(string infoString)
         {
@@ -1390,9 +1386,6 @@ namespace pwiz.Skyline.Model.Results
             string ionization = null;
             string analyzer = null;
             string detector = null;
-            double? lockmassPos = null;
-            double? lockmassNeg = null;
-            double? lockmassTol = null;
 
             string line;
             bool readLine = false;
@@ -1419,21 +1412,6 @@ namespace pwiz.Skyline.Model.Results
                 {
                     detector = line.Substring(DETECTOR.Length);
                 }
-                else if (line.StartsWith(LOCKMASSPOS))
-                {
-                    var substring = line.Substring(LOCKMASSPOS.Length);
-                    lockmassPos = substring.Length > 0 ? double.Parse(substring, CultureInfo.InvariantCulture) : (double?) null;
-                }
-                else if (line.StartsWith(LOCKMASSNEG))
-                {
-                    var substring = line.Substring(LOCKMASSNEG.Length);
-                    lockmassNeg = substring.Length > 0 ? double.Parse(substring, CultureInfo.InvariantCulture) : (double?)null;
-                }
-                else if (line.StartsWith(LOCKMASSTOL))
-                {
-                    var substring = line.Substring(LOCKMASSTOL.Length);
-                    lockmassTol = substring.Length > 0 ? double.Parse(substring, CultureInfo.InvariantCulture) : (double?)null;
-                }
                 else
                 {
                     throw new IOException(string.Format(Resources.InstrumentInfoUtil_ReadInstrumentConfig_Unexpected_line_in_instrument_config__0__, line));
@@ -1442,8 +1420,7 @@ namespace pwiz.Skyline.Model.Results
 
             if(readLine)
             {
-                instrumentInfo = new MsInstrumentConfigInfo(model, ionization, analyzer, detector, 
-                    new LockMassParameters(lockmassPos, lockmassNeg, lockmassTol));
+                instrumentInfo = new MsInstrumentConfigInfo(model, ionization, analyzer, detector);
                 return true;
             }
             instrumentInfo = null;
@@ -1487,28 +1464,6 @@ namespace pwiz.Skyline.Model.Results
                 if(!string.IsNullOrWhiteSpace(configInfo.Detector))
                 {
                     infoString.Append(DETECTOR).Append(configInfo.Detector).Append('\n'); // Not L10N
-                }
-
-                if (configInfo.LockmassParameters != null && !configInfo.LockmassParameters.IsEmpty)
-                {
-                    // lockmassPositive
-                    if (configInfo.LockmassParameters.LockmassPositive.HasValue)
-                    {
-                        infoString.Append(LOCKMASSPOS).Append(configInfo.LockmassParameters.LockmassPositive.Value.ToString(CultureInfo.InvariantCulture)).Append('\n'); // Not L10N
-                    }
-
-                    // lockmassNegative
-                    if (configInfo.LockmassParameters.LockmassNegative.HasValue)
-                    {
-                        infoString.Append(LOCKMASSNEG).Append(configInfo.LockmassParameters.LockmassNegative.Value.ToString(CultureInfo.InvariantCulture)).Append('\n'); // Not L10N
-                    }
-
-                    // lockmassTolerance
-                    if (configInfo.LockmassParameters.LockmassNegative.HasValue)
-                    {
-                        infoString.Append(LOCKMASSTOL).Append(configInfo.LockmassParameters.LockmassTolerance.Value.ToString(CultureInfo.InvariantCulture)).Append('\n'); // Not L10N
-                    }
-                    
                 }
             }
             
