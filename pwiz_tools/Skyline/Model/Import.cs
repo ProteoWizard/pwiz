@@ -392,7 +392,7 @@ namespace pwiz.Skyline.Model
                 int irtColumn = -1;
                 int libraryColumn = -1;
                 var irtNames = new[] { "tr_recalibrated", "irt" }; // Not L10N
-                var libraryNames = new[] { "libraryintensity", "relativeintensity", "relative_intensity", "library_intensity" }; // Not L10N
+                var libraryNames = new[] { "libraryintensity", "relativeintensity", "relative_intensity", "relativefragmentintensity", "library_intensity" }; // Not L10N
                 var decoyNames = new[] { "decoy" }; // Not L10N
                 if (headers != null)
                 {

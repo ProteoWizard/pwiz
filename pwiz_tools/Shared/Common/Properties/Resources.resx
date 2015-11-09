@@ -270,7 +270,7 @@
     <value>Executing query</value>
   </data>
   <data name="AbstractViewContext_WriteData_Writing_row__0___1_" xml:space="preserve">
-    <value>Writing row {0}/{1}</value>
+    <value>Writing row {0:#,0}/{1:#,0}</value>
   </data>
   <data name="ManageViewsForm_BtnRemoveOnClick_Are_you_sure_you_want_to_delete_the_view___0___" xml:space="preserve">
     <value>Are you sure you want to delete the view '{0}'?</value>

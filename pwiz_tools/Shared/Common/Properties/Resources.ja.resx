@@ -270,7 +270,7 @@
     <value>クエリの実行中</value>
   </data>
   <data name="AbstractViewContext_WriteData_Writing_row__0___1_" xml:space="preserve">
-    <value>{0}/{1}行の書き込み中</value>
+    <value>{0:#,0}/{1:#,0}行の書き込み中</value>
   </data>
   <data name="ManageViewsForm_BtnRemoveOnClick_Are_you_sure_you_want_to_delete_the_view___0___" xml:space="preserve">
     <value>本当にビュー'{0}'を消去してよろしいですか？</value>
