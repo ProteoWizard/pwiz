@@ -367,7 +367,7 @@ namespace pwiz.Skyline.Model.Results
 
             string cachePath = ChromatogramCache.FinalPathForName(documentPath, null);
             var cachedFiles = results.CachedFileInfos.Distinct(new PathComparer<ChromCachedFile>()).ToArray();
-            var dictCachedFiles = cachedFiles.ToDictionary(cachedFile => cachedFile.FilePath);
+            var dictCachedFiles = cachedFiles.ToDictionary(cachedFile => cachedFile.FilePath.GetLocation());
             var enumCachedNames = cachedFiles.Select(cachedFile => cachedFile.FilePath.GetFileName());
             var setCachedFileNames = new HashSet<string>(enumCachedNames);
             var chromatogramSets = new List<ChromatogramSet>();
@@ -1135,7 +1135,7 @@ namespace pwiz.Skyline.Model.Results
                         listValidCaches.Add(cache);
 
                         foreach (var cachedFile in cache.CachedFiles)
-                            cachedPaths.Add(cachedFile.FilePath);
+                            cachedPaths.Add(cachedFile.FilePath.GetLocation());
                     }
 
                     // Update the list if necessary
@@ -1223,7 +1223,7 @@ namespace pwiz.Skyline.Model.Results
                 Dictionary<MsDataFileUri, MsDataFileUri> dictReplace = null;
                 // Find the next file not represented in the list of partial caches
                 var uncachedPaths = new List<KeyValuePair<string, string>>();
-                foreach (var path in msDataFilePaths)
+                foreach (var path in msDataFilePaths.Select(p => p.GetLocation()))
                 {
                     if (!cachedPaths.Contains(path))
                     {

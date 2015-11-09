@@ -304,7 +304,7 @@ namespace pwiz.Skyline.Model.Results
 
         public int IndexOfPath(MsDataFileUri filePath)
         {
-            return MSDataFileInfos.IndexOf(info => Equals(filePath, info.FilePath));
+            return MSDataFileInfos.IndexOf(info => Equals(filePath.GetLocation(), info.FilePath.GetLocation()));
         }
 
         public ChromFileInfoId FindFile(ChromatogramGroupInfo chromGroupInfo)
@@ -401,7 +401,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 fileInfos[i] = MSDataFileInfos[i];
                 
-                var path = fileInfos[i].FilePath;
+                var path = fileInfos[i].FilePath.GetLocation();
 
                 ChromCachedFile fileInfo;
                 if (cachedPaths.TryGetValue(path, out fileInfo))
@@ -905,8 +905,12 @@ namespace pwiz.Skyline.Model.Results
         private const string TAG_LOCKMASS_POS = "lockmass_pos"; // Not L10N
         private const string TAG_LOCKMASS_NEG = "lockmass_neg"; // Not L10N
         private const string TAG_LOCKMASS_TOL = "lockmass_tol"; // Not L10N
+        private const string TAG_CENTROID_MS1 = "centroid_ms1"; // Not L10N
+        private const string TAG_CENTROID_MS2 = "centroid_ms2"; // Not L10N
+        private const string VAL_TRUE = "true"; // Not L10N
 
-        public static string EncodePath(string filePath, string sampleName, int sampleIndex, LockMassParameters lockMassParameters)
+        public static string EncodePath(string filePath, string sampleName, int sampleIndex, LockMassParameters lockMassParameters,
+            bool centroidMS1, bool centroidMS2)
         {
             var parameters = new List<string>();
             const string pairFormat = "{0}={1}"; // Not L10N
@@ -930,6 +934,15 @@ namespace pwiz.Skyline.Model.Results
                 if (lockMassParameters.LockmassTolerance.HasValue)
                     parameters.Add(string.Format(CultureInfo.InvariantCulture, pairFormat, TAG_LOCKMASS_TOL, lockMassParameters.LockmassTolerance.Value));
             }
+            if (centroidMS1)
+            {
+                parameters.Add(string.Format(CultureInfo.InvariantCulture, pairFormat, TAG_CENTROID_MS1, VAL_TRUE)); // Not L10N
+            }
+            if (centroidMS2)
+            {
+                parameters.Add(string.Format(CultureInfo.InvariantCulture, pairFormat, TAG_CENTROID_MS2, VAL_TRUE)); // Not L10N
+            }
+
             return parameters.Any() ? string.Format("{0}?{1}", filePart, string.Join("&", parameters)) : filePart; // Not L10N
         }
 
@@ -946,9 +959,14 @@ namespace pwiz.Skyline.Model.Results
             return sb.ToString();
         }
 
+        public static string GetLocationPart(string path)
+        {
+            return path.Split('?')[0];
+        }
+
         public static string GetPathFilePart(string path)
         {
-            path = path.Split('?')[0]; // Just in case the url args contain '|'  // Not L10N
+            path = GetLocationPart(path); // Just in case the url args contain '|'  // Not L10N
             if (path.IndexOf('|') == -1) // Not L10N
                 return path;
             return path.Split('|')[0]; // Not L10N
@@ -956,7 +974,7 @@ namespace pwiz.Skyline.Model.Results
 
         public static bool HasSamplePart(string path)
         {
-            path = path.Split('?')[0]; // Just in case the url args contain '|'  // Not L10N
+            path = GetLocationPart(path); // Just in case the url args contain '|'  // Not L10N
             string[] parts = path.Split('|'); // Not L10N
 
             int sampleIndex;
@@ -965,7 +983,7 @@ namespace pwiz.Skyline.Model.Results
 
         public static string GetPathSampleNamePart(string path)
         {
-            path = path.Split('?')[0]; // Just in case the url args contain '|'  // Not L10N
+            path = GetLocationPart(path); // Just in case the url args contain '|'  // Not L10N
             if (path.IndexOf('|') == -1) // Not L10N
                 return null;
             return path.Split('|')[1]; // Not L10N
@@ -978,7 +996,7 @@ namespace pwiz.Skyline.Model.Results
 
         public static int GetPathSampleIndexPart(string path)
         {
-            path = path.Split('?')[0]; // Just in case the url args contain '|'  // Not L10N
+            path = GetLocationPart(path); // Just in case the url args contain '|'  // Not L10N
             int sampleIndex = -1;
             if (path.IndexOf('|') != -1) // Not L10N
             {
@@ -1005,6 +1023,16 @@ namespace pwiz.Skyline.Model.Results
             return msDataFileUri.GetFileName();
         }
 
+        public static bool GetCentroidMs1(string path)
+        {
+            return ParseParameterBool(TAG_CENTROID_MS1, path) ?? false;
+        }
+
+        public static bool GetCentroidMs2(string path)
+        {
+            return ParseParameterBool(TAG_CENTROID_MS2, path) ?? false;
+        }
+
         /// <summary>
         /// Returns a sample name for any file path, using either the available sample
         /// information on the path, or the file basename, if no sample information is present.
@@ -1027,6 +1055,16 @@ namespace pwiz.Skyline.Model.Results
                 {
                     return parameter.Split('=')[1];
                 }
+            }
+            return null;
+        }
+
+        private static bool? ParseParameterBool(string name, string url)
+        {
+            var valStr = ParseParameter(name, url);
+            if (valStr != null)
+            {
+                return valStr.Equals(VAL_TRUE);
             }
             return null;
         }

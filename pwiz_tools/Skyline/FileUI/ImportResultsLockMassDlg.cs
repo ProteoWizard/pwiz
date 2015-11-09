@@ -49,13 +49,13 @@ namespace pwiz.Skyline.FileUI
                 // We have at least one Waters file possbily needing lockspray correction
                 using (var dlgLockMass = new ImportResultsLockMassDlg())
                 {
-                    var result = dlgLockMass.ShowDialog(parent); // Will modify Settings.Default with user's input
+                    var result = dlgLockMass.ShowDialog(parent);
                     if (result != DialogResult.OK)
                     {
                         return false; // Cancelled
                     }
+                    namedResults = MsDataFileUri.ChangeLockMassParameters(namedResults, dlgLockMass.LockMassParameters);
                 }
-                namedResults = MsDataFileUri.ChangeLockMassParameters(namedResults, Settings.Default.LockmassParameters);
             }
             return true; // Success
         }
@@ -64,20 +64,43 @@ namespace pwiz.Skyline.FileUI
         {
             InitializeComponent();
 
-            if (Settings.Default.LockMassPositive > 0)
-                LockmassPositive = Settings.Default.LockMassPositive;
-            else
-                LockmassPositive = null;
-            if (Settings.Default.LockMassNegative > 0)
-                LockmassNegative = Settings.Default.LockMassNegative;
-            else
-                LockmassNegative = null;
-            if (Settings.Default.LockMassTolerance > 0)
-                LockmassTolerance = Settings.Default.LockMassTolerance;
-            else
-                LockmassTolerance = null;
+            var lockmassParameters = Settings.Default.LockmassParameters;
+            LockmassPositive = lockmassParameters.LockmassPositive;
+            LockmassNegative = lockmassParameters.LockmassNegative;
+            LockmassTolerance = lockmassParameters.LockmassTolerance;
+        }
 
+        /// <summary>
+        /// Set to valid lockmass parameters, if form is okayed
+        /// </summary>
+        public LockMassParameters LockMassParameters { get; private set; }
 
+        private void btnOk_Click(object sender, EventArgs e)
+        {
+            OkDialog();
+        }
+
+        public void OkDialog()
+        {
+            var helper = new MessageBoxHelper(this);
+            double lockmassPositive;
+            if (string.IsNullOrEmpty(textLockmassPositive.Text))
+                lockmassPositive = 0;
+            else if (!helper.ValidateDecimalTextBox(textLockmassPositive, 0, null, out lockmassPositive))
+                return;
+            double lockmassNegative;
+            if (string.IsNullOrEmpty(textLockmassNegative.Text))
+                lockmassNegative = 0;
+            else if (!helper.ValidateDecimalTextBox(textLockmassNegative, 0, null, out lockmassNegative))
+                return;
+            double lockmassTolerance;
+            if (string.IsNullOrEmpty(textLockmassTolerance.Text))
+                lockmassTolerance = 0;
+            else if (!helper.ValidateDecimalTextBox(textLockmassTolerance, LockMassParameters.LOCKMASS_TOLERANCE_MIN, LockMassParameters.LOCKMASS_TOLERANCE_MAX, out lockmassTolerance))
+                return;
+
+            Settings.Default.LockmassParameters = LockMassParameters = new LockMassParameters(lockmassPositive, lockmassNegative, lockmassTolerance);
+            DialogResult = DialogResult.OK;
         }
 
         public double? LockmassPositive
@@ -122,34 +145,5 @@ namespace pwiz.Skyline.FileUI
             }
             set { textLockmassTolerance.Text = value.HasValue ? value.Value.ToString(CultureInfo.CurrentCulture) : string.Empty; }
         }
-
-        private void btnOk_Click(object sender, EventArgs e)
-        {
-            OkDialog();
-        }
-
-        public void OkDialog()
-        {
-            var helper = new MessageBoxHelper(this);
-            double lockmassPositive;
-            if (string.IsNullOrEmpty(textLockmassPositive.Text))
-                lockmassPositive = 0;
-            else if (!helper.ValidateDecimalTextBox(textLockmassPositive, 0, null, out lockmassPositive))
-                return;
-            double lockmassNegative;
-            if (string.IsNullOrEmpty(textLockmassNegative.Text))
-                lockmassNegative = 0;
-            else if (!helper.ValidateDecimalTextBox(textLockmassNegative, 0, null, out lockmassNegative))
-                return;
-            double lockmassTolerance;
-            if (string.IsNullOrEmpty(textLockmassTolerance.Text))
-                lockmassTolerance = 0;
-            else if (!helper.ValidateDecimalTextBox(textLockmassTolerance, LockMassParameters.LOCKMASS_TOLERANCE_MIN, LockMassParameters.LOCKMASS_TOLERANCE_MAX, out lockmassTolerance))
-                return;
-
-            Settings.Default.LockmassParameters = new LockMassParameters(lockmassPositive, lockmassNegative, lockmassTolerance);
-            DialogResult = DialogResult.OK;
-        }
-
     }
 }

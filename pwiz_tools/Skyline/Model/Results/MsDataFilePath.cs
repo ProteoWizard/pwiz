@@ -30,6 +30,7 @@ namespace pwiz.Skyline.Model.Results
 {
     public abstract class MsDataFileUri : IComparable
     {
+        public abstract MsDataFileUri GetLocation();
         public abstract string GetFilePath();
         public abstract string GetFileName();
         public abstract string GetFileNameWithoutExtension();
@@ -43,7 +44,16 @@ namespace pwiz.Skyline.Model.Results
         public abstract MsDataFileUri Normalize();
         public abstract LockMassParameters GetLockMassParameters();
         public abstract bool IsWatersLockmassCorrectionCandidate();
-        public abstract MsDataFileUri ChangeLockMassParameters(LockMassParameters lockMassParameters); // Return a copy of yourself with updated lockmass settings
+        /// <summary>
+        /// Returns a copy of itself with updated lockmass parameters
+        /// </summary>
+        public abstract MsDataFileUri ChangeLockMassParameters(LockMassParameters lockMassParameters);
+        public abstract bool GetCentroidMs1();
+        public abstract bool GetCentroidMs2();
+        /// <summary>
+        /// Returns a copy of itself with updated centroiding parameters
+        /// </summary>
+        public abstract MsDataFileUri ChangeCentroiding(bool centroidMS1, bool centroidMS2);
 
         public string GetSampleOrFileName()
         {
@@ -59,7 +69,9 @@ namespace pwiz.Skyline.Model.Results
             return new MsDataFilePath(SampleHelp.GetPathFilePart(url), 
                 SampleHelp.GetPathSampleNamePart(url), 
                 SampleHelp.GetPathSampleIndexPart(url),
-                SampleHelp.GetLockmassParameters(url));
+                SampleHelp.GetLockmassParameters(url),
+                SampleHelp.GetCentroidMs1(url),
+                SampleHelp.GetCentroidMs2(url));
         }
 
         public static List<KeyValuePair<string, MsDataFileUri[]>> ChangeLockMassParameters(IList<KeyValuePair<string, MsDataFileUri[]>> namedResults, LockMassParameters lockMassParameters)
@@ -72,7 +84,7 @@ namespace pwiz.Skyline.Model.Results
             return result;
         }
 
-        public static KeyValuePair<string, MsDataFileUri[]> ChangeLockMassParameters(KeyValuePair<string, MsDataFileUri[]> namedResult, LockMassParameters lockMassParameters)
+        private static KeyValuePair<string, MsDataFileUri[]> ChangeLockMassParameters(KeyValuePair<string, MsDataFileUri[]> namedResult, LockMassParameters lockMassParameters)
         {
             var result = new KeyValuePair<string, MsDataFileUri[]>(namedResult.Key, namedResult.Value);
             for (var i = 0; i < namedResult.Value.Length; i++)
@@ -90,16 +102,20 @@ namespace pwiz.Skyline.Model.Results
     public class MsDataFilePath : MsDataFileUri
     {
         public static readonly MsDataFilePath EMPTY = new MsDataFilePath(string.Empty);
-        public MsDataFilePath(string filePath, LockMassParameters lockMassParameters = null)
-            : this(filePath, null, -1, lockMassParameters)
+        public MsDataFilePath(string filePath, LockMassParameters lockMassParameters = null, 
+            bool centroidMs1=false, bool centroidMs2=false)
+            : this(filePath, null, -1, lockMassParameters, centroidMs1, centroidMs2)
         {
         }
-        public MsDataFilePath(string filePath, string sampleName, int sampleIndex, LockMassParameters lockMassParameters)
+        public MsDataFilePath(string filePath, string sampleName, int sampleIndex, LockMassParameters lockMassParameters = null,
+            bool centroidMs1 = false, bool centroidMs2 = false)
         {
             FilePath = filePath;
             SampleName = sampleName;
             SampleIndex = sampleIndex;
-            LockMassParameters = lockMassParameters??LockMassParameters.EMPTY;
+            LockMassParameters = lockMassParameters ?? LockMassParameters.EMPTY;
+            CentroidMs1 = centroidMs1;
+            CentroidMs2 = centroidMs2;
         }
 
         protected MsDataFilePath(MsDataFilePath msDataFilePath)
@@ -108,6 +124,8 @@ namespace pwiz.Skyline.Model.Results
             SampleName = msDataFilePath.SampleName;
             SampleIndex = msDataFilePath.SampleIndex;
             LockMassParameters = msDataFilePath.LockMassParameters;
+            CentroidMs1 = msDataFilePath.CentroidMs1;
+            CentroidMs2 = msDataFilePath.CentroidMs2;
         }
 
         public string FilePath { get; private set; }
@@ -119,6 +137,15 @@ namespace pwiz.Skyline.Model.Results
         public string SampleName { get; private set; }
         public int SampleIndex { get; private set; }
         public LockMassParameters LockMassParameters { get; private set; }
+        public bool CentroidMs1 { get; private set; }
+        public bool CentroidMs2 { get; private set; }
+
+        public override MsDataFileUri GetLocation()
+        {
+            if (!LockMassParameters.IsEmpty || CentroidMs1 || CentroidMs2)
+                return new MsDataFilePath(FilePath, SampleName, SampleIndex);
+            return this;
+        }
 
         public override string GetFilePath()
         {
@@ -166,12 +193,27 @@ namespace pwiz.Skyline.Model.Results
 
         public override MsDataFileUri ChangeLockMassParameters(LockMassParameters lockMassParameters)
         {
-            return new MsDataFilePath(FilePath, SampleName, SampleIndex, lockMassParameters);
+            return new MsDataFilePath(FilePath, SampleName, SampleIndex, lockMassParameters, CentroidMs1, CentroidMs2);
+        }
+
+        public override bool GetCentroidMs1()
+        {
+            return CentroidMs1;
+        }
+
+        public override bool GetCentroidMs2()
+        {
+            return CentroidMs2;
+        }
+
+        public override MsDataFileUri ChangeCentroiding(bool centroidMS1, bool centroidMS2)
+        {
+            return new MsDataFilePath(FilePath, SampleName, SampleIndex, LockMassParameters, centroidMS1, centroidMS2);
         }
 
         public override string ToString()
         {
-            return SampleHelp.EncodePath(FilePath, SampleName, SampleIndex, LockMassParameters);
+            return SampleHelp.EncodePath(FilePath, SampleName, SampleIndex, LockMassParameters, CentroidMs1, CentroidMs2);
         }
 
         public override DateTime GetFileLastWriteTime()
@@ -199,6 +241,8 @@ namespace pwiz.Skyline.Model.Results
             return string.Equals(FilePath, other.FilePath) &&
                 string.Equals(SampleName, other.SampleName) &&
                 SampleIndex == other.SampleIndex &&
+                CentroidMs1 == other.CentroidMs1 &&
+                CentroidMs2 == other.CentroidMs2 &&
                 LockMassParameters.Equals(other.LockMassParameters);
         }
 
@@ -223,6 +267,12 @@ namespace pwiz.Skyline.Model.Results
             result = SampleIndex.CompareTo(other.SampleIndex);
             if (result != 0)
                 return result;
+            result = CentroidMs1.CompareTo(other.CentroidMs1);
+            if (result != 0)
+                return result;
+            result = CentroidMs2.CompareTo(other.CentroidMs2);
+            if (result != 0)
+                return result;
             return LockMassParameters.CompareTo(other.LockMassParameters);
 // ReSharper restore StringCompareToIsCultureSpecific
         }
@@ -243,6 +293,8 @@ namespace pwiz.Skyline.Model.Results
                 hashCode = (hashCode*397) ^ (SampleName != null ? SampleName.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ SampleIndex;
                 hashCode = (hashCode*397) ^ (LockMassParameters != null ? LockMassParameters.GetHashCode() : 0);
+                hashCode = (hashCode*397) ^ (CentroidMs1 ? 1 : 0);
+                hashCode = (hashCode*397) ^ (CentroidMs2 ? 1 : 0);
                 return hashCode;
             }
         }
@@ -345,6 +397,11 @@ namespace pwiz.Skyline.Model.Results
             return new ChorusUrl(this) {FileWriteTime = fileWriteTime};
         }
 
+        public override MsDataFileUri GetLocation()
+        {
+            return this;
+        }
+
         public override string GetFilePath()
         {
             return Uri.UnescapeDataString(Path);
@@ -404,6 +461,21 @@ namespace pwiz.Skyline.Model.Results
         public override MsDataFileUri ChangeLockMassParameters(LockMassParameters lockMassParameters)
         {
             return this;  // Chorus will have already performed lockmass correction
+        }
+
+        public override bool GetCentroidMs1()
+        {
+            return false;  // Chorus will have already centroided
+        }
+
+        public override bool GetCentroidMs2()
+        {
+            return false; // Chorus will have already centroided
+        }
+
+        public override MsDataFileUri ChangeCentroiding(bool centroidMS1, bool centroidMS2)
+        {
+            return this; // Chorus will have already centroided
         }
 
         public override string ToString()

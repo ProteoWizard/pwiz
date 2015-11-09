@@ -144,7 +144,8 @@ namespace pwiz.Skyline.Model.Results
                 if (sampleIndex == -1)
                     sampleIndex = 0;
                 // Full-scan extraction always uses SIM as spectra
-                _dataFile = new MsDataFileImpl(dataFilePath, sampleIndex, lockMassParameters, true); // TODO(bspratt) use encoded centroiding info here too
+                _dataFile = new MsDataFileImpl(dataFilePath, sampleIndex, lockMassParameters, true, 
+                    requireVendorCentroidedMS1: DataFilePath.GetCentroidMs1(), requireVendorCentroidedMS2: DataFilePath.GetCentroidMs2());
             }
             return _dataFile;
         }

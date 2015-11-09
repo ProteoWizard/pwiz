@@ -191,7 +191,8 @@ namespace pwiz.Skyline.Model.Results
                                           _document.Settings.TransitionSettings.FullScan.IsEnabledMsMs &&
                                           _document.Settings.TransitionSettings.FullScan.ProductMassAnalyzer ==
                                           FullScanMassAnalyzerType.centroided;
-                        // TODO(bspratt) preserve centroiding info as part of MsDataFileUri string in chromdata
+                        // Preserve centroiding info as part of MsDataFileUri string in chromdata
+                        MSDataFilePath = dataFilePath = MSDataFilePath.ChangeCentroiding(centroidMS1, centroidMS2);
                         inFile = GetMsDataFile(dataFilePathPart, sampleIndex, lockMassCorrection, configInfo, enableSimSpectrum, 
                             centroidMS1, centroidMS2);
                     }
