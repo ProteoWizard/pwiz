@@ -45,35 +45,43 @@ namespace SkylineNightly
             }
 
             var nightly = new Nightly();
+            bool hasPerftests;
 
             switch (args[0].ToLower())
             {
                 case SCHEDULED_PERFTESTS_ARG:
                     nightly.Run(true);  // Include perf tests
-                    nightly.Parse();
-                    nightly.Post();
+                    hasPerftests = nightly.Parse();
+                    if (!hasPerftests)
+                        throw new InvalidDataException("Unexpected lack of perf tests in perftest scheduled run"); // Not L10N
+                    nightly.Post(true);
                     break;
 
                 case SCHEDULED_ARG:
                     nightly.Run(false); // No perf tests
-                    nightly.Parse();
-                    nightly.Post();
+                    hasPerftests = nightly.Parse();
+                    if (hasPerftests)
+                        throw new InvalidDataException("Unexpected perf tests in non-perftest scheduled run"); // Not L10N
+                    nightly.Post(false);
                     break;
 
                 case PARSE_ARG:
-                    nightly.Parse();
-                    nightly.Post();
+                    hasPerftests = nightly.Parse();
+                    nightly.Post(hasPerftests);
                     break;
 
                 case POST_ARG:
-                    nightly.Post();
+                    hasPerftests = nightly.Parse(null, true);
+                    nightly.Post(hasPerftests);
                     break;
 
                 default:
                     var extension = Path.GetExtension(args[0]).ToLower();
                     if (extension == ".log") // Not L10N
-                        nightly.Parse(args[0]);
-                    nightly.Post(Path.ChangeExtension(args[0], ".xml")); // Not L10N
+                        hasPerftests = nightly.Parse(args[0]); // Create the xml for this log file
+                    else
+                        hasPerftests = nightly.Parse(Path.ChangeExtension(args[0], ".log"), true); // Scan the log file for this XML // Not L10N
+                    nightly.Post(hasPerftests, Path.ChangeExtension(args[0], ".xml")); // Not L10N
                     break;
             }
         }

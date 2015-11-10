@@ -47,6 +47,7 @@ namespace SkylineNightly
         private const string TEAM_CITY_USER_NAME = "guest";
         private const string TEAM_CITY_USER_PASSWORD = "guest";
         private const string LABKEY_URL = "https://skyline.gs.washington.edu/labkey/testresults/home/development/Nightly%20x64/post.view?";
+        private const string LABKEY_PERF_URL = "https://skyline.gs.washington.edu/labkey/testresults/home/development/Performance%20Tests/post.view?";
 
         private DateTime _startTime;
         private string _logFile;
@@ -91,6 +92,9 @@ namespace SkylineNightly
             // Locate relevant directories.
             var nightlyDir = GetNightlyDir();
             var skylineNightlySkytr = Path.Combine(nightlyDir, "SkylineNightly.skytr");
+
+            if (withPerfTests)
+                _duration = TimeSpan.FromHours(12);
 
             // Kill any other instance of SkylineNightly.
             foreach (var process in Process.GetProcessesByName("skylinenightly"))
@@ -204,6 +208,7 @@ namespace SkylineNightly
                     skylineTester.GetChild("nightlyRoot").Set(nightlyDir);
                     skylineTester.GetChild("buildRoot").Set(_skylineTesterDir);
                     skylineTester.GetChild("nightlyRunPerfTests").Set(withPerfTests?"true":"false");
+                    skylineTester.GetChild("nightlyDuration").Set(_duration.Hours.ToString());
                     skylineTester.Save(skylineNightlySkytr);
                     var durationHours = double.Parse(skylineTester.GetChild("nightlyDuration").Value);
                     durationSeconds = (int) (durationHours*60*60) + 30*60;  // 30 minutes grace before we kill SkylineTester
@@ -277,11 +282,11 @@ namespace SkylineNightly
             return true;
         }
 
-        public void Parse(string logFile = null)
+        public bool Parse(string logFile = null, bool parseOnlyNoXmlOut = false)
         {
             logFile = logFile ?? GetLatestLog();
             if (logFile == null)
-                return;
+                return false;
             var log = File.ReadAllText(logFile);
 
             // Extract all test lines.
@@ -292,6 +297,8 @@ namespace SkylineNightly
 
             // Extract leaks.
             ParseLeaks(log);
+
+            var hasPerftests = log.Contains("# Perf tests");
 
             _nightly["id"] = Environment.MachineName;
             _nightly["os"] = Environment.OSVersion;
@@ -304,8 +311,12 @@ namespace SkylineNightly
             _nightly["leaks"] = _leaks.Count;
 
             // Save XML file.
-            var xmlFile = Path.ChangeExtension(logFile, ".xml");
-            File.WriteAllText(xmlFile, _nightly.ToString());
+            if (!parseOnlyNoXmlOut)
+            {
+                var xmlFile = Path.ChangeExtension(logFile, ".xml");
+                File.WriteAllText(xmlFile, _nightly.ToString());
+            }
+            return hasPerftests;
         }
 
         private int ParseTests(string log)
@@ -403,7 +414,7 @@ namespace SkylineNightly
         /// <summary>
         /// Post the latest results to the server.
         /// </summary>
-        public void Post(string xmlFile = null)
+        public void Post(bool withPerfTests, string xmlFile = null)
         {
             xmlFile = xmlFile ?? GetLatestXml();
             if (xmlFile == null)
@@ -412,7 +423,10 @@ namespace SkylineNightly
             var xml = File.ReadAllText(xmlFile);
 
             // Post to server.
-            PostToLink(LABKEY_URL, xml);
+            if (withPerfTests)
+                PostToLink(LABKEY_PERF_URL, xml);
+            else
+                PostToLink(LABKEY_URL, xml);
         }
 
         public string GetLatestLog()

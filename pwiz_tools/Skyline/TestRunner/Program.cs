@@ -475,6 +475,7 @@ namespace TestRunner
                     var languagesThisTest = (test.IsPerfTest && perfTestsFrenchOnly) ? new[] { "fr" } : languages;
                     if (perfTestsFrenchOnly && !warnedPass2PerfTest)
                     {
+                        // NB the phrase "# Perf tests" in a log is a key for SkylineNightly to post to a different URL - so don't mess with this.
                         runTests.Log("# Perf tests will be run only once, and only in French.  To run perf tests in other languages, enable all but English.\r\n");
                         warnedPass2PerfTest = true;
                     }
@@ -490,6 +491,7 @@ namespace TestRunner
                                 // Perf Tests are generally too lengthy to run multiple times (but per-language check is useful)
                                 if (!warnedPass2PerfTest)
                                 {
+                                    // NB the phrase "# Perf tests" in a log is a key for SkylineNightly to post to a different URL - so don't mess with this.
                                     runTests.Log("# Perf tests will be run only once per language.\r\n");
                                     warnedPass2PerfTest = true;
                                 }
