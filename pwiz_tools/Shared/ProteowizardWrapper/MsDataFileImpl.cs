@@ -915,11 +915,11 @@ namespace pwiz.ProteowizardWrapper
         public double? LockmassNegative { get; private set; }
         public double? LockmassTolerance { get; private set; }
 
-        public static double LOCKMASS_TOLERANCE_DEFAULT = 0.1; // Per Will T
-        public static double LOCKMASS_TOLERANCE_MAX = 10.0;
-        public static double LOCKMASS_TOLERANCE_MIN = 0;
+        public static readonly double LOCKMASS_TOLERANCE_DEFAULT = 0.1; // Per Will T
+        public static readonly double LOCKMASS_TOLERANCE_MAX = 10.0;
+        public static readonly double LOCKMASS_TOLERANCE_MIN = 0;
 
-        public static LockMassParameters EMPTY = new LockMassParameters(null, null, null);
+        public static readonly LockMassParameters EMPTY = new LockMassParameters(null, null, null);
 
         public bool IsEmpty
         {

@@ -2530,7 +2530,7 @@ namespace pwiz.Skyline.Model.DocSettings
             Validate();
         }
 
-        public static DriftTimePredictor EMPTY = new DriftTimePredictor();  // For test purposes
+        public static readonly DriftTimePredictor EMPTY = new DriftTimePredictor();  // For test purposes
 
         public IonMobilityLibrarySpec IonMobilityLibrary { get; private set; }
 

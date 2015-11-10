@@ -34,7 +34,7 @@ namespace pwiz.Skyline.Model.Results
     [XmlRoot("measured_results")]
     public sealed class MeasuredResults : Immutable, IXmlSerializable
     {
-        public static MeasuredResults EMPTY = new MeasuredResults(new ChromatogramSet[0]);
+        public static readonly MeasuredResults EMPTY = new MeasuredResults(new ChromatogramSet[0]);
 
         private ImmutableList<ChromatogramSet> _chromatograms;
         private int _countUnloaded;
