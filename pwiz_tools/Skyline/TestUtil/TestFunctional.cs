@@ -850,6 +850,10 @@ namespace pwiz.SkylineTestUtil
             }
 
             DoTest();
+            if (null != SkylineWindow)
+            {
+                AssertEx.ValidatesAgainstSchema(SkylineWindow.Document);
+            }
 
             if (doClipboardCheck)
             {

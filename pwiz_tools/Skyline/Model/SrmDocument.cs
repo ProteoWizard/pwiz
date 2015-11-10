@@ -240,7 +240,8 @@ namespace pwiz.Skyline.Model
         public const double FORMAT_VERSION_3_1 = 3.1;   // Release format. No change from 2.62
         public const double FORMAT_VERSION_3_11 = 3.11; // Adds compensation voltage optimization support
         public const double FORMAT_VERSION_3_12 = 3.12; // Adds small molecule ion labels and multiple charge states
-        public const double FORMAT_VERSION = FORMAT_VERSION_3_12;
+        public const double FORMAT_VERSION_3_5 = 3.5; // Release format
+        public const double FORMAT_VERSION = FORMAT_VERSION_3_5;
 
         public const int MAX_PEPTIDE_COUNT = 100*1000;
         public const int MAX_TRANSITION_COUNT = 6*MAX_PEPTIDE_COUNT; // Modern DIA experiments may often have 6 transitions per peptide

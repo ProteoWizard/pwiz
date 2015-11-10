@@ -356,7 +356,13 @@ namespace pwiz.SkylineTestUtil
 
         private static void ValidationCallBack(object sender, ValidationEventArgs args)
         {
-            throw (new Exception(String.Format(CultureInfo.InvariantCulture, "XML Validation error using Skyline_{0}.xsd:", SrmDocument.FORMAT_VERSION) + args.Message));
+            string message = String.Format(CultureInfo.InvariantCulture, "XML Validation error using Skyline_{0}.xsd:",
+                SrmDocument.FORMAT_VERSION) + args.Message;
+            if (null != args.Exception)
+            {
+                message = TextUtil.SpaceSeparate(message, string.Format("Line {0} Position {1}", args.Exception.LineNumber, args.Exception.LinePosition));
+            }
+            throw (new Exception(message));
         }
 
         public static TObj RoundTrip<TObj>(TObj target)
