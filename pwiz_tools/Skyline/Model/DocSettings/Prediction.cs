@@ -1498,7 +1498,7 @@ namespace pwiz.Skyline.Model.DocSettings
             // Write tag attributes
             writer.WriteAttribute(ATTR.modified_sequence, ModifiedSequence);
             writer.WriteAttribute(ATTR.charge, Charge);
-            writer.WriteAttribute(ATTR.drift_time, DriftTimeInfo.DriftTimeMsec(false));
+            writer.WriteAttributeNullable(ATTR.drift_time, DriftTimeInfo.DriftTimeMsec(false));
             writer.WriteAttribute(ATTR.high_energy_drift_time_offset, DriftTimeInfo.HighEnergyDriftTimeOffsetMsec);
         }
 
