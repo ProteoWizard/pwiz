@@ -304,7 +304,7 @@ namespace pwiz.Skyline.Model.Results
 
         public int IndexOfPath(MsDataFileUri filePath)
         {
-            return MSDataFileInfos.IndexOf(info => Equals(filePath.GetLocation(), info.FilePath.GetLocation()));
+            return MSDataFileInfos.IndexOf(info => Equals(filePath, info.FilePath));
         }
 
         public ChromFileInfoId FindFile(ChromatogramGroupInfo chromGroupInfo)
@@ -401,7 +401,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 fileInfos[i] = MSDataFileInfos[i];
                 
-                var path = fileInfos[i].FilePath.GetLocation();
+                var path = fileInfos[i].FilePath;
 
                 ChromCachedFile fileInfo;
                 if (cachedPaths.TryGetValue(path, out fileInfo))

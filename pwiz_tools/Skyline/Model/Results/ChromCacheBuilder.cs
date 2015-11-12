@@ -180,21 +180,17 @@ namespace pwiz.Skyline.Model.Results
                     if (dataFilePathRecalc == null && !RemoteChromDataProvider.IsRemoteChromFile(dataFilePath))
                     {
                         // Always use SIM as spectra, if any full-scan chromatogram extraction is enabled
-                        var enableSimSpectrum = _document.Settings.TransitionSettings.FullScan.IsEnabled;
                         var configInfo = fileInfo.InstrumentInfoList.FirstOrDefault();
-                        var centroidMS1 = _document.Settings.TransitionSettings.FullScan.IsEnabled &&
-                                          _document.Settings.TransitionSettings.FullScan.IsEnabledMs &&
-                                          _document.Settings.TransitionSettings.FullScan.PrecursorMassAnalyzer ==
-                                          FullScanMassAnalyzerType.centroided;
-
-                        var centroidMS2 = _document.Settings.TransitionSettings.FullScan.IsEnabled &&
-                                          _document.Settings.TransitionSettings.FullScan.IsEnabledMsMs &&
-                                          _document.Settings.TransitionSettings.FullScan.ProductMassAnalyzer ==
-                                          FullScanMassAnalyzerType.centroided;
-                        // Preserve centroiding info as part of MsDataFileUri string in chromdata
-                        MSDataFilePath = dataFilePath = MSDataFilePath.ChangeCentroiding(centroidMS1, centroidMS2);
-                        inFile = GetMsDataFile(dataFilePathPart, sampleIndex, lockMassCorrection, configInfo, enableSimSpectrum, 
-                            centroidMS1, centroidMS2);
+                        var fullScan = _document.Settings.TransitionSettings.FullScan;
+                        var enableSimSpectrum = fullScan.IsEnabled;
+                        var centroidMS1 = fullScan.IsCentroidedMs;
+                        var centroidMS2 = fullScan.IsCentroidedMsMs;
+                        inFile = GetMsDataFile(dataFilePathPart, sampleIndex, lockMassCorrection, configInfo,
+                            enableSimSpectrum, centroidMS1, centroidMS2);
+                        // Preserve centroiding info as part of MsDataFileUri string in chromdata only if it will be used
+                        // CONSIDER: Dangerously high knowledge of future control flow required for making this decision
+                        if (!ChromatogramDataProvider.HasChromatogramData(inFile) && !inFile.HasSrmSpectra)
+                            MSDataFilePath = dataFilePath = MSDataFilePath.ChangeCentroiding(centroidMS1, centroidMS2);
                     }
 
                     // Check for cancelation
