@@ -847,7 +847,7 @@
         <xs:attribute name="sequence" type="sequence_type" use="required"/>
         <xs:attribute name="modified_sequence" type="xs:string" use="required"/>
         <xs:attribute name="lookup_sequence" type="xs:string"/>
-        <xs:attribute name="start" type="xs:positiveInteger"/>
+        <xs:attribute name="start" type="xs:nonNegativeInteger"/>
         <xs:attribute name="end" type="xs:positiveInteger"/>
         <xs:attribute name="prev_aa" type="prev_next_amino_acid_type"/>
         <xs:attribute name="next_aa" type="prev_next_amino_acid_type"/>

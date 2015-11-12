@@ -233,9 +233,8 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public ChromSetFileMatch FindMatchingMSDataFile(MsDataFileUri filePathFind)
+        public ChromSetFileMatch FindExactMatchingMSDataFile(MsDataFileUri filePathFind)
         {
-            // First look for an exact match
             int fileOrder = 0;
             foreach (ChromatogramSet chromSet in Chromatograms)
             {
@@ -246,8 +245,17 @@ namespace pwiz.Skyline.Model.Results
                     fileOrder++;
                 }
             }
+            return null;
+        }
+
+        public ChromSetFileMatch FindMatchingMSDataFile(MsDataFileUri filePathFind)
+        {
+            // First look for an exact match
+            var exactMatch = FindExactMatchingMSDataFile(filePathFind);
+            if (exactMatch != null)
+                return exactMatch;
             // Then look for a basename match
-            fileOrder = 0;
+            int fileOrder = 0;
             foreach (ChromatogramSet chromSet in Chromatograms)
             {
                 string fileBasename = filePathFind.GetFileNameWithoutExtension();
@@ -275,7 +283,7 @@ namespace pwiz.Skyline.Model.Results
             // has a pipeline that generates mzML files all uppercase
             if (!name.ToLower().StartsWith(prefix.ToLower()))
                 return false;
-            if (name.Length == prefix.Length || name[prefix.Length] == '.') // TODO: Not L10N?
+            if (name.Length == prefix.Length || name[prefix.Length] == '.') // Not L10N
                 return true;
             // Check for Waters MSe
             string suffix = name.Substring(prefix.Length);
@@ -367,7 +375,7 @@ namespace pwiz.Skyline.Model.Results
 
             string cachePath = ChromatogramCache.FinalPathForName(documentPath, null);
             var cachedFiles = results.CachedFileInfos.Distinct(new PathComparer<ChromCachedFile>()).ToArray();
-            var dictCachedFiles = cachedFiles.ToDictionary(cachedFile => cachedFile.FilePath.GetLocation());
+            var dictCachedFiles = cachedFiles.ToDictionary(cachedFile => cachedFile.FilePath);
             var enumCachedNames = cachedFiles.Select(cachedFile => cachedFile.FilePath.GetFileName());
             var setCachedFileNames = new HashSet<string>(enumCachedNames);
             var chromatogramSets = new List<ChromatogramSet>();
@@ -1135,7 +1143,7 @@ namespace pwiz.Skyline.Model.Results
                         listValidCaches.Add(cache);
 
                         foreach (var cachedFile in cache.CachedFiles)
-                            cachedPaths.Add(cachedFile.FilePath.GetLocation());
+                            cachedPaths.Add(cachedFile.FilePath);
                     }
 
                     // Update the list if necessary
@@ -1223,7 +1231,7 @@ namespace pwiz.Skyline.Model.Results
                 Dictionary<MsDataFileUri, MsDataFileUri> dictReplace = null;
                 // Find the next file not represented in the list of partial caches
                 var uncachedPaths = new List<KeyValuePair<string, string>>();
-                foreach (var path in msDataFilePaths.Select(p => p.GetLocation()))
+                foreach (var path in msDataFilePaths)
                 {
                     if (!cachedPaths.Contains(path))
                     {
@@ -1297,7 +1305,9 @@ namespace pwiz.Skyline.Model.Results
             private void Complete(bool final)
             {
                 _resultsClone._statusLoading = (final ? null : _status);
-                _completed(_documentPath, _resultsClone, false);
+                bool setsChanged = !ArrayUtil.ReferencesEqual(_resultsClone.Chromatograms,
+                    _document.Settings.MeasuredResults.Chromatograms);
+                _completed(_documentPath, _resultsClone, setsChanged);
             }
 
             private void Fail(Exception x)
@@ -1350,9 +1360,10 @@ namespace pwiz.Skyline.Model.Results
                     return;
                 }
 
-                if (cache != null)
+                if (cache != null && EnsurePathsMatch(cache))
                 {
-                    List<ChromatogramCache> listPartialCaches = new List<ChromatogramCache>();
+                    // Add this to the list of partial caches
+                    var listPartialCaches = new List<ChromatogramCache>();
                     if (_resultsClone._listPartialCaches != null)
                         listPartialCaches.AddRange(_resultsClone._listPartialCaches);
                     listPartialCaches.Add(cache);
@@ -1360,6 +1371,31 @@ namespace pwiz.Skyline.Model.Results
                 }
 
                 Complete(false);
+            }
+
+            private bool EnsurePathsMatch(ChromatogramCache cache)
+            {
+                // Make sure the path in the result matches the one in the cache. Otherwise,
+                // loading will go into an infinite loop.
+                foreach (var cachedFilePath in cache.CachedFilePaths)
+                {
+                    var match = _resultsClone.FindExactMatchingMSDataFile(cachedFilePath);
+                    if (match == null)
+                    {
+                        // If not exact match, try a location match, which may not yet have processing
+                        // parameters added yet
+                        match = _resultsClone.FindExactMatchingMSDataFile(cachedFilePath.GetLocation());
+                        if (match == null)
+                            return false;
+                        int i = _resultsClone.Chromatograms.IndexOf(match.Chromatograms);
+                        var arrayChrom = _resultsClone.Chromatograms.ToArray();
+                        var arrayPaths = arrayChrom[i].MSDataFilePaths.ToArray();
+                        arrayPaths[match.FileOrder] = cachedFilePath;
+                        arrayChrom[i] = arrayChrom[i].ChangeMSDataFilePaths(arrayPaths);
+                        _resultsClone.Chromatograms = arrayChrom;
+                    }
+                }
+                return true;
             }
 
             private void FinishCacheJoin(ChromatogramCache cache, Exception x)

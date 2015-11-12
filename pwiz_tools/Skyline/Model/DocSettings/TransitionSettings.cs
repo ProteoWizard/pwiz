@@ -2035,9 +2035,19 @@ namespace pwiz.Skyline.Model.DocSettings
             get { return PrecursorIsotopes != FullScanPrecursorIsotopes.None; }
         }
 
+        public bool IsCentroidedMs
+        {
+            get { return IsEnabledMs && PrecursorMassAnalyzer == FullScanMassAnalyzerType.centroided; }
+        }
+
         public bool IsEnabledMsMs
         {
             get { return AcquisitionMethod != FullScanAcquisitionMethod.None; }
+        }
+
+        public bool IsCentroidedMsMs
+        {
+            get { return IsEnabledMsMs && ProductMassAnalyzer == FullScanMassAnalyzerType.centroided; }
         }
 
         public bool IsHighResPrecursor { get { return IsHighResAnalyzer(PrecursorMassAnalyzer); } }

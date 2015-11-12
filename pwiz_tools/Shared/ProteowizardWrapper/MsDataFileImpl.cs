@@ -395,19 +395,20 @@ namespace pwiz.ProteowizardWrapper
                     // CONSIDER(bspratt): there is no acceptable wrapping order when both centroiding and lockmass are needed at the same time 
                     // (For now, this can't happen in practice, as Waters offers no centroiding, but someday this may force pwiz API rework)
                     var centroidLevel = new List<int>();
-                    if (_requireVendorCentroidedMS1)
-                        centroidLevel.Add(1);
-                    if (_requireVendorCentroidedMS2)
-                        centroidLevel.Add(2);
+                    _spectrumList = _msDataFile.run.spectrumList;
+                    bool hasSrmSpectra = HasSrmSpectraInList(_spectrumList);
+                    if (!hasSrmSpectra)
+                    {
+                        if (_requireVendorCentroidedMS1)
+                            centroidLevel.Add(1);
+                        if (_requireVendorCentroidedMS2)
+                            centroidLevel.Add(2);
+                    }
                     if (centroidLevel.Any())
                     {
-                        _spectrumList = new SpectrumList_PeakPicker(_msDataFile.run.spectrumList,
+                        _spectrumList = new SpectrumList_PeakPicker(_spectrumList,
                             new VendorOnlyPeakDetector(), // Throws an exception when no vendor centroiding available
                             true, centroidLevel.ToArray());
-                    }
-                    else
-                    {
-                        _spectrumList = _msDataFile.run.spectrumList;
                     }
 
                     _lockmassFunction = null;
@@ -417,18 +418,20 @@ namespace pwiz.ProteowizardWrapper
                             _lockmassParameters.LockmassPositive ?? 0,
                             _lockmassParameters.LockmassNegative ?? 0,
                             _lockmassParameters.LockmassTolerance ?? LockMassParameters.LOCKMASS_TOLERANCE_DEFAULT);
-                        if (_spectrumList.size() > 0 && !HasSrmSpectra)
+                        if (_spectrumList.size() > 0 && !hasSrmSpectra)
                         {
                             // If the first seen spectrum has MS1 data and function > 1 assume it's the lockspray function, 
                             // and thus to be omitted from chromatogram extraction.
                             // N.B. for msE data we will always assume function 3 and greater are to be omitted
                             // CONSIDER(bspratt) I really wish there was some way to communicate decisions like this to the user
-                            var spectrum = _spectrumList.spectrum(0, DetailLevel.FullMetadata);
-                            if (GetMsLevel(spectrum) == 1)
+                            using (var spectrum = _spectrumList.spectrum(0, DetailLevel.FullMetadata))
                             {
-                                var function = MsDataSpectrum.WatersFunctionNumberFromId(id.abbreviate(spectrum.id));
-                                if (function > 1)
-                                    _lockmassFunction = function; // Ignore all scans in this function for chromatogram extraction purposes
+                                if (GetMsLevel(spectrum) == 1)
+                                {
+                                    var function = MsDataSpectrum.WatersFunctionNumberFromId(id.abbreviate(spectrum.id));
+                                    if (function > 1)
+                                        _lockmassFunction = function; // Ignore all scans in this function for chromatogram extraction purposes
+                                }
                             }
                         }
                     }
@@ -635,16 +638,18 @@ namespace pwiz.ProteowizardWrapper
 
         public bool HasSrmSpectra
         {
-            get
-            {
-                if (SpectrumList.size() == 0)
-                    return false;
+            get { return HasSrmSpectraInList(SpectrumList); }
+        }
 
-                // If the first spectrum is not SRM, the others will not be either
-                using (var spectrum = SpectrumList.spectrum(0, false))
-                {
-                    return IsSrmSpectrum(spectrum);
-                }
+        private static bool HasSrmSpectraInList(SpectrumList spectrumList)
+        {
+            if (spectrumList == null || spectrumList.size() == 0)
+                return false;
+
+            // If the first spectrum is not SRM, the others will not be either
+            using (var spectrum = spectrumList.spectrum(0, false))
+            {
+                return IsSrmSpectrum(spectrum);
             }
         }
 
