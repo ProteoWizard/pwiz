@@ -228,11 +228,17 @@
       <Component Id="MethodConverter.dll">
         <File Source="$(var.Skyline.TargetDir)/MethodConverter.dll" KeyPath="yes"/>
       </Component>
+      <Component Id="MethodWriter.dll">
+        <File Source="$(var.Skyline.TargetDir)/MethodWriter.dll" KeyPath="yes"/>
+      </Component>
       <?if $(sys.BUILDARCH) = x64?>
       <Component Id="mfc100u.dll">
         <File Source="$(var.Skyline.TargetDir)/mfc100u.dll" KeyPath="yes"/>
       </Component>
       <?endif?>
+      <Component Id="Microsoft.ConcurrencyVisualizer.Markers.dll">
+        <File Source="$(var.Skyline.TargetDir)/Microsoft.ConcurrencyVisualizer.Markers.dll" KeyPath="yes"/>
+      </Component>
       <Component Id="MIDAC.dll">
         <File Source="$(var.Skyline.TargetDir)/MIDAC.dll" KeyPath="yes"/>
       </Component>
