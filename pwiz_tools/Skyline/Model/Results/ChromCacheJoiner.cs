@@ -108,7 +108,7 @@ namespace pwiz.Skyline.Model.Results
 
                     // Scan ids
                     long offsetScanIds = _fsScans.Stream.Position;
-                    _listCachedFiles.AddRange(rawData.ChromCacheFiles.Select(f => f.RelocateScanIds(offsetScanIds)));
+                    _listCachedFiles.AddRange(rawData.ChromCacheFiles.Select(f => f.RelocateScanIds(f.LocationScanIds + offsetScanIds)));
                     if (rawData.CountBytesScanIds > 0)
                     {
                         _inStream.Seek(rawData.LocationScanIds, SeekOrigin.Begin);
