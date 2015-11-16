@@ -969,16 +969,27 @@ namespace pwiz.Skyline.Util
         /// <param name="itemCount">Total number of items to read.</param>
         /// <param name="itemSize">Size of each item in bytes.</param>
         /// <param name="bytesPerBlock">Maximum size of a block in bytes.</param>
-        public BlockedArray(Func<int, TItem[]> readItems, int itemCount, int itemSize, int bytesPerBlock)
+        /// <param name="progressMonitor">Optional progress monitor for reporting progress over long periods</param>
+        /// <param name="status">Optional progress status object for reporting progress</param>
+        public BlockedArray(Func<int, TItem[]> readItems, int itemCount, int itemSize, int bytesPerBlock,
+            IProgressMonitor progressMonitor = null, ProgressStatus status = null)
         {
             _itemCount = itemCount;
             _blocks = new List<TItem[]>();
 
             var itemsPerBlock = bytesPerBlock/itemSize;
+            int startPercent = status != null ? status.PercentComplete : 0;
             while (itemCount > 0)
             {
                 _blocks.Add(readItems(Math.Min(itemCount, itemsPerBlock)));
                 itemCount -= itemsPerBlock;
+
+                if (progressMonitor != null && status != null)
+                {
+                    int currentPercent = (int) (startPercent + 100 - (itemCount*100.0)/_itemCount);
+                    if (currentPercent != status.PercentComplete)
+                        progressMonitor.UpdateProgress(status = status.ChangePercentComplete(currentPercent));
+                }
             }
         }
 
