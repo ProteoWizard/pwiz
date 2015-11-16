@@ -1265,6 +1265,8 @@ namespace pwiz.Skyline.Model.Results
                                     var cache = ChromatogramCache.Load(partPath, _status, _loader);
                                     if (cache.IsSupportedVersion)
                                     {
+                                        EnsurePathsMatch(cache);
+
                                         var listPartialCaches = new List<ChromatogramCache>();
                                         if (_resultsClone._listPartialCaches != null)
                                             listPartialCaches.AddRange(_resultsClone._listPartialCaches);
@@ -1384,14 +1386,16 @@ namespace pwiz.Skyline.Model.Results
                     {
                         // If not exact match, try a location match, which may not yet have processing
                         // parameters added yet
-                        match = _resultsClone.FindExactMatchingMSDataFile(cachedFilePath.GetLocation());
+                        var pathMatch = cachedFilePath.GetLocation();
+                        match = _resultsClone.FindExactMatchingMSDataFile(pathMatch);
                         if (match == null)
                             return false;
                         int i = _resultsClone.Chromatograms.IndexOf(match.Chromatograms);
                         var arrayChrom = _resultsClone.Chromatograms.ToArray();
-                        var arrayPaths = arrayChrom[i].MSDataFilePaths.ToArray();
-                        arrayPaths[match.FileOrder] = cachedFilePath;
-                        arrayChrom[i] = arrayChrom[i].ChangeMSDataFilePaths(arrayPaths);
+                        var chrom = arrayChrom[i];
+                        var arrayPaths = chrom.MSDataFilePaths.ToArray();
+                        arrayPaths[chrom.IndexOfPath(pathMatch)] = cachedFilePath;
+                        arrayChrom[i] = chrom.ChangeMSDataFilePaths(arrayPaths);
                         _resultsClone.Chromatograms = arrayChrom;
                     }
                 }

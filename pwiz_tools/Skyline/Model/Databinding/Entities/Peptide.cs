@@ -98,8 +98,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 return IsSmallMolecule()
                     ? TextUtil.EXCEL_NA
-                    : SrmDocument.Settings.GetPrecursorCalc(IsotopeLabelType.light, DocNode.ExplicitMods)
-                        .GetModifiedSequence(Sequence, true);
+                    : DocNode.ModifiedSequenceDisplay;
             }
         }
 
@@ -183,7 +182,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 {
                     return null;
                 }
-                return retentionTimeRegression.Calculator.ScoreSequence(DocNode.RawTextId);
+                return retentionTimeRegression.Calculator.ScoreSequence(SrmDocument.Settings.GetSourceTextId(DocNode));
             }
         }
 

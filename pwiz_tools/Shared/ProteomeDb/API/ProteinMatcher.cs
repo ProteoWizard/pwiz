@@ -350,7 +350,7 @@ namespace pwiz.ProteomeDatabase.API
                 if ((0 != (proteinMatchSettings.MatchTypes & matchType)) && 
                     (0==(matchType &(ProteinMatchType.sequence|ProteinMatchType.description)))) // handle sequence and description below
                 {
-                    if (protein.ProteinMetadata.TextForMatchTypes(matchType).ToLower().IndexOf(ltext, StringComparison.Ordinal) >= 0)
+                    if (Matches(protein.ProteinMetadata, matchType, ltext))
                     {
                         MatchType |= matchType;
                     }
@@ -358,7 +358,7 @@ namespace pwiz.ProteomeDatabase.API
                     {
                         foreach (ProteinMetadata alternative in Protein.AlternativeNames)
                         {
-                            if (alternative.TextForMatchTypes(matchType).ToLower().IndexOf(ltext, StringComparison.Ordinal) >= 0)
+                            if (Matches(alternative, matchType, ltext))
                             {
                                 MatchType |= matchType;
                                 AlternativeName = alternative;
@@ -371,8 +371,8 @@ namespace pwiz.ProteomeDatabase.API
             if ((MatchType == 0) && // Don't bother declaring a description match if we already have a more specific one (name, accession etc)
                 (0 != (proteinMatchSettings.MatchTypes & ProteinMatchType.description))) 
             {
-                if (protein.Description.ToLower().IndexOf(ltext, StringComparison.Ordinal) >= 0 ||
-                    protein.Name.ToLower().IndexOf(ltext, StringComparison.Ordinal) >= 0)
+                if (ContainsLowerCase(protein.Description, ltext) ||
+                    ContainsLowerCase(protein.Name, ltext))
                 {
                        MatchType |= ProteinMatchType.description;
                 }
@@ -380,8 +380,8 @@ namespace pwiz.ProteomeDatabase.API
                 {
                     foreach (ProteinMetadata alternative in Protein.AlternativeNames)
                     {
-                        if (alternative.Name.ToLower().IndexOf(ltext, StringComparison.Ordinal) >= 0 ||
-                            alternative.Description.ToLower().IndexOf(ltext, StringComparison.Ordinal) >= 0)
+                        if (ContainsLowerCase(alternative.Name, ltext) ||
+                            ContainsLowerCase(alternative.Description, ltext))
                         {
                             MatchType |= ProteinMatchType.description;
                             AlternativeDescription = alternative;
@@ -423,6 +423,19 @@ namespace pwiz.ProteomeDatabase.API
         public ProteinMetadata AlternativeDescription { get; private set; }
         public IList<DigestedPeptide> DigestedPeptides { get; private set; }
         public ProteinMatchType MatchType { get; private set; }
+
+        private static bool Matches(ProteinMetadata proteinMetadata, ProteinMatchType matchType, string ltext)
+        {
+            return ContainsLowerCase(proteinMetadata.TextForMatchTypes(matchType), ltext);
+        }
+        private static bool ContainsLowerCase(string bigString, string ltext)
+        {
+            if (string.IsNullOrEmpty(bigString) || string.IsNullOrEmpty(ltext))
+            {
+                return false;
+            }
+            return bigString.ToLower().IndexOf(ltext, StringComparison.OrdinalIgnoreCase) >= 0;
+        }
     }
 
     public static class ProteinMatchTypeExtension

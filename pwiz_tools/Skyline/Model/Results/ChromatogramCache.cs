@@ -721,7 +721,7 @@ namespace pwiz.Skyline.Model.Results
             }
 
             if (progressMonitor != null)
-                progressMonitor.UpdateProgress(status = status.ChangePercentComplete(20));
+                progressMonitor.UpdateProgress(status = status.ChangePercentComplete(10));
 
             // Read list of chromatogram group headers
             stream.Seek(locationHeaders, SeekOrigin.Begin);
@@ -765,14 +765,14 @@ namespace pwiz.Skyline.Model.Results
             }
 
             if (progressMonitor != null)
-                progressMonitor.UpdateProgress(status = status.ChangePercentComplete(50));
+                progressMonitor.UpdateProgress(status = status.ChangePercentComplete(30));
 
             // Read list of transitions
             stream.Seek(locationTrans, SeekOrigin.Begin);
             raw.ChromTransitions = ChromTransition.ReadArray(stream, numTrans, formatVersion);
 
             if (progressMonitor != null)
-                progressMonitor.UpdateProgress(status.ChangePercentComplete(30));
+                progressMonitor.UpdateProgress(status = status.ChangePercentComplete(50));
 
             // Read list of peaks
             stream.Seek(locationPeaks, SeekOrigin.Begin);
@@ -780,7 +780,9 @@ namespace pwiz.Skyline.Model.Results
                 count => ChromPeak.ReadArray(stream, count), 
                 numPeaks, 
                 ChromPeak.SizeOf,
-                ChromPeak.DEFAULT_BLOCK_SIZE);
+                ChromPeak.DEFAULT_BLOCK_SIZE,
+                progressMonitor,
+                status);
 
             return raw.LocationScanIds;  // Bytes of chromatogram data
         }
