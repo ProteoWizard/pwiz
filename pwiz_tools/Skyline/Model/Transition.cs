@@ -603,14 +603,16 @@ namespace pwiz.Skyline.Model
         {
             Transition = transition.Transition;
             Losses = losses;
-            if (Transition.IsNonReporterCustomIon())
+            if (Transition.IsCustom())
             {
                 if (!string.IsNullOrEmpty(transition.PrimaryCustomIonEquivalenceKey))
                     CustomIonEquivalenceTestValue = transition.PrimaryCustomIonEquivalenceKey;
                 else if (!string.IsNullOrEmpty(transition.SecondaryCustomIonEquivalenceKey))
                     CustomIonEquivalenceTestValue = transition.SecondaryCustomIonEquivalenceKey;
-                else
+                else if (Transition.IsNonReporterCustomIon())
                     CustomIonEquivalenceTestValue = "_mzSortIndex_" + parent.Children.IndexOf(transition); // Not L10N
+                else
+                    CustomIonEquivalenceTestValue = null;
             }
             else
             {
