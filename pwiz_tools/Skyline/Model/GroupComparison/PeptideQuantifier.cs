@@ -86,8 +86,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         public IDictionary<IdentityPath, Quantity> GetTransitionIntensities(SrmSettings srmSettings, int replicateIndex)
         {
             var quantities = new Dictionary<IdentityPath, Quantity>();
-            var transitionsToNormalizeAgainst = GetTransitionsForLabel(
-                PeptideDocNode, replicateIndex, NormalizationMethod.IsotopeLabelTypeName);
+            var transitionsToNormalizeAgainst = GetTransitionsToNormalizeAgainst(PeptideDocNode, replicateIndex);
             foreach (var precursor in PeptideDocNode.TransitionGroups)
             {
                 if (SkipTransitionGroup(precursor))
@@ -115,7 +114,7 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         private Quantity GetTransitionQuantity(
             SrmSettings srmSettings,
-            IDictionary<TransitionLossEquivalentKey, TransitionChromInfo> peptideStandards,
+            IDictionary<PeptideDocNode.TransitionKey, TransitionChromInfo> peptideStandards,
             int replicateIndex,
             TransitionGroupDocNode transitionGroup, TransitionDocNode transition)
         {
@@ -143,7 +142,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             if (null != peptideStandards)
             {
                 TransitionChromInfo chromInfoStandard;
-                if (!peptideStandards.TryGetValue(transition.EquivalentKey(transitionGroup), out chromInfoStandard))
+                if (!peptideStandards.TryGetValue(GetRatioTransitionKey(transitionGroup, transition), out chromInfoStandard))
                 {
                     return null;
                 }
@@ -193,17 +192,17 @@ namespace pwiz.Skyline.Model.GroupComparison
             return null;
         }
 
-        private Dictionary<TransitionLossEquivalentKey, TransitionChromInfo> GetTransitionsForLabel(
-            PeptideDocNode peptideDocNode, int replicateIndex, string isotopeLabelName)
+        private Dictionary<PeptideDocNode.TransitionKey, TransitionChromInfo> GetTransitionsToNormalizeAgainst(
+            PeptideDocNode peptideDocNode, int replicateIndex)
         {
-            if (string.IsNullOrEmpty(isotopeLabelName))
+            if (string.IsNullOrEmpty(NormalizationMethod.IsotopeLabelTypeName))
             {
                 return null;
             }
-            var result = new Dictionary<TransitionLossEquivalentKey, TransitionChromInfo>();
+            var result = new Dictionary<PeptideDocNode.TransitionKey, TransitionChromInfo>();
             foreach (var transitionGroup in peptideDocNode.TransitionGroups)
             {
-                if (!Equals(isotopeLabelName, transitionGroup.TransitionGroup.LabelType.Name))
+                if (!Equals(NormalizationMethod.IsotopeLabelTypeName, transitionGroup.TransitionGroup.LabelType.Name))
                 {
                     continue;
                 }
@@ -221,11 +220,16 @@ namespace pwiz.Skyline.Model.GroupComparison
                     var chromInfo = chromInfoList.FirstOrDefault(chrom => 0 == chrom.OptimizationStep);
                     if (null != chromInfo && !chromInfo.IsEmpty)
                     {
-                        result[transition.EquivalentKey(transitionGroup)] = chromInfo;
+                        result[GetRatioTransitionKey(transitionGroup, transition)] = chromInfo;
                     }
                 }
             }
             return result;
+        }
+
+        private PeptideDocNode.TransitionKey GetRatioTransitionKey(TransitionGroupDocNode transitionGroup, TransitionDocNode transitionDocNode)
+        {
+            return new PeptideDocNode.TransitionKey(transitionGroup, transitionDocNode.Key(transitionGroup), RatioLabelType);
         }
 
         public static double? SumQuantities(IEnumerable<Quantity> quantities, NormalizationMethod normalizationMethod)

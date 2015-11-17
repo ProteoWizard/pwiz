@@ -1485,7 +1485,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        private struct TransitionKey
+        public struct TransitionKey
         {
             private readonly IonType _ionType;
             private readonly string _customIonEquivalenceTestValue; // Derived from formula, or name, or an mz sort

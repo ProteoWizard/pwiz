@@ -178,6 +178,7 @@
     <Compile Include="Results\MsxTest.cs" />
     <Compile Include="Results\MultiLabelRatioTest.cs" />
     <Compile Include="Results\NumericsLsSolverTest.cs" />
+    <Compile Include="Results\PeptideQuantifierTest.cs" />
     <Compile Include="Results\RestultNameMapTest.cs" />
     <Compile Include="Results\ResultsUtilTest.cs" />
     <Compile Include="Results\DocumentRetentionTimesTest.cs" />
@@ -260,6 +261,7 @@
     <None Include="Results\MsxTest.zip" />
     <EmbeddedResource Include="Results\MultiLabelCustomReports.skyr" />
     <EmbeddedResource Include="Results\MultiLabelWithResults.sky" />
+    <EmbeddedResource Include="Results\PeptideQuantifierTest.sky" />
     <None Include="SimpleDecoys.zip" />
     <EmbeddedResource Include="Results\HeavyVariable.sky" />
     <EmbeddedResource Include="Results\MultiLabel.sky" />
