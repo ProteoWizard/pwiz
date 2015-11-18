@@ -29,7 +29,7 @@ runComparison <- function() {
 	## get standard protein name from StandardType column
 	standardpepname <- ""
 	if(sum(unique(raw$StandardType) %in% "Normalization") !=0 ){
-		standardpepname <- as.character(unique(raw[raw$StandardType == "Normalization", "PeptideSequence"]))
+		standardpepname <- as.character(unique(raw[raw$StandardType == "Normalization", "PeptideModifiedSequence"]))
 	}
 
 	## change column name as Intensity
