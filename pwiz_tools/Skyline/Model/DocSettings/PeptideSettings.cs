@@ -1155,6 +1155,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         private ImmutableList<TypedModifications> _modifications;
         private ImmutableList<IsotopeLabelType> _internalStandardTypes;
+        private ImmutableList<PeptideLabelRatio> _emptyPeptideRatios; 
 
         public PeptideModifications(IList<StaticMod> staticMods,
             IList<TypedModifications> heavyMods)
@@ -1305,6 +1306,48 @@ namespace pwiz.Skyline.Model.DocSettings
         public bool HasModification(StaticMod staticMod)
         {
             return _modifications.SelectMany(typeModifications => typeModifications.Modifications).Contains(staticMod);
+        }
+
+        public IList<PeptideLabelRatio> CalcPeptideRatios(Func<IsotopeLabelType, IsotopeLabelType, RatioValue> calcPairedRatio,
+                                                   Func<IsotopeLabelType, RatioValue> calcGlobalRatio)
+        {
+            // Avoid allocation if possible, as this can get big for DIA data without ratios
+            IList<PeptideLabelRatio> listRatios = _emptyPeptideRatios == null ? new List<PeptideLabelRatio>() : null;
+            int i = 0;
+
+            // Cache empty ratios for perf and memory use
+            foreach (var standardType in RatioInternalStandardTypes)
+            {
+                foreach (var labelType in GetModificationTypes())
+                {
+                    if (ReferenceEquals(standardType, labelType))
+                        continue;
+
+                    listRatios = AddPeptideRatio(listRatios, i++, labelType, standardType, calcPairedRatio(labelType, standardType));
+                }
+            }
+            // Then add ratios to global standards
+            foreach (var labelType in GetModificationTypes())
+            {
+                listRatios = AddPeptideRatio(listRatios, i++, labelType, null, calcGlobalRatio(labelType));
+            }
+            return listRatios ?? _emptyPeptideRatios;
+        }
+
+        private IList<PeptideLabelRatio> AddPeptideRatio(IList<PeptideLabelRatio> listRatios, int i,
+            IsotopeLabelType labelType, IsotopeLabelType standardType, RatioValue ratio)
+        {
+            if (_emptyPeptideRatios == null)
+            {
+                listRatios.Add(new PeptideLabelRatio(labelType, standardType, ratio));
+            }
+            else if (ratio != null)
+            {
+                if (listRatios == null)
+                    listRatios = _emptyPeptideRatios.ToArray();
+                listRatios[i] = new PeptideLabelRatio(labelType, standardType, ratio);
+            }
+            return listRatios;
         }
 
         #region Property change methods
@@ -1478,6 +1521,9 @@ namespace pwiz.Skyline.Model.DocSettings
                     string.Format(Resources.PeptideModifications_DoValidate_Maximum_neutral_losses__0__must_be_between__1__and__2__,
                                   MaxNeutralLosses, MIN_MAX_NEUTRAL_LOSSES, MAX_MAX_NEUTRAL_LOSSES));
             }
+
+            var listRatios = CalcPeptideRatios((l, h) => null, l => null);
+            _emptyPeptideRatios = ImmutableList<PeptideLabelRatio>.ValueOf(listRatios);
         }
 
         public static PeptideModifications Deserialize(XmlReader reader)
@@ -1594,6 +1640,8 @@ namespace pwiz.Skyline.Model.DocSettings
 
             _modifications = MakeReadOnly(list.ToArray());
             InternalStandardTypes = internalStandardTypes;
+
+            DoValidate();
         }
 
         private static void SetInternalStandardType(IsotopeLabelType labelType,

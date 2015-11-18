@@ -140,7 +140,7 @@ namespace pwiz.Skyline.Model.Results
             string format = dataFilePathRecalc == null
                                 ? Resources.ChromCacheBuilder_BuildNextFileInner_Importing__0__
                                 : Resources.ChromCacheBuilder_BuildNextFileInner_Recalculating_scores_for__0_;
-            string message = string.Format(format, MSDataFilePath.GetSampleOrFileName());
+            string message = string.Format(format, MSDataFilePath.GetSampleName() ?? MSDataFilePath.GetFileName());
             LoadingStatus.Transitions.Flush();
             _status = _status.ChangeMessage(message).ChangePercentComplete(0);
             _status = LoadingStatus.ChangeFilePath(MSDataFilePath).ChangeImporting(true);

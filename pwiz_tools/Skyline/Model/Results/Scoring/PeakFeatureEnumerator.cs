@@ -192,7 +192,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                             isMaxPeakIndex, features, mzFilters));
                     }
 
-                    yield return new PeakTransitionGroupFeatures(peakId, listRunFeatures);
+                    yield return new PeakTransitionGroupFeatures(peakId, listRunFeatures.ToArray());
                 }
             }
         }

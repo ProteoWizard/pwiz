@@ -106,8 +106,7 @@ namespace pwiz.Skyline.Model
                 var mProphetScoresGroup = new List<double>();
                 foreach (var peakGroupFeatures in transitionGroupFeatures.PeakGroupFeatures)
                 {
-                    var featureValues = peakGroupFeatures.Features.Select(value => (double) value).ToArray();
-                    mProphetScoresGroup.Add(ScoringModel.Score(featureValues));
+                    mProphetScoresGroup.Add(ScoringModel.Score(peakGroupFeatures.Features));
                 }
                 var pValuesGroup = mProphetScoresGroup.Select(score => 1 - Statistics.PNorm(score)).ToList();
                 int bestIndex = mProphetScoresGroup.IndexOf(mProphetScoresGroup.Max());

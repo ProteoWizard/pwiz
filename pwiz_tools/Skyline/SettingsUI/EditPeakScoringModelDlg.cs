@@ -230,15 +230,15 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             // Get scores for target and decoy groups.
-            List<IList<double[]>> targetTransitionGroups;
-            List<IList<double[]>> decoyTransitionGroups;
+            List<IList<float[]>> targetTransitionGroups;
+            List<IList<float[]>> decoyTransitionGroups;
             _targetDecoyGenerator.GetTransitionGroups(out targetTransitionGroups, out decoyTransitionGroups);
             // If decoy box is checked and no decoys, throw an error
             if (decoyCheckBox.Checked && decoyTransitionGroups.Count == 0)
                 throw new InvalidDataException(string.Format(Resources.EditPeakScoringModelDlg_TrainModel_There_are_no_decoy_peptides_in_the_current_document__Uncheck_the_Use_Decoys_Box_));
             // Use decoys for training only if decoy box is checked
             if (!decoyCheckBox.Checked)
-                decoyTransitionGroups = new List<IList<double[]>>();
+                decoyTransitionGroups = new List<IList<float[]>>();
 
             // Set intial weights based on previous model (with NaN's reset to 0)
             var initialWeights = new double[peakScoringModel.PeakFeatureCalculators.Count];
@@ -1241,14 +1241,14 @@ namespace pwiz.Skyline.SettingsUI
 
         public int GetTargetCount()
         {
-            List<IList<double[]>> targetGroups, decoyGroups;
+            List<IList<float[]>> targetGroups, decoyGroups;
             _targetDecoyGenerator.GetTransitionGroups(out targetGroups, out decoyGroups);
             return targetGroups.Count;
         }
 
         public int GetDecoyCount()
         {
-            List<IList<double[]>> targetGroups, decoyGroups;
+            List<IList<float[]>> targetGroups, decoyGroups;
             _targetDecoyGenerator.GetTransitionGroups(out targetGroups, out decoyGroups);
             return decoyGroups.Count;
         }

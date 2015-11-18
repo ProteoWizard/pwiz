@@ -973,7 +973,11 @@ namespace pwiz.Skyline.Model.Results
                 if (_resultsClone._statusLoading == null)
                 {
                     var fileName = Path.GetFileName(_documentPath);
-                    _status = new ChromatogramLoadingStatus(string.Format(Resources.Loader_Load_Loading_results_for__0__, fileName));
+                    // Avoid repeatedly reporting that results are loading for the file if joining is disabled, i.e. command line
+                    string initialMessage = _resultsClone.IsJoiningDisabled
+                        ? string.Empty
+                        : string.Format(Resources.Loader_Load_Loading_results_for__0__, fileName);
+                    _status = new ChromatogramLoadingStatus(initialMessage);
                     _loader.UpdateProgress(_status);
                 }
                 else

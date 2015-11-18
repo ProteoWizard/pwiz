@@ -197,15 +197,20 @@ namespace pwiz.Common.DataBinding
             IList<PropertyDescriptor> properties = bindingListSource.GetItemProperties(new PropertyDescriptor[0]).Cast<PropertyDescriptor>().ToArray();
             dsvWriter.WriteHeaderRow(writer, properties);
             var rowCount = rows.Count;
+            int startPercent = status.PercentComplete;
             for (int rowIndex = 0; rowIndex < rowCount; rowIndex++)
             {
                 if (progressMonitor.IsCanceled)
                 {
                     return;
                 }
-                status = status.ChangeMessage(string.Format(Resources.AbstractViewContext_WriteData_Writing_row__0___1_, (rowIndex + 1), rowCount))
-                    .ChangePercentComplete(rowIndex*100/rowCount);
-                progressMonitor.UpdateProgress(status);
+                int percentComplete = startPercent + (rowIndex*(100 - startPercent)/rowCount);
+                if (percentComplete > status.PercentComplete)
+                {
+                    status = status.ChangeMessage(string.Format(Resources.AbstractViewContext_WriteData_Writing_row__0___1_, (rowIndex + 1), rowCount))
+                        .ChangePercentComplete(percentComplete);
+                    progressMonitor.UpdateProgress(status);
+                }
                 dsvWriter.WriteDataRow(writer, rows[rowIndex], properties);
             }
         }

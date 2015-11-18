@@ -54,6 +54,7 @@ using System.Threading;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Controls.SeqNode;
@@ -2321,7 +2322,7 @@ namespace pwiz.Skyline.Model
         {
             float peakCountRatio = reader.GetFloatAttribute(ATTR.peak_count_ratio);
             float? retentionTime = reader.GetNullableFloatAttribute(ATTR.retention_time);
-            return new PeptideChromInfo(fileId, peakCountRatio, retentionTime, new PeptideLabelRatio[0]);
+            return new PeptideChromInfo(fileId, peakCountRatio, retentionTime, ImmutableList<PeptideLabelRatio>.EMPTY);
         }
 
         /// <summary>
@@ -2491,7 +2492,7 @@ namespace pwiz.Skyline.Model
                                                 area, null, null, // Ms1 and Fragment values calculated later
                                                 backgroundArea, null, null, // Ms1 and Fragment values calculated later
                                                 height,
-                                                new RatioValue[countRatios],
+                                                TransitionGroupChromInfo.GetEmptyRatios(countRatios),
                                                 massError,
                                                 truncated,
                                                 identified,
@@ -2865,7 +2866,7 @@ namespace pwiz.Skyline.Model
                                                fwhmDegenerate,
                                                truncated,
                                                identified,
-                                               new float?[countRatios],
+                                               TransitionChromInfo.GetEmptyRatios(countRatios),
                                                annotations,
                                                userSet);
             }

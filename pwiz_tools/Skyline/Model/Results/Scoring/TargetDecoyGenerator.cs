@@ -70,17 +70,17 @@ namespace pwiz.Skyline.Model.Results.Scoring
             }
         }
 
-        public void GetTransitionGroups(out List<IList<double[]>> targetGroups,
-            out List<IList<double[]>> decoyGroups)
+        public void GetTransitionGroups(out List<IList<float[]>> targetGroups,
+            out List<IList<float[]>> decoyGroups)
         {
-            targetGroups = new List<IList<double[]>>();
-            decoyGroups = new List<IList<double[]>>();
+            targetGroups = new List<IList<float[]>>();
+            decoyGroups = new List<IList<float[]>>();
 
             foreach (var peakTransitionGroupFeatures in _peakTransitionGroupFeaturesList)
             {
-                var transitionGroup = new List<double[]>();
+                var transitionGroup = new List<float[]>();
                 foreach (var peakGroupFeatures in peakTransitionGroupFeatures.PeakGroupFeatures)
-                    transitionGroup.Add(ToDoubles(peakGroupFeatures.Features));
+                    transitionGroup.Add(peakGroupFeatures.Features);
 
                 if (!transitionGroup.Any())
                     continue;
@@ -89,17 +89,6 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 else
                     targetGroups.Add(transitionGroup);
             }
-        }
-
-        /// <summary>
-        /// Convert array of floats to array of doubles.
-        /// </summary>
-        private static double[] ToDoubles(float[] f)
-        {
-            var d = new double[f.Length];
-            for (int i = 0; i < f.Length; i++)
-                d[i] = f[i];
-            return d;
         }
 
         /// <summary>
@@ -196,8 +185,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// </summary>
         private static double GetScore(IList<double> weights, PeakGroupFeatures peakGroupFeatures, double bias)
         {
-            // TODO: Can we avoid this allocation?  Why are features floats sometimes and doubles at other times?
-            return LinearModelParams.Score(ToDoubles(peakGroupFeatures.Features), weights, bias);
+            return LinearModelParams.Score(peakGroupFeatures.Features, weights, bias);
         }
 
         private static double GetScore(LinearModelParams parameters, PeakGroupFeatures peakGroupFeatures)

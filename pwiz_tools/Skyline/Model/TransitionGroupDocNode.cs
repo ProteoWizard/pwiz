@@ -1362,7 +1362,7 @@ namespace pwiz.Skyline.Model
         {
             // Use the old ratio for now, and it will be corrected by the peptide,
             // if it is incorrect.
-            IList<float?> ratios = chromInfo != null ? chromInfo.Ratios : new float?[ratioCount];
+            IList<float?> ratios = chromInfo != null ? chromInfo.Ratios : TransitionChromInfo.GetEmptyRatios(ratioCount);
             Annotations annotations = chromInfo != null ? chromInfo.Annotations : Annotations.EMPTY;
 
             return new TransitionChromInfo(fileId, step, peak, ratios, annotations, userSet);
@@ -1991,7 +1991,7 @@ namespace pwiz.Skyline.Model
                 }
                 else
                 {
-                    Ratios = new RatioValue[ratioCount];
+                    Ratios = TransitionGroupChromInfo.GetEmptyRatios(ratioCount);
                     Annotations = Annotations.EMPTY;
                 }
 

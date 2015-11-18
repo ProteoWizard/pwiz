@@ -51,7 +51,7 @@ namespace pwiz.Skyline.Model.Results
         public IList<PeptideLabelRatio> LabelRatios
         {
             get { return _labelRatios; }
-            private set { _labelRatios = MakeReadOnly(value); }
+            private set { _labelRatios = value as ImmutableList<PeptideLabelRatio> ?? MakeReadOnly(value); }
         }
 
         #region object overrides
@@ -138,6 +138,22 @@ namespace pwiz.Skyline.Model.Results
     /// </summary>
     public sealed class TransitionGroupChromInfo : ChromInfo
     {
+        private static readonly IList<RatioValue>[] EMPTY_RATIOS  = new ImmutableList<RatioValue>[4];
+
+        static TransitionGroupChromInfo()
+        {
+            for (int i = 0; i < EMPTY_RATIOS.Length; i++)
+            {
+                EMPTY_RATIOS[i] = ImmutableList<RatioValue>.ValueOf(new RatioValue[i + 1]);
+            }
+        }
+
+        public static IList<RatioValue> GetEmptyRatios(int countRatios)
+        {
+            int i = countRatios - 1;
+            return i <= EMPTY_RATIOS.Length ? EMPTY_RATIOS[i] : new RatioValue[countRatios];
+        }
+
         private ImmutableList<RatioValue> _ratios;
 
         public TransitionGroupChromInfo(ChromFileInfoId fileId,
@@ -205,7 +221,7 @@ namespace pwiz.Skyline.Model.Results
         public IList<RatioValue> Ratios
         {
             get { return _ratios; }
-            private set { _ratios = MakeReadOnly(value); }
+            private set { _ratios = value as ImmutableList<RatioValue> ?? MakeReadOnly(value); }
         }
         public float? MassError { get; private set; }
         public int? Truncated { get; private set; }
@@ -336,6 +352,22 @@ namespace pwiz.Skyline.Model.Results
     /// </summary>
     public sealed class TransitionChromInfo : ChromInfo
     {
+        private static readonly IList<float?>[] EMPTY_RATIOS  = new ImmutableList<float?>[4];
+
+        static TransitionChromInfo()
+        {
+            for (int i = 0; i < EMPTY_RATIOS.Length; i++)
+            {
+                EMPTY_RATIOS[i] = ImmutableList<float?>.ValueOf(new float?[i + 1]);
+            }
+        }
+
+        public static IList<float?> GetEmptyRatios(int countRatios)
+        {
+            int i = countRatios - 1;
+            return i <= EMPTY_RATIOS.Length ? EMPTY_RATIOS[i] : new float?[countRatios];
+        }
+
         private ImmutableList<float?> _ratios;
 
         public TransitionChromInfo(float startRetentionTime, float endRetentionTime)
@@ -409,7 +441,7 @@ namespace pwiz.Skyline.Model.Results
         public IList<float?> Ratios
         {
             get { return _ratios; }
-            private set { _ratios = MakeReadOnly(value); }
+            private set { _ratios = value as ImmutableList<float?> ?? MakeReadOnly(value); }
         }
         public float? Ratio { get { return _ratios[0]; } }
 
