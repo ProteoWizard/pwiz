@@ -920,7 +920,7 @@ namespace pwiz.Skyline.Model.Results
         {
             var modelCalcs = ScoringModel.PeakFeatureCalculators;
             var detailFeatures = new float [detailFeatureCalculators.Count];
-            var modelFeatures = new double [modelCalcs.Count];
+            var modelFeatures = new float [modelCalcs.Count];
             // Here we score both the detailFeatureCalculators (for storage) 
             // and the peak calculators of the legacy model (for import-stage peak scoring)
             // This will cause some scores to be calculated multiple times, but score
@@ -930,7 +930,7 @@ namespace pwiz.Skyline.Model.Results
             var summaryData = new PeptidePeakDataConverter<IDetailedPeakData>(this);
             foreach (var calc in allFeatureCalculators)
             {
-                double feature;
+                float feature;
                 var summaryCalc = calc as SummaryPeakFeatureCalculator;
                 if (summaryCalc != null)
                 {
@@ -943,7 +943,7 @@ namespace pwiz.Skyline.Model.Results
                 int detailIndex = detailFeatureCalculators.IndexOf(calc);
                 if (detailIndex != -1)
                 {
-                    detailFeatures[detailIndex] = (float)feature;
+                    detailFeatures[detailIndex] = feature;
                 }
                 int modelIndex = modelCalcs.IndexOf(calc);
                 if (modelIndex != -1)

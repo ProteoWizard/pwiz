@@ -107,7 +107,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// Return a list of peak feature values.
         /// </summary>
         /// <returns></returns>
-        public List<double[]> ToList()
+        public List<float[]> ToList()
         {
             return ScoredPeaks.Select(peak => peak.Features).ToList();
         }

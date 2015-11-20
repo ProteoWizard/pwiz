@@ -26,7 +26,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public class ScoredPeak
     {
-        public double[] Features { get; private set; }
+        public float[] Features { get; private set; }
         public double Score { get; set; }
 
         /// <summary>
@@ -35,7 +35,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// the array.
         /// </summary>
         /// <param name="features">Array of feature values.</param>
-        public ScoredPeak(double[] features)
+        public ScoredPeak(float[] features)
         {
             Features = features;
             Score = Features[0];    // Use the first feature as the initial score.

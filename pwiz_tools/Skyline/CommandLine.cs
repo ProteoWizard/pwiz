@@ -1179,8 +1179,8 @@ namespace pwiz.Skyline
                 var targetDecoyGenerator = new TargetDecoyGenerator(_doc, scoringModel, progressMonitor);
 
                 // Get scores for target and decoy groups.
-                List<IList<double[]>> targetTransitionGroups;
-                List<IList<double[]>> decoyTransitionGroups;
+                List<IList<float[]>> targetTransitionGroups;
+                List<IList<float[]>> decoyTransitionGroups;
                 targetDecoyGenerator.GetTransitionGroups(out targetTransitionGroups, out decoyTransitionGroups);
                 // If decoy box is checked and no decoys, throw an error
                 if (decoys && decoyTransitionGroups.Count == 0)
@@ -1190,7 +1190,7 @@ namespace pwiz.Skyline
                 }
                 // Use decoys for training only if decoy box is checked
                 if (!decoys)
-                    decoyTransitionGroups = new List<IList<double[]>>();
+                    decoyTransitionGroups = new List<IList<float[]>>();
 
                 // Set intial weights based on previous model (with NaN's reset to 0)
                 var initialWeights = new double[scoringModel.PeakFeatureCalculators.Count];

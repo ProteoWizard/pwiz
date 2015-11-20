@@ -35,7 +35,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
         }
 
-        public ScoredGroupPeaksSet(IEnumerable<IList<double[]>> groupList)
+        public ScoredGroupPeaksSet(IEnumerable<IList<float[]>> groupList)
         {
             foreach (var group in groupList)
             {
@@ -197,9 +197,9 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// Return a list of transition groups, each containing peak feature values.
         /// </summary>
         /// <returns></returns>
-        public List<IList<double[]>> ToList()
+        public List<IList<float[]>> ToList()
         {
-            var list = new List<IList<double[]>>(_scoredGroupPeaksList.Count);
+            var list = new List<IList<float[]>>(_scoredGroupPeaksList.Count);
             foreach (var scoredGroupPeaks in _scoredGroupPeaksList)
                 list.Add(scoredGroupPeaks.ToList());
             return list;

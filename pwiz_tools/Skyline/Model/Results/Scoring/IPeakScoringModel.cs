@@ -58,13 +58,13 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// <param name="includeSecondBest"> Include the second best peaks in the targets as decoys?</param>
         /// <param name="preTrain">Use a pre-trained model to bootstrap the learning?</param>
         /// <param name="progressMonitor">Progress monitor for displaying progress to the user</param>
-        IPeakScoringModel Train(IList<IList<double[]>> targets, IList<IList<double[]>> decoys, LinearModelParams initParameters,
+        IPeakScoringModel Train(IList<IList<float[]>> targets, IList<IList<float[]>> decoys, LinearModelParams initParameters,
             bool includeSecondBest = false, bool preTrain = true, IProgressMonitor progressMonitor = null);
 
         /// <summary>
         /// Scoring function for the model
         /// </summary>
-        double Score(IList<double> features);
+        double Score(IList<float> features);
 
         /// <summary>
         /// Was the model trained with a decoy set?
@@ -98,9 +98,9 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public bool IsTrained { get { return Parameters != null && Parameters.Weights != null; } }
         public abstract IList<IPeakFeatureCalculator> PeakFeatureCalculators { get; }
-        public abstract IPeakScoringModel Train(IList<IList<double[]>> targets, IList<IList<double[]>> decoys, LinearModelParams initParameters,
+        public abstract IPeakScoringModel Train(IList<IList<float[]>> targets, IList<IList<float[]>> decoys, LinearModelParams initParameters,
             bool includeSecondBest = false, bool preTrain = true, IProgressMonitor progressMonitor = null);
-        public double Score(IList<double> features)
+        public double Score(IList<float> features)
         {
             return Parameters.Score(features);
         }
@@ -159,7 +159,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     public interface IModelParams
     {
         // ReSharper disable UnusedMemberInSuper.Global
-        double Score(IList<double> features);
+        double Score(IList<float> features);
         // ReSharper restore UnusedMemberInSuper.Global
     }
 
@@ -187,7 +187,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public double Bias { get; set; }
 
-        public static double Score(IList<double> features, IList<double> weights, double bias)
+        public static double Score(IList<float> features, IList<double> weights, double bias)
         {
             if (features.Count != weights.Count)
             {
@@ -203,12 +203,12 @@ namespace pwiz.Skyline.Model.Results.Scoring
             return score;
         }
 
-        public static double Score(IList<double> features, LinearModelParams parameters)
+        public static double Score(IList<float> features, LinearModelParams parameters)
         {
             return parameters.Score(features);
         }
 
-        public double Score(IList<double> features)
+        public double Score(IList<float> features)
         {
             return Score(features, Weights, Bias);
         }

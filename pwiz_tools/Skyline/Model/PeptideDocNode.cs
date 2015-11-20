@@ -1363,27 +1363,9 @@ namespace pwiz.Skyline.Model
                 if (RetentionTimesMeasured > 0)
                     retentionTime = (float) (RetentionTimeTotal/RetentionTimesMeasured);
                 var mods = Settings.PeptideSettings.Modifications;
-                var listRatios = new List<PeptideLabelRatio>();
-                // First add ratios to reference peptides
-                foreach (var standardType in mods.RatioInternalStandardTypes)
-                {
-                    foreach (var labelType in mods.GetModificationTypes())
-                    {
-                        if (ReferenceEquals(standardType, labelType))
-                            continue;
-
-                        RatioValue ratio = CalcTransitionGroupRatio(-1, labelType, standardType);
-                        listRatios.Add(new PeptideLabelRatio(labelType, standardType, ratio));
-                    }                    
-                }
-                // Then add ratios to global standards
-                foreach (var labelType in mods.GetModificationTypes())
-                {
-                    RatioValue ratio = CalcTransitionGroupGlobalRatio(-1, labelType);
-                    listRatios.Add(new PeptideLabelRatio(labelType, null, ratio));
-                }
-
-                return new PeptideChromInfo(FileId, peakCountRatio, retentionTime, listRatios.ToArray());
+                var listRatios = mods.CalcPeptideRatios((l, h) => CalcTransitionGroupRatio(-1, l, h),
+                    l => CalcTransitionGroupGlobalRatio(-1, l));
+                return new PeptideChromInfo(FileId, peakCountRatio, retentionTime, listRatios);
             }
 
             public float? CalcTransitionGlobalRatio(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, IsotopeLabelType labelType)
@@ -1456,8 +1438,9 @@ namespace pwiz.Skyline.Model
                     return null;
                 }
 
-                List<double> numerators = new List<double>();
-                List<double> denominators = new List<double>();
+                // Delay allocation, which can be costly in DIA data with no ratios
+                List<double> numerators = null;
+                List<double> denominators = null;
 
                 foreach (var pair in GetAreaPairs(labelTypeNum))
                 {
@@ -1470,9 +1453,17 @@ namespace pwiz.Skyline.Model
                     if (!TranAreas.TryGetValue(new TransitionKey(key, labelTypeDenom), out areaDenom))
                         continue;
 
+                    if (numerators == null)
+                    {
+                        numerators = new List<double>();
+                        denominators = new List<double>();
+                    }
                     numerators.Add(areaNum);
                     denominators.Add(areaDenom);
                 }
+
+                if (numerators == null)
+                    return null;
 
                 return RatioValue.Calculate(numerators, denominators);
             }

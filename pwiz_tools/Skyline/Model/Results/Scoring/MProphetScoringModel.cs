@@ -160,7 +160,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// <param name="preTrain">Use a pre-trained model to bootstrap the learning.</param>
         /// <param name="progressMonitor"></param>
         /// <returns>Immutable model with new weights.</returns>
-        public override IPeakScoringModel Train(IList<IList<double[]>> targets, IList<IList<double[]>> decoys, LinearModelParams initParameters,
+        public override IPeakScoringModel Train(IList<IList<float[]>> targets, IList<IList<float[]>> decoys, LinearModelParams initParameters,
             bool includeSecondBest = false, bool preTrain = true, IProgressMonitor progressMonitor = null)
         {
             if(initParameters == null)
@@ -220,6 +220,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
                         im.CalculateWeights(iteration, targetTransitionGroups, decoyTransitionGroups,
                                             includeSecondBest, calcWeights, out decoyMean, out decoyStdev, ref colinearWarning);
+
+                        GC.Collect();   // Each loop generates a number of large objects. GC helps to keep private bytes under control
                     }
                     if (progressMonitor != null)
                         progressMonitor.UpdateProgress(status.ChangePercentComplete(100));
@@ -392,7 +394,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// Copy peak features and category to training data array in preparation
         /// for analysis using LDA.
         /// </summary>
-        public void CopyToTrainData(double[] features, double[,] trainData, double[] weights, int row, int category)
+        public void CopyToTrainData(float[] features, double[,] trainData, double[] weights, int row, int category)
         {
             int j = 0;
             for (int i = 0; i < features.Length; i++)

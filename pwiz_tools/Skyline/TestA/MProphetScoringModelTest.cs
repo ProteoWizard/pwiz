@@ -111,7 +111,7 @@ namespace pwiz.SkylineTestA
                 scoringModel = (MProphetPeakScoringModel)scoringModel.Train(targetTransitionGroups.ToList(), decoyTransitionGroups.ToList(), new LinearModelParams(fileWeights._weights), false, false);
                 Assert.AreEqual(scoringModel.Parameters.Weights.Count, fileWeights._weights.Length);
                 for (int i = 0; i < scoringModel.Parameters.Weights.Count; i++)
-                    Assert.AreEqual(fileWeights._weights[i], scoringModel.Parameters.Weights[i], 1e-7);
+                    Assert.AreEqual(fileWeights._weights[i], scoringModel.Parameters.Weights[i], 1e-6);
             }
         }
 
@@ -290,10 +290,10 @@ namespace pwiz.SkylineTestA
                 }
 
                 // Parse feature values for this peak.
-                var features = new double[featuresCount];
-                features[0] = double.Parse(data.Items[i, mainVarColumn], CultureInfo.InvariantCulture);
+                var features = new float[featuresCount];
+                features[0] = (float) double.Parse(data.Items[i, mainVarColumn], CultureInfo.InvariantCulture);
                 for (int j = 0; j < varColumns.Count; j++)
-                    features[j + 1] = double.Parse(data.Items[i, varColumns[j]], CultureInfo.InvariantCulture);
+                    features[j + 1] = (float) double.Parse(data.Items[i, varColumns[j]], CultureInfo.InvariantCulture);
 
                 // Add the peak to its transition group.
                 transitionGroup.Add(new ScoredPeak(features));

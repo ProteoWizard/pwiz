@@ -160,11 +160,15 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
     {
         rawfile_->setCurrentController(ie.controllerType, ie.controllerNumber);
     }
-    catch (RawEgg&)
+    catch (RawEgg& r)
     {
+        const char *what = r.what();
+        if (what == NULL)
+            what = "cause unknown";
         throw runtime_error("[SpectrumList_Thermo::spectrum()] Error setting controller to: " +
                             lexical_cast<string>(ie.controllerType) + "," +
-                            lexical_cast<string>(ie.controllerNumber));
+                            lexical_cast<string>(ie.controllerNumber) +
+                            " (" + what + ")");
     }
 
     // allocate a new Spectrum

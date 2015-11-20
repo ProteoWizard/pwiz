@@ -290,7 +290,7 @@ namespace pwiz.Skyline.Model.Databinding
                 {
                     return false;
                 }
-                progressMonitor.UpdateProgress(status = status.ChangePercentComplete(95)
+                progressMonitor.UpdateProgress(status = status.ChangePercentComplete(5)
                     .ChangeMessage(Resources.ExportReportDlg_ExportReport_Writing_report));
 
                 WriteDataWithStatus(progressMonitor, ref status, writer, bindingListSource, dsvWriter);

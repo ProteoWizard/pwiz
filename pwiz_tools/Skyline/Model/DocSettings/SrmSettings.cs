@@ -1805,7 +1805,8 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public void Dispose()
         {
-            _progressMonitor.UpdateProgress(_status = _status.Complete());
+            if (_seenGroupCount + _seenMoleculeCount > 0)
+                _progressMonitor.UpdateProgress(_status = _status.Complete());
         }
 
         public int GroupCount

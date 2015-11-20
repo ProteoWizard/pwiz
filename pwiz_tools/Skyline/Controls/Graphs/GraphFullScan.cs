@@ -771,7 +771,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             Settings.Default.FilterDriftTimesFullScan = filterBtn.Checked = filter;
             _zoomYAxis = true;
-            SetSpectra(_msDataFileScanHelper.MsDataSpectra);
+            SetSpectraUI(_msDataFileScanHelper.MsDataSpectra);
         }
 
         private void btnIsolationWindow_Click(object sender, EventArgs e)
