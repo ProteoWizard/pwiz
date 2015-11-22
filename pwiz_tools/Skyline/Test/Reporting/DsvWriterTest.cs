@@ -21,6 +21,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
@@ -47,6 +48,9 @@ namespace pwiz.SkylineTest.Reporting
             viewContext.ExportToFile(null, GetTestReport(skylineDataSchema), testFile, dsvWriter);
             string strExported = File.ReadAllText(testFile);
             Assert.AreEqual(ExpectedInvariantReport, strExported);
+            // Assert that the file written out was UTF8 encoding without any byte order mark
+            byte[] bytesExported = File.ReadAllBytes(testFile);
+            CollectionAssert.AreEqual(Encoding.UTF8.GetBytes(strExported), bytesExported);
         }
 
         [TestMethod]

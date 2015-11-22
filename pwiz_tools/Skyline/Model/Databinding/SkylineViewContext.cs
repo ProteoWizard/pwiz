@@ -256,7 +256,7 @@ namespace pwiz.Skyline.Model.Databinding
                         {
                             var status = new ProgressStatus(Resources.ExportReportDlg_ExportReport_Building_report);
                             broker.UpdateProgress(status);
-                            using (var writer = new StreamWriter(stream, Encoding.UTF8))
+                            using (var writer = new StreamWriter(stream))
                             {
                                 success = Export(broker, ref status, viewInfo, writer, dsvWriter);
                                 writer.Close();
