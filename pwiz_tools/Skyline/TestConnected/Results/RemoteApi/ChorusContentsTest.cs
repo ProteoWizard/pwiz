@@ -42,7 +42,7 @@ namespace pwiz.SkylineTestConnected.Results.RemoteApi
         }
 
         [TestMethod]
-        public void TestContents()
+        public void TestChorusContents()
         {
             ChorusSession chorusSession = new ChorusSession();
             ChorusContents chorusContents = chorusSession.FetchContents(TEST_ACCOUNT, new Uri(TEST_ACCOUNT.ServerUrl + "/skyline/api/contents/my/projects"));
@@ -53,7 +53,7 @@ namespace pwiz.SkylineTestConnected.Results.RemoteApi
         /// Tests that all instrument models are identified as something by ChorusSession.GetFileTypeFromInstrumentModel
         /// </summary>
         [TestMethod]
-        public void TestInstrumentModels()
+        public void TestChorusInstrumentModels()
         {
             var accounts = new[]
             {

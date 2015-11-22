@@ -171,7 +171,7 @@ namespace pwiz.SkylineTestA
                 foreach (StaticMod original in dict.Values)
                 {
                     modToMatch = (StaticMod)original.ChangeName("Test");
-                    if (original.Formula != null)
+                    if (original.Formula != null || original.Losses != null)
                         modToMatch = modToMatch.ChangeFormula("H2OCl");
                     else if (original.LabelAtoms != LabelAtoms.None)
                         modToMatch = modToMatch.ChangeFormula("H2OCl").ChangeLabelAtoms(LabelAtoms.None);
