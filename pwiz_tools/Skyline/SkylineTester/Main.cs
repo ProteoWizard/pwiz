@@ -22,7 +22,6 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Windows.Forms;
 using TestRunnerLib;
 using ZedGraph;
@@ -481,11 +480,20 @@ namespace SkylineTester
                 Devenv = null;
         }
 
-        public void RunUI(Action action, int delayMsec)
+        public void RunUI(Action action, int delayMsec = 0)
         {
             if (delayMsec == 0)
             {
-                RunUI(action);
+                if (!IsHandleCreated)
+                    return;
+
+                try
+                {
+                    Invoke(action);
+                }
+                catch (ObjectDisposedException)
+                {
+                }
             }
             else
             {
@@ -501,24 +509,15 @@ namespace SkylineTester
 
         private void RunUI(Action action)
         {
-            int retryCount = 0;
-            while (IsHandleCreated)
+            if (!IsHandleCreated)
+                return;
+
+            try
             {
-                try
-                {
-                    Invoke(action);
-                }
-                catch (ObjectDisposedException)
-                {
-                    return;
-                }
-                catch (Exception ex)
-                {
-                    if (++retryCount > 10)
-                        MessageBox.Show(ex.ToString(), "Retry count exceeded", MessageBoxButtons.OK);
-                    else
-                        Thread.Sleep(500);
-                }
+                Invoke(action);
+            }
+            catch (ObjectDisposedException)
+            {
             }
         }
     }
