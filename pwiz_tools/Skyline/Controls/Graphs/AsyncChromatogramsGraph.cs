@@ -133,7 +133,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 return Rectangle.Empty;
 
             Rectangle invalidRect;
-            if (_fullFrame || _xAxisAnimation != null || _yAxisAnimation != null || (newPeaks && !progressive))
+            if (_fullFrame || _xAxisAnimation != null || _yAxisAnimation != null || (newPeaks && !progressive) || time < _lastTime)
             {
                 // full frame invalidation
                 invalidRect = new Rectangle(0, 0, bitmap.Width, bitmap.Height);
@@ -186,17 +186,11 @@ namespace pwiz.Skyline.Controls.Graphs
             List<ChromatogramLoadingStatus.TransitionData.Peak> bin;
             bool peaksAdded = false;
 
-            // Ensure that we get at least a few updates on a very fast load.
-            int maxBins = (int) Math.Max(1, transitions.MaxRetentionTime/10/ChromatogramLoadingStatus.TIME_RESOLUTION);
-
             // Process bins of peaks queued by the reader thread.
             float maxTime = (float) _xMax;
             float maxIntensity = 0;
-            while (maxBins-- > 0 && transitions.BinnedPeaks.TryPeek(out bin))
+            while (transitions.BinnedPeaks.TryPeek(out bin))
             {
-                if (bin == null && peaksAdded)
-                    break;
-                
                 transitions.BinnedPeaks.TryDequeue(out bin);
                 
                 if (bin == null)
@@ -216,7 +210,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     _activeCurves.Clear();
                     _lastCurve = null;
                     _fullFrame = true;
-                    return false;
+                    peaksAdded = true;
+                    continue;
                 }
 
                 if (transitions.Progressive)
@@ -270,7 +265,8 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 // Filter out small intensities.
                 var peak = bin[i];
-                if (peak.Intensity < ChromatogramLoadingStatus.DISPLAY_FILTER_PERCENT*maxIntensity)
+                float intensity = peak.Intensity;
+                if (intensity < ChromatogramLoadingStatus.DISPLAY_FILTER_PERCENT*maxIntensity)
                     break;
 
                 CurveInfo curve = null;
@@ -286,16 +282,26 @@ namespace pwiz.Skyline.Controls.Graphs
                 // Add a new curve.
                 if (curve == null)
                 {
-                    curve = new CurveInfo(bin[i].ModifiedSequence, bin[i].Color, retentionTime);
+                    curve = new CurveInfo(bin[i].ModifiedSequence, bin[i].Color, retentionTime, intensity);
                     _graphPane.CurveList.Insert(0, curve.Curve);
                     _activeCurves.Add(curve);
                 }
+                else
+                {
+                    // add preceding zero if necessary
+                    if (curve.Curve.Points[curve.Curve.NPts - 1].X < retentionTime - ChromatogramLoadingStatus.TIME_RESOLUTION * 1.5)
+                        curve.Curve.AddPoint(retentionTime - ChromatogramLoadingStatus.TIME_RESOLUTION, 0);
+                    // add new point or change zero
+                    if (curve.Curve.Points[curve.Curve.NPts - 1].X > retentionTime - ChromatogramLoadingStatus.TIME_RESOLUTION * 0.5)
+                        curve.Curve.Points[curve.Curve.NPts - 1].Y = intensity;
+                    else
+                        curve.Curve.AddPoint(retentionTime, intensity);
+                    // add following zero
+                    curve.Curve.AddPoint(retentionTime + ChromatogramLoadingStatus.TIME_RESOLUTION, 0);
+                }
 
                 // Add intensity value to the curve.
-                float intensity = bin[i].Intensity;
                 maxIntensity = Math.Max(maxIntensity, intensity);
-                curve.Curve.Points[curve.Curve.NPts - 1].Y = intensity;
-                curve.Curve.AddPoint(retentionTime + ChromatogramLoadingStatus.TIME_RESOLUTION, 0);
                 curve.IsActive = true;
                 peaksAdded = true;
             }
@@ -445,7 +451,7 @@ namespace pwiz.Skyline.Controls.Graphs
             public string ModifiedSequence { get; private set; }
             public bool IsActive { get; set; }
 
-            public CurveInfo(string modifiedSequence, Color peptideColor, double retentionTime)
+            public CurveInfo(string modifiedSequence, Color peptideColor, double retentionTime, float intensity)
             {
                 Curve = new LineItem(string.Empty, new PointPairList(), peptideColor, SymbolType.None)
                 {
@@ -453,15 +459,9 @@ namespace pwiz.Skyline.Controls.Graphs
                     Label = { IsVisible = false }
                 };
                 Curve.AddPoint(retentionTime - ChromatogramLoadingStatus.TIME_RESOLUTION, 0);
-                Curve.AddPoint(retentionTime, 0);
-                ModifiedSequence = modifiedSequence;
-            }
-
-            public CurveInfo(string modifiedSequence, Color peptideColor, double retentionTime, float intensity)
-                : this(modifiedSequence, peptideColor, retentionTime)
-            {
-                Curve.Points[1].Y = intensity;
+                Curve.AddPoint(retentionTime, intensity);
                 Curve.AddPoint(retentionTime + ChromatogramLoadingStatus.TIME_RESOLUTION, 0);
+                ModifiedSequence = modifiedSequence;
             }
 
             public void InsertAt(int index, double retentionTime, double intensity)
