@@ -8744,8 +8744,8 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="Resources.ReportSpecList_GetDefaults_Peptide_Quantification" xml:space="preserve">
     <value>Peptide Quantification</value>
   </data>
-  <data name="BiblioSpecLiteBuilder_AmbiguousMatches_Peptide_spectrum_matches_containing_the_following_peptides_were_discarded_because_the_spectrum_had_multiple_matches_" xml:space="preserve">
-    <value>Peptide-spectrum matches containing the following peptides were discarded because the spectrum had multiple matches:</value>
+  <data name="BiblioSpecLiteBuilder_AmbiguousMatches_The_library_built_successfully__Spectra_matching_the_following_peptides_had_multiple_ambiguous_peptide_matches_and_were_excluded_" xml:space="preserve">
+    <value>The library built successfully. Spectra matching the following peptides had multiple ambiguous peptide matches and were excluded:</value>
   </data>
   <data name="EditDriftTimePredictorDlg_btnGenerateFromDocument_Click_Finding_drift_time_values_for_peaks" xml:space="preserve">
     <value>Finding drift time values for peaks</value>

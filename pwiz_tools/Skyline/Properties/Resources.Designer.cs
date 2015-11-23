@@ -1612,12 +1612,13 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Peptide-spectrum matches containing the following peptides were discarded because the spectrum had multiple matches:.
+        ///   Looks up a localized string similar to The library built successfully. Spectra matching the following peptides had multiple ambiguous peptide matches and were excluded:.
         /// </summary>
-        public static string BiblioSpecLiteBuilder_AmbiguousMatches_Peptide_spectrum_matches_containing_the_following_peptides_were_discarded_because_the_spectrum_had_multiple_matches_ {
+        public static string BiblioSpecLiteBuilder_AmbiguousMatches_The_library_built_successfully__Spectra_matching_the_following_peptides_had_multiple_ambiguous_peptide_matches_and_were_excluded_ {
             get {
-                return ResourceManager.GetString("BiblioSpecLiteBuilder_AmbiguousMatches_Peptide_spectrum_matches_containing_the_fo" +
-                        "llowing_peptides_were_discarded_because_the_spectrum_had_multiple_matches_", resourceCulture);
+                return ResourceManager.GetString("BiblioSpecLiteBuilder_AmbiguousMatches_The_library_built_successfully__Spectra_ma" +
+                        "tching_the_following_peptides_had_multiple_ambiguous_peptide_matches_and_were_ex" +
+                        "cluded_", resourceCulture);
             }
         }
         

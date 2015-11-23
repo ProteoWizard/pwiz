@@ -85,7 +85,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 return _ambiguousMatches != null && _ambiguousMatches.Any()
                     ? TextUtil.LineSeparate(
-                        Resources.BiblioSpecLiteBuilder_AmbiguousMatches_Peptide_spectrum_matches_containing_the_following_peptides_were_discarded_because_the_spectrum_had_multiple_matches_,
+                        Resources.BiblioSpecLiteBuilder_AmbiguousMatches_The_library_built_successfully__Spectra_matching_the_following_peptides_had_multiple_ambiguous_peptide_matches_and_were_excluded_,
                         string.Join(Environment.NewLine, _ambiguousMatches))
                     : string.Empty;
             }
