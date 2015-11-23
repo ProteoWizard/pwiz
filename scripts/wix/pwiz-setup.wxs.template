@@ -288,6 +288,11 @@
 <Component Feature="MainFeature"><File Id="_MassLynxRaw.dll" Name="MassLynxRaw.dll" Source="msvc-release\MassLynxRaw.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_cdt.dll" Name="cdt.dll" Source="msvc-release\cdt.dll" KeyPath="yes"/></Component>
 
+                  
+<!-- UIMF DLLs -->
+<Component Feature="MainFeature"><File Id="_UIMFLibrary.dll" Name="UIMFLibrary.dll" Source="msvc-release\UIMFLibrary.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_System.Data.SQLite.dll" Name="System.Data.SQLite.dll" Source="msvc-release\System.Data.SQLite.dll" KeyPath="yes"/></Component>
+
 
 <!-- ProteoWizard executables -->
 <Component Feature="MainFeature"><File Id="_chainsaw.exe" Name="chainsaw.exe" Source="msvc-release\chainsaw.exe" KeyPath="yes"/></Component>
