@@ -109,12 +109,12 @@ namespace pwiz.Skyline
 
 
         // Import results from one or more data files.
-        private void ImportResults(string dataFile)
+        private void ImportResults(MsDataFileUri msDataFileUri)
         {
             RunDlg<ImportResultsDlg>(Program.MainWindow.ImportResults, importResultsDlg =>
             {
                 importResultsDlg.NamedPathSets =
-                    importResultsDlg.GetDataSourcePathsFileReplicates(new[] { MsDataFileUri.Parse(dataFile) });
+                    importResultsDlg.GetDataSourcePathsFileReplicates(new[] { msDataFileUri });
                 importResultsDlg.OkDialog();
             });
 
