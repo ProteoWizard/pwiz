@@ -171,7 +171,7 @@ namespace pwiz.SkylineTestUtil
 
         public DataGridViewColumn FindDocumentGridColumn(DocumentGridForm documentGrid, string colName)
         {
-            WaitForCondition(() => (documentGrid.FindColumn(PropertyPath.Parse(colName)) != null));
+            WaitForConditionUI(() => documentGrid.IsComplete && documentGrid.FindColumn(PropertyPath.Parse(colName)) != null);
             return documentGrid.FindColumn(PropertyPath.Parse(colName));
         }
 

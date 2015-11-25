@@ -130,7 +130,7 @@
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+    <value>2</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
     <value>キャンセル</value>
@@ -157,7 +157,7 @@
     <value>75, 23</value>
   </data>
   <data name="btnOK.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+    <value>1</value>
   </data>
   <data name="btnOK.Text" xml:space="preserve">
     <value>OK</value>
@@ -184,7 +184,7 @@
     <value>64, 13</value>
   </data>
   <data name="label2.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+    <value>0</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
     <value>ビュー名(&amp;N):</value>
@@ -313,7 +313,7 @@
     <value>622, 335</value>
   </data>
   <data name="tabControl1.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
+    <value>0</value>
   </data>
   <data name="&gt;&gt;tabControl1.Name" xml:space="preserve">
     <value>tabControl1</value>
@@ -383,6 +383,23 @@
   <data name="toolStripSeparator1.Size" type="System.Drawing.Size, System.Drawing">
     <value>6, 25</value>
   </data>
+  <data name="toolButtonFind.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAABhSURBVDhPzY/BCQAxCATtvwN7sqc7kEQWXSX5HDfgZ5yE
+        RH7JA7NhroXFzLVgzGbEI1XNh7JrYTFzBVzeTODCzHJQJjWBC/L0TbjuK2yJQbibCzJjg7IsF2MzLhcn
+        zeeIvK7WkD3AZ8ECAAAAAElFTkSuQmCC
+</value>
+  </data>
+  <data name="toolButtonFind.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="toolButtonFind.Size" type="System.Drawing.Size, System.Drawing">
+    <value>23, 22</value>
+  </data>
+  <data name="toolButtonFind.Text" xml:space="preserve">
+    <value>列を検索</value>
+  </data>
   <data name="toolButtonShowAdvanced.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
@@ -417,7 +434,7 @@
     <value>622, 25</value>
   </data>
   <data name="toolStrip.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>0</value>
   </data>
   <data name="toolStrip.Text" xml:space="preserve">
     <value>toolStrip1</value>
@@ -444,7 +461,7 @@
     <value>75, 23</value>
   </data>
   <data name="btnPreview.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+    <value>1</value>
   </data>
   <data name="btnPreview.Text" xml:space="preserve">
     <value>プレビュー...</value>
@@ -474,7 +491,7 @@
     <value>622, 25</value>
   </data>
   <data name="panel1.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
+    <value>1</value>
   </data>
   <data name="&gt;&gt;panel1.Name" xml:space="preserve">
     <value>panel1</value>
@@ -498,7 +515,7 @@
     <value>622, 360</value>
   </data>
   <data name="panelViewEditor.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
+    <value>1</value>
   </data>
   <data name="&gt;&gt;panelViewEditor.Name" xml:space="preserve">
     <value>panelViewEditor</value>
@@ -522,7 +539,7 @@
     <value>622, 32</value>
   </data>
   <data name="panelButtons.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
+    <value>1</value>
   </data>
   <data name="&gt;&gt;panelButtons.Name" xml:space="preserve">
     <value>panelButtons</value>
@@ -569,6 +586,12 @@
   <data name="&gt;&gt;toolStripSeparator1.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;toolButtonFind.Name" xml:space="preserve">
+    <value>toolButtonFind</value>
+  </data>
+  <data name="&gt;&gt;toolButtonFind.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;toolButtonShowAdvanced.Name" xml:space="preserve">
     <value>toolButtonShowAdvanced</value>
   </data>
@@ -579,6 +602,6 @@
     <value>ViewEditor</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Form, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>pwiz.Common.Controls.CommonFormEx, pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

@@ -117,11 +117,17 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="Accuracy">
+    <value>精度</value>
+  </data>
   <data name="AcquiredTime">
     <value>取得時間</value>
   </data>
   <data name="AdjustedPValue">
     <value>調整されたP-値</value>
+  </data>
+  <data name="AnalyteConcentration">
+    <value>アナライト濃度</value>
   </data>
   <data name="Area">
     <value>面積</value>
@@ -150,11 +156,20 @@
   <data name="BestRetentionTime">
     <value>最良保持時間</value>
   </data>
+  <data name="CalculatedConcentration">
+    <value>計算濃度</value>
+  </data>
+  <data name="CalibrationCurve">
+    <value>校正曲線</value>
+  </data>
   <data name="CleavageAa">
     <value>開裂Aa</value>
   </data>
   <data name="CollisionEnergy">
     <value>衝突エネルギー</value>
+  </data>
+  <data name="ConcentrationMultiplier">
+    <value>濃度乗数</value>
   </data>
   <data name="ConfidenceLevel">
     <value>信頼度レベル</value>
@@ -213,6 +228,9 @@
   <data name="EndTime">
     <value>終了時間</value>
   </data>
+  <data name="ErrorMessage">
+    <value>エラーメッセージ</value>
+  </data>
   <data name="EstimatedValue">
     <value>推定値</value>
   </data>
@@ -249,11 +267,20 @@
   <data name="FwhmDegenerate">
     <value>Fwhm縮退</value>
   </data>
+  <data name="Group">
+    <value>グループ</value>
+  </data>
   <data name="Height">
     <value>高さ</value>
   </data>
   <data name="Identified">
     <value>同定済み</value>
+  </data>
+  <data name="Intercept">
+    <value>切片</value>
+  </data>
+  <data name="InternalStandardConcentration">
+    <value>内部標準濃度</value>
   </data>
   <data name="IsDecoy">
     <value>同位体デコイ</value>
@@ -402,8 +429,14 @@
   <data name="NextAa">
     <value>次のAa</value>
   </data>
+  <data name="NormalizedArea">
+    <value>正規化面積</value>
+  </data>
   <data name="OptCollisionEnergy">
     <value>最適衝突エネルギー</value>
+  </data>
+  <data name="OptCompensationVoltage">
+    <value>最適補償電圧</value>
   </data>
   <data name="OptDeclusteringPotential">
     <value>最適デクラスタリングポテンシャル</value>
@@ -446,6 +479,9 @@
   </data>
   <data name="PeptideSequence">
     <value>ペプチドシークエンス</value>
+  </data>
+  <data name="PointCount">
+    <value>点数</value>
   </data>
   <data name="Precursor">
     <value>プリカーサー</value>
@@ -505,7 +541,7 @@
     <value>タンパク質</value>
   </data>
   <data name="ProteinAccession">
-    <value>タンパク質取得</value>
+    <value>タンパク質アクセッション</value>
   </data>
   <data name="ProteinDescription">
     <value>タンパク質の説明</value>
@@ -533,6 +569,12 @@
   </data>
   <data name="PValue">
     <value>P-値</value>
+  </data>
+  <data name="QuadraticCoefficient">
+    <value>二次係数</value>
+  </data>
+  <data name="Quantification">
+    <value>定量化</value>
   </data>
   <data name="Range">
     <value>範囲</value>
@@ -579,8 +621,17 @@
   <data name="RetentionTimeCalculatorScore">
     <value>保持時間カルキュレータスコア</value>
   </data>
+  <data name="RSquared">
+    <value>R平方</value>
+  </data>
   <data name="SampleName">
     <value>試料名</value>
+  </data>
+  <data name="SampleType">
+    <value>試料タイプ</value>
+  </data>
+  <data name="Slope">
+    <value>勾配</value>
   </data>
   <data name="StandardError">
     <value>標準エラー</value>
@@ -651,6 +702,9 @@
   <data name="TotalBackgroundMs1">
     <value>総バックグラウンドMS1</value>
   </data>
+  <data name="TransitionCount">
+    <value>トランジション数</value>
+  </data>
   <data name="Transition">
     <value>トランジション</value>
   </data>
@@ -696,6 +750,12 @@
   <data name="IonFormula">
     <value>イオン公式</value>
   </data>
+  <data name="PrecursorIonName">
+    <value>プリカーサーイオン名</value>
+  </data>
+  <data name="PrecursorIonFormula">
+    <value>プリカーサーイオン公式</value>
+  </data>
   <data name="ProductIonFormula">
     <value>プロダクトイオン公式</value>
   </data>
@@ -713,5 +773,17 @@
   </data>
   <data name="ExplicitRetentionTimeWindow">
     <value>明示的保持時間ウィンドウ</value>
+  </data>
+  <data name="SLens">
+    <value>S-レンズ</value>
+  </data>
+  <data name="ConeVoltage">
+    <value>コーン電圧</value>
+  </data>
+  <data name="ExplicitDeclusteringPotential">
+    <value>明示的デクラスタリングポテンシャル</value>
+  </data>
+  <data name="ExplicitCompensationVoltage">
+    <value>明示的補償電圧</value>
   </data>
 </root>

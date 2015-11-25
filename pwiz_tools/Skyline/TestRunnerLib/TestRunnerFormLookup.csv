@@ -19,6 +19,7 @@ BuildLibraryDlg,TestFullScanId
 BuildLibraryNotification,*
 CalculateIsolationSchemeDlg,TestCalculateIsolationWindows
 CalibrateIrtDlg,IrtFunctionalTest
+CalibrationForm,TestCalibration
 ChangeIrtPeptidesDlg,IrtFunctionalTest
 ChooseSchedulingReplicatesDlg,TestRetentionTimeFilter
 ChromatogramRTThresholdDlg,TestEditDialogs
@@ -33,7 +34,7 @@ DocumentGridForm,TestReportSummary
 DocumentSettingsDlg,TestAnnotations
 EditCEDlg,TestOptimization
 EditChorusAccountDlg,*
-EditCustomMoleculeDlg, EditCustomMoleculeDlgTest
+EditCustomMoleculeDlg,TestEditCustomMoleculeDlg
 EditDPDlg,TestEditDialogs
 EditDriftTimePredictorDlg,TestIonMobility
 EditEnzymeDlg,TestEditSettingsTypes
@@ -117,6 +118,7 @@ PeptideSettingsUI.FilterTab,TestEditDialogs
 PeptideSettingsUI.LibraryTab,TestMethodEditTutorial
 PeptideSettingsUI.ModificationsTab,TestNeutralLoss
 PeptideSettingsUI.PredictionTab,IrtFunctionalTest
+PeptideSettingsUI.QuantificationTab,TestCalibration
 PivotReportDlg,TestReportSummaryWithOldReports
 PopupPickList,TestPrecursorIon
 PreviewReportDlg,TestReportSummaryWithOldReports

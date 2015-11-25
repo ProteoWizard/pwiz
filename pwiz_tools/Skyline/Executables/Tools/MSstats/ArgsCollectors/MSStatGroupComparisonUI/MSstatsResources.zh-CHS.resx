@@ -144,4 +144,16 @@
   <data name="SampleSizeUi_ValidateNumber_The_number___0___is_not_valid_" xml:space="preserve">
     <value>数字 '{0}' 无效。</value>
   </data>
+  <data name="SummaryMethod_Linear_Linear_model" xml:space="preserve">
+    <value>线性模型</value>
+  </data>
+  <data name="SummaryMethod_Tmp_Tukey_s_median_polish" xml:space="preserve">
+    <value>图基中位数平滑</value>
+  </data>
+  <data name="SummaryMethod_Skyline_Skyline" xml:space="preserve">
+    <value>Skyline</value>
+  </data>
+  <data name="MSstatsGroupComparisonCollector_CollectArgs_Unable_to_find_a_column_named___0__" xml:space="preserve">
+    <value>无法找到名称为“{0}”的列</value>
+  </data>
 </root>

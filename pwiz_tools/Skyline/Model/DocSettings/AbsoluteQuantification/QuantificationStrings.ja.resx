@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+	<!-- 
+		Microsoft ResX Schema
+
+		Version 1.3
+
+		The primary goals of this format is to allow a simple XML format 
+		that is mostly human readable. The generation and parsing of the 
+		various data types are done through the TypeConverter classes 
+		associated with the data types.
+
+		Example:
+
+		... ado.net/XML headers & schema ...
+		<resheader name="resmimetype">text/microsoft-resx</resheader>
+		<resheader name="version">1.3</resheader>
+		<resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+		<resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+		<data name="Name1">this is my long string</data>
+		<data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+		<data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+			[base64 mime encoded serialized .NET Framework object]
+		</data>
+		<data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+			[base64 mime encoded string representing a byte array form of the .NET Framework object]
+		</data>
+
+		There are any number of "resheader" rows that contain simple 
+		name/value pairs.
+
+		Each data row contains a name, and value. The row also contains a 
+		type or mimetype. Type corresponds to a .NET class that support 
+		text/value conversion through the TypeConverter architecture. 
+		Classes that don't support this are serialized and stored with the 
+		mimetype set.
+
+		The mimetype is used for serialized objects, and tells the 
+		ResXResourceReader how to depersist the object. This is currently not 
+		extensible. For a given mimetype the value must be set accordingly:
+
+		Note - application/x-microsoft.net.object.binary.base64 is the format 
+		that the ResXResourceWriter will generate, however the reader can 
+		read any of the formats listed below.
+
+		mimetype: application/x-microsoft.net.object.binary.base64
+		value   : The object must be serialized with 
+			: System.Serialization.Formatters.Binary.BinaryFormatter
+			: and then encoded with base64 encoding.
+
+		mimetype: application/x-microsoft.net.object.soap.base64
+		value   : The object must be serialized with 
+			: System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+			: and then encoded with base64 encoding.
+
+		mimetype: application/x-microsoft.net.object.bytearray.base64
+		value   : The object must be serialized into a byte array 
+			: using a System.ComponentModel.TypeConverter
+			: and then encoded with base64 encoding.
+	-->
+	
+	<xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+		<xsd:element name="root" msdata:IsDataSet="true">
+			<xsd:complexType>
+				<xsd:choice maxOccurs="unbounded">
+					<xsd:element name="data">
+						<xsd:complexType>
+							<xsd:sequence>
+								<xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+								<xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+							</xsd:sequence>
+							<xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+							<xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+							<xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+						</xsd:complexType>
+					</xsd:element>
+					<xsd:element name="resheader">
+						<xsd:complexType>
+							<xsd:sequence>
+								<xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+							</xsd:sequence>
+							<xsd:attribute name="name" type="xsd:string" use="required" />
+						</xsd:complexType>
+					</xsd:element>
+				</xsd:choice>
+			</xsd:complexType>
+		</xsd:element>
+	</xsd:schema>
+	<resheader name="resmimetype">
+		<value>text/microsoft-resx</value>
+	</resheader>
+	<resheader name="version">
+		<value>1.3</value>
+	</resheader>
+	<resheader name="reader">
+		<value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+	</resheader>
+	<resheader name="writer">
+		<value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+	</resheader>
+  <data name="Analyte Concentration" xml:space="preserve">
+    <value>アナライト濃度</value>
+  </data>
+  <data name="Area" xml:space="preserve">
+    <value>面積</value>
+  </data>
+  <data name="Calibration_Curve" xml:space="preserve">
+    <value>校正曲線</value>
+  </data>
+  <data name="Calculated_Concentration" xml:space="preserve">
+    <value>計算濃度</value>
+  </data>
+  <data name="CalibrationCurveFitter_GetCalibrationCurve_All_of_the_external_standards_are_missing_one_or_more_peaks_" xml:space="preserve">
+    <value>すべての外部標準に1つまたは複数のピークが欠けています。</value>
+  </data>
+  <data name="CalibrationCurveFitter_GetCalibrationCurve_The_external_standards_and_the_target_replicate_have_no_peaks_in_common_" xml:space="preserve">
+    <value>外部標準およびターゲット繰り返し測定に共通のピークがありません。</value>
+  </data>
+  <data name="CalibrationCurveFitter_GetXAxisTitle_Ratio_to__0_" xml:space="preserve">
+    <value>{0}に対する比率</value>
+  </data>
+  <data name="CalibrationCurveFitter_GetXAxisTitle_Concentration_from_ratio_to_0_" xml:space="preserve">
+    <value>{0}に対する比率からの濃度</value>
+  </data>
+  <data name="CalibrationForm_DisplayCalibrationCurve_No_results_available" xml:space="preserve">
+    <value>利用可能な結果がありません</value>
+  </data>
+  <data name="CalibrationForm_DisplayCalibrationCurve_Select_a_peptide_to_see_its_calibration_curve" xml:space="preserve">
+    <value>校正曲線を表示するペプチドを選択します</value>
+  </data>
+  <data name="Normalized_Intensity" xml:space="preserve">
+    <value>正規化強度</value>
+  </data>
+  <data name="Weighting" xml:space="preserve">
+    <value>加重</value>
+  </data>
+  <data name="SampleType_UNKNOWN_Unknown" xml:space="preserve">
+    <value>不明</value>
+  </data>
+  <data name="SampleType_STANDARD_Standard" xml:space="preserve">
+    <value>標準</value>
+  </data>
+  <data name="SampleType_QC_Quality_Control" xml:space="preserve">
+    <value>品質管理</value>
+  </data>
+  <data name="SampleType_SOLVENT_Solvent" xml:space="preserve">
+    <value>溶媒</value>
+  </data>
+  <data name="SampleType_BLANK_Blank" xml:space="preserve">
+    <value>空白</value>
+  </data>
+  <data name="SampleType_DOUBLE_BLANK_Double_Blank" xml:space="preserve">
+    <value>二重空白</value>
+  </data>
+  <data name="RegressionFit_LINEAR_Linear" xml:space="preserve">
+    <value>線形</value>
+  </data>
+  <data name="RegressionFit_LINEAR_THROUGH_ZERO_Linear_through_zero" xml:space="preserve">
+    <value>ゼロまで線形</value>
+  </data>
+  <data name="RegressionFit_QUADRATIC_Quadratic" xml:space="preserve">
+    <value>二次</value>
+  </data>
+  <data name="RegressionWeighting_NONE" xml:space="preserve">
+    <value>なし</value>
+  </data>
+  <data name="RegressionWeighting_ONE_OVER_X" xml:space="preserve">
+    <value>1 / x</value>
+  </data>
+  <data name="RegressionWeighting_ONE_OVER_X_SQUARED" xml:space="preserve">
+    <value>1 / (x * x)</value>
+  </data>
+  <data name="CalibrationForm_DisplayCalibrationCurve_The_selected_replicate_has_no_transitions_that_can_be_quantified_" xml:space="preserve">
+    <value>選択した繰り返し測定には定量化可能なトランジションがありません。</value>
+  </data>
+  <data name="CalibrationForm_DisplayCalibrationCurve_" xml:space="preserve">
+    <value>R-Squared = </value>
+  </data>
+  <data name="CalibrationCurve_ToString_Error__" xml:space="preserve">
+    <value>エラー：</value>
+  </data>
+  <data name="CalibrationCurve_ToString_y_x_2_x_c" xml:space="preserve">
+    <value>y = {0} x^2 + {1} x + {2}</value>
+  </data>
+  <data name="CalibrationCurve_ToString_Slope___0__Intercept___1_" xml:space="preserve">
+    <value>勾配： {0}I切片：{1}</value>
+  </data>
+  <data name="CalibrationCurve_ToString_Slope___0_" xml:space="preserve">
+    <value>勾配：{0}</value>
+  </data>
+  <data name="Concentration_Ratio" xml:space="preserve">
+    <value>濃度比</value>
+  </data>
+  <data name="CalibrationCurveFitter_GetYAxisTitle_Peak_Area_Ratio" xml:space="preserve">
+    <value>ピーク面積比</value>
+  </data>
+  <data name="CalibrationCurveFitter_GetYAxisTitle_Peak_Area" xml:space="preserve">
+    <value>ピーク面積</value>
+  </data>
+  <data name="CalibrationCurveFitter_GetYAxisTitle_Normalized_Peak_Area" xml:space="preserve">
+    <value>正規化ピーク面積</value>
+  </data>
+  <data name="CalibrationCurveFitter_PeakAreaRatioText__0___1__Peak_Area_Ratio" xml:space="preserve">
+    <value>{0}：{1} ピーク面積比</value>
+  </data>
+  <data name="CalibrationForm_DisplayCalibrationCurve_Use_the_Quantification_tab_on_the_Peptide_Settings_dialog_to_control_the_conversion_of_peak_areas_to_concentrations_" xml:space="preserve">
+    <value>ペプチド設定ダイアログの定量化タブを利用して、ピーク面積の濃度への変換を制御します。</value>
+  </data>
+  <data name="CalibrationForm_DisplayCalibrationCurve_To_convert_peak_area_ratios_to_concentrations__specify_the_internal_standard_concentration_for__0__" xml:space="preserve">
+    <value>ピーク面積比を濃度に変換するには、{0}の内部標準濃度を指定します。</value>
+  </data>
+  <data name="CalibrationForm_DisplayCalibrationCurve_To_fit_a_calibration_curve__set_the_Sample_Type_of_some_replicates_to_Standard__and_specify_their_concentration_" xml:space="preserve">
+    <value>校正曲線を適合させるには、いくつかの繰り返し測定のサンプルタイプを標準に設定し、それらの濃度を指定します。</value>
+  </data>
+  <data name="CalibrationCurveFitter_ConcentrationRatioText__0___1__Concentration_Ratio" xml:space="preserve">
+    <value>{0}：{1} 濃度比</value>
+  </data>
+  <data name="RegressionFit_NONE_None" xml:space="preserve">
+    <value>なし</value>
+  </data>
+  <data name="CalibrationCurveFitter_PeakAreaRatioText_Peak_Area_Ratio_to__0_" xml:space="preserve">
+    <value>{0}に対するピーク面積比</value>
+  </data>
+  <data name="CalibrationCurveFitter_ConcentrationRatioText_Concentration_Ratio_to__0_" xml:space="preserve">
+    <value>{0}に対する濃度比</value>
+  </data>
+  <data name="CalibrationCurveFitter_GetQuantificationResult_One_or_more_transitions_are_missing_or_truncated_" xml:space="preserve">
+    <value>1つまたは複数のトランジションが欠損または切断されています。</value>
+  </data>
+  <data name="CalibrationForm_DisplayCalibrationCurve_The_selected_replicate_has_missing_or_truncated_transitions" xml:space="preserve">
+    <value>選択した繰り返し測定に欠損または切断されたトランジションがあります</value>
+  </data>
+  <data name="QuantificationResult_ToString_Normalized_Area___0_" xml:space="preserve">
+    <value>正規化面積：{0}</value>
+  </data>
+</root>

@@ -447,33 +447,6 @@
   <data name="&gt;&gt;checkBoxShowWizard.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="checkBoxLiveReports.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="checkBoxLiveReports.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 6</value>
-  </data>
-  <data name="checkBoxLiveReports.Size" type="System.Drawing.Size, System.Drawing">
-    <value>241, 17</value>
-  </data>
-  <data name="checkBoxLiveReports.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="checkBoxLiveReports.Text" xml:space="preserve">
-    <value>当前报告（文档网格、新结果网格）</value>
-  </data>
-  <data name="&gt;&gt;checkBoxLiveReports.Name" xml:space="preserve">
-    <value>checkBoxLiveReports</value>
-  </data>
-  <data name="&gt;&gt;checkBoxLiveReports.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;checkBoxLiveReports.Parent" xml:space="preserve">
-    <value>tabMisc</value>
-  </data>
-  <data name="&gt;&gt;checkBoxLiveReports.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
   <data name="tabMisc.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
   </data>
@@ -500,6 +473,60 @@
   </data>
   <data name="&gt;&gt;tabMisc.ZOrder" xml:space="preserve">
     <value>3</value>
+  </data>
+  <data name="powerOfTenCheckBox.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="powerOfTenCheckBox.Location" type="System.Drawing.Point, System.Drawing">
+    <value>17, 17</value>
+  </data>
+  <data name="powerOfTenCheckBox.Size" type="System.Drawing.Size, System.Drawing">
+    <value>214, 17</value>
+  </data>
+  <data name="powerOfTenCheckBox.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="powerOfTenCheckBox.Text" xml:space="preserve">
+    <value>始终在图表上使用科学记数法</value>
+  </data>
+  <data name="&gt;&gt;powerOfTenCheckBox.Name" xml:space="preserve">
+    <value>powerOfTenCheckBox</value>
+  </data>
+  <data name="&gt;&gt;powerOfTenCheckBox.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;powerOfTenCheckBox.Parent" xml:space="preserve">
+    <value>tabDisplay</value>
+  </data>
+  <data name="&gt;&gt;powerOfTenCheckBox.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="tabDisplay.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabDisplay.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="tabDisplay.Size" type="System.Drawing.Size, System.Drawing">
+    <value>389, 248</value>
+  </data>
+  <data name="tabDisplay.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="tabDisplay.Text" xml:space="preserve">
+    <value>显示</value>
+  </data>
+  <data name="&gt;&gt;tabDisplay.Name" xml:space="preserve">
+    <value>tabDisplay</value>
+  </data>
+  <data name="&gt;&gt;tabDisplay.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabDisplay.Parent" xml:space="preserve">
+    <value>tabControl</value>
+  </data>
+  <data name="&gt;&gt;tabDisplay.ZOrder" xml:space="preserve">
+    <value>4</value>
   </data>
   <data name="tabControl.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 12</value>

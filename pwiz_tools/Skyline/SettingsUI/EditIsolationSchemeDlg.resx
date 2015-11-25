@@ -184,7 +184,7 @@
     <value>21</value>
   </data>
   <data name="cbSpecifyMargin.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Right</value>
+    <value>Bottom, Left</value>
   </data>
   <data name="cbSpecifyMargin.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -484,7 +484,7 @@
     <value>9</value>
   </data>
   <data name="cbSpecifyCERange.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Right</value>
+    <value>Bottom, Left</value>
   </data>
   <data name="cbSpecifyCERange.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -845,9 +845,6 @@
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
     <value>404, 530</value>
-  </data>
-  <data name="$this.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
   </data>
   <data name="$this.MinimumSize" type="System.Drawing.Size, System.Drawing">
     <value>379, 476</value>

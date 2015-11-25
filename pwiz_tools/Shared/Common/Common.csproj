@@ -280,7 +280,13 @@
     <EmbeddedResource Include="DataBinding\Controls\Editor\ChooseColumnsTab.zh-CHS.resx">
       <DependentUpon>ChooseColumnsTab.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="DataBinding\Controls\Editor\ChooseViewsControl.ja.resx">
+      <DependentUpon>ChooseViewsControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="DataBinding\Controls\Editor\ChooseViewsControl.resx">
+      <DependentUpon>ChooseViewsControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DataBinding\Controls\Editor\ChooseViewsControl.zh-CHS.resx">
       <DependentUpon>ChooseViewsControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="DataBinding\Controls\Editor\FilterTab.ja.resx">
@@ -289,8 +295,14 @@
     <EmbeddedResource Include="DataBinding\Controls\Editor\FilterTab.zh-CHS.resx">
       <DependentUpon>FilterTab.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="DataBinding\Controls\Editor\FindColumnDlg.ja.resx">
+      <DependentUpon>FindColumnDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="DataBinding\Controls\Editor\FindColumnDlg.resx">
       <DependentUpon>FindColumnDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DataBinding\Controls\Editor\FindColumnDlg.zh-CHS.resx">
+	  <DependentUpon>FindColumnDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="DataBinding\Controls\Editor\ManageViewsForm.ja.resx">
       <DependentUpon>ManageViewsForm.cs</DependentUpon>

@@ -45,8 +45,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>9007</ApplicationRevision>
-    <ApplicationVersion>3.1.1.9007</ApplicationVersion>
+    <ApplicationRevision>9155</ApplicationRevision>
+    <ApplicationVersion>3.4.9.9155</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -1450,6 +1450,12 @@
       <DependentUpon>AboutDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\AlertDlg.ja.resx">
+      <DependentUpon>AlertDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\AlertDlg.zh-CHS.resx">
+      <DependentUpon>AlertDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Alerts\AlertLinkDlg.ja.resx">
       <DependentUpon>AlertLinkDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -1560,7 +1566,13 @@
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Databinding\EditGroupComparisonDlg.zh-CHS.resx" />
+    <EmbeddedResource Include="Controls\Graphs\Calibration\CalibrationForm.ja.resx">
+      <DependentUpon>CalibrationForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\Calibration\CalibrationForm.resx">
+      <DependentUpon>CalibrationForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\Calibration\CalibrationForm.zh-CHS.resx">
       <DependentUpon>CalibrationForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\EditGroupComparisonDlg.ja.resx">
@@ -1671,9 +1683,15 @@
       <DependentUpon>ComparePeakPickingDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\RefineProteinListDlg.ja.resx">
+      <DependentUpon>RefineProteinListDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="EditUI\RefineProteinListDlg.resx">
       <DependentUpon>RefineProteinListDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\RefineProteinListDlg.zh-CHS.resx">
+      <DependentUpon>RefineProteinListDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\CreateIrtCalculatorDlg.ja.resx">
       <DependentUpon>CreateIrtCalculatorDlg.cs</DependentUpon>
@@ -1689,7 +1707,13 @@
       <DependentUpon>ExportChorusRequestDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\ImportResultsLockMassDlg.ja.resx">
+      <DependentUpon>ImportResultsLockMassDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ImportResultsLockMassDlg.resx">
+      <DependentUpon>ImportResultsLockMassDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\ImportResultsLockMassDlg.zh-CHS.resx">
       <DependentUpon>ImportResultsLockMassDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ImportTransitionListErrorDlg.ja.resx">
@@ -2129,11 +2153,13 @@
       <DependentUpon>ColumnCaptions.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Model\DocSettings\AbsoluteQuantification\QuantificationStrings.ja.resx" />
     <EmbeddedResource Include="Model\DocSettings\AbsoluteQuantification\QuantificationStrings.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>QuantificationStrings.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Model\DocSettings\AbsoluteQuantification\QuantificationStrings.zh-CHS.resx" />
     <EmbeddedResource Include="Model\GroupComparison\GroupComparisonStrings.ja.resx" />
     <EmbeddedResource Include="Model\GroupComparison\GroupComparisonStrings.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -2288,7 +2314,13 @@
     <EmbeddedResource Include="SettingsUI\EditCEDlg.zh-CHS.resx">
       <DependentUpon>EditCEDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditCoVDlg.ja.resx">
+      <DependentUpon>EditCoVDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditCoVDlg.resx">
+      <DependentUpon>EditCoVDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditCoVDlg.zh-CHS.resx">
       <DependentUpon>EditCoVDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditCustomMoleculeDlg.ja.resx">

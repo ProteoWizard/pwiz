@@ -369,6 +369,36 @@ W = 2T/R
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbOffsetHighEnergySpectra.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="btnUseResults.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Right</value>
+  </data>
+  <data name="btnUseResults.Location" type="System.Drawing.Point, System.Drawing">
+    <value>433, 383</value>
+  </data>
+  <data name="btnUseResults.Size" type="System.Drawing.Size, System.Drawing">
+    <value>117, 28</value>
+  </data>
+  <data name="btnUseResults.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="btnUseResults.Text" xml:space="preserve">
+    <value>結果を使用(&amp;U)</value>
+  </data>
+  <data name="btnUseResults.ToolTip" xml:space="preserve">
+    <value>ドリフト時間ピークがあるか現在のドキュメントの結果を検査</value>
+  </data>
+  <data name="&gt;&gt;btnUseResults.Name" xml:space="preserve">
+    <value>btnUseResults</value>
+  </data>
+  <data name="&gt;&gt;btnUseResults.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnUseResults.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;btnUseResults.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="bindingChargeRegressionLines.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -653,12 +683,6 @@ W = 2T/R
   <data name="&gt;&gt;Intercept.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;bindingChargeRegressionLines.Name" xml:space="preserve">
-    <value>bindingChargeRegressionLines</value>
-  </data>
-  <data name="&gt;&gt;bindingChargeRegressionLines.Type" xml:space="preserve">
-    <value>System.Windows.Forms.BindingSource, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;MeasuredDriftTimeSequence.Name" xml:space="preserve">
     <value>MeasuredDriftTimeSequence</value>
   </data>
@@ -682,6 +706,12 @@ W = 2T/R
   </data>
   <data name="&gt;&gt;MeasuredDriftTimeHighEnergyOffsetMsec.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;bindingChargeRegressionLines.Name" xml:space="preserve">
+    <value>bindingChargeRegressionLines</value>
+  </data>
+  <data name="&gt;&gt;bindingChargeRegressionLines.Type" xml:space="preserve">
+    <value>System.Windows.Forms.BindingSource, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>EditDriftTimePredictorDlg</value>

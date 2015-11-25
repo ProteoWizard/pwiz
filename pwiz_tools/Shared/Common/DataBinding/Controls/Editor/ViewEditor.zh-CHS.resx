@@ -187,7 +187,7 @@
     <value>3</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>查看名称(&amp;N)：</value>
+    <value>查看名称(&amp;N):</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -383,6 +383,23 @@
   <data name="toolStripSeparator1.Size" type="System.Drawing.Size, System.Drawing">
     <value>6, 25</value>
   </data>
+  <data name="toolButtonFind.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAABhSURBVDhPzY/BCQAxCATtvwN7sqc7kEQWXSX5HDfgZ5yE
+        RH7JA7NhroXFzLVgzGbEI1XNh7JrYTFzBVzeTODCzHJQJjWBC/L0TbjuK2yJQbibCzJjg7IsF2MzLhcn
+        zeeIvK7WkD3AZ8ECAAAAAElFTkSuQmCC
+</value>
+  </data>
+  <data name="toolButtonFind.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="toolButtonFind.Size" type="System.Drawing.Size, System.Drawing">
+    <value>23, 22</value>
+  </data>
+  <data name="toolButtonFind.Text" xml:space="preserve">
+    <value>查找列</value>
+  </data>
   <data name="toolButtonShowAdvanced.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
@@ -569,6 +586,12 @@
   <data name="&gt;&gt;toolStripSeparator1.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;toolButtonFind.Name" xml:space="preserve">
+    <value>toolButtonFind</value>
+  </data>
+  <data name="&gt;&gt;toolButtonFind.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;toolButtonShowAdvanced.Name" xml:space="preserve">
     <value>toolButtonShowAdvanced</value>
   </data>
@@ -579,6 +602,6 @@
     <value>ViewEditor</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Form, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>pwiz.Common.Controls.CommonFormEx, pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

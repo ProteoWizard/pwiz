@@ -144,4 +144,16 @@
   <data name="SampleSizeUi_ValidateNumber_The_number___0___is_not_valid_" xml:space="preserve">
     <value>数値「{0}」は有効ではありません。</value>
   </data>
+  <data name="SummaryMethod_Linear_Linear_model" xml:space="preserve">
+    <value>線形モデル</value>
+  </data>
+  <data name="SummaryMethod_Tmp_Tukey_s_median_polish" xml:space="preserve">
+    <value>Tukeyの中央値完全化</value>
+  </data>
+  <data name="SummaryMethod_Skyline_Skyline" xml:space="preserve">
+    <value>Skyline</value>
+  </data>
+  <data name="MSstatsGroupComparisonCollector_CollectArgs_Unable_to_find_a_column_named___0__" xml:space="preserve">
+    <value>'{0}'という名の列が見つかりません</value>
+  </data>
 </root>

@@ -754,17 +754,13 @@ namespace pwiz.Skyline.Model
         public static string DP { get { return Resources.ExportOptimize_DP_Declustering_Potential; }}
         public static string COV { get { return Resources.ExportOptimize_COV_Compensation_Voltage; } }
 
-        private static readonly string[] OPTIMIZE_TYPES = {NONE, CE, DP, COV};
-
-        public static string[] OptimizeTypes { get { return OPTIMIZE_TYPES; } }
+        public static string[] OptimizeTypes { get { return new[] { NONE, CE, DP, COV }; } }
 
         public static string COV_ROUGH { get { return Resources.ExportOptimize_COV_ROUGH_Rough_Tune; } }
         public static string COV_MEDIUM { get { return Resources.ExportOptimize_COV_MEDIUM_Medium_Tune; } }
         public static string COV_FINE { get { return Resources.ExportOptimize_COV_FINE_Fine_Tune; } }
 
-        private static readonly string[] COV_TUNE_TYPES = {COV_ROUGH, COV_MEDIUM, COV_FINE};
-
-        public static string[] CompensationVoltageTuneTypes { get { return COV_TUNE_TYPES; } }
+        public static string[] CompensationVoltageTuneTypes { get { return new[] { COV_ROUGH, COV_MEDIUM, COV_FINE }; } }
     }
 
     public class ThermoMassListExporter : AbstractMassListExporter
@@ -1754,6 +1750,7 @@ namespace pwiz.Skyline.Model
             }
 
             IComparer<TransitionOrdered> comparer = TransitionOrdered.TransitionComparerInstance;
+            // ReSharper disable once CollectionNeverQueried.Local
             var sortedByPrimaryTransitions = new SortedDictionary<TransitionOrdered, TransitionDocNode>(comparer);
             foreach (TransitionDocNode transition in nodeGroup.Children)
             {
@@ -3381,6 +3378,7 @@ namespace pwiz.Skyline.Model
         protected override IEnumerable<DocNode> GetTransitionsInBestOrder(TransitionGroupDocNode nodeGroup, TransitionGroupDocNode nodeGroupPrimary)
         {
             IComparer<TransitionOrdered> comparer = TransitionOrdered.TransitionComparerInstance;
+            // ReSharper disable once CollectionNeverQueried.Local
             var sortedByPrimaryTransitions = new SortedDictionary<TransitionOrdered, TransitionDocNode>(comparer);
             foreach (TransitionDocNode transition in nodeGroup.Children)
             {
