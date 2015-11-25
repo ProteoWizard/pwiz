@@ -158,7 +158,10 @@ string translate_SourceFileTypeToRunID(const SourceFile& sf, CVID sourceFileType
 
         // location="file://path/to/source.d/AcqData" name="msprofile.bin"
         case MS_Agilent_MassHunter_format:
-            if (nameExtension == ".bin" && bfs::path(sf.location).leaf() == "AcqData")
+            if (bfs::path(sf.location).leaf() == "AcqData" &&
+                (bal::iends_with(sf.name, "msprofile.bin") ||
+                 bal::iends_with(sf.name, "mspeak.bin") ||
+                 bal::iends_with(sf.name, "msscan.bin")))
                 return bfs::basename(bfs::path(sf.location).parent_path().leaf());
             return "";
 
