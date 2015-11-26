@@ -1,4 +1,5 @@
 AboutDlg,TestMiscForms
+AlertDlg,TestLiveReportsFilter
 AddIrtCalculatorDlg,IrtFunctionalTest
 AddIrtPeptidesDlg,IrtFunctionalTest
 AddIrtSpectralLibrary,TestIrtTutorial

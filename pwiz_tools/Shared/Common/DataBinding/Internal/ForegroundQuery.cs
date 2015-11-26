@@ -55,8 +55,8 @@ namespace pwiz.Common.DataBinding.Internal
             {
                 var tickCounter = new Pivoter.TickCounter(_cancellationToken, 10000000);
                 var queryResults = QueryResults.Empty
-                                               .SetParameters(QueryRequest.QueryParameters)
-                                               .SetSourceRows(RowSource.ListRowItems());
+                    .SetParameters(QueryRequest.QueryParameters)
+                    .SetSourceRows(RowSource.ListRowItems());
 
                 queryResults = RunAll(tickCounter, queryResults);
                 QueryRequest.SetFinalQueryResults(queryResults);
@@ -64,6 +64,10 @@ namespace pwiz.Common.DataBinding.Internal
             catch (OperationCanceledException)
             {
                 // ignore
+            }
+            catch (Exception ex)
+            {
+                QueryRequest.OnUnhandledException(ex);
             }
         }
     }

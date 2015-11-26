@@ -185,6 +185,7 @@
     <Compile Include="IsolationSchemeTest.cs" />
     <Compile Include="LibraryBuildShareTest.cs" />
     <Compile Include="LibraryExplorerTest.cs" />
+    <Compile Include="LiveReportsErrorTest.cs" />
     <Compile Include="LiveReportsFilterTest.cs" />
     <Compile Include="LongWaitTest.cs" />
     <Compile Include="ManageLibraryRunsTest.cs" />
@@ -313,6 +314,7 @@
     <None Include="LibraryBuildTest.zip" />
     <None Include="LibraryExplorerTest.zip" />
     <None Include="LibraryShareTest.zip" />
+    <None Include="LiveReportsErrorTest.sky.zip" />
     <None Include="LiveReportsFilterTest.zip" />
     <None Include="ManageLibraryRunsTest.zip" />
     <None Include="ManageResultsTest.zip" />

@@ -23,6 +23,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Controls.Editor;
+using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
@@ -40,6 +42,8 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestLiveReportsFilter()
         {
+            LocalizationHelper.CurrentCulture =
+                LocalizationHelper.CurrentUICulture = CultureInfo.GetCultureInfo("fr-FR");
             TestFilesZip = @"TestFunctional\LiveReportsFilterTest.zip";
             RunFunctionalTest();
         }
@@ -93,21 +97,37 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => documentGrid.ChooseView(Resources.SkylineViewContext_GetDocumentGridRowSources_Precursors));
             WaitForConditionUI(() => documentGrid.IsComplete);
             Assert.AreEqual(12 + (TestSmallMolecules ? 1 : 0), documentGrid.RowCount);
-            var quickFilterForm = ShowDialog<QuickFilterForm>(() =>
             {
-                var precursorMzColumn = documentGrid.FindColumn(PropertyPath.Root.Property("Mz"));
-                documentGrid.QuickFilter(precursorMzColumn);
-            });
-            RunUI(()=>
-            {
-                quickFilterForm.SetFilterOperation(0, FilterOperations.OP_IS_GREATER_THAN);
-                quickFilterForm.SetFilterOperand(0, "500");
-                quickFilterForm.SetFilterOperation(1, FilterOperations.OP_IS_LESS_THAN);
-                quickFilterForm.SetFilterOperand(1, "600");
-            });
-            OkDialog(quickFilterForm, quickFilterForm.OkDialog);
+                var quickFilterForm = ShowDialog<QuickFilterForm>(() =>
+                {
+                    var precursorMzColumn = documentGrid.FindColumn(PropertyPath.Root.Property("Mz"));
+                    documentGrid.QuickFilter(precursorMzColumn);
+                });
+                RunUI(() =>
+                {
+                    quickFilterForm.SetFilterOperation(0, FilterOperations.OP_IS_GREATER_THAN);
+                    quickFilterForm.SetFilterOperand(0, 500.5.ToString(CultureInfo.CurrentCulture));
+                    quickFilterForm.SetFilterOperation(1, FilterOperations.OP_IS_LESS_THAN);
+                    quickFilterForm.SetFilterOperand(1, 600.5.ToString(CultureInfo.CurrentCulture));
+                });
+                OkDialog(quickFilterForm, quickFilterForm.OkDialog);
+            }
             WaitForConditionUI(() => documentGrid.IsComplete);
             Assert.AreEqual(8, documentGrid.RowCount);
+            {
+                var quickFilterForm = ShowDialog<QuickFilterForm>(() =>
+                {
+                    var precursorMzColumn = documentGrid.FindColumn(PropertyPath.Root.Property("Mz"));
+                    documentGrid.QuickFilter(precursorMzColumn);
+                });
+                RunUI(() =>
+                {
+                    quickFilterForm.SetFilterOperand(0, "invalidnumber");
+                });
+                var messageDlg = ShowDialog<AlertDlg>(quickFilterForm.OkDialog);
+                OkDialog(messageDlg, messageDlg.OkDialog);
+                OkDialog(quickFilterForm, quickFilterForm.CancelButton.PerformClick);
+            }
         }
 
         private void AddFilter(DataboundGridForm databoundGridForm, PropertyPath propertyPath,

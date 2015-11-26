@@ -33,6 +33,7 @@ namespace pwiz.Common.DataBinding.Controls
             InitializeComponent();
         }
         public DataSchema DataSchema { get; private set; }
+        public IViewContext ViewContext { get; set; }
         public PropertyDescriptor PropertyDescriptor { get; private set; }
         public RowFilter RowFilter { get; private set; }
 
@@ -165,7 +166,28 @@ namespace pwiz.Common.DataBinding.Controls
         public void OkDialog()
         {
             RowFilter = GetCurrentFilter();
+            try
+            {
+                RowFilter.GetPredicate(PropertyDescriptor);
+            }
+            catch (Exception e)
+            {
+                ShowErrorMessage(e);
+                return;
+            }
             DialogResult = DialogResult.OK;
+        }
+
+        public virtual void ShowErrorMessage(Exception e)
+        {
+            if (null != ViewContext)
+            {
+                ViewContext.ShowMessageBox(this, e.Message, MessageBoxButtons.OK);
+            }
+            else
+            {
+                MessageBox.Show(this, e.Message);
+            }
         }
 
         private void btnClearFilter_Click(object sender, EventArgs e)

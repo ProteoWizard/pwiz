@@ -8813,4 +8813,10 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="DataGridViewPasteHandler_DataGridViewOnKeyDown_Clear_cells" xml:space="preserve">
     <value>Clear cells</value>
   </data>
+  <data name="DataboundGridControl_DisplayError_An_error_occured_while_displaying_the_data_rows_" xml:space="preserve">
+    <value>An error occured while displaying the data rows:</value>
+  </data>
+  <data name="DataboundGridControl_DisplayError_Do_you_want_to_continue_to_see_these_error_messages_" xml:space="preserve">
+    <value>Do you want to continue to see these error messages?</value>
+  </data>
 </root>

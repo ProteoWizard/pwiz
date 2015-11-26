@@ -6363,6 +6363,26 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to An error occured while displaying the data rows:.
+        /// </summary>
+        public static string DataboundGridControl_DisplayError_An_error_occured_while_displaying_the_data_rows_ {
+            get {
+                return ResourceManager.GetString("DataboundGridControl_DisplayError_An_error_occured_while_displaying_the_data_rows" +
+                        "_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Do you want to continue to see these error messages?.
+        /// </summary>
+        public static string DataboundGridControl_DisplayError_Do_you_want_to_continue_to_see_these_error_messages_ {
+            get {
+                return ResourceManager.GetString("DataboundGridControl_DisplayError_Do_you_want_to_continue_to_see_these_error_mess" +
+                        "ages_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error setting value:.
         /// </summary>
         public static string DataboundGridControl_DoFillDown_Error_setting_value_ {
