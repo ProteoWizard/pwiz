@@ -218,11 +218,15 @@ namespace pwiz.SkylineTestFunctional
             CheckRoundTrip(); // Verify that this all serializes properly
             // Check annotation def is added
             var annotationDefs = SkylineWindow.Document.Settings.DataSettings.AnnotationDefs;
-            Assert.AreEqual(annotationDefs.Count, 1);
-            Assert.AreEqual(annotationDefs[0].AnnotationTargets.Count, 1);
-            Assert.AreEqual(annotationDefs[0].AnnotationTargets.First(), AnnotationDef.AnnotationTarget.precursor_result);
-            Assert.AreEqual(annotationDefs[0].Type, AnnotationDef.AnnotationType.number);
-            Assert.AreEqual(annotationDefs[0].Name, MProphetResultsHandler.AnnotationName);
+            Assert.AreEqual(2, annotationDefs.Count);
+            Assert.AreEqual(1, annotationDefs[0].AnnotationTargets.Count);
+            Assert.AreEqual(AnnotationDef.AnnotationTarget.precursor_result, annotationDefs[0].AnnotationTargets.First());
+            Assert.AreEqual(AnnotationDef.AnnotationType.number, annotationDefs[0].Type);
+            Assert.AreEqual(MProphetResultsHandler.AnnotationName, annotationDefs[0].Name);
+            Assert.AreEqual(1, annotationDefs[1].AnnotationTargets.Count);
+            Assert.AreEqual(AnnotationDef.AnnotationTarget.precursor_result, annotationDefs[1].AnnotationTargets.First());
+            Assert.AreEqual(AnnotationDef.AnnotationType.number, annotationDefs[1].Type);
+            Assert.AreEqual(MProphetResultsHandler.MAnnotationName, annotationDefs[1].Name);
             // Check annotations are added
             foreach (var nodeGroup in SkylineWindow.Document.MoleculeTransitionGroups)
             {
@@ -231,12 +235,12 @@ namespace pwiz.SkylineTestFunctional
                     var annotations = chromInfo.Annotations.ListAnnotations();
                     if (nodeGroup.IsDecoy)
                     {
-                        Assert.AreEqual(annotations.Length, 1);
+                        Assert.AreEqual(1, annotations.Length);
                         Assert.AreEqual(MProphetResultsHandler.MAnnotationName, annotations[0].Key);
                     }
                     else
                     {
-                        Assert.AreEqual(annotations.Length, 2);
+                        Assert.AreEqual(2, annotations.Length);
                         Assert.AreEqual(MProphetResultsHandler.AnnotationName, annotations[0].Key);
                         Assert.AreEqual(MProphetResultsHandler.MAnnotationName, annotations[1].Key);
                     }

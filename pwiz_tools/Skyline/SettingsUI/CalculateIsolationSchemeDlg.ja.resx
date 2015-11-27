@@ -126,14 +126,14 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
-    <value>250, 13</value>
+    <value>222, 9</value>
   </data>
   <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnOk.TabIndex" type="System.Int32, mscorlib">
-    <value>21</value>
+    <value>19</value>
   </data>
   <data name="btnOk.Text" xml:space="preserve">
     <value>OK</value>
@@ -148,7 +148,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
-    <value>22</value>
+    <value>20</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -157,13 +157,13 @@
     <value>NoControl</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>250, 42</value>
+    <value>222, 38</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
-    <value>22</value>
+    <value>20</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
     <value>キャンセル</value>
@@ -178,16 +178,16 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>21</value>
+    <value>19</value>
   </data>
   <data name="comboWindowType.Location" type="System.Drawing.Point, System.Drawing">
-    <value>106, 78</value>
+    <value>105, 75</value>
   </data>
   <data name="comboWindowType.Size" type="System.Drawing.Size, System.Drawing">
-    <value>67, 21</value>
+    <value>95, 21</value>
   </data>
   <data name="comboWindowType.TabIndex" type="System.Int32, mscorlib">
-    <value>24</value>
+    <value>7</value>
   </data>
   <data name="&gt;&gt;comboWindowType.Name" xml:space="preserve">
     <value>comboWindowType</value>
@@ -199,7 +199,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;comboWindowType.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>4</value>
   </data>
   <data name="labelWindowType.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -208,16 +208,16 @@
     <value>NoControl</value>
   </data>
   <data name="labelWindowType.Location" type="System.Drawing.Point, System.Drawing">
-    <value>103, 62</value>
+    <value>102, 59</value>
   </data>
   <data name="labelWindowType.Size" type="System.Drawing.Size, System.Drawing">
     <value>72, 13</value>
   </data>
   <data name="labelWindowType.TabIndex" type="System.Int32, mscorlib">
-    <value>23</value>
+    <value>6</value>
   </data>
   <data name="labelWindowType.Text" xml:space="preserve">
-    <value>ウィンドウタイプ(&amp;W)：</value>
+    <value>ウィンドウタイプ(&amp;T)：</value>
   </data>
   <data name="&gt;&gt;labelWindowType.Name" xml:space="preserve">
     <value>labelWindowType</value>
@@ -229,19 +229,19 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;labelWindowType.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>5</value>
   </data>
   <data name="textWindowsPerScan.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
   <data name="textWindowsPerScan.Location" type="System.Drawing.Point, System.Drawing">
-    <value>18, 217</value>
+    <value>195, 210</value>
   </data>
   <data name="textWindowsPerScan.Size" type="System.Drawing.Size, System.Drawing">
     <value>39, 20</value>
   </data>
   <data name="textWindowsPerScan.TabIndex" type="System.Int32, mscorlib">
-    <value>13</value>
+    <value>17</value>
   </data>
   <data name="&gt;&gt;textWindowsPerScan.Name" xml:space="preserve">
     <value>textWindowsPerScan</value>
@@ -253,7 +253,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textWindowsPerScan.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>6</value>
   </data>
   <data name="labelWindowsPerScan.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -265,16 +265,16 @@
     <value>NoControl</value>
   </data>
   <data name="labelWindowsPerScan.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 201</value>
+    <value>192, 194</value>
   </data>
   <data name="labelWindowsPerScan.Size" type="System.Drawing.Size, System.Drawing">
     <value>98, 13</value>
   </data>
   <data name="labelWindowsPerScan.TabIndex" type="System.Int32, mscorlib">
-    <value>12</value>
+    <value>16</value>
   </data>
   <data name="labelWindowsPerScan.Text" xml:space="preserve">
-    <value>スキャン毎のウィンドウ数(&amp;D)：</value>
+    <value>スキャン毎のウィンドウ数(&amp;N)：</value>
   </data>
   <data name="&gt;&gt;labelWindowsPerScan.Name" xml:space="preserve">
     <value>labelWindowsPerScan</value>
@@ -286,7 +286,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;labelWindowsPerScan.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>7</value>
   </data>
   <data name="labelWindowCount.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -295,13 +295,13 @@
     <value>NoControl</value>
   </data>
   <data name="labelWindowCount.Location" type="System.Drawing.Point, System.Drawing">
-    <value>90, 112</value>
+    <value>89, 156</value>
   </data>
   <data name="labelWindowCount.Size" type="System.Drawing.Size, System.Drawing">
     <value>0, 13</value>
   </data>
   <data name="labelWindowCount.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
+    <value>13</value>
   </data>
   <data name="&gt;&gt;labelWindowCount.Name" xml:space="preserve">
     <value>labelWindowCount</value>
@@ -313,40 +313,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;labelWindowCount.ZOrder" xml:space="preserve">
-    <value>6</value>
-  </data>
-  <data name="cbGenerateMethodTarget.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="cbGenerateMethodTarget.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="cbGenerateMethodTarget.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="cbGenerateMethodTarget.Location" type="System.Drawing.Point, System.Drawing">
-    <value>220, 259</value>
-  </data>
-  <data name="cbGenerateMethodTarget.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 17</value>
-  </data>
-  <data name="cbGenerateMethodTarget.TabIndex" type="System.Int32, mscorlib">
-    <value>20</value>
-  </data>
-  <data name="cbGenerateMethodTarget.Text" xml:space="preserve">
-    <value>ターゲットを生成(&amp;T)</value>
-  </data>
-  <data name="&gt;&gt;cbGenerateMethodTarget.Name" xml:space="preserve">
-    <value>cbGenerateMethodTarget</value>
-  </data>
-  <data name="&gt;&gt;cbGenerateMethodTarget.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;cbGenerateMethodTarget.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;cbGenerateMethodTarget.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>8</value>
   </data>
   <data name="cbOptimizeWindowPlacement.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -355,13 +322,13 @@
     <value>NoControl</value>
   </data>
   <data name="cbOptimizeWindowPlacement.Location" type="System.Drawing.Point, System.Drawing">
-    <value>18, 259</value>
+    <value>17, 258</value>
   </data>
   <data name="cbOptimizeWindowPlacement.Size" type="System.Drawing.Size, System.Drawing">
     <value>157, 17</value>
   </data>
   <data name="cbOptimizeWindowPlacement.TabIndex" type="System.Int32, mscorlib">
-    <value>19</value>
+    <value>18</value>
   </data>
   <data name="cbOptimizeWindowPlacement.Text" xml:space="preserve">
     <value>ウィンドウ位置の最適化(&amp;P)</value>
@@ -376,7 +343,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbOptimizeWindowPlacement.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>9</value>
   </data>
   <data name="label8.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -385,13 +352,13 @@
     <value>NoControl</value>
   </data>
   <data name="label8.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 150</value>
+    <value>14, 194</value>
   </data>
   <data name="label8.Size" type="System.Drawing.Size, System.Drawing">
     <value>79, 13</value>
   </data>
   <data name="label8.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
+    <value>14</value>
   </data>
   <data name="label8.Text" xml:space="preserve">
     <value>デコンボリューション(&amp;D)：</value>
@@ -406,91 +373,28 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label8.ZOrder" xml:space="preserve">
-    <value>9</value>
-  </data>
-  <data name="textMarginRight.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="textMarginRight.Location" type="System.Drawing.Point, System.Drawing">
-    <value>272, 217</value>
-  </data>
-  <data name="textMarginRight.Size" type="System.Drawing.Size, System.Drawing">
-    <value>55, 20</value>
-  </data>
-  <data name="textMarginRight.TabIndex" type="System.Int32, mscorlib">
-    <value>18</value>
-  </data>
-  <data name="&gt;&gt;textMarginRight.Name" xml:space="preserve">
-    <value>textMarginRight</value>
-  </data>
-  <data name="&gt;&gt;textMarginRight.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textMarginRight.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;textMarginRight.ZOrder" xml:space="preserve">
     <value>10</value>
   </data>
-  <data name="textMarginLeft.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
+  <data name="textMargin.Location" type="System.Drawing.Point, System.Drawing">
+    <value>15, 122</value>
   </data>
-  <data name="textMarginLeft.Location" type="System.Drawing.Point, System.Drawing">
-    <value>206, 217</value>
-  </data>
-  <data name="textMarginLeft.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="textMargin.Size" type="System.Drawing.Size, System.Drawing">
     <value>55, 20</value>
   </data>
-  <data name="textMarginLeft.TabIndex" type="System.Int32, mscorlib">
-    <value>17</value>
+  <data name="textMargin.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
   </data>
-  <data name="&gt;&gt;textMarginLeft.Name" xml:space="preserve">
-    <value>textMarginLeft</value>
+  <data name="&gt;&gt;textMargin.Name" xml:space="preserve">
+    <value>textMargin</value>
   </data>
-  <data name="&gt;&gt;textMarginLeft.Type" xml:space="preserve">
+  <data name="&gt;&gt;textMargin.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;textMarginLeft.Parent" xml:space="preserve">
+  <data name="&gt;&gt;textMargin.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;textMarginLeft.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;textMargin.ZOrder" xml:space="preserve">
     <value>11</value>
-  </data>
-  <data name="label5.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="label5.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label5.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="label5.Location" type="System.Drawing.Point, System.Drawing">
-    <value>203, 201</value>
-  </data>
-  <data name="label5.Size" type="System.Drawing.Size, System.Drawing">
-    <value>70, 13</value>
-  </data>
-  <data name="label5.TabIndex" type="System.Int32, mscorlib">
-    <value>16</value>
-  </data>
-  <data name="label5.Text" xml:space="preserve">
-    <value>マージン幅(&amp;G)：</value>
-  </data>
-  <data name="&gt;&gt;label5.Name" xml:space="preserve">
-    <value>label5</value>
-  </data>
-  <data name="&gt;&gt;label5.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label5.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;label5.ZOrder" xml:space="preserve">
-    <value>12</value>
-  </data>
-  <data name="label4.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
   </data>
   <data name="label4.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -499,16 +403,16 @@
     <value>NoControl</value>
   </data>
   <data name="label4.Location" type="System.Drawing.Point, System.Drawing">
-    <value>203, 150</value>
+    <value>12, 106</value>
   </data>
   <data name="label4.Size" type="System.Drawing.Size, System.Drawing">
-    <value>47, 13</value>
+    <value>70, 13</value>
   </data>
   <data name="label4.TabIndex" type="System.Int32, mscorlib">
-    <value>14</value>
+    <value>8</value>
   </data>
   <data name="label4.Text" xml:space="preserve">
-    <value>マージン(&amp;M)：</value>
+    <value>マージン幅(&amp;M)：</value>
   </data>
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
@@ -520,34 +424,10 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
-    <value>13</value>
-  </data>
-  <data name="comboMargins.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="comboMargins.Location" type="System.Drawing.Point, System.Drawing">
-    <value>206, 166</value>
-  </data>
-  <data name="comboMargins.Size" type="System.Drawing.Size, System.Drawing">
-    <value>121, 21</value>
-  </data>
-  <data name="comboMargins.TabIndex" type="System.Int32, mscorlib">
-    <value>15</value>
-  </data>
-  <data name="&gt;&gt;comboMargins.Name" xml:space="preserve">
-    <value>comboMargins</value>
-  </data>
-  <data name="&gt;&gt;comboMargins.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;comboMargins.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;comboMargins.ZOrder" xml:space="preserve">
-    <value>14</value>
+    <value>12</value>
   </data>
   <data name="textWidth.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 79</value>
+    <value>15, 75</value>
   </data>
   <data name="textWidth.Size" type="System.Drawing.Size, System.Drawing">
     <value>55, 20</value>
@@ -565,7 +445,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textWidth.ZOrder" xml:space="preserve">
-    <value>15</value>
+    <value>13</value>
   </data>
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -574,7 +454,7 @@
     <value>NoControl</value>
   </data>
   <data name="label3.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 62</value>
+    <value>12, 59</value>
   </data>
   <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
     <value>77, 13</value>
@@ -595,10 +475,10 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
-    <value>16</value>
+    <value>14</value>
   </data>
   <data name="textEnd.Location" type="System.Drawing.Point, System.Drawing">
-    <value>111, 30</value>
+    <value>105, 26</value>
   </data>
   <data name="textEnd.Size" type="System.Drawing.Size, System.Drawing">
     <value>55, 20</value>
@@ -616,7 +496,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textEnd.ZOrder" xml:space="preserve">
-    <value>17</value>
+    <value>15</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -625,7 +505,7 @@
     <value>NoControl</value>
   </data>
   <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>108, 13</value>
+    <value>102, 9</value>
   </data>
   <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
     <value>50, 13</value>
@@ -646,10 +526,10 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
-    <value>18</value>
+    <value>16</value>
   </data>
   <data name="textStart.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 30</value>
+    <value>15, 26</value>
   </data>
   <data name="textStart.Size" type="System.Drawing.Size, System.Drawing">
     <value>55, 20</value>
@@ -667,7 +547,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textStart.ZOrder" xml:space="preserve">
-    <value>19</value>
+    <value>17</value>
   </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -676,7 +556,7 @@
     <value>NoControl</value>
   </data>
   <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 13</value>
+    <value>12, 9</value>
   </data>
   <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
     <value>53, 13</value>
@@ -697,16 +577,16 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>20</value>
+    <value>18</value>
   </data>
   <data name="comboDeconv.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 166</value>
+    <value>15, 210</value>
   </data>
   <data name="comboDeconv.Size" type="System.Drawing.Size, System.Drawing">
-    <value>121, 21</value>
+    <value>145, 21</value>
   </data>
   <data name="comboDeconv.TabIndex" type="System.Int32, mscorlib">
-    <value>26</value>
+    <value>15</value>
   </data>
   <data name="&gt;&gt;comboDeconv.Name" xml:space="preserve">
     <value>comboDeconv</value>
@@ -718,22 +598,22 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;comboDeconv.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>3</value>
   </data>
   <data name="label6.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="label6.Location" type="System.Drawing.Point, System.Drawing">
-    <value>18, 111</value>
+    <value>12, 156</value>
   </data>
   <data name="label6.Size" type="System.Drawing.Size, System.Drawing">
     <value>80, 13</value>
   </data>
   <data name="label6.TabIndex" type="System.Int32, mscorlib">
-    <value>27</value>
+    <value>12</value>
   </data>
   <data name="label6.Text" xml:space="preserve">
-    <value>ウィンドウ数(&amp;W)：</value>
+    <value>ウィンドウ数：</value>
   </data>
   <data name="&gt;&gt;label6.Name" xml:space="preserve">
     <value>label6</value>
@@ -745,7 +625,58 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label6.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="textCERange.Location" type="System.Drawing.Point, System.Drawing">
+    <value>105, 122</value>
+  </data>
+  <data name="textCERange.Size" type="System.Drawing.Size, System.Drawing">
+    <value>55, 20</value>
+  </data>
+  <data name="textCERange.TabIndex" type="System.Int32, mscorlib">
+    <value>11</value>
+  </data>
+  <data name="&gt;&gt;textCERange.Name" xml:space="preserve">
+    <value>textCERange</value>
+  </data>
+  <data name="&gt;&gt;textCERange.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textCERange.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;textCERange.ZOrder" xml:space="preserve">
     <value>0</value>
+  </data>
+  <data name="label5.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label5.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="label5.Location" type="System.Drawing.Point, System.Drawing">
+    <value>102, 106</value>
+  </data>
+  <data name="label5.Size" type="System.Drawing.Size, System.Drawing">
+    <value>54, 13</value>
+  </data>
+  <data name="label5.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
+  <data name="label5.Text" xml:space="preserve">
+    <value>&amp;CE範囲(&amp;C)：</value>
+  </data>
+  <data name="&gt;&gt;label5.Name" xml:space="preserve">
+    <value>label5</value>
+  </data>
+  <data name="&gt;&gt;label5.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label5.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;label5.ZOrder" xml:space="preserve">
+    <value>1</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -754,7 +685,7 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>337, 287</value>
+    <value>309, 286</value>
   </data>
   <data name="$this.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>

@@ -1612,12 +1612,13 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Peptide-spectrum matches containing the following peptides were discarded because the spectrum had multiple matches:.
+        ///   Looks up a localized string similar to The library built successfully. Spectra matching the following peptides had multiple ambiguous peptide matches and were excluded:.
         /// </summary>
-        public static string BiblioSpecLiteBuilder_AmbiguousMatches_Peptide_spectrum_matches_containing_the_following_peptides_were_discarded_because_the_spectrum_had_multiple_matches_ {
+        public static string BiblioSpecLiteBuilder_AmbiguousMatches_The_library_built_successfully__Spectra_matching_the_following_peptides_had_multiple_ambiguous_peptide_matches_and_were_excluded_ {
             get {
-                return ResourceManager.GetString("BiblioSpecLiteBuilder_AmbiguousMatches_Peptide_spectrum_matches_containing_the_fo" +
-                        "llowing_peptides_were_discarded_because_the_spectrum_had_multiple_matches_", resourceCulture);
+                return ResourceManager.GetString("BiblioSpecLiteBuilder_AmbiguousMatches_The_library_built_successfully__Spectra_ma" +
+                        "tching_the_following_peptides_had_multiple_ambiguous_peptide_matches_and_were_ex" +
+                        "cluded_", resourceCulture);
             }
         }
         
@@ -6358,6 +6359,26 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("DatabaseNotConnectedException_DBERROR_The_database_for_the_calculator__0__could_n" +
                         "ot_be_opened__Check_that_the_file__1__was_not_moved_or_deleted_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An error occured while displaying the data rows:.
+        /// </summary>
+        public static string DataboundGridControl_DisplayError_An_error_occured_while_displaying_the_data_rows_ {
+            get {
+                return ResourceManager.GetString("DataboundGridControl_DisplayError_An_error_occured_while_displaying_the_data_rows" +
+                        "_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Do you want to continue to see these error messages?.
+        /// </summary>
+        public static string DataboundGridControl_DisplayError_Do_you_want_to_continue_to_see_these_error_messages_ {
+            get {
+                return ResourceManager.GetString("DataboundGridControl_DisplayError_Do_you_want_to_continue_to_see_these_error_mess" +
+                        "ages_", resourceCulture);
             }
         }
         

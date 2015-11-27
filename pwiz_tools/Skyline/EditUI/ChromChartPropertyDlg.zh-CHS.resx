@@ -222,32 +222,11 @@
   <data name="&gt;&gt;textLineWidth.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
-  <data name="textFontSize.Location" type="System.Drawing.Point, System.Drawing">
-    <value>147, 25</value>
-  </data>
-  <data name="textFontSize.Size" type="System.Drawing.Size, System.Drawing">
-    <value>83, 20</value>
-  </data>
-  <data name="textFontSize.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="&gt;&gt;textFontSize.Name" xml:space="preserve">
-    <value>textFontSize</value>
-  </data>
-  <data name="&gt;&gt;textFontSize.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textFontSize.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;textFontSize.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>144, 9</value>
+    <value>118, 9</value>
   </data>
   <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
     <value>52, 13</value>
@@ -460,7 +439,7 @@
     <value>4</value>
   </data>
   <data name="label5.Text" xml:space="preserve">
-    <value>最小亮度(&amp;N)：</value>
+    <value>最小强度(&amp;N)：</value>
   </data>
   <data name="&gt;&gt;label5.Name" xml:space="preserve">
     <value>label5</value>
@@ -496,7 +475,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;groupBox1.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="cbShowOverlappingLabels.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -523,7 +502,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbShowOverlappingLabels.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="cbShowMultiplePeptides.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -553,6 +532,42 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbShowMultiplePeptides.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="textSizeComboBox.Items" xml:space="preserve">
+    <value>超小</value>
+  </data>
+  <data name="textSizeComboBox.Items1" xml:space="preserve">
+    <value>小</value>
+  </data>
+  <data name="textSizeComboBox.Items2" xml:space="preserve">
+    <value>正常</value>
+  </data>
+  <data name="textSizeComboBox.Items3" xml:space="preserve">
+    <value>大</value>
+  </data>
+  <data name="textSizeComboBox.Items4" xml:space="preserve">
+    <value>超大</value>
+  </data>
+  <data name="textSizeComboBox.Location" type="System.Drawing.Point, System.Drawing">
+    <value>121, 25</value>
+  </data>
+  <data name="textSizeComboBox.Size" type="System.Drawing.Size, System.Drawing">
+    <value>97, 21</value>
+  </data>
+  <data name="textSizeComboBox.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="&gt;&gt;textSizeComboBox.Name" xml:space="preserve">
+    <value>textSizeComboBox</value>
+  </data>
+  <data name="&gt;&gt;textSizeComboBox.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textSizeComboBox.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;textSizeComboBox.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">

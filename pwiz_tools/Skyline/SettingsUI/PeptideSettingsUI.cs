@@ -46,7 +46,7 @@ namespace pwiz.Skyline.SettingsUI
         private const int BORDER_BOTTOM_HEIGHT = 16;
 
 // ReSharper disable InconsistentNaming
-        public enum TABS { Digest, Prediction, Filter, Library, Modifications, Integration }
+        public enum TABS { Digest, Prediction, Filter, Library, Modifications, /* Integration, */ Quantification }
 // ReSharper restore InconsistentNaming
 
         public class DigestionTab : IFormView { }
@@ -55,10 +55,11 @@ namespace pwiz.Skyline.SettingsUI
         public class LibraryTab : IFormView { }
         public class ModificationsTab : IFormView { }
 //        public class IntegrationTab : IFormView { }    - not yet visible ever
+        public class QuantificationTab : IFormView { }
 
         private static readonly IFormView[] TAB_PAGES =
         {
-            new DigestionTab(), new PredictionTab(), new FilterTab(), new LibraryTab(), new ModificationsTab()
+            new DigestionTab(), new PredictionTab(), new FilterTab(), new LibraryTab(), new ModificationsTab(), /* new IntegrationTab(), */ new QuantificationTab(), 
         };
 
         private readonly SkylineWindow _parent;

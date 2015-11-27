@@ -39,6 +39,9 @@ namespace pwiz.Skyline.Controls.Databinding
     public partial class DataboundGridControl: UserControl
     {
         private PropertyDescriptor _columnFilterPropertyDescriptor;
+        private readonly object _errorMessageLock = new object();
+        private bool _errorMessagePending;
+        private bool _suppressErrorMessages;
 
         public DataboundGridControl()
         {
@@ -50,7 +53,15 @@ namespace pwiz.Skyline.Controls.Databinding
             get { return bindingListSource; }
             set
             {
+                if (null != BindingListSource)
+                {
+                    BindingListSource.DataError -= bindingListSource_DataError;
+                }
                 bindingListSource = value;
+                if (null != BindingListSource)
+                {
+                    BindingListSource.DataError += bindingListSource_DataError;
+                }
                 NavBar.BindingListSource = bindingListSource;
                 boundDataGridView.DataSource = bindingListSource;
             }
@@ -284,7 +295,10 @@ namespace pwiz.Skyline.Controls.Databinding
             {
                 return;
             }
-            using (var quickFilterForm = new QuickFilterForm())
+            using (var quickFilterForm = new QuickFilterForm()
+            {
+                ViewContext = BindingListSource.ViewContext
+            })
             {
                 quickFilterForm.SetFilter(BindingListSource.ViewInfo.DataSchema, _columnFilterPropertyDescriptor, BindingListSource.RowFilter);
                 if (FormUtil.ShowDialog(this, quickFilterForm) == DialogResult.OK)
@@ -459,6 +473,52 @@ namespace pwiz.Skyline.Controls.Databinding
                 sortDescendingToolStripMenuItem.Checked = false;
             }
             fillDownToolStripMenuItem.Enabled = IsEnableFillDown();
+        }
+
+        private void bindingListSource_DataError(object sender, BindingManagerDataErrorEventArgs e)
+        {
+            lock (_errorMessageLock)
+            {
+                if (_suppressErrorMessages || _errorMessagePending)
+                {
+                    return;
+                }
+                if (IsHandleCreated)
+                {
+                    try
+                    {
+                        BeginInvoke(new Action(() => DisplayError(e)));
+                        _errorMessagePending = true;
+                    }
+                    catch (Exception)
+                    {
+                        // ignore
+                    }
+                }
+            }
+        }
+
+        private void DisplayError(BindingManagerDataErrorEventArgs e)
+        {
+            lock (_errorMessageLock)
+            {
+                _errorMessagePending = false;
+            }
+            if (_suppressErrorMessages)
+            {
+                return;
+            }
+            string message = TextUtil.LineSeparate(
+                Resources.DataboundGridControl_DisplayError_An_error_occured_while_displaying_the_data_rows_,
+                e.Exception.Message,
+                Resources.DataboundGridControl_DisplayError_Do_you_want_to_continue_to_see_these_error_messages_
+                );
+
+            var alertDlg = new AlertDlg(message, MessageBoxButtons.YesNo) {Exception = e.Exception};
+            if (alertDlg.ShowAndDispose(this) == DialogResult.No)
+            {
+                _suppressErrorMessages = true;
+            }
         }
     }
 }

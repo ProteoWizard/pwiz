@@ -176,7 +176,7 @@ namespace pwiz.Skyline
                 if (commandArgs.ImportingReplicateFile)
                 {
                     // If expected results are not imported successfully, terminate
-                    if (!ImportResultsFile(MsDataFileUri.Parse(commandArgs.ReplicateFile).ChangeLockMassParameters(commandArgs.LockMassParameters),
+                    if (!ImportResultsFile(commandArgs.ReplicateFile.ChangeLockMassParameters(commandArgs.LockMassParameters),
                                            commandArgs.ReplicateName,
                                            commandArgs.ImportBeforeDate,
                                            commandArgs.ImportOnOrAfterDate,

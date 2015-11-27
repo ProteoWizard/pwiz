@@ -66,16 +66,16 @@ namespace pwiz.Skyline.Model.Results
         {
             var fullScans = MsDataSpectra;
             double minDrift, maxDrift;
-            GetDriftRange(out minDrift, out maxDrift, Source);
-            if (Settings.Default.FilterDriftTimesFullScan)
+            if (Settings.Default.FilterDriftTimesFullScan && GetDriftRange(out minDrift, out maxDrift, Source))
                 fullScans = fullScans.Where(s => minDrift <= s.DriftTimeMsec && s.DriftTimeMsec <= maxDrift).ToArray();
             return fullScans;
         }
 
-        public void GetDriftRange(out double minDrift, out double maxDrift, ChromSource sourceType)
+        public bool GetDriftRange(out double minDrift, out double maxDrift, ChromSource sourceType)
         {
             minDrift = double.MaxValue;
             maxDrift = double.MinValue;
+            var hasDriftInfo = false;
             foreach (var transition in ScanProvider.Transitions)
             {
                 if (!transition.IonMobilityValue.HasValue || !transition.IonMobilityExtractionWidth.HasValue)
@@ -92,8 +92,10 @@ namespace pwiz.Skyline.Model.Results
                     double endDrift = startDrift + transition.IonMobilityExtractionWidth.Value;
                     minDrift = Math.Min(minDrift, startDrift);
                     maxDrift = Math.Max(maxDrift, endDrift);
+                    hasDriftInfo = true;
                 }
             }
+            return hasDriftInfo;
         }
 
         public int[][] GetScanIndexes()

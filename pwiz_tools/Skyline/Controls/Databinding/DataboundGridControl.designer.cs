@@ -61,6 +61,7 @@
             // bindingListSource
             // 
             this.bindingListSource.RowSource = new object[0];
+            this.bindingListSource.DataError += new System.Windows.Forms.BindingManagerDataErrorEventHandler(this.bindingListSource_DataError);
             // 
             // contextMenuStrip
             // 

@@ -445,7 +445,7 @@
     <value>1</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>次の結果を表示：</value>
+    <value>次の結果を表示します：</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -517,7 +517,7 @@
     <value>True</value>
   </metadata>
   <data name="PickedApex.HeaderText" xml:space="preserve">
-    <value>選択頂点</value>
+    <value>選択された頂点</value>
   </data>
   <metadata name="qValue.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -1605,7 +1605,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>ピーク選択を比較</value>
+    <value>ピークピッキングを比較</value>
   </data>
   <data name="&gt;&gt;File.Name" xml:space="preserve">
     <value>File</value>

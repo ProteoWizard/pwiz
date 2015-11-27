@@ -138,7 +138,7 @@
     <value>True</value>
   </metadata>
   <data name="Slope.HeaderText" xml:space="preserve">
-    <value>斜率</value>
+    <value>斜度</value>
   </data>
   <data name="Slope.Width" type="System.Int32, mscorlib">
     <value>90</value>
@@ -163,11 +163,11 @@
     <value>10</value>
   </data>
   <data name="gridRegression.ToolTip" xml:space="preserve">
-    <value>斜率和截距值被用于从离子迁移库中的母离子碰撞横截面“C”来计算以毫秒为单位的预测漂移时间“D”，借助以下形式的等式：
+    <value>斜度和截距值被用于从离子迁移库中的母离子碰撞横截面“C”来计算以毫秒为单位的预测漂移时间“D”，借助以下形式的等式：
 
-D = 斜率 * C + 截距
+D = 斜度 * C + 截距
 
-每个母离子电荷态都需要不同的斜率和截距值。 如果母离子电荷态没有在此列表中表示出来，则没有漂移时间信息将用于该电荷态的色谱图提取。 这就是说，色谱图将在所有漂移区间内提取，不带有任何漂移时间过滤。</value>
+每个母离子电荷态都需要不同的斜度和截距值。 如果母离子电荷态没有在此列表中表示出来，则没有漂移时间信息将用于该电荷态的色谱图提取。 这就是说，色谱图将在所有漂移区间内提取，不带有任何漂移时间过滤。</value>
   </data>
   <data name="&gt;&gt;gridRegression.Name" xml:space="preserve">
     <value>gridRegression</value>
@@ -369,6 +369,36 @@ D = 斜率 * C + 截距
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbOffsetHighEnergySpectra.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="btnUseResults.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Right</value>
+  </data>
+  <data name="btnUseResults.Location" type="System.Drawing.Point, System.Drawing">
+    <value>433, 383</value>
+  </data>
+  <data name="btnUseResults.Size" type="System.Drawing.Size, System.Drawing">
+    <value>117, 28</value>
+  </data>
+  <data name="btnUseResults.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="btnUseResults.Text" xml:space="preserve">
+    <value>使用结果(&amp;U)</value>
+  </data>
+  <data name="btnUseResults.ToolTip" xml:space="preserve">
+    <value>检查当前文档的漂移时间峰结果</value>
+  </data>
+  <data name="&gt;&gt;btnUseResults.Name" xml:space="preserve">
+    <value>btnUseResults</value>
+  </data>
+  <data name="&gt;&gt;btnUseResults.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnUseResults.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;btnUseResults.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="bindingChargeRegressionLines.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -653,12 +683,6 @@ D = 斜率 * C + 截距
   <data name="&gt;&gt;Intercept.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;bindingChargeRegressionLines.Name" xml:space="preserve">
-    <value>bindingChargeRegressionLines</value>
-  </data>
-  <data name="&gt;&gt;bindingChargeRegressionLines.Type" xml:space="preserve">
-    <value>System.Windows.Forms.BindingSource, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;MeasuredDriftTimeSequence.Name" xml:space="preserve">
     <value>MeasuredDriftTimeSequence</value>
   </data>
@@ -682,6 +706,12 @@ D = 斜率 * C + 截距
   </data>
   <data name="&gt;&gt;MeasuredDriftTimeHighEnergyOffsetMsec.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;bindingChargeRegressionLines.Name" xml:space="preserve">
+    <value>bindingChargeRegressionLines</value>
+  </data>
+  <data name="&gt;&gt;bindingChargeRegressionLines.Type" xml:space="preserve">
+    <value>System.Windows.Forms.BindingSource, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>EditDriftTimePredictorDlg</value>

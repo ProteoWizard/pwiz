@@ -92,7 +92,13 @@
       <LastGenOutput>MSstatsResources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="QualityControlUI.ja.resx">
+      <DependentUpon>QualityControlUI.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="QualityControlUI.resx">
+      <DependentUpon>QualityControlUI.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="QualityControlUI.zh-CHS.resx">
       <DependentUpon>QualityControlUI.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SampleSizeUI.ja.resx">

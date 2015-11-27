@@ -134,44 +134,11 @@ namespace pwiz.Skyline.Model
 
         public SrmDocument ChangePeaks(IProgressMonitor progressMonitor = null)
         {
-            var annotationNames = from def in Document.Settings.DataSettings.AnnotationDefs
+            var annotationNames = (from def in Document.Settings.DataSettings.AnnotationDefs
                                   where def.AnnotationTargets.Contains(AnnotationDef.AnnotationTarget.precursor_result)
-                                  select def.Name;
-            var containsQAnnotation = annotationNames.Contains(AnnotationName);
-            if (!containsQAnnotation && AddAnnotation)
-            {
-                var annotationTargets = AnnotationDef.AnnotationTargetSet.OfValues(AnnotationDef.AnnotationTarget.precursor_result);
-                var newAnnotationDef = new AnnotationDef(AnnotationName, annotationTargets, AnnotationDef.AnnotationType.number, new string[0]);
-                AnnotationDef existingAnnotationDef;
-                // CONSIDER: Throw error instead of overwriting?
-                if (!Settings.Default.AnnotationDefList.TryGetValue(AnnotationName, out existingAnnotationDef) && !Equals(existingAnnotationDef, newAnnotationDef))
-                {
-                    Settings.Default.AnnotationDefList.SetValue(newAnnotationDef);
-                }
-                else
-                {
-                    // Use the existing annotation
-                    newAnnotationDef = existingAnnotationDef;
-                }
-
-                Document = Document.ChangeSettings(Document.Settings.ChangeAnnotationDefs(defs =>
-                {
-                    var defsNew = defs.ToList();
-                    defsNew.Add(newAnnotationDef);
-                    return defsNew;
-                }));
-            }
-            else if (containsQAnnotation && !AddAnnotation)
-            {
-                Document = Document.ChangeSettings(Document.Settings.ChangeAnnotationDefs(defs =>
-                {
-                    var defsNew = defs.ToList();
-                    defsNew.RemoveAll(def => Equals(def.Name, AnnotationName));
-                    return defsNew;
-                }));
-                var annotationNamesToKeep = Document.Settings.DataSettings.AnnotationDefs.Select(def => def.Name).ToList();
-                Document = (SrmDocument) Document.StripAnnotationValues(annotationNamesToKeep);
-            }
+                                  select def.Name).ToArray();
+            Document = EnsureAnnotation(Document, AnnotationName, AddAnnotation, annotationNames);
+            Document = EnsureAnnotation(Document, MAnnotationName, AddAnnotation, annotationNames);
             var settingsChangeMonitor = progressMonitor != null
                 ? new SrmSettingsChangeMonitor(progressMonitor, Resources.MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries)
                 : null;
@@ -188,6 +155,50 @@ namespace pwiz.Skyline.Model
                 }
                 return Document;
             }
+        }
+
+        private SrmDocument EnsureAnnotation(SrmDocument document, string annotationName, bool addAnnotation,
+            IEnumerable<string> annotationNames)
+        {
+            var containsQAnnotation = annotationNames.Contains(annotationName);
+            if (!containsQAnnotation && addAnnotation)
+            {
+                var annotationTargets =
+                    AnnotationDef.AnnotationTargetSet.OfValues(AnnotationDef.AnnotationTarget.precursor_result);
+                var newAnnotationDef = new AnnotationDef(annotationName, annotationTargets, AnnotationDef.AnnotationType.number,
+                    new string[0]);
+                AnnotationDef existingAnnotationDef;
+                // CONSIDER: Throw error instead of overwriting?
+                if (!Settings.Default.AnnotationDefList.TryGetValue(annotationName, out existingAnnotationDef) &&
+                    !Equals(existingAnnotationDef, newAnnotationDef))
+                {
+                    Settings.Default.AnnotationDefList.SetValue(newAnnotationDef);
+                }
+                else
+                {
+                    // Use the existing annotation
+                    newAnnotationDef = existingAnnotationDef;
+                }
+
+                document = document.ChangeSettings(Document.Settings.ChangeAnnotationDefs(defs =>
+                {
+                    var defsNew = defs.ToList();
+                    defsNew.Add(newAnnotationDef);
+                    return defsNew;
+                }));
+            }
+            else if (containsQAnnotation && !AddAnnotation)
+            {
+                document = document.ChangeSettings(Document.Settings.ChangeAnnotationDefs(defs =>
+                {
+                    var defsNew = defs.ToList();
+                    defsNew.RemoveAll(def => Equals(def.Name, annotationName));
+                    return defsNew;
+                }));
+                var annotationNamesToKeep = document.Settings.DataSettings.AnnotationDefs.Select(def => def.Name).ToList();
+                document = (SrmDocument) document.StripAnnotationValues(annotationNamesToKeep);
+            }
+            return document;
         }
 
         public void WriteScores(TextWriter writer,

@@ -90,12 +90,18 @@ namespace pwiz.Common.DataBinding.Controls.Editor
 
         private void FindNextButtonOnClick(object sender, EventArgs eventArgs)
         {
-            GoToSearchResult(_searcher.FindNextResult);
+            if (null != _searcher)
+            {
+                GoToSearchResult(_searcher.FindNextResult);
+            }
         }
 
         private void FindPreviousButtonOnClick(object sender, EventArgs eventArgs)
         {
-            GoToSearchResult(_searcher.FindPreviousResult);
+            if (null != _searcher)
+            {
+                GoToSearchResult(_searcher.FindPreviousResult);
+            }
         }
 
         /// <summary>

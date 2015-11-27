@@ -23,6 +23,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -33,7 +34,7 @@ namespace pwiz.Skyline
     public class CommandArgs
     {
         public string SkylineFile { get; private set; }
-        public string ReplicateFile { get; private set; }
+        public MsDataFileUri ReplicateFile { get; private set; }
         public string ReplicateName { get; private set; }
         public bool ImportAppend { get; private set; }
         public bool ImportDisableJoining { get; private set; }
@@ -90,7 +91,7 @@ namespace pwiz.Skyline
         }
         public bool ImportingReplicateFile
         {
-            get { return !string.IsNullOrEmpty(ReplicateFile); }
+            get { return null != ReplicateFile; }
         }
         public bool ImportingSourceDirectory
         {
@@ -463,10 +464,17 @@ namespace pwiz.Skyline
             {
                 if (arg.StartsWith("--")) // Not L10N
                 {
-                    var parts = arg.Substring(2).Split('=');
-                    Name = parts[0];
-                    if (parts.Length > 1)
-                        Value = parts[1];
+                    arg = arg.Substring(2);
+                    int indexEqualsSign = arg.IndexOf('=');
+                    if (indexEqualsSign >= 0)
+                    {
+                        Name = arg.Substring(0, indexEqualsSign);
+                        Value = arg.Substring(indexEqualsSign + 1);
+                    }
+                    else
+                    {
+                        Name = arg;
+                    }
                 }
             }
 
@@ -865,7 +873,14 @@ namespace pwiz.Skyline
 
                 else if (IsNameValue(pair, "import-file"))
                 {
-                    ReplicateFile = GetFullPath(pair.Value);
+                    if (pair.Value.StartsWith(ChorusUrl.ChorusUrlPrefix))
+                    {
+                        ReplicateFile = MsDataFileUri.Parse(pair.Value);
+                    }
+                    else
+                    {
+                        ReplicateFile = new MsDataFilePath(GetFullPath(pair.Value));
+                    }
                     RequiresSkylineDocument = true;
                 }
 

@@ -291,7 +291,19 @@ namespace pwiz.Skyline.Model.Results
             }
             catch (Exception x)
             {
-                if (x.Message.Contains("PeakDetector::NoVendorPeakPickingException")) // Not L10N
+                // Because exceptions frequently get wrapped now
+                var canceledX = x.InnerException as LoadCanceledException;
+                var missingDataX = x.InnerException as MissingDataException;
+                if (canceledX != null)
+                {
+                    _status = canceledX.Status;
+                    ExitRead(null);
+                }
+                else if (missingDataX != null)
+                {
+                    ExitRead(new MissingDataException(missingDataX.MessageFormat, MSDataFilePath.GetSampleOrFileName(), missingDataX));
+                }
+                else if (x.Message.Contains("PeakDetector::NoVendorPeakPickingException")) // Not L10N
                 {
                     ExitRead(new NoCentroidedDataException(MSDataFilePath.GetFileName(), x));
                 }

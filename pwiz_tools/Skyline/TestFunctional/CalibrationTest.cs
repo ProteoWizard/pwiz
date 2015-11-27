@@ -65,11 +65,19 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_Use_the_Quantification_tab_on_the_Peptide_Settings_dialog_to_control_the_conversion_of_peak_areas_to_concentrations_,
                 GetGraphTitle(calibrationForm));
             PauseForScreenShot("Quantification not configured");
-            var peptideSettingsUi = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-            peptideSettingsUi.QuantNormalizationMethod = NormalizationMethod.GetNormalizationMethod(IsotopeLabelType.heavy);
-            peptideSettingsUi.QuantUnits = "ng/mL";
-            OkDialog(peptideSettingsUi, peptideSettingsUi.OkDialog);
+            {
+                var peptideSettingsUi = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+                RunUI(() =>
+                {
+                    peptideSettingsUi.SelectedTab = PeptideSettingsUI.TABS.Quantification;
+                    peptideSettingsUi.QuantNormalizationMethod = NormalizationMethod.GetNormalizationMethod(IsotopeLabelType.heavy);
+                    peptideSettingsUi.QuantUnits = "ng/mL";
+                });
+                PauseForScreenShot("Peptide Settings - Quantification tab");
+                OkDialog(peptideSettingsUi, peptideSettingsUi.OkDialog);
+            }
             PauseForScreenShot("Normalization without Internal Standard Concentration");
+            WaitForOpenForm<CalibrationForm>();
 
             RunUI(() => SkylineWindow.ShowDocumentGrid(true));
             var documentGrid = FindOpenForm<DocumentGridForm>();
@@ -94,16 +102,23 @@ namespace pwiz.SkylineTestFunctional
             });
             FillInSampleTypesAndConcentrations();
             WaitForGraphs();
-            peptideSettingsUi = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-            peptideSettingsUi.QuantNormalizationMethod = NormalizationMethod.NONE;
-            peptideSettingsUi.QuantRegressionFit = RegressionFit.LINEAR;
-            OkDialog(peptideSettingsUi, peptideSettingsUi.OkDialog);
-            RunUI(() => SkylineWindow.ShowCalibrationForm());
+            {
+                var peptideSettingsUi = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+                RunUI(() =>
+                {
+                    peptideSettingsUi.QuantNormalizationMethod = NormalizationMethod.NONE;
+                    peptideSettingsUi.QuantRegressionFit = RegressionFit.LINEAR;
+                });
+                OkDialog(peptideSettingsUi, peptideSettingsUi.OkDialog);
+                RunUI(() => SkylineWindow.ShowCalibrationForm());
+            }
             PauseForScreenShot("External Calibration Without Internal Standard");
 
-            peptideSettingsUi = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-            peptideSettingsUi.QuantNormalizationMethod = NormalizationMethod.GetNormalizationMethod(IsotopeLabelType.heavy);
-            OkDialog(peptideSettingsUi, peptideSettingsUi.OkDialog);
+            {
+                var peptideSettingsUi = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+                RunUI(() => peptideSettingsUi.QuantNormalizationMethod = NormalizationMethod.GetNormalizationMethod(IsotopeLabelType.heavy));
+                OkDialog(peptideSettingsUi, peptideSettingsUi.OkDialog);
+            }
             PauseForScreenShot("External Calibration normalized to heavy");
 
             RunUI(() => documentGrid.ChooseView("PeptidesWithCalibration"));

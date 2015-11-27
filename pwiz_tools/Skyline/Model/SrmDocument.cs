@@ -1822,6 +1822,22 @@ namespace pwiz.Skyline.Model
                 results.Validate(settings);
         }
 
+        private sealed class XmlReadContext
+        {
+            private readonly Dictionary<string, string> _dictNonDuplicatedNames = new Dictionary<string, string>();
+
+            public string GetNonDuplicatedName(string name)
+            {
+                string nonDuplicatedName;
+                if (!_dictNonDuplicatedNames.TryGetValue(name, out nonDuplicatedName))
+                {
+                    _dictNonDuplicatedNames.Add(name, name);
+                    nonDuplicatedName = name;
+                }
+                return nonDuplicatedName;
+            }
+        }
+
         /// <summary>
         /// Deserializes document from XML.
         /// </summary>
@@ -1842,18 +1858,19 @@ namespace pwiz.Skyline.Model
 
             Settings = reader.DeserializeElement<SrmSettings>() ?? SrmSettingsList.GetDefault();
 
+            var context = new XmlReadContext();
             PeptideGroupDocNode[] children = null;
             if (reader.IsStartElement())
             {
                 // Support v0.1 naming
                 if (!reader.IsStartElement(EL.selected_proteins))
-                    children = ReadPeptideGroupListXml(reader);
+                    children = ReadPeptideGroupListXml(reader, context);
                 else if (reader.IsEmptyElement)
                     reader.Read();
                 else
                 {
                     reader.ReadStartElement();
-                    children = ReadPeptideGroupListXml(reader);
+                    children = ReadPeptideGroupListXml(reader, context);
                     reader.ReadEndElement();
                 }
             }
@@ -1884,17 +1901,18 @@ namespace pwiz.Skyline.Model
         /// <see cref="XmlReader"/> positioned at the start of the list.
         /// </summary>
         /// <param name="reader">The reader positioned on the element of the first node</param>
+        /// <param name="context">Context object to store values passed to children but only used during this read</param>
         /// <returns>An array of <see cref="PeptideGroupDocNode"/> objects for
         ///         inclusion in a <see cref="SrmDocument"/> child list</returns>
-        private PeptideGroupDocNode[] ReadPeptideGroupListXml(XmlReader reader)
+        private PeptideGroupDocNode[] ReadPeptideGroupListXml(XmlReader reader, XmlReadContext context)
         {
             var list = new List<PeptideGroupDocNode>();
             while (reader.IsStartElement(EL.protein) || reader.IsStartElement(EL.peptide_list))
             {
                 if (reader.IsStartElement(EL.protein))
-                    list.Add(ReadProteinXml(reader));
+                    list.Add(ReadProteinXml(reader, context));
                 else
-                    list.Add(ReadPeptideGroupXml(reader));
+                    list.Add(ReadPeptideGroupXml(reader, context));
             }
             return list.ToArray();
         }
@@ -1920,8 +1938,9 @@ namespace pwiz.Skyline.Model
         /// either a FASTA sequence or a peptide list.
         /// </summary>
         /// <param name="reader">The reader positioned at a protein tag</param>
+        /// <param name="context">Context object to store values passed to children but only used during this read</param>
         /// <returns>A new <see cref="PeptideGroupDocNode"/></returns>
-        private PeptideGroupDocNode ReadProteinXml(XmlReader reader)
+        private PeptideGroupDocNode ReadProteinXml(XmlReader reader, XmlReadContext context)
         {
             string name = reader.GetAttribute(ATTR.name);
             string description = reader.GetAttribute(ATTR.description);
@@ -1931,7 +1950,7 @@ namespace pwiz.Skyline.Model
 
             reader.ReadStartElement();
 
-            var annotations = ReadAnnotations(reader);
+            var annotations = ReadAnnotations(reader, context);
 
             ProteinMetadata[] alternatives;
             if (!reader.IsStartElement(EL.alternatives) || reader.IsEmptyElement)
@@ -1976,13 +1995,13 @@ namespace pwiz.Skyline.Model
 
             PeptideDocNode[] children = null;
             if (!reader.IsStartElement(EL.selected_peptides))
-                children = ReadPeptideListXml(reader, group);
+                children = ReadPeptideListXml(reader, context, group);
             else if (reader.IsEmptyElement)
                 reader.Read();
             else
             {
                 reader.ReadStartElement(EL.selected_peptides);
-                children = ReadPeptideListXml(reader, group);
+                children = ReadPeptideListXml(reader, context, group);
                 reader.ReadEndElement();                    
             }
 
@@ -2033,8 +2052,9 @@ namespace pwiz.Skyline.Model
         /// start element.
         /// </summary>
         /// <param name="reader">The reader positioned at a start element of a peptide group</param>
+        /// <param name="context">Context object to store values passed to children but only used during this read</param>
         /// <returns>A new <see cref="PeptideGroupDocNode"/></returns>
-        private PeptideGroupDocNode ReadPeptideGroupXml(XmlReader reader)
+        private PeptideGroupDocNode ReadPeptideGroupXml(XmlReader reader, XmlReadContext context)
         {
             ProteinMetadata proteinMetadata = ReadProteinMetadataXML(reader, true); // read label_name and label_description
             bool autoManageChildren = reader.GetBoolAttribute(ATTR.auto_manage_children, true);
@@ -2050,16 +2070,16 @@ namespace pwiz.Skyline.Model
             else
             {
                 reader.ReadStartElement();
-                annotations = ReadAnnotations(reader);
+                annotations = ReadAnnotations(reader, context);
 
                 if (!reader.IsStartElement(EL.selected_peptides))
-                    children = ReadPeptideListXml(reader, group);
+                    children = ReadPeptideListXml(reader, context, group);
                 else if (reader.IsEmptyElement)
                     reader.Read();
                 else
                 {
                     reader.ReadStartElement(EL.selected_peptides);
-                    children = ReadPeptideListXml(reader, group);
+                    children = ReadPeptideListXml(reader, context, group);
                     reader.ReadEndElement();
                 }
 
@@ -2075,14 +2095,15 @@ namespace pwiz.Skyline.Model
         /// a <see cref="XmlReader"/> positioned at the first element in the list.
         /// </summary>
         /// <param name="reader">The reader positioned at the first element</param>
+        /// <param name="context">Context object to store values passed to children but only used during this read</param>
         /// <param name="group">A previously read parent <see cref="Identity"/></param>
         /// <returns>A new array of <see cref="PeptideDocNode"/></returns>
-        private PeptideDocNode[] ReadPeptideListXml(XmlReader reader, PeptideGroup group)
+        private PeptideDocNode[] ReadPeptideListXml(XmlReader reader, XmlReadContext context, PeptideGroup group)
         {
             var list = new List<PeptideDocNode>();
             while (reader.IsStartElement(EL.molecule) || reader.IsStartElement(EL.peptide))
             {
-                 list.Add(ReadPeptideXml(reader, group, reader.IsStartElement(EL.molecule)));
+                 list.Add(ReadPeptideXml(reader, context, group, reader.IsStartElement(EL.molecule)));
             }
             return list.ToArray();
         }
@@ -2108,10 +2129,11 @@ namespace pwiz.Skyline.Model
         /// positioned at the start element.
         /// </summary>
         /// <param name="reader">The reader positioned at a start element of a peptide or molecule</param>
+        /// <param name="context">Context object to store values passed to children but only used during this read</param>
         /// <param name="group">A previously read parent <see cref="Identity"/></param>
         /// <param name="isCustomMolecule">if true, we're reading a custom molecule, not a peptide</param>
         /// <returns>A new <see cref="PeptideDocNode"/></returns>
-        private PeptideDocNode ReadPeptideXml(XmlReader reader, PeptideGroup group, bool isCustomMolecule)
+        private PeptideDocNode ReadPeptideXml(XmlReader reader, XmlReadContext context, PeptideGroup group, bool isCustomMolecule)
         {
             int? start = reader.GetNullableIntAttribute(ATTR.start);
             int? end = reader.GetNullableIntAttribute(ATTR.end);
@@ -2153,18 +2175,18 @@ namespace pwiz.Skyline.Model
             {
                 reader.ReadStartElement();
                 if(reader.IsStartElement())
-                    annotations = ReadAnnotations(reader);
+                    annotations = ReadAnnotations(reader, context);
                 if (!isCustomMolecule)
                 {
                     mods = ReadExplicitMods(reader, peptide);
                     SkipImplicitModsElement(reader);
                     lookupMods = ReadLookupMods(reader, lookupSequence);
                 }
-                results = ReadPeptideResults(reader);
+                results = ReadPeptideResults(reader, context);
 
                 if (reader.IsStartElement(EL.precursor))
                 {
-                    children = ReadTransitionGroupListXml(reader, peptide, mods, customIon);
+                    children = ReadTransitionGroupListXml(reader, context, peptide, mods, customIon);
                 }
                 else if (reader.IsStartElement(EL.selected_transitions))
                 {
@@ -2174,7 +2196,7 @@ namespace pwiz.Skyline.Model
                     else
                     {
                         reader.ReadStartElement(EL.selected_transitions);
-                        children = ReadUngroupedTransitionListXml(reader, peptide, mods);
+                        children = ReadUngroupedTransitionListXml(reader, context, peptide, mods);
                         reader.ReadEndElement();
                     }
                 }
@@ -2310,14 +2332,14 @@ namespace pwiz.Skyline.Model
             return new TypedExplicitModifications(peptide, typedMods.LabelType, listMods.ToArray());
         }
 
-        private Results<PeptideChromInfo> ReadPeptideResults(XmlReader reader)
+        private Results<PeptideChromInfo> ReadPeptideResults(XmlReader reader, XmlReadContext context)
         {
             if (reader.IsStartElement(EL.peptide_results))
-                return ReadResults(reader, Settings, EL.peptide_result, ReadPeptideChromInfo);
+                return ReadResults(reader, context, Settings, EL.peptide_result, ReadPeptideChromInfo);
             return null;
         }
 
-        private static PeptideChromInfo ReadPeptideChromInfo(XmlReader reader,
+        private static PeptideChromInfo ReadPeptideChromInfo(XmlReader reader, XmlReadContext context,
             SrmSettings settings, ChromFileInfoId fileId)
         {
             float peakCountRatio = reader.GetFloatAttribute(ATTR.peak_count_ratio);
@@ -2330,19 +2352,20 @@ namespace pwiz.Skyline.Model
         /// a <see cref="XmlReader"/> positioned at the first element in the list.
         /// </summary>
         /// <param name="reader">The reader positioned at the first element</param>
+        /// <param name="context">Context object to store values passed to children but only used during this read</param>
         /// <param name="peptide">A previously read parent <see cref="Identity"/></param>
         /// <param name="mods">Explicit modifications for the peptide</param>
         /// <param name="customIon">Custom ion to use for reading older formats</param>
         /// <returns>A new array of <see cref="TransitionGroupDocNode"/></returns>
-        private TransitionGroupDocNode[] ReadTransitionGroupListXml(XmlReader reader, Peptide peptide, ExplicitMods mods, DocNodeCustomIon customIon)
+        private TransitionGroupDocNode[] ReadTransitionGroupListXml(XmlReader reader, XmlReadContext context, Peptide peptide, ExplicitMods mods, DocNodeCustomIon customIon)
         {
             var list = new List<TransitionGroupDocNode>();
             while (reader.IsStartElement(EL.precursor))
-                list.Add(ReadTransitionGroupXml(reader, peptide, mods, customIon));
+                list.Add(ReadTransitionGroupXml(reader, context, peptide, mods, customIon));
             return list.ToArray();
         }
 
-        private TransitionGroupDocNode ReadTransitionGroupXml(XmlReader reader, Peptide peptide, ExplicitMods mods, DocNodeCustomIon customIon)
+        private TransitionGroupDocNode ReadTransitionGroupXml(XmlReader reader, XmlReadContext context, Peptide peptide, ExplicitMods mods, DocNodeCustomIon customIon)
         {
             int precursorCharge = reader.GetIntAttribute(ATTR.charge);
             var typedMods = ReadLabelType(reader, IsotopeLabelType.light);
@@ -2402,9 +2425,9 @@ namespace pwiz.Skyline.Model
             else
             {
                 reader.ReadStartElement();
-                var annotations = ReadAnnotations(reader);
-                var libInfo = ReadTransitionGroupLibInfo(reader);
-                var results = ReadTransitionGroupResults(reader);
+                var annotations = ReadAnnotations(reader, context);
+                var libInfo = ReadTransitionGroupLibInfo(reader, context);
+                var results = ReadTransitionGroupResults(reader, context);
 
                 var nodeGroup = new TransitionGroupDocNode(group,
                                                   annotations,
@@ -2415,7 +2438,7 @@ namespace pwiz.Skyline.Model
                                                   results,
                                                   children,
                                                   autoManageChildren);
-                children = ReadTransitionListXml(reader, group, mods, nodeGroup.IsotopeDist);
+                children = ReadTransitionListXml(reader, context, group, mods, nodeGroup.IsotopeDist);
 
                 reader.ReadEndElement();
 
@@ -2434,26 +2457,29 @@ namespace pwiz.Skyline.Model
             return typedMods;
         }
 
-        private static SpectrumHeaderInfo ReadTransitionGroupLibInfo(XmlReader reader)
+        private static SpectrumHeaderInfo ReadTransitionGroupLibInfo(XmlReader reader, XmlReadContext context)
         {
             // Look for an appropriate deserialization helper for spectrum
             // header info on the current tag.
             var helpers = PeptideLibraries.SpectrumHeaderXmlHelpers;
             var helper = reader.FindHelper(helpers);
             if (helper != null)
-                return helper.Deserialize(reader);
+            {
+                var libInfo = helper.Deserialize(reader);
+                return libInfo.ChangeLibraryName(context.GetNonDuplicatedName(libInfo.LibraryName));
+            }
 
             return null;
         }
 
-        private Results<TransitionGroupChromInfo> ReadTransitionGroupResults(XmlReader reader)
+        private Results<TransitionGroupChromInfo> ReadTransitionGroupResults(XmlReader reader, XmlReadContext context)
         {
             if (reader.IsStartElement(EL.precursor_results))
-                return ReadResults(reader, Settings, EL.precursor_peak, ReadTransitionGroupChromInfo);
+                return ReadResults(reader, context, Settings, EL.precursor_peak, ReadTransitionGroupChromInfo);
             return null;
         }
 
-        private static TransitionGroupChromInfo ReadTransitionGroupChromInfo(XmlReader reader,
+        private static TransitionGroupChromInfo ReadTransitionGroupChromInfo(XmlReader reader, XmlReadContext context,
             SrmSettings settings, ChromFileInfoId fileId)
         {
             int optimizationStep = reader.GetIntAttribute(ATTR.step);
@@ -2475,7 +2501,7 @@ namespace pwiz.Skyline.Model
             if (!reader.IsEmptyElement)
             {
                 reader.ReadStartElement();
-                annotations = ReadAnnotations(reader);
+                annotations = ReadAnnotations(reader, context);
             }
             // Ignore userSet during load, since all values are still calculated
             // from the child transitions.  Otherwise inconsistency is possible.
@@ -2512,11 +2538,12 @@ namespace pwiz.Skyline.Model
         /// there will be only one.
         /// </summary>
         /// <param name="reader">The reader positioned on a &lt;transition&gt; start tag</param>
+        /// <param name="context">Context object to store values passed to children but only used during this read</param>
         /// <param name="peptide">A previously read <see cref="Peptide"/> instance</param>
         /// <param name="mods">Explicit mods for the peptide</param>
         /// <returns>An array of <see cref="TransitionGroupDocNode"/> instances for
         ///         inclusion in a <see cref="PeptideDocNode"/> child list</returns>
-        private TransitionGroupDocNode[] ReadUngroupedTransitionListXml(XmlReader reader, Peptide peptide, ExplicitMods mods)
+        private TransitionGroupDocNode[] ReadUngroupedTransitionListXml(XmlReader reader, XmlReadContext context, Peptide peptide, ExplicitMods mods)
         {
             TransitionInfo info = new TransitionInfo();
             TransitionGroup curGroup = null;
@@ -2526,7 +2553,7 @@ namespace pwiz.Skyline.Model
             while (reader.IsStartElement(EL.transition))
             {
                 // Read a transition tag.
-                info.ReadXml(reader, Settings);
+                info.ReadXml(reader, context, Settings);
 
                 // If the transition is not in the current group
                 if (curGroup == null || curGroup.PrecursorCharge != info.PrecursorCharge)
@@ -2578,16 +2605,17 @@ namespace pwiz.Skyline.Model
         /// a <see cref="TransitionDocNode"/> positioned at the first element in the list.
         /// </summary>
         /// <param name="reader">The reader positioned at the first element</param>
+        /// <param name="context">Context object to store values passed to children but only used during this read</param>
         /// <param name="group">A previously read parent <see cref="Identity"/></param>
         /// <param name="mods">Explicit modifications for the peptide</param>
         /// <param name="isotopeDist">Isotope peak distribution to use for assigning M+N m/z values</param>
         /// <returns>A new array of <see cref="TransitionDocNode"/></returns>
-        private TransitionDocNode[] ReadTransitionListXml(XmlReader reader, TransitionGroup group,
-            ExplicitMods mods, IsotopeDistInfo isotopeDist)
+        private TransitionDocNode[] ReadTransitionListXml(XmlReader reader, XmlReadContext context,
+            TransitionGroup group, ExplicitMods mods, IsotopeDistInfo isotopeDist)
         {
             var list = new List<TransitionDocNode>();
             while (reader.IsStartElement(EL.transition))
-                list.Add(ReadTransitionXml(reader, group, mods, isotopeDist));
+                list.Add(ReadTransitionXml(reader, context, group, mods, isotopeDist));
             return list.ToArray();
         }
 
@@ -2596,11 +2624,12 @@ namespace pwiz.Skyline.Model
         /// positioned at the start element.
         /// </summary>
         /// <param name="reader">The reader positioned at a start element of a transition</param>
+        /// <param name="context">Context object to store values passed to children but only used during this read</param>
         /// <param name="group">A previously read parent <see cref="Identity"/></param>
         /// <param name="mods">Explicit mods for the peptide</param>
         /// <param name="isotopeDist">Isotope peak distribution to use for assigning M+N m/z values</param>
         /// <returns>A new <see cref="TransitionDocNode"/></returns>
-        private TransitionDocNode ReadTransitionXml(XmlReader reader, TransitionGroup group,
+        private TransitionDocNode ReadTransitionXml(XmlReader reader, XmlReadContext context, TransitionGroup group,
             ExplicitMods mods, IsotopeDistInfo isotopeDist)
         {
             TransitionInfo info = new TransitionInfo();
@@ -2619,7 +2648,7 @@ namespace pwiz.Skyline.Model
                 else
                     customIon = DocNodeCustomIon.Deserialize(reader);
             }
-            info.ReadXmlElements(reader, Settings);
+            info.ReadXmlElements(reader, context, Settings);
 
             Transition transition;
             if (isCustom)
@@ -2651,7 +2680,18 @@ namespace pwiz.Skyline.Model
                 massH, isotopeDistInfo, info.LibInfo, info.Results);
         }
 
+        /// <summary>
+        /// Reads annotations without ensuring that they use a single unique key string. This
+        /// is currently only used for <see cref="ChromatogramSet"/>, because it is difficult to
+        /// get it to use the version with a non-null context and the possible level of repetition
+        /// is much smaller than with the document nodes and results objects.
+        /// </summary>
         public static Annotations ReadAnnotations(XmlReader reader)
+        {
+            return ReadAnnotations(reader, null);
+        }
+
+        private static Annotations ReadAnnotations(XmlReader reader, XmlReadContext context)
         {
             string note = null;
             int color = 0;
@@ -2667,6 +2707,8 @@ namespace pwiz.Skyline.Model
                 string name = reader.GetAttribute(ATTR.name);
                 if (name == null)
                     throw new InvalidDataException(Resources.SrmDocument_ReadAnnotations_Annotation_found_without_name);
+                if (context != null)
+                    name = context.GetNonDuplicatedName(name);
                 annotations[name] = reader.ReadElementString();
             }
 
@@ -2696,10 +2738,10 @@ namespace pwiz.Skyline.Model
             public Results<TransitionChromInfo> Results { get; private set; }
             public MeasuredIon MeasuredIon { get; private set; }
 
-            public void ReadXml(XmlReader reader, SrmSettings settings)
+            public void ReadXml(XmlReader reader, XmlReadContext context, SrmSettings settings)
             {
                 ReadXmlAttributes(reader, settings);
-                ReadXmlElements(reader, settings);
+                ReadXmlElements(reader, context, settings);
             }
 
             public void ReadXmlAttributes(XmlReader reader, SrmSettings settings)
@@ -2724,7 +2766,7 @@ namespace pwiz.Skyline.Model
                 }
             }
 
-            public void ReadXmlElements(XmlReader reader, SrmSettings settings)
+            public void ReadXmlElements(XmlReader reader, XmlReadContext context, SrmSettings settings)
             {
                 if (reader.IsEmptyElement)
                 {
@@ -2733,7 +2775,7 @@ namespace pwiz.Skyline.Model
                 else
                 {
                     reader.ReadStartElement();
-                    Annotations = ReadAnnotations(reader); // This is reliably first in all versions
+                    Annotations = ReadAnnotations(reader, context); // This is reliably first in all versions
                     while (true)
                     {  // The order of these elements may depend on the version of the file being read
                         if (reader.IsStartElement(EL.losses))
@@ -2741,7 +2783,7 @@ namespace pwiz.Skyline.Model
                         else if (reader.IsStartElement(EL.transition_lib_info))
                             LibInfo = ReadTransitionLibInfo(reader);
                         else if (reader.IsStartElement(EL.transition_results))
-                            Results = ReadTransitionResults(reader, settings);
+                            Results = ReadTransitionResults(reader, context, settings);
                         // Read and discard informational elements.  These values are always
                         // calculated from the settings to ensure consistency.
                         else if (reader.IsStartElement(EL.precursor_mz))
@@ -2817,14 +2859,14 @@ namespace pwiz.Skyline.Model
                 return null;
             }
 
-            private static Results<TransitionChromInfo> ReadTransitionResults(XmlReader reader, SrmSettings settings)
+            private static Results<TransitionChromInfo> ReadTransitionResults(XmlReader reader, XmlReadContext context, SrmSettings settings)
             {
                 if (reader.IsStartElement(EL.transition_results))
-                    return ReadResults(reader, settings, EL.transition_peak, ReadTransitionPeak);
+                    return ReadResults(reader, context, settings, EL.transition_peak, ReadTransitionPeak);
                 return null;
             }
 
-            private static TransitionChromInfo ReadTransitionPeak(XmlReader reader,
+            private static TransitionChromInfo ReadTransitionPeak(XmlReader reader, XmlReadContext context,
                 SrmSettings settings, ChromFileInfoId fileId)
             {
                 int optimizationStep = reader.GetIntAttribute(ATTR.step);
@@ -2850,7 +2892,7 @@ namespace pwiz.Skyline.Model
                 if (!reader.IsEmptyElement)
                 {
                     reader.ReadStartElement();
-                    annotations = ReadAnnotations(reader);
+                    annotations = ReadAnnotations(reader, context);
                 }
                 int countRatios = settings.PeptideSettings.Modifications.RatioInternalStandardTypes.Count;
                 return new TransitionChromInfo(fileId,
@@ -2872,8 +2914,8 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        private static Results<TItem> ReadResults<TItem>(XmlReader reader, SrmSettings settings, string start,
-                Func<XmlReader, SrmSettings, ChromFileInfoId, TItem> readInfo)
+        private static Results<TItem> ReadResults<TItem>(XmlReader reader, XmlReadContext context, SrmSettings settings, string start,
+                Func<XmlReader, XmlReadContext, SrmSettings, ChromFileInfoId, TItem> readInfo)
             where TItem : ChromInfo
         {
             // If the results element is empty, then there are no results to read.
@@ -2906,7 +2948,7 @@ namespace pwiz.Skyline.Model
                 if (fileInfoId == null)
                     throw new InvalidDataException(string.Format(Resources.SrmDocument_ReadResults_No_file_with_id__0__found_in_the_replicate__1__, fileId, name));
 
-                TItem chromInfo = readInfo(reader, settings, fileInfoId);
+                TItem chromInfo = readInfo(reader, context, settings, fileInfoId);
                 // Consume the tag
                 reader.Read();
 
