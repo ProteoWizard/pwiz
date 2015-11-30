@@ -89,6 +89,15 @@ namespace pwiz.ProteowizardWrapper
             return FULL_READER_LIST.readIds(path);
         }
 
+        public const string PREFIX_TOTAL = "SRM TIC "; // Not L10N
+        public const string PREFIX_SINGLE = "SRM SIC "; // Not L10N
+        public const string PREFIX_PRECURSOR = "SIM SIC "; // Not L10N
+
+        public static bool IsSingleIonCurrentId(string id)
+        {
+            return id.StartsWith(PREFIX_SINGLE) || id.StartsWith(PREFIX_PRECURSOR);
+        }
+
         public MsDataFileImpl(string path, int sampleIndex = 0, LockMassParameters lockmassParameters = null, bool simAsSpectra = false, bool srmAsSpectra = false, bool acceptZeroLengthSpectra = true, bool requireVendorCentroidedMS1 = false, bool requireVendorCentroidedMS2 = false)
         {
             // see note above on enabling performance measurement
@@ -362,6 +371,7 @@ namespace pwiz.ProteowizardWrapper
                         IsWatersFile &&
                         _msDataFile.run.spectrumList != null &&
                         !_msDataFile.run.spectrumList.empty() &&
+                        !HasChromatogramData && 
                         !HasSrmSpectra;
                 }
                 catch (Exception)
@@ -639,6 +649,28 @@ namespace pwiz.ProteowizardWrapper
         public bool HasSrmSpectra
         {
             get { return HasSrmSpectraInList(SpectrumList); }
+        }
+
+        public bool HasChromatogramData
+        {
+            get
+            {
+                var len = ChromatogramCount;
+
+                // Many files have just one TIC chromatogram
+                if (len < 2)
+                    return false;
+
+                for (var i = 0; i < len; i++)
+                {
+                    int index;
+                    var id = GetChromatogramId(i, out index);
+
+                    if (IsSingleIonCurrentId(id))
+                        return true;
+                }
+                return false;
+            }
         }
 
         private static bool HasSrmSpectraInList(SpectrumList spectrumList)

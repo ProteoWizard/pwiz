@@ -318,21 +318,7 @@ namespace pwiz.Skyline.Model.Results
 
         public static bool HasChromatogramData(MsDataFileImpl dataFile)
         {
-            int len = dataFile.ChromatogramCount;
-
-            // Many files have just one TIC chromatogram
-            if (len < 2)
-                return false;
-
-            for (int i = 0; i < len; i++)
-            {
-                int index;
-                string id = dataFile.GetChromatogramId(i, out index);
-
-                if (ChromKey.IsKeyId(id))
-                    return true;
-            }
-            return false;
+            return dataFile.HasChromatogramData;
         }
 
         public override void ReleaseMemory()
