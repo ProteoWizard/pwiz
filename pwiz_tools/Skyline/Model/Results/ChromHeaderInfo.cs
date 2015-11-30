@@ -1704,17 +1704,13 @@ namespace pwiz.Skyline.Model.Results
             return (f1 > f2 ? 1 : -1);
         }
 
-        // Not LS0N
-        private const string PREFIX_TOTAL = "SRM TIC "; // Not L10N
-        private const string PREFIX_SINGLE = "SRM SIC "; // Not L10N
-        private const string PREFIX_PRECURSOR = "SIM SIC "; // Not L10N
         private const string SUFFIX_CE = "CE="; // Not L10N
 
         private static readonly Regex REGEX_ABI = new Regex(@"Q1=([^ ]+) Q3=([^ ]+) "); // Not L10N
 
         public static bool IsKeyId(string id)
         {
-            return id.StartsWith(PREFIX_SINGLE) || id.StartsWith(PREFIX_PRECURSOR); // || id.StartsWith(PREFIX_TOTAL); Skip the TICs, since Skyline calculates these
+            return MsDataFileImpl.IsSingleIonCurrentId(id); // || id.StartsWith(PREFIX_TOTAL); Skip the TICs, since Skyline calculates these
         }
 
         public static ChromKey FromId(string id, bool parseCE)
@@ -1722,20 +1718,20 @@ namespace pwiz.Skyline.Model.Results
             try
             {
                 double precursor, product;
-                if (id.StartsWith(PREFIX_TOTAL))
+                if (id.StartsWith(MsDataFileImpl.PREFIX_TOTAL))
                 {
-                    precursor = double.Parse(id.Substring(PREFIX_TOTAL.Length), CultureInfo.InvariantCulture);
+                    precursor = double.Parse(id.Substring(MsDataFileImpl.PREFIX_TOTAL.Length), CultureInfo.InvariantCulture);
                     product = 0;
                 }
-                else if (id.StartsWith(PREFIX_PRECURSOR))
+                else if (id.StartsWith(MsDataFileImpl.PREFIX_PRECURSOR))
                 {
-                    precursor = double.Parse(id.Substring(PREFIX_TOTAL.Length), CultureInfo.InvariantCulture);
+                    precursor = double.Parse(id.Substring(MsDataFileImpl.PREFIX_TOTAL.Length), CultureInfo.InvariantCulture);
                     product = precursor;
                 }
-                else if (id.StartsWith(PREFIX_SINGLE))
+                else if (id.StartsWith(MsDataFileImpl.PREFIX_SINGLE))
                 {
                     // Remove the prefix
-                    string mzPart = id.Substring(PREFIX_SINGLE.Length);
+                    string mzPart = id.Substring(MsDataFileImpl.PREFIX_SINGLE.Length);
 
                     // Check of ABI id format match
                     string[] mzs;

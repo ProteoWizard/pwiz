@@ -177,8 +177,8 @@ void MaxQuantReader::initFixedModifications()
             Verbosity::comment(V_DETAIL, "Checking for mqpar file in parent folder of msms.txt file.");
             if (!filesystem::exists(tryPath) || !filesystem::is_regular_file(tryPath))
             {
-                // Not there, throw exception
-                throw BlibException(false, "mqpar.xml file not found.");
+                // Not there, error
+                Verbosity::error("mqpar.xml file not found.");
             }
         }
     }
