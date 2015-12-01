@@ -31,6 +31,7 @@ namespace pwiz.Common.SystemUtil
         private Thread[] _produceThreads;
         private Thread[] _consumeThreads;
         private BlockingCollection<TItem> _queue;
+        private readonly object _queueLock = new object();
         private CountdownEvent _threadExit;
         private int _itemsWaiting;
         private readonly object _exceptionLock = new object();
@@ -71,7 +72,16 @@ namespace pwiz.Common.SystemUtil
         public void RunAsync(int consumeThreads, string consumeName, int produceThreads, string produceName, int maxQueueSize = -1)
         {
             // Create a queue and a number of threads to work on queued items.
-            _queue = maxQueueSize > 0 ? new BlockingCollection<TItem>(maxQueueSize) : new BlockingCollection<TItem>();
+            // First thread to call RunAsync wins.
+            lock (_queueLock)
+            {
+                if (_queue != null)
+                    return;
+                _queue = maxQueueSize > 0
+                    ? new BlockingCollection<TItem>(maxQueueSize)
+                    : new BlockingCollection<TItem>();
+            }
+
             _threadExit = new CountdownEvent(consumeThreads);
             if (produceThreads > 0)
                 _produceThreads = new Thread[produceThreads];
@@ -171,13 +181,19 @@ namespace pwiz.Common.SystemUtil
             if (_consumeThreads == null)
                 return;
 
+            Clear();
+            DoneAdding();
+        }
+
+        public void Clear()
+        {
             // Clear work queue.
             TItem item;
             while (_queue.TryTake(out item))
             {
             }
 
-            DoneAdding(true);
+            _itemsWaiting = 0;
         }
 
         /// <summary>
@@ -239,6 +255,8 @@ namespace pwiz.Common.SystemUtil
         /// </summary>
         public void DoneAdding(bool wait = false)
         {
+            if (_queue == null)
+                return;
             if (_consumeThreads == null)
             {
                 _queue.Add(null);
