@@ -182,8 +182,15 @@ namespace pwiz.Skyline.Model.Results
                 return false; // Return without even opening the file
             if (!Directory.Exists(filePath))
                 return false; // Thermo .raw is a file, Waters .raw is actually a directory
-            using (var f = new MsDataFileImpl(filePath))
-                return f.IsWatersLockmassCorrectionCandidate;
+            try
+            {
+                using (var f = new MsDataFileImpl(filePath))
+                    return f.IsWatersLockmassCorrectionCandidate;
+            }
+            catch (Exception)
+            {
+                return false; // whatever that was, it wasn't a Waters lockmass file
+            }
         }
 
         public override LockMassParameters GetLockMassParameters()
