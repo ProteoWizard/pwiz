@@ -2110,6 +2110,10 @@ namespace pwiz.Skyline.Model.Results
 
         public static bool IsOptimizationSpacing(double mz1, double mz2)
         {
+            // Must be ordered correctly to be optimization spacing
+            if (mz1 > mz2)
+                return false;
+
             double delta = Math.Abs(Math.Abs(mz2 - mz1) - OPTIMIZE_SHIFT_SIZE);
             return delta < OPTIMIZE_SHIFT_THRESHOLD;
         }
