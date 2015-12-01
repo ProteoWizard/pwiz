@@ -707,15 +707,32 @@ namespace pwiz.Skyline.Model.Results
             // a merged copy of the PeptideDocNode needs to be created that includes
             // this new precursor.
             if (ReferenceEquals(nodePep, NodePep))
-                AddDataSet(chromDataSet);
+            {
+                if (!FindAndMerge(chromDataSet))
+                {
+                    // Not necessary to update children, because found in peptide
+                    AddDataSet(chromDataSet);
+                }
+                else
+                {
+                    // Merging causes a change in the children
+                    UpdatePepChildren();
+                }
+            }
             // Unless we already have one of these
             else if (!HasEquivalentGroupNode(chromDataSet.NodeGroup))
             {
                 if (!FindAndMerge(chromDataSet))
                     AddDataSet(chromDataSet);
-                var childrenNew = DataSets.Select(d => d.NodeGroup).ToArray();
-                NodePep = (PeptideDocNode)NodePep.ChangeChildren(childrenNew);
+                // Change children no matter what, since this was not in the peptide
+                UpdatePepChildren();
             }
+        }
+
+        private void UpdatePepChildren()
+        {
+            var childrenNew = DataSets.Select(d => d.NodeGroup).ToArray();
+            NodePep = (PeptideDocNode)NodePep.ChangeChildrenChecked(childrenNew);
         }
 
         private void AddDataSet(ChromDataSet chromDataSet)

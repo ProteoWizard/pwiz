@@ -213,6 +213,8 @@ namespace pwiz.Skyline.Model.Results
                 if (!setKeys.Contains(chromData.Key))
                     Add(chromData);
             }
+            // Enforce expected sorting if product ions are coming from different groups
+            _listChromData.Sort((d1, d2) => d1.Key.CompareTo(d2.Key));
         }
 
         public bool Load(ChromDataProvider provider, string modifiedSequence, Color peptideColor)
@@ -770,9 +772,11 @@ namespace pwiz.Skyline.Model.Results
                 if (i < _listChromData.Count - 1 &&
                     ChromatogramInfo.IsOptimizationSpacing(_listChromData[i].Key.Product, _listChromData[i + 1].Key.Product))
                 {
+                    // CONSIDER: This is no longer possible, since IsOptimizationSpacing checked for order
+                    //           optimization spacing could happen at a boundary changing between ion types
                     if (_listChromData[i + 1].Key.Product < _listChromData[i].Key.Product)
                     {
-                        throw new InvalidDataException(String.Format(Resources.ChromDataSet_MarkOptimizationData_Incorrectly_sorted_chromatograms__0__1__,
+                        throw new InvalidDataException(string.Format(Resources.ChromDataSet_MarkOptimizationData_Incorrectly_sorted_chromatograms__0__1__,
                                                                      _listChromData[i + 1].Key.Product, _listChromData[i].Key.Product));
                     }
                 }
