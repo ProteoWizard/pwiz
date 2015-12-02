@@ -119,6 +119,7 @@
 <Component Feature="MainFeature"><File Id="_ObjectListView.dll" Name="ObjectListView.dll" Source="msvc-release\ObjectListView.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_PopupControl.dll" Name="PopupControl.dll" Source="msvc-release\PopupControl.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_QuasiTel.R" Name="QuasiTel.R" Source="msvc-release\QuasiTel.R" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_scantime.R" Name="scantime.R" Source="msvc-release\scantime.R" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_System.Data.SQLite.dll" Name="System.Data.SQLite.dll" Source="msvc-release\System.Data.SQLite.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_gene2protein.db3" Name="gene2protein.db3" Source="msvc-release\gene2protein.db3" KeyPath="yes"/></Component>
 <!--
