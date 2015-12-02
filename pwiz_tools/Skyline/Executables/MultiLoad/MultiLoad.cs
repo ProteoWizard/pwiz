@@ -12,7 +12,7 @@ namespace MultiLoad
         private const string RootDir = @"C:\Users\donmarsh\Documents\Data"; //@"D:\Data\20150331_Pedro_TTOF5600_64w";
         private const string SkylineFile = @"TTOF_64w.sky";
         private const string SkydFile = RootDir + @"\" + SkylineFile + "d";
-        private const string SkylineExe = @"D:\pwiz\pwiz_tools\Skyline\bin\x64\Release\Skyline-daily.exe";
+        private const string SkylineExe = @"D:\pwiz\pwiz_tools\Skyline\bin\x64\Release\Skyline.exe";
         private const string Log = RootDir + @"\MultiLoad_#.log";
 
         private string _log;
