@@ -400,7 +400,7 @@
     <value>asyncGraph</value>
   </data>
   <data name="&gt;&gt;asyncGraph.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.Graphs.AsyncChromatogramsGraph, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.Graphs.AsyncChromatogramsGraph, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;asyncGraph.Parent" xml:space="preserve">
     <value>panelGraph</value>
@@ -529,6 +529,6 @@
     <value>AllChromatogramsGraph</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

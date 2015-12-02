@@ -124,7 +124,7 @@
     <value>The Skyline document will retain results acquired only within the last 'n' days, where 'n' is the size of the rolling "Results time window". Results from runs older than the rolling window will be removed from the document.</value>
   </data>
   <data name="richTextBox1.Text" xml:space="preserve">
-    <value>The version of AutoQC installed must be compatible with the version of Skyline being used. For example, if you are running Skyline-daily you must install AutoQC-daily. 
+    <value>The version of AutoQC installed must be compatible with the version of Skyline being used. For example, if you are running Skyline you must install AutoQC-daily. 
 
 Before starting AutoQC set up the appropriate settings in the "Settings" tab. AutoQC requires the path to a folder were the instrument will write QC runs, as well as the path to a Skyline document where results will get imported.  Any new runs added to the folder will automatically get imported to the given Skyline document. 
 When AutoQC is started it will import all existing runs in the folder that are newer than the last imported run in the Skyline document. If the document does not have any imported results AutoQC will import all existing runs in the folder. 
