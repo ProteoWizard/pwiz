@@ -124,7 +124,7 @@
     <value>Skyline 文档将仅保留在最后“n”天内获得的结果，这里“n”是滚动“结果时间窗口”的大小。在滚动窗口以前的运行结果将从文档中删除。</value>
   </data>
   <data name="richTextBox1.Text" xml:space="preserve">
-    <value>安装的 AutoQC 版本必须兼容正在使用的 Skyline 版本。例如，如果您正在运行 Skyline-daily，则您必须安装 AutoQC-daily。
+    <value>安装的 AutoQC 版本必须兼容正在使用的 Skyline 版本。例如，如果您正在运行 Skyline，则您必须安装 AutoQC-daily。
 
 在开始 AutoQC 前，在“设置”标签中进行合适的设置。AutoQC 需要到达仪器写 QC 运行的文件夹的路径，以及结果将被导入的 Skyline 文档的路径。 添加到文件夹的任何新运行将自动导入到已知的 Skyline 文档。
 当开始 AutoQC 后，它将导入所有现有的运行到文件夹中，这些运行比 Skyline 文档中最后导入的运行要更新。如果文档没有任何导入的结果，AutoQC 将导入所有现有运行到文件夹中。

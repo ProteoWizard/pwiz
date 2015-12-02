@@ -105,7 +105,7 @@
     <value>Error: Could not connect to Skyline.</value>
   </data>
   <data name="Program_Program_Make_sure_you_have_a_valid__0__installation_" xml:space="preserve">
-    <comment>Example: Make sure you have a valid Skyline-Daily installation.</comment>
+    <comment>Example: Make sure you have a valid Skyline installation.</comment>
     <value>Make sure you have a valid {0} installation.</value>
   </data>
 </root>
