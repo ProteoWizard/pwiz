@@ -21,12 +21,14 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Serialization;
 using Ionic.Zip;
+using Newtonsoft.Json.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Alerts;
@@ -840,7 +842,22 @@ namespace pwiz.Skyline
 
         public bool SaveDocument(String fileName, bool includingCacheFile = true)
         {
-            SrmDocument document = DocumentUI;
+            if (string.IsNullOrEmpty(DocumentUI.Settings.DataSettings.DocumentGuid) ||
+                !Equals(DocumentFilePath, fileName))
+            {
+                SrmDocument docOriginal;
+                SrmDocument docNew;
+                do
+                {
+                    docOriginal = Document;
+                    docNew =
+                        docOriginal.ChangeSettings(
+                            docOriginal.Settings.ChangeDataSettings(
+                                docOriginal.Settings.DataSettings.ChangeDocumentGuid()));
+                } while (!SetDocument(docNew, docOriginal));
+            }
+
+            SrmDocument document = Document;
 
             try
             {
@@ -2430,6 +2447,9 @@ namespace pwiz.Skyline
 
         public void ShowPublishDlg(IPanoramaPublishClient publishClient)
         {
+            if (publishClient == null)
+                publishClient = new WebPanoramaPublishClient();
+
             var document = DocumentUI;
             if (!document.IsLoaded)
             {
@@ -2482,17 +2502,76 @@ namespace pwiz.Skyline
 
                 servers.Add(newServer);
             }
+            var panoramaSavedUri = document.Settings.DataSettings.PanoramaPublishUri;
+            var showPublishDocDlg = true;
 
-            using (var publishDocumentDlg = new PublishDocumentDlg(this, servers, fileName))
+            // if the document has a saved uri prompt user for acton, check servers, and permissions, then publish
+            // if something fails in the attempt to publish to the saved uri will bring up the usual PublishDocumentDlg
+            if (panoramaSavedUri != null && !string.IsNullOrEmpty(panoramaSavedUri.ToString()))
             {
-                publishDocumentDlg.PanoramaPublishClient = publishClient;
-                if (publishDocumentDlg.ShowDialog(this) == DialogResult.OK)
+                showPublishDocDlg = !PublishToSavedUri(publishClient, panoramaSavedUri, fileName, servers);
+            }
+
+            // if no uri was saved to publish to or user chose to view the dialog show the dialog
+            if (showPublishDocDlg)
+            {
+                using (var publishDocumentDlg = new PublishDocumentDlg(this, servers, fileName))
                 {
-                    if (ShareDocument(publishDocumentDlg.FileName, false))
-                        publishDocumentDlg.UploadSharedZipFile(this);
+                    publishDocumentDlg.PanoramaPublishClient = publishClient;
+                    if (publishDocumentDlg.ShowDialog(this) == DialogResult.OK)
+                    {
+                        if (ShareDocument(publishDocumentDlg.FileName, false))
+                            publishDocumentDlg.Upload(this);
+                    }
                 }
             }
         }
+
+        private bool PublishToSavedUri(IPanoramaPublishClient publishClient, Uri panoramaSavedUri, string fileName,
+            ServerList servers)
+        {
+            var message = TextUtil.LineSeparate(Resources.SkylineWindow_ShowPublishDlg_This_file_was_last_published_to___0_,
+                Resources.SkylineWindow_ShowPublishDlg_Publish_to_the_same_location_);
+            if (MultiButtonMsgDlg.Show(this, string.Format(message, panoramaSavedUri),
+                    MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false) != DialogResult.Yes)
+                return false;
+
+            var server = servers.FirstOrDefault(s => s.URI.Host.Equals(panoramaSavedUri.Host));
+            if (server == null)
+                return false;
+
+            JToken folders;
+            var folderPath = panoramaSavedUri.AbsolutePath;
+            try
+            {
+                folders = publishClient.GetInfoForFolders(server, folderPath.TrimEnd('/').TrimStart('/'));
+            }
+            catch (WebException)
+            {
+                return false;
+            }
+
+            // must escape uri string as panorama api does not and strings are escaped in schema
+            if (folders == null || !folderPath.Contains(Uri.EscapeUriString(folders["path"].ToString()))) // Not L10N
+                return false;
+
+            if (!PanoramaUtil.CheckFolderPermissions(folders) || !PanoramaUtil.CheckFolderType(folders))
+                return false;
+
+            var fileInfo = new FolderInformation(server, true);
+            if (!publishClient.ServerSupportsSkydVersion(fileInfo, this, this))
+                return false;
+
+            var zipFilePath = FileEx.GetTimeStampedFileName(fileName);
+            if (!ShareDocument(zipFilePath, false))
+                return false;
+
+            var serverRelativePath = folders["path"].ToString() + '/'; // Not L10N
+            serverRelativePath = serverRelativePath.TrimStart('/');
+            publishClient.UploadSharedZipFile(this, server, zipFilePath, serverRelativePath);
+            return true; // success!
+        }
+
 
         private void chorusRequestToolStripMenuItem_Click(object sender, EventArgs e)
         {

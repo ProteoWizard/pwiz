@@ -50,7 +50,7 @@ namespace pwiz.Skyline.FileUI
             chrom_lib,
             folder
          }
-        
+
         public PublishDocumentDlg(IDocumentUIContainer docContainer, SettingsList<Server> servers, string fileName)
         {
             IsLoaded = false;
@@ -84,7 +84,7 @@ namespace pwiz.Skyline.FileUI
                         Text = Resources.PublishDocumentDlg_PublishDocumentDlg_Load_Retrieving_information_on_servers
                     })
                 {
-                    waitDlg.PerformWork(this, 1000, () => PublishDocumentDlgLoad(listServerFolders));
+                    waitDlg.PerformWork(this, 800, () => PublishDocumentDlgLoad(listServerFolders));
                 }
             }
             catch (Exception x)
@@ -95,7 +95,7 @@ namespace pwiz.Skyline.FileUI
             foreach (var serverFolder in listServerFolders)
             {
                 var server = serverFolder.Key;
-                TreeNode treeNode = new TreeNode(server.URI.ToString()) {Tag = new FolderInformation(server, false)};
+                var treeNode = new TreeNode(server.URI.ToString()) { Tag = new FolderInformation(server, false) };
                 treeViewFolders.Nodes.Add(treeNode);
                 if (serverFolder.Value != null)
                     AddSubFolders(server, treeNode, serverFolder.Value);
@@ -117,7 +117,7 @@ namespace pwiz.Skyline.FileUI
                 JToken folders = null;
                 try
                 {
-                    folders = PanoramaPublishClient.GetInfoForFolders(server);
+                    folders = PanoramaPublishClient.GetInfoForFolders(server, null);
                 }
                 catch (WebException)
                 {
@@ -144,28 +144,6 @@ namespace pwiz.Skyline.FileUI
         private void SaveServerTreeExpansion()
         {
             Settings.Default.PanoramaServerExpansion = ServerTreeStateRestorer.GetPersistentString();
-        }
-
-        private class FolderInformation
-        {
-            private readonly Server _server;
-            private readonly bool _hasWritePermission;
-
-            public FolderInformation(Server server, bool hasWritePermission)
-            {
-                _server = server;
-                _hasWritePermission = hasWritePermission;
-            }
-
-            public Server Server
-            {
-                get { return _server; }
-            }
-
-            public bool HasWritePermission
-            {
-                get { return _hasWritePermission; }
-            }
         }
 
         private void AddSubFolders(Server server, TreeNode node, JToken folder)
@@ -256,91 +234,21 @@ namespace pwiz.Skyline.FileUI
                 return;
             }
 
-            if (!ServerSupportsSkydVersion(folderInfo))
+            if (!PanoramaPublishClient.ServerSupportsSkydVersion(folderInfo,_docContainer, this))
             {
                 return;
             }
 
             DialogResult = DialogResult.OK;
         }
-
-        private bool ServerSupportsSkydVersion(FolderInformation folderInfo)
+           
+        public void Upload(Control parent)
         {
-            var settings = _docContainer.DocumentUI.Settings;
-            Assume.IsTrue(_docContainer.DocumentUI.IsLoaded);
-            var cacheVersion = settings.HasResults ? settings.MeasuredResults.CacheVersion : null;
-
-            if (cacheVersion == null)
-            {
-                // The document may not have any chromatogram data.
-                return true;
-            }
-
-            var serverVersionsJson = PanoramaPublishClient.SupportedVersionsJson(folderInfo.Server);
-            if (serverVersionsJson == null)
-            {
-                // There was an error getting the server-supported skyd version for some reason.
-                // Perhaps this is an older server that did not understand the request, or
-                // the returned JSON was malformed. Let the document upload continue.
-                return true;
-            }
-
-            int? serverVersion = null;
-            JToken serverSkydVersion;
-            if (serverVersionsJson.TryGetValue("SKYD_version", out serverSkydVersion)) // Not L10N
-            {
-                int version;
-                if(int.TryParse(serverSkydVersion.Value<string>(), out version))
-                {
-                    serverVersion = version;   
-                }
-            }
-
-            if (serverVersion.HasValue && cacheVersion.Value > serverVersion.Value)
-            {
-                MessageDlg.Show(this,
-                    string.Format(
-                        Resources.PublishDocumentDlg_ServerSupportsSkydVersion_,
-                        cacheVersion.Value)
-                    );
-                return false;
-            }
-
-            return true;
-        }
-
-        public void UploadSharedZipFile(Control parent)
-        {
-            var folderPath = GetFolderPath(treeViewFolders.SelectedNode);
+            string folderPath = GetFolderPath(treeViewFolders.SelectedNode);
             var zipFilePath = tbFilePath.Text;
             FolderInformation folderInfo = treeViewFolders.SelectedNode.Tag as FolderInformation;
-            if (folderInfo == null)
-                return;
-
-            try
-            {
-                using (var waitDlg = new LongWaitDlg { Text = Resources.PublishDocumentDlg_UploadSharedZipFile_Uploading_File })
-                {
-                    waitDlg.PerformWork(parent, 1000, longWaitBroker => PanoramaPublishClient.SendZipFile(folderInfo.Server, folderPath,
-                                                                                            zipFilePath, longWaitBroker));
-                }
-            }
-            catch (Exception x)
-            {
-                var panoramaEx = x.InnerException as PanoramaImportErrorException;
-                if(panoramaEx == null)
-                {
-                    MessageDlg.ShowException(parent, x);
-                }
-                else
-                {
-                    var message = string.Format(Resources.WebPanoramaPublishClient_ImportDataOnServer_Error_importing_Skyline_file_on_Panorama_server__0_,
-                                                panoramaEx.ServerUrl);
-                    AlertLinkDlg.Show(parent, message,
-                        Resources.PublishDocumentDlg_UploadSharedZipFile_Click_here_to_view_the_error_details_,
-                        new Uri(panoramaEx.ServerUrl, panoramaEx.JobUrlPart).ToString());
-                }
-            }
+            if(folderInfo != null)
+                PanoramaPublishClient.UploadSharedZipFile(parent,folderInfo.Server, zipFilePath, folderPath);
         }
 
         private string GetFolderPath(TreeNode folderNode)

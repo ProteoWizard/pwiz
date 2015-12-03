@@ -96,8 +96,12 @@ namespace pwiz.SkylineTestFunctional
                     SkylineWindow.Undo();
                     SkylineWindow.SaveDocument(docPersistPath);
                 });
-
-            Assert.AreSame(docEmpty, SkylineWindow.Document);
+            // Document now changes because of document GUID
+            Assert.AreNotSame(docEmpty, SkylineWindow.Document);
+            Assert.AreNotSame(docEmpty.Settings.DataSettings, SkylineWindow.Document.Settings.DataSettings);
+            Assert.AreSame(docEmpty.Children, SkylineWindow.Document.Children);
+            Assert.AreSame(docEmpty.Settings.PeptideSettings, SkylineWindow.Document.Settings.PeptideSettings);
+            Assert.AreSame(docEmpty.Settings.TransitionSettings, SkylineWindow.Document.Settings.TransitionSettings);
             Assert.IsTrue(File.Exists(docPersistPath));
             Assert.IsFalse(File.Exists(cachePersistPath));
 
@@ -200,25 +204,25 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(expectCacheLen, newCacheLen);
             
             // An undo followed by a redo should not change that
-            Assert.AreEqual(8, SkylineWindow.Document.RevisionIndex);
+            Assert.AreEqual(9, SkylineWindow.Document.RevisionIndex);
             RunUI(SkylineWindow.Undo);
-            Assert.AreEqual(5, SkylineWindow.Document.RevisionIndex);
+            Assert.AreEqual(6, SkylineWindow.Document.RevisionIndex);
             Assert.AreEqual(newCacheLen, new FileInfo(cachePersistPath).Length);
             RunUI(SkylineWindow.Redo);
-            Assert.AreEqual(8, SkylineWindow.Document.RevisionIndex);
+            Assert.AreEqual(9, SkylineWindow.Document.RevisionIndex);
             Assert.AreEqual(newCacheLen, new FileInfo(cachePersistPath).Length);
             // Undo followed by a save, should reduce cache to previous size
             RunUI(SkylineWindow.Undo);
-            Assert.AreEqual(5, SkylineWindow.Document.RevisionIndex);
+            Assert.AreEqual(6, SkylineWindow.Document.RevisionIndex);
             RunUI(() => SkylineWindow.SaveDocument());
             Assert.AreEqual(startCacheLen, new FileInfo(cachePersistPath).Length);
-            Assert.AreEqual(6, SkylineWindow.Document.RevisionIndex);
+            Assert.AreEqual(7, SkylineWindow.Document.RevisionIndex);
             Thread.Sleep(10);  // Wait 10 ms to make sure the cache change in Redo registers as a cache modification
             // After which, a redo should return the document to the add state and
             // restore the cache
             RunUI(SkylineWindow.Redo);
             var docRedo = WaitForDocumentLoaded();
-            Assert.AreEqual(9, docRedo.RevisionIndex);
+            Assert.AreEqual(10, docRedo.RevisionIndex);
             stateAdd.AreEqual(docRedo);
             Assert.AreEqual(newCacheLen, new FileInfo(cachePersistPath).Length);
 
@@ -226,7 +230,7 @@ namespace pwiz.SkylineTestFunctional
             var docPreUndo = SkylineWindow.Document;
             RunUI(SkylineWindow.Undo);
             var docUndoLoaded = WaitForDocumentChangeLoaded(docPreUndo);
-            Assert.AreEqual(7, docUndoLoaded.RevisionIndex);
+            Assert.AreEqual(8, docUndoLoaded.RevisionIndex);
             Assert.AreNotSame(docInitial, docUndoLoaded);
             Assert.AreEqual(docInitial, docUndoLoaded);    // Cache optimization changes document
             docInitial = docUndoLoaded;
@@ -263,7 +267,7 @@ namespace pwiz.SkylineTestFunctional
                           SkylineWindow.Undo();
                           var docCurrent = SkylineWindow.DocumentUI;
                           if (ReferenceEquals(docInitial, docCurrent))
-                              Assert.AreEqual(7, docInitial.RevisionIndex);
+                              Assert.AreEqual(8, docInitial.RevisionIndex);
                           else
                           {
                               // Attempt to report more information when the test fails here

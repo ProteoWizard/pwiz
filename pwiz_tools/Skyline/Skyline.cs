@@ -2491,6 +2491,15 @@ namespace pwiz.Skyline
             }
         }
 
+        public void ChangeDocPanoramaUri(Uri uri)
+        {
+                    ModifyDocument(Resources.SkylineWindow_ChangeDocPanoramaUri_Store_Panorama_publish_location,
+                        doc => doc.ChangeSettings(
+                            doc.Settings.ChangeDataSettings(
+                                doc.Settings.DataSettings.ChangePanoramaPublishUri(
+                                uri))));
+        }
+
         private void editGroupComparisonListMenuItem_Click(object sender, EventArgs e)
         {
             DisplayDocumentSettingsDialogPage(1);

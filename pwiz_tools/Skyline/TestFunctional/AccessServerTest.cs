@@ -120,41 +120,54 @@ namespace pwiz.SkylineTestFunctional
             CheckPublishFailure(WRITE_NO_TARGETED,
                 Resources
                     .PublishDocumentDlg_UploadSharedZipFile_You_do_not_have_permission_to_upload_to_the_given_folder);
-            CheckPublishSuccess(WRITE_TARGETED);
+            CheckPublishSuccess(WRITE_TARGETED, false);
 
             // Document has no chromatograms, should be published regardless of skyd version supported by server -- Success
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("no_chromatograms.sky")));
             WaitForDocumentLoaded();
             ((TestPanoramaPublishClient)_testPublishClient).ServerSkydVersion = "7";
-            CheckPublishSuccess(WRITE_TARGETED);
+            CheckPublishSuccess(WRITE_TARGETED, false);
 
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("skyd9.sky")));
             WaitForDocumentLoaded();
             // Server supports a version lower than the chromatogram cache in this document -- Fail
             ((TestPanoramaPublishClient)_testPublishClient).ServerSkydVersion = "7";
             CheckPublishFailure(WRITE_TARGETED, string.Format(Resources.PublishDocumentDlg_ServerSupportsSkydVersion_, "9"));
+            Assert.AreEqual(SkylineWindow.Document.Settings.DataSettings.PanoramaPublishUri, null);
 
             // Server supports the version of the chromatogram cache in this document -- Success
             ((TestPanoramaPublishClient) _testPublishClient).ServerSkydVersion = "9";
-            CheckPublishSuccess(WRITE_TARGETED);
+            CheckPublishSuccess(WRITE_TARGETED, false);
+            Assert.AreNotEqual(SkylineWindow.Document.Settings.DataSettings.PanoramaPublishUri, null);
 
             // Document should be published even if an invalid version is returned by the server -- Success 
             ((TestPanoramaPublishClient)_testPublishClient).ServerSkydVersion = "NINE";
-            CheckPublishSuccess(WRITE_TARGETED);
-           
+            CheckPublishSuccess(WRITE_TARGETED, true);
         }
 
-        public void CheckPublishSuccess(string nodeSelection)
+        public void CheckPublishSuccess(string nodeSelection, bool expectingSavedUri)
         {
-            var publishDocumentDlg = ShowDialog<PublishDocumentDlg>(() => SkylineWindow.ShowPublishDlg(_testPublishClient));
-            WaitForCondition(60 * 1000, () => publishDocumentDlg.IsLoaded);
-            RunUI(() =>
+            bool hasSavedUri = SkylineWindow.Document.Settings.DataSettings.PanoramaPublishUri != null;
+            Assert.AreEqual(expectingSavedUri, hasSavedUri);
+            if (hasSavedUri)
             {
-                publishDocumentDlg.SelectItem(nodeSelection);
-                Assert.AreEqual(nodeSelection, publishDocumentDlg.GetSelectedNodeText());
-            });
-
-            OkDialog(publishDocumentDlg, publishDocumentDlg.OkDialog);
+                // Test click don't use saved uri
+                var publishToSavedUri = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.ShowPublishDlg(_testPublishClient));
+                OkDialog(publishToSavedUri, publishToSavedUri.ClickYes);
+            }
+            else
+            {
+                var publishDocumentDlg = ShowDialog<PublishDocumentDlg>(() => SkylineWindow.ShowPublishDlg(_testPublishClient));
+                WaitForCondition(60 * 1000, () => publishDocumentDlg.IsLoaded);
+                RunUI(() =>
+                {
+                    publishDocumentDlg.SelectItem(nodeSelection);
+                    Assert.AreEqual(nodeSelection, publishDocumentDlg.GetSelectedNodeText());
+                });
+                OkDialog(publishDocumentDlg, publishDocumentDlg.OkDialog);
+            }
+            var goToSite = WaitForOpenForm<MultiButtonMsgDlg>();
+            OkDialog(goToSite, goToSite.ClickNo);
         }
 
         public void CheckPublishFailure(string nodeSelection, string failureMessage)
@@ -219,7 +232,7 @@ namespace pwiz.SkylineTestFunctional
 
         private class TestPanoramaClient : IPanoramaClient
         {
-            public Uri ServerUri { get;  private set; }
+            public Uri ServerUri { get { return null; } }
             
             public ServerState GetServerState()
             {
@@ -256,7 +269,7 @@ namespace pwiz.SkylineTestFunctional
             }
         }
 
-        private class TestPanoramaPublishClient : IPanoramaPublishClient
+        private class TestPanoramaPublishClient : AbstractPanoramaPublishClient
         {
             string _serverSkydVersion = ChromatogramCache.FORMAT_VERSION_CACHE.ToString();
 
@@ -266,23 +279,11 @@ namespace pwiz.SkylineTestFunctional
                 set { _serverSkydVersion = value; }
             }
 
-
-            public JToken GetInfoForFolders(Server server)
-            {
-                JObject testFolders = new JObject();
-                testFolders["children"] = new JArray(
-                    CreateFolder(NO_WRITE_NO_TARGETED, false, false),
-                    CreateFolder(NO_WRITE_TARGETED, false, true),
-                    CreateFolder(WRITE_TARGETED, true, true),
-                    CreateFolder(WRITE_NO_TARGETED, true, false));
-
-                return testFolders;
-            }
-
             private JObject CreateFolder(string name, bool write, bool targeted)
             {
                 JObject obj = new JObject();
                 obj["name"] = name;
+                obj["path"] = "/" + name + "/";
                 obj["userPermissions"] = write ? 3 : 1;
                 if (!write || !targeted)
                 {
@@ -303,16 +304,33 @@ namespace pwiz.SkylineTestFunctional
                 return obj;
             }
 
-            public void SendZipFile(Server server, string folderPath, string zipFilePath, IProgressMonitor progressMonitor)
-            {                
+            public override JToken GetInfoForFolders(Server server, string folder)
+            {
+                JObject testFolders = new JObject();
+                // this addition is hacky but necessary as far as I can tell to get PanoramaSavedUri testing to work
+                // basically adds a WRITE_TARGET type folder in the root because the new code to deal with publishing to a 
+                // saved uri doesn't load a folder tree, but instead the directory structure for a single folder
+                testFolders = CreateFolder(WRITE_TARGETED, true, true);
+                testFolders["children"] = new JArray(
+                    CreateFolder(NO_WRITE_NO_TARGETED, false, false),
+                    CreateFolder(NO_WRITE_TARGETED, false, true),
+                    CreateFolder(WRITE_TARGETED, true, true),
+                    CreateFolder(WRITE_NO_TARGETED, true, false));
+                return testFolders;
             }
 
-            public JObject SupportedVersionsJson(Server server)
+            public override Uri SendZipFile(Server server, string folderPath, string zipFilePath, IProgressMonitor progressMonitor)
+            {
+                return null;
+            }
+
+            public override JObject SupportedVersionsJson(Server server)
             {
                 var obj = new JObject();
                 obj["SKYD_version"] = ServerSkydVersion;
                 return obj;
             }
+
         }
     }
 }

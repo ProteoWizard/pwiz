@@ -20,16 +20,21 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading;
+using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 
@@ -506,22 +511,130 @@ namespace pwiz.Skyline.Util
 
     public interface IPanoramaPublishClient
     {
-        JToken GetInfoForFolders(Server server);
-        void SendZipFile(Server server, string folderPath, string zipFilePath, IProgressMonitor progressMonitor);
+        JToken GetInfoForFolders(Server server, string folder);
+        Uri SendZipFile(Server server, string folderPath, string zipFilePath, IProgressMonitor progressMonitor);
         JObject SupportedVersionsJson(Server server);
+        void UploadSharedZipFile(Control parent, Server server, string zipFilePath, string folderPath);
+        bool ServerSupportsSkydVersion(FolderInformation folderInfo, IDocumentUIContainer _docContainer,
+            IWin32Window parent);
     }
 
-    class WebPanoramaPublishClient : IPanoramaPublishClient
+    public abstract class AbstractPanoramaPublishClient : IPanoramaPublishClient
+    {
+        public abstract JToken GetInfoForFolders(Server server, string folder);
+        public abstract Uri SendZipFile(Server server, string folderPath, string zipFilePath, IProgressMonitor progressMonitor);
+        public abstract JObject SupportedVersionsJson(Server server);
+        
+        public bool ServerSupportsSkydVersion(FolderInformation folderInfo, IDocumentUIContainer _docContainer, IWin32Window parent)
+        {
+            var settings = _docContainer.DocumentUI.Settings;
+            Assume.IsTrue(_docContainer.DocumentUI.IsLoaded);
+            var cacheVersion = settings.HasResults ? settings.MeasuredResults.CacheVersion : null;
+
+            if (cacheVersion == null)
+            {
+                // The document may not have any chromatogram data.
+                return true;
+            }
+
+            var serverVersionsJson = SupportedVersionsJson(folderInfo.Server);
+            if (serverVersionsJson == null)
+            {
+                // There was an error getting the server-supported skyd version for some reason.
+                // Perhaps this is an older server that did not understand the request, or
+                // the returned JSON was malformed. Let the document upload continue.
+                return true;
+            }
+
+            int? serverVersion = null;
+            JToken serverSkydVersion;
+            if (serverVersionsJson.TryGetValue("SKYD_version", out serverSkydVersion)) // Not L10N
+            {
+                int version;
+                if (int.TryParse(serverSkydVersion.Value<string>(), out version))
+                {
+                    serverVersion = version;
+                }
+            }
+
+            if (serverVersion.HasValue && cacheVersion.Value > serverVersion.Value)
+            {
+                MessageDlg.Show(parent,
+                    string.Format(
+                        Resources.PublishDocumentDlg_ServerSupportsSkydVersion_,
+                        cacheVersion.Value)
+                    );
+                return false;
+            }
+
+            return true;
+        }
+
+        public void UploadSharedZipFile(Control parent, Server server, string zipFilePath, string folderPath)
+        {
+            Uri result = null;
+
+            if (server == null)
+                return;
+            try
+            {
+                var isCanceled = false;
+                using (var waitDlg = new LongWaitDlg { Text = Resources.PublishDocumentDlg_UploadSharedZipFile_Uploading_File })
+                {
+                    waitDlg.PerformWork(parent, 1000, longWaitBroker =>
+                    {
+                        result = SendZipFile(server, folderPath,
+                            zipFilePath, longWaitBroker);
+                        if (longWaitBroker.IsCanceled)
+                            isCanceled = true;
+                    });
+                }
+                if (!isCanceled) // if user not canceled 
+                {
+                    String message = Resources.WebPanoramaPublishClient_UploadSharedZipFile_Publish_succeeded__would_you_like_to_view_the_file_in_Panorama_;
+                    if (MultiButtonMsgDlg.Show(parent, message, MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false)
+                        == DialogResult.Yes)
+                        Process.Start(result.ToString());
+                }
+            }
+            catch (Exception x)
+            {
+                var panoramaEx = x.InnerException as PanoramaImportErrorException;
+                if (panoramaEx != null && panoramaEx.ReturnUri != null)
+                {
+                    var message = Resources.WebPanoramaPublishClient_UploadSharedZipFile_An_error_occured_while_publishing_to_Panorama__would_you_like_to_go_to_Panorama_;
+                    if (MultiButtonMsgDlg.Show(parent, message, MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false)
+                        == DialogResult.Yes)
+                        Process.Start(panoramaEx.ReturnUri.ToString());
+                }
+                else
+                {
+                    MessageDlg.ShowException(parent, x);
+                }
+            }
+
+            // Change PanoramaUrl setting to the successful url used
+            var uriString = server.GetKey() + folderPath;
+            uriString = Uri.EscapeUriString(uriString);
+            var window = parent as SkylineWindow;
+            if (window != null && Uri.IsWellFormedUriString(uriString, UriKind.Absolute)) // cant do Uri.isWellFormed because of port and ip
+            {
+                window.ChangeDocPanoramaUri(new Uri(uriString));
+            }
+        }
+    }
+
+    class WebPanoramaPublishClient : AbstractPanoramaPublishClient
     {
         private WebClient _webClient;
         private IProgressMonitor _progressMonitor;
         private ProgressStatus _progressStatus;
 
        
-        public JToken GetInfoForFolders(Server server)
+        public override JToken GetInfoForFolders(Server server, string folder)
         {
             // Retrieve folders from server.
-            Uri uri = PanoramaUtil.GetContainersUri(server.URI, null, true); // Not L10N
+            Uri uri = PanoramaUtil.GetContainersUri(server.URI, folder, true); // Not L10N
 
             using (WebClient webClient = new WebClient())
             {
@@ -531,7 +644,7 @@ namespace pwiz.Skyline.Util
             }
         }
 
-        public void SendZipFile(Server server, string folderPath, string zipFilePath, IProgressMonitor progressMonitor)
+        public override Uri  SendZipFile(Server server, string folderPath, string zipFilePath, IProgressMonitor progressMonitor)
         {
             _progressMonitor = progressMonitor;
             _progressStatus = new ProgressStatus(String.Empty);
@@ -578,7 +691,7 @@ namespace pwiz.Skyline.Util
                             _progressStatus.ChangeMessage(
                                 Resources.WebPanoramaPublishClient_SendZipFile_Deleting_temporary_file_on_server));
                     DeleteTempZipFile(tmpUploadUri, server.AuthHeader);
-                    return;
+                    return null;
                 }
                 // Make sure the temporary file was uploaded to the server
                 ConfirmFileOnServer(tmpUploadUri, server.AuthHeader);
@@ -614,10 +727,11 @@ namespace pwiz.Skyline.Util
                                      "query.queryName=job&schemaName=pipeline&query.rowId~eq=" + rowId); // Not L10N
                 bool complete = false;
                 // Wait for import to finish before returning.
+                Uri result = null;
                 while (!complete)
                 {
                     if (progressMonitor.IsCanceled)
-                        return;
+                        return null;
 
                     string statusResponse = _webClient.UploadString(statusUri, PanoramaUtil.FORM_POST, string.Empty);
                     JToken jStatusResponse = JObject.Parse(statusResponse);
@@ -627,19 +741,24 @@ namespace pwiz.Skyline.Util
                         continue;
 
                     string status = (string)row["Status"]; // Not L10N
+                    result = new Uri(server.URI.AbsoluteUri.TrimEnd('/') + (string)row["_labkeyurl_Description"]); // Not L10N
                     if (string.Equals(status, "ERROR")) // Not L10N
                     {
-                        throw new PanoramaImportErrorException(server.URI, (string)row["_labkeyurl_RowId"]); // Not L10N
+                        var e = new PanoramaImportErrorException(server.URI, (string) row["_labkeyurl_RowId"], result); // Not L10N
+                        progressMonitor.UpdateProgress(
+                            _progressStatus = _progressStatus.ChangeErrorException(e));
+                        throw e;
                     }
 
                     complete = string.Equals(status, "COMPLETE"); // Not L10N
                 }
 
                 progressMonitor.UpdateProgress(_progressStatus.Complete());
+                return result;
             }
         }
 
-        public JObject SupportedVersionsJson(Server server)
+        public override JObject SupportedVersionsJson(Server server)
         {
             var uri = PanoramaUtil.Call(server.URI, "targetedms", null, "getMaxSupportedVersions"); // Not L10N
 
@@ -781,20 +900,44 @@ namespace pwiz.Skyline.Util
 
     public class PanoramaImportErrorException : Exception
     {
-        public PanoramaImportErrorException(Uri serverUrl, string jobUrlPart)
+        public PanoramaImportErrorException(Uri serverUrl, string jobUrlPart, Uri returnUri)
         {
             ServerUrl = serverUrl;
             JobUrlPart = jobUrlPart;
+            ReturnUri = returnUri;
         }
 
         public Uri ServerUrl { get; private set; }
         public string JobUrlPart { get; private set; }
+        public Uri ReturnUri { get; private set; }
     }
 
     public class PanoramaServerException : Exception
     {
         public PanoramaServerException(string message) : base(message)
         {
+        }
+    }
+
+    public class FolderInformation
+    {
+        private readonly Server _server;
+        private readonly bool _hasWritePermission;
+
+        public FolderInformation(Server server, bool hasWritePermission)
+        {
+            _server = server;
+            _hasWritePermission = hasWritePermission;
+        }
+
+        public Server Server
+        {
+            get { return _server; }
+        }
+
+        public bool HasWritePermission
+        {
+            get { return _hasWritePermission; }
         }
     }
 }

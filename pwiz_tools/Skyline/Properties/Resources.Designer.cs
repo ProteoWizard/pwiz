@@ -6439,6 +6439,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The URI {0} is not well formed..
+        /// </summary>
+        public static string DataSettings_ChangePanoramaPublishUri_The_URI__0__is_not_well_formed_ {
+            get {
+                return ResourceManager.GetString("DataSettings_ChangePanoramaPublishUri_The_URI__0__is_not_well_formed_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An error occurred attempting to read sample information from the file {0}..
         /// </summary>
         public static string DataSourceUtil_GetWiffSubPaths_An_error_occurred_attempting_to_read_sample_information_from_the_file__0__ {
@@ -20622,6 +20631,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Store Panorama publish location.
+        /// </summary>
+        public static string SkylineWindow_ChangeDocPanoramaUri_Store_Panorama_publish_location {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ChangeDocPanoramaUri_Store_Panorama_publish_location", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Change settings.
         /// </summary>
         public static string SkylineWindow_ChangeSettings_Change_settings {
@@ -22381,6 +22399,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Publish to the same location?.
+        /// </summary>
+        public static string SkylineWindow_ShowPublishDlg_Publish_to_the_same_location_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowPublishDlg_Publish_to_the_same_location_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Register.
         /// </summary>
         public static string SkylineWindow_ShowPublishDlg_Register {
@@ -22395,6 +22422,15 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_to_publish_to {
             get {
                 return ResourceManager.GetString("SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_to_publish_to", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This file was last published to: {0}.
+        /// </summary>
+        public static string SkylineWindow_ShowPublishDlg_This_file_was_last_published_to___0_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowPublishDlg_This_file_was_last_published_to___0_", resourceCulture);
             }
         }
         
@@ -26798,6 +26834,26 @@ namespace pwiz.Skyline.Properties {
         public static string WebPanoramaPublishClient_SendZipFile_Waiting_for_data_import_completion___ {
             get {
                 return ResourceManager.GetString("WebPanoramaPublishClient_SendZipFile_Waiting_for_data_import_completion___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An error occured while publishing to Panorama, would you like to go to Panorama?.
+        /// </summary>
+        public static string WebPanoramaPublishClient_UploadSharedZipFile_An_error_occured_while_publishing_to_Panorama__would_you_like_to_go_to_Panorama_ {
+            get {
+                return ResourceManager.GetString("WebPanoramaPublishClient_UploadSharedZipFile_An_error_occured_while_publishing_to" +
+                        "_Panorama__would_you_like_to_go_to_Panorama_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Publish succeeded, would you like to view the file in Panorama?.
+        /// </summary>
+        public static string WebPanoramaPublishClient_UploadSharedZipFile_Publish_succeeded__would_you_like_to_view_the_file_in_Panorama_ {
+            get {
+                return ResourceManager.GetString("WebPanoramaPublishClient_UploadSharedZipFile_Publish_succeeded__would_you_like_to" +
+                        "_view_the_file_in_Panorama_", resourceCulture);
             }
         }
         

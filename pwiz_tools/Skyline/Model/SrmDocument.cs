@@ -242,7 +242,8 @@ namespace pwiz.Skyline.Model
         public const double FORMAT_VERSION_3_11 = 3.11; // Adds compensation voltage optimization support
         public const double FORMAT_VERSION_3_12 = 3.12; // Adds small molecule ion labels and multiple charge states
         public const double FORMAT_VERSION_3_5 = 3.5; // Release format
-        public const double FORMAT_VERSION = FORMAT_VERSION_3_5;
+        public const double FORMAT_VERSION_3_51 = 3.51; // Adds document GUID and Panorama URI
+        public const double FORMAT_VERSION = FORMAT_VERSION_3_51;
 
         public const int MAX_PEPTIDE_COUNT = 100*1000;
         public const int MAX_TRANSITION_COUNT = 6*MAX_PEPTIDE_COUNT; // Modern DIA experiments may often have 6 transitions per peptide
@@ -2982,7 +2983,7 @@ namespace pwiz.Skyline.Model
         {
             writer.WriteAttribute(ATTR.format_version, FORMAT_VERSION);
             writer.WriteAttribute(ATTR.software_version, Install.ProgramNameAndVersion);
-                
+
             writer.WriteElement(Settings);
             foreach (PeptideGroupDocNode nodeGroup in Children)
             {

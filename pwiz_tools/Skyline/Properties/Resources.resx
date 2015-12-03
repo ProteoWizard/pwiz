@@ -8819,4 +8819,22 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="DataboundGridControl_DisplayError_Do_you_want_to_continue_to_see_these_error_messages_" xml:space="preserve">
     <value>Do you want to continue to see these error messages?</value>
   </data>
+  <data name="WebPanoramaPublishClient_UploadSharedZipFile_Publish_succeeded__would_you_like_to_view_the_file_in_Panorama_" xml:space="preserve">
+    <value>Publish succeeded, would you like to view the file in Panorama?</value>
+  </data>
+  <data name="WebPanoramaPublishClient_UploadSharedZipFile_An_error_occured_while_publishing_to_Panorama__would_you_like_to_go_to_Panorama_" xml:space="preserve">
+    <value>An error occured while publishing to Panorama, would you like to go to Panorama?</value>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg_This_file_was_last_published_to___0_" xml:space="preserve">
+    <value>This file was last published to: {0}</value>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg_Publish_to_the_same_location_" xml:space="preserve">
+    <value>Publish to the same location?</value>
+  </data>
+  <data name="DataSettings_ChangePanoramaPublishUri_The_URI__0__is_not_well_formed_" xml:space="preserve">
+    <value>The URI {0} is not well formed.</value>
+  </data>
+  <data name="SkylineWindow_ChangeDocPanoramaUri_Store_Panorama_publish_location" xml:space="preserve">
+    <value>Store Panorama publish location</value>
+  </data>
 </root>

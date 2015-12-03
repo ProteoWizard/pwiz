@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml;
@@ -25,6 +27,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.DocSettings
@@ -58,6 +61,10 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public ViewSpecList ViewSpecList { get; private set; }
 
+        public Uri PanoramaPublishUri { get; private set; }
+
+        public string DocumentGuid { get; private set; }
+
         #region Property change methods
         public DataSettings ChangeAnnotationDefs(IList<AnnotationDef> annotationDefs)
         {
@@ -72,6 +79,18 @@ namespace pwiz.Skyline.Model.DocSettings
         public DataSettings ChangeViewSpecList(ViewSpecList viewSpecList)
         {
             return ChangeProp(ImClone(this), im => im.ViewSpecList = viewSpecList);
+        }
+
+        public DataSettings ChangePanoramaPublishUri(Uri newUri)
+        {
+            if (!newUri.IsWellFormedOriginalString()) // https://msdn.microsoft.com/en-us/library/system.uri.iswellformedoriginalstring
+                throw new ArgumentException(string.Format(Resources.DataSettings_ChangePanoramaPublishUri_The_URI__0__is_not_well_formed_, newUri));
+            return ChangeProp(ImClone(this), im => im.PanoramaPublishUri = newUri);
+        }
+
+        public DataSettings ChangeDocumentGuid()
+        {
+            return ChangeProp(ImClone(this), im => im.DocumentGuid = Guid.NewGuid().ToString());
         }
         #endregion
 
@@ -110,6 +129,13 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public void ReadXml(XmlReader reader)
         {
+            string uri = reader.GetAttribute(Attr.panorama_publish_uri);
+            if (!string.IsNullOrEmpty(uri))
+                PanoramaPublishUri = new Uri(uri);
+            string docGuid = reader.GetAttribute(Attr.document_guid);
+            if (!string.IsNullOrEmpty(docGuid))
+                DocumentGuid = docGuid;
+
             var allElements = new List<IXmlSerializable>();
             // Consume tag
             if (reader.IsEmptyElement)
@@ -125,8 +151,19 @@ namespace pwiz.Skyline.Model.DocSettings
             ViewSpecList = allElements.OfType<ViewSpecList>().FirstOrDefault() ?? ViewSpecList.EMPTY;
         }
 
+        private enum Attr
+        {
+            panorama_publish_uri,
+            document_guid
+        }
+
         public void WriteXml(XmlWriter writer)
         {
+            if(PanoramaPublishUri != null)
+                writer.WriteAttributeIfString(Attr.panorama_publish_uri, PanoramaPublishUri.ToString());
+//            Assume.IsFalse(string.IsNullOrEmpty(DocumentGuid)); // Should have a document GUID by this point
+            if(!string.IsNullOrEmpty(DocumentGuid))
+                writer.WriteAttributeString(Attr.document_guid, DocumentGuid);
             var elements = AnnotationDefs.Cast<IXmlSerializable>().Concat(GroupComparisonDefs);
             if (ViewSpecList.ViewSpecs.Any())
             {
@@ -151,9 +188,11 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return ArrayUtil.EqualsDeep(other._annotationDefs, _annotationDefs) 
-                && ArrayUtil.EqualsDeep(other._groupComparisonDefs, _groupComparisonDefs)
-                && Equals(ViewSpecList, other.ViewSpecList);
+            return ArrayUtil.EqualsDeep(other._annotationDefs, _annotationDefs)
+                   && ArrayUtil.EqualsDeep(other._groupComparisonDefs, _groupComparisonDefs)
+                   && Equals(ViewSpecList, other.ViewSpecList)
+                   && Equals(PanoramaPublishUri, other.PanoramaPublishUri)
+                   && Equals(DocumentGuid, other.DocumentGuid);
         }
 
         public override bool Equals(object obj)
@@ -171,6 +210,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 int result = _annotationDefs.GetHashCodeDeep();
                 result = result*397 + _groupComparisonDefs.GetHashCodeDeep();
                 result = result*397 + ViewSpecList.GetHashCode();
+                result = result*397 + (PanoramaPublishUri == null ? 0 : PanoramaPublishUri.GetHashCode());
+                result = result*397 + (DocumentGuid == null ? 0 : DocumentGuid.GetHashCode());
                 return result;
             }
         }
