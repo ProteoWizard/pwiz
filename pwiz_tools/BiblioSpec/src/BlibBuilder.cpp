@@ -476,6 +476,8 @@ int BlibBuilder::parseNextSwitch(int i, int argc, char* argv[])
         Verbosity::open_logfile();
     } else if (switchName == 'A') {
         ambiguityMessages_ = true;
+    } else if (switchName == 'K') {
+        keepAmbiguous_ = true;
     } else {
         return BlibMaker::parseNextSwitch(i, argc, argv);
     }

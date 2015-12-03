@@ -302,7 +302,9 @@ void BuildParser::buildTables(PSM_SCORE_TYPE scoreType, string specFilename, boo
     filterBySequence(blibMaker_.getTargetSequences(), blibMaker_.getTargetSequencesModified());
 
     // prune out any duplicates from the list of psms
-    removeDuplicates();
+    if (!blibMaker_.keepAmbiguous()) {
+        removeDuplicates();
+    }
 
     // for reading spectrum file
     if( specReader_ ) {
