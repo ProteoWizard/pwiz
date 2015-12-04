@@ -211,6 +211,8 @@ class CleavageAgentInfo : public boost::singleton<CleavageAgentInfo>
                 cleavageAgents_.insert(*itr);
                 cleavageAgentNames_.push_back(cvTermInfo.name);
                 cleavageAgentNameToCvidMap_[bal::to_lower_copy(cvTermInfo.name)] = *itr;
+                BOOST_FOREACH(const string& synonym, cvTermInfo.exactSynonyms)
+                    cleavageAgentNameToCvidMap_[bal::to_lower_copy(synonym)] = *itr;
                 const CVTermInfo& cleavageAgentRegexTerm = pwiz::cv::cvTermInfo(regexRelationItr->second);
                 cleavageAgentRegexToCvidMap_[cleavageAgentRegexTerm.name] = *itr;
                 cleavageAgentToRegexMap_[*itr] = &cleavageAgentRegexTerm;

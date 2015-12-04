@@ -72,6 +72,8 @@ void testCleavageAgents()
     unit_assert_operator_equal(MS_Trypsin, Digestion::getCleavageAgentByName("trypsin"));
     unit_assert_operator_equal(MS_Trypsin_P, Digestion::getCleavageAgentByName("TRYPSIN/P"));
     unit_assert_operator_equal(MS_Trypsin_P, Digestion::getCleavageAgentByName("trypsin/p"));
+    unit_assert_operator_equal(MS_glutamyl_endopeptidase, Digestion::getCleavageAgentByName("glutamyl endopeptidase"));
+    unit_assert_operator_equal(MS_Glu_C, Digestion::getCleavageAgentByName("Glu-C")); // test exact synonyms
     unit_assert_operator_equal(CVID_Unknown, Digestion::getCleavageAgentByName("ion trap"));
     unit_assert_operator_equal(CVID_Unknown, Digestion::getCleavageAgentByName("!@#$%^&*"));
 
