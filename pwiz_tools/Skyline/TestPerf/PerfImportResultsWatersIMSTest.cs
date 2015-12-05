@@ -24,7 +24,6 @@ using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
-using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
@@ -110,8 +109,10 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 // just be able to move to the next page.
                 RunUI(() => Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page));
                 RunUI(() => importPeptideSearchDlg.ClickNextButton());
-
                 // Modifications are already set up, so that page should get skipped.
+                RunUI(() => importPeptideSearchDlg.ClickNextButton()); // Accept the full scan settings
+
+/* No lockmass correction for IMS data due to Waters DLL limitations as of Nov 2015
                 var lockmassDlg = ShowDialog<ImportResultsLockMassDlg>(() => importPeptideSearchDlg.ClickNextButton()); // Accept the full scan settings, lockmass correction dialog should appear
                 RunUI(() =>
                 {
@@ -122,7 +123,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 });
                 RunUI(lockmassDlg.OkDialog);
                 WaitForClosedForm<ImportResultsLockMassDlg>();
-
+*/
 
                 // Add FASTA also skipped because filter for document peptides was chosen.
 

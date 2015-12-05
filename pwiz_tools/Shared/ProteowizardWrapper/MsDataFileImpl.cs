@@ -372,6 +372,7 @@ namespace pwiz.ProteowizardWrapper
                         _msDataFile.run.spectrumList != null &&
                         !_msDataFile.run.spectrumList.empty() &&
                         !HasChromatogramData && 
+                        !HasDriftTimeSpectra && // CDT reader doesn't handle lockmass correction as of Nov 2015
                         !HasSrmSpectra;
                 }
                 catch (Exception)
@@ -651,6 +652,11 @@ namespace pwiz.ProteowizardWrapper
             get { return HasSrmSpectraInList(SpectrumList); }
         }
 
+        public bool HasDriftTimeSpectra
+        {
+            get { return HasDriftTimeSpectraInList(SpectrumList); }
+        }
+
         public bool HasChromatogramData
         {
             get
@@ -682,6 +688,18 @@ namespace pwiz.ProteowizardWrapper
             using (var spectrum = spectrumList.spectrum(0, false))
             {
                 return IsSrmSpectrum(spectrum);
+            }
+        }
+
+        private static bool HasDriftTimeSpectraInList(SpectrumList spectrumList)
+        {
+            if (spectrumList == null || spectrumList.size() == 0)
+                return false;
+
+            // Assume that if any spectra have drift times, all do
+            using (var spectrum = spectrumList.spectrum(0, false))
+            {
+                return GetDriftTimeMsec(spectrum).HasValue;
             }
         }
 
