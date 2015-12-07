@@ -116,8 +116,6 @@ namespace pwiz.Skyline
         /// </summary>
         public SkylineWindow(string[] args = null)
         {
-            LocalizationHelper.InitThread();
-
             InitializeComponent();
             
             _undoManager = new UndoManager(this);
