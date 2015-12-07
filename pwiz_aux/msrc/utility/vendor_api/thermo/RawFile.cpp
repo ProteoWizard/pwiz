@@ -1006,6 +1006,9 @@ void ScanInfoImpl::parseFilterString()
     constantNeutralLoss_ = filterParser.constantNeutralLoss_;
     analyzerScanOffset_ = filterParser.analyzer_scan_offset_;
 
+    // overwrite the filter line's isolation m/z with the value from GetPrecursorMassFromScanNum()
+    if (!precursorMZs_.empty())
+        precursorMZs_[0] = rawfile_->getPrecursorMass(scanNumber_, MSOrder_Any);
 
     for (size_t i=0; i < filterParser.scanRangeMin_.size(); ++i)
         scanRanges_.push_back(make_pair(filterParser.scanRangeMin_[i], filterParser.scanRangeMax_[i]));
@@ -1134,7 +1137,7 @@ double RawFileImpl::getPrecursorMass(long scanNumber, MSOrder msOrder)
 
     double result;
     checkResult(raw4->GetPrecursorMassForScanNum(scanNumber, msOrder, &result), "[RawFileImpl::GetPrecursorMassForScanNum()] ");
-    return floor(result * 100 + 0.5) / 100; // round to 2 decimal places (like the filter line)
+    return result;
 }
 
 
