@@ -727,6 +727,12 @@ namespace pwiz.Skyline.Model.Results
                 // Change children no matter what, since this was not in the peptide
                 UpdatePepChildren();
             }
+            // Important not to lose iRT type
+            if (nodePep.GlobalStandardType == PeptideDocNode.STANDARD_TYPE_IRT &&
+                NodePep.GlobalStandardType != PeptideDocNode.STANDARD_TYPE_IRT)
+            {
+                NodePep = NodePep.ChangeStandardType(PeptideDocNode.STANDARD_TYPE_IRT);
+            }
         }
 
         private void UpdatePepChildren()

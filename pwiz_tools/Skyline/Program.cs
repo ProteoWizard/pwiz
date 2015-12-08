@@ -155,7 +155,9 @@ namespace pwiz.Skyline
                     catch (CultureNotFoundException)
                     {
                     }
-                }                
+                }
+                LocalizationHelper.InitThread(Thread.CurrentThread);
+
                 // Make sure the user has agreed to the current license version
                 // or one more recent.
                 int licenseVersion = Settings.Default.LicenseVersionAccepted;

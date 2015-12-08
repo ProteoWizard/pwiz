@@ -127,7 +127,7 @@ namespace pwiz.Skyline.Model.Irt
         {
             RequireUsable();
 
-            var returnStandard = peptides.Where(_database.IsStandard).ToArray();
+            var returnStandard = peptides.Where(_database.IsStandard).Distinct().ToArray();
 
             if(returnStandard.Length != _database.StandardPeptideCount)
                 throw new IncompleteStandardException(this);
