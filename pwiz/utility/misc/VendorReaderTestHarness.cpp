@@ -485,7 +485,9 @@ void generate(const Reader& reader, const string& rawpath)
 {
     // read file into MSData object
     vector<MSDataPtr> msds;
-    reader.read(rawpath, "dummy", msds);
+    Reader::Config readerConfig;
+    readerConfig.adjustUnknownTimeZonesToHostTimeZone = false;
+    reader.read(rawpath, "dummy", msds, readerConfig);
     MSDataFile::WriteConfig config;
     config.indexed = false;
     config.binaryDataEncoderConfig.precision = BinaryDataEncoder::Precision_32;
