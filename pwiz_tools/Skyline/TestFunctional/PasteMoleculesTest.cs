@@ -105,6 +105,12 @@ namespace pwiz.SkylineTestFunctional
             const string line4 = "\r\nMyMolecule3\tMyMol3\tMyFrag3\tH2\tH\t\t\t1\t1";
 
             // Provoke some errors
+            TestError(line1.Replace("C34H12O4", "C77H12O4"), // mz and formula disagree
+                String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Error_on_line__0___Precursor_m_z__1__does_not_agree_with_value__2__as_calculated_from_ion_formula_and_charge_state__delta____3___Transition_Settings___Instrument___Method_match_tolerance_m_z____4_____Correct_the_m_z_value_in_the_table__or_leave_it_blank_and_Skyline_will_calculate_it_for_you_,
+                1, (float)precursorMzAtZNeg2, 500.0373, 258, docEmpty.Settings.TransitionSettings.Instrument.MzMatchTolerance));
+            TestError(line1.Replace("C34H3", "C76H3"), // mz and formula disagree
+                String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Error_on_line__0___Product_m_z__1__does_not_agree_with_value__2__as_calculated_from_ion_formula_and_charge_state__delta____3___Transition_Settings___Instrument___Method_match_tolerance_m_z____4_____Correct_the_m_z_value_in_the_table__or_leave_it_blank_and_Skyline_will_calculate_it_for_you_,
+                1, (float)productMzAtZNeg2, 465.5097, 252, docEmpty.Settings.TransitionSettings.Instrument.MzMatchTolerance));
             var badcharge = Transition.MAX_PRODUCT_CHARGE + 1;
             TestError(line1 + line2start + "\t\t1\t" + badcharge, // Excessively large charge for product
                 String.Format(Resources.Transition_Validate_Product_ion_charge__0__must_be_non_zero_and_between__1__and__2__, 

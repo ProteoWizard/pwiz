@@ -586,7 +586,7 @@ namespace pwiz.Skyline.EditUI
         private int INDEX_COMPENSATION_VOLTAGE { get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.compensationVoltage); } }
         private int INDEX_DECLUSTERING_POTENTIAL { get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.declusteringPotential); } }
 
-        private static int? ValidateFormulaWithMz(SrmDocument document, ref string moleculeFormula, double mz, int? charge, out double monoMass, out double averageMass)
+        private static int? ValidateFormulaWithMz(SrmDocument document, ref string moleculeFormula, double mz, int? charge, out double monoMass, out double averageMass, out double? mzCalc)
         {
             // Is the ion's formula the old style where user expected us to add a hydrogen?
             var tolerance = document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
@@ -598,7 +598,8 @@ namespace pwiz.Skyline.EditUI
                 ? monoMass
                 : averageMass;
             // Does given charge, if any, agree with mass and mz?
-            if (charge.HasValue && tolerance >= (Math.Abs(BioMassCalc.CalculateIonMz(mass, charge.Value) - mz)))
+            mzCalc = charge.HasValue ? BioMassCalc.CalculateIonMz(mass, charge.Value) : (double?)null;
+            if (mzCalc.HasValue && tolerance >= (Math.Abs(mzCalc.Value - mz)))
             {
                 return charge;
             }
@@ -930,7 +931,8 @@ namespace pwiz.Skyline.EditUI
                         if (mz > 0)
                         {
                             // Is the ion's formula the old style where user expected us to add a hydrogen? 
-                            charge = ValidateFormulaWithMz(document, ref formula, mz, charge, out monoMass, out averageMmass);
+                            double? mzCalc;
+                            charge = ValidateFormulaWithMz(document, ref formula, mz, charge, out monoMass, out averageMmass, out mzCalc);
                             row.Cells[indexFormula].Value = formula;
                             massOk = monoMass < CustomIon.MAX_MASS && averageMmass < CustomIon.MAX_MASS &&
                                      !(massTooLow = charge.HasValue && (monoMass < CustomIon.MIN_MASS || averageMmass < CustomIon.MIN_MASS)); // Null charge => masses are 0 but meaningless
@@ -941,9 +943,23 @@ namespace pwiz.Skyline.EditUI
                                     row.Cells[indexCharge].Value = charge.Value;
                                     return new MoleculeInfo(name, formula, charge.Value, mz, monoMass, averageMmass, isotopeLabelType, retentionTimeInfo, explicitTransitionGroupValues, note);
                                 }
-                                errMessage = String.Format(getPrecursorColumns
-                                    ? Resources.PasteDlg_ValidateEntry_Error_on_line__0___Precursor_formula_and_m_z_value_do_not_agree_for_any_charge_state_
-                                    : Resources.PasteDlg_ValidateEntry_Error_on_line__0___Product_formula_and_m_z_value_do_not_agree_for_any_charge_state_, row.Index+1);
+                                else if (mzCalc.HasValue)
+                                {
+                                    // There was an initial charge value, but it didn't make sense with formula and proposed mz
+                                    errMessage = String.Format(getPrecursorColumns
+                                        ? Resources.PasteDlg_ReadPrecursorOrProductColumns_Error_on_line__0___Precursor_m_z__1__does_not_agree_with_value__2__as_calculated_from_ion_formula_and_charge_state__delta____3___Transition_Settings___Instrument___Method_match_tolerance_m_z____4_____Correct_the_m_z_value_in_the_table__or_leave_it_blank_and_Skyline_will_calculate_it_for_you_
+                                        : Resources.PasteDlg_ReadPrecursorOrProductColumns_Error_on_line__0___Product_m_z__1__does_not_agree_with_value__2__as_calculated_from_ion_formula_and_charge_state__delta____3___Transition_Settings___Instrument___Method_match_tolerance_m_z____4_____Correct_the_m_z_value_in_the_table__or_leave_it_blank_and_Skyline_will_calculate_it_for_you_,
+                                        row.Index + 1, (float)mz, (float)mzCalc.Value, (float)(mzCalc.Value - mz), (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance);
+                                    errColumn = indexMz;
+                                }
+                                else
+                                {
+                                    // No charge state given, and mz makes no sense with formula
+                                    errMessage = String.Format(getPrecursorColumns
+                                        ? Resources.PasteDlg_ValidateEntry_Error_on_line__0___Precursor_formula_and_m_z_value_do_not_agree_for_any_charge_state_
+                                        : Resources.PasteDlg_ValidateEntry_Error_on_line__0___Product_formula_and_m_z_value_do_not_agree_for_any_charge_state_, row.Index+1);
+                                    errColumn = indexMz;
+                                }
                             }
                         }
                         else if (charge.HasValue)
