@@ -104,9 +104,9 @@ namespace pwiz.Skyline.Controls.Graphs
                                     GraphicsUnit.Pixel);
                             }
                             pictureBox.Invalidate(_context._invalidRect);
-                            pictureBox.Update();
                         }
 
+                        pictureBox.Update();
                         _context._invalidRect.Width = 0;
                         _context._updateTimer.Interval = FrameMilliseconds;
                     }

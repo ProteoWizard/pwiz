@@ -112,7 +112,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
             var newStatus = Interlocked.Exchange(ref _newStatus, null);
             if (newStatus != null)
+            {
                 _status = newStatus;
+                ResetGraph();
+            }
 
             if (_status == null)
                 return Rectangle.Empty;
@@ -195,22 +198,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 
                 if (bin == null)
                 {
-                    string sampleName = _status.FilePath.GetSampleName();
-                    string filePath = _status.FilePath.GetFileName();
-                    var fileName = !string.IsNullOrEmpty(sampleName)
-                        ? string.Format(Resources.AsyncChromatogramsGraph_Render__0___sample__1_, filePath, sampleName)
-                        : filePath;
-                    _graphPane.Title.Text = fileName;
-                    _graphPane.CurveList.Clear();
-                    _graphPane.XAxis.Scale.Max = _xMax = Math.Max(X_AXIS_START, _status.Transitions.MaxRetentionTime);
-                    _graphPane.YAxis.Scale.Max = _yMax = Y_AXIS_START;
-                    _graphPane.AxisChange();
-                    _xAxisAnimation = null;
-                    _yAxisAnimation = null;
-                    _activeCurves.Clear();
-                    _lastCurve = null;
-                    _fullFrame = true;
-                    peaksAdded = true;
+                    ResetGraph();
                     continue;
                 }
 
@@ -242,6 +230,26 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             return peaksAdded;
+        }
+
+        private void ResetGraph()
+        {
+            string sampleName = _status.FilePath.GetSampleName();
+            string filePath = _status.FilePath.GetFileName();
+            var fileName = !string.IsNullOrEmpty(sampleName)
+                ? string.Format(Resources.AsyncChromatogramsGraph_Render__0___sample__1_, filePath, sampleName)
+                : filePath;
+            _graphPane.Title.Text = fileName;
+            _graphPane.CurveList.Clear();
+            _graphPane.XAxis.Scale.Max = _xMax = Math.Max(X_AXIS_START, _status.Transitions.MaxRetentionTime);
+            _graphPane.YAxis.Scale.Max = _yMax = Y_AXIS_START;
+            _graphPane.AxisChange();
+            _xAxisAnimation = null;
+            _yAxisAnimation = null;
+            _activeCurves.Clear();
+            _lastCurve = null;
+            _fullFrame = true;
+            UpdateProgressLine(0);
         }
 
         private void ProcessBinProgressive(
