@@ -108,9 +108,9 @@ namespace pwiz.SkylineTestFunctional
             WaitForGraphs();
             Assert.AreEqual(2, graphChromatogramGraphControl.MasterPane.PaneList.Count);
             Assert.AreEqual(2, peakAreaSummary.GraphControl.MasterPane.PaneList.Count);
-            AssertCurveListsSame(GraphChromatogram.GetCurveList(graphChromatogramGraphControl.MasterPane.PaneList[0]),
+            AssertCurveListsSame(graphChromatogram.GetCurveList(graphChromatogramGraphControl.MasterPane.PaneList[0]),
                 peakAreaSummary.GraphControl.MasterPane.PaneList[0].CurveList);
-            AssertCurveListsSame(GraphChromatogram.GetCurveList(graphChromatogramGraphControl.MasterPane.PaneList[1]),
+            AssertCurveListsSame(graphChromatogram.GetCurveList(graphChromatogramGraphControl.MasterPane.PaneList[1]),
                 peakAreaSummary.GraphControl.MasterPane.PaneList[1].CurveList);
         }
 

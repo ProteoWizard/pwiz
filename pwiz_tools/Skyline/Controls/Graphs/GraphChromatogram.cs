@@ -2847,7 +2847,7 @@ namespace pwiz.Skyline.Controls.Graphs
             get { return GraphPanes.SelectMany(GetGraphItems); }
         }
 
-        public static IEnumerable<ChromGraphItem> GetGraphItems(GraphPane pane)
+        public IEnumerable<ChromGraphItem> GetGraphItems(GraphPane pane)
         {
             return GetCurves(pane).Select(c => c.Tag).Cast<ChromGraphItem>();
         }
@@ -2855,15 +2855,23 @@ namespace pwiz.Skyline.Controls.Graphs
         /// <summary>
         /// Return graph items associated with a GraphPane's curves.
         /// </summary>
-        public static IEnumerable<CurveItem> GetCurves(GraphPane pane)
+        public IEnumerable<CurveItem> GetCurves(GraphPane pane)
         {
-            return pane.CurveList.Where(curve => curve.Tag is ChromGraphItem && ((ChromGraphItem)curve.Tag).TransitionGroupNode != null);
+            foreach (var curve in pane.CurveList)
+            {
+                var graphItem = curve.Tag as ChromGraphItem;
+                if (graphItem != null)
+                {
+                    if (_showPeptideTotals || graphItem.TransitionGroupNode != null)
+                        yield return curve;
+                }
+            }
         }
 
         /// <summary>
         /// Return a GraphPane's curve list, skipping curves that don't have a graph item.
         /// </summary>
-        public static CurveList GetCurveList(GraphPane pane)
+        public CurveList GetCurveList(GraphPane pane)
         {
             var curveList = new CurveList();
             curveList.AddRange(GetCurves(pane));
