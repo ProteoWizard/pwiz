@@ -80,6 +80,11 @@ QuantitationConfiguration::QuantitationConfiguration(QuantitationMethod quantita
     }
 }
 
+QuantitationConfiguration::operator std::string() const
+{
+    return (boost::format("%1% ; %2%") % lexical_cast<string>(reporterIonMzTolerance) % (normalizeIntensities ? "1" : "0")).str();
+}
+
 
 namespace {
 
@@ -341,9 +346,6 @@ struct SpectrumList_Quantifier
             }
         }
 
-        if (!quantitationConfig.normalizeIntensities)
-            return;
-
         double itraq4plexIsotopeCorrectionFactors[4][4] =
         {
             // -2    -1     +1     +2
@@ -367,52 +369,56 @@ struct SpectrumList_Quantifier
         };
 
         // normalize reporter ion intensities to the total for each channel
-        if (quantitationMethod != QuantitationMethod::None && quantitationMethod != QuantitationMethod::LabelFree)
+        switch (quantitationMethod.value())
         {
-            switch (quantitationMethod.value())
+            case QuantitationMethod::ITRAQ4plex:
             {
-                case QuantitationMethod::ITRAQ4plex:
+                double (&icf)[4][4] = itraq4plexIsotopeCorrectionFactors;
+                for (size_t i=0; i < spectrumQuantitationRows.size(); ++i)
                 {
-                    normalizeReporterIons(itraqTotalReporterIonIntensities);
-                    double (&icf)[4][4] = itraq4plexIsotopeCorrectionFactors;
-                    for (size_t i=0; i < spectrumQuantitationRows.size(); ++i)
-                    {
-                        vector<double>& rii = spectrumQuantitationRows[i].reporterIonIntensities;
-                        /*114*/ rii[1] = max(0.0, rii[1] - icf[1][1]*rii[2]);
-                        /*115*/ rii[2] = max(0.0, rii[2] - (icf[0][2]*rii[1] + icf[2][1]*rii[3] + icf[3][0]*rii[4]));
-                        /*116*/ rii[3] = max(0.0, rii[3] - (icf[0][3]*rii[1] + icf[1][2]*rii[2] + icf[3][1]*rii[4]));
-                        /*117*/ rii[4] = max(0.0, rii[4] - (icf[1][3]*rii[2] + icf[2][2]*rii[3]));
-                    }
-                    break;
+                    vector<double>& rii = spectrumQuantitationRows[i].reporterIonIntensities;
+                    double icf_114_115=icf[1][1]*rii[2], icf_115_116=icf[2][1]*rii[3], icf_116_117=icf[3][1]*rii[4]; // icf_114_115 = fraction of 115's intensity to subtract from 114
+                    double icf_115_114=icf[0][2]*rii[1], icf_116_115=icf[1][2]*rii[2], icf_117_116=icf[2][2]*rii[3];
+                    /*114*/ rii[1] = max(0.0, rii[1] - icf_114_115);
+                    /*115*/ rii[2] = max(0.0, rii[2] - icf_115_116 - icf_115_114);
+                    /*116*/ rii[3] = max(0.0, rii[3] - icf_116_117 - icf_116_115);
+                    /*117*/ rii[4] = max(0.0, rii[4]               - icf_117_116);
                 }
-
-                case QuantitationMethod::ITRAQ8plex:
-                {
+                if (quantitationConfig.normalizeIntensities)
                     normalizeReporterIons(itraqTotalReporterIonIntensities);
-                    double (&icf)[8][4] = itraq8plexIsotopeCorrectionFactors;
-                    for (size_t i=0; i < spectrumQuantitationRows.size(); ++i)
-                    {
-                        vector<double>& rii = spectrumQuantitationRows[i].reporterIonIntensities;
-                        /*113*/ rii[0] = max(0.0, rii[0] - icf[1][1]*rii[1]);
-                        /*114*/ rii[1] = max(0.0, rii[1] - (icf[0][2]*rii[0] + icf[2][1]*rii[2]));
-                        /*115*/ rii[2] = max(0.0, rii[2] - (icf[0][3]*rii[0] + icf[1][2]*rii[1] + icf[3][1]*rii[3] + icf[4][0]*rii[4]));
-                        /*116*/ rii[3] = max(0.0, rii[3] - (icf[1][3]*rii[1] + icf[2][2]*rii[2] + icf[4][1]*rii[4] + icf[5][0]*rii[5]));
-                        /*117*/ rii[4] = max(0.0, rii[4] - (icf[2][3]*rii[2] + icf[3][2]*rii[3] + icf[5][1]*rii[5] + icf[6][0]*rii[6]));
-                        /*118*/ rii[5] = max(0.0, rii[5] - (icf[3][3]*rii[3] + icf[4][2]*rii[4] + icf[6][1]*rii[6]));
-                        /*119*/ rii[6] = max(0.0, rii[6] - icf[5][2]*rii[5]);
-                        /*121*/ //rii[7] -= icf[][1] *rii[1];
-                    }
-                    break;
-                }
-
-                case QuantitationMethod::TMT2plex:
-                case QuantitationMethod::TMT6plex:
-                case QuantitationMethod::TMT10plex:
-                    normalizeReporterIons(tmtTotalReporterIonIntensities);
-                    break;
-
-                default: break;
+                break;
             }
+
+            case QuantitationMethod::ITRAQ8plex:
+            {
+                double (&icf)[8][4] = itraq8plexIsotopeCorrectionFactors;
+                for (size_t i=0; i < spectrumQuantitationRows.size(); ++i)
+                {
+                    vector<double>& rii = spectrumQuantitationRows[i].reporterIonIntensities;
+                    double icf_113_114=icf[0][1]*rii[1], icf_114_115=icf[1][1]*rii[2], icf_115_116=icf[2][1]*rii[3], icf_116_117=icf[3][1]*rii[4], icf_117_118=icf[4][1]*rii[5], icf_118_119=icf[5][1]*rii[6];
+                    double icf_114_113=icf[0][2]*rii[0], icf_115_114=icf[1][2]*rii[1], icf_116_115=icf[2][2]*rii[2], icf_117_116=icf[3][2]*rii[3], icf_118_117=icf[4][2]*rii[4], icf_119_118=icf[5][2]*rii[5];
+                    /*113*/ rii[0] = max(0.0, rii[0] - icf_113_114);
+                    /*114*/ rii[1] = max(0.0, rii[1] - icf_114_115 - icf_114_113);
+                    /*115*/ rii[2] = max(0.0, rii[2] - icf_115_116 - icf_115_114);
+                    /*116*/ rii[3] = max(0.0, rii[3] - icf_116_117 - icf_116_115);
+                    /*117*/ rii[4] = max(0.0, rii[4] - icf_117_118 - icf_117_116);
+                    /*118*/ rii[5] = max(0.0, rii[5] - icf_118_119 - icf_118_117);
+                    /*119*/ rii[6] = max(0.0, rii[6]               - icf_119_118);
+                    /*121*/ //rii[7] is not adjusted because it is 2 Da away from the previous reporter ion
+                }
+                if (quantitationConfig.normalizeIntensities)
+                    normalizeReporterIons(itraqTotalReporterIonIntensities);
+                break;
+            }
+
+            case QuantitationMethod::TMT2plex:
+            case QuantitationMethod::TMT6plex:
+            case QuantitationMethod::TMT10plex:
+                if (quantitationConfig.normalizeIntensities)
+                    normalizeReporterIons(tmtTotalReporterIonIntensities);
+                break;
+
+            default: break;
         }
     }
 
@@ -424,7 +430,7 @@ struct SpectrumList_Quantifier
     {
         std::fill(reporterIonIntensities.begin(), reporterIonIntensities.end(), 0);
 
-        vector<ReporterIon>::const_iterator begin = reporterIonMZs.begin(), end = reporterIonMZs.end(), itr = begin;
+        vector<ReporterIon>::const_iterator begin = reporterIonMZs.begin(),end = reporterIonMZs.end(), itr = begin;
         for (size_t i=0; i < mzArray.size(); ++i)
         {
             if (mzArray[i] + tolerance < itr->mass)
@@ -831,13 +837,14 @@ void embedScanTime(const string& idpDbFilepath,
 
         // populate the source statistics
         sqlite::command cmd(idpDb, "UPDATE SpectrumSource SET "
-                                    "TotalSpectraMS1 = ?, TotalIonCurrentMS1 = ?, "
-                                    "TotalSpectraMS2 = ?, TotalIonCurrentMS2 = ?, "
-                                    "QuantitationMethod = ? "
-                                    "WHERE Id = ?");
+                                   "TotalSpectraMS1 = ?, TotalIonCurrentMS1 = ?, "
+                                   "TotalSpectraMS2 = ?, TotalIonCurrentMS2 = ?, "
+                                   "QuantitationMethod = ?, QuantitationSettings = ? "
+                                   "WHERE Id = ?");
         cmd.binder() << slq->totalSpectraByMSLevel[1] << slq->totalIonCurrentByMSLevel[1] <<
                         slq->totalSpectraByMSLevel[2] << slq->totalIonCurrentByMSLevel[2] <<
                         newQuantitationConfig.quantitationMethod.value() <<
+                        (string) newQuantitationConfig <<
                         source.id;
         cmd.execute();
         cmd.reset();
@@ -974,11 +981,11 @@ void embedGeneMetadata(const string& idpDbFilepath, pwiz::util::IterationListene
 }
 
 void EmbedMS1Metrics(const string& idpDbFilepath,
-           const string& sourceSearchPath,
-           const string& sourceExtensionPriorityList,
-           const map<int, QuantitationConfiguration>& quantitationMethodBySource,
-           const map<int, XIC::XICConfiguration>& xicConfigBySource,
-           pwiz::util::IterationListenerRegistry* ilr)
+                     const string& sourceSearchPath,
+                     const string& sourceExtensionPriorityList,
+                     const map<int, QuantitationConfiguration>& quantitationMethodBySource,
+                     const map<int, XIC::XICConfiguration>& xicConfigBySource,
+                     pwiz::util::IterationListenerRegistry* ilr)
 {
     sqlite::database idpDb;
     // get a list of sources from the database
@@ -994,7 +1001,6 @@ void EmbedMS1Metrics(const string& idpDbFilepath,
     idpDb.execute("DROP TABLE IF EXISTS XICMetrics; "
                   "DROP TABLE IF EXISTS XICMetricsSettings; "
                   "CREATE TABLE IF NOT EXISTS XICMetrics (Id INTEGER PRIMARY KEY, DistinctMatch INTEGER, SpectrumSource INTEGER, Peptide INTEGER, PeakIntensity NUMERIC, PeakArea NUMERIC, PeakSNR NUMERIC, PeakTimeInSeconds NUMERIC); "
-                  "CREATE TABLE IF NOT EXISTS XICMetricsSettings (SourceId INTEGER PRIMARY KEY, TotalSpectra INT, Settings STRING); "
                   "CREATE INDEX IF NOT EXISTS XICMetrics_MatchSourcePeptide ON XICMetrics(DistinctMatch,SpectrumSource,Peptide);");
     for(size_t i=0; i < sources.size(); ++i)
     {
@@ -1011,17 +1017,7 @@ void EmbedMS1Metrics(const string& idpDbFilepath,
         else if (xicConfigBySource.count(0) > 0)
             config = xicConfigBySource.find(0)->second; // applies to all sources
 
-        string align = "0";
-        if (config.AlignRetentionTime)
-            align = "1";
-        ostringstream oss; oss << config.MonoisotopicAdjustmentSet;
-        string configString = oss.str() + "; " +
-        "[-" + lexical_cast<string>(config.RetentionTimeLowerTolerance) + "," + lexical_cast<string>(config.RetentionTimeUpperTolerance) + "] ; "+
-        "[-" + lexical_cast<string>(config.ChromatogramMzLowerOffset) + "," + lexical_cast<string>(config.ChromatogramMzUpperOffset) + "] ; " +
-        lexical_cast<string>(config.MaxQValue) + " ; " + align;
-
-        int spectraAdded = XIC::EmbedMS1ForFile(idpDb, idpDbFilepath, source.filepath, lexical_cast<string>(source.id), config, ilr, i, sources.size());
-        idpDb.execute("INSERT INTO XICMetricsSettings VALUES (" + lexical_cast<string>(source.id) + "," + lexical_cast<string>(spectraAdded) + ",'" + configString+ "')");
+        /*int spectraAdded = */XIC::EmbedMS1ForFile(idpDb, idpDbFilepath, source.filepath, lexical_cast<string>(source.id), config, ilr, i, sources.size());
     }
 }
 

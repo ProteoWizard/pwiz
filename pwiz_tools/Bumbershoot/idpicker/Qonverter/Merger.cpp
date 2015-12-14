@@ -214,7 +214,7 @@ boost::format addNewSpectrumSourceGroupsSql(
 
 boost::format addNewSpectrumSourcesSql(
     "INSERT INTO merged.SpectrumSource\n"
-    "    SELECT ssMerge.AfterMergeId, Name, URL, ssgMerge.AfterMergeId, 0, 0, 0, 0, 0\n"
+    "    SELECT ssMerge.AfterMergeId, Name, URL, ssgMerge.AfterMergeId, 0, 0, 0, 0, 0, NULL\n"
     "    FROM %1%.SpectrumSource newSource\n"
     "    JOIN SpectrumSourceMergeMap ssMerge ON newSource.Id = ssMerge.BeforeMergeId\n"
     "    JOIN SpectrumSourceGroupMergeMap ssgMerge ON newSource.Group_ = ssgMerge.BeforeMergeId\n"

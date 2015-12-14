@@ -79,6 +79,7 @@
     RTCONFIG_VARIABLE( MZTolerance, LabelFreeLowerMzLimit, "10ppm" ) \
     RTCONFIG_VARIABLE( MZTolerance, LabelFreeUpperMzLimit, "10ppm" ) \
     RTCONFIG_VARIABLE( MZTolerance, ReporterIonMzTolerance, string("0.015mz") ) \
+    RTCONFIG_VARIABLE( bool, NormalizeReporterIons, true ) \
     RTCONFIG_VARIABLE( IDPICKER_NAMESPACE::MessageSeverity, LogLevel, "BriefInfo" ) \
     RTCONFIG_VARIABLE( string, LogFilepath, "" )
 

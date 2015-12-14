@@ -56,9 +56,12 @@ public ref struct Embedder abstract
 ref struct QuantitationConfiguration
 {
     QuantitationConfiguration(/*QuantitationMethod::None, MZTolerance(10, MZTolerance::PPM)*/);
+    QuantitationConfiguration(QuantitationMethod quantitationMethod, String^ settingsString);
+    virtual String^ ToString() override;
 
     property QuantitationMethod QuantitationMethod;
     property pwiz::CLI::chemistry::MZTolerance^ ReporterIonMzTolerance;
+    property bool NormalizeIntensities;
 };
 
 ref struct XICConfiguration

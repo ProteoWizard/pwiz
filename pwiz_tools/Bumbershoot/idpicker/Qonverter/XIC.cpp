@@ -320,6 +320,15 @@ XICConfiguration::XICConfiguration(bool AlignRetentionTime, const string& RTFold
                      : AlignRetentionTime(AlignRetentionTime), RTFolder(RTFolder), MaxQValue(MaxQValue), MonoisotopicAdjustmentSet(MonoisotopicAdjustmentSet), RetentionTimeLowerTolerance(RetentionTimeLowerTolerance), RetentionTimeUpperTolerance(RetentionTimeUpperTolerance), ChromatogramMzLowerOffset(ChromatogramMzLowerOffset), ChromatogramMzUpperOffset(ChromatogramMzUpperOffset)
 {}
 
+XICConfiguration::operator std::string() const
+{
+    return (boost::format("%1% ; [%2%,%3%] ; [%4%,%5%] ; %6% ; %7%") %
+                          lexical_cast<string>(MonoisotopicAdjustmentSet) %
+                          RetentionTimeLowerTolerance % RetentionTimeUpperTolerance %
+                          lexical_cast<string>(ChromatogramMzLowerOffset) % lexical_cast<string>(ChromatogramMzUpperOffset) %
+                          MaxQValue % (AlignRetentionTime ? 1 : 0)).str();
+}
+
 XICWindowList GetMZRTWindows(sqlite::database& db, MS2ScanMap& ms2ScanMap, const string& sourceId, XICConfiguration config)
 {
     // use avg mass if either offset is not in PPM units and the total tolerance in Daltons is greater than 1
@@ -1340,11 +1349,13 @@ int EmbedMS1ForFile(sqlite::database& idpDb, const string& idpDBFilePath, const 
         sqlite::command cmd2(idpDb, "UPDATE SpectrumSource SET "
                                     "TotalSpectraMS1 = ?, "
                                     "TotalSpectraMS2 = ?, "
-                                    "QuantitationMethod = ? "
+                                    "QuantitationMethod = ?, "
+                                    "QuantitationSettings = ? "
                                     "WHERE Id = ?");
         cmd2.binder() << MS1Count <<
                          MS2Count <<
-                         int(QuantitationMethod::LabelFree) <<
+                         QuantitationMethod::LabelFree <<
+                         (string) config <<
                          sourceId;
         cmd2.execute();
         cmd2.reset();

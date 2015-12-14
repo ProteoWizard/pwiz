@@ -57,6 +57,7 @@
         <property name="TotalIonCurrentMS1"/>
         <property name="TotalIonCurrentMS2"/>
         <property name="QuantitationMethod"/>
+        <property name="QuantitationSettings"/>
         <join optional="true" table="SpectrumSourceMetadata"><key column="Id"/><property name="Metadata" column="MsDataBytes" lazy="true" type="SpectrumSourceMetadataUserType"/></join>
     </class>
 

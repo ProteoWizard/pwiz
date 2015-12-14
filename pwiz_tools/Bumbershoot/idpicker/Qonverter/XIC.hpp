@@ -64,6 +64,8 @@ struct XICConfiguration
     int RetentionTimeUpperTolerance;
     pwiz::chemistry::MZTolerance ChromatogramMzLowerOffset;
     pwiz::chemistry::MZTolerance ChromatogramMzUpperOffset;
+
+    operator std::string() const;
 };
 
 

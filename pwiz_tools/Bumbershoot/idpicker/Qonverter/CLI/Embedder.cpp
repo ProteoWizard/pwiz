@@ -53,7 +53,8 @@ NativeEmbedder::QuantitationConfiguration makeNativeQuantitationConfiguration(Em
 {
     return NativeEmbedder::QuantitationConfiguration(NativeIDPicker::QuantitationMethod::get_by_value((int) managedQuantitationConfig->QuantitationMethod).get(),
                                                      pwiz::chemistry::MZTolerance(managedQuantitationConfig->ReporterIonMzTolerance->value,
-                                                                                  (pwiz::chemistry::MZTolerance::Units) managedQuantitationConfig->ReporterIonMzTolerance->units));
+                                                                                  (pwiz::chemistry::MZTolerance::Units) managedQuantitationConfig->ReporterIonMzTolerance->units),
+                                                     managedQuantitationConfig->NormalizeIntensities);
 }
 
 NativeXIC::XICConfiguration makeNativeXICConfiguration(Embedder::XICConfiguration^ managedXICConfig)
@@ -75,7 +76,34 @@ Embedder::QuantitationConfiguration::QuantitationConfiguration()
     NativeEmbedder::QuantitationConfiguration nativeConfig;
     this->QuantitationMethod = (IDPicker::QuantitationMethod) nativeConfig.quantitationMethod.value();
     ReporterIonMzTolerance = gcnew MZTolerance(nativeConfig.reporterIonMzTolerance.value, (MZTolerance::Units) nativeConfig.reporterIonMzTolerance.units);
+    NormalizeIntensities = nativeConfig.normalizeIntensities;
 }
+
+Embedder::QuantitationConfiguration::QuantitationConfiguration(IDPicker::QuantitationMethod quantitationMethod, String^ settingsString)
+{
+    String^ pattern = "([\\d\\.]+)(\\w+) ; (\\d)";
+    Regex^ rx = gcnew Regex(pattern);
+    Match^ match = rx->Match(settingsString);
+    if (match->Success)
+    {
+        MZTolerance::Units units = match->Groups[2]->Value->ToLower() == "mz" ? MZTolerance::Units::MZ : MZTolerance::Units::PPM;
+        ReporterIonMzTolerance = gcnew MZTolerance(Double::Parse(match->Groups[1]->Value), units);
+        NormalizeIntensities = (match->Groups[3]->Value == "1");
+    }
+    else
+    {
+        NativeEmbedder::QuantitationConfiguration nativeConfig;
+        ReporterIonMzTolerance = gcnew MZTolerance(nativeConfig.reporterIonMzTolerance.value, (MZTolerance::Units) nativeConfig.reporterIonMzTolerance.units);
+        NormalizeIntensities = nativeConfig.normalizeIntensities;
+    }
+    this->QuantitationMethod = quantitationMethod;
+}
+
+String^ Embedder::QuantitationConfiguration::ToString()
+{
+    return ReporterIonMzTolerance->value.ToString() + ReporterIonMzTolerance->units.ToString()->ToLower() + " ; " + (NormalizeIntensities ? "1" : "0");
+}
+
 
 Embedder::XICConfiguration::XICConfiguration()
 {
@@ -111,12 +139,12 @@ Embedder::XICConfiguration::XICConfiguration(String^ representitiveString)
         double ChromatogramMzLowerOffsetValue = -Double::Parse(match->Groups[5]->Value);
         double ChromatogramMzUpperOffsetValue = Double::Parse(match->Groups[7]->Value);
         
-        if (match->Groups[6]->Value == "mz")
+        if (match->Groups[6]->Value->ToLower() == "mz")
             ChromatogramMzLowerOffset = gcnew MZTolerance(ChromatogramMzLowerOffsetValue, MZTolerance::Units::MZ);
         else
             ChromatogramMzLowerOffset = gcnew MZTolerance(ChromatogramMzLowerOffsetValue, MZTolerance::Units::PPM);
             
-        if (match->Groups[8]->Value == "mz")
+        if (match->Groups[8]->Value->ToLower() == "mz")
             ChromatogramMzUpperOffset = gcnew MZTolerance(ChromatogramMzUpperOffsetValue, MZTolerance::Units::MZ);
         else
             ChromatogramMzUpperOffset = gcnew MZTolerance(ChromatogramMzUpperOffsetValue, MZTolerance::Units::PPM);
@@ -155,11 +183,12 @@ String^ Embedder::XICConfiguration::ToString()
     String^ align = "0";
     if (AlignRetentionTime == true)
         align = "1";
-    return "[" + MonoisotopicAdjustmentMin.ToString() + "," + MonoisotopicAdjustmentMax.ToString() + "] ; "
-            + "[" + (-RetentionTimeLowerTolerance).ToString() + "," + RetentionTimeUpperTolerance.ToString() + "] ; "
-            + "[" + (-ChromatogramMzLowerOffset->value).ToString() + ChromatogramMzLowerOffset->units.ToString()->ToLower()
-            + "," + (ChromatogramMzUpperOffset->value).ToString() + ChromatogramMzUpperOffset->units.ToString()->ToLower() + "] ; "
-            + MaxQValue.ToString() + " ; " + align;
+    return String::Format("[{0},{1}] ; [{2},{3}] ; [{4}{5},{6}{7}] ; {8} ; {9}",
+                          MonoisotopicAdjustmentMin, MonoisotopicAdjustmentMax,
+                          RetentionTimeLowerTolerance, RetentionTimeUpperTolerance,
+                          ChromatogramMzLowerOffset->value, ChromatogramMzLowerOffset->units.ToString()->ToLower(),
+                          ChromatogramMzUpperOffset->value, ChromatogramMzUpperOffset->units.ToString()->ToLower(),
+                          MaxQValue, align);
 }
 
 void Embedder::Embed(String^ idpDbFilepath,

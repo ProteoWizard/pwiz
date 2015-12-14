@@ -86,6 +86,8 @@ struct QuantitationConfiguration
     QuantitationMethod quantitationMethod;
     MZTolerance reporterIonMzTolerance;
     bool normalizeIntensities;
+
+    operator std::string() const;
 };
 
 

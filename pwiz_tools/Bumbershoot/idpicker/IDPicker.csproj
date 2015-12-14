@@ -387,11 +387,11 @@
     <Compile Include="Forms\UserErrorForm.Designer.cs">
       <DependentUpon>UserErrorForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Forms\XICForm.cs">
+    <Compile Include="Forms\QuantitationSettingsForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Forms\XICForm.Designer.cs">
-      <DependentUpon>XICForm.cs</DependentUpon>
+    <Compile Include="Forms\QuantitationSettingsForm.Designer.cs">
+      <DependentUpon>QuantitationSettingsForm.cs</DependentUpon>
     </Compile>
     <Compile Include="LayoutManager.cs" />
     <Compile Include="Program.cs" />
@@ -440,8 +440,8 @@
       <DependentUpon>IDPickerForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Forms\XICForm.resx">
-      <DependentUpon>XICForm.cs</DependentUpon>
+    <EmbeddedResource Include="Forms\QuantitationSettingsForm.resx">
+      <DependentUpon>QuantitationSettingsForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

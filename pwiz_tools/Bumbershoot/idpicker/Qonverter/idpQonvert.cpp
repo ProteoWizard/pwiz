@@ -102,7 +102,7 @@ int InitProcess( argList_t& args )
     {
         if( args[i] == "-workdir" && i+1 <= args.size() )
         {
-            chdir( args[i+1].c_str() );
+            bfs::current_path(args[i + 1]);
             args.erase( args.begin() + i );
         }
         else if( args[i] == "-cpus" && i+1 <= args.size() )
@@ -669,7 +669,7 @@ int run( int argc, char* argv[] )
 
         vector<string> idpDbFilepaths, parserFilepaths;
         BOOST_FOREACH(const string& filepath, g_rtConfig->inputFilepaths)
-            if (bfs::path(filepath).extension() == ".idpDB")
+            if (bal::iequals(bfs::path(filepath).extension().string(), ".idpDB"))
                 idpDbFilepaths.push_back(filepath);
             else
                 parserFilepaths.push_back(filepath);
@@ -760,7 +760,7 @@ int run( int argc, char* argv[] )
         if (g_rtConfig->EmbedSpectrumSources || g_rtConfig->EmbedSpectrumScanTimes)
         {
             map<int, Embedder::QuantitationConfiguration> allSourcesQuantitationMethodMap;
-            allSourcesQuantitationMethodMap[0] = Embedder::QuantitationConfiguration(g_rtConfig->QuantitationMethod, g_rtConfig->ReporterIonMzTolerance);
+            allSourcesQuantitationMethodMap[0] = Embedder::QuantitationConfiguration(g_rtConfig->QuantitationMethod, g_rtConfig->ReporterIonMzTolerance, g_rtConfig->NormalizeReporterIons);
 
             map<int, XIC::XICConfiguration> allSourcesXICConfigurationMap;
             allSourcesXICConfigurationMap[0] = XIC::XICConfiguration(false, "", g_rtConfig->MaxFDR,
@@ -794,7 +794,7 @@ int run( int argc, char* argv[] )
 
         // switch to exe directory to allow embedGeneMetadata to find the gene mappings
         bfs::path exePath(args[0]);
-        chdir(exePath.parent_path().string().c_str());
+        bfs::current_path(exePath.parent_path());
 
         if (g_rtConfig->EmbedGeneMetadata)
             for (size_t i=0 ; i < idpDbFilepaths.size(); ++i)

@@ -37,7 +37,7 @@ namespace sqlite = sqlite3pp;
 
 BEGIN_IDPICKER_NAMESPACE
 
-const int CURRENT_SCHEMA_REVISION = 13;
+const int CURRENT_SCHEMA_REVISION = 14;
 
 namespace SchemaUpdater {
 
@@ -109,13 +109,56 @@ struct DistinctDoubleArraySum
     }
 };
 
+void update_13_to_14(sqlite::database& db, const IterationListenerRegistry* ilr, bool& vacuumNeeded)
+{
+    ITERATION_UPDATE(ilr, 13, CURRENT_SCHEMA_REVISION, "updating schema version")
+
+    db.execute("ALTER TABLE SpectrumSource ADD COLUMN QuantitationSettings TEXT");
+    
+    try
+    {
+        sqlite::command cmd(db, "UPDATE SpectrumSource SET "
+                                "TotalSpectraMS1 = ?, TotalIonCurrentMS1 = 0, "
+                                "TotalSpectraMS2 = 0, TotalIonCurrentMS2 = 0, "
+                                "QuantitationMethod = ?, "
+                                "QuantitationSettings = ? "
+                                "WHERE Id = ?");
+
+        sqlite::query q(db, "SELECT SourceId, TotalSpectra, Settings FROM XICMetricsSettings");
+        sqlite3_int64 sourceId;
+        int totalSpectra;
+        string settings;
+
+        BOOST_FOREACH(sqlite::query::rows row, q)
+        {
+            row.getter() >> sourceId >> totalSpectra >> settings;
+
+            cmd.binder() << totalSpectra <<
+                            1 << // CONSIDER: include Embedder.hpp to access QuantitationMethod::LabelFree::value() ?
+                            settings <<
+                            sourceId;
+            cmd.execute();
+            cmd.reset();
+        }
+
+        db.execute("DROP TABLE XICMetricsSettings");
+    }
+    catch (sqlite::database_error& e)
+    {
+        if (!bal::contains(e.what(), "no such")) // column or table
+            throw runtime_error(e.what());
+    }
+
+    //update_14_to_15(db, ilr, vacuumNeeded);
+}
+
 void update_12_to_13(sqlite::database& db, const IterationListenerRegistry* ilr, bool& vacuumNeeded)
 {
     ITERATION_UPDATE(ilr, 12, CURRENT_SCHEMA_REVISION, "updating schema version")
 
     db.execute("CREATE TABLE IF NOT EXISTS PeptideModificationProbability(PeptideModification INTEGER PRIMARY KEY, Probability NUMERIC)");
 
-    //update_13_to_14(db, ilr, vacuumNeeded);
+    update_13_to_14(db, ilr, vacuumNeeded);
 }
 
 void update_11_to_12(sqlite::database& db, const IterationListenerRegistry* ilr, bool& vacuumNeeded)
@@ -601,6 +644,8 @@ bool update(sqlite3* idpDbConnection, const IterationListenerRegistry* ilr)
         update_11_to_12(db, ilr, vacuumNeeded);
     else if (schemaRevision == 12)
         update_12_to_13(db, ilr, vacuumNeeded);
+    else if (schemaRevision == 13)
+        update_13_to_14(db, ilr, vacuumNeeded);
     else if (schemaRevision > CURRENT_SCHEMA_REVISION)
         throw runtime_error("[SchemaUpdater::update] unable to update schema revision " +
                             lexical_cast<string>(schemaRevision) +

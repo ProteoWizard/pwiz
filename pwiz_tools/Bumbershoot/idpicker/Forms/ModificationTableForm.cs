@@ -911,7 +911,7 @@ namespace IDPicker.Forms
                 }
 
             var rowFilter = new StringBuilder();
-            rowFilter.AppendFormat("[{0}] = 'Infinity' OR Total >= {1}", deltaMassColumnName, minRows);
+            rowFilter.AppendFormat("[{0}] = '{2}' OR Total >= {1}", deltaMassColumnName, minRows, CultureInfo.CurrentCulture.NumberFormat.PositiveInfinitySymbol);
             if (unimodFilter)
                 rowFilter.AppendFormat(" AND ({0})", String.Join(" OR ", unimodMasses.Select(o => String.Format("([{0}]-{1} <= 0.0001 AND [{0}]-{1} >= -0.0001)", deltaMassColumnName, o.ToString(CultureInfo.InvariantCulture))).ToArray()));
             (dataGridView.DataSource as DataTable).DefaultView.RowFilter = rowFilter.ToString();

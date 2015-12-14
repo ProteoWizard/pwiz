@@ -94,8 +94,9 @@ struct path_stringer
     result_type operator()(const bfs::path& x) const { return x.string(); }
 };
 
-int testCommand(const string& command)
+int testCommand(string command)
 {
+    bal::replace_all(command, "idpQonvert.exe\"", "idpQonvert.exe\" -LogFilepath test.log ");
     cout << "Running command: " << command << endl;
     bpt::ptime start = bpt::microsec_clock::universal_time();
     int result = system(command.c_str());
@@ -316,6 +317,16 @@ void testIdpQonvert(const string& idpQonvertPath, const bfs::path& testDataPath)
     // ITRAQ4plex
     {
         command = (format("%1%\"%2%\" \"%3%\" -DecoyPrefix \"\" -OverwriteExistingFiles 1 -QuantitationMethod ITRAQ4plex%1%") % commandQuote % idpQonvertPath % bal::join(idFiles | boost::adaptors::transformed(path_stringer()), "\" \"")).str();
+        unit_assert_operator_equal(0, testCommand(command));
+
+        sqlite3pp::database db(idpDbFiles[0].string());
+        unit_assert(sqlite3pp::query(db, "SELECT COUNT(*) FROM SpectrumSource WHERE QuantitationMethod > 0").begin()->get<int>(0) > 0);
+        unit_assert(sqlite3pp::query(db, "SELECT COUNT(*) FROM SpectrumQuantitation WHERE iTRAQ_ReporterIonIntensities IS NOT NULL").begin()->get<int>(0) > 0);
+    }
+
+    // ITRAQ4plex without normalization
+    {
+        command = (format("%1%\"%2%\" \"%3%\" -DecoyPrefix \"\" -OverwriteExistingFiles 1 -QuantitationMethod ITRAQ4plex -NormalizeReporterIons 0%1%") % commandQuote % idpQonvertPath % bal::join(idFiles | boost::adaptors::transformed(path_stringer()), "\" \"")).str();
         unit_assert_operator_equal(0, testCommand(command));
 
         sqlite3pp::database db(idpDbFiles[0].string());
@@ -628,7 +639,7 @@ void testIdpQuery(const string& idpQueryPath, const bfs::path& testDataPath)
             ifstream outputFile((testDataPath / ("merged-empty-iTRAQ4plex-" + groupColumn + ".tsv")).string().c_str());
             string line;
             getline(outputFile, line);
-            unit_assert_operator_equal("Accession    GeneId    GeneGroup    DistinctPeptides    DistinctMatches    FilteredSpectra    IsDecoy    Cluster    ProteinGroup    Length    PercentCoverage    Sequence    Description    TaxonomyId    GeneName    GeneFamily    Chromosome    GeneDescription    ", line);
+            unit_assert_operator_equal("Accession\tGeneId\tGeneGroup\tDistinctPeptides\tDistinctMatches\tFilteredSpectra\tIsDecoy\tCluster\tProteinGroup\tLength\tPercentCoverage\tSequence\tDescription\tTaxonomyId\tGeneName\tGeneFamily\tChromosome\tGeneDescription\t", line);
             // TODO: figure out how to test the output of the second line
         }
 
@@ -672,6 +683,9 @@ int main(int argc, char* argv[])
 
     try
     {
+        // change to test executable's directory so that embedGeneMetadata can find gene2protein.db3
+        bfs::current_path(bfs::path(argv[0]).parent_path());
+
         vector<string> args(argv+1, argv + argc);
 
         size_t idpQonvertArg = findOneFilename("idpQonvert" + exeExtension, args);

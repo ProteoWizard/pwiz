@@ -47,7 +47,11 @@ namespace IDPicker.Forms
         private NHibernate.ISession session;
         private bool hasEmbeddedSources, hasNonEmbeddedSources;
         private bool embeddedChanges; // true if the embedded data has changed
-        private Dictionary<int, object[]> _savedRowSettings;
+
+        private Embedder.QuantitationConfiguration _defaultIsobaricConfig;
+        private Embedder.XICConfiguration _defaultXicConfig;
+        private Dictionary<int, Embedder.QuantitationConfiguration> _isobaricConfigBySource; // non-default configs
+        private Dictionary<int, Embedder.XICConfiguration> _xicConfigBySource; // non-default configs
 
         public bool CancelRequested { get; private set; }
         public bool EmbedInProgress { get; private set; }
@@ -59,12 +63,33 @@ namespace IDPicker.Forms
             InitializeComponent();
         }
 
+        public static bool IsIsobaric(QuantitationMethod quantitationMethod)
+        {
+            return quantitationMethod >= QuantitationMethod.ITRAQ4plex && quantitationMethod <= QuantitationMethod.TMT10plex;
+        }
+
+        public static bool IsLabelFree(QuantitationMethod quantitationMethod)
+        {
+            return quantitationMethod == QuantitationMethod.LabelFree;
+        }
+
+        public QuantitationMethod QuantitationMethodForRow(int rowIndex)
+        {
+            return (QuantitationMethod) quantitationMethodColumn.Items.IndexOf(dataGridView.Rows[rowIndex].Cells[quantitationMethodColumn.Index].Value);
+        }
+
         protected override void OnLoad (EventArgs e)
         {
             searchPathTextBox.Text = String.Join(";", Util.StringCollectionToStringArray(Properties.Settings.Default.SourcePaths));
             extensionsTextBox.Text = Properties.Settings.Default.SourceExtensions;
             embeddedChanges = false;
-            _savedRowSettings = new Dictionary<int, object[]>();
+
+            // TODO: set these from global defaults?
+            _defaultIsobaricConfig = new Embedder.QuantitationConfiguration() { QuantitationMethod = QuantitationMethod.ITRAQ4plex };
+            _defaultXicConfig = new Embedder.XICConfiguration();
+
+            _isobaricConfigBySource = new Dictionary<int, Embedder.QuantitationConfiguration>();
+            _xicConfigBySource = new Dictionary<int, Embedder.XICConfiguration>();
 
             CancelRequested = false;
             EmbedInProgress = false;
@@ -87,9 +112,7 @@ namespace IDPicker.Forms
             dataGridView.Rows.Clear();
 
             var rows = session.CreateSQLQuery(
-                "SELECT ss.Id, Name, COUNT(s.Id), IFNULL((SELECT LENGTH(MsDataBytes) FROM SpectrumSourceMetadata WHERE Id=ss.Id), 0), MIN(IFNULL(s.ScanTimeInSeconds, 0)), QuantitationMethod, " +
-                //"IFNULL((SELECT count() FROM XICMetrics x JOIN PeptideSpectrumMatch psm on x.PsmId=psm.Id JOIN Spectrum s on psm.Spectrum = s.Id where s.Source =ss.Id), 0) " +
-                "IFNULL((SELECT TotalSpectra FROM XICMetricsSettings WHERE SourceId=ss.Id), 0), IFNULL((SELECT Settings FROM XICMetricsSettings WHERE SourceId=ss.Id), '') " +
+                "SELECT ss.Id, Name, COUNT(s.Id), IFNULL((SELECT LENGTH(MsDataBytes) FROM SpectrumSourceMetadata WHERE Id=ss.Id), 0), MIN(IFNULL(s.ScanTimeInSeconds, 0)), QuantitationMethod, IFNULL(QuantitationSettings, '') " +
                 "FROM SpectrumSource ss " +
                 "JOIN UnfilteredSpectrum s ON ss.Id=Source " +
                 "GROUP BY ss.Id")
@@ -102,11 +125,13 @@ namespace IDPicker.Forms
                                       EmbeddedSize = Convert.ToInt32(o[3]),
                                       MinScanTime = Convert.ToDouble(o[4]),
                                       QuantitationMethodIndex = Convert.ToInt32(o[5]),
-                                      XICTotal = Convert.ToInt32(o[6]),
-                                      XICSettings = (string) o[7]
+                                      QuantitationSettings = (string) o[6]
                                   });
 
             hasEmbeddedSources = hasNonEmbeddedSources = false;
+
+            _isobaricConfigBySource.Clear();
+            _xicConfigBySource.Clear();
 
             foreach (var row in rows)
             {
@@ -133,28 +158,32 @@ namespace IDPicker.Forms
                     status = "not embedded";
                     hasNonEmbeddedSources = true;
                 }
-                var quantitationMethod = ((string)quantitationMethodColumn.Items[row.QuantitationMethodIndex]);
-                if (_savedRowSettings.ContainsKey(row.Id))
-                    quantitationMethod = _savedRowSettings[row.Id][0].ToString();
-                if (quantitationMethod == "Label free")
+
+                var quantitationMethod = (QuantitationMethod) row.QuantitationMethodIndex;
+
+                if (IsLabelFree(quantitationMethod))
                 {
-                    var newXIC = (_savedRowSettings.ContainsKey(row.Id))
-                                     ? _savedRowSettings[row.Id][1]
-                                     : new Embedder.XICConfiguration(row.XICSettings);
-                    dataGridView.Rows.Add(row.Id, row.Name, status, quantitationMethod, newXIC);
+                    var savedSettings = new Embedder.XICConfiguration(row.QuantitationSettings);
+                    _xicConfigBySource[row.Id] = savedSettings;
+                    dataGridView.Rows.Add(row.Id, row.Name, status, quantitationMethodColumn.Items[row.QuantitationMethodIndex], savedSettings);
+                }
+                else if (IsIsobaric(quantitationMethod))
+                {
+                    var savedSettings = new Embedder.QuantitationConfiguration(quantitationMethod, row.QuantitationSettings);
+                    _isobaricConfigBySource[row.Id] = savedSettings;
+                    dataGridView.Rows.Add(row.Id, row.Name, status, quantitationMethodColumn.Items[row.QuantitationMethodIndex], savedSettings);
                 }
                 else
-                    dataGridView.Rows.Add(row.Id, row.Name, status, quantitationMethod, "n/a");
+                    dataGridView.Rows.Add(row.Id, row.Name, status, quantitationMethodColumn.Items[row.QuantitationMethodIndex], "n/a");
             }
-            _savedRowSettings = new Dictionary<int, object[]>();
 
             dataGridView.ResumeLayout();
 
-            if (dataGridView.Rows.Cast<DataGridViewRow>()
-                                    .Any(x => x.Cells[quantitationMethodColumn.Index].Value.ToString() != "None"))
+            if (dataGridView.Rows.Cast<DataGridViewRow>().Any(x => x.Cells[quantitationMethodColumn.Index].Value.ToString() != "None"))
                 embedScanTimeOnlyBox.Text = "Embed scan times and quantitation only";
             else
                 embedScanTimeOnlyBox.Text = "Embed scan times only";
+
             deleteAllButton.Enabled = hasEmbeddedSources;
             embedAllButton.Enabled = hasNonEmbeddedSources;
             okButton.Text = "Close";
@@ -237,23 +266,20 @@ namespace IDPicker.Forms
             }
 
             var quantitationMethodBySource = new Dictionary<int, Embedder.QuantitationConfiguration>();
-            var xicConfigBySource = new Dictionary<int, Embedder.XICConfiguration>{{0, new Embedder.XICConfiguration()}};
-            _savedRowSettings = new Dictionary<int, object[]>();
+            var xicConfigBySource = new Dictionary<int, Embedder.XICConfiguration>{{0, _defaultXicConfig}};
+
             foreach (DataGridViewRow row in dataGridView.Rows)
             {
                 int id = (int) row.Cells[idColumn.Index].Value;
-                string methodString = (string) (row.Cells[quantitationMethodColumn.Index] as DataGridViewComboBoxCell).Value;
-                int methodIndex = quantitationMethodColumn.Items.IndexOf(methodString);
-                quantitationMethodBySource[id] = new Embedder.QuantitationConfiguration
+                var method = QuantitationMethodForRow(row.Index);
+
+                if (IsLabelFree(method))
                 {
-                    QuantitationMethod = (QuantitationMethod)methodIndex,
-                    ReporterIonMzTolerance = new MZTolerance(((QuantitationMethod)methodIndex == QuantitationMethod.TMT10plex) ? 0.003 : 0.015, MZTolerance.Units.MZ)
-                };
-                _savedRowSettings[id] = new object[] { row.Cells[quantitationMethodColumn.Index].Value, row.Cells[quantitationSettingsColumn.Index].Value };
-                if (quantitationMethodBySource[id].QuantitationMethod == QuantitationMethod.LabelFree)
-                    xicConfigBySource[id] =
-                        row.Cells[quantitationSettingsColumn.Index].Value as Embedder.XICConfiguration ??
-                        new Embedder.XICConfiguration();
+                    xicConfigBySource[id] = (Embedder.XICConfiguration) row.Cells[quantitationSettingsColumn.Index].Value;
+                    quantitationMethodBySource[id] = new Embedder.QuantitationConfiguration(QuantitationMethod.LabelFree, _defaultIsobaricConfig.ToString());
+                }
+                else if (IsIsobaric(method))
+                    quantitationMethodBySource[id] = (Embedder.QuantitationConfiguration) row.Cells[quantitationSettingsColumn.Index].Value;
             }
 
             okButton.Text = "Cancel";
@@ -268,8 +294,7 @@ namespace IDPicker.Forms
 
                     var tempFolder = string.Empty;
                     var splitSourceList = new List<List<string>>();
-                    if (quantitationMethodBySource.Any(x => x.Value.QuantitationMethod == QuantitationMethod.LabelFree)
-                        && xicConfigBySource.Any(x => x.Value.AlignRetentionTime))
+                    if (quantitationMethodBySource.Any(x => IsLabelFree(x.Value.QuantitationMethod)) && xicConfigBySource.Any(x => x.Value.AlignRetentionTime))
                     {
                         tempFolder = getTempFolder();
                         splitSourceList = GetRTAlignGroups();
@@ -280,7 +305,8 @@ namespace IDPicker.Forms
                         Embedder.EmbedScanTime(idpDbFilepath, searchPath.ToString(), extensions, quantitationMethodBySource, ilr);
                     else
                         Embedder.Embed(idpDbFilepath, searchPath.ToString(), extensions, quantitationMethodBySource, ilr);
-                    if (quantitationMethodBySource.Any(x => x.Value.QuantitationMethod == QuantitationMethod.LabelFree))
+
+                    if (quantitationMethodBySource.Any(x => IsLabelFree(x.Value.QuantitationMethod)))
                     {
                         BeginInvoke(new MethodInvoker(() => ModeandDefaultPanel.Visible = false));
                         if (xicConfigBySource.Any(x => x.Value.AlignRetentionTime))
@@ -299,6 +325,7 @@ namespace IDPicker.Forms
                                     kvp.Value.AlignRetentionTime = false;
                             }
                         }
+
                         Embedder.EmbedMS1Metrics(idpDbFilepath, searchPath.ToString(), extensions, quantitationMethodBySource, xicConfigBySource, ilr);
                         if (!string.IsNullOrEmpty(tempFolder) && Directory.Exists(tempFolder))
                             Directory.Delete(tempFolder,true);
@@ -504,7 +531,7 @@ namespace IDPicker.Forms
                 {
                     var tls = session.SessionFactory.OpenStatelessSession();
                     tls.CreateSQLQuery(@"UPDATE SpectrumSourceMetadata SET MsDataBytes = NULL;
-                                         UPDATE SpectrumSource SET QuantitationMethod = 0;
+                                         UPDATE SpectrumSource SET QuantitationMethod = 0, QuantitationSettings = NULL;
                                          UPDATE Spectrum SET ScanTimeInSeconds = NULL;
                                          UPDATE UnfilteredSpectrum SET ScanTimeInSeconds = NULL;
                                          DELETE FROM PeptideQuantitation;
@@ -512,7 +539,6 @@ namespace IDPicker.Forms
                                          DELETE FROM ProteinQuantitation;
                                          DELETE FROM SpectrumQuantitation;
                                          DELETE FROM XICMetrics;
-                                         DELETE FROM XICMetricsSettings;
                                          VACUUM
                                         ").ExecuteUpdate();
                 }
@@ -542,35 +568,40 @@ namespace IDPicker.Forms
         {
             if (e.RowIndex < 0)
                 return;
+
             if (e.ColumnIndex == quantitationMethodColumn.Index)
             {
                 embedAllButton.Enabled = true;
 
-                var selectedRows =
-                    dataGridView.SelectedCells.Cast<DataGridViewCell>().Select(o => o.OwningRow).ToList();
+                var selectedRows = dataGridView.SelectedCells.Cast<DataGridViewCell>().Select(o => o.OwningRow).ToList();
                 if (selectedRows.Count > 1)
-                    selectedRows.ForEach(
-                        o => o.Cells[e.ColumnIndex].Value = dataGridView[e.ColumnIndex, e.RowIndex].Value);
+                    selectedRows.ForEach(o => o.Cells[e.ColumnIndex].Value = dataGridView[e.ColumnIndex, e.RowIndex].Value);
 
+                // None -> LabelFree/Isobaric: apply default settings
+                // LabelFree/Isobaric -> None: reset the saved settings
                 var rowID = (int)dataGridView[idColumn.Index, e.RowIndex].Value;
-                var xicConfig = dataGridView[quantitationSettingsColumn.Index, e.RowIndex].Value;
-                if (xicConfig is Embedder.XICConfiguration &&
-                    dataGridView[quantitationMethodColumn.Index, e.RowIndex].Value.ToString() != "Label free")
+                var newMethod = QuantitationMethodForRow(e.RowIndex);
+                if (newMethod == QuantitationMethod.None)
                 {
-                    if (dataGridView[quantitationSettingsColumn.Index, e.RowIndex].Value is
-                        Embedder.XICConfiguration)
-                        _savedRowSettings[rowID] = new object[] { "Label free", dataGridView[quantitationSettingsColumn.Index, e.RowIndex].Value };
+                    _xicConfigBySource.Remove(rowID);
+                    _isobaricConfigBySource.Remove(rowID);
                     dataGridView[quantitationSettingsColumn.Index, e.RowIndex].Value = "n/a";
                 }
-                else if (_savedRowSettings.ContainsKey(rowID) &&
-                            _savedRowSettings[rowID][1] is Embedder.XICConfiguration)
-                    dataGridView[quantitationSettingsColumn.Index, e.RowIndex].Value = _savedRowSettings[rowID][1];
-                else
-                    dataGridView[quantitationSettingsColumn.Index, e.RowIndex].Value = new Embedder.XICConfiguration();
+                else if (IsLabelFree(newMethod))
+                {
+                    _isobaricConfigBySource.Remove(rowID);
+                    dataGridView[quantitationSettingsColumn.Index, e.RowIndex].Value = _xicConfigBySource[rowID] = _defaultXicConfig;
+                }
+                else if (IsIsobaric(newMethod))
+                {
+                    _xicConfigBySource.Remove(rowID);
+                    dataGridView[quantitationSettingsColumn.Index, e.RowIndex].Value = _isobaricConfigBySource[rowID] = _defaultIsobaricConfig;
+                    _defaultIsobaricConfig.QuantitationMethod = newMethod;
+                }
+
                 dataGridView.InvalidateCell(quantitationSettingsColumn.Index, e.RowIndex);
 
-                if (dataGridView.Rows.Cast<DataGridViewRow>()
-                                .Any(x => x.Cells[quantitationMethodColumn.Index].Value.ToString() != "None"))
+                if (dataGridView.Rows.Cast<DataGridViewRow>().Any(x => x.Cells[quantitationMethodColumn.Index].Value.ToString() != "None"))
                     embedScanTimeOnlyBox.Text = "Embed scan times and quantitation only";
                 else
                     embedScanTimeOnlyBox.Text = "Embed scan times only";
@@ -593,22 +624,22 @@ namespace IDPicker.Forms
             if (mostRecentFilter != null)
                 maxQValue = mostRecentFilter.MaximumQValue;
 
-            var defaultConfiguration = new Embedder.XICConfiguration();
-            if (dataGridView.RowCount > 0)
-                defaultConfiguration =
-                    (dataGridView.Rows[0].Cells[quantitationSettingsColumn.Index].Value as Embedder.XICConfiguration) ??
-                    new Embedder.XICConfiguration();
-            
-            var xicForm = new XICForm(defaultConfiguration, maxQValue);
-            if (xicForm.ShowDialog() == DialogResult.OK)
+            var quantitationSettingsForm = new QuantitationSettingsForm(_defaultXicConfig, _defaultIsobaricConfig, maxQValue);
+            if (quantitationSettingsForm.ShowDialog() == DialogResult.OK)
+            {
                 foreach (DataGridViewRow row in dataGridView.Rows)
                 {
-                    var newXIC = xicForm.GetConfig();
-                    if (row.Cells[quantitationMethodColumn.Index].Value.ToString() != "Label free")
-                        row.Cells[quantitationSettingsColumn.Index].Value = "n/a";
+                    var method = QuantitationMethodForRow(row.Index);
+                    if (IsLabelFree(method))
+                        row.Cells[quantitationSettingsColumn.Index].Value = quantitationSettingsForm.XicConfig;
+                    else if (IsIsobaric(method))
+                        row.Cells[quantitationSettingsColumn.Index].Value = quantitationSettingsForm.IsobaricConfig;
                     else
-                        row.Cells[quantitationSettingsColumn.Index].Value = newXIC;
+                        row.Cells[quantitationSettingsColumn.Index].Value = "n/a";
                 }
+                _defaultIsobaricConfig = quantitationSettingsForm.IsobaricConfig;
+                _defaultXicConfig = quantitationSettingsForm.XicConfig;
+            }
         }
 
         private void dataGridView_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
@@ -617,14 +648,38 @@ namespace IDPicker.Forms
             var mostRecentFilter = session.Query<PersistentDataFilter>().OrderByDescending(o => o.Id).FirstOrDefault();
             if (mostRecentFilter != null)
                 maxQValue = mostRecentFilter.MaximumQValue;
+
             if (e.ColumnIndex == quantitationSettingsColumn.Index)
             {
-                var oldSettings = dataGridView[e.ColumnIndex, e.RowIndex].Value as Embedder.XICConfiguration;
-                if (oldSettings == null)
+                var row = dataGridView.Rows[e.RowIndex];
+                var method = QuantitationMethodForRow(e.RowIndex);
+                if (method == QuantitationMethod.None)
                     return;
-                var xicForm = new XICForm(oldSettings, maxQValue);
-                if (xicForm.ShowDialog() == DialogResult.OK)
-                    dataGridView[e.ColumnIndex, e.RowIndex].Value = xicForm.GetConfig();
+
+                var currentXicConfig = new Embedder.XICConfiguration();
+                var currentQuantitationConfig = new Embedder.QuantitationConfiguration();
+                if (IsLabelFree(method))
+                {
+                    currentXicConfig = (row.Cells[quantitationSettingsColumn.Index].Value as Embedder.XICConfiguration) ?? currentXicConfig;
+
+                    var quantSettingsForm = new QuantitationSettingsForm((row.Cells[quantitationSettingsColumn.Index].Value as Embedder.XICConfiguration), _defaultIsobaricConfig, maxQValue);
+                    if (quantSettingsForm.ShowDialog() == DialogResult.OK)
+                    {
+                        row.Cells[quantitationSettingsColumn.Index].Value = quantSettingsForm.XicConfig;
+                        _xicConfigBySource[e.RowIndex] = quantSettingsForm.XicConfig;
+                    }
+                }
+                else if (IsIsobaric(method))
+                {
+                    currentQuantitationConfig = (row.Cells[quantitationSettingsColumn.Index].Value as Embedder.QuantitationConfiguration) ?? currentQuantitationConfig;
+
+                    var quantSettingsForm = new QuantitationSettingsForm(_defaultXicConfig, (row.Cells[quantitationSettingsColumn.Index].Value as Embedder.QuantitationConfiguration), maxQValue);
+                    if (quantSettingsForm.ShowDialog() == DialogResult.OK)
+                    {
+                        row.Cells[quantitationSettingsColumn.Index].Value = quantSettingsForm.IsobaricConfig;
+                        _isobaricConfigBySource[e.RowIndex] = quantSettingsForm.IsobaricConfig;
+                    }
+                }
             }
         }
     }

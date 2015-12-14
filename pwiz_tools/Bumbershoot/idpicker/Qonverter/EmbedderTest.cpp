@@ -140,12 +140,16 @@ string testReporterIons(const vector<double>& expectedIntensities, const string&
         const double* reporterIonArray = reinterpret_cast<const double*>(reporterIonBlob);
         vector<double> reporterIons(reporterIonArray, reporterIonArray + reporterIonCount);
         unit_assert_operator_equal(expectedIntensities.size(), reporterIons.size());
-        for (int i = 0; i < reporterIonCount; ++i)
-        {
-            //cout << reporterIons[i] << " ";
-            unit_assert_operator_equal(expectedIntensities[i], reporterIons[i]);
-        }
-        //cout << endl;
+        if (reporterIonCount > 0) unit_assert_operator_equal(expectedIntensities[0], reporterIons[0]);
+        if (reporterIonCount > 1) unit_assert_operator_equal(expectedIntensities[1], reporterIons[1]);
+        if (reporterIonCount > 2) unit_assert_operator_equal(expectedIntensities[2], reporterIons[2]);
+        if (reporterIonCount > 3) unit_assert_operator_equal(expectedIntensities[3], reporterIons[3]);
+        if (reporterIonCount > 4) unit_assert_operator_equal(expectedIntensities[4], reporterIons[4]);
+        if (reporterIonCount > 5) unit_assert_operator_equal(expectedIntensities[5], reporterIons[5]);
+        if (reporterIonCount > 6) unit_assert_operator_equal(expectedIntensities[6], reporterIons[6]);
+        if (reporterIonCount > 7) unit_assert_operator_equal(expectedIntensities[7], reporterIons[7]);
+        if (reporterIonCount > 8) unit_assert_operator_equal(expectedIntensities[8], reporterIons[8]);
+        if (reporterIonCount > 9) unit_assert_operator_equal(expectedIntensities[9], reporterIons[9]);
         return "";
     }
     catch (exception& e)
@@ -233,14 +237,18 @@ void test()
     // 116    116.111618  1      1
     // 117    117.114973  1      1
     {
-        vector<double> mzArray; mzArray += 100, 113.1, 114.11, 115,  115.11, 116.1, 117.1, 200, 300, 400, 500, 600, 700;
-        vector<double> inArray; inArray +=  10, 113,   114,    115,  115.5,  116,   117,   20,  30,  40,  30,  20,  10;
+        vector<double> mzArray; mzArray += 100, 113.1, 114.11, 115,   115.11, 116.1, 117.1, 200, 300, 400, 500, 600, 700;
+        vector<double> inArray; inArray +=  10, 113,   114,    115.5, 115,    116,   117,   20,  30,  40,  30,  20,  10;
         bfs::remove("testEmbedder.mzML");
         createExampleWithArrays(mzArray, inArray);
 
         quantitationMethodBySource[1] = Embedder::QuantitationConfiguration(QuantitationMethod::ITRAQ4plex, MZTolerance(0.015, MZTolerance::MZ), false);
         Embedder::embed("testEmbedder.idpDB", "testEmbedder.dir", quantitationMethodBySource);
-        vector<double> expectedIntensities; expectedIntensities += 0, 114, 115.5, 116, 117, 0, 0, 0;
+        double corrected114 = max(0.0, 114 - 0.02 * 115);
+        double corrected115 = max(0.0, 115 - 0.03 * 116 - 0.059 * 114);
+        double corrected116 = max(0.0, 116 - 0.04 * 117 - 0.056 * 115);
+        double corrected117 = max(0.0, 117              - 0.045 * 116);
+        vector<double> expectedIntensities; expectedIntensities += 0, corrected114, corrected115, corrected116, corrected117, 0, 0, 0;
         unit_assert_operator_equal("", testReporterIons(expectedIntensities, "testEmbedder.idpDB", "iTRAQ_ReporterIonIntensities"));
     }
 
@@ -262,7 +270,15 @@ void test()
 
         quantitationMethodBySource[1] = Embedder::QuantitationConfiguration(QuantitationMethod::ITRAQ8plex, MZTolerance(0.015, MZTolerance::MZ), false);
         Embedder::embed("testEmbedder.idpDB", "testEmbedder.dir", quantitationMethodBySource);
-        vector<double> expectedIntensities; expectedIntensities += 113, 114, 115, 116, 117, 118, 119, 122;
+        double corrected113 = max(0.0, 113 - 0.0000 * 114);
+        double corrected114 = max(0.0, 114 - 0.0094 * 115 - 0.0689 * 113);
+        double corrected115 = max(0.0, 115 - 0.0188 * 116 - 0.0590 * 114);
+        double corrected116 = max(0.0, 116 - 0.0282 * 117 - 0.0490 * 115);
+        double corrected117 = max(0.0, 117 - 0.0377 * 118 - 0.0390 * 116);
+        double corrected118 = max(0.0, 118 - 0.0471 * 119 - 0.0288 * 117);
+        double corrected119 = max(0.0, 119                - 0.0191 * 118);
+        double corrected121 = 122;
+        vector<double> expectedIntensities; expectedIntensities += corrected113, corrected114, corrected115, corrected116, corrected117, corrected118, corrected119, corrected121;
         unit_assert_operator_equal("", testReporterIons(expectedIntensities, "testEmbedder.idpDB", "iTRAQ_ReporterIonIntensities"));
     }
 
@@ -356,7 +372,7 @@ void test()
         unit_assert_operator_equal("", testReporterIons(expectedIntensities, "testEmbedder.idpDB", "TMT_ReporterIonIntensities"));
     }
     
-    // test again with normalization: use TMT because iTRAQ normalization includes isotope factor correction
+    // test again with normalization
     {
         vector<double> mzArray; mzArray += 100, 126.128, 127.131, 128.134, 129.132, 130.143, 131.137, 200, 300, 400, 500, 600, 700;
         vector<double> inArray; inArray +=  10, 10,      90,      20,      100,     10,      1,       20,  30,  40,  30,  20,  10;
@@ -393,6 +409,9 @@ int main(int argc, char* argv[])
 
     try
     {
+        // change to test executable's directory so that embedGeneMetadata can find gene2protein.db3
+        bfs::current_path(bfs::path(argv[0]).parent_path());
+
         test();
     }
     catch (exception& e)

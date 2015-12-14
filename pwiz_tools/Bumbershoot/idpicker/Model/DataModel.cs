@@ -64,6 +64,7 @@ namespace IDPicker.DataModel
         public virtual double TotalIonCurrentMS2 { get; protected set; }
 
         public virtual QuantitationMethod QuantitationMethod { get; protected set; }
+        public virtual string QuantitationSettings { get; protected set; }
 
         public virtual IList<Spectrum> Spectra { get; set; }
 
