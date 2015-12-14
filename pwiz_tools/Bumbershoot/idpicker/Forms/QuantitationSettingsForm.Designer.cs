@@ -24,7 +24,7 @@
 
 namespace IDPicker.Forms
 {
-    partial class XICForm
+    partial class QuantitationSettingsForm
     {
         /// <summary>
         /// Required designer variable.
@@ -63,7 +63,6 @@ namespace IDPicker.Forms
             this.ChromatogramMzUpperOffsetUnitsBox = new System.Windows.Forms.ComboBox();
             this.ChromatogramMzUpperOffsetValueBox = new System.Windows.Forms.NumericUpDown();
             this.label4 = new System.Windows.Forms.Label();
-            this.ContentPanel = new System.Windows.Forms.Panel();
             this.RTAlignInfo = new System.Windows.Forms.LinkLabel();
             this.RTAlignBox = new System.Windows.Forms.CheckBox();
             this.label9 = new System.Windows.Forms.Label();
@@ -72,19 +71,30 @@ namespace IDPicker.Forms
             this.RTTolLowerBox = new System.Windows.Forms.NumericUpDown();
             this.label7 = new System.Windows.Forms.Label();
             this.RTTolUpperBox = new System.Windows.Forms.NumericUpDown();
+            this.tabControl = new System.Windows.Forms.TabControl();
+            this.labelFreeSettingsTabPage = new System.Windows.Forms.TabPage();
+            this.isobaricQuantSettingsTabPage = new System.Windows.Forms.TabPage();
+            this.label10 = new System.Windows.Forms.Label();
+            this.normalizeReporterIonsCheckBox = new System.Windows.Forms.CheckBox();
+            this.reporterIonToleranceUnits = new System.Windows.Forms.ComboBox();
+            this.reporterIonToleranceUpDown = new System.Windows.Forms.NumericUpDown();
+            this.label5 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.MonoisotopicAdjustmentMinBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.MonoisotopicAdjustmentMaxBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.ChromatogramMzLowerOffsetValueBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.ChromatogramMzUpperOffsetValueBox)).BeginInit();
-            this.ContentPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.RTTolLowerBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.RTTolUpperBox)).BeginInit();
+            this.tabControl.SuspendLayout();
+            this.labelFreeSettingsTabPage.SuspendLayout();
+            this.isobaricQuantSettingsTabPage.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.reporterIonToleranceUpDown)).BeginInit();
             this.SuspendLayout();
             // 
             // StartButton
             // 
             this.StartButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.StartButton.Location = new System.Drawing.Point(303, 189);
+            this.StartButton.Location = new System.Drawing.Point(411, 237);
             this.StartButton.Name = "StartButton";
             this.StartButton.Size = new System.Drawing.Size(75, 23);
             this.StartButton.TabIndex = 12;
@@ -96,7 +106,7 @@ namespace IDPicker.Forms
             // 
             this.label1.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(76, 17);
+            this.label1.Location = new System.Drawing.Point(127, 25);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(127, 13);
             this.label1.TabIndex = 1;
@@ -105,7 +115,7 @@ namespace IDPicker.Forms
             // MonoisotopicAdjustmentMinBox
             // 
             this.MonoisotopicAdjustmentMinBox.Anchor = System.Windows.Forms.AnchorStyles.Top;
-            this.MonoisotopicAdjustmentMinBox.Location = new System.Drawing.Point(209, 15);
+            this.MonoisotopicAdjustmentMinBox.Location = new System.Drawing.Point(260, 23);
             this.MonoisotopicAdjustmentMinBox.Minimum = new decimal(new int[] {
             100,
             0,
@@ -120,7 +130,7 @@ namespace IDPicker.Forms
             // 
             this.label2.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(262, 17);
+            this.label2.Location = new System.Drawing.Point(313, 25);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(10, 13);
             this.label2.TabIndex = 3;
@@ -129,7 +139,7 @@ namespace IDPicker.Forms
             // MonoisotopicAdjustmentMaxBox
             // 
             this.MonoisotopicAdjustmentMaxBox.Anchor = System.Windows.Forms.AnchorStyles.Top;
-            this.MonoisotopicAdjustmentMaxBox.Location = new System.Drawing.Point(278, 15);
+            this.MonoisotopicAdjustmentMaxBox.Location = new System.Drawing.Point(329, 23);
             this.MonoisotopicAdjustmentMaxBox.Minimum = new decimal(new int[] {
             100,
             0,
@@ -149,7 +159,7 @@ namespace IDPicker.Forms
             // 
             this.label3.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(47, 95);
+            this.label3.Location = new System.Drawing.Point(98, 103);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(156, 13);
             this.label3.TabIndex = 5;
@@ -164,7 +174,7 @@ namespace IDPicker.Forms
             0,
             0,
             65536});
-            this.ChromatogramMzLowerOffsetValueBox.Location = new System.Drawing.Point(209, 93);
+            this.ChromatogramMzLowerOffsetValueBox.Location = new System.Drawing.Point(260, 101);
             this.ChromatogramMzLowerOffsetValueBox.Name = "ChromatogramMzLowerOffsetValueBox";
             this.ChromatogramMzLowerOffsetValueBox.Size = new System.Drawing.Size(59, 20);
             this.ChromatogramMzLowerOffsetValueBox.TabIndex = 5;
@@ -183,7 +193,7 @@ namespace IDPicker.Forms
             this.ChromatogramMzLowerOffsetUnitsBox.Items.AddRange(new object[] {
             "MZ",
             "PPM"});
-            this.ChromatogramMzLowerOffsetUnitsBox.Location = new System.Drawing.Point(276, 92);
+            this.ChromatogramMzLowerOffsetUnitsBox.Location = new System.Drawing.Point(327, 100);
             this.ChromatogramMzLowerOffsetUnitsBox.Name = "ChromatogramMzLowerOffsetUnitsBox";
             this.ChromatogramMzLowerOffsetUnitsBox.Size = new System.Drawing.Size(69, 21);
             this.ChromatogramMzLowerOffsetUnitsBox.TabIndex = 6;
@@ -196,7 +206,7 @@ namespace IDPicker.Forms
             this.ChromatogramMzUpperOffsetUnitsBox.Items.AddRange(new object[] {
             "MZ",
             "PPM"});
-            this.ChromatogramMzUpperOffsetUnitsBox.Location = new System.Drawing.Point(276, 118);
+            this.ChromatogramMzUpperOffsetUnitsBox.Location = new System.Drawing.Point(327, 126);
             this.ChromatogramMzUpperOffsetUnitsBox.Name = "ChromatogramMzUpperOffsetUnitsBox";
             this.ChromatogramMzUpperOffsetUnitsBox.Size = new System.Drawing.Size(69, 21);
             this.ChromatogramMzUpperOffsetUnitsBox.TabIndex = 8;
@@ -210,7 +220,7 @@ namespace IDPicker.Forms
             0,
             0,
             65536});
-            this.ChromatogramMzUpperOffsetValueBox.Location = new System.Drawing.Point(209, 119);
+            this.ChromatogramMzUpperOffsetValueBox.Location = new System.Drawing.Point(260, 127);
             this.ChromatogramMzUpperOffsetValueBox.Name = "ChromatogramMzUpperOffsetValueBox";
             this.ChromatogramMzUpperOffsetValueBox.Size = new System.Drawing.Size(59, 20);
             this.ChromatogramMzUpperOffsetValueBox.TabIndex = 7;
@@ -225,44 +235,17 @@ namespace IDPicker.Forms
             // 
             this.label4.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(47, 121);
+            this.label4.Location = new System.Drawing.Point(98, 129);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(156, 13);
             this.label4.TabIndex = 8;
             this.label4.Text = "Upper chromatogram tolerance:";
             // 
-            // ContentPanel
-            // 
-            this.ContentPanel.Controls.Add(this.RTAlignInfo);
-            this.ContentPanel.Controls.Add(this.RTAlignBox);
-            this.ContentPanel.Controls.Add(this.label9);
-            this.ContentPanel.Controls.Add(this.label8);
-            this.ContentPanel.Controls.Add(this.label6);
-            this.ContentPanel.Controls.Add(this.RTTolLowerBox);
-            this.ContentPanel.Controls.Add(this.label7);
-            this.ContentPanel.Controls.Add(this.RTTolUpperBox);
-            this.ContentPanel.Controls.Add(this.label1);
-            this.ContentPanel.Controls.Add(this.StartButton);
-            this.ContentPanel.Controls.Add(this.MonoisotopicAdjustmentMinBox);
-            this.ContentPanel.Controls.Add(this.label2);
-            this.ContentPanel.Controls.Add(this.ChromatogramMzUpperOffsetUnitsBox);
-            this.ContentPanel.Controls.Add(this.MonoisotopicAdjustmentMaxBox);
-            this.ContentPanel.Controls.Add(this.ChromatogramMzUpperOffsetValueBox);
-            this.ContentPanel.Controls.Add(this.label3);
-            this.ContentPanel.Controls.Add(this.label4);
-            this.ContentPanel.Controls.Add(this.ChromatogramMzLowerOffsetValueBox);
-            this.ContentPanel.Controls.Add(this.ChromatogramMzLowerOffsetUnitsBox);
-            this.ContentPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.ContentPanel.Location = new System.Drawing.Point(0, 0);
-            this.ContentPanel.Name = "ContentPanel";
-            this.ContentPanel.Size = new System.Drawing.Size(390, 224);
-            this.ContentPanel.TabIndex = 15;
-            // 
             // RTAlignInfo
             // 
             this.RTAlignInfo.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.RTAlignInfo.AutoSize = true;
-            this.RTAlignInfo.Location = new System.Drawing.Point(184, 151);
+            this.RTAlignInfo.Location = new System.Drawing.Point(237, 159);
             this.RTAlignInfo.Name = "RTAlignInfo";
             this.RTAlignInfo.Size = new System.Drawing.Size(142, 13);
             this.RTAlignInfo.TabIndex = 22;
@@ -274,7 +257,7 @@ namespace IDPicker.Forms
             // 
             this.RTAlignBox.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.RTAlignBox.AutoSize = true;
-            this.RTAlignBox.Location = new System.Drawing.Point(65, 150);
+            this.RTAlignBox.Location = new System.Drawing.Point(116, 158);
             this.RTAlignBox.Name = "RTAlignBox";
             this.RTAlignBox.Size = new System.Drawing.Size(115, 17);
             this.RTAlignBox.TabIndex = 9;
@@ -285,7 +268,7 @@ namespace IDPicker.Forms
             // 
             this.label9.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(274, 69);
+            this.label9.Location = new System.Drawing.Point(325, 77);
             this.label9.Name = "label9";
             this.label9.Size = new System.Drawing.Size(47, 13);
             this.label9.TabIndex = 20;
@@ -295,7 +278,7 @@ namespace IDPicker.Forms
             // 
             this.label8.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(51, 69);
+            this.label8.Location = new System.Drawing.Point(102, 77);
             this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(152, 13);
             this.label8.TabIndex = 19;
@@ -305,7 +288,7 @@ namespace IDPicker.Forms
             // 
             this.label6.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(51, 43);
+            this.label6.Location = new System.Drawing.Point(102, 51);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(152, 13);
             this.label6.TabIndex = 15;
@@ -319,7 +302,7 @@ namespace IDPicker.Forms
             0,
             0,
             0});
-            this.RTTolLowerBox.Location = new System.Drawing.Point(209, 41);
+            this.RTTolLowerBox.Location = new System.Drawing.Point(260, 49);
             this.RTTolLowerBox.Maximum = new decimal(new int[] {
             10000,
             0,
@@ -339,7 +322,7 @@ namespace IDPicker.Forms
             // 
             this.label7.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(274, 43);
+            this.label7.Location = new System.Drawing.Point(325, 51);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(47, 13);
             this.label7.TabIndex = 17;
@@ -353,7 +336,7 @@ namespace IDPicker.Forms
             0,
             0,
             0});
-            this.RTTolUpperBox.Location = new System.Drawing.Point(209, 67);
+            this.RTTolUpperBox.Location = new System.Drawing.Point(260, 75);
             this.RTTolUpperBox.Maximum = new decimal(new int[] {
             10000,
             0,
@@ -369,25 +352,150 @@ namespace IDPicker.Forms
             0});
             this.RTTolUpperBox.Enter += new System.EventHandler(this.NumericUpDownEnter);
             // 
-            // XICForm
+            // tabControl
+            // 
+            this.tabControl.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.tabControl.Controls.Add(this.labelFreeSettingsTabPage);
+            this.tabControl.Controls.Add(this.isobaricQuantSettingsTabPage);
+            this.tabControl.Location = new System.Drawing.Point(1, 3);
+            this.tabControl.Name = "tabControl";
+            this.tabControl.SelectedIndex = 0;
+            this.tabControl.Size = new System.Drawing.Size(498, 222);
+            this.tabControl.TabIndex = 16;
+            // 
+            // labelFreeSettingsTabPage
+            // 
+            this.labelFreeSettingsTabPage.BackColor = System.Drawing.SystemColors.Control;
+            this.labelFreeSettingsTabPage.Controls.Add(this.RTAlignInfo);
+            this.labelFreeSettingsTabPage.Controls.Add(this.RTAlignBox);
+            this.labelFreeSettingsTabPage.Controls.Add(this.label1);
+            this.labelFreeSettingsTabPage.Controls.Add(this.label9);
+            this.labelFreeSettingsTabPage.Controls.Add(this.ChromatogramMzLowerOffsetUnitsBox);
+            this.labelFreeSettingsTabPage.Controls.Add(this.label8);
+            this.labelFreeSettingsTabPage.Controls.Add(this.ChromatogramMzLowerOffsetValueBox);
+            this.labelFreeSettingsTabPage.Controls.Add(this.label6);
+            this.labelFreeSettingsTabPage.Controls.Add(this.label4);
+            this.labelFreeSettingsTabPage.Controls.Add(this.RTTolLowerBox);
+            this.labelFreeSettingsTabPage.Controls.Add(this.label3);
+            this.labelFreeSettingsTabPage.Controls.Add(this.label7);
+            this.labelFreeSettingsTabPage.Controls.Add(this.ChromatogramMzUpperOffsetValueBox);
+            this.labelFreeSettingsTabPage.Controls.Add(this.RTTolUpperBox);
+            this.labelFreeSettingsTabPage.Controls.Add(this.MonoisotopicAdjustmentMaxBox);
+            this.labelFreeSettingsTabPage.Controls.Add(this.ChromatogramMzUpperOffsetUnitsBox);
+            this.labelFreeSettingsTabPage.Controls.Add(this.label2);
+            this.labelFreeSettingsTabPage.Controls.Add(this.MonoisotopicAdjustmentMinBox);
+            this.labelFreeSettingsTabPage.Location = new System.Drawing.Point(4, 22);
+            this.labelFreeSettingsTabPage.Name = "labelFreeSettingsTabPage";
+            this.labelFreeSettingsTabPage.Padding = new System.Windows.Forms.Padding(3);
+            this.labelFreeSettingsTabPage.Size = new System.Drawing.Size(490, 196);
+            this.labelFreeSettingsTabPage.TabIndex = 0;
+            this.labelFreeSettingsTabPage.Text = "Label-Free";
+            // 
+            // isobaricQuantSettingsTabPage
+            // 
+            this.isobaricQuantSettingsTabPage.BackColor = System.Drawing.SystemColors.Control;
+            this.isobaricQuantSettingsTabPage.Controls.Add(this.label10);
+            this.isobaricQuantSettingsTabPage.Controls.Add(this.normalizeReporterIonsCheckBox);
+            this.isobaricQuantSettingsTabPage.Controls.Add(this.reporterIonToleranceUnits);
+            this.isobaricQuantSettingsTabPage.Controls.Add(this.reporterIonToleranceUpDown);
+            this.isobaricQuantSettingsTabPage.Controls.Add(this.label5);
+            this.isobaricQuantSettingsTabPage.Location = new System.Drawing.Point(4, 22);
+            this.isobaricQuantSettingsTabPage.Name = "isobaricQuantSettingsTabPage";
+            this.isobaricQuantSettingsTabPage.Padding = new System.Windows.Forms.Padding(3);
+            this.isobaricQuantSettingsTabPage.Size = new System.Drawing.Size(490, 196);
+            this.isobaricQuantSettingsTabPage.TabIndex = 1;
+            this.isobaricQuantSettingsTabPage.Text = "iTRAQ/TMT";
+            // 
+            // label10
+            // 
+            this.label10.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.label10.AutoSize = true;
+            this.label10.Location = new System.Drawing.Point(264, 50);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(177, 13);
+            this.label10.TabIndex = 11;
+            this.label10.Text = "(assume backround ratio of 1:1:1:...)";
+            // 
+            // normalizeReporterIonsCheckBox
+            // 
+            this.normalizeReporterIonsCheckBox.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.normalizeReporterIonsCheckBox.AutoSize = true;
+            this.normalizeReporterIonsCheckBox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.normalizeReporterIonsCheckBox.Location = new System.Drawing.Point(80, 49);
+            this.normalizeReporterIonsCheckBox.Name = "normalizeReporterIonsCheckBox";
+            this.normalizeReporterIonsCheckBox.Size = new System.Drawing.Size(180, 17);
+            this.normalizeReporterIonsCheckBox.TabIndex = 10;
+            this.normalizeReporterIonsCheckBox.Text = "Normalize reporter ion intensities:";
+            this.normalizeReporterIonsCheckBox.UseVisualStyleBackColor = true;
+            // 
+            // reporterIonToleranceUnits
+            // 
+            this.reporterIonToleranceUnits.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.reporterIonToleranceUnits.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.reporterIonToleranceUnits.FormattingEnabled = true;
+            this.reporterIonToleranceUnits.Items.AddRange(new object[] {
+            "MZ",
+            "PPM"});
+            this.reporterIonToleranceUnits.Location = new System.Drawing.Point(315, 22);
+            this.reporterIonToleranceUnits.Name = "reporterIonToleranceUnits";
+            this.reporterIonToleranceUnits.Size = new System.Drawing.Size(69, 21);
+            this.reporterIonToleranceUnits.TabIndex = 9;
+            // 
+            // reporterIonToleranceUpDown
+            // 
+            this.reporterIonToleranceUpDown.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.reporterIonToleranceUpDown.DecimalPlaces = 4;
+            this.reporterIonToleranceUpDown.Increment = new decimal(new int[] {
+            1,
+            0,
+            0,
+            65536});
+            this.reporterIonToleranceUpDown.Location = new System.Drawing.Point(248, 23);
+            this.reporterIonToleranceUpDown.Name = "reporterIonToleranceUpDown";
+            this.reporterIonToleranceUpDown.Size = new System.Drawing.Size(59, 20);
+            this.reporterIonToleranceUpDown.TabIndex = 7;
+            this.reporterIonToleranceUpDown.Value = new decimal(new int[] {
+            15,
+            0,
+            0,
+            196608});
+            // 
+            // label5
+            // 
+            this.label5.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(106, 25);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(136, 13);
+            this.label5.TabIndex = 8;
+            this.label5.Text = "Reporter ion m/z tolerance:";
+            // 
+            // QuantitationSettingsForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(390, 224);
-            this.Controls.Add(this.ContentPanel);
+            this.ClientSize = new System.Drawing.Size(498, 272);
+            this.Controls.Add(this.tabControl);
+            this.Controls.Add(this.StartButton);
             this.Location = new System.Drawing.Point(406, 262);
-            this.MaximumSize = new System.Drawing.Size(406, 262);
-            this.Name = "XICForm";
-            this.Text = "Embed XIC Metrics";
+            this.Name = "QuantitationSettingsForm";
+            this.ShowIcon = false;
+            this.Text = "Quantitation Settings";
             this.Load += new System.EventHandler(this.XICForm_Load);
             ((System.ComponentModel.ISupportInitialize)(this.MonoisotopicAdjustmentMinBox)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.MonoisotopicAdjustmentMaxBox)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.ChromatogramMzLowerOffsetValueBox)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.ChromatogramMzUpperOffsetValueBox)).EndInit();
-            this.ContentPanel.ResumeLayout(false);
-            this.ContentPanel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.RTTolLowerBox)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.RTTolUpperBox)).EndInit();
+            this.tabControl.ResumeLayout(false);
+            this.labelFreeSettingsTabPage.ResumeLayout(false);
+            this.labelFreeSettingsTabPage.PerformLayout();
+            this.isobaricQuantSettingsTabPage.ResumeLayout(false);
+            this.isobaricQuantSettingsTabPage.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.reporterIonToleranceUpDown)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -405,7 +513,6 @@ namespace IDPicker.Forms
         private System.Windows.Forms.ComboBox ChromatogramMzUpperOffsetUnitsBox;
         private System.Windows.Forms.NumericUpDown ChromatogramMzUpperOffsetValueBox;
         private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.Panel ContentPanel;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.NumericUpDown RTTolLowerBox;
         private System.Windows.Forms.Label label7;
@@ -414,5 +521,13 @@ namespace IDPicker.Forms
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.LinkLabel RTAlignInfo;
         private System.Windows.Forms.CheckBox RTAlignBox;
+        private System.Windows.Forms.TabControl tabControl;
+        private System.Windows.Forms.TabPage labelFreeSettingsTabPage;
+        private System.Windows.Forms.TabPage isobaricQuantSettingsTabPage;
+        private System.Windows.Forms.ComboBox reporterIonToleranceUnits;
+        private System.Windows.Forms.NumericUpDown reporterIonToleranceUpDown;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.CheckBox normalizeReporterIonsCheckBox;
+        private System.Windows.Forms.Label label10;
     }
 }

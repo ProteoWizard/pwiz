@@ -41,15 +41,17 @@ using pwiz.CLI.util;
 
 namespace IDPicker.Forms
 {
-    public partial class XICForm : Form
+    public partial class QuantitationSettingsForm : Form
     {
         private string _rFilepath;
-        private Embedder.XICConfiguration _config;
+        public Embedder.XICConfiguration XicConfig { get; private set; }
+        public Embedder.QuantitationConfiguration IsobaricConfig { get; private set; }
         private double _maxQValue = 0.05;
 
-        public XICForm(Embedder.XICConfiguration oldConfig, double maxQValue)
+        public QuantitationSettingsForm(Embedder.XICConfiguration oldXicConfig, Embedder.QuantitationConfiguration oldIsobaricConfig, double maxQValue)
         {
-            _config = oldConfig;
+            XicConfig = oldXicConfig;
+            IsobaricConfig = oldIsobaricConfig;
             _maxQValue = maxQValue;
             InitializeComponent();
         }
@@ -75,14 +77,18 @@ namespace IDPicker.Forms
                 RTAlignBox.Enabled = false;
 
             //load config into form
-            MonoisotopicAdjustmentMinBox.Value = _config.MonoisotopicAdjustmentMin;
-            MonoisotopicAdjustmentMaxBox.Value = _config.MonoisotopicAdjustmentMax;
-            RTTolLowerBox.Value = _config.RetentionTimeLowerTolerance;
-            RTTolUpperBox.Value = _config.RetentionTimeUpperTolerance;
-            ChromatogramMzLowerOffsetValueBox.Value = (decimal)_config.ChromatogramMzLowerOffset.value;
-            ChromatogramMzUpperOffsetValueBox.Value = (decimal)_config.ChromatogramMzUpperOffset.value;
-            ChromatogramMzLowerOffsetUnitsBox.SelectedIndex = (int)_config.ChromatogramMzLowerOffset.units;
-            ChromatogramMzUpperOffsetUnitsBox.SelectedIndex = (int)_config.ChromatogramMzUpperOffset.units;
+            MonoisotopicAdjustmentMinBox.Value = XicConfig.MonoisotopicAdjustmentMin;
+            MonoisotopicAdjustmentMaxBox.Value = XicConfig.MonoisotopicAdjustmentMax;
+            RTTolLowerBox.Value = XicConfig.RetentionTimeLowerTolerance;
+            RTTolUpperBox.Value = XicConfig.RetentionTimeUpperTolerance;
+            ChromatogramMzLowerOffsetValueBox.Value = (decimal)XicConfig.ChromatogramMzLowerOffset.value;
+            ChromatogramMzUpperOffsetValueBox.Value = (decimal)XicConfig.ChromatogramMzUpperOffset.value;
+            ChromatogramMzLowerOffsetUnitsBox.SelectedIndex = (int)XicConfig.ChromatogramMzLowerOffset.units;
+            ChromatogramMzUpperOffsetUnitsBox.SelectedIndex = (int)XicConfig.ChromatogramMzUpperOffset.units;
+
+            reporterIonToleranceUpDown.Value = (decimal)IsobaricConfig.ReporterIonMzTolerance.value;
+            reporterIonToleranceUnits.SelectedIndex = (int)IsobaricConfig.ReporterIonMzTolerance.units;
+            normalizeReporterIonsCheckBox.Checked = IsobaricConfig.NormalizeIntensities;
         }
 
         private void StartButton_Click(object sender, EventArgs e)
@@ -95,7 +101,7 @@ namespace IDPicker.Forms
             var rtMin = (int)Math.Round(RTTolLowerBox.Value);
             var maMax = (int)Math.Round(MonoisotopicAdjustmentMaxBox.Value);
             var maMin = (int)Math.Round(MonoisotopicAdjustmentMinBox.Value);
-            _config = new Embedder.XICConfiguration{
+            XicConfig = new Embedder.XICConfiguration{
                 ChromatogramMzLowerOffset = new MZTolerance(cloValue, cloUnits),
                 ChromatogramMzUpperOffset = new MZTolerance(cuoValue, cuoUnits),
                 RetentionTimeLowerTolerance = rtMin,
@@ -104,12 +110,15 @@ namespace IDPicker.Forms
                 MonoisotopicAdjustmentMin = maMin,
                 MaxQValue = _maxQValue,
                 AlignRetentionTime = RTAlignBox.Checked};
-            DialogResult = DialogResult.OK;
-        }
 
-        public Embedder.XICConfiguration GetConfig()
-        {
-            return _config;
+            IsobaricConfig = new Embedder.QuantitationConfiguration
+            {
+                QuantitationMethod = IsobaricConfig.QuantitationMethod,
+                ReporterIonMzTolerance = new MZTolerance((double) reporterIonToleranceUpDown.Value, (MZTolerance.Units) reporterIonToleranceUnits.SelectedIndex),
+                NormalizeIntensities = normalizeReporterIonsCheckBox.Checked
+            };
+
+            DialogResult = DialogResult.OK;
         }
 
         internal class XICIterationListener : IterationListener
