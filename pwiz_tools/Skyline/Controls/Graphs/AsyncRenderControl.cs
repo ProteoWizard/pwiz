@@ -89,6 +89,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         {
                             var swap = (Bitmap) pictureBox.Image;
                             pictureBox.Image = _context._renderBitmap;
+                            pictureBox.Update();
                             _context._renderBitmap = swap;
                         }
 
@@ -104,9 +105,9 @@ namespace pwiz.Skyline.Controls.Graphs
                                     GraphicsUnit.Pixel);
                             }
                             pictureBox.Invalidate(_context._invalidRect);
+                            pictureBox.Update();
                         }
 
-                        pictureBox.Update();
                         _context._invalidRect.Width = 0;
                         _context._updateTimer.Interval = FrameMilliseconds;
                     }

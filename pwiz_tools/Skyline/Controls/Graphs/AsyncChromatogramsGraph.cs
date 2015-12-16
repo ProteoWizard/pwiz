@@ -167,7 +167,8 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             // Render a new bitmap if something has changed.
-            if (invalidRect.Width > 0)
+            if (invalidRect.Width > 0 && _status.Transitions != null &&
+                (_status.Transitions.CurrentTime > 0 || _status.Transitions.MaxRetentionTime > 0))
             {
                 using (var graphics = Graphics.FromImage(bitmap))
                 {
@@ -190,7 +191,7 @@ namespace pwiz.Skyline.Controls.Graphs
             bool peaksAdded = false;
 
             // Process bins of peaks queued by the reader thread.
-            float maxTime = (float) _xMax;
+            float maxTime = (float) Math.Max(Math.Max(_xMax, transitions.MaxRetentionTime), transitions.CurrentTime);
             float maxIntensity = 0;
             while (transitions.BinnedPeaks.TryPeek(out bin))
             {
@@ -199,6 +200,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (bin == null)
                 {
                     ResetGraph();
+                    maxTime = (float) _xMax;
+                    maxIntensity = 0;
+                    transitions.MaxIntensity = 0;
                     continue;
                 }
 
@@ -294,17 +298,17 @@ namespace pwiz.Skyline.Controls.Graphs
                     _graphPane.CurveList.Insert(0, curve.Curve);
                     _activeCurves.Add(curve);
                 }
+                // Add preceding zero if necessary.
+                else if (curve.Curve.Points[curve.Curve.NPts - 1].X < retentionTime - ChromatogramLoadingStatus.TIME_RESOLUTION*1.01)
+                {
+                    curve.Curve.AddPoint(retentionTime - ChromatogramLoadingStatus.TIME_RESOLUTION, 0);
+                    curve.Curve.AddPoint(retentionTime, intensity);
+                    curve.Curve.AddPoint(retentionTime + ChromatogramLoadingStatus.TIME_RESOLUTION, 0);
+                }
+                // Add next point by modifying preceding intensity.
                 else
                 {
-                    // add preceding zero if necessary
-                    if (curve.Curve.Points[curve.Curve.NPts - 1].X < retentionTime - ChromatogramLoadingStatus.TIME_RESOLUTION * 1.5)
-                        curve.Curve.AddPoint(retentionTime - ChromatogramLoadingStatus.TIME_RESOLUTION, 0);
-                    // add new point or change zero
-                    if (curve.Curve.Points[curve.Curve.NPts - 1].X > retentionTime - ChromatogramLoadingStatus.TIME_RESOLUTION * 0.5)
-                        curve.Curve.Points[curve.Curve.NPts - 1].Y = intensity;
-                    else
-                        curve.Curve.AddPoint(retentionTime, intensity);
-                    // add following zero
+                    curve.Curve.Points[curve.Curve.NPts - 1].Y += intensity;
                     curve.Curve.AddPoint(retentionTime + ChromatogramLoadingStatus.TIME_RESOLUTION, 0);
                 }
 
@@ -474,8 +478,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
             public void InsertAt(int index, double retentionTime, double intensity)
             {
-                Curve.AddPoint(Curve.Points[Curve.NPts - 1].X, Curve.Points[Curve.NPts - 1].Y);
-                for (int j = index+1; j < Curve.NPts - 1; j++)
+                Curve.AddPoint(0, 0);
+                for (int j = Curve.NPts - 1; j > index; j--)
                 {
                     Curve.Points[j].X = Curve.Points[j - 1].X;
                     Curve.Points[j].Y = Curve.Points[j - 1].Y;
@@ -486,16 +490,12 @@ namespace pwiz.Skyline.Controls.Graphs
 
             public void CheckZeroes(int index)
             {
-                if (index == 0 ||
-                    ChromatogramLoadingStatus.GetBinIndex((float) Curve.Points[index - 1].X) < 
-                    ChromatogramLoadingStatus.GetBinIndex((float) Curve.Points[index].X - 1))
+                if (index == 0 || Curve.Points[index].X - Curve.Points[index-1].X > ChromatogramLoadingStatus.TIME_RESOLUTION)
                 {
                     InsertAt(index, Curve.Points[index].X - ChromatogramLoadingStatus.TIME_RESOLUTION, 0);
                     index++;
                 }
-                if (index + 1 == Curve.NPts ||
-                    ChromatogramLoadingStatus.GetBinIndex((float) Curve.Points[index].X) <
-                    ChromatogramLoadingStatus.GetBinIndex((float) Curve.Points[index+1].X) - 1)
+                if (index == Curve.NPts - 1 || Curve.Points[index+1].X - Curve.Points[index].X > ChromatogramLoadingStatus.TIME_RESOLUTION)
                 {
                     InsertAt(index+1, Curve.Points[index].X + ChromatogramLoadingStatus.TIME_RESOLUTION, 0);
                 }
