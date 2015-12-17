@@ -97,7 +97,8 @@ namespace pwiz.Skyline.Model.Results
                 ChromTaskList chromTaskList = _chromTaskLists[iTaskList];
                 if (null == chromTaskList)
                 {
-                    chromTaskList = _chromTaskLists[iTaskList] = new ChromTaskList(CheckCancelled, _document, _chorusAccount, requestProvider.ChorusUrl, ChromTaskList.ChunkChromatogramRequest(requestProvider.GetChromatogramRequest(), 100));
+                    chromTaskList = _chromTaskLists[iTaskList] = new ChromTaskList(CheckCancelled, _document, _chorusAccount, requestProvider.ChorusUrl, ChromTaskList.ChunkChromatogramRequest(requestProvider.GetChromatogramRequest(), 1000));
+                    chromTaskList.SetMinimumSimultaneousTasks(3);
                 }
                 ChromKey chromKey = requestProvider.ChromKeys[idRemain];
                 loaded = chromTaskList.GetChromatogram(chromKey, out times, out scanIndexes, out intensities, out massErrors);
