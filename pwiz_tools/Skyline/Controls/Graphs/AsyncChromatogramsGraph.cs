@@ -72,7 +72,6 @@ namespace pwiz.Skyline.Controls.Graphs
         protected override void BackgroundInitialize()
         {
             _graphPane = new GraphPane();
-            _graphPane.Chart.Fill = new Fill(_backgroundGradientColor1, _backgroundGradientColor2, 45.0f);
             _graphPane.Chart.Border.IsVisible = false;
             _graphPane.Border.IsVisible = false;
 
@@ -164,6 +163,8 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 _lastTime = time;
                 UpdateProgressLine(time);
+                if (_unfinishedBox == null)
+                    invalidRect = new Rectangle(0, 0, bitmap.Width, bitmap.Height);
             }
 
             // Render a new bitmap if something has changed.
@@ -254,6 +255,7 @@ namespace pwiz.Skyline.Controls.Graphs
             _lastCurve = null;
             _fullFrame = true;
             UpdateProgressLine(0);
+            _graphPane.Chart.Fill = new Fill(Color.White);
         }
 
         private void ProcessBinProgressive(
@@ -426,6 +428,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // If we're still loading, create a white rectangle which blocks the fill background, indicating data yet to be loaded.
             if (time < _status.Transitions.MaxRetentionTime)
             {
+                _graphPane.Chart.Fill = new Fill(_backgroundGradientColor1, _backgroundGradientColor2, 45.0f);
                 _unfinishedBox = new BoxObj(
                     time,
                     _graphPane.YAxis.Scale.Max,
