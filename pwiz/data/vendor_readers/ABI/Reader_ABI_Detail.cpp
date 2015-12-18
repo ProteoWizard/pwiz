@@ -78,6 +78,7 @@ InstrumentConfigurationPtr translateAsInstrumentConfiguration(InstrumentModel in
         case API3200QTrap:
         case API3500QTrap:
         case API4000QTrap:
+        case API4500QTrap:
         case API5500QTrap:
         case API6500QTrap:
             ic.componentList.push_back(source);
