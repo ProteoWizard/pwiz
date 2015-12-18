@@ -323,10 +323,11 @@ InstrumentModel WiffFileImpl::getInstrumentModel() const
         if (modelName->Contains("3500QTRAP"))       return API3500QTrap; // predicted
         if (modelName->Contains("4000QTRAP"))       return API4000QTrap;
         if (modelName->Contains("4000"))            return API4000; // predicted
+        if (modelName->Contains("QTRAP4500"))       return API4500QTrap;
         if (modelName->Contains("5000"))            return API5000; // predicted
-        if (modelName->Contains("5500QTRAP"))       return API5500QTrap; // predicted
+        if (modelName->Contains("QTRAP5500"))       return API5500QTrap; // predicted
         if (modelName->Contains("5500"))            return API5500; // predicted
-        if (modelName->Contains("6500QTRAP"))       return API6500QTrap; // predicted
+        if (modelName->Contains("QTRAP6500"))       return API6500QTrap; // predicted
         if (modelName->Contains("6500"))            return API6500; // predicted
         if (modelName->Contains("QSTARPULSAR"))     return QStarPulsarI; // also covers variants like "API QStar Pulsar i, 0, Qstar"
         if (modelName->Contains("QSTARXL"))         return QStarXL;

@@ -138,6 +138,7 @@ PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModel instrumentModel)
         case API3200QTrap:      return MS_3200_QTRAP;
         case API3500QTrap:      return MS_3500_QTRAP;
         case API4000QTrap:      return MS_4000_QTRAP;
+        case API4500QTrap:      return MS_QTRAP_4500;
         case API5500QTrap:      return MS_QTRAP_5500;
         case API6500QTrap:      return MS_QTRAP_6500;
         case API4600TripleTOF:  return MS_TripleTOF_4600;
