@@ -50,6 +50,7 @@ namespace pwiz.Skyline.EditUI
         private List<ProteinColumn> _proteinColumns;
         private List<PeptideDocNode> _peptideDocNodes;
         private List<HashSet<Protein>> _peptideProteins;
+        private bool _targetIsInBackgroundProteome;
 
         public UniquePeptidesDlg(IDocumentUIContainer documentUiContainer)
         {
@@ -58,6 +59,7 @@ namespace pwiz.Skyline.EditUI
             Icon = Resources.Skyline;
 
             DocumentUIContainer = documentUiContainer;
+            _targetIsInBackgroundProteome = false;
             dataGridView1.CurrentCellChanged += dataGridView1_CurrentCellChanged; 
         }
 
@@ -264,6 +266,7 @@ namespace pwiz.Skyline.EditUI
                             {
                                 if (protein.Sequence == PeptideGroupDocNode.PeptideGroup.Sequence)
                                 {
+                                    _targetIsInBackgroundProteome = true;
                                     continue;
                                 }
                                 proteins.Add(protein);
@@ -307,12 +310,12 @@ namespace pwiz.Skyline.EditUI
         
         private void uniqueOnlyToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            SelectPeptidesWithNumberOfMatchesAtOrBelowThreshold(1);
+            SelectUnique();
         }
 
         private void excludeBackgroundProteomeToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            SelectPeptidesWithNumberOfMatchesAtOrBelowThreshold(0);
+            ExcludeBackgroundProteome();
         }
 
         private void includeAllToolStripMenuItem_Click(object sender, EventArgs e)
@@ -341,9 +344,8 @@ namespace pwiz.Skyline.EditUI
             dataGridView1.EndEdit();
             for (int rowIndex = 0; rowIndex < dataGridView1.Rows.Count; rowIndex++)
             {
-                int matchCount = 0;
+                int matchCount = _targetIsInBackgroundProteome ? 1 : 0;
                 var row = dataGridView1.Rows[rowIndex];
-                bool included = true;
                 for (int col = 0; col < dataGridView1.ColumnCount; col++)
                 {
                     if (col == PeptideIncludedColumn.Index || col == PeptideColumn.Index)
@@ -355,11 +357,10 @@ namespace pwiz.Skyline.EditUI
                     }
                     if (matchCount > threshold)
                     {
-                        included = false;
                         break;
                     }
                 }
-                row.Cells[PeptideIncludedColumn.Name].Value = included;
+                row.Cells[PeptideIncludedColumn.Name].Value = (matchCount <= threshold);
             }
             SetCheckBoxPeptideIncludedHeaderState();
         }
@@ -472,9 +473,24 @@ namespace pwiz.Skyline.EditUI
                 _checkBoxPeptideIncludedColumnHeader.CheckState = CheckState.Unchecked;
         }
 
+        #region for testing
+
         public DataGridView GetDataGridView()
         {
             return dataGridView1;
         }
+
+        public void SelectUnique()
+        {
+            SelectPeptidesWithNumberOfMatchesAtOrBelowThreshold(1);
+        }
+
+        public void ExcludeBackgroundProteome()
+        {
+            SelectPeptidesWithNumberOfMatchesAtOrBelowThreshold(0);
+        }
+
+        #endregion
+
     }
 }
