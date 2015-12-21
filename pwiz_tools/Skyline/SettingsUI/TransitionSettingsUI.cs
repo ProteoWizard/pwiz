@@ -809,6 +809,11 @@ namespace pwiz.Skyline.SettingsUI
             _driverDP.AddItem();
         }
 
+        public void EditCoVList()
+        {
+            _driverCoV.EditList();
+        }
+
         public void EditOptimizationLibraryList()
         {
             _driverOptimizationLibrary.EditList();

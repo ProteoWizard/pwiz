@@ -35,6 +35,7 @@ DocumentGridForm,TestReportSummary
 DocumentSettingsDlg,TestAnnotations
 EditCEDlg,TestOptimization
 EditChorusAccountDlg,*
+EditCoVDlg,TestOptimization
 EditCustomMoleculeDlg,TestEditCustomMoleculeDlg
 EditDPDlg,TestEditDialogs
 EditDriftTimePredictorDlg,TestIonMobility

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Globalization;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
@@ -31,6 +32,56 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        public double? Min
+        {
+            get
+            {
+                double min;
+                return double.TryParse(textMin.Text, out min) ? (double?)min : null;
+            }
+            set { textMin.Text = value.HasValue ? value.Value.ToString(CultureInfo.CurrentCulture) : string.Empty; }
+        }
+
+        public double? Max
+        {
+            get
+            {
+                double max;
+                return double.TryParse(textMax.Text, out max) ? (double?)max : null;
+            }
+            set { textMax.Text = value.HasValue ? value.Value.ToString(CultureInfo.CurrentCulture) : string.Empty; }
+        }
+
+        public int? StepsRough
+        {
+            get
+            {
+                int steps;
+                return int.TryParse(textStepsRough.Text, out steps) ? (int?)steps : null;
+            }
+            set { textStepsRough.Text = value.HasValue ? value.Value.ToString(CultureInfo.CurrentCulture) : string.Empty; }
+        }
+
+        public int? StepsMedium
+        {
+            get
+            {
+                int steps;
+                return int.TryParse(textStepsMedium.Text, out steps) ? (int?)steps : null;
+            }
+            set { textStepsMedium.Text = value.HasValue ? value.Value.ToString(CultureInfo.CurrentCulture) : string.Empty; }
+        }
+
+        public int? StepsFine
+        {
+            get
+            {
+                int steps;
+                return int.TryParse(textStepsFine.Text, out steps) ? (int?)steps : null;
+            }
+            set { textStepsFine.Text = value.HasValue ? value.Value.ToString(CultureInfo.CurrentCulture) : string.Empty; }
+        }
+
         private void UpdateUI(CompensationVoltageParameters covParams)
         {
             if (covParams != null)
@@ -46,6 +97,11 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         private void btnOk_Click(object sender, System.EventArgs e)
+        {
+            OkDialog();
+        }
+
+        public void OkDialog()
         {
             var helper = new MessageBoxHelper(this);
 
