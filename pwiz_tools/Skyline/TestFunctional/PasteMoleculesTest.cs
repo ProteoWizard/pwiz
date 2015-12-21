@@ -94,6 +94,7 @@ namespace pwiz.SkylineTestFunctional
 
             var docEmpty = SkylineWindow.Document;
 
+            TestLabelsNoFormulas();
             TestPrecursorTransitions();
             TestTransitionListArrangementAndReporting();
 
@@ -526,6 +527,7 @@ namespace pwiz.SkylineTestFunctional
                 PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
                 PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargeProduct,
                 PasteDlg.SmallMoleculeTransitionListColumnHeaders.note,
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.labelType,
            };
             // If user omits some product info but not others, complain
             RunUI(() =>
@@ -561,7 +563,8 @@ namespace pwiz.SkylineTestFunctional
             RunUI(pasteDlg.PasteTransitions);
             OkDialog(pasteDlg, pasteDlg.OkDialog);
             var pastedDoc = WaitForDocumentChange(docOrig);
-            // We expect precursor transitions
+            // We expect precursor transitions, but since both are light, in two different groups
+            Assert.AreEqual(2, pastedDoc.MoleculeTransitionGroupCount);
             foreach (var trans in pastedDoc.MoleculeTransitions)
             {
                 Assert.IsTrue(trans.Transition.IsPrecursor());
@@ -591,6 +594,80 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(trans.Annotations.Note.StartsWith("not") || trans.Annotations.Note.StartsWith("macro"));
             }
 
+            RunUI(() => SkylineWindow.NewDocument(true));
+            docOrig = SkylineWindow.Document;
+            var pasteDlg4 = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+            RunUI(() =>
+            {
+                pasteDlg4.IsMolecule = true;
+                pasteDlg4.SetSmallMoleculeColumns(columnOrder.ToList());
+            });
+            WaitForConditionUI(() => pasteDlg4.GetUsableColumnCount() == columnOrder.ToList().Count);
+            const string impliedLabeled =
+                "Oly\tlager\tbubbles\t452\t\t\t\t1\t\tmacrobrew\theavy" + "\n" +
+                "Oly\tlager\tfoam\t234\t\t\t\t1\t\tmacrobrew\tlight";
+            SetClipboardText(impliedLabeled);
+            RunUI(pasteDlg4.PasteTransitions);
+            OkDialog(pasteDlg4, pasteDlg4.OkDialog);
+            pastedDoc = WaitForDocumentChange(docOrig);
+            // We expect a single heavy/light pair
+            Assert.AreEqual(1, pastedDoc.MoleculeCount);
+            foreach (var trans in pastedDoc.MoleculeTransitions)
+            {
+                Assert.IsTrue(trans.Transition.IsPrecursor());
+                Assert.AreEqual(trans.Annotations.Note, "macrobrew");
+            }
+
+            RunUI(() => SkylineWindow.NewDocument(true));
+            RunUI(() => Settings.Default.CustomMoleculeTransitionInsertColumnsList = saveColumnOrder);
+        }
+
+        private void TestLabelsNoFormulas()
+        {
+            // Test our handling of labels without formulas
+
+            var saveColumnOrder = Settings.Default.CustomMoleculeTransitionInsertColumnsList;
+
+            RunUI(() => SkylineWindow.NewDocument(true));
+            var docOrig = SkylineWindow.Document;
+            var pasteDlg2 = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+            //non-standard column order
+            var columnOrder = new[]
+            {
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.namePrecursor,
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.nameProduct,
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.labelType,
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.formulaProduct,
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.mzPrecursor,
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.mzProduct,
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargeProduct,
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.rtPrecursor,
+           };
+            // If user omits some product info but not others, complain
+            RunUI(() =>
+            {
+                pasteDlg2.IsMolecule = true;
+                pasteDlg2.SetSmallMoleculeColumns(columnOrder.ToList());
+            });
+            WaitForConditionUI(() => pasteDlg2.GetUsableColumnCount() == columnOrder.ToList().Count);
+
+            const string transistionList =
+                "Amino Acids\tAla\t\tlight\t\t\t225\t44\t1\t1\t3\n" +
+                "Amino Acids\tAla\t\theavy\t\t\t229\t48\t1\t1\t4\n" + // NB we ignore RT conflicts
+                "Amino Acids\tArg\t\tlight\t\t\t310\t217\t1\t1\t19\n" +
+                "Amino Acids\tArg\t\theavy\t\t\t312\t219\t1\t1\t19\n";
+
+
+            SetClipboardText(transistionList);
+            RunUI(pasteDlg2.PasteTransitions);
+            OkDialog(pasteDlg2, pasteDlg2.OkDialog);
+            var pastedDoc = WaitForDocumentChange(docOrig);
+            Assert.AreEqual(1, pastedDoc.MoleculeGroupCount);
+            Assert.AreEqual(2, pastedDoc.MoleculeCount);
+            
             RunUI(() => SkylineWindow.NewDocument(true));
             RunUI(() => Settings.Default.CustomMoleculeTransitionInsertColumnsList = saveColumnOrder);
         }

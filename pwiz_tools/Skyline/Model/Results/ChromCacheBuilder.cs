@@ -154,6 +154,8 @@ namespace pwiz.Skyline.Model.Results
             {
                 var dataFilePath = MSDataFilePath;
                 var lockMassCorrection = MSDataFilePath.GetLockMassParameters();
+                var centroidMS1 = MSDataFilePath.GetCentroidMs1();
+                var centroidMS2 = MSDataFilePath.GetCentroidMs2();
                 var msDataFilePath = MSDataFilePath as MsDataFilePath;
                 if (msDataFilePath != null)
                 {
@@ -183,8 +185,6 @@ namespace pwiz.Skyline.Model.Results
                         var configInfo = fileInfo.InstrumentInfoList.FirstOrDefault();
                         var fullScan = _document.Settings.TransitionSettings.FullScan;
                         var enableSimSpectrum = fullScan.IsEnabled;
-                        var centroidMS1 = fullScan.IsCentroidedMs;
-                        var centroidMS2 = fullScan.IsCentroidedMsMs;
                         inFile = GetMsDataFile(dataFilePathPart, sampleIndex, lockMassCorrection, configInfo,
                             enableSimSpectrum, centroidMS1, centroidMS2);
                         // Preserve centroiding info as part of MsDataFileUri string in chromdata only if it will be used

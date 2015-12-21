@@ -176,7 +176,7 @@ namespace pwiz.Skyline
                 if (commandArgs.ImportingReplicateFile)
                 {
                     // If expected results are not imported successfully, terminate
-                    if (!ImportResultsFile(commandArgs.ReplicateFile.ChangeLockMassParameters(commandArgs.LockMassParameters),
+                    if (!ImportResultsFile(commandArgs.ReplicateFile.ChangeParameters(_doc, commandArgs.LockMassParameters),
                                            commandArgs.ReplicateName,
                                            commandArgs.ImportBeforeDate,
                                            commandArgs.ImportOnOrAfterDate,
@@ -623,10 +623,6 @@ namespace pwiz.Skyline
                 _doc = _doc.ChangeSettingsNoDiff(_doc.Settings.ChangeIsResultsJoiningDisabled(true));
             }
 
-            // Apply settings such as lockmass correction
-            if (!(lockMassParameters == null || lockMassParameters.IsEmpty))
-                listNamedPaths = MsDataFileUri.ChangeLockMassParameters(listNamedPaths, lockMassParameters);
-
             // Import files one at a time
             foreach (var namedPaths in listNamedPaths)
             {
@@ -634,7 +630,7 @@ namespace pwiz.Skyline
                 var files = namedPaths.Value;
                 foreach (var file in files)
                 {
-                    if (!ImportResultsFile(file, replicateName, importBefore, importOnOrAfter, optimize))
+                    if (!ImportResultsFile(file.ChangeParameters(_doc, lockMassParameters), replicateName, importBefore, importOnOrAfter, optimize))
                         return false;
                 }
             }
@@ -1111,10 +1107,10 @@ namespace pwiz.Skyline
         {
             foreach (var resultFile in import.GetFoundResultsFiles())
             {
-                var filePath = new MsDataFilePath(resultFile.Path, commandArgs.LockMassParameters);
+                var filePath = new MsDataFilePath(resultFile.Path);
                 if (!_doc.Settings.HasResults || _doc.Settings.MeasuredResults.FindMatchingMSDataFile(filePath) == null)
                 {
-                    if (!ImportResultsFile(filePath, resultFile.Name, null, null, null))
+                    if (!ImportResultsFile(filePath.ChangeParameters(_doc, commandArgs.LockMassParameters), resultFile.Name, null, null, null))
                         break; // Lots of work completed, still want to save
                 }
             }

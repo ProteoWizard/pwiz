@@ -235,9 +235,8 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public ChromatogramSet(string name,
-            IEnumerable<string> msDataFileNames,
-            LockMassParameters lockmassParameters = null) // Waters lockmass correction - applies to all files in list
-            : this(name, msDataFileNames.Select(file => new MsDataFilePath(file, lockmassParameters)))
+            IEnumerable<string> msDataFileNames)
+            : this(name, msDataFileNames.Select(file => new MsDataFilePath(file)))
         {
             
         }

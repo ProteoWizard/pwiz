@@ -72,7 +72,6 @@ namespace pwiz.Skyline.Controls.Graphs
         protected override void BackgroundInitialize()
         {
             _graphPane = new GraphPane();
-            _graphPane.Chart.Fill = new Fill(_backgroundGradientColor1, _backgroundGradientColor2, 45.0f);
             _graphPane.Chart.Border.IsVisible = false;
             _graphPane.Border.IsVisible = false;
 
@@ -112,7 +111,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
             var newStatus = Interlocked.Exchange(ref _newStatus, null);
             if (newStatus != null)
+            {
                 _status = newStatus;
+                ResetGraph();
+            }
 
             if (_status == null)
                 return Rectangle.Empty;
@@ -161,10 +163,13 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 _lastTime = time;
                 UpdateProgressLine(time);
+                if (_unfinishedBox == null)
+                    invalidRect = new Rectangle(0, 0, bitmap.Width, bitmap.Height);
             }
 
             // Render a new bitmap if something has changed.
-            if (invalidRect.Width > 0)
+            if (invalidRect.Width > 0 && _status.Transitions != null &&
+                (_status.Transitions.CurrentTime > 0 || _status.Transitions.MaxRetentionTime > 0))
             {
                 using (var graphics = Graphics.FromImage(bitmap))
                 {
@@ -187,7 +192,7 @@ namespace pwiz.Skyline.Controls.Graphs
             bool peaksAdded = false;
 
             // Process bins of peaks queued by the reader thread.
-            float maxTime = (float) _xMax;
+            float maxTime = (float) Math.Max(Math.Max(_xMax, transitions.MaxRetentionTime), transitions.CurrentTime);
             float maxIntensity = 0;
             while (transitions.BinnedPeaks.TryPeek(out bin))
             {
@@ -195,22 +200,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 
                 if (bin == null)
                 {
-                    string sampleName = _status.FilePath.GetSampleName();
-                    string filePath = _status.FilePath.GetFileName();
-                    var fileName = !string.IsNullOrEmpty(sampleName)
-                        ? string.Format(Resources.AsyncChromatogramsGraph_Render__0___sample__1_, filePath, sampleName)
-                        : filePath;
-                    _graphPane.Title.Text = fileName;
-                    _graphPane.CurveList.Clear();
-                    _graphPane.XAxis.Scale.Max = _xMax = Math.Max(X_AXIS_START, _status.Transitions.MaxRetentionTime);
-                    _graphPane.YAxis.Scale.Max = _yMax = Y_AXIS_START;
-                    _graphPane.AxisChange();
-                    _xAxisAnimation = null;
-                    _yAxisAnimation = null;
-                    _activeCurves.Clear();
-                    _lastCurve = null;
-                    _fullFrame = true;
-                    peaksAdded = true;
+                    ResetGraph();
+                    maxTime = (float) _xMax;
+                    maxIntensity = 0;
+                    transitions.MaxIntensity = 0;
                     continue;
                 }
 
@@ -242,6 +235,27 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             return peaksAdded;
+        }
+
+        private void ResetGraph()
+        {
+            string sampleName = _status.FilePath.GetSampleName();
+            string filePath = _status.FilePath.GetFileName();
+            var fileName = !string.IsNullOrEmpty(sampleName)
+                ? string.Format(Resources.AsyncChromatogramsGraph_Render__0___sample__1_, filePath, sampleName)
+                : filePath;
+            _graphPane.Title.Text = fileName;
+            _graphPane.CurveList.Clear();
+            _graphPane.XAxis.Scale.Max = _xMax = Math.Max(X_AXIS_START, _status.Transitions.MaxRetentionTime);
+            _graphPane.YAxis.Scale.Max = _yMax = Y_AXIS_START;
+            _graphPane.AxisChange();
+            _xAxisAnimation = null;
+            _yAxisAnimation = null;
+            _activeCurves.Clear();
+            _lastCurve = null;
+            _fullFrame = true;
+            UpdateProgressLine(0);
+            _graphPane.Chart.Fill = new Fill(Color.White);
         }
 
         private void ProcessBinProgressive(
@@ -286,17 +300,17 @@ namespace pwiz.Skyline.Controls.Graphs
                     _graphPane.CurveList.Insert(0, curve.Curve);
                     _activeCurves.Add(curve);
                 }
+                // Add preceding zero if necessary.
+                else if (curve.Curve.Points[curve.Curve.NPts - 1].X < retentionTime - ChromatogramLoadingStatus.TIME_RESOLUTION*1.01)
+                {
+                    curve.Curve.AddPoint(retentionTime - ChromatogramLoadingStatus.TIME_RESOLUTION, 0);
+                    curve.Curve.AddPoint(retentionTime, intensity);
+                    curve.Curve.AddPoint(retentionTime + ChromatogramLoadingStatus.TIME_RESOLUTION, 0);
+                }
+                // Add next point by modifying preceding intensity.
                 else
                 {
-                    // add preceding zero if necessary
-                    if (curve.Curve.Points[curve.Curve.NPts - 1].X < retentionTime - ChromatogramLoadingStatus.TIME_RESOLUTION * 1.5)
-                        curve.Curve.AddPoint(retentionTime - ChromatogramLoadingStatus.TIME_RESOLUTION, 0);
-                    // add new point or change zero
-                    if (curve.Curve.Points[curve.Curve.NPts - 1].X > retentionTime - ChromatogramLoadingStatus.TIME_RESOLUTION * 0.5)
-                        curve.Curve.Points[curve.Curve.NPts - 1].Y = intensity;
-                    else
-                        curve.Curve.AddPoint(retentionTime, intensity);
-                    // add following zero
+                    curve.Curve.Points[curve.Curve.NPts - 1].Y += intensity;
                     curve.Curve.AddPoint(retentionTime + ChromatogramLoadingStatus.TIME_RESOLUTION, 0);
                 }
 
@@ -414,6 +428,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // If we're still loading, create a white rectangle which blocks the fill background, indicating data yet to be loaded.
             if (time < _status.Transitions.MaxRetentionTime)
             {
+                _graphPane.Chart.Fill = new Fill(_backgroundGradientColor1, _backgroundGradientColor2, 45.0f);
                 _unfinishedBox = new BoxObj(
                     time,
                     _graphPane.YAxis.Scale.Max,
@@ -466,8 +481,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
             public void InsertAt(int index, double retentionTime, double intensity)
             {
-                Curve.AddPoint(Curve.Points[Curve.NPts - 1].X, Curve.Points[Curve.NPts - 1].Y);
-                for (int j = index+1; j < Curve.NPts - 1; j++)
+                Curve.AddPoint(0, 0);
+                for (int j = Curve.NPts - 1; j > index; j--)
                 {
                     Curve.Points[j].X = Curve.Points[j - 1].X;
                     Curve.Points[j].Y = Curve.Points[j - 1].Y;
@@ -478,16 +493,12 @@ namespace pwiz.Skyline.Controls.Graphs
 
             public void CheckZeroes(int index)
             {
-                if (index == 0 ||
-                    ChromatogramLoadingStatus.GetBinIndex((float) Curve.Points[index - 1].X) < 
-                    ChromatogramLoadingStatus.GetBinIndex((float) Curve.Points[index].X - 1))
+                if (index == 0 || Curve.Points[index].X - Curve.Points[index-1].X > ChromatogramLoadingStatus.TIME_RESOLUTION)
                 {
                     InsertAt(index, Curve.Points[index].X - ChromatogramLoadingStatus.TIME_RESOLUTION, 0);
                     index++;
                 }
-                if (index + 1 == Curve.NPts ||
-                    ChromatogramLoadingStatus.GetBinIndex((float) Curve.Points[index].X) <
-                    ChromatogramLoadingStatus.GetBinIndex((float) Curve.Points[index+1].X) - 1)
+                if (index == Curve.NPts - 1 || Curve.Points[index+1].X - Curve.Points[index].X > ChromatogramLoadingStatus.TIME_RESOLUTION)
                 {
                     InsertAt(index+1, Curve.Points[index].X + ChromatogramLoadingStatus.TIME_RESOLUTION, 0);
                 }

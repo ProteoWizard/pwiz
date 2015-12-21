@@ -89,6 +89,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         {
                             var swap = (Bitmap) pictureBox.Image;
                             pictureBox.Image = _context._renderBitmap;
+                            pictureBox.Update();
                             _context._renderBitmap = swap;
                         }
 

@@ -74,7 +74,7 @@ namespace pwiz.SkylineTestA
             var docContainer = new ResultsTestDocumentContainer(docCurrent, docCurrentPath);
             string replicateName = Path.GetFileNameWithoutExtension(resultsPath);
             var lockMassParameters = new LockMassParameters(456.78, 567.89, 12.34);
-            var listChromatograms = new List<ChromatogramSet> { new ChromatogramSet(replicateName, new[] { resultsPath }, lockMassParameters) };
+            var listChromatograms = new List<ChromatogramSet> { new ChromatogramSet(replicateName, new[] { new MsDataFilePath(resultsPath, lockMassParameters) }) };
 
             // Lockmass values are Waters only so don't expect them to be saved to the doc which has no Waters results
             // So test the serialization here

@@ -55,6 +55,11 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public abstract MsDataFileUri ChangeCentroiding(bool centroidMS1, bool centroidMS2);
 
+        public MsDataFileUri ChangeParameters(SrmDocument doc, LockMassParameters lockMassParameters)
+        {
+            return doc.Settings.TransitionSettings.FullScan.ApplySettings(ChangeLockMassParameters(lockMassParameters));
+        }
+
         public string GetSampleOrFileName()
         {
             return GetSampleName() ?? GetFileNameWithoutExtension();
@@ -72,30 +77,6 @@ namespace pwiz.Skyline.Model.Results
                 SampleHelp.GetLockmassParameters(url),
                 SampleHelp.GetCentroidMs1(url),
                 SampleHelp.GetCentroidMs2(url));
-        }
-
-        public static List<KeyValuePair<string, MsDataFileUri[]>> ChangeLockMassParameters(IList<KeyValuePair<string, MsDataFileUri[]>> namedResults, LockMassParameters lockMassParameters)
-        {
-            var result = new List<KeyValuePair<string, MsDataFileUri[]>>();
-            foreach (var namedResult in namedResults)
-            {
-                result.Add(ChangeLockMassParameters(namedResult, lockMassParameters));
-            }
-            return result;
-        }
-
-        private static KeyValuePair<string, MsDataFileUri[]> ChangeLockMassParameters(KeyValuePair<string, MsDataFileUri[]> namedResult, LockMassParameters lockMassParameters)
-        {
-            var result = new KeyValuePair<string, MsDataFileUri[]>(namedResult.Key, namedResult.Value);
-            for (var i = 0; i < namedResult.Value.Length; i++)
-            {
-                var msDataFileUri = result.Value[i];
-                if (lockMassParameters == null || lockMassParameters.IsEmpty || !msDataFileUri.IsWatersLockmassCorrectionCandidate())
-                    result.Value[i] = msDataFileUri.ChangeLockMassParameters(LockMassParameters.EMPTY);
-                else
-                    result.Value[i] = msDataFileUri.ChangeLockMassParameters(lockMassParameters);
-            }
-            return result;
         }
     }
 

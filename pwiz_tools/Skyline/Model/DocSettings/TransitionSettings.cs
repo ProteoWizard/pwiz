@@ -2050,6 +2050,11 @@ namespace pwiz.Skyline.Model.DocSettings
             get { return IsEnabledMsMs && ProductMassAnalyzer == FullScanMassAnalyzerType.centroided; }
         }
 
+        public MsDataFileUri ApplySettings(MsDataFileUri path)
+        {
+            return path.ChangeCentroiding(IsCentroidedMs, IsCentroidedMsMs);
+        }
+
         public bool IsHighResPrecursor { get { return IsHighResAnalyzer(PrecursorMassAnalyzer); } }
 
         public bool IsHighResProduct { get { return IsHighResAnalyzer(ProductMassAnalyzer); } }
