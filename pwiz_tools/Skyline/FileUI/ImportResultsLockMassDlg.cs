@@ -34,15 +34,19 @@ namespace pwiz.Skyline.FileUI
     public partial class ImportResultsLockMassDlg : FormEx
     {
         /// <summary>
-        /// Check to see if any of these are Waters files in potential need of lockmass correction.
-        /// If lockmass correction is desired, the MsDataFileUri values in namedResults are modified.
+        /// Updates the parameters for a list of named results. Including a check to see if any of the files
+        /// are Waters files in potential need of lockmass correction. If lockmass correction is desired,
+        /// the MsDataFileUri values in namedResults are modified.
+        /// 
+        /// CONSIDER: Move this to a more general location, since it now does more than just lockmass correction.
         /// </summary>
         /// <param name="parent">Parent window to make owner of <see cref="ImportResultsLockMassDlg"/></param>
         /// <param name="doc">we only do lockmass correction if doc has full scan settings</param>
         /// <param name="namedResults">list of files to be checked - lockmass settings may be modified by this call</param>
         /// <returns>false iff cancelled by user</returns>
-        public static bool CheckWatersLockmassCorrection(Control parent, SrmDocument doc, ref List<KeyValuePair<string, MsDataFileUri[]>> namedResults)
+        public static bool UpdateNamedResultsParameters(Control parent, SrmDocument doc, ref List<KeyValuePair<string, MsDataFileUri[]>> namedResults)
         {
+            LockMassParameters lockMassParameters = null;
             if (doc.Settings.TransitionSettings.FullScan.IsEnabled &&
                 namedResults.Any(n => n.Value.Any(m => m.IsWatersLockmassCorrectionCandidate())))
             {
@@ -54,10 +58,35 @@ namespace pwiz.Skyline.FileUI
                     {
                         return false; // Cancelled
                     }
-                    namedResults = MsDataFileUri.ChangeLockMassParameters(namedResults, dlgLockMass.LockMassParameters);
+                    lockMassParameters = dlgLockMass.LockMassParameters;
                 }
             }
+            namedResults = ChangeLockMassParameters(namedResults, lockMassParameters, doc);
             return true; // Success
+        }
+
+        public static List<KeyValuePair<string, MsDataFileUri[]>> ChangeLockMassParameters(IList<KeyValuePair<string, MsDataFileUri[]>> namedResults, LockMassParameters lockMassParameters, SrmDocument doc)
+        {
+            var result = new List<KeyValuePair<string, MsDataFileUri[]>>();
+            foreach (var namedResult in namedResults)
+            {
+                result.Add(ChangeLockMassParameters(namedResult, lockMassParameters, doc));
+            }
+            return result;
+        }
+
+        private static KeyValuePair<string, MsDataFileUri[]> ChangeLockMassParameters(KeyValuePair<string, MsDataFileUri[]> namedResult, LockMassParameters lockMassParameters, SrmDocument doc)
+        {
+            var result = new KeyValuePair<string, MsDataFileUri[]>(namedResult.Key, namedResult.Value);
+            for (var i = 0; i < namedResult.Value.Length; i++)
+            {
+                var msDataFileUri = result.Value[i];
+                if (lockMassParameters == null || lockMassParameters.IsEmpty || !msDataFileUri.IsWatersLockmassCorrectionCandidate())
+                    result.Value[i] = msDataFileUri.ChangeParameters(doc, LockMassParameters.EMPTY);
+                else
+                    result.Value[i] = msDataFileUri.ChangeParameters(doc, lockMassParameters);
+            }
+            return result;
         }
 
         public ImportResultsLockMassDlg()

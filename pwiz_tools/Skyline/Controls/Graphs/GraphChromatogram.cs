@@ -935,7 +935,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         // Should we show the scan selection point?
                         if (_arrayChromInfo != null && Equals(_stateProvider.SelectedScanFile, FilePath) && _stateProvider.SelectedScanTransition != null)
                         {
-                            foreach (var graphPane in graphControl.MasterPane.PaneList)
+                            foreach (var graphPane in GraphPanes)
                             {
                                 var transitionCurve = GetTransitionCurve(graphPane);
                                 if (transitionCurve == null)
@@ -1031,6 +1031,9 @@ namespace pwiz.Skyline.Controls.Graphs
             foreach (var graphPane in GraphPanes)
             {
                 graphPane.XAxis.Title.Text = xAxisTitle;
+
+                GraphHelper.FormatGraphPane(graphPane);
+                GraphHelper.FormatFontSize(graphPane, Settings.Default.ChromatogramFontSize);
             }
  
             graphControl.IsEnableVPan = graphControl.IsEnableVZoom = !Settings.Default.LockYChrom;

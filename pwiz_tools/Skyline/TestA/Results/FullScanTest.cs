@@ -253,7 +253,7 @@ namespace pwiz.SkylineTestA.Results
             var filePath = testFilesDir.GetTestPath(fileName);
             AssertEx.ThrowsException<AssertFailedException>(() => 
                 {
-                listResults = new List<ChromatogramSet> { new ChromatogramSet("rep1", new[] {filePath}), };
+                listResults = new List<ChromatogramSet> { new ChromatogramSet("rep1", new[] {new MsDataFilePath(filePath, null, true)}), };
                 docContainer.ChangeMeasuredResults(new MeasuredResults(listResults.ToArray()), 1, 1, 1);
                 },
                 string.Format(Resources.NoCentroidedDataException_NoCentroidedDataException_No_centroided_data_available_for_file___0_____Adjust_your_Full_Scan_settings_, fileName));

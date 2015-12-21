@@ -2058,7 +2058,7 @@ namespace pwiz.Skyline
 
                     // Check with user for Waters lockmass settings if any, results written to Settings.Default
                     // If lockmass correction is desired, MsDataFileUri values in namedResults are modified by this call.
-                    if (!ImportResultsLockMassDlg.CheckWatersLockmassCorrection(this, DocumentUI, ref namedResults))
+                    if (!ImportResultsLockMassDlg.UpdateNamedResultsParameters(this, DocumentUI, ref namedResults))
                         return; // User cancelled, no change
 
                     ModifyDocument(description,

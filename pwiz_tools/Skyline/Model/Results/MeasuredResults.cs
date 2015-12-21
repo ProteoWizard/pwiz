@@ -233,21 +233,6 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public ChromSetFileMatch FindExactMatchingMSDataFile(MsDataFileUri filePathFind)
-        {
-            int fileOrder = 0;
-            foreach (ChromatogramSet chromSet in Chromatograms)
-            {
-                foreach (var filePath in chromSet.MSDataFilePaths)
-                {
-                    if (Equals(filePath, filePathFind))
-                        return new ChromSetFileMatch(chromSet, filePath, fileOrder);
-                    fileOrder++;
-                }
-            }
-            return null;
-        }
-
         public ChromSetFileMatch FindMatchingMSDataFile(MsDataFileUri filePathFind)
         {
             // First look for an exact match
@@ -262,6 +247,42 @@ namespace pwiz.Skyline.Model.Results
                 foreach (var filePath in chromSet.MSDataFilePaths)
                 {
                     if (IsBaseNameMatch(filePath.GetFileNameWithoutExtension(), fileBasename))
+                        return new ChromSetFileMatch(chromSet, filePath, fileOrder);
+                    fileOrder++;
+                }
+            }
+            return null;
+        }
+
+        public ChromSetFileMatch FindMatchingOrExistingMSDataFile(MsDataFileUri filePathFind)
+        {
+            // First look for an exact match
+            var exactMatch = FindExactMatchingMSDataFile(filePathFind);
+            if (exactMatch != null)
+                return exactMatch;
+            // Then look for an existing file
+            int fileOrder = 0;
+            foreach (ChromatogramSet chromSet in Chromatograms)
+            {
+                foreach (var filePath in chromSet.MSDataFilePaths)
+                {
+                    var filePathMatching = ChromatogramSet.GetExistingDataFilePath(filePathFind.ToString(), filePath);
+                    if (filePathMatching != null)
+                        return new ChromSetFileMatch(chromSet, filePathMatching, fileOrder);
+                    fileOrder++;
+                }
+            }
+            return null;
+        }
+
+        private ChromSetFileMatch FindExactMatchingMSDataFile(MsDataFileUri filePathFind)
+        {
+            int fileOrder = 0;
+            foreach (ChromatogramSet chromSet in Chromatograms)
+            {
+                foreach (var filePath in chromSet.MSDataFilePaths)
+                {
+                    if (Equals(filePath, filePathFind))
                         return new ChromSetFileMatch(chromSet, filePath, fileOrder);
                     fileOrder++;
                 }
@@ -1115,7 +1136,7 @@ namespace pwiz.Skyline.Model.Results
                             {
                                 // Otherwise, get rid of this cache, since it will need to be
                                 // replaced.
-                                cache.ReadStream.CloseStream();
+                                cache.Dispose();
                                 FileEx.SafeDelete(cache.CachePath);
                             }
                         }
@@ -1182,7 +1203,11 @@ namespace pwiz.Skyline.Model.Results
                         }
                     }
                     if (listPartialCaches.Count > 0)
+                    {
                         _resultsClone._listPartialCaches = ImmutableList.ValueOf(listPartialCaches);
+                        // Use recursion to get the cached paths from the new partial caches
+                        return GetCachedPaths();
+                    }
                 }
                 return cachedPaths;
             }
@@ -1204,6 +1229,10 @@ namespace pwiz.Skyline.Model.Results
                                 var cache = ChromatogramCache.Load(sharedCachePath, _status, _loader);
                                 if (cache.IsSupportedVersion)
                                     listAddCaches.Add(cache);
+                                else
+                                {
+                                    cache.Dispose();
+                                }
                             }
                             catch (UnauthorizedAccessException) {}
                             catch (IOException) {}
@@ -1242,8 +1271,7 @@ namespace pwiz.Skyline.Model.Results
                         // First make sure the file wasn't found and loaded locally
                         if (cachedPaths.Count > 0 && path is MsDataFilePath)
                         {
-                            string dataFilePathPart;
-                            var dataFilePath = ChromatogramSet.GetExistingDataFilePath(cachePath, (MsDataFilePath) path, out dataFilePathPart);
+                            var dataFilePath = ChromatogramSet.GetExistingDataFilePath(cachePath, path);
                             if (cachedPaths.Contains(dataFilePath))
                             {
                                 if (dictReplace == null)
@@ -1267,16 +1295,21 @@ namespace pwiz.Skyline.Model.Results
                                 try
                                 {
                                     var cache = ChromatogramCache.Load(partPath, _status, _loader);
-                                    if (cache.IsSupportedVersion)
+                                    if (cache.IsSupportedVersion && EnsurePathsMatch(cache))
                                     {
-                                        EnsurePathsMatch(cache);
-
                                         var listPartialCaches = new List<ChromatogramCache>();
                                         if (_resultsClone._listPartialCaches != null)
                                             listPartialCaches.AddRange(_resultsClone._listPartialCaches);
                                         listPartialCaches.Add(cache);
                                         _resultsClone._listPartialCaches = ImmutableList.ValueOf(listPartialCaches);
                                         continue;
+                                    }
+                                    else
+                                    {
+                                        // If not getting added to the partial caches close the file and delete
+                                        // it, so it won't get tried again.
+                                        cache.Dispose();
+                                        FileEx.SafeDelete(partPath);
                                     }
                                 }
                                 catch (Exception x)
@@ -1299,6 +1332,11 @@ namespace pwiz.Skyline.Model.Results
                     var cache = ChromatogramCache.Load(replicatePath, _status, _loader);
                     if (cache.IsSupportedVersion)
                         listPartialCaches.Add(cache);
+                    else
+                    {
+                        cache.Dispose();
+                        FileEx.SafeDelete(replicatePath);
+                    }
                 }
                 catch (Exception x)
                 {
@@ -1385,23 +1423,9 @@ namespace pwiz.Skyline.Model.Results
                 // loading will go into an infinite loop.
                 foreach (var cachedFilePath in cache.CachedFilePaths)
                 {
-                    var match = _resultsClone.FindExactMatchingMSDataFile(cachedFilePath);
+                    var match = _resultsClone.FindMatchingOrExistingMSDataFile(cachedFilePath);
                     if (match == null)
-                    {
-                        // If not exact match, try a location match, which may not yet have processing
-                        // parameters added yet
-                        var pathMatch = cachedFilePath.GetLocation();
-                        match = _resultsClone.FindExactMatchingMSDataFile(pathMatch);
-                        if (match == null)
-                            return false;
-                        int i = _resultsClone.Chromatograms.IndexOf(match.Chromatograms);
-                        var arrayChrom = _resultsClone.Chromatograms.ToArray();
-                        var chrom = arrayChrom[i];
-                        var arrayPaths = chrom.MSDataFilePaths.ToArray();
-                        arrayPaths[chrom.IndexOfPath(pathMatch)] = cachedFilePath;
-                        arrayChrom[i] = chrom.ChangeMSDataFilePaths(arrayPaths);
-                        _resultsClone.Chromatograms = arrayChrom;
-                    }
+                        return false;
                 }
                 return true;
             }

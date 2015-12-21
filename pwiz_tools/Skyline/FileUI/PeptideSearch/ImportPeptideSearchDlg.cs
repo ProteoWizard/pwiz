@@ -497,7 +497,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     .ToList();
 
             // Ask about lockmass correction, if needed - lockmass settings in namedResults will be updated by this call as needed
-            if (!ImportResultsLockMassDlg.CheckWatersLockmassCorrection(this, SkylineWindow.DocumentUI, ref namedResults))
+            if (!ImportResultsLockMassDlg.UpdateNamedResultsParameters(this, SkylineWindow.DocumentUI, ref namedResults))
             {
                 CloseWizard(DialogResult.Cancel);  // User cancelled, no change
             }
