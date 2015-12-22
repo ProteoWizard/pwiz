@@ -57,14 +57,14 @@ void MzXMLParser::startElement(const XML_Char *el, const XML_Char **attr) {
             string compression = getAttrValue("compressionType", attr);
 
             bdeConfig_.precision = (precision == "64")
-                ? BinaryDataEncoder::Precision::Precision_64
-                : BinaryDataEncoder::Precision::Precision_32;
+                ? BinaryDataEncoder::Precision_64
+                : BinaryDataEncoder::Precision_32;
             bdeConfig_.byteOrder = (!byteOrder.empty() && byteOrder != "network")
-                ? BinaryDataEncoder::ByteOrder::ByteOrder_LittleEndian
-                : BinaryDataEncoder::ByteOrder::ByteOrder_BigEndian;
+                ? BinaryDataEncoder::ByteOrder_LittleEndian
+                : BinaryDataEncoder::ByteOrder_BigEndian;
             bdeConfig_.compression = (compression == "zlib")
-                ? BinaryDataEncoder::Compression::Compression_Zlib
-                : BinaryDataEncoder::Compression::Compression_None;
+                ? BinaryDataEncoder::Compression_Zlib
+                : BinaryDataEncoder::Compression_None;
         }
         break;
     }
@@ -123,7 +123,7 @@ void MzXMLParser::endElement(const XML_Char *el) {
             currentSpectrum_->intensities = new float[numDecodedPeaks];
             for (size_t i = 0, j = 0; j < decoded.size(); i++, j += 2) {
                 currentSpectrum_->mzs[i] = decoded[j];
-                currentSpectrum_->intensities[i] = decoded[j + 1];
+                currentSpectrum_->intensities[i] = (float)decoded[j + 1];
             }
         }
         break;

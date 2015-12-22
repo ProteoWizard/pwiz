@@ -28,6 +28,7 @@
  */
 
 #include <cstdarg>
+#include <cstdio>
 #include <exception>
 #include <string>
 
