@@ -326,7 +326,7 @@ namespace pwiz.ProteomeDatabase.Fasta
 
 
         private const string MATCH_DESCRIPTION_WITH_OPTIONAL_OS_AND_GN = // match common uniprot OS and GN format
-            @"(?<description>((.*?(((\sOS=(?<species>(.*?)))?)((\sGN=(?<gene>(.*?)))?)(\s\w\w\=)+).*))|.*)"; // Not L10N
+            @"(?<description>((.*?(((\sOS=(?<species>(.*?)))?)((\sGN=(?<gene>(.*?)))?)($|(\s\w\w\=)+).*)))|.*)"; // Not L10N
 
         /// <summary>
         /// class for regex matching in FASTA header lines - contains a comment, a regex, and an output format to be used with Regex replace

@@ -47,14 +47,18 @@ namespace CommonTest
         /// <param name="species">species, when known</param>
         /// <param name="gene">gene, when known</param>
         /// <param name="websearchcode">hint for faking up web search response</param>
+        /// <param name="wellformed">if true, expect that result can be arrived at without web access</param>
         public FastaHeaderReaderResult(string accession, string preferredname, string name,
             string description,
-            string species, string gene, char websearchcode = WebEnabledFastaImporter.UNIPROTKB_TAG)
+            string species, string gene, char websearchcode = WebEnabledFastaImporter.UNIPROTKB_TAG,
+            bool wellformed = false)
         {
             Protein = new ProteinMetadata(name, description, preferredname, accession, gene, species, websearchcode.ToString(CultureInfo.InvariantCulture));
+            Wellformed = wellformed;
         }
 
         public ProteinMetadata Protein { get; set; }
+        public bool Wellformed { get; private set; }
 
         private static string FindTerm(string str, string splitter)
         {
@@ -154,6 +158,19 @@ namespace CommonTest
 
             return new List<FastaHeaderParserTest>
             {
+                new FastaHeaderParserTest(
+                    // Test handling of OS= and GN= but nothing afterward (this was formerly unsupported by the regex)
+                    @">sp|P10636-3|TAU_HUMAN Isoform Tau-A of Microtubule-associated protein tau OS=Homo sapiens GN=MAPT",
+                    new[]
+                    {
+                        new FastaHeaderReaderResult(accession: "P10636-3",
+                            name: "sp|P10636-3|TAU_HUMAN",
+                            preferredname: "TAU_HUMAN",
+                            description: "Isoform Tau-A of Microtubule-associated protein tau OS=Homo sapiens GN=MAPT",
+                            species: "Homo sapiens", gene: "MAPT", 
+                            wellformed:true) // Should not require web access for complete metadata
+                    }),
+
                 new FastaHeaderParserTest(
                     @">IPI:IPI00197700.1 Tax_Id=10116 Gene_Symbol=Apoa2 Apolipoprotein A-II",
                     new[]
@@ -266,7 +283,8 @@ namespace CommonTest
                         new FastaHeaderReaderResult(accession: "P01222", name: "sp|P01222|TSHB_HUMAN",
                             preferredname: "TSHB_HUMAN",
                             description: "Thyrotropin subunit beta OS=Homo sapiens GN=TSHB PE=1 SV=2",
-                            species: "Homo sapiens", gene: "TSHB")
+                            species: "Homo sapiens", gene: "TSHB", 
+                            wellformed: true) // Well-formed, should require no search
                     }),
                 new FastaHeaderParserTest(
                     ">Y62E10A.1	CE22694 WBGene00004410 locus:rpa-2 status:Confirmed TR:Q9U1X9 protein_id:CAB60595.1",
@@ -649,6 +667,10 @@ namespace CommonTest
                 foreach (var name in dbProtein.Names)
                 {
                     var actual = new DbProteinName(null, name.GetProteinMetadata());
+                    if (tests[testnum].ExpectedResults[n].Wellformed)
+                    {
+                        Assert.AreEqual(WebEnabledFastaImporter.SEARCHDONE_TAG.ToString(), actual.WebSearchInfo.ToString()); // No search needed
+                    }
                     var expected = new DbProteinName(null, tests[testnum].ExpectedResults[n++].Protein);
                     if (tests[testnum].Header.Contains(NEGTEST_NAME))
                     {
