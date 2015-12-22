@@ -25,7 +25,7 @@
 
 #include "PepXMLreader.h"
 #include "BlibMaker.h"
-#include "MzXMLParser.h"
+#include "mzxmlParser.h"
 #include <algorithm>
 #include <boost/algorithm/string.hpp>
 #include <cmath>
