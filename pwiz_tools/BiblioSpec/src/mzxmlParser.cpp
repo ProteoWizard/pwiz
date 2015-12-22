@@ -1,5 +1,5 @@
 #include "BlibException.h"
-#include "mzXMLParser.h"
+#include "mzxmlParser.h"
 #include "Verbosity.h"
 
 #include <cstdlib>
