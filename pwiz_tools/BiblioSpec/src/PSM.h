@@ -111,3 +111,10 @@ struct PSM{
     };
 };
 
+struct PSMSpecKeySorter {
+  bool operator() (const PSM* x, const PSM* y) { return x->specKey < y->specKey; }
+};
+
+struct PSMSpecIndexSorter {
+  bool operator() (const PSM* x, const PSM* y) { return x->specIndex < y->specIndex; }
+};

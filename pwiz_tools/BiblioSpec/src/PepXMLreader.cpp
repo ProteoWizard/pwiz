@@ -25,6 +25,7 @@
 
 #include "PepXMLreader.h"
 #include "BlibMaker.h"
+#include "MzXMLParser.h"
 #include <algorithm>
 #include <boost/algorithm/string.hpp>
 #include <cmath>
@@ -180,18 +181,11 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
                throw BlibException(false, "The .pep.xml file appears to be from "
                                 "Proteome Discoverer but not from one of the supported "
                                 "search engines (SEQUEST, Mascot).");
-
            }
-
        }
-       
-       if (boost::iequals("average", getAttrValue("fragment_mass_type", attr)))
-           massType = 0;
-       else
-           massType = 1;
-       
-       AminoAcidMasses::initializeMass(aminoacidmass, massType);
 
+       massType = (boost::iequals("average", getAttrValue("fragment_mass_type", attr))) ? 0 : 1;       
+       AminoAcidMasses::initializeMass(aminoacidmass, massType);
    } else if(isElement("spectrum_query", name)) {
        // is it better to do this at the start of the element or the end?
        scanIndex=-1;
@@ -332,8 +326,28 @@ void PepXMLreader::endElement(const XML_Char* name)
             setNextProgressSize(progress);
         }
 
+        string specFile = getSpecFileName();
+        std::transform(specFile.begin(), specFile.end(), specFile.begin(), ::tolower);
+        SpecFileReader* originalReader = NULL;
+        if ((lookUpBy_ == SCAN_NUM_ID || lookUpBy_ == INDEX_ID) &&
+            specFile.length() >= 6 && specFile.compare(specFile.length() - 6, 6, ".mzxml") == 0) {
+            originalReader = specReader_;
+            specReader_ = new MzXMLParser();
+            switch (lookUpBy_) {
+            case SCAN_NUM_ID:
+                std::sort(psms_.begin(), psms_.end(), PSMSpecKeySorter());
+                break;
+            case INDEX_ID:
+                std::sort(psms_.begin(), psms_.end(), PSMSpecIndexSorter());
+                break;
+            }
+        }
         buildTables(scoreType_);
-        
+        if (originalReader) {
+            delete specReader_;
+            specReader_ = originalReader;
+        }
+
         // reset values for next
         mzXMLFile[0]='\0';
         massType = 1;
@@ -363,7 +377,7 @@ void PepXMLreader::endElement(const XML_Char* name)
                                "score %.2f, seq %s, name %s.",
                                scanNumber, charge, pepProb, pepSeq,
                                spectrumName.c_str());
-             psms_.push_back(curPSM_);
+            psms_.push_back(curPSM_);
             curPSM_ = NULL;
         }
 

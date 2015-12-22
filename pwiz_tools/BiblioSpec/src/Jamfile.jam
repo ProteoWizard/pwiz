@@ -165,6 +165,7 @@ lib blib
     DotProduct.cpp
     LibReader.cpp
     Match.cpp
+    mzXMLParser.cpp
     Options.cpp
     PeakProcess.cpp
     PsmFile.cpp

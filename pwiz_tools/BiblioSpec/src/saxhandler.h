@@ -210,9 +210,13 @@ public:
 
 protected:
     XML_Parser m_parser_;
-    string  m_strFileName_;
+    string m_strFileName_;
     const char* m_bytes_;
     size_t m_bytesLen_;
+
+    void initParser();
+    std::string generateError(const std::string& message);
+    std::string getParserError();
 
     /**
      * Sax parsers can throw this error to be caught in parse() where
