@@ -174,6 +174,11 @@ namespace pwiz.Skyline.Model.Results
         private int[] RawScanIds { get; set; }
         public IEnumerable<CrawdadPeak> RawPeaks { get; private set; }
 
+        public float RawCenterTime
+        {
+            get { return (float) (0.5*(RawTimes.Last() + RawTimes.First())); }
+        }
+
         /// <summary>
         /// Time array shared by all transitions of a precursor, and on the
         /// same scale as all other precursors of a peptide.

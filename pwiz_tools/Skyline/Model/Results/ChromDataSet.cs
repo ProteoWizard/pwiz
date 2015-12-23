@@ -26,6 +26,7 @@ using pwiz.Crawdad;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using Array = System.Array;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -426,6 +427,8 @@ namespace pwiz.Skyline.Model.Results
                 // But only for fragment ions to allow hidden MS1 isotopes to participate
                 hasDocNode && chromData.Key.Source == ChromSource.fragment));
 
+            RemoveProductConflictsByTime(retentionTimes);
+
             // Merge sort all peaks into a single list
             IList<ChromDataPeak> allPeaks = SplitMS(MergePeaks());
 
@@ -539,6 +542,61 @@ namespace pwiz.Skyline.Model.Results
 
 //            if (retentionTimes.Length > 0 && !_listPeakSets[0].Identified)
 //                Console.WriteLine("Idenifications outside peaks.");
+        }
+
+        private void RemoveProductConflictsByTime(double[] retentionTimes)
+        {
+            // Check for chromatograms with identical Q1>Q3 pairs but different RT windows.
+            // Pick the one whose center most nearly matches the explict RT value if any
+            for (var i = 0; i < _listChromData.Count - 1;)
+            {
+                var iNext = i + 1;
+                var chromData = _listChromData[i];
+                var chromDataNext = _listChromData[iNext];
+
+                if (chromData.Key.Product != chromDataNext.Key.Product ||
+                    // Only do this for fragments, because MS1 and SIM are allowed to match
+                    chromData.Key.Source != ChromSource.fragment ||
+                    chromDataNext.Key.Source != ChromSource.fragment)
+                {
+                    i++; // Just advance
+                    continue;
+                }
+
+                var it0 = retentionTimes.IndexOf(t => chromData.RawTimes.First() <= t && t <= chromData.RawTimes.Last());
+                var it1 = retentionTimes.IndexOf(t => chromDataNext.RawTimes.First() <= t && t <= chromDataNext.RawTimes.Last());
+                if ((it0 != -1) != (it1 != -1))
+                {
+                    // One or the other doesn't match timewise, easy choice
+                    if (it0 != -1)
+                    {
+                        _listChromData.RemoveAt(iNext); // Next in list is not in time range
+                    }
+                    else
+                    {
+                        _listChromData.RemoveAt(i); // Current is not in time range
+                    }
+                }
+                else if (it0 != -1)
+                {
+                    // Pick the one that's best centered on predicted time (per Will T's suggestion)
+                    var t0 = retentionTimes[it0];
+                    var t1 = retentionTimes[it1];
+                    if (Math.Abs(t0 - chromData.RawCenterTime) <= Math.Abs(t1 - chromDataNext.RawCenterTime))
+                    {
+                        _listChromData.RemoveAt(iNext);
+                    }
+                    else
+                    {
+                        _listChromData.RemoveAt(i);
+                    }
+                }
+                else
+                {
+                    // Just pick the first one
+                    _listChromData.RemoveAt(iNext);
+                }
+            }
         }
 
         /// <summary>

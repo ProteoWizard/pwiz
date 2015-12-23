@@ -144,6 +144,7 @@
     <Compile Include="Results\AgilentMixTest.cs" />
     <Compile Include="Results\AgilentMseTest.cs" />
     <Compile Include="Results\BlibDriftTimeTest.cs" />
+    <Compile Include="Results\ExplicitRTTest.cs" />
     <Compile Include="Results\MeasuredDriftValuesTest.cs" />
     <Compile Include="Results\MultiplePeptidesSameMzTest.cs" />
     <Compile Include="Results\SmallWiffTest.cs" />
@@ -201,6 +202,7 @@
     <None Include="Results\AgilentMix.zip" />
     <None Include="Results\AgilentMse.zip" />
     <None Include="Results\BlibDriftTimeTest.zip" />
+    <None Include="Results\ExplicitRTTest.zip" />
     <None Include="Results\MultiplePeptidesSameMz.zip" />
     <None Include="Results\SmallWiff.zip" />
     <None Include="Results\ThermoQuant.zip" />
