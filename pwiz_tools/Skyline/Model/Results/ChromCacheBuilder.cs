@@ -647,6 +647,14 @@ namespace pwiz.Skyline.Model.Results
             var nodePep = peptideChromDataSets.NodePep;
             if (nodePep == null)
                 return;
+            if (nodePep.ExplicitRetentionTime != null)
+            {
+                // Explicitly set retention time overrides any predictor
+                peptideChromDataSets.PredictedRetentionTime =
+                    new RetentionTimePrediction(nodePep.ExplicitRetentionTime.RetentionTime, nodePep.ExplicitRetentionTime.RetentionTimeWindow ?? 0);
+                peptideChromDataSets.RetentionTimes = new[] { nodePep.ExplicitRetentionTime.RetentionTime }; // Feed this information to the peak picker
+                return;
+            }
             if (!nodePep.IsProteomic)  // No retention time prediction for small molecules
                 return;
             string lookupSequence = nodePep.SourceUnmodifiedTextId;
@@ -1003,6 +1011,7 @@ namespace pwiz.Skyline.Model.Results
                 int icNext = ic + 1, itNext = it + 1;
                 if (ChromKey.CompareTolerant(tc.Mz, tt.Mz, tolerance) != 0)
                 {
+                    // Current transition and current chromatogram are not a match
                     // Advance in the list with the smaller m/z
                     if (tc.Mz > tt.Mz)
                         it = itNext;
@@ -1011,14 +1020,16 @@ namespace pwiz.Skyline.Model.Results
                 }
                 else
                 {
-                    // If next chromatogram matches better, just advance and continue
+                    // Current transition and current chromatogram are an mz match
+                    // If next chromatogram matches better, just advance in chromatogram list and continue
                     double delta = Math.Abs(tc.Mz - tt.Mz);
                     MzIndexChromData tc2 = null;
                     // Handle the case where there are both ms1 and sim chromatograms
+                    // Or where Q1-Q3 pair is selected more than once, probably with different RT windows
                     if (icNext < cc)
                     {
                         var tcNext = listMzIndexChromatograms[icNext];
-                        if (AreMatchingPrecursors(tc, tcNext))
+                        if (AreMatchingPrecursors(tc, tcNext) || AreMatchingFragments(tc, tcNext))
                         {
                             tc2 = tcNext;
                             icNext++;
@@ -1028,7 +1039,7 @@ namespace pwiz.Skyline.Model.Results
                     {
                         ic = NextChrom(ic, tc, tc2, null, listMatchingData);
                     }
-                    // or next transition matches better, just advance and continue
+                    // or next transition matches better, just advance in transition list and continue
                     else if (itNext < ct && delta > Math.Abs(tc.Mz - listMzTrans[itNext].Mz))
                         it = itNext;
                     // otherwise, this is the best match, so add it
@@ -1055,6 +1066,14 @@ namespace pwiz.Skyline.Model.Results
                    tc2.Chrom.Key.Source != ChromSource.fragment;
         }
 
+        private static bool AreMatchingFragments(MzIndexChromData tc, MzIndexChromData tc2)
+        {
+            return tc.Mz == tc2.Mz &&
+                   tc.Chrom.Key.Precursor == tc2.Chrom.Key.Precursor &&
+                   tc.Chrom.Key.Source == ChromSource.fragment &&
+                   tc2.Chrom.Key.Source == ChromSource.fragment;
+        }
+
         private static int NextChrom(int ic, MzIndexChromData tc, MzIndexChromData tc2, MzTrans tt,
                                      ICollection<IndexChromDataTrans> listMatchingData)
         {
@@ -1068,6 +1087,9 @@ namespace pwiz.Skyline.Model.Results
                 // If there are two precursor chromatograms matching the same transition, add them
                 // both. One will probably fail to load. At some point, we will make Transitions contain
                 // a ChromSource, and then we will only match the right ChromSource.
+                // If there are two fragment chromatograms matching the same transition, add them
+                // both.  Likely they have different RT ranges and only one or the other is useful,
+                // but we don't have enough RT information at this point to make that decision.
                 if (tc2 != null)
                 {
                     listMatchingData.Add(new IndexChromDataTrans(tc2.Index, tc2.Chrom, nodeTran));

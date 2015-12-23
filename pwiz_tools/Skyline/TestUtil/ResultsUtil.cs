@@ -216,7 +216,7 @@ namespace pwiz.SkylineTestUtil
             failMessage += CompareValues(transitions, transitionsActual, "transition");
             failMessage += CompareValues(transitionsHeavy, transitionsHeavyActual, "heavy transition");
             if (failMessage.Length > 0)
-                Assert.Fail("IsDocumentResultsState failed: "+failMessage);
+                Assert.Fail("IsDocumentResultsState failed for replicate " + replicateName + ": "+failMessage);
         }
 
         public static void MatchChromatograms(ResultsTestDocumentContainer docContainer,

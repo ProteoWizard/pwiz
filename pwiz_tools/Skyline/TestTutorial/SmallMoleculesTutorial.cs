@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -104,17 +105,17 @@ namespace pwiz.SkylineTestTutorial
                 }
 
                 var columnsOrdered = new[]
-                    {
-                        // Molecule List Name,Precursor Name,Precursor Formula,Precursor Charge,Precursor RT,Precursor CE,Product m/z,Product Charge
-                        PasteDlg.SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
-                        PasteDlg.SmallMoleculeTransitionListColumnHeaders.namePrecursor,
-                        PasteDlg.SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
-                        PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
-                        PasteDlg.SmallMoleculeTransitionListColumnHeaders.rtPrecursor,
-                        PasteDlg.SmallMoleculeTransitionListColumnHeaders.cePrecursor,
-                        PasteDlg.SmallMoleculeTransitionListColumnHeaders.mzProduct,
-                        PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargeProduct
-                    }.ToList();
+                {
+                    // Molecule List Name,Precursor Name,Precursor Formula,Precursor Charge,Precursor RT,Precursor CE,Product m/z,Product Charge
+                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
+                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.namePrecursor,
+                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
+                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
+                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.rtPrecursor,
+                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.cePrecursor,
+                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.mzProduct,
+                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargeProduct
+                }.ToList();
                 RunUI(() => { pasteDlg.SetSmallMoleculeColumns(columnsOrdered); });
                 WaitForConditionUI(() => pasteDlg.GetUsableColumnCount() == columnsOrdered.Count);
                 PauseForScreenShot<PasteDlg>("Paste Dialog with selected and ordered columns", 4);
@@ -142,7 +143,7 @@ namespace pwiz.SkylineTestTutorial
 
                 var importResultsDlg1 = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
                 var openDataSourceDialog1 = ShowDialog<OpenDataSourceDialog>(() => importResultsDlg1.NamedPathSets =
-                                                                            importResultsDlg1.GetDataSourcePathsFile(null));
+                    importResultsDlg1.GetDataSourcePathsFile(null));
                 RunUI(() =>
                 {
                     openDataSourceDialog1.CurrentDirectory = new MsDataFilePath(GetTestPath());
@@ -164,9 +165,20 @@ namespace pwiz.SkylineTestTutorial
                 PauseForScreenShot<SkylineWindow>("Skyline window multi-target graph", 8);
 
                 var docResults = SkylineWindow.Document;
+                var expectedTransCount = new Dictionary<string, int>
+                {
+                    {"ID15655_01_WAA263_3976_020415", 21},
+                    {"ID15657_01_WAA263_3976_020415", 21},
+                    {"ID15658_01_WAA263_3976_020415", 21},
+                    {"ID15662_01_WAA263_3976_020415", 21},
+                    {"ID15740_02_WAA263_3976_020415", 19},
+                    {"ID15741_01_WAA263_3976_020415", 21},
+                };
                 foreach (var chromatogramSet in docResults.Settings.MeasuredResults.Chromatograms)
                 {
-                    int trans = chromatogramSet.Name == "ID15741_01_WAA263_3976_020415" ? 20 : 21;
+                    int trans;
+                    if (!expectedTransCount.TryGetValue(chromatogramSet.Name, out trans))
+                        trans = 20; // Most have this value
                     AssertResult.IsDocumentResultsState(docResults, chromatogramSet.Name, 19, 19, 0, trans, 0);
                 }
 
