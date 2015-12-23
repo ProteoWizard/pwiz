@@ -166,6 +166,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public int OptimizationStep { get { return _step; } }
 
         public double? RetentionPrediction { get; set; }
+        public ExplicitRetentionTimeInfo RetentionExplicit { get; set; }
         public double RetentionWindow { get; set; }
 
         public double[] RetentionMsMs { get; set; }
@@ -486,6 +487,19 @@ namespace pwiz.Skyline.Controls.Graphs
                                      };
                     annotations.Add(box);
                 }
+            }
+
+            if (RetentionExplicit != null && GraphChromatogram.ShowRT != ShowRTChrom.none)
+            {
+                // Create temporary label to calculate positions
+                AddRetentionTimeAnnotation(graphPane,
+                                            g,
+                                            annotations,
+                                            ptTop,
+                                            Resources.ChromGraphItem_AddAnnotations_Explicit,
+                                            GraphObjType.predicted_rt_window,
+                                            COLOR_RETENTION_TIME,
+                                            ScaleRetentionTime(RetentionExplicit.RetentionTime));
             }
 
             for (int i = 0, len = Chromatogram.NumPeaks; i < len; i++)

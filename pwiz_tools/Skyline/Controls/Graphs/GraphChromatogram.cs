@@ -959,7 +959,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     foreach (var chromGraphItem in _graphHelper.ListPrimaryGraphItems())
                     {
-                        SetRetentionTimeIndicators(chromGraphItem.Value, settings, chromatograms, nodeGroups,
+                        SetRetentionTimeIndicators(chromGraphItem.Value, settings, chromatograms, nodePeps, nodeGroups,
                             lookupSequence, lookupMods);
                     }
                 }
@@ -2118,6 +2118,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private void SetRetentionTimeIndicators(ChromGraphItem chromGraphPrimary,
                                                 SrmSettings settings,
                                                 ChromatogramSet chromatograms,
+                                                PeptideDocNode[] nodePeps,
                                                 TransitionGroupDocNode[] nodeGroups,
                                                 string lookupSequence,
                                                 ExplicitMods lookupMods)
@@ -2128,7 +2129,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 return;
             }
             SetRetentionTimePredictedIndicator(chromGraphPrimary, settings, chromatograms,
-                nodeGroups, lookupSequence, lookupMods);
+                nodePeps, lookupSequence, lookupMods);
             SetRetentionTimeIdIndicators(chromGraphPrimary, settings,
                 nodeGroups, lookupSequence, lookupMods);
         }
@@ -2136,7 +2137,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private static void SetRetentionTimePredictedIndicator(ChromGraphItem chromGraphPrimary,
                                                                SrmSettings settings,
                                                                ChromatogramSet chromatograms,
-                                                               TransitionGroupDocNode[] nodeGroups,
+                                                               PeptideDocNode[] nodePeps,
                                                                string lookupSequence,
                                                                ExplicitMods lookupMods)
         {
@@ -2153,6 +2154,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 chromGraphPrimary.RetentionPrediction = predictedRT;
                 chromGraphPrimary.RetentionWindow = window;
             }
+            chromGraphPrimary.RetentionExplicit = (nodePeps.Length == 1) ? nodePeps[0].ExplicitRetentionTime : null;
         }
 
 

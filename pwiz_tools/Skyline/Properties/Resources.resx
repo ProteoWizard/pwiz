@@ -8843,4 +8843,8 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="PasteDlg_ReadPrecursorOrProductColumns_Error_on_line__0___Product_m_z__1__does_not_agree_with_value__2__as_calculated_from_ion_formula_and_charge_state__delta____3___Transition_Settings___Instrument___Method_match_tolerance_m_z____4_____Correct_the_m_z_value_in_the_table__or_leave_it_blank_and_Skyline_will_calculate_it_for_you_" xml:space="preserve">
     <value>Error on line {0}: Product m/z {1} does not agree with value {2} as calculated from ion formula and charge state (delta = {3}, Transition Settings | Instrument | Method match tolerance m/z = {4}).  Correct the m/z value in the table, or leave it blank and Skyline will calculate it for you.</value>
   </data>
+  <data name="ChromGraphItem_AddAnnotations_Explicit" xml:space="preserve">
+    <value>Explicit</value>
+    <comment>used for displaying explicit retention times in chromatogram graphs</comment>
+  </data>
 </root>

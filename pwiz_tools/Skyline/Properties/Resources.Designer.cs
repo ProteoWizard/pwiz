@@ -3050,6 +3050,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Explicit.
+        /// </summary>
+        public static string ChromGraphItem_AddAnnotations_Explicit {
+            get {
+                return ResourceManager.GetString("ChromGraphItem_AddAnnotations_Explicit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to ID.
         /// </summary>
         public static string ChromGraphItem_AddAnnotations_ID {
