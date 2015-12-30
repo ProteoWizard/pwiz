@@ -232,6 +232,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="ChromatogramExporterTest.zip" />
+    <None Include="CommandLineAssayImportTest.zip" />
     <None Include="CommandLineImportTest.zip" />
     <None Include="CommandLineTest.zip" />
     <None Include="DocLoadLibraryTest.zip" />
