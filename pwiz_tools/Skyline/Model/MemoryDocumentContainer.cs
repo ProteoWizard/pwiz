@@ -25,6 +25,7 @@ using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
@@ -122,7 +123,7 @@ namespace pwiz.Skyline.Model
         }
     }
 
-    public class ResultsMemoryDocumentContainer : MemoryDocumentContainer
+    public class ResultsMemoryDocumentContainer : MemoryDocumentContainer, IDisposable
     {
         public ResultsMemoryDocumentContainer(SrmDocument docInitial, string pathInitial)
             : this(docInitial, pathInitial, false)
@@ -165,5 +166,11 @@ namespace pwiz.Skyline.Model
         public IonMobilityLibraryManager IonMobilityManager { get; private set; }
 
         public IrtDbManager IrtDbManager { get; private set; }
+
+        public void Dispose()
+        {
+            // Release current document to ensure the streams are closed on it
+            SetDocument(new SrmDocument(SrmSettingsList.GetDefault()), Document);
+        }
     }
 }

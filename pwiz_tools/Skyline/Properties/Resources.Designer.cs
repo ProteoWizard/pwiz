@@ -1859,12 +1859,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Creating spectral library for imported mass list.
+        ///   Looks up a localized string similar to Creating spectral library for imported transition list.
         /// </summary>
-        public static string BlibDb_CreateLibraryFromSpectra_Creating_spectral_library_for_imported_mass_list_ {
+        public static string BlibDb_CreateLibraryFromSpectra_Creating_spectral_library_for_imported_transition_list {
             get {
-                return ResourceManager.GetString("BlibDb_CreateLibraryFromSpectra_Creating_spectral_library_for_imported_mass_list_" +
-                        "", resourceCulture);
+                return ResourceManager.GetString("BlibDb_CreateLibraryFromSpectra_Creating_spectral_library_for_imported_transition" +
+                        "_list", resourceCulture);
             }
         }
         
@@ -3787,16 +3787,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Warning: Use of the argument {0} requires the argument {1}.
-        /// </summary>
-        public static string CommandArgs_ReportArgRequirment_Warning__Use_of_the_argument__0__requires_the_argument__1_ {
-            get {
-                return ResourceManager.GetString("CommandArgs_ReportArgRequirment_Warning__Use_of_the_argument__0__requires_the_arg" +
-                        "ument__1_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to The run length {0} must be between {1} and {2}..
         /// </summary>
         public static string CommandArgs_RunLength_The_run_length__0__must_be_between__1__and__2__ {
@@ -3822,6 +3812,16 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("CommandArgs_TransListInstrumentType_The_instrument_type__0__is_not_valid_for_tran" +
                         "sition_list_export", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Warning: Use of the argument {0} requires the argument {1}.
+        /// </summary>
+        public static string CommandArgs_WarnArgRequirment_Warning__Use_of_the_argument__0__requires_the_argument__1_ {
+            get {
+                return ResourceManager.GetString("CommandArgs_WarnArgRequirment_Warning__Use_of_the_argument__0__requires_the_argum" +
+                        "ent__1_", resourceCulture);
             }
         }
         
@@ -3889,6 +3889,25 @@ namespace pwiz.Skyline.Properties {
         public static string CommandLine_ConnectLibrarySpecs_Warning__Could_not_find_the_spectral_library__0_ {
             get {
                 return ResourceManager.GetString("CommandLine_ConnectLibrarySpecs_Warning__Could_not_find_the_spectral_library__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: Importing an assay library to a document without an iRT calculator cannot create {0}, because it exists..
+        /// </summary>
+        public static string CommandLine_CreateIrtDatabase_Error__Importing_an_assay_library_to_a_document_without_an_iRT_calculator_cannot_create__0___because_it_exists_ {
+            get {
+                return ResourceManager.GetString("CommandLine_CreateIrtDatabase_Error__Importing_an_assay_library_to_a_document_wit" +
+                        "hout_an_iRT_calculator_cannot_create__0___because_it_exists_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use the {0} argument to specify a file to create..
+        /// </summary>
+        public static string CommandLine_CreateIrtDatabase_Use_the__0__argument_to_specify_a_file_to_create_ {
+            get {
+                return ResourceManager.GetString("CommandLine_CreateIrtDatabase_Use_the__0__argument_to_specify_a_file_to_create_", resourceCulture);
             }
         }
         
@@ -4729,11 +4748,146 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Adding {0} spectra to the library {1}.
+        /// </summary>
+        public static string CommandLine_ImportTransitionList_Adding__0__spectra_to_the_library__1_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportTransitionList_Adding__0__spectra_to_the_library__1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: (line {0}, column {1}) {2}.
+        /// </summary>
+        public static string CommandLine_ImportTransitionList_Error___line__0___column__1____2_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportTransitionList_Error___line__0___column__1____2_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: Imported assay library {0} lacks ion abundance values..
+        /// </summary>
+        public static string CommandLine_ImportTransitionList_Error__Imported_assay_library__0__lacks_ion_abundance_values_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportTransitionList_Error__Imported_assay_library__0__lacks_ion_abun" +
+                        "dance_values_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: Imported assay library {0} lacks iRT and ion abundance values..
+        /// </summary>
+        public static string CommandLine_ImportTransitionList_Error__Imported_assay_library__0__lacks_iRT_and_ion_abundance_values_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportTransitionList_Error__Imported_assay_library__0__lacks_iRT_and_" +
+                        "ion_abundance_values_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: Imported assay library {0} lacks iRT values..
+        /// </summary>
+        public static string CommandLine_ImportTransitionList_Error__Imported_assay_library__0__lacks_iRT_values_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportTransitionList_Error__Imported_assay_library__0__lacks_iRT_valu" +
+                        "es_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: The name {0} specified with {1} was not found in the imported assay library..
+        /// </summary>
+        public static string CommandLine_ImportTransitionList_Error__The_name__0__specified_with__1__was_not_found_in_the_imported_assay_library_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportTransitionList_Error__The_name__0__specified_with__1__was_not_f" +
+                        "ound_in_the_imported_assay_library_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: There is an existing library with the same name {0} as the document library to be created..
+        /// </summary>
+        public static string CommandLine_ImportTransitionList_Error__There_is_an_existing_library_with_the_same_name__0__as_the_document_library_to_be_created_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportTransitionList_Error__There_is_an_existing_library_with_the_sam" +
+                        "e_name__0__as_the_document_library_to_be_created_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: To create the iRT database &apos;{0}&apos; for this assay library, you must specify the iRT standards using either of the arguments {1} or {2}.
+        /// </summary>
+        public static string CommandLine_ImportTransitionList_Error__To_create_the_iRT_database___0___for_this_assay_library__you_must_specify_the_iRT_standards_using_either_of_the_arguments__1__or__2_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportTransitionList_Error__To_create_the_iRT_database___0___for_this" +
+                        "_assay_library__you_must_specify_the_iRT_standards_using_either_of_the_arguments" +
+                        "__1__or__2_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finishing up import.
+        /// </summary>
+        public static string CommandLine_ImportTransitionList_Finishing_up_import {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportTransitionList_Finishing_up_import", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Importing {0} iRT values into the iRT calculator {1}.
+        /// </summary>
+        public static string CommandLine_ImportTransitionList_Importing__0__iRT_values_into_the_iRT_calculator__1_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportTransitionList_Importing__0__iRT_values_into_the_iRT_calculator" +
+                        "__1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Importing iRT transition list {0}.
+        /// </summary>
+        public static string CommandLine_ImportTransitionList_Importing_iRT_transition_list__0_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportTransitionList_Importing_iRT_transition_list__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Importing transiton list {0}....
         /// </summary>
         public static string CommandLine_ImportTransitionList_Importing_transiton_list__0____ {
             get {
                 return ResourceManager.GetString("CommandLine_ImportTransitionList_Importing_transiton_list__0____", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Warning: (line {0}, column {1}) {2}.
+        /// </summary>
+        public static string CommandLine_ImportTransitionList_Warning___line__0___column__1____2_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportTransitionList_Warning___line__0___column__1____2_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Warning: The document is missing iRT standards.
+        /// </summary>
+        public static string CommandLine_ImportTransitionList_Warning__The_document_is_missing_iRT_standards {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportTransitionList_Warning__The_document_is_missing_iRT_standards", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Warning: The iRT calculator already contains {0} with the value {1}. Ignoring {2}.
+        /// </summary>
+        public static string CommandLine_ImportTransitionList_Warning__The_iRT_calculator_already_contains__0__with_the_value__1___Ignoring__2_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportTransitionList_Warning__The_iRT_calculator_already_contains__0_" +
+                        "_with_the_value__1___Ignoring__2_", resourceCulture);
             }
         }
         

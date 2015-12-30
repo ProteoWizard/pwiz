@@ -1094,7 +1094,7 @@ namespace pwiz.Skyline.Model
             string dbPath = calculator.DatabasePath;
             IrtDb db = File.Exists(dbPath) ? IrtDb.GetIrtDb(dbPath, null) : IrtDb.CreateIrtDb(dbPath);
             var oldPeptides = db.GetPeptides().Select(p => new DbIrtPeptide(p)).ToList();
-            IList<Tuple<DbIrtPeptide, DbIrtPeptide>> conflicts;
+            IList<DbIrtPeptide.Conflict> conflicts;
             var peptidesCombined = DbIrtPeptide.FindNonConflicts(oldPeptides, irtPeptides, progressMonitor, out conflicts);
             if (peptidesCombined == null)
                 return null;
@@ -1102,14 +1102,14 @@ namespace pwiz.Skyline.Model
             {
                 // If old and new peptides are a library entry and a standards entry, throw an error
                 // The same peptide must not appear in both places
-                if (conflict.Item1.Standard ^ conflict.Item2.Standard)
+                if (conflict.NewPeptide.Standard ^ conflict.ExistingPeptide.Standard)
                 {
                     throw new InvalidDataException(string.Format(Resources.SkylineWindow_AddIrtPeptides_Imported_peptide__0__with_iRT_library_value_is_already_being_used_as_an_iRT_standard_,
-                                                    conflict.Item1.PeptideModSeq));
+                                                    conflict.NewPeptide.PeptideModSeq));
                 }
             }
             // Peptides that were already present in the database can be either kept or overwritten 
-            peptidesCombined.AddRange(conflicts.Select(conflict => overwriteExisting ? conflict.Item1  : conflict.Item2));
+            peptidesCombined.AddRange(conflicts.Select(conflict => overwriteExisting ? conflict.NewPeptide  : conflict.ExistingPeptide));
             db = db.UpdatePeptides(peptidesCombined, oldPeptides);
             calculator = calculator.ChangeDatabase(db);
             retentionTimeRegression = retentionTimeRegression.ChangeCalculator(calculator);

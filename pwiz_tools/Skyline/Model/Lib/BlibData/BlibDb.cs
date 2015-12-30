@@ -144,7 +144,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             {
                 int progressPercent = 0;
                 int i = 0;
-                var status = new ProgressStatus(Resources.BlibDb_CreateLibraryFromSpectra_Creating_spectral_library_for_imported_mass_list_);
+                var status = new ProgressStatus(Resources.BlibDb_CreateLibraryFromSpectra_Creating_spectral_library_for_imported_transition_list);
                 foreach (var spectrum in listSpectra)
                 {
                     ++i;

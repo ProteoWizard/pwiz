@@ -143,7 +143,7 @@ namespace pwiz.Skyline.FileUI
                     textNewDatabase.Focus();
                     return;
                 }
-                if (!CreateDatabase(textNewDatabase.Text))
+                if (!CreateIrtDatabase(textNewDatabase.Text))
                     return;
             }
             else
@@ -160,7 +160,7 @@ namespace pwiz.Skyline.FileUI
                     comboBoxProteins.Focus();
                     return;
                 }
-                if (!CreateDatabase(textNewDatabaseProteins.Text))
+                if (!CreateIrtDatabase(textNewDatabaseProteins.Text))
                     return;
             }
             // Make a version of the document with the new calculator in it
@@ -219,33 +219,15 @@ namespace pwiz.Skyline.FileUI
                 dbIrtPeptidesFilter.ForEach(pep => pep.Standard = _irtPeptideSequences.Contains(pep.PeptideModSeq));
         }
 
-        public bool CreateDatabase(string path)
+        public bool CreateIrtDatabase(string path)
         {
             try
             {
-                FileEx.SafeDelete(path);
-            }
-            catch (IOException x)
-            {
-                MessageDlg.Show(this, x.Message);
-                return false;
-            }
-
-            //Create file, initialize db
-            try
-            {
-                IrtDb.CreateIrtDb(path);
-            }
-            catch (DatabaseOpeningException x)
-            {
-                MessageDlg.ShowException(this, x);
-                return false;
+                ImportAssayLibraryHelper.CreateIrtDatabase(path);
             }
             catch (Exception x)
             {
-                var message = TextUtil.LineSeparate(string.Format(Resources.EditIrtCalcDlg_CreateDatabase_The_file__0__could_not_be_created, path),
-                                                    x.Message);
-                MessageDlg.ShowWithException(this, message, x);
+                MessageDlg.ShowException(this, x);
                 return false;
             }
             return true;

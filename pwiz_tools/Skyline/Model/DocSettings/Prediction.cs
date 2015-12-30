@@ -438,6 +438,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return base.Equals(obj) &&
                    Equals(obj.Calculator, Calculator) &&
                    Equals(obj.Conversion, Conversion) &&
+                   obj._isMissingStandardPeptides == _isMissingStandardPeptides &&
                    obj.TimeWindow == TimeWindow &&
                    Equals(obj._listFileIdToConversion, _listFileIdToConversion) &&
                    ArrayUtil.EqualsDeep(obj.PeptideTimes, PeptideTimes);
@@ -457,6 +458,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 int result = base.GetHashCode();
                 result = (result*397) ^ Calculator.GetHashCode();
                 result = (result*397) ^ (Conversion != null ? Conversion.GetHashCode() : 0);
+                result = (result*397) ^ _isMissingStandardPeptides.GetHashCode();
                 result = (result*397) ^ TimeWindow.GetHashCode();
                 result = (result*397) ^ PeptideTimes.GetHashCodeDeep();
                 result = (result*397) ^ (_listFileIdToConversion != null
@@ -952,8 +954,11 @@ namespace pwiz.Skyline.Model.DocSettings
 
     public class CalculatorException : Exception
     {
-        public CalculatorException(string message)
-            : base(message)
+        public CalculatorException(string message) : base(message)
+        {
+        }
+
+        public CalculatorException(string message, Exception innerException) : base(message, innerException)
         {
         }
     }

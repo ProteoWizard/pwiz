@@ -36,6 +36,7 @@ using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
@@ -132,6 +133,7 @@ namespace pwiz.Skyline
                 catch (Exception x)
                 {
                     _out.WriteLine(Resources.CommandLine_Run_Error__Failed_importing_the_file__0____1_, commandArgs.FastaPath, x.Message);
+                    return;
                 }
             }
 
@@ -139,11 +141,13 @@ namespace pwiz.Skyline
             {
                 try
                 {
-                    ImportTransitionList(commandArgs.TransitionListPath);
+                    if (!ImportTransitionList(commandArgs))
+                        return;
                 }
                 catch (Exception x)
                 {
-                    _out.WriteLine(Resources.CommandLine_Run_Error__Failed_importing_the_file__0____1_, commandArgs.FastaPath, x.Message);
+                    _out.WriteLine(Resources.CommandLine_Run_Error__Failed_importing_the_file__0____1_, commandArgs.TransitionListPath, x.Message);
+                    return;
                 }
             }
 
@@ -202,9 +206,11 @@ namespace pwiz.Skyline
             if (_doc != null && !_doc.IsLoaded)
             {
                 IProgressMonitor progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
-                var docContainer = new ResultsMemoryDocumentContainer(null, _skylineFile) { ProgressMonitor = progressMonitor };
-                docContainer.SetDocument(_doc, null, true);
-                _doc = docContainer.Document;
+                using (var docContainer = new ResultsMemoryDocumentContainer(null, _skylineFile) { ProgressMonitor = progressMonitor })
+                {
+                    docContainer.SetDocument(_doc, null, true);
+                    _doc = docContainer.Document;
+                }
             }
 
             if (commandArgs.RemovingResults && commandArgs.RemoveBeforeDate.HasValue)
@@ -639,15 +645,17 @@ namespace pwiz.Skyline
             {
                 // Allow joining to happen
                 var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
-                var docContainer = new ResultsMemoryDocumentContainer(null, _skylineFile) { ProgressMonitor = progressMonitor };
-                _doc = _doc.ChangeSettingsNoDiff(_doc.Settings.ChangeIsResultsJoiningDisabled(false));
-                if (!_doc.IsLoaded)
+                using (var docContainer = new ResultsMemoryDocumentContainer(null, _skylineFile) { ProgressMonitor = progressMonitor })
                 {
-                    docContainer.SetDocument(_doc, null, true);
-                    _doc = docContainer.Document;
-                    // If not fully loaded now, there must have been an error.
+                    _doc = _doc.ChangeSettingsNoDiff(_doc.Settings.ChangeIsResultsJoiningDisabled(false));
                     if (!_doc.IsLoaded)
-                        return false;
+                    {
+                        docContainer.SetDocument(_doc, null, true);
+                        _doc = docContainer.Document;
+                        // If not fully loaded now, there must have been an error.
+                        if (!_doc.IsLoaded)
+                            return false;
+                    }
                 }
             }
 
@@ -1262,34 +1270,232 @@ namespace pwiz.Skyline
                 _doc = new RefinementSettings { MinPeptidesPerProtein = 1 }.Refine(_doc);
         }
 
-        private void ImportTransitionList(string path)
+        private bool ImportTransitionList(CommandArgs commandArgs)
         {
-            _out.WriteLine(Resources.CommandLine_ImportTransitionList_Importing_transiton_list__0____, Path.GetFileName(path));
+            _out.WriteLine(Resources.CommandLine_ImportTransitionList_Importing_transiton_list__0____, Path.GetFileName(commandArgs.TransitionListPath));
 
-/*          TODO: Finish this with next commit  
- *          IdentityPath selectPath = null;
-            List<MeasuredRetentionTime> irtPeptides = null;
-            List<SpectrumMzInfo> librarySpectra = null;
-            List<TransitionImportErrorInfo> errorList = null;
-            List<PeptideGroupDocNode> peptideGroups = null;
-            RetentionTimeRegression retentionTimeRegressionStore = null;
-            bool irtsImported = false;
-            SrmDocument docNew = null;
+            IdentityPath selectPath;
+            List<MeasuredRetentionTime> irtPeptides;
+            List<SpectrumMzInfo> librarySpectra;
+            List<TransitionImportErrorInfo> errorList;
+            List<PeptideGroupDocNode> peptideGroups;
             var retentionTimeRegression = _doc.Settings.PeptideSettings.Prediction.RetentionTime;
+            RCalcIrt calcIrt = retentionTimeRegression != null ? (retentionTimeRegression.Calculator as RCalcIrt) : null;
 
             var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
-            var inputs = new MassListInputs(path);
-            docNew = _doc.ImportMassList(inputs, progressMonitor, null,
+            var inputs = new MassListInputs(commandArgs.TransitionListPath);
+            var docNew = _doc.ImportMassList(inputs, progressMonitor, null,
                 out selectPath, out irtPeptides, out librarySpectra, out errorList, out peptideGroups);
 
             // If nothing was imported (e.g. operation was canceled or zero error-free transitions) and also no errors, just return
             if (ReferenceEquals(docNew, _doc) && !errorList.Any())
-                return;
+                return true;
             // Show the errors or as warnings, if error transitions are ignore
             if (errorList.Any())
             {
+                string messageFormat = !commandArgs.IsIgnoreTransitionErrors
+                    ? Resources.CommandLine_ImportTransitionList_Error___line__0___column__1____2_
+                    : Resources.CommandLine_ImportTransitionList_Warning___line__0___column__1____2_;
+                foreach (var errorMessage in errorList)
+                {
+                    _out.WriteLine(messageFormat, errorMessage.Row, errorMessage.Column, errorMessage.ErrorMessage);
+                }
+                if (!commandArgs.IsIgnoreTransitionErrors)
+                    return false;
             }
- */
+            if (!commandArgs.IsTransitionListAssayLibrary)
+            {
+                _doc = docNew;
+                return true;
+            }
+            if (irtPeptides.Count == 0 || librarySpectra.Count == 0)
+            {
+                if (irtPeptides.Any())
+                    _out.WriteLine(Resources.CommandLine_ImportTransitionList_Error__Imported_assay_library__0__lacks_ion_abundance_values_);
+                else if (librarySpectra.Any())
+                    _out.WriteLine(Resources.CommandLine_ImportTransitionList_Error__Imported_assay_library__0__lacks_iRT_values_);
+                else
+                    _out.WriteLine(Resources.CommandLine_ImportTransitionList_Error__Imported_assay_library__0__lacks_iRT_and_ion_abundance_values_);
+                return false;
+            }
+
+            string destinationPath = commandArgs.SaveFile ?? commandArgs.SkylineFile;
+            string documentLibrary = BiblioSpecLiteSpec.GetLibraryFileName(destinationPath);
+            // ReSharper disable once AssignNullToNotNullAttribute
+            string outputLibraryPath = Path.Combine(Path.GetDirectoryName(documentLibrary),
+                Path.GetFileNameWithoutExtension(documentLibrary) + BiblioSpecLiteSpec.ASSAY_NAME +
+                BiblioSpecLiteSpec.EXT);
+            bool libraryExists = File.Exists(outputLibraryPath);
+            string libraryName = Path.GetFileNameWithoutExtension(destinationPath) + BiblioSpecLiteSpec.ASSAY_NAME;
+            int indexOldLibrary = docNew.Settings.PeptideSettings.Libraries.LibrarySpecs.IndexOf(
+                    spec => spec != null && spec.FilePath == outputLibraryPath);
+            bool libraryLinkedToDoc = indexOldLibrary != -1;
+            if (libraryExists && !libraryLinkedToDoc)
+            {
+                _out.WriteLine(Resources.CommandLine_ImportTransitionList_Error__There_is_an_existing_library_with_the_same_name__0__as_the_document_library_to_be_created_,
+                        libraryName);
+                return false;
+            }
+
+            var dbIrtPeptides = irtPeptides.Select(rt => new DbIrtPeptide(rt.PeptideSequence, rt.RetentionTime, false, TimeSource.scan)).ToList();
+            var dbIrtPeptidesFilter = ImportAssayLibraryHelper.GetUnscoredIrtPeptides(dbIrtPeptides, calcIrt);
+            // If there are no iRT peptides with different values than the database, don't import any iRT's
+            bool checkPeptides = false;
+            if (dbIrtPeptidesFilter.Any())
+            {
+                if (calcIrt == null)
+                {
+                    string irtDatabasePath = commandArgs.IrtDatabasePath;
+                    if (string.IsNullOrEmpty(irtDatabasePath))
+                        irtDatabasePath = Path.ChangeExtension(destinationPath, IrtDb.EXT);
+                    if (!string.IsNullOrEmpty(commandArgs.IrtStandardsPath))
+                    {
+                        _out.WriteLine(Resources.CommandLine_ImportTransitionList_Importing_iRT_transition_list__0_, commandArgs.IrtStandardsPath);
+                        var irtInputs = new MassListInputs(commandArgs.IrtStandardsPath);
+                        try
+                        {
+                            List<SpectrumMzInfo> irtLibrarySpectra;
+                            docNew = docNew.ImportMassList(irtInputs, null, out selectPath, out irtPeptides, out irtLibrarySpectra, out errorList);
+                            if (errorList.Any())
+                            {
+                                throw new InvalidDataException(errorList[0].ErrorMessage);
+                            }
+                            librarySpectra.AddRange(irtLibrarySpectra);
+                            dbIrtPeptidesFilter.AddRange(irtPeptides.Select(rt => new DbIrtPeptide(rt.PeptideSequence, rt.RetentionTime, true, TimeSource.scan)));
+                        }
+                        catch (Exception x)
+                        {
+                            _out.WriteLine(Resources.CommandLine_Run_Error__Failed_importing_the_file__0____1_, commandArgs.IrtStandardsPath, x.Message);
+                            return false;
+                        }
+                        if (!CreateIrtDatabase(irtDatabasePath, commandArgs))
+                            return false;
+                    }
+                    else if (!string.IsNullOrEmpty(commandArgs.IrtGroupName))
+                    {
+                        var nodeGroupIrt = docNew.PeptideGroups.FirstOrDefault(nodeGroup => nodeGroup.Name == commandArgs.IrtGroupName);
+                        if (nodeGroupIrt == null)
+                        {
+                            _out.WriteLine(Resources.CommandLine_ImportTransitionList_Error__The_name__0__specified_with__1__was_not_found_in_the_imported_assay_library_,
+                                commandArgs.IrtGroupName, CommandArgs.ArgText(CommandArgs.ARG_IRT_STANDARDS_GROUP_NAME));
+                            return false;
+                        }
+                        var irtPeptideSequences = new HashSet<string>(nodeGroupIrt.Peptides.Select(pep => pep.ModifiedSequence));
+                        dbIrtPeptidesFilter.ForEach(pep => pep.Standard = irtPeptideSequences.Contains(pep.PeptideModSeq));
+                        if (!CreateIrtDatabase(irtDatabasePath, commandArgs))
+                            return false;
+                    }
+                    else if (!File.Exists(irtDatabasePath))
+                    {
+                        _out.Write(Resources.CommandLine_ImportTransitionList_Error__To_create_the_iRT_database___0___for_this_assay_library__you_must_specify_the_iRT_standards_using_either_of_the_arguments__1__or__2_,
+                            irtDatabasePath, CommandArgs.ArgText(CommandArgs.ARG_IRT_STANDARDS_GROUP_NAME), CommandArgs.ArgText(CommandArgs.ARG_IRT_STANDARDS_FILE));
+                        return false;
+                    }
+                    else
+                    {
+                        checkPeptides = true;
+                    }
+                    string irtCalcName = commandArgs.IrtCalcName ?? Path.GetFileNameWithoutExtension(destinationPath);
+                    calcIrt = new RCalcIrt(irtCalcName, irtDatabasePath);
+
+                    retentionTimeRegression = new RetentionTimeRegression(calcIrt.Name, calcIrt, null, null, 10, new List<MeasuredRetentionTime>());
+                    docNew = docNew.ChangeSettings(docNew.Settings.ChangePeptidePrediction(prediction =>
+                        prediction.ChangeRetentionTime(retentionTimeRegression)));
+                }
+                string dbPath = calcIrt.DatabasePath;
+                IrtDb db = IrtDb.GetIrtDb(dbPath, null);
+                if (checkPeptides)
+                {
+                    var standards = docNew.Molecules.Where(m => db.IsStandard(m.RawTextId)).ToArray();
+                    if (standards.Length != db.StandardPeptideCount)
+                    {
+                        _out.WriteLine(Resources.CommandLine_ImportTransitionList_Warning__The_document_is_missing_iRT_standards);
+                        foreach (var rawTextId in db.StandardPeptides.Where(s => !standards.Contains(nodePep => s == nodePep.RawTextId)))
+                        {
+                            _out.WriteLine("    " + rawTextId); // Not L10N
+                        }
+                    }
+                }
+                var oldPeptides = db.GetPeptides().ToList();
+                IList<DbIrtPeptide.Conflict> conflicts;
+                dbIrtPeptidesFilter = DbIrtPeptide.MakeUnique(dbIrtPeptidesFilter);
+                DbIrtPeptide.FindNonConflicts(oldPeptides, dbIrtPeptidesFilter, null, out conflicts);
+                // Warn about peptides that are present in the import and already in the database
+                foreach (var conflict in conflicts)
+                {
+                    _out.WriteLine(Resources.CommandLine_ImportTransitionList_Warning__The_iRT_calculator_already_contains__0__with_the_value__1___Ignoring__2_,
+                        conflict.ExistingPeptide.PeptideModSeq, conflict.ExistingPeptide.Irt, conflict.NewPeptide.Irt);
+                }
+
+                _out.WriteLine(Resources.CommandLine_ImportTransitionList_Importing__0__iRT_values_into_the_iRT_calculator__1_, dbIrtPeptidesFilter.Count, calcIrt.Name);
+                docNew = docNew.AddIrtPeptides(dbIrtPeptidesFilter, false, progressMonitor);
+                if (docNew == null)
+                    return false;
+            }
+
+            librarySpectra = SpectrumMzInfo.RemoveDuplicateSpectra(librarySpectra);
+
+            if (libraryLinkedToDoc)
+            {
+                string oldName = docNew.Settings.PeptideSettings.Libraries.LibrarySpecs[indexOldLibrary].Name;
+                var libraryOld = docNew.Settings.PeptideSettings.Libraries.GetLibrary(oldName);
+                var additionalSpectra = SpectrumMzInfo.GetInfoFromLibrary(libraryOld);
+                additionalSpectra = SpectrumMzInfo.RemoveDuplicateSpectra(additionalSpectra);
+                
+                librarySpectra = SpectrumMzInfo.MergeWithOverwrite(librarySpectra, additionalSpectra);
+
+                foreach (var stream in libraryOld.ReadStreams)
+                    stream.CloseStream();
+            }
+
+            if (librarySpectra.Any())
+            {
+                // Delete the existing library; either it's not tied to the document or we've already extracted the spectra
+                _out.WriteLine(Resources.CommandLine_ImportTransitionList_Adding__0__spectra_to_the_library__1_, librarySpectra.Count, libraryName);
+                if (libraryExists)
+                {
+                    FileEx.SafeDelete(outputLibraryPath);
+                    FileEx.SafeDelete(Path.ChangeExtension(outputLibraryPath, BiblioSpecLiteSpec.EXT_REDUNDANT));
+                }
+                using (var blibDb = BlibDb.CreateBlibDb(outputLibraryPath))
+                {
+                    var docLibrarySpec = new BiblioSpecLiteSpec(libraryName, outputLibraryPath);
+                    var docLibrary = blibDb.CreateLibraryFromSpectra(docLibrarySpec, librarySpectra, libraryName,
+                        progressMonitor);
+                    if (docLibrary == null)
+                        return false;
+                    var newSettings = docNew.Settings.ChangePeptideLibraries(
+                        libs => libs.ChangeLibrary(docLibrary, docLibrarySpec, indexOldLibrary));
+                    docNew = docNew.ChangeSettings(newSettings, new SrmSettingsChangeMonitor(progressMonitor,
+                        Resources.SkylineWindow_ImportMassList_Finishing_up_import));
+                }
+            }
+            _doc = docNew;
+            return true;
+        }
+
+        public bool CreateIrtDatabase(string irtDatabasePath, CommandArgs commandArgs)
+        {
+            if (File.Exists(irtDatabasePath))
+            {
+                _out.WriteLine(Resources.CommandLine_CreateIrtDatabase_Error__Importing_an_assay_library_to_a_document_without_an_iRT_calculator_cannot_create__0___because_it_exists_,
+                              irtDatabasePath);
+                if (string.IsNullOrEmpty(commandArgs.IrtDatabasePath))
+                {
+                    _out.WriteLine(Resources.CommandLine_CreateIrtDatabase_Use_the__0__argument_to_specify_a_file_to_create_, CommandArgs.ArgText(CommandArgs.ARG_IRT_DATABASE_PATH));
+                }
+                return false;
+            }
+            try
+            {
+                ImportAssayLibraryHelper.CreateIrtDatabase(irtDatabasePath);
+            }
+            catch (Exception x)
+            {
+                _out.WriteLine(Resources.CommandLine_GeneralException_Error___0_, x);
+                return false;
+            }
+            return true;
         }
 
         public bool SetLibrary(string name, string path, bool append = true)
@@ -2149,47 +2355,49 @@ namespace pwiz.Skyline
         public static SrmDocument ImportResults(SrmDocument doc, string docPath, string replicate, MsDataFileUri dataFile,
                                                 OptimizableRegression optimize, IProgressMonitor progressMonitor, out ProgressStatus status)
         {
-            var docContainer = new ResultsMemoryDocumentContainer(null, docPath) {ProgressMonitor = progressMonitor};
-
-            // Make sure library loading happens, which may not happen, if the doc
-            // parameter is used as the baseline document.
-            docContainer.SetDocument(doc, null);
-
-            SrmDocument docAdded;
-            do
+            using (var docContainer = new ResultsMemoryDocumentContainer(null, docPath) {ProgressMonitor = progressMonitor})
             {
-                doc = docContainer.Document;
+                // Make sure library loading happens, which may not happen, if the doc
+                // parameter is used as the baseline document.
+                docContainer.SetDocument(doc, null);
 
-                var listChromatograms = new List<ChromatogramSet>();
-
-                if (doc.Settings.HasResults)
-                    listChromatograms.AddRange(doc.Settings.MeasuredResults.Chromatograms);
-
-                int indexChrom = listChromatograms.IndexOf(chrom => chrom.Name.Equals(replicate));
-                if (indexChrom != -1)
+                SrmDocument docAdded;
+                do
                 {
-                    var chromatogram = listChromatograms[indexChrom];
-                    var paths = chromatogram.MSDataFilePaths;
-                    var listFilePaths = paths.ToList();
-                    listFilePaths.Add(dataFile);
-                    listChromatograms[indexChrom] = chromatogram.ChangeMSDataFilePaths(listFilePaths);
-                }
-                else
-                {
-                    listChromatograms.Add(new ChromatogramSet(replicate, new[] { dataFile.Normalize() }, Annotations.EMPTY, optimize));
-                }
+                    doc = docContainer.Document;
 
-                var results = doc.Settings.HasResults
-                                  ? doc.Settings.MeasuredResults.ChangeChromatograms(listChromatograms)
-                                  : new MeasuredResults(listChromatograms, doc.Settings.IsResultsJoiningDisabled);
+                    var listChromatograms = new List<ChromatogramSet>();
 
-                docAdded = doc.ChangeMeasuredResults(results);
+                    if (doc.Settings.HasResults)
+                        listChromatograms.AddRange(doc.Settings.MeasuredResults.Chromatograms);
+
+                    int indexChrom = listChromatograms.IndexOf(chrom => chrom.Name.Equals(replicate));
+                    if (indexChrom != -1)
+                    {
+                        var chromatogram = listChromatograms[indexChrom];
+                        var paths = chromatogram.MSDataFilePaths;
+                        var listFilePaths = paths.ToList();
+                        listFilePaths.Add(dataFile);
+                        listChromatograms[indexChrom] = chromatogram.ChangeMSDataFilePaths(listFilePaths);
+                    }
+                    else
+                    {
+                        listChromatograms.Add(new ChromatogramSet(replicate, new[] {dataFile.Normalize()},
+                            Annotations.EMPTY, optimize));
+                    }
+
+                    var results = doc.Settings.HasResults
+                                      ? doc.Settings.MeasuredResults.ChangeChromatograms(listChromatograms)
+                                      : new MeasuredResults(listChromatograms, doc.Settings.IsResultsJoiningDisabled);
+
+                    docAdded = doc.ChangeMeasuredResults(results);
+                }
+                while (!docContainer.SetDocument(docAdded, doc, true));
+
+                status = docContainer.LastProgress;
+
+                return docContainer.Document;
             }
-            while (!docContainer.SetDocument(docAdded, doc, true));
-
-            status = docContainer.LastProgress;
-
-            return docContainer.Document;
         }
 
         /// <summary>

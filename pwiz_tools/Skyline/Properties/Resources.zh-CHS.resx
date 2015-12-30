@@ -6889,9 +6889,6 @@
   <data name="DocumentGridViewContext_Preview_Preview_New_Report" xml:space="preserve">
     <value>预览新报告</value>
   </data>
-  <data name="BlibDb_CreateLibraryFromSpectra_Creating_spectral_library_for_imported_mass_list_" xml:space="preserve">
-    <value>针对导入的质量列表创建谱图库</value>
-  </data>
   <data name="SkylineWindow_ImportMassList_Creating_Spectral_Library" xml:space="preserve">
     <value>创建谱图库</value>
   </data>

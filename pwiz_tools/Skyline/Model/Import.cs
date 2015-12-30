@@ -899,14 +899,10 @@ namespace pwiz.Skyline.Model
 
             private static double ColumnMz(string[] fields, int column, IFormatProvider provider)
             {
-                try
-                {
-                    return double.Parse(fields[column], provider);
-                }
-                catch (FormatException)
-                {
-                    return 0;   // Invalid m/z
-                }                
+                double result;
+                if (double.TryParse(fields[column], NumberStyles.Number, provider, out result))
+                    return result;
+                return 0;   // Invalid m/z
             }
 
             private static double? ColumnDouble(string[] fields, int column, IFormatProvider provider)

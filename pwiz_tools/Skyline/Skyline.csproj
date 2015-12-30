@@ -811,6 +811,7 @@
     <Compile Include="Model\ExplicitTransitionGroupValues.cs" />
     <Compile Include="Model\GroupComparison\PeptideQuantifier.cs" />
     <Compile Include="Model\GroupComparison\SummarizationMethod.cs" />
+    <Compile Include="Model\ImportAssayLibrary.cs" />
     <Compile Include="Model\ImportPeakBoundaries.cs" />
     <Compile Include="Model\ImportPeptideSearch.cs" />
     <Compile Include="Model\IonMobility\DbIonMobilityPeptide.cs" />

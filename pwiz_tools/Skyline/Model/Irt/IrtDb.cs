@@ -35,8 +35,11 @@ namespace pwiz.Skyline.Model.Irt
 {
     public class DatabaseOpeningException : CalculatorException
     {
-        public DatabaseOpeningException(string message)
-            : base(message)
+        public DatabaseOpeningException(string message) : base(message)
+        {
+        }
+
+        public DatabaseOpeningException(string message, Exception innerException) : base(message, innerException)
         {
         }
     }
@@ -329,6 +332,7 @@ namespace pwiz.Skyline.Model.Irt
                     throw new DatabaseOpeningException(String.Format(Resources.IrtDb_GetIrtDb_The_file__0__does_not_exist_, path));
 
                 string message;
+                Exception xInner = null;
                 try
                 {
                     //Check for a valid SQLite file and that it has our schema
@@ -341,28 +345,33 @@ namespace pwiz.Skyline.Model.Irt
                         }
                     }
                 }
-                catch (UnauthorizedAccessException)
+                catch (UnauthorizedAccessException x)
                 {
                     message = string.Format(Resources.IrtDb_GetIrtDb_You_do_not_have_privileges_to_access_the_file__0_, path);
+                    xInner = x;
                 }
-                catch (DirectoryNotFoundException)
+                catch (DirectoryNotFoundException x)
                 {
                     message = string.Format(Resources.IrtDb_GetIrtDb_The_path_containing__0__does_not_exist, path);
+                    xInner = x;
                 }
-                catch (FileNotFoundException)
+                catch (FileNotFoundException x)
                 {
                     message = string.Format(Resources.IrtDb_GetIrtDb_The_file__0__could_not_be_created_Perhaps_you_do_not_have_sufficient_privileges, path);
+                    xInner = x;
                 }
-                catch (SQLiteException)
+                catch (SQLiteException x)
                 {
                     message = string.Format(Resources.IrtDb_GetIrtDb_The_file__0__is_not_a_valid_iRT_database_file, path);
+                    xInner = x;
                 }
-                catch (Exception)
+                catch (Exception x)
                 {
                     message = string.Format(Resources.IrtDb_GetIrtDb_The_file__0__could_not_be_opened, path);
+                    xInner = x;
                 }
 
-                throw new DatabaseOpeningException(message);
+                throw new DatabaseOpeningException(message, xInner);
             }
             catch (DatabaseOpeningException x)
             {

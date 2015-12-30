@@ -92,10 +92,11 @@ namespace pwiz.SkylineTestUtil
         public static void Contains(string value, params string[] parts)
         {
             Assert.IsNotNull(value, "No message found");
+            Assert.AreNotEqual(0, parts.Length, "Must have at least one thing contained");
             foreach (string part in parts)
             {
-                Assert.IsTrue(value.Contains(part),
-                    string.Format("The text '{0}' does not contain '{1}'", value, part));
+                if (!value.Contains(part))
+                    Assert.Fail("The text '{0}' does not contain '{1}'", value, part);
             }
         }
 

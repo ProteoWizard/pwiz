@@ -51,17 +51,21 @@ namespace pwiz.Skyline
         public bool NoAllChromatogramsGraph { get; private set; }
 
         // Transition list and assay library import
-        private const string ARG_IMPORT_TRANSITION_LIST = "import-transition-list"; // Not L10N
-        private const string ARG_IMPORT_ASSAY_LIBRARY = "import-assay-library"; // Not L10N
-        private const string ARG_IGNORE_TRANSITION_ERRORS = "ignore-transition-errors"; // Not L10N
-        private const string ARG_IRT_STANDARDS_GROUP_NAME = "irt-standards-group-name"; // Not L10N
-        private const string ARG_IRT_STANDARDS_FILE = "irt-standards-file"; // Not L10N
+        public const string ARG_IMPORT_TRANSITION_LIST = "import-transition-list"; // Not L10N
+        public const string ARG_IMPORT_ASSAY_LIBRARY = "import-assay-library"; // Not L10N
+        public const string ARG_IGNORE_TRANSITION_ERRORS = "ignore-transition-errors"; // Not L10N
+        public const string ARG_IRT_STANDARDS_GROUP_NAME = "irt-standards-group-name"; // Not L10N
+        public const string ARG_IRT_STANDARDS_FILE = "irt-standards-file"; // Not L10N
+        public const string ARG_IRT_DATABASE_PATH = "irt-database-path"; // Not L10N
+        public const string ARG_IRT_CALC_NAME = "irt-calc-name"; // Not L10N
 
         public string TransitionListPath { get; private set; }
         public bool IsTransitionListAssayLibrary { get; private set; }
         public bool IsIgnoreTransitionErrors { get; private set; }
         public string IrtGroupName { get; private set; }
         public string IrtStandardsPath { get; private set; }
+        public string IrtDatabasePath { get; private set; }
+        public string IrtCalcName { get; private set; }
 
         // Waters lockmass correction
         private const string ARG_IMPORT_LOCKMASS_POSITIVE = "import-lockmass-positive"; // Not L10N
@@ -835,6 +839,16 @@ namespace pwiz.Skyline
                     IrtStandardsPath = pair.Value;
                 }
 
+                else if (IsNameValue(pair, ARG_IRT_DATABASE_PATH))
+                {
+                    IrtDatabasePath = pair.Value;
+                }
+
+                else if (IsNameValue(pair, ARG_IRT_CALC_NAME))
+                {
+                    IrtCalcName = pair.Value;
+                }
+
                 else if (IsNameValue(pair, ARG_DECOYS_ADD))
                 {
                     if (pair.Value == "reversed")
@@ -1450,9 +1464,20 @@ namespace pwiz.Skyline
             return true;
         }
 
+        public static string ArgText(string argName)
+        {
+            return "--" + argName;  // Not L10N
+        }
+
+        public static string WarnArgRequirementText(string requiredArg, string usedArg)
+        {
+            return string.Format(Resources.CommandArgs_WarnArgRequirment_Warning__Use_of_the_argument__0__requires_the_argument__1_,
+                ArgText(usedArg), ArgText(requiredArg));
+        }
+
         private void WarnArgRequirment(string requiredArg, string usedArg)
         {
-            _out.WriteLine(Resources.CommandArgs_ReportArgRequirment_Warning__Use_of_the_argument__0__requires_the_argument__1_, usedArg, requiredArg);
+            _out.WriteLine(WarnArgRequirementText(requiredArg, usedArg));
         }
 
         private double? ParseDouble(string value, string argName)
@@ -1460,7 +1485,8 @@ namespace pwiz.Skyline
             double valueDecimal;
             if (!double.TryParse(value, out valueDecimal))
             {
-                _out.WriteLine(Resources.CommandArgs_ParseDouble_Error__The_argument__0__requires_a_decimal_number_value_, argName);
+                _out.WriteLine(Resources.CommandArgs_ParseDouble_Error__The_argument__0__requires_a_decimal_number_value_,
+                    ArgText(argName));
                 return null;
             }
             return valueDecimal;

@@ -189,6 +189,7 @@
     <Compile Include="UniModTest.cs" />
     <Compile Include="MProphetResultsHandlerTest.cs" />
     <Compile Include="UniquePrefixTest.cs" />
+    <Compile Include="CommandLineAssayImportTest.cs" />
     <Compile Include="VariableModTest.cs" />
     <Compile Include="XmlValidationTest.cs" />
   </ItemGroup>
@@ -230,6 +231,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="ChromatogramExporterTest.zip" />
     <None Include="CommandLineImportTest.zip" />
     <None Include="CommandLineTest.zip" />
     <None Include="DocLoadLibraryTest.zip" />

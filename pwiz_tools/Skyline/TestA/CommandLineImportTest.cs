@@ -50,14 +50,13 @@ namespace pwiz.SkylineTestA
                 "--import-search-add-mods",
                 "--import-fasta=" + fastaPath);
 
-            Assert.IsTrue(output.Contains(string.Format(
-                Resources.CommandArgs_ParseArgsInternal_Warning__The_cutoff_score__0__is_invalid__It_must_be_a_value_between_0_and_1_, badCutoff)));
-            Assert.IsTrue(output.Contains(TextUtil.LineSeparate(Resources.CommandLine_ImportSearch_Creating_spectral_library_from_files_,
-                Path.GetFileName(searchFilePath))));
-            Assert.IsTrue(output.Contains(string.Format(
-                Resources.CommandLine_ImportSearch_Adding__0__modifications_, 2)));
-            Assert.IsTrue(output.Contains(string.Format(
-                Resources.CommandLine_ImportFasta_Importing_FASTA_file__0____, Path.GetFileName(fastaPath))));
+            AssertEx.Contains(output, string.Format(
+                Resources.CommandArgs_ParseArgsInternal_Warning__The_cutoff_score__0__is_invalid__It_must_be_a_value_between_0_and_1_, badCutoff));
+            AssertEx.Contains(output, TextUtil.LineSeparate(Resources.CommandLine_ImportSearch_Creating_spectral_library_from_files_,
+                Path.GetFileName(searchFilePath)));
+            AssertEx.Contains(output, string.Format(Resources.CommandLine_ImportSearch_Adding__0__modifications_, 2));
+            AssertEx.Contains(output, string.Format(Resources.CommandLine_ImportFasta_Importing_FASTA_file__0____,
+                Path.GetFileName(fastaPath)));
 
             var doc = ResultsUtil.DeserializeDocument(outPath);
             Assert.IsTrue(doc.Settings.HasResults);
@@ -75,10 +74,10 @@ namespace pwiz.SkylineTestA
                 "--import-search-file=" + searchFilePath,
                 "--import-fasta=" + fastaPath);
 
-            Assert.IsTrue(output.Contains(TextUtil.LineSeparate(Resources.CommandLine_ImportSearch_Creating_spectral_library_from_files_,
-                Path.GetFileName(searchFilePath))));
-            Assert.IsTrue(output.Contains(string.Format(
-                Resources.CommandLine_ImportFasta_Importing_FASTA_file__0____, Path.GetFileName(fastaPath))));
+            AssertEx.Contains(output, TextUtil.LineSeparate(Resources.CommandLine_ImportSearch_Creating_spectral_library_from_files_,
+                Path.GetFileName(searchFilePath)));
+            AssertEx.Contains(output, string.Format(Resources.CommandLine_ImportFasta_Importing_FASTA_file__0____,
+                Path.GetFileName(fastaPath)));
 
             doc = ResultsUtil.DeserializeDocument(outPath2);
             Assert.IsTrue(doc.Settings.HasResults);
@@ -94,10 +93,8 @@ namespace pwiz.SkylineTestA
                 "--import-search-cutoff-score=" + 0.99,
                 "--import-search-add-mods");
 
-            Assert.IsTrue(output.Contains(string.Format(Resources.CommandArgs_ReportArgRequirment_Warning__Use_of_the_argument__0__requires_the_argument__1_,
-                CommandArgs.ARG_IMPORT_PEPTIDE_SEARCH_CUTOFF, CommandArgs.ARG_IMPORT_PEPTIDE_SEARCH_FILE)));
-            Assert.IsTrue(output.Contains(string.Format(Resources.CommandArgs_ReportArgRequirment_Warning__Use_of_the_argument__0__requires_the_argument__1_,
-                CommandArgs.ARG_IMPORT_PEPTIDE_SEARCH_MODS, CommandArgs.ARG_IMPORT_PEPTIDE_SEARCH_FILE)));
+            AssertEx.Contains(output, CommandArgs.WarnArgRequirementText(CommandArgs.ARG_IMPORT_PEPTIDE_SEARCH_FILE, CommandArgs.ARG_IMPORT_PEPTIDE_SEARCH_CUTOFF));
+            AssertEx.Contains(output, CommandArgs.WarnArgRequirementText(CommandArgs.ARG_IMPORT_PEPTIDE_SEARCH_FILE, CommandArgs.ARG_IMPORT_PEPTIDE_SEARCH_MODS));
         }
 
         private static string RunCommand(params string[] inputArgs)

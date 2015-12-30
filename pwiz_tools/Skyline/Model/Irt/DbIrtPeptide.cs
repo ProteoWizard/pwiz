@@ -95,16 +95,30 @@ namespace pwiz.Skyline.Model.Irt
             return uniqueIrtPeptidesDict.Values.ToList();
         }
 
+        public struct Conflict
+        {
+            public Conflict(DbIrtPeptide newPeptide, DbIrtPeptide existingPeptide) : this()
+            {
+                ExistingPeptide = existingPeptide;
+                NewPeptide = newPeptide;
+            }
+
+            public DbIrtPeptide ExistingPeptide { get; private set; }
+            public DbIrtPeptide NewPeptide { get; private set; }
+        }
+
         public static List<DbIrtPeptide> FindNonConflicts(IList<DbIrtPeptide> oldPeptides, 
                                                           IList<DbIrtPeptide> newPeptides, 
                                                           IProgressMonitor progressMonitor,
-                                                          out IList<Tuple<DbIrtPeptide, DbIrtPeptide>> conflicts)
+                                                          out IList<Conflict> conflicts)
         {
             int progressPercent = 0;
             int i = 0;
             var status = new ProgressStatus(Resources.DbIrtPeptide_FindNonConflicts_Adding_iRT_values_for_imported_peptides);
+            if (progressMonitor != null)
+                progressMonitor.UpdateProgress(status);
             var peptidesNoConflict = new List<DbIrtPeptide>();
-            conflicts = new List<Tuple<DbIrtPeptide, DbIrtPeptide>>();
+            conflicts = new List<Conflict>();
             var dictOld = oldPeptides.ToDictionary(pep => pep.PeptideModSeq);
             var dictNew = newPeptides.ToDictionary(pep => pep.PeptideModSeq);
             foreach (var newPeptide in newPeptides)
@@ -118,7 +132,7 @@ namespace pwiz.Skyline.Model.Irt
                 }
                 else
                 {
-                    conflicts.Add(new Tuple<DbIrtPeptide, DbIrtPeptide>(newPeptide, oldPeptide));
+                    conflicts.Add(new Conflict(newPeptide, oldPeptide));
                 }
                 if (progressMonitor != null)
                 {

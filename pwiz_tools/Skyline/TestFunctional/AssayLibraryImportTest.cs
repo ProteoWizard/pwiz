@@ -25,6 +25,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Results;
@@ -124,7 +125,7 @@ namespace pwiz.SkylineTestFunctional
             LoadDocument(documentExisting);
             RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textConflict), importIrt => importIrt.Btn0Click());
             var importIrtConflictOverwriteNo = WaitForOpenForm<MultiButtonMsgDlg>();
-            RunUI(() => Assert.AreEqual(importIrtConflictOverwrite.Message,
+            RunUI(() => Assert.AreEqual(importIrtConflictOverwriteNo.Message,
                                         TextUtil.LineSeparate(string.Format(Resources.SkylineWindow_ImportMassList_The_iRT_calculator_already_contains__0__of_the_imported_peptides_, 1),
                                                                 Resources.SkylineWindow_ImportMassList_Keep_the_existing_iRT_value_or_overwrite_with_the_imported_value_)));
             // Don't overwrite the iRT value
@@ -314,7 +315,7 @@ namespace pwiz.SkylineTestFunctional
             LoadDocument(documentExisting);
             RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textConflict), importIrt => importIrt.Btn0Click());
             var importIrtConflictOverwriteYes = WaitForOpenForm<MultiButtonMsgDlg>();
-            RunUI(() => Assert.AreEqual(importIrtConflictOverwrite.Message,
+            RunUI(() => Assert.AreEqual(importIrtConflictOverwriteYes.Message,
                                         TextUtil.LineSeparate(string.Format(Resources.SkylineWindow_ImportMassList_The_iRT_calculator_already_contains__0__of_the_imported_peptides_, 1),
                                                                 Resources.SkylineWindow_ImportMassList_Keep_the_existing_iRT_value_or_overwrite_with_the_imported_value_)));
             OkDialog(importIrtConflictOverwriteYes, importIrtConflictOverwriteYes.Btn1Click);
@@ -566,7 +567,7 @@ namespace pwiz.SkylineTestFunctional
             var irtOriginal = TestFilesDir.GetTestPath("irtOriginal.irtdb");
             var docReload = LoadDocument(documentBlank);
             Assert.IsNull(docReload.Settings.PeptideSettings.Prediction.RetentionTime);
-            Assert.AreEqual(0, SkylineWindow.Document.PeptideTransitions.Count());
+            Assert.AreEqual(0, SkylineWindow.Document.PeptideTransitionCount);
             RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textConflict), importIrt => importIrt.Btn0Click());
             var createIrtCalcExisting = WaitForOpenForm<CreateIrtCalculatorDlg>();
             RunUI(() =>
@@ -623,7 +624,7 @@ namespace pwiz.SkylineTestFunctional
             }
             Assert.IsNotNull(SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime);
             Assert.IsNotNull(SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator);
-            Assert.IsTrue(Settings.Default.RetentionTimeList.Contains(SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime));
+            VerifyEmptyRTRegression();
             Assert.IsTrue(Settings.Default.RTScoreCalculatorList.Contains(SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator));
             Assert.IsTrue(Settings.Default.SpectralLibraryList.Contains(SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs[0]));
 
@@ -683,7 +684,7 @@ namespace pwiz.SkylineTestFunctional
             }
             Assert.IsNotNull(SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime);
             Assert.IsNotNull(SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator);
-            Assert.IsTrue(Settings.Default.RetentionTimeList.Contains(SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime));
+            VerifyEmptyRTRegression();
             Assert.IsTrue(Settings.Default.RTScoreCalculatorList.Contains(SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator));
             Assert.IsTrue(Settings.Default.SpectralLibraryList.Contains(SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs[0]));
 
@@ -844,6 +845,18 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNotNull(irtValueNoLib);
             Assert.AreEqual(irtValueNoLib.Value, 52.407, 1e-3);
 
+        }
+
+        private static void VerifyEmptyRTRegression()
+        {
+            RetentionTimeRegression rtRegression;
+            Assert.IsTrue(
+                Settings.Default.RetentionTimeList.TryGetValue(
+                    SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime.Name, out rtRegression));
+            Assert.IsNull(rtRegression.Conversion);
+                // Probably not what was expected when this test was written, but no regression is created, because document lacks standard peptide targets
+            Assert.AreEqual(SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime,
+                rtRegression.ClearEquations());
         }
 
         private static void RemoveColumn(string textIrtGroupConflict, int columnIndex)

@@ -6889,9 +6889,6 @@
   <data name="DocumentGridViewContext_Preview_Preview_New_Report" xml:space="preserve">
     <value>新しいレポートをプレビュー</value>
   </data>
-  <data name="BlibDb_CreateLibraryFromSpectra_Creating_spectral_library_for_imported_mass_list_" xml:space="preserve">
-    <value>インポートされた質量リストのスペクトルライブラリの作成中</value>
-  </data>
   <data name="SkylineWindow_ImportMassList_Creating_Spectral_Library" xml:space="preserve">
     <value>スペクトルライブラリの作成中</value>
   </data>

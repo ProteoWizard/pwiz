@@ -1621,7 +1621,7 @@ namespace pwiz.Skyline
             }
 
             var dbIrtPeptides = irtPeptides.Select(rt => new DbIrtPeptide(rt.PeptideSequence, rt.RetentionTime, false, TimeSource.scan)).ToList();
-            var dbIrtPeptidesFilter = GetUnscoredIrtPeptides(dbIrtPeptides, calcIrt);
+            var dbIrtPeptidesFilter = ImportAssayLibraryHelper.GetUnscoredIrtPeptides(dbIrtPeptides, calcIrt);
             bool overwriteExisting = false;
             MassListInputs irtInputs = null;
             // If there are no iRT peptides or none with different values than the database, don't import any iRT's
@@ -1645,7 +1645,7 @@ namespace pwiz.Skyline
                     if (calcIrt == null)
                     {
                         // If there is no iRT calculator, ask the user to create one
-                        using (CreateIrtCalculatorDlg dlg = new CreateIrtCalculatorDlg(docNew, DocumentFilePath, Settings.Default.RTScoreCalculatorList, peptideGroups))
+                        using (var dlg = new CreateIrtCalculatorDlg(docNew, DocumentFilePath, Settings.Default.RTScoreCalculatorList, peptideGroups))
                         {
                             if (dlg.ShowDialog(this) != DialogResult.OK)
                             {
@@ -1659,11 +1659,10 @@ namespace pwiz.Skyline
                                 irtInputs = new MassListInputs(dlg.IrtFile);
                         }
                     }
-                    // ReSharper disable once PossibleNullReferenceException
                     string dbPath = calcIrt.DatabasePath;
                     IrtDb db = File.Exists(dbPath) ? IrtDb.GetIrtDb(dbPath, null) : IrtDb.CreateIrtDb(dbPath);
                     var oldPeptides = db.GetPeptides().ToList();
-                    IList<Tuple<DbIrtPeptide, DbIrtPeptide>> conflicts;
+                    IList<DbIrtPeptide.Conflict> conflicts;
                     dbIrtPeptidesFilter = DbIrtPeptide.MakeUnique(dbIrtPeptidesFilter);
                     DbIrtPeptide.FindNonConflicts(oldPeptides, dbIrtPeptidesFilter, null, out conflicts);
                     // Ask whether to keep or overwrite peptides that are present in the import and already in the database
@@ -1833,21 +1832,6 @@ namespace pwiz.Skyline
             {
                 Settings.Default.SpectralLibraryList.Insert(0, docLibrarySpec);
             }
-        }
-
-        private static List<DbIrtPeptide> GetUnscoredIrtPeptides(List<DbIrtPeptide> dbIrtPeptides, RCalcIrt calcIrt)
-        {
-            var dbIrtPeptidesFilter = new List<DbIrtPeptide>();
-            // Filter out peptides that have the same sequence and iRT as those in the database
-            foreach (var dbIrtPeptide in dbIrtPeptides)
-            {
-                double? oldScore = calcIrt != null ? calcIrt.ScoreSequence(dbIrtPeptide.PeptideModSeq) : null;
-                if (oldScore == null || Math.Abs(oldScore.Value - dbIrtPeptide.Irt) > DbIrtPeptide.IRT_MIN_DIFF)
-                {
-                    dbIrtPeptidesFilter.Add(dbIrtPeptide);
-                }
-            }
-            return dbIrtPeptidesFilter;
         }
 
         private void importDocumentMenuItem_Click(object sender, EventArgs e)

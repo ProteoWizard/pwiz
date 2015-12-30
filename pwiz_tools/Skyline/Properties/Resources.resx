@@ -6889,9 +6889,6 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="DocumentGridViewContext_Preview_Preview_New_Report" xml:space="preserve">
     <value>Preview New Report</value>
   </data>
-  <data name="BlibDb_CreateLibraryFromSpectra_Creating_spectral_library_for_imported_mass_list_" xml:space="preserve">
-    <value>Creating spectral library for imported mass list</value>
-  </data>
   <data name="SkylineWindow_ImportMassList_Creating_Spectral_Library" xml:space="preserve">
     <value>Creating Spectral Library</value>
   </data>
@@ -8540,9 +8537,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="SkylineWindow_ApplyPeak_No_results_found_for_the_precursor__0__in_the_file__1__" xml:space="preserve">
     <value>No results found for the precursor {0} in the file {1}.</value>
   </data>
-  <data name="CommandArgs_ReportArgRequirment_Warning__Use_of_the_argument__0__requires_the_argument__1_" xml:space="preserve">
-    <value>Warning: Use of the argument {0} requires the argument {1}</value>
-  </data>
   <data name="CommandLine_ReintegratePeaks_Error__You_must_first_import_results_into_the_document_before_reintegrating_" xml:space="preserve">
     <value>Error: You must first import results into the document before reintegrating.</value>
   </data>
@@ -8572,9 +8566,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   </data>
   <data name="CommandArgs_ParseArgsInternal_Error__Unexpected_argument____0_" xml:space="preserve">
     <value>Error: Unexpected argument --{0}</value>
-  </data>
-  <data name="CommandArgs_ParseDouble_Error__The_argument__0__requires_a_decimal_number_value_" xml:space="preserve">
-    <value>Error: The argument {0} requires a decimal number value.</value>
   </data>
   <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_resolution_to__0__" xml:space="preserve">
     <value>Changing full-scan precursor resolution to {0}.</value>
@@ -8756,6 +8747,51 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="Replicate" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Replicate.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="CommandLine_ImportTransitionList_Error___line__0___column__1____2_" xml:space="preserve">
+    <value>Error: (line {0}, column {1}) {2}</value>
+  </data>
+  <data name="CommandLine_ImportTransitionList_Warning___line__0___column__1____2_" xml:space="preserve">
+    <value>Warning: (line {0}, column {1}) {2}</value>
+  </data>
+  <data name="CommandLine_ImportTransitionList_Error__Imported_assay_library__0__lacks_ion_abundance_values_" xml:space="preserve">
+    <value>Error: Imported assay library {0} lacks ion abundance values.</value>
+  </data>
+  <data name="CommandLine_ImportTransitionList_Error__Imported_assay_library__0__lacks_iRT_values_" xml:space="preserve">
+    <value>Error: Imported assay library {0} lacks iRT values.</value>
+  </data>
+  <data name="CommandLine_ImportTransitionList_Error__Imported_assay_library__0__lacks_iRT_and_ion_abundance_values_" xml:space="preserve">
+    <value>Error: Imported assay library {0} lacks iRT and ion abundance values.</value>
+  </data>
+  <data name="CommandLine_ImportTransitionList_Error__There_is_an_existing_library_with_the_same_name__0__as_the_document_library_to_be_created_" xml:space="preserve">
+    <value>Error: There is an existing library with the same name {0} as the document library to be created.</value>
+  </data>
+  <data name="CommandLine_ImportTransitionList_Warning__The_iRT_calculator_already_contains__0__with_the_value__1___Ignoring__2_" xml:space="preserve">
+    <value>Warning: The iRT calculator already contains {0} with the value {1}. Ignoring {2}</value>
+  </data>
+  <data name="BlibDb_CreateLibraryFromSpectra_Creating_spectral_library_for_imported_transition_list" xml:space="preserve">
+    <value>Creating spectral library for imported transition list</value>
+  </data>
+  <data name="CommandLine_ImportTransitionList_Finishing_up_import" xml:space="preserve">
+    <value>Finishing up import</value>
+  </data>
+  <data name="CommandArgs_WarnArgRequirment_Warning__Use_of_the_argument__0__requires_the_argument__1_" xml:space="preserve">
+    <value>Warning: Use of the argument {0} requires the argument {1}</value>
+  </data>
+  <data name="CommandArgs_ParseDouble_Error__The_argument__0__requires_a_decimal_number_value_" xml:space="preserve">
+    <value>Error: The argument {0} requires a decimal number value.</value>
+  </data>
+  <data name="CommandLine_CreateIrtDatabase_Error__Importing_an_assay_library_to_a_document_without_an_iRT_calculator_cannot_create__0___because_it_exists_" xml:space="preserve">
+    <value>Error: Importing an assay library to a document without an iRT calculator cannot create {0}, because it exists.</value>
+  </data>
+  <data name="CommandLine_CreateIrtDatabase_Use_the__0__argument_to_specify_a_file_to_create_" xml:space="preserve">
+    <value>Use the {0} argument to specify a file to create.</value>
+  </data>
+  <data name="CommandLine_ImportTransitionList_Error__To_create_the_iRT_database___0___for_this_assay_library__you_must_specify_the_iRT_standards_using_either_of_the_arguments__1__or__2_" xml:space="preserve">
+    <value>Error: To create the iRT database '{0}' for this assay library, you must specify the iRT standards using either of the arguments {1} or {2}</value>
+  </data>
+  <data name="CommandLine_ImportTransitionList_Error__The_name__0__specified_with__1__was_not_found_in_the_imported_assay_library_" xml:space="preserve">
+    <value>Error: The name {0} specified with {1} was not found in the imported assay library.</value>
+  </data>
   <data name="ShimadzuMethodExporter_ExportMethod_Error_copying_template_file__0__to_destination__1__" xml:space="preserve">
     <value>Error copying template file {0} to destination {1}.</value>
   </data>
@@ -8846,5 +8882,17 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="ChromGraphItem_AddAnnotations_Explicit" xml:space="preserve">
     <value>Explicit</value>
     <comment>used for displaying explicit retention times in chromatogram graphs</comment>
+  </data>
+  <data name="CommandLine_ImportTransitionList_Importing_iRT_transition_list__0_" xml:space="preserve">
+    <value>Importing iRT transition list {0}</value>
+  </data>
+  <data name="CommandLine_ImportTransitionList_Adding__0__spectra_to_the_library__1_" xml:space="preserve">
+    <value>Adding {0} spectra to the library {1}</value>
+  </data>
+  <data name="CommandLine_ImportTransitionList_Importing__0__iRT_values_into_the_iRT_calculator__1_" xml:space="preserve">
+    <value>Importing {0} iRT values into the iRT calculator {1}</value>
+  </data>
+  <data name="CommandLine_ImportTransitionList_Warning__The_document_is_missing_iRT_standards" xml:space="preserve">
+    <value>Warning: The document is missing iRT standards</value>
   </data>
 </root>
