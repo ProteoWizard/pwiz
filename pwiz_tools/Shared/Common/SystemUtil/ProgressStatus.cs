@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Threading;
 
 namespace pwiz.Common.SystemUtil
 {
@@ -26,6 +27,24 @@ namespace pwiz.Common.SystemUtil
 
     public class ProgressStatus : Immutable
     {
+        /// <summary>
+        /// Increments a counter, and returns the percent complete before incrementing if it
+        /// is different from the incremented percent complete. Important to reporting percent
+        /// complete progress changes only once during parallel operations.
+        /// </summary>
+        public static int? ThreadsafeIncementPercent(ref int currentCount, int? totalCount)
+        {
+            Interlocked.Increment(ref currentCount);
+            if (totalCount.HasValue)
+            {
+                int percentIncremented = currentCount*100/totalCount.Value;
+                int percentBefore = (currentCount - 1)*100/totalCount.Value;
+                if (percentIncremented != percentBefore)
+                    return percentBefore;
+            }
+            return null;
+        }
+
         /// <summary>
         /// Initial constructor for progress status of a long operation.  Starts
         /// in <see cref="pwiz.Common.SystemUtil.ProgressState.begin"/>.
