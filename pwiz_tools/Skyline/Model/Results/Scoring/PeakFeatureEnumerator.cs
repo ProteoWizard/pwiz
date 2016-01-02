@@ -71,10 +71,9 @@ namespace pwiz.Skyline.Model.Results.Scoring
                     if (progressMonitor.IsCanceled)
                         throw new OperationCanceledException();
 
-                    int percentComplete = currentPeptide*100/totalPeptides;
-                    Interlocked.Increment(ref currentPeptide);
-                    if (percentComplete < 100)
-                        progressMonitor.UpdateProgress(status = status.ChangePercentComplete(percentComplete));
+                    int? percentComplete = ProgressStatus.ThreadsafeIncementPercent(ref currentPeptide, totalPeptides);
+                    if (percentComplete.HasValue && percentComplete.Value < 100)
+                        progressMonitor.UpdateProgress(status = status.ChangePercentComplete(percentComplete.Value));
                 }
 
                 var peakFeatureList = new List<PeakTransitionGroupFeatures>();

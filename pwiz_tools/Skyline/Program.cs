@@ -532,17 +532,17 @@ namespace pwiz.Skyline
 
             public override void Write(char value)
             {
-                Debug.Write(value);
+                Trace.Write(value);
             }
 
             public override void WriteLine()
             {
-                Debug.WriteLine(string.Empty);
+                Trace.WriteLine(string.Empty);
             }
 
             public override void WriteLine(string value)
             {
-                Debug.WriteLine(value);
+                Trace.WriteLine(value);
             }
         }
     }

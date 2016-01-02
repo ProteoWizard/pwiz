@@ -1772,25 +1772,24 @@ namespace pwiz.Skyline.Model.DocSettings
             bool messageChange = _formatString != null;
             if (messageChange)
                 _status = _status.ChangeMessage(string.Format(_formatString, nodeGroup.Name));
-            UpdateProgress(messageChange);
-            Interlocked.Increment(ref _seenGroupCount);
+            int? percentComplete = ProgressStatus.ThreadsafeIncementPercent(ref _seenGroupCount, GroupCount);
+            UpdateProgress(percentComplete, messageChange);
         }
 
         public void ProcessMolecule(PeptideDocNode nodePep)
         {
-            UpdateProgress(false);
-            Interlocked.Increment(ref _seenMoleculeCount);
+            int? percentComplete = ProgressStatus.ThreadsafeIncementPercent(ref _seenMoleculeCount, MoleculeCount);
+            UpdateProgress(percentComplete, false);
         }
 
-        private void UpdateProgress(bool forceUpdate)
+        private void UpdateProgress(int? percentComplete, bool forceUpdate)
         {
             // Stop processing if the document changes, since the SetDocument call will fail
             if (_progressMonitor.IsCanceled || (_documentContainer != null && !ReferenceEquals(_startDocument, _documentContainer.Document)))
                 throw new OperationCanceledException();
 
-            int percentComplete = (_seenMoleculeCount * 100) / MoleculeCount ?? (_seenGroupCount * 100) / GroupCount;
-            if (_status.PercentComplete != percentComplete)
-                ChangeProgress(status => status.ChangePercentComplete(percentComplete));
+            if (percentComplete.HasValue)
+                ChangeProgress(status => status.ChangePercentComplete(percentComplete.Value));
             else if (forceUpdate)
                 ChangeProgress(status => status);
         }
