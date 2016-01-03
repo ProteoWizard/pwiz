@@ -145,6 +145,11 @@ namespace pwiz.Skyline.Model.DocSettings
             return mod;
         }
 
+        public static bool IsStructuralModification(string modName)
+        {
+            return DictStructuralModNames.ContainsKey(modName) || DictHiddenStructuralModNames.ContainsKey(modName);
+        }
+
         /// <summary>
         /// Searches for a UniMod modification by modification definition.
         /// </summary>

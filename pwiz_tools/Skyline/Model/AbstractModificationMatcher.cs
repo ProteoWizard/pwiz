@@ -39,10 +39,10 @@ namespace pwiz.Skyline.Model
         protected MappedList<string, StaticMod> DefSetStatic { get; private set; }
         protected MappedList<string, StaticMod> DefSetHeavy { get; private set; }
         protected IsotopeLabelType DocDefHeavyLabelType { get; private set; }
-        protected Dictionary<StaticMod, IsotopeLabelType> UserDefinedTypedMods { get; set; }
-        public Dictionary<AAModKey, AAModMatch> Matches { get; set; }
+        protected Dictionary<StaticMod, IsotopeLabelType> UserDefinedTypedMods { get; private set; }
+        public Dictionary<AAModKey, AAModMatch> Matches { get; private set; }
 
-        public List<string> UnmatchedSequences { get; set; }
+        public List<string> UnmatchedSequences { get; private set; }
 
         private static readonly SequenceMassCalc CALC_DEFAULT = new SequenceMassCalc(MassType.Monoisotopic);
         public static double GetDefaultModMass(char aa, StaticMod mod)
@@ -385,8 +385,7 @@ namespace pwiz.Skyline.Model
                         }
                         if (key.Mass != null)
                         {
-                            var keyStr = string.Format("{0}[{1}]", // Not L10N
-                                key.AA, Math.Round(GetDefaultModMass(key.AA, mod.StructuralMod), key.RoundedTo));
+                            var keyStr = GetMatchString(key, mod.StructuralMod, true); // Not L10N
                             if (!keyStrings.Contains(keyStr))
                                 keyStrings.Add(keyStr);
                         }
@@ -403,8 +402,7 @@ namespace pwiz.Skyline.Model
                         }
                         if (key.Mass != null)
                         {
-                            var keyStr = string.Format("{0}{{{1}}}", // Not L10N
-                                key.AA, Math.Round(GetDefaultModMass(key.AA, mod.HeavyMod), key.RoundedTo));
+                            var keyStr = GetMatchString(key, mod.HeavyMod, false); // Not L10N
                             if (!keyStrings.Contains(keyStr))
                                 keyStrings.Add(keyStr);
                         }
@@ -424,6 +422,13 @@ namespace pwiz.Skyline.Model
                 }
                 return sb.ToString();
             }
+        }
+
+        private static string GetMatchString(AAModKey key, StaticMod staticMod, bool structural)
+        {
+            string formatString = structural ? "{0}[{1}{2}]" : "{0}{{{1}{2}}}"; // Not L10N
+            var modMass = Math.Round(GetDefaultModMass(key.AA, staticMod), key.RoundedTo);
+            return string.Format(formatString, key.AA, (modMass > 0 ? "+" : string.Empty), modMass); // Not L10N
         }
 
         public string UninterpretedMods
@@ -643,7 +648,8 @@ namespace pwiz.Skyline.Model
             }
             public override string ToString()
             {
-                return string.Format(CultureInfo.InvariantCulture, UserIndicatedHeavy ? "{0}{{{1}}}" : "{0}[{1}]", AA, Mass); // Not L10N
+                return string.Format(CultureInfo.InvariantCulture, UserIndicatedHeavy ? "{0}{{{1}{2}}}" : "{0}[{1}{2}]",    // Not L10N
+                    AA, Mass > 0 ? "+" : string.Empty, Mass); // Not L10N
             }
         }
 

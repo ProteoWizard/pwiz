@@ -608,29 +608,36 @@ namespace pwiz.Skyline.Model
                 Separator = separator;
                 Indices = indices;
                 Settings = settings;
-                ModMatcher = new ModificationMatcher();
+                ModMatcher = CreateModificationMatcher(settings, sequences);
+                NodeDictionary = new Dictionary<string, PeptideDocNode>();
+            }
+
+            private static ModificationMatcher CreateModificationMatcher(SrmSettings settings,
+                IEnumerable<string> sequences)
+            {
+                var modMatcher = new ModificationMatcher();
                 // We want AutoSelect on so we can generate transition groups, but we want the filter to 
                 // be lenient because we are only using this to match modifications, not generate the
                 // final transition groups
-                var settingsMatcher = Settings.ChangeTransitionFilter(filter => filter.ChangeAutoSelect(true))
+                var settingsMatcher = settings.ChangeTransitionFilter(filter => filter.ChangeAutoSelect(true))
                                            .ChangeTransitionFullScan(fullscan => fullscan.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.None, null, null))
-                                           .ChangeTransitionFilter(filter => filter.ChangePrecursorCharges(Enumerable.Range(TransitionGroup.MIN_PRECURSOR_CHARGE, 
+                                           .ChangeTransitionFilter(filter => filter.ChangePrecursorCharges(Enumerable.Range(TransitionGroup.MIN_PRECURSOR_CHARGE,
                                                                                                                             TransitionGroup.MAX_PRECURSOR_CHARGE).ToArray()));
                 try
                 {
-                    ModMatcher.CreateMatches(settingsMatcher,
+                    modMatcher.CreateMatches(settingsMatcher,
                                              sequences != null ? sequences.Distinct() : new string[0],
                                              Properties.Settings.Default.StaticModList,
                                              Properties.Settings.Default.HeavyModList);
                 }
                 catch (FormatException)
                 {
-                    ModMatcher.CreateMatches(settingsMatcher,
+                    modMatcher.CreateMatches(settingsMatcher,
                                              new string[0],
                                              Properties.Settings.Default.StaticModList,
                                              Properties.Settings.Default.HeavyModList);
                 }
-                NodeDictionary = new Dictionary<string, PeptideDocNode>();
+                return modMatcher;
             }
 
             protected SrmSettings Settings { get; private set; }
@@ -925,6 +932,7 @@ namespace pwiz.Skyline.Model
 
             protected static int FindPrecursor(string[] fields,
                                                string sequence,
+                                               string modifiedSequence,
                                                IsotopeLabelType labelType,
                                                int iSequence,
                                                int iDecoy,
@@ -933,16 +941,26 @@ namespace pwiz.Skyline.Model
                                                SrmSettings settings,
                                                out IList<TransitionExp> transitionExps)
             {
+                PeptideDocNode nodeForModPep = null;
+                if (!Equals(modifiedSequence, sequence))
+                {
+                    var modMatcher = CreateModificationMatcher(settings, new[] {modifiedSequence});
+                    nodeForModPep = modMatcher.GetModifiedNode(modifiedSequence, null);
+                }
+                var nodesToConsider = Peptide.CreateAllDocNodes(settings, sequence).ToList();
+                if (nodeForModPep != null)
+                    nodesToConsider.Insert(0, nodeForModPep);
+
                 transitionExps = new List<TransitionExp>();
                 int indexPrec = -1;
-                foreach (PeptideDocNode nodePep in Peptide.CreateAllDocNodes(settings, sequence))
+                foreach (PeptideDocNode nodePep in nodesToConsider)
                 {
                     var mods = nodePep.ExplicitMods;
                     var calc = settings.TryGetPrecursorCalc(labelType, mods);
                     if (calc == null)
                         continue;
 
-                    double precursorMassH = calc.GetPrecursorMass(sequence);
+                    double precursorMassH = calc.GetPrecursorMass(nodePep.Peptide.Sequence);
                     bool isDecoy = iDecoy != -1 && Equals(fields[iDecoy].ToLowerInvariant(), "true");   // Not L10N
                     for (int i = 0; i < fields.Length; i++)
                     {
@@ -1106,11 +1124,12 @@ namespace pwiz.Skyline.Model
                         foreach (var candidateIndex in newSeqCandidates)
                         {
                             string sequence = RemoveSequenceNotes(fields[candidateIndex]);
+                            string modifiedSequence = RemoveModifiedSequenceNotes(fields[candidateIndex]);
                             IsotopeLabelType labelType = IsotopeLabelType.light;
                             if (iLabelType != -1)
                                 labelType = GetLabelType(fields[iLabelType]);
                             IList<TransitionExp> transitionExps;
-                            int candidateMzIndex = FindPrecursor(fields, sequence, labelType, candidateIndex, iDecoy,
+                            int candidateMzIndex = FindPrecursor(fields, sequence, modifiedSequence, labelType, candidateIndex, iDecoy,
                                                        tolerance, provider, settings, out transitionExps);
                             // If no match, and no specific label type, then try heavy.
                             if (settings.PeptideSettings.Modifications.HasHeavyModifications &&
@@ -1121,7 +1140,7 @@ namespace pwiz.Skyline.Model
                                 {
                                     if (settings.TryGetPrecursorCalc(typeMods.LabelType, null) != null)
                                     {
-                                        candidateMzIndex = FindPrecursor(fields, sequence, typeMods.LabelType, candidateIndex, iDecoy,
+                                        candidateMzIndex = FindPrecursor(fields, sequence, modifiedSequence, typeMods.LabelType, candidateIndex, iDecoy,
                                                                    tolerance, provider, settings, out transitionExps);
                                         if (candidateMzIndex != -1)
                                             break;
@@ -1169,6 +1188,9 @@ namespace pwiz.Skyline.Model
                 var listCandidates = new List<int>();
                 for (int i = 0; i < fields.Length; i++)
                 {
+                    var fieldUpper = fields[i].ToUpper(CultureInfo.InvariantCulture);
+                    if ("TRUE" == fieldUpper || "FALSE" == fieldUpper)
+                        continue;
                     string seqPotential = RemoveSequenceNotes(fields[i]);
                     if (seqPotential.Length < 2)
                         continue;
@@ -1423,8 +1445,10 @@ namespace pwiz.Skyline.Model
 
                 // Look for sequence column
                 string sequence;
+                string modifiedSequence;
                 IsotopeLabelType labelType;
-                int iExPeptide = FindExPeptide(fields, exPeptideRegex, settings, out sequence, out labelType);
+                int iExPeptide = FindExPeptide(fields, exPeptideRegex, settings,
+                    out sequence, out modifiedSequence, out labelType);
                 // If no sequence column found, return null.  After this,
                 // all errors throw.
                 if (iExPeptide == -1)
@@ -1439,7 +1463,7 @@ namespace pwiz.Skyline.Model
 
                 double tolerance = settings.TransitionSettings.Instrument.MzMatchTolerance;
                 IList<TransitionExp> transitionExps;
-                int iPrecursor = FindPrecursor(fields, sequence, labelType, iExPeptide, iDecoy,
+                int iPrecursor = FindPrecursor(fields, sequence, modifiedSequence, labelType, iExPeptide, iDecoy,
                                                tolerance, provider, settings, out transitionExps);
                 if (iPrecursor == -1)
                     throw new MzMatchException(Resources.GeneralRowReader_Create_No_valid_precursor_m_z_column_found, 1, -1);
@@ -1454,7 +1478,7 @@ namespace pwiz.Skyline.Model
             }
 
             private static int FindExPeptide(string[] fields, Regex exPeptideRegex, SrmSettings settings,
-                out string sequence, out IsotopeLabelType labelType)
+                out string sequence, out string modifiedSequence, out IsotopeLabelType labelType)
             {
                 labelType = IsotopeLabelType.light;
 
@@ -1467,6 +1491,7 @@ namespace pwiz.Skyline.Model
                         if (FastaSequence.IsExSequence(sequencePart))
                         {
                             sequence = sequencePart;
+                            modifiedSequence = GetModifiedSequence(match);
                             labelType = GetLabelType(match, settings);
                             return i;
                         }
@@ -1476,6 +1501,7 @@ namespace pwiz.Skyline.Model
                     }
                 }
                 sequence = null;
+                modifiedSequence = null;
                 return -1;
             }
 

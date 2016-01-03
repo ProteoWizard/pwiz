@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Text;
 using pwiz.Common.SystemUtil;
@@ -113,12 +112,9 @@ namespace pwiz.Skyline.Model
                         modTerminus = ModTerminus.N;
                     if (indexAA == aas.Length - 1)
                         modTerminus = ModTerminus.C;
-                    int decPlace = mod.IndexOf(LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator,
-                        StringComparison.Ordinal);
                     string name = null;
-                    var roundedTo = Math.Min(decPlace == -1 ? 0 : mod.Length - decPlace - 1,
-                        DEFAULT_ROUNDING_DIGITS);
                     double? mass = null;
+                    int roundedTo = 0;
                     double result;
                     // If passed in modification in UniMod notation, look up the id and find the name and mass
                     int uniModId;
@@ -126,15 +122,30 @@ namespace pwiz.Skyline.Model
                     {
                         var staticMod = GetStaticMod(uniModId, aa, modTerminus);
                         if (staticMod == null)
-                            throw new InvalidDataException(string.Format(Resources.ModificationMatcher_EnumerateSequenceInfos_Unrecognized_Unimod_id__0__in_modified_peptide_sequence_, 
+                            throw new FormatException(string.Format(Resources.ModificationMatcher_EnumerateSequenceInfos_Unrecognized_Unimod_id__0__in_modified_peptide_sequence_, 
                                                                          uniModId));
                         name = staticMod.Name;
-                        isHeavy = !UniMod.DictStructuralModNames.ContainsKey(name);
+                        isHeavy = !UniMod.IsStructuralModification(name);
+                        // CONSIDER: Mass depends on TransitionPrediction settings for precursors
+                        mass = staticMod.MonoisotopicMass;
+                        roundedTo = DEFAULT_ROUNDING_DIGITS;
                     }
                     else if (double.TryParse(mod, NumberStyles.Float, FormatProvider ?? NumberFormatInfo.CurrentInfo, out result))
-                        mass = Math.Round(result, roundedTo);
+                    {
+                        mass = result;
+                        int decPlace = mod.IndexOf(LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator,
+                            StringComparison.Ordinal);
+                        if (decPlace != -1)
+                            roundedTo = Math.Min(mod.Length - decPlace - 1, DEFAULT_ROUNDING_DIGITS);
+                    }
                     else
+                    {
                         name = mod;
+                    }
+                    
+                    if (mass.HasValue)
+                        mass = Math.Round(mass.Value, roundedTo);
+ 
                     var key = new AAModKey
                     {
                         Name = name,
@@ -274,7 +285,7 @@ namespace pwiz.Skyline.Model
                     {
                         var staticMod = GetStaticMod(uniModId, aa, modTerminus);
                         if (staticMod == null)
-                            throw new InvalidDataException(string.Format(Resources.ModificationMatcher_EnumerateSequenceInfos_Unrecognized_Unimod_id__0__in_modified_peptide_sequence_, 
+                            throw new FormatException(string.Format(Resources.ModificationMatcher_EnumerateSequenceInfos_Unrecognized_Unimod_id__0__in_modified_peptide_sequence_, 
                                                                          uniModId));
                         string name = staticMod.Name;
                         bool isHeavy = !UniMod.DictStructuralModNames.ContainsKey(name);

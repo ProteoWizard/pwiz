@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
@@ -56,11 +55,11 @@ namespace pwiz.SkylineTestA
             UpdateMatcherFail(STR_FAIL_DOUBLE_MOD);
             // Test exception thrown if unimod not specified correctly
             UpdateMatcherFail(STR_FAIL_UNIMOD);
-            UpdateMatcherDataFail(STR_UNKNOWN_UNIMOD);
+            UpdateMatcherFail(STR_UNKNOWN_UNIMOD);
             // Can't phosphorylate tryptophan
-            UpdateMatcherDataFail(STR_FAIL_WRONG_AA_UNIMOD);
+            UpdateMatcherFail(STR_FAIL_WRONG_AA_UNIMOD);
             // Can't put C-terminal modification in middle of peptide
-            UpdateMatcherDataFail(STR_FAIL_UNIMOD_TERMINUS);
+            UpdateMatcherFail(STR_FAIL_UNIMOD_TERMINUS);
 
             // Test mods in UniMod match correctly. 
             UpdateMatcher(StaticModList.GetDefaultsOn(), HeavyModList.GetDefaultsOn(), null, null);
@@ -279,15 +278,6 @@ namespace pwiz.SkylineTestA
             if (seq != null)
                 _seqs.Add(seq);
             AssertEx.ThrowsException<FormatException>(() => 
-                UpdateMatcher(null, null, null, null));
-            _seqs.Remove(seq);
-        }
-
-        private static void UpdateMatcherDataFail(string seq)
-        {
-            if (seq != null)
-                _seqs.Add(seq);
-            AssertEx.ThrowsException<InvalidDataException>(() =>
                 UpdateMatcher(null, null, null, null));
             _seqs.Remove(seq);
         }
