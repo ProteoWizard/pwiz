@@ -264,7 +264,7 @@ namespace pwiz.SkylineTestA
         private static void ValidateIrtAndLibrary(SrmDocument docAfter)
         {
             int irtStandardCount = 0;
-            foreach (var nodePep in docAfter.Molecules)
+            foreach (var nodePep in docAfter.Peptides) // We don't expect this to work for non-peptide molecules
             {
                 if (nodePep.GlobalStandardType == PeptideDocNode.STANDARD_TYPE_IRT)
                     irtStandardCount++;
