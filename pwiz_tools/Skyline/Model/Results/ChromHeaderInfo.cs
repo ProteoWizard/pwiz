@@ -1717,6 +1717,9 @@ namespace pwiz.Skyline.Model.Results
         {
             try
             {
+                if (MsDataFileImpl.IsNegativeChargeId(id).HasValue) // We currently ignore chromatogram polarity, but we may encounter it in mzML so must at least be able to recognize it
+                    id = id.Substring(2);
+
                 double precursor, product;
                 if (id.StartsWith(MsDataFileImpl.PREFIX_TOTAL))
                 {
