@@ -187,11 +187,11 @@ namespace pwiz.Common.DataBinding
         protected virtual void WriteData(IProgressMonitor progressMonitor, TextWriter writer,
             BindingListSource bindingListSource, DsvWriter dsvWriter)
         {
-            ProgressStatus status = new ProgressStatus(string.Format(Resources.AbstractViewContext_WriteData_Writing__0__rows, bindingListSource.Count));
+            IProgressStatus status = new ProgressStatus(string.Format(Resources.AbstractViewContext_WriteData_Writing__0__rows, bindingListSource.Count));
             WriteDataWithStatus(progressMonitor, ref status, writer, bindingListSource, dsvWriter);
         }
 
-        protected virtual void WriteDataWithStatus(IProgressMonitor progressMonitor, ref ProgressStatus status, TextWriter writer, BindingListSource bindingListSource, DsvWriter dsvWriter)
+        protected virtual void WriteDataWithStatus(IProgressMonitor progressMonitor, ref IProgressStatus status, TextWriter writer, BindingListSource bindingListSource, DsvWriter dsvWriter)
         {
             IList<RowItem> rows = Array.AsReadOnly(bindingListSource.Cast<RowItem>().ToArray());
             IList<PropertyDescriptor> properties = bindingListSource.GetItemProperties(new PropertyDescriptor[0]).Cast<PropertyDescriptor>().ToArray();
@@ -671,7 +671,7 @@ namespace pwiz.Common.DataBinding
                 get { return false; }
             }
 
-            public UpdateProgressResponse UpdateProgress(ProgressStatus status)
+            public UpdateProgressResponse UpdateProgress(IProgressStatus status)
             {
                 return UpdateProgressResponse.normal;
             }

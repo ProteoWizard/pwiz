@@ -63,7 +63,7 @@ namespace pwiz.Skyline.Model
                 {
                     DocumentChangedEvent(this, new DocumentChangedEventArgs(docOriginal));
 
-                    bool complete = docNew.IsLoaded || (LastProgress != null && LastProgress.IsError);
+                    bool complete = IsFinal(docNew);
                     if (wait)
                     {
                         if (!complete)
@@ -79,12 +79,26 @@ namespace pwiz.Skyline.Model
             return true;
         }
 
-        public void ResetProgress()
+        public void WaitForComplete()
+        {
+            lock (CHANGE_EVENT_LOCK)
+            {
+                while (!IsFinal(Document))
+                    Monitor.Wait(CHANGE_EVENT_LOCK);    // Wait until next DocumentChangedEvent
+            }
+        }
+
+        private bool IsFinal(SrmDocument doc)
+        {
+            return doc.IsLoaded || (LastProgress != null && LastProgress.IsError);
+        }
+
+        public virtual void ResetProgress()
         {
             LastProgress = null;
         }
 
-        public ProgressStatus LastProgress { get; private set; }
+        public IProgressStatus LastProgress { get; private set; }
 
         private void UpdateProgress(object sender, ProgressUpdateEventArgs e)
         {
@@ -136,7 +150,7 @@ namespace pwiz.Skyline.Model
             // Chromatogram loader needs file path to know how to place the .skyd file
             DocumentFilePath = pathInitial;
 
-            ChromatogramManager = new ChromatogramManager();
+            ChromatogramManager = new ChromatogramManager(false);
             ChromatogramManager.Register(this);
             Register(ChromatogramManager);
 
@@ -167,8 +181,21 @@ namespace pwiz.Skyline.Model
 
         public IrtDbManager IrtDbManager { get; private set; }
 
+        public override void ResetProgress()
+        {
+            base.ResetProgress();
+
+            ChromatogramManager.ResetProgress();
+            LibraryManager.ResetProgress();
+            RetentionTimeManager.ResetProgress();
+            IonMobilityManager.ResetProgress();
+            IrtDbManager.ResetProgress();
+        }
+
         public void Dispose()
         {
+            ChromatogramManager.Dispose();
+
             // Release current document to ensure the streams are closed on it
             SetDocument(new SrmDocument(SrmSettingsList.GetDefault()), Document);
         }

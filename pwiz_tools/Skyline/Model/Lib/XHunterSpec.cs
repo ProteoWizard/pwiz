@@ -341,7 +341,7 @@ namespace pwiz.Skyline.Model.Lib
        
         // ReSharper restore UnusedMember.Local
 
-        private bool CreateCache(ILoadMonitor loader, ProgressStatus status, int percent)
+        private bool CreateCache(ILoadMonitor loader, IProgressStatus status, int percent)
         {
             var sm = loader.StreamManager;
 
@@ -555,7 +555,7 @@ namespace pwiz.Skyline.Model.Lib
             return false;
         }
 
-        private bool Load(ILoadMonitor loader, ProgressStatus status, bool cached)
+        private bool Load(ILoadMonitor loader, IProgressStatus status, bool cached)
         {
             try
             {

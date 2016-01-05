@@ -104,7 +104,7 @@ namespace pwiz.BiblioSpec
 
         public IList<string> TargetSequences { get; private set; }
 
-        public bool BuildLibrary(LibraryBuildAction libraryBuildAction, IProgressMonitor progressMonitor, ref ProgressStatus status, out string[] ambiguous)
+        public bool BuildLibrary(LibraryBuildAction libraryBuildAction, IProgressMonitor progressMonitor, ref IProgressStatus status, out string[] ambiguous)
         {
             // Arguments for BlibBuild
             // ReSharper disable NonLocalizedString

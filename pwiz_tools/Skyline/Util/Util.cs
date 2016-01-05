@@ -972,7 +972,7 @@ namespace pwiz.Skyline.Util
         /// <param name="progressMonitor">Optional progress monitor for reporting progress over long periods</param>
         /// <param name="status">Optional progress status object for reporting progress</param>
         public BlockedArray(Func<int, TItem[]> readItems, int itemCount, int itemSize, int bytesPerBlock,
-            IProgressMonitor progressMonitor = null, ProgressStatus status = null)
+            IProgressMonitor progressMonitor = null, IProgressStatus status = null)
         {
             _itemCount = itemCount;
             _blocks = new List<TItem[]>();

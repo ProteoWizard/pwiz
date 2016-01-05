@@ -56,8 +56,8 @@ namespace pwiz.Skyline.Model.Results
         //private static readonly Log LOG = new Log<ChromCacheBuilder>();
 
         public ChromCacheBuilder(SrmDocument document, ChromatogramCache cacheRecalc,
-            string cachePath, MsDataFileUri msDataFilePath, ILoadMonitor loader, ProgressStatus status,
-            Action<ChromatogramCache, Exception> complete)
+            string cachePath, MsDataFileUri msDataFilePath, ILoadMonitor loader, IProgressStatus status,
+            Action<ChromatogramCache, IProgressStatus> complete)
             : base(cachePath, loader, status, complete)
         {
             _document = document;
@@ -141,13 +141,22 @@ namespace pwiz.Skyline.Model.Results
                                 ? Resources.ChromCacheBuilder_BuildNextFileInner_Importing__0__
                                 : Resources.ChromCacheBuilder_BuildNextFileInner_Recalculating_scores_for__0_;
             string message = string.Format(format, MSDataFilePath.GetSampleName() ?? MSDataFilePath.GetFileName());
-            LoadingStatus.Transitions.Flush();
-            _status = _status.ChangeMessage(message).ChangePercentComplete(0);
-            _status = LoadingStatus.ChangeFilePath(MSDataFilePath).ChangeImporting(true);
-            var allChromData = LoadingStatus.Transitions;
-            allChromData.MaxIntensity = 0;
-            allChromData.MaxRetentionTime = 0;
-            allChromData.MaxRetentionTimeKnown = false;
+            _status = _status
+                .ChangeMessage(message)
+                .ChangePercentComplete(0);
+            ChromatogramLoadingStatus.TransitionData allChromData = null;
+            var loadingStatus = _status as ChromatogramLoadingStatus;
+            if (loadingStatus != null)
+            {
+                allChromData = loadingStatus.Transitions;
+                allChromData.Flush();
+                allChromData.MaxIntensity = 0;
+                allChromData.MaxRetentionTime = 0;
+                allChromData.MaxRetentionTimeKnown = false;
+                _status = loadingStatus
+                    .ChangeImporting(true)
+                    .ChangeFilePath(MSDataFilePath);
+            }
             _loader.UpdateProgress(_status);
 
             try
@@ -222,9 +231,12 @@ namespace pwiz.Skyline.Model.Results
                     if (dataFilePathRecalc != null)
                     {
                         provider = CreateChromatogramRecalcProvider(dataFilePathRecalc, fileInfo);
-                        allChromData.MaxIntensity = (float) (provider.MaxIntensity ?? 0);
-                        allChromData.MaxRetentionTime = (float) (provider.MaxRetentionTime ?? 0);
-                        allChromData.MaxRetentionTimeKnown = provider.MaxRetentionTime.HasValue;
+                        if (allChromData != null)
+                        {
+                            allChromData.MaxIntensity = (float) (provider.MaxIntensity ?? 0);
+                            allChromData.MaxRetentionTime = (float) (provider.MaxRetentionTime ?? 0);
+                            allChromData.MaxRetentionTimeKnown = provider.MaxRetentionTime.HasValue;
+                        }
                     }
                     else if (ChorusResponseChromDataProvider.IsChorusResponse(dataFilePath))
                     {
@@ -278,7 +290,7 @@ namespace pwiz.Skyline.Model.Results
                         inFile.Dispose();
                 }
 
-                ActionUtil.RunAsync(() => ExitRead(null), "Exit read"); // Not L10N
+                ExitRead(null);
             }
             catch (LoadCanceledException x)
             {
@@ -287,7 +299,7 @@ namespace pwiz.Skyline.Model.Results
             }
             catch (MissingDataException x)
             {
-                ExitRead(new MissingDataException(x.MessageFormat, MSDataFilePath.GetSampleOrFileName(), x));
+                ExitRead(new MissingDataException(x.MessageFormat, MSDataFilePath.GetFilePath(), x));
             }
             catch (Exception x)
             {
@@ -439,8 +451,8 @@ namespace pwiz.Skyline.Model.Results
                                      _currentFileInfo.Flags,
                                      _currentFileInfo.LastWriteTime,
                                      _currentFileInfo.StartTime,
-                                     LoadingStatus.Transitions.MaxRetentionTime,
-                                     LoadingStatus.Transitions.MaxIntensity,
+                                     0,//LoadingStatus.Transitions.MaxRetentionTime,
+                                     0,//LoadingStatus.Transitions.MaxIntensity,
                                      _currentFileInfo.SizeScanIds,
                                      _currentFileInfo.LocationScanIds,
                                      _currentFileInfo.InstrumentInfoList));

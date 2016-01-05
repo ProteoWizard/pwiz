@@ -129,10 +129,11 @@ namespace pwiz.SkylineTest.Results
             // Wait up to 5 seconds for cancel to occur
             for (int i = 0; i < 50; i++)
             {
-                if (docContainer.LastProgress.IsCanceled)
+                if (docContainer.LastProgress != null && docContainer.LastProgress.IsCanceled)
                     break;
                 Thread.Sleep(100);
             }
+            // ReSharper disable once PossibleNullReferenceException
             if (!docContainer.LastProgress.IsCanceled)
             {
                 Assert.Fail("Attempt to cancel results load failed. {0}", docContainer.LastProgress.ErrorException != null

@@ -839,6 +839,8 @@
     <Compile Include="Model\Lib\ChromLib\Data\SampleFile.cs" />
     <Compile Include="Model\Lib\ChromLib\Data\Transition.cs" />
     <Compile Include="Model\MProphetResultsHandler.cs" />
+    <Compile Include="Model\MultiFileLoader.cs" />
+    <Compile Include="Model\MultiProgressStatus.cs" />
     <Compile Include="Model\OptimizationStep.cs" />
     <Compile Include="Model\DocSettings\IsotopeEnrichments.cs" />
     <Compile Include="Model\DocSettings\Loss.cs" />

@@ -34,7 +34,7 @@ namespace pwiz.Skyline.Model.Results
         private ChromatogramRequestProvider[] _chromatogramRequestProviders;
         private ChromTaskList[] _chromTaskLists;
 
-        public RemoteChromDataProvider(SrmDocument document, IRetentionTimePredictor retentionTimePredictor, ChromFileInfo chromFileInfo, ProgressStatus progressStatus, int startPercent,
+        public RemoteChromDataProvider(SrmDocument document, IRetentionTimePredictor retentionTimePredictor, ChromFileInfo chromFileInfo, IProgressStatus progressStatus, int startPercent,
             int endPercent, ILoadMonitor loader)
             : base(chromFileInfo, progressStatus, startPercent, endPercent, loader)
         {
@@ -105,9 +105,9 @@ namespace pwiz.Skyline.Model.Results
                 if (loaded)
                 {
                     extra = new ChromExtra(id, chromKey.Precursor == 0 ? 0 : -1);
-                    if (times.Length > 0)
+                    if (times.Length > 0 && Status is ChromatogramLoadingStatus)
                     {
-                        LoadingStatus.Transitions.AddTransition(
+                        ((ChromatogramLoadingStatus)Status).Transitions.AddTransition(
                                 modifiedSequence,
                                 peptideColor,
                                 extra.StatusId,

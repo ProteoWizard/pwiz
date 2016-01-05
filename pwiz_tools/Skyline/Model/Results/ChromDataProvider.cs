@@ -32,7 +32,7 @@ namespace pwiz.Skyline.Model.Results
         protected readonly IProgressMonitor _loader;
 
         protected ChromDataProvider(ChromFileInfo fileInfo,
-                                    ProgressStatus status,
+                                    IProgressStatus status,
                                     int startPercent,
                                     int endPercent,
                                     IProgressMonitor loader)
@@ -72,9 +72,7 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromFileInfo FileInfo { get; private set; }
 
-        public ProgressStatus Status { get; protected set; }
-
-        public ChromatogramLoadingStatus LoadingStatus { get { return (ChromatogramLoadingStatus) Status; } }
+        public IProgressStatus Status { get; protected set; }
 
         public abstract IEnumerable<KeyValuePair<ChromKey, int>> ChromIds { get; }
 
@@ -125,7 +123,7 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromatogramDataProvider(MsDataFileImpl dataFile,
                                         ChromFileInfo fileInfo,
-                                        ProgressStatus status,
+                                        IProgressStatus status,
                                         int startPercent,
                                         int endPercent,
                                         IProgressMonitor loader)
@@ -270,8 +268,9 @@ namespace pwiz.Skyline.Model.Results
                 if (_readMaxMinutes > 0 && predictedMinutes > _readMaxMinutes)
                 {
                     // TODO: This warning isn't checked in the command line version of Skyline.  Maybe we should do that.
-                    Status =
-                        Status.ChangeWarningMessage(Resources.ChromatogramDataProvider_GetChromatogram_This_import_appears_to_be_taking_longer_than_expected__If_importing_from_a_network_drive__consider_canceling_this_import__copying_to_local_disk_and_retrying_);
+                    if (Status is ChromatogramLoadingStatus)
+                        Status =
+                            ((ChromatogramLoadingStatus)Status).ChangeWarningMessage(Resources.ChromatogramDataProvider_GetChromatogram_This_import_appears_to_be_taking_longer_than_expected__If_importing_from_a_network_drive__consider_canceling_this_import__copying_to_local_disk_and_retrying_);
                 }
             }
 
@@ -282,12 +281,14 @@ namespace pwiz.Skyline.Model.Results
             extra = new ChromExtra(index, -1);  // TODO: is zero the right value?
 
             // Display in AllChromatogramsGraph
-            LoadingStatus.Transitions.AddTransition(
-                modifiedSequence,
-                color,
-                index, -1,
-                times,
-                intensities);
+            var loadingStatus = Status as ChromatogramLoadingStatus;
+            if (loadingStatus != null)
+                loadingStatus.Transitions.AddTransition(
+                    modifiedSequence,
+                    color,
+                    index, -1,
+                    times,
+                    intensities);
             return true;
         }
 

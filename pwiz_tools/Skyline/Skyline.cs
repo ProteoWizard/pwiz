@@ -63,6 +63,8 @@ using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using MultiException = pwiz.Skyline.Model.MultiException;
+using MultiProgressStatus = pwiz.Skyline.Model.MultiProgressStatus;
 using PasteFormat = pwiz.Skyline.EditUI.PasteFormat;
 using Peptide = pwiz.Skyline.Model.Peptide;
 using Timer = System.Windows.Forms.Timer;
@@ -106,7 +108,7 @@ namespace pwiz.Skyline
         public event EventHandler<DocumentChangedEventArgs> DocumentChangedEvent;
         public event EventHandler<DocumentChangedEventArgs> DocumentUIChangedEvent;
 
-        private List<ProgressStatus> _listProgress;
+        private List<IProgressStatus> _listProgress;
         private readonly TaskbarProgress _taskbarProgress = new TaskbarProgress();
         private readonly Timer _timerProgress;
         private readonly Timer _timerGraphs;
@@ -127,7 +129,7 @@ namespace pwiz.Skyline
 
             _graphSpectrumSettings = new GraphSpectrumSettings(UpdateSpectrumGraph);
 
-            _listProgress = new List<ProgressStatus>();
+            _listProgress = new List<IProgressStatus>();
             _timerProgress = new Timer { Interval = 750 };
             _timerProgress.Tick += UpdateProgressUI;
             _timerGraphs = new Timer { Interval = 100 };
@@ -141,7 +143,7 @@ namespace pwiz.Skyline
             _backgroundProteomeManager = new BackgroundProteomeManager();
             _backgroundProteomeManager.ProgressUpdateEvent += UpdateProgress;
             _backgroundProteomeManager.Register(this);
-            _chromatogramManager = new ChromatogramManager { SupportAllGraphs = !Program.NoAllChromatogramsGraph };
+            _chromatogramManager = new ChromatogramManager(true) { SupportAllGraphs = !Program.NoAllChromatogramsGraph };
             _chromatogramManager.ProgressUpdateEvent += UpdateProgress;
             _chromatogramManager.Register(this);
             _irtDbManager = new IrtDbManager();
@@ -822,6 +824,8 @@ namespace pwiz.Skyline
 
         protected override void OnClosed(EventArgs e)
         {
+            _chromatogramManager.Dispose();
+
             _timerGraphs.Dispose();
             _timerProgress.Dispose();
 
@@ -4132,9 +4136,9 @@ namespace pwiz.Skyline
             }
         }
 
-        private List<ProgressStatus> ListProgress { get { return _listProgress; } }
+        private List<IProgressStatus> ListProgress { get { return _listProgress; } }
 
-        private bool SetListProgress(List<ProgressStatus> listNew, List<ProgressStatus> listOriginal)
+        private bool SetListProgress(List<IProgressStatus> listNew, List<IProgressStatus> listOriginal)
         {
             var listResult = Interlocked.CompareExchange(ref _listProgress, listNew, listOriginal);
 
@@ -4150,7 +4154,7 @@ namespace pwiz.Skyline
             }
         }
 
-        UpdateProgressResponse IProgressMonitor.UpdateProgress(ProgressStatus status)
+        UpdateProgressResponse IProgressMonitor.UpdateProgress(IProgressStatus status)
         {
             var args = new ProgressUpdateEventArgs(status);
             UpdateProgress(this, args);
@@ -4165,11 +4169,11 @@ namespace pwiz.Skyline
             var final = status.IsFinal;
 
             int i;
-            List<ProgressStatus> listOriginal, listNew;
+            List<IProgressStatus> listOriginal, listNew;
             do
             {
                 listOriginal = ListProgress;
-                listNew = new List<ProgressStatus>(listOriginal);
+                listNew = new List<IProgressStatus>(listOriginal);
 
                 // Replace existing status, if it is already being tracked.
                 for (i = 0; i < listNew.Count; i++)
@@ -4207,7 +4211,7 @@ namespace pwiz.Skyline
             }
         }
 
-        private void BeginProgressUI(ProgressStatus status)
+        private void BeginProgressUI(IProgressStatus status)
         {
             _timerProgress.Start();
         }
@@ -4240,6 +4244,9 @@ namespace pwiz.Skyline
         private bool ShowProgressErrorUI(ProgressUpdateEventArgs e)
         {
             var x = e.Progress.ErrorException;
+            var multiException = x as MultiException;
+            if (multiException != null)
+                x = multiException.Exceptions.First(exception => exception != null);
             var message = x.Message;
 
             // Drill down to see if the innermost exception was an out-of-memory exception.
@@ -4264,9 +4271,9 @@ namespace pwiz.Skyline
                 try
                 {
                     MultiButtonMsgDlg dlg;
-                    if (e.Progress.SegmentCount < 3)
+                    int fileCount = GetFileCount(e.Progress);
+                    if (fileCount == 1)
                     {
-                        // 2 files and 1 for joining
                         dlg = new MultiButtonMsgDlg(message, Resources.SkylineWindow_ShowProgressErrorUI_Retry);
                     }
                     else
@@ -4310,6 +4317,12 @@ namespace pwiz.Skyline
             return true;
         }
 
+        private int GetFileCount(IProgressStatus status)
+        {
+            var multiStatus = status as MultiProgressStatus;
+            return multiStatus == null ? status.SegmentCount - 1 : multiStatus.ProgressList.Count;
+        }
+
         public void UpdateTaskbarProgress(int? percentComplete)
         {
             if (!percentComplete.HasValue)
@@ -4345,7 +4358,7 @@ namespace pwiz.Skyline
             else
             {
                 // Update the status bar with the first progress status.
-                ProgressStatus status = listProgress[0];
+                var status = listProgress[0];
                 statusProgress.Value = status.PercentComplete;
                 statusProgress.Visible = true;
                 UpdateTaskbarProgress(status.PercentComplete);
@@ -4355,17 +4368,23 @@ namespace pwiz.Skyline
                     return;
 
                 // Update chromatogram graph if we are importing a data file.
-                var loadingStatus = listProgress.FirstOrDefault(s => s is ChromatogramLoadingStatus) as ChromatogramLoadingStatus;
-                if (loadingStatus != null && loadingStatus.Importing)
+                var multiStatus = listProgress.FirstOrDefault(s => s is MultiProgressStatus) as MultiProgressStatus;
+                if (multiStatus != null)
                 {
-                    buttonShowAllChromatograms.Visible = true;
-                    if (_allChromatogramsGraph == null)
+                    foreach (var loadingStatus in multiStatus.ProgressList)
                     {
-                        _allChromatogramsGraph = new AllChromatogramsGraph {Owner = this};
-                        if (Settings.Default.AutoShowAllChromatogramsGraph)
-                            _allChromatogramsGraph.Show();
+                        if (loadingStatus.State == ProgressState.running && loadingStatus.Importing)
+                        {
+                            buttonShowAllChromatograms.Visible = true;
+                            if (_allChromatogramsGraph == null)
+                            {
+                                _allChromatogramsGraph = new AllChromatogramsGraph {Owner = this};
+                                if (Settings.Default.AutoShowAllChromatogramsGraph)
+                                    _allChromatogramsGraph.Show();
+                            }
+                            _allChromatogramsGraph.UpdateStatus(loadingStatus);
+                        }
                     }
-                    _allChromatogramsGraph.UpdateStatus(loadingStatus);
                 }
             }
         }

@@ -305,7 +305,7 @@ namespace pwiz.Skyline.Model.Lib
 
         private bool Load(ILoadMonitor loader)
         {
-            ProgressStatus status =
+            IProgressStatus status =
                 new ProgressStatus(string.Format(Resources.BiblioSpecLibrary_Load_Loading__0__library,
                                                  Path.GetFileName(FilePath)));
             loader.UpdateProgress(status);

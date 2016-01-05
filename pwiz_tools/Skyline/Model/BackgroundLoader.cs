@@ -30,6 +30,8 @@ namespace pwiz.Skyline.Model
         private readonly Dictionary<int, IDocumentContainer> _processing =
             new Dictionary<int, IDocumentContainer>();
 
+        protected bool IsMultiThreadAware { get; set; }
+
         public event EventHandler<ProgressUpdateEventArgs> ProgressUpdateEvent;
 
         public IStreamManager StreamManager
@@ -61,14 +63,17 @@ namespace pwiz.Skyline.Model
                     EndProcessing(document);
                 else
                 {
-                    int docIndex = document.Id.GlobalIndex;
-                    lock (_processing)
+                    if (!IsMultiThreadAware)
                     {
-                        // Keep track of the documents being processed, to avoid running
-                        // processing on the same document on multiple threads.
-                        if (_processing.ContainsKey(docIndex))
-                            return;
-                        _processing.Add(docIndex, container);
+                        int docIndex = document.Id.GlobalIndex;
+                        lock (_processing)
+                        {
+                            // Keep track of the documents being processed, to avoid running
+                            // processing on the same document on multiple threads.
+                            if (_processing.ContainsKey(docIndex))
+                                return;
+                            _processing.Add(docIndex, container);
+                        }
                     }
 
                     Action<IDocumentContainer, SrmDocument> loader = OnLoadBackground;
@@ -108,9 +113,12 @@ namespace pwiz.Skyline.Model
 
                 LoadBackground(container, document, docCurrent);
 
-                // Force a document changed notification, since loading blocks them
-                // from triggering new processing, but new processing may have accumulated
-                OnDocumentChanged(container, new DocumentChangedEventArgs(docCurrent));
+                if (!IsMultiThreadAware)
+                {
+                    // Force a document changed notification, since loading blocks them
+                    // from triggering new processing, but new processing may have accumulated
+                    OnDocumentChanged(container, new DocumentChangedEventArgs(docCurrent));
+                }
             }
             catch (Exception exception)
             {
@@ -179,7 +187,7 @@ namespace pwiz.Skyline.Model
         protected abstract bool LoadBackground(IDocumentContainer container,
             SrmDocument document, SrmDocument docCurrent);
 
-        protected UpdateProgressResponse UpdateProgress(ProgressStatus status)
+        public UpdateProgressResponse UpdateProgress(IProgressStatus status)
         {
             if (ProgressUpdateEvent != null)
             {
@@ -210,7 +218,11 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        protected class LoadMonitor : ILoadMonitor
+        public virtual void ResetProgress()
+        {            
+        }
+
+        public class LoadMonitor : ILoadMonitor
         {
             private readonly BackgroundLoader _manager;
             private readonly IDocumentContainer _container;
@@ -244,7 +256,7 @@ namespace pwiz.Skyline.Model
             /// Updates progress reporting for this operation.
             /// </summary>
             /// <param name="status"></param>
-            public UpdateProgressResponse UpdateProgress(ProgressStatus status)
+            public virtual UpdateProgressResponse UpdateProgress(IProgressStatus status)
             {
                 return _manager.UpdateProgress(status);
             }
@@ -282,7 +294,7 @@ namespace pwiz.Skyline.Model
             get { return _monitor.IsCanceled; }
         }
 
-        public UpdateProgressResponse UpdateProgress(ProgressStatus status)
+        public UpdateProgressResponse UpdateProgress(IProgressStatus status)
         {
             return _monitor.UpdateProgress(status);
         }

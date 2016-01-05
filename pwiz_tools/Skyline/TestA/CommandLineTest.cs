@@ -291,11 +291,14 @@ namespace pwiz.SkylineTestA
             SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
 
             //Attach replicate
-            ProgressStatus status;
-            doc = CommandLine.ImportResults(doc, docPath, replicate, MsDataFileUri.Parse(rawPath), null, null, out status);
+            var commandLine = new CommandLine();
+            var docContainer = new ResultsMemoryDocumentContainer(doc, docPath);
+            commandLine.ImportResults(docContainer, replicate, MsDataFileUri.Parse(rawPath), null);
+            docContainer.WaitForComplete();
+            doc = docContainer.Document;
+            var status = docContainer.LastProgress;
             Assert.IsNull(status);
 
-            string programmaticReport;
             MemoryDocumentContainer memoryDocumentContainer = new MemoryDocumentContainer();
             Assert.IsTrue(memoryDocumentContainer.SetDocument(doc, memoryDocumentContainer.Document));
             SkylineDataSchema skylineDataSchema = new SkylineDataSchema(memoryDocumentContainer, SkylineDataSchema.GetLocalizedSchemaLocalizer());
@@ -305,7 +308,7 @@ namespace pwiz.SkylineTestA
             status = new ProgressStatus("Exporting report");
             viewContext.Export(null, ref status, viewInfo, writer,
                 new DsvWriter(CultureInfo.CurrentCulture, TextUtil.GetCsvSeparator(LocalizationHelper.CurrentCulture)));
-            programmaticReport = writer.ToString();
+            var programmaticReport = writer.ToString();
 
             RunCommand("--in=" + docPath,
                        "--import-file=" + rawPath,
@@ -332,8 +335,12 @@ namespace pwiz.SkylineTestA
 
             //Attach replicate
             SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
-            ProgressStatus status;
-            doc = CommandLine.ImportResults(doc, docPath, replicate, MsDataFileUri.Parse(rawPath), null, null, out status);
+            var commandLine = new CommandLine();
+            var docContainer = new ResultsMemoryDocumentContainer(doc, docPath);
+            commandLine.ImportResults(docContainer, replicate, MsDataFileUri.Parse(rawPath), null);
+            docContainer.WaitForComplete();
+            doc = docContainer.Document;
+            var status = docContainer.LastProgress;
             Assert.IsNull(status);
 
             //First, programmatically generate the report
@@ -932,7 +939,7 @@ namespace pwiz.SkylineTestA
                                      "--import-file=" + rawPath,
                                      "--save");
 
-                Assert.IsTrue(msg.Contains(string.Format(Resources.CommandLine_ImportResultsFile_Warning__Cannot_read_file__0____Ignoring___, rawPath)));
+                AssertEx.Contains(msg, string.Format(Resources.CommandLine_ImportResultsFile_Warning__Cannot_read_file__0____Ignoring___, rawPath));
 
                 // the document should not have changed
                 SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
@@ -942,7 +949,8 @@ namespace pwiz.SkylineTestA
                                  "--import-all=" + testFilesDir.FullPath,
                                  "--save");
 
-                Assert.IsTrue(msg.Contains(string.Format(Resources.CommandLine_ImportResultsFile_Warning__Cannot_read_file__0____Ignoring___, rawPath)), msg);
+                string expected = string.Format(Resources.CommandLine_ImportResultsFile_Warning__Cannot_read_file__0____Ignoring___, rawPath);
+                AssertEx.Contains(msg, expected);
                 doc = ResultsUtil.DeserializeDocument(docPath);
                 Assert.IsTrue(doc.Settings.HasResults);
                 Assert.AreEqual(6, doc.Settings.MeasuredResults.Chromatograms.Count,

@@ -63,26 +63,29 @@ namespace pwiz.Skyline.Model.Results
             : base(string.Format(messageFormat, fileName))
         {
             MessageFormat = messageFormat;
+            FilePath = fileName;
         }
 
         public MissingDataException(string messageFormat, string fileName, Exception innerException)
             : base(string.Format(messageFormat, fileName), innerException)
         {
             MessageFormat = messageFormat;
+            FilePath = fileName;
         }
 
         public string MessageFormat { get; private set; }
+        public string FilePath { get; private set; }
     }
 
     internal class LoadCanceledException : IOException
     {
-        public LoadCanceledException(ProgressStatus status)
+        public LoadCanceledException(IProgressStatus status)
             : base(Resources.LoadCanceledException_LoadCanceledException_Data_import_canceled)
         {
             Status = status;
         }
 
-        public ProgressStatus Status { get; private set; }
+        public IProgressStatus Status { get; private set; }
     }
 
     internal class ChromCacheBuildException : IOException

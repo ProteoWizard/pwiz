@@ -25,7 +25,34 @@ namespace pwiz.Common.SystemUtil
     public enum ProgressState { begin, running, complete, cancelled, error }
 // ReSharper restore InconsistentNaming
 
-    public class ProgressStatus : Immutable
+    public interface IProgressStatus
+    {
+        ProgressState State { get; }
+        string Message { get; }
+        int PercentComplete { get; }
+        Exception ErrorException { get; }
+        IProgressStatus ChangePercentComplete(int percent);
+        IProgressStatus ChangeMessage(string prop);
+        IProgressStatus Complete();
+        IProgressStatus Cancel();
+        IProgressStatus ChangeErrorException(Exception prop);
+        IProgressStatus ChangeSegments(int segment, int segmentCount);
+        IProgressStatus NextSegment();
+        IProgressStatus UpdatePercentCompleteProgress(IProgressMonitor progressMonitor, long currentCount,
+            long totalCount);
+
+        bool IsPercentComplete(int percent);
+
+        int SegmentCount { get; }
+        object Id { get; }
+        bool IsFinal { get; }
+        bool IsComplete { get; }
+        bool IsError { get; }
+        bool IsCanceled { get; }
+        bool IsBegin { get; }
+    }
+
+    public class ProgressStatus : Immutable, IProgressStatus
     {
         /// <summary>
         /// Increments a counter, and returns the percent complete before incrementing if it
@@ -54,6 +81,10 @@ namespace pwiz.Common.SystemUtil
             State = ProgressState.begin;
             Message = message;
             Id = new object();
+        }
+
+        public ProgressStatus() : this(string.Empty)
+        {
         }
 
         public ProgressState State { get; private set; }
@@ -110,7 +141,7 @@ namespace pwiz.Common.SystemUtil
 
         #region Property change methods
 
-        public ProgressStatus ChangePercentComplete(int percent)
+        public IProgressStatus ChangePercentComplete(int percent)
         {
             var zoomedPercentComplete = percent;
 
@@ -148,7 +179,7 @@ namespace pwiz.Common.SystemUtil
                 });
         }
 
-        public ProgressStatus ChangeSegments(int segment, int segmentCount)
+        public IProgressStatus ChangeSegments(int segment, int segmentCount)
         {
             return ChangeProp(ImClone(this), s =>
                 {
@@ -164,7 +195,7 @@ namespace pwiz.Common.SystemUtil
                 });
         }
 
-        public ProgressStatus NextSegment()
+        public IProgressStatus NextSegment()
         {
             int segment = Segment + 1;
             if (segment >= SegmentCount)
@@ -172,7 +203,7 @@ namespace pwiz.Common.SystemUtil
             return ChangeSegments(segment, SegmentCount);
         }
 
-        public ProgressStatus ChangeErrorException(Exception prop)
+        public IProgressStatus ChangeErrorException(Exception prop)
         {
             return ChangeProp(ImClone(this), s =>
                 {
@@ -181,7 +212,7 @@ namespace pwiz.Common.SystemUtil
                 });
         }
 
-        public ProgressStatus ChangeMessage(string prop)
+        public IProgressStatus ChangeMessage(string prop)
         {
             return ChangeProp(ImClone(this), s => s.Message = prop);
         }
@@ -191,17 +222,17 @@ namespace pwiz.Common.SystemUtil
             return ChangeProp(ImClone(this), s => s.WarningMessage = prop);
         }
 
-        public ProgressStatus Cancel()
+        public IProgressStatus Cancel()
         {
             return ChangeProp(ImClone(this), s => s.State = ProgressState.cancelled);
         }
 
-        public ProgressStatus Complete()
+        public IProgressStatus Complete()
         {
             return ChangePercentComplete(100);
         }
 
-        public ProgressStatus UpdatePercentCompleteProgress(IProgressMonitor progressMonitor,
+        public IProgressStatus UpdatePercentCompleteProgress(IProgressMonitor progressMonitor,
             long currentCount, long totalCount)
         {
             if (progressMonitor.IsCanceled)

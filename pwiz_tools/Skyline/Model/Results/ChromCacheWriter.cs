@@ -27,7 +27,7 @@ namespace pwiz.Skyline.Model.Results
 {
     internal class ChromCacheWriter : IDisposable
     {
-        private readonly Action<ChromatogramCache, Exception> _completed;
+        private readonly Action<ChromatogramCache, IProgressStatus> _completed;
 
         protected readonly List<ChromCachedFile> _listCachedFiles = new List<ChromCachedFile>();
         protected readonly List<ChromTransition> _listTransitions = new List<ChromTransition>();
@@ -39,13 +39,13 @@ namespace pwiz.Skyline.Model.Results
         protected readonly FileSaver _fsPeaks;
         protected readonly FileSaver _fsScores;
         protected readonly ILoadMonitor _loader;
-        protected ProgressStatus _status;
+        protected IProgressStatus _status;
         protected int _peakCount;
         protected int _scoreCount;
         protected IPooledStream _destinationStream;
 
-        protected ChromCacheWriter(string cachePath, ILoadMonitor loader, ProgressStatus status,
-                                   Action<ChromatogramCache, Exception> completed)
+        protected ChromCacheWriter(string cachePath, ILoadMonitor loader, IProgressStatus status,
+                                   Action<ChromatogramCache, IProgressStatus> completed)
         {
             CachePath = cachePath;
             _fs = new FileSaver(CachePath);
@@ -58,8 +58,6 @@ namespace pwiz.Skyline.Model.Results
         }
 
         protected string CachePath { get; private set; }
-
-        protected ChromatogramLoadingStatus LoadingStatus { get { return (ChromatogramLoadingStatus)_status; } }
 
         protected void Complete(Exception x)
         {
@@ -131,11 +129,11 @@ namespace pwiz.Skyline.Model.Results
 
                 try
                 {
-                    _completed(result, x);
+                    _completed(result, x == null ? _status : _status.ChangeErrorException(x));
                 }
                 catch (Exception x2)
                 {
-                    _completed(null, x2);
+                    _completed(null, _status.ChangeErrorException(x2));
                 }
             }
         }

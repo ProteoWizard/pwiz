@@ -25,6 +25,7 @@ using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
@@ -34,9 +35,23 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
 {
-    public sealed class ChromatogramManager : BackgroundLoader
+    public sealed class ChromatogramManager : BackgroundLoader, IDisposable
     {
+        private readonly MultiFileLoader _multiFileLoader;
+        private readonly bool _synchronousMode;
+
         public bool SupportAllGraphs { get; set; }
+        public int LoadingThreads { get; set; }
+        public MultiProgressStatus Status { get; set; }
+
+        public ChromatogramManager(bool synchronousMode)
+        {
+            IsMultiThreadAware = true;
+            LoadingThreads = 1;
+            _multiFileLoader = new MultiFileLoader();
+            _synchronousMode = synchronousMode;
+            Status = new MultiProgressStatus(_synchronousMode);
+        }
 
         protected override bool StateChanged(SrmDocument document, SrmDocument previous)
         {
@@ -67,6 +82,43 @@ namespace pwiz.Skyline.Model.Results
                 return null;
             } 
             return settings.MeasuredResults.IsNotLoadedExplained;
+        }
+
+        public override void ResetProgress()
+        {
+            lock (_multiFileLoader)
+            {
+                Status = new MultiProgressStatus(_synchronousMode);
+                _multiFileLoader.Reset();
+            }
+        }
+
+        public void RemoveFile(IProgressStatus status)
+        {
+            var loadingStatus = status as ChromatogramLoadingStatus;
+            if (loadingStatus == null)
+                return;
+            lock (_multiFileLoader)
+            {
+                _multiFileLoader.ClearFile(loadingStatus.FilePath.GetFilePath());
+                Status = Status.Remove(status);
+            }
+        }
+
+        public void Dispose()
+        {
+            lock (_multiFileLoader)
+            {
+                _multiFileLoader.DoneAddingFiles();
+            }
+        }
+
+        public void Cancel()
+        {
+            lock (_multiFileLoader)
+            {
+                _multiFileLoader.Cancel();
+            }
         }
 
         protected override IEnumerable<IPooledStream> GetOpenStreams(SrmDocument document)
@@ -111,8 +163,17 @@ namespace pwiz.Skyline.Model.Results
 
         protected override bool LoadBackground(IDocumentContainer container, SrmDocument document, SrmDocument docCurrent)
         {
-            var loader = new Loader(this, container, document, docCurrent);
-            loader.Load();
+            lock (this)
+            {
+                // Now that we're in the lock, we have to refresh the current document.
+                docCurrent = container.Document;
+                if (IsLoaded(docCurrent))
+                    return false;
+
+                _multiFileLoader.ThreadCount = LoadingThreads;
+                var loader = new Loader(this, container, document, docCurrent, _multiFileLoader);
+                loader.Load();
+            }
 
             return false;
         }
@@ -123,13 +184,16 @@ namespace pwiz.Skyline.Model.Results
             private readonly IDocumentContainer _container;
             private readonly SrmDocument _document;
             private readonly SrmDocument _docCurrent;
+            private readonly MultiFileLoader _multiFileLoader;
+            private MultiFileLoadMonitor _loadMonitor;
 
-            public Loader(ChromatogramManager manager, IDocumentContainer container, SrmDocument document, SrmDocument docCurrent)
+            public Loader(ChromatogramManager manager, IDocumentContainer container, SrmDocument document, SrmDocument docCurrent, MultiFileLoader multiFileLoader)
             {
                 _manager = manager;
                 _container = container;
                 _document = document;
                 _docCurrent = docCurrent;
+                _multiFileLoader = multiFileLoader;
             }
 
             public void Load()
@@ -142,15 +206,15 @@ namespace pwiz.Skyline.Model.Results
                 if (results.IsLoaded)
                     return;
 
-                var loadMonitor = new LoadMonitor(_manager, _container, results) {HasUI = _manager.SupportAllGraphs};
-                results.Load(_docCurrent, documentFilePath, loadMonitor, FinishLoad);
+                Assume.IsNull(_loadMonitor);
+                _loadMonitor = new MultiFileLoadMonitor(_manager, _container, results) {HasUI = _manager.SupportAllGraphs};
+                results.Load(_docCurrent, documentFilePath, _loadMonitor, _multiFileLoader, FinishLoad);
             }
 
             private void CancelLoad(MeasuredResults results)
             {
-                if (results.StatusLoading != null)
-                    _manager.UpdateProgress(results.StatusLoading.Cancel());
-                _manager.EndProcessing(_document);                
+                _manager.UpdateProgress(_manager.Status.Cancel());
+                _manager.EndProcessing(_document);
             }
 
             private void FinishLoad(string documentPath, MeasuredResults resultsLoad, bool changeSets)
@@ -201,10 +265,6 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
                 while (docNew == null || !_manager.CompleteProcessing(_container, docNew, docCurrent));
-
-                // Force a document changed event to keep progressive load going
-                // until it is complete
-                _manager.OnDocumentChanged(_container, new DocumentChangedEventArgs(docCurrent));
             }
         }
     }

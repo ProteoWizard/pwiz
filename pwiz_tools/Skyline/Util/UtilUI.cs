@@ -144,14 +144,14 @@ namespace pwiz.Skyline.Util
             _performWork(this);
         }
 
-        public ProgressStatus Status { get; private set; }
+        public IProgressStatus Status { get; private set; }
 
         public bool IsCanceled
         {
             get { return _broker.IsCanceled; }
         }
 
-        public UpdateProgressResponse UpdateProgress(ProgressStatus status)
+        public UpdateProgressResponse UpdateProgress(IProgressStatus status)
         {
             _broker.ProgressValue = status.PercentComplete;
             _broker.Message = status.Message;
@@ -164,12 +164,12 @@ namespace pwiz.Skyline.Util
 
     public class ProgressUpdateEventArgs : EventArgs
     {
-        public ProgressUpdateEventArgs(ProgressStatus progress)
+        public ProgressUpdateEventArgs(IProgressStatus progress)
         {
             Progress = progress;
         }
 
-        public ProgressStatus Progress { get; private set; }
+        public IProgressStatus Progress { get; private set; }
 
         public UpdateProgressResponse Response { get; set; }
     }

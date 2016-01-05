@@ -119,7 +119,7 @@ namespace pwiz.SkylineTestUtil
                     ResultSet.WriteReportHelper(resultSet, separator, oldStringWriter, cultureInfo);
                     StringWriter newStringWriter = new StringWriter();
                     var skylineViewContext = (SkylineViewContext) bindingListSource.ViewContext;
-                    ProgressStatus progressStatus = new ProgressStatus("Status");
+                    IProgressStatus progressStatus = new ProgressStatus("Status");
                     skylineViewContext.Export(null, ref progressStatus, viewInfo, newStringWriter,
                         new DsvWriter(cultureInfo, separator));
                     var newLineSeparators = new[] { "\r\n" };

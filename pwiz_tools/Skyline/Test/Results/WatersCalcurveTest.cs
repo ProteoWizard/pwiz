@@ -434,7 +434,10 @@ namespace pwiz.SkylineTest.Results
             Assert.IsTrue(File.Exists(cachePath));
             // And the replicate cache files should have been removed
             foreach (var cacheName in replicateCacheNames)
-                Assert.IsFalse(File.Exists(testFilesDir.GetTestPath(cacheName)));
+            {
+                var path = testFilesDir.GetTestPath(cacheName);
+                Assert.IsFalse(File.Exists(path));
+            }
 
             // Save the cache file time stamp
             var cacheInfo = new FileInfo(cachePath);

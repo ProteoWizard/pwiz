@@ -40,7 +40,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             // Get features for each peptide
             int totalPeptides = document.MoleculeCount;
             int currentPeptide = 0;
-            var status = new ProgressStatus(Resources.PeakFeatureEnumerator_GetPeakFeatures_Calculating_peak_group_scores);
+            IProgressStatus status = new ProgressStatus(Resources.PeakFeatureEnumerator_GetPeakFeatures_Calculating_peak_group_scores);
 
             // Set up run ID dictionary
             var runEnumDict = new Dictionary<int, int>();

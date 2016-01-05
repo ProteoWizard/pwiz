@@ -21,7 +21,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
@@ -235,9 +234,7 @@ namespace pwiz.SkylineTest.Results
             out string docPath)
         {
             docPath = testFilesDir.GetTestPath(skyFile);
-            var consoleBuffer = new StringBuilder();
-            var consoleOutput = new CommandStatusWriter(new StringWriter(consoleBuffer));
-            var cmdline = new CommandLine(consoleOutput);
+            var cmdline = new CommandLine();
             Assert.IsTrue(cmdline.OpenSkyFile(docPath)); // Handles any path shifts in database files, like our .imdb file
             SrmDocument doc = cmdline.Document;
             var refine = new RefinementSettings();

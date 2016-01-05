@@ -43,7 +43,7 @@ namespace pwiz.Skyline.Model.Results
                                               MsDataFileUri dataFilePath,
                                               ChromFileInfo fileInfo,
                                               bool? singleMatchMz,
-                                              ProgressStatus status,
+                                              IProgressStatus status,
                                               int startPercent,
                                               int endPercent,
                                               ILoadMonitor loader)
@@ -92,9 +92,9 @@ namespace pwiz.Skyline.Model.Results
             extra = new ChromExtra(chromKeyIndices.StatusId, chromKeyIndices.StatusRank);
 
             // Display in AllChromatogramsGraph
-            if (chromKeyIndices.Key.Precursor != 0)
+            if (chromKeyIndices.Key.Precursor != 0 && Status is ChromatogramLoadingStatus)
             {
-                LoadingStatus.Transitions.AddTransition(
+                ((ChromatogramLoadingStatus)Status).Transitions.AddTransition(
                     modifiedSequence,
                     peptideColor,
                     chromKeyIndices.StatusId,

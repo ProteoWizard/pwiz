@@ -933,7 +933,7 @@ namespace pwiz.Skyline.Util
     public sealed class StreamReaderWithProgress : StreamReader
     {
         private readonly IProgressMonitor _progressMonitor;
-        private ProgressStatus _status;
+        private IProgressStatus _status;
         private readonly long _totalBytes;
         private long _bytesRead;
 
@@ -959,7 +959,7 @@ namespace pwiz.Skyline.Util
     public class XmlWriterWithProgress : XmlTextWriter
     {
         private readonly IProgressMonitor _progressMonitor;
-        private ProgressStatus _status;
+        private IProgressStatus _status;
         private readonly int _transitionCount;
         private int _transitionsWritten;
 
