@@ -862,41 +862,29 @@ namespace pwiz.Skyline.Controls
 
 		#region #  Properties  #
 
-		protected virtual CreateParams CreateParams
-		{
-			get
-			{
-				CreateParams params1 = new CreateParams();
-				int nX = _location.X;
-				int nY = _location.Y;
-				Screen screen1 = Screen.FromHandle(Handle);
-				if ((nX + _size.Width) > screen1.Bounds.Width)
-				{
-					nX = screen1.Bounds.Width - _size.Width;
-				}
-				if ((nY + _size.Height) > screen1.Bounds.Height)
-				{
-					nY = screen1.Bounds.Height - _size.Height;
-				}
-				_location = new Point(nX, nY);
-				Size size1 = _size;
-				Point point1 = _location;
-				params1.X = nX;
-				params1.Y = nY;
-				params1.Height = size1.Height;
-				params1.Width = size1.Width;
-				params1.Parent = IntPtr.Zero;
-				params1.Style = -2147483648;
-				params1.ExStyle = 0x88;
-				if (_supportsLayered)
-				{
-					params1.ExStyle += 0x80000;
-				}
-				_size = size1;
-				_location = point1;
-				return params1;
-			}
-		}
+	    protected virtual CreateParams CreateParams
+	    {
+	        get
+	        {
+	            CreateParams params1 = new CreateParams();
+	            Size size1 = _size;
+	            Point point1 = _location;
+	            params1.X = _location.X;
+	            params1.Y = _location.Y;
+	            params1.Height = size1.Height;
+	            params1.Width = size1.Width;
+	            params1.Parent = IntPtr.Zero;
+	            params1.Style = -2147483648;
+	            params1.ExStyle = 0x88;
+	            if (_supportsLayered)
+	            {
+	                params1.ExStyle += 0x80000;
+	            }
+	            _size = size1;
+	            _location = point1;
+	            return params1;
+	        }
+	    }
 
 		public Control Parent
 		{

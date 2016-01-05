@@ -149,12 +149,17 @@ namespace pwiz.Skyline.Util
 
         public void ForceOnScreen()
         {
-            var location = Location;
-            location.X = Math.Max(GetScreen(Left, Top).WorkingArea.Left,
-                Math.Min(location.X, GetScreen(Right, Top).WorkingArea.Right - Size.Width));
-            location.Y = Math.Max(GetScreen(Left, Top).WorkingArea.Top,
-                Math.Min(location.Y, GetScreen(Left, Bottom).WorkingArea.Bottom - Size.Height));
-            Location = location;
+            ForceOnScreen(this);
+        }
+
+        public static void ForceOnScreen(Form form)
+        {
+            var location = form.Location;
+            location.X = Math.Max(GetScreen(form.Left, form.Top).WorkingArea.Left,
+                Math.Min(location.X, GetScreen(form.Right, form.Top).WorkingArea.Right - form.Size.Width));
+            location.Y = Math.Max(GetScreen(form.Left, form.Top).WorkingArea.Top,
+                Math.Min(location.Y, GetScreen(form.Left, form.Bottom).WorkingArea.Bottom - form.Size.Height));
+            form.Location = location;
         }
 
         private static Screen GetScreen(int x, int y)
