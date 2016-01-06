@@ -246,6 +246,7 @@ namespace pwiz.Skyline.Model
         private IList<string> ReadLinesFromFile()
         {
             var inputLines = File.ReadAllLines(_inputFilename);
+            inputLines = inputLines.Where(line => line.Trim().Length > 0).ToArray();
             if (inputLines.Length == 0)
                 throw new InvalidDataException(Resources.MassListImporter_Import_Empty_transition_list);
             InitFormat(inputLines);
@@ -259,7 +260,11 @@ namespace pwiz.Skyline.Model
             {
                 string line;
                 while ((line = readerLines.ReadLine()) != null)
+                {
+                    if (line.Trim().Length == 0)
+                        continue;
                     inputLines.Add(line);
+                }
             }
             if (inputLines.Count == 0)
                 throw new InvalidDataException(Resources.MassListImporter_Import_Empty_transition_list);
@@ -1270,7 +1275,9 @@ namespace pwiz.Skyline.Model
                     {
                         // Move amino acid following the modification to before it
                         int indexFirstAA = indexClose + 1;
-                        seq = seq[indexFirstAA] + seq.Substring(0, indexFirstAA) + seq.Substring(indexFirstAA + 1);
+                        if (seq[indexFirstAA] == '-')
+                            indexFirstAA++;
+                        seq = seq[indexFirstAA] + seq.Substring(0, indexClose + 1) + seq.Substring(indexFirstAA + 1);
                     }
                 }
                 return seq;
@@ -1308,6 +1315,8 @@ namespace pwiz.Skyline.Model
                     foreach (string line in lines)
                     {
                         string[] fieldsNext = line.ParseDsvFields(separator);
+                        if (iSequence >= fieldsNext.Length)
+                            continue;
                         AddCount(fieldsNext[iSequence], sequenceCounts);
                         for (int i = 0; i < valueCounts.Length; i++)
                         {

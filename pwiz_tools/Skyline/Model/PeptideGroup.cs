@@ -174,7 +174,12 @@ namespace pwiz.Skyline.Model
             // it is not a valid modified sequence.
             if(seq.Length == 0 || (!AminoAcid.IsExAA(seq[0]) && !OPEN_MOD.Contains(seq[0])))
                 return seq;
-            return rgx.Replace(seq, string.Empty);
+            string result = rgx.Replace(seq, string.Empty);
+            // Some potential modified sequences begin with [3Lt]-AAAA. The above replace
+            // will remove the bracketed modification, but not the dash.
+            if (result.StartsWith("-")) // Not L10N
+                result = result.Substring(1);
+            return result;
         }
 
         private readonly string _name;

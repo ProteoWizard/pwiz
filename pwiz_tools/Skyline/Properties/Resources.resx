@@ -5985,10 +5985,7 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="PeakBoundaryImporter_Import_Peptide_has_unrecognized_modifications__0__at_line__1_" xml:space="preserve">
     <value>Peptide has unrecognized modifications {0} at line {1}</value>
   </data>
-  <data name="ModificationMatcher_EnumerateSequenceInfos_Unrecognized_Unimod_id__0__in_modified_peptide_sequence_" xml:space="preserve">
-    <value>Unrecognized Unimod id {0} in modified peptide sequence.</value>
-  </data>
-  <data name="SkylineWindow_ShowReintegrateDialog_Reintegrate_peaks" xml:space="preserve">
+    <data name="SkylineWindow_ShowReintegrateDialog_Reintegrate_peaks" xml:space="preserve">
     <value>Reintegrate peaks</value>
   </data>
   <data name="DocumentGridViewContext_CreateViewEditor_Edit_Report" xml:space="preserve">
@@ -8818,5 +8815,11 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   </data>
   <data name="DataboundGridControl_DisplayError_Do_you_want_to_continue_to_see_these_error_messages_" xml:space="preserve">
     <value>Do you want to continue to see these error messages?</value>
+  </data>
+    <data name="ModificationMatcher_ThrowUnimodException_Unrecognized_modification_placement_for_Unimod_id__0__in_modified_peptide_sequence__1___amino_acid__2____3___" xml:space="preserve">
+    <value>Unrecognized modification placement for Unimod id {0} in modified peptide sequence {1} (amino acid {2}, {3}).</value>
+  </data>
+    <data name="ModificationMatcher_ThrowUnimodException_Unrecognized_Unimod_id__0__in_modified_peptide_sequence__1___amino_acid__2____3___" xml:space="preserve">
+    <value>Unrecognized Unimod id {0} in modified peptide sequence {1} (amino acid {2}, {3}).</value>
   </data>
 </root>

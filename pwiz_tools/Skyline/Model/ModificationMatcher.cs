@@ -122,8 +122,9 @@ namespace pwiz.Skyline.Model
                     {
                         var staticMod = GetStaticMod(uniModId, aa, modTerminus);
                         if (staticMod == null)
-                            throw new FormatException(string.Format(Resources.ModificationMatcher_EnumerateSequenceInfos_Unrecognized_Unimod_id__0__in_modified_peptide_sequence_, 
-                                                                         uniModId));
+                        {
+                            ThrowUnimodException(seq, uniModId, indexAA, indexBracket, indexClose);
+                        }
                         name = staticMod.Name;
                         isHeavy = !UniMod.IsStructuralModification(name);
                         // CONSIDER: Mass depends on TransitionPrediction settings for precursors
@@ -285,8 +286,10 @@ namespace pwiz.Skyline.Model
                     {
                         var staticMod = GetStaticMod(uniModId, aa, modTerminus);
                         if (staticMod == null)
-                            throw new FormatException(string.Format(Resources.ModificationMatcher_EnumerateSequenceInfos_Unrecognized_Unimod_id__0__in_modified_peptide_sequence_, 
-                                                                         uniModId));
+                        {
+                            ThrowUnimodException(seq, uniModId, indexAA, indexBracket, indexClose);
+                            return null;    // Keep ReSharper happy
+                        }
                         string name = staticMod.Name;
                         bool isHeavy = !UniMod.DictStructuralModNames.ContainsKey(name);
                         sb[indexBracket] = isHeavy ? '{' : '['; // Not L10N
@@ -303,6 +306,23 @@ namespace pwiz.Skyline.Model
                 }
             }
             return sb.ToString();
+        }
+
+        private static void ThrowUnimodException(string seq, int uniModId, int indexAA, int indexBracket, int indexClose)
+        {
+            int indexFirst = Math.Max(0, indexBracket - 1);
+            int indexLast = Math.Min(seq.Length, indexClose + 1);
+            string unrecognizedAaMod = seq.Substring(indexFirst, indexLast - indexFirst);
+            if (UniMod.IsValidUnimodId(uniModId))
+            {
+                throw new FormatException(
+                    string.Format(Resources.ModificationMatcher_ThrowUnimodException_Unrecognized_modification_placement_for_Unimod_id__0__in_modified_peptide_sequence__1___amino_acid__2____3___,
+                        uniModId, seq, indexAA + 1, unrecognizedAaMod));
+            }
+
+            throw new FormatException(
+                string.Format(Resources.ModificationMatcher_ThrowUnimodException_Unrecognized_Unimod_id__0__in_modified_peptide_sequence__1___amino_acid__2____3___,
+                    uniModId, seq, indexAA + 1, unrecognizedAaMod));
         }
 
         public string GetSeqModUnmatchedStr(int startIndex)

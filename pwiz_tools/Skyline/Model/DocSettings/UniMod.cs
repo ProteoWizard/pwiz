@@ -32,6 +32,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public static Dictionary<string, StaticMod> DictIsotopeModNames { get; private set; }
         public static Dictionary<string, StaticMod> DictHiddenIsotopeModNames { get; private set; }
         public static Dictionary<UniModIdKey, StaticMod> DictUniModIds { get; private set; }
+        public static HashSet<int> SetUniModIds { get; private set; }
         public static Dictionary<string, int> DictShortNamesToUniMod { get; private set; } 
         public static ModMassLookup MassLookup { get; private set; }
 
@@ -49,6 +50,7 @@ namespace pwiz.Skyline.Model.DocSettings
             DictIsotopeModNames = new Dictionary<string, StaticMod>();
             DictHiddenIsotopeModNames = new Dictionary<string, StaticMod>();
             DictUniModIds = new Dictionary<UniModIdKey, StaticMod>();
+            SetUniModIds = new HashSet<int>();
             DictShortNamesToUniMod = new Dictionary<string, int>();
             MassLookup = new ModMassLookup();
 
@@ -107,6 +109,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 // Add to dictionary by ID.
                 if (id == null)
                     continue;
+                SetUniModIds.Add(id.Value);
                 var idKey = new UniModIdKey
                 {
                     Id = (int) id,
@@ -148,6 +151,11 @@ namespace pwiz.Skyline.Model.DocSettings
         public static bool IsStructuralModification(string modName)
         {
             return DictStructuralModNames.ContainsKey(modName) || DictHiddenStructuralModNames.ContainsKey(modName);
+        }
+
+        public static bool IsValidUnimodId(int id)
+        {
+            return SetUniModIds.Contains(id);
         }
 
         /// <summary>
