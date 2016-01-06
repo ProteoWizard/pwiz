@@ -46,6 +46,7 @@
             this.textCutoff = new System.Windows.Forms.TextBox();
             this.label6 = new System.Windows.Forms.Label();
             this.panelProperties = new System.Windows.Forms.Panel();
+            this.cbIncludeAmbiguousMatches = new System.Windows.Forms.CheckBox();
             this.cbFilter = new System.Windows.Forms.CheckBox();
             this.btnBrowse = new System.Windows.Forms.Button();
             this.panelFiles = new System.Windows.Forms.Panel();
@@ -159,6 +160,7 @@
             // panelProperties
             // 
             resources.ApplyResources(this.panelProperties, "panelProperties");
+            this.panelProperties.Controls.Add(this.cbIncludeAmbiguousMatches);
             this.panelProperties.Controls.Add(this.cbFilter);
             this.panelProperties.Controls.Add(this.btnBrowse);
             this.panelProperties.Controls.Add(this.label6);
@@ -175,6 +177,12 @@
             this.panelProperties.Controls.Add(this.textName);
             this.panelProperties.Controls.Add(this.label4);
             this.panelProperties.Name = "panelProperties";
+            // 
+            // cbIncludeAmbiguousMatches
+            // 
+            resources.ApplyResources(this.cbIncludeAmbiguousMatches, "cbIncludeAmbiguousMatches");
+            this.cbIncludeAmbiguousMatches.Name = "cbIncludeAmbiguousMatches";
+            this.cbIncludeAmbiguousMatches.UseVisualStyleBackColor = true;
             // 
             // cbFilter
             // 
@@ -309,5 +317,6 @@
         private System.Windows.Forms.ToolTip helpTip;
         private System.Windows.Forms.CheckBox cbFilter;
         private System.Windows.Forms.Button btnAddPaths;
+        private System.Windows.Forms.CheckBox cbIncludeAmbiguousMatches;
     }
 }

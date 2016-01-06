@@ -58,7 +58,7 @@ namespace pwiz.Skyline.Model
         public PeptideModifications MatcherPepMods { get { return _matcher.MatcherPepMods; } }
         public IList<StaticMod> MatcherHeavyMods { get { return MatcherPepMods.GetModifications(DefaultHeavyLabelType); } }
 
-        public BiblioSpecLiteBuilder GetLibBuilder(SrmDocument doc, string docFilePath)
+        public BiblioSpecLiteBuilder GetLibBuilder(SrmDocument doc, string docFilePath, bool includeAmbiguousMatches)
         {
             string outputPath = BiblioSpecLiteSpec.GetLibraryFileName(docFilePath);
 
@@ -88,7 +88,8 @@ namespace pwiz.Skyline.Model
                 KeepRedundant = true,
                 CutOffScore = CutoffScore,
                 Authority = LAB_AUTHORITY,
-                Id = Helpers.MakeId(name)
+                Id = Helpers.MakeId(name),
+                IncludeAmbiguousMatches = includeAmbiguousMatches
             };
         }
 

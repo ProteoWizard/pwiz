@@ -236,6 +236,7 @@ namespace pwiz.Skyline.SettingsUI
                 _builder = new BiblioSpecLiteBuilder(name, outputPath, inputFilesChosen, targetPeptidesChosen)
                               {
                                   Action = libraryBuildAction,
+                                  IncludeAmbiguousMatches = cbIncludeAmbiguousMatches.Checked,
                                   KeepRedundant = LibraryKeepRedundant,
                                   CutOffScore = cutOffScore,
                                   Authority = authority,

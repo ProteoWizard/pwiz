@@ -1118,7 +1118,7 @@ namespace pwiz.Skyline
             };
 
             // Build library
-            var builder = import.GetLibBuilder(doc, commandArgs.Saving ? commandArgs.SaveFile : commandArgs.SkylineFile);
+            var builder = import.GetLibBuilder(doc, commandArgs.Saving ? commandArgs.SaveFile : commandArgs.SkylineFile, commandArgs.IncludeAmbiguousMatches);
             ImportPeptideSearch.ClosePeptideSearchLibraryStreams(doc);
             _out.WriteLine(Resources.CommandLine_ImportSearch_Creating_spectral_library_from_files_);
             foreach (var file in commandArgs.SearchResultsFiles)

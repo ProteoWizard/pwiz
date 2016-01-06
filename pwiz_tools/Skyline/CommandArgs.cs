@@ -198,10 +198,12 @@ namespace pwiz.Skyline
         public const string ARG_IMPORT_PEPTIDE_SEARCH_FILE = "import-search-file"; // Not L10N
         public const string ARG_IMPORT_PEPTIDE_SEARCH_CUTOFF = "import-search-cutoff-score"; // Not L10N
         public const string ARG_IMPORT_PEPTIDE_SEARCH_MODS = "import-search-add-mods"; // Not L10N
+        public const string ARG_IMPORT_PEPTIDE_SEARCH_AMBIGUOUS = "import-search-include-ambiguous"; // Not L10N
 
         public List<string> SearchResultsFiles { get; private set; }
         public double? CutoffScore { get; private set; }
         public bool AcceptAllModifications { get; private set; }
+        public bool IncludeAmbiguousMatches { get; private set; }
         public bool ImportingSearch
         {
             get { return SearchResultsFiles.Count > 0; }
@@ -779,6 +781,10 @@ namespace pwiz.Skyline
                 else if (IsNameOnly(pair, ARG_IMPORT_PEPTIDE_SEARCH_MODS))
                 {
                     AcceptAllModifications = true;
+                }
+                else if (IsNameOnly(pair, ARG_IMPORT_PEPTIDE_SEARCH_AMBIGUOUS))
+                {
+                    IncludeAmbiguousMatches = true;
                 }
 
                 // Run each line of a text file like a SkylineRunner command
@@ -1439,6 +1445,8 @@ namespace pwiz.Skyline
                     WarnArgRequirment(ARG_IMPORT_PEPTIDE_SEARCH_FILE, ARG_IMPORT_PEPTIDE_SEARCH_CUTOFF);
                 if (AcceptAllModifications)
                     WarnArgRequirment(ARG_IMPORT_PEPTIDE_SEARCH_FILE, ARG_IMPORT_PEPTIDE_SEARCH_MODS);
+                if (IncludeAmbiguousMatches)
+                    WarnArgRequirment(ARG_IMPORT_PEPTIDE_SEARCH_FILE, ARG_IMPORT_PEPTIDE_SEARCH_AMBIGUOUS);
             }
            
             // If skylineFile isn't set and one of the commands that requires --in is called, complain.

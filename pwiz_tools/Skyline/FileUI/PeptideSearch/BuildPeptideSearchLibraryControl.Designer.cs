@@ -32,6 +32,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.peptideSearchSplitContainer = new System.Windows.Forms.SplitContainer();
             this.label1 = new System.Windows.Forms.Label();
             this.textCutoff = new System.Windows.Forms.TextBox();
+            this.cbIncludeAmbiguousMatches = new System.Windows.Forms.CheckBox();
             this.grpWorkflow = new System.Windows.Forms.GroupBox();
             this.radioDIA = new System.Windows.Forms.RadioButton();
             this.radioPRM = new System.Windows.Forms.RadioButton();
@@ -61,6 +62,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // 
             // peptideSearchSplitContainer.Panel2
             // 
+            this.peptideSearchSplitContainer.Panel2.Controls.Add(this.cbIncludeAmbiguousMatches);
             this.peptideSearchSplitContainer.Panel2.Controls.Add(this.grpWorkflow);
             this.peptideSearchSplitContainer.Panel2.Controls.Add(this.cbFilterForDocumentPeptides);
             this.peptideSearchSplitContainer.Panel2.Controls.Add(this.btnRemFile);
@@ -77,6 +79,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // 
             resources.ApplyResources(this.textCutoff, "textCutoff");
             this.textCutoff.Name = "textCutoff";
+            // 
+            // cbIncludeAmbiguousMatches
+            // 
+            resources.ApplyResources(this.cbIncludeAmbiguousMatches, "cbIncludeAmbiguousMatches");
+            this.cbIncludeAmbiguousMatches.Name = "cbIncludeAmbiguousMatches";
+            this.cbIncludeAmbiguousMatches.UseVisualStyleBackColor = true;
             // 
             // grpWorkflow
             // 
@@ -171,6 +179,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private System.Windows.Forms.RadioButton radioDDA;
         private System.Windows.Forms.RadioButton radioDIA;
         private System.Windows.Forms.RadioButton radioPRM;
+        private System.Windows.Forms.CheckBox cbIncludeAmbiguousMatches;
 
     }
 }

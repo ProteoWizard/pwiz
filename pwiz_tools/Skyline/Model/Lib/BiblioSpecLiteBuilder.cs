@@ -70,6 +70,7 @@ namespace pwiz.Skyline.Model.Lib
         public double? CutOffScore { get; set; }
         public string Authority { get; set; }
         public string Id { get; set; }
+        public bool IncludeAmbiguousMatches { get; set; }
 
         public IList<string> InputFiles
         {
@@ -119,9 +120,9 @@ namespace pwiz.Skyline.Model.Lib
             var blibBuilder = new BlibBuild(redundantLibrary, InputFiles, TargetSequences)
             {
                 Authority = Authority,
+                IncludeAmbiguousMatches = IncludeAmbiguousMatches,
                 CutOffScore = CutOffScore,
                 Id = Id,
-
             };
             try
             {

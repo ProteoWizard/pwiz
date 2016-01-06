@@ -95,6 +95,7 @@ namespace pwiz.BiblioSpec
         public double? CutOffScore { get; set; }
         public string Authority { get; set; }
         public int? CompressLevel { get; set; }
+        public bool IncludeAmbiguousMatches { get; set; }
 
         public IList<string> InputFiles
         {
@@ -130,6 +131,10 @@ namespace pwiz.BiblioSpec
             {
                 argv.Add("-i");
                 argv.Add(Id);
+            }
+            if (IncludeAmbiguousMatches)
+            {
+                argv.Add("-K");
             }
             string dirCommon = PathEx.GetCommonRoot(InputFiles);
             var stdinBuilder = new StringBuilder();

@@ -196,7 +196,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             BiblioSpecLiteBuilder builder;
             try
             {
-                builder = ImportPeptideSearch.GetLibBuilder(SkylineWindow.Document, SkylineWindow.DocumentFilePath);
+                builder = ImportPeptideSearch.GetLibBuilder(SkylineWindow.Document, SkylineWindow.DocumentFilePath, cbIncludeAmbiguousMatches.Checked);
             }
             catch (FileEx.DeleteException de)
             {
@@ -286,6 +286,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             int offset = grpWorkflow.Height + (cbFilterForDocumentPeptides.Top - listSearchFiles.Bottom);
             listSearchFiles.Height += offset;
             cbFilterForDocumentPeptides.Top += offset;
+            cbIncludeAmbiguousMatches.Top += offset;
         }
 
         public class InputFilesChangedEventArgs : EventArgs
