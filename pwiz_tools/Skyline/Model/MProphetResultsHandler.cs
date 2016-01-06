@@ -285,7 +285,7 @@ namespace pwiz.Skyline.Model
             PeakFeatureStatistics peakFeatureStatistics;
             if (_featureDictionary.TryGetValue(id, out peakFeatureStatistics))
             {
-                bestScoresIndex = peakFeatureStatistics.BestIndex;
+                bestScoresIndex = peakFeatureStatistics.BestScoreIndex;
                 mProphetScores = peakFeatureStatistics.MprophetScores;
                 pValues = peakFeatureStatistics.PValues;
                 qValue = peakFeatureStatistics.QValue ?? double.NaN;
@@ -361,20 +361,21 @@ namespace pwiz.Skyline.Model
 
     public class PeakFeatureStatistics
     {
-        public PeakFeatureStatistics(PeakTransitionGroupFeatures features, IList<double> mprophetScores, IList<double> pValues, int bestIndex, double? qValue)
+        public PeakFeatureStatistics(PeakTransitionGroupFeatures features, IList<double> mprophetScores, IList<double> pValues, int bestScoreIndex, double? qValue)
         {
             Features = features;
             MprophetScores = mprophetScores;
             PValues = pValues;
-            BestIndex = bestIndex;
+            BestScoreIndex = bestScoreIndex;
             QValue = qValue;
         }
 
         public PeakTransitionGroupFeatures Features { get; private set; }
         public IList<double> MprophetScores { get; private set; }
         public IList<double> PValues { get; private set; }
-        public int BestIndex { get; private set; }
-        public double BestScore { get { return MprophetScores[BestIndex]; } }
+        public int BestPeakIndex { get { return Features.PeakGroupFeatures[BestScoreIndex].OriginalPeakIndex; } }
+        public int BestScoreIndex { get; private set; }
+        public double BestScore { get { return MprophetScores[BestScoreIndex]; } }
         public double? QValue { get; private set; }
 
         public PeakFeatureStatistics SetQValue(double? qValue)

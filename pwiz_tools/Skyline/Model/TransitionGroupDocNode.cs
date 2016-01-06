@@ -1269,10 +1269,10 @@ namespace pwiz.Skyline.Model
                 }
                 // Otherwise, if the reintegrate peak is different from the default
                 // best peak, then use it and mark the peak as chosen by reintegration
-                else if (bestIndex != reintegratePeak.BestIndex)
+                else if (bestIndex != reintegratePeak.BestPeakIndex)
                 {
                     userSet = UserSet.REINTEGRATED;
-                    bestIndex = reintegratePeak.BestIndex;
+                    bestIndex = reintegratePeak.BestPeakIndex;
                 }
             }
             return bestIndex;
