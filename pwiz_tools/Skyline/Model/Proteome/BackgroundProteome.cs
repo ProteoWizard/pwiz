@@ -36,13 +36,15 @@ namespace pwiz.Skyline.Model.Proteome
     [XmlRoot("background_proteome")]
     public class BackgroundProteome : BackgroundProteomeSpec
     {
+        private bool? _needsProteinMetadataSearch; // Nullable for lazy evaluation, for quicker ctor
+
         public static readonly BackgroundProteome NONE =
             new BackgroundProteome(BackgroundProteomeList.GetDefault());
 
         private HashSet<string> DigestionNames { get; set; }
-        public bool NeedsProteinMetadataSearch { get; private set; }
         public BackgroundProteome(BackgroundProteomeSpec backgroundProteomeSpec) : this(backgroundProteomeSpec, false)
         {
+            // We intentionally do not copy the _needsProteinMetadataSearch member
         }
 
         public BackgroundProteome(BackgroundProteomeSpec backgroundProteomeSpec, bool queryDigestions)
@@ -51,14 +53,12 @@ namespace pwiz.Skyline.Model.Proteome
             DigestionNames = new HashSet<string>();
             if (!IsNone)
             {
-                NeedsProteinMetadataSearch = true; // Until proven otherwise
                 try
                 {
                     using (var proteomeDb = OpenProteomeDb())
                     {
                         if (queryDigestions)
                             DigestionNames.UnionWith(proteomeDb.ListDigestions().Select(digestion => digestion.Name));
-                        NeedsProteinMetadataSearch = proteomeDb.HasProteinNamesWithUnresolvedMetadata();
                     }
                 }
                 catch (Exception)
@@ -74,6 +74,33 @@ namespace pwiz.Skyline.Model.Proteome
         {
             DigestionNames = new HashSet<string>();
         }
+
+        public bool NeedsProteinMetadataSearch
+        {
+            get
+            {
+                if (!_needsProteinMetadataSearch.HasValue)  // Lazy evaluation for quicker ctor
+                {
+                    _needsProteinMetadataSearch = true; // Until proven otherwise
+                    if (!IsNone)
+                    {
+                        try
+                        {
+                            using (var proteomeDb = OpenProteomeDb())
+                            {
+                                _needsProteinMetadataSearch = proteomeDb.HasProteinNamesWithUnresolvedMetadata();
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            DatabaseInvalid = true;
+                        }
+                    }
+                }
+                return _needsProteinMetadataSearch.Value;
+            }
+        }
+
 
         public bool HasDigestion(PeptideSettings peptideSettings)
         {

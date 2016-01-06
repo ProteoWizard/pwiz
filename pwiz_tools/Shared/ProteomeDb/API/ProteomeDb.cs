@@ -608,7 +608,7 @@ namespace pwiz.ProteomeDatabase.API
         /// <returns>true on success</returns>
         public bool LookupProteinMetadata(ProgressMonitor progressMonitor, WebEnabledFastaImporter fastaImporter, bool polite = false)
         {
-            List<DbProteinName> unsearchedProteins;
+            var unsearchedProteins = new List<ProteinSearchInfo>();
             List<DbProteinName> untaggedProteins;
             using (ISession session = OpenSession())
             {
@@ -619,29 +619,57 @@ namespace pwiz.ProteomeDatabase.API
 
                 // get a list of proteins with unresolved metadata websearches
                 var proteinNames = session.CreateCriteria(typeof (DbProteinName)).List<DbProteinName>();
-                unsearchedProteins =
+                var proteinsToSearch =
                     proteinNames.Where(proteinName => (proteinName.GetProteinMetadata().GetPendingSearchTerm().Length > 0))
                         .ToList();
                 // and a list of proteins which have never been considered for metadata search
                 untaggedProteins =
                     proteinNames.Where(proteinName => proteinName.WebSearchInfo.IsEmpty()).ToList();
-            }
 
-            foreach (var untaggedProtein in untaggedProteins)
-            {
-                untaggedProtein.SetWebSearchCompleted(); // by default take this out of consideration for next time
-                var metadata = untaggedProtein.GetProteinMetadata();
-                if (metadata.HasMissingMetadata())
+                foreach (var untaggedProtein in untaggedProteins)
                 {
-                    var search = fastaImporter.ParseProteinMetaData(metadata);
-                    if (search!=null)
+                    untaggedProtein.SetWebSearchCompleted(); // by default take this out of consideration for next time
+                    var metadata = untaggedProtein.GetProteinMetadata();
+                    if (metadata.HasMissingMetadata())
                     {
-                        metadata = untaggedProtein.ChangeProteinMetadata(metadata.Merge(search)); // don't stomp name by accident
-                        metadata = untaggedProtein.ChangeProteinMetadata(metadata.ChangeWebSearchInfo(search.WebSearchInfo));
+                        var search = fastaImporter.ParseProteinMetaData(metadata);
+                        if (search!=null)
+                        {
+                            metadata = untaggedProtein.ChangeProteinMetadata(metadata.Merge(search)); // don't stomp name by accident
+                            metadata = untaggedProtein.ChangeProteinMetadata(metadata.ChangeWebSearchInfo(search.WebSearchInfo));
+                        }
+                    }
+                    if (metadata.NeedsSearch())
+                        proteinsToSearch.Add(untaggedProtein); // add to the list of things to commit back to the db
+                }
+                // Get the lengths of the sequences without getting the sequences themselves, for best speed
+                var proteinIds = proteinsToSearch.Select(name => name.Protein.Id.Value).Distinct().ToArray();
+                var proteinLengths = new Dictionary<long, int>();
+                using (var cmd = session.Connection.CreateCommand())
+                {
+                    string sql = "SELECT Id, LENGTH(Sequence) AS SequenceLength FROM ProteomeDbProtein P"; // Not L10N
+                    if (proteinIds.Length < 1000)
+                    {
+                        sql += " WHERE P.Id IN (" + // Not L10N
+                        string.Join(",", proteinIds) + ")"; // Not L10N
+                    }
+                    cmd.CommandText = sql;
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            var id = reader.GetValue(0);
+                            var len = reader.GetValue(1);
+                            proteinLengths.Add(Convert.ToInt64(id), Convert.ToInt32(len));
+                        }
                     }
                 }
-                if (metadata.NeedsSearch())
-                    unsearchedProteins.Add(untaggedProtein); // add to the list of things to commit back to the db
+                foreach (var p in proteinsToSearch)
+                {
+                    int length;
+                    proteinLengths.TryGetValue(p.Protein.Id.GetValueOrDefault(), out length);
+                    unsearchedProteins.Add(new ProteinSearchInfo(p, length));
+                }
             }
 
             if (untaggedProteins.Any(untagged => !untagged.GetProteinMetadata().NeedsSearch())) // did any get set as unsearchable?
@@ -681,7 +709,7 @@ namespace pwiz.ProteomeDatabase.API
                                 return false;
                             }
                             success = true;
-                            results.Add(result);
+                            results.Add(result.ProteinDbInfo);
                         }
                     }
                     if (results.Any()) // save this batch

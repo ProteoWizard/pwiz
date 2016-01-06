@@ -188,8 +188,8 @@ namespace pwiz.Skyline.Model.Proteome
                     try
                     {
                         // Now go to the web for more protein metadata (or pretend to, depending on WebEnabledFastaImporter.DefaultWebAccessMode)
-                        var docNodesWithUnresolvedProteinMetadata = new Dictionary<DbProteinName,PeptideGroupDocNode>(); 
-                        var proteinsToSearch = new List<DbProteinName>(); // DbProteinName is a convenient container for immutable ProteinMetadata objects
+                        var docNodesWithUnresolvedProteinMetadata = new Dictionary<ProteinSearchInfo,PeptideGroupDocNode>(); 
+                        var proteinsToSearch = new List<ProteinSearchInfo>(); 
                         foreach (PeptideGroupDocNode node in docOrig.PeptideGroups)
                         {
                             if (node.ProteinMetadata.NeedsSearch() && !_processedNodes.ContainsKey(node.Id.GlobalIndex)) // Did we already process this?
@@ -213,7 +213,9 @@ namespace pwiz.Skyline.Model.Proteome
                                 }
                                 if (proteinMetadata != null)
                                 {
-                                    proteinsToSearch.Add(new DbProteinName(null, proteinMetadata)); // DbProteinName is just a convenient container for metadata
+                                    // We note the sequence length because it's useful in disambiguating search results
+                                    proteinsToSearch.Add(new ProteinSearchInfo(new DbProteinName(null, proteinMetadata), 
+                                        node.PeptideGroup.Sequence == null ? 0 : node.PeptideGroup.Sequence.Length)); 
                                     docNodesWithUnresolvedProteinMetadata.Add(proteinsToSearch.Last(), node);
                                 }
                             }
