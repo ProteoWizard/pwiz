@@ -292,12 +292,14 @@ namespace pwiz.SkylineTestA
 
             //Attach replicate
             var commandLine = new CommandLine();
-            var docContainer = new ResultsMemoryDocumentContainer(doc, docPath);
-            commandLine.ImportResults(docContainer, replicate, MsDataFileUri.Parse(rawPath), null);
-            docContainer.WaitForComplete();
-            doc = docContainer.Document;
-            var status = docContainer.LastProgress;
-            Assert.IsNull(status);
+            using (var docContainer = new ResultsMemoryDocumentContainer(doc, docPath))
+            {
+                commandLine.ImportResults(docContainer, replicate, MsDataFileUri.Parse(rawPath), null);
+                docContainer.WaitForComplete();
+                doc = docContainer.Document;
+                var progressStatus = docContainer.LastProgress;
+                Assert.IsNull(progressStatus);                
+            }
 
             MemoryDocumentContainer memoryDocumentContainer = new MemoryDocumentContainer();
             Assert.IsTrue(memoryDocumentContainer.SetDocument(doc, memoryDocumentContainer.Document));
@@ -305,7 +307,7 @@ namespace pwiz.SkylineTestA
             DocumentGridViewContext viewContext = new DocumentGridViewContext(skylineDataSchema);
             ViewInfo viewInfo = viewContext.GetViewInfo(PersistedViews.MainGroup.Id.ViewName(reportName));
             StringWriter writer = new StringWriter();
-            status = new ProgressStatus("Exporting report");
+            IProgressStatus status = new ProgressStatus("Exporting report");
             viewContext.Export(null, ref status, viewInfo, writer,
                 new DsvWriter(CultureInfo.CurrentCulture, TextUtil.GetCsvSeparator(LocalizationHelper.CurrentCulture)));
             var programmaticReport = writer.ToString();
@@ -336,12 +338,14 @@ namespace pwiz.SkylineTestA
             //Attach replicate
             SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
             var commandLine = new CommandLine();
-            var docContainer = new ResultsMemoryDocumentContainer(doc, docPath);
-            commandLine.ImportResults(docContainer, replicate, MsDataFileUri.Parse(rawPath), null);
-            docContainer.WaitForComplete();
-            doc = docContainer.Document;
-            var status = docContainer.LastProgress;
-            Assert.IsNull(status);
+            using (var docContainer = new ResultsMemoryDocumentContainer(doc, docPath))
+            {
+                commandLine.ImportResults(docContainer, replicate, MsDataFileUri.Parse(rawPath), null);
+                docContainer.WaitForComplete();
+                doc = docContainer.Document;
+                var status = docContainer.LastProgress;
+                Assert.IsNull(status);
+            }
 
             //First, programmatically generate the report
             var chromFiles = new[] { rawFile };

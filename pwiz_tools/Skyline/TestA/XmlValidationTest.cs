@@ -71,90 +71,92 @@ namespace pwiz.SkylineTestA
         private static void TestInstrumentInfo(string resultsPath, string docCurrentPath)
         {
             var docCurrent = ResultsUtil.DeserializeDocument(docCurrentPath);
-            var docContainer = new ResultsTestDocumentContainer(docCurrent, docCurrentPath);
-            string replicateName = Path.GetFileNameWithoutExtension(resultsPath);
-            var lockMassParameters = new LockMassParameters(456.78, 567.89, 12.34);
-            var listChromatograms = new List<ChromatogramSet> { new ChromatogramSet(replicateName, new[] { new MsDataFilePath(resultsPath, lockMassParameters) }) };
-
-            // Lockmass values are Waters only so don't expect them to be saved to the doc which has no Waters results
-            // So test the serialization here
-            var stringBuilder = new StringBuilder();
-            using (var xmlWriter = XmlWriter.Create(stringBuilder))
+            using (var docContainer = new ResultsTestDocumentContainer(docCurrent, docCurrentPath))
             {
-                xmlWriter.WriteStartDocument();
-                xmlWriter.WriteStartElement("TestDocument");
-                xmlWriter.WriteElements(listChromatograms, new XmlElementHelper<ChromatogramSet>());
-                xmlWriter.WriteEndElement();
-                xmlWriter.WriteEndDocument();
+                string replicateName = Path.GetFileNameWithoutExtension(resultsPath);
+                var lockMassParameters = new LockMassParameters(456.78, 567.89, 12.34);
+                var listChromatograms = new List<ChromatogramSet> { new ChromatogramSet(replicateName, new[] { new MsDataFilePath(resultsPath, lockMassParameters) }) };
+
+                // Lockmass values are Waters only so don't expect them to be saved to the doc which has no Waters results
+                // So test the serialization here
+                var stringBuilder = new StringBuilder();
+                using (var xmlWriter = XmlWriter.Create(stringBuilder))
+                {
+                    xmlWriter.WriteStartDocument();
+                    xmlWriter.WriteStartElement("TestDocument");
+                    xmlWriter.WriteElements(listChromatograms, new XmlElementHelper<ChromatogramSet>());
+                    xmlWriter.WriteEndElement();
+                    xmlWriter.WriteEndDocument();
+                }
+                var xmlReader = XmlReader.Create(new StringReader(stringBuilder.ToString()));
+                xmlReader.ReadStartElement();
+                var deserializedObjects = new List<ChromatogramSet>();
+                xmlReader.ReadElements(deserializedObjects);
+                Assert.AreEqual(1, deserializedObjects.Count);
+                var compare = deserializedObjects[0];
+                Assert.AreEqual(456.78, compare.MSDataFileInfos[0].FilePath.GetLockMassParameters().LockmassPositive.Value);
+                Assert.AreEqual(567.89, compare.MSDataFileInfos[0].FilePath.GetLockMassParameters().LockmassNegative.Value);
+                Assert.AreEqual(12.34, compare.MSDataFileInfos[0].FilePath.GetLockMassParameters().LockmassTolerance.Value);
+                Assert.AreEqual(listChromatograms[0], compare);
+
+                // We don't expect any new peptides/precursors/transitions added due to the imported results.
+                var docCurrentResults = docContainer.ChangeMeasuredResults(new MeasuredResults(listChromatograms), 0, 0, 0);
+
+                WriteDocument(docCurrentResults, docCurrentPath);
+
+                docCurrentResults = ResultsUtil.DeserializeDocument(docCurrentPath);
+                Assert.IsNotNull(docCurrentResults);
+                AssertEx.IsDocumentState(docCurrentResults, 0, 7, 11, 22, 66);
+                Assert.AreEqual(1, docCurrentResults.Settings.MeasuredResults.Chromatograms.Count);
+
+                XmlDocument xdoc = new XmlDocument();
+                xdoc.Load(docCurrentPath);
+
+                var replicateList = xdoc.SelectNodes("/srm_settings/settings_summary/measured_results/replicate");
+                Assert.IsNotNull(replicateList);
+                Assert.AreEqual(1, replicateList.Count);
+                var replicate = replicateList.Item(0);
+                Assert.IsNotNull(replicate);
+                var attribs = replicate.Attributes;
+                Assert.IsNotNull(attribs);
+                Assert.AreEqual(replicateName, attribs.GetNamedItem(SrmDocument.ATTR.name).Value);
+
+
+                var instrumentList = replicate.SelectNodes("sample_file/instrument_info_list/instrument_info");
+                Assert.IsNotNull(instrumentList);
+                Assert.AreEqual(1, instrumentList.Count);
+                var instrumentInfo = instrumentList.Item(0);
+                Assert.IsNotNull(instrumentInfo);
+                Assert.IsNotNull(instrumentInfo.Attributes);
+
+                // model
+                var model = instrumentInfo.SelectSingleNode(ChromatogramSet.EL.model.ToString());
+                Assert.IsNotNull(model);
+                Assert.IsNotNull(model.FirstChild);
+                Assert.IsTrue(model.FirstChild.NodeType == XmlNodeType.Text);
+                Assert.AreEqual("TSQ Vantage", model.FirstChild.Value);
+
+                // ion source
+                var ionsource = instrumentInfo.SelectSingleNode(ChromatogramSet.EL.ionsource.ToString());
+                Assert.IsNotNull(ionsource);
+                Assert.IsNotNull(ionsource.FirstChild);
+                Assert.AreEqual(ionsource.FirstChild.NodeType, XmlNodeType.Text);
+                Assert.AreEqual("nanoelectrospray", ionsource.FirstChild.Value);
+
+                // analyzer
+                var analyzer = instrumentInfo.SelectSingleNode(ChromatogramSet.EL.analyzer.ToString());
+                Assert.IsNotNull(analyzer);
+                Assert.IsNotNull(analyzer.FirstChild);
+                Assert.AreEqual(analyzer.FirstChild.NodeType, XmlNodeType.Text);
+                Assert.AreEqual("quadrupole/quadrupole/quadrupole", analyzer.FirstChild.Value);
+
+                // dectector
+                var detector = instrumentInfo.SelectSingleNode(ChromatogramSet.EL.detector.ToString());
+                Assert.IsNotNull(detector);
+                Assert.IsNotNull(detector.FirstChild);
+                Assert.AreEqual(detector.FirstChild.NodeType, XmlNodeType.Text);
+                Assert.AreEqual("electron multiplier", detector.FirstChild.Value);
             }
-            var xmlReader = XmlReader.Create(new StringReader(stringBuilder.ToString()));
-            xmlReader.ReadStartElement();
-            var deserializedObjects = new List<ChromatogramSet>();
-            xmlReader.ReadElements(deserializedObjects);
-            Assert.AreEqual(1, deserializedObjects.Count);
-            var compare = deserializedObjects[0];
-            Assert.AreEqual(456.78, compare.MSDataFileInfos[0].FilePath.GetLockMassParameters().LockmassPositive.Value);
-            Assert.AreEqual(567.89, compare.MSDataFileInfos[0].FilePath.GetLockMassParameters().LockmassNegative.Value);
-            Assert.AreEqual(12.34, compare.MSDataFileInfos[0].FilePath.GetLockMassParameters().LockmassTolerance.Value);
-            Assert.AreEqual(listChromatograms[0], compare);
-            
-            // We don't expect any new peptides/precursors/transitions added due to the imported results.
-            var docCurrentResults = docContainer.ChangeMeasuredResults(new MeasuredResults(listChromatograms), 0, 0, 0);
-
-            WriteDocument(docCurrentResults, docCurrentPath);
-
-            docCurrentResults = ResultsUtil.DeserializeDocument(docCurrentPath);
-            Assert.IsNotNull(docCurrentResults);
-            AssertEx.IsDocumentState(docCurrentResults, 0, 7, 11, 22, 66);
-            Assert.AreEqual(1, docCurrentResults.Settings.MeasuredResults.Chromatograms.Count);
-
-            XmlDocument xdoc = new XmlDocument();
-            xdoc.Load(docCurrentPath);
-
-            var replicateList = xdoc.SelectNodes("/srm_settings/settings_summary/measured_results/replicate");
-            Assert.IsNotNull(replicateList);
-            Assert.AreEqual(1, replicateList.Count);
-            var replicate = replicateList.Item(0);
-            Assert.IsNotNull(replicate);
-            var attribs = replicate.Attributes;
-            Assert.IsNotNull(attribs);
-            Assert.AreEqual(replicateName, attribs.GetNamedItem(SrmDocument.ATTR.name).Value);
-
-
-            var instrumentList = replicate.SelectNodes("sample_file/instrument_info_list/instrument_info");
-            Assert.IsNotNull(instrumentList);
-            Assert.AreEqual(1, instrumentList.Count);
-            var instrumentInfo = instrumentList.Item(0);
-            Assert.IsNotNull(instrumentInfo);
-            Assert.IsNotNull(instrumentInfo.Attributes);
-
-            // model
-            var model = instrumentInfo.SelectSingleNode(ChromatogramSet.EL.model.ToString());
-            Assert.IsNotNull(model);
-            Assert.IsNotNull(model.FirstChild);
-            Assert.IsTrue(model.FirstChild.NodeType == XmlNodeType.Text);
-            Assert.AreEqual("TSQ Vantage", model.FirstChild.Value);
-
-            // ion source
-            var ionsource = instrumentInfo.SelectSingleNode(ChromatogramSet.EL.ionsource.ToString());
-            Assert.IsNotNull(ionsource);
-            Assert.IsNotNull(ionsource.FirstChild);
-            Assert.AreEqual(ionsource.FirstChild.NodeType, XmlNodeType.Text);
-            Assert.AreEqual("nanoelectrospray", ionsource.FirstChild.Value);
-
-            // analyzer
-            var analyzer = instrumentInfo.SelectSingleNode(ChromatogramSet.EL.analyzer.ToString());
-            Assert.IsNotNull(analyzer);
-            Assert.IsNotNull(analyzer.FirstChild);
-            Assert.AreEqual(analyzer.FirstChild.NodeType, XmlNodeType.Text);
-            Assert.AreEqual("quadrupole/quadrupole/quadrupole", analyzer.FirstChild.Value);
-
-            // dectector
-            var detector = instrumentInfo.SelectSingleNode(ChromatogramSet.EL.detector.ToString());
-            Assert.IsNotNull(detector);
-            Assert.IsNotNull(detector.FirstChild);
-            Assert.AreEqual(detector.FirstChild.NodeType, XmlNodeType.Text);
-            Assert.AreEqual("electron multiplier", detector.FirstChild.Value);
         }
 
         private void TestSchemaValidation(Stream schemaFile, string doc08Path, string docCurrentPath)
@@ -183,12 +185,9 @@ namespace pwiz.SkylineTestA
             // The document should not validate.
             Assert.IsTrue(_errorCount > 0);
 
-
             var doc08 = ResultsUtil.DeserializeDocument(doc08Path);
             Assert.IsNotNull(doc08);
             AssertEx.IsDocumentState(doc08, 0, 7, 11, 22, 66);
-
-           
 
             // Save the document.
             // IMPORTANT: update the default modifications first.

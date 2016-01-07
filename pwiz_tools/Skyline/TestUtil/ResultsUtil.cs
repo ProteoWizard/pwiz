@@ -149,8 +149,10 @@ namespace pwiz.SkylineTestUtil
             return Document;
         }
 
-        public void Release()
+        public override void Dispose()
         {
+            base.Dispose();
+
             var docEmpty = new SrmDocument(SrmSettingsList.GetDefault());
             Assert.IsTrue(SetDocument(docEmpty, Document));            
         }

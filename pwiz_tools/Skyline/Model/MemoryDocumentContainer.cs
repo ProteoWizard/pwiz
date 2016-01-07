@@ -192,7 +192,7 @@ namespace pwiz.Skyline.Model
             IrtDbManager.ResetProgress();
         }
 
-        public void Dispose()
+        public virtual void Dispose()
         {
             ChromatogramManager.Dispose();
 

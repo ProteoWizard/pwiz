@@ -234,8 +234,8 @@ namespace pwiz.SkylineTestA
 
 
             using (var testDir = new TestFilesDir(TestContext, ZIP_FILE))
+            using (var modMatchDocContainer = InitMatchDocContainer(testDir))
             {
-                var modMatchDocContainer = InitMatchDocContainer(testDir);
                 var libkeyModMatcher = new LibKeyModificationMatcher();
                 var anlLibSpec = new BiblioSpecLiteSpec("ANL_Combo", testDir.GetTestPath("ANL_Combined.blib"));
                 var yeastLibSpec = new BiblioSpecLiteSpec("Yeast", testDir.GetTestPath("Yeast_atlas_small.blib"));

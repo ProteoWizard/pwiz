@@ -74,31 +74,30 @@ namespace pwiz.SkylineTestA
             SrmDocument doc = ResultsUtil.DeserializeDocument(chromExportDoc);
             // Load an empty doc, so that we can make a change and 
             // cause the .skyd to be loaded
-            var docContainer = new ResultsTestDocumentContainer(null, chromExportDoc);
-            docContainer.SetDocument(doc, null, true);
-            docContainer.AssertComplete();
-            SrmDocument docResults = docContainer.Document;
-            if (IsSaveAll)
+            using (var docContainer = new ResultsTestDocumentContainer(null, chromExportDoc))
             {
-                // For regenerating all of the required expected files, if things change
-                SaveChrom(docResults, testFilesDir.GetTestPath(EXPORT_1), FILE_NAMES_1.ToList(), CultureInfo.GetCultureInfo("en-US"), EXTRACTOR_1, SOURCES_1);
-                SaveChrom(docResults, testFilesDir.GetTestPath(EXPORT_2), FILE_NAMES_2.ToList(), CultureInfo.GetCultureInfo("en-US"), EXTRACTOR_2, SOURCES_2);
-                SaveChrom(docResults, testFilesDir.GetTestPath(EXPORT_ALL), FILE_NAMES_ALL.ToList(), CultureInfo.GetCultureInfo("en-US"), EXTRACTOR_ALL, SOURCES_ALL);
-                SaveChrom(docResults, testFilesDir.GetTestPathIntl(EXPORT_1), FILE_NAMES_1.ToList(), CultureInfo.GetCultureInfo("fr-FR"), EXTRACTOR_1, SOURCES_1);
-                SaveChrom(docResults, testFilesDir.GetTestPathIntl(EXPORT_2), FILE_NAMES_2.ToList(), CultureInfo.GetCultureInfo("fr-FR"), EXTRACTOR_2, SOURCES_2);
-                SaveChrom(docResults, testFilesDir.GetTestPathIntl(EXPORT_ALL), FILE_NAMES_ALL.ToList(), CultureInfo.GetCultureInfo("fr-FR"), EXTRACTOR_ALL, SOURCES_ALL);
+                docContainer.SetDocument(doc, null, true);
+                docContainer.AssertComplete();
+                SrmDocument docResults = docContainer.Document;
+                if (IsSaveAll)
+                {
+                    // For regenerating all of the required expected files, if things change
+                    SaveChrom(docResults, testFilesDir.GetTestPath(EXPORT_1), FILE_NAMES_1.ToList(), CultureInfo.GetCultureInfo("en-US"), EXTRACTOR_1, SOURCES_1);
+                    SaveChrom(docResults, testFilesDir.GetTestPath(EXPORT_2), FILE_NAMES_2.ToList(), CultureInfo.GetCultureInfo("en-US"), EXTRACTOR_2, SOURCES_2);
+                    SaveChrom(docResults, testFilesDir.GetTestPath(EXPORT_ALL), FILE_NAMES_ALL.ToList(), CultureInfo.GetCultureInfo("en-US"), EXTRACTOR_ALL, SOURCES_ALL);
+                    SaveChrom(docResults, testFilesDir.GetTestPathIntl(EXPORT_1), FILE_NAMES_1.ToList(), CultureInfo.GetCultureInfo("fr-FR"), EXTRACTOR_1, SOURCES_1);
+                    SaveChrom(docResults, testFilesDir.GetTestPathIntl(EXPORT_2), FILE_NAMES_2.ToList(), CultureInfo.GetCultureInfo("fr-FR"), EXTRACTOR_2, SOURCES_2);
+                    SaveChrom(docResults, testFilesDir.GetTestPathIntl(EXPORT_ALL), FILE_NAMES_ALL.ToList(), CultureInfo.GetCultureInfo("fr-FR"), EXTRACTOR_ALL, SOURCES_ALL);
+                }
+
+                SaveChrom(docResults, fileActual1, FILE_NAMES_1.ToList(), LocalizationHelper.CurrentCulture, EXTRACTOR_1, SOURCES_1);
+                SaveChrom(docResults, fileActual2, FILE_NAMES_2.ToList(), LocalizationHelper.CurrentCulture, EXTRACTOR_2, SOURCES_2);
+                SaveChrom(docResults, fileActualAll, FILE_NAMES_ALL.ToList(), LocalizationHelper.CurrentCulture, EXTRACTOR_ALL, SOURCES_ALL);
+
+                AssertEx.FileEquals(fileExpected1, fileActual1);
+                AssertEx.FileEquals(fileExpected2, fileActual2);
+                AssertEx.FileEquals(fileExpectedAll, fileActualAll);
             }
-
-            SaveChrom(docResults, fileActual1, FILE_NAMES_1.ToList(), LocalizationHelper.CurrentCulture, EXTRACTOR_1, SOURCES_1);
-            SaveChrom(docResults, fileActual2, FILE_NAMES_2.ToList(), LocalizationHelper.CurrentCulture, EXTRACTOR_2, SOURCES_2);
-            SaveChrom(docResults, fileActualAll, FILE_NAMES_ALL.ToList(), LocalizationHelper.CurrentCulture, EXTRACTOR_ALL, SOURCES_ALL);
-
-            AssertEx.FileEquals(fileExpected1, fileActual1);
-            AssertEx.FileEquals(fileExpected2, fileActual2);
-            AssertEx.FileEquals(fileExpectedAll, fileActualAll);
-
-            // Close the .skyd file
-            docContainer.Release();
         }
 
         private static string GetActualName(string fileExpected)
