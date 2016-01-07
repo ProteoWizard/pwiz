@@ -629,7 +629,7 @@ namespace pwiz.ProteomeDatabase.Fasta
                     STANDARD_REGEX_OUTPUT_FORMAT + UNIPROTKB_TAG + "${ipi}"), // will attempt to lookup on Uniprot after passing through our translation layer // Not L10N
 
                 new FastaRegExSearchtermPair(
-                    @"Pick out 'SGDID:S000028729' (or SGD:S...)) from >YAL019W-A YAL019W-A SGDID:S000028729, Chr I from 114250-114819, Genome Release 64-2-1, Dubious ORF, 'Dubious open reading frame; unlikely to encode a functional protein, based on available experimental and comparative sequence data; partially overlaps ORF ATS1/YAL020C'", // NOt L10N
+                    @"Pick out 'SGDID:S000028729' (or SGD:S...)) from >YAL019W-A YAL019W-A SGDID:S000028729, Chr I from 114250-114819, Genome Release 64-2-1, Dubious ORF, 'Dubious open reading frame; unlikely to encode a functional protein, based on available experimental and comparative sequence data; partially overlaps ORF ATS1/YAL020C'", // Not L10N
                     @"^(?<name>[^\s]+)(?<description>(.*?((SGD\:S|SGDID\:S)(?<sgd>([0-9]+))[^\s]*)).*)", // Not L10N
                     STANDARD_REGEX_OUTPUT_FORMAT + UNIPROTKB_TAG + "SGD:S${sgd}"), // will attempt to lookup on Uniprot // Not L10N
 
@@ -1279,7 +1279,7 @@ namespace pwiz.ProteomeDatabase.Fasta
 
                 if (responses.Count>0)
                 {
-                    const string STATUS_REVIEWED = "reviewed"; // Not L10N - Uniprot reviewed status
+                    const string STATUS_REVIEWED = "reviewed"; // Uniprot reviewed status // Not L10N
                     // now see if responses are ambiguous or not
                     if (proteins.Count() == 1)
                     {
