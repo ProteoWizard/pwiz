@@ -72,20 +72,20 @@ namespace pwiz.SkylineTest.Results
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
             string docPath;
             SrmDocument doc = InitThermoDocument(testFilesDir, out docPath);
-            using (var docContainer = new ResultsTestDocumentContainer(doc, docPath))
-            {
-                // Verify mzML and RAW contain same results
-                string extRaw = ExtensionTestContext.ExtThermoRaw;
-                AssertResult.MatchChromatograms(docContainer,
-                                            testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03" + extRaw),
-                                            testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03.mzML"),
-                                            0, 0);
-                // Verify mzXML and RAW contain same results (some small peaks are different)
-                AssertResult.MatchChromatograms(docContainer,
-                                            testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03" + extRaw),
-                                            testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03.mzXML"),
-                                            2, 0);
-            }
+            var docContainer = new ResultsTestDocumentContainer(doc, docPath);
+            // Verify mzML and RAW contain same results
+            string extRaw = ExtensionTestContext.ExtThermoRaw;
+            AssertResult.MatchChromatograms(docContainer,
+                                        testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03" + extRaw),
+                                        testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03.mzML"),
+                                        0, 0);
+            // Verify mzXML and RAW contain same results (some small peaks are different)
+            AssertResult.MatchChromatograms(docContainer,
+                                        testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03" + extRaw),
+                                        testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03.mzXML"),
+                                        2, 0);
+            // Release file handles
+            docContainer.Release();
             testFilesDir.Dispose();
         }
 
@@ -96,58 +96,55 @@ namespace pwiz.SkylineTest.Results
         public void ThermoCancelImportTest()
         {
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            string docPath;
+            SrmDocument doc = InitThermoDocument(testFilesDir, out docPath);
+            var docContainer = new ResultsTestDocumentContainer(doc, docPath);
             string resultsPath = testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03" +
                 ExtensionTestContext.ExtThermoRaw);
             string dirPath = Path.GetDirectoryName(resultsPath) ?? "";
-            string docPath;
-            SrmDocument doc = InitThermoDocument(testFilesDir, out docPath);
-            using (var docContainer = new ResultsTestDocumentContainer(doc, docPath))
+            // Remove any existing temp and cache files
+            foreach (var path in Directory.GetFiles(dirPath))
             {
-                // Remove any existing temp and cache files
-                foreach (var path in Directory.GetFiles(dirPath))
-                {
-                    if (IsCacheOrTempFile(path))
-                        FileEx.SafeDelete(path);
-                }
-                string name = Path.GetFileNameWithoutExtension(resultsPath);
-                var listChromatograms = new List<ChromatogramSet> { new ChromatogramSet(name, new[] { MsDataFileUri.Parse(resultsPath) }) };
-                var docResults = doc.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
-                // Start cache load, but don't wait for completion
-                Assert.IsTrue(docContainer.SetDocument(docResults, doc));
+                if (IsCacheOrTempFile(path))
+                    FileEx.SafeDelete(path);
+            }
+            string name = Path.GetFileNameWithoutExtension(resultsPath);
+            var listChromatograms = new List<ChromatogramSet> {new ChromatogramSet(name, new[] {MsDataFileUri.Parse(resultsPath)})};
+            var docResults = doc.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
+            // Start cache load, but don't wait for completion
+            Assert.IsTrue(docContainer.SetDocument(docResults, doc));
 
-                // Wait up to 1 second for the cache to start being written
-                for (int i = 0; i < 100; i++)
-                {
-                    if (Directory.GetFiles(dirPath).IndexOf(IsCacheOrTempFile) != -1)
-                        break;
-                    Thread.Sleep(10);
-                }
+            // Wait up to 1 second for the cache to start being written
+            for (int i = 0; i < 100; i++)
+            {
+                if (Directory.GetFiles(dirPath).IndexOf(IsCacheOrTempFile) != -1)
+                    break;
+                Thread.Sleep(10);
+            }
 
-                Assert.IsTrue(Directory.GetFiles(dirPath).IndexOf(IsCacheOrTempFile) != -1, "Failed to create cache file");
+            Assert.IsTrue(Directory.GetFiles(dirPath).IndexOf(IsCacheOrTempFile) != -1, "Failed to create cache file");
 
-                // Cancel by reverting to the original document
-                Assert.IsTrue(docContainer.SetDocument(doc, docResults));
-                // Wait up to 5 seconds for cancel to occur
-                for (int i = 0; i < 50; i++)
-                {
-                    if (docContainer.LastProgress != null && docContainer.LastProgress.IsCanceled)
-                        break;
-                    Thread.Sleep(100);
-                }
-                // ReSharper disable once PossibleNullReferenceException
-                if (!docContainer.LastProgress.IsCanceled)
-                {
-                    Assert.Fail("Attempt to cancel results load failed. {0}", docContainer.LastProgress.ErrorException != null
-                        ? docContainer.LastProgress.ErrorException.Message : string.Empty);
-                }
+            // Cancel by reverting to the original document
+            Assert.IsTrue(docContainer.SetDocument(doc, docResults));
+            // Wait up to 5 seconds for cancel to occur
+            for (int i = 0; i < 50; i++)
+            {
+                if (docContainer.LastProgress.IsCanceled)
+                    break;
+                Thread.Sleep(100);
+            }
+            if (!docContainer.LastProgress.IsCanceled)
+            {
+                Assert.Fail("Attempt to cancel results load failed. {0}", docContainer.LastProgress.ErrorException != null
+                    ? docContainer.LastProgress.ErrorException.Message : string.Empty);
+            }
 
-                // Wait up to 20 seconds for the cache to be removed
-                for (int i = 0; i < 200; i++)
-                {
-                    if (Directory.GetFiles(dirPath).IndexOf(IsCacheOrTempFile) == -1)
-                        break;
-                    Thread.Sleep(100);
-                }
+            // Wait up to 20 seconds for the cache to be removed
+            for (int i = 0; i < 200; i++)
+            {
+                if (Directory.GetFiles(dirPath).IndexOf(IsCacheOrTempFile) == -1)
+                    break;
+                Thread.Sleep(100);
             }
             // Cache file has been removed
             Assert.IsTrue(Directory.GetFiles(dirPath).IndexOf(IsCacheOrTempFile) == -1, "Failed to remove cache file");
@@ -196,10 +193,9 @@ namespace pwiz.SkylineTest.Results
                 AssertEx.ConvertedSmallMoleculeDocumentIsSimilar(docOrig, doc);
                 AssertEx.Serializable(doc);
             }
-            using (var docContainer = new ResultsTestDocumentContainer(doc, docPath))
-            {
-                string extRaw = ExtensionTestContext.ExtThermoRaw;
-                var listChromatograms = new List<ChromatogramSet>
+            var docContainer = new ResultsTestDocumentContainer(doc, docPath);
+            string extRaw = ExtensionTestContext.ExtThermoRaw;
+            var listChromatograms = new List<ChromatogramSet>
                                         {
                                             new ChromatogramSet("rep03", new[]
                                                                              {
@@ -212,128 +208,129 @@ namespace pwiz.SkylineTest.Results
                                                                                      "Site20_STUDY9P_PHASEII_QC_05" + extRaw))
                                                                              })
                                         };
-                var docResults = doc.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
-                Assert.IsTrue(docContainer.SetDocument(docResults, doc, true));
-                docContainer.AssertComplete();
-                docResults = docContainer.Document;
-                // Make sure all groups have at least 5 transitions (of 6) with ratios
-                int ratioGroupMissingCount = 0;
-                foreach (var nodeGroup in docResults.MoleculeTransitionGroups)
+            var docResults = doc.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
+            Assert.IsTrue(docContainer.SetDocument(docResults, doc, true));
+            docContainer.AssertComplete();
+            docResults = docContainer.Document;
+            // Make sure all groups have at least 5 transitions (of 6) with ratios
+            int ratioGroupMissingCount = 0;
+            foreach (var nodeGroup in docResults.MoleculeTransitionGroups)
+            {
+                if (nodeGroup.TransitionGroup.LabelType.IsLight)
                 {
-                    if (nodeGroup.TransitionGroup.LabelType.IsLight)
+                    foreach (var result in nodeGroup.Results)
+                        Assert.IsFalse(result[0].Ratio.HasValue, "Light group found with a ratio");
+                    foreach (TransitionDocNode nodeTran in nodeGroup.Children)
                     {
-                        foreach (var result in nodeGroup.Results)
-                            Assert.IsFalse(result[0].Ratio.HasValue, "Light group found with a ratio");
-                        foreach (TransitionDocNode nodeTran in nodeGroup.Children)
-                        {
-                            foreach (var resultTran in nodeTran.Results)
-                                Assert.IsFalse(resultTran[0].Ratio.HasValue, "Light transition found with a ratio");
-                        }
-                    }
-                    else
-                    {
-                        bool missingRatio = false;
-                        foreach (ChromInfoList<TransitionGroupChromInfo> chromInfoList in nodeGroup.Results)
-                        {
-                            var ratioHeavy = chromInfoList[0].Ratio;
-                            if (!ratioHeavy.HasValue)
-                                missingRatio = true;
-                        }
-                        int ratioCount1 = 0;
-                        int ratioCount2 = 0;
-                        foreach (TransitionDocNode nodeTranHeavy in nodeGroup.Children)
-                        {
-                            float? ratioHeavy = nodeTranHeavy.Results[0][0].Ratio;
-                            if (ratioHeavy.HasValue)
-                            {
-                                Assert.IsFalse(float.IsNaN(ratioHeavy.Value) || float.IsInfinity(ratioHeavy.Value));
-                                ratioCount1++;
-                            }
-                            ratioHeavy = nodeTranHeavy.Results[1][0].Ratio;
-                            if (ratioHeavy.HasValue)
-                            {
-                                Assert.IsFalse(float.IsNaN(ratioHeavy.Value) || float.IsInfinity(ratioHeavy.Value));
-                                ratioCount2++;
-                            }
-                        }
-                        Assert.AreEqual(3, ratioCount1);
-                        if (ratioCount2 < 2)
-                            ratioGroupMissingCount++;
-                        else
-                            Assert.IsFalse(missingRatio, "Precursor missing ratio when transitions have ratios");
+                        foreach (var resultTran in nodeTran.Results)
+                            Assert.IsFalse(resultTran[0].Ratio.HasValue, "Light transition found with a ratio");
                     }
                 }
-                // 3 groups with less than 2 transition ratios
-                Assert.AreEqual(3, ratioGroupMissingCount);
-
-                // Remove the first light transition, checking that this removes the ratio
-                // from the corresponding heavy transition, but not the entire group, until
-                // after all light transitions have been removed.
-                IdentityPath pathFirstPep = docResults.GetPathTo((int)SrmDocument.Level.Molecules, 0);
-                var nodePep = (PeptideDocNode)docResults.FindNode(pathFirstPep);
-                Assert.AreEqual(2, nodePep.Children.Count);
-                var nodeGroupLight = (TransitionGroupDocNode)nodePep.Children[0];
-                IdentityPath pathGroupLight = new IdentityPath(pathFirstPep, nodeGroupLight.TransitionGroup);
-                Assert.IsNull(nodeGroupLight.Results[0][0].Ratio, "Light group has ratio");
-                var nodeGroupHeavy = (TransitionGroupDocNode)nodePep.Children[1];
-                IdentityPath pathGroupHeavy = new IdentityPath(pathFirstPep, nodeGroupHeavy.TransitionGroup);
-                float? ratioStart = nodeGroupHeavy.Results[0][0].Ratio;
-                Assert.IsTrue(ratioStart.HasValue, "No starting heavy group ratio");
-                var expectedValues = new[] { 1.403414, 1.38697791, 1.34598482 };
-                for (int i = 0; i < 3; i++)
+                else
                 {
-                    var pathLight = docResults.GetPathTo((int)SrmDocument.Level.Transitions, 0);
-                    var pathHeavy = docResults.GetPathTo((int)SrmDocument.Level.Transitions, 3);
-                    TransitionDocNode nodeTran = (TransitionDocNode)docResults.FindNode(pathHeavy);
-                    float? ratioTran = nodeTran.Results[0][0].Ratio;
-                    Assert.IsTrue(ratioTran.HasValue, "Expected transition ratio not found");
-                    Assert.AreEqual(ratioTran.Value, expectedValues[i], 1.0e-5);
-                    docResults = (SrmDocument)docResults.RemoveChild(pathLight.Parent, docResults.FindNode(pathLight));
-                    nodeTran = (TransitionDocNode)docResults.FindNode(pathHeavy);
-                    Assert.IsFalse(nodeTran.Results[0][0].Ratio.HasValue, "Unexpected transiton ratio found");
-                    Assert.AreEqual(pathGroupHeavy, pathHeavy.Parent, "Transition found outside expected group");
-                    //                nodePep = (PeptideDocNode) docResults.FindNode(pathFirstPep);
-                    nodeGroupHeavy = (TransitionGroupDocNode)docResults.FindNode(pathGroupHeavy);
-                    //                Assert.AreEqual(nodePep.Results[0][0].RatioToStandard, nodeGroupHeavy.Results[0][0].Ratio,
-                    //                                "Peptide and group ratios not equal");
-                    if (i < 2)
+                    bool missingRatio = false;
+                    foreach (ChromInfoList<TransitionGroupChromInfo> chromInfoList in nodeGroup.Results)
                     {
-                        float? ratioGroup = nodeGroupHeavy.Results[0][0].Ratio;
-                        Assert.IsTrue(ratioGroup.HasValue, "Group ratio removed with transition ratios");
-                        Assert.AreEqual(ratioStart.Value, ratioGroup.Value, 0.1,
-                                        "Unexpected group ratio change by more than 0.1");
+                        var ratioHeavy = chromInfoList[0].Ratio;
+                        if (!ratioHeavy.HasValue)
+                            missingRatio = true;
                     }
+                    int ratioCount1 = 0;
+                    int ratioCount2 = 0;
+                    foreach (TransitionDocNode nodeTranHeavy in nodeGroup.Children)
+                    {
+                        float? ratioHeavy = nodeTranHeavy.Results[0][0].Ratio;
+                        if (ratioHeavy.HasValue)
+                        {
+                            Assert.IsFalse(float.IsNaN(ratioHeavy.Value) || float.IsInfinity(ratioHeavy.Value));
+                            ratioCount1++;
+                        }
+                        ratioHeavy = nodeTranHeavy.Results[1][0].Ratio;
+                        if (ratioHeavy.HasValue)
+                        {
+                            Assert.IsFalse(float.IsNaN(ratioHeavy.Value) || float.IsInfinity(ratioHeavy.Value));
+                            ratioCount2++;                            
+                        }
+                    }
+                    Assert.AreEqual(3, ratioCount1);
+                    if (ratioCount2 < 2)
+                        ratioGroupMissingCount++;
                     else
-                    {
-                        Assert.IsFalse(nodeGroupHeavy.Results[0][0].Ratio.HasValue,
-                                       "Group ratio still present with no transition ratios");
-                    }
-                }
-                bool asSmallMolecules = (smallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none);
-                if (!asSmallMolecules) // GetTransitions() doesn't work the same way for small molecules - it only lists existing ones
-                {
-                    bool firstAdd = true;
-                    var nodeGroupLightOrig = (TransitionGroupDocNode)doc.FindNode(pathGroupLight);
-                    DocNode[] lightChildrenOrig = nodeGroupLightOrig.Children.ToArray();
-                    foreach (var nodeTran in nodeGroupLightOrig.GetTransitions(docResults.Settings,
-                        null, nodeGroupLightOrig.PrecursorMz, null, null, null, false))
-                    {
-                        var transition = nodeTran.Transition;
-                        if (!firstAdd && lightChildrenOrig.IndexOf(node => Equals(node.Id, transition)) == -1)
-                            continue;
-                        // Add the first transition, and then the original transitions
-                        docResults = (SrmDocument)docResults.Add(pathGroupLight, nodeTran);
-                        nodeGroupHeavy = (TransitionGroupDocNode)docResults.FindNode(pathGroupHeavy);
-                        if (firstAdd)
-                            Assert.IsNull(nodeGroupHeavy.Results[0][0].Ratio, "Unexpected heavy ratio found");
-                        else
-                            Assert.IsNotNull(nodeGroupHeavy.Results[0][0].Ratio,
-                                "Heavy ratio null after adding light children");
-                        firstAdd = false;
-                    }
-                    Assert.AreEqual(ratioStart, nodeGroupHeavy.Results[0][0].Ratio);
+                        Assert.IsFalse(missingRatio, "Precursor missing ratio when transitions have ratios");
                 }
             }
+            // 3 groups with less than 2 transition ratios
+            Assert.AreEqual(3, ratioGroupMissingCount);
+
+            // Remove the first light transition, checking that this removes the ratio
+            // from the corresponding heavy transition, but not the entire group, until
+            // after all light transitions have been removed.
+            IdentityPath pathFirstPep = docResults.GetPathTo((int) SrmDocument.Level.Molecules, 0);
+            var nodePep = (PeptideDocNode) docResults.FindNode(pathFirstPep);
+            Assert.AreEqual(2, nodePep.Children.Count);
+            var nodeGroupLight = (TransitionGroupDocNode) nodePep.Children[0];
+            IdentityPath pathGroupLight = new IdentityPath(pathFirstPep, nodeGroupLight.TransitionGroup);
+            Assert.IsNull(nodeGroupLight.Results[0][0].Ratio, "Light group has ratio");
+            var nodeGroupHeavy = (TransitionGroupDocNode) nodePep.Children[1];
+            IdentityPath pathGroupHeavy = new IdentityPath(pathFirstPep, nodeGroupHeavy.TransitionGroup);
+            float? ratioStart = nodeGroupHeavy.Results[0][0].Ratio;
+            Assert.IsTrue(ratioStart.HasValue, "No starting heavy group ratio");
+            var expectedValues = new[] { 1.403414, 1.38697791, 1.34598482 };
+            for (int i = 0; i < 3; i++)
+            {
+                var pathLight = docResults.GetPathTo((int) SrmDocument.Level.Transitions, 0);
+                var pathHeavy = docResults.GetPathTo((int) SrmDocument.Level.Transitions, 3);
+                TransitionDocNode nodeTran = (TransitionDocNode) docResults.FindNode(pathHeavy);
+                float? ratioTran = nodeTran.Results[0][0].Ratio;
+                Assert.IsTrue(ratioTran.HasValue, "Expected transition ratio not found");
+                Assert.AreEqual(ratioTran.Value, expectedValues[i], 1.0e-5);
+                docResults = (SrmDocument) docResults.RemoveChild(pathLight.Parent, docResults.FindNode(pathLight));
+                nodeTran = (TransitionDocNode) docResults.FindNode(pathHeavy);
+                Assert.IsFalse(nodeTran.Results[0][0].Ratio.HasValue, "Unexpected transiton ratio found");
+                Assert.AreEqual(pathGroupHeavy, pathHeavy.Parent, "Transition found outside expected group");
+//                nodePep = (PeptideDocNode) docResults.FindNode(pathFirstPep);
+                nodeGroupHeavy = (TransitionGroupDocNode) docResults.FindNode(pathGroupHeavy);
+//                Assert.AreEqual(nodePep.Results[0][0].RatioToStandard, nodeGroupHeavy.Results[0][0].Ratio,
+//                                "Peptide and group ratios not equal");
+                if (i < 2)
+                {
+                    float? ratioGroup = nodeGroupHeavy.Results[0][0].Ratio;
+                    Assert.IsTrue(ratioGroup.HasValue, "Group ratio removed with transition ratios");
+                    Assert.AreEqual(ratioStart.Value, ratioGroup.Value, 0.1,
+                                    "Unexpected group ratio change by more than 0.1");
+                }
+                else
+                {
+                    Assert.IsFalse(nodeGroupHeavy.Results[0][0].Ratio.HasValue,
+                                   "Group ratio still present with no transition ratios");
+                }
+            }
+            bool asSmallMolecules = (smallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none);
+            if (!asSmallMolecules) // GetTransitions() doesn't work the same way for small molecules - it only lists existing ones
+            {
+                bool firstAdd = true;
+                var nodeGroupLightOrig = (TransitionGroupDocNode) doc.FindNode(pathGroupLight);
+                DocNode[] lightChildrenOrig = nodeGroupLightOrig.Children.ToArray();
+                foreach (var nodeTran in nodeGroupLightOrig.GetTransitions(docResults.Settings,
+                    null, nodeGroupLightOrig.PrecursorMz, null, null, null, false))
+                {
+                    var transition = nodeTran.Transition;
+                    if (!firstAdd && lightChildrenOrig.IndexOf(node => Equals(node.Id, transition)) == -1)
+                        continue;
+                    // Add the first transition, and then the original transitions
+                    docResults = (SrmDocument) docResults.Add(pathGroupLight, nodeTran);
+                    nodeGroupHeavy = (TransitionGroupDocNode) docResults.FindNode(pathGroupHeavy);
+                    if (firstAdd)
+                        Assert.IsNull(nodeGroupHeavy.Results[0][0].Ratio, "Unexpected heavy ratio found");
+                    else
+                        Assert.IsNotNull(nodeGroupHeavy.Results[0][0].Ratio,
+                            "Heavy ratio null after adding light children");
+                    firstAdd = false;
+                }
+                Assert.AreEqual(ratioStart, nodeGroupHeavy.Results[0][0].Ratio);
+            }
+            // Release file handles
+            docContainer.Release();
             testFilesDir.Dispose();
         }
 
@@ -371,11 +368,10 @@ namespace pwiz.SkylineTest.Results
                     mods.HeavyModifications.Select(m => m.ChangeRelativeRT(relativeRT)).ToArray()));
             var docMods = doc.ChangeSettings(settings);
             var docResults = docMods.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
-            using (var docContainer = new ResultsTestDocumentContainer(docMods, docPath))
-            {
-                Assert.IsTrue(docContainer.SetDocument(docResults, docMods, true));
-                docContainer.AssertComplete();
-            }
+            var docContainer = new ResultsTestDocumentContainer(docMods, docPath);
+            Assert.IsTrue(docContainer.SetDocument(docResults, docMods, true));
+            docContainer.AssertComplete();
+            docContainer.Release();
         }
 
         /// <summary>
@@ -406,25 +402,24 @@ namespace pwiz.SkylineTest.Results
                                                                              })
                                         };
             var docResults = docMixed.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
-            using (var docContainerMixed = new ResultsTestDocumentContainer(docMixed, docPath))
-            {
-                Assert.IsTrue(docContainerMixed.SetDocument(docResults, docMixed, true));
-                docContainerMixed.AssertComplete();
-                docMixed = docContainerMixed.Document;
-            }
+            var docContainerMixed = new ResultsTestDocumentContainer(docMixed, docPath);
+            Assert.IsTrue(docContainerMixed.SetDocument(docResults, docMixed, true));
+            docContainerMixed.AssertComplete();
+            docMixed = docContainerMixed.Document;
             SrmDocument docMixedUnmixed = (SrmDocument) docMixed.ChangeChildren(new DocNode[0]);
             IdentityPath tempPath;
             docMixedUnmixed = docMixedUnmixed.AddPeptideGroups(docUnmixed.PeptideGroups, true, IdentityPath.ROOT,
                 out tempPath, out tempPath);
 
             docResults = docUnmixed.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
-            using (var docContainerUnmixed = new ResultsTestDocumentContainer(docUnmixed, docPath))
-            {
-                Assert.IsTrue(docContainerUnmixed.SetDocument(docResults, docUnmixed, true));
-                docContainerUnmixed.AssertComplete();
-                docUnmixed = docContainerUnmixed.Document;
-                AssertEx.DocumentCloned(docMixedUnmixed, docUnmixed);
-            }
+            var docContainerUnmixed = new ResultsTestDocumentContainer(docUnmixed, docPath);
+            Assert.IsTrue(docContainerUnmixed.SetDocument(docResults, docUnmixed, true));
+            docContainerUnmixed.AssertComplete();
+            docUnmixed = docContainerUnmixed.Document;
+            AssertEx.DocumentCloned(docMixedUnmixed, docUnmixed);
+
+            docContainerMixed.Release();
+            docContainerUnmixed.Release();
         }
 
         private static bool IsCacheOrTempFile(string path)

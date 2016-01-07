@@ -36,7 +36,7 @@ namespace pwiz.Common.SystemUtil
         /// Reports updated <see cref="ProgressStatus"/> on a library load.
         /// </summary>
         /// <param name="status">The new status</param>
-        UpdateProgressResponse UpdateProgress(IProgressStatus status);
+        UpdateProgressResponse UpdateProgress(ProgressStatus status);
 
         /// <summary>
         /// True if this progress monitor has a user interface.

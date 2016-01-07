@@ -625,7 +625,7 @@ namespace pwiz.Skyline.Model.Lib
             return false;
         }
 
-        private bool Load(ILoadMonitor loader, IProgressStatus status, bool cached)
+        private bool Load(ILoadMonitor loader, ProgressStatus status, bool cached)
         {
             try
             {
@@ -776,7 +776,7 @@ namespace pwiz.Skyline.Model.Lib
         private static readonly char[] MAJOR_SEP = {'/'};
         private static readonly char[] MINOR_SEP = {','};
 // ReSharper restore NonLocalizedString
-        private bool CreateCache(ILoadMonitor loader, IProgressStatus status, int percent)
+        private bool CreateCache(ILoadMonitor loader, ProgressStatus status, int percent)
         {
             var sm = loader.StreamManager;
             long size = sm.GetLength(FilePath);

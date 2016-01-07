@@ -28,8 +28,8 @@ namespace pwiz.Common.SystemUtil
     {
         string StatusPrefix { get; set; }
         string HideLinePrefix { get; set; }
-        void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status);
-        void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status,
+        void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref ProgressStatus status);
+        void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref ProgressStatus status,
                  TextWriter writer);
     }
 
@@ -48,12 +48,12 @@ namespace pwiz.Common.SystemUtil
         /// </summary>
         public string HideLinePrefix { get; set; }
 
-        public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status)
+        public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref ProgressStatus status)
         {
             Run(psi, stdin, progress,ref status, null);
         }
 
-        public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status, TextWriter writer)
+        public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref ProgressStatus status, TextWriter writer)
         {
             // Make sure required streams are redirected.
             psi.RedirectStandardOutput = true;
@@ -162,12 +162,12 @@ namespace pwiz.Common.SystemUtil
             public bool shouldCancel { get; set; }
             public string StatusPrefix { get; set; }
             public string HideLinePrefix { get; set; }
-            public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status)
+            public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref ProgressStatus status)
             {
                 Run(psi, stdin, progress, ref status, null);
             }
 
-            public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status, TextWriter writer)
+            public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref ProgressStatus status, TextWriter writer)
             {
                 if (shouldCancel)
                 {

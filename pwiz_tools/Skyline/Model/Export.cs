@@ -2183,7 +2183,7 @@ namespace pwiz.Skyline.Model
 
             var procAnalyst = AnalystProcess ?? Process.Start(Path.Combine(analystDir, ANALYST_EXE));
             // Wait for main window to be present.
-            IProgressStatus status = null;
+            ProgressStatus status = null;
             while (!progressMonitor.IsCanceled && IsAnalystProcessMainWindowActive(procAnalyst) == false)
             {
                 if (status == null)
@@ -3636,7 +3636,7 @@ namespace pwiz.Skyline.Model
                     RedirectStandardInput = true
                 };
 
-                IProgressStatus status;
+                ProgressStatus status;
                 if (dictTranLists.Count == 1)
                     status = new ProgressStatus(string.Format(Resources.MethodExporter_ExportMethod_Exporting_method__0__, methodName));
                 else

@@ -64,12 +64,11 @@ namespace pwiz.SkylineTestA.Results
                 doc = refine.ConvertToSmallMolecules(pepdoc);
             }
 
-            using (var docContainer = new ResultsTestDocumentContainer(doc, docPath))
-            {
-                // Import the mzML file and verify Mz range
-                Import(docContainer, testFilesDir.GetTestPath(RESULTS_NAME), 510, 512);
-                Import(docContainer, testFilesDir.GetTestPath(RESULTS_NAME2), 555, 557);
-            }
+            var docContainer = new ResultsTestDocumentContainer(doc, docPath);
+
+            // Import the mzML file and verify Mz range
+            Import(docContainer, testFilesDir.GetTestPath(RESULTS_NAME), 510, 512);
+            Import(docContainer, testFilesDir.GetTestPath(RESULTS_NAME2), 555, 557);
         }
 
         private void Import(ResultsTestDocumentContainer docContainer, string resultsPath, double minMz, double maxMz)

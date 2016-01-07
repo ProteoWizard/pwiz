@@ -164,7 +164,7 @@ namespace pwiz.SkylineTestA
                 get { return false; }
             }
 
-            public UpdateProgressResponse UpdateProgress(IProgressStatus status)
+            public UpdateProgressResponse UpdateProgress(ProgressStatus status)
             {
                 return UpdateProgressResponse.normal;
             }

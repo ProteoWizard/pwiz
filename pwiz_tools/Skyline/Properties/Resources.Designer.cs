@@ -5267,15 +5267,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Message: .
-        /// </summary>
-        public static string CommandProgressMonitor_UpdateProgressInternal_Message__ {
-            get {
-                return ResourceManager.GetString("CommandProgressMonitor_UpdateProgressInternal_Message__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Waiting....
         /// </summary>
         public static string CommandWaitBroker_UpdateProgress_Waiting___ {

@@ -78,141 +78,140 @@ namespace pwiz.SkylineTestA.Results
             Assert.AreEqual(FullScanAcquisitionMethod.DIA, fullScanInitial.AcquisitionMethod);
             Assert.AreEqual(25, fullScanInitial.PrecursorFilter);
             AssertEx.Serializable(doc);
-            using (var docContainer = new ResultsTestDocumentContainer(doc, docPath))
+            var docContainer = new ResultsTestDocumentContainer(doc, docPath);
+
+            // Import the first RAW file (or mzML for international)
+            string rawPath = testFilesDir.GetTestPath("Asym_DIA_data.mzML");
+            var measuredResults = new MeasuredResults(new[] { new ChromatogramSet("Single", new[] { rawPath }) });
+            TransitionGroupDocNode nodeGroup;
+            double ratio;
+
             {
-                // Import the first RAW file (or mzML for international)
-                string rawPath = testFilesDir.GetTestPath("Asym_DIA_data.mzML");
-                var measuredResults = new MeasuredResults(new[] { new ChromatogramSet("Single", new[] { rawPath }) });
-                TransitionGroupDocNode nodeGroup;
-                double ratio;
+                // Import with symmetric isolation window
+                SrmDocument docResults = docContainer.ChangeMeasuredResults(measuredResults, expectedMoleculeCount, 1, 1, 2, 2);
+                nodeGroup = docResults.MoleculeTransitionGroups.First();
+                ratio = nodeGroup.Results[0][0].Ratio ?? 0;
+                // The expected ratio is 1.0, but the symmetric isolation window should produce poor results
+                if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)  // Can't use labels without a formula
+                    Assert.AreEqual(0.25, ratio, 0.05);
 
+                // Revert to original document, and get rid of results cache
+                Assert.IsTrue(docContainer.SetDocument(doc, docResults, false));
+                FileEx.SafeDelete(testFilesDir.GetTestPath("Asym_DIA.skyd"));
+            }
+
+            {
+                // Import with asymmetric isolation window
+                SrmDocument docAsym = doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fullScan =>
+                    fullScan.ChangeAcquisitionMethod(fullScan.AcquisitionMethod, new IsolationScheme("Test asym", 5, 20))));
+                AssertEx.Serializable(docAsym);
+                Assert.IsTrue(docContainer.SetDocument(docAsym, doc, false));
+
+                SrmDocument docResults = docContainer.ChangeMeasuredResults(measuredResults, expectedMoleculeCount, 1, 1, 2, 2);
+                nodeGroup = docResults.MoleculeTransitionGroups.First();
+                ratio = nodeGroup.Results[0][0].Ratio ?? 0;
+                // Asymmetric should be a lot closer to 1.0
+                if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)  // Can't use labels without a formula
+                    Assert.AreEqual(1.05, ratio, 0.05);
+
+                // Revert to original document, and get rid of results cache
+                Assert.IsTrue(docContainer.SetDocument(doc, docResults, false));
+                FileEx.SafeDelete(testFilesDir.GetTestPath("Asym_DIA.skyd"));
+            }
+
+            {
+                // Import with prespecified isolation windows
+                var windowList = new List<IsolationWindow>
                 {
-                    // Import with symmetric isolation window
-                    SrmDocument docResults = docContainer.ChangeMeasuredResults(measuredResults, expectedMoleculeCount, 1, 1, 2, 2);
-                    nodeGroup = docResults.MoleculeTransitionGroups.First();
-                    ratio = nodeGroup.Results[0][0].Ratio ?? 0;
-                    // The expected ratio is 1.0, but the symmetric isolation window should produce poor results
-                    if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)  // Can't use labels without a formula
-                        Assert.AreEqual(0.25, ratio, 0.05);
+                    new IsolationWindow(999.2702214, 1024.270221),
+                    new IsolationWindow(1024.27267, 1049.27267)
+                };
+                SrmDocument docPrespecified = doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fullScan =>
+                    fullScan.ChangeAcquisitionMethod(fullScan.AcquisitionMethod, new IsolationScheme("Test prespecified", windowList))));
+                AssertEx.Serializable(docPrespecified);
+                Assert.IsTrue(docContainer.SetDocument(docPrespecified, doc, false));
 
-                    // Revert to original document, and get rid of results cache
-                    Assert.IsTrue(docContainer.SetDocument(doc, docResults, false));
-                    FileEx.SafeDelete(testFilesDir.GetTestPath("Asym_DIA.skyd"));
+                SrmDocument docResults = docContainer.ChangeMeasuredResults(measuredResults, expectedMoleculeCount, 1, 1, 2, 2);
+                nodeGroup = docResults.MoleculeTransitionGroups.First();
+                ratio = nodeGroup.Results[0][0].Ratio ?? 0;
+                // Asymmetric should be a lot closer to 1.0
+                if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)  // Can't use labels without a formula
+                    Assert.AreEqual(1.05, ratio, 0.05);
+
+                // Revert to original document, and get rid of results cache
+                Assert.IsTrue(docContainer.SetDocument(doc, docResults, false));
+                FileEx.SafeDelete(testFilesDir.GetTestPath("Asym_DIA.skyd"));
+            }
+
+            {
+                // Import with prespecified targets
+                var windowList = new List<IsolationWindow>
+                {
+                    new IsolationWindow(999.2702214, 1024.270221, 1004.27),
+                    new IsolationWindow(1024.27267, 1049.27267, 1029.27)
+                };
+                SrmDocument docPrespecified = doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fullScan =>
+                    fullScan.ChangeAcquisitionMethod(fullScan.AcquisitionMethod, new IsolationScheme("Test target", windowList))));
+                AssertEx.Serializable(docPrespecified);
+                Assert.IsTrue(docContainer.SetDocument(docPrespecified, doc, false));
+
+                SrmDocument docResults = docContainer.ChangeMeasuredResults(measuredResults, expectedMoleculeCount, 1, 1, 2, 2);
+                nodeGroup = docResults.MoleculeTransitionGroups.First();
+                ratio = nodeGroup.Results[0][0].Ratio ?? 0;
+                // Asymmetric should be a lot closer to 1.0
+                if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)  // Can't use labels without a formula
+                    Assert.AreEqual(1.05, ratio, 0.05);
+
+                // Revert to original document, and get rid of results cache
+                Assert.IsTrue(docContainer.SetDocument(doc, docResults, false));
+                FileEx.SafeDelete(testFilesDir.GetTestPath("Asym_DIA.skyd"));
+            }
+
+            {
+                // Import with ambiguous prespecified targets
+                var windowList = new List<IsolationWindow>
+                {
+                    new IsolationWindow(999.2702214, 1024.270221, 1004.27),
+                    new IsolationWindow(1000.0, 1049.27267, 1004.28)
+                };
+                SrmDocument docAmbiguous = doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fullScan =>
+                    fullScan.ChangeAcquisitionMethod(fullScan.AcquisitionMethod, new IsolationScheme("Test ambiguous", windowList))));
+                AssertEx.Serializable(docAmbiguous);
+                Assert.IsTrue(docContainer.SetDocument(docAmbiguous, doc, false));
+
+                try
+                {
+                    docContainer.ChangeMeasuredResults(measuredResults, expectedMoleculeCount, 1, 1, 2, 2);
+                    Assert.Fail("Expected ambiguous isolation targets.");
+                }
+                catch (Exception x)
+                {
+                    AssertEx.AreComparableStrings(Resources.SpectrumFilter_FindFilterPairs_Two_isolation_windows_contain_targets_which_match_the_isolation_target__0__, x.Message, 1);
                 }
 
+                // Revert to original document, and get rid of results cache
+                Assert.IsTrue(docContainer.SetDocument(doc, docContainer.Document, false));
+                FileEx.SafeDelete(testFilesDir.GetTestPath("Asym_DIA.skyd"));
+            }
+
+            {
+                // Import with one isolation window, so one result is discarded.
+                var windowList = new List<IsolationWindow>
                 {
-                    // Import with asymmetric isolation window
-                    SrmDocument docAsym = doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fullScan =>
-                        fullScan.ChangeAcquisitionMethod(fullScan.AcquisitionMethod, new IsolationScheme("Test asym", 5, 20))));
-                    AssertEx.Serializable(docAsym);
-                    Assert.IsTrue(docContainer.SetDocument(docAsym, doc, false));
+                    new IsolationWindow(999.2702214, 1024.270221),
+                };
+                SrmDocument docOneWindow = doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fullScan =>
+                    fullScan.ChangeAcquisitionMethod(fullScan.AcquisitionMethod, new IsolationScheme("Test one window", windowList))));
+                AssertEx.Serializable(docOneWindow);
+                Assert.IsTrue(docContainer.SetDocument(docOneWindow, doc, false));
 
-                    SrmDocument docResults = docContainer.ChangeMeasuredResults(measuredResults, expectedMoleculeCount, 1, 1, 2, 2);
-                    nodeGroup = docResults.MoleculeTransitionGroups.First();
-                    ratio = nodeGroup.Results[0][0].Ratio ?? 0;
-                    // Asymmetric should be a lot closer to 1.0
-                    if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)  // Can't use labels without a formula
-                        Assert.AreEqual(1.05, ratio, 0.05);
+                SrmDocument docResults = docContainer.ChangeMeasuredResults(measuredResults, 1, 1, 0, 2, 0);
+                nodeGroup = docResults.MoleculeTransitionGroups.First();
+                Assert.IsNull(nodeGroup.Results[0][0].Ratio);
 
-                    // Revert to original document, and get rid of results cache
-                    Assert.IsTrue(docContainer.SetDocument(doc, docResults, false));
-                    FileEx.SafeDelete(testFilesDir.GetTestPath("Asym_DIA.skyd"));
-                }
-
-                {
-                    // Import with prespecified isolation windows
-                    var windowList = new List<IsolationWindow>
-                    {
-                        new IsolationWindow(999.2702214, 1024.270221),
-                        new IsolationWindow(1024.27267, 1049.27267)
-                    };
-                    SrmDocument docPrespecified = doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fullScan =>
-                        fullScan.ChangeAcquisitionMethod(fullScan.AcquisitionMethod, new IsolationScheme("Test prespecified", windowList))));
-                    AssertEx.Serializable(docPrespecified);
-                    Assert.IsTrue(docContainer.SetDocument(docPrespecified, doc, false));
-
-                    SrmDocument docResults = docContainer.ChangeMeasuredResults(measuredResults, expectedMoleculeCount, 1, 1, 2, 2);
-                    nodeGroup = docResults.MoleculeTransitionGroups.First();
-                    ratio = nodeGroup.Results[0][0].Ratio ?? 0;
-                    // Asymmetric should be a lot closer to 1.0
-                    if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)  // Can't use labels without a formula
-                        Assert.AreEqual(1.05, ratio, 0.05);
-
-                    // Revert to original document, and get rid of results cache
-                    Assert.IsTrue(docContainer.SetDocument(doc, docResults, false));
-                    FileEx.SafeDelete(testFilesDir.GetTestPath("Asym_DIA.skyd"));
-                }
-
-                {
-                    // Import with prespecified targets
-                    var windowList = new List<IsolationWindow>
-                    {
-                        new IsolationWindow(999.2702214, 1024.270221, 1004.27),
-                        new IsolationWindow(1024.27267, 1049.27267, 1029.27)
-                    };
-                    SrmDocument docPrespecified = doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fullScan =>
-                        fullScan.ChangeAcquisitionMethod(fullScan.AcquisitionMethod, new IsolationScheme("Test target", windowList))));
-                    AssertEx.Serializable(docPrespecified);
-                    Assert.IsTrue(docContainer.SetDocument(docPrespecified, doc, false));
-
-                    SrmDocument docResults = docContainer.ChangeMeasuredResults(measuredResults, expectedMoleculeCount, 1, 1, 2, 2);
-                    nodeGroup = docResults.MoleculeTransitionGroups.First();
-                    ratio = nodeGroup.Results[0][0].Ratio ?? 0;
-                    // Asymmetric should be a lot closer to 1.0
-                    if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)  // Can't use labels without a formula
-                        Assert.AreEqual(1.05, ratio, 0.05);
-
-                    // Revert to original document, and get rid of results cache
-                    Assert.IsTrue(docContainer.SetDocument(doc, docResults, false));
-                    FileEx.SafeDelete(testFilesDir.GetTestPath("Asym_DIA.skyd"));
-                }
-
-                {
-                    // Import with ambiguous prespecified targets
-                    var windowList = new List<IsolationWindow>
-                    {
-                        new IsolationWindow(999.2702214, 1024.270221, 1004.27),
-                        new IsolationWindow(1000.0, 1049.27267, 1004.28)
-                    };
-                    SrmDocument docAmbiguous = doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fullScan =>
-                        fullScan.ChangeAcquisitionMethod(fullScan.AcquisitionMethod, new IsolationScheme("Test ambiguous", windowList))));
-                    AssertEx.Serializable(docAmbiguous);
-                    Assert.IsTrue(docContainer.SetDocument(docAmbiguous, doc, false));
-
-                    try
-                    {
-                        docContainer.ChangeMeasuredResults(measuredResults, expectedMoleculeCount, 1, 1, 2, 2);
-                        Assert.Fail("Expected ambiguous isolation targets.");
-                    }
-                    catch (Exception x)
-                    {
-                        AssertEx.AreComparableStrings(Resources.SpectrumFilter_FindFilterPairs_Two_isolation_windows_contain_targets_which_match_the_isolation_target__0__, x.Message, 1);
-                    }
-
-                    // Revert to original document, and get rid of results cache
-                    Assert.IsTrue(docContainer.SetDocument(doc, docContainer.Document, false));
-                    FileEx.SafeDelete(testFilesDir.GetTestPath("Asym_DIA.skyd"));
-                }
-
-                {
-                    // Import with one isolation window, so one result is discarded.
-                    var windowList = new List<IsolationWindow>
-                    {
-                        new IsolationWindow(999.2702214, 1024.270221),
-                    };
-                    SrmDocument docOneWindow = doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fullScan =>
-                        fullScan.ChangeAcquisitionMethod(fullScan.AcquisitionMethod, new IsolationScheme("Test one window", windowList))));
-                    AssertEx.Serializable(docOneWindow);
-                    Assert.IsTrue(docContainer.SetDocument(docOneWindow, doc, false));
-
-                    SrmDocument docResults = docContainer.ChangeMeasuredResults(measuredResults, 1, 1, 0, 2, 0);
-                    nodeGroup = docResults.MoleculeTransitionGroups.First();
-                    Assert.IsNull(nodeGroup.Results[0][0].Ratio);
-
-                    // Revert to original document, and get rid of results cache
-                    Assert.IsTrue(docContainer.SetDocument(doc, docResults, false));
-                    FileEx.SafeDelete(testFilesDir.GetTestPath("Asym_DIA.skyd"));
-                }
+                // Revert to original document, and get rid of results cache
+                Assert.IsTrue(docContainer.SetDocument(doc, docResults, false));
+                FileEx.SafeDelete(testFilesDir.GetTestPath("Asym_DIA.skyd"));
             }
 
             testFilesDir.Dispose();

@@ -54,23 +54,23 @@ namespace pwiz.SkylineTest.Results
             string docPath;
             SrmDocument doc = InitAgilentDocument(testFilesDir, out docPath);
 
-            using (var docContainer = new ResultsTestDocumentContainer(doc, docPath))
-            {
-                const string replicateName = "AgilentTest";
-                string extRaw = ExtensionTestContext.ExtAgilentRaw;
-                var chromSets = new[]
+            var docContainer = new ResultsTestDocumentContainer(doc, docPath);
+            const string replicateName = "AgilentTest";
+            string extRaw = ExtensionTestContext.ExtAgilentRaw;
+            var chromSets = new[]
                                 {
                                     new ChromatogramSet(replicateName, new[]
                                         { new MsDataFilePath(testFilesDir.GetTestPath("081809_100fmol-MichromMix-05" + extRaw)),  }),
                                 };
-                var docResults = doc.ChangeMeasuredResults(new MeasuredResults(chromSets));
-                Assert.IsTrue(docContainer.SetDocument(docResults, doc, true));
-                docContainer.AssertComplete();
-                docResults = docContainer.Document;
-                AssertResult.IsDocumentResultsState(docResults, replicateName,
-                    doc.PeptideCount, doc.PeptideTransitionGroupCount, 0, doc.PeptideTransitionCount, 0);
-            }
+            var docResults = doc.ChangeMeasuredResults(new MeasuredResults(chromSets));
+            Assert.IsTrue(docContainer.SetDocument(docResults, doc, true));
+            docContainer.AssertComplete();
+            docResults = docContainer.Document;
+            AssertResult.IsDocumentResultsState(docResults, replicateName,
+                doc.PeptideCount, doc.PeptideTransitionGroupCount, 0, doc.PeptideTransitionCount, 0);
 
+            // Release file handles
+            docContainer.Release();
             testFilesDir.Dispose();
         }
 

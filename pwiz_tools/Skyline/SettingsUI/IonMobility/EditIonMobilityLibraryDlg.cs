@@ -657,7 +657,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                                       int countProviders,
                                       IDictionary<int, RegressionLine> regressions)
         {
-            IProgressStatus status = new ProgressStatus(Resources.CollisionalCrossSectionGridViewDriver_ProcessIonMobilityValues_Reading_ion_mobility_information);
+            var status = new ProgressStatus(Resources.CollisionalCrossSectionGridViewDriver_ProcessIonMobilityValues_Reading_ion_mobility_information);
             var peptideIonMobilities = new List<ValidatingIonMobilityPeptide>();
             int runCount = 0;
             foreach (var ionMobilityInfoProvider in providers)

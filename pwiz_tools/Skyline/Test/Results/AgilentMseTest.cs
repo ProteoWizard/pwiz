@@ -69,42 +69,42 @@ namespace pwiz.SkylineTest.Results
                 var refine = new RefinementSettings();
                 document = refine.ConvertToSmallMolecules(document, asSmallMolecules);
             }
-            using (var docContainer = new ResultsTestDocumentContainer(document, docPath))
+            var docContainer = new ResultsTestDocumentContainer(document, docPath);
+            var doc = docContainer.Document;
+            var listChromatograms = new List<ChromatogramSet>();
+            var path = MsDataFileUri.Parse(@"AgilentMse\BSA-AI-0-10-25-41_first_100_scans.mzML");
+            listChromatograms.Add(AssertResult.FindChromatogramSet(doc, path) ??
+                    new ChromatogramSet(path.GetFileName().Replace('.', '_'), new[] { path }));
+            var docResults = doc.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
+            Assert.IsTrue(docContainer.SetDocument(docResults, doc, true));
+            docContainer.AssertComplete();
+            document = docContainer.Document;
+
+            float tolerance = (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+            var results = document.Settings.MeasuredResults;
+            foreach (var pair in document.MoleculePrecursorPairs)
             {
-                var doc = docContainer.Document;
-                var listChromatograms = new List<ChromatogramSet>();
-                var path = MsDataFileUri.Parse(@"AgilentMse\BSA-AI-0-10-25-41_first_100_scans.mzML");
-                listChromatograms.Add(AssertResult.FindChromatogramSet(doc, path) ??
-                        new ChromatogramSet(path.GetFileName().Replace('.', '_'), new[] { path }));
-                var docResults = doc.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
-                Assert.IsTrue(docContainer.SetDocument(docResults, doc, true));
-                docContainer.AssertComplete();
-                document = docContainer.Document;
-
-                float tolerance = (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
-                var results = document.Settings.MeasuredResults;
-                foreach (var pair in document.MoleculePrecursorPairs)
-                {
-                    ChromatogramGroupInfo[] chromGroupInfo;
-                    Assert.IsTrue(results.TryLoadChromatogram(0, pair.NodePep, pair.NodeGroup,
-                        tolerance, true, out chromGroupInfo));
-                    Assert.AreEqual(1, chromGroupInfo.Length);
-                }
-
-                // now drill down for specific values
-                int nPeptides = 0;
-                foreach (var nodePep in document.Molecules.Where(nodePep => nodePep.Results[0] != null))
-                {
-                    // expecting just one peptide result in this small data set
-                    if (nodePep.Results[0].Sum(chromInfo => chromInfo.PeakCountRatio > 0 ? 1 : 0) > 0)
-                    {
-                        Assert.AreEqual(0.2462, (double)nodePep.GetMeasuredRetentionTime(0), .0001, "averaged retention time differs in node " + nodePep.RawTextId);
-                        Assert.AreEqual(0.3333, (double)nodePep.GetPeakCountRatio(0), 0.0001);
-                        nPeptides++;
-                    }
-                }
-                Assert.AreEqual(1, nPeptides);
+                ChromatogramGroupInfo[] chromGroupInfo;
+                Assert.IsTrue(results.TryLoadChromatogram(0, pair.NodePep, pair.NodeGroup,
+                    tolerance, true, out chromGroupInfo));
+                Assert.AreEqual(1, chromGroupInfo.Length);
             }
+
+            // now drill down for specific values
+            int nPeptides = 0;
+            foreach (var nodePep in document.Molecules.Where(nodePep => nodePep.Results[0] != null))
+            {
+                // expecting just one peptide result in this small data set
+                if (nodePep.Results[0].Sum(chromInfo => chromInfo.PeakCountRatio > 0 ? 1 : 0) > 0)
+                {
+                    Assert.AreEqual(0.2462, (double)nodePep.GetMeasuredRetentionTime(0), .0001, "averaged retention time differs in node "+nodePep.RawTextId);
+                    Assert.AreEqual(0.3333, (double)nodePep.GetPeakCountRatio(0), 0.0001);
+                    nPeptides++;
+                }
+            }
+            Assert.AreEqual(1, nPeptides);
+            // Release file handles
+            docContainer.Release();
             testFilesDir.Dispose();
         }
 

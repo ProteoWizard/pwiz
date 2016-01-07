@@ -86,7 +86,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// </summary>       
         private string ReportToCsvString(SrmDocument doc, char separator, IProgressMonitor progressMonitor)
         {
-            IProgressStatus status = new ProgressStatus(string.Format(Resources.ReportSpec_ReportToCsvString_Exporting__0__report, Name));
+            var status = new ProgressStatus(string.Format(Resources.ReportSpec_ReportToCsvString_Exporting__0__report, Name));
             progressMonitor.UpdateProgress(status);
 
             Report report = Report.Load(this);

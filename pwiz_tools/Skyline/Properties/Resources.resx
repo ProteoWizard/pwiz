@@ -8855,9 +8855,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="DataboundGridControl_DisplayError_Do_you_want_to_continue_to_see_these_error_messages_" xml:space="preserve">
     <value>Do you want to continue to see these error messages?</value>
   </data>
-  <data name="CommandProgressMonitor_UpdateProgressInternal_Message__" xml:space="preserve">
-    <value>Message: </value>
-  </data>
   <data name="WebPanoramaPublishClient_UploadSharedZipFile_Publish_succeeded__would_you_like_to_view_the_file_in_Panorama_" xml:space="preserve">
     <value>Publish succeeded, would you like to view the file in Panorama?</value>
   </data>

@@ -132,7 +132,7 @@ namespace pwiz.Skyline.Model.Proteome
                 if (progressMonitor.IsCanceled)
                     return null;
 
-                IProgressStatus progressStatus = new ProgressStatus(Resources.ProteinMetadataManager_LookupProteinMetadata_resolving_protein_details);
+                var progressStatus = new ProgressStatus(Resources.ProteinMetadataManager_LookupProteinMetadata_resolving_protein_details);
                 int nResolved = 0;
                 int nUnresolved = docOrig.PeptideGroups.Select(pg => pg.ProteinMetadata.NeedsSearch()).Count();
 

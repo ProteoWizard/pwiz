@@ -2027,7 +2027,6 @@ namespace pwiz.Skyline
 
         public void ImportResults()
         {
-            _chromatogramManager.ResetProgress();
             if (DocumentUI.MoleculeTransitionCount == 0)
             {
                 MessageDlg.Show(this, Resources.SkylineWindow_ImportResults_You_must_add_at_least_one_target_transition_before_importing_results_);

@@ -48,7 +48,7 @@ namespace pwiz.Skyline.Model.Results
         private int _totalSteps;
         private int _currentStep;
         private readonly IProgressMonitor _progressMonitor;
-        private IProgressStatus _progressStatus;
+        private ProgressStatus _progressStatus;
         private Exception _dataFileScanHelperException;
 
         private struct DriftTimeIntensityPair

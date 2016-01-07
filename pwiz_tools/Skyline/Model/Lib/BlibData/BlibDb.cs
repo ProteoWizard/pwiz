@@ -39,7 +39,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             new Regex("urn:lsid:([^:]*):spectral_library:bibliospec:[^:]*:([^:]*)"); // Not L10N
 
         private IProgressMonitor ProgressMonitor { get; set; }
-        private IProgressStatus _progressStatus;
+        private ProgressStatus _progressStatus;
 
         private BlibDb(String path)
         {
@@ -144,7 +144,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             {
                 int progressPercent = 0;
                 int i = 0;
-                IProgressStatus status = new ProgressStatus(Resources.BlibDb_CreateLibraryFromSpectra_Creating_spectral_library_for_imported_transition_list);
+                var status = new ProgressStatus(Resources.BlibDb_CreateLibraryFromSpectra_Creating_spectral_library_for_imported_transition_list);
                 foreach (var spectrum in listSpectra)
                 {
                     ++i;

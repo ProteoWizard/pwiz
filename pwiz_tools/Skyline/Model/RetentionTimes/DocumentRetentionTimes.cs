@@ -95,7 +95,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
             var newResultsSources = ListSourcesForResults(document.Settings.MeasuredResults, newSources);
             var allLibraryRetentionTimes = ReadAllRetentionTimes(document, newSources);
             var newFileAlignments = new List<FileRetentionTimeAlignments>();
-            IProgressStatus progressStatus = new ProgressStatus("Aligning retention times"); // Not L10N?  Will users see this?
+            var progressStatus = new ProgressStatus("Aligning retention times"); // Not L10N?  Will users see this?
             foreach (var retentionTimeSource in newResultsSources.Values)
             {
                 progressStatus = progressStatus.ChangePercentComplete(100*newFileAlignments.Count/newResultsSources.Count);

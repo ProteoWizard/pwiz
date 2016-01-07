@@ -213,8 +213,6 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ShowPeakAreaReplicateComparison();
             });
 
-            WaitForCondition(15 * 60 * 1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded); // 10 minutes
-
             if (AsSmallMolecules)
             {
                 return;  // Too peptide-centric from here to end of test
@@ -222,6 +220,7 @@ namespace pwiz.SkylineTestTutorial
 
             FindNode("IHGFDLAAINLQR");
             RestoreViewOnScreen(8);
+            WaitForCondition(15*60*1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded); // 10 minutes
 
             PauseForScreenShot("Main Skyline window", 8);
             

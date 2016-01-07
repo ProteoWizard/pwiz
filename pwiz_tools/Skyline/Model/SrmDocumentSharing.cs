@@ -65,7 +65,7 @@ namespace pwiz.Skyline.Model
         public bool CompleteSharing { get; private set; }
 
         private IProgressMonitor ProgressMonitor { get; set; }
-        private IProgressStatus _progressStatus;
+        private ProgressStatus _progressStatus;
         private int CountEntries { get; set; }
         private int EntriesSaved { get; set; }
         private string CurrentEntry { get; set; }

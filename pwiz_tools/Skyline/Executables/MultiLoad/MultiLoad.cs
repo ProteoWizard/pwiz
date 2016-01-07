@@ -3,16 +3,15 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
-using System.Linq;
 using System.Windows.Forms;
 
 namespace MultiLoad
 {
     public partial class MultiLoad : Form
     {
-        private const string RootDir = @"C:\Users\donmm\Documents\Data"; //@"D:\Data\20150331_Pedro_TTOF5600_64w";
+        private const string RootDir = @"C:\Users\donmarsh\Documents\Data"; //@"D:\Data\20150331_Pedro_TTOF5600_64w";
         private const string SkylineFile = @"TTOF_64w.sky";
-        //private const string SkylineExe = @"C:\Users\donmm\Documents\pwiz-trunk\pwiz_tools\Skyline\bin\x64\Release\Skyline-daily.exe";
+        private const string SkydFile = RootDir + @"\" + SkylineFile + "d";
         private const string SkylineExe = @"D:\pwiz\pwiz_tools\Skyline\bin\x64\Release\Skyline-daily.exe";
         private const string Log = RootDir + @"\MultiLoad_#.log";
 
@@ -49,91 +48,22 @@ namespace MultiLoad
             _timeColor = lblTime.ForeColor;
             lblTime.ForeColor = Color.Red;
 
-            DeleteFiles(RootDir, "*.skyd");
-            DeleteFiles(RootDir, "*.tmp");
-
-            _log = Log.Replace("#", DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss"));
-
             _stopwatch = new Stopwatch();
             _stopwatch.Start();
             _timer = new Timer {Interval = 500};
             _timer.Tick += (s, e1) => lblTime.Text = _stopwatch.Elapsed.ToString(@"mm\:ss"); // Not L10N
             _timer.Start();
+            
+            if (File.Exists(SkydFile))
+                File.Delete(SkydFile);
 
+            _log = Log.Replace("#", DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss"));
             _dataDir = Path.Combine(RootDir, comboModel.Text);
-            var extension = 
-                comboModel.Text.StartsWith("mz5") ? ".mz5" :
-                comboModel.Text.StartsWith("mzml") ? ".mzML" :
-                ".wiff";
-            var dataFiles = Directory.EnumerateFiles(_dataDir).Where(s => Path.GetExtension(s) == extension).ToList();
 
             _uiIndex = comboUI.SelectedIndex;
-            if (_uiIndex == 4)
-            {
-                var args = string.Format(
-                    @"--timestamp --dir=""{0}"" --in=""{1}"" --import-no-join --importthreads={2}",
-                    RootDir,
-                    SkylineFile,
-                    (int)numericMaxProcesses.Value);
-                args = dataFiles.Aggregate(args, (current, dataFile) => current + string.Format(@" --import-file=""{0}""", dataFile));
-                //args += string.Format(@" --import-file=""{0}""", dataFiles[0]);
-
-                _queue = new QueueWorker<string>(RunCommandLine) { CompleteAction = RunFinished };
-                _queue.RunAsync(1, "Run command line");
-                _queue.Add(args);
-                _queue.DoneAdding();
-            }
-            else
-            {
-                _queue = new QueueWorker<string>(Run) {CompleteAction = RunFinished};
-                _queue.RunAsync((int) numericMaxProcesses.Value, "Start Skyline");
-                _queue.Add(dataFiles);
-            }
-        }
-
-        private static void DeleteFiles(string directory, string pattern)
-        {
-            foreach (var file in Directory.EnumerateFiles(directory, pattern, SearchOption.AllDirectories))
-            {
-                try
-                {
-                    File.Delete(file);
-                }
-                catch (Exception)
-                {
-                    // ignored
-                }
-            }
-        }
-
-        private void RunCommandLine(string args, int threadIndex)
-        {
-            AddToLog("Start command line");
-            AddToLog(args);
-            var runner = new Process
-            {
-                StartInfo =
-                {
-                    FileName = SkylineExe,
-                    Arguments = args,
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true
-                }
-            };
-
-            runner.OutputDataReceived += HandleOutput;
-            runner.ErrorDataReceived += HandleOutput;
-            runner.Start();
-            runner.BeginOutputReadLine();
-            runner.BeginErrorReadLine();
-            runner.WaitForExit();
-            AddToLog("End command line");
-        }
-
-        private void HandleOutput(object sender, DataReceivedEventArgs e)
-        {
-            AddToLog(e.Data);
+            _queue = new QueueWorker<string>(Run) {CompleteAction = RunFinished};
+            _queue.RunAsync((int) numericMaxProcesses.Value, "Start Skyline");
+            _queue.Add(Directory.EnumerateFiles(_dataDir, comboModel.Text == "wiff" ? "*.wiff" : "*.mz5"));
         }
 
         private void RunFinished()
@@ -183,7 +113,7 @@ namespace MultiLoad
         {
             lock (_log)
             {
-                File.AppendAllText(_log, text + Environment.NewLine);
+                File.AppendAllText(_log, "[" + DateTime.Now.ToString("HH:mm:ss") + "] " + text + Environment.NewLine);
             }
         }
     }

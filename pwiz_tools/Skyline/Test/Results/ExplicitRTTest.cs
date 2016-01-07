@@ -55,49 +55,51 @@ namespace pwiz.SkylineTest.Results
         {
             string docPath;
             var document = InitExplicitRTDocument(testFilesDir, skyFile, out docPath);
-            using (var docContainer = new ResultsTestDocumentContainer(document, docPath))
-            {
-                var doc = docContainer.Document;
-                var listChromatograms = new List<ChromatogramSet>();
-                foreach (var filename in filenames)
-                {
-                    var path = MsDataFileUri.Parse(filename + ExtensionTestContext.ExtWatersRaw);
-                    listChromatograms.Add(AssertResult.FindChromatogramSet(doc, path) ??
-                                          new ChromatogramSet(path.GetFileName().Replace('.', '_'), new[] { path }));
-                }
-                var docResults = doc.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
-                Assert.IsTrue(docContainer.SetDocument(docResults, doc, true));
-                docContainer.AssertComplete();
-                document = docContainer.Document;
+            var docContainer = new ResultsTestDocumentContainer(document, docPath);
 
-                float tolerance = (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
-                foreach (var pair in document.MoleculePrecursorPairs)
+            var doc = docContainer.Document;
+            var listChromatograms = new List<ChromatogramSet>();
+            foreach (var filename in filenames)
+            {
+                var path = MsDataFileUri.Parse(filename + ExtensionTestContext.ExtWatersRaw);
+                listChromatograms.Add(AssertResult.FindChromatogramSet(doc, path) ??
+                                      new ChromatogramSet(path.GetFileName().Replace('.', '_'), new[] { path }));
+            }
+            var docResults = doc.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
+            Assert.IsTrue(docContainer.SetDocument(docResults, doc, true));
+            docContainer.AssertComplete();
+            document = docContainer.Document;
+
+            float tolerance = (float) document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+            foreach (var pair in document.MoleculePrecursorPairs)
+            {
+                ChromatogramGroupInfo[] chromGroupInfo;
+                Assert.IsTrue(document.Settings.MeasuredResults.TryLoadChromatogram(0, pair.NodePep, pair.NodeGroup, tolerance,
+                    true, out chromGroupInfo));
+                Assert.IsTrue(document.Settings.MeasuredResults.TryLoadChromatogram(1, pair.NodePep, pair.NodeGroup, tolerance,
+                    true, out chromGroupInfo));
+            }
+            var nResults = 0;
+            foreach (var nodePep in document.Molecules)
+            {
+                foreach (var results in nodePep.Results)
                 {
-                    ChromatogramGroupInfo[] chromGroupInfo;
-                    Assert.IsTrue(document.Settings.MeasuredResults.TryLoadChromatogram(0, pair.NodePep, pair.NodeGroup, tolerance,
-                        true, out chromGroupInfo));
-                    Assert.IsTrue(document.Settings.MeasuredResults.TryLoadChromatogram(1, pair.NodePep, pair.NodeGroup, tolerance,
-                        true, out chromGroupInfo));
-                }
-                var nResults = 0;
-                foreach (var nodePep in document.Molecules)
-                {
-                    foreach (var results in nodePep.Results)
+                    foreach (var result in results)
                     {
-                        foreach (var result in results)
+                        Assert.AreEqual(expectedRT, result.RetentionTime ?? 0, .1); // We should pick peaks based on explicit RT
+                        if (expectedRatio.HasValue) // If we didn't, ratios won't be right
                         {
-                            Assert.AreEqual(expectedRT, result.RetentionTime ?? 0, .1); // We should pick peaks based on explicit RT
-                            if (expectedRatio.HasValue) // If we didn't, ratios won't be right
-                            {
-                                Assert.IsNotNull(result.LabelRatios[0].Ratio);
-                                Assert.AreEqual(expectedRatio.Value, result.LabelRatios[0].Ratio.Ratio, .1);
-                            }
-                            nResults++;
+                            Assert.IsNotNull(result.LabelRatios[0].Ratio);
+                            Assert.AreEqual(expectedRatio.Value, result.LabelRatios[0].Ratio.Ratio, .1);
                         }
+                        nResults++;
                     }
                 }
-                Assert.AreEqual(filenames.Length * document.MoleculeGroupCount, nResults);
             }
+            Assert.AreEqual(filenames.Length*document.MoleculeGroupCount, nResults);
+
+            // Release file handles
+            docContainer.Release();
         }
 
         private static SrmDocument InitExplicitRTDocument(TestFilesDir testFilesDir, string fileName, out string docPath)

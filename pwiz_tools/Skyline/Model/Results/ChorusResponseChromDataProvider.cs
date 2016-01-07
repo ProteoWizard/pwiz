@@ -30,7 +30,7 @@ namespace pwiz.Skyline.Model.Results
     internal class ChorusResponseChromDataProvider : ChromDataProvider
     {
         private readonly CachedChromatogramDataProvider _cachedChromatogramDataProvider;
-        public ChorusResponseChromDataProvider(SrmDocument document, ChromFileInfo chromFileInfo, IProgressStatus progressStatus, int startPercent,
+        public ChorusResponseChromDataProvider(SrmDocument document, ChromFileInfo chromFileInfo, ProgressStatus progressStatus, int startPercent,
             int endPercent, ILoadMonitor loader) : base(chromFileInfo, progressStatus, startPercent, endPercent, loader)
         {
             ChromatogramCache.RawData rawData;

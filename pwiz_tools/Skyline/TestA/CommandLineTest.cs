@@ -291,26 +291,21 @@ namespace pwiz.SkylineTestA
             SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
 
             //Attach replicate
-            var commandLine = new CommandLine();
-            using (var docContainer = new ResultsMemoryDocumentContainer(doc, docPath))
-            {
-                commandLine.ImportResults(docContainer, replicate, MsDataFileUri.Parse(rawPath), null);
-                docContainer.WaitForComplete();
-                doc = docContainer.Document;
-                var progressStatus = docContainer.LastProgress;
-                Assert.IsNull(progressStatus);                
-            }
+            ProgressStatus status;
+            doc = CommandLine.ImportResults(doc, docPath, replicate, MsDataFileUri.Parse(rawPath), null, null, out status);
+            Assert.IsNull(status);
 
+            string programmaticReport;
             MemoryDocumentContainer memoryDocumentContainer = new MemoryDocumentContainer();
             Assert.IsTrue(memoryDocumentContainer.SetDocument(doc, memoryDocumentContainer.Document));
             SkylineDataSchema skylineDataSchema = new SkylineDataSchema(memoryDocumentContainer, SkylineDataSchema.GetLocalizedSchemaLocalizer());
             DocumentGridViewContext viewContext = new DocumentGridViewContext(skylineDataSchema);
             ViewInfo viewInfo = viewContext.GetViewInfo(PersistedViews.MainGroup.Id.ViewName(reportName));
             StringWriter writer = new StringWriter();
-            IProgressStatus status = new ProgressStatus("Exporting report");
+            status = new ProgressStatus("Exporting report");
             viewContext.Export(null, ref status, viewInfo, writer,
                 new DsvWriter(CultureInfo.CurrentCulture, TextUtil.GetCsvSeparator(LocalizationHelper.CurrentCulture)));
-            var programmaticReport = writer.ToString();
+            programmaticReport = writer.ToString();
 
             RunCommand("--in=" + docPath,
                        "--import-file=" + rawPath,
@@ -337,15 +332,9 @@ namespace pwiz.SkylineTestA
 
             //Attach replicate
             SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
-            var commandLine = new CommandLine();
-            using (var docContainer = new ResultsMemoryDocumentContainer(doc, docPath))
-            {
-                commandLine.ImportResults(docContainer, replicate, MsDataFileUri.Parse(rawPath), null);
-                docContainer.WaitForComplete();
-                doc = docContainer.Document;
-                var status = docContainer.LastProgress;
-                Assert.IsNull(status);
-            }
+            ProgressStatus status;
+            doc = CommandLine.ImportResults(doc, docPath, replicate, MsDataFileUri.Parse(rawPath), null, null, out status);
+            Assert.IsNull(status);
 
             //First, programmatically generate the report
             var chromFiles = new[] { rawFile };
@@ -943,7 +932,7 @@ namespace pwiz.SkylineTestA
                                      "--import-file=" + rawPath,
                                      "--save");
 
-                AssertEx.Contains(msg, string.Format(Resources.CommandLine_ImportResultsFile_Warning__Cannot_read_file__0____Ignoring___, rawPath));
+                Assert.IsTrue(msg.Contains(string.Format(Resources.CommandLine_ImportResultsFile_Warning__Cannot_read_file__0____Ignoring___, rawPath)));
 
                 // the document should not have changed
                 SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
@@ -953,8 +942,7 @@ namespace pwiz.SkylineTestA
                                  "--import-all=" + testFilesDir.FullPath,
                                  "--save");
 
-                string expected = string.Format(Resources.CommandLine_ImportResultsFile_Warning__Cannot_read_file__0____Ignoring___, rawPath);
-                AssertEx.Contains(msg, expected);
+                Assert.IsTrue(msg.Contains(string.Format(Resources.CommandLine_ImportResultsFile_Warning__Cannot_read_file__0____Ignoring___, rawPath)), msg);
                 doc = ResultsUtil.DeserializeDocument(docPath);
                 Assert.IsTrue(doc.Settings.HasResults);
                 Assert.AreEqual(6, doc.Settings.MeasuredResults.Chromatograms.Count,

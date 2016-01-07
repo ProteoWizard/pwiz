@@ -23,7 +23,6 @@ using System.Globalization;
 using System.IO;
 using System.IO.Pipes;
 using System.Net;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
@@ -109,19 +108,7 @@ namespace pwiz.Skyline
             {
                 if (!CommandLineRunner.HasCommandPrefix(args[0]))
                 {
-                    TextWriter textWriter;
-                    if (Debugger.IsAttached)
-                    {
-                        textWriter = new DebugWriter();
-                    }
-                    else
-                    {
-                        AttachConsole(-1);
-                        textWriter = Console.Out;
-                        Console.WriteLine();
-                        Console.WriteLine();
-                    }
-                    var writer = new CommandStatusWriter(textWriter);
+                    var writer = new CommandStatusWriter(new DebugWriter());
                     if (args[0].Equals("--ui", StringComparison.InvariantCultureIgnoreCase)) // Not L10N
                     {
                         // ReSharper disable once ObjectCreationAsStatement
@@ -558,9 +545,6 @@ namespace pwiz.Skyline
                 Trace.WriteLine(value);
             }
         }
-
-        [DllImport("kernel32", SetLastError = true)]
-        private static extern bool AttachConsole(int dwProcessId);
     }
 
     public class CommandLineRunner

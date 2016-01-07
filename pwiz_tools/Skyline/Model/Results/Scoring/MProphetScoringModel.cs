@@ -203,7 +203,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                     double decoyStdev = 0;
                     bool colinearWarning = false;
                     // This may take a long time between progress updates, but just measure progress by cycles through the training
-                    IProgressStatus status = new ProgressStatus(Resources.MProphetPeakScoringModel_Train_Training_peak_scoring_model);
+                    var status = new ProgressStatus(Resources.MProphetPeakScoringModel_Train_Training_peak_scoring_model);
                     if (progressMonitor != null)
                         progressMonitor.UpdateProgress(status);
                     for (int iteration = 0; iteration < MAX_ITERATIONS; iteration++)

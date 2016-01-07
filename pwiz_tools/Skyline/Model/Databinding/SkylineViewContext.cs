@@ -253,7 +253,7 @@ namespace pwiz.Skyline.Model.Databinding
                     {
                         var action = new Action<IProgressMonitor>(broker =>
                         {
-                            IProgressStatus status = new ProgressStatus(Resources.ExportReportDlg_ExportReport_Building_report);
+                            var status = new ProgressStatus(Resources.ExportReportDlg_ExportReport_Building_report);
                             broker.UpdateProgress(status);
                             using (var writer = new StreamWriter(stream))
                             {
@@ -279,7 +279,7 @@ namespace pwiz.Skyline.Model.Databinding
             }
         }
 
-        public bool Export(IProgressMonitor progressMonitor, ref IProgressStatus status, ViewInfo viewInfo, TextWriter writer, DsvWriter dsvWriter)
+        public bool Export(IProgressMonitor progressMonitor, ref ProgressStatus status, ViewInfo viewInfo, TextWriter writer, DsvWriter dsvWriter)
         {
             progressMonitor = progressMonitor ?? new UncancellableProgressMonitor();
             using (var bindingListSource = new BindingListSource())

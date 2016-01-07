@@ -96,7 +96,7 @@ namespace pwiz.Skyline.Model
             container.SetDocument(document, container.Document);
             var dataSchema = new SkylineDataSchema(container, DataSchemaLocalizer.INVARIANT);
             var viewContext = new DocumentGridViewContext(dataSchema);
-            IProgressStatus status = new ProgressStatus(string.Format(Resources.ReportSpec_ReportToCsvString_Exporting__0__report,
+            var status = new ProgressStatus(string.Format(Resources.ReportSpec_ReportToCsvString_Exporting__0__report,
                 viewSpec.Name));
             var writer = new StringWriter();
             if (viewContext.Export(progressMonitor, ref status, viewContext.GetViewInfo(null, viewSpec), writer,

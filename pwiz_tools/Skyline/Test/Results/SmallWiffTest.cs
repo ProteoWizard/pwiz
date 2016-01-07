@@ -103,73 +103,73 @@ namespace pwiz.SkylineTest.Results
             TestFilesDir testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
 
             SrmDocument doc = InitWiffDocument(testFilesDir);
-            using (var docContainer = new ResultsTestDocumentContainer(doc,
-                testFilesDir.GetTestPath("SimpleWiffTest.sky")))
+            var docContainer = new ResultsTestDocumentContainer(doc,
+                testFilesDir.GetTestPath("SimpleWiffTest.sky"));
+            FileEx.SafeDelete(ChromatogramCache.FinalPathForName(docContainer.DocumentFilePath, null));
+
+            var listChromatograms = new List<ChromatogramSet>();
+
+            if (ExtensionTestContext.CanImportAbWiff)
             {
-                FileEx.SafeDelete(ChromatogramCache.FinalPathForName(docContainer.DocumentFilePath, null));
+                string pathWiff = testFilesDir.GetTestPath("051309_digestion.wiff");
+                string[] dataIds = MsDataFileImpl.ReadIds(pathWiff);
 
-                var listChromatograms = new List<ChromatogramSet>();
-
-                if (ExtensionTestContext.CanImportAbWiff)
+                for (int i = 0; i < dataIds.Length; i++)
                 {
-                    string pathWiff = testFilesDir.GetTestPath("051309_digestion.wiff");
-                    string[] dataIds = MsDataFileImpl.ReadIds(pathWiff);
-
-                    for (int i = 0; i < dataIds.Length; i++)
-                    {
-                        string nameSample = dataIds[i];
-                        if (!Equals(nameSample, "test") && listChromatograms.Count == 0)
-                            continue;
-                        string pathSample = SampleHelp.EncodePath(pathWiff, nameSample, i, LockMassParameters.EMPTY, false, false);
-                        listChromatograms.Add(new ChromatogramSet(nameSample, new[] { MsDataFileUri.Parse(pathSample) }));
-                    }
+                    string nameSample = dataIds[i];
+                    if (!Equals(nameSample, "test") && listChromatograms.Count == 0)
+                        continue;
+                    string pathSample = SampleHelp.EncodePath(pathWiff, nameSample, i, LockMassParameters.EMPTY, false, false);
+                    listChromatograms.Add(new ChromatogramSet(nameSample, new[] { MsDataFileUri.Parse(pathSample) }));
                 }
-                else
-                {
-                    listChromatograms.Add(new ChromatogramSet("test",
-                        new[] { MsDataFileUri.Parse(testFilesDir.GetTestPath("051309_digestion-test.mzML")) }));
-                    listChromatograms.Add(new ChromatogramSet("rfp9,before,h,1",
-                        new[] { MsDataFileUri.Parse(testFilesDir.GetTestPath("051309_digestion-rfp9,before,h,1.mzML")) }));
-                }
-
-                // Should have added test and one after
-                Assert.AreEqual(2, listChromatograms.Count);
-
-                var docResults = doc.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
-                Assert.IsTrue(docContainer.SetDocument(docResults, doc, true));
-                docContainer.AssertComplete();
-
-                docResults = docContainer.Document;
-
-                AssertEx.IsDocumentState(docResults, 6, 9, 9, 18, 54);
-                Assert.IsTrue(docResults.Settings.MeasuredResults.IsLoaded);
-
-                foreach (var nodeTran in docResults.PeptideTransitions)
-                {
-                    Assert.IsTrue(nodeTran.HasResults);
-                    Assert.AreEqual(2, nodeTran.Results.Count);
-                }
-
-                // Remove the last chromatogram
-                listChromatograms.RemoveAt(1);
-
-                var docResultsSingle = docResults.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
-
-                AssertResult.IsDocumentResultsState(docResultsSingle, "test", 9, 2, 9, 8, 27);
-
-                // Add mzXML version of test sample
-                listChromatograms.Add(new ChromatogramSet("test-mzXML", new[] { MsDataFileUri.Parse(testFilesDir.GetTestPath("051309_digestion-s3.mzXML")) }));
-
-                var docMzxml = docResults.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
-                Assert.IsTrue(docContainer.SetDocument(docMzxml, docResults, true));
-                docContainer.AssertComplete();
-                docMzxml = docContainer.Document;
-                // Verify mzXML and native contained same results
-                // Unfortunately mzWiff produces chromatograms with now zeros, which
-                // need to be interpolated into place.  This means a .wiff file and
-                // its mzWiff mzXML file will never be the same.
-                AssertResult.MatchChromatograms(docMzxml, 0, 1, -1, 0);
             }
+            else
+            {
+                listChromatograms.Add(new ChromatogramSet("test",
+                    new[] { MsDataFileUri.Parse(testFilesDir.GetTestPath("051309_digestion-test.mzML")) }));
+                listChromatograms.Add(new ChromatogramSet("rfp9,before,h,1",
+                    new[] { MsDataFileUri.Parse(testFilesDir.GetTestPath("051309_digestion-rfp9,before,h,1.mzML")) }));
+            }
+
+            // Should have added test and one after
+            Assert.AreEqual(2, listChromatograms.Count);
+
+            var docResults = doc.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
+            Assert.IsTrue(docContainer.SetDocument(docResults, doc, true));
+            docContainer.AssertComplete();
+
+            docResults = docContainer.Document;
+
+            AssertEx.IsDocumentState(docResults, 6, 9, 9, 18, 54);
+            Assert.IsTrue(docResults.Settings.MeasuredResults.IsLoaded);
+
+            foreach (var nodeTran in docResults.PeptideTransitions)
+            {
+                Assert.IsTrue(nodeTran.HasResults);
+                Assert.AreEqual(2, nodeTran.Results.Count);
+            }
+
+            // Remove the last chromatogram
+            listChromatograms.RemoveAt(1);
+
+            var docResultsSingle = docResults.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
+
+            AssertResult.IsDocumentResultsState(docResultsSingle, "test", 9, 2, 9, 8, 27);
+
+            // Add mzXML version of test sample
+            listChromatograms.Add(new ChromatogramSet("test-mzXML", new[] { MsDataFileUri.Parse(testFilesDir.GetTestPath("051309_digestion-s3.mzXML")) }));
+
+            var docMzxml = docResults.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
+            Assert.IsTrue(docContainer.SetDocument(docMzxml, docResults, true));
+            docContainer.AssertComplete();
+            docMzxml = docContainer.Document;
+            // Verify mzXML and native contained same results
+            // Unfortunately mzWiff produces chromatograms with now zeros, which
+            // need to be interpolated into place.  This means a .wiff file and
+            // its mzWiff mzXML file will never be the same.
+            AssertResult.MatchChromatograms(docMzxml, 0, 1, -1, 0);
+            // Release all file handels
+            Assert.IsTrue(docContainer.SetDocument(doc, docContainer.Document));
 
             // TODO: Switch to a using clause when PWiz is fixed, and this assertion fails
 //            AssertEx.ThrowsException<IOException>(() => testFilesDir.Dispose());

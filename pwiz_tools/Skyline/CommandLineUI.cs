@@ -71,10 +71,7 @@ namespace pwiz.Skyline
         {
             WaitForSkyline();
             OpenDocument(_commandArgs.SkylineFile);
-            foreach (var replicateFile in _commandArgs.ReplicateFile)
-            {
-                ImportResults(replicateFile);
-            }
+            ImportResults(_commandArgs.ReplicateFile);
             SkylineWindow.DiscardChanges = true;
             RunUI(SkylineWindow.Close);
         }

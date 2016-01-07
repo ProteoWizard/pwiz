@@ -37,18 +37,15 @@ namespace pwiz.Skyline.Model.Results
         public const int MAX_PEAKS_PER_BIN = 3;                // how many peaks to graph per bin
         public const double DISPLAY_FILTER_PERCENT = 0.01;     // filter peaks less than this percentage of maximum intensity
 
-        public ChromatogramLoadingStatus(string filePath, int fileNumber) :
-            base(SampleHelp.GetFileName(filePath))
+        public ChromatogramLoadingStatus(string message) :
+            base(message)
         {
             Transitions = new TransitionData();
-            FilePath = MsDataFileUri.Parse(filePath);
-            FileNumber = fileNumber;
         }
 
         public TransitionData Transitions { get; private set; }
         public MsDataFileUri FilePath { get; private set; }
         public bool Importing { get; private set; }
-        public int FileNumber { get; private set; }
 
         public ChromatogramLoadingStatus ChangeFilePath(MsDataFileUri filePath)
         {
@@ -191,6 +188,12 @@ namespace pwiz.Skyline.Model.Results
                 minPeak.FilterIndex = filterIndex;
                 minPeak.BinIndex = binIndex;
                 _maxImportedIntensity = Math.Max(_maxImportedIntensity, intensity);
+            }
+
+            public int GetRank(int id)
+            {
+                // TODO: how to get rank from AllChromatogramsGraph (information must be moved to Model!)
+                return 1;
             }
 
             public class Peak

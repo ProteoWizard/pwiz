@@ -71,7 +71,7 @@ namespace pwiz.Skyline.Model.Results
             SrmDocument document,
             IRetentionTimePredictor retentionTimePredictor,
             string cachePath, // We'll write tempfiles in this directory
-            IProgressStatus status,
+            ProgressStatus status,
             int startPercent,
             int endPercent,
             IProgressMonitor loader)
@@ -119,8 +119,8 @@ namespace pwiz.Skyline.Model.Results
             }
 
             // Get data object used to graph all of the chromatograms.
-            if (_loader.HasUI && Status is ChromatogramLoadingStatus)
-                _allChromData = ((ChromatogramLoadingStatus) Status).Transitions;
+            if (_loader.HasUI)
+                _allChromData = LoadingStatus.Transitions;
 
             try
             {
@@ -530,7 +530,7 @@ namespace pwiz.Skyline.Model.Results
         {
             var statusId = _collectors.ReleaseChromatogram(id, _chromGroups,
                 out times, out intensities, out massErrors, out scanIndexes);
-            extra = new ChromExtra(statusId, 0);
+            extra = new ChromExtra(statusId, LoadingStatus.Transitions.GetRank(id));  // TODO: Get rank
 
             // Each chromatogram will be read only once!
             _readChromatograms++;
@@ -565,12 +565,12 @@ namespace pwiz.Skyline.Model.Results
 
         public override double? MaxRetentionTime
         {
-            get { return Status is ChromatogramLoadingStatus ? ((ChromatogramLoadingStatus)Status).Transitions.MaxRetentionTime : 0; }
+            get { return LoadingStatus.Transitions.MaxRetentionTime; }
         }
 
         public override double? MaxIntensity
         {
-            get { return Status is ChromatogramLoadingStatus ? ((ChromatogramLoadingStatus)Status).Transitions.MaxIntensity : 0; }
+            get { return LoadingStatus.Transitions.MaxIntensity; }
         }
 
         public override bool IsProcessedScans
@@ -1033,7 +1033,7 @@ namespace pwiz.Skyline.Model.Results
                 lock (this)
                 {
                     _retentionTime = float.MaxValue;
-                    Monitor.PulseAll(this);
+                    Monitor.Pulse(this);
                 }
             }
 
@@ -1042,7 +1042,7 @@ namespace pwiz.Skyline.Model.Results
                 lock (this)
                 {
                     _retentionTime = retentionTime;
-                    Monitor.PulseAll(this);
+                    Monitor.Pulse(this);
                 }
             }
 

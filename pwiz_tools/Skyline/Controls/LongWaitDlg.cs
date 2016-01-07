@@ -109,7 +109,7 @@ namespace pwiz.Skyline.Controls
             PerformWork(parent, delayMillis, indefiniteWaitBroker.PerformWork);
         }
 
-        public IProgressStatus PerformWork(Control parent, int delayMillis, Action<IProgressMonitor> performWork)
+        public ProgressStatus PerformWork(Control parent, int delayMillis, Action<IProgressMonitor> performWork)
         {
             var progressWaitBroker = new ProgressWaitBroker(performWork);
             PerformWork(parent, delayMillis, progressWaitBroker.PerformWork);

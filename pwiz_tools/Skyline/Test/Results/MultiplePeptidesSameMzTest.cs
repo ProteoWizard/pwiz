@@ -56,40 +56,41 @@ namespace pwiz.SkylineTest.Results
             string docPath;
             SrmDocument document = InitMultiplePeptidesSameMzDocument(testFilesDir, out docPath);
             document = (new RefinementSettings()).ConvertToSmallMolecules(document, asSmallMolecules);
-            using (var docContainer = new ResultsTestDocumentContainer(document, docPath))
-            {
-                var doc = docContainer.Document;
-                var listChromatograms = new List<ChromatogramSet>();
-                var path = MsDataFileUri.Parse(@"AMultiplePeptidesSameMz\ljz_20131201k_Newvariant_standards_braf.mzML");
-                listChromatograms.Add(AssertResult.FindChromatogramSet(doc, path) ??
-                        new ChromatogramSet(path.GetFileName().Replace('.', '_'), new[] { path }));
-                var docResults = doc.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
-                Assert.IsTrue(docContainer.SetDocument(docResults, doc, true));
-                docContainer.AssertComplete();
-                document = docContainer.Document;
+            var docContainer = new ResultsTestDocumentContainer(document, docPath);
 
-                float tolerance = (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
-                var results = document.Settings.MeasuredResults;
-                foreach (var pair in document.MoleculePrecursorPairs)
-                {
-                    ChromatogramGroupInfo[] chromGroupInfo;
-                    Assert.IsTrue(results.TryLoadChromatogram(0, pair.NodePep, pair.NodeGroup,
-                        tolerance, true, out chromGroupInfo));
-                    Assert.AreEqual(1, chromGroupInfo.Length);  // without the fix, only the first pair will have a chromatogram
-                }
-                // now drill down for specific values
-                int nPeptides = 0;
-                foreach (var nodePep in document.Molecules.Where(nodePep => nodePep.Results[0] != null))
-                {
-                    // expecting three peptide result in this small data set
-                    if (nodePep.Results[0].Sum(chromInfo => chromInfo.PeakCountRatio > 0 ? 1 : 0) > 0)
-                    {
-                        Assert.AreEqual(34.2441024780273, (double)nodePep.GetMeasuredRetentionTime(0), .0001);
-                        nPeptides++;
-                    }
-                }
-                Assert.AreEqual(3, nPeptides); // without the fix this will give just one result
+            var doc = docContainer.Document;
+            var listChromatograms = new List<ChromatogramSet>();
+            var path = MsDataFileUri.Parse(@"AMultiplePeptidesSameMz\ljz_20131201k_Newvariant_standards_braf.mzML");
+            listChromatograms.Add(AssertResult.FindChromatogramSet(doc, path) ??
+                    new ChromatogramSet(path.GetFileName().Replace('.', '_'), new[] { path }));
+            var docResults = doc.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
+            Assert.IsTrue(docContainer.SetDocument(docResults, doc, true));
+            docContainer.AssertComplete();
+            document = docContainer.Document;
+
+            float tolerance = (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+            var results = document.Settings.MeasuredResults;
+            foreach (var pair in document.MoleculePrecursorPairs)
+            {
+                ChromatogramGroupInfo[] chromGroupInfo;
+                Assert.IsTrue(results.TryLoadChromatogram(0, pair.NodePep, pair.NodeGroup,
+                    tolerance, true, out chromGroupInfo));
+                Assert.AreEqual(1, chromGroupInfo.Length);  // without the fix, only the first pair will have a chromatogram
             }
+            // now drill down for specific values
+            int nPeptides = 0;
+            foreach (var nodePep in document.Molecules.Where(nodePep => nodePep.Results[0] != null))
+            {
+                // expecting three peptide result in this small data set
+                if (nodePep.Results[0].Sum(chromInfo => chromInfo.PeakCountRatio > 0 ? 1 : 0) > 0)
+                {
+                    Assert.AreEqual(34.2441024780273,(double)nodePep.GetMeasuredRetentionTime(0), .0001);
+                    nPeptides++;
+                }
+            }
+            Assert.AreEqual(3, nPeptides); // without the fix this will give just one result
+            // Release file handles
+            docContainer.Release();
             testFilesDir.Dispose();
         }
 

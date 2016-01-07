@@ -44,7 +44,7 @@ namespace pwiz.Skyline.Model.Results
         private const string KEY_PROTEIN_PILOT = @"SOFTWARE\Classes\groFile\shell\open\command";
         // ReSharper restore NonLocalizedString
 
-        public static List<string> ConvertPilotFiles(IList<string> inputFiles, IProgressMonitor progress, IProgressStatus status)
+        public static List<string> ConvertPilotFiles(IList<string> inputFiles, IProgressMonitor progress, ProgressStatus status)
         {
             string groupConverterExePath = null;
             var inputFilesPilotConverted = new List<string>();
@@ -247,7 +247,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         private static void ConvertBrukerToMzml(string filePathBruker,
-            string outputPath, IProgressMonitor monitor, IProgressStatus status)
+            string outputPath, IProgressMonitor monitor, ProgressStatus status)
         {
             // We use CompassXport, if it is installed, to convert a Bruker raw file to mzML.  This solves two
             // issues: the Bruker reader can't be called on any thread other than the main thread, and there

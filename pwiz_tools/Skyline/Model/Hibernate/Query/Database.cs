@@ -72,7 +72,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
         }
 
         public IProgressMonitor ProgressMonitor { get; set; }
-        public IProgressStatus Status { get; set; }
+        public ProgressStatus Status { get; set; }
         public int PercentOfWait { get; set; }
 
         public ISessionFactory SessionFactory

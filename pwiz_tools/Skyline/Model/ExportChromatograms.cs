@@ -87,7 +87,7 @@ namespace pwiz.Skyline.Model
         {
             int currentReplicates = 0;
             int totalReplicates = _chromatogramSets.Count;
-            IProgressStatus status = new ProgressStatus(string.Empty);
+            var status = new ProgressStatus(string.Empty);
             FormatHeader(writer, FIELD_NAMES);
             foreach (var chromatograms in _chromatogramSets)
             {

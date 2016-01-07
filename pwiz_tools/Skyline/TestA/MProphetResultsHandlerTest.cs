@@ -72,100 +72,101 @@ namespace pwiz.SkylineTestA
                 }));
             // Load an empty doc, so that we can make a change and 
             // cause the .skyd to be loaded
-            using (var docContainer = new ResultsTestDocumentContainer(null, documentFile))
+            var docContainer = new ResultsTestDocumentContainer(null, documentFile);
+            docContainer.SetDocument(doc, null, true);
+            docContainer.AssertComplete();
+            SrmDocument docOriginal = docContainer.Document;
+            var peakScoringModel = docOriginal.Settings.PeptideSettings.Integration.PeakScoringModel;
+            var resultsHandler = new MProphetResultsHandler(docOriginal, peakScoringModel) { QValueCutoff = Q_CUTOFF };
+            
+            // 1. Reintegrate and export report produces expected file
+            resultsHandler.ScoreFeatures();
+            var docNew = resultsHandler.ChangePeaks();
+            var reportSpec = MakeReportSpec();
+            if (IsSaveAll)
             {
-                docContainer.SetDocument(doc, null, true);
-                docContainer.AssertComplete();
-                SrmDocument docOriginal = docContainer.Document;
-                var peakScoringModel = docOriginal.Settings.PeptideSettings.Integration.PeakScoringModel;
-                var resultsHandler = new MProphetResultsHandler(docOriginal, peakScoringModel) { QValueCutoff = Q_CUTOFF };
-
-                // 1. Reintegrate and export report produces expected file
-                resultsHandler.ScoreFeatures();
-                var docNew = resultsHandler.ChangePeaks();
-                var reportSpec = MakeReportSpec();
-                if (IsSaveAll)
-                {
-                    // For regenerating expected files if things change
-                    ReportToCsv(reportSpec, docNew, testFilesDir.GetTestPath(REPORT_EXPECTED), CultureInfo.GetCultureInfo("en-US"));
-                    ReportToCsv(reportSpec, docNew, testFilesDir.GetTestPathIntl(REPORT_EXPECTED), CultureInfo.GetCultureInfo("fr-FR"));
-                }
-                string docNewActual = testFilesDir.GetTestPath(REPORT_ACTUAL);
-                string docNewExpected = testFilesDir.GetTestPathLocale(REPORT_EXPECTED);
-                ReportToCsv(reportSpec, docNew, docNewActual, CultureInfo.CurrentCulture);
-                AssertEx.FileEquals(docNewExpected, docNewActual);
-
-                // 2. Reintegrating again gives no change in document
-                var resultsHandlerRepeat = new MProphetResultsHandler(docNew, peakScoringModel) { QValueCutoff = Q_CUTOFF };
-                resultsHandlerRepeat.ScoreFeatures();
-                var docRepeat = resultsHandlerRepeat.ChangePeaks();
-                Assert.AreSame(docRepeat, docNew);
-                Assert.AreNotSame(docOriginal, docNew);
-
-                // 3. Export mProphet results gives expected file
-                var calcs = peakScoringModel.PeakFeatureCalculators;
-                var mProphetActual = testFilesDir.GetTestPath(MPROPHET_ACTUAL);
-                var mProphetExpected = testFilesDir.GetTestPathLocale(MPROPHET_EXPECTED);
-                if (IsSaveAll)
-                {
-                    // For regenerating files
-                    SaveMProphetFeatures(resultsHandler, testFilesDir.GetTestPath(MPROPHET_EXPECTED), CultureInfo.GetCultureInfo("en-US"), calcs);
-                    SaveMProphetFeatures(resultsHandler, testFilesDir.GetTestPathIntl(MPROPHET_EXPECTED), CultureInfo.GetCultureInfo("fr-FR"), calcs);
-                }
-                SaveMProphetFeatures(resultsHandler, mProphetActual, CultureInfo.CurrentCulture, calcs);
-                AssertEx.FileEquals(mProphetExpected, mProphetActual);
-
-                // 4. Export mProphet -> Import Peak Boundaries leads to same result as reintegrate
-                var resultsHandlerQAll = new MProphetResultsHandler(docOriginal, peakScoringModel) { QValueCutoff = 1.0 };
-                resultsHandlerQAll.ScoreFeatures();
-                var docNewQAll = resultsHandlerQAll.ChangePeaks();
-                var peakBoundaryImporter = new PeakBoundaryImporter(docNewQAll);
-                long lineCount = Helpers.CountLinesInFile(mProphetActual);
-                peakBoundaryImporter.Import(mProphetActual, null, lineCount);
-                var docImport = peakBoundaryImporter.Document;
-                // Serialized documents are easier to debug when something is different
-                string strDocNew = SerializeDoc(docNewQAll);
-                string strDocImport = SerializeDoc(docImport);
-                AssertEx.NoDiff(strDocNew, strDocImport);
-                Assert.AreSame(docNewQAll, docImport);
-
-                // 5. Reintegration with q value cutoff of <0 causes all peaks set to null
-                var handlerAllNull = new MProphetResultsHandler(docOriginal, peakScoringModel) { QValueCutoff = -0.001 };
-                handlerAllNull.ScoreFeatures();
-                var docNull = handlerAllNull.ChangePeaks();
-                foreach (var transitionNode in docNull.PeptideTransitions)
-                    foreach (var chromInfo in transitionNode.ChromInfos)
-                        Assert.IsTrue(chromInfo.IsEmpty || transitionNode.IsDecoy);
-
-                // 6. Reintegration adjusts example peak to null at q=0.005 cutoff, but adjusts it to a non-null peak at q=0.20
-                const int groupNum = 11;
-                var midQNode = resultsHandler.Document.PeptideTransitionGroups.ToList()[groupNum];
-                foreach (var chromInfo in midQNode.Transitions.SelectMany(transition => transition.ChromInfos))
-                    Assert.IsTrue(chromInfo.IsEmpty);
-                resultsHandler.QValueCutoff = Q_CUTOFF_HIGH;
-                resultsHandler.ChangePeaks();
-                var midQNodeNew = resultsHandler.Document.PeptideTransitionGroups.ToList()[groupNum];
-                foreach (var chromInfo in midQNodeNew.Transitions.SelectMany(transition => transition.ChromInfos))
-                    Assert.IsFalse(chromInfo.IsEmpty);
-
-                // 7. Labeled peptide pairs still have matching peaks
-                foreach (var peptideNode in resultsHandler.Document.Peptides)
-                {
-                    Assert.AreEqual(2, peptideNode.TransitionGroupCount);
-                    var groupList = peptideNode.TransitionGroups.ToList();
-                    var lightGroup = groupList[0];
-                    var heavyGroup = groupList[0];
-                    var lightChromInfo = lightGroup.ChromInfos.ToList()[0];
-                    var heavyChromInfo = heavyGroup.ChromInfos.ToList()[0];
-                    Assert.AreEqual(lightChromInfo.StartRetentionTime, heavyChromInfo.StartRetentionTime);
-                    Assert.AreEqual(lightChromInfo.EndRetentionTime, heavyChromInfo.EndRetentionTime);
-                    Assert.AreEqual(lightChromInfo.RetentionTime, heavyChromInfo.RetentionTime);
-                }
-
-                // 8. Verify that chosen peaks and q values are the same as those in mProphet paper: 
-                // http://www.nature.com/nmeth/journal/v8/n5/full/nmeth.1584.html#/supplementary-information
-                // TODO: Grab this data from the mProphet paper
+                // For regenerating expected files if things change
+                ReportToCsv(reportSpec, docNew, testFilesDir.GetTestPath(REPORT_EXPECTED), CultureInfo.GetCultureInfo("en-US"));
+                ReportToCsv(reportSpec, docNew, testFilesDir.GetTestPathIntl(REPORT_EXPECTED), CultureInfo.GetCultureInfo("fr-FR"));
             }
+            string docNewActual = testFilesDir.GetTestPath(REPORT_ACTUAL);                                        
+            string docNewExpected = testFilesDir.GetTestPathLocale(REPORT_EXPECTED);
+            ReportToCsv(reportSpec, docNew, docNewActual, CultureInfo.CurrentCulture);
+            AssertEx.FileEquals(docNewExpected, docNewActual);
+
+            // 2. Reintegrating again gives no change in document
+            var resultsHandlerRepeat = new MProphetResultsHandler(docNew, peakScoringModel) { QValueCutoff = Q_CUTOFF };
+            resultsHandlerRepeat.ScoreFeatures();
+            var docRepeat = resultsHandlerRepeat.ChangePeaks();
+            Assert.AreSame(docRepeat, docNew);
+            Assert.AreNotSame(docOriginal, docNew);
+
+            // 3. Export mProphet results gives expected file
+            var calcs = peakScoringModel.PeakFeatureCalculators;
+            var mProphetActual = testFilesDir.GetTestPath(MPROPHET_ACTUAL);
+            var mProphetExpected = testFilesDir.GetTestPathLocale(MPROPHET_EXPECTED);
+            if (IsSaveAll)
+            {
+                // For regenerating files
+                SaveMProphetFeatures(resultsHandler, testFilesDir.GetTestPath(MPROPHET_EXPECTED), CultureInfo.GetCultureInfo("en-US"), calcs);
+                SaveMProphetFeatures(resultsHandler, testFilesDir.GetTestPathIntl(MPROPHET_EXPECTED), CultureInfo.GetCultureInfo("fr-FR"), calcs);
+            }
+            SaveMProphetFeatures(resultsHandler, mProphetActual, CultureInfo.CurrentCulture, calcs);
+            AssertEx.FileEquals(mProphetExpected, mProphetActual);
+
+            // 4. Export mProphet -> Import Peak Boundaries leads to same result as reintegrate
+            var resultsHandlerQAll = new MProphetResultsHandler(docOriginal, peakScoringModel) {QValueCutoff = 1.0};
+            resultsHandlerQAll.ScoreFeatures();
+            var docNewQAll = resultsHandlerQAll.ChangePeaks();
+            var peakBoundaryImporter = new PeakBoundaryImporter(docNewQAll);
+            long lineCount = Helpers.CountLinesInFile(mProphetActual);
+            peakBoundaryImporter.Import(mProphetActual, null, lineCount);
+            var docImport = peakBoundaryImporter.Document;
+            // Serialized documents are easier to debug when something is different
+            string strDocNew = SerializeDoc(docNewQAll);
+            string strDocImport = SerializeDoc(docImport);
+            AssertEx.NoDiff(strDocNew, strDocImport);
+            Assert.AreSame(docNewQAll, docImport);
+
+            // 5. Reintegration with q value cutoff of <0 causes all peaks set to null
+            var handlerAllNull = new MProphetResultsHandler(docOriginal, peakScoringModel) {QValueCutoff = -0.001};
+            handlerAllNull.ScoreFeatures();
+            var docNull = handlerAllNull.ChangePeaks();
+            foreach (var transitionNode in docNull.PeptideTransitions)
+                foreach(var chromInfo in transitionNode.ChromInfos)
+                    Assert.IsTrue(chromInfo.IsEmpty || transitionNode.IsDecoy);
+
+            // 6. Reintegration adjusts example peak to null at q=0.005 cutoff, but adjusts it to a non-null peak at q=0.20
+            const int groupNum = 11;
+            var midQNode = resultsHandler.Document.PeptideTransitionGroups.ToList()[groupNum];
+            foreach (var chromInfo in midQNode.Transitions.SelectMany(transition => transition.ChromInfos))
+                Assert.IsTrue(chromInfo.IsEmpty);
+            resultsHandler.QValueCutoff = Q_CUTOFF_HIGH;
+            resultsHandler.ChangePeaks();
+            var midQNodeNew = resultsHandler.Document.PeptideTransitionGroups.ToList()[groupNum];
+            foreach (var chromInfo in midQNodeNew.Transitions.SelectMany(transition => transition.ChromInfos))
+                Assert.IsFalse(chromInfo.IsEmpty);
+
+            // 7. Labeled peptide pairs still have matching peaks
+            foreach (var peptideNode in resultsHandler.Document.Peptides)
+            {
+                Assert.AreEqual(2, peptideNode.TransitionGroupCount);
+                var groupList = peptideNode.TransitionGroups.ToList();
+                var lightGroup = groupList[0];
+                var heavyGroup = groupList[0];
+                var lightChromInfo = lightGroup.ChromInfos.ToList()[0];
+                var heavyChromInfo = heavyGroup.ChromInfos.ToList()[0];
+                Assert.AreEqual(lightChromInfo.StartRetentionTime, heavyChromInfo.StartRetentionTime);
+                Assert.AreEqual(lightChromInfo.EndRetentionTime, heavyChromInfo.EndRetentionTime);
+                Assert.AreEqual(lightChromInfo.RetentionTime, heavyChromInfo.RetentionTime);
+            }
+
+            // 8. Verify that chosen peaks and q values are the same as those in mProphet paper: 
+            // http://www.nature.com/nmeth/journal/v8/n5/full/nmeth.1584.html#/supplementary-information
+            // TODO: Grab this data from the mProphet paper
+
+            // Release open streams
+            docContainer.Release();
         }
 
         private string SerializeDoc(SrmDocument doc)

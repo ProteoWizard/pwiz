@@ -34,9 +34,8 @@ namespace pwiz.Skyline
     public class CommandArgs
     {
         public string SkylineFile { get; private set; }
-        public List<MsDataFileUri> ReplicateFile { get; private set; }
+        public MsDataFileUri ReplicateFile { get; private set; }
         public string ReplicateName { get; private set; }
-        public int ImportThreads { get; private set; }
         public bool ImportAppend { get; private set; }
         public bool ImportDisableJoining { get; private set; }
         public string ImportSourceDirectory { get; private set; }
@@ -96,7 +95,7 @@ namespace pwiz.Skyline
         }
         public bool ImportingReplicateFile
         {
-            get { return ReplicateFile.Count > 0; }
+            get { return null != ReplicateFile; }
         }
         public bool ImportingSourceDirectory
         {
@@ -458,7 +457,6 @@ namespace pwiz.Skyline
             DwellTime = AbstractMassListExporter.DWELL_TIME_DEFAULT;
             RunLength = AbstractMassListExporter.RUN_LENGTH_DEFAULT;
 
-            ReplicateFile = new List<MsDataFileUri>();
             SearchResultsFiles = new List<string>();
 
             ImportBeforeDate = null;
@@ -515,8 +513,6 @@ namespace pwiz.Skyline
 
         private bool ParseArgsInternal(IEnumerable<string> args)
         {
-            ImportThreads = 1;
-
             foreach (string s in args)
             {
                 var pair = new NameValuePair(s);
@@ -549,10 +545,6 @@ namespace pwiz.Skyline
                         return false;
                     }
                     Directory.SetCurrentDirectory(pair.Value);
-                }
-                else if (IsNameValue(pair, "import-threads"))
-                {
-                    ImportThreads = int.Parse(pair.Value);
                 }
                 else if (IsNameOnly(pair, "timestamp")) // Not L10N
                 {
@@ -903,11 +895,11 @@ namespace pwiz.Skyline
                 {
                     if (pair.Value.StartsWith(ChorusUrl.ChorusUrlPrefix))
                     {
-                        ReplicateFile.Add(MsDataFileUri.Parse(pair.Value));
+                        ReplicateFile = MsDataFileUri.Parse(pair.Value);
                     }
                     else
                     {
-                        ReplicateFile.Add(new MsDataFilePath(GetFullPath(pair.Value)));
+                        ReplicateFile = new MsDataFilePath(GetFullPath(pair.Value));
                     }
                     RequiresSkylineDocument = true;
                 }

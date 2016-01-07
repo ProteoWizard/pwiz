@@ -39,7 +39,7 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromCacheJoiner(string cachePath, IPooledStream streamDest,
                                 IList<string> cacheFilePaths, ILoadMonitor loader, ProgressStatus status,
-                                Action<ChromatogramCache, IProgressStatus> completed)
+                                Action<ChromatogramCache, Exception> completed)
             : base(cachePath, loader, status, completed)
         {
             _destinationStream = streamDest;

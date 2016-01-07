@@ -181,7 +181,7 @@ namespace pwiz.Skyline.Model.Proteome
                     backgroundProteomeWithDigestions.NeedsProteinMetadataSearch; 
 
                 string name = originalBackgroundProteome.Name;
-                IProgressStatus progressStatus =
+                ProgressStatus progressStatus =
                     new ProgressStatus(string.Format(getMetadata?Resources.BackgroundProteomeManager_LoadBackground_Resolving_protein_details_for__0__proteome:Resources.BackgroundProteomeManager_LoadBackground_Digesting__0__proteome, name));
                 try
                 {
@@ -263,7 +263,7 @@ namespace pwiz.Skyline.Model.Proteome
             private readonly string _pathProteome;
             private readonly bool _isTemporary;  // Are we doing this work on a temporary copy of the DB?
 
-            private IProgressStatus _progressStatus;
+            private ProgressStatus _progressStatus;
 
             public DigestHelper(BackgroundProteomeManager manager,
                                 IDocumentContainer container,
@@ -281,7 +281,7 @@ namespace pwiz.Skyline.Model.Proteome
             }
 
 // ReSharper disable RedundantAssignment
-            public Digestion Digest(ref IProgressStatus progressStatus)
+            public Digestion Digest(ref ProgressStatus progressStatus)
 // ReSharper restore RedundantAssignment
             {
                 using (var proteomeDb = ProteomeDb.OpenProteomeDb(_pathProteome,_isTemporary))
@@ -298,7 +298,7 @@ namespace pwiz.Skyline.Model.Proteome
             }
 
             // ReSharper disable RedundantAssignment
-            public bool LookupProteinMetadata(ref IProgressStatus progressStatus)
+            public bool LookupProteinMetadata(ref ProgressStatus progressStatus)
             // ReSharper restore RedundantAssignment
             {
                 if (!_manager.FastaImporter.HasWebAccess()) // Do we even have web access?

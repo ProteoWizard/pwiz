@@ -113,160 +113,160 @@ namespace pwiz.SkylineTestA
             var peakBoundaryDoc = testFilesDir.GetTestPath("Chrom05.sky");
             SrmDocument doc = ResultsUtil.DeserializeDocument(peakBoundaryDoc);
 
-            var cult = LocalizationHelper.CurrentCulture;
-            var cultI = CultureInfo.InvariantCulture;
-            string csvSep = TextUtil.CsvSeparator.ToString(cultI);
-            string spaceSep = TextUtil.SEPARATOR_SPACE.ToString(cultI);
-
             // Load an empty doc, so that we can make a change and 
             // cause the .skyd to be loaded
-            using (var docContainer = new ResultsTestDocumentContainer(null, peakBoundaryDoc))
+            var docContainer = new ResultsTestDocumentContainer(null, peakBoundaryDoc);
+            docContainer.SetDocument(doc, null, true);
+            docContainer.AssertComplete();
+            SrmDocument docResults = docContainer.Document;
+            // Test Tsv import, looking at first .raw file
+            DoFileImportTests(docResults, peakBoundaryFileTsv, _precursorCharge,
+                _tsvMinTime1, _tsvMaxTime1, _tsvIdentified1, _tsvAreas1, _peptides, 0, precursorMzs, annote);
+            // Test Tsv import, looking at second .raw file
+            DoFileImportTests(docResults, peakBoundaryFileTsv, _precursorCharge,
+                _tsvMinTime2, _tsvMaxTime2, _tsvIdentified2, _tsvAreas2, _peptides, 1, precursorMzs, annote);
+
+            // Test Csv import for local format
+            DoFileImportTests(docResults, peakBoundaryFileCsv, _precursorCharge,
+                _csvMinTime1, _csvMaxTime1, _csvIdentified1, _csvAreas1, _peptides, 0, precursorMzs, annote);
+            DoFileImportTests(docResults, peakBoundaryFileCsv, _precursorCharge,
+                _csvMinTime2, _csvMaxTime2, _csvIdentified2, _csvAreas2, _peptides, 1, precursorMzs, annote);
+
+            // Test that importing same file twice leads to no change to document the second time
+            var docNew = ImportFileToDoc(docResults, peakBoundaryFileTsv);
+            var docNewSame = ImportFileToDoc(docNew, peakBoundaryFileTsv);
+            Assert.AreSame(docNew, docNewSame);
+            Assert.AreNotSame(docNew, docResults);
+
+            // Test that exporting peak boundaries and then importing them leads to no change
+            string peakBoundaryExport = testFilesDir.GetTestPath("TestRoundTrip.csv");
+            ReportSpec reportSpec = MakeReportSpec();
+            ReportToCsv(reportSpec, docNew, peakBoundaryExport);
+            var docRoundTrip = ImportFileToDoc(docNew, peakBoundaryExport);
+            Assert.AreSame(docNew, docRoundTrip);
+
+
+            var cult = LocalizationHelper.CurrentCulture;
+            var cultI = CultureInfo.InvariantCulture;
+            // 1. Empty file - 
+            ImportThrowsException(docResults, string.Empty,
+                Resources.PeakBoundaryImporter_Import_Failed_to_read_the_first_line_of_the_file);
+
+            // 2. No separator in first line
+            ImportThrowsException(docResults, "No-valid-separators",
+                TextUtil.CsvSeparator == TextUtil.SEPARATOR_CSV
+                    ? Resources.PeakBoundaryImporter_DetermineCorrectSeparator_The_first_line_does_not_contain_any_of_the_possible_separators_comma__tab_or_space_
+                    : Resources.PeakBoundaryImporter_DetermineCorrectSeparator_The_first_line_does_not_contain_any_of_the_possible_separators_semicolon__tab_or_space_);
+            
+            // 3. Missing field names
+            string csvSep = TextUtil.CsvSeparator.ToString(cultI);
+            string spaceSep = TextUtil.SEPARATOR_SPACE.ToString(cultI);
+            ImportThrowsException(docResults, string.Join(csvSep, PeakBoundaryImporter.STANDARD_FIELD_NAMES.Take(3).ToArray()),
+                Resources.PeakBoundaryImporter_Import_Failed_to_find_the_necessary_headers__0__in_the_first_line);
+
+            string headerRow = string.Join(csvSep, PeakBoundaryImporter.STANDARD_FIELD_NAMES.Take(6));
+            string headerRowSpaced = string.Join(spaceSep, PeakBoundaryImporter.STANDARD_FIELD_NAMES.Take(6));
+            string[] values =
             {
-                docContainer.SetDocument(doc, null, true);
-                docContainer.AssertComplete();
-                SrmDocument docResults = docContainer.Document;
-                // Test Tsv import, looking at first .raw file
-                DoFileImportTests(docResults, peakBoundaryFileTsv, _precursorCharge,
-                    _tsvMinTime1, _tsvMaxTime1, _tsvIdentified1, _tsvAreas1, _peptides, 0, precursorMzs, annote);
-                // Test Tsv import, looking at second .raw file
-                DoFileImportTests(docResults, peakBoundaryFileTsv, _precursorCharge,
-                    _tsvMinTime2, _tsvMaxTime2, _tsvIdentified2, _tsvAreas2, _peptides, 1, precursorMzs, annote);
+                "TPEVDDEALEK", "Q_2012_0918_RJ_13.raw", (3.5).ToString(cult), (4.5).ToString(cult), 2.ToString(cult), 0.ToString(cult)
+            };
+            
+            // 4. Mismatched field count
+            ImportThrowsException(docResults, TextUtil.LineSeparate(headerRow, string.Join(spaceSep, values)),
+                Resources.PeakBoundaryImporter_Import_Line__0__field_count__1__differs_from_the_first_line__which_has__2_);
+            
+            // 5. Invalid charge state
+            string[] valuesBadCharge = new List<string>(values).ToArray();
+            valuesBadCharge[(int) PeakBoundaryImporter.Field.charge] = (3.5).ToString(cult);
+            ImportThrowsException(docResults, TextUtil.LineSeparate(headerRow, string.Join(csvSep, valuesBadCharge)),
+                Resources.PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_charge_state_);
+            valuesBadCharge[(int) PeakBoundaryImporter.Field.charge] = TextUtil.EXCEL_NA;
+            ImportThrowsException(docResults, TextUtil.LineSeparate(headerRow, string.Join(csvSep, valuesBadCharge)),
+                Resources.PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_charge_state_);
 
-                // Test Csv import for local format
-                DoFileImportTests(docResults, peakBoundaryFileCsv, _precursorCharge,
-                    _csvMinTime1, _csvMaxTime1, _csvIdentified1, _csvAreas1, _peptides, 0, precursorMzs, annote);
-                DoFileImportTests(docResults, peakBoundaryFileCsv, _precursorCharge,
-                    _csvMinTime2, _csvMaxTime2, _csvIdentified2, _csvAreas2, _peptides, 1, precursorMzs, annote);
+            // 6. Invalid start time
+            string[] valuesBadTime = new List<string>(values).ToArray();
+            valuesBadTime[(int) PeakBoundaryImporter.Field.start_time] = "bad";
+            ImportThrowsException(docResults, TextUtil.LineSeparate(headerRowSpaced, string.Join(spaceSep, valuesBadTime)),
+                Resources.PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_start_time_);
+            valuesBadTime[(int)PeakBoundaryImporter.Field.end_time] = "bad";
+            ImportThrowsException(docResults, TextUtil.LineSeparate(headerRowSpaced, string.Join(spaceSep, valuesBadTime)),
+                Resources.PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_start_time_);
 
-                // Test that importing same file twice leads to no change to document the second time
-                var docNew = ImportFileToDoc(docResults, peakBoundaryFileTsv);
-                var docNewSame = ImportFileToDoc(docNew, peakBoundaryFileTsv);
-                Assert.AreSame(docNew, docNewSame);
-                Assert.AreNotSame(docNew, docResults);
+            // But ok if not adjusting peaks
+            ImportNoException(docResults, TextUtil.LineSeparate(headerRowSpaced, string.Join(spaceSep, valuesBadTime)), true, false, false);
 
-                // Test that exporting peak boundaries and then importing them leads to no change
-                string peakBoundaryExport = testFilesDir.GetTestPath("TestRoundTrip.csv");
-                ReportSpec reportSpec = MakeReportSpec();
-                ReportToCsv(reportSpec, docNew, peakBoundaryExport);
-                var docRoundTrip = ImportFileToDoc(docNew, peakBoundaryExport);
-                Assert.AreSame(docNew, docRoundTrip);
+            // 7. Invalid end time
+            valuesBadTime[(int) PeakBoundaryImporter.Field.start_time] =
+                values[(int) PeakBoundaryImporter.Field.start_time];
+            ImportThrowsException(docResults, TextUtil.LineSeparate(headerRowSpaced, string.Join(spaceSep, valuesBadTime)),
+                Resources.PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_end_time_);
 
+            // But ok if not adjusting peaks
+            ImportNoException(docResults, TextUtil.LineSeparate(headerRowSpaced, string.Join(spaceSep, valuesBadTime)), true, false, false);
 
-                // 1. Empty file - 
-                ImportThrowsException(docResults, string.Empty,
-                    Resources.PeakBoundaryImporter_Import_Failed_to_read_the_first_line_of_the_file);
+            // #N/A in times ok
+            valuesBadTime[(int)PeakBoundaryImporter.Field.start_time] =
+                valuesBadTime[(int)PeakBoundaryImporter.Field.end_time] = TextUtil.EXCEL_NA;
+            ImportNoException(docResults, TextUtil.LineSeparate(headerRowSpaced, string.Join(spaceSep, valuesBadTime)));
+            // If only start time #N/A throws exception
+            valuesBadTime[(int)PeakBoundaryImporter.Field.start_time] = (3.5).ToString(cult);
+            ImportThrowsException(docResults, TextUtil.LineSeparate(headerRowSpaced, string.Join(spaceSep, valuesBadTime)),
+                Resources.PeakBoundaryImporter_Import_Missing_end_time_on_line__0_);
+            // If only end time #N/A throws exception
+            valuesBadTime[(int)PeakBoundaryImporter.Field.start_time] = TextUtil.EXCEL_NA;
+            valuesBadTime[(int)PeakBoundaryImporter.Field.end_time] = (3.5).ToString(cult);
+            ImportThrowsException(docResults, TextUtil.LineSeparate(headerRowSpaced, string.Join(spaceSep, valuesBadTime)),
+                Resources.PeakBoundaryImporter_Import_Missing_start_time_on_line__0_);
+            // Empty times throws exception
+            valuesBadTime[(int)PeakBoundaryImporter.Field.start_time] =
+                valuesBadTime[(int)PeakBoundaryImporter.Field.end_time] = string.Empty;
+            ImportThrowsException(docResults, TextUtil.LineSeparate(headerRowSpaced, string.Join(spaceSep, valuesBadTime)),
+                Resources.PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_start_time_);
+            
+            // 8. Not imported file gets skipped
+            string[] valuesBadFile = new List<string>(values).ToArray();
+            valuesBadFile[(int) PeakBoundaryImporter.Field.filename] = "Q_2012_0918_RJ_15.raw";
+            ImportNoException(docResults, TextUtil.LineSeparate(headerRowSpaced, string.Join(spaceSep, valuesBadFile)));
 
-                // 2. No separator in first line
-                ImportThrowsException(docResults, "No-valid-separators",
-                    TextUtil.CsvSeparator == TextUtil.SEPARATOR_CSV
-                        ? Resources.PeakBoundaryImporter_DetermineCorrectSeparator_The_first_line_does_not_contain_any_of_the_possible_separators_comma__tab_or_space_
-                        : Resources.PeakBoundaryImporter_DetermineCorrectSeparator_The_first_line_does_not_contain_any_of_the_possible_separators_semicolon__tab_or_space_);
+            // 9. Unknown modification state gets skipped
+            string[] valuesBadSequence = new List<string>(values).ToArray();
+            valuesBadSequence[(int)PeakBoundaryImporter.Field.modified_peptide] = "T[+80]PEVDDEALEK";
+            ImportNoException(docResults, TextUtil.LineSeparate(headerRow, string.Join(csvSep, valuesBadSequence)));
 
-                // 3. Missing field names
-                ImportThrowsException(docResults, string.Join(csvSep, PeakBoundaryImporter.STANDARD_FIELD_NAMES.Take(3).ToArray()),
-                    Resources.PeakBoundaryImporter_Import_Failed_to_find_the_necessary_headers__0__in_the_first_line);
+            // 10. Unknown peptide sequence gets skipped
+            valuesBadSequence[(int)PeakBoundaryImporter.Field.modified_peptide] = "PEPTIDER";
+            ImportNoException(docResults, TextUtil.LineSeparate(headerRow, string.Join(csvSep, valuesBadSequence)));
 
-                string headerRow = string.Join(csvSep, PeakBoundaryImporter.STANDARD_FIELD_NAMES.Take(6));
-                string headerRowSpaced = string.Join(spaceSep, PeakBoundaryImporter.STANDARD_FIELD_NAMES.Take(6));
-                string[] values =
-                {
-                    "TPEVDDEALEK", "Q_2012_0918_RJ_13.raw", (3.5).ToString(cult), (4.5).ToString(cult), 2.ToString(cult), 0.ToString(cult)
-                };
+            // 11. Bad value in decoy field
+            string[] valuesBadDecoys = new List<string>(values).ToArray();
+            valuesBadDecoys[(int)PeakBoundaryImporter.Field.is_decoy] = 3.ToString(cult);
+            ImportThrowsException(docResults, TextUtil.LineSeparate(headerRow, string.Join(csvSep, valuesBadDecoys)),
+                Resources.PeakBoundaryImporter_Import_The_decoy_value__0__on_line__1__is_invalid__must_be_0_or_1_);
 
-                // 4. Mismatched field count
-                ImportThrowsException(docResults, TextUtil.LineSeparate(headerRow, string.Join(spaceSep, values)),
-                    Resources.PeakBoundaryImporter_Import_Line__0__field_count__1__differs_from_the_first_line__which_has__2_);
+            // 12. Import with bad sample throws exception
+            string[] valuesSample =
+            {
+                "TPEVDDEALEK", "Q_2012_0918_RJ_13.raw", (3.5).ToString(cult), (4.5).ToString(cult), 2.ToString(cult), 0.ToString(cult), "badSample"
+            };
+            string headerRowSample = string.Join(csvSep, PeakBoundaryImporter.STANDARD_FIELD_NAMES);
+            ImportThrowsException(docResults, TextUtil.LineSeparate(headerRowSample, string.Join(csvSep, valuesSample)),
+                Resources.PeakBoundaryImporter_Import_Sample__0__on_line__1__does_not_match_the_file__2__);
 
-                // 5. Invalid charge state
-                string[] valuesBadCharge = new List<string>(values).ToArray();
-                valuesBadCharge[(int)PeakBoundaryImporter.Field.charge] = (3.5).ToString(cult);
-                ImportThrowsException(docResults, TextUtil.LineSeparate(headerRow, string.Join(csvSep, valuesBadCharge)),
-                    Resources.PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_charge_state_);
-                valuesBadCharge[(int)PeakBoundaryImporter.Field.charge] = TextUtil.EXCEL_NA;
-                ImportThrowsException(docResults, TextUtil.LineSeparate(headerRow, string.Join(csvSep, valuesBadCharge)),
-                    Resources.PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_charge_state_);
+            // 13. Decoys, charge state, and sample missing ok
+            var valuesFourFields = valuesSample.Take(4);
+            string headerFourFields = string.Join(csvSep, PeakBoundaryImporter.STANDARD_FIELD_NAMES.Take(4));
+            ImportNoException(docResults, TextUtil.LineSeparate(headerFourFields, string.Join(csvSep, valuesFourFields)));
 
-                // 6. Invalid start time
-                string[] valuesBadTime = new List<string>(values).ToArray();
-                valuesBadTime[(int)PeakBoundaryImporter.Field.start_time] = "bad";
-                ImportThrowsException(docResults, TextUtil.LineSeparate(headerRowSpaced, string.Join(spaceSep, valuesBadTime)),
-                    Resources.PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_start_time_);
-                valuesBadTime[(int)PeakBoundaryImporter.Field.end_time] = "bad";
-                ImportThrowsException(docResults, TextUtil.LineSeparate(headerRowSpaced, string.Join(spaceSep, valuesBadTime)),
-                    Resources.PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_start_time_);
+            // 14. Valid (charge state, fileName, peptide) combo that is not in document gets skipped
+            string[] valuesBadCombo = new List<string>(values).ToArray();
+            valuesBadCombo[(int) PeakBoundaryImporter.Field.charge] = (5).ToString(cult);
+            ImportNoException(docResults, TextUtil.LineSeparate(headerRow, string.Join(csvSep, valuesBadCombo)));
 
-                // But ok if not adjusting peaks
-                ImportNoException(docResults, TextUtil.LineSeparate(headerRowSpaced, string.Join(spaceSep, valuesBadTime)), true, false, false);
+            // Note: Importing with all 7 columns is tested as part of MProphetResultsHandlerTest
 
-                // 7. Invalid end time
-                valuesBadTime[(int)PeakBoundaryImporter.Field.start_time] =
-                    values[(int)PeakBoundaryImporter.Field.start_time];
-                ImportThrowsException(docResults, TextUtil.LineSeparate(headerRowSpaced, string.Join(spaceSep, valuesBadTime)),
-                    Resources.PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_end_time_);
-
-                // But ok if not adjusting peaks
-                ImportNoException(docResults, TextUtil.LineSeparate(headerRowSpaced, string.Join(spaceSep, valuesBadTime)), true, false, false);
-
-                // #N/A in times ok
-                valuesBadTime[(int)PeakBoundaryImporter.Field.start_time] =
-                    valuesBadTime[(int)PeakBoundaryImporter.Field.end_time] = TextUtil.EXCEL_NA;
-                ImportNoException(docResults, TextUtil.LineSeparate(headerRowSpaced, string.Join(spaceSep, valuesBadTime)));
-                // If only start time #N/A throws exception
-                valuesBadTime[(int)PeakBoundaryImporter.Field.start_time] = (3.5).ToString(cult);
-                ImportThrowsException(docResults, TextUtil.LineSeparate(headerRowSpaced, string.Join(spaceSep, valuesBadTime)),
-                    Resources.PeakBoundaryImporter_Import_Missing_end_time_on_line__0_);
-                // If only end time #N/A throws exception
-                valuesBadTime[(int)PeakBoundaryImporter.Field.start_time] = TextUtil.EXCEL_NA;
-                valuesBadTime[(int)PeakBoundaryImporter.Field.end_time] = (3.5).ToString(cult);
-                ImportThrowsException(docResults, TextUtil.LineSeparate(headerRowSpaced, string.Join(spaceSep, valuesBadTime)),
-                    Resources.PeakBoundaryImporter_Import_Missing_start_time_on_line__0_);
-                // Empty times throws exception
-                valuesBadTime[(int)PeakBoundaryImporter.Field.start_time] =
-                    valuesBadTime[(int)PeakBoundaryImporter.Field.end_time] = string.Empty;
-                ImportThrowsException(docResults, TextUtil.LineSeparate(headerRowSpaced, string.Join(spaceSep, valuesBadTime)),
-                    Resources.PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_start_time_);
-
-                // 8. Not imported file gets skipped
-                string[] valuesBadFile = new List<string>(values).ToArray();
-                valuesBadFile[(int)PeakBoundaryImporter.Field.filename] = "Q_2012_0918_RJ_15.raw";
-                ImportNoException(docResults, TextUtil.LineSeparate(headerRowSpaced, string.Join(spaceSep, valuesBadFile)));
-
-                // 9. Unknown modification state gets skipped
-                string[] valuesBadSequence = new List<string>(values).ToArray();
-                valuesBadSequence[(int)PeakBoundaryImporter.Field.modified_peptide] = "T[+80]PEVDDEALEK";
-                ImportNoException(docResults, TextUtil.LineSeparate(headerRow, string.Join(csvSep, valuesBadSequence)));
-
-                // 10. Unknown peptide sequence gets skipped
-                valuesBadSequence[(int)PeakBoundaryImporter.Field.modified_peptide] = "PEPTIDER";
-                ImportNoException(docResults, TextUtil.LineSeparate(headerRow, string.Join(csvSep, valuesBadSequence)));
-
-                // 11. Bad value in decoy field
-                string[] valuesBadDecoys = new List<string>(values).ToArray();
-                valuesBadDecoys[(int)PeakBoundaryImporter.Field.is_decoy] = 3.ToString(cult);
-                ImportThrowsException(docResults, TextUtil.LineSeparate(headerRow, string.Join(csvSep, valuesBadDecoys)),
-                    Resources.PeakBoundaryImporter_Import_The_decoy_value__0__on_line__1__is_invalid__must_be_0_or_1_);
-
-                // 12. Import with bad sample throws exception
-                string[] valuesSample =
-                {
-                    "TPEVDDEALEK", "Q_2012_0918_RJ_13.raw", (3.5).ToString(cult), (4.5).ToString(cult), 2.ToString(cult), 0.ToString(cult), "badSample"
-                };
-                string headerRowSample = string.Join(csvSep, PeakBoundaryImporter.STANDARD_FIELD_NAMES);
-                ImportThrowsException(docResults, TextUtil.LineSeparate(headerRowSample, string.Join(csvSep, valuesSample)),
-                    Resources.PeakBoundaryImporter_Import_Sample__0__on_line__1__does_not_match_the_file__2__);
-
-                // 13. Decoys, charge state, and sample missing ok
-                var valuesFourFields = valuesSample.Take(4);
-                string headerFourFields = string.Join(csvSep, PeakBoundaryImporter.STANDARD_FIELD_NAMES.Take(4));
-                ImportNoException(docResults, TextUtil.LineSeparate(headerFourFields, string.Join(csvSep, valuesFourFields)));
-
-                // 14. Valid (charge state, fileName, peptide) combo that is not in document gets skipped
-                string[] valuesBadCombo = new List<string>(values).ToArray();
-                valuesBadCombo[(int)PeakBoundaryImporter.Field.charge] = (5).ToString(cult);
-                ImportNoException(docResults, TextUtil.LineSeparate(headerRow, string.Join(csvSep, valuesBadCombo)));
-
-                // Note: Importing with all 7 columns is tested as part of MProphetResultsHandlerTest
-            }
+            // Release open streams
+            docContainer.Release();
 
             // Now check a file that has peptide ID's, and see that they're properly ported
             var peptideIdPath = testFilesDir.GetTestPath("Template_MS1Filtering_1118_2011_3-2min.sky");
@@ -280,41 +280,42 @@ namespace pwiz.SkylineTestA
                         });
                 }));
 
-            using (var docContainerId = new ResultsTestDocumentContainer(null, peptideIdPath))
-            {
-                docContainerId.SetDocument(docId, null, true);
-                docContainerId.AssertComplete();
-                SrmDocument docResultsId = docContainerId.Document;
-                var peakBoundaryFileId = testFilesDir.GetTestPath(isIntl
-                                                                      ? "Template_MS1Filtering_1118_2011_3-2min_new_intl.tsv"
-                                                                      : "Template_MS1Filtering_1118_2011_3-2min_new.tsv");
-                DoFileImportTests(docResultsId, peakBoundaryFileId, _precursorChargeId,
-                    _idMinTime1, _idMaxTime1, _idIdentified1, _idAreas1, _peptidesId, 0);
+            var docContainerId = new ResultsTestDocumentContainer(null, peptideIdPath);
+            docContainerId.SetDocument(docId, null, true);
+            docContainerId.AssertComplete();
+            SrmDocument docResultsId = docContainerId.Document;
+            var peakBoundaryFileId = testFilesDir.GetTestPath(isIntl
+                                                                  ? "Template_MS1Filtering_1118_2011_3-2min_new_intl.tsv"
+                                                                  : "Template_MS1Filtering_1118_2011_3-2min_new.tsv");
+            DoFileImportTests(docResultsId, peakBoundaryFileId, _precursorChargeId,
+                _idMinTime1, _idMaxTime1, _idIdentified1, _idAreas1, _peptidesId, 0);
 
-                // 15. Decminal import format ok
-                var headerUnimod = string.Join(csvSep, PeakBoundaryImporter.STANDARD_FIELD_NAMES.Take(4));
-                var valuesUnimod = new[]
+            // 15. Decminal import format ok
+            var headerUnimod = string.Join(csvSep, PeakBoundaryImporter.STANDARD_FIELD_NAMES.Take(4));
+            var valuesUnimod =  new []
             {
                 "LGGLRPES[+" + string.Format("{0:F01}", 80.0) + "]PESLTSVSR", "100803_0005b_MCF7_TiTip3.wiff", (80.5).ToString(cult), (82.0).ToString(cult)
             };
-                ImportNoException(docResultsId, TextUtil.LineSeparate(headerUnimod, string.Join(csvSep, valuesUnimod)));
+            ImportNoException(docResultsId, TextUtil.LineSeparate(headerUnimod, string.Join(csvSep, valuesUnimod)));
+            
+            // 16. Integer import format ok
+            valuesUnimod[0] = "LGGLRPES[+80]PESLTSVSR";
+            ImportNoException(docResultsId, TextUtil.LineSeparate(headerUnimod, string.Join(csvSep, valuesUnimod)));
+            
+            // 17. Unimod import format ok
+            valuesUnimod[0] = "LGGLRPES(UniMod:21)PESLTSVSR";
+            ImportNoException(docResultsId, TextUtil.LineSeparate(headerUnimod, string.Join(csvSep, valuesUnimod)));
 
-                // 16. Integer import format ok
-                valuesUnimod[0] = "LGGLRPES[+80]PESLTSVSR";
-                ImportNoException(docResultsId, TextUtil.LineSeparate(headerUnimod, string.Join(csvSep, valuesUnimod)));
+            // 18. Strange capitalizations OK
+            valuesUnimod[0] = "LGGLRPES(uniMoD:21)PESLTSVSR";
+            ImportNoException(docResultsId, TextUtil.LineSeparate(headerUnimod, string.Join(csvSep, valuesUnimod)));
 
-                // 17. Unimod import format ok
-                valuesUnimod[0] = "LGGLRPES(UniMod:21)PESLTSVSR";
-                ImportNoException(docResultsId, TextUtil.LineSeparate(headerUnimod, string.Join(csvSep, valuesUnimod)));
-
-                // 18. Strange capitalizations OK
-                valuesUnimod[0] = "LGGLRPES(uniMoD:21)PESLTSVSR";
-                ImportNoException(docResultsId, TextUtil.LineSeparate(headerUnimod, string.Join(csvSep, valuesUnimod)));
-
-                // 18. Unimod with brackets OK
-                valuesUnimod[0] = "LGGLRPES[uniMoD:21]PESLTSVSR";
-                ImportNoException(docResultsId, TextUtil.LineSeparate(headerUnimod, string.Join(csvSep, valuesUnimod)));
-            }
+            // 18. Unimod with brackets OK
+            valuesUnimod[0] = "LGGLRPES[uniMoD:21]PESLTSVSR";
+            ImportNoException(docResultsId, TextUtil.LineSeparate(headerUnimod, string.Join(csvSep, valuesUnimod)));
+            
+            // Release open streams
+            docContainerId.Release();
         }
 
         private static ReportSpec MakeReportSpec()

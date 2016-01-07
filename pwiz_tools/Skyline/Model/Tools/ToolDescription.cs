@@ -803,7 +803,7 @@ namespace pwiz.Skyline.Model.Tools
                         Resources.ToolDescriptionHelpers_GetReport_Error_0_requires_a_report_titled_1_which_no_longer_exists__Please_select_a_new_report_or_import_the_report_format,
                         toolTitle, reportTitle));
             }
-            IProgressStatus status =
+            var status =
                 new ProgressStatus(string.Format(Resources.ReportSpec_ReportToCsvString_Exporting__0__report,
                     reportTitle));
             var writer = new StringWriter();

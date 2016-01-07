@@ -540,7 +540,7 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public static ChromatogramCache Load(string cachePath, IProgressStatus status, ILoadMonitor loader)
+        public static ChromatogramCache Load(string cachePath, ProgressStatus status, ILoadMonitor loader)
         {
             status = status.ChangeMessage(string.Format(Resources.ChromatogramCache_Load_Loading__0__cache, Path.GetFileName(cachePath)));
             loader.UpdateProgress(status);
@@ -571,10 +571,9 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public static void Join(string cachePath, IPooledStream streamDest,
-            IList<string> listCachePaths, ILoadMonitor loader,
-            Action<ChromatogramCache, IProgressStatus> complete)
+            IList<string> listCachePaths, ProgressStatus status, ILoadMonitor loader,
+            Action<ChromatogramCache, Exception> complete)
         {
-            var status = new ProgressStatus(string.Empty);
             try
             {
                 var joiner = new ChromCacheJoiner(cachePath, streamDest, listCachePaths, loader, status, complete);
@@ -582,13 +581,13 @@ namespace pwiz.Skyline.Model.Results
             }
             catch (Exception x)
             {
-                complete(null, status.ChangeErrorException(x));
+                complete(null, x);
             }
         }
 
         public static void Build(SrmDocument document, ChromatogramCache cacheRecalc,
-            string cachePath, MsDataFileUri msDataFileUri, IProgressStatus status, ILoadMonitor loader,
-            Action<ChromatogramCache, IProgressStatus> complete)
+            string cachePath, MsDataFileUri msDataFileUri, ProgressStatus status, ILoadMonitor loader,
+            Action<ChromatogramCache, Exception> complete)
         {
             try
             {
@@ -597,7 +596,7 @@ namespace pwiz.Skyline.Model.Results
             }
             catch (Exception x)
             {
-                complete(null, status.ChangeErrorException(x));
+                complete(null, x);
             }
         }
 
@@ -606,7 +605,7 @@ namespace pwiz.Skyline.Model.Results
             return LoadStructs(stream, null, null, out raw);
         }
 
-        public static long LoadStructs(Stream stream, IProgressStatus status, IProgressMonitor progressMonitor, out RawData raw)
+        public static long LoadStructs(Stream stream, ProgressStatus status, IProgressMonitor progressMonitor, out RawData raw)
         {
             // Read library header from the end of the cache
             const int countHeader = (int)Header.count * 4;
