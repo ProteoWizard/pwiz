@@ -6,8 +6,8 @@ namespace pwiz.Topograph.Util
     public class ProgressMonitorImpl : IProgressMonitor
     {
         private Func<bool> _isCanceledImpl;
-        private Action<ProgressStatus> _updateProgressImpl;
-        public ProgressMonitorImpl(Func<bool> isCanceledImpl, Action<ProgressStatus> updateProgressImpl)
+        private Action<IProgressStatus> _updateProgressImpl;
+        public ProgressMonitorImpl(Func<bool> isCanceledImpl, Action<IProgressStatus> updateProgressImpl)
         {
             _isCanceledImpl = isCanceledImpl;
             _updateProgressImpl = updateProgressImpl;
@@ -17,7 +17,7 @@ namespace pwiz.Topograph.Util
             get { return _isCanceledImpl.Invoke(); }
         }
 
-        public UpdateProgressResponse UpdateProgress(ProgressStatus status)
+        public UpdateProgressResponse UpdateProgress(IProgressStatus status)
         {
             _updateProgressImpl.Invoke(status);
             return UpdateProgressResponse.normal;
@@ -28,7 +28,7 @@ namespace pwiz.Topograph.Util
             get { return false; }
         }
 
-        public static ProgressMonitorImpl NewProgressMonitorImpl(ProgressStatus currentStatus, Func<int, bool> updateProgress)
+        public static ProgressMonitorImpl NewProgressMonitorImpl(IProgressStatus currentStatus, Func<int, bool> updateProgress)
         {
             return new ProgressMonitorImpl(
                 () => !updateProgress.Invoke(currentStatus.PercentComplete), 

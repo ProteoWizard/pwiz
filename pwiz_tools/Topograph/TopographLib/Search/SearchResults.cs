@@ -52,7 +52,7 @@ namespace pwiz.Topograph.Search
                                     {
                                         CompressLevel = 0,
                                     };
-                var status = new ProgressStatus("");
+                IProgressStatus status = new ProgressStatus("");
                 var progressMonitorImpl = ProgressMonitorImpl.NewProgressMonitorImpl(status, progressMonitor);
                 string[] ambiguousPeptides;
                 blibBuild.BuildLibrary(LibraryBuildAction.Create, progressMonitorImpl, ref status, out ambiguousPeptides);
