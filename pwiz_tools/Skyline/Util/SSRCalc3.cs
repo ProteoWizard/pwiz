@@ -86,8 +86,9 @@ namespace pwiz.Skyline.Util
             }
         }
 
-        public IEnumerable<string> ChooseRegressionPeptides(IEnumerable<string> peptides)
+        public IEnumerable<string> ChooseRegressionPeptides(IEnumerable<string> peptides, out int minCount)
         {
+            minCount = 0;
             return peptides;
         }
 

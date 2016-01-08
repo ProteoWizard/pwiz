@@ -159,9 +159,10 @@ namespace pwiz.Skyline.Model.Irt
                 if (!dictSeqToPeptide.ContainsKey(seqMod))
                     dictSeqToPeptide.Add(seqMod, nodePep);
             }
+            int minCount = 0;
             try
             {
-                var regressionPeps = rtRegression.Calculator.ChooseRegressionPeptides(dictSeqToPeptide.Keys);
+                var regressionPeps = rtRegression.Calculator.ChooseRegressionPeptides(dictSeqToPeptide.Keys, out minCount);
                 var setRegression = new HashSet<string>(regressionPeps);
                 dictSeqToPeptide = dictSeqToPeptide.Where(p => setRegression.Contains(p.Key))
                                                    .ToDictionary(p => p.Key, p => p.Value);
@@ -215,18 +216,25 @@ namespace pwiz.Skyline.Model.Irt
             // Only calculate regressions for files with retention times for all of the standards
             var fileIdToConversions = from p in dictFileIdToCorr
                                        where p.Value.Count == dictSeqToPeptide.Count
-                                       select new KeyValuePair<int, RegressionLine>(p.Key, CalcConversion(p.Value));
+                                       select new KeyValuePair<int, RegressionLine>(p.Key, CalcConversion(p.Value, minCount));
 
-            return rtRegression.ChangeEquations(new RegressionLineElement(CalcConversion(listPepCorr)),
+            return rtRegression.ChangeEquations(new RegressionLineElement(CalcConversion(listPepCorr, minCount)),
                                                 fileIdToConversions,
                                                 dictStandardPeptides);
         }
 
-        private static RegressionLine CalcConversion(IList<TimeScorePair> listPepCorr)
+        private static RegressionLine CalcConversion(IList<TimeScorePair> listPepCorr, int minCount)
         {
-            var statTime = new Statistics(listPepCorr.Select(p => p.Time));
-            var statScore = new Statistics(listPepCorr.Select(p => p.Score));
+            var listTime = listPepCorr.Select(p => p.Time).ToList();
+            var listScore = listPepCorr.Select(p => p.Score).ToList();
 
+            RegressionLine line;
+            if (RCalcIrt.TryGetRegressionLine(listScore, listTime, minCount, out line))
+                return line;
+
+            // TODO: Figure out something better here
+            var statTime = new Statistics(listTime);
+            var statScore = new Statistics(listScore);
             return new RegressionLine(statTime.Slope(statScore), statTime.Intercept(statScore));
         }
 

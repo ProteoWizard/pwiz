@@ -147,14 +147,16 @@ namespace pwiz.Skyline.Model.Lib
             get { return double.NaN; }
         }
 
-        public override IEnumerable<string> ChooseRegressionPeptides(IEnumerable<string> peptides)
+        public override IEnumerable<string> ChooseRegressionPeptides(IEnumerable<string> peptides, out int minCount)
         {
+            minCount = 0;
             return peptides.Where(peptide => null != ScoreSequence(peptide));
         }
 
         public override IEnumerable<string> GetStandardPeptides(IEnumerable<string> peptides)
         {
-            return ChooseRegressionPeptides(peptides);
+            int minCount;
+            return ChooseRegressionPeptides(peptides, out minCount);
         }
     }
 }

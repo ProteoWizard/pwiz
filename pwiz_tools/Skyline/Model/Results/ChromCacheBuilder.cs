@@ -809,24 +809,16 @@ namespace pwiz.Skyline.Model.Results
                     if (_dictSeqToTime == null)
                         return;
 
-                    try
+                    var listTimes = new List<double>();
+                    var listIrts = new List<double>();
+                    foreach (string sequence in _calculator.GetStandardPeptides(_dictSeqToTime.Keys))
                     {
-                        var listTimes = new List<double>();
-                        var listScores = new List<double>();
-                        foreach (string sequence in _calculator.GetStandardPeptides(_dictSeqToTime.Keys))
-                        {
-                            listTimes.Add(_dictSeqToTime[sequence]);
-                            listScores.Add(_calculator.ScoreSequence(sequence).Value);
-                        }
-                        var statTime = new Statistics(listTimes);
-                        var statScore = new Statistics(listScores);
-
-                        _conversion = new RegressionLineElement(
-                            new RegressionLine(statTime.Slope(statScore), statTime.Intercept(statScore)));
+                        listTimes.Add(_dictSeqToTime[sequence]);
+                        listIrts.Add(_calculator.ScoreSequence(sequence).Value);
                     }
-                    catch (IncompleteStandardException)
-                    {
-                    }
+                    RegressionLine line;
+                    if (RCalcIrt.TryGetRegressionLine(listIrts, listTimes, out line))
+                        _conversion = new RegressionLineElement(line);
                 }
             }
 

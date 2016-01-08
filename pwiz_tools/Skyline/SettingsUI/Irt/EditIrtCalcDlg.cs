@@ -1047,9 +1047,6 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 public int RegressionLineCount { get; private set; }
             }
 
-            private const double MIN_IRT_TO_TIME_CORRELATION = 0.99;
-            private const int MIN_IRT_TO_TIME_POINT_COUNT = 20;
-
             private IRegressionFunction CalcRegressionLine(IRetentionTimeProvider retentionTimes)
             {
                 // Attempt to get regression based on standards
@@ -1066,25 +1063,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 var listIrts = standardPeptides.Select(peptide => peptide.Irt).ToList();
                 if (listTimes.Count == standardPeptides.Length)
                 {
-                    var statTimes = new Statistics(listTimes);
-                    var statIrts = new Statistics(listIrts);
-                    double correlation = statIrts.R(statTimes);
-                    // If the correlation is not good enough, try removing one value to
-                    // fix the problem.)
-                    if (correlation < MIN_IRT_TO_TIME_CORRELATION)
-                    {
-                        double? time = null, irt = null;
-                        for (int i = 0; i < listTimes.Count; i++)
-                        {
-                            statTimes = GetTrial(listTimes, i, ref time);
-                            statIrts = GetTrial(listIrts, i, ref irt);
-                            correlation = statIrts.R(statTimes);
-                            if (correlation >= MIN_IRT_TO_TIME_CORRELATION)
-                                break;
-                        }
-                    }
-                    if (correlation >= MIN_IRT_TO_TIME_CORRELATION)
-                        return new RegressionLine(statIrts.Slope(statTimes), statIrts.Intercept(statTimes));
+                    RegressionLine line;
+                    if (RCalcIrt.TryGetRegressionLine(listTimes, listIrts, out line))
+                        return line;
                 }
 
                 if (Items.Count > 0)
@@ -1092,7 +1073,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     // Attempt to get a regression based on shared peptides
                     var calculator = new CurrentCalculator(StandardPeptideList, Items);
                     var peptidesTimes = retentionTimes.PeptideRetentionTimes.ToArray();
-                    var regression = RetentionTimeRegression.FindThreshold(MIN_IRT_TO_TIME_CORRELATION,
+                    var regression = RetentionTimeRegression.FindThreshold(RCalcIrt.MIN_IRT_TO_TIME_CORRELATION,
                                                                            RetentionTimeRegression.ThresholdPrecision,
                                                                            peptidesTimes,
                                                                            new MeasuredRetentionTime[0],
@@ -1100,7 +1081,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
                                                                            calculator,
                                                                            () => false);
 
-                    if (regression != null && regression.PeptideTimes.Count >= MIN_IRT_TO_TIME_POINT_COUNT)
+                    var startingCount = peptidesTimes.Length;
+                    var regressionCount = regression != null ? regression.PeptideTimes.Count : 0;
+                    if (regression != null && RCalcIrt.IsAcceptableStandardCount(startingCount, regressionCount))                        
                     {
                         // Finally must recalculate the regression, because it is transposed from what
                         // we want.
@@ -1113,15 +1096,6 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 }
 
                 return null;
-            }
-
-            private static Statistics GetTrial(IList<double> listValues, int i, ref double? valueReplace)
-            {
-                if (valueReplace.HasValue)
-                    listValues.Insert(i-1, valueReplace.Value);
-                valueReplace = listValues[i];
-                listValues.RemoveAt(i);
-                return new Statistics(listValues);
             }
 
             private void AddRetentionTimesToDict(IRetentionTimeProvider retentionTimes,
@@ -1352,13 +1326,16 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 return null;
             }
 
-            public override IEnumerable<string> ChooseRegressionPeptides(IEnumerable<string> peptides)
+            public override IEnumerable<string> ChooseRegressionPeptides(IEnumerable<string> peptides, out int minCount)
             {
                 var returnStandard = peptides.Where(_dictStandards.ContainsKey).ToArray();
+                var returnCount = returnStandard.Length;
+                var standardsCount = _dictStandards.Count;
 
-                if (returnStandard.Length != _dictStandards.Count)
+                if (!RCalcIrt.IsAcceptableStandardCount(standardsCount, returnCount))
                     throw new IncompleteStandardException(this);
 
+                minCount = RCalcIrt.MinStandardCount(standardsCount);
                 return returnStandard;
             }
 

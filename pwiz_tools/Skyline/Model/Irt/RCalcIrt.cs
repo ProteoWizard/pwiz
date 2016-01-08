@@ -34,6 +34,22 @@ namespace pwiz.Skyline.Model.Irt
     {
         public static readonly RCalcIrt NONE = new RCalcIrt("None", string.Empty); // Not L10N
 
+        public const double MIN_IRT_TO_TIME_CORRELATION = 0.99;
+        public const double MIN_PEPTIDES_PERCENT = 0.80;
+        public const int MIN_PEPTIDES_COUNT = 8;
+
+        public static int MinStandardCount(int expectedCount)
+        {
+            return expectedCount <= MIN_PEPTIDES_COUNT
+                ? expectedCount
+                : Math.Max(MIN_PEPTIDES_COUNT, (int) (expectedCount*MIN_PEPTIDES_PERCENT));
+        }
+
+        public static bool IsAcceptableStandardCount(int expectedCount, int actualCount)
+        {
+            return actualCount >= MinStandardCount(expectedCount);
+        }
+
         private IrtDb _database;
 
         public RCalcIrt(string name, string databasePath)
@@ -123,21 +139,67 @@ namespace pwiz.Skyline.Model.Irt
                                     dbPeptide.TimeSource);
         }
 
-        public override IEnumerable<string> ChooseRegressionPeptides(IEnumerable<string> peptides)
+        public static bool TryGetRegressionLine(IList<double> listIndependent, IList<double> listDependent, out RegressionLine line)
+        {
+            var minPoints = (int) Math.Round(Math.Max(MIN_PEPTIDES_COUNT, listIndependent.Count*MIN_PEPTIDES_PERCENT));
+            return TryGetRegressionLine(listIndependent, listDependent, minPoints, out line);
+        }
+
+        public static bool TryGetRegressionLine(IList<double> listIndependent, IList<double> listDependent, int minPoints, out RegressionLine line)
+        {
+            line = null;
+            if (listIndependent.Count != listDependent.Count || listIndependent.Count < minPoints)
+                return false;
+
+            double correlation;
+            while (true)
+            {
+                var statIndependent = new Statistics(listIndependent);
+                var statDependent = new Statistics(listDependent);
+                line = new RegressionLine(statDependent.Slope(statIndependent), statDependent.Intercept(statIndependent));
+                correlation = statDependent.R(statIndependent);
+
+                if (correlation >= MIN_IRT_TO_TIME_CORRELATION || listIndependent.Count <= minPoints)
+                    break;
+
+                var furthest = 0;
+                var maxDistance = 0.0;
+                for (var i = 0; i < listDependent.Count; i++)
+                {
+                    var distance = Math.Abs(line.GetY(listDependent[i]) - listIndependent[i]);
+                    if (distance > maxDistance)
+                    {
+                        furthest = i;
+                        maxDistance = distance;
+                    }
+                }
+
+                listIndependent.RemoveAt(furthest);
+                listDependent.RemoveAt(furthest);
+            }
+
+            return correlation >= MIN_IRT_TO_TIME_CORRELATION;
+        }
+
+        public override IEnumerable<string> ChooseRegressionPeptides(IEnumerable<string> peptides, out int minCount)
         {
             RequireUsable();
 
             var returnStandard = peptides.Where(_database.IsStandard).Distinct().ToArray();
+            var returnCount = returnStandard.Length;
+            var databaseCount = _database.StandardPeptideCount;
 
-            if(returnStandard.Length != _database.StandardPeptideCount)
+            if (!IsAcceptableStandardCount(databaseCount, returnCount))
                 throw new IncompleteStandardException(this);
 
+            minCount = MinStandardCount(databaseCount);
             return returnStandard;
         }
 
         public override IEnumerable<string> GetStandardPeptides(IEnumerable<string> peptides)
         {
-            return ChooseRegressionPeptides(peptides);
+            int minCount;
+            return ChooseRegressionPeptides(peptides, out minCount);
         }
 
         public override double? ScoreSequence(string seq)

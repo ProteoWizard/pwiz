@@ -476,8 +476,9 @@ namespace pwiz.Skyline.SettingsUI
                 RecalcRegression(calculator, activePeptides);
             }
 
+            int minCount;
             var usePeptides = new HashSet<string>(calculator.ChooseRegressionPeptides(
-                activePeptides.Select(pep => pep.PeptideSequence)));
+                activePeptides.Select(pep => pep.PeptideSequence), out minCount));
             //now go back and get the MeasuredPeptides corresponding to the strings chosen by the calculator
             var tablePeptides = activePeptides.Where(measuredRT =>
                 usePeptides.Contains(measuredRT.PeptideSequence)).ToList();
@@ -560,7 +561,8 @@ namespace pwiz.Skyline.SettingsUI
                 r = statistics.R;
             }
 
-            var pepCount = calculatorSpec.ChooseRegressionPeptides(peptidesTimes.Select(mrt => mrt.PeptideSequence)).Count();
+            int minCount;
+            var pepCount = calculatorSpec.ChooseRegressionPeptides(peptidesTimes.Select(mrt => mrt.PeptideSequence), out minCount).Count();
 
             labelRValue.Text = string.Format(Resources.EditRTDlg_RecalcRegression__0__peptides_R__1__, pepCount,
                                              Math.Round(r, RetentionTimeRegression.ThresholdPrecision));

@@ -542,7 +542,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 try
                 {
                     listRTs[i] = new List<double>();
-                    calcPeptides[i] = allPeptides ? listPeptides : calc.ChooseRegressionPeptides(listPeptides).ToList();
+                    int minCount;
+                    calcPeptides[i] = allPeptides ? listPeptides : calc.ChooseRegressionPeptides(listPeptides, out minCount).ToList();
                     peptideScoresByCalc[i] = RetentionTimeScoreCache.CalcScores(calc, calcPeptides[i], scoreCache);
                 }
                 catch (Exception)
@@ -971,7 +972,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         double UnknownScore { get; }
 
-        IEnumerable<string> ChooseRegressionPeptides(IEnumerable<string> peptides);
+        IEnumerable<string> ChooseRegressionPeptides(IEnumerable<string> peptides, out int minCount);
 
         IEnumerable<string> GetStandardPeptides(IEnumerable<string> peptides);
     }
@@ -987,7 +988,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public abstract double UnknownScore { get; }
 
-        public abstract IEnumerable<string> ChooseRegressionPeptides(IEnumerable<string> peptides);
+        public abstract IEnumerable<string> ChooseRegressionPeptides(IEnumerable<string> peptides, out int minCount);
 
         public abstract IEnumerable<string> GetStandardPeptides(IEnumerable<string> peptides);
 
@@ -1047,9 +1048,9 @@ namespace pwiz.Skyline.Model.DocSettings
         {
         }
 
-        public override IEnumerable<string> ChooseRegressionPeptides(IEnumerable<string> peptides)
+        public override IEnumerable<string> ChooseRegressionPeptides(IEnumerable<string> peptides, out int minCount)
         {
-            return _impl.ChooseRegressionPeptides(peptides);
+            return _impl.ChooseRegressionPeptides(peptides, out minCount);
         }
 
         private void Validate()
