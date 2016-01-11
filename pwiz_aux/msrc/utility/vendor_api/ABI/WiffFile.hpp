@@ -220,7 +220,7 @@ class PWIZ_API_DECL WiffFile
 
     virtual InstrumentModel getInstrumentModel() const = 0;
     virtual IonSourceType getIonSourceType() const = 0;
-    virtual boost::local_time::local_date_time getSampleAcquisitionTime(int sample) const = 0;
+    virtual boost::local_time::local_date_time getSampleAcquisitionTime(int sample, bool adjustToHostTime) const = 0;
 
     virtual ExperimentPtr getExperiment(int sample, int period, int experiment) const = 0;
     virtual SpectrumPtr getSpectrum(int sample, int period, int experiment, int cycle) const = 0;

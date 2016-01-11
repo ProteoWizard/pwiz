@@ -54,6 +54,7 @@ Reader::Config::Config(const Config& rhs)
 	acceptZeroLengthSpectra = rhs.acceptZeroLengthSpectra;
     combineIonMobilitySpectra = rhs.combineIonMobilitySpectra;
     unknownInstrumentIsError = rhs.unknownInstrumentIsError;
+    adjustUnknownTimeZonesToHostTimeZone = rhs.adjustUnknownTimeZonesToHostTimeZone;
 }
 
 // default implementation; most Readers don't need to worry about multi-run input files

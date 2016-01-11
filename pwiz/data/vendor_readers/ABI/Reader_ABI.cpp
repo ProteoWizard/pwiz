@@ -65,7 +65,7 @@ using namespace pwiz::msdata::detail::ABI;
 namespace {
 
 void fillInMetadata(const string& wiffpath, MSData& msd, WiffFilePtr wifffile,
-                    const ExperimentsMap& experimentsMap, int sample)
+                    const ExperimentsMap& experimentsMap, int sample, const Reader::Config& config)
 {
     msd.cvs = defaultCVList();
 
@@ -148,7 +148,7 @@ void fillInMetadata(const string& wiffpath, MSData& msd, WiffFilePtr wifffile,
     msd.run.defaultInstrumentConfigurationPtr = ic;
 
     msd.run.id = msd.id;
-    msd.run.startTimeStamp = encode_xml_datetime(wifffile->getSampleAcquisitionTime(sample));
+    msd.run.startTimeStamp = encode_xml_datetime(wifffile->getSampleAcquisitionTime(sample, config.adjustUnknownTimeZonesToHostTimeZone));
 }
 
 void cacheExperiments(WiffFilePtr wifffile, ExperimentsMap& experimentsMap, int sample)
@@ -186,7 +186,7 @@ void Reader_ABI::read(const string& filename,
         result.run.spectrumListPtr = SpectrumListPtr(sl);
         result.run.chromatogramListPtr = ChromatogramListPtr(cl);
 
-        fillInMetadata(filename, result, wifffile, experimentsMap, runIndex);
+        fillInMetadata(filename, result, wifffile, experimentsMap, runIndex, config);
     }
     catch (std::exception& e)
     {
@@ -225,7 +225,7 @@ void Reader_ABI::read(const string& filename,
                 result.run.spectrumListPtr = SpectrumListPtr(sl);
                 result.run.chromatogramListPtr = ChromatogramListPtr(cl);
 
-                fillInMetadata(filename, result, wifffile, experimentsMap, i);
+                fillInMetadata(filename, result, wifffile, experimentsMap, i, config);
 
                 results.push_back(msDataPtr);
             }
