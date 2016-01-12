@@ -316,7 +316,7 @@ namespace Test
         [TestCategory("Model")]
         public void TestSchemaUpdater()
         {
-            Assert.AreEqual(14, SchemaUpdater.CurrentSchemaRevision);
+            Assert.AreEqual(15, SchemaUpdater.CurrentSchemaRevision);
 
             var testModel = new TestModel() { TestContext = TestContext };
             TestModel.ClassInitialize(TestContext);

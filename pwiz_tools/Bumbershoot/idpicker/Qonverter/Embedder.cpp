@@ -854,6 +854,81 @@ void embedScanTime(const string& idpDbFilepath,
 }
 
 
+namespace {
+
+int channelsByQuantitationMethod(QuantitationMethod method)
+{
+    switch (method.value())
+    {
+        case QuantitationMethod::ITRAQ4plex: return 4;
+        case QuantitationMethod::ITRAQ8plex: return 8;
+        case QuantitationMethod::TMT2plex: return 2;
+        case QuantitationMethod::TMT6plex: return 6;
+        case QuantitationMethod::TMT10plex: return 10;
+        default: throw runtime_error("[channelsByQuantitationMethod] unhandled QuantitationMethod");
+    }
+}
+
+} // namespace
+
+
+void embedIsobaricSampleMapping(const string& idpDbFilepath, const map<string, vector<string> >& isobaricSampleMap)
+{
+    sqlite3pp::database idpDb(idpDbFilepath);
+
+    map<string, sqlite3_int64> sourceGroupIdByName;
+    map<sqlite3_int64, QuantitationMethod> sourceGroupQuantitationMethod;
+
+    sqlite3pp::query sourceGroupByNameQuery(idpDb, "SELECT ssg.Id, ssg.Name, COUNT(DISTINCT ss.QuantitationMethod), ss.QuantitationMethod "
+                                                   "FROM SpectrumSource ss, SpectrumSourceGroup ssg "
+                                                   "WHERE ss.Group_=ssg.Id AND ss.QuantitationMethod > 0 "
+                                                   "GROUP BY ssg.Id");
+    BOOST_FOREACH(sqlite3pp::query::rows queryRow, sourceGroupByNameQuery)
+    {
+        if (queryRow.get<int>(2) > 1)
+            throw runtime_error("[embedIsobaricSampleMapping] source group '" + queryRow.get<string>(1) + "' uses more than one quantitation method (each group must use a single quantitation method)");
+
+        sourceGroupIdByName[queryRow.get<string>(1)] = queryRow.get<sqlite3_int64>(0);
+        sourceGroupQuantitationMethod[queryRow.get<sqlite3_int64>(0)] = QuantitationMethod::get_by_index(queryRow.get<int>(3)).get();
+    }
+
+    idpDb.execute("DROP TABLE IF EXISTS IsobaricSampleMapping;"
+                  "CREATE TABLE IsobaricSampleMapping (GroupId INTEGER PRIMARY KEY, Samples TEXT);");
+    sqlite3pp::command insertSampleMappingCommand(idpDb, "INSERT INTO IsobaricSampleMapping VALUES (?, ?)");
+
+    BOOST_FOREACH_FIELD((const string& sourceGroup)(const vector<string>& sampleNames), isobaricSampleMap)
+    {
+        sqlite3_int64 groupId = sourceGroupIdByName[sourceGroup];
+        QuantitationMethod quantitationMethod = sourceGroupQuantitationMethod[groupId];
+        if (sampleNames.size() != channelsByQuantitationMethod(quantitationMethod))
+            throw runtime_error("[embedIsobaricSampleMapping] number of samples (" + lexical_cast<string>(sampleNames.size()) +
+                                ") for group " + sourceGroup + " does not match number of channels in the quantitation method (" + lexical_cast<string>(channelsByQuantitationMethod(quantitationMethod)) + ")");
+        string sampleNameString = bal::join(sampleNames, ",");
+        insertSampleMappingCommand.binder() << groupId << sampleNameString;
+        insertSampleMappingCommand.step();
+        insertSampleMappingCommand.reset();
+    }
+}
+
+
+map<string, vector<string> > getIsobaricSampleMapping(const string& idpDbFilepath)
+{
+    sqlite3pp::database idpDb(idpDbFilepath);
+
+    sqlite3pp::query isobaricSampleMappingQuery(idpDb, "SELECT ssg.Name, Samples FROM IsobaricSampleMapping ism, SpectrumSourceGroup ssg WHERE GroupId=ssg.Id GROUP BY GroupId");
+    map<string, vector<string> > result;
+
+    BOOST_FOREACH(sqlite3pp::query::rows queryRow, isobaricSampleMappingQuery)
+    {
+        vector<string>& sampleNames = result[queryRow.get<string>(0)];
+        string sampleNamesString = queryRow.get<string>(1);
+        bal::split(sampleNames, sampleNamesString, bal::is_any_of(","));
+    }
+
+    return result;
+}
+
+
 void extract(const string& idpDbFilepath, const string& sourceName, const string& outputFilepath)
 {
     // open the database

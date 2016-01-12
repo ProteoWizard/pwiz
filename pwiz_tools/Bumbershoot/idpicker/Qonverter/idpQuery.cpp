@@ -171,34 +171,36 @@ struct ReporterIon
 {
     const char* name;
     size_t index;
+    bool empty;
+    bool reference;
 };
 
 ReporterIon iTRAQ_ions[8] =
 {
-    { "113", 0 },
-    { "114", 1 },
-    { "115", 2 },
-    { "116", 3 },
-    { "117", 4 },
-    { "118", 5 },
-    { "119", 6 },
-    { "121", 7 }
+    { "113", 0, false, false },
+    { "114", 1, false, false },
+    { "115", 2, false, false },
+    { "116", 3, false, false },
+    { "117", 4, false, false },
+    { "118", 5, false, false },
+    { "119", 6, false, false },
+    { "121", 7, false, false }
 };
 ReporterIon itraq4plexIons[4] = { iTRAQ_ions[1], iTRAQ_ions[2], iTRAQ_ions[3], iTRAQ_ions[4] };
 ReporterIon itraq8plexIons[8] = { iTRAQ_ions[0], iTRAQ_ions[1], iTRAQ_ions[2], iTRAQ_ions[3], iTRAQ_ions[4], iTRAQ_ions[5], iTRAQ_ions[6], iTRAQ_ions[7] };
 
 ReporterIon TMT_ions[10] =
 {
-    { "126", 0 },
-    { "127N", 1 },
-    { "127C", 2 },
-    { "128N", 3 },
-    { "128C", 4 },
-    { "129N", 5 },
-    { "129C", 6 },
-    { "130N", 7 },
-    { "130C", 8 },
-    { "131", 9 }
+    { "126", 0, false, false },
+    { "127N", 1, false, false },
+    { "127C", 2, false, false },
+    { "128N", 3, false, false },
+    { "128C", 4, false, false },
+    { "129N", 5, false, false },
+    { "129C", 6, false, false },
+    { "130N", 7, false, false },
+    { "130C", 8, false, false },
+    { "131", 9, false, false }
 };
 ReporterIon tmt2plexIons[2] = { TMT_ions[0], TMT_ions[2] };
 ReporterIon tmt6plexIons[6] = { TMT_ions[0], TMT_ions[2], TMT_ions[4], TMT_ions[6], TMT_ions[8], TMT_ions[9] };
@@ -213,17 +215,31 @@ void writeBlobArray(const void* blob, ostream& os, const vector<ReporterIon>& ar
 
     if (blob == NULL)
     {
-        os << "0";
-        for (size_t i=1; i < arrayInfo.size(); ++i)
-            os << "\t0";
+        for (size_t i = 0; i < arrayInfo.size(); ++i)
+            if (!arrayInfo[i].empty && !arrayInfo[i].reference)
+                os << "0\t";
+        os.seekp(-1, ios::cur);
         return;
     }
 
     const ArrayType* blobArray = reinterpret_cast<const ArrayType*>(blob);
-    streamsize oldPrecision = os.precision(0);
+
+    ArrayType referenceValue = 1;
+    for (size_t i = 0; i < arrayInfo.size(); ++i)
+        if (arrayInfo[i].reference)
+        {
+            referenceValue = blobArray[arrayInfo[i].index];
+            break;
+        }
+
+    if (referenceValue == 0)
+        referenceValue = 1; // don't divide by zero
+
+    streamsize oldPrecision = os.precision(referenceValue == 1 ? 0 : 4);
     ios::fmtflags oldFlags = os.flags(ios::fixed);
     for (size_t i = 0; i < arrayInfo.size(); ++i)
-        os << blobArray[arrayInfo[i].index] << '\t';
+        if (!arrayInfo[i].empty && !arrayInfo[i].reference)
+            os << blobArray[arrayInfo[i].index] / referenceValue << '\t';
     os.seekp(-1, ios::cur);
     os.precision(oldPrecision);
     os.flags(oldFlags);
@@ -401,7 +417,8 @@ int proteinQuery(GroupBy groupBy, const bfs::path& filepath,
     else if (groupBy == GroupBy::Gene) groupByString = "pro.GeneId";
     else if (groupBy == GroupBy::GeneGroup) groupByString = "pro.GeneGroup";
 
-        
+    map<string, vector<string> > isobaricSamplesByGroup = Embedder::getIsobaricSampleMapping(filepath.string());
+
     PivotDataByColumnMap pivotDataByColumn;
     PivotDataByColumnMap::const_iterator findAbstractColumnItr;
     PivotDataMap::const_iterator findIdItr;
@@ -416,9 +433,15 @@ int proteinQuery(GroupBy groupBy, const bfs::path& filepath,
     BOOST_FOREACH(sqlite::query::rows row, quantitationMethodsQuery)
         quantitationMethods.insert(QuantitationMethod::get_by_index(row.get<int>(0)).get());
 
+    map<boost::int64_t, string> groupNameById;
+    sqlite::query groupQuery(idpDB, "SELECT Id, Name FROM SpectrumSourceGroup");
+    BOOST_FOREACH(sqlite::query::rows row, groupQuery)
+        groupNameById[row.get<sqlite_int64>(0)] = row.get<string>(1);
+
+
     vector<ReporterIon> itraqMethodIons, tmtMethodIons;
     if (quantitationMethods.count(QuantitationMethod::ITRAQ8plex) > 0)
-        itraqMethodIons.assign(itraq8plexIons, itraq8plexIons+8);
+        itraqMethodIons.assign(itraq8plexIons, itraq8plexIons + 8);
     else if (quantitationMethods.count(QuantitationMethod::ITRAQ4plex) > 0)
         itraqMethodIons.assign(itraq4plexIons, itraq4plexIons + 4);
 
@@ -477,19 +500,35 @@ int proteinQuery(GroupBy groupBy, const bfs::path& filepath,
         }
         else if (bal::starts_with(tokens[i], "Pivot"))
         {
-            string sql = bal::ends_with(tokens[i], "Source") ? "SELECT Name, Id FROM SpectrumSource ORDER BY Name"
-                                                             : "SELECT Name, Id FROM SpectrumSourceGroup ORDER BY Name";
+            bool groupBySource = bal::ends_with(tokens[i], "Source");
+            string sql = groupBySource ? "SELECT Name, Id FROM SpectrumSource ORDER BY Name"
+                                       : "SELECT Name, Id FROM SpectrumSourceGroup ORDER BY Name";
             sqlite::query q(idpDB, sql.c_str());
 
             vector<boost::int64_t>& pivotColumnIds = pivotColumnIdsByAbstractColumn[i];
+            string groupOrSourceName, sampleNamesString;
+            vector<string> sampleNames;
 
             if (bal::contains(tokens[i], "ITRAQ"))
             {
                 if (!itraqMethodIons.empty())
                     BOOST_FOREACH(sqlite::query::rows row, q)
                     {
-                        BOOST_FOREACH(const string& header, getReporterIonHeaders(iTRAQ_ions, quantitationMethods))
-                            outputStream << row.get<string>(0) << " (" << header << ")\t";
+                        groupOrSourceName = row.get<string>(0);
+
+                        const vector<string>& sampleNames = isobaricSamplesByGroup[groupOrSourceName];
+
+                        if (groupOrSourceName == "/" && sampleNames.empty())
+                            continue;
+
+                        if (sampleNames.empty())
+                            BOOST_FOREACH(const string& header, getReporterIonHeaders(iTRAQ_ions, quantitationMethods))
+                                outputStream << groupOrSourceName << " (" << header << ")\t";
+                        else
+                            BOOST_FOREACH(const string& sample, sampleNames)
+                                if (sample != "Reference" && sample != "Empty")
+                                    outputStream << sample << "\t";
+
                         pivotColumnIds.push_back(static_cast<boost::int64_t>(row.get<sqlite3_int64>(1)));
                     }
             }
@@ -498,8 +537,21 @@ int proteinQuery(GroupBy groupBy, const bfs::path& filepath,
                 if (!tmtMethodIons.empty())
                     BOOST_FOREACH(sqlite::query::rows row, q)
                     {
-                        BOOST_FOREACH(const string& header, getReporterIonHeaders(TMT_ions, quantitationMethods))
-                            outputStream << row.get<string>(0) << " (" << header << ")\t";
+                        groupOrSourceName = row.get<string>(0);
+
+                        const vector<string>& sampleNames = isobaricSamplesByGroup[groupOrSourceName];
+
+                        if (groupOrSourceName == "/" && sampleNames.empty())
+                            continue;
+
+                        if (sampleNames.empty())
+                            BOOST_FOREACH(const string& header, getReporterIonHeaders(TMT_ions, quantitationMethods))
+                                outputStream << groupOrSourceName << " (" << header << ")\t";
+                        else
+                            BOOST_FOREACH(const string& sample, sampleNames)
+                                if (sample != "Reference" && sample != "Empty")
+                                    outputStream << sample << "\t";
+
                         pivotColumnIds.push_back(static_cast<boost::int64_t>(row.get<sqlite3_int64>(1)));
                     }
             }
@@ -637,16 +689,35 @@ int proteinQuery(GroupBy groupBy, const bfs::path& filepath,
                             const PivotDataMap& pivotDataMap = findAbstractColumnItr->second;
                             findIdItr = pivotDataMap.find(id);
 
+                            vector<ReporterIon>* reporterIonsPtr = &itraqMethodIons;
+                            if (enumColumns[i].index() == ProteinColumn::PivotTMTByGroup || enumColumns[i].index() == ProteinColumn::PivotTMTBySource)
+                                reporterIonsPtr = &tmtMethodIons;
+                            vector<ReporterIon>& reporterIons = *reporterIonsPtr;
+
+                            // reset reference/empty properties for reporter ions
+                            if (enumColumns[i].index() == ProteinColumn::PivotITRAQByGroup || enumColumns[i].index() == ProteinColumn::PivotTMTByGroup)
+                                for (size_t j=0; j < reporterIons.size(); ++j)
+                                    reporterIons[j].reference = reporterIons[j].empty = false;
+
                             // for the current protein/gene/cluster/whatever, look it up in the pivotDataMap by its id,
                             // then (even if it's not found): for every source or group, output a column for the value
                             // corresponding to that source or group (or 0 if there is no value for that source or group)
                             if (findIdItr == pivotDataMap.end())
                                 for (size_t j=0; j < pivotColumnIds.size(); ++j)
                                 {
-                                    if (enumColumns[i].index() == ProteinColumn::PivotITRAQByGroup || enumColumns[i].index() == ProteinColumn::PivotITRAQBySource)
-                                        writeBlobArray<double>(NULL, outputStream, itraqMethodIons);
-                                    else if (enumColumns[i].index() == ProteinColumn::PivotTMTByGroup || enumColumns[i].index() == ProteinColumn::PivotTMTBySource)
-                                        writeBlobArray<double>(NULL, outputStream, tmtMethodIons);
+                                    const string& groupName = groupNameById[pivotColumnIds[j]];
+                                    const vector<string>& sampleNames = isobaricSamplesByGroup[groupName];
+                                    if (!sampleNames.empty())
+                                    {
+                                        if (reporterIons.size() != sampleNames.size())
+                                            throw runtime_error("sample name count does not match number of reporter ions");
+                                        for (size_t k=0; k < sampleNames.size(); ++k)
+                                            if (sampleNames[k] == "Empty")
+                                                reporterIons[k].empty = true;
+                                            else if (sampleNames[k] == "Reference")
+                                                reporterIons[k].reference = true;
+                                    }
+                                    writeBlobArray<double>(NULL, outputStream, reporterIons);
                                     
                                     if (j < pivotColumnIds.size()-1)
                                         outputStream << '\t';
@@ -655,21 +726,25 @@ int proteinQuery(GroupBy groupBy, const bfs::path& filepath,
                                 for (size_t j=0; j < pivotColumnIds.size(); ++j)
                                 {
                                     findPivotColumnItr = findIdItr->second.find(pivotColumnIds[j]);
-                                    if (enumColumns[i].index() == ProteinColumn::PivotITRAQByGroup || enumColumns[i].index() == ProteinColumn::PivotITRAQBySource)
+
+                                    const string& groupName = groupNameById[pivotColumnIds[j]];
+                                    const vector<string>& sampleNames = isobaricSamplesByGroup[groupName];
+                                    if (!sampleNames.empty())
                                     {
-                                        if (findPivotColumnItr == findIdItr->second.end())
-                                            writeBlobArray<double>(NULL, outputStream, itraqMethodIons);
-                                        else
-                                            writeBlobArray<double>(boost::get<const void*>(findPivotColumnItr->second), outputStream, itraqMethodIons);
+                                        if (reporterIons.size() != sampleNames.size())
+                                            throw runtime_error("sample name count does not match number of reporter ions");
+                                        for (size_t k = 0; k < sampleNames.size(); ++k)
+                                            if (sampleNames[k] == "Empty")
+                                                reporterIons[k].empty = true;
+                                            else if (sampleNames[k] == "Reference")
+                                                reporterIons[k].reference = true;
                                     }
-                                    else if (enumColumns[i].index() == ProteinColumn::PivotTMTByGroup || enumColumns[i].index() == ProteinColumn::PivotTMTBySource)
-                                    {
-                                        if (findPivotColumnItr == findIdItr->second.end())
-                                            writeBlobArray<double>(NULL, outputStream, tmtMethodIons);
-                                        else
-                                            writeBlobArray<double>(boost::get<const void*>(findPivotColumnItr->second), outputStream, tmtMethodIons);
-                                    }
-                                    
+
+                                    if (findPivotColumnItr == findIdItr->second.end())
+                                        writeBlobArray<double>(NULL, outputStream, reporterIons);
+                                    else
+                                        writeBlobArray<double>(boost::get<const void*>(findPivotColumnItr->second), outputStream, reporterIons);
+
                                     if (j < pivotColumnIds.size()-1)
                                         outputStream << '\t';
                                 }

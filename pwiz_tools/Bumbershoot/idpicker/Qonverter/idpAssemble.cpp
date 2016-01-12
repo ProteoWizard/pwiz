@@ -33,12 +33,19 @@
 #include "boost/crc.hpp"
 #include "boost/variant.hpp"
 #include "boost/xpressive/xpressive_dynamic.hpp"
+#include "boost/core/null_deleter.hpp"
 
 #include "SchemaUpdater.hpp"
 #include "TotalCounts.hpp"
 #include "Parser.hpp"
 #include "Merger.hpp"
 #include "Filter.hpp"
+#include "Embedder.hpp"
+#include "Logger.hpp"
+#include <boost/log/expressions.hpp>
+#include <boost/log/utility/setup/common_attributes.hpp>
+#include <boost/log/sinks/sync_frontend.hpp>
+#include <boost/log/sinks/text_ostream_backend.hpp>
 #include "sqlite3pp.h"
 #include <iomanip>
 #include "CoreVersion.hpp"
@@ -52,6 +59,86 @@ using std::setw;
 using std::setfill;
 using boost::format;
 namespace bxp = boost::xpressive;
+namespace expr = boost::log::expressions;
+namespace sinks = boost::log::sinks;
+
+
+BOOST_LOG_ATTRIBUTE_KEYWORD(line_id, "LineID", unsigned int)
+BOOST_LOG_ATTRIBUTE_KEYWORD(severity, "Severity", MessageSeverity::domain)
+
+struct severity_tag;
+// The operator is used when putting the severity level to log
+boost::log::formatting_ostream& operator<<
+(
+    boost::log::formatting_ostream& strm,
+    const boost::log::to_log_manip< MessageSeverity::domain, severity_tag>& manip
+)
+{
+    if (manip.get() >= MessageSeverity::Warning)
+        strm << '\n' << MessageSeverity::get_by_value(manip.get()).get().str() << ": ";
+    return strm;
+}
+
+template <typename T>
+T& parse(T& lhs, const typename T::domain& rhs)
+{
+    // boost::lexical_cast fails on BOOST_ENUM types
+    stringstream ss;
+    ss << T(rhs);
+    ss >> lhs;
+    return lhs;
+}
+
+template <typename T, typename S>
+inline T& parse(T& lhs, const S& rhs) { return lhs = lexical_cast<T, S>(rhs); }
+
+void embedIsobaricSampleMapping(const string& idpDbFilepath, const string& isobaricSampleMappingFilepath)
+{
+    // open the mapping file; format is "<Group Name>\t<Sample1>,<Sample2>,<Sample3>,<Sample4>"
+    ifstream isobaricSampleMappingFile(isobaricSampleMappingFilepath.c_str());
+
+    map<string, sqlite3_int64> groupIdByName;
+    map<string, vector<string> > isobaricSampleMapping;
+
+    sqlite3pp::database idpDb(idpDbFilepath);
+    sqlite3pp::query sourceIdByNameQuery(idpDb, "SELECT Id, Name FROM SpectrumSourceGroup");
+    BOOST_FOREACH(sqlite3pp::query::rows queryRow, sourceIdByNameQuery)
+    {
+        groupIdByName[queryRow.get<string>(1)] = queryRow.get<sqlite3_int64>(0);
+    }
+
+    bxp::sregex groupFilemaskRegex = bxp::sregex::compile("(\\S+)\t(\\S+)");
+    bxp::smatch match;
+
+    string line;
+    while (getline(isobaricSampleMappingFile, line))
+    {
+        if (line.empty())
+            continue;
+
+        try
+        {
+            bxp::regex_match(line, match, groupFilemaskRegex);
+            string groupName = match[1].str();
+            string sampleNamesString = match[2].str();
+
+            if (groupIdByName.count(groupName) == 0)
+                throw runtime_error("assembly does not contain a group named \"" + groupName + "\"");
+
+            bal::split(isobaricSampleMapping[groupName], sampleNamesString, bal::is_any_of(","));
+
+            if (isobaricSampleMapping[groupName].size() < 2)
+                throw runtime_error("there must be at least 2 samples (i.e. TMT duplex)");
+        }
+        catch (exception& e)
+        {
+            throw runtime_error("error reading line \"" + line + "\" from isobaric sample mapping file: " + e.what());
+        }
+    }
+
+    if (!isobaricSampleMapping.empty())
+        Embedder::embedIsobaricSampleMapping(idpDbFilepath, isobaricSampleMapping);
+}
 
 
 void assignSourceGroupHierarchy(const string& idpDbFilepath, const string& assemblyFilepath)
@@ -333,22 +420,38 @@ int main(int argc, const char* argv[])
                    "                   [-FilterAtGeneLevel <boolean>]\n"
                    "                   [-MergedOutputFilepath <string>]\n"
                    "                   [-AssignSourceHierarchy <assemble.tsv>]\n"
+                   "                   [-IsobaricSampleMapping <mapping.tsv>]\n"
                    "                   [-SummarizeSources <boolean>]\n"
+                   "                   [-LogLevel <Error|Warning|BriefInfo|VerboseInfo|DebugInfo>]\n"
+                   "                   [-LogFilepath <filepath to log to>]\n"
                    "                   [-cpus <max thread count>]\n"
                    "                   [-b <file containing a long list of newline-separated idpDB filemasks>]\n"
                    "\n"
                    "Example: idpAssemble fraction1.idpDB fraction2.idpDB fraction3.idpDB -MergedOutputFilepath mudpit.idpDB\n"
                    "\n"
                    "The assemble.tsv file is a tab-delimited file with two columns. The first column is the source group path,\n"
-                   "the second column is a source group name to assign to that group.";
+                   "the second column is a source group name to assign to that group. For example:\n"
+                   "repA1.idpDB\t/repA\n"
+                   "repA2.idpDB\t/repA\n"
+                   "repB1.idpDB\t/repB\n"
+                   "repB2.idpDB\t/repB\n"
+                   "\n"
+                   "The mapping.tsv file is a tab-delimited file with two columns. The first column is the source group,\n"
+                   "the second column is a comma-delimited list of sample names, in ascending order of reporter ion mass. The special\n"
+                   "sample name 'Reference', if present, will be used to normalize the other channels. Samples named 'Empty' will be\n"
+                   "ignored. Here is an iTRAQ-4plex example:\n"
+                   "/A123_B456_C789\tA123,B456,C789,Reference\n";
 
     string mergeTargetFilepath;
     string assembleTextFilepath;
+    string isobaricSampleMappingFilepath;
+    string logFilepath;
     vector<string> mergeSourceFilepaths;
     Filter::Config filterConfig;
     int maxThreads = 8;
     string batchFile;
     bool summarizeSources = false;
+    MessageSeverity logLevel = MessageSeverity::Warning;
 
     vector<string> args(argv + 1, argv + argc);
 
@@ -356,7 +459,7 @@ int main(int argc, const char* argv[])
     {
         if (args[i][0] == '-' && !bfs::exists(args[i]) && i + 1 == args.size())
         {
-            cerr << args[i] << " must be followed by a value." << endl;
+            BOOST_LOG_SEV(logSource::get(), MessageSeverity::Error) << args[i] << " must be followed by a value." << endl;
             return 1;
         }
 
@@ -364,6 +467,8 @@ int main(int argc, const char* argv[])
             mergeTargetFilepath = args[++i];
         else if (args[i] == "-AssignSourceHierarchy")
             assembleTextFilepath = args[++i];
+        else if (args[i] == "-IsobaricSampleMapping")
+            isobaricSampleMappingFilepath = args[++i];
         else if (args[i] == "-MaxFDRScore")
             filterConfig.maxFDRScore = lexical_cast<double>(args[++i]);
         else if (args[i] == "-MinDistinctPeptides")
@@ -382,6 +487,10 @@ int main(int argc, const char* argv[])
             filterConfig.geneLevelFiltering = lexical_cast<bool>(args[++i]);
         else if (args[i] == "-SummarizeSources")
             summarizeSources = lexical_cast<bool>(args[++i]);
+        else if (args[i] == "-LogLevel")
+            parse(logLevel, args[++i]);
+        else if (args[i] == "-LogFilepath")
+            logFilepath = args[++i];
         else if (args[i] == "-cpus")
             maxThreads = lexical_cast<int>(args[++i]);
         else if (args[i] == "-b")
@@ -391,12 +500,44 @@ int main(int argc, const char* argv[])
             vector<bfs::path> matchingFiles;
             pwiz::util::expand_pathmask(args[i], matchingFiles);
             if (matchingFiles.empty())
-                cerr << "Warning: no matching files for filemask: " << args[i] << endl;
+                BOOST_LOG_SEV(logSource::get(), MessageSeverity::Warning) << "no matching files for filemask: " << args[i] << endl;
             else
                 BOOST_FOREACH(const bfs::path& p, matchingFiles)
                     mergeSourceFilepaths.push_back(p.string());
         }
     }
+
+    boost::log::formatter fmt = expr::stream << expr::attr<MessageSeverity::domain, severity_tag>("Severity") << expr::smessage;
+
+    // Initialize sinks
+    typedef sinks::synchronous_sink<sinks::text_ostream_backend> text_sink;
+    boost::shared_ptr<text_sink> sink = boost::make_shared<text_sink>();
+
+    // errors always go to console
+    sink->locked_backend()->add_stream(boost::shared_ptr<std::ostream>(&cerr, boost::null_deleter()));
+    sink->set_formatter(fmt);
+    sink->set_filter(severity >= MessageSeverity::Error);
+    boost::log::core::get()->add_sink(sink);
+    sink->locked_backend()->auto_flush(true);
+
+    // Add attributes
+    boost::log::add_common_attributes();
+
+    sink = boost::make_shared<text_sink>();
+    if (logFilepath.empty())
+    {
+        sink->locked_backend()->add_stream(boost::shared_ptr<std::ostream>(&cout, boost::null_deleter())); // if no logfile is set, send messages to console
+        sink->set_filter(severity < MessageSeverity::Error); // but don't send errors to the console twice
+        sink->locked_backend()->auto_flush(true);
+    }
+    else
+    {
+        sink->locked_backend()->add_stream(boost::make_shared<std::ofstream>(logFilepath.c_str()));
+        sink->set_filter(severity >= logLevel.index()); // NOTE: use index() to avoid delayed evaluation of expression
+    }
+    fmt = expr::stream << expr::attr<MessageSeverity::domain, severity_tag>("Severity") << expr::smessage;
+    sink->set_formatter(fmt);
+    boost::log::core::get()->add_sink(sink);
 
     if (!batchFile.empty())
     {
@@ -407,7 +548,7 @@ int main(int argc, const char* argv[])
             vector<bfs::path> matchingFiles;
             pwiz::util::expand_pathmask(line, matchingFiles);
             if (matchingFiles.empty())
-                cerr << "Warning: no matching files for filemask: " << line << endl;
+                BOOST_LOG_SEV(logSource::get(), MessageSeverity::Warning) << "no matching files for filemask: " << line << endl;
             else
                 BOOST_FOREACH(const bfs::path& p, matchingFiles)
                     mergeSourceFilepaths.push_back(p.string());
@@ -416,21 +557,25 @@ int main(int argc, const char* argv[])
 
     if (mergeSourceFilepaths.empty())
     {
-        cerr << "Error: not enough arguments. No idpDB files given as input.\n" << endl;
-        cerr << usage << endl;
+        BOOST_LOG_SEV(logSource::get(), MessageSeverity::Error) << "not enough arguments. No idpDB files given as input.\n\n" << usage << endl;
         return 1;
     }
 
     if (mergeSourceFilepaths.size() > 1 && mergeTargetFilepath.empty())
     {
-        cerr << "Error: more than one idpDB file was given as input but no merge target filepath was given.\n" << endl;
-        cerr << usage << endl;
+        BOOST_LOG_SEV(logSource::get(), MessageSeverity::Error) << "more than one idpDB file was given as input but no merge target filepath was given.\n\n" << usage << endl;
         return 1;
     }
 
     if (!assembleTextFilepath.empty() && !bfs::exists(assembleTextFilepath))
     {
-        cerr << "Error: the assembly file specified by AssignSourceHierarchy does not exist." << endl;
+        BOOST_LOG_SEV(logSource::get(), MessageSeverity::Error) << "the assembly file specified by AssignSourceHierarchy does not exist." << endl;
+        return 1;
+    }
+
+    if (!isobaricSampleMappingFilepath.empty() && !bfs::exists(isobaricSampleMappingFilepath))
+    {
+        BOOST_LOG_SEV(logSource::get(), MessageSeverity::Error) << "the isobaric sample mapping file specified by IsobaricSampleMapping does not exist." << endl;
         return 1;
     }
 
@@ -444,24 +589,29 @@ int main(int argc, const char* argv[])
     {
         if (mergeSourceFilepaths.size() > 1)
         {
-            cout << "Merging " << mergeSourceFilepaths.size() << " files to: " << mergeTargetFilepath << endl;
+            BOOST_LOG_SEV(logSource::get(), MessageSeverity::BriefInfo) << "Merging " << mergeSourceFilepaths.size() << " files to: " << mergeTargetFilepath << endl;
             bpt::ptime start = bpt::microsec_clock::local_time();
             Merger merger;
             merger.merge(mergeTargetFilepath, mergeSourceFilepaths, maxThreads, &ilr);
             //std::random_shuffle(mergeSourceFilepaths.begin(), mergeSourceFilepaths.end());
             //merger.merge(bfs::path(mergeTargetFilepath).replace_extension(".reverse.idpDB").string(), mergeSourceFilepaths, 1, &ilr);
-            cout << "\nMerging finished in " << bpt::to_simple_string(bpt::microsec_clock::local_time() - start);
+            BOOST_LOG_SEV(logSource::get(), MessageSeverity::BriefInfo) << "Merging finished in " << bpt::to_simple_string(bpt::microsec_clock::local_time() - start);
         }
+        else // make sure schema is up to date
+            SchemaUpdater::update(mergeTargetFilepath);
 
         bpt::ptime start = bpt::microsec_clock::local_time();
         Filter filter;
         filter.config = filterConfig;
         filter.filter(mergeTargetFilepath, &ilr);
         //filter.filter(bfs::path(mergeTargetFilepath).replace_extension(".reverse.idpDB").string(), &ilr);
-        cout << "\nFiltering finished in " << bpt::to_simple_string(bpt::microsec_clock::local_time() - start);
+        BOOST_LOG_SEV(logSource::get(), MessageSeverity::BriefInfo) << "Filtering finished in " << bpt::to_simple_string(bpt::microsec_clock::local_time() - start);
 
         if (!assembleTextFilepath.empty())
             assignSourceGroupHierarchy(mergeTargetFilepath, assembleTextFilepath);
+
+        if (!isobaricSampleMappingFilepath.empty())
+            embedIsobaricSampleMapping(mergeTargetFilepath, isobaricSampleMappingFilepath);
 
         summarizeAssembly(mergeTargetFilepath, summarizeSources);
         //summarizeAssembly(bfs::path(mergeTargetFilepath).replace_extension(".reverse.idpDB").string(), summarizeSources);
@@ -470,11 +620,11 @@ int main(int argc, const char* argv[])
     }
     catch (exception& e)
     {
-        cerr << "\nUnhandled exception: " << e.what() << endl;
+        BOOST_LOG_SEV(logSource::get(), MessageSeverity::Error) << "\nUnhandled exception: " << e.what() << endl;
     }
     catch (...)
     {
-        cerr << "\nUnknown exception." << endl;
+        BOOST_LOG_SEV(logSource::get(), MessageSeverity::Error) << "\nUnknown exception." << endl;
     }
     return 1;
 }

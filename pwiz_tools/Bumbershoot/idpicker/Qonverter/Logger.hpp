@@ -50,6 +50,7 @@ bool IsStdOutRedirected();
 
 
 BOOST_ENUM(MessageSeverity,
+    (DebugInfo)
     (VerboseInfo)
     (BriefInfo)
     (Warning)

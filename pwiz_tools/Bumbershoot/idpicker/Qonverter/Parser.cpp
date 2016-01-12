@@ -432,6 +432,7 @@ struct ParserImpl
                       "CREATE TABLE IF NOT EXISTS PeptideSpectrumMatchScore (PsmId INTEGER NOT NULL, Value NUMERIC, ScoreNameId INTEGER NOT NULL, primary key (PsmId, ScoreNameId));"
                       "CREATE TABLE IF NOT EXISTS PeptideSpectrumMatchScoreName (Id INTEGER PRIMARY KEY, Name TEXT UNIQUE NOT NULL);"
                       "CREATE TABLE IF NOT EXISTS IntegerSet (Value INTEGER PRIMARY KEY);"
+                      "CREATE TABLE IF NOT EXISTS IsobaricSampleMapping (GroupId INTEGER PRIMARY KEY, Samples TEXT);"
                       "CREATE TABLE IF NOT EXISTS LayoutProperty (Id INTEGER PRIMARY KEY, Name TEXT, PaneLocations TEXT, HasCustomColumnSettings INT, FormProperties TEXT);"
                       "CREATE TABLE IF NOT EXISTS ProteinCoverage (Id INTEGER PRIMARY KEY, Coverage NUMERIC, CoverageMask BLOB);"
                       "CREATE TABLE IF NOT EXISTS SpectrumQuantitation (Id INTEGER PRIMARY KEY, iTRAQ_ReporterIonIntensities BLOB, TMT_ReporterIonIntensities BLOB, PrecursorIonIntensity NUMERIC);"

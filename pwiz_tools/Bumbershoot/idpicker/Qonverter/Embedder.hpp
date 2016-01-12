@@ -124,6 +124,12 @@ void embedScanTime(const string& idpDbFilepath,
                    const map<int, QuantitationConfiguration>& quantitationMethodBySource = map<int, QuantitationConfiguration>(),
                    pwiz::util::IterationListenerRegistry* ilr = 0);
 
+/// adds a mapping of source group to sample names; the sample names are in ascending order of isobaric quantitation channel reporter ion mass
+void embedIsobaricSampleMapping(const string& idpDbFilepath, const map<string, vector<string> >& isobaricSampleMap);
+
+/// retrieves the mapping of source group to sample names; the sample names are in ascending order of isobaric quantitation channel reporter ion mass
+map<string, vector<string> > getIsobaricSampleMapping(const string& idpDbFilepath);
+
 /// checks whether the given idpDB has embedded gene metadata (although it may not necessarily be the most up-to-date)
 bool hasGeneMetadata(const string& idpDbFilepath);
 

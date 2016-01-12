@@ -34,6 +34,7 @@
 #include "boost/core/null_deleter.hpp"
 #include "boost/range/algorithm_ext/insert.hpp"
 
+#include "SchemaUpdater.hpp"
 #include "Parser.hpp"
 #include "Embedder.hpp"
 #include "idpQonvert.hpp"
@@ -753,7 +754,16 @@ int run( int argc, char* argv[] )
                                                                             << left << setw(9) << totalPeptides
                                                                             << "Total" << endl;
         }
-        
+        else // make sure schema is up to date for EmbedOnly jobs (e.g. gene metadata and/or quantitation)
+        {
+            for (size_t i = 0, end = idpDbFilepaths.size(); i < end; ++i)
+            {
+                IterationListenerRegistry ilr;
+                ilr.addListener(IterationListenerPtr(new UserFeedbackProgressMonitor(idpDbFilepaths[i])), 1);
+                SchemaUpdater::update(idpDbFilepaths[i], &ilr);
+            }
+        }
+
         BOOST_FOREACH(const string& filepath, parserFilepaths)
             idpDbFilepaths.push_back(Parser::outputFilepath(filepath).string());
 

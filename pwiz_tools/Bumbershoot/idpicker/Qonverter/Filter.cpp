@@ -63,35 +63,38 @@ namespace {
 
 
 /// MaxFDRScore
-boost::format createFilteredSpectrumTableSql(
-    "CREATE TABLE FilteredSpectrum (Id INTEGER PRIMARY KEY, Source INTEGER, Index_ INTEGER, NativeID TEXT, PrecursorMZ NUMERIC, ScanTimeInSeconds NUMERIC);\n"
-    "INSERT INTO FilteredSpectrum SELECT s.*\n"
+const string filteredSpectrumSelectSql =
+    "SELECT s.*\n"
     "FROM PeptideSpectrumMatch psm\n"
     "JOIN Spectrum s ON psm.Spectrum = s.Id\n"
     "JOIN SpectrumSource ss ON s.Source = ss.Id\n"
     "-- filter out ungrouped spectrum sources\n"
     "WHERE ss.Group_ AND %1% >= psm.QValue AND psm.Rank = 1\n"
-    "GROUP BY s.Id;\n"
+    "GROUP BY s.Id;\n";
+boost::format createFilteredSpectrumTableSql(
+    "CREATE TABLE FilteredSpectrum (Id INTEGER PRIMARY KEY, Source INTEGER, Index_ INTEGER, NativeID TEXT, PrecursorMZ NUMERIC, ScanTimeInSeconds NUMERIC);\n"
+    "INSERT INTO FilteredSpectrum " + filteredSpectrumSelectSql +
     "CREATE UNIQUE INDEX FilteredSpectrum_SourceNativeID ON FilteredSpectrum (Source, NativeID);"
 );
 
 /// MinDistinctPeptides, MinSpectra (used to compose a WHERE/GROUP BY/HAVING predicate which depends on whether grouping happens at the protein or gene level)
-boost::format createFilteredProteinTableSql(
-    "CREATE TABLE FilteredProtein (Id INTEGER PRIMARY KEY, Accession TEXT, IsDecoy INT, Cluster INT, ProteinGroup INT, Length INT, GeneId TEXT, GeneGroup INT);\n"
-    "INSERT INTO FilteredProtein SELECT pro.*\n"
+const string filteredProteinSelectSql =
+    "SELECT pro.*\n"
     "FROM FilteredPeptideSpectrumMatch psm\n"
     "JOIN FilteredSpectrum s ON psm.Spectrum = s.Id\n"
     "JOIN PeptideInstance pi ON psm.Peptide = pi.Peptide\n"
     "JOIN Protein pro ON pi.Protein = pro.Id\n"
     "GROUP BY pi.Protein\n"
     "HAVING %1% <= COUNT(DISTINCT psm.Peptide) AND\n"
-    "       %2% <= COUNT(DISTINCT psm.Spectrum);\n"
+    "       %2% <= COUNT(DISTINCT psm.Spectrum);\n";
+boost::format createFilteredProteinTableSql(
+    "CREATE TABLE FilteredProtein (Id INTEGER PRIMARY KEY, Accession TEXT, IsDecoy INT, Cluster INT, ProteinGroup INT, Length INT, GeneId TEXT, GeneGroup INT);\n"
+    "INSERT INTO FilteredProtein " + filteredProteinSelectSql +
     "CREATE UNIQUE INDEX FiltProtein_Accession ON FilteredProtein (Accession);"
 );
 
-boost::format createFilteredProteinTableByGeneSql(
-    "CREATE TABLE FilteredProtein (Id INTEGER PRIMARY KEY, Accession TEXT, IsDecoy INT, Cluster INT, ProteinGroup INT, Length INT, GeneId TEXT, GeneGroup INT);\n"
-    "INSERT INTO FilteredProtein SELECT pro.*\n"
+const string filteredProteinTableByGeneSelectSql =
+    "SELECT pro.*\n"
     "FROM FilteredPeptideSpectrumMatch psm\n"
     "JOIN FilteredSpectrum s ON psm.Spectrum = s.Id\n"
     "JOIN PeptideInstance pi ON psm.Peptide = pi.Peptide\n"
@@ -101,20 +104,25 @@ boost::format createFilteredProteinTableByGeneSql(
     "                 GROUP BY GeneId\n"
     "                 HAVING %1% <= COUNT(DISTINCT psm.Peptide) AND\n"
     "                        %2% <= COUNT(DISTINCT psm.Spectrum))\n"
-    "GROUP BY pi.Protein;\n"
+    "GROUP BY pi.Protein;\n";
+boost::format createFilteredProteinTableByGeneSql(
+    "CREATE TABLE FilteredProtein (Id INTEGER PRIMARY KEY, Accession TEXT, IsDecoy INT, Cluster INT, ProteinGroup INT, Length INT, GeneId TEXT, GeneGroup INT);\n"
+    "INSERT INTO FilteredProtein " + filteredProteinTableByGeneSelectSql +
     "CREATE UNIQUE INDEX FiltProtein_Accession ON FilteredProtein (Accession);"
 );
 
 /// MaxFDRScore
-boost::format createFilteredPSMTableSql(
-    "CREATE TABLE FilteredPeptideSpectrumMatch (Id INTEGER PRIMARY KEY, Spectrum INT, Analysis INT, Peptide INT, QValue NUMERIC, ObservedNeutralMass NUMERIC, MonoisotopicMassError NUMERIC, MolecularWeightError NUMERIC, Rank INT, Charge INT);\n"
-    "INSERT INTO FilteredPeptideSpectrumMatch SELECT psm.*\n"
+const string filteredPSMSelectSql =
+    "SELECT psm.*\n"
     "FROM Protein pro\n"
     "JOIN PeptideInstance pi ON pro.Id = pi.Protein\n"
     "JOIN PeptideSpectrumMatch psm ON pi.Peptide = psm.Peptide\n"
     "JOIN FilteredSpectrum s ON psm.Spectrum = s.Id\n"
     "WHERE %1% >= psm.QValue AND psm.Rank = 1\n"
-    "GROUP BY psm.Id;\n"
+    "GROUP BY psm.Id;\n";
+boost::format createFilteredPSMTableSql(
+    "CREATE TABLE FilteredPeptideSpectrumMatch (Id INTEGER PRIMARY KEY, Spectrum INT, Analysis INT, Peptide INT, QValue NUMERIC, ObservedNeutralMass NUMERIC, MonoisotopicMassError NUMERIC, MolecularWeightError NUMERIC, Rank INT, Charge INT);\n"
+    "INSERT INTO FilteredPeptideSpectrumMatch " + filteredPSMSelectSql +
     "CREATE INDEX FilteredPeptideSpectrumMatch_PeptideSpectrumAnalysis ON FilteredPeptideSpectrumMatch (Peptide, Spectrum, Analysis);\n"
     "CREATE INDEX FilteredPeptideSpectrumMatch_SpectrumPeptideAnalysis ON FilteredPeptideSpectrumMatch (Spectrum, Peptide, Analysis);"
 );
@@ -130,25 +138,29 @@ boost::format deleteFilteredPSMsUnderMatchCountSql(
 );
 
 /// (MinimumSpectraPerDistinctPeptide > 1 ? "HAVING " + MinimumSpectraPerDistinctPeptide + @" <= COUNT(DISTINCT psm.Spectrum)" : "");
-boost::format createFilteredPeptideTableSql(
-    "CREATE TABLE FilteredPeptide (Id INTEGER PRIMARY KEY, MonoisotopicMass NUMERIC, MolecularWeight NUMERIC, PeptideGroup INT, DecoySequence TEXT);\n"
-    "INSERT INTO FilteredPeptide SELECT pep.*\n"
+const string filterdPeptideSelectSql =
+    "SELECT pep.*\n"
     "FROM FilteredPeptideSpectrumMatch psm\n"
     "JOIN Peptide pep ON psm.Peptide = pep.Id\n"
-    "GROUP BY pep.Id %1%"
+    "GROUP BY pep.Id %1%";
+boost::format createFilteredPeptideTableSql(
+    "CREATE TABLE FilteredPeptide (Id INTEGER PRIMARY KEY, MonoisotopicMass NUMERIC, MolecularWeight NUMERIC, PeptideGroup INT, DecoySequence TEXT);\n"
+    "INSERT INTO FilteredPeptide " + filterdPeptideSelectSql
 );
 
-string createFilteredPeptideInstanceTableSql(
-    "CREATE TABLE FilteredPeptideInstance (Id INTEGER PRIMARY KEY, Protein INT, Peptide INT, Offset INT, Length INT, NTerminusIsSpecific INT, CTerminusIsSpecific INT, MissedCleavages INT);\n"
-    "INSERT INTO FilteredPeptideInstance SELECT pi.*\n"
+const string filteredPeptideInstanceSelectSql =
+    "SELECT pi.*\n"
     "FROM FilteredPeptide pep\n"
     "JOIN PeptideInstance pi ON pep.Id = pi.Peptide\n"
-    "JOIN FilteredProtein pro ON pi.Protein = pro.Id;\n"
+    "JOIN FilteredProtein pro ON pi.Protein = pro.Id;\n";
+const string createFilteredPeptideInstanceTableSql(
+    "CREATE TABLE FilteredPeptideInstance (Id INTEGER PRIMARY KEY, Protein INT, Peptide INT, Offset INT, Length INT, NTerminusIsSpecific INT, CTerminusIsSpecific INT, MissedCleavages INT);\n"
+    "INSERT INTO FilteredPeptideInstance " + filteredPeptideInstanceSelectSql +
     "CREATE INDEX FilteredPeptideInstance_PeptideProtein ON FilteredPeptideInstance (Peptide, Protein);\n"
     "CREATE INDEX FilteredPeptideInstance_ProteinOffsetLength ON FilteredPeptideInstance (Protein, Offset, Length);"
 );
 
-string renameFilteredTablesSql(
+const string renameFilteredTablesSql(
     "ALTER TABLE Protein RENAME TO UnfilteredProtein;\n"
     "ALTER TABLE PeptideInstance RENAME TO UnfilteredPeptideInstance;\n"
     "ALTER TABLE Peptide RENAME TO UnfilteredPeptide;\n"
@@ -162,7 +174,7 @@ string renameFilteredTablesSql(
     "ALTER TABLE FilteredSpectrum RENAME TO Spectrum"
 );
 
-string assembleProteinGroupsSql(
+const string assembleProteinGroupsSql(
     "CREATE TEMP TABLE ProteinGroups AS\n"
     "    SELECT pro.Id AS ProteinId, GROUP_CONCAT(DISTINCT pi.Peptide) AS ProteinGroup\n"
     "    FROM PeptideInstance pi\n"
@@ -187,7 +199,7 @@ string assembleProteinGroupsSql(
     "DROP TABLE TempProtein;"
 );
 
-string assembleGeneGroupsSql(
+const string assembleGeneGroupsSql(
     "CREATE TEMP TABLE GeneGroups AS\n"
     "    SELECT pro.GeneId AS GeneId, GROUP_CONCAT(DISTINCT pi.Peptide) AS GeneGroup\n"
     "    FROM PeptideInstance pi\n"
@@ -214,7 +226,7 @@ string assembleGeneGroupsSql(
     "DROP TABLE TempProtein;"
 );
 
-string assemblePeptideGroupsSql(
+const string assemblePeptideGroupsSql(
     "CREATE TEMP TABLE PeptideGroups AS\n"
     "         SELECT pep.Id AS PeptideId, GROUP_CONCAT(DISTINCT pi.Protein) AS PeptideGroup\n"
     "         FROM PeptideInstance pi\n"
@@ -253,7 +265,7 @@ boost::format assembleDistinctMatchesSql(
     "CREATE INDEX DistinctMatch_DistinctMatchId ON DistinctMatch (DistinctMatchId);"
 );
 
-string aggregateQuantitationStatisticsSql(
+const string aggregateQuantitationStatisticsSql(
     "DELETE FROM PeptideQuantitation;\n"
     "INSERT INTO PeptideQuantitation (Id, iTRAQ_ReporterIonIntensities, TMT_ReporterIonIntensities, PrecursorIonIntensity)\n"
     "    SELECT psm.Peptide, DISTINCT_DOUBLE_ARRAY_SUM(iTRAQ_ReporterIonIntensities), DISTINCT_DOUBLE_ARRAY_SUM(TMT_ReporterIonIntensities), SUM(PrecursorIonIntensity)\n"
@@ -316,21 +328,24 @@ string trimFilteredTables(
     "DELETE FROM Spectrum WHERE Id NOT IN (SELECT Spectrum FROM PeptideSpectrumMatch);"
 );
 
-string prepareCoverageSql(
-    "CREATE TEMP TABLE CoverageJoinTable AS\n"
+
+const string prepareCoverageSelectSql1 =
     "    SELECT pro.Id AS Protein, pro.Length AS ProteinLength, pi.Offset AS PeptideOffset, pi.Length AS PeptideLength\n"
     "    FROM PeptideInstance pi\n"
     "    JOIN Protein pro ON pi.Protein = pro.Id\n"
     "    JOIN ProteinData pd ON pi.Protein = pd.Id\n"
-    "    GROUP BY pi.Id;\n"
-    "CREATE INDEX CoverageJoinTable_ProteinOffsetLength ON CoverageJoinTable(Protein, PeptideOffset, PeptideLength);\n"
-    "\n"
-    "DELETE FROM ProteinCoverage;\n"
-    "INSERT INTO ProteinCoverage(Id, Coverage)\n"
+    "    GROUP BY pi.Id;\n";
+const string prepareCoverageSelectSql2 =
     "    SELECT Protein, CAST(COUNT(DISTINCT i.Value) AS REAL) * 100 / ProteinLength\n"
     "    FROM IntegerSet i, CoverageJoinTable\n"
     "    WHERE i.Value BETWEEN PeptideOffset AND PeptideOffset + PeptideLength - 1\n"
-    "    GROUP BY Protein;"
+    "    GROUP BY Protein;";
+const string prepareCoverageSql(
+    "CREATE TEMP TABLE CoverageJoinTable AS\n" + prepareCoverageSelectSql1 +
+    "CREATE INDEX CoverageJoinTable_ProteinOffsetLength ON CoverageJoinTable(Protein, PeptideOffset, PeptideLength);\n"
+    "\n"
+    "DELETE FROM ProteinCoverage;\n"
+    "INSERT INTO ProteinCoverage(Id, Coverage)\n" + prepareCoverageSelectSql2
 );
 
 } // namespace
@@ -456,6 +471,17 @@ struct Filter::Impl
         FilterStep_Count
     };
 
+    static string explainQueryPlan(sqlite3pp::database& db, const string& singleStatement)
+    {
+        ostringstream result;
+        sqlite3pp::query planQuery(db, ("EXPLAIN QUERY PLAN " + singleStatement).c_str());
+        BOOST_FOREACH(sqlite3pp::query::rows row, planQuery)
+        {
+            result << row.get<string>(3) << "\n";
+        }
+        return result.str();
+    }
+
     void filterConnection()
     {
         sqlite3pp::database& idpDb = *this->idpDb;
@@ -485,7 +511,7 @@ struct Filter::Impl
             createFilteredPeptideTable(idpDb);
             int filteredPeptideInstances = createFilteredPeptideInstanceTable(idpDb);
 
-            BOOST_LOG_SEV(logSource::get(), MessageSeverity::BriefInfo) << "First filter results: " << filteredSpectra << " spectra; " << filteredPSMs << " PSMs; " << filteredProteins << " proteins; " << filteredPeptideInstances << " peptide instances";
+            BOOST_LOG_SEV(logSource::get(), MessageSeverity::VerboseInfo) << "First filter results: " << filteredSpectra << " spectra; " << filteredPSMs << " PSMs; " << filteredProteins << " proteins; " << filteredPeptideInstances << " peptide instances";
 
             renameFilteredTables(idpDb);
 
@@ -522,6 +548,7 @@ struct Filter::Impl
     int createFilteredSpectrumTable(sqlite3pp::database& db)
     {
         ITERATION_UPDATE(ilr, FilterStep_FilterSpectra, FilterStep_Count, "filtering spectra")
+        BOOST_LOG_SEV(logSource::get(), MessageSeverity::DebugInfo) << explainQueryPlan(db, (boost::format(filteredSpectrumSelectSql) % config.maxFDRScore).str());
         db.execute((createFilteredSpectrumTableSql % config.maxFDRScore).str());
         return sqlite3pp::query(db, "SELECT COUNT(*) From FilteredSpectrum").begin()->get<int>(0);
     }
@@ -531,6 +558,7 @@ struct Filter::Impl
         boost::format& format = config.geneLevelFiltering ? createFilteredProteinTableByGeneSql : createFilteredProteinTableSql;
 
         ITERATION_UPDATE(ilr, FilterStep_FilterProteins, FilterStep_Count, "filtering proteins")
+        BOOST_LOG_SEV(logSource::get(), MessageSeverity::DebugInfo) << explainQueryPlan(db, (boost::format(config.geneLevelFiltering ? filteredProteinTableByGeneSelectSql : filteredProteinSelectSql) % config.minDistinctPeptides % config.minSpectra).str());
         db.execute((format % config.minDistinctPeptides % config.minSpectra).str());
         return sqlite3pp::query(db, "SELECT COUNT(*) From FilteredProtein").begin()->get<int>(0);
     }
@@ -538,6 +566,7 @@ struct Filter::Impl
     int createFilteredPSMTable(sqlite3pp::database& db)
     {
         ITERATION_UPDATE(ilr, FilterStep_FilterPSMs, FilterStep_Count, "filtering peptide spectrum matches")
+        BOOST_LOG_SEV(logSource::get(), MessageSeverity::DebugInfo) << explainQueryPlan(db, (boost::format(filteredPSMSelectSql) % config.maxFDRScore).str());
         db.execute((createFilteredPSMTableSql % config.maxFDRScore).str());
         return sqlite3pp::query(db, "SELECT COUNT(*) From FilteredPeptideSpectrumMatch").begin()->get<int>(0);
     }
@@ -545,6 +574,7 @@ struct Filter::Impl
     int createFilteredPeptideInstanceTable(sqlite3pp::database& db)
     {
         ITERATION_UPDATE(ilr, FilterStep_FilterPeptideInstances, FilterStep_Count, "filtering peptide instances")
+        BOOST_LOG_SEV(logSource::get(), MessageSeverity::DebugInfo) << explainQueryPlan(db, filteredPeptideInstanceSelectSql);
         db.execute(createFilteredPeptideInstanceTableSql);
         return sqlite3pp::query(db, "SELECT COUNT(*) From FilteredPeptideInstance").begin()->get<int>(0);
     }
@@ -591,6 +621,7 @@ struct Filter::Impl
         string filterExpression = config.minSpectraPerDistinctPeptide > 1 ?
                                   "HAVING " + lexical_cast<string>(config.minSpectraPerDistinctPeptide) + " <= COUNT(DISTINCT psm.Spectrum)" :
                                   "";
+        BOOST_LOG_SEV(logSource::get(), MessageSeverity::DebugInfo) << explainQueryPlan(db, (boost::format(filterdPeptideSelectSql) % filterExpression).str());
         db.execute((createFilteredPeptideTableSql % filterExpression).str());
 
         if (config.minSpectraPerDistinctMatch + config.minSpectraPerDistinctPeptide > 1)
@@ -696,8 +727,9 @@ struct Filter::Impl
     void assembleProteinCoverage(sqlite3pp::database& idpDb)
     {
         ITERATION_UPDATE(ilr, FilterStep_CalculateProteinCoverage, FilterStep_Count, "calculating protein coverage")
-
+        BOOST_LOG_SEV(logSource::get(), MessageSeverity::DebugInfo) << explainQueryPlan(idpDb, prepareCoverageSelectSql1);
         idpDb.execute(prepareCoverageSql);
+        BOOST_LOG_SEV(logSource::get(), MessageSeverity::DebugInfo) << explainQueryPlan(idpDb, prepareCoverageSelectSql2);
 
         // get non-zero coverage depths at each protein offset
         sqlite3pp::query coverageMaskRows(idpDb, "SELECT Protein, ProteinLength, i.Value, COUNT(i.Value)\n"

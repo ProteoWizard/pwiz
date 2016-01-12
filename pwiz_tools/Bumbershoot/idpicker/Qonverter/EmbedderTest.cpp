@@ -398,6 +398,61 @@ void test()
     Embedder::dropGeneMetadata("testEmbedder.idpDB");
     unit_assert(!Embedder::hasGeneMetadata("testEmbedder.idpDB"));
 
+
+    // test isobaric sample mapping
+    {
+        // create dummy test sources and groups
+        {
+            sqlite3pp::database idpDb("testEmbedder.idpDB");
+
+            sqlite3pp::command addSpectrumSource(idpDb, "INSERT INTO SpectrumSource (Id, Name, Group_, QuantitationMethod) VALUES (?,?,?,?)");
+            sqlite3pp::command addSpectrumSourceGroup(idpDb, "INSERT INTO SpectrumSourceGroup (Id, Name) VALUES (?,?)");
+
+            addSpectrumSource.binder() << 2 << "A12_B34_C56_Ref_f01" << 2 << (int) QuantitationMethod::ITRAQ4plex;
+            addSpectrumSource.step();
+            addSpectrumSource.reset();
+
+            addSpectrumSource.binder() << 3 << "A12_B34_C56_Ref_f02" << 2 << (int) QuantitationMethod::ITRAQ4plex;
+            addSpectrumSource.step();
+            addSpectrumSource.reset();
+
+            addSpectrumSource.binder() << 4 << "Ref_D78_E90_F12_f01" << 3 << (int) QuantitationMethod::ITRAQ4plex;
+            addSpectrumSource.step();
+            addSpectrumSource.reset();
+
+            addSpectrumSource.binder() << 5 << "Ref_D78_E90_F12_f02" << 3 << (int) QuantitationMethod::ITRAQ4plex;
+            addSpectrumSource.step();
+            addSpectrumSource.reset();
+
+            addSpectrumSourceGroup.binder() << 2 << "A12_B34_C56";
+            addSpectrumSourceGroup.step();
+            addSpectrumSourceGroup.reset();
+
+            addSpectrumSourceGroup.binder() << 3 << "D78_E90_F12";
+            addSpectrumSourceGroup.step();
+            addSpectrumSourceGroup.reset();
+        }
+
+        map<string, vector<string> > testMapping;
+        testMapping["A12_B34_C56"] += "A12", "B34", "C56", "Reference";
+        testMapping["D78_E90_F12"] += "Reference", "D78", "E90", "F12";
+        Embedder::embedIsobaricSampleMapping("testEmbedder.idpDB", testMapping);
+
+        map<string, vector<string> > result = Embedder::getIsobaricSampleMapping("testEmbedder.idpDB");
+        unit_assert_operator_equal(2, result.size());
+        unit_assert_operator_equal(4, result["A12_B34_C56"].size());
+        unit_assert_operator_equal(4, result["D78_E90_F12"].size());
+        unit_assert_operator_equal("A12", result["A12_B34_C56"][0]);
+        unit_assert_operator_equal("B34", result["A12_B34_C56"][1]);
+        unit_assert_operator_equal("C56", result["A12_B34_C56"][2]);
+        unit_assert_operator_equal("Reference", result["A12_B34_C56"][3]);
+        unit_assert_operator_equal("Reference", result["D78_E90_F12"][0]);
+        unit_assert_operator_equal("D78", result["D78_E90_F12"][1]);
+        unit_assert_operator_equal("E90", result["D78_E90_F12"][2]);
+        unit_assert_operator_equal("F12", result["D78_E90_F12"][3]);
+    }
+
+
     bfs::remove("testEmbedder.mz5");
     bfs::remove("testEmbedder.idpDB");
 }

@@ -37,7 +37,7 @@ namespace sqlite = sqlite3pp;
 
 BEGIN_IDPICKER_NAMESPACE
 
-const int CURRENT_SCHEMA_REVISION = 14;
+const int CURRENT_SCHEMA_REVISION = 15;
 
 namespace SchemaUpdater {
 
@@ -109,6 +109,14 @@ struct DistinctDoubleArraySum
     }
 };
 
+void update_14_to_15(sqlite::database& db, const IterationListenerRegistry* ilr, bool& vacuumNeeded)
+{
+    ITERATION_UPDATE(ilr, 14, CURRENT_SCHEMA_REVISION, "updating schema version")
+    db.execute("CREATE TABLE IF NOT EXISTS IsobaricSampleMapping (GroupId INTEGER PRIMARY KEY, Samples TEXT)");
+
+    //update_15_to_16(db, ilr, vacuumNeeded);
+}
+
 void update_13_to_14(sqlite::database& db, const IterationListenerRegistry* ilr, bool& vacuumNeeded)
 {
     ITERATION_UPDATE(ilr, 13, CURRENT_SCHEMA_REVISION, "updating schema version")
@@ -149,7 +157,7 @@ void update_13_to_14(sqlite::database& db, const IterationListenerRegistry* ilr,
             throw runtime_error(e.what());
     }
 
-    //update_14_to_15(db, ilr, vacuumNeeded);
+    update_14_to_15(db, ilr, vacuumNeeded);
 }
 
 void update_12_to_13(sqlite::database& db, const IterationListenerRegistry* ilr, bool& vacuumNeeded)
@@ -646,6 +654,8 @@ bool update(sqlite3* idpDbConnection, const IterationListenerRegistry* ilr)
         update_12_to_13(db, ilr, vacuumNeeded);
     else if (schemaRevision == 13)
         update_13_to_14(db, ilr, vacuumNeeded);
+    else if (schemaRevision == 14)
+        update_14_to_15(db, ilr, vacuumNeeded);
     else if (schemaRevision > CURRENT_SCHEMA_REVISION)
         throw runtime_error("[SchemaUpdater::update] unable to update schema revision " +
                             lexical_cast<string>(schemaRevision) +

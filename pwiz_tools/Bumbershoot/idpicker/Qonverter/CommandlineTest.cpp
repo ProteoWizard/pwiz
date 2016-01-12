@@ -97,6 +97,7 @@ struct path_stringer
 int testCommand(string command)
 {
     bal::replace_all(command, "idpQonvert.exe\"", "idpQonvert.exe\" -LogFilepath test.log ");
+    bal::replace_all(command, "idpAssemble.exe\"", "idpAssemble.exe\" -LogFilepath test.log ");
     cout << "Running command: " << command << endl;
     bpt::ptime start = bpt::microsec_clock::universal_time();
     int result = system(command.c_str());
@@ -508,6 +509,60 @@ void testIdpAssemble(const string& idpQonvertPath, const string& idpAssemblePath
         unit_assert(sqlite3pp::query(db, "SELECT COUNT(*) FROM SpectrumSource WHERE QuantitationMethod > 0").begin()->get<int>(0) > 0);
         unit_assert(sqlite3pp::query(db, "SELECT COUNT(*) FROM SpectrumQuantitation WHERE TMT_ReporterIonIntensities IS NOT NULL").begin()->get<int>(0) > 0);
     }
+
+    // test isobaric sample mapping
+    {
+        string assemblyFilepath = (testDataPath / "groups.txt").string();
+        ofstream assemblyFile(assemblyFilepath.c_str());
+        assemblyFile << "/201203" << "\t201203-624176-12\n"
+                     << "/201208" << "\t201208-378803\n";
+        assemblyFile.close();
+
+        // the sample names are dummy values
+        string isobaricSampleMappingFilepath = (testDataPath / "sample_mapping.txt").string();
+        ofstream isobaricSampleMappingFile(isobaricSampleMappingFilepath.c_str());
+        isobaricSampleMappingFile << "/201203" << "\tEmpty,201203-TMT2,201203-TMT3,Empty,201203-TMT5,Reference,201203-TMT7,201203-TMT8,201203-TMT9,201203-TMT10\n"
+                                  << "/201208" << "\t201208-TMT1,201208-TMT2,201208-TMT3,Empty,201208-TMT5,Reference,201208-TMT7,201208-TMT8,201208-TMT9,Empty\n";
+        isobaricSampleMappingFile.close();
+
+        string mergedQuantifiedOutputFilepath = (testDataPath / "merged-TMT10plex-withIsobaricSampleMapping.idpDB").string();
+        bfs::copy_file(testDataPath / "merged-TMT10plex.idpDB", mergedQuantifiedOutputFilepath);
+        command = (format("%1%\"%2%\" \"%3%\" -AssignSourceHierarchy \"%4%\" -IsobaricSampleMapping \"%5%\"%1%") % commandQuote % idpAssemblePath % mergedQuantifiedOutputFilepath % assemblyFilepath % isobaricSampleMappingFilepath).str();
+        unit_assert_operator_equal(0, testCommand(command));
+        sqlite3pp::database db(mergedQuantifiedOutputFilepath);
+        unit_assert_operator_equal(3, sqlite3pp::query(db, "SELECT COUNT(*) FROM SpectrumSourceGroup").begin()->get<int>(0));
+        unit_assert_operator_equal(1, sqlite3pp::query(db, "SELECT COUNT(*) FROM SpectrumSourceGroup WHERE Name='/201203'").begin()->get<int>(0));
+        unit_assert_operator_equal(1, sqlite3pp::query(db, "SELECT COUNT(*) FROM SpectrumSourceGroup WHERE Name='/201208'").begin()->get<int>(0));
+        unit_assert_operator_equal("Empty,201203-TMT2,201203-TMT3,Empty,201203-TMT5,Reference,201203-TMT7,201203-TMT8,201203-TMT9,201203-TMT10", sqlite3pp::query(db, "SELECT Samples FROM IsobaricSampleMapping WHERE GroupId=2").begin()->get<string>(0));
+        unit_assert_operator_equal("201208-TMT1,201208-TMT2,201208-TMT3,Empty,201208-TMT5,Reference,201208-TMT7,201208-TMT8,201208-TMT9,Empty", sqlite3pp::query(db, "SELECT Samples FROM IsobaricSampleMapping WHERE GroupId=3").begin()->get<string>(0));
+    }
+
+    // test isobaric sample count mismatch error
+    {
+        string assemblyFilepath = (testDataPath / "groups.txt").string();
+        ofstream assemblyFile(assemblyFilepath.c_str());
+        assemblyFile << "/201203" << "\t201203-624176-12\n"
+                     << "/201208" << "\t201208-378803\n";
+        assemblyFile.close();
+
+        // the sample names are dummy values
+        string isobaricSampleMappingFilepath = (testDataPath / "sample_mapping.txt").string();
+        ofstream isobaricSampleMappingFile(isobaricSampleMappingFilepath.c_str());
+        isobaricSampleMappingFile << "/201203" << "\t201203-TMT2,201203-TMT3,Empty,201203-TMT5,Reference,201203-TMT7,201203-TMT8,201203-TMT9,201203-TMT10\n"
+                                  << "/201208" << "\t201208-TMT1,201208-TMT2,201208-TMT3,201208-TMT5,Reference,201208-TMT7,201208-TMT8,201208-TMT9,Empty\n";
+        isobaricSampleMappingFile.close();
+
+        string mergedQuantifiedOutputFilepath = (testDataPath / "merged-TMT10plex-withBadIsobaricSampleMapping.idpDB").string();
+        bfs::copy_file(testDataPath / "merged-TMT10plex.idpDB", mergedQuantifiedOutputFilepath);
+        command = (format("%1%\"%2%\" \"%3%\" -AssignSourceHierarchy \"%4%\" -IsobaricSampleMapping \"%5%\"%1%") % commandQuote % idpAssemblePath % mergedQuantifiedOutputFilepath % assemblyFilepath % isobaricSampleMappingFilepath).str();
+        unit_assert_operator_equal(1, testCommand(command));
+        {
+            ifstream testLog("test.log");
+            string testLogString(bfs::file_size("test.log"), ' ');
+            testLog.read(&testLogString[0], testLogString.length());
+            unit_assert(bal::contains(testLogString, "[embedIsobaricSampleMapping] number of samples (9) for group /201203 does not match number of channels in the quantitation method (10)"));
+        }
+    }
 }
 
 
@@ -667,6 +722,25 @@ void testIdpQuery(const string& idpQueryPath, const bfs::path& testDataPath)
         unit_assert_operator_equal(0, testCommand(command));
         unit_assert(bfs::exists(quantifiedOutputFilepath));
         bfs::rename(quantifiedOutputFilepath, testDataPath / ("merged-quantified-iTRAQ8plex-" + groupColumn + ".tsv"));
+    }
+
+    // test isobaric sample mapping
+    {
+        string quantifiedInputFilepath = (testDataPath / "merged-TMT10plex-withIsobaricSampleMapping.idpDB").string();
+        string quantifiedOutputFilepath = (testDataPath / "merged-TMT10plex-withIsobaricSampleMapping.tsv").string();
+
+        command = (format("%1%\"%2%\" ProteinGroup Accession,PivotTMTByGroup \"%3%\"%1%") % commandQuote % idpQueryPath % quantifiedInputFilepath).str();
+        unit_assert_operator_equal(0, testCommand(command));
+        unit_assert(bfs::exists(quantifiedOutputFilepath));
+        {
+            ifstream outputFile(quantifiedOutputFilepath.c_str());
+            string line;
+            getline(outputFile, line);
+            // /201203 Empty,201203-TMT2,201203-TMT3,Empty,201203-TMT5,Reference,201203-TMT7,201203-TMT8,201203-TMT9,201203-TMT10
+            // /201208 201208-TMT1,201208-TMT2,201208-TMT3,Empty,201208-TMT5,Reference,201208-TMT7,201208-TMT8,201208-TMT9,Empty
+            unit_assert_operator_equal("Accession\t201203-TMT2\t201203-TMT3\t201203-TMT5\t201203-TMT7\t201203-TMT8\t201203-TMT9\t201203-TMT10\t201208-TMT1\t201208-TMT2\t201208-TMT3\t201208-TMT5\t201208-TMT7\t201208-TMT8\t201208-TMT9\t", line);
+            // TODO: figure out how to test the output of the second line
+        }
     }
 }
 

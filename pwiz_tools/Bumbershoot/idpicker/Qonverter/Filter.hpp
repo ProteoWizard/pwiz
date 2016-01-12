@@ -56,7 +56,7 @@ using std::pair;
 using std::string;
 
 
-/// an object responsible for merging two or more idpDBs into a single output idpDB
+/// an object responsible for filtering an idpDB according to various thresholds and parsimony
 struct Filter
 {
     Filter();
