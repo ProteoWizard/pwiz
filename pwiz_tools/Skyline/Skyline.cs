@@ -1125,7 +1125,7 @@ namespace pwiz.Skyline
                 {
                     Paste(string.IsNullOrEmpty(textCsv) ? text : textCsv);
                 }
-                catch (InvalidDataException x)
+                catch (Exception x)
                 {
                     MessageDlg.ShowException(this, x);
                 }

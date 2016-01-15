@@ -871,7 +871,7 @@ namespace pwiz.Skyline.Controls
             int y = pt.Y + rectDrop.Height;
             if (y + size.Height > screen.WorkingArea.Height)
                 y = pt.Y - size.Height;
-            int x = Math.Min(pt.X, screen.WorkingArea.Width - size.Width);
+            int x = Math.Min(pt.X, screen.WorkingArea.Right - size.Width); 
             
             return new Point(x, y);
         }

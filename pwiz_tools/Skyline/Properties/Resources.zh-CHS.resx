@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -5985,10 +5985,7 @@
   <data name="PeakBoundaryImporter_Import_Peptide_has_unrecognized_modifications__0__at_line__1_" xml:space="preserve">
     <value>第 {1}行肽段有未识别修饰{0}</value>
   </data>
-  <data name="ModificationMatcher_EnumerateSequenceInfos_Unrecognized_Unimod_id__0__in_modified_peptide_sequence_" xml:space="preserve">
-    <value>修饰的肽序列中的未识别 Unimod id {0}。</value>
-  </data>
-  <data name="SkylineWindow_ShowReintegrateDialog_Reintegrate_peaks" xml:space="preserve">
+    <data name="SkylineWindow_ShowReintegrateDialog_Reintegrate_peaks" xml:space="preserve">
     <value>重新合并峰</value>
   </data>
   <data name="DocumentGridViewContext_CreateViewEditor_Edit_Report" xml:space="preserve">

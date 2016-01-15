@@ -202,13 +202,13 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                  Name = "ICPL (K)", 
                  AAs = "K", LabelAtoms = LabelAtoms.None, Formula = "C6H3NO", ID = 365, 
-                 Structural = true, ShortName = "ICL", Hidden = false, 
+                 Structural = true, ShortName = "IP0", Hidden = false, 
             },
             new UniModModificationData
             {
                  Name = "ICPL:13C(6) (K)", 
                  AAs = "K", LabelAtoms = LabelAtoms.None, Formula = "H3C'6NO", ID = 364, 
-                 Structural = true, ShortName = "ICH", Hidden = false, 
+                 Structural = true, ShortName = "IP6", Hidden = false, 
             },
             new UniModModificationData
             {
@@ -1546,7 +1546,7 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                  Name = "Chlorination (Y)", 
                  AAs = "Y", LabelAtoms = LabelAtoms.None, Formula = "Cl", ID = 936, 
-                 Structural = true, Hidden = true, 
+                 Structural = true, ShortName = "1Cl", Hidden = true, 
             },
             new UniModModificationData
             {
@@ -2272,13 +2272,13 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                  Name = "dichlorination (C)", 
                  AAs = "C", LabelAtoms = LabelAtoms.None, Formula = "Cl2", ID = 937, 
-                 Structural = true, Hidden = true, 
+                 Structural = true, ShortName = "2Cl", Hidden = true, 
             },
             new UniModModificationData
             {
                  Name = "dichlorination (Y)", 
                  AAs = "Y", LabelAtoms = LabelAtoms.None, Formula = "Cl2", ID = 937, 
-                 Structural = true, Hidden = true, 
+                 Structural = true, ShortName = "2Cl", Hidden = true, 
             },
             new UniModModificationData
             {
@@ -3100,13 +3100,13 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                  Name = "GeranylGeranyl (C)", 
                  AAs = "C", LabelAtoms = LabelAtoms.None, Formula = "H32C20", ID = 48, 
-                 Structural = true, Hidden = true, 
+                 Structural = true, ShortName = "2Ge", Hidden = true, 
             },
             new UniModModificationData
             {
                  Name = "GGQ (K)", 
                  AAs = "K", LabelAtoms = LabelAtoms.None, Formula = "H14C9N4O4", ID = 1292, 
-                 Structural = true, Hidden = true, 
+                 Structural = true, ShortName = "GGQ", Hidden = true, 
             },
             new UniModModificationData
             {
@@ -3796,13 +3796,13 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                  Name = "ICPL (N-term)", 
                  Terminus = ModTerminus.N, LabelAtoms = LabelAtoms.None, Formula = "C6H3NO", ID = 365, 
-                 Structural = true, ShortName = "ICL", Hidden = true, 
+                 Structural = true, ShortName = "IP0", Hidden = true, 
             },
             new UniModModificationData
             {
                  Name = "ICPL:13C(6) (N-term)", 
                  Terminus = ModTerminus.N, LabelAtoms = LabelAtoms.None, Formula = "H3C'6NO", ID = 364, 
-                 Structural = true, ShortName = "ICH", Hidden = true, 
+                 Structural = true, ShortName = "IP6", Hidden = true, 
             },
             new UniModModificationData
             {
@@ -5122,7 +5122,7 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                  Name = "PEO-Iodoacetyl-LC-Biotin (C)", 
                  AAs = "C", LabelAtoms = LabelAtoms.None, Formula = "H30C18N4O5S", ID = 20, 
-                 Structural = true, Hidden = true, 
+                 Structural = true, ShortName = "PEO", Hidden = true, 
             },
             new UniModModificationData
             {
@@ -5584,13 +5584,13 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                  Name = "QQQTGG (K)", 
                  AAs = "K", LabelAtoms = LabelAtoms.None, Formula = "H37C23N9O10", ID = 877, 
-                 Structural = true, Hidden = true, 
+                 Structural = true, ShortName = "SU2", Hidden = true, 
             },
             new UniModModificationData
             {
                  Name = "QTGG (K)", 
                  AAs = "K", LabelAtoms = LabelAtoms.None, Formula = "H21C13N5O6", ID = 1293, 
-                 Structural = true, Hidden = true, 
+                 Structural = true, ShortName = "SU1", Hidden = true, 
             },
             new UniModModificationData
             {
@@ -6963,3 +6963,45 @@ namespace pwiz.Skyline.Model.DocSettings
 //Unable to match: Xlink:DTSSP (Protein N-term)
 //Unable to match: Xlink:EGS (Protein N-term)
 //Unable to match: Xlink:EGScleaved (Protein N-term)
+//Unused code: arg-add = +1R
+//Unused code: benzyl = Bnz
+//Unused code: boc = Boc
+//Unused code: cbz(benzyloxycarbonyl) = CBZ
+//Unused code: cholesterol = Chl
+//Unused code: c-terminal methyl = 1Me
+//Unused code: cys->hcy = CHC
+//Unused code: cys->pyro-cam = PCa
+//Unused code: cys->pyro-cmc = PCm
+//Unused code: dinitrophenyl = 2Np
+//Unused code: ethylamide = EAm
+//Unused code: fmoc = Fmc
+//Unused code: formaldehydeadduct = FRT
+//Unused code: formylmet = FMA
+//Unused code: gpianchor = GPI
+//Unused code: hex(1)hexnac(1) = HHN
+//Unused code: hydrazide = Hyz
+//Unused code: itraq = IT4
+//Unused code: itraq8plexcold = T8C
+//Unused code: lys->hydroxyallysine = HAA
+//Unused code: lys-add = +1K
+//Unused code: met->aha+tag = MAT
+//Unused code: met->aha+tagmcl = MAC
+//Unused code: met->carbamidomethyl-hcy = CaS
+//Unused code: met->carboxymethyl-hcy = CoS
+//Unused code: met->hcy = MHC
+//Unused code: microcin = Mic
+//Unused code: microcinc7 = Mi7
+//Unused code: naphthyl = Npl
+//Unused code: napthylacetyl = NpA
+//Unused code: n-ethylmaleimide = NEM
+//Unused code: n-ethylmaleimide+water = NMH
+//Unused code: nicotinyl = Ncl
+//Unused code: n-methylmaleimide = NMM
+//Unused code: n-methylmaleimide+water = MMH
+//Unused code: n-terminal methyl = 1Me
+//Unused code: phospho(ser,thr) = Pho
+//Unused code: pmc = PMC
+//Unused code: sec->dha = UHA
+//Unused code: ser->oxoalanine = SOa
+//Unused code: trifluoroacetyl = TFA
+//Unused code: trinitrophenyl = 3Np

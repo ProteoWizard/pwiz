@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Text;
@@ -1338,10 +1339,9 @@ namespace pwiz.Skyline.Util
         {
             // create GUID
             string guidSuffix = string.Format("-{0}", Guid.NewGuid()); // Not L10N
-
             var startInfo = new ProcessStartInfo
                 {
-                    FileName = "SkylineProcessRunner.exe", // Not L10N
+                    FileName = GetSkylineProcessRunnerExePath(),
                     Arguments = guidSuffix + " " + arguments, // Not L10N
                 };
                 
@@ -1382,6 +1382,12 @@ namespace pwiz.Skyline.Util
                     throw new IOException("Error running process"); // Not L10N? Does user see this?
                 }
             }
+        }
+
+        private static string GetSkylineProcessRunnerExePath()
+        {
+            string skylineFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            return Path.Combine(skylineFolder ?? string.Empty, "SkylineProcessRunner.exe"); // Not L10N
         }
     }
     

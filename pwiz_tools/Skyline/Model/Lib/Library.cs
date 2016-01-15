@@ -173,6 +173,8 @@ namespace pwiz.Skyline.Model.Lib
                 Library library;
                 if (_loadedLibraries.TryGetValue(spec.Name, out library))
                     return library;
+                // If the library has not yet been loaded, then create a new lock
+                // for everyone to wait on until the library has been loaded.
                 if (!_loadingLibraries.TryGetValue(spec.Name, out loadLock))
                 {
                     loadLock = new LibraryLoadLock();
@@ -193,7 +195,11 @@ namespace pwiz.Skyline.Model.Lib
             {
                 _loadingLibraries.Remove(spec.Name);
                 if (loadLock.Library != null)
-                    _loadedLibraries.Add(spec.Name, loadLock.Library);
+                {
+                    // Update the newly loaded library in the dictionary, regardless of whether
+                    // we were the thread that actually did the loading.
+                    _loadedLibraries[spec.Name] = loadLock.Library;
+                }
                 return loadLock.Library;
             }
         }

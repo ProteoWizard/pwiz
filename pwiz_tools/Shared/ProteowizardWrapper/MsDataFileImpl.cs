@@ -93,8 +93,19 @@ namespace pwiz.ProteowizardWrapper
         public const string PREFIX_SINGLE = "SRM SIC "; // Not L10N
         public const string PREFIX_PRECURSOR = "SIM SIC "; // Not L10N
 
+        public static bool? IsNegativeChargeId(string id) // We currently ignore chromatogram polarity, but we may encounter it in mzML so must at least be able to recognize it
+        {
+            if (id.StartsWith("+ ")) // Not L10N
+                return false;
+            if (id.StartsWith("- ")) // Not L10N
+                return true;
+            return null;
+        }
+
         public static bool IsSingleIonCurrentId(string id)
         {
+            if (IsNegativeChargeId(id).HasValue)
+                id = id.Substring(2);
             return id.StartsWith(PREFIX_SINGLE) || id.StartsWith(PREFIX_PRECURSOR);
         }
 

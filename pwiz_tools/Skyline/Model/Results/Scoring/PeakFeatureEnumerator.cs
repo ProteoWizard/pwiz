@@ -187,7 +187,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                         float startTime = summaryPeakData.StartTime;
                         float endTime = summaryPeakData.EndTime;
                         bool isMaxPeakIndex = summaryPeakData.IsMaxPeakIndex;
-                        listRunFeatures.Add(new PeakGroupFeatures(retentionTime, startTime, endTime,
+                        listRunFeatures.Add(new PeakGroupFeatures(summaryPeakData.PeakIndex, retentionTime, startTime, endTime,
                             isMaxPeakIndex, features, mzFilters));
                     }
 
@@ -284,6 +284,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
             {
                 get { return _peakIndex == _chromGroupInfoPrimary.BestPeakIndex; }
             }
+
+            public int PeakIndex { get { return _peakIndex; } }
 
             public bool NextPeakIndex()
             {
@@ -749,9 +751,10 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     public sealed class PeakGroupFeatures
     {
-        public PeakGroupFeatures(float retentionTime, float startTime, float endTime, bool isMaxPeak,
+        public PeakGroupFeatures(int peakIndex, float retentionTime, float startTime, float endTime, bool isMaxPeak,
             float[] features, MzFilterPairs[] filterPairs)
         {
+            OriginalPeakIndex = peakIndex;
             RetentionTime = retentionTime;
             StartTime = startTime;
             EndTime = endTime;
@@ -760,6 +763,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             FilterPairs = filterPairs;
         }
 
+        public int OriginalPeakIndex { get; private set; }
         public float RetentionTime { get; private set; }
         public float StartTime { get; private set; }
         public float EndTime { get; private set; }

@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.IO.Pipes;
@@ -26,6 +27,7 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
+using Microsoft.Win32;
 using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
@@ -224,7 +226,7 @@ namespace pwiz.Skyline
                         reportShutdownDlg.ShowDialog();
                     }
                 }
-
+                SystemEvents.DisplaySettingsChanged += SystemEventsOnDisplaySettingsChanged;
                 // Careful, a throw out of the SkylineWindow constructor without this
                 // catch causes Skyline just to appear to silently never start.  Makes for
                 // some difficult debugging.
@@ -289,6 +291,19 @@ namespace pwiz.Skyline
             }
 
             MainWindow = null;
+        }
+
+        private static void SystemEventsOnDisplaySettingsChanged(object sender, EventArgs eventArgs)
+        {
+            foreach (Form form in Application.OpenForms)
+            {
+                Rectangle rcForm = form.Bounds;
+                var screen = Screen.FromControl(form);
+                if (!rcForm.IntersectsWith(screen.WorkingArea))
+                {
+                    FormEx.ForceOnScreen(form);
+                }
+            }
         }
 
         private static void SendAnalyticsHit()

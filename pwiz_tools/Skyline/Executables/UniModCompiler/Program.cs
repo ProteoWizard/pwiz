@@ -43,7 +43,18 @@ namespace UniModCompiler
         private static List<Mod> _listedMods;
         private static List<Mod> _listedHiddenMods;
         private static List<string> _impossibleMods;
-        private static Dictionary<string, string> _dictModNameToThreeLetterCode;
+        private static Dictionary<string, ThreeLetterCodeUsed> _dictModNameToThreeLetterCode;
+
+        private class ThreeLetterCodeUsed
+        {
+            public ThreeLetterCodeUsed(string threeLetterCode)
+            {
+                ThreeLetterCode = threeLetterCode;
+            }
+
+            public string ThreeLetterCode { get; private set; }
+            public bool Used { get; set; }
+        }
 
         private const string PROJECT_PATH = @"..\..";
         private static readonly string INPUT_FILES_PATH = Path.Combine(PROJECT_PATH, "InputFiles");
@@ -148,6 +159,10 @@ namespace UniModCompiler
                 {
                     writer.WriteLine("//Unable to match: " + listedMod.Name);
                 }
+                foreach (var unusedSciex in _dictModNameToThreeLetterCode.Where(p => !p.Value.Used).OrderBy(p => p.Key))
+                {
+                    writer.WriteLine("//Unused code: {0} = {1}", unusedSciex.Key, unusedSciex.Value.ThreeLetterCode);
+                }
 
                 writer.Close();
             }
@@ -233,9 +248,9 @@ namespace UniModCompiler
         }
 
 
-        private static Dictionary<string, string> LoadShortNames(string path)
+        private static Dictionary<string, ThreeLetterCodeUsed> LoadShortNames(string path)
         {
-            var dictModNameToThreeLetterCode = new Dictionary<string, string>();
+            var dictModNameToThreeLetterCode = new Dictionary<string, ThreeLetterCodeUsed>();
             // Throws an exception, if it cannot read the file
             using (var reader = new StreamReader(path))
             {
@@ -248,11 +263,15 @@ namespace UniModCompiler
                         mod.ItemsElementName.Select((t, i) => new {type = t, index = i}).First(
                             t => t.type.ToString() == ItemsChoiceType.Nme.ToString()).index;
                     var name = (string)mod.Items[nameIndex];
+                    if ((name.Contains("Protein") && name.Contains("Terminal")) || name.Contains("Old3LetterCode"))
+                        continue;
+                    if (name.StartsWith("Terminal "))
+                        name = name.Substring(9);
 
                     var threeLetterCodeIndex =
                         mod.ItemsElementName.Select((t, i) => new {type = t, index = i}).First(
                             t => t.type.ToString() == ItemsChoiceType.TLC.ToString()).index;
-                    dictModNameToThreeLetterCode[name] = (string)mod.Items[threeLetterCodeIndex];
+                    dictModNameToThreeLetterCode[name.ToLower()] = new ThreeLetterCodeUsed((string) mod.Items[threeLetterCodeIndex]);
 
                     var displayNameItem =
                         mod.ItemsElementName.Select((t, i) => new {type = t, index = i}).FirstOrDefault(
@@ -261,11 +280,31 @@ namespace UniModCompiler
                     {
                         nameIndex = displayNameItem.index;
                         var displayNamename = (string) mod.Items[nameIndex];
-                        dictModNameToThreeLetterCode[displayNamename] = (string)mod.Items[threeLetterCodeIndex];
+                        dictModNameToThreeLetterCode[displayNamename.ToLower()] = new ThreeLetterCodeUsed((string) mod.Items[threeLetterCodeIndex]);
                     }
                 }
             }
+
+            AddNameAliases(dictModNameToThreeLetterCode,
+                new Dictionary<string, string>
+                {
+                    {"GlyGlyGln", "GGQ"},
+                    {"GlnThrGlyGly", "QTGG"},
+                    {"GlnGlnGlnThrGlyGly", "QQQTGG"},
+                    {"Chloro", "Chlorination" },
+                    {"Dichloro", "dichlorination"},
+                    {"Acetyl-PEO-Biotin", "PEO-Iodoacetyl-LC-Biotin"}
+                });
+
             return dictModNameToThreeLetterCode;
+        }
+
+        private static void AddNameAliases(Dictionary<string, ThreeLetterCodeUsed> dictModNameToThreeLetterCode, Dictionary<string, string> dictAliases)
+        {
+            foreach (var nameValue in dictAliases)
+            {
+                dictModNameToThreeLetterCode.Add(nameValue.Value.ToLower(), dictModNameToThreeLetterCode[nameValue.Key.ToLower()]);
+            }
         }
 
         /// <summary>
@@ -405,8 +444,8 @@ namespace UniModCompiler
                     continue;
                 }
 
-                string threeLetterCode;
-                var nameKey = mod.Name.Substring(0, mod.Name.LastIndexOf("(", StringComparison.Ordinal)).Trim();
+                ThreeLetterCodeUsed threeLetterCode;
+                var nameKey = mod.Name.Substring(0, mod.Name.LastIndexOf("(", StringComparison.Ordinal)).Trim().ToLower();
                 _dictModNameToThreeLetterCode.TryGetValue(nameKey, out threeLetterCode);
 
                 writer.WriteLine("            new UniModModificationData");
@@ -414,18 +453,38 @@ namespace UniModCompiler
                 writer.WriteLine(@"                 Name = ""{0}"", ", mod.Name);
                 writer.Write("                 ");
                 if (mod.AAs.Length > 0)
-                    writer.Write(string.Format(@"AAs = ""{0}"", ", BuildAAString(mod.AAs)));
+                    writer.Write(@"AAs = ""{0}"", ", BuildAAString(mod.AAs));
                 if (mod.Terminus != null)
-                    writer.Write(string.Format(@"Terminus = {0}, ", "ModTerminus." + mod.Terminus));
-                writer.Write(string.Format("LabelAtoms = {0}, ", labelAtoms));
+                    writer.Write(@"Terminus = {0}, ", "ModTerminus." + mod.Terminus);
+                writer.Write("LabelAtoms = {0}, ", labelAtoms);
                 if (Equals(labelAtoms, "LabelAtoms.None"))
-                    writer.Write(string.Format(@"Formula = ""{0}"", ", BuildFormula(dictMod.delta.element)));
+                    writer.Write(@"Formula = ""{0}"", ", BuildFormula(dictMod.delta.element));
                 if(!Equals(lossesStr, "null"))
-                    writer.Write(string.Format("Losses = {0}, ", lossesStr));
+                    writer.Write("Losses = {0}, ", lossesStr);
                 writer.WriteLine("ID = {0}, ", dictMod.record_id);
-                writer.Write(string.Format("                 Structural = {0}, ", (!isotopic).ToString(CultureInfo.InvariantCulture).ToLower()));
-                if (!string.IsNullOrEmpty(threeLetterCode))
-                    writer.Write(string.Format(@"ShortName = ""{0}"", ", threeLetterCode));
+                writer.Write("                 Structural = {0}, ", (!isotopic).ToString(CultureInfo.InvariantCulture).ToLower());
+                if (threeLetterCode != null)
+                {
+                    writer.Write(@"ShortName = ""{0}"", ", threeLetterCode.ThreeLetterCode);
+                    threeLetterCode.Used = true;
+                    if (mod.Terminus.HasValue)
+                    {
+                        nameKey = "Terminal " + nameKey;
+                        ThreeLetterCodeUsed threeLetterCodeTerm;
+                        if (_dictModNameToThreeLetterCode.TryGetValue(nameKey, out threeLetterCodeTerm))
+                        {
+                            if (!Equals(threeLetterCode.ThreeLetterCode, threeLetterCodeTerm.ThreeLetterCode))
+                            {
+                                Console.Error.WriteLine("Mismatched three letter codes {0} and terminal {1}",
+                                    threeLetterCode.ThreeLetterCode, threeLetterCodeTerm.ThreeLetterCode);
+                            }
+                            else
+                            {
+                                threeLetterCodeTerm.Used = true;
+                            }
+                        }
+                    }
+                }
                 writer.WriteLine("Hidden = {0}, ", hidden.ToString().ToLower());
                 writer.WriteLine("            },");
 
