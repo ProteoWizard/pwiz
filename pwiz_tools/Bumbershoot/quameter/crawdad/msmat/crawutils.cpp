@@ -37,26 +37,6 @@ extern "C" {
 
 #endif
 
-#ifndef __GNUC__
-double round(double n) {
-  
-  double tempval;
-  double decimalpart = n-(int)n;//obtain just the decimal part
-    
-  if(decimalpart>=0.5)//next integer number if greater or equal to 0.5
-      
-    tempval = ceil(n);
-      
-  else 
-      
-    tempval = floor(n);//otherwise stay in the current interger part
-    
-  return tempval;
-}
-      
-#endif
-
-
 
 
 namespace crawutils {

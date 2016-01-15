@@ -36,7 +36,7 @@ namespace freicore
 {
 namespace quameter
 {
-    typedef boost::lockfree::queue<size_t, boost::lockfree::capacity<1> > BoostLockFreeQueue;
+    typedef boost::lockfree::queue<size_t, boost::lockfree::capacity<65534> > BoostLockFreeQueue;
     RunTimeConfig*                  g_rtConfig;
     boost::mutex                    msdMutex;
     BoostLockFreeQueue              metricsTasks;

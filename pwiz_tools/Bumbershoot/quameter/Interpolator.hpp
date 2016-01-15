@@ -61,12 +61,12 @@ struct Interpolator
         //for (int i=2; i < _size; ++i)
             //minSampleSize = min(minSampleSize, x[i] - x[i-1]);
 
-        vector<double> sampleDeltas(_size);
+        vector<double> sampleDeltas(_size, 0);
         for (int i=1; i < _size; ++i)
             sampleDeltas[i] = x[i] - x[i-1];
         sort(sampleDeltas.begin(), sampleDeltas.end());
 
-        double minSampleSize = sampleDeltas[size_t(_size*0.01)];
+        double minSampleSize = sampleDeltas[min(size_t(_size - 1), size_t(_size*0.01 + 1))];
 
         size_t newSize = (x.back() - x.front()) / minSampleSize;
 
