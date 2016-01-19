@@ -672,16 +672,7 @@ SeqMod MaxQuantReader::searchForMod(vector<string>& modNames, string modSequence
     }
 
     // get mod abbreviation
-    string modAbbreviation = "";
-    for (int i = posOpenParen + 1; i < posOpenParen + 3; i++)
-    {
-        if (modSequence[i] < 'a' || modSequence[i] > 'z')
-        {
-            throw BlibException(false, "Illegal character %c found in sequence %s (line %d)", 
-                                modSequence[i], modSequence.c_str(), lineNum_);
-        }
-        modAbbreviation += modSequence[i];
-    }
+    string modAbbreviation = modSequence.substr(posOpenParen + 1, 2);
     
     // check for closing parentheses
     if (modSequence[posOpenParen + 3] != ')')
