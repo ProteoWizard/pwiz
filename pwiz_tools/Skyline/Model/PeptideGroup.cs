@@ -139,6 +139,7 @@ namespace pwiz.Skyline.Model
         public static readonly Regex RGX_ALL = new Regex(@"(\[.*?\]|\{.*?\}|\(.*?\))"); // Not L10N
         public static readonly Regex RGX_LIGHT = new Regex(@"\[.*?\]"); // Not L10N
         public static readonly Regex RGX_HEAVY = new Regex(@"\{.*?\}"); // Not L10N
+        public static readonly Regex RGX_DASH = new Regex(@"^-");
 
         public static bool IsSequence(string seq)
         {
@@ -161,25 +162,6 @@ namespace pwiz.Skyline.Model
                     return false;
             }
             return true;
-        }
-
-        public static string StripModifications(string seq)
-        {
-            return StripModifications(seq, RGX_ALL);
-        }
-
-        public static string StripModifications(string seq, Regex rgx)
-        {
-            // If the sequence begins with anything other than an AA or mod, 
-            // it is not a valid modified sequence.
-            if(seq.Length == 0 || (!AminoAcid.IsExAA(seq[0]) && !OPEN_MOD.Contains(seq[0])))
-                return seq;
-            string result = rgx.Replace(seq, string.Empty);
-            // Some potential modified sequences begin with [3Lt]-AAAA. The above replace
-            // will remove the bracketed modification, but not the dash.
-            if (result.StartsWith("-")) // Not L10N
-                result = result.Substring(1);
-            return result;
         }
 
         private readonly string _name;
@@ -363,6 +345,64 @@ namespace pwiz.Skyline.Model
                 throw new InvalidOperationException(Resources.FastaSequence_ComparePeptides_Peptides_in_different_FASTA_sequences_may_not_be_compared);
 
             return Comparer<int>.Default.Compare(pep1.Order, pep2.Order);
+        }
+
+        public static string StripModifications(string seq)
+        {
+            return StripModifications(seq, RGX_ALL);
+        }
+
+        public static string StripModifications(string seq, Regex rgx)
+        {
+            // If the sequence begins with anything other than an AA or mod, 
+            // it is not a valid modified sequence.
+            if (seq.Length == 0 || (!AminoAcid.IsExAA(seq[0]) && !OPEN_MOD.Contains(seq[0])))
+                return seq;
+            string result = rgx.Replace(seq, String.Empty);
+            // Some potential modified sequences begin with [3Lt]-AAAA. The above replace
+            // will remove the bracketed modification, but not the dash.
+            if (!result.Contains("\n")) // Not L10N
+                result = RemoveLeadingDash(result);
+            else
+            {
+                var sb = new StringBuilder();
+                var reader = new StringReader(result);
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    line = RemoveLeadingDash(line);
+                    sb.AppendLine(line);
+                }
+                result = sb.ToString();
+            }
+            return result;
+        }
+
+        private static string RemoveLeadingDash(string line)
+        {
+            if (line.StartsWith("-")) // Not L10N
+                line = line.Substring(1);
+            return line;
+        }
+
+        public static string NormalizeNTerminalMod(string seq)
+        {
+            // Handle the case where the sequence begins with a modification
+            if (seq.Length > 0 && OPEN_MOD.Contains(seq[0]))
+            {
+                char openBracket = seq[0];
+                char closeBracket = CLOSE_MOD[OPEN_MOD.IndexOf(c => c == openBracket)];
+                int indexClose = seq.IndexOf(closeBracket, 0);
+                if (indexClose != -1 && indexClose < seq.Length - 1)
+                {
+                    // Move amino acid following the modification to before it
+                    int indexFirstAA = indexClose + 1;
+                    if (seq[indexFirstAA] == '-')
+                        indexFirstAA++;
+                    seq = seq[indexFirstAA] + seq.Substring(0, indexClose + 1) + seq.Substring(indexFirstAA + 1);
+                }
+            }
+            return seq;
         }
     }
 
