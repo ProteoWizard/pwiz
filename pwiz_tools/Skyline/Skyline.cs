@@ -2996,7 +2996,7 @@ namespace pwiz.Skyline
                     })
                     {
                         var undoState = GetUndoState();
-                        longWaitDlg.PerformWork(this, 800, progressMonitor =>
+                        longWaitDlg.PerformWork(parent, 800, progressMonitor =>
                         {
                             using (var settingsChangeMonitor = new SrmSettingsChangeMonitor(progressMonitor, message, this))
                             {
