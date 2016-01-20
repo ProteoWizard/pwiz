@@ -317,11 +317,17 @@ namespace pwiz.Skyline.EditUI
                     return null;
             }
             var backgroundProteome = GetBackgroundProteome(document);
+            // Insert last to first so that proteins get inserted on top of each other
+            // in the order they are added. Peptide insertion into peptide lists needs
+            // to be carefully tracked to insert them in the order they are listed in
+            // the grid.
+            int lastGroupGlobalIndex = 0, lastPeptideIndex = -1;
             for (int i = gridViewPeptides.Rows.Count - 1; i >= 0; i--)
             {
                 PeptideGroupDocNode peptideGroupDocNode;
                 var row = gridViewPeptides.Rows[i];
                 var pepModSequence = Convert.ToString(row.Cells[colPeptideSequence.Index].Value);
+                pepModSequence = FastaSequence.NormalizeNTerminalMod(pepModSequence);
                 var proteinName = Convert.ToString(row.Cells[colPeptideProtein.Index].Value);
                 if (string.IsNullOrEmpty(pepModSequence) && string.IsNullOrEmpty(proteinName))
                     continue;
@@ -398,9 +404,25 @@ namespace pwiz.Skyline.EditUI
                 // Avoid adding an existing peptide a second time.
                 if (!peptides.Contains(nodePep => Equals(nodePep.Key, nodePepNew.Key)))
                 {
-                    peptides.Add(nodePepNew);
                     if (nodePepNew.Peptide.FastaSequence != null)
+                    {
+                        peptides.Add(nodePepNew);
                         peptides.Sort(FastaSequence.ComparePeptides);
+                    }
+                    else
+                    {
+                        int groupGlobalIndex = peptideGroupDocNode.PeptideGroup.GlobalIndex;
+                        if (groupGlobalIndex == lastGroupGlobalIndex && lastPeptideIndex != -1)
+                        {
+                            peptides.Insert(lastPeptideIndex, nodePepNew);
+                        }
+                        else
+                        {
+                            lastPeptideIndex = peptides.Count;
+                            peptides.Add(nodePepNew);
+                        }
+                        lastGroupGlobalIndex = groupGlobalIndex;
+                    }
                     var newPeptideGroupDocNode = new PeptideGroupDocNode(peptideGroupDocNode.PeptideGroup, peptideGroupDocNode.Annotations, peptideGroupDocNode.Name, peptideGroupDocNode.Description, peptides.ToArray(), false);
                     document = (SrmDocument)document.ReplaceChild(newPeptideGroupDocNode);
                 }
@@ -446,6 +468,7 @@ namespace pwiz.Skyline.EditUI
                     });
                     return null;
                 }
+                peptideSequence = FastaSequence.NormalizeNTerminalMod(peptideSequence);
                 listSequences.Add(peptideSequence);
             }
             return listSequences;

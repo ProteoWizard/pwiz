@@ -1470,7 +1470,8 @@ namespace pwiz.Skyline
                 var header = reader.ReadLine(); // Read past header
                 while ((line = reader.ReadLine()) != null)
                 {
-                    sequences.Add(line);
+                    string sequence = FastaSequence.NormalizeNTerminalMod(line.Trim());
+                    sequences.Add(sequence);
                 }
                 try
                 {

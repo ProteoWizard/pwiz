@@ -1190,7 +1190,7 @@ namespace pwiz.Skyline.Model
                 for (int i = 0; i < fields.Length; i++)
                 {
                     var fieldUpper = fields[i].ToUpper(CultureInfo.InvariantCulture);
-                    if ("TRUE" == fieldUpper || "FALSE" == fieldUpper)
+                    if ("TRUE" == fieldUpper || "FALSE" == fieldUpper) // Not L10N
                         continue;
                     string seqPotential = RemoveSequenceNotes(fields[i]);
                     if (seqPotential.Length < 2)
@@ -1256,27 +1256,7 @@ namespace pwiz.Skyline.Model
                     seq = seq.Substring(0, dotIndices.First());
                 }
                 seq = seq.TrimEnd('+');
-                return NormalizeNTerminalMod(seq);  // Make sure any n-terminal mod gets moved to after the first AA
-            }
-
-            private static string NormalizeNTerminalMod(string seq)
-            {
-                // Handle the case where the sequence begins with a modification
-                if (FastaSequence.OPEN_MOD.Contains(seq[0]))
-                {
-                    char openBracket = seq[0];
-                    char closeBracket = FastaSequence.CLOSE_MOD[FastaSequence.OPEN_MOD.IndexOf(c => c == openBracket)];
-                    int indexClose = seq.IndexOf(closeBracket, 0);
-                    if (indexClose != -1 && indexClose < seq.Length - 1)
-                    {
-                        // Move amino acid following the modification to before it
-                        int indexFirstAA = indexClose + 1;
-                        if (seq[indexFirstAA] == '-')
-                            indexFirstAA++;
-                        seq = seq[indexFirstAA] + seq.Substring(0, indexClose + 1) + seq.Substring(indexFirstAA + 1);
-                    }
-                }
-                return seq;
+                return FastaSequence.NormalizeNTerminalMod(seq);  // Make sure any n-terminal mod gets moved to after the first AA
             }
 
             private static readonly string[] EXCLUDE_PROTEIN_VALUES = { "true", "false", "heavy", "light", "unit" }; // Not L10N
