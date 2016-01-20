@@ -111,16 +111,16 @@
     <value>计算的浓度</value>
   </data>
   <data name="CalibrationCurveFitter_GetCalibrationCurve_All_of_the_external_standards_are_missing_one_or_more_peaks_" xml:space="preserve">
-    <value>所有外部标准均缺少一个或多个峰。</value>
+    <value>所有外标均缺少一个或多个峰。</value>
   </data>
   <data name="CalibrationCurveFitter_GetCalibrationCurve_The_external_standards_and_the_target_replicate_have_no_peaks_in_common_" xml:space="preserve">
-    <value>外部标准和目标重复测定没有共同的峰。</value>
+    <value>外标和目标重复测定没有共同的峰。</value>
   </data>
   <data name="CalibrationCurveFitter_GetXAxisTitle_Ratio_to__0_" xml:space="preserve">
     <value>相对于{0}的比率</value>
   </data>
   <data name="CalibrationCurveFitter_GetXAxisTitle_Concentration_from_ratio_to_0_" xml:space="preserve">
-    <value>相对于{0}的比率浓度</value>
+    <value>由相对于{0}的比率计算出的浓度</value>
   </data>
   <data name="CalibrationForm_DisplayCalibrationCurve_No_results_available" xml:space="preserve">
     <value>无可用的结果</value>
@@ -132,7 +132,7 @@
     <value>归一化强度</value>
   </data>
   <data name="Weighting" xml:space="preserve">
-    <value>加权</value>
+    <value>权重</value>
   </data>
   <data name="SampleType_UNKNOWN_Unknown" xml:space="preserve">
     <value>未知</value>
@@ -150,13 +150,13 @@
     <value>空白</value>
   </data>
   <data name="SampleType_DOUBLE_BLANK_Double_Blank" xml:space="preserve">
-    <value>双白</value>
+    <value>双空白</value>
   </data>
   <data name="RegressionFit_LINEAR_Linear" xml:space="preserve">
     <value>线性</value>
   </data>
   <data name="RegressionFit_LINEAR_THROUGH_ZERO_Linear_through_zero" xml:space="preserve">
-    <value>通过零的线性</value>
+    <value>过零点的线性</value>
   </data>
   <data name="RegressionFit_QUADRATIC_Quadratic" xml:space="preserve">
     <value>二次的</value>
@@ -183,10 +183,10 @@
     <value>y = {0} x^2 + {1} x + {2}</value>
   </data>
   <data name="CalibrationCurve_ToString_Slope___0__Intercept___1_" xml:space="preserve">
-    <value>斜度： {0}截距：{1}</value>
+    <value>斜率： {0} 截距：{1}</value>
   </data>
   <data name="CalibrationCurve_ToString_Slope___0_" xml:space="preserve">
-    <value>斜度：{0}</value>
+    <value>斜率：{0}</value>
   </data>
   <data name="Concentration_Ratio" xml:space="preserve">
     <value>浓度比</value>
@@ -198,7 +198,7 @@
     <value>峰面积</value>
   </data>
   <data name="CalibrationCurveFitter_GetYAxisTitle_Normalized_Peak_Area" xml:space="preserve">
-    <value>归一化的峰面积</value>
+    <value>校准后的峰面积</value>
   </data>
   <data name="CalibrationCurveFitter_PeakAreaRatioText__0___1__Peak_Area_Ratio" xml:space="preserve">
     <value>{0}：{1} 峰面积比</value>
@@ -207,10 +207,10 @@
     <value>使用肽设置对话框的定量标签，控制峰面积向浓度的转换。</value>
   </data>
   <data name="CalibrationForm_DisplayCalibrationCurve_To_convert_peak_area_ratios_to_concentrations__specify_the_internal_standard_concentration_for__0__" xml:space="preserve">
-    <value>为将峰面积比转换为浓度，指定{0}的内部标准浓度。</value>
+    <value>为将峰面积比转换为浓度，指定{0}的内标浓度。</value>
   </data>
   <data name="CalibrationForm_DisplayCalibrationCurve_To_fit_a_calibration_curve__set_the_Sample_Type_of_some_replicates_to_Standard__and_specify_their_concentration_" xml:space="preserve">
-    <value>为适应校准曲线，将一些重复测定的样品类型设定为标准，再指定其浓度。</value>
+    <value>为切合校准曲线，将一些重复测定的样品类型设定为标准，再指定其浓度。</value>
   </data>
   <data name="CalibrationCurveFitter_ConcentrationRatioText__0___1__Concentration_Ratio" xml:space="preserve">
     <value>{0}：{1} 浓度比</value>
@@ -225,12 +225,12 @@
     <value>相对于{0}的浓度比</value>
   </data>
   <data name="CalibrationCurveFitter_GetQuantificationResult_One_or_more_transitions_are_missing_or_truncated_" xml:space="preserve">
-    <value>一个或多个离子对缺失或为截短的。</value>
+    <value>一个或多个离子对缺失或被截短。</value>
   </data>
   <data name="CalibrationForm_DisplayCalibrationCurve_The_selected_replicate_has_missing_or_truncated_transitions" xml:space="preserve">
     <value>所选的重复测定有缺失或截短的离子对</value>
   </data>
   <data name="QuantificationResult_ToString_Normalized_Area___0_" xml:space="preserve">
-    <value>归一化面积：{0}</value>
+    <value>校准后面积：{0}</value>
   </data>
 </root>

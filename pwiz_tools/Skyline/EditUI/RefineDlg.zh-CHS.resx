@@ -600,7 +600,7 @@
   <data name="comboReplicateUse.ToolTip" xml:space="preserve">
     <value>确定重复测定结果用于调整：
 全部 - 所有重复测定值取平均，用于技术重复测定
-最佳 - 只有最佳测定值被用于每个肽，用于分级组分</value>
+最佳 - 对于每条肽段只用最佳测定值，用于分级组分</value>
   </data>
   <data name="&gt;&gt;comboReplicateUse.Name" xml:space="preserve">
     <value>comboReplicateUse</value>

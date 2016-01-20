@@ -352,7 +352,7 @@
     <value>8</value>
   </data>
   <data name="lblNormalizationMethod.Text" xml:space="preserve">
-    <value>标准化方法(&amp;M)：</value>
+    <value>校准方法(&amp;M)：</value>
   </data>
   <data name="&gt;&gt;lblNormalizationMethod.Name" xml:space="preserve">
     <value>lblNormalizationMethod</value>

@@ -211,7 +211,7 @@
     <value>3</value>
   </data>
   <data name="textRetentionTimeWindow.ToolTip" xml:space="preserve">
-    <value>当拥有明确保留时间值时，该值才可用。</value>
+    <value>当有明确保留时间值时，该值才有用。</value>
   </data>
   <data name="&gt;&gt;textRetentionTimeWindow.Name" xml:space="preserve">
     <value>textRetentionTimeWindow</value>
@@ -301,7 +301,7 @@
     <value>9</value>
   </data>
   <data name="textSLens.ToolTip" xml:space="preserve">
-    <value>忽略任何预测的或库 s-lens 值</value>
+    <value>覆盖任何预测的或库 s-lens 值</value>
   </data>
   <data name="&gt;&gt;textSLens.Name" xml:space="preserve">
     <value>textSLens</value>
@@ -364,7 +364,7 @@
     <value>11</value>
   </data>
   <data name="textConeVoltage.ToolTip" xml:space="preserve">
-    <value>忽略任何预测的或库锥孔电压值</value>
+    <value>覆盖任何预测的或库锥孔电压值</value>
   </data>
   <data name="&gt;&gt;textConeVoltage.Name" xml:space="preserve">
     <value>textConeVoltage</value>
@@ -391,7 +391,7 @@
     <value>7</value>
   </data>
   <data name="textDeclusteringPotential.ToolTip" xml:space="preserve">
-    <value>忽略任何预测的或库去簇电压值</value>
+    <value>覆盖任何预测的或库去簇电压值</value>
   </data>
   <data name="&gt;&gt;textDeclusteringPotential.Name" xml:space="preserve">
     <value>textDeclusteringPotential</value>
@@ -418,7 +418,7 @@
     <value>13</value>
   </data>
   <data name="textCompensationVoltage.ToolTip" xml:space="preserve">
-    <value>忽略任何预测的或库补偿电压值</value>
+    <value>覆盖任何预测的或库补偿电压值</value>
   </data>
   <data name="&gt;&gt;textCompensationVoltage.Name" xml:space="preserve">
     <value>textCompensationVoltage</value>
@@ -577,7 +577,7 @@
     <value>14</value>
   </data>
   <data name="labelDriftTimeMsec.Text" xml:space="preserve">
-    <value>漂移时间（毫秒）(&amp;D):</value>
+    <value>漂移时间（毫秒）(&amp;D)：</value>
   </data>
   <data name="&gt;&gt;labelDriftTimeMsec.Name" xml:space="preserve">
     <value>labelDriftTimeMsec</value>
@@ -640,7 +640,7 @@
     <value>0</value>
   </data>
   <data name="labelRetentionTime.Text" xml:space="preserve">
-    <value>保留时间(&amp;R):</value>
+    <value>保留时间(&amp;R)：</value>
   </data>
   <data name="&gt;&gt;labelRetentionTime.Name" xml:space="preserve">
     <value>labelRetentionTime</value>
@@ -670,7 +670,7 @@
     <value>2</value>
   </data>
   <data name="labelRetentionTimeWindow.Text" xml:space="preserve">
-    <value>保留时间窗口(&amp;W):</value>
+    <value>保留时间窗口(&amp;W)：</value>
   </data>
   <data name="&gt;&gt;labelRetentionTimeWindow.Name" xml:space="preserve">
     <value>labelRetentionTimeWindow</value>
@@ -778,7 +778,7 @@
     <value>2</value>
   </data>
   <data name="labelCharge.Text" xml:space="preserve">
-    <value>电荷(&amp;H):</value>
+    <value>电荷(&amp;H)：</value>
   </data>
   <data name="&gt;&gt;labelCharge.Name" xml:space="preserve">
     <value>labelCharge</value>

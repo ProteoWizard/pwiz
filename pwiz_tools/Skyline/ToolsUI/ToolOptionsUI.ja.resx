@@ -424,7 +424,7 @@
     <value>NoControl</value>
   </data>
   <data name="checkBoxShowWizard.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 30</value>
+    <value>6, 6</value>
   </data>
   <data name="checkBoxShowWizard.Size" type="System.Drawing.Size, System.Drawing">
     <value>103, 17</value>
