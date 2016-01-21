@@ -20367,6 +20367,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Please provide us with an email we can contact you with if we have any further questions regarding the error.  
+        ///If you would not like to supply an email you can report anonymously..
+        /// </summary>
+        public static string SkippedReportErrorDlg_btnOK_Click_No_Email {
+            get {
+                return ResourceManager.GetString("SkippedReportErrorDlg_btnOK_Click_No_Email", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
         /// </summary>
         public static System.Drawing.Icon Skyline {

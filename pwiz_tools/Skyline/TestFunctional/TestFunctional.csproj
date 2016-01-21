@@ -206,6 +206,7 @@
     <Compile Include="RefineListDlgTest.cs" />
     <Compile Include="RenameProteinsTest.cs" />
     <Compile Include="ReporterIonTest.cs" />
+    <Compile Include="ReportErrorDlgTest.cs" />
     <Compile Include="ReportSharingTest.cs" />
     <Compile Include="ReportSummaryTest.cs" />
     <Compile Include="RetentionTimeAlignmentTest.cs" />

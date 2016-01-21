@@ -6176,6 +6176,10 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="TestSkylineProcessRunner_RunProcess_The_operation_was_canceled_by_the_user_" xml:space="preserve">
     <value>The operation was canceled by the user.</value>
   </data>
+  <data name="SkippedReportErrorDlg_btnOK_Click_No_Email" xml:space="preserve">
+    <value>Please provide an email address at which we can contact you if we have any further questions regarding the error.  
+If you prefer you can choose to report anonymously.</value>
+  </data>
   <data name="BiblioSpecLiteBuilder_BuildLibrary_Preparing_to_build_library" xml:space="preserve">
     <value>Preparing to build library</value>
   </data>

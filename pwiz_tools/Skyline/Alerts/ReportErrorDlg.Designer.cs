@@ -30,15 +30,11 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ReportErrorDlg));
             this.btnCancel = new System.Windows.Forms.Button();
-            this.tbMessage = new System.Windows.Forms.RichTextBox();
-            this.lblCommentBox = new System.Windows.Forms.Label();
             this.lblError = new System.Windows.Forms.Label();
             this.lblReportError = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.tbSourceCodeLocation = new System.Windows.Forms.TextBox();
             this.btnClipboard = new System.Windows.Forms.Button();
-            this.lblEmail = new System.Windows.Forms.Label();
-            this.tbEmail = new System.Windows.Forms.TextBox();
             this.tbErrorDescription = new System.Windows.Forms.TextBox();
             this.btnOK = new System.Windows.Forms.Button();
             this.SuspendLayout();
@@ -49,17 +45,6 @@
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.UseVisualStyleBackColor = true;
-            // 
-            // tbMessage
-            // 
-            this.tbMessage.AcceptsTab = true;
-            resources.ApplyResources(this.tbMessage, "tbMessage");
-            this.tbMessage.Name = "tbMessage";
-            // 
-            // lblCommentBox
-            // 
-            resources.ApplyResources(this.lblCommentBox, "lblCommentBox");
-            this.lblCommentBox.Name = "lblCommentBox";
             // 
             // lblError
             // 
@@ -89,16 +74,6 @@
             this.btnClipboard.UseVisualStyleBackColor = true;
             this.btnClipboard.Click += new System.EventHandler(this.btnClipboard_Click);
             // 
-            // lblEmail
-            // 
-            resources.ApplyResources(this.lblEmail, "lblEmail");
-            this.lblEmail.Name = "lblEmail";
-            // 
-            // tbEmail
-            // 
-            resources.ApplyResources(this.tbEmail, "tbEmail");
-            this.tbEmail.Name = "tbEmail";
-            // 
             // tbErrorDescription
             // 
             resources.ApplyResources(this.tbErrorDescription, "tbErrorDescription");
@@ -120,16 +95,13 @@
             this.CancelButton = this.btnCancel;
             this.Controls.Add(this.btnOK);
             this.Controls.Add(this.tbErrorDescription);
-            this.Controls.Add(this.tbEmail);
-            this.Controls.Add(this.lblEmail);
             this.Controls.Add(this.btnClipboard);
             this.Controls.Add(this.tbSourceCodeLocation);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.lblReportError);
             this.Controls.Add(this.lblError);
-            this.Controls.Add(this.lblCommentBox);
-            this.Controls.Add(this.tbMessage);
             this.Controls.Add(this.btnCancel);
+            this.Icon = global::pwiz.Skyline.Properties.Resources.Skyline;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "ReportErrorDlg";
@@ -142,15 +114,11 @@
         #endregion
 
         private System.Windows.Forms.Button btnCancel;
-        private System.Windows.Forms.RichTextBox tbMessage;
-        private System.Windows.Forms.Label lblCommentBox;
         private System.Windows.Forms.Label lblError;
         private System.Windows.Forms.Label lblReportError;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox tbSourceCodeLocation;
         private System.Windows.Forms.Button btnClipboard;
-        private System.Windows.Forms.Label lblEmail;
-        private System.Windows.Forms.TextBox tbEmail;
         private System.Windows.Forms.TextBox tbErrorDescription;
         private System.Windows.Forms.Button btnOK;
     }

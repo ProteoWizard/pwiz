@@ -135,6 +135,8 @@ RegressionRTThresholdDlg,TestIrtTutorial
 ReintegrateDlg,TestReintegrateDlg
 RenameProteinsDlg,TestRenameProteins
 RenameResultDlg,TestManageResults
+ReportErrorDlg,TestReportErrorDlg
+DetailedReportErrorDlg,TestReportErrorDlg
 ReportShutdownDlg,TestMiscForms
 RescoreResultsDlg,TestManageResults
 ResultsGridForm,TestAnnotationsWithOldReports

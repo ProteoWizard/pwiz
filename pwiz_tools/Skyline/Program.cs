@@ -519,8 +519,8 @@ namespace pwiz.Skyline
 
         public static SkylineWindow MainWindow { get; private set; }
         public static StartPage StartWindow { get; private set; }
-        public static SrmDocument ActiveDocument { get { return MainWindow.Document; } }
-        public static SrmDocument ActiveDocumentUI { get { return MainWindow.DocumentUI; } }
+        public static SrmDocument ActiveDocument { get { return MainWindow != null ? MainWindow.Document : null; } }
+        public static SrmDocument ActiveDocumentUI { get { return MainWindow != null ? MainWindow.DocumentUI : null; } }
 
         /// <summary>
         /// Shortcut to the application name stored in <see cref="Settings"/>

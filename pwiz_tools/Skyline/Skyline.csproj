@@ -249,6 +249,12 @@
     <Compile Include="Alerts\PasteTypeDlg.Designer.cs">
       <DependentUpon>PasteTypeDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="Alerts\DetailedReportErrorDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Alerts\DetailedReportErrorDlg.Designer.cs">
+      <DependentUpon>DetailedReportErrorDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="Alerts\SpectrumLibraryInfoDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -1526,6 +1532,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\ShareTypeDlg.zh-CHS.resx">
       <DependentUpon>ShareTypeDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\DetailedReportErrorDlg.resx">
+      <DependentUpon>DetailedReportErrorDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\SpectrumLibraryInfoDlg.ja.resx">
       <DependentUpon>SpectrumLibraryInfoDlg.cs</DependentUpon>
