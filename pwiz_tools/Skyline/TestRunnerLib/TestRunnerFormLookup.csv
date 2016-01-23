@@ -4,6 +4,7 @@ AddIrtCalculatorDlg,IrtFunctionalTest
 AddIrtPeptidesDlg,IrtFunctionalTest
 AddIrtSpectralLibrary,TestIrtTutorial
 AddIrtStandardsDlg,IrtFunctionalTest
+AddIrtStandardsToDocumentDlg,TestAddLibrary
 AddOptimizationLibraryDlg,TestOptimization
 AddOptimizationsDlg,TestOptimization
 AddPathsDlg,TestLibraryBuild

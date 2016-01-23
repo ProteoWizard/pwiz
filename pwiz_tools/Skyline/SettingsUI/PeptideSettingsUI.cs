@@ -398,7 +398,7 @@ namespace pwiz.Skyline.SettingsUI
         public void OkDialog()
         {
             PeptideSettings settings = ValidateNewSettings(true);
-            if(settings == null)
+            if (settings == null)
                 return;
 
             // Only update, if anything changed

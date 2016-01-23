@@ -711,6 +711,10 @@ namespace pwiz.Skyline.Model.Results
         public static MeasuredResults MergeResults(MeasuredResults resultsOrig, MeasuredResults resultsImport,
             string documentPath, MergeAction mergeAction, out MeasuredResults resultsBase)
         {
+            // Code below expects 'remove' when there are no measured results to import
+            if (resultsImport == null)
+                mergeAction = MergeAction.remove;
+
             MeasuredResults resultsNew;
             if (resultsOrig != null)
             {

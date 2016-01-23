@@ -1277,6 +1277,12 @@
     <Compile Include="SettingsUI\BuildBackgroundProteomeDlg.Designer.cs">
       <DependentUpon>BuildBackgroundProteomeDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="SettingsUI\Irt\AddIrtStandardsToDocumentDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\Irt\AddIrtStandardsToDocumentDlg.Designer.cs">
+      <DependentUpon>AddIrtStandardsToDocumentDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="SettingsUI\Irt\CalibrateIrtDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -2228,6 +2234,10 @@
     <EmbeddedResource Include="Resources\StartPage\WizardPeptideSearchDIA.png" />
     <EmbeddedResource Include="Resources\StartPage\WizardPeptideSearchPRM.png" />
     <Content Include="Resources\Replicate.bmp" />
+    <EmbeddedResource Include="Model\Irt\StandardsDocuments\APOA1.sky" />
+    <EmbeddedResource Include="Model\Irt\StandardsDocuments\Biognosys.sky" />
+    <EmbeddedResource Include="Model\Irt\StandardsDocuments\Pierce.sky" />
+    <EmbeddedResource Include="Model\Irt\StandardsDocuments\Sigma.sky" />
     <None Include="Resources\StartPage\GroupedStudies_thumb.jpg" />
     <None Include="Resources\StartPage\DIA_thumb.jpg" />
     <None Include="Resources\StartPage\SmallMolecule_thumb.jpg" />
@@ -2513,6 +2523,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Irt\AddIrtStandardsDlg.zh-CHS.resx">
       <DependentUpon>AddIrtStandardsDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\Irt\AddIrtStandardsToDocumentDlg.resx">
+      <DependentUpon>AddIrtStandardsToDocumentDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Irt\CalibrateIrtDlg.ja.resx">
       <DependentUpon>CalibrateIrtDlg.cs</DependentUpon>
@@ -3776,6 +3789,7 @@
       <FileType>File</FileType>
     </PublishFile>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterPublish">
     <Exec Command="SignAfterPublish.bat &quot;$(ProjectDir)University of Washington (MacCoss Lab).pfx&quot; password &quot;$(ProjectDir)bin\$(Platform)\$(ConfigurationName)\app.publish&quot; $(TargetName)" />

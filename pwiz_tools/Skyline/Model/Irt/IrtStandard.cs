@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model.DocSettings;
@@ -8,9 +9,9 @@ namespace pwiz.Skyline.Model.Irt
 {
     public class IrtStandard
     {
-        public static readonly IrtStandard NULL = new IrtStandard(string.Empty, new DbIrtPeptide[0]);
+        public static readonly IrtStandard NULL = new IrtStandard(string.Empty, null, new DbIrtPeptide[0]);
 
-        public static readonly IrtStandard BIOGNOSIS = new IrtStandard("Biognosys (iRT-C18)", // Not L10N
+        public static readonly IrtStandard BIOGNOSYS = new IrtStandard("Biognosys (iRT-C18)", "Biognosys.sky", // Not L10N
             new[] {
                 MakePeptide("LGGNEQVTR",      -24.92), // Not L10N
                 MakePeptide("GAGSSEPVTGLDAK",   0.00), // Not L10N
@@ -25,7 +26,7 @@ namespace pwiz.Skyline.Model.Irt
                 MakePeptide("LFLQFGAQGSPFLK", 100.00), // Not L10N
             });
 
-        public static readonly IrtStandard PIERCE = new IrtStandard("Pierce (iRT-C18)", // Not L10N
+        public static readonly IrtStandard PIERCE = new IrtStandard("Pierce (iRT-C18)", "Pierce.sky", // Not L10N
             new[] {
                 MakePeptide("SSAAPPPPPR",       -27.60), // Not L10N
                 MakePeptide("GISNEGQNASIK",     -17.47), // Not L10N
@@ -43,7 +44,7 @@ namespace pwiz.Skyline.Model.Irt
                 MakePeptide("LSSEAPALFQFDLK",    90.41), // Not L10N
             });
 
-        public static readonly IrtStandard SIGMA = new IrtStandard("Sigma (iRT-C18)", // Not L10N
+        public static readonly IrtStandard SIGMA = new IrtStandard("Sigma (iRT-C18)", "Sigma.sky", // Not L10N
             new[] {
                 MakePeptide("AEFAEVSK",            -2.71), // Not L10N
                 MakePeptide("SGFSSVSVSR",           7.33), // Not L10N
@@ -57,7 +58,7 @@ namespace pwiz.Skyline.Model.Irt
                 MakePeptide("AVQQPDGLAVLGIFLK",   125.03), // Not L10N
             });
 
-        public static readonly IrtStandard APOA1 = new IrtStandard("APOA1 (iRT-C18)", // Not L10N
+        public static readonly IrtStandard APOA1 = new IrtStandard("APOA1 (iRT-C18)", "APOA1.sky", // Not L10N
             new[] {
                 MakePeptide("AELQEGAR",      -30.74), // Not L10N
                 MakePeptide("LHELQEK",       -29.14), // Not L10N
@@ -76,17 +77,35 @@ namespace pwiz.Skyline.Model.Irt
             });
 
         public static readonly ImmutableList<IrtStandard> ALL = ImmutableList.ValueOf(new[] {
-            NULL, BIOGNOSIS, PIERCE, SIGMA, APOA1
+            NULL, BIOGNOSYS, PIERCE, SIGMA, APOA1
         });
 
-        public IrtStandard(string name, IEnumerable<DbIrtPeptide> peptides)
+        public IrtStandard(string name, string skyFile, IEnumerable<DbIrtPeptide> peptides)
         {
             Name = name;
             Peptides = ImmutableList.ValueOf(peptides);
+            _resourceSkyFile = skyFile;
         }
 
+        private readonly string _resourceSkyFile;
         public string Name { get; private set; }
         public ImmutableList<DbIrtPeptide> Peptides { get; private set; }
+
+        public TextReader DocumentReader
+        {
+            get
+            {
+                try
+                {
+                    var stream = typeof(IrtStandard).Assembly.GetManifestResourceStream(typeof(IrtStandard), "StandardsDocuments." + _resourceSkyFile); // Not L10N
+                    return stream != null ? new StreamReader(stream) : null;
+                }
+                catch (Exception)
+                {
+                    return null;
+                }
+            }
+        }
 
         /// <summary>
         /// Determines whether a collection of peptides matches this set of standard peptides.
@@ -151,6 +170,11 @@ namespace pwiz.Skyline.Model.Irt
         private static DbIrtPeptide MakePeptide(string sequence, double time)
         {
             return new DbIrtPeptide(sequence, time, true, TimeSource.peak);
+        }
+
+        public static IrtStandard WhichStandard(IEnumerable<string> peptides)
+        {
+            return ALL.FirstOrDefault(s => s.IsMatch(peptides.Select(p => MakePeptide(p, 0)).ToList(), null)) ?? NULL;
         }
 
         public override string ToString()

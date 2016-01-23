@@ -60,6 +60,7 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -2814,16 +2815,89 @@ namespace pwiz.Skyline
         {
             using (PeptideSettingsUI ps = new PeptideSettingsUI(this, _libraryManager) { TabControlSel = tab })
             {
+                var oldStandard = RCalcIrtStandard();
+                
                 if (ps.ShowDialog(parent) == DialogResult.OK)
                 {
                     if (ps.IsShowLibraryExplorer)
                         OwnedForms[OwnedForms.IndexOf(form => form is ViewLibraryDlg)].Activate();
+
+                    var newStandard = RCalcIrtStandard();
+                    if (oldStandard != newStandard)
+                        AddStandardsToDocument(newStandard);
                 }
             }
 
             // In case user shows/hides things via the Spectral Library 
             // Explorer's spectrum graph pane.
             UpdateGraphPanes();
+        }
+
+        private void AddStandardsToDocument(IrtStandard standard)
+        {
+            var standardDocReader = standard.DocumentReader;
+            if (standardDocReader == null)
+                return;
+
+            // Check if document already has the standards
+            var docPeptides = Document.Peptides.Select(nodePep => nodePep.Peptide.Sequence);
+            var standardPeptides = standard.Peptides.Select(pep => pep.Sequence);
+            if (!standardPeptides.Except(docPeptides).Any())
+                return;
+
+            using (var dlg = new AddIrtStandardsToDocumentDlg())
+            {
+                if (dlg.ShowDialog() == DialogResult.Yes)
+                {
+                    ModifyDocument(Resources.SkylineWindow_AddStandardsToDocument_Add_standard_peptides, doc =>
+                    {
+                        IdentityPath firstAdded, nextAdd;
+                        doc = doc.ImportDocumentXml(standardDocReader,
+                                                    string.Empty,
+                                                    MeasuredResults.MergeAction.remove,
+                                                    false,
+                                                    FindSpectralLibrary,
+                                                    Settings.Default.StaticModList,
+                                                    Settings.Default.HeavyModList,
+                                                    doc.Children.Any() ? new IdentityPath(doc.Children.First().Id) : null,
+                                                    out firstAdded,
+                                                    out nextAdd,
+                                                    false);
+
+                        var standardPepGroup = doc.PeptideGroups.First(nodePepGroup => new IdentityPath(nodePepGroup.Id).Equals(firstAdded));
+                        var pepList = (from nodePep in standardPepGroup.Peptides let tranGroupList =
+                                           (from TransitionGroupDocNode nodeTranGroup in nodePep.Children
+                                            select nodeTranGroup.ChangeChildren(nodeTranGroup.Children.Take(dlg.NumTransitions).ToList()))
+                                            .Cast<DocNode>().ToList()
+                                       select nodePep.ChangeChildren(tranGroupList)).Cast<DocNode>().ToList();
+                        var newStandardPepGroup = standardPepGroup.ChangeChildren(pepList);
+                        return (SrmDocument) doc.ReplaceChild(newStandardPepGroup);
+                    });
+                }
+            }
+        }
+
+        private IrtStandard RCalcIrtStandard()
+        {
+            var rt = Document.Settings.PeptideSettings.Prediction.RetentionTime;
+            if (rt != null)
+            {
+                var calc = rt.Calculator as RCalcIrt;
+                if (calc != null)
+                {
+                    try
+                    {
+                        calc = calc.Initialize(null) as RCalcIrt;
+                    }
+                    catch
+                    {
+                        return IrtStandard.NULL;
+                    }
+                    if (calc != null)
+                        return IrtStandard.WhichStandard(calc.GetStandardPeptides());
+                }
+            }
+            return IrtStandard.NULL;
         }
 
         private void transitionSettingsMenuItem_Click(object sender, EventArgs e)

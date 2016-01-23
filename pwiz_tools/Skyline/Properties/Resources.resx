@@ -8902,4 +8902,7 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="CommandLine_ImportTransitionList_Warning__The_document_is_missing_iRT_standards" xml:space="preserve">
     <value>Warning: The document is missing iRT standards</value>
   </data>
+  <data name="SkylineWindow_AddStandardsToDocument_Add_standard_peptides" xml:space="preserve">
+    <value>Add standard peptides</value>
+  </data>
 </root>

@@ -225,6 +225,11 @@ namespace pwiz.Skyline.Model.Irt
                 throw new InvalidOperationException(Resources.RCalcIrt_RequireUsable_Unexpected_use_of_iRT_calculator_before_successful_initialization_);
         }
 
+        public IEnumerable<string> GetStandardPeptides()
+        {
+            return _database.StandardPeptides;
+        }
+
         #region Property change methods
 
         public RCalcIrt ChangeDatabasePath(string path)

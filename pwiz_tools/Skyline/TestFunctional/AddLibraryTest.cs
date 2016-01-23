@@ -18,9 +18,13 @@
  */
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -84,7 +88,74 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(libName, editRtDlg.Regression.Calculator.Name);
 
             OkDialog(editRtDlg, editRtDlg.OkDialog);
-            OkDialog(peptideSettingsUi, peptideSettingsUi.OkDialog);
+            var addStandardsBiognosysDlg = ShowDialog<AddIrtStandardsToDocumentDlg>(peptideSettingsUi.OkDialog);
+            OkDialog(addStandardsBiognosysDlg, addStandardsBiognosysDlg.BtnYesClick);
+            VerifyAdd(1, 0);
+
+            ResetModsAndSetStandards("apoa1", "apoa1.irtdb");
+            var addStandardsApoa1Dlg = WaitForOpenForm<AddIrtStandardsToDocumentDlg>();
+            OkDialog(addStandardsApoa1Dlg, addStandardsApoa1Dlg.BtnYesClick);
+            VerifyAdd(1, 1);
+
+            ResetModsAndSetStandards("pierce", "pierce.irtdb");
+            var addStandardsPierceDlg = WaitForOpenForm<AddIrtStandardsToDocumentDlg>();
+            OkDialog(addStandardsPierceDlg, addStandardsPierceDlg.BtnYesClick);
+            VerifyAdd(1, 2);
+
+            ResetModsAndSetStandards("sigma", "sigma.irtdb");
+            var addStandardsSigmaDlg = WaitForOpenForm<AddIrtStandardsToDocumentDlg>();
+            OkDialog(addStandardsSigmaDlg, addStandardsSigmaDlg.BtnYesClick);
+            VerifyAdd(1, 2);
+        }
+
+        private void ResetModsAndSetStandards(string name, string libName)
+        {
+            var peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+
+            // Reset mods
+            var modsListDlg1 = ShowDialog<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(peptideSettingsDlg.EditStaticMods);
+            RunUI(modsListDlg1.ResetList);
+            OkDialog(modsListDlg1, modsListDlg1.OkDialog);
+            var modsListDlg2 = ShowDialog<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(peptideSettingsDlg.EditHeavyMods);
+            RunUI(modsListDlg2.ResetList);
+            OkDialog(modsListDlg2, modsListDlg2.OkDialog);
+
+            // Set standards
+            var regressionListDlg = ShowDialog<EditListDlg<SettingsListBase<RetentionTimeRegression>, RetentionTimeRegression>>(peptideSettingsDlg.EditRegressionList);
+            var editRegressionDlg = ShowDialog<EditRTDlg>(regressionListDlg.AddItem);
+            var editIrtCalcDlg = ShowDialog<EditIrtCalcDlg>(editRegressionDlg.AddCalculator);
+            RunUI(() =>
+            {
+                editIrtCalcDlg.OpenDatabase(TestFilesDir.GetTestPath(libName));
+                editIrtCalcDlg.CalcName = name;
+            });
+            OkDialog(editIrtCalcDlg, editIrtCalcDlg.OkDialog);
+            RunUI(() =>
+            {
+                editRegressionDlg.SetRegressionName(name);
+                editRegressionDlg.SetAutoCalcRegression(true);
+                editRegressionDlg.SetTimeWindow(2);
+            });
+            OkDialog(editRegressionDlg, editRegressionDlg.OkDialog);
+            OkDialog(regressionListDlg, regressionListDlg.OkDialog);
+            RunUI(() => peptideSettingsDlg.SelectedRTPredictor = name);
+            OkDialog(peptideSettingsDlg, peptideSettingsDlg.OkDialog);
+        }
+
+        private static void VerifyAdd(int numStaticMods, int numHeavyMods)
+        {
+            var calc = SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator as RCalcIrt;
+            Assert.IsNotNull(calc);
+            var standards = calc.GetStandardPeptides().Select(SequenceMassCalc.NormalizeModifiedSequence).ToArray();
+
+            var peptides = SkylineWindow.Document.PeptideGroups.First().Peptides.ToArray();
+            Assert.AreEqual(standards.Length, peptides.Length);
+            foreach (var peptide in peptides)
+                Assert.IsTrue(standards.Contains(peptide.ModifiedSequence));
+
+            var mods = SkylineWindow.Document.Settings.PeptideSettings.Modifications;
+            Assert.AreEqual(numStaticMods, mods.StaticModifications.Count);
+            Assert.AreEqual(numHeavyMods, mods.HeavyModifications.Count);
         }
     }
 }
