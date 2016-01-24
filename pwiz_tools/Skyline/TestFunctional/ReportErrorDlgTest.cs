@@ -54,7 +54,6 @@ namespace pwiz.SkylineTestFunctional
 
             ReportException(new Exception());
             var reportErrorDlg2 = WaitForOpenForm<ReportErrorDlg>();
-            IsPauseForScreenShots = true;
             var skippedReportForm= ShowDialog<DetailedReportErrorDlg>(reportErrorDlg2.OkDialog);
             RunUI(()=>
             {
