@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Include xmlns="http://schemas.microsoft.com/wix/2006/wi">
-  <?define ProductVersion="3.5.0.9216" ?>
+  <?define ProductVersion="3.5.0.9321" ?>
   <?if $(sys.BUILDARCH) = x64 ?>
     <?define UpgradeCode="{AADA455D-DB0C-4245-A844-AB81329B9E4F}"?>
     <?define ProductName="Skyline (64 bit)"?>
