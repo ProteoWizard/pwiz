@@ -19,7 +19,7 @@ namespace ImportPerf
                 return;
 
             // Remove all SKYD files
-            foreach (var skydFile in Directory.EnumerateFiles(Path.GetDirectoryName(_cmdArgs.FilePath) ?? string.Empty, "*.sky"))
+            foreach (var skydFile in Directory.EnumerateFiles(Path.GetDirectoryName(_cmdArgs.FilePath) ?? string.Empty, "*.skyd"))
             {
                 try
                 {
@@ -45,9 +45,11 @@ namespace ImportPerf
                 dataDir = _cmdArgs.DataDir;
             var fileGroupCurrent = new List<string>();
             var fileGroups = new List<List<string>> {fileGroupCurrent};
-            foreach (var dataFile in Directory.EnumerateFiles(dataDir, dataFilter))
+            var dataFiles = Directory.EnumerateFiles(dataDir, dataFilter).ToArray();
+            int filesPerProcess = (int) Math.Ceiling(((double) dataFiles.Length)/_cmdArgs.Processes);
+            foreach (var dataFile in dataFiles)
             {
-                if (fileGroupCurrent.Count >= _cmdArgs.Threads)
+                if (fileGroupCurrent.Count >= filesPerProcess)
                 {
                     fileGroupCurrent = new List<string>();
                     fileGroups.Add(fileGroupCurrent);
@@ -67,7 +69,7 @@ namespace ImportPerf
                 "--timestamp",
                 "--in=\"" + _cmdArgs.FilePath + "\"",
                 "--import-no-join",
-                "--import-threads=" + dataFiles.Count
+                "--import-threads=" + _cmdArgs.Threads
             };
             args.AddRange(dataFiles.Select(f => "--import-file=\"" + f + "\""));
             string argsText = string.Join(" ", args);
@@ -110,9 +112,13 @@ namespace ImportPerf
 
         private static void AddToLog(int threadIndex, string line)
         {
+            // If multiple process, prefix with a 1-based thread/process index
+            if (_cmdArgs.Processes > 1)
+                line = (threadIndex + 1) + "> " + line;
+
             lock (LogLock)
             {
-                Console.WriteLine(threadIndex + "> " + line);
+                Console.WriteLine(line);
             }
         }
     }
