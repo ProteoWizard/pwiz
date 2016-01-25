@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
-<ReportSpecList>
-  <report name="MSstats Input" rowsource="pwiz.Skyline.Model.Databinding.Entities.Transition" sublist="Results!*">
+<views>
+  <view name="MSstats Input" rowsource="pwiz.Skyline.Model.Databinding.Entities.Transition" sublist="Results!*">
     <column name="Precursor.Peptide.Protein.Name" />
     <column name="Precursor.Peptide.ModifiedSequence" />
     <column name="Precursor.Charge" />
@@ -14,5 +14,6 @@
     <column name="Precursor.Peptide.StandardType" />
     <column name="Results!*.Value.Truncated" />
     <filter column="Results!*.Value" opname="isnotnullorblank" />
-  </report>
-</ReportSpecList>
+    <filter column="Precursor.IsDecoy" opname="&lt;&gt;" operand="True" />
+  </view>
+</views>

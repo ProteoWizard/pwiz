@@ -27,7 +27,7 @@ namespace MSStatArgsCollector
     {
         private enum Args { normalize_to, samples, 
             power, fdr, lower_fold, upper_fold, allow_missing_peaks,
-            feature_selection,
+            feature_selection,remove_interfered_proteins,max_arg
         }
 
         public string[] Arguments { get; private set; }
@@ -37,7 +37,7 @@ namespace MSStatArgsCollector
             InitializeComponent();
             comboNormalizeTo.SelectedIndex = 1;
 
-            if (oldArgs != null && oldArgs.Length == 8)
+            if (oldArgs != null && oldArgs.Length == (int) Args.max_arg)
                 Arguments = oldArgs;
 
             RestoreValues();
@@ -67,6 +67,8 @@ namespace MSStatArgsCollector
                 RestoreDecimalText(Arguments[(int)Args.fdr], numberFDR, Fdr);
                 RestoreDecimalText(Arguments[(int)Args.lower_fold], numberLDFC, Ldfc);
                 RestoreDecimalText(Arguments[(int)Args.upper_fold], numberUDFC, Udfc);
+                cbxSelectHighQualityFeatures.Checked = Truestring == Arguments[(int) Args.feature_selection];
+                cbxRemoveInterferedProteins.Checked = Truestring == Arguments[(int) Args.remove_interfered_proteins];
             }
 
             if (!rBtnSamples.Checked && !rBtnPower.Checked)
@@ -177,7 +179,7 @@ namespace MSStatArgsCollector
         //
         private void GenerateArguments(decimal power, decimal fdr, decimal ldfc, decimal udfc)
         {
-            Arguments = new string[Enum.GetValues(typeof(Args)).Length];
+            Arguments = new string[(int) Args.max_arg];
 
             Arguments[(int) Args.normalize_to] = (comboNormalizeTo.SelectedIndex).ToString(CultureInfo.InvariantCulture);
             Arguments[(int) Args.samples] = (rBtnSamples.Checked) ? Truestring : numberSamples.Value.ToString(CultureInfo.InvariantCulture);
@@ -189,6 +191,8 @@ namespace MSStatArgsCollector
             Arguments[(int) Args.allow_missing_peaks] = (cboxAllowMissingPeaks.Checked) ? Truestring : Falsestring;
             Arguments[(int) Args.feature_selection] =
                 cbxSelectHighQualityFeatures.Checked ? Truestring : Falsestring;
+            Arguments[(int) Args.remove_interfered_proteins] =
+                cbxRemoveInterferedProteins.Checked ? Truestring : Falsestring;
         }
 
         private void btnCancel_Click(object sender, EventArgs e)
@@ -251,6 +255,11 @@ namespace MSStatArgsCollector
         private void rBtnPower_CheckedChanged(object sender, EventArgs e)
         {
             numberPower.Enabled = numberPower.Visible = !rBtnPower.Checked;
+        }
+
+        private void cbxSelectHighQualityFeatures_CheckedChanged(object sender, EventArgs e)
+        {
+            cbxRemoveInterferedProteins.Enabled = cbxSelectHighQualityFeatures.Checked;
         }
     }
 

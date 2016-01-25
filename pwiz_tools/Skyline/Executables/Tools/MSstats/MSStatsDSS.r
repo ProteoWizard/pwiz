@@ -102,12 +102,17 @@ runDSS <- function() {
 	optionfeatureselection <- arguments[9]
 	
 	if (optionfeatureselection == "TRUE") { 
-		input_feature_selection <- "highQuality_Significance" 
+		input_feature_selection <- "highQuality" 
 	} else { 
 		input_feature_selection <- "all" 
 	}
 
-	quantData <- try(dataProcess(raw, normalization=inputnormalize, nameStandards=standardpepname,  fillIncompleteRows=(inputmissingpeaks=="TRUE"), featureSubset=input_feature_selection, summaryMethod = "TMP", censoredInt="0", skylineReport=TRUE))
+	## Nick, here for new option for 'allow...'
+	## remove proteins with interference cbox
+	
+	inputremoveproteins <- arguments[10]
+
+	quantData <- try(dataProcess(raw, normalization=inputnormalize, nameStandards=standardpepname,  fillIncompleteRows=(inputmissingpeaks=="TRUE"), featureSubset=input_feature_selection, remove_proteins_with_interference=(inputremoveproteins=="TRUE"), summaryMethod = "TMP", censoredInt="0", skylineReport=TRUE))
 
 	if (class(quantData) != "try-error") {
 

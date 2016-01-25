@@ -82,19 +82,25 @@ runComparison <- function() {
 	## missing peaks cbox
 	inputmissingpeaks <- arguments[4]
 
-	## Nick, here for new option for feature selection
+
 	## feature selection input
 	
 	optionfeatureselection <- arguments[5]
         lastFixedArgument <- 5
 	
 	if (optionfeatureselection == "TRUE") { 
-		input_feature_selection <- "highQuality_Significance" 
+		input_feature_selection <- "highQuality" 
 	} else { 
 		input_feature_selection <- "all" 
 	}
+
+	## Nick, here for new option for 'allow...'
+	## remove proteins with interference cbox
 	
-	quantData <- try(dataProcess(raw, normalization=inputnormalize, nameStandards=standardpepname, fillIncompleteRows=(inputmissingpeaks=="TRUE"), featureSubset=input_feature_selection, summaryMethod = "TMP", censoredInt="0", skylineReport=TRUE))
+	inputremoveproteins <- arguments[6]
+		
+
+	quantData <- try(dataProcess(raw, normalization=inputnormalize, nameStandards=standardpepname, fillIncompleteRows=(inputmissingpeaks=="TRUE"), featureSubset=input_feature_selection, remove_proteins_with_interference=(inputremoveproteins=="TRUE"), summaryMethod = "TMP", censoredInt="0", skylineReport=TRUE))
 
 	if (class(quantData) != "try-error") {
 

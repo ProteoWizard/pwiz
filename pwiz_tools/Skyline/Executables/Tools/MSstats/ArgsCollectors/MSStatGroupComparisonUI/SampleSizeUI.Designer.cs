@@ -49,6 +49,7 @@
             this.cboxAllowMissingPeaks = new System.Windows.Forms.CheckBox();
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
             this.cbxSelectHighQualityFeatures = new System.Windows.Forms.CheckBox();
+            this.cbxRemoveInterferedProteins = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.numberSamples)).BeginInit();
             this.gBoxFoldChange.SuspendLayout();
             this.groupBoxAuto.SuspendLayout();
@@ -78,7 +79,7 @@
             // 
             this.labelFDR.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.labelFDR.AutoSize = true;
-            this.labelFDR.Location = new System.Drawing.Point(3, 203);
+            this.labelFDR.Location = new System.Drawing.Point(3, 252);
             this.labelFDR.Margin = new System.Windows.Forms.Padding(3, 0, 3, 8);
             this.labelFDR.Name = "labelFDR";
             this.labelFDR.Size = new System.Drawing.Size(32, 13);
@@ -135,7 +136,7 @@
             this.gBoxFoldChange.Controls.Add(this.numberLDFC);
             this.gBoxFoldChange.Controls.Add(this.labelLowerDesiredFC);
             this.gBoxFoldChange.Controls.Add(this.labelUpperDesiredFC);
-            this.gBoxFoldChange.Location = new System.Drawing.Point(3, 262);
+            this.gBoxFoldChange.Location = new System.Drawing.Point(198, 3);
             this.gBoxFoldChange.Name = "gBoxFoldChange";
             this.gBoxFoldChange.Size = new System.Drawing.Size(154, 74);
             this.gBoxFoldChange.TabIndex = 6;
@@ -182,7 +183,7 @@
             // numberFDR
             // 
             this.numberFDR.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.numberFDR.Location = new System.Drawing.Point(3, 227);
+            this.numberFDR.Location = new System.Drawing.Point(3, 276);
             this.numberFDR.Margin = new System.Windows.Forms.Padding(3, 3, 3, 12);
             this.numberFDR.Name = "numberFDR";
             this.numberFDR.Size = new System.Drawing.Size(60, 20);
@@ -215,7 +216,7 @@
             // 
             this.groupBoxAuto.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.groupBoxAuto.Controls.Add(this.flowLayoutPanel2);
-            this.groupBoxAuto.Location = new System.Drawing.Point(3, 89);
+            this.groupBoxAuto.Location = new System.Drawing.Point(3, 138);
             this.groupBoxAuto.Name = "groupBoxAuto";
             this.groupBoxAuto.Size = new System.Drawing.Size(154, 111);
             this.groupBoxAuto.TabIndex = 3;
@@ -235,7 +236,7 @@
             this.flowLayoutPanel2.Size = new System.Drawing.Size(148, 92);
             this.flowLayoutPanel2.TabIndex = 15;
             // 
-            // comboBoxNoramilzeTo
+            // comboNormalizeTo
             // 
             this.comboNormalizeTo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboNormalizeTo.ForeColor = System.Drawing.SystemColors.WindowText;
@@ -276,6 +277,7 @@
             this.flowLayoutPanel1.Controls.Add(this.comboNormalizeTo);
             this.flowLayoutPanel1.Controls.Add(this.cboxAllowMissingPeaks);
             this.flowLayoutPanel1.Controls.Add(this.cbxSelectHighQualityFeatures);
+            this.flowLayoutPanel1.Controls.Add(this.cbxRemoveInterferedProteins);
             this.flowLayoutPanel1.Controls.Add(this.groupBoxAuto);
             this.flowLayoutPanel1.Controls.Add(this.labelFDR);
             this.flowLayoutPanel1.Controls.Add(this.numberFDR);
@@ -295,6 +297,20 @@
             this.cbxSelectHighQualityFeatures.TabIndex = 7;
             this.cbxSelectHighQualityFeatures.Text = "Select high quality features";
             this.cbxSelectHighQualityFeatures.UseVisualStyleBackColor = true;
+            this.cbxSelectHighQualityFeatures.CheckedChanged += new System.EventHandler(this.cbxSelectHighQualityFeatures_CheckedChanged);
+            // 
+            // cbxRemoveInterferedProteins
+            // 
+            this.cbxRemoveInterferedProteins.AutoSize = true;
+            this.cbxRemoveInterferedProteins.Enabled = false;
+            this.cbxRemoveInterferedProteins.Location = new System.Drawing.Point(13, 89);
+            this.cbxRemoveInterferedProteins.Margin = new System.Windows.Forms.Padding(13, 3, 3, 3);
+            this.cbxRemoveInterferedProteins.Name = "cbxRemoveInterferedProteins";
+            this.cbxRemoveInterferedProteins.Size = new System.Drawing.Size(179, 43);
+            this.cbxRemoveInterferedProteins.TabIndex = 8;
+            this.cbxRemoveInterferedProteins.Text = "Allow the algorithm to delete the \r\nwhole protein if all of its features \r\nhave i" +
+    "nterference";
+            this.cbxRemoveInterferedProteins.UseVisualStyleBackColor = true;
             // 
             // SampleSizeUi
             // 
@@ -348,5 +364,6 @@
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel2;
         private System.Windows.Forms.CheckBox cbxSelectHighQualityFeatures;
+        private System.Windows.Forms.CheckBox cbxRemoveInterferedProteins;
     }
 }

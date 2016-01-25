@@ -39,6 +39,7 @@
             this.tbxWidth = new System.Windows.Forms.TextBox();
             this.lblWidth = new System.Windows.Forms.Label();
             this.cbxSelectHighQualityFeatures = new System.Windows.Forms.CheckBox();
+            this.cbxRemoveInterferedProteins = new System.Windows.Forms.CheckBox();
             this.groupBoxPlotSize.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -107,7 +108,7 @@
             this.groupBoxPlotSize.Controls.Add(this.lblHeight);
             this.groupBoxPlotSize.Controls.Add(this.tbxWidth);
             this.groupBoxPlotSize.Controls.Add(this.lblWidth);
-            this.groupBoxPlotSize.Location = new System.Drawing.Point(12, 116);
+            this.groupBoxPlotSize.Location = new System.Drawing.Point(13, 148);
             this.groupBoxPlotSize.Name = "groupBoxPlotSize";
             this.groupBoxPlotSize.Size = new System.Drawing.Size(241, 113);
             this.groupBoxPlotSize.TabIndex = 5;
@@ -157,6 +158,19 @@
             this.cbxSelectHighQualityFeatures.TabIndex = 6;
             this.cbxSelectHighQualityFeatures.Text = "Select high quality features";
             this.cbxSelectHighQualityFeatures.UseVisualStyleBackColor = true;
+            this.cbxSelectHighQualityFeatures.CheckedChanged += new System.EventHandler(this.cbxSelectHighQualityFeatures_CheckedChanged);
+            // 
+            // cbxRemoveInterferedProteins
+            // 
+            this.cbxRemoveInterferedProteins.AutoSize = true;
+            this.cbxRemoveInterferedProteins.Enabled = false;
+            this.cbxRemoveInterferedProteins.Location = new System.Drawing.Point(31, 100);
+            this.cbxRemoveInterferedProteins.Name = "cbxRemoveInterferedProteins";
+            this.cbxRemoveInterferedProteins.Size = new System.Drawing.Size(179, 43);
+            this.cbxRemoveInterferedProteins.TabIndex = 7;
+            this.cbxRemoveInterferedProteins.Text = "Allow the algorithm to delete the \r\nwhole protein if all of its features \r\nhave i" +
+    "nterference";
+            this.cbxRemoveInterferedProteins.UseVisualStyleBackColor = true;
             // 
             // QualityControlUI
             // 
@@ -164,7 +178,8 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(268, 241);
+            this.ClientSize = new System.Drawing.Size(268, 273);
+            this.Controls.Add(this.cbxRemoveInterferedProteins);
             this.Controls.Add(this.cbxSelectHighQualityFeatures);
             this.Controls.Add(this.groupBoxPlotSize);
             this.Controls.Add(this.cboxAllowMissingPeaks);
@@ -198,5 +213,6 @@
         private System.Windows.Forms.TextBox tbxWidth;
         private System.Windows.Forms.Label lblWidth;
         private System.Windows.Forms.CheckBox cbxSelectHighQualityFeatures;
+        private System.Windows.Forms.CheckBox cbxRemoveInterferedProteins;
     }
 }

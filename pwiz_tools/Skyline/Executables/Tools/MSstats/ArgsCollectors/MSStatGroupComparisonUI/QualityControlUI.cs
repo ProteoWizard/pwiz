@@ -24,7 +24,7 @@ namespace MSStatArgsCollector
 {
     public partial class QualityControlUI : Form
     {
-        private enum Args {normalize_to, allow_missing_peaks, feature_selection, width, height}
+        private enum Args {normalize_to, allow_missing_peaks, feature_selection, remove_interfered_proteins, width, height, max_arg}
 
         public string[] Arguments { get; private set; }
         public QualityControlUI(string[] oldArgs)
@@ -34,12 +34,13 @@ namespace MSStatArgsCollector
 
             try
             {
-                if (oldArgs != null && oldArgs.Length == Enum.GetValues(typeof (Args)).Length)
+                if (oldArgs != null && oldArgs.Length == (int) Args.max_arg)
                 {
                     comboBoxNormalizeTo.SelectedIndex = int.Parse(oldArgs[(int) Args.normalize_to],
                         CultureInfo.InvariantCulture);
                     cboxAllowMissingPeaks.Checked = TRUESTRING == oldArgs[(int) Args.allow_missing_peaks];
                     cbxSelectHighQualityFeatures.Checked = TRUESTRING == oldArgs[(int) Args.feature_selection];
+                    cbxRemoveInterferedProteins.Checked = TRUESTRING == oldArgs[(int) Args.remove_interfered_proteins];
                     tbxWidth.Text = oldArgs[(int) Args.width];
                     tbxHeight.Text = oldArgs[(int) Args.height];
                 }
@@ -54,12 +55,14 @@ namespace MSStatArgsCollector
         private const string FALSESTRING = "FALSE"; // Not L10N
         private void GenerateArguments()
         {
-            Arguments = new string[Enum.GetValues(typeof(Args)).Length];
+            Arguments = new string[(int) Args.max_arg];
             Arguments[(int)Args.normalize_to] = (comboBoxNormalizeTo.SelectedIndex).ToString(CultureInfo.InvariantCulture);
             Arguments[(int)Args.allow_missing_peaks] = (cboxAllowMissingPeaks.Checked) ? TRUESTRING : FALSESTRING;
             Arguments[(int) Args.feature_selection] =
                 cbxSelectHighQualityFeatures.Checked ? TRUESTRING : FALSESTRING;
-            Arguments[(int) Args.width] = tbxWidth.Text;
+            Arguments[(int)Args.remove_interfered_proteins] = 
+                cbxRemoveInterferedProteins.Checked ? TRUESTRING : FALSESTRING;
+            Arguments[(int)Args.width] = tbxWidth.Text;
             Arguments[(int) Args.height] = tbxHeight.Text;
         }
 
@@ -72,6 +75,11 @@ namespace MSStatArgsCollector
         {
             GenerateArguments();
             DialogResult = DialogResult.OK;
+        }
+
+        private void cbxSelectHighQualityFeatures_CheckedChanged(object sender, EventArgs e)
+        {
+            cbxRemoveInterferedProteins.Enabled = cbxSelectHighQualityFeatures.Checked;
         }
 
     }

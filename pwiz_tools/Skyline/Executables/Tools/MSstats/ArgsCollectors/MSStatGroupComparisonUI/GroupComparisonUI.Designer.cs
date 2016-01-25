@@ -41,6 +41,7 @@
             this.labelControlGroup = new System.Windows.Forms.Label();
             this.argsLayoutPanel = new System.Windows.Forms.FlowLayoutPanel();
             this.cboxSelectHighQualityFeatures = new System.Windows.Forms.CheckBox();
+            this.cboxRemoveInterferedProteins = new System.Windows.Forms.CheckBox();
             this.argsLayoutPanel.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -170,7 +171,7 @@
             this.argsLayoutPanel.Controls.Add(this.labelComparisonGroups);
             this.argsLayoutPanel.Controls.Add(this.ComparisonGroups);
             this.argsLayoutPanel.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
-            this.argsLayoutPanel.Location = new System.Drawing.Point(12, 155);
+            this.argsLayoutPanel.Location = new System.Drawing.Point(12, 187);
             this.argsLayoutPanel.Name = "argsLayoutPanel";
             this.argsLayoutPanel.Padding = new System.Windows.Forms.Padding(0, 0, 0, 10);
             this.argsLayoutPanel.Size = new System.Drawing.Size(180, 132);
@@ -185,6 +186,19 @@
             this.cboxSelectHighQualityFeatures.TabIndex = 5;
             this.cboxSelectHighQualityFeatures.Text = "Select high quality features";
             this.cboxSelectHighQualityFeatures.UseVisualStyleBackColor = true;
+            this.cboxSelectHighQualityFeatures.CheckedChanged += new System.EventHandler(this.cboxSelectHighQualityFeatures_CheckedChanged);
+            // 
+            // cboxRemoveInterferedProteins
+            // 
+            this.cboxRemoveInterferedProteins.AutoSize = true;
+            this.cboxRemoveInterferedProteins.Enabled = false;
+            this.cboxRemoveInterferedProteins.Location = new System.Drawing.Point(30, 138);
+            this.cboxRemoveInterferedProteins.Name = "cboxRemoveInterferedProteins";
+            this.cboxRemoveInterferedProteins.Size = new System.Drawing.Size(231, 30);
+            this.cboxRemoveInterferedProteins.TabIndex = 6;
+            this.cboxRemoveInterferedProteins.Text = "Allow the algorithm to delete the whole \r\nprotein if all of its features have int" +
+    "erference";
+            this.cboxRemoveInterferedProteins.UseVisualStyleBackColor = true;
             // 
             // GroupComparisonUi
             // 
@@ -195,6 +209,7 @@
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.CancelButton = this.btnCancel;
             this.ClientSize = new System.Drawing.Size(292, 459);
+            this.Controls.Add(this.cboxRemoveInterferedProteins);
             this.Controls.Add(this.cboxSelectHighQualityFeatures);
             this.Controls.Add(this.labelName);
             this.Controls.Add(this.cboxAllowMissingPeaks);
@@ -236,5 +251,6 @@
         private System.Windows.Forms.Label labelControlGroup;
         private System.Windows.Forms.FlowLayoutPanel argsLayoutPanel;
         private System.Windows.Forms.CheckBox cboxSelectHighQualityFeatures;
+        private System.Windows.Forms.CheckBox cboxRemoveInterferedProteins;
     }
 }
