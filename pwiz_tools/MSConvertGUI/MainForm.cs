@@ -362,7 +362,7 @@ namespace MSConvertGUI
                         FilterDGV.Rows.Add(new[]
                                                {
                                                    "chargeStatePredictor",
-                                                   String.Format("{0} {1} {2} {3}",
+                                                   String.Format("overrideExistingCharge={0} maxMultipleCharge={1} minMultipleCharge={2} singleChargeFractionTIC={3}",
                                                                  ChaOverwriteCharge.Checked.ToString().ToLower(),
                                                                  ChaMCMaxBox.Text, ChaMCMinBox.Text, ChaSingleBox.Value)
                                                });
