@@ -389,8 +389,8 @@
     <value>7</value>
   </data>
   <data name="comboDeclusterPotential.ToolTip" xml:space="preserve">
-    <value>线性方程用于从其质荷比中
-针对每个母离子预测最优去簇电压  (DP)。同位素标记的肽段
+    <value>线性方程将被用于对每个母离子从其质荷比中
+预测最优去簇电压 (DP)。同位素标记的肽段
 使用针对未标记形式预测的 DP。（仅限 AB 仪器）</value>
   </data>
   <data name="&gt;&gt;comboDeclusterPotential.Name" xml:space="preserve">
@@ -697,8 +697,8 @@
   </data>
   <data name="cbAutoSelect.ToolTip" xml:space="preserve">
     <value>如果选中，那么离子对将根据指定的
-过滤器以及库设置自动为肽段选择。否则，所有离子对
-选择都必须由手动文档编辑完成。</value>
+自动从蛋白质中选择。否则，所有离子对
+段选择都必须由手动文档编辑完成。</value>
   </data>
   <data name="&gt;&gt;cbAutoSelect.Name" xml:space="preserve">
     <value>cbAutoSelect</value>
@@ -1210,9 +1210,9 @@
     <value>从已过滤的子离子和类型以及过滤的子离子(&amp;U)</value>
   </data>
   <data name="radioAllAndFiltered.ToolTip" xml:space="preserve">
-    <value>从过滤器标签中仅应用离子电荷和类型来选
-子电荷和类型来选择用于排名的 MS/MS 峰匹配离子，
-但也添加匹配完整过滤器的所有子离子，
+    <value>只从过滤器标签中应用离子电荷和类型来选
+择用于排名的 MS/MS 峰匹配离子，
+但同时也添加匹配完整过滤器的所有子离子，
 如果这些子离子未在库中被发现</value>
   </data>
   <data name="&gt;&gt;radioAllAndFiltered.Name" xml:space="preserve">
@@ -1274,7 +1274,7 @@
     <value>从已过滤的离子电荷和类型(&amp;C)</value>
   </data>
   <data name="radioAll.ToolTip" xml:space="preserve">
-    <value>从过滤器标签中仅应用离子电荷和类型来选
+    <value>只从过滤器标签中应用离子电荷和类型来选
 择用于排名的MS/MS 峰匹配离子</value>
   </data>
   <data name="&gt;&gt;radioAll.Name" xml:space="preserve">
@@ -1447,6 +1447,9 @@
   </data>
   <data name="label13.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
+  </data>
+  <data name="label13.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 8.25pt</value>
   </data>
   <data name="label13.Location" type="System.Drawing.Point, System.Drawing">
     <value>94, 43</value>

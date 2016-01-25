@@ -259,7 +259,7 @@
     <value>True</value>
   </metadata>
   <data name="colUnrefinedSlope.HeaderText" xml:space="preserve">
-    <value>未调整的斜度</value>
+    <value>未调整的斜率</value>
   </data>
   <data name="colUnrefinedSlope.Visible" type="System.Boolean, mscorlib">
     <value>False</value>

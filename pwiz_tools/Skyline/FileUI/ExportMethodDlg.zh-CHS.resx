@@ -685,7 +685,7 @@
   </data>
   <data name="cbEnergyRamp.ToolTip" xml:space="preserve">
     <value>某些版本的 Thermo TSQ 软件要求
-添加能量变化列</value>
+添加触发器和参考栏</value>
   </data>
   <data name="&gt;&gt;cbEnergyRamp.Name" xml:space="preserve">
     <value>cbEnergyRamp</value>
@@ -719,7 +719,7 @@
   </data>
   <data name="cbTriggerRefColumns.ToolTip" xml:space="preserve">
     <value>某些版本Thermo TSQ软件要求
-添加能量变化列</value>
+添加触发器和参考栏</value>
   </data>
   <data name="&gt;&gt;cbTriggerRefColumns.Name" xml:space="preserve">
     <value>cbTriggerRefColumns</value>

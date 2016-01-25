@@ -138,7 +138,7 @@
     <value>True</value>
   </metadata>
   <data name="Slope.HeaderText" xml:space="preserve">
-    <value>斜度</value>
+    <value>斜率</value>
   </data>
   <data name="Slope.Width" type="System.Int32, mscorlib">
     <value>90</value>
@@ -160,14 +160,14 @@
     <value>534, 117</value>
   </data>
   <data name="gridRegression.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
+    <value>11</value>
   </data>
   <data name="gridRegression.ToolTip" xml:space="preserve">
-    <value>斜度和截距值被用于从离子迁移库中的母离子碰撞横截面“C”来计算以毫秒为单位的预测漂移时间“D”，借助以下形式的等式：
+    <value>斜率和截距值被用于从离子迁移库中的母离子碰撞横截面“C”来计算以毫秒为单位的预测漂移时间“D”，借助以下形式的等式：
 
-D = 斜度 * C + 截距
+D = 斜率 * C + 截距
 
-每个母离子电荷态都需要不同的斜度和截距值。 如果母离子电荷态没有在此列表中表示出来，则没有漂移时间信息将用于该电荷态的色谱图提取。 这就是说，色谱图将在所有漂移区间内提取，不带有任何漂移时间过滤。</value>
+每个母离子电荷态都需要不同的斜率和截距值。 如果母离子电荷态没有在此列表中表示出来，则没有漂移时间信息将用于该电荷态的色谱图提取。 这就是说，色谱图将在所有漂移区间内提取，不带有任何漂移时间过滤。</value>
   </data>
   <data name="&gt;&gt;gridRegression.Name" xml:space="preserve">
     <value>gridRegression</value>
@@ -179,7 +179,7 @@ D = 斜度 * C + 截距
     <value>$this</value>
   </data>
   <data name="&gt;&gt;gridRegression.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="comboLibrary.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
@@ -197,7 +197,7 @@ D = 斜度 * C + 截距
     <value>325, 24</value>
   </data>
   <data name="comboLibrary.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
+    <value>9</value>
   </data>
   <data name="comboLibrary.ToolTip" xml:space="preserve">
     <value>针对具体肽段和电荷态选择（或创建）一个碰撞横截面值或是测量的漂移时间的保存表格。</value>
@@ -212,7 +212,7 @@ D = 斜度 * C + 截距
     <value>$this</value>
   </data>
   <data name="&gt;&gt;comboLibrary.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>6</value>
   </data>
   <data name="textResolvingPower.Location" type="System.Drawing.Point, System.Drawing">
     <value>16, 101</value>
@@ -243,7 +243,7 @@ D = 斜度 * C + 截距
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textResolvingPower.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>8</value>
   </data>
   <data name="textName.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -273,7 +273,7 @@ D = 斜度 * C + 截距
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textName.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>10</value>
   </data>
   <data name="gridMeasuredDriftTimes.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
@@ -336,7 +336,7 @@ D = 斜度 * C + 截距
     <value>$this</value>
   </data>
   <data name="&gt;&gt;gridMeasuredDriftTimes.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="cbOffsetHighEnergySpectra.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
@@ -420,7 +420,7 @@ D = 斜度 * C + 截距
     <value>100, 28</value>
   </data>
   <data name="btnOk.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
+    <value>12</value>
   </data>
   <data name="btnOk.Text" xml:space="preserve">
     <value>确定</value>
@@ -435,7 +435,7 @@ D = 斜度 * C + 截距
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
-    <value>12</value>
+    <value>13</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -453,7 +453,7 @@ D = 斜度 * C + 截距
     <value>100, 28</value>
   </data>
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
-    <value>12</value>
+    <value>13</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
     <value>取消</value>
@@ -468,7 +468,7 @@ D = 斜度 * C + 截距
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>11</value>
+    <value>12</value>
   </data>
   <data name="labelConversionParameters.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
@@ -489,7 +489,7 @@ D = 斜度 * C + 截距
     <value>159, 17</value>
   </data>
   <data name="labelConversionParameters.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
+    <value>10</value>
   </data>
   <data name="labelConversionParameters.Text" xml:space="preserve">
     <value>转换参数(&amp;C)：</value>
@@ -504,7 +504,7 @@ D = 斜度 * C + 截距
     <value>$this</value>
   </data>
   <data name="&gt;&gt;labelConversionParameters.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="labelIonMobilityLibrary.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
@@ -525,7 +525,7 @@ D = 斜度 * C + 截距
     <value>130, 17</value>
   </data>
   <data name="labelIonMobilityLibrary.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
+    <value>8</value>
   </data>
   <data name="labelIonMobilityLibrary.Text" xml:space="preserve">
     <value>离子迁移库(&amp;I)：</value>
@@ -540,7 +540,7 @@ D = 斜度 * C + 截距
     <value>$this</value>
   </data>
   <data name="&gt;&gt;labelIonMobilityLibrary.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>7</value>
   </data>
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -573,7 +573,7 @@ D = 斜度 * C + 截距
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>9</value>
   </data>
   <data name="label4.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -606,7 +606,7 @@ D = 斜度 * C + 截距
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>11</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -639,7 +639,7 @@ D = 斜度 * C + 截距
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>

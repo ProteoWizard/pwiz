@@ -169,7 +169,7 @@
     <value>碰撞能量</value>
   </data>
   <data name="ConcentrationMultiplier">
-    <value>浓度乘数</value>
+    <value>浓度系数</value>
   </data>
   <data name="ConfidenceLevel">
     <value>置信级</value>
@@ -280,7 +280,7 @@
     <value>截距</value>
   </data>
   <data name="InternalStandardConcentration">
-    <value>内部标准浓度</value>
+    <value>内标浓度</value>
   </data>
   <data name="IsDecoy">
     <value>是诱饵</value>
@@ -430,7 +430,7 @@
     <value>下一个 Aa</value>
   </data>
   <data name="NormalizedArea">
-    <value>归一化面积</value>
+    <value>校准后面积</value>
   </data>
   <data name="OptCollisionEnergy">
     <value>最优碰撞能量</value>
@@ -631,7 +631,7 @@
     <value>样品类型</value>
   </data>
   <data name="Slope">
-    <value>斜度</value>
+    <value>斜率</value>
   </data>
   <data name="StandardError">
     <value>标准错误</value>
@@ -781,9 +781,9 @@
     <value>锥孔电压</value>
   </data>
   <data name="ExplicitDeclusteringPotential">
-    <value>明示去簇电压</value>
+    <value>明确的去簇电压</value>
   </data>
   <data name="ExplicitCompensationVoltage">
-    <value>明示补偿电压</value>
+    <value>明确的补偿电压</value>
   </data>
 </root>

@@ -302,9 +302,9 @@
     <value>6</value>
   </data>
   <data name="comboAction.ToolTip" xml:space="preserve">
-    <value>选择创建新库，或者如果您之前
-已保存了冗余库数据的副本，
-则可添加到现有库。</value>
+    <value>选择创建新库或者添
+加到现有库, 如果您之前已保存了冗
+余库数据的副本。</value>
   </data>
   <data name="&gt;&gt;comboAction.Name" xml:space="preserve">
     <value>comboAction</value>
@@ -501,8 +501,8 @@ Yeast_20090902</value>
     <value>9</value>
   </data>
   <data name="textCutoff.ToolTip" xml:space="preserve">
-    <value>分数将分布在1.0 - 0 范围内，1.0 分是最有可能正确的，
-该分数将为图谱提供一个截止，
+    <value>得分将分布在1.0 - 0 范围内，1.0 分是最有可能正确的，
+该得分将为图谱提供一个截止，
 所有超过截止的图谱将被收纳到库里。
 
 对于 TPP pepXML 而言，这是最小的 PeptideProphet 概率。
@@ -790,7 +790,7 @@ Yeast_20090902</value>
     <value>1</value>
   </data>
   <data name="listInputFiles.ToolTip" xml:space="preserve">
-    <value>所有已选中文件中的符合截止分数的谱图
+    <value>所有已选中文件中的符合截止得分的谱图
 将被添加到冗余库，然后基于该冗余库
 建立最终的非冗余库。</value>
   </data>

@@ -130,7 +130,7 @@
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+    <value>2</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
     <value>取消</value>
@@ -157,7 +157,7 @@
     <value>75, 23</value>
   </data>
   <data name="btnOK.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+    <value>1</value>
   </data>
   <data name="btnOK.Text" xml:space="preserve">
     <value>确定</value>
@@ -184,10 +184,10 @@
     <value>64, 13</value>
   </data>
   <data name="label2.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+    <value>0</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>查看名称(&amp;N):</value>
+    <value>查看名称(&amp;N)：</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -313,7 +313,7 @@
     <value>622, 335</value>
   </data>
   <data name="tabControl1.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
+    <value>0</value>
   </data>
   <data name="&gt;&gt;tabControl1.Name" xml:space="preserve">
     <value>tabControl1</value>
@@ -434,7 +434,7 @@
     <value>622, 25</value>
   </data>
   <data name="toolStrip.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>0</value>
   </data>
   <data name="toolStrip.Text" xml:space="preserve">
     <value>toolStrip1</value>
@@ -461,7 +461,7 @@
     <value>75, 23</value>
   </data>
   <data name="btnPreview.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+    <value>1</value>
   </data>
   <data name="btnPreview.Text" xml:space="preserve">
     <value>预览…</value>
@@ -491,7 +491,7 @@
     <value>622, 25</value>
   </data>
   <data name="panel1.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
+    <value>1</value>
   </data>
   <data name="&gt;&gt;panel1.Name" xml:space="preserve">
     <value>panel1</value>
@@ -515,7 +515,7 @@
     <value>622, 360</value>
   </data>
   <data name="panelViewEditor.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
+    <value>1</value>
   </data>
   <data name="&gt;&gt;panelViewEditor.Name" xml:space="preserve">
     <value>panelViewEditor</value>
@@ -539,7 +539,7 @@
     <value>622, 32</value>
   </data>
   <data name="panelButtons.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
+    <value>1</value>
   </data>
   <data name="&gt;&gt;panelButtons.Name" xml:space="preserve">
     <value>panelButtons</value>

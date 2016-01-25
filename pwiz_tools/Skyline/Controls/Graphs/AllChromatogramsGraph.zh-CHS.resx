@@ -367,7 +367,7 @@
     <value>1</value>
   </data>
   <data name="lblWarning.Text" xml:space="preserve">
-    <value>警告： 从网络驱动器导入 Thermo 原始文件非常慢。Skyline 建议取消此次导入，将文件复制到本地硬盘，再从本地备份中导入。</value>
+    <value>警告： 从网络驱动器导入 Thermo RAW文件非常慢。Skyline 建议取消此次导入，将文件复制到本地硬盘，再从本地备份中导入。</value>
   </data>
   <data name="lblWarning.Visible" type="System.Boolean, mscorlib">
     <value>False</value>

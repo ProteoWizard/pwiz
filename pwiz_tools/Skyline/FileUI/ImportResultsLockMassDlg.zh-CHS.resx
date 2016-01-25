@@ -214,7 +214,7 @@
     <value>1</value>
   </data>
   <data name="labelPositive.Text" xml:space="preserve">
-    <value>&amp;ESI+(&amp;E)</value>
+    <value>ESI+(&amp;E)</value>
   </data>
   <data name="&gt;&gt;labelPositive.Name" xml:space="preserve">
     <value>labelPositive</value>
@@ -328,7 +328,7 @@
     <value>4</value>
   </data>
   <data name="labelNegative.Text" xml:space="preserve">
-    <value>E&amp;SI-(&amp;S)</value>
+    <value>ESI-(&amp;S)</value>
   </data>
   <data name="&gt;&gt;labelNegative.Name" xml:space="preserve">
     <value>labelNegative</value>
@@ -352,7 +352,7 @@
     <value>0</value>
   </data>
   <data name="labelLockMassInstructions.Text" xml:space="preserve">
-    <value>如果未使用锁定喷雾，或如果已应用了锁定质量校正，则留空这些字段。</value>
+    <value>如果未使用锁定喷雾，或如果已应用了锁定质量修正，则留空这些字段。</value>
   </data>
   <data name="&gt;&gt;labelLockMassInstructions.Name" xml:space="preserve">
     <value>labelLockMassInstructions</value>
@@ -466,7 +466,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>Waters 锁定质量校正</value>
+    <value>Waters 锁定质量修正</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>ImportResultsLockMassDlg</value>

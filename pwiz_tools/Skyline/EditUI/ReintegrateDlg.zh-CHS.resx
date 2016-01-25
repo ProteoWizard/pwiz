@@ -355,7 +355,7 @@
     <value>0</value>
   </data>
   <data name="label36.Text" xml:space="preserve">
-    <value>峰值分数模型(&amp;P)：</value>
+    <value>峰得分模型(&amp;P)：</value>
   </data>
   <data name="&gt;&gt;label36.Name" xml:space="preserve">
     <value>label36</value>
