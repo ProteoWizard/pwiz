@@ -223,7 +223,7 @@ namespace pwiz.Skyline.Model
                 WATERS_XEVO_QTOF,
             };
 
-        private readonly static Dictionary<string, string> METHOD_EXTENSIONS;
+        private static readonly Dictionary<string, string> METHOD_EXTENSIONS;
 
         static ExportInstrumentType()
         {
@@ -1005,15 +1005,20 @@ namespace pwiz.Skyline.Model
                                             nodeTranGroup.TransitionGroup.LabelTypeText,
                                             nodeTranGroup.PrecursorCharge >= 0 ? '+' : '-',
                                             nodeTranGroup.PrecursorCharge);
+            if (step != 0)
+            {
+                compound += '.' + step.ToString(CultureInfo);
+            }
+
             if (!_compoundCounts.ContainsKey(compound))
             {
                 _compoundCounts[compound] = 0;
             }
             else
             {
-                int compoundStep = (++_compoundCounts[compound]) / MAX_COMPOUND_NAME + 1;
+                int compoundStep = ++_compoundCounts[compound] / MAX_COMPOUND_NAME + 1;
                 if (compoundStep > 1)
-                    compound += compoundStep;
+                    compound += '.' + compoundStep;
             }
             writer.WriteDsvField(compound, FieldSeparator);
             writer.Write(FieldSeparator);
@@ -2061,7 +2066,7 @@ namespace pwiz.Skyline.Model
                 averagePeakArea = sumPeakArea/resultsUsedCount;
         }
 
-        static internal string GetSequenceWithModsString(PeptideDocNode nodePep, SrmSettings settings)
+        internal static string GetSequenceWithModsString(PeptideDocNode nodePep, SrmSettings settings)
         {
             string result;
             if (nodePep.Peptide.IsCustomIon)
@@ -3314,7 +3319,7 @@ namespace pwiz.Skyline.Model
             // Mass Fragments 1-6
             for (int i = 0; i < 6; i++)
             {
-                var mz = i < transitions.Count()
+                var mz = i < transitions.Length
                     ? GetProductMz(SequenceMassCalc.PersistentMZ(((TransitionDocNode) transitions[i]).Mz), step)
                     : 0;
                 writer.Write(mz.ToString(MASS_FORMAT, CultureInfo));
