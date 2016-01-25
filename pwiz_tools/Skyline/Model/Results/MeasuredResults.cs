@@ -726,6 +726,7 @@ namespace pwiz.Skyline.Model.Results
 
                 if (mergeAction == MergeAction.remove)
                     resultsNew = null;
+                // ReSharper disable once PossibleNullReferenceException
                 else if (resultsBase._cacheFinal != null || resultsBase._listPartialCaches != null)
                     resultsNew = resultsBase;
                 else
