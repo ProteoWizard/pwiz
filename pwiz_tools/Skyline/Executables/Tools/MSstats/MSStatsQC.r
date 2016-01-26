@@ -134,10 +134,10 @@ runQC <- function() {
 		cat("\n\n =======================================")
 		cat("\n ** Generating dataProcess Plots..... \n \n")
 
-		dataProcessPlots(data=quantData, type="ProfilePlot", address="", width=as.numeric(arguments[5]), height=as.numeric(arguments[6]))
+		dataProcessPlots(data=quantData, type="ProfilePlot", address="", width=as.numeric(arguments[6]), height=as.numeric(arguments[7]))
 		cat("\n Saved ProfilePlot.pdf \n \n")
 
-		dataProcessPlots(data=quantData, type="QCPlot", address="", width=as.numeric(arguments[5]), height=as.numeric(arguments[6]))
+		dataProcessPlots(data=quantData, type="QCPlot", address="", width=as.numeric(arguments[6]), height=as.numeric(arguments[7]))
 		cat("\n Saved QCPlot.pdf \n \n")
 
 		dataProcessPlots(data=quantData, type="ConditionPlot", address="")
