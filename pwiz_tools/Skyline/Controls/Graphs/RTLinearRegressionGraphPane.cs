@@ -661,7 +661,7 @@ namespace pwiz.Skyline.Controls.Graphs
             private bool PointIsOverEx(RTLinearRegressionGraphPane graphPane, PointF point,
                 RetentionTimeRegression regression, double x, double y)
             {
-                if (regression != null)
+                if (regression != null && regression.IsUsable)
                     y = GetResidual(regression, x, y);
                 return graphPane.PointIsOver(point, x, y);
             }
