@@ -2505,7 +2505,7 @@ namespace pwiz.Skyline
                             panoramaEx.ServerUrl);
                         _statusWriter.WriteLine(
                             Resources.PanoramaPublishHelper_PublishDocToPanorama_Error_details_can_be_found_at__0_,
-                            new Uri(panoramaEx.ServerUrl, panoramaEx.JobUrlPart));
+                            panoramaEx.JobUrl);
                     }
                 }
             }

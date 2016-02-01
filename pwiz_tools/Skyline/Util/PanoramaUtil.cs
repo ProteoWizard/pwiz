@@ -600,12 +600,12 @@ namespace pwiz.Skyline.Util
             catch (Exception x)
             {
                 var panoramaEx = x.InnerException as PanoramaImportErrorException;
-                if (panoramaEx != null && panoramaEx.ReturnUri != null)
+                if (panoramaEx != null)
                 {
                     var message = Resources.WebPanoramaPublishClient_UploadSharedZipFile_An_error_occured_while_publishing_to_Panorama__would_you_like_to_go_to_Panorama_;
                     if (MultiButtonMsgDlg.Show(parent, message, MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false)
                         == DialogResult.Yes)
-                        Process.Start(panoramaEx.ReturnUri.ToString());
+                        Process.Start(panoramaEx.JobUrl.ToString());
                 }
                 else
                 {
@@ -741,10 +741,11 @@ namespace pwiz.Skyline.Util
                         continue;
 
                     string status = (string)row["Status"]; // Not L10N
-                    result = new Uri(server.URI.AbsoluteUri.TrimEnd('/') + (string)row["_labkeyurl_Description"]); // Not L10N
+                    result = new Uri(server.URI, (string)row["_labkeyurl_Description"]); // Not L10N
                     if (string.Equals(status, "ERROR")) // Not L10N
                     {
-                        var e = new PanoramaImportErrorException(server.URI, (string) row["_labkeyurl_RowId"], result); // Not L10N
+                        var jobUrl = new Uri(server.URI, (string)row["_labkeyurl_RowId"]); // Not L10N
+                        var e = new PanoramaImportErrorException(server.URI, jobUrl); 
                         progressMonitor.UpdateProgress(
                             _progressStatus = _progressStatus.ChangeErrorException(e));
                         throw e;
@@ -900,16 +901,14 @@ namespace pwiz.Skyline.Util
 
     public class PanoramaImportErrorException : Exception
     {
-        public PanoramaImportErrorException(Uri serverUrl, string jobUrlPart, Uri returnUri)
+        public PanoramaImportErrorException(Uri serverUrl, Uri jobUrl)
         {
             ServerUrl = serverUrl;
-            JobUrlPart = jobUrlPart;
-            ReturnUri = returnUri;
+            JobUrl = jobUrl;
         }
 
         public Uri ServerUrl { get; private set; }
-        public string JobUrlPart { get; private set; }
-        public Uri ReturnUri { get; private set; }
+        public Uri JobUrl { get; private set; }
     }
 
     public class PanoramaServerException : Exception
