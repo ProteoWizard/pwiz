@@ -27,7 +27,7 @@ namespace pwiz.SkylineTestFunctional
     /// Test the Unique Peptides dialog
     /// </summary>
     [TestClass]
-    public class UniquePeptidesTest : AbstractFunctionalTestEx
+    public class UniquePeptidesDialogTest : AbstractFunctionalTestEx
     {
 
         private const string TEXT_FASTA_SPROT = // A protein not in the background proteome
@@ -40,9 +40,9 @@ namespace pwiz.SkylineTestFunctional
             "PGAGSLEI*";
 
         [TestMethod]
-        public void TestUniquePeptides()
+        public void TestUniquePeptidesDialog()
         {
-            TestFilesZip = @"TestFunctional\UniquePeptidesTest.zip";
+            TestFilesZip = @"TestFunctional\UniquePeptidesDialogTest.zip";
             RunFunctionalTest();
         }
 
