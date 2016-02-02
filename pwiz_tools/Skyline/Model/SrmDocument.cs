@@ -243,7 +243,8 @@ namespace pwiz.Skyline.Model
         public const double FORMAT_VERSION_3_12 = 3.12; // Adds small molecule ion labels and multiple charge states
         public const double FORMAT_VERSION_3_5 = 3.5; // Release format
         public const double FORMAT_VERSION_3_51 = 3.51; // Adds document GUID and Panorama URI
-        public const double FORMAT_VERSION = FORMAT_VERSION_3_51;
+        public const double FORMAT_VERSION_3_52 = 3.52; // Cleans up potential ambiguity around explicit vs calculated slens and cone voltage
+        public const double FORMAT_VERSION = FORMAT_VERSION_3_52;
 
         public const int MAX_PEPTIDE_COUNT = 100*1000;
         public const int MAX_TRANSITION_COUNT = 6*MAX_PEPTIDE_COUNT; // Modern DIA experiments may often have 6 transitions per peptide
@@ -1742,8 +1743,10 @@ namespace pwiz.Skyline.Model
             public const string loss_neutral_mass = "loss_neutral_mass";
             public const string collision_energy = "collision_energy";
             public const string explicit_collision_energy = "explicit_collision_energy";
-            public const string s_lens = "s_lens";
-            public const string cone_voltage = "cone_voltage";
+            public const string explicit_s_lens = "explicit_s_lens";
+            public const string s_lens_obsolete = "s_lens"; // Really should have been explicit_s_lens
+            public const string explicit_cone_voltage = "explicit_cone_voltage";
+            public const string cone_voltage_obsolete = "cone_voltage"; // Really should have been explicit_cone_voltage
             public const string declustering_potential = "declustering_potential";
             public const string explicit_declustering_potential = "explicit_declustering_potential";
             public const string explicit_compensation_voltage = "explicit_compensation_voltage";
@@ -2112,13 +2115,13 @@ namespace pwiz.Skyline.Model
         /// <summary>
         /// Deserialize any explictly set CE, DT, etc information from attributes
         /// </summary>
-        static private ExplicitTransitionGroupValues ReadExplicitTransitionValuesAttributes(XmlReader reader)
+        private ExplicitTransitionGroupValues ReadExplicitTransitionValuesAttributes(XmlReader reader)
         {
             double? importedCollisionEnergy = reader.GetNullableDoubleAttribute(ATTR.explicit_collision_energy);
             double? importedDriftTimeMsec = reader.GetNullableDoubleAttribute(ATTR.explicit_drift_time_msec);
             double? importedDriftTimeHighEnergyOffsetMsec = reader.GetNullableDoubleAttribute(ATTR.explicit_drift_time_high_energy_offset_msec);
-            double? importedSLens = reader.GetNullableDoubleAttribute(ATTR.s_lens);
-            double? importedConeVoltage = reader.GetNullableDoubleAttribute(ATTR.cone_voltage);
+            double? importedSLens = reader.GetNullableDoubleAttribute(FormatVersion < FORMAT_VERSION_3_52 ? ATTR.s_lens_obsolete : ATTR.explicit_s_lens);
+            double? importedConeVoltage = reader.GetNullableDoubleAttribute(FormatVersion < FORMAT_VERSION_3_52 ? ATTR.cone_voltage_obsolete : ATTR.explicit_cone_voltage);
             double? importedCompensationVoltage = reader.GetNullableDoubleAttribute(ATTR.explicit_compensation_voltage);
             double? importedDeclusteringPotential = reader.GetNullableDoubleAttribute(ATTR.explicit_declustering_potential);
             return new ExplicitTransitionGroupValues(importedCollisionEnergy, importedDriftTimeMsec, importedDriftTimeHighEnergyOffsetMsec, importedSLens, importedConeVoltage, 
@@ -3105,8 +3108,8 @@ namespace pwiz.Skyline.Model
             writer.WriteAttributeNullable(ATTR.explicit_collision_energy, importedAttributes.CollisionEnergy);
             writer.WriteAttributeNullable(ATTR.explicit_drift_time_msec, importedAttributes.DriftTimeMsec);
             writer.WriteAttributeNullable(ATTR.explicit_drift_time_high_energy_offset_msec, importedAttributes.DriftTimeHighEnergyOffsetMsec);
-            writer.WriteAttributeNullable(ATTR.s_lens, importedAttributes.SLens);
-            writer.WriteAttributeNullable(ATTR.cone_voltage, importedAttributes.ConeVoltage);
+            writer.WriteAttributeNullable(ATTR.explicit_s_lens, importedAttributes.SLens);
+            writer.WriteAttributeNullable(ATTR.explicit_cone_voltage, importedAttributes.ConeVoltage);
             writer.WriteAttributeNullable(ATTR.explicit_declustering_potential, importedAttributes.DeclusteringPotential);
             writer.WriteAttributeNullable(ATTR.explicit_compensation_voltage, importedAttributes.CompensationVoltage);
         }

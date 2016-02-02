@@ -774,11 +774,11 @@
   <data name="ExplicitRetentionTimeWindow">
     <value>Explicit Retention Time Window</value>
   </data>
-  <data name="SLens">
-    <value>S-Lens</value>
+  <data name="ExplicitSLens">
+    <value>Explicit S-Lens</value>
   </data>
-  <data name="ConeVoltage">
-    <value>Cone Voltage</value>
+  <data name="ExplicitConeVoltage">
+    <value>Explicit Cone Voltage</value>
   </data>
   <data name="ExplicitDeclusteringPotential">
     <value>Explicit Declustering Potential</value>

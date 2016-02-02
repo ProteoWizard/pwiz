@@ -774,12 +774,6 @@
   <data name="ExplicitRetentionTimeWindow">
     <value>明确保留时间窗口</value>
   </data>
-  <data name="SLens">
-    <value>S-Lens</value>
-  </data>
-  <data name="ConeVoltage">
-    <value>锥孔电压</value>
-  </data>
   <data name="ExplicitDeclusteringPotential">
     <value>明确的去簇电压</value>
   </data>

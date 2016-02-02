@@ -214,7 +214,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [Format(Formats.OPT_PARAMETER, NullValue = TextUtil.EXCEL_NA)]
-        public double? SLens
+        public double? ExplicitSLens
         {
             get
             {
@@ -223,13 +223,13 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             set
             {
                 var values = DocNode.ExplicitValues.ChangeSLens(value);
-                ChangeDocNode(EditDescription.SetColumn("SLens", value), // Not L10N
+                ChangeDocNode(EditDescription.SetColumn("ExplicitSLens", value), // Not L10N
                     DocNode.ChangeExplicitValues(values));
             }
         }
 
         [Format(Formats.OPT_PARAMETER, NullValue = TextUtil.EXCEL_NA)]
-        public double? ConeVoltage
+        public double? ExplicitConeVoltage
         {
             get
             {
@@ -238,7 +238,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             set
             {
                 var values = DocNode.ExplicitValues.ChangeConeVoltage(value);
-                ChangeDocNode(EditDescription.SetColumn("ConeVoltage", value), // Not L10N
+                ChangeDocNode(EditDescription.SetColumn("ExplicitConeVoltage", value), // Not L10N
                     DocNode.ChangeExplicitValues(values));
             }
         }

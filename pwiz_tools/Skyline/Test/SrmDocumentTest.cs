@@ -104,8 +104,14 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void MoleculeDocumentSerializeTest()
         {
-            AssertEx.ValidatesAgainstSchema(DOC_MOLECULES);
-            var doc = AssertEx.Deserialize<SrmDocument>(DOC_MOLECULES);
+            ValidateDocMolecules(DOC_MOLECULES);  // V3.12, where s_lens and cone_voltage were misnamed
+            ValidateDocMolecules(DOC_MOLECULES.Replace("3.12", "3.52").Replace("s_lens", "explicit_s_lens").Replace("cone_voltage", "explicit_cone_voltage"));
+        }
+
+        private static void ValidateDocMolecules(string docText)
+        {
+            AssertEx.ValidatesAgainstSchema(docText);
+            var doc = AssertEx.Deserialize<SrmDocument>(docText);
             AssertEx.IsDocumentState(doc, null, 1, 1, 1, 2);
             var transition = new DocNodeCustomIon(60, 60, "molecule");
             var transition2 = new DocNodeCustomIon(55, 55, "molecule fragment");

@@ -451,8 +451,8 @@ namespace pwiz.Skyline.Model.Databinding
                     columnsToRemove.Add(PropertyPath.Root.Property("ExplicitDriftTimeHighEnergyOffsetMsec"));
                     columnsToRemove.Add(PropertyPath.Root.Property("ExplicitCompensationVoltage"));
                     columnsToRemove.Add(PropertyPath.Root.Property("ExplicitDeclusteringPotential"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("SLens"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("ConeVoltage"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitSLens"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitConeVoltage"));
                     addRoot = true;
                 }
                 else if (columnDescriptor.PropertyType == typeof(Entities.Transition))

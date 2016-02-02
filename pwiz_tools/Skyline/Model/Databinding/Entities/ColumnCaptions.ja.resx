@@ -774,12 +774,6 @@
   <data name="ExplicitRetentionTimeWindow">
     <value>明示的保持時間ウィンドウ</value>
   </data>
-  <data name="SLens">
-    <value>S-レンズ</value>
-  </data>
-  <data name="ConeVoltage">
-    <value>コーン電圧</value>
-  </data>
   <data name="ExplicitDeclusteringPotential">
     <value>明示的デクラスタリングポテンシャル</value>
   </data>
