@@ -213,7 +213,7 @@ namespace pwiz.Skyline.Model
             double precursorMzWindow = filter.PrecursorMzWindow;
             var types = filter.IonTypes;
             MassType massType = tranSettings.Prediction.FragmentMassType;
-            int minMz = tranSettings.Instrument.GetMinMz(precursorMz);
+            int minMz = tranSettings.Instrument.GetMinMz(precursorMzAccept);
             int maxMz = tranSettings.Instrument.MaxMz;
 
             var pepMods = settings.PeptideSettings.Modifications;
