@@ -1404,7 +1404,7 @@ namespace pwiz.Skyline.Model.Results
                         ChromatogramEntries = listKeepEntries.ToArray(),
                         ChromTransitions = listKeepTransitions.ToArray(),
                         ChromatogramPeaks = new BlockedArray<ChromPeak>(
-                            count => ChromPeak.ReadArray(fsPeaks.FileStream.SafeFileHandle, count), peakCount,
+                            count => ChromPeak.ReadArray(fsPeaks.FileStream, count), peakCount,
                             ChromPeak.SizeOf, ChromPeak.DEFAULT_BLOCK_SIZE),
                         TextIdBytes = listKeepTextIdBytes.ToArray(),
                         ScoreTypes = scoreTypes,
