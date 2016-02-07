@@ -22,7 +22,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using pwiz.Crawdad;
+using pwiz.Common.PeakFinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -971,7 +971,7 @@ namespace pwiz.Skyline.Model.Results
         private ChromDataPeakList FindCoelutingPeaks(ChromDataPeak dataPeakMax,
                                                      IList<ChromDataPeak> allPeaks)
         {
-            CrawdadPeak peakMax = dataPeakMax.Peak;
+            IFoundPeak peakMax = dataPeakMax.Peak;
             float areaMax = peakMax.Area;
             int centerMax = peakMax.TimeIndex;
             int startMax = peakMax.StartIndex;

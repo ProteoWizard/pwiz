@@ -21,7 +21,8 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Linq;
-using pwiz.Crawdad;
+using pwiz.Common.PeakFinding;
+using pwiz.Skyline.Model.Results.Crawdad;
 using pwiz.Skyline.Model.Results.Scoring;
 
 namespace pwiz.Skyline.Model.Results
@@ -129,10 +130,10 @@ namespace pwiz.Skyline.Model.Results
 
         public void FindPeaks(double[] retentionTimes, bool requireDocNode)
         {
-            Finder = new CrawdadPeakFinder();
+            Finder = Crawdads.NewCrawdadPeakFinder();
             Finder.SetChromatogram(Times, Intensities);
             if (requireDocNode && DocNode == null)
-                RawPeaks = new CrawdadPeak[0];
+                RawPeaks = new IFoundPeak[0];
             else
             {
                 RawPeaks = Finder.CalcPeaks(MAX_PEAKS, TimesToIndices(retentionTimes));
@@ -162,7 +163,7 @@ namespace pwiz.Skyline.Model.Results
             return index;
         }
 
-        private CrawdadPeakFinder Finder { get; set; }
+        private IPeakFinder Finder { get; set; }
 
         public ChromKey Key { get; private set; }
         public ChromExtra Extra { get; private set; }
@@ -172,7 +173,7 @@ namespace pwiz.Skyline.Model.Results
         private float[] RawIntensities { get; set; }
         private float[] RawMassErrors { get; set; }
         private int[] RawScanIds { get; set; }
-        public IEnumerable<CrawdadPeak> RawPeaks { get; private set; }
+        public IEnumerable<IFoundPeak> RawPeaks { get; private set; }
 
         public float RawCenterTime
         {
@@ -233,12 +234,12 @@ namespace pwiz.Skyline.Model.Results
             RawScanIds = ScanIndexes = scanIndexesNew;
         }
 
-        public CrawdadPeak CalcPeak(int startIndex, int endIndex)
+        public IFoundPeak CalcPeak(int startIndex, int endIndex)
         {
             return Finder.GetPeak(startIndex, endIndex);
         }
 
-        public ChromPeak CalcChromPeak(CrawdadPeak peakMax, ChromPeak.FlagValues flags, out CrawdadPeak peak)
+        public ChromPeak CalcChromPeak(IFoundPeak peakMax, ChromPeak.FlagValues flags, out IFoundPeak peak)
         {
             // Reintegrate all peaks to the max peak, even the max peak itself, since its boundaries may
             // have been extended from the Crawdad originals.
@@ -406,9 +407,9 @@ namespace pwiz.Skyline.Model.Results
     internal sealed class ChromDataPeak : ITransitionPeakData<IDetailedPeakData>, IDetailedPeakData
     {
         private ChromPeak _chromPeak;
-        private CrawdadPeak _crawPeak;
+        private IFoundPeak _crawPeak;
 
-        public ChromDataPeak(ChromData data, CrawdadPeak peak)
+        public ChromDataPeak(ChromData data, IFoundPeak peak)
         {
             Data = data;
             _crawPeak = peak;
@@ -416,7 +417,7 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromData Data { get; private set; }
         public ChromPeak DataPeak {get { return _chromPeak; }}
-        public CrawdadPeak Peak { get { return _crawPeak; } }
+        public IFoundPeak Peak { get { return _crawPeak; } }
 
         public TransitionDocNode NodeTran { get { return Data.DocNode; } }
         public IDetailedPeakData PeakData { get { return this; } }
@@ -432,7 +433,7 @@ namespace pwiz.Skyline.Model.Results
                     Data.Times[Peak.StartIndex], Data.Times[Peak.EndIndex]);
         }
 
-        public ChromPeak CalcChromPeak(CrawdadPeak peakMax, ChromPeak.FlagValues flags)
+        public ChromPeak CalcChromPeak(IFoundPeak peakMax, ChromPeak.FlagValues flags)
         {
             _chromPeak = Data.CalcChromPeak(peakMax, flags, out _crawPeak);
             return _chromPeak;

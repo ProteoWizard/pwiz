@@ -24,13 +24,13 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
-using pwiz.Crawdad;
 using pwiz.MSGraph;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Results.Crawdad;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using ZedGraph;
@@ -763,7 +763,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public static void MakeChromatogramInfo(double precursorMz, LibraryChromGroup chromGroup, LibraryChromGroup.ChromData chromData, out ChromatogramInfo chromatogramInfo, out TransitionChromInfo transitionChromInfo)
         {
-            var crawPeakFinder = new CrawdadPeakFinder();
+            var crawPeakFinder = Crawdads.NewCrawdadPeakFinder();
             crawPeakFinder.SetChromatogram(chromGroup.Times, chromData.Intensities);
             var crawdadPeak =
                 crawPeakFinder.GetPeak(

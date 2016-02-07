@@ -243,6 +243,13 @@
     <Compile Include="Graph\DataFrameBuilder.cs" />
     <Compile Include="Graph\GraphData.cs" />
     <Compile Include="Graph\GraphPaneData.cs" />
+    <Compile Include="PeakFinding\ChromSmoother.cs" />
+    <Compile Include="PeakFinding\FoundPeak.cs" />
+    <Compile Include="PeakFinding\PeakFinder.cs" />
+    <Compile Include="PeakFinding\IFoundPeak.cs" />
+    <Compile Include="PeakFinding\IPeakFinder.cs" />
+    <Compile Include="PeakFinding\PeakAndValleyFinder.cs" />
+    <Compile Include="PeakFinding\PeakFinders.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -302,7 +309,7 @@
       <DependentUpon>FindColumnDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="DataBinding\Controls\Editor\FindColumnDlg.zh-CHS.resx">
-	  <DependentUpon>FindColumnDlg.cs</DependentUpon>
+      <DependentUpon>FindColumnDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="DataBinding\Controls\Editor\ManageViewsForm.ja.resx">
       <DependentUpon>ManageViewsForm.cs</DependentUpon>

@@ -24,10 +24,12 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using pwiz.Common.PeakFinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Crawdad;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results.Crawdad;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -1005,8 +1007,8 @@ namespace pwiz.Skyline.Model.Results
             return (short) Math.Round(f*10);
         }
 
-        public ChromPeak(CrawdadPeakFinder finder,
-                         CrawdadPeak peak,
+        public ChromPeak(IPeakFinder finder,
+                         IFoundPeak peak,
                          FlagValues flags,
                          IList<float> times,
                          IList<float> intensities,
@@ -2231,7 +2233,7 @@ namespace pwiz.Skyline.Model.Results
             if (startIndex == endIndex)
                 return ChromPeak.EMPTY;
 
-            CrawdadPeakFinder finder = new CrawdadPeakFinder();
+            var finder = Crawdads.NewCrawdadPeakFinder();
             finder.SetChromatogram(Times, Intensities);
             var peak = finder.GetPeak(startIndex, endIndex);
             return new ChromPeak(finder, peak, flags, Times, Intensities, MassError10Xs);

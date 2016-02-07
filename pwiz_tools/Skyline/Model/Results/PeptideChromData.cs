@@ -21,7 +21,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Linq;
-using pwiz.Crawdad;
+using pwiz.Common.PeakFinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
@@ -848,7 +848,7 @@ namespace pwiz.Skyline.Model.Results
             PeakGroup = Data.SetBestPeak(PeakGroup, peakBest, indexSet);
         }
 
-        private CrawdadPeak BestCrawPeak { get { return PeakGroup != null ? PeakGroup[0].Peak : null; }}
+        private IFoundPeak BestCrawPeak { get { return PeakGroup != null ? PeakGroup[0].Peak : null; }}
 
         /// <summary>
         /// Peptide normalized start index of best peak
