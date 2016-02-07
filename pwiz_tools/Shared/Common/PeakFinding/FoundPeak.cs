@@ -30,8 +30,13 @@ namespace pwiz.Common.PeakFinding
         // This is an extra integer that gets added to the start and end of the peak, which slightly affects 
         // the way floating point numbers get rounded.
         private readonly int _widthDataWings;
+
         /// <param name="widthDataWings">Extra number that gets added to start and end of peak.  Only used so that floating point numbers
         /// get rounded exactly the way they were in the old Crawdad.</param>
+        /// <param name="intensities"></param>
+        /// <param name="baselineIntensity"></param>
+        /// <param name="startIndex"></param>
+        /// <param name="endIndex"></param>
         public FoundPeak(int widthDataWings, IList<float> intensities, float baselineIntensity, int startIndex, int endIndex)
         {
             _allIntensities = intensities;
