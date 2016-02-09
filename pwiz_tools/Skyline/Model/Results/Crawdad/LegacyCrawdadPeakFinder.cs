@@ -54,6 +54,9 @@ namespace pwiz.Skyline.Model.Results.Crawdad
         }
 
         public bool IsHeightAsArea { get { return _managedCrawdadPeakFinder.IsHeightAsArea; } }
+
+        public IList<float> Intensities1D { get { return _managedCrawdadPeakFinder.Intensities1d; } }
+        public IList<float> Intensities2d { get { return _managedCrawdadPeakFinder.Intensities2d; } }
     }
 
     public class LegacyCrawdadPeak : IFoundPeak

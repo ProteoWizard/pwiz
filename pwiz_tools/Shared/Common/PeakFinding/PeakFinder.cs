@@ -54,7 +54,7 @@ namespace pwiz.Common.PeakFinding
 
         public IList<IFoundPeak> CalcPeaks(int max, int[] idIndices)
         {
-            PeakAndValleyFinder peakAndValleyFinder = new PeakAndValleyFinder(_intensities);
+            PeakAndValleyFinder peakAndValleyFinder = GetPeakAndValleyFinder();
             var allPeaks = new List<FoundPeak>();
             foreach (var startEnd in peakAndValleyFinder.FindPeaks())
             {
@@ -78,6 +78,11 @@ namespace pwiz.Common.PeakFinding
             return allPeaks.Take(max).Cast<IFoundPeak>().ToArray();
         }
 
+        private PeakAndValleyFinder GetPeakAndValleyFinder()
+        {
+            return new PeakAndValleyFinder(_intensities ?? new float[0]);
+        }
+
         private int ComparePeakIdentifiedArea(FoundPeak peak1, FoundPeak peak2)
         {
             if (peak1.Identified)
@@ -96,5 +101,34 @@ namespace pwiz.Common.PeakFinding
 
         public bool IsHeightAsArea { get { return false; } }
 
+        public IList<float> Intensities1D
+        {
+            get
+            {
+                if (_intensities == null)
+                {
+                    return new float[0];
+                }
+                var peakAndValleyFinder = GetPeakAndValleyFinder();
+                return peakAndValleyFinder.GetIntensities1d()
+                    .Skip(peakAndValleyFinder._widthDataWings)
+                    .Take(_intensities.Count).ToArray();
+            }
+        }
+
+        public IList<float> Intensities2d
+        {
+            get
+            {
+                if (_intensities == null)
+                {
+                    return new float[0];
+                }
+                var peakAndValleyFinder = GetPeakAndValleyFinder();
+                return peakAndValleyFinder.GetIntensities2d()
+                    .Skip(peakAndValleyFinder._widthDataWings)
+                    .Take(_intensities.Count).ToArray();
+            }
+        }
     }
 }

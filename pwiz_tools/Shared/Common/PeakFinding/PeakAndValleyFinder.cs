@@ -298,5 +298,18 @@ namespace pwiz.Common.PeakFinding
             }
         }
 
+        public IList<float> GetIntensities2d()
+        {
+            return _chrom2D;
+        }
+
+        public IList<float> GetIntensities1d()
+        {
+            var gs1d = new GaussSmother();
+            gs1d.SetGaussWeights(GetSd(), 1);
+            gs1d.TrimWeightsByFracMax(0.005f);
+            gs1d.SmoothVect(_intensitiesWithWings);
+            return _intensitiesWithWings;
+        }
     }
 }

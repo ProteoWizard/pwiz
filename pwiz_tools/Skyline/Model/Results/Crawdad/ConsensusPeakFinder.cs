@@ -98,6 +98,71 @@ namespace pwiz.Skyline.Model.Results.Crawdad
             return results.First();
         }
 
+        public IList<float> Intensities1D
+        {
+            get
+            {
+                var results = new List<IList<float>>();
+                foreach (var peakFinder in _peakFinders)
+                {
+                    results.Add(peakFinder.Intensities1D);
+                }
+                for (int iFinder = 1; iFinder < results.Count; iFinder++)
+                {
+                    if (!EnsureIntensitiesEqual(results[0], results[iFinder]))
+                    {
+                        break;
+                    }
+                }
+                return results.First();
+            }
+        }
+
+        public IList<float> Intensities2d
+        {
+            get
+            {
+                var results = new List<IList<float>>();
+                foreach (var peakFinder in _peakFinders)
+                {
+                    results.Add(peakFinder.Intensities2d);
+                }
+                for (int iFinder = 1; iFinder < results.Count; iFinder++)
+                {
+                    if (!EnsureIntensitiesEqual(results[0], results[iFinder]))
+                    {
+                        break;
+                    }
+                }
+                return results.First();
+            }
+        }
+
+        private bool EnsureIntensitiesEqual(IList<float> intensities1, IList<float> intensities2)
+        {
+            if (intensities1.Count != intensities2.Count)
+            {
+                ReportMismatch(string.Format("Different number of intensities: {0} vs {1}", intensities1.Count, intensities2.Count), 
+                    new IFoundPeak[0], new IFoundPeak[0], new int[0]);
+                return false;
+            }
+            for (int i = 0; i < intensities1.Count; i++)
+            {
+                var diff = Math.Abs(intensities1[i] - intensities2[i]);
+                if (diff < 1)
+                {
+                    continue;
+                }
+                if (ValuesCloseEnough(intensities1[i], intensities2[i]))
+                {
+                    continue;
+                }
+                ReportMismatch(string.Format("Values differ at position {0}: {1} vs {2}", i, intensities1[i], intensities2[i]),
+                    new IFoundPeak[0], new IFoundPeak[0], new int[0]);
+            }
+            return true;
+        }
+
         private bool EnsurePeaklistsEqual(IList<IFoundPeak> peakList1, IList<IFoundPeak> peakList2, IList<int> idTimes)
         {
             if (peakList1.Count != peakList2.Count)

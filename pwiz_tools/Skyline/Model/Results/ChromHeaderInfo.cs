@@ -2319,7 +2319,7 @@ namespace pwiz.Skyline.Model.Results
         {
             if (Intensities == null)
                 return;
-            var peakFinder = new CrawdadPeakFinder();
+            var peakFinder = Crawdads.NewCrawdadPeakFinder();
             peakFinder.SetChromatogram(Times, Intensities);
             Intensities = peakFinder.Intensities2d.ToArray();
         }
