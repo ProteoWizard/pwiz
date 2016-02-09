@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using pwiz.Skyline.Model.DocSettings;
@@ -812,8 +811,10 @@ namespace pwiz.Skyline.Model
                             this, settings, mods, useFilter, 50);
                         foreach (var rmi in spectrumInfoR.PeaksRanked)
                         {
-                            Debug.Assert(!transitionRanks.ContainsKey(rmi.PredictedMz));
-                            transitionRanks.Add(rmi.PredictedMz, rmi);
+                            if (!transitionRanks.ContainsKey(rmi.PredictedMz))
+                            {
+                                transitionRanks.Add(rmi.PredictedMz, rmi);
+                            }
                             if (!useFilter && rmi.PredictedMz2 != 0 && !transitionRanks.ContainsKey(rmi.PredictedMz2))
                                 transitionRanks.Add(rmi.PredictedMz2, rmi);
                         }
