@@ -188,33 +188,28 @@ class MascotSpecReader : public SpecFileReader {
     double getRetentionTimeFromTitle(const string& title) const
     {
         // text to search for preceeding and following time
-        const char* startTags[3] = { "Elution:", "RT:", "rt=" };
-        const char* secondStartTags[3] = { "to ", NULL, NULL };
-        const char* endTags[3] = { "min", "min", "," };
+        const char* startTags[4] = { "Elution:", "Elution from: ", "RT:", "rt=" };
+        const char* secondStartTags[4] = { "to ", " to ", NULL, NULL };
+        const char* endTags[4] = { "min", " ", "min", "," };
 
-        double firstTime = 0;
+        double time = 0;
         double secondTime = 0;
-        for(int format_idx = 0; format_idx < 2; format_idx++)
+        for (int format_idx = 0; format_idx < 4; format_idx++)
         {
-
             size_t position = 0;
-            firstTime = getTime(title, startTags[format_idx], 
-                                endTags[format_idx], position);
+            if ((time = getTime(title, startTags[format_idx], endTags[format_idx], &position)) == 0)
+                continue;
+
             if (secondStartTags[format_idx] != NULL)
-            {
-                secondTime = getTime(title, secondStartTags[format_idx], 
-                                     endTags[format_idx], position);
-            }
+                secondTime = getTime(title, secondStartTags[format_idx], endTags[format_idx], &position);
 
-            if( firstTime > 0 )
+            if (time != 0)
                 break;
-
         } // try another format
 
-        double time = firstTime;
-        if( secondTime != 0 )
+        if (time != 0 && secondTime != 0)
         {
-            time = (firstTime + secondTime) / 2 ;
+            time = (time + secondTime) / 2 ;
         }
 
         return time;
@@ -226,9 +221,9 @@ class MascotSpecReader : public SpecFileReader {
      * Update position to the end of the parsed double.
      */
     double getTime(const string& title, const char* startTag,
-                   const char* endTag, size_t position) const
+                   const char* endTag, size_t* position) const
     {
-        size_t start = title.find(startTag, position);
+        size_t start = title.find(startTag, *position);
         if( start == string::npos )
             return 0; // not found
 
@@ -238,7 +233,7 @@ class MascotSpecReader : public SpecFileReader {
         try
         {
             double time = boost::lexical_cast<double>(timeStr);
-            position = start;
+            *position = start;
             return time;
         }
         catch(...)
