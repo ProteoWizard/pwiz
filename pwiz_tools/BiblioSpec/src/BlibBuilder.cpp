@@ -81,7 +81,7 @@ BlibBuilder::~BlibBuilder()
 void BlibBuilder::usage()
 {
     const char* usage =
-        "Usage: BlibBuild [options] <*.sqt|*.pep.xml|*.pepXML|*.blib|*.idpXML|*.dat|*.ssl|*.pride.xml|*.msms.txt|*.msf|*.mzid|*.perc.xml|*final_fragment.csv>+ <library_name>\n"
+        "Usage: BlibBuild [options] <*.sqt|*.pep.xml|*.pepXML|*.blib|*.idpXML|*.dat|*.ssl|*.pride.xml|*.msms.txt|*.msf|*.mzid|*.perc.xml|*final_fragment.csv|*.proxl.xml>+ <library_name>\n"
         "   -o                Overwrite existing library. Default append.\n"
         "   -S  <filename>    Read from file as though it were stdin.\n"
         "   -s                Result file names from stdin. e.g. ls *sqt | BlibBuild -s new.blib.\n"
@@ -220,6 +220,7 @@ int BlibBuilder::parseCommandArgs(int argc, char* argv[])
                    has_extension(file_name, ".mzid") ||
                    has_extension(file_name, "msms.txt") ||
                    has_extension(file_name, "final_fragment.csv") ||
+                   has_extension(file_name, ".proxl.xml") ||
                    has_extension(file_name, ".ssl") ) {
 
                     input_files.push_back(file_name);
@@ -227,7 +228,8 @@ int BlibBuilder::parseCommandArgs(int argc, char* argv[])
                     Verbosity::error("Unsupported file type '%s'.  Must be .sqt, "
                                      ".pep.xml/.pep.XML/.pepXML, .idpXML, .dat, "
                                      ".xtan.xml, .ssl, .group.xml, .pride.xml, .msms.txt, "
-                                     ".msf, .pdResult, .mzid, perc.xml, final_fragment.csv or .blib.",
+                                     ".msf, .pdResult, .mzid, perc.xml, final_fragment.csv, "
+                                     ".proxl.xml, or .blib.",
                                      file_name);
                 }
             }

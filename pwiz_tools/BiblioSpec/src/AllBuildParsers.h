@@ -40,6 +40,7 @@
 #include "MzIdentMLReader.h"
 #include "PercolatorXmlReader.h"
 #include "WatersMseReader.h"
+#include "ProxlXmlReader.h"
 /*
  * Local Variables:
  * mode: c

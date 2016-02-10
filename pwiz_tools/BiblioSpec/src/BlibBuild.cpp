@@ -143,8 +143,10 @@ int main(int argc, char* argv[])
             } else if (has_extension(result_file, "final_fragment.csv")) {
                 WatersMseReader mseReader(builder, result_file, progress_cptr);
                 success = mseReader.parseFile();
-
-             } else { 
+            } else if (has_extension(result_file, ".proxl.xml")) {
+                ProxlXmlReader proxlReader(builder, result_file, progress_cptr);
+                success = proxlReader.parseFile();
+            } else { 
                 // shouldn't get to here b/c cmd line parsing checks, but...
                 Verbosity::error("Unknown input file type '%s'.", result_file);
             }

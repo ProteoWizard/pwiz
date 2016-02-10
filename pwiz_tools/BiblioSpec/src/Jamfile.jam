@@ -131,6 +131,7 @@ lib blibbuild
     PepXMLreader.cpp
     PercolatorXmlReader.cpp
     PrideXmlReader.cpp
+    ProxlXmlReader.cpp
     MaxQuantModReader.cpp
     MaxQuantReader.cpp
     MSFReader.cpp
