@@ -131,8 +131,8 @@ Baf2SqlImpl::Baf2SqlImpl(const string& rawpath) : rawpath_(rawpath), bafFilepath
         double rt = row.get<double>(++idx);
         int segment = row.get<int>(++idx);
         int ak = row.get<int>(++idx);
-        double startMz = row.get<double>(++idx);
-        double endMz = row.get<double>(++idx);
+        int startMz = row.get<int>(++idx);
+        int endMz = row.get<int>(++idx);
         double tic = row.get<double>(++idx);
         double bpi = row.get<double>(++idx);
         IonPolarity polarity = (IonPolarity) row.get<int>(++idx);

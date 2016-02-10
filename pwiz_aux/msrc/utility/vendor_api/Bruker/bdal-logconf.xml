@@ -1,0 +1,6 @@
+<bdal-logconf>
+  <sink name="console" class="bdal.logging.ConsoleSink"/>
+  <root level="FATAL">
+    <sink ref="console"/>
+  </root>
+</bdal-logconf>
