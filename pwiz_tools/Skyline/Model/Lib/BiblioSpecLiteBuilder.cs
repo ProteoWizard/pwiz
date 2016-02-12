@@ -50,6 +50,7 @@ namespace pwiz.Skyline.Model.Lib
         public const string EXT_PERCOLATOR_XML = "results.xml";
         public const string EXT_MAX_QUANT = "msms.txt";
         public const string EXT_WATERS_MSE = "final_fragment.csv";
+        public const string EXT_PROXL_XML = ".proxl.xml";
         // ReSharper restore NonLocalizedString
 
         private ReadOnlyCollection<string> _inputFiles;

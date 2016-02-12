@@ -54,6 +54,7 @@ namespace pwiz.Skyline.SettingsUI
             BiblioSpecLiteBuilder.EXT_PERCOLATOR_XML,
             BiblioSpecLiteBuilder.EXT_MAX_QUANT,
             BiblioSpecLiteBuilder.EXT_WATERS_MSE,
+            BiblioSpecLiteBuilder.EXT_PROXL_XML
         };
 
         private BiblioSpecLiteBuilder _builder;

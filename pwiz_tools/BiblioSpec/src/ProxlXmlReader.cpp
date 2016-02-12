@@ -249,7 +249,7 @@ void ProxlXmlReader::characters(const XML_Char *s, int len) {
 }
 
 double ProxlXmlReader::calcMass(const string& sequence) {
-    double sum = 0.0;
+    double sum = 2*aaMasses_['h'] + aaMasses_['o'];
     for (string::const_iterator i = sequence.begin(); i != sequence.end(); i++)
         sum += aaMasses_[*i];
     return sum;
