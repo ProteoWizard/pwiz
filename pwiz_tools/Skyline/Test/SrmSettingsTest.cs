@@ -341,34 +341,37 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void EnzymeDigestionTest()
         {
-            const string sequence = "FAHFAHPRFAHKPAHKAHMERMLST";
+            const string sequence = "KKRFAHFAHPRFAHKPAHKAHMERMLSTKKKRSTTKRK";
             var enzymeTrypsin = new Enzyme("Trypsin", "KR", "P");
-            DigestsTo(sequence, enzymeTrypsin, "FAHFAHPR", "FAHKPAHK", "AHMER", "MLST");
+            DigestsTo(sequence, false, enzymeTrypsin, "FAHFAHPR", "FAHKPAHK", "AHMER", "MLSTK", "STTK");
+            DigestsTo(sequence, true, enzymeTrypsin, "FAHKPAHK", "AHMER");
             var enzymeReverseTrypsin = new Enzyme("R-Trypsin", "KR", "P", SequenceTerminus.N);
-            DigestsTo(sequence, enzymeReverseTrypsin, "FAHFAHPRFAH", "KPAH", "KAHME", "RMLST");
+            DigestsTo(sequence, false, enzymeReverseTrypsin, "RFAHFAHPRFAH", "KPAH", "KAHME", "RMLST", "RSTT");
+            DigestsTo(sequence, true, enzymeReverseTrypsin, "KPAH", "KAHME");
             var enzymeUnrestrictedTrypsin = new Enzyme("U-Trypsin", "KR", null);
-            DigestsTo(sequence, enzymeUnrestrictedTrypsin, "FAHFAHPR", "FAHK", "PAHK", "AHMER", "MLST");
+            DigestsTo(sequence, false, enzymeUnrestrictedTrypsin, "FAHFAHPR", "FAHK", "PAHK", "AHMER", "MLSTK", "STTK");
+            DigestsTo(sequence, true, enzymeUnrestrictedTrypsin, "FAHK", "PAHK", "AHMER");
             var enzymeUnReverseTrypsin = new Enzyme("U-R-Trypsin", "KR", null, SequenceTerminus.N);
-            DigestsTo(sequence, enzymeUnReverseTrypsin, "FAHFAHP", "RFAH", "KPAH", "KAHME", "RMLST");
+            DigestsTo(sequence, false, enzymeUnReverseTrypsin, "RFAHFAHP", "RFAH", "KPAH", "KAHME", "RMLST", "RSTT");
+            DigestsTo(sequence, true, enzymeUnReverseTrypsin,"RFAH", "KPAH", "KAHME");
             var enzymeBothTrypsinR = new Enzyme("B-TrypsinR", "R", "P", "K", "P");
-            DigestsTo(sequence, enzymeBothTrypsinR, "FAHFAHPR", "FAH", "KPAH", "KAHMER", "MLST");
+            DigestsTo(sequence, false, enzymeBothTrypsinR, "KR", "FAHFAHPR", "FAH", "KPAH", "KAHMER", "MLST", "KR", "STT", "KR");
+            DigestsTo(sequence, true, enzymeBothTrypsinR, "KR", "FAHFAHPR", "FAH", "KPAH", "KAHMER", "STT", "KR");
             var enzymeBothTrypsinK = new Enzyme("B-TrypsinK", "K", "P", "R", "P");
-            DigestsTo(sequence, enzymeBothTrypsinK, "FAHFAHPRFAHKPAHK", "AHME", "RMLST");
+            DigestsTo(sequence, false, enzymeBothTrypsinK, "RFAHFAHPRFAHKPAHK", "AHME", "RMLSTK", "RSTTK", "RK");
+            DigestsTo(sequence, true, enzymeBothTrypsinK, "AHME", "RK");
             var enzymeUnrestrictedBothTrypsin = new Enzyme("U-B-Trypsin", "K", null, "R", null);
-            DigestsTo(sequence, enzymeUnrestrictedBothTrypsin, "FAHFAHP", "RFAHK", "PAHK", "AHME", "RMLST");
+            DigestsTo(sequence, false, enzymeUnrestrictedBothTrypsin, "RFAHFAHP", "RFAHK", "PAHK", "AHME", "RMLSTK", "RSTTK", "RK");
+            DigestsTo(sequence, true, enzymeUnrestrictedBothTrypsin, "RFAHK", "PAHK", "AHME", "RK");
         }
 
-        private static void DigestsTo(string sequence, Enzyme enzyme, params string[] pepSeqs)
+        private static void DigestsTo(string sequence, bool excludeRaggedEnds, Enzyme enzyme, params string[] pepSeqs)
         {
             var fastaSeq = new FastaSequence("p", "d", new ProteinMetadata[0], sequence);
-            var digestSettings = new DigestSettings(0, false);
-            var pepSeqEnum = pepSeqs.GetEnumerator();
-            foreach (var peptide in enzyme.Digest(fastaSeq, digestSettings))
-            {
-                Assert.IsTrue(pepSeqEnum.MoveNext());
-                Assert.AreEqual(pepSeqEnum.Current, peptide.Sequence);
-            }
-            Assert.IsFalse(pepSeqEnum.MoveNext());
+            var digestSettings = new DigestSettings(0, excludeRaggedEnds);
+            var peptides = string.Join(" ", enzyme.Digest(fastaSeq, digestSettings).Select(p => p.Sequence));
+            var expected = string.Join(" ", pepSeqs);
+            Assert.AreEqual(expected, peptides);
         }
 
         /// <summary>
