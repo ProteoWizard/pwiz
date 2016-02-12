@@ -50,7 +50,7 @@
             // 
             // helpTip
             // 
-            this.helpTip.AutoPopDelay = 15000;
+            this.helpTip.AutoPopDelay = 32767;
             this.helpTip.InitialDelay = 500;
             this.helpTip.ReshowDelay = 100;
             // 

@@ -87,7 +87,7 @@
             // 
             // toolTipControls
             // 
-            this.toolTipControls.AutoPopDelay = 10000;
+            this.toolTipControls.AutoPopDelay = 32767;
             this.toolTipControls.InitialDelay = 500;
             this.toolTipControls.ReshowDelay = 100;
             // 
