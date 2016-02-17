@@ -123,10 +123,10 @@ namespace pwiz.Skyline.Alerts
 
         private void SkippedReportErrorDlg_FormClosing(object sender, FormClosingEventArgs e)
         {
-            // If user closing form without clicking a button, call OkDialog non anonymous
+            // If user closing form without clicking a button, call OkDialog as anonymous
             if (e.CloseReason != CloseReason.None)
             {
-                if (!OkDialog(false))
+                if (!OkDialog(true))
                 {
                     e.Cancel = true;
                 }                
@@ -145,10 +145,10 @@ namespace pwiz.Skyline.Alerts
                     // ReSharper disable once UnusedVariable
                     var addr = new MailAddress(textBoxEmail.Text);
                 }
-                catch (Exception x)
+                catch (Exception)
                 {
                     textBoxEmail.Focus();
-                    MessageDlg.ShowWithException(this, Resources.SkippedReportErrorDlg_btnOK_Click_No_Email, x);
+                    MessageDlg.Show(this, Resources.SkippedReportErrorDlg_btnOK_Click_No_Email);
                     return false;
                 }
 

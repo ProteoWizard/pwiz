@@ -128,7 +128,9 @@
             this.Controls.Add(this.lblCommentBox);
             this.Controls.Add(this.textBoxMsg);
             this.Controls.Add(this.lblReportError);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = global::pwiz.Skyline.Properties.Resources.Skyline;
+            this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "DetailedReportErrorDlg";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.SkippedReportErrorDlg_FormClosing);
