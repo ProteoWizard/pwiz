@@ -18,6 +18,8 @@
  */
 
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
@@ -41,17 +43,26 @@ namespace pwiz.SkylineTest.Results
 
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
 
+            // Verify our use of explict RT where multiple nodes and multiple chromatograms all have same Q1>Q3
+            // This data set has three chromatograms with Q1=150 Q3=150 (one in negative ion mode), and 
+            // three transition nodes with that Q1>Q3 but different RTs (one with neg charge)
+            // Expected alignment: 
+            // function 65/ index 242 : RT 6.95 glutamate
+            // function 66/ index 243 : RT 7.95 glutamine (but no decent peak in the data, so it takes the 6.95 peak instead)
+            // function 197/ index 117 (neg ion mode): RT 6.4 alpha_ketogluterate
+            doTest(testFilesDir, "glutes.sky", null, new[] { "090215_033" }, null, new[] { 6.95, 6.95, 6.4 });
+
             // Verify our handling of two Q1>Q3 transitions with no RT overlap - formerly we just ignored one or the other though both are needed
             // As in https://skyline.gs.washington.edu/labkey/announcements/home/support/thread.view?entityId=924e3c51-7c00-1033-9ff1-da202582a252&_anchor=24723
-            doTest(testFilesDir, "lysine.sky", 13.8, new[] { "ESvKprosp_20151120_035", "ESvKprosp_20151120_036" }, .5);
+            doTest(testFilesDir, "lysine.sky", 13.8, new[] { "ESvKprosp_20151120_035", "ESvKprosp_20151120_036" }, .5, null);
 
             // Verify our use of explict RT in peak picking where the correct peak isn't the largest 
             // As in https://skyline.gs.washington.edu/labkey/announcements/home/support/thread.view?entityId=273ccc30-8258-1033-9ff1-da202582a252&_anchor=24774
-            doTest(testFilesDir, "test_b.sky", 9.1, new[] { "120315_120", "120315_121", "120315_125", "120315_126" }, null);
+            doTest(testFilesDir, "test_b.sky", 9.1, new[] { "120315_120", "120315_121", "120315_125", "120315_126" }, null, null);
 
         }
 
-        private static void doTest(TestFilesDir testFilesDir, string skyFile, double expectedRT, string[] filenames, double? expectedRatio)
+        private static void doTest(TestFilesDir testFilesDir, string skyFile, double? expectedRT, string[] filenames, double? expectedRatio, double[] expectedRTs)
         {
             string docPath;
             var document = InitExplicitRTDocument(testFilesDir, skyFile, out docPath);
@@ -67,17 +78,46 @@ namespace pwiz.SkylineTest.Results
             }
             var docResults = doc.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
             Assert.IsTrue(docContainer.SetDocument(docResults, doc, true));
+            while (!docContainer.Document.IsLoaded)
+            {
+                Thread.Sleep(100);
+            }
             docContainer.AssertComplete();
             document = docContainer.Document;
 
             float tolerance = (float) document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+            var infos = new List<ChromatogramGroupInfo[]>();
             foreach (var pair in document.MoleculePrecursorPairs)
             {
-                ChromatogramGroupInfo[] chromGroupInfo;
-                Assert.IsTrue(document.Settings.MeasuredResults.TryLoadChromatogram(0, pair.NodePep, pair.NodeGroup, tolerance,
-                    true, out chromGroupInfo));
-                Assert.IsTrue(document.Settings.MeasuredResults.TryLoadChromatogram(1, pair.NodePep, pair.NodeGroup, tolerance,
-                    true, out chromGroupInfo));
+                for (var f = 0; f < filenames.Length; f++)
+                {
+                    ChromatogramGroupInfo[] chromGroupInfo;
+                    Assert.IsTrue(document.Settings.MeasuredResults.TryLoadChromatogram(f, pair.NodePep, pair.NodeGroup, tolerance,
+                        true, out chromGroupInfo));
+                    infos.Add(chromGroupInfo);
+                }
+            }
+            if (expectedRTs != null)
+            {
+                for (int i = 0; i < infos.Count; i++)
+                {
+                    var chromatogramInfo = infos[i][0].GetTransitionInfo(0);
+                    var chromPeaks = chromatogramInfo.Peaks.ToList();
+                    if (expectedRTs[i] == 0) // Not expecting to find a good peak
+                    {
+                        var errmsg = chromatogramInfo.BestPeakIndex >= 0 ? string.Format("Did not expect to find a peak at RT {0} in {1} ", chromPeaks[chromatogramInfo.BestPeakIndex].RetentionTime, skyFile) : string.Empty;
+                        Assert.AreEqual(-1, chromatogramInfo.BestPeakIndex, errmsg);
+                    }
+                    else if (chromatogramInfo.BestPeakIndex == -1)
+                    {
+                        Assert.Fail("expected to find a peak at {0} in {1}", expectedRTs[i], skyFile);
+                    }
+                    else
+                    {
+                        var peakRT = chromPeaks[chromatogramInfo.BestPeakIndex].RetentionTime;
+                        Assert.AreEqual(expectedRTs[i], peakRT, 0.1, string.Format("Expected to find a peak at RT {0} in {1}", expectedRTs[i], skyFile));
+                    }
+                }
             }
             var nResults = 0;
             foreach (var nodePep in document.Molecules)
@@ -86,7 +126,10 @@ namespace pwiz.SkylineTest.Results
                 {
                     foreach (var result in results)
                     {
-                        Assert.AreEqual(expectedRT, result.RetentionTime ?? 0, .1); // We should pick peaks based on explicit RT
+                        if (expectedRT.HasValue)
+                        {
+                            Assert.AreEqual(expectedRT.Value, result.RetentionTime ?? 0, .1); // We should pick peaks based on explicit RT
+                        }
                         if (expectedRatio.HasValue) // If we didn't, ratios won't be right
                         {
                             Assert.IsNotNull(result.LabelRatios[0].Ratio);
@@ -96,7 +139,7 @@ namespace pwiz.SkylineTest.Results
                     }
                 }
             }
-            Assert.AreEqual(filenames.Length*document.MoleculeGroupCount, nResults);
+            Assert.AreEqual(filenames.Length*document.MoleculeCount, nResults);
 
             // Release file handles
             docContainer.Release();

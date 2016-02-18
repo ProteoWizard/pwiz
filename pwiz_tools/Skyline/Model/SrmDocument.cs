@@ -3314,7 +3314,8 @@ namespace pwiz.Skyline.Model
                 double massDiff = massCalc.GetModMass(sequence[mod.IndexAA], mod.Modification);
 
                 writer.WriteAttribute(ATTR.mass_diff,
-                                      string.Format("{0}{1}", (massDiff < 0 ? string.Empty : "+"), Math.Round(massDiff, 1))); // Not L10N
+                    string.Format(CultureInfo.InvariantCulture, "{0}{1}", (massDiff < 0 ? string.Empty : "+"),  // Not L10N
+                        Math.Round(massDiff, 1)));
 
                 writer.WriteEndElement();
             }
@@ -3375,7 +3376,8 @@ namespace pwiz.Skyline.Model
                 // modified sequence
                 var calcPre = Settings.GetPrecursorCalc(node.TransitionGroup.LabelType, nodePep.ExplicitMods);
                 string seq = node.TransitionGroup.Peptide.Sequence;
-                writer.WriteAttribute(ATTR.modified_sequence, calcPre.GetModifiedSequence(seq, true));
+                writer.WriteAttribute(ATTR.modified_sequence, calcPre.GetModifiedSequence(seq,
+                    false)); // formatNarrow = false; We want InvariantCulture, not the local format
             }
             else
             {

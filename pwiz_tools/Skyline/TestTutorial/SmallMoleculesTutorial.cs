@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -41,13 +42,13 @@ namespace pwiz.SkylineTestTutorial
             // Set true to look at tutorial screenshots.
             // IsPauseForScreenShots = true;
 
-            LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/SmallMolecule-3_1.pdf";
+            LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/SmallMolecule-3_5.pdf";
 
             TestFilesZipPaths = new []
             {
                 (UseRawFiles
-                   ? @"https://skyline.gs.washington.edu/tutorials/SmallMolecule.zip"
-                   : @"https://skyline.gs.washington.edu/tutorials/SmallMoleculeMzml.zip"),
+                   ? @"https://skyline.gs.washington.edu/tutorials/SmallMolecule_3_5.zip"
+                   : @"https://skyline.gs.washington.edu/tutorials/SmallMoleculeMzml_3_5.zip"),
                 @"TestTutorial\SmallMoleculeViews.zip"
             };
             RunFunctionalTest();
@@ -106,7 +107,7 @@ namespace pwiz.SkylineTestTutorial
 
                 var columnsOrdered = new[]
                 {
-                    // Molecule List Name,Precursor Name,Precursor Formula,Precursor Charge,Precursor RT,Precursor CE,Product m/z,Product Charge
+                    // Molecule List Name,Precursor Name,Precursor Formula,Precursor Charge,Precursor RT,Precursor CE,Product m/z,Product Charge, label type
                     PasteDlg.SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
                     PasteDlg.SmallMoleculeTransitionListColumnHeaders.namePrecursor,
                     PasteDlg.SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
@@ -114,13 +115,14 @@ namespace pwiz.SkylineTestTutorial
                     PasteDlg.SmallMoleculeTransitionListColumnHeaders.rtPrecursor,
                     PasteDlg.SmallMoleculeTransitionListColumnHeaders.cePrecursor,
                     PasteDlg.SmallMoleculeTransitionListColumnHeaders.mzProduct,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargeProduct
+                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargeProduct,
+                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.labelType
                 }.ToList();
                 RunUI(() => { pasteDlg.SetSmallMoleculeColumns(columnsOrdered); });
                 WaitForConditionUI(() => pasteDlg.GetUsableColumnCount() == columnsOrdered.Count);
                 PauseForScreenShot<PasteDlg>("Paste Dialog with selected and ordered columns", 4);
 
-                SetCsvFileClipboardText(GetTestPath("SMTutorial_TransitionList.csv"), true);
+                SetCsvFileClipboardText(GetTestPath("SMTutorial_TransitionList_HeavyLight.csv"), true);
                 RunUI(pasteDlg.PasteTransitions);
                 RunUI(pasteDlg.ValidateCells);
                 PauseForScreenShot<PasteDlg>("Paste Dialog with validated contents", 5);
@@ -128,7 +130,7 @@ namespace pwiz.SkylineTestTutorial
                 OkDialog(pasteDlg, pasteDlg.OkDialog);
                 var docTargets = WaitForDocumentChange(doc);
 
-                AssertEx.IsDocumentState(docTargets, null, 6, 19, 19, 21);
+                AssertEx.IsDocumentState(docTargets, null, 6, 12, 19, 21);
                 Assert.IsFalse(docTargets.MoleculeTransitions.Any(t => t.Transition.IsPrecursor()));
 
                 RunUI(() =>
@@ -165,23 +167,40 @@ namespace pwiz.SkylineTestTutorial
                 PauseForScreenShot<SkylineWindow>("Skyline window multi-target graph", 8);
 
                 var docResults = SkylineWindow.Document;
-                var expectedTransCount = new Dictionary<string, int>
+
+                var expectedTransCount = new Dictionary<string, int[]>
                 {
-                    {"ID15655_01_WAA263_3976_020415", 21},
-                    {"ID15657_01_WAA263_3976_020415", 21},
-                    {"ID15658_01_WAA263_3976_020415", 21},
-                    {"ID15662_01_WAA263_3976_020415", 21},
-                    {"ID15740_02_WAA263_3976_020415", 19},
-                    {"ID15741_01_WAA263_3976_020415", 21},
+                    // transition groups, heavy transition groups, tranistions, heavy transitions
+                    {"ID15656_01_WAA263_3976_020415", new[] {12, 5, 13, 6}},
+                    {"ID15658_01_WAA263_3976_020415", new[] {12, 6, 13, 7}},
+                    {"ID15659_01_WAA263_3976_020415", new[] {11, 7, 12, 8}},
+                    {"ID15661_01_WAA263_3976_020415", new[] {12, 7, 12, 8}},
+                    {"ID15662_01_WAA263_3976_020415", new[] {12, 7, 12, 8}},
+                    {"ID15663_01_WAA263_3976_020415", new[] {12, 7, 12, 8}},
+                    {"ID15664_01_WAA263_3976_020415", new[] {11, 6, 11, 7}},
+                    {"ID15739_01_WAA263_3976_020415", new[] {10, 6, 10, 7}},
+                    {"ID15740_01_WAA263_3976_020415", new[] {12, 6, 12, 7}},
+                    {"ID15740_02_WAA263_3976_020415", new[] {12, 5, 12, 6}},
+                    {"ID15740_04_WAA263_3976_020415", new[] {12, 6, 12, 7}},
+                    {"ID15741_01_WAA263_3976_020415", new[] {12, 7, 12, 8}},
+                    {"ID15741_02_WAA263_3976_020415", new[] {12, 6, 12, 7}}
                 };
+                var msg = "";
                 foreach (var chromatogramSet in docResults.Settings.MeasuredResults.Chromatograms)
                 {
-                    int trans;
-                    if (!expectedTransCount.TryGetValue(chromatogramSet.Name, out trans))
-                        trans = 20; // Most have this value
-                    AssertResult.IsDocumentResultsState(docResults, chromatogramSet.Name, 19, 19, 0, trans, 0);
+                    int[] transitions;
+                    if (!expectedTransCount.TryGetValue(chromatogramSet.Name, out transitions))
+                        transitions = new[] {12, 7, 13, 8}; // Most have this value
+                    try
+                    {
+                        AssertResult.IsDocumentResultsState(docResults, chromatogramSet.Name, 12, transitions[0], transitions[1], transitions[2], transitions[3]);
+                    }
+                    catch(Exception x)
+                    {
+                        msg += x.Message;
+                    }
                 }
-
+                Assert.IsTrue(string.IsNullOrEmpty(msg),msg);
                 RestoreViewOnScreen(9);
                 PauseForScreenShot<SkylineWindow>("Skyline window multi-replicate layout", 9);
             }

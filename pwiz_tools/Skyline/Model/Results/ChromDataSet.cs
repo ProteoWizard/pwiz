@@ -563,26 +563,15 @@ namespace pwiz.Skyline.Model.Results
                     continue;
                 }
 
-                var it0 = retentionTimes.IndexOf(t => chromData.RawTimes.First() <= t && t <= chromData.RawTimes.Last());
-                var it1 = retentionTimes.IndexOf(t => chromDataNext.RawTimes.First() <= t && t <= chromDataNext.RawTimes.Last());
-                if ((it0 != -1) != (it1 != -1))
+                if (retentionTimes.Length > 0) 
                 {
-                    // One or the other doesn't match timewise, easy choice
-                    if (it0 != -1)
-                    {
-                        _listChromData.RemoveAt(iNext); // Next in list is not in time range
-                    }
-                    else
-                    {
-                        _listChromData.RemoveAt(i); // Current is not in time range
-                    }
-                }
-                else if (it0 != -1)
-                {
+                    var it0 = retentionTimes.IndexOf(t => chromData.RawTimes.First() <= t && t <= chromData.RawTimes.Last());
+                    var it1 = retentionTimes.IndexOf(t => chromDataNext.RawTimes.First() <= t && t <= chromDataNext.RawTimes.Last());
                     // Pick the one that's best centered on predicted time (per Will T's suggestion)
-                    var t0 = retentionTimes[it0];
-                    var t1 = retentionTimes[it1];
-                    if (Math.Abs(t0 - chromData.RawCenterTime) <= Math.Abs(t1 - chromDataNext.RawCenterTime))
+                    // Actually that's not ideal, some chromatograms are mostly empty on one end or the other.  Look at the "center of gravity" instead.
+                    var t0 = retentionTimes[Math.Max(0, it0)]; // Raw times range might not include any expected RT
+                    var t1 = retentionTimes[Math.Max(0, it1)]; 
+                    if (Math.Abs(t0 - chromData.RawCenterOfGravityTime) <= Math.Abs(t1 - chromDataNext.RawCenterOfGravityTime))
                     {
                         _listChromData.RemoveAt(iNext);
                     }

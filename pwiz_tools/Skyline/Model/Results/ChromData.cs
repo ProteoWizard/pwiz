@@ -181,6 +181,22 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
+        /// Many chromatograms are largely empty at one end or the other, this finds the time at the center of gravity,
+        /// which is a cheap way of getting close to some big peak
+        /// </summary>
+        public float RawCenterOfGravityTime
+        {
+            get
+            {
+                var sum = RawIntensities.Sum();
+                if (sum <= 0)
+                    return RawCenterTime;
+                var mi = RawTimes.Zip(RawIntensities, (d1, d2) => d1 * d2).Sum();
+                return mi / sum;
+            }
+        }
+        
+        /// <summary>
         /// Time array shared by all transitions of a precursor, and on the
         /// same scale as all other precursors of a peptide.
         /// </summary>

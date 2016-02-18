@@ -322,6 +322,9 @@ namespace pwiz.Skyline.Model.Results
                                       float tolerance, out ChromGroupHeaderInfo5[] headerInfos)
         {
             float precursorMz = nodeGroup != null ? (float)nodeGroup.PrecursorMz : 0;
+            double? explicitRT = null;
+            if (nodePep != null && nodePep.ExplicitRetentionTime != null)
+                explicitRT = nodePep.ExplicitRetentionTime.RetentionTime;
             int i = FindEntry(precursorMz, tolerance);
             if (i == -1)
             {
@@ -330,13 +333,38 @@ namespace pwiz.Skyline.Model.Results
             }
 
             // Add entries to a list until they no longer match
+            // If there are multiple matches for mz, use explicit RT as a tiebreaker per replicate if available
             var listChromatograms = new List<ChromGroupHeaderInfo5>();
+            var dictReplicateBestRt = explicitRT.HasValue ? new Dictionary<int, double>() : null; // Find best RT match for each replicate
             for (; i < _chromatogramEntries.Length && MatchMz(precursorMz, _chromatogramEntries[i].Precursor, tolerance); i++)
             {
                 if (nodePep != null && !TextIdEqual(i, nodePep))
                     continue;
-
-                listChromatograms.Add(_chromatogramEntries[i]);
+                if (!explicitRT.HasValue)
+                {
+                    listChromatograms.Add(_chromatogramEntries[i]);
+                    continue;
+                }
+                // We have retention time info, use that in the match
+                var chromGroupHeaderInfo5 = _chromatogramEntries[i];
+                var rtPeak = GetPeak(chromGroupHeaderInfo5.StartPeakIndex + chromGroupHeaderInfo5.MaxPeakIndex).RetentionTime;
+                double currentClosestRtForReplicate;
+                if (!dictReplicateBestRt.TryGetValue(chromGroupHeaderInfo5.FileIndex, out currentClosestRtForReplicate))
+                {
+                    listChromatograms.Add(chromGroupHeaderInfo5);
+                    dictReplicateBestRt[chromGroupHeaderInfo5.FileIndex] = rtPeak;
+                }
+                else if (rtPeak == currentClosestRtForReplicate)
+                {
+                    listChromatograms.Add(chromGroupHeaderInfo5);  // Same mz, same RT, add them both
+                } 
+                else if (Math.Abs(rtPeak - explicitRT.Value) < Math.Abs(currentClosestRtForReplicate - explicitRT.Value))
+                {
+                    // Better RT match for this mz this replicate - remove previous matches from list
+                    listChromatograms.RemoveAll(c => Equals(c.FileIndex, chromGroupHeaderInfo5.FileIndex));
+                    listChromatograms.Add(chromGroupHeaderInfo5);
+                    dictReplicateBestRt[chromGroupHeaderInfo5.FileIndex] = rtPeak; 
+                }
             }
 
             headerInfos = listChromatograms.ToArray();
@@ -1404,7 +1432,7 @@ namespace pwiz.Skyline.Model.Results
                         ChromatogramEntries = listKeepEntries.ToArray(),
                         ChromTransitions = listKeepTransitions.ToArray(),
                         ChromatogramPeaks = new BlockedArray<ChromPeak>(
-                            count => ChromPeak.ReadArray(fsPeaks.FileStream.SafeFileHandle, count), peakCount,
+                            count => ChromPeak.ReadArray(fsPeaks.FileStream, count), peakCount,
                             ChromPeak.SizeOf, ChromPeak.DEFAULT_BLOCK_SIZE),
                         TextIdBytes = listKeepTextIdBytes.ToArray(),
                         ScoreTypes = scoreTypes,

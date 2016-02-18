@@ -1015,17 +1015,20 @@ namespace pwiz.Skyline.Model.Results
                     // Current transition and current chromatogram are an mz match
                     // If next chromatogram matches better, just advance in chromatogram list and continue
                     double delta = Math.Abs(tc.Mz - tt.Mz);
-                    MzIndexChromData tc2 = null;
+                    List<MzIndexChromData> tc2 = null;
                     // Handle the case where there are both ms1 and sim chromatograms
                     // Or where Q1-Q3 pair is selected more than once, probably with different RT windows
-                    if (icNext < cc)
+                    while (icNext < cc)
                     {
                         var tcNext = listMzIndexChromatograms[icNext];
-                        if (AreMatchingPrecursors(tc, tcNext) || AreMatchingFragments(tc, tcNext))
-                        {
-                            tc2 = tcNext;
-                            icNext++;
-                        }
+                        if (!AreMatchingPrecursors(tc, tcNext) && !AreMatchingFragments(tc, tcNext))
+                            break;
+
+                        if (tc2 == null)
+                            tc2 = new List<MzIndexChromData> {tcNext};
+                        else
+                            tc2.Add(tcNext);
+                        icNext++;
                     }
                     if (icNext < cc && delta > Math.Abs(listMzIndexChromatograms[icNext].Mz - tt.Mz))
                     {
@@ -1066,7 +1069,7 @@ namespace pwiz.Skyline.Model.Results
                    tc2.Chrom.Key.Source == ChromSource.fragment;
         }
 
-        private static int NextChrom(int ic, MzIndexChromData tc, MzIndexChromData tc2, MzTrans tt,
+        private static int NextChrom(int ic, MzIndexChromData tc, ICollection<MzIndexChromData> tc2List, MzTrans tt,
                                      ICollection<IndexChromDataTrans> listMatchingData)
         {
             // Make sure all chromatograms extracted from MS1 stay with the group regardless of whether
@@ -1082,12 +1085,13 @@ namespace pwiz.Skyline.Model.Results
                 // If there are two fragment chromatograms matching the same transition, add them
                 // both.  Likely they have different RT ranges and only one or the other is useful,
                 // but we don't have enough RT information at this point to make that decision.
-                if (tc2 != null)
+                if (tc2List != null)
                 {
-                    listMatchingData.Add(new IndexChromDataTrans(tc2.Index, tc2.Chrom, nodeTran));
+                    foreach (var tc2 in tc2List)
+                        listMatchingData.Add(new IndexChromDataTrans(tc2.Index, tc2.Chrom, nodeTran));
                 }
             }
-            return ic + (tc2 != null ? 2 : 1);
+            return ic + (tc2List != null ? tc2List.Count+1 : 1);
         }
 
         private class MzIndexChromData

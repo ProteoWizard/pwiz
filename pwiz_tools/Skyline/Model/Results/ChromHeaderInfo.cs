@@ -448,7 +448,7 @@ namespace pwiz.Skyline.Model.Results
         /// <param name="file">File handler returned from <see cref="FileStream.SafeFileHandle"/></param>
         /// <param name="count">Number of elements to read</param>
         /// <returns>New array of elements</returns>
-        public static unsafe ChromGroupHeaderInfo5[] ReadArray(SafeHandle file, int count)
+        private static unsafe ChromGroupHeaderInfo5[] ReadArray(SafeHandle file, int count)
         {
             ChromGroupHeaderInfo5[] results = new ChromGroupHeaderInfo5[count];
             fixed (ChromGroupHeaderInfo5* p = results)
@@ -557,7 +557,7 @@ namespace pwiz.Skyline.Model.Results
         /// <param name="file">File handler returned from <see cref="FileStream.SafeFileHandle"/></param>
         /// <param name="count">Number of elements to read</param>
         /// <returns>New array of elements</returns>
-        public static unsafe ChromTransition4[] ReadArray(SafeHandle file, int count)
+        private static unsafe ChromTransition4[] ReadArray(SafeHandle file, int count)
         {
             ChromTransition4[] results = new ChromTransition4[count];
             fixed (ChromTransition4* p = results)
@@ -737,7 +737,7 @@ namespace pwiz.Skyline.Model.Results
         /// <param name="file">File handler returned from <see cref="FileStream.SafeFileHandle"/></param>
         /// <param name="count">Number of elements to read</param>
         /// <returns>New array of elements</returns>
-        public static unsafe ChromTransition5[] ReadArray(SafeHandle file, int count)
+        private static unsafe ChromTransition5[] ReadArray(SafeHandle file, int count)
         {
             ChromTransition5[] results = new ChromTransition5[count];
             fixed (ChromTransition5* p = results)
@@ -937,7 +937,7 @@ namespace pwiz.Skyline.Model.Results
         /// <param name="file">File handler returned from <see cref="FileStream.SafeFileHandle"/></param>
         /// <param name="count">Number of elements to read</param>
         /// <returns>New array of elements</returns>
-        public static unsafe ChromTransition[] ReadArray(SafeHandle file, int count)
+        private static unsafe ChromTransition[] ReadArray(SafeHandle file, int count)
         {
             ChromTransition[] results = new ChromTransition[count];
             fixed (ChromTransition* p = results)
@@ -1231,7 +1231,7 @@ namespace pwiz.Skyline.Model.Results
         /// <param name="file">File handler returned from <see cref="FileStream.SafeFileHandle"/></param>
         /// <param name="count">Number of elements to read</param>
         /// <returns>New array of elements</returns>
-        public static unsafe ChromPeak[] ReadArray(SafeHandle file, int count)
+        private static unsafe ChromPeak[] ReadArray(SafeHandle file, int count)
         {
             ChromPeak[] results = new ChromPeak[count];
             if (count > 0)
