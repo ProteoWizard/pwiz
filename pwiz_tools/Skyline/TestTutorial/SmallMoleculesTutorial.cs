@@ -107,7 +107,7 @@ namespace pwiz.SkylineTestTutorial
 
                 var columnsOrdered = new[]
                 {
-                    // Molecule List Name,Precursor Name,Precursor Formula,Precursor Charge,Precursor RT,Precursor CE,Product m/z,Product Charge
+                    // Molecule List Name,Precursor Name,Precursor Formula,Precursor Charge,Precursor RT,Precursor CE,Product m/z,Product Charge, label type
                     PasteDlg.SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
                     PasteDlg.SmallMoleculeTransitionListColumnHeaders.namePrecursor,
                     PasteDlg.SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
@@ -183,8 +183,7 @@ namespace pwiz.SkylineTestTutorial
                     {"ID15740_02_WAA263_3976_020415", new[] {12, 5, 12, 6}},
                     {"ID15740_04_WAA263_3976_020415", new[] {12, 6, 12, 7}},
                     {"ID15741_01_WAA263_3976_020415", new[] {12, 7, 12, 8}},
-                    {"ID15741_02_WAA263_3976_020415", new[] {12, 6, 12, 7}},
-//                    {"ID15662_01_WAA263_3976_020415", new[] {12, 7, 13, 8}},
+                    {"ID15741_02_WAA263_3976_020415", new[] {12, 6, 12, 7}}
                 };
                 var msg = "";
                 foreach (var chromatogramSet in docResults.Settings.MeasuredResults.Chromatograms)
@@ -203,7 +202,6 @@ namespace pwiz.SkylineTestTutorial
                 }
                 Assert.IsTrue(string.IsNullOrEmpty(msg),msg);
                 RestoreViewOnScreen(9);
-PauseTest();
                 PauseForScreenShot<SkylineWindow>("Skyline window multi-replicate layout", 9);
             }
 
