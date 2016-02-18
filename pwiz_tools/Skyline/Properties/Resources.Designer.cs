@@ -2424,6 +2424,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to All of these peptides are known CiRT peptides. Would you like to use the predefined iRT values?.
+        /// </summary>
+        public static string CalibrateIrtDlg_OkDialog_All_of_these_peptides_are_known_CiRT_peptides__Would_you_like_to_use_the_predefined_iRT_values_ {
+            get {
+                return ResourceManager.GetString("CalibrateIrtDlg_OkDialog_All_of_these_peptides_are_known_CiRT_peptides__Would_you" +
+                        "_like_to_use_the_predefined_iRT_values_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The standard must have two fixed points..
         /// </summary>
         public static string CalibrateIrtDlg_OkDialog_The_standard_must_have_two_fixed_points {

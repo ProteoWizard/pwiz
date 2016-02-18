@@ -8905,4 +8905,7 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="SkylineWindow_AddStandardsToDocument_Add_standard_peptides" xml:space="preserve">
     <value>Add standard peptides</value>
   </data>
+  <data name="CalibrateIrtDlg_OkDialog_All_of_these_peptides_are_known_CiRT_peptides__Would_you_like_to_use_the_predefined_iRT_values_" xml:space="preserve">
+    <value>All of these peptides are known CiRT peptides. Would you like to use the predefined iRT values?</value>
+  </data>
 </root>

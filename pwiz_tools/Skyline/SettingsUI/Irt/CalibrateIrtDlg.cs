@@ -66,6 +66,37 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         public void OkDialog()
         {
+            var irts = IrtStandard.CIRT.Peptides.ToDictionary(p =>
+                SequenceMassCalc.NormalizeModifiedSequence(p.PeptideModSeq), p => p.Irt);
+            var calibrationPeptides = new List<Tuple<DbIrtPeptide, double>>();
+            foreach (var pep in StandardPeptideList)
+            {
+                double irt;
+                if (!irts.TryGetValue(SequenceMassCalc.NormalizeModifiedSequence(pep.Sequence), out irt))
+                    break;
+                calibrationPeptides.Add(new Tuple<DbIrtPeptide, double>(new DbIrtPeptide(pep.Sequence, irt, true, TimeSource.peak), pep.RetentionTime));
+            }
+            if (calibrationPeptides.Count == StandardPeptideList.Count)
+            {
+                var statStandard = new Statistics(calibrationPeptides.Select(p => p.Item1.Irt));
+                var statMeasured = new Statistics(calibrationPeptides.Select(p => p.Item2));
+                if (statStandard.R(statMeasured) >= RCalcIrt.MIN_IRT_TO_TIME_CORRELATION)
+                {
+                    var result = MultiButtonMsgDlg.Show(this,
+                        Resources.CalibrateIrtDlg_OkDialog_All_of_these_peptides_are_known_CiRT_peptides__Would_you_like_to_use_the_predefined_iRT_values_,
+                        MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, true);
+                    if (result == DialogResult.Cancel)
+                        return;
+
+                    if (result == DialogResult.Yes)
+                    {
+                        CalibrationPeptides = calibrationPeptides.Select(x => x.Item1).ToList();
+                        DialogResult = DialogResult.OK;
+                        return;
+                    }
+                }
+            }
+
             double minIrt;
             double maxIrt;
 
@@ -240,7 +271,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             public List<MeasuredPeptide> Recalculate(SrmDocument document, int peptideCount)
             {
-                var peps = FindEvenlySpacedPeptides(document, peptideCount);
+                var peps = FindBestPeptides(document, peptideCount);
 
                 Items.RaiseListChangedEvents = false;
                 try
@@ -266,6 +297,31 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 return peps;
             }
 
+            private static List<MeasuredPeptide> FindBestPeptides(SrmDocument doc, int peptideCount)
+            {
+                var docPeptides = new List<MeasuredPeptide>();
+                var cirtPeptides = new List<MeasuredPeptide>();
+                foreach (var pep in doc.Peptides)
+                {
+                    if (pep.SchedulingTime.HasValue && !pep.IsDecoy)
+                    {
+                        var seq = doc.Settings.GetModifiedSequence(pep);
+                        var schedulingTime = pep.SchedulingTime.Value;
+                        var measuredPeptide = new MeasuredPeptide(seq, schedulingTime);
+                        if (!IrtStandard.CIRT.Contains(seq))
+                            docPeptides.Add(measuredPeptide);
+                        else
+                            cirtPeptides.Add(measuredPeptide);
+                    }
+                }
+
+                if (cirtPeptides.Count >= peptideCount)
+                    return IrtPeptidePicker.Filter(cirtPeptides, peptideCount).ToList();
+
+                docPeptides.AddRange(cirtPeptides);
+                return FindEvenlySpacedPeptides(docPeptides, peptideCount);
+            }
+
             /// <summary>
             /// This algorithm will determine a number of evenly spaced retention times for the given document,
             /// and then determine an optimal set of peptides from the document. That is, a set of peptides that
@@ -273,30 +329,16 @@ namespace pwiz.Skyline.SettingsUI.Irt
             /// 
             /// The returned list is guaranteed to be sorted by retention time.
             /// </summary>
-            /// <param name="doc">An SrmDocument to get peptides from</param>
+            /// <param name="docPeptides">Peptides to choose from</param>
             /// <param name="peptideCount">The number of peptides desired</param>
-            private static List<MeasuredPeptide> FindEvenlySpacedPeptides(SrmDocument doc, int peptideCount)
+            private static List<MeasuredPeptide> FindEvenlySpacedPeptides(List<MeasuredPeptide> docPeptides, int peptideCount)
             {
-                double minRT = float.PositiveInfinity;
-                double maxRT = 0;
-                List<MeasuredPeptide> docPeptides = new List<MeasuredPeptide>();
-                foreach (var pep in doc.Peptides)
-                {
-                    if (pep.SchedulingTime.HasValue && !pep.IsDecoy)
-                    {
-                        docPeptides.Add(new MeasuredPeptide(doc.Settings.GetModifiedSequence(pep), pep.SchedulingTime.Value));
-
-                        if (pep.SchedulingTime.Value < minRT)
-                            minRT = pep.SchedulingTime.Value;
-                        if (pep.SchedulingTime.Value > maxRT)
-                            maxRT = pep.SchedulingTime.Value;
-                    }
-                }
-
-                docPeptides.Sort((one, two) => one.RetentionTime.CompareTo(two.RetentionTime));
-
+                docPeptides.Sort((x, y) => x.RetentionTime.CompareTo(y.RetentionTime));
                 if (docPeptides.Count == peptideCount)
                     return docPeptides;
+
+                var minRT = docPeptides.First().RetentionTime;
+                var maxRT = docPeptides.Last().RetentionTime;
 
                 /*
                  * This algorithm will pick the closest peptide to each "target RT" as defined
@@ -355,6 +397,155 @@ namespace pwiz.Skyline.SettingsUI.Irt
         }
 
         #endregion
+
+        public class IrtPeptidePicker
+        {
+            private List<Tuple<MeasuredPeptide, double>>[] _bins;
+
+            public const int BIN_FACTOR = 4;
+
+            public int BinCount { get { return _bins.Length; } }
+            public int PeptideCount { get { return _bins.Sum(bin => bin.Count); } }
+
+            public IEnumerable<MeasuredPeptide> MeasuredPeptides { get { return from bin in _bins from tuple in bin select tuple.Item1; } }
+            public IEnumerable<double> Irts { get { return from bin in _bins from tuple in bin select tuple.Item2; } }
+            public double R { get { return new Statistics(MeasuredPeptides.Select(p => p.RetentionTime)).R(new Statistics(Irts)); } }
+
+            public IrtPeptidePicker(IEnumerable<MeasuredPeptide> peptides)
+            {
+                var listMeasured = new List<MeasuredPeptide>();
+                var listIrt = new List<double>();
+
+                var irts = IrtStandard.CIRT.Peptides.ToDictionary(p =>
+                    SequenceMassCalc.NormalizeModifiedSequence(p.PeptideModSeq), p => p.Irt);
+
+                foreach (var peptide in peptides)
+                {
+                    var normalizedModSeq = SequenceMassCalc.NormalizeModifiedSequence(peptide.Sequence);
+                    double irtValue;
+                    if (irts.TryGetValue(normalizedModSeq, out irtValue))
+                    {
+                        listMeasured.Add(peptide);
+                        listIrt.Add(irtValue);
+                    }
+                }
+
+                _bins = listMeasured.Any()
+                    ? Bin(listMeasured, listIrt, listMeasured.Count/BIN_FACTOR)
+                    : new List<Tuple<MeasuredPeptide, double>>[0];
+            }
+
+            public static IEnumerable<MeasuredPeptide> Filter(IEnumerable<MeasuredPeptide> peptides, int numPeptides)
+            {
+                var picker = new IrtPeptidePicker(peptides);
+                picker.Filter(numPeptides);
+                return picker.MeasuredPeptides.OrderBy(p => p.RetentionTime);
+            }
+
+            public void Filter(int numPeptides)
+            {
+                while (PeptideCount > numPeptides)
+                {
+                    // Find bin with most peptides
+                    var bin = 0;
+                    var maxBinCount = 0;
+                    for (var i = 0; i < _bins.Length; i++)
+                    {
+                        if (_bins[i].Count > maxBinCount)
+                        {
+                            bin = i;
+                            maxBinCount = _bins[i].Count;
+                        }
+                    }
+                    // Attempt to remove outlier from bin with most peptides
+                    var outlier = OutlierCandidate(_bins[bin]);
+                    if (outlier == -1)
+                    {
+                        // If not successful re-bin with fewer bins or break if at 1
+                        if (_bins.Length == 1)
+                            return;
+                        Rebin(_bins.Length - 1);
+                        continue;
+                    }
+
+                    _bins[bin].RemoveAt(outlier);
+                }
+            }
+
+            private static int OutlierCandidate(IReadOnlyCollection<Tuple<MeasuredPeptide, double>> bin)
+            {
+                if (bin.Count == 1)
+                    return 0;
+                else if (bin.Count == 2)
+                    return -1;
+
+                // Drop one value and see which improves the correlation the most
+                var candidate = -1;
+                var bestCorrelation = double.MinValue;
+                for (var i = 0; i < bin.Count; i++)
+                {
+                    var thisIndex = i;
+                    var statMeasured = new Statistics(bin.Select(t => t.Item1).Where((x, j) => j != thisIndex).Select(p => p.RetentionTime));
+                    var statIrt = new Statistics(bin.Select(t => t.Item2).Where((x, j) => j != thisIndex));
+                    var correlation = statMeasured.R(statIrt);
+                    if (correlation > bestCorrelation)
+                    {
+                        candidate = i;
+                        bestCorrelation = correlation;
+                    }
+                }
+                return candidate;
+            }
+
+            private static List<Tuple<MeasuredPeptide, double>>[] Bin(IList<MeasuredPeptide> peptides, IList<double> irts, int numBins)
+            {
+                Assume.IsTrue(peptides.Count.Equals(irts.Count));
+                var rtMin = peptides.Min(p => p.RetentionTime);
+                var rtRange = peptides.Max(p => p.RetentionTime) - rtMin;
+
+                var bins = new List<Tuple<MeasuredPeptide, double>>[numBins];
+                for (var i = 0; i < numBins; i++)
+                    bins[i] = new List<Tuple<MeasuredPeptide, double>>();
+
+                for (var i = 0; i < peptides.Count; i++)
+                {
+                    var bin = (int) (numBins*(peptides[i].RetentionTime - rtMin)/rtRange);
+                    if (bin >= numBins)
+                        bin = numBins - 1;
+                    bins[bin].Add(new Tuple<MeasuredPeptide, double>(peptides[i], irts[i]));
+                }
+                return bins;
+            }
+
+            private void Rebin(int numBins)
+            {
+                double rtMin = double.MaxValue, rtMax = double.MinValue;
+                foreach (var rt in from oldBin in _bins from tuple in oldBin select tuple.Item1.RetentionTime)
+                {
+                    if (rt < rtMin)
+                        rtMin = rt;
+                    if (rt > rtMax)
+                        rtMax = rt;
+                }
+                var rtRange = rtMax - rtMin;
+
+                var bins = new List<Tuple<MeasuredPeptide, double>>[numBins];
+                for (var i = 0; i < numBins; i++)
+                    bins[i] = new List<Tuple<MeasuredPeptide, double>>();
+
+                foreach (var oldBin in _bins)
+                {
+                    foreach (var tuple in oldBin)
+                    {
+                        var bin = (int) (numBins*(tuple.Item1.RetentionTime - rtMin)/rtRange);
+                        if (bin >= numBins)
+                            bin = numBins - 1;
+                        bins[bin].Add(tuple);
+                    }
+                }
+                _bins = bins;
+            }
+        }
     }
 
     public class StandardPeptide : MeasuredPeptide

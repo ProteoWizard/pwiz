@@ -147,6 +147,7 @@
     <Compile Include="FullScanPrecursorTest.cs" />
     <Compile Include="InstrumentInfoUtilTest.cs" />
     <Compile Include="IonMobilityUnitTest.cs" />
+    <Compile Include="IrtPeptidePickerTest.cs" />
     <Compile Include="IsotypeModTest.cs" />
     <Compile Include="LibraryLoadTest.cs" />
     <Compile Include="LibrarySettingsTest.cs" />

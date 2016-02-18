@@ -76,8 +76,143 @@ namespace pwiz.Skyline.Model.Irt
                 MakePeptide("VSFLSALEEYTK",  106.32), // Not L10N
             });
 
+        public static readonly IrtStandard CIRT_SHORT = new IrtStandard("CiRT (iRT-C18)", "CiRT.sky", // Not L10N
+            new[] {
+                MakePeptide("DSYVGDEAQSK",                -14.83), // Not L10N
+                MakePeptide("AGFAGDDAPR",                  -8.72), // Not L10N
+                MakePeptide("ATAGDTHLGGEDFDNR",             5.18), // Not L10N
+                MakePeptide("VATVSLPR",                    13.40), // Not L10N
+                MakePeptide("ELISNASDALDK",                25.06), // Not L10N
+                MakePeptide("IGPLGLSPK",                   29.44), // Not L10N
+                MakePeptide("TTPSYVAFTDTER",               34.81), // Not L10N
+                MakePeptide("VC[+57.0]ENIPIVLC[+57.0]GNK", 54.97), // Not L10N
+                MakePeptide("DLTDYLMK",                    59.78), // Not L10N
+                MakePeptide("LGEHNIDVLEGNEQFINAAK",        60.00), // Not L10N
+                MakePeptide("SYELPDGQVITIGNER",            66.92), // Not L10N
+                MakePeptide("YFPTQALNFAFK",                93.51), // Not L10N
+                MakePeptide("SNYNFEKPFLWLAR",              93.98), // Not L10N
+                MakePeptide("DSTLIMQLLR",                 101.79), // Not L10N
+            });
+
+        public static readonly IrtStandard CIRT = new IrtStandard("CiRT", null, // Not L10N
+            new[] {
+                MakePeptide("ADTLDPALLRPGR",               35.99), // Not L10N
+                MakePeptide("AFEEAEK",                    -21.36), // Not L10N
+                MakePeptide("AFLIEEQK",                    22.80), // Not L10N
+                MakePeptide("AGFAGDDAPR",                  -9.82), // Not L10N
+                MakePeptide("AGLQFPVGR",                   37.05), // Not L10N
+                MakePeptide("AILGSVER",                     5.42), // Not L10N
+                MakePeptide("APGFGDNR",                   -15.63), // Not L10N
+                MakePeptide("AQIWDTAGQER",                 16.85), // Not L10N
+                MakePeptide("ATAGDTHLGGEDFDNR",             3.19), // Not L10N
+                MakePeptide("ATIGADFLTK",                  43.84), // Not L10N
+                MakePeptide("AVANQTSATFLR",                19.25), // Not L10N
+                MakePeptide("AVFPSIVGRPR",                 34.03), // Not L10N
+                MakePeptide("C[+57.0]ATITPDEAR",          -10.14), // Not L10N
+                MakePeptide("DAGTIAGLNVLR",                59.04), // Not L10N
+                MakePeptide("DAHQSLLATR",                  -3.25), // Not L10N
+                MakePeptide("DELTLEGIK",                   39.13), // Not L10N
+                MakePeptide("DLMAC[+57.0]AQTGSGK",          0.31), // Not L10N
+                MakePeptide("DLTDYLMK",                    60.01), // Not L10N
+                MakePeptide("DNIQGITKPAIR",                12.60), // Not L10N
+                MakePeptide("DNTGYDLK",                    -9.40), // Not L10N
+                MakePeptide("DSTLIMQLLR",                 103.65), // Not L10N
+                MakePeptide("DSYVGDEAQSK",                -15.51), // Not L10N
+                MakePeptide("DVQEIFR",                     29.62), // Not L10N
+                MakePeptide("DWNVDLIPK",                   70.54), // Not L10N
+                MakePeptide("EAYPGDVFYLHSR",               46.35), // Not L10N
+                MakePeptide("EC[+57.0]ADLWPR",             28.71), // Not L10N
+                MakePeptide("EDAANNYAR",                  -23.23), // Not L10N
+                MakePeptide("EGIPPDQQR",                  -15.84), // Not L10N
+                MakePeptide("EHAALEPR",                   -22.61), // Not L10N
+                MakePeptide("EIAQDFK",                     -4.05), // Not L10N
+                MakePeptide("EIQTAVR",                    -17.07), // Not L10N
+                MakePeptide("ELIIGDR",                     11.56), // Not L10N
+                MakePeptide("ELISNASDALDK",                23.50), // Not L10N
+                MakePeptide("EMVELPLR",                    47.97), // Not L10N
+                MakePeptide("ESTLHLVLR",                   28.54), // Not L10N
+                MakePeptide("EVDIGIPDATGR",                37.10), // Not L10N
+                MakePeptide("FDDGAGGDNEVQR",              -11.32), // Not L10N
+                MakePeptide("FDLMYAK",                     38.20), // Not L10N
+                MakePeptide("FDNLYGC[+57.0]R",              9.61), // Not L10N
+                MakePeptide("FEELC[+57.0]ADLFR",           73.50), // Not L10N
+                MakePeptide("FELSGIPPAPR",                 52.50), // Not L10N
+                MakePeptide("FELTGIPPAPR",                 53.10), // Not L10N
+                MakePeptide("FPFAANSR",                    18.76), // Not L10N
+                MakePeptide("FQSLGVAFYR",                  60.23), // Not L10N
+                MakePeptide("FTQAGSEVSALLGR",              61.45), // Not L10N
+                MakePeptide("FTVDLPK",                     37.86), // Not L10N
+                MakePeptide("FVIGGPQGDAGLTGR",             40.55), // Not L10N
+                MakePeptide("GC[+57.0]EVVVSGK",           -15.49), // Not L10N
+                MakePeptide("GEEILSGAQR",                  -1.81), // Not L10N
+                MakePeptide("GILFVGSGVSGGEEGAR",           51.15), // Not L10N
+                MakePeptide("GILLYGPPGTGK",                45.37), // Not L10N
+                MakePeptide("GIRPAINVGLSVSR",              37.98), // Not L10N
+                MakePeptide("GNHEC[+57.0]ASINR",          -23.57), // Not L10N
+                MakePeptide("GVC[+57.0]TEAGMYALR",         31.21), // Not L10N
+                MakePeptide("GVLLYGPPGTGK",                28.12), // Not L10N
+                MakePeptide("GVLMYGPPGTGK",                28.21), // Not L10N
+                MakePeptide("HFSVEGQLEFR",                 41.11), // Not L10N
+                MakePeptide("HITIFSPEGR",                  22.40), // Not L10N
+                MakePeptide("HLQLAIR",                      9.43), // Not L10N
+                MakePeptide("HLTGEFEK",                   -13.72), // Not L10N
+                MakePeptide("HVFGQAAK",                   -24.54), // Not L10N
+                MakePeptide("IC[+57.0]DFGLAR",             28.01), // Not L10N
+                MakePeptide("IC[+57.0]GDIHGQYYDLLR",       50.35), // Not L10N
+                MakePeptide("IETLDPALIRPGR",               43.43), // Not L10N
+                MakePeptide("IGGIGTVPVGR",                 21.90), // Not L10N
+                MakePeptide("IGLFGGAGVGK",                 43.29), // Not L10N
+                MakePeptide("IGPLGLSPK",                   29.48), // Not L10N
+                MakePeptide("IHETNLK",                    -25.54), // Not L10N
+                MakePeptide("IINEPTAAAIAYGLDK",            65.72), // Not L10N
+                MakePeptide("IYGFYDEC[+57.0]K",            31.70), // Not L10N
+                MakePeptide("KPLLESGTLGTK",                 9.06), // Not L10N
+                MakePeptide("LAEQAER",                    -25.09), // Not L10N
+                MakePeptide("LGANSLLDLVVFGR",             134.01), // Not L10N
+                MakePeptide("LIEDFLAR",                    56.93), // Not L10N
+                MakePeptide("LILIESR",                     28.15), // Not L10N
+                MakePeptide("LPLQDVYK",                    29.20), // Not L10N
+                MakePeptide("LQIWDTAGQER",                 36.29), // Not L10N
+                MakePeptide("LVIVGDGAC[+57.0]GK",          10.80), // Not L10N
+                MakePeptide("LVLVGDGGTGK",                 12.02), // Not L10N
+                MakePeptide("LYQVEYAFK",                   46.27), // Not L10N
+                MakePeptide("MLSC[+57.0]AGADR",           -15.49), // Not L10N
+                MakePeptide("NILGGTVFR",                   49.61), // Not L10N
+                MakePeptide("NIVEAAAVR",                    5.74), // Not L10N
+                MakePeptide("NLLSVAYK",                    34.34), // Not L10N
+                MakePeptide("NLQYYDISAK",                  25.80), // Not L10N
+                MakePeptide("NMSVIAHVDHGK",                -5.36), // Not L10N
+                MakePeptide("QAVDVSPLR",                   11.34), // Not L10N
+                MakePeptide("QTVAVGVIK",                    9.90), // Not L10N
+                MakePeptide("SAPSTGGVK",                  -27.57), // Not L10N
+                MakePeptide("SGQGAFGNMC[+57.0]R",           0.79), // Not L10N
+                MakePeptide("SNYNFEKPFLWLAR",              96.02), // Not L10N
+                MakePeptide("STELLIR",                     18.10), // Not L10N
+                MakePeptide("STTTGHLIYK",                  -9.49), // Not L10N
+                MakePeptide("SYELPDGQVITIGNER",            67.30), // Not L10N
+                MakePeptide("TIAMDGTEGLVR",                32.82), // Not L10N
+                MakePeptide("TIVMGASFR",                   29.53), // Not L10N
+                MakePeptide("TLSDYNIQK",                    4.35), // Not L10N
+                MakePeptide("TTIFSPEGR",                   15.18), // Not L10N
+                MakePeptide("TTPSYVAFTDTER",               33.80), // Not L10N
+                MakePeptide("TTVEYLIK",                    30.17), // Not L10N
+                MakePeptide("VAVVAGYGDVGK",                15.33), // Not L10N
+                MakePeptide("VC[+57.0]ENIPIVLC[+57.0]GNK", 49.07), // Not L10N
+                MakePeptide("VLPSIVNEVLK",                 83.75), // Not L10N
+                MakePeptide("VPAINVNDSVTK",                17.71), // Not L10N
+                MakePeptide("VSTEVDAR",                   -20.14), // Not L10N
+                MakePeptide("VVPGYGHAVLR",                  8.62), // Not L10N
+                MakePeptide("WPFWLSPR",                    98.38), // Not L10N
+                MakePeptide("YAWVLDK",                     41.60), // Not L10N
+                MakePeptide("YDSTHGR",                    -57.06), // Not L10N
+                MakePeptide("YFPTQALNFAFK",                95.40), // Not L10N
+                MakePeptide("YLVLDEADR",                   27.69), // Not L10N
+                MakePeptide("YPIEHGIVTNWDDMEK",            56.90), // Not L10N
+                MakePeptide("YTQSNSVC[+57.0]YAK",         -12.79), // Not L10N
+            });
+
         public static readonly ImmutableList<IrtStandard> ALL = ImmutableList.ValueOf(new[] {
-            NULL, BIOGNOSYS, PIERCE, SIGMA, APOA1
+            NULL, BIOGNOSYS, PIERCE, SIGMA, APOA1, CIRT_SHORT
         });
 
         public IrtStandard(string name, string skyFile, IEnumerable<DbIrtPeptide> peptides)
@@ -130,6 +265,11 @@ namespace pwiz.Skyline.Model.Irt
             return ContainsMatch(Peptides, peptide, irtTolerance);
         }
 
+        public bool Contains(string peptideModSeq)
+        {
+            return ContainsMatch(Peptides, peptideModSeq);
+        }
+
         private DbIrtPeptide MatchingStandard(DbIrtPeptide peptide, double? irtTolerance)
         {
             return Peptides.FirstOrDefault(p => Match(peptide, p, irtTolerance));
@@ -140,9 +280,20 @@ namespace pwiz.Skyline.Model.Irt
             return peptides.Any(p => Match(p, peptide, irtTolerance));
         }
 
+        public static bool ContainsMatch(IEnumerable<DbIrtPeptide> peptides, string peptideModSeq)
+        {
+            return peptides.Any(p => Match(p, peptideModSeq));
+        }
+
         public static bool Match(DbIrtPeptide x, DbIrtPeptide y, double? irtTolerance)
         {
-            return Equals(x.PeptideModSeq, y.PeptideModSeq) && (!irtTolerance.HasValue || Math.Abs(x.Irt - y.Irt) < irtTolerance.Value);
+            return Equals(SequenceMassCalc.NormalizeModifiedSequence(x.PeptideModSeq), SequenceMassCalc.NormalizeModifiedSequence(y.PeptideModSeq)) &&
+                   (!irtTolerance.HasValue || Math.Abs(x.Irt - y.Irt) < irtTolerance.Value);
+        }
+
+        public static bool Match(DbIrtPeptide x, string peptideModSeq)
+        {
+            return Equals(x.PeptideModSeq, peptideModSeq);
         }
 
         /// <summary>
