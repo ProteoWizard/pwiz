@@ -19,6 +19,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
@@ -77,6 +78,10 @@ namespace pwiz.SkylineTest.Results
             }
             var docResults = doc.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
             Assert.IsTrue(docContainer.SetDocument(docResults, doc, true));
+            while (!docContainer.Document.IsLoaded)
+            {
+                Thread.Sleep(100);
+            }
             docContainer.AssertComplete();
             document = docContainer.Document;
 
