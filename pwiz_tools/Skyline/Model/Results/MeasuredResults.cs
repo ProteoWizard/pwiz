@@ -530,6 +530,8 @@ namespace pwiz.Skyline.Model.Results
             // TODO: But it messes up when there are 2 sets of transitions for
             //       the same precursor covering different numbers of transitions.
             //       Skyline never creates this case, but it has been reported
+            // In small molecule SRM, it's not at all unusual to have the same Q1>Q3
+            // pair repeatedly, at different retention times, so we use explicit RT to disambiguate if available
             int maxTranMatch = 1;
 
             var listChrom = new List<ChromatogramGroupInfo>();
