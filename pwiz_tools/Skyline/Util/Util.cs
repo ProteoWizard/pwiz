@@ -1675,6 +1675,13 @@ namespace pwiz.Skyline.Util
 
     public static class ParallelEx
     {
+        // This can be set to true to make debugging easier.
+        public const bool SINGLE_THREADED = false;
+
+        private static readonly ParallelOptions PARALLEL_OPTIONS = new ParallelOptions
+        {
+            MaxDegreeOfParallelism = SINGLE_THREADED ? 1 : -1
+        };
         public static void For(int fromInclusive, int toExclusive, Action<int> body, Action<AggregateException> catchClause = null)
         {
             Action<int> localBody = i =>
@@ -1682,7 +1689,7 @@ namespace pwiz.Skyline.Util
                 LocalizationHelper.InitThread(); // Ensure appropriate culture
                 body(i);
             };
-            LoopWithExceptionHandling(() => Parallel.For(fromInclusive, toExclusive, localBody), catchClause);
+            LoopWithExceptionHandling(() => Parallel.For(fromInclusive, toExclusive, PARALLEL_OPTIONS, localBody), catchClause);
         }
 
         public static void ForEach<TSource>(IEnumerable<TSource> source, Action<TSource> body, Action<AggregateException> catchClause = null)
@@ -1692,7 +1699,7 @@ namespace pwiz.Skyline.Util
                 LocalizationHelper.InitThread(); // Ensure appropriate culture
                 body(o);
             };
-            LoopWithExceptionHandling(() => Parallel.ForEach(source, localBody), catchClause);
+            LoopWithExceptionHandling(() => Parallel.ForEach(source, PARALLEL_OPTIONS, localBody), catchClause);
         }
 
         private static void LoopWithExceptionHandling(Action loop, Action<AggregateException> catchClause)
