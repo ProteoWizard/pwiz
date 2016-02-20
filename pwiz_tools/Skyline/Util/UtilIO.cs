@@ -1112,7 +1112,14 @@ namespace pwiz.Skyline.Util
         {
             if (_stream != null)
             {
-                _stream.Close();
+                try
+                {
+                    _stream.Close();
+                }
+                catch (Exception e)
+                {
+                    Trace.TraceWarning("Exception in FileSaver.Dispose: {0}", e); // Not L10N
+                }
                 _stream = null;
             }
 
