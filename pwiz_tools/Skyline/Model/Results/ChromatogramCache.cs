@@ -335,7 +335,7 @@ namespace pwiz.Skyline.Model.Results
             // Add entries to a list until they no longer match
             // If there are multiple matches for mz, use explicit RT as a tiebreaker per replicate if available
             var listChromatograms = new List<ChromGroupHeaderInfo5>();
-            var dictReplicateBestRt = explicitRT.HasValue ? new Dictionary<int, double>() : null; // Find best RT match for each replicate
+            var dictReplicateBestRt = explicitRT.HasValue ? new Dictionary<int, double?>() : null; // Find best RT match for each replicate
             for (; i < _chromatogramEntries.Length && MatchMz(precursorMz, _chromatogramEntries[i].Precursor, tolerance); i++)
             {
                 if (nodePep != null && !TextIdEqual(i, nodePep))
@@ -345,30 +345,50 @@ namespace pwiz.Skyline.Model.Results
                     listChromatograms.Add(_chromatogramEntries[i]);
                     continue;
                 }
-                // We have retention time info, use that in the match
+                // We have retention time info and picked peaks, use that in the match
                 var chromGroupHeaderInfo5 = _chromatogramEntries[i];
-                var rtPeak = GetPeak(chromGroupHeaderInfo5.StartPeakIndex + chromGroupHeaderInfo5.MaxPeakIndex).RetentionTime;
-                double currentClosestRtForReplicate;
+                // CONSIDER: This makes it so that chromatograms without an peak data will
+                //           only be selected for molecules with explicit RT when there is
+                //           no other option. Ideally, if ChromGroupHeaderInfo5 contained
+                //           the start and end RT for the chromatograms, we would pick based
+                //           on that.
+                double? peakRT = null;
+                if (chromGroupHeaderInfo5.MaxPeakIndex != -1)
+                    peakRT = GetPeak(chromGroupHeaderInfo5.StartPeakIndex + chromGroupHeaderInfo5.MaxPeakIndex).RetentionTime;
+                double? currentClosestRtForReplicate;
                 if (!dictReplicateBestRt.TryGetValue(chromGroupHeaderInfo5.FileIndex, out currentClosestRtForReplicate))
                 {
                     listChromatograms.Add(chromGroupHeaderInfo5);
-                    dictReplicateBestRt[chromGroupHeaderInfo5.FileIndex] = rtPeak;
+                    dictReplicateBestRt[chromGroupHeaderInfo5.FileIndex] = peakRT;
                 }
-                else if (rtPeak == currentClosestRtForReplicate)
+                else if (peakRT == currentClosestRtForReplicate)
                 {
                     listChromatograms.Add(chromGroupHeaderInfo5);  // Same mz, same RT, add them both
                 } 
-                else if (Math.Abs(rtPeak - explicitRT.Value) < Math.Abs(currentClosestRtForReplicate - explicitRT.Value))
+                else if (IsCloserRT(peakRT, currentClosestRtForReplicate, explicitRT.Value))
                 {
                     // Better RT match for this mz this replicate - remove previous matches from list
                     listChromatograms.RemoveAll(c => Equals(c.FileIndex, chromGroupHeaderInfo5.FileIndex));
                     listChromatograms.Add(chromGroupHeaderInfo5);
-                    dictReplicateBestRt[chromGroupHeaderInfo5.FileIndex] = rtPeak; 
+                    dictReplicateBestRt[chromGroupHeaderInfo5.FileIndex] = peakRT; 
                 }
             }
 
             headerInfos = listChromatograms.ToArray();
             return headerInfos.Length > 0;
+        }
+
+        private static bool IsCloserRT(double? peakRT, double? currentClosestRT, double expectedRT)
+        {
+            return CalcDeltaRT(peakRT, expectedRT) < CalcDeltaRT(currentClosestRT, expectedRT);
+        }
+
+        private static double CalcDeltaRT(double? peakRT, double expectedRT)
+        {
+            if (!peakRT.HasValue)
+                return double.MaxValue;
+
+            return Math.Abs(peakRT.Value - expectedRT);
         }
 
         private bool TextIdEqual(int entryIndex, PeptideDocNode nodePep)
