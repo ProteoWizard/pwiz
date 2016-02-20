@@ -52,7 +52,7 @@ namespace pwiz.Skyline.Model.Results
         private readonly RetentionTimePredictor _retentionTimePredictor;
         private readonly Dictionary<string, int> _dictSequenceToByteIndex = new Dictionary<string, int>();
 
-        private const int SCORING_THREADS = ParallelEx.SINGLE_THREADED ? 1 : 4;
+        private readonly int SCORING_THREADS = ParallelEx.SINGLE_THREADED ? 1 : 4;
         //private static readonly Log LOG = new Log<ChromCacheBuilder>();
 
         public ChromCacheBuilder(SrmDocument document, ChromatogramCache cacheRecalc,

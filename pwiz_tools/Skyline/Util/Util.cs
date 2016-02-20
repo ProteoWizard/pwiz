@@ -1676,7 +1676,7 @@ namespace pwiz.Skyline.Util
     public static class ParallelEx
     {
         // This can be set to true to make debugging easier.
-        public const bool SINGLE_THREADED = false;
+        public static readonly bool SINGLE_THREADED = false;
 
         private static readonly ParallelOptions PARALLEL_OPTIONS = new ParallelOptions
         {
