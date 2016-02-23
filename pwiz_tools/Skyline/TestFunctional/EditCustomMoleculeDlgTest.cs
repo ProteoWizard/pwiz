@@ -427,6 +427,7 @@ namespace pwiz.SkylineTestFunctional
         private static void TestAddingSmallMolecule()
         {
             RunUI(() => SkylineWindow.SelectedPath = new IdentityPath(SkylineWindow.Document.MoleculeGroups.ElementAt(0).Id));
+            var doc = SkylineWindow.Document;
             var moleculeDlg = ShowDialog<EditCustomMoleculeDlg>(SkylineWindow.AddSmallMolecule);
             const int charge = 1;
             RunUI(() =>
@@ -437,7 +438,7 @@ namespace pwiz.SkylineTestFunctional
             });
             OkDialog(moleculeDlg, moleculeDlg.OkDialog);
             var compareIon = new DocNodeCustomIon(COOO13H, COOO13H);
-            var newDoc = SkylineWindow.Document;
+            var newDoc = WaitForDocumentChange(doc);
             Assert.AreEqual(compareIon, newDoc.Molecules.ElementAt(0).CustomIon);
             Assert.AreEqual(compareIon, newDoc.MoleculeTransitionGroups.ElementAt(0).CustomIon);
             Assert.AreEqual(charge, newDoc.MoleculeTransitionGroups.ElementAt(0).PrecursorCharge);

@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -315,5 +316,23 @@ namespace pwiz.SkylineTestUtil
             }
             return maxTime;
         }        
+    }
+
+    public class SilentProgressMonitor : IProgressMonitor
+    {
+        public bool IsCanceled
+        {
+            get { return false; }
+        }
+
+        public UpdateProgressResponse UpdateProgress(ProgressStatus status)
+        {
+            return UpdateProgressResponse.normal;
+        }
+
+        public bool HasUI
+        {
+            get { return false; }
+        }
     }
 }

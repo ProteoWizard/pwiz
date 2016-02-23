@@ -493,9 +493,7 @@ namespace pwiz.SkylineTest.Results
 
             // Optimizing should shrink the cache
             var results = docNoCacheChange2.Settings.MeasuredResults.OptimizeCache(docPath, streamManager);
-            var docOptimized = new SrmDocument(docNoCacheChange2,
-                                               docNoCacheChange2.Settings.ChangeMeasuredResults(results),
-                                               docNoCacheChange2.Children);
+            var docOptimized = docNoCacheChange2.ChangeSettings(docNoCacheChange2.Settings.ChangeMeasuredResults(results));
             // This should not cause a reload
             Assert.IsTrue(docContainer.SetDocument(docOptimized, docNoCacheChange2, false));
 

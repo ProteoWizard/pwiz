@@ -25,7 +25,6 @@ using System.Text;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
-using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
@@ -182,28 +181,12 @@ namespace pwiz.SkylineTest.Results
                 {
                     var sharePath = testFilesDir.GetTestPath(complete==1?"share_complete.zip":"share_minimized.zip");
                     var share = new SrmDocumentSharing(document, docPath, sharePath, complete==1);
-                    using (var longWaitDlg = new LongWaitDlg
-                    { 
-                        // ReSharper disable once LocalizableElement
-                        Text = "unit test WatersImsTest -- sharing document",
-                    })
-                    {
-                        longWaitDlg.PerformWork(null, 1000, share.Share);
-                        Assert.IsFalse(longWaitDlg.IsCanceled);
-                    } 
+                    share.Share(new SilentProgressMonitor());
 
                     var files = share.ListEntries().ToArray();
                     Assert.IsTrue(files.Contains(withDriftTimePredictor ? "scaled.imdb" : "mse-mobility.filtered-scaled.blib"));
                     // And round trip it to make sure we haven't left out any new features in minimized imdb or blib files
-                    using (var longWaitDlg = new LongWaitDlg
-                    {
-                        // ReSharper disable once LocalizableElement
-                        Text = "unit test WatersImsTest",
-                    })
-                    {
-                        longWaitDlg.PerformWork(null, 1000, share.Extract);
-                        Assert.IsFalse(longWaitDlg.IsCanceled);
-                    }
+                    share.Extract(new SilentProgressMonitor());
                     using (TextReader reader = new StreamReader(share.DocumentPath))
                     {
                         XmlSerializer documentSerializer = new XmlSerializer(typeof(SrmDocument));

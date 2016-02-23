@@ -258,14 +258,14 @@ namespace pwiz.Skyline.Model
             Settings = settings;
         }
 
-        public SrmDocument(SrmDocument doc, SrmSettings settings, IList<DocNode> children)
+        private SrmDocument(SrmDocument doc, SrmSettings settings, IList<DocNode> children)
             : base(doc.Id, Annotations.EMPTY, children, false)
         {
             FormatVersion = doc.FormatVersion;
             RevisionIndex = doc.RevisionIndex + 1;
             UserRevisionIndex = doc.UserRevisionIndex;
             Settings = settings;
-            CheckIsProteinMetadataComplete();
+            IsProteinMetadataPending = CalcIsProteinMetadataPending();
         }
 
         public override AnnotationDef.AnnotationTarget AnnotationTarget { 
@@ -579,11 +579,11 @@ namespace pwiz.Skyline.Model
                         : PeptidePrediction.SchedulingStrategy.all_variable_window);
         }
 
-        private void CheckIsProteinMetadataComplete()
+        private bool CalcIsProteinMetadataPending()
         {
             // Non proteomic molecules never do protein metadata searches
             var unsearched = (from pg in PeptideGroups where pg.ProteinMetadata.NeedsSearch() select pg);
-            IsProteinMetadataPending = unsearched.Any();
+            return unsearched.Any();
         }
 
         public SrmDocument IncrementUserRevisionIndex()
@@ -608,7 +608,7 @@ namespace pwiz.Skyline.Model
             docClone.Settings = Settings.CachePeptideStandards(Children, docClone.Children);
 
             // Note protein metadata readiness
-            docClone.CheckIsProteinMetadataComplete();
+            docClone.IsProteinMetadataPending = docClone.CalcIsProteinMetadataPending();
 
             // If this document has associated results, update the results
             // for any peptides that have changed.
@@ -1896,7 +1896,7 @@ namespace pwiz.Skyline.Model
 
                 SetChildren(UpdateResultsSummaries(children, new Dictionary<int, PeptideDocNode>()));
 
-                CheckIsProteinMetadataComplete(); // Background loaders are about to kick in, they need this info.
+                IsProteinMetadataPending = CalcIsProteinMetadataPending(); // Background loaders are about to kick in, they need this info.
             }
         }
 

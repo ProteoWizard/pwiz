@@ -406,7 +406,7 @@ namespace pwiz.Skyline.EditUI
                                  ? docNode
                                  : ExcludePeptides((PeptideGroupDocNode) docNode));
             }
-            return new SrmDocument(srmDocument, srmDocument.Settings, children);
+            return (SrmDocument) srmDocument.ChangeChildrenChecked(children);
         }
 
         private PeptideGroupDocNode ExcludePeptides(PeptideGroupDocNode peptideGroupDocNode)
