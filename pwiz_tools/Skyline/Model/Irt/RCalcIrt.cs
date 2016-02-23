@@ -166,7 +166,7 @@ namespace pwiz.Skyline.Model.Irt
                 var maxDistance = 0.0;
                 for (var i = 0; i < listDependent.Count; i++)
                 {
-                    var distance = Math.Abs(line.GetY(listDependent[i]) - listIndependent[i]);
+                    var distance = Math.Abs(line.GetY(listIndependent[i]) - listDependent[i]);
                     if (distance > maxDistance)
                     {
                         furthest = i;
