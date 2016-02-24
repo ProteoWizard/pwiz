@@ -124,6 +124,8 @@ namespace pwiz.Skyline
                     _out.WriteLine(Resources.CommandLine_Run_Not_setting_library_);
             }
 
+            WaitForDocumentLoaded();
+
             if (commandArgs.ImportingFasta && !commandArgs.ImportingSearch)
             {
                 try
@@ -203,15 +205,7 @@ namespace pwiz.Skyline
                 }
             }
 
-            if (_doc != null && !_doc.IsLoaded)
-            {
-                IProgressMonitor progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
-                using (var docContainer = new ResultsMemoryDocumentContainer(null, _skylineFile) { ProgressMonitor = progressMonitor })
-                {
-                    docContainer.SetDocument(_doc, null, true);
-                    _doc = docContainer.Document;
-                }
-            }
+            WaitForDocumentLoaded();
 
             if (commandArgs.RemovingResults && commandArgs.RemoveBeforeDate.HasValue)
             {
@@ -302,6 +296,19 @@ namespace pwiz.Skyline
                 else
                 {
                     _out.WriteLine(Resources.CommandLine_Run_No_new_results_added__Skipping_Panorama_import_);  
+                }
+            }
+        }
+
+        private void WaitForDocumentLoaded()
+        {
+            if (_doc != null && !_doc.IsLoaded)
+            {
+                IProgressMonitor progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
+                using (var docContainer = new ResultsMemoryDocumentContainer(null, _skylineFile) { ProgressMonitor = progressMonitor })
+                {
+                    docContainer.SetDocument(_doc, null, true);
+                    _doc = docContainer.Document;
                 }
             }
         }
