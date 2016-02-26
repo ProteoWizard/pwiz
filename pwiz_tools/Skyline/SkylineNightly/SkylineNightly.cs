@@ -33,7 +33,7 @@ namespace SkylineNightly
             InitializeComponent();
             startTime.Value = DateTime.Parse(Settings.Default.StartTime);
             textBoxFolder.Text = Settings.Default.NightlyFolder;
-            includePerfTests.Checked = Settings.Default.PerfTests;
+            comboBoxOptions.SelectedIndex = Settings.Default.ReleaseBranch ? 2 : (Settings.Default.PerfTests ? 1 : 0);
             if (string.IsNullOrEmpty(textBoxFolder.Text))
                 textBoxFolder.Text = Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
@@ -64,7 +64,8 @@ namespace SkylineNightly
             if (!Directory.Exists(nightlyFolder))
                 Directory.CreateDirectory(nightlyFolder);
             Settings.Default.NightlyFolder = nightlyFolder;
-            Settings.Default.PerfTests = includePerfTests.Checked;
+            Settings.Default.PerfTests = comboBoxOptions.SelectedIndex > 0;
+            Settings.Default.ReleaseBranch = comboBoxOptions.SelectedIndex > 1;
             Settings.Default.Save();
 
             // Create new scheduled task to run the nightly build.
@@ -91,7 +92,20 @@ namespace SkylineNightly
 
                     // Add an action that will launch SkylineTester whenever the trigger fires
                     var assembly = Assembly.GetExecutingAssembly();
-                    td.Actions.Add(new ExecAction(assembly.Location, includePerfTests.Checked ? Program.SCHEDULED_PERFTESTS_ARG : Program.SCHEDULED_ARG)); // Not L10N
+                    string arg;
+                    switch (comboBoxOptions.SelectedIndex)
+                    {
+                        default:
+                            arg = Program.SCHEDULED_ARG;
+                            break;
+                        case 1:
+                            arg = Program.SCHEDULED_PERFTESTS_ARG;
+                            break;
+                        case 2:
+                            arg = Program.SCHEDULED_RELEASE_BRANCH_ARG;
+                            break;
+                    }
+                    td.Actions.Add(new ExecAction(assembly.Location, arg)); // Not L10N
 
                     // Register the task in the root folder
                     ts.RootFolder.RegisterTaskDefinition(Nightly.NIGHTLY_TASK_NAME, td);

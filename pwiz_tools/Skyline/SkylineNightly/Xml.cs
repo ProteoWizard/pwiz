@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Xml;
 
 namespace SkylineNightly
@@ -26,7 +27,16 @@ namespace SkylineNightly
     /// </summary>
     public class Xml
     {
-        private readonly XmlNode _root;
+        private readonly XmlNode _rootNode;
+
+        private XmlNode GetRoot()
+        {
+            if (_rootNode == null)
+            {
+                throw new Exception("XML root node is null"); // Not L10N
+            }
+            return _rootNode;
+        }
 
         // Load from XML string.
         public static Xml FromString(string xmlString)
@@ -40,38 +50,38 @@ namespace SkylineNightly
         public Xml(string root)
         {
             var doc = new XmlDocument();
-            _root = doc.CreateElement(root);
-            doc.AppendChild(_root);
+            _rootNode = doc.CreateElement(root);
+            doc.AppendChild(GetRoot());
         }
 
         // Create from node.
         private Xml(XmlNode root)
         {
-            _root = root;
+            _rootNode = root;
         }
 
         // Set the value of the element.
         public void Set(string value)
         {
-            _root.InnerText = value;
+            GetRoot().InnerText = value;
         }
 
         public string Value
         {
-            get { return _root.InnerText; }
+            get { return GetRoot().InnerText; }
         }
 
         // Get a child node.
         public Xml GetChild(string child)
         {
-            return new Xml(_root.SelectSingleNode(child));
+            return new Xml(GetRoot().SelectSingleNode(child));
         }
 
         // Create/append a child node.
         public Xml Append(string element)
         {
             // ReSharper disable once PossibleNullReferenceException
-            var child = _root.AppendChild(_root.OwnerDocument.CreateElement(element));
+            var child = GetRoot().AppendChild(GetRoot().OwnerDocument.CreateElement(element));
             return new Xml(child);
         }
 
@@ -80,21 +90,22 @@ namespace SkylineNightly
         {
             set
             {
-                ((XmlElement)_root).SetAttribute(key, value.ToString());
+                ((XmlElement)GetRoot()).SetAttribute(key, value.ToString());
             }
         }
 
         // Count how many child nodes are within this element.
         public int Count
         {
-            get { return _root.ChildNodes.Count; }
+            get { return GetRoot().ChildNodes.Count; }
         }
 
         // Save XML to disk file.
         public void Save(string file)
         {
-            if (_root.OwnerDocument != null)
-                _root.OwnerDocument.Save(file);
+            var root = GetRoot();
+            if (root.OwnerDocument != null)
+                root.OwnerDocument.Save(file);
         }
 
         public override string ToString()
@@ -105,7 +116,7 @@ namespace SkylineNightly
                 {
                     xw.Formatting = Formatting.Indented;
                     xw.Indentation = 4;
-                    _root.WriteTo(xw);
+                    GetRoot().WriteTo(xw);
                 }
                 return sw.ToString();
             }

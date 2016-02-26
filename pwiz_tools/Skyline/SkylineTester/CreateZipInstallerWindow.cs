@@ -155,6 +155,9 @@ namespace SkylineTester
                         AddFile(testZipFile, zipFile, testZipDirectory);
                     }
 
+                    // Add the file that we use to determine which branch this is from
+                    AddFile(Path.Combine(solutionDirectory,"..\\..\\SVN_info.txt"), zipFile);
+
                     // Add unit testing DLL.
                     var unitTestingDll = Path.Combine(
                         Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),

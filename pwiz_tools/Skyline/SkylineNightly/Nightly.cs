@@ -39,15 +39,17 @@ namespace SkylineNightly
     {
         public const string NIGHTLY_TASK_NAME = "Skyline nightly build";
 
-        private const string TEAM_CITY_BUILD_URL = "https://teamcity.labkey.org/viewType.html?buildTypeId=bt{0}";
-        private const string TEAM_CITY_ZIP_URL = "https://teamcity.labkey.org/repository/download/bt{0}/{1}:id/SkylineTester.zip";
-        private const int TEAM_CITY_BUILD_TYPE_64 = 209;
-        private const int TEAM_CITY_BUILD_TYPE_32 = 19;
-        private const int TEAM_CITY_BUILD_TYPE = TEAM_CITY_BUILD_TYPE_64;
+        private const string TEAM_CITY_BUILD_URL = "https://teamcity.labkey.org/viewType.html?buildTypeId={0}";
+        private const string TEAM_CITY_ZIP_URL = "https://teamcity.labkey.org/repository/download/{0}/{1}:id/SkylineTester.zip";
+        private const string TEAM_CITY_BUILD_TYPE_64 = "bt209";
+        private const string TEAM_CITY_BUILD_TYPE_RELEASE_64 = "ProteoWizard_WindowsX8664SkylineReleaseBranchMsvcProfessional";
+        private const string TEAM_CITY_BUILD_TYPE_32 = "bt19";
+        private const string TEAM_CITY_BUILD_TYPE = TEAM_CITY_BUILD_TYPE_64;
         private const string TEAM_CITY_USER_NAME = "guest";
         private const string TEAM_CITY_USER_PASSWORD = "guest";
         private const string LABKEY_URL = "https://skyline.gs.washington.edu/labkey/testresults/home/development/Nightly%20x64/post.view?";
         private const string LABKEY_PERF_URL = "https://skyline.gs.washington.edu/labkey/testresults/home/development/Performance%20Tests/post.view?";
+        private const string LABKEY_RELEASE_PERF_URL = "https://skyline.gs.washington.edu/labkey/testresults/home/development/Release%20Branch/post.view?";
 
         private DateTime _startTime;
         private string _logFile;
@@ -84,14 +86,18 @@ namespace SkylineNightly
             _duration = TimeSpan.FromHours(9);
         }
 
+        public enum RunMode { nightly, nightly_with_perftests, release_branch_with_perftests}
+
         /// <summary>
         /// Run nightly build/test and report results to server.
         /// </summary>
-        public void Run(bool withPerfTests)
+        public void Run(RunMode mode)
         {
             // Locate relevant directories.
             var nightlyDir = GetNightlyDir();
             var skylineNightlySkytr = Path.Combine(nightlyDir, "SkylineNightly.skytr");
+
+            bool withPerfTests = mode != RunMode.nightly;
 
             if (withPerfTests)
                 _duration = TimeSpan.FromHours(12);
@@ -168,7 +174,7 @@ namespace SkylineNightly
             {
                 try
                 {
-                    DownloadSkylineTester(skylineTesterZip);
+                    DownloadSkylineTester(skylineTesterZip, mode);
                     break;
                 }
                 catch (Exception ex)
@@ -190,6 +196,16 @@ namespace SkylineNightly
             Log("Delete zip file " + skylineTesterZip);
             File.Delete(skylineTesterZip);
 
+            // Now figure out which branch we're working in - there's a file in the downloaded SkylineTester zip that tells us.
+            string branchUrl = null;
+            var lines = File.ReadAllLines(Path.Combine(_skylineTesterDir, "SkylineTester Files", "SVN_info.txt"));
+            if (lines[1].Contains("branches"))
+            {
+                // Looks like  $URL: https://svn.code.sf.net/p/proteowizard/code/branches/skyline_3_5/SVN_info.txt $
+                branchUrl =
+                    lines[1].Split(new[] {"URL: "}, StringSplitOptions.None)[1].Split(new[] {"/SVN_info"},StringSplitOptions.None)[0];
+            }
+
             // Create ".skytr" file to execute nightly build in SkylineTester.
             var assembly = Assembly.GetExecutingAssembly();
             const string resourceName = "SkylineNightly.SkylineNightly.skytr";
@@ -209,6 +225,13 @@ namespace SkylineNightly
                     skylineTester.GetChild("buildRoot").Set(_skylineTesterDir);
                     skylineTester.GetChild("nightlyRunPerfTests").Set(withPerfTests?"true":"false");
                     skylineTester.GetChild("nightlyDuration").Set(_duration.Hours.ToString());
+                    if (!string.IsNullOrEmpty(branchUrl) && !branchUrl.Contains("trunk"))
+                    {
+                        skylineTester.GetChild("nightlyBuildTrunk").Set("false");
+                        skylineTester.GetChild("nightlyBranch").Set("true");
+                        skylineTester.GetChild("nightlyBranchUrl").Set(branchUrl);
+                        Log("Testing branch at " + branchUrl);
+                    }
                     skylineTester.Save(skylineNightlySkytr);
                     var durationHours = double.Parse(skylineTester.GetChild("nightlyDuration").Value);
                     durationSeconds = (int) (durationHours*60*60) + 30*60;  // 30 minutes grace before we kill SkylineTester
@@ -243,13 +266,15 @@ namespace SkylineNightly
             _duration = DateTime.Now - startTime;
         }
 
-        private void DownloadSkylineTester(string skylineTesterZip)
+        private void DownloadSkylineTester(string skylineTesterZip, RunMode mode)
         {
             using (var client = new WebClient())
             {
                 client.Credentials = new NetworkCredential(TEAM_CITY_USER_NAME, TEAM_CITY_USER_PASSWORD);
-
-                var buildPageUrl = string.Format(TEAM_CITY_BUILD_URL, TEAM_CITY_BUILD_TYPE);
+                var buildType = (mode == RunMode.release_branch_with_perftests)
+                    ? TEAM_CITY_BUILD_TYPE_RELEASE_64
+                    : TEAM_CITY_BUILD_TYPE;
+                var buildPageUrl = string.Format(TEAM_CITY_BUILD_URL, buildType);
                 Log("Download Team City build page");
                 var buildStatusPage = client.DownloadString(buildPageUrl);
 
@@ -257,7 +282,7 @@ namespace SkylineNightly
                 if (match.Success)
                 {
                     string id = match.Groups[1].Value;
-                    string zipFileLink = string.Format(TEAM_CITY_ZIP_URL, TEAM_CITY_BUILD_TYPE, id);
+                    string zipFileLink = string.Format(TEAM_CITY_ZIP_URL, buildType, id);
                     Log("Download SkylineTester zip file");
                     client.DownloadFile(zipFileLink, skylineTesterZip);
                 }
@@ -282,11 +307,11 @@ namespace SkylineNightly
             return true;
         }
 
-        public bool Parse(string logFile = null, bool parseOnlyNoXmlOut = false)
+        public RunMode Parse(string logFile = null, bool parseOnlyNoXmlOut = false)
         {
             logFile = logFile ?? GetLatestLog();
             if (logFile == null)
-                return false;
+                throw new Exception("cannot locate current log");
             var log = File.ReadAllText(logFile);
 
             // Extract all test lines.
@@ -299,6 +324,7 @@ namespace SkylineNightly
             ParseLeaks(log);
 
             var hasPerftests = log.Contains("# Perf tests");
+            var isTrunk = !log.Contains("Testing branch at");
 
             _nightly["id"] = Environment.MachineName;
             _nightly["os"] = Environment.OSVersion;
@@ -316,7 +342,9 @@ namespace SkylineNightly
                 var xmlFile = Path.ChangeExtension(logFile, ".xml");
                 File.WriteAllText(xmlFile, _nightly.ToString());
             }
-            return hasPerftests;
+            return isTrunk
+                ? (hasPerftests ? RunMode.nightly_with_perftests : RunMode.nightly)
+                : RunMode.release_branch_with_perftests;
         }
 
         private int ParseTests(string log)
@@ -414,19 +442,22 @@ namespace SkylineNightly
         /// <summary>
         /// Post the latest results to the server.
         /// </summary>
-        public void Post(bool withPerfTests, string xmlFile = null)
+        public void Post(RunMode mode, string xmlFile = null)
         {
             xmlFile = xmlFile ?? GetLatestXml();
             if (xmlFile == null)
                 return;
             
             var xml = File.ReadAllText(xmlFile);
-
+            string url;
             // Post to server.
-            if (withPerfTests)
-                PostToLink(LABKEY_PERF_URL, xml);
+            if (mode == RunMode.release_branch_with_perftests)
+                url = LABKEY_RELEASE_PERF_URL;
+            else if (mode == RunMode.nightly_with_perftests)
+                url = LABKEY_PERF_URL;
             else
-                PostToLink(LABKEY_URL, xml);
+                url = LABKEY_URL;
+            PostToLink(url, xml);
         }
 
         public string GetLatestLog()

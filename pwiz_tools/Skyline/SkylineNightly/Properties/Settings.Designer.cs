@@ -58,5 +58,17 @@ namespace SkylineNightly.Properties {
                 this["PerfTests"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ReleaseBranch {
+            get {
+                return ((bool)(this["ReleaseBranch"]));
+            }
+            set {
+                this["ReleaseBranch"] = value;
+            }
+        }
     }
 }
