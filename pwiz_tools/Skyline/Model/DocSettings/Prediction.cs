@@ -79,6 +79,7 @@ namespace pwiz.Skyline.Model.DocSettings
             PeptideTimes = peptidesTimes;
 
             _calculator = calculator;
+            InsufficientCorrelation = false;
             
             Validate();
         }
@@ -107,6 +108,8 @@ namespace pwiz.Skyline.Model.DocSettings
             get { return _peptidesTimes; }
             private set { _peptidesTimes = MakeReadOnly(value); }
         }
+
+        public bool InsufficientCorrelation { get; private set; }
 
         #region Property change methods
 
@@ -157,6 +160,11 @@ namespace pwiz.Skyline.Model.DocSettings
                         im._isMissingStandardPeptides = (dictStandardPeptides == null);
                         im._dictStandardPeptides = (dictStandardPeptides != null ? MakeReadOnly(dictStandardPeptides) : null);
                     });
+        }
+
+        public RetentionTimeRegression ChangeInsufficientCorrelation(bool insufficient)
+        {
+            return ChangeProp(ImClone(this), im => im.InsufficientCorrelation = insufficient);
         }
 
         #endregion
@@ -239,7 +247,7 @@ namespace pwiz.Skyline.Model.DocSettings
             // unless the document has no results
             if (Conversion == null)
             {
-                if (!document.Settings.HasResults && _dictStandardPeptides != null)
+                if ((!document.Settings.HasResults && _dictStandardPeptides != null) || InsufficientCorrelation)
                     return false;
 
                 // If prediction settings have change, then do auto-recalc

@@ -32,6 +32,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
     public enum PlotTypeRT { correlation, residuals }
 
+    public enum PointsTypeRT { targets, standards, decoys }
+
     public sealed class RTGraphController : GraphSummary.IController
     {
         public static GraphTypeRT GraphType
@@ -44,6 +46,12 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get { return Helpers.ParseEnum(Settings.Default.RTPlotType, PlotTypeRT.correlation); }
             set { Settings.Default.RTPlotType = value.ToString(); }
+        }
+
+        public static PointsTypeRT PointsType
+        {
+            get { return Helpers.ParseEnum(Settings.Default.RTPointsType, PointsTypeRT.targets); }
+            set { Settings.Default.RTPointsType = value.ToString(); }
         }
 
         public static double OutThreshold { get { return Settings.Default.RTResidualRThreshold; } }

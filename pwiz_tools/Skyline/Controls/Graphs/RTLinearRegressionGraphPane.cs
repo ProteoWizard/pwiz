@@ -165,7 +165,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public static PeptideDocNode[] CalcOutliers(SrmDocument document, double threshold, int? precision, bool bestResult)
         {
-            var data = new GraphData(document, null, -1, threshold, precision, true, bestResult);
+            var data = new GraphData(document, null, -1, threshold, precision, true, bestResult, RTGraphController.PointsType);
             return data.Refine(() => false).Outliers;
         }
 
@@ -193,10 +193,10 @@ namespace pwiz.Skyline.Controls.Graphs
             return data != null && data.IsValidFor(document);
         }
 
-        public bool IsValidFor(SrmDocument document, int resultIndex, bool bestResult, double threshold, bool refine)
+        public bool IsValidFor(SrmDocument document, int resultIndex, bool bestResult, double threshold, bool refine, PointsTypeRT pointsType)
         {
             var data = Data;
-            return data != null && data.IsValidFor(document, resultIndex, bestResult, threshold, refine);
+            return data != null && data.IsValidFor(document, resultIndex, bestResult, threshold, refine, pointsType);
         }
 
         public void Clear()
@@ -213,10 +213,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 data.Graph(this, nodeSelected);
         }
 
-        public void Update(SrmDocument document, int resultIndex, double threshold, bool refine)
+        public void Update(SrmDocument document, int resultIndex, double threshold, bool refine, PointsTypeRT pointsType)
         {
             bool bestResults = (ShowReplicate == ReplicateDisplay.best);
-            Data = new GraphData(document, Data, resultIndex, threshold, null, refine, bestResults);
+            Data = new GraphData(document, Data, resultIndex, threshold, null, refine, bestResults, pointsType);
 
             XAxis.Title.Text = Data.Calculator.Name;
         }
@@ -317,9 +317,17 @@ namespace pwiz.Skyline.Controls.Graphs
                     bool refine = Settings.Default.RTRefinePeptides;
                     bool bestResult = (ShowReplicate == ReplicateDisplay.best);
                     
-                    if (!IsValidFor(document, resultIndex, bestResult, threshold, refine))
+                    if ((RTGraphController.PointsType == PointsTypeRT.standards && !document.GetRetentionTimeStandards().Any()) ||
+                        (RTGraphController.PointsType == PointsTypeRT.decoys &&
+                         !document.PeptideGroups.Any(nodePepGroup => nodePepGroup.Children.Cast<PeptideDocNode>().Any(nodePep => nodePep.IsDecoy))))
                     {
-                        Update(document, resultIndex, threshold, refine);
+                        RTGraphController.PointsType = PointsTypeRT.targets;
+                    }
+                    PointsTypeRT pointsType = RTGraphController.PointsType;
+                    
+                    if (!IsValidFor(document, resultIndex, bestResult, threshold, refine, pointsType))
+                    {
+                        Update(document, resultIndex, threshold, refine, pointsType);
                         if (refine && !IsRefined)
                         {
                             // Do refinement on a background thread.
@@ -372,6 +380,7 @@ namespace pwiz.Skyline.Controls.Graphs
             private readonly double _threshold;
             private readonly int? _thresholdPrecision;
             private readonly bool _refine;
+            private readonly PointsTypeRT _pointsType;
             private readonly List<PeptideDocumentIndex> _peptidesIndexes;
             private readonly List<MeasuredRetentionTime> _peptidesTimes;
             private readonly RetentionTimeScoreCache _scoreCache;
@@ -398,20 +407,43 @@ namespace pwiz.Skyline.Controls.Graphs
             private HashSet<int> _outlierIndexes;
 
             public GraphData(SrmDocument document, GraphData dataPrevious,
-                int resultIndex, double threshold, int? thresholdPrecision, bool refine, bool bestResult)
+                int resultIndex, double threshold, int? thresholdPrecision, bool refine, bool bestResult, PointsTypeRT pointsType)
             {
                 _document = document;
                 _resultIndex = resultIndex;
                 _bestResult = bestResult;
                 _threshold = threshold;
                 _thresholdPrecision = thresholdPrecision;
+                _pointsType = pointsType;
                 _peptidesIndexes = new List<PeptideDocumentIndex>();
                 _peptidesTimes = new List<MeasuredRetentionTime>();
                 int index = -1;
+
+                var standards = new HashSet<string>();
+                if (RTGraphController.PointsType == PointsTypeRT.standards)
+                    standards = document.GetRetentionTimeStandards();
+
                 // CONSIDER: Retention time prediction for small molecules?
                 foreach (var nodePeptide in document.Peptides)
                 {
                     index++;
+
+                    switch (RTGraphController.PointsType)
+                    {
+                        default:
+                            if (nodePeptide.IsDecoy)
+                                continue;
+                            break;
+                        case PointsTypeRT.standards:
+                            if (!standards.Contains(document.Settings.GetModifiedSequence(nodePeptide)))
+                                continue;
+                            break;
+                        case PointsTypeRT.decoys:
+                            if (!nodePeptide.IsDecoy)
+                                continue;
+                            break;
+                    }
+
                     float? rt = null;
                     if (!bestResult)
                         rt = nodePeptide.GetSchedulingTime(resultIndex);
@@ -474,7 +506,6 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                 }
 
-
                 if (_regressionAll != null)
                 {
                     _scoreCache = new RetentionTimeScoreCache(new[] { _calculator }, _peptidesTimes,
@@ -510,7 +541,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 return ReferenceEquals(document, _document);
             }
 
-            public bool IsValidFor(SrmDocument document, int resultIndex, bool bestResult, double threshold, bool refine)
+            public bool IsValidFor(SrmDocument document, int resultIndex, bool bestResult, double threshold, bool refine, PointsTypeRT pointsType)
             {
                 string calculatorName = Settings.Default.RTCalculatorName;
                 if (string.IsNullOrEmpty(calculatorName))
@@ -519,6 +550,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         _resultIndex == resultIndex &&
                         _bestResult == bestResult &&
                         _threshold == threshold &&
+                        _pointsType == pointsType &&
                         _calculatorName == Settings.Default.RTCalculatorName &&
                         ReferenceEquals(_calculator, Settings.Default.GetCalculatorByName(calculatorName)) &&
                         // Valid if refine is true, and this data requires no further refining

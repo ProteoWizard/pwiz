@@ -366,6 +366,7 @@ namespace pwiz.Skyline.Model.Results
             var listChromData = CalcPeptideChromDataSets(provider, listMzPrecursors, setInternalStandards);
 
             var listProviderIds = new List<IList<int>>(listChromData.Where(IsFirstPassPeptide).Select(c => c.ProviderIds.ToArray()));
+            var doSecondPass = true;
             listProviderIds.AddRange(listChromData.Where(c => !IsFirstPassPeptide(c)).Select(c => c.ProviderIds.ToArray()));
 
             provider.SetRequestOrder(listProviderIds);
@@ -390,7 +391,7 @@ namespace pwiz.Skyline.Model.Results
 
                 // All threads must complete scoring before we complete the first pass.
                 _chromDataSets.Wait();
-                _retentionTimePredictor.CreateConversion();
+                doSecondPass = _retentionTimePredictor.CreateConversion();
 
                 // Let the provider know that it is now safe to use retention time prediction
                 if (provider.CompleteFirstPass())
@@ -402,21 +403,24 @@ namespace pwiz.Skyline.Model.Results
                 }
             }
 
-            // Load scan data.
-            for (int i = 0; i < listChromData.Count; i++)
+            if (doSecondPass)
             {
-                var pepChromData = listChromData[i];
-                if (pepChromData == null)
-                    continue;
-                if (!IsFirstPassPeptide(pepChromData))
+                // Load scan data.
+                for (int i = 0; i < listChromData.Count; i++)
                 {
-                    if (pepChromData.Load(provider))
-                        PostChromDataSet(pepChromData);
-                }
+                    var pepChromData = listChromData[i];
+                    if (pepChromData == null)
+                        continue;
+                    if (!IsFirstPassPeptide(pepChromData))
+                    {
+                        if (pepChromData.Load(provider))
+                            PostChromDataSet(pepChromData);
+                    }
 
-                // Release the reference to the chromatogram data set so that
-                // it can be garbage collected after it has been written
-                listChromData[i] = null;
+                    // Release the reference to the chromatogram data set so that
+                    // it can be garbage collected after it has been written
+                    listChromData[i] = null;
+                }
             }
 
             // Write scan ids
@@ -802,12 +806,12 @@ namespace pwiz.Skyline.Model.Results
                 return _conversion.GetY(score.Value);
             }
 
-            public void CreateConversion()
+            public bool CreateConversion()
             {
                 lock (_dictSeqToTime)   // not necessary, but make Resharper happy
                 {
                     if (_dictSeqToTime == null)
-                        return;
+                        return false;
 
                     var listTimes = new List<double>();
                     var listIrts = new List<double>();
@@ -817,8 +821,11 @@ namespace pwiz.Skyline.Model.Results
                         listIrts.Add(_calculator.ScoreSequence(sequence).Value);
                     }
                     RegressionLine line;
-                    if (RCalcIrt.TryGetRegressionLine(listIrts, listTimes, out line))
-                        _conversion = new RegressionLineElement(line);
+                    if (!RCalcIrt.TryGetRegressionLine(listIrts, listTimes, out line))
+                        return false;
+
+                    _conversion = new RegressionLineElement(line);
+                    return true;
                 }
             }
 

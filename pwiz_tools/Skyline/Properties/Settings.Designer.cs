@@ -2121,5 +2121,17 @@ namespace pwiz.Skyline.Properties {
                 this["DocumentGridView"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("targets")]
+        public string RTPointsType {
+            get {
+                return ((string)(this["RTPointsType"]));
+            }
+            set {
+                this["RTPointsType"] = value;
+            }
+        }
     }
 }

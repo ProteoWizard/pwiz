@@ -530,5 +530,8 @@
     <Setting Name="DocumentGridView" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
+    <Setting Name="RTPointsType" Type="System.String" Scope="User">
+      <Value Profile="(Default)">targets</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

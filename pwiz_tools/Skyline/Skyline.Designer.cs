@@ -144,6 +144,10 @@ namespace pwiz.Skyline
             this.timePlotContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.timeCorrelationContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.timeResidualsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.timePointsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.timeTargetsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.timeStandardsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.timeDecoysContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.rtValueMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.allRTValueContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.timeRTValueContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -1171,6 +1175,7 @@ namespace pwiz.Skyline
             this.contextMenuRetentionTimes.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.timeGraphContextMenuItem,
             this.timePlotContextMenuItem,
+            this.timePointsContextMenuItem,
             this.rtValueMenuItem,
             this.showRTLegendContextMenuItem,
             this.selectionContextMenuItem,
@@ -1248,6 +1253,33 @@ namespace pwiz.Skyline
             this.timeResidualsContextMenuItem.Name = "timeResidualsContextMenuItem";
             resources.ApplyResources(this.timeResidualsContextMenuItem, "timeResidualsContextMenuItem");
             this.timeResidualsContextMenuItem.Click += new System.EventHandler(this.timeResidualsContextMenuItem_Click);
+            // 
+            // timePointsContextMenuItem
+            // 
+            this.timePointsContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.timeTargetsContextMenuItem,
+            this.timeStandardsContextMenuItem,
+            this.timeDecoysContextMenuItem});
+            this.timePointsContextMenuItem.Name = "timePointsContextMenuItem";
+            resources.ApplyResources(this.timePointsContextMenuItem, "timePointsContextMenuItem");
+            // 
+            // timeTargetsContextMenuItem
+            // 
+            this.timeTargetsContextMenuItem.Name = "timeTargetsContextMenuItem";
+            resources.ApplyResources(this.timeTargetsContextMenuItem, "timeTargetsContextMenuItem");
+            this.timeTargetsContextMenuItem.Click += new System.EventHandler(this.timeTargetsContextMenuItem_Click);
+            // 
+            // timeStandardsContextMenuItem
+            // 
+            this.timeStandardsContextMenuItem.Name = "timeStandardsContextMenuItem";
+            resources.ApplyResources(this.timeStandardsContextMenuItem, "timeStandardsContextMenuItem");
+            this.timeStandardsContextMenuItem.Click += new System.EventHandler(this.timeStandardsContextMenuItem_Click);
+            // 
+            // timeDecoysContextMenuItem
+            // 
+            this.timeDecoysContextMenuItem.Name = "timeDecoysContextMenuItem";
+            resources.ApplyResources(this.timeDecoysContextMenuItem, "timeDecoysContextMenuItem");
+            this.timeDecoysContextMenuItem.Click += new System.EventHandler(this.timeDecoysContextMenuItem_Click);
             // 
             // rtValueMenuItem
             // 
@@ -3712,6 +3744,10 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem timeCorrelationContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem timeResidualsContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem removeEmptyPeptidesMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem timePointsContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem timeTargetsContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem timeStandardsContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem timeDecoysContextMenuItem;
     }
 }
 

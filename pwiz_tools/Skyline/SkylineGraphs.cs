@@ -2685,6 +2685,23 @@ namespace pwiz.Skyline
                 }
                 timeCorrelationContextMenuItem.Checked = RTGraphController.PlotType == PlotTypeRT.correlation;
                 timeResidualsContextMenuItem.Checked = RTGraphController.PlotType == PlotTypeRT.residuals;
+
+                var showPointsTypeStandards = Document.GetRetentionTimeStandards().Any();
+                var showPointsTypeDecoys = Document.PeptideGroups.Any(nodePepGroup => nodePepGroup.Children.Cast<PeptideDocNode>().Any(nodePep => nodePep.IsDecoy));
+                if (showPointsTypeStandards || showPointsTypeDecoys)
+                {
+                    menuStrip.Items.Insert(iInsert++, timePointsContextMenuItem);
+                    timePointsContextMenuItem.DropDownItems.Clear();
+                    timePointsContextMenuItem.DropDownItems.Add(timeTargetsContextMenuItem);
+                    if (showPointsTypeStandards)
+                        timePointsContextMenuItem.DropDownItems.Add(timeStandardsContextMenuItem);
+                    if (showPointsTypeDecoys)
+                        timePointsContextMenuItem.DropDownItems.Add(timeDecoysContextMenuItem);
+                    timeTargetsContextMenuItem.Checked = RTGraphController.PointsType == PointsTypeRT.targets;
+                    timeStandardsContextMenuItem.Checked = RTGraphController.PointsType == PointsTypeRT.standards;
+                    timeDecoysContextMenuItem.Checked = RTGraphController.PointsType == PointsTypeRT.decoys;
+                }
+
                 refineRTContextMenuItem.Checked = set.RTRefinePeptides;
                 menuStrip.Items.Insert(iInsert++, refineRTContextMenuItem);
                 predictionRTContextMenuItem.Checked = set.RTPredictorVisible;
@@ -2881,9 +2898,30 @@ namespace pwiz.Skyline
             ShowPlotType(PlotTypeRT.residuals);
         }
 
+        private void timeTargetsContextMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowPointsType(PointsTypeRT.targets);
+        }
+
+        private void timeStandardsContextMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowPointsType(PointsTypeRT.standards);
+        }
+
+        private void timeDecoysContextMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowPointsType(PointsTypeRT.decoys);
+        }
+
         public void ShowPlotType(PlotTypeRT plotTypeRT)
         {
             RTGraphController.PlotType = plotTypeRT;
+            UpdateRetentionTimeGraph();
+        }
+
+        public void ShowPointsType(PointsTypeRT pointsTypeRT)
+        {
+            RTGraphController.PointsType = pointsTypeRT;
             UpdateRetentionTimeGraph();
         }
 

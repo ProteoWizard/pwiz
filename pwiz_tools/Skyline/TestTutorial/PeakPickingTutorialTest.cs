@@ -163,6 +163,19 @@ namespace pwiz.SkylineTestTutorial
                 });
             PauseForScreenShot("Main window", 5);
 
+            // Test different point types on RTLinearRegressionGraph
+            RunUI(() =>
+            {
+                SkylineWindow.ShowRTLinearRegressionGraph();
+                SkylineWindow.ShowPlotType(PlotTypeRT.correlation);
+                SkylineWindow.ChooseCalculator("iRT_SRMAtlas_20121202_noLGG");
+            });
+            const int numDecoys = 30;
+            CheckPointsTypeRT(PointsTypeRT.targets, SkylineWindow.Document.PeptideCount - numDecoys);
+            CheckPointsTypeRT(PointsTypeRT.standards, SkylineWindow.Document.GetRetentionTimeStandards().Count);
+            CheckPointsTypeRT(PointsTypeRT.decoys, numDecoys);
+            RunUI(() => SkylineWindow.ShowGraphRetentionTime(false));
+
             // Train the peak scoring model
             var reintegrateDlg = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
             PauseForScreenShot<ReintegrateDlg>("Reintegrate form", 6);
@@ -468,6 +481,18 @@ namespace pwiz.SkylineTestTutorial
                 else
                     yield return " null ";  // To help values line up
             }
+        }
+
+        private static void CheckPointsTypeRT(PointsTypeRT pointsType, int expectedPoints)
+        {
+            RunUI(() => SkylineWindow.ShowPointsType(pointsType));
+            WaitForGraphs();
+            RunUI(() =>
+            {
+                RTLinearRegressionGraphPane pane;
+                Assert.IsTrue(SkylineWindow.RTGraphController.GraphSummary.TryGetGraphPane(out pane));
+                Assert.AreEqual(expectedPoints, pane.StatisticsRefined.ListRetentionTimes.Count);
+            });
         }
     }
 }

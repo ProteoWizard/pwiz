@@ -12,7 +12,7 @@
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY C:\proj\pwiz\pwiz\pwiz_tools\Skyline\Model\Lib\Library.csKIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -218,9 +218,10 @@ namespace pwiz.Skyline.Model.Irt
                                        where p.Value.Count == dictSeqToPeptide.Count
                                        select new KeyValuePair<int, RegressionLine>(p.Key, CalcConversion(p.Value, minCount));
 
-            return rtRegression.ChangeEquations(new RegressionLineElement(CalcConversion(listPepCorr, minCount)),
-                                                fileIdToConversions,
-                                                dictStandardPeptides);
+            var line = CalcConversion(listPepCorr, minCount);
+            return line != null
+                ? rtRegression.ChangeEquations(new RegressionLineElement(line), fileIdToConversions, dictStandardPeptides)
+                : rtRegression.ChangeEquations(null, fileIdToConversions, dictStandardPeptides).ChangeInsufficientCorrelation(true);
         }
 
         private static RegressionLine CalcConversion(IList<TimeScorePair> listPepCorr, int minCount)
@@ -229,13 +230,7 @@ namespace pwiz.Skyline.Model.Irt
             var listScore = listPepCorr.Select(p => p.Score).ToList();
 
             RegressionLine line;
-            if (RCalcIrt.TryGetRegressionLine(listScore, listTime, minCount, out line))
-                return line;
-
-            // TODO: Figure out something better here
-            var statTime = new Statistics(listTime);
-            var statScore = new Statistics(listScore);
-            return new RegressionLine(statTime.Slope(statScore), statTime.Intercept(statScore));
+            return RCalcIrt.TryGetRegressionLine(listScore, listTime, minCount, out line) ? line : null;
         }
 
         private struct TimeScorePair
