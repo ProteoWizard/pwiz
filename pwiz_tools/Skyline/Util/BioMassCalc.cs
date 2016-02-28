@@ -299,6 +299,16 @@ namespace pwiz.Skyline.Util
             return totalMass;
         }
 
+        public double CalculateMassFromFormula(IDictionary<string, int> desc)
+        {
+            double totalMass = ParseMass(desc);
+
+            if (totalMass == 0.0)
+                ThrowArgumentException(desc.ToString());
+
+            return totalMass;
+        }
+
         /// <summary>
         /// Turn a formula like C5H9H'3NO2S into C5H12NO2S
         /// </summary>
@@ -447,6 +457,24 @@ namespace pwiz.Skyline.Util
             }
 
             return totalMass;            
+        }
+
+        public double ParseMass(IDictionary<string, int> desc)
+        {
+            double totalMass = 0;
+            foreach (var elementCount in desc)
+            {
+                double massAtom = GetMass(elementCount.Key);
+
+                // Stop if unrecognized atom found.
+                if (massAtom == 0)
+                {
+                    // CONSIDER: Throw with a useful message?
+                    break;
+                }
+                totalMass += massAtom * elementCount.Value;
+            }
+            return totalMass;
         }
 
         /// <summary>

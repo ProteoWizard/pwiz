@@ -60,6 +60,12 @@ namespace pwiz.SkylineTestTutorial
             return TestFilesDirs[0].GetTestPath(Path.Combine(folder, relativePath));
         }
 
+        private bool StatusContains(string format)
+        {
+            return SkylineWindow.Status.Contains(format.Split('{').First()) &&
+                   SkylineWindow.Status.Contains(format.Split('}').Last());
+        }
+
         protected override void DoTest()
         {
             LinkPdf = "http://www.srmcourse.ch/tutorials2014/Tutorial-1_Settings.pdf";
@@ -142,11 +148,10 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(pepSettings, pepSettings.OkDialog);
 
             WaitForCondition(
-                () => SkylineWindow.Status.Contains(Resources.BackgroundProteomeSpec_Digest_Digesting__0__.Split('{').First()) &&
-                      SkylineWindow.Status.Contains(Resources.BackgroundProteomeSpec_Digest_Digesting__0__.Split('}').Last()));
+                () => StatusContains(Resources.BackgroundProteomeSpec_Digest_Digesting__0__));
             WaitForCondition(
-                () => SkylineWindow.Status.Contains(Resources.BackgroundProteomeManager_LoadBackground_Resolving_protein_details_for__0__proteome.Split('{').First()) &&
-                      SkylineWindow.Status.Contains(Resources.BackgroundProteomeManager_LoadBackground_Resolving_protein_details_for__0__proteome.Split('}').Last()));
+                () => StatusContains(Resources.BackgroundProteomeManager_LoadBackground_Resolving_protein_details_for__0__proteome) ||
+                      StatusContains(ProteomeDatabase.Properties.Resources.ProteomeDb_LookupProteinMetadata_Retrieving_details_for__0__proteins));
             WaitForCondition(() => SkylineWindow.Status.Contains(Resources.SkylineWindow_UpdateProgressUI_Ready));
             WaitForDocumentLoaded();
 

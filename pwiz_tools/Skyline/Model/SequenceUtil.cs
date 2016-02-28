@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -317,6 +318,63 @@ namespace pwiz.Skyline.Model
             public string _massModCleaveNFormula;
         }
 
+        // For internal use only - similar to Molecule class, but this is not immutable and not sorted (for speed)
+        private sealed class MoleculeUnsorted
+        {
+            public Dictionary<string, int> Elements { get; private set; }
+
+            public MoleculeUnsorted(Dictionary<string, int> elements)
+            {
+                Elements = elements;
+            }
+
+            public static MoleculeUnsorted Parse(string formula)
+            {
+                return new MoleculeUnsorted(Molecule.ParseToDictionary(formula));
+            }
+
+            public MoleculeUnsorted SetElementCount(string element, int count)
+            {
+                if (Elements.ContainsKey(element))
+                {
+                    Elements[element] = count;
+                }
+                else
+                {
+                   Elements.Add(element, count);
+                }
+                return this;
+            }
+
+            public int GetElementCount(string element)
+            {
+                int count;
+                if (Elements.TryGetValue(element, out count))
+                {
+                    return count;
+                }
+                return 0;
+            }
+
+            public override string ToString()
+            {
+                var result = new StringBuilder();
+                var sortedKeys = Elements.Keys.ToList();
+                sortedKeys.Sort();
+                foreach (var key in sortedKeys)
+                {
+                    result.Append(key);
+                    var value = Elements[key];
+                    if (value != 1)
+                    {
+                        result.Append(value);
+                    }
+                }
+                return result.ToString();
+            }
+
+        }
+        
         /// <summary>
         /// All summed modifications for this calculator
         /// </summary>
@@ -630,16 +688,16 @@ namespace pwiz.Skyline.Model
             return GetMzDistribution(seq, charge, abundances, null);
         }
 
-        public MassDistribution GetMzDistribution(string seq, int charge, IsotopeAbundances abundances, ExplicitSequenceMods mods)
+        public MassDistribution GetMzDistribution(string seq, int charge, IsotopeAbundances abundances, ExplicitSequenceMods mods = null)
         {
             double unexplainedMass;
-            Molecule molecule = GetFormula(seq, mods, out unexplainedMass);
+            MoleculeUnsorted molecule = GetFormula(seq, mods, out unexplainedMass);
             return GetMzDistribution(molecule, charge, abundances, unexplainedMass, true);
         }
 
         public MassDistribution GetMZDistributionFromFormula(string formula, int charge, IsotopeAbundances abundances)
         {
-            Molecule molecule = Molecule.Parse(formula);
+            var molecule = MoleculeUnsorted.Parse(formula);
             return GetMzDistribution(molecule, charge, abundances, 0, false);
         }
 
@@ -669,19 +727,19 @@ namespace pwiz.Skyline.Model
         }
 
 // ReSharper disable once ParameterTypeCanBeEnumerable.Local
-        private MassDistribution GetMzDistribution(Molecule molecule, int charge, IsotopeAbundances abundances, double unexplainedMass, bool isMassH)
+        private MassDistribution GetMzDistribution(MoleculeUnsorted molecule, int charge, IsotopeAbundances abundances, double unexplainedMass, bool isMassH)
         {
             // Low resolution to get back only peaks at Dalton (i.e. neutron) boundaries
-            var md = new MassDistribution(_massResolution, _minimumAbundance);
+            var md = new MassDistribution.Helper(_massResolution, _minimumAbundance);
             var result = md;
-            foreach (var element in molecule)
+            foreach (var element in molecule.Elements)
             {
                 result = result.Add(md.Add(abundances[element.Key]).Multiply(element.Value));
             }
             return result.OffsetAndDivide(unexplainedMass + charge* (isMassH ? BioMassCalc.MassProton : -BioMassCalc.MassElectron), charge);
         }
 
-        private Molecule GetFormula(string seq, ExplicitSequenceMods mods, out double unexplainedMass)
+        private MoleculeUnsorted GetFormula(string seq, ExplicitSequenceMods mods, out double unexplainedMass)
         {
             var formula = new FormulaBuilder(_massCalc);
             var modMasses = GetModMasses(mods);
@@ -708,11 +766,9 @@ namespace pwiz.Skyline.Model
                     formula.Append(modFormula, modUnexplainedMass);
                 }
             }
-            formula.Append("H2O"); // N-term = H, C-term = OH // Not L10N
+            formula.Append(H2O); // N-term = H, C-term = OH
             unexplainedMass = formula.UnexplainedMass;
-            // CONSIDER: More efficient translation between builder and Molecure.
-            //           Both contain a dictionary for atom counts.
-            return Molecule.Parse(formula.ToString());
+            return new MoleculeUnsorted(formula.DictAtomCounts);
         }
 
         private sealed class FormulaBuilder
@@ -727,11 +783,33 @@ namespace pwiz.Skyline.Model
                 _dictAtomCounts = new Dictionary<string, int>();
             }
 
+            // ReSharper disable once UnusedMethodReturnValue.Local
             public FormulaBuilder Append(string formula, double unexplainedMass = 0)
             {
                 _unexplainedMass += unexplainedMass;
                 if (formula != null)
                     ParseModCounts(_massCalc, formula, _dictAtomCounts);
+                return this;
+            }
+
+            public FormulaBuilder Append(IDictionary<string, int> formula, double unexplainedMass = 0)
+            {
+                _unexplainedMass += unexplainedMass;
+                if (formula != null)
+                {
+                    foreach (var elementCount in formula)
+                    {
+                        int count;
+                        if (_dictAtomCounts.TryGetValue(elementCount.Key, out count))
+                        {
+                            _dictAtomCounts[elementCount.Key] = count + elementCount.Value;
+                        }
+                        else
+                        {
+                            _dictAtomCounts.Add(elementCount.Key, elementCount.Value);
+                        }
+                    }
+                }
                 return this;
             }
 
@@ -750,6 +828,11 @@ namespace pwiz.Skyline.Model
                     }
                     return unexplainedMass;
                 }
+            }
+
+            public Dictionary<string, int> DictAtomCounts
+            {
+                get { return _dictAtomCounts; }
             }
 
             public override string ToString()
@@ -1027,7 +1110,7 @@ namespace pwiz.Skyline.Model
         {
             for (int i = 0; i < AMINO_FORMULAS.Length; i++)
             {
-                string formula = AMINO_FORMULAS[i];
+                var formula = AMINO_FORMULAS[i];
                 if (formula != null)
                     _aminoMasses[i] = _massCalc.CalculateMassFromFormula(formula);
             }
@@ -1047,8 +1130,8 @@ namespace pwiz.Skyline.Model
             // ReSharper restore CharImplicitlyConvertedToNumeric
         }
 
-        private static readonly string[] AMINO_FORMULAS = new string[128];
-
+        private static readonly Molecule[] AMINO_FORMULAS = new Molecule[128];
+        private static readonly Molecule H2O = Molecule.Parse("H2O"); // Not L10N
         static SequenceMassCalc()
         {
             // Not L10N
@@ -1056,43 +1139,44 @@ namespace pwiz.Skyline.Model
 
             // ReSharper disable CharImplicitlyConvertedToNumeric
             // ReSharper disable NonLocalizedString
-            AMINO_FORMULAS['a'] = AMINO_FORMULAS['A'] = "C3H5ON";
-            AMINO_FORMULAS['c'] = AMINO_FORMULAS['C'] = "C3H5ONS";
-            AMINO_FORMULAS['d'] = AMINO_FORMULAS['D'] = "C4H5O3N";
-            AMINO_FORMULAS['e'] = AMINO_FORMULAS['E'] = "C5H7O3N";
-            AMINO_FORMULAS['f'] = AMINO_FORMULAS['F'] = "C9H9ON";
-            AMINO_FORMULAS['g'] = AMINO_FORMULAS['G'] = "C2H3ON";
-            AMINO_FORMULAS['h'] = AMINO_FORMULAS['H'] = "C6H7ON3";
-            AMINO_FORMULAS['i'] = AMINO_FORMULAS['I'] = "C6H11ON";
-            AMINO_FORMULAS['k'] = AMINO_FORMULAS['K'] = "C6H12ON2";
-            AMINO_FORMULAS['l'] = AMINO_FORMULAS['L'] = "C6H11ON";
-            AMINO_FORMULAS['m'] = AMINO_FORMULAS['M'] = "C5H9ONS";
-            AMINO_FORMULAS['n'] = AMINO_FORMULAS['N'] = "C4H6O2N2";
-            AMINO_FORMULAS['o'] = AMINO_FORMULAS['O'] = "C12H19N3O2";
-            AMINO_FORMULAS['p'] = AMINO_FORMULAS['P'] = "C5H7ON";
-            AMINO_FORMULAS['q'] = AMINO_FORMULAS['Q'] = "C5H8O2N2";
-            AMINO_FORMULAS['r'] = AMINO_FORMULAS['R'] = "C6H12ON4";
-            AMINO_FORMULAS['s'] = AMINO_FORMULAS['S'] = "C3H5O2N";
-            AMINO_FORMULAS['t'] = AMINO_FORMULAS['T'] = "C4H7O2N";
-            AMINO_FORMULAS['u'] = AMINO_FORMULAS['U'] = "C3H5NOSe";
-            AMINO_FORMULAS['v'] = AMINO_FORMULAS['V'] = "C5H9ON";
-            AMINO_FORMULAS['w'] = AMINO_FORMULAS['W'] = "C11H10ON2";
-            AMINO_FORMULAS['y'] = AMINO_FORMULAS['Y'] = "C9H9O2N";
+            // TODO(bspratt): what about B and Z? (see average values above for masses)
+            AMINO_FORMULAS['a'] = AMINO_FORMULAS['A'] = Molecule.Parse("C3H5ON");
+            AMINO_FORMULAS['c'] = AMINO_FORMULAS['C'] = Molecule.Parse("C3H5ONS");
+            AMINO_FORMULAS['d'] = AMINO_FORMULAS['D'] = Molecule.Parse("C4H5O3N");
+            AMINO_FORMULAS['e'] = AMINO_FORMULAS['E'] = Molecule.Parse("C5H7O3N");
+            AMINO_FORMULAS['f'] = AMINO_FORMULAS['F'] = Molecule.Parse("C9H9ON");
+            AMINO_FORMULAS['g'] = AMINO_FORMULAS['G'] = Molecule.Parse("C2H3ON");
+            AMINO_FORMULAS['h'] = AMINO_FORMULAS['H'] = Molecule.Parse("C6H7ON3");
+            AMINO_FORMULAS['i'] = AMINO_FORMULAS['I'] = Molecule.Parse("C6H11ON");
+            AMINO_FORMULAS['k'] = AMINO_FORMULAS['K'] = Molecule.Parse("C6H12ON2");
+            AMINO_FORMULAS['l'] = AMINO_FORMULAS['L'] = Molecule.Parse("C6H11ON");
+            AMINO_FORMULAS['m'] = AMINO_FORMULAS['M'] = Molecule.Parse("C5H9ONS");
+            AMINO_FORMULAS['n'] = AMINO_FORMULAS['N'] = Molecule.Parse("C4H6O2N2");
+            AMINO_FORMULAS['o'] = AMINO_FORMULAS['O'] = Molecule.Parse("C12H19N3O2");
+            AMINO_FORMULAS['p'] = AMINO_FORMULAS['P'] = Molecule.Parse("C5H7ON");
+            AMINO_FORMULAS['q'] = AMINO_FORMULAS['Q'] = Molecule.Parse("C5H8O2N2");
+            AMINO_FORMULAS['r'] = AMINO_FORMULAS['R'] = Molecule.Parse("C6H12ON4");
+            AMINO_FORMULAS['s'] = AMINO_FORMULAS['S'] = Molecule.Parse("C3H5O2N");
+            AMINO_FORMULAS['t'] = AMINO_FORMULAS['T'] = Molecule.Parse("C4H7O2N");
+            AMINO_FORMULAS['u'] = AMINO_FORMULAS['U'] = Molecule.Parse("C3H5NOSe");
+            AMINO_FORMULAS['v'] = AMINO_FORMULAS['V'] = Molecule.Parse("C5H9ON");
+            AMINO_FORMULAS['w'] = AMINO_FORMULAS['W'] = Molecule.Parse("C11H10ON2");
+            AMINO_FORMULAS['y'] = AMINO_FORMULAS['Y'] = Molecule.Parse("C9H9O2N");
             // ReSharper restore NonLocalizedString
             // ReSharper restore CharImplicitlyConvertedToNumeric
         }
 
-        public static string GetAminoAcidFormula(char aa)
+        public static Molecule GetAminoAcidFormula(char aa)
         {
-            return AMINO_FORMULAS[aa];
+            return Molecule.FromDict(ImmutableSortedList.FromValues(AMINO_FORMULAS[aa]));
         }
 
         public static string GetHeavyFormula(char aa, LabelAtoms labelAtoms)
         {
-            string formulaAA = AMINO_FORMULAS[aa];
-            if (string.IsNullOrEmpty(formulaAA))
+            var formulaAA = AMINO_FORMULAS[aa];
+            if (formulaAA == null)
                 throw new ArgumentOutOfRangeException(string.Format(Resources.SequenceMassCalc_GetHeavyFormula_No_formula_found_for_the_amino_acid___0__, aa));
-            string formulaHeavy = formulaAA;
+            var formulaHeavy = formulaAA.ToString();
             if ((labelAtoms & LabelAtoms.C13) != 0)
                 formulaHeavy = formulaHeavy.Replace(BioMassCalc.C, BioMassCalc.C13);
             if ((labelAtoms & LabelAtoms.N15) != 0)

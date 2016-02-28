@@ -94,15 +94,11 @@ namespace pwiz.Skyline.Model.Proteome
 
         public Digestion Digest(Enzyme enzyme, DigestSettings digestSettings, ILoadMonitor loader)
         {
-            ProgressStatus progressStatus = new ProgressStatus(string.Format(Resources.BackgroundProteomeSpec_Digest_Digesting__0__, enzyme.Name));
+            var progressStatus = new ProgressStatus(string.Format(Resources.BackgroundProteomeSpec_Digest_Digesting__0__, enzyme.Name));
+            loader.UpdateProgress(progressStatus);
             using (var proteomeDb = OpenProteomeDb())
             {
-                return proteomeDb.Digest(new ProteaseImpl(enzyme),
-                                            (s, i) =>
-                                            {
-                                                loader.UpdateProgress(progressStatus.ChangePercentComplete(i));
-                                                return !loader.IsCanceled;
-                                            });
+                return proteomeDb.Digest(new ProteaseImpl(enzyme), digestSettings.MaxMissedCleavages, loader, ref progressStatus);
             }
         }
 
@@ -168,24 +164,29 @@ namespace pwiz.Skyline.Model.Proteome
             _enzyme = enzyme;
         }
 
-        public IEnumerable<DigestedPeptide> Digest(Protein protein)
+        public IEnumerable<DigestedPeptide> Digest(Protein protein, int maxMissedCleavages)
         {
-            if (string.IsNullOrEmpty(protein.Sequence))
+            return DigestSequence(protein.Sequence, maxMissedCleavages, null);
+        }
+
+        public IEnumerable<DigestedPeptide> DigestSequence(string proteinSequence, int maxMissedCleavages, int? maxPeptideSequenceLength)
+        {
+            if (string.IsNullOrEmpty(proteinSequence))
             {
                 yield break;
             }
             FastaSequence fastaSequence;
             try
             {
-                fastaSequence = new FastaSequence("name", "description", new List<ProteinMetadata>(), protein.Sequence); // Not L10N
+                fastaSequence = new FastaSequence("name", "description", new List<ProteinMetadata>(), proteinSequence); // Not L10N
             }
             catch (InvalidDataException)
             {
                 // It's possible that the peptide sequence in the fasta file was bogus, in which case we just don't digest it.
                 yield break;
             }
-            DigestSettings digestSettings = new DigestSettings(6, false);
-            foreach (var digest in _enzyme.Digest(fastaSequence, digestSettings))
+            var digestSettings = new DigestSettings(maxMissedCleavages, false);
+            foreach (var digest in _enzyme.Digest(fastaSequence, digestSettings, maxPeptideSequenceLength))
             {
                 var digestedPeptide = new DigestedPeptide
                 {

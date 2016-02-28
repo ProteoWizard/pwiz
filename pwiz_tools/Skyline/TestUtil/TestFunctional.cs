@@ -614,9 +614,9 @@ namespace pwiz.SkylineTestUtil
         }
 
         // Pause a test so we can play with the UI manually.
-        public static void PauseTest()
+        public static void PauseTest(string description = null)
         {
-            PauseAndContinueForm.Show();
+            PauseAndContinueForm.Show(description);
         }
 
         /// <summary>

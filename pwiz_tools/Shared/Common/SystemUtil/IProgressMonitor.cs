@@ -43,4 +43,23 @@ namespace pwiz.Common.SystemUtil
         /// </summary>
         bool HasUI { get; }
     }
+
+
+    public class SilentProgressMonitor : IProgressMonitor
+    {
+        public bool IsCanceled
+        {
+            get { return false; }
+        }
+
+        public UpdateProgressResponse UpdateProgress(ProgressStatus status)
+        {
+            return UpdateProgressResponse.normal;
+        }
+        
+        public bool HasUI
+        {
+            get { return false; }
+        }
+    }
 }

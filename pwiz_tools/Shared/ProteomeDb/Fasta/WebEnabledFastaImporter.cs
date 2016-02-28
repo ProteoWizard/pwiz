@@ -672,6 +672,8 @@ namespace pwiz.ProteomeDatabase.Fasta
                 {UNIPROTKB_TAG, UNIPROTKB_RATELIMIT}
             };
 
+            progressMonitor = progressMonitor ?? new SilentProgressMonitor();
+
             // sort out the various webservices so we can batch up
             var proteins = proteinsToSearch.ToArray();
             foreach (var prot in proteins)
@@ -742,7 +744,7 @@ namespace pwiz.ProteomeDatabase.Fasta
                 var consecutiveFailures = 0;
                 var failureCount = 0;
                 var successCount = 0;
-                cancelled |= ((progressMonitor != null) && progressMonitor.IsCanceled);
+                cancelled |= progressMonitor.IsCanceled;
                 if (cancelled)
                     break;
                 var politenessIntervalMsec = ratelimit[searchType];
@@ -750,7 +752,7 @@ namespace pwiz.ProteomeDatabase.Fasta
                 while (true)
                 {
                     var idealBatchsize = _maxBatchSize[searchType];
-                    cancelled |= ((progressMonitor != null) && progressMonitor.IsCanceled);
+                    cancelled |= progressMonitor.IsCanceled;
                     if (cancelled)
                         break;
                     var type = searchType;
@@ -779,13 +781,13 @@ namespace pwiz.ProteomeDatabase.Fasta
                     if (snoozeMs > 0)
                         Thread.Sleep((int)snoozeMs);
                     politeStopwatch.Restart();
-                    cancelled |= ((progressMonitor != null) && progressMonitor.IsCanceled);
+                    cancelled |= progressMonitor.IsCanceled;
                     if (cancelled)
                         break;
                     var processed = DoWebserviceLookup(searches, searchType, progressMonitor);
                     if (processed < 0) // Returns negative on web access error
                     {
-                        if (processed == -2)
+                        if (processed == URL_TOO_LONG)
                         {
                             // We're creating URLs that are too long
                             _maxBatchSize[searchType] = Math.Max(1, (int)(_maxBatchSize[searchType] * 0.75));
@@ -910,6 +912,7 @@ namespace pwiz.ProteomeDatabase.Fasta
         public const string KNOWNGOOD_UNIPROT_SEARCH_TARGET = "Q08641"; // Not L10N
         public const int KNOWNGOOD_UNIPROT_SEARCH_TARGET_SEQLEN = 628;
         public const int MAX_CONSECUTIVE_PROTEIN_METATDATA_LOOKUP_FAILURES = 20; // If we fail on several in a row, assume all are doomed to fail.
+        public const int URL_TOO_LONG = -2;
 
         private bool SimilarSearchTerms(string a, string b)
         {
@@ -938,8 +941,8 @@ namespace pwiz.ProteomeDatabase.Fasta
             {
                 if (searchterms.Count == 0)
                     break;
-                if ((progressMonitor != null) && progressMonitor.IsCanceled)
-                    break;
+                if (progressMonitor.IsCanceled)
+                    break; // Cancelled
                 var caught = false;
                 try
                 {
@@ -1260,7 +1263,7 @@ namespace pwiz.ProteomeDatabase.Fasta
                                     proteins[0].SetWebSearchCompleted(); // No more need for lookup
                                     return 1; // We resolved one
                                 }
-                                return -2; // Probably asked for too many at once, caller will go into batch reduction mode
+                                return URL_TOO_LONG; // Probably asked for too many at once, caller will go into batch reduction mode
                         }
                     }
                     caught = true;

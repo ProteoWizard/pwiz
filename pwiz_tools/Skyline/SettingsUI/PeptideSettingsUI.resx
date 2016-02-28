@@ -355,7 +355,7 @@ to occur in combination on any fragment instance.</value>
     <value>1</value>
   </data>
   <data name="comboMissedCleavages.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 95</value>
+    <value>28, 87</value>
   </data>
   <data name="comboMissedCleavages.Size" type="System.Drawing.Size, System.Drawing">
     <value>44, 21</value>
@@ -377,7 +377,7 @@ considering protein digestion.</value>
     <value>tabDigestion</value>
   </data>
   <data name="&gt;&gt;comboMissedCleavages.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>3</value>
   </data>
   <data name="comboEnzyme.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 36</value>
@@ -403,10 +403,10 @@ to injection into the mass spectrometer
     <value>tabDigestion</value>
   </data>
   <data name="&gt;&gt;comboEnzyme.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>5</value>
   </data>
   <data name="comboBackgroundProteome.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 158</value>
+    <value>28, 188</value>
   </data>
   <data name="comboBackgroundProteome.Size" type="System.Drawing.Size, System.Drawing">
     <value>169, 21</value>
@@ -429,7 +429,7 @@ injected into the mass spectrometer.</value>
     <value>tabDigestion</value>
   </data>
   <data name="&gt;&gt;comboBackgroundProteome.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>7</value>
   </data>
   <data name="textMeasureRTWindow.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 133</value>
@@ -1094,14 +1094,82 @@ W = 2T/R</value>
   <data name="&gt;&gt;cbUseSpectralLibraryDriftTimes.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
+  <data name="comboBoxPeptideUniquenessConstraint.Items" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="comboBoxPeptideUniquenessConstraint.Items1" xml:space="preserve">
+    <value>Proteins</value>
+  </data>
+  <data name="comboBoxPeptideUniquenessConstraint.Items2" xml:space="preserve">
+    <value>Genes</value>
+  </data>
+  <data name="comboBoxPeptideUniquenessConstraint.Items3" xml:space="preserve">
+    <value>Species</value>
+  </data>
+  <data name="comboBoxPeptideUniquenessConstraint.Location" type="System.Drawing.Point, System.Drawing">
+    <value>28, 238</value>
+  </data>
+  <data name="comboBoxPeptideUniquenessConstraint.Size" type="System.Drawing.Size, System.Drawing">
+    <value>87, 21</value>
+  </data>
+  <data name="comboBoxPeptideUniquenessConstraint.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="comboBoxPeptideUniquenessConstraint.ToolTip" xml:space="preserve">
+    <value>"Protein" excludes any peptide that appears in more than one protein in the background proteome.  
+"Gene" excludes any peptide that appears in proteins for more than one gene in the background proteome.  
+"Species" excludes any peptide that appears in proteins for more than one species in the background proteome.</value>
+  </data>
+  <data name="&gt;&gt;comboBoxPeptideUniquenessConstraint.Name" xml:space="preserve">
+    <value>comboBoxPeptideUniquenessConstraint</value>
+  </data>
+  <data name="&gt;&gt;comboBoxPeptideUniquenessConstraint.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboBoxPeptideUniquenessConstraint.Parent" xml:space="preserve">
+    <value>tabDigestion</value>
+  </data>
+  <data name="&gt;&gt;comboBoxPeptideUniquenessConstraint.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
   <data name="tabControl1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="labelPeptideUniquenessConstraint.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelPeptideUniquenessConstraint.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelPeptideUniquenessConstraint.Location" type="System.Drawing.Point, System.Drawing">
+    <value>25, 222</value>
+  </data>
+  <data name="labelPeptideUniquenessConstraint.Size" type="System.Drawing.Size, System.Drawing">
+    <value>156, 13</value>
+  </data>
+  <data name="labelPeptideUniquenessConstraint.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="labelPeptideUniquenessConstraint.Text" xml:space="preserve">
+    <value>Enforce peptide &amp;uniqueness by:</value>
+  </data>
+  <data name="&gt;&gt;labelPeptideUniquenessConstraint.Name" xml:space="preserve">
+    <value>labelPeptideUniquenessConstraint</value>
+  </data>
+  <data name="&gt;&gt;labelPeptideUniquenessConstraint.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelPeptideUniquenessConstraint.Parent" xml:space="preserve">
+    <value>tabDigestion</value>
+  </data>
+  <data name="&gt;&gt;labelPeptideUniquenessConstraint.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 79</value>
+    <value>25, 71</value>
   </data>
   <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
     <value>117, 13</value>
@@ -1122,7 +1190,7 @@ W = 2T/R</value>
     <value>tabDigestion</value>
   </data>
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>2</value>
   </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1149,13 +1217,13 @@ W = 2T/R</value>
     <value>tabDigestion</value>
   </data>
   <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>4</value>
   </data>
   <data name="label15.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="label15.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 142</value>
+    <value>25, 172</value>
   </data>
   <data name="label15.Size" type="System.Drawing.Size, System.Drawing">
     <value>115, 13</value>
@@ -1176,7 +1244,7 @@ W = 2T/R</value>
     <value>tabDigestion</value>
   </data>
   <data name="&gt;&gt;label15.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>6</value>
   </data>
   <data name="tabDigestion.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
@@ -2370,6 +2438,6 @@ W = 2T/R</value>
     <value>PeptideSettingsUI</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

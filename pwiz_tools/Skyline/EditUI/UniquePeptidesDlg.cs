@@ -50,7 +50,26 @@ namespace pwiz.Skyline.EditUI
         private List<ProteinColumn> _proteinColumns;
         private List<PeptideDocNode> _peptideDocNodes;
         private List<HashSet<Protein>> _peptideProteins;
-        private bool _targetIsInBackgroundProteome;
+        private readonly HashSet<PeptideDocNode> _peptidesInBackgroundProteome;
+
+        // Support multiple selection (though using peptide settings is more efficient way to do this filtering)
+        public static List<PeptideGroupTreeNode> PeptideSelection(SequenceTree sequenceTree)
+        {
+            var peptideGroupTreeNodes = new List<PeptideGroupTreeNode>();
+            foreach (var node in sequenceTree.SelectedNodes)
+            {
+                PeptideGroupTreeNode peptideGroupTreeNode = null;
+                var treeNode = node as SrmTreeNode;
+                if (treeNode != null)
+                    peptideGroupTreeNode = treeNode.GetNodeOfType<PeptideGroupTreeNode>();
+
+                if (peptideGroupTreeNode != null && peptideGroupTreeNode.ChildDocNodes.Cast<PeptideDocNode>().Any(n => n.IsProteomic))
+                {
+                    peptideGroupTreeNodes.Add(peptideGroupTreeNode);
+                }
+            }
+            return peptideGroupTreeNodes;
+        }
 
         public UniquePeptidesDlg(IDocumentUIContainer documentUiContainer)
         {
@@ -59,9 +78,16 @@ namespace pwiz.Skyline.EditUI
             Icon = Resources.Skyline;
 
             DocumentUIContainer = documentUiContainer;
-            _targetIsInBackgroundProteome = false;
+            _peptidesInBackgroundProteome = new HashSet<PeptideDocNode>();
             dataGridView1.CurrentCellChanged += dataGridView1_CurrentCellChanged; 
         }
+
+        public enum UniquenessType
+        {
+            protein, // Reject any peptide found in more than one protein  in background proteome
+            gene, // Reject any peptide associated with more than one gene in background proteome
+            species // Reject any peptide associated with more than one species in background proteome
+        };
 
         public IDocumentUIContainer DocumentUIContainer { get; private set; }
 
@@ -76,14 +102,16 @@ namespace pwiz.Skyline.EditUI
             {
                 return;
             }
+            // Expecting to find this peptide
+            var peptideGroupDocNode = PeptideGroupDocNodes.First(g => g.Peptides.Contains(peptideDocNode));
             String peptideSequence = peptideDocNode.Peptide.Sequence;
             String proteinSequence;
             var proteinColumn = dataGridView1.Columns[dataGridView1.CurrentCell.ColumnIndex].Tag as ProteinColumn;
             ProteinMetadata metadata;
             if (proteinColumn == null)
             {
-                metadata = PeptideGroupDocNode.ProteinMetadata;
-                proteinSequence = PeptideGroupDocNode.PeptideGroup.Sequence;
+                metadata = peptideGroupDocNode.ProteinMetadata;
+                proteinSequence = peptideGroupDocNode.PeptideGroup.Sequence;
             }
             else
             {
@@ -110,12 +138,12 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
-        public PeptideGroupTreeNode PeptideGroupTreeNode { get; set;}
-        public PeptideGroupDocNode PeptideGroupDocNode
+        public List<PeptideGroupTreeNode> PeptideGroupTreeNodes { get; set;}
+        public IEnumerable<PeptideGroupDocNode> PeptideGroupDocNodes
         {
-            get { return (PeptideGroupDocNode) PeptideGroupTreeNode.Model;}
+            get { return PeptideGroupTreeNodes.Select(n => (PeptideGroupDocNode)(n.Model)); }
         }
-        public SrmDocument SrmDocument { get { return PeptideGroupTreeNode.Document; } }
+        public SrmDocument SrmDocument { get { return PeptideGroupTreeNodes.First().Document; } }
         public BackgroundProteome BackgroundProteome
         {
             get
@@ -135,12 +163,14 @@ namespace pwiz.Skyline.EditUI
             }
             _proteinColumns = new List<ProteinColumn>();
             _peptideDocNodes = new List<PeptideDocNode>();
-            foreach (var child in PeptideGroupDocNode.Children)
+            foreach (var peptideGroupDocNode in PeptideGroupDocNodes)
             {
-                var nodePep = child as PeptideDocNode;
-                if (nodePep != null && nodePep.IsProteomic)
+                foreach (PeptideDocNode nodePep in peptideGroupDocNode.Children)
                 {
-                    _peptideDocNodes.Add(nodePep);
+                    if (nodePep.IsProteomic)
+                    {
+                        _peptideDocNodes.Add(nodePep);
+                    }
                 }
             }
             _peptideProteins = null;
@@ -191,10 +221,20 @@ namespace pwiz.Skyline.EditUI
             {
                 ProteinColumn proteinColumn = new ProteinColumn(_proteinColumns.Count, protein);
                 _proteinColumns.Add(proteinColumn);
+                var accession = string.IsNullOrEmpty(protein.Accession) ? string.Empty : protein.Accession + "\n"; // Not L10N
+                var proteinName = protein.Name;
+                // Isoforms may all get the same preferredname, which is confusing to look at
+                if (!string.IsNullOrEmpty(protein.PreferredName) &&
+                    !proteinList.Any(p => (!ReferenceEquals(p, protein) &&
+                             (string.Compare(p.PreferredName, protein.PreferredName, StringComparison.OrdinalIgnoreCase) == 0))))
+                {
+                    proteinName = protein.PreferredName;
+                }
+                var gene = string.IsNullOrEmpty(protein.Gene) ? string.Empty : "\n" + protein.Gene; // Not L10N
                 DataGridViewCheckBoxColumn column = new DataGridViewCheckBoxColumn
                 {
                     Name = proteinColumn.Name,
-                    HeaderText = ((protein.Gene != null) ? String.Format(Resources.UniquePeptidesDlg_LaunchPeptideProteinsQuery_, protein.Name, protein.Gene) : protein.Name), // Not L10N
+                    HeaderText = accession + proteinName + gene, 
                     ReadOnly = true,
                     ToolTipText = protein.ProteinMetadata.DisplayTextWithoutName(), 
                     SortMode = DataGridViewColumnSortMode.Automatic,
@@ -253,26 +293,36 @@ namespace pwiz.Skyline.EditUI
                 using (var proteomeDb = BackgroundProteome.OpenProteomeDb())
                 {
                     Digestion digestion = BackgroundProteome.GetDigestion(proteomeDb, SrmDocument.Settings.PeptideSettings);
-                    foreach (var peptideDocNode in _peptideDocNodes)
+                    if (digestion != null)
                     {
-                        HashSet<Protein> proteins = new HashSet<Protein>();
-                        if (digestion != null)
+                        var peptidesOfInterest = _peptideDocNodes.Select(node => node.Peptide.Sequence);
+                        var sequenceProteinsDict = digestion.GetProteinsWithSequences(peptidesOfInterest, null);
+                        if (longWaitBroker.IsCanceled)
                         {
-                            if (longWaitBroker.IsCanceled)
-                            {
-                                return;
-                            }
-                            foreach (Protein protein in digestion.GetProteinsWithSequence(peptideDocNode.Peptide.Sequence))
-                            {
-                                if (protein.Sequence == PeptideGroupDocNode.PeptideGroup.Sequence)
-                                {
-                                    _targetIsInBackgroundProteome = true;
-                                    continue;
-                                }
-                                proteins.Add(protein);
-                            }
+                            return;
                         }
-                        peptideProteins.Add(proteins);
+                        foreach (var peptideDocNode in _peptideDocNodes)
+                        {
+                            HashSet<Protein> proteins = new HashSet<Protein>();
+                            var peptideGroupDocNode = PeptideGroupDocNodes.First(g => g.Peptides.Contains(peptideDocNode));
+                            List<Protein> proteinsForSequence;
+                            if (sequenceProteinsDict.TryGetValue(peptideDocNode.Peptide.Sequence, out proteinsForSequence))
+                            {
+                                if (peptideGroupDocNode != null)
+                                {
+                                    foreach (var protein in proteinsForSequence)
+                                    {
+                                        if (protein.Sequence == peptideGroupDocNode.PeptideGroup.Sequence)
+                                        {
+                                            _peptidesInBackgroundProteome.Add(peptideDocNode);
+                                            continue;
+                                        }
+                                        proteins.Add(protein);
+                                    }
+                                }
+                            }
+                            peptideProteins.Add(proteins);
+                        }
                     }
                 }
             }
@@ -307,10 +357,20 @@ namespace pwiz.Skyline.EditUI
         {
             SetSelectedRowsIncluded(false);
         }
-        
-        private void uniqueOnlyToolStripMenuItem_Click(object sender, EventArgs e)
+
+        private void uniqueProteinsOnlyToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            SelectUnique();
+            SelectUnique(UniquenessType.protein);
+       }
+
+        private void uniqueGenesOnlyToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SelectPeptidesWithNumberOfMatchesAtOrBelowThreshold(1, UniquenessType.gene);
+        }
+
+        private void uniqueSpeciesOnlyToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SelectPeptidesWithNumberOfMatchesAtOrBelowThreshold(1, UniquenessType.species);
         }
 
         private void excludeBackgroundProteomeToolStripMenuItem_Click(object sender, EventArgs e)
@@ -339,13 +399,14 @@ namespace pwiz.Skyline.EditUI
             SetCheckBoxPeptideIncludedHeaderState();
         }
 
-        private void SelectPeptidesWithNumberOfMatchesAtOrBelowThreshold(int threshold)
+        private void SelectPeptidesWithNumberOfMatchesAtOrBelowThreshold(int threshold, UniquenessType uniqueBy)
         {
             dataGridView1.EndEdit();
+            var dubious = new HashSet<string>();
             for (int rowIndex = 0; rowIndex < dataGridView1.Rows.Count; rowIndex++)
             {
-                int matchCount = _targetIsInBackgroundProteome ? 1 : 0;
                 var row = dataGridView1.Rows[rowIndex];
+                int matchCount = _peptidesInBackgroundProteome.Contains((PeptideDocNode)row.Tag) ? 1 : 0;
                 for (int col = 0; col < dataGridView1.ColumnCount; col++)
                 {
                     if (col == PeptideIncludedColumn.Index || col == PeptideColumn.Index)
@@ -353,7 +414,38 @@ namespace pwiz.Skyline.EditUI
 
                     if (row.Cells[col].Value is bool && ((bool) row.Cells[col].Value))
                     {
-                        matchCount++;
+                        if (uniqueBy == UniquenessType.protein)
+                        {
+                            matchCount++;
+                        }
+                        else
+                        {
+                            var peptide = (PeptideDocNode)row.Tag;
+                            var parent = PeptideGroupDocNodes.First(p => p.Children.Contains(peptide));
+                            string testValA;
+                            string testValB;
+                            // ATP5B and atp5b are the same thing, as are "mus musculus" and "MUS MUSCULUS"
+                            if (uniqueBy == UniquenessType.gene)
+                            {
+                                // ReSharper disable once PossibleNullReferenceException
+                                if (string.Compare(testValA = parent.ProteinMetadata.Gene, testValB = ((ProteinColumn) dataGridView1.Columns[col].Tag).Protein.Gene, StringComparison.OrdinalIgnoreCase) != 0)
+                                    matchCount++;
+                            }
+                            else
+                            {
+                                // ReSharper disable once PossibleNullReferenceException
+                                if (string.Compare(testValA = parent.ProteinMetadata.Species, testValB = ((ProteinColumn)dataGridView1.Columns[col].Tag).Protein.Species, StringComparison.OrdinalIgnoreCase) != 0)
+                                    matchCount++;
+                            }
+                            if (string.IsNullOrEmpty(testValA))
+                            {
+                                dubious.Add(parent.Name);
+                            }
+                            if (string.IsNullOrEmpty(testValB))
+                            {
+                                dubious.Add(((ProteinColumn)dataGridView1.Columns[col].Tag).Protein.Name);
+                            }
+                        }
                     }
                     if (matchCount > threshold)
                     {
@@ -363,6 +455,15 @@ namespace pwiz.Skyline.EditUI
                 row.Cells[PeptideIncludedColumn.Name].Value = (matchCount <= threshold);
             }
             SetCheckBoxPeptideIncludedHeaderState();
+            if (dubious.Any())
+            {
+                var dubiousValues = TextUtil.LineSeparate(uniqueBy == UniquenessType.gene ? 
+                    Resources.UniquePeptidesDlg_SelectPeptidesWithNumberOfMatchesAtOrBelowThreshold_Some_background_proteome_proteins_did_not_have_gene_information__this_selection_may_be_suspect_ :
+                    Resources.UniquePeptidesDlg_SelectPeptidesWithNumberOfMatchesAtOrBelowThreshold_Some_background_proteome_proteins_did_not_have_species_information__this_selection_may_be_suspect_,
+                    Resources.UniquePeptidesDlg_SelectPeptidesWithNumberOfMatchesAtOrBelowThreshold_These_proteins_include_,
+                    TextUtil.LineSeparate(dubious)); // Not L10N
+                MessageDlg.Show(this, dubiousValues);
+            }
         }
 
         private void SetSelectedRowsIncluded(bool included)
@@ -399,10 +500,9 @@ namespace pwiz.Skyline.EditUI
         private SrmDocument ExcludePeptidesFromDocument(SrmDocument srmDocument)
         {
             List<DocNode> children = new List<DocNode>();
-            PeptideGroupDocNode peptideGroupDocNode = PeptideGroupDocNode;
             foreach (var docNode in srmDocument.Children)
             {
-                children.Add(!Equals(docNode, peptideGroupDocNode)
+                children.Add(!PeptideGroupDocNodes.Contains(docNode)
                                  ? docNode
                                  : ExcludePeptides((PeptideGroupDocNode) docNode));
             }
@@ -417,7 +517,8 @@ namespace pwiz.Skyline.EditUI
                 var row = dataGridView1.Rows[i];
                 if (!(bool) row.Cells[PeptideIncludedColumn.Name].Value)
                 {
-                    excludedPeptides.Add((PeptideDocNode) row.Tag);
+                    if (peptideGroupDocNode.Children.Contains((PeptideDocNode)row.Tag))
+                        excludedPeptides.Add((PeptideDocNode) row.Tag);
                 }
             }
             List<PeptideDocNode> children = new List<PeptideDocNode>();
@@ -480,14 +581,14 @@ namespace pwiz.Skyline.EditUI
             return dataGridView1;
         }
 
-        public void SelectUnique()
+        public void SelectUnique(UniquenessType uniquenessType)
         {
-            SelectPeptidesWithNumberOfMatchesAtOrBelowThreshold(1);
+            SelectPeptidesWithNumberOfMatchesAtOrBelowThreshold(1, uniquenessType);
         }
 
         public void ExcludeBackgroundProteome()
         {
-            SelectPeptidesWithNumberOfMatchesAtOrBelowThreshold(0);
+            SelectPeptidesWithNumberOfMatchesAtOrBelowThreshold(0, UniquenessType.protein);
         }
 
         #endregion

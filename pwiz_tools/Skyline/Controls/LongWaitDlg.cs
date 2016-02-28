@@ -81,6 +81,16 @@ namespace pwiz.Skyline.Controls
 
         public bool IsCancellable { get; private set; }
 
+        public void EnableCancelOption(bool enable)
+        {
+            // Work is done, but it's still nice to have the progress indicator visible for context while any final 
+            // steps take place - but it's wrong to offer a cancellation option, so grey it out
+            if (btnCancel != null && btnCancel.IsHandleCreated)
+            {
+                btnCancel.Invoke((Action) (() => btnCancel.Enabled = enable)); 
+            }
+        }
+
         public bool IsDocumentChanged(SrmDocument docOrig)
         {
             return _documentContainer != null && !ReferenceEquals(docOrig, _documentContainer.Document);

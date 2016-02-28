@@ -543,10 +543,10 @@ namespace pwiz.Skyline
 
         public void ModifyDocument(string description, Func<SrmDocument, SrmDocument> act)
         {
-            ModifyDocument(description, null, act);
+            ModifyDocument(description, null, act, null, null);
         }
 
-        public void ModifyDocument(string description, IUndoState undoState, Func<SrmDocument, SrmDocument> act)
+        public void ModifyDocument(string description, IUndoState undoState, Func<SrmDocument, SrmDocument> act, Action onModifying, Action onModified)
         {
             try
             {
@@ -556,6 +556,10 @@ namespace pwiz.Skyline
                     SrmDocument docNew;
                     do
                     {
+                        // Make sure cancel is enabled if it is going to be disabled below
+                        if (onModifying != null)
+                            onModifying();
+
                         docOriginal = Document;
                         docNew = act(docOriginal);
 
@@ -566,6 +570,15 @@ namespace pwiz.Skyline
 
                         // And mark the document as changed by the user.
                         docNew = docNew.IncrementUserRevisionIndex();
+
+                        // It's now too late to quit - if caller has a cancel button or equivalent it should be disabled now,
+                        // as leaving it enabled during what could be a long period of updating (including UI, possibly) can
+                        // lead to confusing behavior.  Possibly there are other reasons to provide a onModified Action, but this 
+                        // is the original use case.
+                        if (onModified != null)
+                        {
+                            onModified();
+                        }
                     }
                     while (!SetDocument(docNew, docOriginal));
                     
@@ -891,7 +904,7 @@ namespace pwiz.Skyline
             SrmTreeNode nodeTree = SequenceTree.SelectedNode as SrmTreeNode;
             var enabled = nodeTree != null;
             editNoteToolStripMenuItem.Enabled = enabled;
-            manageUniquePeptidesMenuItem.Enabled = enabled;
+            manageUniquePeptidesMenuItem.Enabled = UniquePeptidesDlg.PeptideSelection(SequenceTree).Any(); // Only works for peptide molecules, and only if selected
             var nodePepTree = SequenceTree.GetNodeOfType<PeptideTreeNode>();
             modifyPeptideMenuItem.Enabled = nodePepTree != null;
             setStandardTypeMenuItem.Enabled = HasSelectedTargetPeptides();
@@ -2048,19 +2061,16 @@ namespace pwiz.Skyline
                                                       Resources.SkylineWindow_ShowUniquePeptidesDlg_Choose_a_background_proteome_in_the_Digestions_tab_of_the_Peptide_Settings));
                 return;
             }
-            var treeNode = SequenceTree.SelectedNode;
-            while (treeNode != null && !(treeNode is PeptideGroupTreeNode))
+
+            // Need at least one node selected in tree
+            var peptideGroupTreeNodes = UniquePeptidesDlg.PeptideSelection(SequenceTree);
+            if (!peptideGroupTreeNodes.Any())
             {
-                treeNode = treeNode.Parent;
-            }
-            var peptideGroupTreeNode = treeNode as PeptideGroupTreeNode;
-            if (peptideGroupTreeNode == null)
-            {
-                return;
+                return;  // No selection
             }
             using (UniquePeptidesDlg uniquePeptidesDlg = new UniquePeptidesDlg(this)
             {
-                PeptideGroupTreeNode = peptideGroupTreeNode
+                PeptideGroupTreeNodes = peptideGroupTreeNodes
             })
             {
                 uniquePeptidesDlg.ShowDialog(this);
@@ -3083,7 +3093,29 @@ namespace pwiz.Skyline
                         {
                             using (var settingsChangeMonitor = new SrmSettingsChangeMonitor(progressMonitor, message, this))
                             {
-                                success = ChangeSettings(newSettings, true, null, undoState, settingsChangeMonitor);
+                                // If background proteome lacks the needed protein metadata for uniqueness checks, force loading now
+                                var diff = new SrmSettingsDiff(newSettings, Document.Settings);
+                                if (diff.DiffPeptides || newSettings.PeptideSettings.NeedsBackgroundProteomeUniquenessCheckProcessing)
+                                {
+                                    if (progressMonitor.IsCanceled)
+                                    {
+                                        return;
+                                    }
+                                    // Looping here in case some other agent interrupts us with a change to Document
+                                    while (newSettings.PeptideSettings.NeedsBackgroundProteomeUniquenessCheckProcessing)
+                                    {
+                                        var manager = new BackgroundProteomeManager(); // Use the background loader logic, but in this thread
+                                        var withMetaData = manager.LoadForeground(newSettings.PeptideSettings, settingsChangeMonitor);
+                                        if (withMetaData == null)
+                                        {
+                                            return; // Cancelled
+                                        }
+                                        newSettings = newSettings.ChangePeptideSettings(s => s.ChangeBackgroundProteome(withMetaData));
+                                    }
+                                }
+                                success = ChangeSettings(newSettings, true, null, undoState, settingsChangeMonitor,
+                                    () => longWaitDlg.EnableCancelOption(true),
+                                    () => longWaitDlg.EnableCancelOption(false));
                             }
                         });
                         if (!success || longWaitDlg.IsCanceled)
@@ -3097,13 +3129,18 @@ namespace pwiz.Skyline
                     // Canceled mid-change due to background document change
                     documentChanged = true;
                 }
+                finally
+                {
+                    BackgroundProteomeManager._foregroundLoadRequested = false; // Done overriding the background loader
+                }
             }
             while (documentChanged);
 
             return true;
         }
 
-        public bool ChangeSettings(SrmSettings newSettings, bool store, string message = null, IUndoState undoState = null, SrmSettingsChangeMonitor monitor = null)
+        public bool ChangeSettings(SrmSettings newSettings, bool store, string message = null, IUndoState undoState = null,
+            SrmSettingsChangeMonitor monitor = null, Action onModifyingAction = null, Action onModifiedAction = null)
         {
             if (store)
             {
@@ -3119,7 +3156,7 @@ namespace pwiz.Skyline
             }
 
             ModifyDocument(message ?? Resources.SkylineWindow_ChangeSettings_Change_settings, undoState,
-                doc => doc.ChangeSettings(newSettings, monitor));
+                doc => doc.ChangeSettings(newSettings, monitor), onModifyingAction, onModifiedAction);
             return true;
         }
 

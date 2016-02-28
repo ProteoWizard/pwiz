@@ -1708,6 +1708,21 @@ namespace pwiz.Skyline.Model.DocSettings
     }
 
     /// <summary>
+    /// Transient values useful for ChangeSettings
+    /// </summary>
+    public class DocumentSettingsContext
+    {
+        public DocumentSettingsContext(IEnumerable<PeptideDocNode> peptideDocNodesPrecalculatedForUniquenessCheck,
+            Dictionary<string, bool> uniquenessDict)
+        {
+            PeptideDocNodesPrecalculatedForUniquenessCheck = peptideDocNodesPrecalculatedForUniquenessCheck;
+            UniquenessDict = uniquenessDict;
+        }
+        public IEnumerable<PeptideDocNode> PeptideDocNodesPrecalculatedForUniquenessCheck { get; private set; }
+        public Dictionary<string, bool> UniquenessDict { get; private set; }
+    }
+
+    /// <summary>
     /// Enum used to specify the representation of modifications in a sequence
     /// </summary>
     public enum SequenceModFormatType { mass_diff, mass_diff_narrow, three_letter_code };
@@ -1802,6 +1817,11 @@ namespace pwiz.Skyline.Model.DocSettings
                 _progressMonitor.UpdateProgress(statusNew);
         }
 
+        public bool IsCanceled()
+        {
+            return _progressMonitor.IsCanceled;
+        }
+
         public void Dispose()
         {
             if (_seenGroupCount + _seenMoleculeCount > 0)
@@ -1894,7 +1914,8 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public SrmSettingsDiff(bool diffPeptides, bool diffPeptideProps,
             bool diffTransitionGroups, bool diffTransitionGroupProps,
-            bool diffTransitions, bool diffTransitionProps)
+            bool diffTransitions, bool diffTransitionProps,
+            SrmSettingsChangeMonitor monitor = null)
         {
             DiffPeptides = diffPeptides;
             DiffPeptideProps = diffPeptideProps;
@@ -1902,6 +1923,7 @@ namespace pwiz.Skyline.Model.DocSettings
             DiffTransitionGroupProps = diffTransitionGroupProps;
             DiffTransitions = diffTransitions;
             DiffTransitionProps = diffTransitionProps;
+            Monitor = monitor;
         }
 
         /// <summary>
@@ -1956,10 +1978,19 @@ namespace pwiz.Skyline.Model.DocSettings
                                   // And changing DIA isolation scheme could change precursors
                                   !Equals(newTran.FullScan.IsolationScheme, oldTran.FullScan.IsolationScheme);
 
+            // Background proteome uniqueness constraints - only considered a change if constraint type
+            // changes, or if constraint is non-None and background proteome or digestion enzyme changes
+            var uniquenessConstraintChange = 
+                !Equals(newPep.Filter.PeptideUniqueness, oldPep.Filter.PeptideUniqueness) ||
+                (!Equals(newPep.Filter.PeptideUniqueness, PeptideFilter.PeptideUniquenessConstraint.none) &&
+                 (!newPep.BackgroundProteome.Equals(oldPep.BackgroundProteome) ||
+                  !newPep.DigestSettings.Equals(oldPep.DigestSettings)));
+
             // Change peptides if enzyme, digestion or filter settings changed
             DiffPeptides = !newPep.Enzyme.Equals(oldPep.Enzyme) ||
                                   !newPep.DigestSettings.Equals(oldPep.DigestSettings) ||
                                   !newPep.Filter.Equals(oldPep.Filter) ||
+                                  uniquenessConstraintChange ||
                                   // If precursors differ, and peptide picks depend on the library
                                   (precursorsDiff && newPep.Libraries.HasLibraries && newPep.Libraries.Pick != PeptidePick.filter) ||
                                   // If variable modifications changed

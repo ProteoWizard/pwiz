@@ -69,8 +69,10 @@ namespace pwiz.Skyline.SettingsUI
             this.comboDriftTimePredictor = new System.Windows.Forms.ComboBox();
             this.textSpectralLibraryDriftTimesResolvingPower = new System.Windows.Forms.TextBox();
             this.cbUseSpectralLibraryDriftTimes = new System.Windows.Forms.CheckBox();
+            this.comboBoxPeptideUniquenessConstraint = new System.Windows.Forms.ComboBox();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabDigestion = new System.Windows.Forms.TabPage();
+            this.labelPeptideUniquenessConstraint = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.label15 = new System.Windows.Forms.Label();
@@ -425,6 +427,19 @@ namespace pwiz.Skyline.SettingsUI
             this.cbUseSpectralLibraryDriftTimes.UseVisualStyleBackColor = true;
             this.cbUseSpectralLibraryDriftTimes.CheckedChanged += new System.EventHandler(this.cbUseSpectralLibraryDriftTimes_CheckChanged);
             // 
+            // comboBoxPeptideUniquenessConstraint
+            // 
+            this.comboBoxPeptideUniquenessConstraint.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxPeptideUniquenessConstraint.FormattingEnabled = true;
+            this.comboBoxPeptideUniquenessConstraint.Items.AddRange(new object[] {
+            resources.GetString("comboBoxPeptideUniquenessConstraint.Items"),
+            resources.GetString("comboBoxPeptideUniquenessConstraint.Items1"),
+            resources.GetString("comboBoxPeptideUniquenessConstraint.Items2"),
+            resources.GetString("comboBoxPeptideUniquenessConstraint.Items3")});
+            resources.ApplyResources(this.comboBoxPeptideUniquenessConstraint, "comboBoxPeptideUniquenessConstraint");
+            this.comboBoxPeptideUniquenessConstraint.Name = "comboBoxPeptideUniquenessConstraint";
+            this.helpTip.SetToolTip(this.comboBoxPeptideUniquenessConstraint, resources.GetString("comboBoxPeptideUniquenessConstraint.ToolTip"));
+            // 
             // tabControl1
             // 
             resources.ApplyResources(this.tabControl1, "tabControl1");
@@ -441,6 +456,8 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // tabDigestion
             // 
+            this.tabDigestion.Controls.Add(this.labelPeptideUniquenessConstraint);
+            this.tabDigestion.Controls.Add(this.comboBoxPeptideUniquenessConstraint);
             this.tabDigestion.Controls.Add(this.label2);
             this.tabDigestion.Controls.Add(this.comboMissedCleavages);
             this.tabDigestion.Controls.Add(this.label1);
@@ -450,6 +467,11 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(this.tabDigestion, "tabDigestion");
             this.tabDigestion.Name = "tabDigestion";
             this.tabDigestion.UseVisualStyleBackColor = true;
+            // 
+            // labelPeptideUniquenessConstraint
+            // 
+            resources.ApplyResources(this.labelPeptideUniquenessConstraint, "labelPeptideUniquenessConstraint");
+            this.labelPeptideUniquenessConstraint.Name = "labelPeptideUniquenessConstraint";
             // 
             // label2
             // 
@@ -929,5 +951,7 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.Label label23;
         private System.Windows.Forms.TextBox tbxQuantUnits;
         private System.Windows.Forms.Label lblQuantUnits;
+        private System.Windows.Forms.Label labelPeptideUniquenessConstraint;
+        private System.Windows.Forms.ComboBox comboBoxPeptideUniquenessConstraint;
     }
 }

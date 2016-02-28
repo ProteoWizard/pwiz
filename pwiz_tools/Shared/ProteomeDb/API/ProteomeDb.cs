@@ -23,8 +23,10 @@ using System.Data.SQLite;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using NHibernate;
 using NHibernate.Criterion;
+using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.DataModel;
 using pwiz.ProteomeDatabase.Fasta;
 using pwiz.ProteomeDatabase.Properties;
@@ -37,6 +39,8 @@ namespace pwiz.ProteomeDatabase.API
     public class ProteomeDb : IDisposable
     {
         public const string EXT_PROTDB = ".protdb"; // Not L10N
+
+        public static int PROTDB_MAX_MISSED_CLEAVAGES = 6;
 
         internal static readonly Type TYPE_DB = typeof(DbDigestion);
         public const int SCHEMA_VERSION_MAJOR_0 = 0;
@@ -90,6 +94,24 @@ namespace pwiz.ProteomeDatabase.API
                     UpdateSchema(session);
                 }
             }
+        }
+
+        private bool UpdateProgressAndCheckForCancellation(IProgressMonitor progressMonitor, ref ProgressStatus status, string message, int pctComplete)
+        {
+            if (progressMonitor.IsCanceled)
+                return false;
+            progressMonitor.UpdateProgress(status = status.ChangeMessage(message).ChangePercentComplete(pctComplete));
+            return true;
+        }
+
+        public int Refcount { get { return _databaseResource.Refcount; } }
+
+        // Close all file handles
+        public void CloseDbConnection()
+        {
+            if (Refcount > 1) // Don't try this unless you're the only instance using this db
+                throw new Exception("ProteomeDb locking problem"); // Not L10N
+            _databaseResource.SessionFactory.Close();
         }
 
         private void ReadVersion(ISession session)
@@ -194,10 +216,10 @@ namespace pwiz.ProteomeDatabase.API
             public ICollection<DbProteinName> Names { get; private set; }
         }
 
-        public void AddFastaFile(StreamReader reader, ProgressMonitor progressMonitor)
+        public void AddFastaFile(StreamReader reader, IProgressMonitor progressMonitor, ref ProgressStatus status,  bool delayAnalyzeDb)
         {
             Dictionary<string, ProtIdNames> proteinIds = new Dictionary<string, ProtIdNames>();
-            using (ISession session = OpenWriteSession())
+            using (ISession session = OpenWriteSession()) // This is a long session, but there's no harm since db is useless till its done
             {
                 foreach (DbProtein protein in session.CreateCriteria(typeof(DbProtein)).List())
                 {
@@ -229,7 +251,7 @@ namespace pwiz.ProteomeDatabase.API
                     foreach (DbProtein protein in fastaImporter.Import(reader))
                     {
                         int iProgress = (int)(reader.BaseStream.Position * 100 / (reader.BaseStream.Length + 1));
-                        if (!progressMonitor.Invoke(string.Format(Resources.ProteomeDb_AddFastaFile_Added__0__proteins,proteinCount), iProgress))
+                        if (!UpdateProgressAndCheckForCancellation(progressMonitor, ref status, string.Format(Resources.ProteomeDb_AddFastaFile_Added__0__proteins,proteinCount), iProgress))
                         {
                             return;
                         }
@@ -271,14 +293,18 @@ namespace pwiz.ProteomeDatabase.API
                             }
                         }
                     }
-                    if (!progressMonitor.Invoke(Resources.ProteomeDb_AddFastaFile_Saving_changes, 99))
+                    if (!UpdateProgressAndCheckForCancellation(progressMonitor, ref status, Resources.ProteomeDb_AddFastaFile_Saving_changes, 99))
                     {
                         return;
                     }
+                    // TODO(bspratt): update or just wipe the Digestion tables, they're out of date now (issue #304, see commented out test ing ProteomeDbTest.cs, and other TODO in this file)
                     transaction.Commit();
                 }
-                AnalyzeDb(session);
-                progressMonitor.Invoke(
+                if (!delayAnalyzeDb)
+                {
+                    AnalyzeDb(session); // NB This runs asynchronously and may interfere with further writes
+                }
+                UpdateProgressAndCheckForCancellation(progressMonitor, ref status, 
                     string.Format(Resources.ProteomeDb_AddFastaFile_Finished_importing__0__proteins, proteinCount), 100);
             }
         }
@@ -286,6 +312,7 @@ namespace pwiz.ProteomeDatabase.API
         /// <summary>
         /// Executes the "analyze" command to update statistics about indexes in the database.
         /// This should be called after a large number of records have been inserted.
+        /// Note that this runs asynchronously and may interfere with writes, so use judiciously
         /// </summary>
         private static void AnalyzeDb(ISession session)
         {
@@ -293,6 +320,14 @@ namespace pwiz.ProteomeDatabase.API
             {
                 command.CommandText = "Analyze;"; // Not L10N
                 command.ExecuteNonQuery();
+            }
+        }
+
+        public void AnalyzeDb()
+        {
+            using (var session = OpenWriteSession())
+            {
+                AnalyzeDb(session);
             }
         }
 
@@ -359,16 +394,23 @@ namespace pwiz.ProteomeDatabase.API
 
         public bool HasProteinNamesWithUnresolvedMetadata()
         {
-            // get a list of proteins with unresolved metadata websearches
-            using (ISession session = OpenSession())
+            // Get a list of proteins with unresolved metadata websearches
+            using (var session = OpenSession())
             {
-                var dbProteinNames = session.CreateCriteria(typeof (DbProteinName)).List<DbProteinName>();
-                // proteins with unresolved searches
-                if (dbProteinNames.Any(proteinName => (proteinName.GetProteinMetadata().GetPendingSearchTerm().Length > 0)))
-                    return true;
-                // proteins which have never been considered for metadata search
-                return dbProteinNames.Any(proteinName => proteinName.WebSearchInfo.IsEmpty());
+                var hql = "SELECT WebSearchStatus FROM " + typeof (DbProteinName); // Not L10N
+                var query = session.CreateQuery(hql);
+                foreach (var value in query.List())
+                {
+                    var term = value == null ? string.Empty : value.ToString();
+                    var webSearchInfo = WebSearchInfo.FromString(term);
+                    if (webSearchInfo.GetPendingSearchTerm().Length > 0 || // Protein not yet searched
+                        webSearchInfo.IsEmpty()) // Protein has never been considered for metadata search
+                    {
+                        return true;
+                    }
+                }
             }
+            return false;
         }
 
         public Digestion GetDigestion(String name)
@@ -385,11 +427,17 @@ namespace pwiz.ProteomeDatabase.API
         {
             using (ISession session = OpenSession())
             {
-                return (DbDigestion) session.CreateCriteria(typeof (DbDigestion))
-                    .Add(Restrictions.Eq("Name", name)) // Not L10N
-                    .UniqueResult();
+                return GetDbDigestion(name, session);
             }
         }
+
+        private DbDigestion GetDbDigestion(string name, ISession session)
+        {
+            return (DbDigestion) session.CreateCriteria(typeof (DbDigestion))
+                .Add(Restrictions.Eq("Name", name)) // Not L10N
+                .UniqueResult();
+        }
+
         public IList<Protein> ListProteinSequences()
         {
             using (ISession session = OpenSession())
@@ -483,118 +531,209 @@ namespace pwiz.ProteomeDatabase.API
             return proteinNames.Any() ? proteinNames[0] : null;
         }
 
-        public Digestion Digest(IProtease protease, ProgressMonitor progressMonitor)
+        public Digestion Digest(IProtease protease, int maxMissedCleavages, IProgressMonitor progressMonitor, ref ProgressStatus status, bool delayDbIndexing = false)
         {
             using (ISession session = OpenWriteSession())
             {
-                DbDigestion dbDigestion = GetDbDigestion(protease.Name);
-                HashSet<string> existingSequences = new HashSet<string>();
-                using (var transaction = session.BeginTransaction())
+                DbDigestion dbDigestion = GetDbDigestion(protease.Name, session);
+                HashSet<string> existingSequences;  // TODO(bspratt) - the logic around this seems fishy, investigate.  Probably never actually been used.  Part of fix for issue #304, probably
+                if (dbDigestion != null)
                 {
-                    if (dbDigestion != null)
+                    if (dbDigestion.MaxSequenceLength >= MAX_SEQUENCE_LENGTH)
                     {
-                        if (dbDigestion.MaxSequenceLength >= MAX_SEQUENCE_LENGTH)
+                        return new Digestion(this, dbDigestion);
+                    }
+                    if (!UpdateProgressAndCheckForCancellation(progressMonitor, ref status, Resources.ProteomeDb_Digest_Listing_existing_peptides, 0))
+                    {
+                        return null;
+                    }
+                    IQuery query = session.CreateQuery("SELECT P.Sequence FROM " // Not L10N
+                                                        + typeof(DbDigestedPeptide) + " P WHERE P.Digestion = :Digestion") // Not L10N
+                        .SetParameter("Digestion", dbDigestion); // Not L10N
+                    List<String> listSequences = new List<string>();
+                    query.List(listSequences);
+                    existingSequences = new HashSet<string>(listSequences);
+                    dbDigestion.MaxSequenceLength = MAX_SEQUENCE_LENGTH;
+                }
+                else
+                {
+                    dbDigestion = new DbDigestion
+                    {
+                        Name = protease.Name,
+                        MinSequenceLength = MIN_SEQUENCE_LENGTH,
+                        MaxSequenceLength = MAX_SEQUENCE_LENGTH,
+                    };
+                    existingSequences = new HashSet<string>();
+                }
+                if (!UpdateProgressAndCheckForCancellation(progressMonitor, ref status, Resources.ProteomeDb_Digest_Listing_proteins, 0)) 
+                {
+                    return null;
+                }
+                var dbProteins = new List<DbProtein>();
+                session.CreateCriteria(typeof (DbProtein)).List(dbProteins);
+
+                // Digest the proteins
+                var proteinCount = dbProteins.Count;
+                if (proteinCount == 0)
+                    return null;
+
+                var proteinsList = new Protein[proteinCount];
+                var truncatedSequences = new HashSet<string>[proteinCount]; // One hashset of sequences for each protein of interest
+                const int N_DIGEST_THREADS = 16; // Arbitrary value - do a progress/canel check every nth protein
+                for (var i = 0; i < proteinCount; i += N_DIGEST_THREADS)
+                {
+                    var endRange = Math.Min(proteinCount, i + N_DIGEST_THREADS);
+                    if (!UpdateProgressAndCheckForCancellation(progressMonitor, ref status, string.Format(Resources.ProteomeDb_Digest_Digesting__0__proteins, proteinCount), 50 * endRange / proteinCount))
+                    {
+                        return null;
+                    }
+                    for (int ii = i; ii < endRange; ii++)
+                    {
+                        var protein = new Protein(ProteomeDbPath, dbProteins[ii]);
+                        proteinsList[ii] = protein;
+                    }
+                    Parallel.For(i, endRange, ii => 
+                    {
+                        var proteinSequences = new HashSet<string>(); // We only save the first dbDigestion.MaxSequenceLength characters of each peptide so collisions are likely
+                        truncatedSequences[ii] = proteinSequences;  // One hashset of sequences for each protein of interest
+
+                        foreach (var digestedPeptide in protease.DigestSequence(proteinsList[ii].Sequence, maxMissedCleavages, null))
                         {
-                            return new Digestion(this, dbDigestion);
+                            if (digestedPeptide.Sequence.Length < dbDigestion.MinSequenceLength)
+                            {
+                                continue;
+                            }
+                            var truncatedSequence = digestedPeptide.Sequence.Substring(
+                                0, Math.Min(digestedPeptide.Sequence.Length, dbDigestion.MaxSequenceLength));
+                            if (!existingSequences.Contains(truncatedSequence))
+                            {
+                                proteinSequences.Add(truncatedSequence);
+                            }
                         }
-                        if (!progressMonitor.Invoke(Resources.ProteomeDb_Digest_Listing_existing_peptides, 0))
+                    });
+                }
+
+                // Now write to db
+                if (!UpdateProgressAndCheckForCancellation(progressMonitor, ref status, Resources.ProteomeDb_AddFastaFile_Saving_changes, 50))
+                {
+                    return null;
+                }
+                bool committed = true;
+                int digestedPeptideIdsCount;
+                try
+                {
+                    using (var transaction = session.BeginTransaction())
+                    {
+                        session.SaveOrUpdate(dbDigestion);
+
+                        Dictionary<String, long> digestedPeptideIds
+                            = new Dictionary<string, long>();
+                        const String sqlPeptide =
+                                "INSERT INTO ProteomeDbDigestedPeptide (Digestion, Sequence) VALUES(?,?);select last_insert_rowid();"; // Not L10N
+                        using (var commandPeptide = session.Connection.CreateCommand())
+                        using (var commandProtein = session.Connection.CreateCommand())
                         {
-                            return null;
+                            commandPeptide.CommandText = sqlPeptide;
+                            commandPeptide.Parameters.Add(new SQLiteParameter());
+                            commandPeptide.Parameters.Add(new SQLiteParameter());
+                            const String sqlPeptideProtein =
+                                "INSERT INTO ProteomeDbDigestedPeptideProtein (Peptide, Protein) VALUES(?,?);"; // Not L10N
+                            commandProtein.CommandText = sqlPeptideProtein;
+                            commandProtein.Parameters.Add(new SQLiteParameter());
+                            commandProtein.Parameters.Add(new SQLiteParameter());
+                            commandProtein.Parameters.Add(new SQLiteParameter());
+                            for (int i = 0; i < proteinCount; i++)
+                            {
+                                var protein = proteinsList[i];
+                                if (!UpdateProgressAndCheckForCancellation(progressMonitor, ref status, string.Format(Resources.ProteomeDb_Digest_Digesting__0__proteins, proteinCount), 50 * (proteinCount + i) / proteinCount))
+                                {
+                                    return null;
+                                }
+                                foreach (var truncatedSequence in truncatedSequences[i])
+                                {
+                                    long digestedPeptideId;
+                                    if (!digestedPeptideIds.TryGetValue(truncatedSequence, out digestedPeptideId))
+                                    {
+                                        ((SQLiteParameter)commandPeptide.Parameters[0]).Value = dbDigestion.Id;
+                                        ((SQLiteParameter)commandPeptide.Parameters[1]).Value = truncatedSequence;
+                                        digestedPeptideId = Convert.ToInt64(commandPeptide.ExecuteScalar());
+                                        digestedPeptideIds.Add(truncatedSequence, digestedPeptideId);
+                                    }
+                                    ((SQLiteParameter)commandProtein.Parameters[0]).Value = digestedPeptideId;
+                                    ((SQLiteParameter)commandProtein.Parameters[1]).Value = protein.Id;
+                                    commandProtein.ExecuteNonQuery();
+                                }
+                            }
                         }
-                        IQuery query = session.CreateQuery("SELECT P.Sequence FROM " // Not L10N
-                                                           + typeof(DbDigestedPeptide) + " P WHERE P.Digestion = :Digestion") // Not L10N
-                            .SetParameter("Digestion", dbDigestion); // Not L10N
-                        List<String> listSequences = new List<string>();
-                        query.List(listSequences);
-                        existingSequences.UnionWith(listSequences);
-                        dbDigestion.MaxSequenceLength = MAX_SEQUENCE_LENGTH;
-                        session.Update(dbDigestion);
+                        try
+                        {
+                            transaction.Commit();
+                        }
+                        catch (Exception)
+                        {
+                            committed = false;
+                        }
+                        digestedPeptideIdsCount = digestedPeptideIds.Count;
+                    }
+                }
+                catch (Exception)
+                {
+                    if (!committed)
+                    {
+                        return null; // Interrupted
                     }
                     else
                     {
-                        dbDigestion = new DbDigestion
-                        {
-                            Name = protease.Name,
-                            MinSequenceLength = MIN_SEQUENCE_LENGTH,
-                            MaxSequenceLength = MAX_SEQUENCE_LENGTH,
-                        };
-                        session.Save(dbDigestion);
+                        throw;
                     }
-                    if (!progressMonitor.Invoke(Resources.ProteomeDb_Digest_Listing_proteins, 0)) 
-                    {
-                        return null;
-                    }
-                    List<DbProtein> proteins = new List<DbProtein>();
-                    session.CreateCriteria(typeof(DbProtein)).List(proteins);
-                    Dictionary<String, long> digestedPeptideIds
-                        = new Dictionary<string, long>();
-                    const String sqlPeptide =
-                            "INSERT INTO ProteomeDbDigestedPeptide (Digestion, Sequence) VALUES(?,?);select last_insert_rowid();"; // Not L10N
-                    using (var commandPeptide = session.Connection.CreateCommand())
-                    using (var commandProtein = session.Connection.CreateCommand())
-                    {
-                        commandPeptide.CommandText = sqlPeptide;
-                        commandPeptide.Parameters.Add(new SQLiteParameter());
-                        commandPeptide.Parameters.Add(new SQLiteParameter());
-                        const String sqlPeptideProtein =
-                            "INSERT INTO ProteomeDbDigestedPeptideProtein (Peptide, Protein) VALUES(?,?);"; // Not L10N
-                        commandProtein.CommandText = sqlPeptideProtein;
-                        commandProtein.Parameters.Add(new SQLiteParameter());
-                        commandProtein.Parameters.Add(new SQLiteParameter());
-                        commandProtein.Parameters.Add(new SQLiteParameter());
-                        for (int i = 0; i < proteins.Count; i++)
-                        {
-                            var proteinSequences = new HashSet<string>();
-                            if (!progressMonitor.Invoke(string.Format(Resources.ProteomeDb_Digest_Digesting__0__proteins,proteins.Count), 100 * i / proteins.Count))
-                            {
-                                return null;
-                            }
-                            Protein protein = new Protein(ProteomeDbPath, proteins[i]);
-
-                            foreach (DigestedPeptide digestedPeptide in protease.Digest(protein))
-                            {
-                                if (digestedPeptide.Sequence.Length < dbDigestion.MinSequenceLength)
-                                {
-                                    continue;
-                                }
-                                String truncatedSequence = digestedPeptide.Sequence.Substring(
-                                    0, Math.Min(digestedPeptide.Sequence.Length, dbDigestion.MaxSequenceLength));
-                                if (existingSequences.Contains(truncatedSequence))
-                                {
-                                    continue;
-                                }
-                                if (proteinSequences.Contains(truncatedSequence))
-                                {
-                                    continue;
-                                }
-                                proteinSequences.Add(truncatedSequence);
-                                long digestedPeptideId;
-                                if (!digestedPeptideIds.TryGetValue(truncatedSequence, out digestedPeptideId))
-                                {
-                                    ((SQLiteParameter)commandPeptide.Parameters[0]).Value = dbDigestion.Id;
-                                    ((SQLiteParameter)commandPeptide.Parameters[1]).Value = truncatedSequence;
-                                    digestedPeptideId = Convert.ToInt64(commandPeptide.ExecuteScalar());
-                                    digestedPeptideIds.Add(truncatedSequence, digestedPeptideId);
-                                }
-                                ((SQLiteParameter)commandProtein.Parameters[0]).Value = digestedPeptideId;
-                                ((SQLiteParameter)commandProtein.Parameters[1]).Value = protein.Id;
-                                commandProtein.ExecuteNonQuery();
-                            }
-                        }
-                    }
-                    if (!progressMonitor.Invoke(Resources.ProteomeDb_AddFastaFile_Saving_changes, 99))
-                    {
-                        return null;
-                    }
-                    transaction.Commit();
-
-                    AnalyzeDb(session);
-                    progressMonitor.Invoke(
-                        string.Format(Resources.ProteomeDb_Digest_Digested__0__proteins_into__1__unique_peptides,
-                                      proteins.Count, digestedPeptideIds.Count),
-                        100);
                 }
-                return new Digestion(this, dbDigestion);
+                if (committed && !delayDbIndexing)
+                {
+                    AnalyzeDb(session); // This runs asynchronously, and interferes with writes
+                }
+                if (committed)
+                {
+                    progressMonitor.UpdateProgress(new ProgressStatus(string.Format(Resources.ProteomeDb_Digest_Digested__0__proteins_into__1__unique_peptides,proteinCount, digestedPeptideIdsCount)).ChangePercentComplete(100));
+                }
+                return committed ? new Digestion(this, dbDigestion) : null;
+            }
+        }
+
+        //
+        // Minimal amount of protein info sufficient for peptide uniqueness checks
+        //
+        public class MinimalProteinInfo
+        {
+            public string Sequence;
+            public string Id;
+            public string Gene;
+            public string Species;
+        }
+
+        public IEnumerable<MinimalProteinInfo> GetMinimalProteinInfo()
+        {
+            using (var session = OpenSession())
+            {
+                using (IDbCommand command = session.Connection.CreateCommand())
+                {
+                    command.CommandText =
+                        "SELECT Sequence, Protein, Gene, Species \n" + // Not L10N
+                        "FROM ProteomeDbProtein \n" + // Not L10N
+                        "INNER JOIN ProteomeDbProteinName ON ProteomeDbProteinName.Protein = ProteomeDbProtein.Id \n" + // Not L10N
+                        "WHERE ProteomeDbProteinName.IsPrimary <> 0"; // Not L10N
+                    var reader = command.ExecuteReader();
+                    while (reader.Read())
+                    {
+                        yield return new MinimalProteinInfo
+                        {
+                            Sequence = reader.IsDBNull(0) ? string.Empty : reader.GetString(0),
+                            Id = reader.GetInt64(1).ToString(),
+                            Gene = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+                            Species = reader.IsDBNull(3) ? string.Empty : reader.GetString(3)
+                        };
+                    }
+                    yield return null; // Done
+                }
             }
         }
 
@@ -603,28 +742,33 @@ namespace pwiz.ProteomeDatabase.API
         /// The fasta text importer will have left search hints in ProteinMetadata.
         /// </summary>
         /// <param name="progressMonitor"></param>
+        /// <param name="status"></param>
         /// <param name="fastaImporter">object that accesses the web, or pretends to if in a test</param>
-        /// <param name="polite">if true, don't try to resolve everything in one go, assume we can come back later</param>
+        /// <param name="parseOnly">if true, attempt to parse protein metadata from descriptions but do not proceed to web access</param>
+        /// <param name="done">will return true if there is nothung more to look up</param>
         /// <returns>true on success</returns>
-        public bool LookupProteinMetadata(ProgressMonitor progressMonitor, WebEnabledFastaImporter fastaImporter, bool polite = false)
+        public bool LookupProteinMetadata(IProgressMonitor progressMonitor, ref ProgressStatus status, WebEnabledFastaImporter fastaImporter, bool parseOnly, out bool done)
         {
             var unsearchedProteins = new List<ProteinSearchInfo>();
-            List<DbProteinName> untaggedProteins;
-            using (ISession session = OpenSession())
+            done = false;
+            // If we're here, it's because the background loader is done digesting and has moved on to protein metadata,
+            // or because the PeptideSettingsUI thread needs to have protein metadata resolved for uniqueness purposes before
+            // it can proceed.   Either way, we should be working on a temp copy and be the only one needing write access, so get a lock now
+            using (ISession session = OpenWriteSession())	// We may update the protdb file with web search results
             {
-                if (!progressMonitor.Invoke(Resources.ProteomeDb_LookupProteinMetadata_looking_for_unresolved_protein_details, 0))
+                if (!UpdateProgressAndCheckForCancellation(progressMonitor, ref status, Resources.ProteomeDb_LookupProteinMetadata_looking_for_unresolved_protein_details, 0))
                 {
                     return false;
                 }
-
                 // get a list of proteins with unresolved metadata websearches
-                var proteinNames = session.CreateCriteria(typeof (DbProteinName)).List<DbProteinName>();
+                var proteinNames = session.CreateCriteria(typeof (DbProteinName)).List<DbProteinName>().Where(x => x.WebSearchInfo.NeedsSearch()).ToList();
                 var proteinsToSearch =
                     proteinNames.Where(proteinName => (proteinName.GetProteinMetadata().GetPendingSearchTerm().Length > 0))
                         .ToList();
+                if (!UpdateProgressAndCheckForCancellation(progressMonitor, ref status, Resources.ProteomeDb_LookupProteinMetadata_looking_for_unresolved_protein_details, 0))
+                    return false;
                 // and a list of proteins which have never been considered for metadata search
-                untaggedProteins =
-                    proteinNames.Where(proteinName => proteinName.WebSearchInfo.IsEmpty()).ToList();
+                var untaggedProteins = proteinNames.Where(proteinName => proteinName.WebSearchInfo.IsEmpty()).ToList();
 
                 foreach (var untaggedProtein in untaggedProteins)
                 {
@@ -661,6 +805,11 @@ namespace pwiz.ProteomeDatabase.API
                             var id = reader.GetValue(0);
                             var len = reader.GetValue(1);
                             proteinLengths.Add(Convert.ToInt64(id), Convert.ToInt32(len));
+                            if (proteinLengths.Count % 100 == 0)  // Periodic cancellation check
+                            {
+                                if (!UpdateProgressAndCheckForCancellation(progressMonitor, ref status, Resources.ProteomeDb_LookupProteinMetadata_looking_for_unresolved_protein_details, 0))
+                                    return false;
+                            }
                         }
                     }
                 }
@@ -670,13 +819,10 @@ namespace pwiz.ProteomeDatabase.API
                     proteinLengths.TryGetValue(p.Protein.Id.GetValueOrDefault(), out length);
                     unsearchedProteins.Add(new ProteinSearchInfo(p, length));
                 }
-            }
 
-            if (untaggedProteins.Any(untagged => !untagged.GetProteinMetadata().NeedsSearch())) // did any get set as unsearchable?
-            {
-                // Write back the ones that were formerly without search terms, but which now indicate no search is possible
-                using (ISession session = OpenWriteSession())
+                if (untaggedProteins.Any(untagged => !untagged.GetProteinMetadata().NeedsSearch())) // did any get set as unsearchable?
                 {
+                    // Write back the ones that were formerly without search terms, but which now indicate no search is possible
                     using (var transaction = session.BeginTransaction())
                     {
                         foreach (var untagged in untaggedProteins.Where(untagged => !untagged.GetProteinMetadata().NeedsSearch()))
@@ -684,55 +830,51 @@ namespace pwiz.ProteomeDatabase.API
                         transaction.Commit();
                     }
                 }
-            }
 
-            if (unsearchedProteins.Any())
-            {
-                int resultsCount = 0;
-                int unsearchedCount = unsearchedProteins.Count;
-                for (bool success = true; success;)
+                if (unsearchedProteins.Any() && !parseOnly)
                 {
-                    success = false; // Until we see at least one succeed this round
-                    var results = new List<DbProteinName>();
+                    int resultsCount = 0;
+                    int unsearchedCount = unsearchedProteins.Count;
+                    for (bool success = true; success;)
+                    {
+                        success = false; // Until we see at least one succeed this round
+                        var results = new List<DbProteinName>();
+                        if (progressMonitor.IsCanceled)
+                            return false;
 
-                    // The "true" arg means "do just one batch then return"
-                    foreach (var result in fastaImporter.DoWebserviceLookup(unsearchedProteins, null, true))
-                    {
-                        if (result != null)
+                        // The "true" arg means "do just one batch then return"
+                        foreach (var result in fastaImporter.DoWebserviceLookup(unsearchedProteins, progressMonitor, true))
                         {
-                            if (
-                            !progressMonitor.Invoke(
-                                string.Format(
-                                    Resources.ProteomeDb_LookupProteinMetadata_Retrieving_details_for__0__proteins,
-                                    unsearchedProteins.Count), 100 * resultsCount++ / unsearchedCount))
+                            if (result != null)
                             {
-                                return false;
+                                if (!UpdateProgressAndCheckForCancellation(progressMonitor, ref status, string.Format(Resources.ProteomeDb_LookupProteinMetadata_Retrieving_details_for__0__proteins,
+                                            unsearchedProteins.Count), 100*resultsCount++/unsearchedCount))
+                                {
+                                    return false;
+                                }
+                                success = true;
+                                results.Add(result.ProteinDbInfo);
                             }
-                            success = true;
-                            results.Add(result.ProteinDbInfo);
                         }
-                    }
-                    if (results.Any()) // save this batch
-                    {
-                        using (var session = OpenWriteSession())
+                        if (results.Any()) // save this batch
                         {
                             using (var transaction = session.BeginTransaction())
                             {
                                 foreach (var result in results)
                                     session.SaveOrUpdate(result); 
                                 transaction.Commit();
-                                session.Close();
                             }
                         }
-                    }
-                    // Edit this list rather than rederive with database access
-                    var hits = unsearchedProteins.Where(p => !p.GetProteinMetadata().NeedsSearch()).ToList();
-                    foreach (var hit in hits)
-                    {
-                        unsearchedProteins.Remove(hit);
+                        // Edit this list rather than rederive with database access
+                        var hits = unsearchedProteins.Where(p => !p.GetProteinMetadata().NeedsSearch()).ToList();
+                        foreach (var hit in hits)
+                        {
+                            unsearchedProteins.Remove(hit);
+                        }
                     }
                 }
-            }
+                done = !unsearchedProteins.Any();
+            } // End writesession
             return true;
         }
     }

@@ -238,6 +238,7 @@
     <Compile Include="PeakBoundaryCompareTest.cs" />
     <Compile Include="SwathIsolationListsTest.cs" />
     <Compile Include="UniquePeptidesDialogTest.cs" />
+    <Compile Include="UniquePeptidesSettingsTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Shared\BiblioSpec\BiblioSpec.csproj">

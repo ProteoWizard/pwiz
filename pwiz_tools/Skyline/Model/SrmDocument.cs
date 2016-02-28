@@ -810,10 +810,57 @@ namespace pwiz.Skyline.Model
                     // peptide group, like Decoys
                     var childrenParallel = new DocNode[Children.Count];
                     var settingsParallel = settingsNew;
+                    int currentPeptide = 0;
+                    int totalPeptides = Children.Count;
+
+                    // If we are looking at peptide uniqueness against a background proteome,
+                    // it's faster to do those checks with a comprehensive list of peptides of 
+                    // potential interest rather than taking them one by one.
+                    // So we'll precalculate the peptides using any other filter settings
+                    // before we go on to apply the uniqueness check.
+                    var uniquenessPrecheckChildren = new List<PeptideDocNode>[Children.Count];
+                    Dictionary<string, bool> uniquenessDict = null;
+                    if (settingsNew.PeptideSettings.Filter.PeptideUniqueness != PeptideFilter.PeptideUniquenessConstraint.none &&
+                        !settingsNew.PeptideSettings.NeedsBackgroundProteomeUniquenessCheckProcessing)
+                    {
+                        // Generate the peptide docnodes with no uniqueness filter
+                        var settingsNoUniquenessFilter =
+                            settingsNew.ChangePeptideSettings(
+                                settingsNew.PeptideSettings.ChangeFilter(
+                                    settingsNew.PeptideSettings.Filter.ChangePeptideUniqueness(
+                                        PeptideFilter.PeptideUniquenessConstraint.none)));
+                        uniquenessPrecheckChildren = new List<PeptideDocNode>[Children.Count];
+                        totalPeptides *= 2; // We have to run the list twice
+                        ParallelEx.For(0, Children.Count, i =>
+                        {
+                            if (progressMonitor != null)
+                            {
+                                var percentComplete = ProgressStatus.ThreadsafeIncementPercent(ref currentPeptide, totalPeptides);
+                                if (percentComplete.HasValue && percentComplete.Value < 100)
+                                    progressMonitor.ChangeProgress(status => status.ChangePercentComplete(percentComplete.Value));
+                            }
+                            var nodeGroup = (PeptideGroupDocNode)Children[i];
+                            uniquenessPrecheckChildren[i] = nodeGroup.GetPeptideNodes(settingsNoUniquenessFilter, true).ToList();
+                        });
+                        var uniquenessPrecheckPeptidesOfInterest = new List<string>(uniquenessPrecheckChildren.SelectMany(u => u.Select(p => p.Peptide.Sequence)));
+                        // Update cache for uniqueness checks against the background proteome while we have worker threads available
+                        uniquenessDict = settingsNew.PeptideSettings.Filter.CheckPeptideUniqueness(settingsNew, uniquenessPrecheckPeptidesOfInterest, progressMonitor);
+                    }
+
+                    // Now perform or complete the peptide selection
                     ParallelEx.For(0, Children.Count, i =>
                     {
-                        var nodeGroup = (PeptideGroupDocNode) Children[i];
-                        childrenParallel[i] = nodeGroup.ChangeSettings(settingsParallel, diff);
+                        if (progressMonitor != null)
+                        {
+                            if (progressMonitor.IsCanceled())
+                                throw new OperationCanceledException();
+                            var percentComplete = ProgressStatus.ThreadsafeIncementPercent(ref currentPeptide, totalPeptides);
+                            if (percentComplete.HasValue && percentComplete.Value < 100)
+                                progressMonitor.ChangeProgress(status => status.ChangePercentComplete(percentComplete.Value));
+                        }
+                        var nodeGroup = (PeptideGroupDocNode)Children[i];
+                        childrenParallel[i] = nodeGroup.ChangeSettings(settingsParallel, diff,
+                           new DocumentSettingsContext(uniquenessPrecheckChildren[i], uniquenessDict)); 
                     });
                     childrenNew = childrenParallel;
                 }

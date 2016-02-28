@@ -2639,7 +2639,8 @@ namespace pwiz.Skyline.Properties
                          8,  // MinPeptideLength
                         25,  // MaxPeptideLength
                         new PeptideExcludeRegex[0], // Exclusions
-                        true // AutoSelect
+                        true, // AutoSelect
+                        PeptideFilter.PeptideUniquenessConstraint.none // Peptide uniqueness constraint measured against background proteome
                     ),
                     new PeptideLibraries
                     (

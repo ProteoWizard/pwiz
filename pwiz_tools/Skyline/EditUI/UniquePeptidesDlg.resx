@@ -174,6 +174,33 @@
   <data name="toolStripSeparator1.Size" type="System.Drawing.Size, System.Drawing">
     <value>233, 6</value>
   </data>
+  <data name="uniqueProteinsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="uniqueProteinsToolStripMenuItem.Text" xml:space="preserve">
+    <value>Proteins</value>
+  </data>
+  <data name="uniqueProteinsToolStripMenuItem.ToolTipText" xml:space="preserve">
+    <value>Exclude any peptides found in more than one protein in the background proteome</value>
+  </data>
+  <data name="uniqueGenesToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="uniqueGenesToolStripMenuItem.Text" xml:space="preserve">
+    <value>Genes</value>
+  </data>
+  <data name="uniqueGenesToolStripMenuItem.ToolTipText" xml:space="preserve">
+    <value>Exclude peptides found in proteins from more than one gene in the background proteome</value>
+  </data>
+  <data name="uniqueSpeciesToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="uniqueSpeciesToolStripMenuItem.Text" xml:space="preserve">
+    <value>Species</value>
+  </data>
+  <data name="uniqueSpeciesToolStripMenuItem.ToolTipText" xml:space="preserve">
+    <value>Exclude peptides found in proteins from more than one species in the background proteome</value>
+  </data>
   <data name="uniqueOnlyToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>236, 22</value>
   </data>
@@ -202,7 +229,7 @@
     <value>Exclude All</value>
   </data>
   <data name="contextMenuStrip1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>237, 148</value>
+    <value>237, 170</value>
   </data>
   <data name="&gt;&gt;contextMenuStrip1.Name" xml:space="preserve">
     <value>contextMenuStrip1</value>
@@ -501,6 +528,18 @@
   <data name="$this.Text" xml:space="preserve">
     <value>Unique Peptides</value>
   </data>
+  <data name="&gt;&gt;PeptideIncludedColumn.Name" xml:space="preserve">
+    <value>PeptideIncludedColumn</value>
+  </data>
+  <data name="&gt;&gt;PeptideIncludedColumn.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewCheckBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;PeptideColumn.Name" xml:space="preserve">
+    <value>PeptideColumn</value>
+  </data>
+  <data name="&gt;&gt;PeptideColumn.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;includeToolStripMenuItem.Name" xml:space="preserve">
     <value>includeToolStripMenuItem</value>
   </data>
@@ -523,6 +562,24 @@
     <value>uniqueOnlyToolStripMenuItem</value>
   </data>
   <data name="&gt;&gt;uniqueOnlyToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;uniqueProteinsToolStripMenuItem.Name" xml:space="preserve">
+    <value>uniqueProteinsToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;uniqueProteinsToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;uniqueGenesToolStripMenuItem.Name" xml:space="preserve">
+    <value>uniqueGenesToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;uniqueGenesToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;uniqueSpeciesToolStripMenuItem.Name" xml:space="preserve">
+    <value>uniqueSpeciesToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;uniqueSpeciesToolStripMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;excludeBackgroundProteomeToolStripMenuItem.Name" xml:space="preserve">
@@ -548,18 +605,6 @@
   </data>
   <data name="&gt;&gt;excludeAllToolStripMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;PeptideIncludedColumn.Name" xml:space="preserve">
-    <value>PeptideIncludedColumn</value>
-  </data>
-  <data name="&gt;&gt;PeptideIncludedColumn.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewCheckBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;PeptideColumn.Name" xml:space="preserve">
-    <value>PeptideColumn</value>
-  </data>
-  <data name="&gt;&gt;PeptideColumn.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>UniquePeptidesDlg</value>

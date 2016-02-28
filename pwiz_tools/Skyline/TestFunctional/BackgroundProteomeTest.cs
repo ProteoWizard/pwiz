@@ -56,6 +56,7 @@ namespace pwiz.SkylineTestFunctional
             var protdbPath = TestFilesDir.GetTestPath(_backgroundProteomeName + ProteomeDb.EXT_PROTDB);
             CreateBackgroundProteome(protdbPath, _backgroundProteomeName, TestFilesDir.GetTestPath("celegans_mini.fasta"));
             WaitForProteinMetadataBackgroundLoaderCompleted();
+            // CreateBackgroundProteome(protdbPath, _backgroundProteomeName, TestFilesDir.GetTestPath("celegans_mini.fasta"), "TrypsinK [K | P]");  TODO(bspratt) - test multi-enzyme protdb
 
             RunUI(() =>
                 {
@@ -112,18 +113,25 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(0, SkylineWindow.Document.PeptideCount);
         }
 
-        public static void CreateBackgroundProteome(string protdbPath, string basename, string fastaFilePath)
+        public static void CreateBackgroundProteome(string protdbPath, string basename, string fastaFilePath, string enzyme = null)
         {
             var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-            var buildBackgroundProteomeDlg = ShowDialog<BuildBackgroundProteomeDlg>(
-                peptideSettingsUI.ShowBuildBackgroundProteomeDlg);
-            RunUI(() =>
+            if (enzyme != null)
             {
-                buildBackgroundProteomeDlg.BackgroundProteomeName = basename;
-                buildBackgroundProteomeDlg.BackgroundProteomePath = protdbPath;
-                buildBackgroundProteomeDlg.AddFastaFile(fastaFilePath);
-            });
-            OkDialog(buildBackgroundProteomeDlg, buildBackgroundProteomeDlg.OkDialog);
+                RunUI(() => { peptideSettingsUI.ComboEnzymeSelected = enzyme; });  // Enzyme change to existing protdb
+            }
+            else
+            {
+                var buildBackgroundProteomeDlg = ShowDialog<BuildBackgroundProteomeDlg>(
+                    peptideSettingsUI.ShowBuildBackgroundProteomeDlg);
+                RunUI(() =>
+                {
+                    buildBackgroundProteomeDlg.BackgroundProteomeName = basename;
+                    buildBackgroundProteomeDlg.BackgroundProteomePath = protdbPath;
+                    buildBackgroundProteomeDlg.AddFastaFile(fastaFilePath);
+                });
+                OkDialog(buildBackgroundProteomeDlg, buildBackgroundProteomeDlg.OkDialog);
+            }
             RunUI(() => { peptideSettingsUI.MissedCleavages = 3; });
             OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
             // Wait until proteome digestion is done

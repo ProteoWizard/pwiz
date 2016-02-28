@@ -17,9 +17,13 @@
  * limitations under the License.
  */
 
+using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.EditUI;
 using pwiz.SkylineTestUtil;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -31,7 +35,12 @@ namespace pwiz.SkylineTestFunctional
     {
 
         private const string TEXT_FASTA_SPROT = // A protein not in the background proteome
-            ">sp|Q13790|APOF_HUMAN Apolipoprotein F OS=Homo sapiens GN=APOF PE=1 SV=1\n" +
+            ">sp|Q13790|APOF_HUMAN Apolipoprotein F OS=Homo sapiens GN=APOF PE=1 SV=1\n" + TEXT_FASTA;
+
+        private const string TEXT_FASTA_NONSENSE = // A protein not in the background proteome
+            ">nonsense\n" + TEXT_FASTA;
+
+        private const string TEXT_FASTA = // A protein not in the background proteome
             "MIPVELLLCYLLLHPVDATSYGKQTNVLMHFPLSLESQTPSSDPLSCQFLHPKSLPGFSH\n" +
             "MAPLPKFLVSLALRNALEEAGCQADVWALQLQLYRQGGVNATQVLIQHLRGLQKGRSTER\n" +
             "NVSVEALASALQLLAREQQSTGRVGRSLPTEDCENEKEQAVHNVVQLLPGVGTFYNLGTA\n" +
@@ -46,56 +55,158 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-        enum TestType
-        {
-            selectUnique,
-            excludeBackground
-        };
+        private const UniquePeptidesDlg.UniquenessType EXCLUDE_BACKGROUND = UniquePeptidesDlg.UniquenessType.protein - 1;
 
-        private void scenario(int nodeNum, int expectedMatches, int finalMoleculeGroupCount, int finalMoleculeCount, int finalTransitionCount, TestType testType)
-        {
-            var rowcount = 0;
-            RunUI(() =>
-            {
-                var node = SkylineWindow.SequenceTree.Nodes[nodeNum]; 
-                SkylineWindow.SequenceTree.SelectedNode = node;
-                rowcount = node.GetNodeCount(false);
-            });
-            using (new CheckDocumentState(finalMoleculeGroupCount, finalMoleculeCount, finalMoleculeCount, finalTransitionCount))
-            {
-                var uniquePeptidesDlg = ShowDialog<UniquePeptidesDlg>(SkylineWindow.ShowUniquePeptidesDlg);
-                WaitForConditionUI(() => uniquePeptidesDlg.GetDataGridView().RowCount == rowcount);
-                RunUI(() =>
-                {
-                    Assert.AreEqual(2 + expectedMatches, uniquePeptidesDlg.GetDataGridView().ColumnCount);
-                    if (testType == TestType.excludeBackground)
-                        uniquePeptidesDlg.ExcludeBackgroundProteome();
-                    else
-                        uniquePeptidesDlg.SelectUnique();
-                });
-                OkDialog(uniquePeptidesDlg, uniquePeptidesDlg.OkDialog);
-            }
-        }
+        const int NODE_ATPB_HUMAN = 0;
+        const int NODE_ATPB_MOUSE = 1;
+        const int NODE_HOP_1 = 3;
+        const int NODE_TAU_MOUSE = 17;
+        const int NODE_APOF_HUMAN = 24;
 
-        protected override void DoTest()
+        const int INITIAL_MOLECULE_COUNT = 423;
+
+        const int NON_UNIQUE_PEPTIDES_BY_PROTEIN_ATPB_MOUSE = 18;
+        const int NON_UNIQUE_PEPTIDES_BY_PROTEIN_TAU_MOUSE = 13;
+
+        const int NON_UNIQUE_PEPTIDES_BY_GENE_ATPB_MOUSE = NODE_HOP_1;
+        const int NON_UNIQUE_PEPTIDES_BY_GENE_TAU_MOUSE = 12;
+        const int NON_UNIQUE_PEPTIDES_BY_SPECIES_TAU_MOUSE = 12;
+        const int TOTAL_PEPTIDES_HOP1 = 23;
+
+        private void ResetDocument(bool bogus = false)
         {
-            OpenDocument("UniqueTest.sky");
+            OpenDocument(bogus ? "UniqueTestBogus.sky": "UniqueTest.sky");  // Contains every protein in the protDB file, bogus version has missing metadata in the protdb
             // Add FASTA sequence that's not in the library
-            RunUI(() => SkylineWindow.Paste(TEXT_FASTA_SPROT));
+            RunUI(() => SkylineWindow.Paste(bogus? TEXT_FASTA_NONSENSE: TEXT_FASTA_SPROT));
 
-            // Finish digesting
+            // Finish digesting and get protein metadata (should not require web access for these well formed fasta headers)
             WaitForCondition(() =>
             {
                 var peptideSettings = SkylineWindow.Document.Settings.PeptideSettings;
                 var backgroundProteome = peptideSettings.BackgroundProteome;
-                return backgroundProteome.HasDigestion(peptideSettings);
+                return backgroundProteome.HasDigestion(peptideSettings) && !backgroundProteome.NeedsProteinMetadataSearch;
             });
-            scenario(3, 0, 25, 423, 1576, TestType.selectUnique); // HOP_1 - should leave everything as is, as there is no overlap with anything in the background proteome even though HOP_1 itself is a member
-            scenario(24, 0, 25, 423, 1576, TestType.selectUnique); // not in the background proteome, and no overlap, should change nothing 
-            scenario(24, 0, 25, 423, 1576, TestType.excludeBackground); // not in the background proteome, and no overlap, should change nothing 
-            scenario(1, 2, 25, 405, 1514, TestType.selectUnique); // should leave only two peptides in ATPB_HUMAN
-            scenario(17, 14, 25, 392, 1463, TestType.selectUnique); // should completely remove TAU_MOUSE peptides, since it has no unique peptides
-            scenario(3, 0, 25, 369, 1388, TestType.excludeBackground); // HOP_1 - should remove all peptides even though there's no overlap, since it's in the background proteome
         }
+
+        private void scenario(int nodeNum, int expectedMatches, int expectedMoleculeFilteredCount, UniquePeptidesDlg.UniquenessType testType, bool bogus = false)
+        {
+            scenario(new [] {nodeNum}, expectedMatches, expectedMoleculeFilteredCount, testType, bogus);
+        }
+
+        private void scenario(int[] nodes, int expectedMatches, int expectedMoleculeFilteredCount, UniquePeptidesDlg.UniquenessType testType, bool bogus = false)
+        {
+            var rowcount = 0;
+            RunUI(() =>
+            {
+                var node = SkylineWindow.SequenceTree.Nodes[nodes[0]];
+                SkylineWindow.SequenceTree.SelectedNode = node; // Clears any existing selection
+                foreach (var i in nodes)
+                {
+                    node = SkylineWindow.SequenceTree.Nodes[i];
+                    SkylineWindow.SequenceTree.SelectNode((TreeNodeMS) node, true);
+                    rowcount += node.GetNodeCount(false);
+                }
+            });
+            var uniquePeptidesDlg = ShowDialog<UniquePeptidesDlg>(SkylineWindow.ShowUniquePeptidesDlg);
+            WaitForConditionUI(() => uniquePeptidesDlg.GetDataGridView().RowCount == rowcount);
+            if (bogus)
+            {
+                uniquePeptidesDlg.BeginInvoke(new Action(() => uniquePeptidesDlg.SelectUnique(testType)));
+                // Expect a warning about missing metadata
+                var errorDlg = WaitForOpenForm<MessageDlg>();
+                var expectedErr = testType == UniquePeptidesDlg.UniquenessType.gene ?
+                    Resources.UniquePeptidesDlg_SelectPeptidesWithNumberOfMatchesAtOrBelowThreshold_Some_background_proteome_proteins_did_not_have_gene_information__this_selection_may_be_suspect_ :
+                    Resources.UniquePeptidesDlg_SelectPeptidesWithNumberOfMatchesAtOrBelowThreshold_Some_background_proteome_proteins_did_not_have_species_information__this_selection_may_be_suspect_;
+                Assert.IsTrue(errorDlg.Message.Contains(expectedErr));
+                RunUI(() => errorDlg.OkDialog());
+            }
+            else
+            {
+                RunUI(() =>
+                {
+                    Assert.AreEqual(2 + expectedMatches, uniquePeptidesDlg.GetDataGridView().ColumnCount);
+                    if (testType == EXCLUDE_BACKGROUND)
+                        uniquePeptidesDlg.ExcludeBackgroundProteome();
+                    else
+                        uniquePeptidesDlg.SelectUnique(testType);
+                });
+            }
+            var doc = SkylineWindow.Document;
+            OkDialog(uniquePeptidesDlg, uniquePeptidesDlg.OkDialog);
+            AssertEx.IsDocumentState(WaitForDocumentChange(doc), null, 25, INITIAL_MOLECULE_COUNT - expectedMoleculeFilteredCount, null, null);
+        }
+
+        protected override void DoTest()
+        {
+
+            ResetDocument();
+            scenario(new [] { NODE_ATPB_MOUSE, NODE_HOP_1, NODE_APOF_HUMAN }, 2, NON_UNIQUE_PEPTIDES_BY_PROTEIN_ATPB_MOUSE, 
+                UniquePeptidesDlg.UniquenessType.protein); // Multiple selection ATPB_MOUSE, HOP_1, APOF_HUMAN, only ATPB_MOUSE is affected
+
+            ResetDocument();
+            scenario(new[] { NODE_ATPB_MOUSE, NODE_TAU_MOUSE, NODE_APOF_HUMAN }, 16, NON_UNIQUE_PEPTIDES_BY_PROTEIN_ATPB_MOUSE + NON_UNIQUE_PEPTIDES_BY_SPECIES_TAU_MOUSE, 
+                UniquePeptidesDlg.UniquenessType.species); // Multiple selection ATPB_MOUSE, TAU_MOUSE, APOF_HUMAN - many mouse peptides also appear in yeast proteins in protdb
+
+            ResetDocument();
+            scenario(new[] { NODE_ATPB_MOUSE, NODE_HOP_1, NODE_APOF_HUMAN }, 2, NON_UNIQUE_PEPTIDES_BY_GENE_ATPB_MOUSE, 
+                UniquePeptidesDlg.UniquenessType.gene); // Multiple selection ATPB_MOUSE, HOP_1, APOF_HUMAN
+
+            ResetDocument();
+            scenario(new[] { NODE_ATPB_MOUSE, NODE_HOP_1, NODE_TAU_MOUSE, NODE_APOF_HUMAN }, 16, NON_UNIQUE_PEPTIDES_BY_GENE_ATPB_MOUSE + NON_UNIQUE_PEPTIDES_BY_GENE_TAU_MOUSE, 
+                UniquePeptidesDlg.UniquenessType.gene); // Multiple selection ATPB_MOUSE, HOP_1, TAU_MOUSE, APOF_HUMAN
+
+            ResetDocument();
+            scenario(new[] { NODE_ATPB_MOUSE, NODE_HOP_1, NODE_TAU_MOUSE, NODE_APOF_HUMAN }, 16, 57, 
+                EXCLUDE_BACKGROUND); // Multiple selection ATPB_MOUSE, HOP_1, TAU_MOUSE, APOF_HUMAN, only APOF_HUMAN is not in background proteome
+
+            ResetDocument();
+            scenario(NODE_HOP_1, 0, 0, 
+                UniquePeptidesDlg.UniquenessType.protein); // HOP_1 - should leave everything as is, as there is no overlap with anything in the background proteome even though HOP_1 itself is a member
+            scenario(NODE_APOF_HUMAN, 0, 0, 
+                UniquePeptidesDlg.UniquenessType.protein); // APOF_HUMAN - not in the background proteome, and no overlap, should change nothing 
+            scenario(NODE_APOF_HUMAN, 0, 0,
+                EXCLUDE_BACKGROUND); // APOF_HUMAN - not in the background proteome, and no overlap, should change nothing 
+            scenario(NODE_ATPB_MOUSE,  2,  NON_UNIQUE_PEPTIDES_BY_PROTEIN_ATPB_MOUSE, 
+                UniquePeptidesDlg.UniquenessType.protein); // should leave only two peptides in ATPB_MOUSE since most appear in other proteins as well
+            scenario(NODE_TAU_MOUSE, 14, NON_UNIQUE_PEPTIDES_BY_PROTEIN_ATPB_MOUSE + NON_UNIQUE_PEPTIDES_BY_PROTEIN_TAU_MOUSE, 
+                UniquePeptidesDlg.UniquenessType.protein); // should completely remove TAU_MOUSE peptides, since it has no unique peptides
+            scenario(NODE_HOP_1, 0, NON_UNIQUE_PEPTIDES_BY_PROTEIN_ATPB_MOUSE + NON_UNIQUE_PEPTIDES_BY_PROTEIN_TAU_MOUSE + TOTAL_PEPTIDES_HOP1, 
+               EXCLUDE_BACKGROUND); // HOP_1 - should remove all peptides even though there's no overlap, since it's in the background proteome
+
+            ResetDocument();
+            scenario(NODE_HOP_1, 0, 0, 
+                UniquePeptidesDlg.UniquenessType.species); // HOP_1 - should leave everything as is, as there is no overlap with anything in the background proteome even though HOP_1 itself is a member
+            scenario(NODE_APOF_HUMAN, 0, 0,
+                UniquePeptidesDlg.UniquenessType.species); // APOF_HUMAN - not in the background proteome, and no overlap, should change nothing 
+            scenario(NODE_APOF_HUMAN, 0, 0, 
+                EXCLUDE_BACKGROUND); // APOF_HUMAN - not in the background proteome, and no overlap, should change nothing 
+            scenario(NODE_ATPB_MOUSE, 2, NON_UNIQUE_PEPTIDES_BY_PROTEIN_ATPB_MOUSE, 
+                UniquePeptidesDlg.UniquenessType.species); // should leave only two peptides in ATPB_MOUSE, since most are also found in human and yeast
+            scenario(NODE_TAU_MOUSE, 14, NON_UNIQUE_PEPTIDES_BY_PROTEIN_ATPB_MOUSE + NON_UNIQUE_PEPTIDES_BY_SPECIES_TAU_MOUSE, 
+                UniquePeptidesDlg.UniquenessType.species); // should remove all but one TAU_MOUSE peptides, since most are also found in human
+            scenario(NODE_HOP_1, 0, NON_UNIQUE_PEPTIDES_BY_PROTEIN_ATPB_MOUSE + NON_UNIQUE_PEPTIDES_BY_SPECIES_TAU_MOUSE + TOTAL_PEPTIDES_HOP1, 
+                EXCLUDE_BACKGROUND); // HOP_1 - should remove all peptides even though there's no overlap, since it's in the background proteome
+
+            ResetDocument();
+            scenario(NODE_HOP_1, 0, 0, 
+                UniquePeptidesDlg.UniquenessType.gene); // HOP_1 - should leave everything as is, as there is no overlap with anything in the background proteome even though HOP_1 itself is a member
+            scenario(NODE_APOF_HUMAN, 0, 0, 
+                UniquePeptidesDlg.UniquenessType.gene); // APOF_HUMAN - not in the background proteome, and no overlap, should change nothing 
+            scenario(NODE_APOF_HUMAN, 0, 0, 
+               EXCLUDE_BACKGROUND); // APOF_HUMAN - not in the background proteome, and no overlap, should change nothing 
+            scenario(NODE_ATPB_MOUSE, 2, NON_UNIQUE_PEPTIDES_BY_GENE_ATPB_MOUSE, 
+                UniquePeptidesDlg.UniquenessType.gene);  // ATPB_MOUSE, drop the three peptides associated with genes ATPB5 and ATP2
+            scenario(NODE_TAU_MOUSE, 14, NON_UNIQUE_PEPTIDES_BY_GENE_ATPB_MOUSE + NON_UNIQUE_PEPTIDES_BY_GENE_TAU_MOUSE, 
+                UniquePeptidesDlg.UniquenessType.gene); // all but two TAU_MOUSE peptides are associated with other genes in addition to MAPT
+            scenario(NODE_HOP_1, 0, NON_UNIQUE_PEPTIDES_BY_GENE_ATPB_MOUSE + NON_UNIQUE_PEPTIDES_BY_GENE_TAU_MOUSE + TOTAL_PEPTIDES_HOP1, 
+                EXCLUDE_BACKGROUND); // HOP_1 - should remove all peptides even though there's no overlap, since it's in the background proteome
+
+            // Test our handling of data without gene or species info - expect to see a warning dialog
+            ResetDocument(bogus:true); // Load the bogus data
+            scenario(NODE_ATPB_MOUSE, 0, 18, UniquePeptidesDlg.UniquenessType.gene, true);
+            scenario(NODE_ATPB_HUMAN, 0, 36, UniquePeptidesDlg.UniquenessType.species, true);
+
+        }
+
     }
 }

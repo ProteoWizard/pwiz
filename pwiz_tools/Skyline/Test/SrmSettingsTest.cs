@@ -343,34 +343,34 @@ namespace pwiz.SkylineTest
         {
             const string sequence = "KKRFAHFAHPRFAHKPAHKAHMERMLSTKKKRSTTKRK";
             var enzymeTrypsin = new Enzyme("Trypsin", "KR", "P");
-            DigestsTo(sequence, false, enzymeTrypsin, "FAHFAHPR", "FAHKPAHK", "AHMER", "MLSTK", "STTK");
-            DigestsTo(sequence, true, enzymeTrypsin, "FAHKPAHK", "AHMER");
+            DigestsTo(sequence, false, 12, enzymeTrypsin, "FAHFAHPR", "FAHKPAHK", "AHMER", "MLSTK", "STTK");  // NB enzyme.CountCleavagePoints gave 8 rather than 12 prior to Feb 2016
+            DigestsTo(sequence, true, 12, enzymeTrypsin, "FAHKPAHK", "AHMER");
             var enzymeReverseTrypsin = new Enzyme("R-Trypsin", "KR", "P", SequenceTerminus.N);
-            DigestsTo(sequence, false, enzymeReverseTrypsin, "RFAHFAHPRFAH", "KPAH", "KAHME", "RMLST", "RSTT");
-            DigestsTo(sequence, true, enzymeReverseTrypsin, "KPAH", "KAHME");
+            DigestsTo(sequence, false, 12, enzymeReverseTrypsin, "RFAHFAHPRFAH", "KPAH", "KAHME", "RMLST", "RSTT");
+            DigestsTo(sequence, true, 12, enzymeReverseTrypsin, "KPAH", "KAHME");
             var enzymeUnrestrictedTrypsin = new Enzyme("U-Trypsin", "KR", null);
-            DigestsTo(sequence, false, enzymeUnrestrictedTrypsin, "FAHFAHPR", "FAHK", "PAHK", "AHMER", "MLSTK", "STTK");
-            DigestsTo(sequence, true, enzymeUnrestrictedTrypsin, "FAHK", "PAHK", "AHMER");
+            DigestsTo(sequence, false, 13, enzymeUnrestrictedTrypsin, "FAHFAHPR", "FAHK", "PAHK", "AHMER", "MLSTK", "STTK");
+            DigestsTo(sequence, true, 13, enzymeUnrestrictedTrypsin, "FAHK", "PAHK", "AHMER");
             var enzymeUnReverseTrypsin = new Enzyme("U-R-Trypsin", "KR", null, SequenceTerminus.N);
-            DigestsTo(sequence, false, enzymeUnReverseTrypsin, "RFAHFAHP", "RFAH", "KPAH", "KAHME", "RMLST", "RSTT");
-            DigestsTo(sequence, true, enzymeUnReverseTrypsin,"RFAH", "KPAH", "KAHME");
+            DigestsTo(sequence, false, 13, enzymeUnReverseTrypsin, "RFAHFAHP", "RFAH", "KPAH", "KAHME", "RMLST", "RSTT");
+            DigestsTo(sequence, true, 13, enzymeUnReverseTrypsin,"RFAH", "KPAH", "KAHME");
             var enzymeBothTrypsinR = new Enzyme("B-TrypsinR", "R", "P", "K", "P");
-            DigestsTo(sequence, false, enzymeBothTrypsinR, "KR", "FAHFAHPR", "FAH", "KPAH", "KAHMER", "MLST", "KR", "STT", "KR");
-            DigestsTo(sequence, true, enzymeBothTrypsinR, "KR", "FAHFAHPR", "FAH", "KPAH", "KAHMER", "STT", "KR");
+            DigestsTo(sequence, false, 12, enzymeBothTrypsinR, "KR", "FAHFAHPR", "FAH", "KPAH", "KAHMER", "MLST", "KR", "STT", "KR");
+            DigestsTo(sequence, true, 12, enzymeBothTrypsinR, "KR", "FAHFAHPR", "FAH", "KPAH", "KAHMER", "STT", "KR");
             var enzymeBothTrypsinK = new Enzyme("B-TrypsinK", "K", "P", "R", "P");
-            DigestsTo(sequence, false, enzymeBothTrypsinK, "RFAHFAHPRFAHKPAHK", "AHME", "RMLSTK", "RSTTK", "RK");
-            DigestsTo(sequence, true, enzymeBothTrypsinK, "AHME", "RK");
+            DigestsTo(sequence, false, 8, enzymeBothTrypsinK, "RFAHFAHPRFAHKPAHK", "AHME", "RMLSTK", "RSTTK", "RK");
+            DigestsTo(sequence, true, 8, enzymeBothTrypsinK, "AHME", "RK");
             var enzymeUnrestrictedBothTrypsin = new Enzyme("U-B-Trypsin", "K", null, "R", null);
-            DigestsTo(sequence, false, enzymeUnrestrictedBothTrypsin, "RFAHFAHP", "RFAHK", "PAHK", "AHME", "RMLSTK", "RSTTK", "RK");
-            DigestsTo(sequence, true, enzymeUnrestrictedBothTrypsin, "RFAHK", "PAHK", "AHME", "RK");
+            DigestsTo(sequence, false, 10, enzymeUnrestrictedBothTrypsin, "RFAHFAHP", "RFAHK", "PAHK", "AHME", "RMLSTK", "RSTTK", "RK");
+            DigestsTo(sequence, true, 10, enzymeUnrestrictedBothTrypsin, "RFAHK", "PAHK", "AHME", "RK");
         }
 
-        private static void DigestsTo(string sequence, bool excludeRaggedEnds, Enzyme enzyme, params string[] pepSeqs)
+        private static void DigestsTo(string sequence, bool excludeRaggedEnds, int expectedCleavagePoints, Enzyme enzyme, params string[] pepSeqs)
         {
             var fastaSeq = new FastaSequence("p", "d", new ProteinMetadata[0], sequence);
             var digestSettings = new DigestSettings(0, excludeRaggedEnds);
-            var peptides = string.Join(" ", enzyme.Digest(fastaSeq, digestSettings).Select(p => p.Sequence));
-            var expected = string.Join(" ", pepSeqs);
+            var peptides = "Missed " + enzyme.CountCleavagePoints(sequence) + " " + string.Join(" ", enzyme.Digest(fastaSeq, digestSettings).Select(p => p.Sequence));
+            var expected = "Missed " + expectedCleavagePoints + " " + string.Join(" ", pepSeqs);
             Assert.AreEqual(expected, peptides);
         }
 
@@ -419,6 +419,10 @@ namespace pwiz.SkylineTest
             // Valid first
             AssertEx.DeserializeNoError<PeptideFilter>("<peptide_filter min_length=\"2\" max_length=\"200\" min_transtions=\"1\"/>");
             AssertEx.DeserializeNoError<PeptideFilter>("<peptide_filter start=\"0\" min_length=\"100\" max_length=\"100\" min_transtions=\"20\" auto_select=\"false\"/>");
+            AssertEx.DeserializeNoError<PeptideFilter>("<peptide_filter start=\"0\" min_length=\"100\" max_length=\"100\" min_transtions=\"20\" auto_select=\"false\" unique_by = \"none\"/>");
+            AssertEx.DeserializeNoError<PeptideFilter>("<peptide_filter start=\"0\" min_length=\"100\" max_length=\"100\" min_transtions=\"20\" auto_select=\"false\" unique_by = \"protein\"/>");
+            AssertEx.DeserializeNoError<PeptideFilter>("<peptide_filter start=\"0\" min_length=\"100\" max_length=\"100\" min_transtions=\"20\" auto_select=\"false\" unique_by = \"gene\"/>");
+            AssertEx.DeserializeNoError<PeptideFilter>("<peptide_filter start=\"0\" min_length=\"100\" max_length=\"100\" min_transtions=\"20\" auto_select=\"false\" unique_by = \"species\"/>");
             AssertEx.DeserializeNoError<PeptideFilter>("<peptide_filter start=\"100\" min_length=\"2\" max_length=\"5\" auto_select=\"true\"/>");
             AssertEx.DeserializeNoError<PeptideFilter>("<peptide_filter start=\"25\" min_length=\"8\" max_length=\"25\" auto_select=\"true\"><peptide_exclusions/></peptide_filter>");
             AssertEx.DeserializeNoError<PeptideFilter>("<peptide_filter start=\"25\" min_length=\"8\" max_length=\"25\">" +
@@ -447,6 +451,9 @@ namespace pwiz.SkylineTest
                             "<peptide_exclusions><exclusion name=\"Invalid\" regex=\"!(M[)\" match_mod_sequence=\"true\"/></peptide_exclusions></peptide_filter>");
             AssertEx.DeserializeError<PeptideFilter>("<peptide_filter start=\"25\" min_length=\"8\" max_length=\"25\">" +
                             "<peptide_exclusions><exclusion name=\"Invalid\" regex=\"M\\[\" include=\"T\" match_mod_sequence=\"T\"/></peptide_exclusions></peptide_filter>");
+            // bad peptide uniqueness mode
+            AssertEx.DeserializeError<PeptideFilter>("<peptide_filter start=\"0\" min_length=\"100\" max_length=\"100\" min_transtions=\"20\" auto_select=\"false\" unique_by = \"nonsense\"/>");
+
         }
 
         /// <summary>

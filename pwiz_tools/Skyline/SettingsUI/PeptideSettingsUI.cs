@@ -124,6 +124,8 @@ namespace pwiz.Skyline.SettingsUI
             textMaxLength.Text = Filter.MaxPeptideLength.ToString(LocalizationHelper.CurrentCulture);
             textMinLength.Text = Filter.MinPeptideLength.ToString(LocalizationHelper.CurrentCulture);
             cbAutoSelect.Checked = Filter.AutoSelect;
+            comboBoxPeptideUniquenessConstraint.SelectedItem =
+                comboBoxPeptideUniquenessConstraint.Items[(int)_peptideSettings.Filter.PeptideUniqueness];
 
             // Initialize spectral library settings
             _driverLibrary = new SettingsListBoxDriver<LibrarySpec>(listLibraries, Settings.Default.SpectralLibraryList);
@@ -132,6 +134,7 @@ namespace pwiz.Skyline.SettingsUI
             _driverLibrary.LoadList(null, listLibrarySpecs);
             _driverBackgroundProteome = new SettingsListComboDriver<BackgroundProteomeSpec>(comboBackgroundProteome, Settings.Default.BackgroundProteomeList);
             _driverBackgroundProteome.LoadList(_peptideSettings.BackgroundProteome.Name);
+            UpdatePeptideUniquenessEnabled();
 
             panelPick.Visible = listLibrarySpecs.Count > 0;
             btnExplore.Enabled = listLibraries.Items.Count > 0;
@@ -188,6 +191,11 @@ namespace pwiz.Skyline.SettingsUI
             tabControl1.FocusFirstTabStop();
         }
 
+        private void UpdatePeptideUniquenessEnabled()
+        {
+            labelPeptideUniquenessConstraint.Enabled = comboBoxPeptideUniquenessConstraint.Enabled = !_driverBackgroundProteome.SelectedItem.IsNone;
+        }
+
         private PeptideSettings ValidateNewSettings(bool showMessages)
         {
             var helper = new MessageBoxHelper(this, showMessages);
@@ -221,6 +229,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
             }
             Helpers.AssignIfEquals(ref backgroundProteome, _peptideSettings.BackgroundProteome);
+            UpdatePeptideUniquenessEnabled();
 
             // Validate and hold prediction settings
             string nameRT = comboRetentionTime.SelectedItem.ToString();
@@ -296,6 +305,8 @@ namespace pwiz.Skyline.SettingsUI
 
             PeptideExcludeRegex[] exclusions = _driverExclusion.Chosen;
 
+            var peptideUniquenessMode = ComboPeptideUniquenessConstraintSelected;
+
             bool autoSelect = cbAutoSelect.Checked;
             PeptideFilter filter;
             try
@@ -304,7 +315,8 @@ namespace pwiz.Skyline.SettingsUI
                                            minPeptideLength,
                                            maxPeptideLength,
                                            exclusions,
-                                           autoSelect);
+                                           autoSelect,
+                                           peptideUniquenessMode);
             }
             catch (InvalidDataException x)
             {
@@ -554,6 +566,7 @@ namespace pwiz.Skyline.SettingsUI
         private void comboBackgroundProteome_SelectedIndexChanged(object sender, EventArgs e)
         {
             _driverBackgroundProteome.SelectedIndexChangedEvent(sender, e);
+            UpdatePeptideUniquenessEnabled();
         }
 
         private void cbUseMeasuredRT_CheckedChanged(object sender, EventArgs e)
@@ -1072,7 +1085,12 @@ namespace pwiz.Skyline.SettingsUI
         public string SelectedBackgroundProteome
         {
             get { return _driverBackgroundProteome.Combo.SelectedItem.ToString(); }
-            set { _driverBackgroundProteome.Combo.SelectedItem = value;  }
+            set { _driverBackgroundProteome.Combo.SelectedItem = value; }
+        }
+
+        public IEnumerable<string> ListBackgroundProteomes
+        {
+            get { return _driverBackgroundProteome.Combo.Items.Cast<object>().Select(item => item.ToString()); }
         }
 
         public string SelectedRTPredictor
@@ -1198,6 +1216,12 @@ namespace pwiz.Skyline.SettingsUI
         public void AddBackgroundProteome()
         {
             _driverBackgroundProteome.AddItem();    
+        }
+
+        public PeptideFilter.PeptideUniquenessConstraint ComboPeptideUniquenessConstraintSelected
+        {
+            get { return (PeptideFilter.PeptideUniquenessConstraint)comboBoxPeptideUniquenessConstraint.SelectedIndex; }
+            set { comboBoxPeptideUniquenessConstraint.SelectedIndex = (int)value; }
         }
 
         public NormalizationMethod QuantNormalizationMethod

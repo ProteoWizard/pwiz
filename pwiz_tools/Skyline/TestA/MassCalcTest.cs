@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
@@ -72,6 +73,46 @@ namespace pwiz.SkylineTestA
         {
             // Test case that caused unexpected exception when O- was not parsed correctly.
             SequenceMassCalc.ParseModCounts(BioMassCalc.MONOISOTOPIC, "OO-HNHN", new Dictionary<string, int>());            
+            
+            // Test normal function
+            var sequence = "VEDELK";
+            var calc = new SequenceMassCalc(MassType.Monoisotopic);
+            var expected = new List<KeyValuePair<double, double>>
+            {
+                new KeyValuePair<double, double>(366.69232575, 0.668595429107379),
+                new KeyValuePair<double, double>(367.194009631186, 0.230439133647163),
+                new KeyValuePair<double, double>(367.69569373213, 0.0384590257505838),
+                new KeyValuePair<double, double>(367.694446060561, 0.017949871952498),
+                new KeyValuePair<double, double>(367.19084355, 0.017192511410608),
+                new KeyValuePair<double, double>(368.196128166749, 0.00616111554527541),
+                new KeyValuePair<double, double>(367.692527431186, 0.00592559754703795),
+                new KeyValuePair<double, double>(367.1954645, 0.00513890101333714),
+                new KeyValuePair<double, double>(368.197384928765, 0.00425230800778248),
+                new KeyValuePair<double, double>(367.697148381186, 0.00177118156340514),
+                new KeyValuePair<double, double>(368.697813900475, 0.00101646716687999),
+                new KeyValuePair<double, double>(368.19421153213, 0.00098894968507418),
+                new KeyValuePair<double, double>(368.1929673, 0.000458171690211896),
+                new KeyValuePair<double, double>(368.699089317816, 0.000360958912487784),
+                new KeyValuePair<double, double>(368.19883248213, 0.000295600474962106),
+                new KeyValuePair<double, double>(368.69657325, 0.000202295887934749),
+                new KeyValuePair<double, double>(367.68936135, 0.000189469126984509),
+                new KeyValuePair<double, double>(368.694649407319, 0.000157258059028779),
+                new KeyValuePair<double, double>(369.199499540822, 0.000109802223366965),
+                new KeyValuePair<double, double>(368.695902738459, 0.000109341412261551),
+                new KeyValuePair<double, double>(369.198241127809, 7.04324061939316E-05),
+                new KeyValuePair<double, double>(368.191045231186, 6.53027220564238E-05),
+                new KeyValuePair<double, double>(368.700518794653, 3.19123118597943E-05),
+                new KeyValuePair<double, double>(369.19633171026, 2.61321131972594E-05),
+                new KeyValuePair<double, double>(369.699928636691, 1.13012567237636E-05),
+                new KeyValuePair<double, double>(368.69272933213, 1.08986656450318E-05),
+                new KeyValuePair<double, double>(367.69860325, 1.06303400612337E-05),
+            };
+            var actual = calc.GetMzDistribution(sequence, 2, IsotopeAbundances.Default).MassesSortedByAbundance();
+            for (var i = 0; i < expected.Count; i++)
+            {
+                Assert.AreEqual(expected[i].Key, actual[i].Key, .0001);
+                Assert.AreEqual(expected[i].Value, actual[i].Value, .0001);
+            } 
         }
 
         [TestMethod]

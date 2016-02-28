@@ -62,6 +62,7 @@ namespace pwiz.ProteomeDatabase.Util
             SessionFactory = SessionFactoryFactory.CreateSessionFactory(path, ProteomeDb.TYPE_DB, false);
             DatabaseLock = new ReaderWriterLock();
         }
+        public int Refcount { get { return _refCount;} }
         public string Path { get; private set; }
         public ISessionFactory SessionFactory { get; private set; }
         public ReaderWriterLock DatabaseLock { get; private set; }

@@ -317,22 +317,4 @@ namespace pwiz.SkylineTestUtil
             return maxTime;
         }        
     }
-
-    public class SilentProgressMonitor : IProgressMonitor
-    {
-        public bool IsCanceled
-        {
-            get { return false; }
-        }
-
-        public UpdateProgressResponse UpdateProgress(ProgressStatus status)
-        {
-            return UpdateProgressResponse.normal;
-        }
-
-        public bool HasUI
-        {
-            get { return false; }
-        }
-    }
 }

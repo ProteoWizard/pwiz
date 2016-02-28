@@ -191,7 +191,7 @@ namespace pwiz.Skyline.Model.Results
             var apexRT = GetApexRT(nodeGroup, resultIndex, chromFileInfo, true) ??
                 GetApexRT(nodeGroup, resultIndex, chromFileInfo, false);
 
-            Assume.IsTrue(chromInfo.PrecursorMz == pair.NodeGroup.PrecursorMz);
+            Assume.IsTrue(Math.Abs(chromInfo.PrecursorMz - pair.NodeGroup.PrecursorMz) < 1.0E-9, "mismatch in precursor values"); // Not L10N
             // Only use the transitions currently enabled
             var transitionPointSets = chromInfo.TransitionPointSets.Where(
                 tp => nodeGroup.Transitions.Any(

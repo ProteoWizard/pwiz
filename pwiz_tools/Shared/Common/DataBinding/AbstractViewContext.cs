@@ -240,7 +240,7 @@ namespace pwiz.Common.DataBinding
                         bool finished = false;
                         if (null == cloneableRowSource)
                         {
-                            var progressMonitor = new UncancellableProgressMonitor();
+                            var progressMonitor = new SilentProgressMonitor();
                             WriteData(progressMonitor, writer, bindingListSource, dataFormat.GetDsvWriter());
                             finished = true;
                         }
@@ -295,7 +295,7 @@ namespace pwiz.Common.DataBinding
                 var cloneableRowSource = bindingListSource.RowSource as ICloneableList;
                 if (null == cloneableRowSource)
                 {
-                    var progressMonitor = new UncancellableProgressMonitor();
+                    var progressMonitor = new SilentProgressMonitor();
                     WriteData(progressMonitor, tsvWriter, bindingListSource, DataFormats.TSV.GetDsvWriter());
                 }
                 else
@@ -661,24 +661,6 @@ namespace pwiz.Common.DataBinding
             if (sourceBindingList.SortDescriptions != null)
             {
                 targetBindingList.ApplySort(sourceBindingList.SortDescriptions);
-            }
-        }
-
-        protected class UncancellableProgressMonitor : IProgressMonitor
-        {
-            public bool IsCanceled
-            {
-                get { return false; }
-            }
-
-            public UpdateProgressResponse UpdateProgress(ProgressStatus status)
-            {
-                return UpdateProgressResponse.normal;
-            }
-
-            public bool HasUI
-            {
-                get { return false; }
             }
         }
 

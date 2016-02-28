@@ -51,6 +51,7 @@ namespace pwiz.SkylineTestUtil
         protected bool AllowInternetAccess
         {
             get { return GetBoolValue("AccessInternet", false); }  // Return false if unspecified
+            set { TestContext.Properties["AccessInternet"] = value ? "true" : "false"; } // Only appropriate to use in perf tests, really
         }
 
         protected bool RunPerfTests

@@ -179,7 +179,7 @@ namespace pwiz.Skyline.Model
                     if (!AutoPickChildrenOff && !settings.PeptideSettings.Filter.AutoSelect)
                         settings = settings.ChangePeptideFilter(filter => filter.ChangeAutoSelect(true));
                     nodePepGroupRefined = nodePepGroupRefined.ChangeSettings(settings,
-                        new SrmSettingsDiff(true, false, false, false, false, false));
+                        new SrmSettingsDiff(true, false, false, false, false, false, progressMonitor));
                 }
 
                 nodePepGroupRefined = Refine(nodePepGroupRefined, document, outlierIds,

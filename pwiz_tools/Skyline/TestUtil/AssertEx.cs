@@ -232,9 +232,19 @@ namespace pwiz.SkylineTestUtil
                     writer.Formatting = Formatting.Indented;
                     try
                     {
-                        var ser = new XmlSerializer(obj.GetType());
-                        ser.Serialize(writer, obj);
-                        var xmlText = sb.ToString();
+                        string xmlText;
+                        try
+                        {
+                            var ser = new XmlSerializer(obj.GetType());
+                            ser.Serialize(writer, obj);
+                            xmlText = sb.ToString();
+                        }
+                        catch (OutOfMemoryException x)
+                        {
+                            if (obj.GetType() == typeof (SrmDocument))
+                                return;  // Just a really big document, let it slide
+                            throw new OutOfMemoryException("Strangely large non-document object", x.InnerException);
+                        }
                         var assembly = Assembly.GetAssembly(typeof(AssertEx));
                         var xsdName = typeof(AssertEx).Namespace + String.Format(CultureInfo.InvariantCulture, ".Schemas.Skyline_{0}.xsd", SrmDocument.FORMAT_VERSION);
                         var schemaStream = assembly.GetManifestResourceStream(xsdName);
@@ -697,18 +707,18 @@ namespace pwiz.SkylineTestUtil
         }
 
         public static void IsDocumentState(SrmDocument document, int? revision, int? groups, int? peptides,
-                                           int? tranGroups, int? transitions)
+                                           int? tranGroups, int? transitions, string hint = null)
         {
             var errmsg = DocumentStateTestResultString(document, revision, groups, peptides, tranGroups, transitions);
             if (errmsg.Length > 0)
-                Assert.Fail(errmsg);
+                Assert.Fail((hint??string.Empty) + errmsg);
 
             // Verify that no two nodes in the document tree have the same global index
             var setIndexes = new HashSet<int>();
             var nodeDuplicate = FindFirstDuplicateGlobalIndex(document, setIndexes);
             if (nodeDuplicate != null)
             {
-                Assert.Fail("Duplicate global index {0} found in node {1}",
+                Assert.Fail((hint??string.Empty) + "Duplicate global index {0} found in node {1}",
                     nodeDuplicate.Id.GlobalIndex, nodeDuplicate);
             }
         }

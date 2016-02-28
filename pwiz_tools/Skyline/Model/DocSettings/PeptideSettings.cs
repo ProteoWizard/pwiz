@@ -149,6 +149,14 @@ namespace pwiz.Skyline.Model.DocSettings
 
         #endregion
 
+        public bool NeedsBackgroundProteomeUniquenessCheckProcessing
+        {
+            get
+            {
+                return BackgroundProteome != null && !BackgroundProteome.IsReadyForUniquenessFilter(Filter.PeptideUniqueness);
+            }
+        }
+
         #region Implementation of IXmlSerializable
 
         /// <summary>
@@ -801,6 +809,14 @@ namespace pwiz.Skyline.Model.DocSettings
         public const int MIN_MAX_LENGTH = 5;
         public const int MAX_MAX_LENGTH = 200;
 
+        public enum PeptideUniquenessConstraint
+        {
+            none,
+            protein,
+            gene,
+            species
+        };
+
         public static readonly IPeptideFilter UNFILTERED = new AllPeptidesFilter();
 
         private ImmutableList<PeptideExcludeRegex> _exclusions;
@@ -812,13 +828,15 @@ namespace pwiz.Skyline.Model.DocSettings
         private Regex _regexIncludeMod;
 
         public PeptideFilter(int excludeNTermAAs, int minPeptideLength,
-                             int maxPeptideLength, IList<PeptideExcludeRegex> exclusions, bool autoSelect)
+                             int maxPeptideLength, IList<PeptideExcludeRegex> exclusions, bool autoSelect,
+                             PeptideUniquenessConstraint peptideUniquenessConstraint)
         {
             Exclusions = exclusions;
             ExcludeNTermAAs = excludeNTermAAs;
             MinPeptideLength = minPeptideLength;
             MaxPeptideLength = maxPeptideLength;
             AutoSelect = autoSelect;
+            PeptideUniqueness = peptideUniquenessConstraint;
             DoValidate();
         }
 
@@ -841,6 +859,8 @@ namespace pwiz.Skyline.Model.DocSettings
                     _regexInclude = _regexIncludeMod = null;
             }
         }
+
+        public PeptideUniquenessConstraint PeptideUniqueness { get; private set; }
 
         #region Property change methods
 
@@ -868,6 +888,12 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             return ChangeProp(ImClone(this), im => im.Exclusions = prop);
         }
+
+        public PeptideFilter ChangePeptideUniqueness(PeptideUniquenessConstraint prop)
+        {
+            return ChangeProp(ImClone(this), im => im.PeptideUniqueness = prop);
+        }
+
         #endregion
 
         public bool Accept(SrmSettings settings, Peptide peptide, ExplicitMods explicitMods, out bool allowVariableMods)
@@ -909,7 +935,40 @@ namespace pwiz.Skyline.Model.DocSettings
                     return false;
             }
 
+            // Peptide uniqueness checks can be expensive, so do this last
+            if ((settings.PeptideSettings.Filter.PeptideUniqueness != PeptideUniquenessConstraint.none)
+                && !CheckPeptideUniqueness(settings, sequence)) 
+                return false;
+
             return true;
+        }
+
+        //
+        // Background proteome uniqueness constraints
+        //
+        public bool CheckPeptideUniqueness(SrmSettings settings, string sequence)
+        {
+            return CheckPeptideUniqueness(settings, new List<string> { sequence }, null)[sequence];
+        }
+
+        public Dictionary<string, bool> CheckPeptideUniqueness(SrmSettings settings, List<string> sequences, SrmSettingsChangeMonitor progressMonitor)
+        {
+            var result = new Dictionary<string, bool>();
+            foreach (var s in sequences)
+            {
+                if (!result.ContainsKey(s))
+                {
+                    result.Add(s, true);
+                }
+            }
+            if (settings.PeptideSettings.Filter.PeptideUniqueness == PeptideUniquenessConstraint.none)
+            {
+                return result; // Everything passes
+            }
+
+            var needsBackgroundProteomeUniquenessCheckProcessing = settings.PeptideSettings.NeedsBackgroundProteomeUniquenessCheckProcessing;
+            Assume.IsFalse(needsBackgroundProteomeUniquenessCheckProcessing); // Should be handled in ChangeSettings
+            return settings.PeptideSettings.BackgroundProteome.PeptidesUniquenessFilter(result, settings.PeptideSettings, progressMonitor);
         }
 
         public int? MaxVariableMods
@@ -932,6 +991,7 @@ namespace pwiz.Skyline.Model.DocSettings
             min_length,
             max_length,
             auto_select,
+            unique_by,
         }
 
         private enum EL
@@ -1045,6 +1105,7 @@ namespace pwiz.Skyline.Model.DocSettings
             MinPeptideLength = reader.GetIntAttribute(ATTR.min_length);
             MaxPeptideLength = reader.GetIntAttribute(ATTR.max_length);
             AutoSelect = reader.GetBoolAttribute(ATTR.auto_select);
+            PeptideUniqueness = reader.GetEnumAttribute(ATTR.unique_by, PeptideUniquenessConstraint.none);
 
             var list = new List<PeptideExcludeRegex>();
 
@@ -1071,6 +1132,10 @@ namespace pwiz.Skyline.Model.DocSettings
             writer.WriteAttribute(ATTR.min_length, MinPeptideLength);
             writer.WriteAttribute(ATTR.max_length, MaxPeptideLength);
             writer.WriteAttribute(ATTR.auto_select, AutoSelect);
+            if (PeptideUniqueness != PeptideUniquenessConstraint.none)
+            {
+                writer.WriteAttribute(ATTR.unique_by, PeptideUniqueness);
+            }
             // Write child elements
             writer.WriteElementList(EL.peptide_exclusions, Exclusions);
         }
@@ -1087,6 +1152,7 @@ namespace pwiz.Skyline.Model.DocSettings
                    obj.MinPeptideLength == MinPeptideLength &&
                    obj.MaxPeptideLength == MaxPeptideLength &&
                    obj.AutoSelect.Equals(AutoSelect) &&
+                   obj.PeptideUniqueness.Equals(PeptideUniqueness) &&
                    ArrayUtil.EqualsDeep(obj._exclusions, _exclusions);
         }
 
@@ -1107,6 +1173,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result*397) ^ MaxPeptideLength;
                 result = (result*397) ^ AutoSelect.GetHashCode();
                 result = (result*397) ^ _exclusions.GetHashCodeDeep();
+                result = (result*397) ^ PeptideUniqueness.GetHashCode();
                 return result;
             }
         }

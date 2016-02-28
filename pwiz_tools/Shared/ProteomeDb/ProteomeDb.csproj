@@ -111,7 +111,6 @@
     <Compile Include="API\Digestion.cs" />
     <Compile Include="API\EntityModel.cs" />
     <Compile Include="API\Protease.cs" />
-    <Compile Include="API\IProgressMonitor.cs" />
     <Compile Include="API\Protein.cs" />
     <Compile Include="API\ProteinMatcher.cs" />
     <Compile Include="API\ProteinMetadata.cs" />

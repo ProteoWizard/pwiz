@@ -18,8 +18,10 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NHibernate;
 using NHibernate.Criterion;
+using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.DataModel;
 
 namespace pwiz.ProteomeDatabase.API
@@ -44,32 +46,76 @@ namespace pwiz.ProteomeDatabase.API
 
         public List<Protein> GetProteinsWithSequence(String sequence)
         {
-            List<Protein> proteins = new List<Protein>();
+            return GetProteinsWithSequences(new[] { sequence }, null)[sequence];
+        }
+
+        public Dictionary<string, List<Protein>> GetProteinsWithSequences(IEnumerable<string> sequences, IProgressMonitor progressMonitor)
+        {
+            var sequenceList = sequences.ToList();
+            var indexSequences = sequenceList.Select(sequence => sequence.Substring(0, Math.Min(sequence.Length, MaxSequenceLength))).Distinct().ToList();
+            var results = new Dictionary<string, List<Protein>>();
+
+            foreach (var s in sequenceList.Distinct())
+            {
+                results.Add(s, new List<Protein>());
+            }
+
             using (var proteomeDb = OpenProteomeDb())
             using (ISession session = proteomeDb.OpenSession())
             {
-                DbDigestion digestion = GetEntity(session);
-                String sequencePrefix = sequence.Substring(0, Math.Min(sequence.Length, MaxSequenceLength));
-                String hql = "SELECT DISTINCT pp.Protein, pn" // Not L10N
-                    + "\nFROM " + typeof(DbDigestedPeptideProtein) + " pp, " + typeof(DbProteinName) + " pn" // Not L10N
-                    + "\nWHERE pp.Protein.Id = pn.Protein.Id AND pn.IsPrimary <> 0" // Not L10N
-                    + "\nAND pp.Peptide.Digestion = :Digestion" // Not L10N
-                    + "\nAND pp.Peptide.Sequence = :Sequence"; // Not L10N
-                IQuery query = session.CreateQuery(hql);
-                query.SetParameter("Digestion", digestion); // Not L10N
-                query.SetParameter("Sequence", sequencePrefix); // Not L10N
-                foreach (object[] values in query.List())
+                var digestion = GetEntity(session);
+                var completedQueries = 0;
+                for (var querySize = Math.Min(500,indexSequences.Count); querySize > 0; )  // A retry loop in case our query overwhelms SQLite
                 {
-                    var protein = (DbProtein)values[0];
-                    var name = (DbProteinName)values[1];
-
-                    if (protein.Sequence.IndexOf(sequence, StringComparison.Ordinal) < 0)
-                        continue;
-
-                    proteins.Add(new Protein(ProteomeDbPath, protein, name));
-                }
+                    try
+                    {
+                        while (completedQueries < indexSequences.Count)
+                        {
+                            var hql = "SELECT DISTINCT pp.Protein, pn, pp.Protein.Sequence" // Not L10N
+                                      + "\nFROM " + typeof (DbDigestedPeptideProtein) + " pp, " + typeof (DbProteinName) + " pn" // Not L10N
+                                      + "\nWHERE pp.Protein.Id = pn.Protein.Id AND pn.IsPrimary <> 0" // Not L10N
+                                      + "\nAND pp.Peptide.Digestion = :Digestion" // Not L10N
+                                      + "\nAND pp.Peptide.Sequence IN (:Sequences)"; // Not L10N
+                            var query = session.CreateQuery(hql);
+                            query.SetParameter("Digestion", digestion); // Not L10N
+                            query.SetParameterList("Sequences", indexSequences.Skip(completedQueries).Take(querySize)); // Not L10N
+                            foreach (object[] values in query.List())
+                            {
+                                // At this point what we have is a list of proteins which are a likely match, but not certain.
+                                // That's because the indexing scheme only uses the first MaxSequenceLength AAs of a peptide.
+                                var protein = (DbProtein) values[0];
+                                var name = (DbProteinName) values[1];
+                                var proteinSequence = (String) values[2];
+                                foreach (
+                                    var sequence in
+                                        sequenceList.Where(
+                                            seq => proteinSequence.IndexOf(seq, StringComparison.Ordinal) >= 0))
+                                {
+                                    // N.B. at this point all we really know is that this peptide sequence is found in this protein's sequence.
+                                    // We don't really know that it's a plausible product of the current digestion.  
+                                    results[sequence].Add(new Protein(ProteomeDbPath, protein, name));
+                                }
+                            }
+                            if (progressMonitor != null && progressMonitor.IsCanceled)
+                            {
+                                break;
+                            }
+                            completedQueries += querySize;
+                        }
+                        break;
+                    }
+                    catch (Exception x)
+                    {
+                        // Failed - probably due to too-large query
+                        querySize /= 2;
+                        if (querySize == 0)
+                        {
+                            throw new Exception("error reading protdb file", x); // Not L10N
+                        }
+                    }
+                }  // End dynamic query size loop
             }
-            return proteins;
+            return results;
         }
 
         public List<KeyValuePair<Protein, String>> GetProteinsWithSequencePrefix(String sequence, int maxResults)

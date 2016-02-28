@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -207,7 +208,7 @@ namespace pwiz.Skyline.SettingsUI
                     return; 
                 }
 
-                ProteomeDb.OpenProteomeDb(textPath.Text);
+                using (ProteomeDb.OpenProteomeDb(textPath.Text)){} // See if it can be opened, but close it quickly
             }
             catch (Exception x)
             {
@@ -251,10 +252,9 @@ namespace pwiz.Skyline.SettingsUI
             Settings.Default.FastaDirectory = Path.GetDirectoryName(fastaFilePath);
             using (var longWaitDlg = new LongWaitDlg { ProgressValue = 0 })
             {
-                var progressMonitor = new ProgressMonitor(longWaitDlg);
                 try
                 {
-                    longWaitDlg.PerformWork(this, 0, () =>
+                    longWaitDlg.PerformWork(this, 0, progressMonitor =>
                     {
                         ProteomeDb proteomeDb = File.Exists(databasePath)
                             ? ProteomeDb.OpenProteomeDb(databasePath)
@@ -263,7 +263,8 @@ namespace pwiz.Skyline.SettingsUI
                         {
                             using (var reader = File.OpenText(fastaFilePath))
                             {
-                                proteomeDb.AddFastaFile(reader, progressMonitor.UpdateProgress);
+                                var status = new ProgressStatus(longWaitDlg.Message);
+                                proteomeDb.AddFastaFile(reader, progressMonitor, ref status, false);
                             }
                         }
                     });
@@ -281,23 +282,6 @@ namespace pwiz.Skyline.SettingsUI
             if (path != null)
                 listboxFasta.Items.Add(path);
             RefreshStatus();
-        }
-
-        private class ProgressMonitor
-        {
-            private readonly LongWaitDlg _longWaitDlg;
-
-            public ProgressMonitor(LongWaitDlg longWaitDlg)
-            {
-                _longWaitDlg = longWaitDlg;
-            }
-
-            public bool UpdateProgress(string message, int progress)
-            {
-                _longWaitDlg.ProgressValue = progress;
-                _longWaitDlg.Message = message;
-                return !_longWaitDlg.IsCanceled;
-            }
         }
 
         private void textName_TextChanged(object sender, EventArgs e)
@@ -337,6 +321,8 @@ namespace pwiz.Skyline.SettingsUI
             {
                 btnAddFastaFile.Enabled = true;
                 ProteomeDb proteomeDb = null;
+                int proteinCount = 0;
+                IList<Digestion> digestions = null;
                 try
                 {
                     using (var longWaitDlg = new LongWaitDlg
@@ -348,13 +334,19 @@ namespace pwiz.Skyline.SettingsUI
                                 textPath.Text)
                     })
                     {
-                        longWaitDlg.PerformWork(this, 1000, () => proteomeDb = ProteomeDb.OpenProteomeDb(textPath.Text));
+                        longWaitDlg.PerformWork(this, 1000, () =>
+                        {
+                            proteomeDb = ProteomeDb.OpenProteomeDb(textPath.Text);
+                            if (proteomeDb != null)
+                            {
+                                proteinCount = proteomeDb.GetProteinCount(); // This can be a lengthy operation on a large protdb, do it within the longwait
+                                digestions = proteomeDb.ListDigestions();
+                            }
+                    });
                     }
                     if (proteomeDb == null)
                         throw new Exception();
 
-                    int proteinCount = proteomeDb.GetProteinCount();
-                    var digestions = proteomeDb.ListDigestions();
                     tbxStatus.Text =
                         string.Format(
                             Resources.BuildBackgroundProteomeDlg_RefreshStatus_The_proteome_file_contains__0__proteins,

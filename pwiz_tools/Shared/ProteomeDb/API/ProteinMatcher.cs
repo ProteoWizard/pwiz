@@ -395,7 +395,7 @@ namespace pwiz.ProteomeDatabase.API
                 if (proteinMatchSettings.Protease != null)
                 {
                     String lastPeptide = null;
-                    foreach (var peptide in proteinMatchSettings.Protease.Digest(protein))
+                    foreach (var peptide in proteinMatchSettings.Protease.Digest(protein, ProteomeDb.PROTDB_MAX_MISSED_CLEAVAGES))
                     {
                         if (!peptide.Sequence.StartsWith(proteinMatchSettings.SearchText))
                         {

@@ -8908,4 +8908,19 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="CalibrateIrtDlg_OkDialog_All_of_these_peptides_are_known_CiRT_peptides__Would_you_like_to_use_the_predefined_iRT_values_" xml:space="preserve">
     <value>All of these peptides are known CiRT peptides. Would you like to use the predefined iRT values?</value>
   </data>
+  <data name="BackgroundProteome_GetUniquenessDict_Examining_background_proteome_for_uniqueness_constraints" xml:space="preserve">
+    <value>Examining background proteome for uniqueness constraints</value>
+  </data>
+  <data name="DigestHelper_LookupProteinMetadata_Unable_to_access_internet_to_resolve_protein_details_" xml:space="preserve">
+    <value>Unable to access internet to resolve protein details.</value>
+  </data>
+  <data name="UniquePeptidesDlg_SelectPeptidesWithNumberOfMatchesAtOrBelowThreshold_Some_background_proteome_proteins_did_not_have_gene_information__this_selection_may_be_suspect_" xml:space="preserve">
+    <value>Some background proteome proteins did not have gene information, this selection may be suspect.</value>
+  </data>
+  <data name="UniquePeptidesDlg_SelectPeptidesWithNumberOfMatchesAtOrBelowThreshold_Some_background_proteome_proteins_did_not_have_species_information__this_selection_may_be_suspect_" xml:space="preserve">
+    <value>Some background proteome proteins did not have species information, this selection may be suspect.</value>
+  </data>
+  <data name="UniquePeptidesDlg_SelectPeptidesWithNumberOfMatchesAtOrBelowThreshold_These_proteins_include_" xml:space="preserve">
+    <value>These proteins include:</value>
+  </data>
 </root>

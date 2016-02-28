@@ -306,12 +306,16 @@ namespace pwiz.Skyline.Model
                 if (0 > Begin.Value || End.Value > _fastaSequence.Sequence.Length)
                     throw new InvalidDataException(Resources.Peptide_Validate_Peptide_sequence_exceeds_the_bounds_of_the_protein_sequence);
 
-                string sequenceCheck = _fastaSequence.Sequence.Substring(Begin.Value, End.Value - Begin.Value);
-                if (!Equals(Sequence, sequenceCheck))
+                var j = 0;
+                for (var i = Begin.Value; i < End.Value;)
                 {
-                    throw new InvalidDataException(
-                        string.Format(Resources.Peptide_Validate_The_peptide_sequence__0__does_not_agree_with_the_protein_sequence__1__at__2__3__,
-                                      Sequence, sequenceCheck, Begin.Value, End.Value));
+                    if (!Equals(Sequence[j++],_fastaSequence.Sequence[i++]))
+                    {
+                        string sequenceCheck = _fastaSequence.Sequence.Substring(Begin.Value, End.Value - Begin.Value);
+                        throw new InvalidDataException(
+                            string.Format(Resources.Peptide_Validate_The_peptide_sequence__0__does_not_agree_with_the_protein_sequence__1__at__2__3__,
+                                Sequence, sequenceCheck, Begin.Value, End.Value));
+                    }
                 }
             }
             // CONSIDER: Validate missed cleavages some day?

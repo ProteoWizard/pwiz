@@ -190,6 +190,11 @@ namespace pwiz.Common.Chemistry
     {
         public static T Parse(String formula)
         {
+            return new T {Dictionary = ImmutableSortedList.FromValues(ParseToDictionary(formula))};
+        }
+
+        public static Dictionary<string, int> ParseToDictionary(string formula)
+        {
             var result = new Dictionary<string, int>();
             string currentElement = null;
             int currentQuantity = 0;
@@ -243,7 +248,12 @@ namespace pwiz.Common.Chemistry
                     result.Add(currentElement, previous + currentQuantity);
                 }
             }
-            return new T {Dictionary = ImmutableSortedList.FromValues(result)};
+            return result;
+        }
+
+        public static T FromDict(ImmutableSortedList<string, int> dict)
+        {
+            return new T {Dictionary = dict};
         }
 
         public override string ToString()

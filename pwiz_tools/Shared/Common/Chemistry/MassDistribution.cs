@@ -40,7 +40,7 @@ namespace pwiz.Common.Chemistry
         }
 
         /// <summary>
-        /// Private constructor used by <see cref="NewInstance"/> to create all useful MassDistributions.
+        /// Private constructor used by NewInstance to create all useful MassDistributions.
         /// </summary>
         /// <param name="dictionary">Dictionary of masses to abundances</param>
         /// <param name="massResolution">Resolution used to merge masses and their abundances</param>
@@ -52,6 +52,13 @@ namespace pwiz.Common.Chemistry
         {
             MassResolution = massResolution;
             MinimumAbundance = minimumAbundance;
+        }
+
+        private MassDistribution(Helper helper)
+            : base(new SortedDictionary<double, double>(helper.Masses.Take(helper.MassCount).ToDictionary(t => t.Mass, t => t.Frequency)))
+        {
+            MassResolution = helper.MassResolution;
+            MinimumAbundance = helper.MinimumAbundance;
         }
 
         public double MassResolution { get; private set; }
@@ -66,19 +73,8 @@ namespace pwiz.Common.Chemistry
         /// </summary>
         public MassDistribution Add(MassDistribution rhs)
         {
-            var map = new Dictionary<Double, Double>();
-            foreach (var thisEntry in this)
-            {
-                foreach (var thatEntry in rhs)
-                {
-                    double mass = thisEntry.Key + thatEntry.Key;
-                    double frequency;
-                    map.TryGetValue(mass, out frequency);
-                    frequency += thisEntry.Value * thatEntry.Value;
-                    map[mass] = frequency;
-                }
-            }
-            return NewInstance(map, MassResolution, MinimumAbundance);
+            var helper = new Helper(this).Add(rhs);
+            return new MassDistribution(helper);
         }
 
         /// <summary>
@@ -92,14 +88,178 @@ namespace pwiz.Common.Chemistry
             if (factor == 1) {
                 return this;
             }
-            MassDistribution result = Add(this);
-            if (factor >= 4) {
-                result = result.Multiply(factor / 2);
+            var helper = new Helper(this).Multiply(factor);
+            return new MassDistribution(helper);
+        }
+
+        /// <summary>
+        /// Implements MassDistribution logic using arrays instead of dicts for best speed in 
+        /// intermediate steps where lookup isn't needed.  This is a hotspot in large Skyline
+        /// documents so some fairly unusual things happen here, like arrays that are larger 
+        /// than they need to be just to avoid reallocation.
+        /// </summary>
+        public class Helper
+        {
+            public MassFrequency[] Masses { get; private set; }
+            public int MassCount { get; private set; } // Tail of Masses array may be unused after binning
+            public double MassResolution { get; private set; }
+            public double MinimumAbundance { get; private set; }
+
+            public Helper(double massResolution, double minimumAbundance)
+
+            {
+                Masses = new MassFrequency[1];
+                Masses[0].Frequency = 1;
+                MassCount = 1;
+                MassResolution = massResolution;
+                MinimumAbundance = minimumAbundance;
             }
-            if (factor % 2 != 0) {
-                result = result.Add(this);
+
+            public Helper(MassDistribution parent)
+            {
+                Masses = parent.Select(keyValuePair => new MassFrequency(keyValuePair.Key,  keyValuePair.Value)).ToArray();
+                MassCount = Masses.Length;
+                MassResolution = parent.MassResolution;
+                MinimumAbundance = parent.MinimumAbundance;
             }
-            return result;
+
+            public Helper(IEnumerable<MassFrequency> val, double massResolution, double minimumAbundance)
+            {
+                Masses = val.ToArray();
+                MassCount = Masses.Length;
+                MassResolution = massResolution;
+                MinimumAbundance = minimumAbundance;
+            }
+
+            public Helper(MassFrequency[] masses, int masscount, double massResolution, double minimumAbundance)
+            {
+                Masses = masses;
+                MassCount = masscount; // Tail of array may me unused after binning, but we don't reallocate for best speed
+                MassResolution = massResolution;
+                MinimumAbundance = minimumAbundance;
+            }
+
+            public Helper Add(IDictionary<double, double> rhs)
+            {
+                return Add(rhs.Select(keyValuePair => new MassFrequency(keyValuePair.Key,  keyValuePair.Value)), rhs.Count);
+            }
+
+            public Helper Add(Helper rhs)
+            {
+                return Add(rhs.Masses, rhs.MassCount);
+            }
+
+            private Helper Add(IEnumerable<MassFrequency> rhs, int rhsCount)
+            {
+                var list = new MassFrequency[MassCount * rhsCount];
+                var i = 0;
+                foreach (var rhsEntry in rhs)
+                {
+                    if (rhsCount-- <= 0)
+                        break;
+                    for (var j = MassCount - 1; j >= 0; j--)
+                    {
+                        list[i].Mass = Masses[j].Mass + rhsEntry.Mass;
+                        list[i++].Frequency = Masses[j].Frequency * rhsEntry.Frequency;
+                    }
+                }
+                var result = new Helper(list, list.Length, MassResolution, MinimumAbundance);
+                result.ApplyBinning();
+                return result;
+            }
+
+            public Helper Multiply(int factor)
+            {
+                if (factor == 0)
+                {
+                    return new Helper(MassResolution, MinimumAbundance);
+                }
+                if (factor == 1)
+                {
+                    return this;
+                }
+                var result = Add(Masses, MassCount);
+                if (factor >= 4)
+                {
+                    result = result.Multiply(factor / 2);
+                }
+                if (factor % 2 != 0) {
+                    result = result.Add(Masses, MassCount);
+                }
+                return result;
+            }
+
+            public void ApplyBinning()
+            {
+                // Sort masses in range that's actually in use
+                Array.Sort(Masses, 0, MassCount);
+
+                // Filter masses by resolution and abundance
+                double curMass = 0.0;
+                double curFrequency = 0.0;
+                double totalAbundance = 0;
+                var count = 0;
+                for (var i = 0; i < MassCount; i++)
+                {
+                    var value = Masses[i];
+                    var frequency = value.Frequency;
+                    if (frequency == 0)
+                        continue;
+
+                    var mass = value.Mass;
+
+                    // If the delta between the next mass and the current center of mass is
+                    // greater than the mass resolution
+                    if (mass - curMass > MassResolution)
+                    {
+                        // If the abundance of the current center of mass is greater than
+                        // the minimum, add it to the new set
+                        if (curFrequency > MinimumAbundance)
+                        {
+                            Masses[count].Mass = curMass;
+                            Masses[count++].Frequency = curFrequency;
+                            totalAbundance += curFrequency;
+                        }
+                        // Reset the current center of mass
+                        curMass = mass;
+                        curFrequency = frequency;
+                    }
+                    else
+                    {
+                        // Add the new mass and adjust the current center of mass
+                        curMass = (curMass * curFrequency + mass * frequency) / (curFrequency + frequency);
+                        curFrequency += frequency;
+                    }
+                }
+                // Include the last center of mass
+                if (curFrequency > MinimumAbundance)
+                {
+                    Masses[count].Mass = curMass;
+                    Masses[count++].Frequency = curFrequency;
+                    totalAbundance += curFrequency;
+                }
+                // If filtered abundances do not total 100%, recalculate the proportions
+                if (totalAbundance != 1)
+                {
+                    for (var i = count - 1; i >= 0; i--)
+                    {
+                        Masses[i].Frequency /= totalAbundance;
+                    }
+                }
+                MassCount = count;
+            }
+
+            // Doesn't return a Helper because it's typically the last step in creating an actual MassDistribution
+            public MassDistribution OffsetAndDivide(double offset, int scale)
+            {
+                var map = new SortedDictionary<double, double>();
+                var absScale = Math.Abs(scale); // Scale is typically a charge, which may be negative, but masses are always positive
+                for (var i = MassCount; i-- > 0;)
+                {
+                    map.Add((Masses[i].Mass + offset) / absScale, Masses[i].Frequency);
+                }
+                return new MassDistribution(map, MassResolution, MinimumAbundance);
+            }
         }
 
         /// <summary>
@@ -128,7 +288,7 @@ namespace pwiz.Common.Chemistry
         /// </summary>
         public MassDistribution Average(MassDistribution massDistribution, double weight)
         {
-            var dict = new Dictionary<double, double>();
+            var dict = new Dictionary<double, double>(Count);
             foreach (var entry in this)
             {
                 dict.Add(entry.Key, entry.Value * (1.0 - weight));
@@ -235,58 +395,34 @@ namespace pwiz.Common.Chemistry
         public static MassDistribution NewInstance(IDictionary<double,double> values, 
             double massResolution, double minimumAbundance)
         {
-            // Sort masses
-            var sortedKeys = values.Keys.ToArray();
-            Array.Sort(sortedKeys);
-
-            // Filter masses by resolution and abundance
-            double curMass = 0.0;
-            double curFrequency = 0.0;
-            double totalAbundance = 0;
-            var map = new Dictionary<double, double>();
-            foreach (var mass in sortedKeys)
+            var arrayValues = new MassFrequency[values.Count];
+            var i = 0;
+            foreach (var value in values)
             {
-                var frequency = values[mass];
-                if (frequency == 0)
-                    continue;
-
-                // If the delta between the next mass and the current center of mass is
-                // greater than the mass resolution
-                if (mass - curMass > massResolution)
-                {
-                    // If the abundance of the current center of mass is greater than
-                    // the minimum, add it to the new set
-                    if (curFrequency > minimumAbundance)
-                    {
-                        map.Add(curMass, curFrequency);
-                        totalAbundance += curFrequency;
-                    }
-                    // Reset the current center of mass
-                    curMass = mass;
-                    curFrequency = frequency;
-                }
-                else
-                {
-                    // Add the new mass and adjust the current center of mass
-                    curMass = (curMass * curFrequency + mass * frequency) / (curFrequency + frequency);
-                    curFrequency += frequency;
-                }
+                arrayValues[i].Mass = value.Key;
+                arrayValues[i++].Frequency = value.Value;
             }
-            // Include the last center of mass
-            if (curFrequency > minimumAbundance)
-            {
-                map.Add(curMass, curFrequency);
-                totalAbundance += curFrequency;
-            }
-            // If filtered abundances do not total 100%, recalculate the proportions
-            if (totalAbundance != 1)
-            {
-                foreach (var entry in map.ToArray())
-                {
-                    map[entry.Key] = entry.Value / totalAbundance;
-                }
-            }
-            return new MassDistribution(new SortedDictionary<double, double>(map), massResolution, minimumAbundance);
+            var helper = new Helper(arrayValues, arrayValues.Length, massResolution, minimumAbundance);
+            helper.ApplyBinning();
+            return new MassDistribution(new SortedDictionary<double, double>(helper.Masses.Take(helper.MassCount).ToDictionary(m => m.Mass, m => m.Frequency)), massResolution, minimumAbundance);
         }
+
+        public struct MassFrequency : IComparable<MassFrequency>
+        {
+            public double Mass { get; set; }
+            public double Frequency { get; set; }
+
+            public MassFrequency(double mass, double frequency) : this()
+            {
+                Mass = mass;
+                Frequency = frequency;
+            }
+
+            public int CompareTo(MassFrequency mf)
+            {
+                return Mass.CompareTo(mf.Mass);
+            }
+        }
+
     }
 }

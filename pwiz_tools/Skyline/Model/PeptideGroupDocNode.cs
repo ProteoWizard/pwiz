@@ -24,6 +24,7 @@ using System.Linq;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -140,7 +141,8 @@ namespace pwiz.Skyline.Model
             return ChangeProp(ImClone(this), im => im._proteinMetadata = newMetadata);
         }
 
-        public PeptideGroupDocNode ChangeSettings(SrmSettings settingsNew, SrmSettingsDiff diff)
+        public PeptideGroupDocNode ChangeSettings(SrmSettings settingsNew, SrmSettingsDiff diff,
+            DocumentSettingsContext context = null)
         {
             if (diff.Monitor != null)
                 diff.Monitor.ProcessGroup(this);
@@ -155,7 +157,43 @@ namespace pwiz.Skyline.Model
                 Dictionary<int, DocNode> mapIndexToChild = CreateGlobalIndexToChildMap();
                 Dictionary<PeptideModKey, DocNode> mapIdToChild = CreatePeptideModToChildMap();
 
-                foreach(PeptideDocNode nodePep in GetPeptideNodes(settingsNew, true))
+                IEnumerable<PeptideDocNode> peptideDocNodes;
+                if (settingsNew.PeptideSettings.Filter.PeptideUniqueness == PeptideFilter.PeptideUniquenessConstraint.none ||
+                                        settingsNew.PeptideSettings.NeedsBackgroundProteomeUniquenessCheckProcessing)
+                {
+                    peptideDocNodes = GetPeptideNodes(settingsNew, true).ToList();
+                }
+                else
+                {
+                    // Checking peptide uniqueness against the background proteome can be expensive.
+                    // Do all the regular processing, then filter those results at the end when we
+                    // can do it in aggregate for best speed.
+                    IEnumerable<PeptideDocNode> peptideDocNodesUnique;
+                    var peptideDocNodesPrecalculatedForUniquenessCheck = context == null ? null : context.PeptideDocNodesPrecalculatedForUniquenessCheck;
+                    var uniquenessDict = context == null ? null : context.UniquenessDict;
+                    if (peptideDocNodesPrecalculatedForUniquenessCheck != null)
+                    {
+                        // Already processed, and a global list of peptides provided
+                        Assume.IsNotNull(uniquenessDict);
+                        peptideDocNodesUnique = peptideDocNodesPrecalculatedForUniquenessCheck;
+                    }
+                    else
+                    {
+                        // We'll have to do the processing for this node, and work with
+                        // just the peptides on this node.  With luck the background proteome
+                        // will already have those cached for uniqueness checks.
+                        var settingsNoUniquenessFilter =
+                            settingsNew.ChangePeptideFilter(f => f.ChangePeptideUniqueness(PeptideFilter.PeptideUniquenessConstraint.none));
+                        var nodes = GetPeptideNodes(settingsNoUniquenessFilter, true).ToList();
+                        var sequences = new List<string>(from p in nodes select p.Peptide.Sequence);
+                        peptideDocNodesUnique = nodes;  // Avoid ReSharper multiple enumeration warning
+                        uniquenessDict = settingsNew.PeptideSettings.Filter.CheckPeptideUniqueness(settingsNew, sequences, diff.Monitor);
+                    }
+                    // ReSharper disable once PossibleNullReferenceException
+                    peptideDocNodes = peptideDocNodesUnique.Where(p => uniquenessDict[p.Peptide.Sequence]);
+                }
+                
+                foreach(var nodePep in peptideDocNodes)
                 {
                     PeptideDocNode nodePepResult = nodePep;
                     SrmSettingsDiff diffNode = SrmSettingsDiff.ALL;

@@ -22,7 +22,6 @@ using System.IO;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
-using System.Text.RegularExpressions;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -34,6 +33,14 @@ namespace pwiz.Skyline.Model.DocSettings
     [XmlRoot("enzyme")]
     public sealed class Enzyme : XmlNamedElement
     {
+        private char[] _cleavageC;
+        private char[] _restrictC;
+        private char[] _cleavageN;
+        private char[] _restrictN;
+        private char[] _cleavageAll;
+
+        static private readonly char[] nonAAs = {'*', '-'};
+
         public Enzyme(string name, string cleavage, string restrict)
             : this(name, cleavage, restrict, null, null)
         {
@@ -88,45 +95,86 @@ namespace pwiz.Skyline.Model.DocSettings
         public bool IsNTerm { get { return Type == SequenceTerminus.N; } }
         public bool IsBothTerm { get { return Type == null; } }
 
-        public string Regex
+        // Using this handrolled Regex equivalent because actual Regex is a bottleneck in multithreading
+        // due to cacheing of the compiled regex by the system - the cache can be a lock contention
+        private List<int> GetMatches(string sequence)
         {
-            get
+            var len = sequence.Length;
+            var result = new List<int>();
+            var last = -1;
+            for (var startat = 0; (startat = sequence.IndexOfAny(_cleavageAll, startat)) >= 0; startat++)
             {
-                string regexC = GetRegex(CleavageC, RestrictC, SequenceTerminus.C);
-                string regexN = GetRegex(CleavageN, RestrictN, SequenceTerminus.N);
-                if (regexC == null)
-                    return regexN;
-                else if (regexN == null)
-                    return regexC;
-                return regexC + "|" + regexN; // Not L10N
+                if (_cleavageC != null && startat < len - 1 &&  // Never matches the end
+                       Array.Exists(_cleavageC, c => c == sequence[startat]) &&
+                       (_restrictC == null || !Array.Exists(_restrictC, c => c == sequence[startat + 1])))
+                {
+                    if (startat != last)
+                        result.Add(last = startat);
+                }
+                else if (_cleavageN != null && startat > 0 && // Never matches the start
+                      Array.Exists(_cleavageN, c => c == sequence[startat]) &&
+                      (_restrictN == null || !Array.Exists(_restrictN, c => c == sequence[startat - 1])))
+                {
+                    if (startat-1 != last)
+                        result.Add(last = startat - 1);
+                }
+            }
+            return result;
+        }
+
+        private class Matcher
+        {
+            private readonly int[] _matches;
+            private int _lastMatch;
+            public Matcher(string sequence, List<int> matches )
+            {
+                Length = sequence.Length;
+                _matches = matches.ToArray();
+            }
+
+            public int Length { get; private set; }
+
+            public void Reset()
+            {
+                _lastMatch = 0;
+            }
+
+            public int? Match(int startat)
+            {
+                if (_lastMatch >= _matches.Length)
+                {
+                    if (_matches.Length == 0)
+                        return null;
+                    _lastMatch = 0;
+                }
+                while (startat > _matches[_lastMatch])
+                {
+                    _lastMatch++;
+                    if (_lastMatch >= _matches.Length)
+                    {
+                        return null;
+                    }
+                }
+                return _matches[_lastMatch];
             }
         }
 
-        private static string GetRegex(string cleavage, string restrict, SequenceTerminus terminus)
+        public IEnumerable<Peptide> Digest(FastaSequence fastaSeq, DigestSettings settings, int? maxPeptideSequenceLength = null)
         {
-            if (string.IsNullOrEmpty(cleavage))
-                return null;
-            string cut = "[" + cleavage + "]"; // Not L10N
-            string nocut = (string.IsNullOrEmpty(restrict) ? "[A-Z]" : "[^" + restrict + "]"); // Not L10N
-            return terminus == SequenceTerminus.C ? cut + nocut : nocut + cut;
-        }
-
-        public IEnumerable<Peptide> Digest(FastaSequence fastaSeq, DigestSettings settings)
-        {
-            Regex regex = new Regex(Regex);
             int begin = 0;
-            int len = fastaSeq.Sequence.Length;
+            var sequence = fastaSeq.Sequence;
+            int len = sequence.Length;
+            var matcher = new Matcher(sequence, GetMatches(sequence));
             while (begin < len)
             {
+                matcher.Reset();
                 int end = begin;
                 int endFirst = begin;
                 int missed = 0;
                 do
                 {
-                    string sequence = fastaSeq.Sequence;
-                    Match m = regex.Match(sequence, end);
-                    end = (m.Success ? m.Index + 1 : len);
-
+                    var m = matcher.Match(end);
+                    end = m + 1 ?? len;
                     // Save the end of the first cleavage
                     if (missed == 0)
                         endFirst = end;
@@ -135,21 +183,25 @@ namespace pwiz.Skyline.Model.DocSettings
                     // i.e. KR, RR, etc. for trypsin
                     if (settings.ExcludeRaggedEnds && end < len)
                     {
-                        Match mNext = regex.Match(sequence, end);
-                        if (mNext.Success && mNext.Index == end)
+                        var mNext = matcher.Match(end);
+                        if (mNext.HasValue && mNext == end)
                         {
                             // If there are no missed cleavages, then move the
                             // begin index to the next cleavage point that is
                             // not part of a run.
                             if (missed == 0)
-                                endFirst = GetDiscontiguousCleavageIndex(regex, mNext, sequence);
+                                endFirst = GetDiscontiguousCleavageIndex(matcher, mNext);
                             break;
                         }
                     }
 
                     // Single amino acid peptides have no fragment ions.
                     int count = end - begin;
-                    if (count > 1 && sequence.IndexOfAny(new[] { '*', '-' }, begin, count) == -1) // Not L10N
+                    // If the sequence is longer than we care to consider, quit
+                    if (maxPeptideSequenceLength.HasValue && count > maxPeptideSequenceLength)
+                        break;
+
+                    if (count > 1 && sequence.IndexOfAny(nonAAs, begin, count) == -1) // Not L10N
                     {
                         yield return new Peptide(fastaSeq, sequence.Substring(begin, end - begin),
                             begin, end, missed);
@@ -173,49 +225,39 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <returns>Number of cleavage points</returns>
         public int CountCleavagePoints(string seq)
         {
-            int count = 0;
-
-            Regex regex = new Regex(Regex);
-            Match m = regex.Match(seq);
-            while (m.Success)
-            {
-                count++;
-                m = m.NextMatch();
-            }
-            return count;
+            return GetMatches(seq).Count;
         }
 
         /// <summary>
         /// Returns the next cleavage index that is more than one
         /// amino acid beyond the last.
         /// </summary>
-        /// <param name="regex">Regex matching cleavage point</param>
+        /// <param name="matcher">state of current match set</param>
         /// <param name="mNext">Previously matched cleavage</param>
-        /// <param name="aa">The amino acid string being digested</param>
         /// <returns>The index of the next valid match</returns>
-        private static int GetDiscontiguousCleavageIndex(Regex regex, Match mNext, string aa)
+        private int GetDiscontiguousCleavageIndex(Matcher matcher, int? mNext)
         {
             // Loop while matches are one amino acid apart.
-            Match mLast;
+            int? mLast;
             do
             {
                 do
                 {
                     mLast = mNext;
-                    mNext = regex.Match(aa, mLast.Index + 1);
+                    mNext = matcher.Match(mLast.Value + 1);
                 }
-                while (mNext.Success && mNext.Index == mLast.Index + 1);
+                while (mNext.HasValue && mNext == mLast + 1);
 
                 // Make sure this new cleavage point is not itself part of a run
                 // of cleavage points.
                 mLast = mNext;
-                if (mNext.Success)
-                    mNext = regex.Match(aa, mNext.Index + 1);
+                if (mNext.HasValue)
+                    mNext = matcher.Match(mNext.Value + 1);
             }
-            while (mNext.Success && mNext.Index == mLast.Index + 1);
+            while (mNext.HasValue && mNext.Value == mLast.Value + 1);
 
             // Return the cleavage point, or the end of the string.
-            return (mLast.Success ? mLast.Index + 1 : aa.Length);
+            return mLast + 1 ?? matcher.Length;
         }
 
         /// <summary>
@@ -251,30 +293,43 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (string.IsNullOrEmpty(CleavageC) && string.IsNullOrEmpty(CleavageN))
                 throw new InvalidDataException(Resources.Enzyme_Validate_Enzymes_must_have_at_least_one_cleavage_point);
+            var cleavageAll = String.Empty;
             if (string.IsNullOrEmpty(CleavageC))
             {
                 if (!string.IsNullOrEmpty(RestrictC))
                     throw new InvalidDataException(Resources.Enzyme_Validate_Enzyme_must_have_C_terminal_cleavage_to_have_C_terminal_restrictions_);
                 CleavageC = RestrictC = null;
+                _cleavageC = null;
+                _restrictC = null;
             }
             else
             {
                 AminoAcid.ValidateAAList(CleavageC);
                 if (!string.IsNullOrEmpty(RestrictC))
                     AminoAcid.ValidateAAList(RestrictC);
+                _cleavageC = CleavageC.ToCharArray();
+                _restrictC = RestrictC == null? null : RestrictC.ToCharArray();
+                cleavageAll = CleavageC;
             }
             if (string.IsNullOrEmpty(CleavageN))
             {
                 if (!string.IsNullOrEmpty(RestrictN))
                     throw new InvalidDataException(Resources.Enzyme_Validate_Enzyme_must_have_N_terminal_cleavage_to_have_N_terminal_restrictions_);
                 CleavageN = RestrictN = null;
+                _cleavageN = null;
+                _restrictN = null;
             }
             else
             {
                 AminoAcid.ValidateAAList(CleavageN);
                 if (!string.IsNullOrEmpty(RestrictN))
                     AminoAcid.ValidateAAList(RestrictN);
+
+                _cleavageN = CleavageN.ToCharArray();
+                _restrictN = RestrictN == null ? null : RestrictN.ToCharArray();
+                cleavageAll += CleavageN;
             }
+            _cleavageAll = cleavageAll.ToCharArray();
         }
 
         private static SequenceTerminus ToSeqTerminus(string value)
