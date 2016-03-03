@@ -29,6 +29,7 @@ using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestTutorial
@@ -143,24 +144,24 @@ namespace pwiz.SkylineTestTutorial
 
                 RunUI(() => SkylineWindow.SaveDocument(GetTestPath("Amino Acid Metabolism.sky")));
 
-                var importResultsDlg1 = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
-                var openDataSourceDialog1 = ShowDialog<OpenDataSourceDialog>(() => importResultsDlg1.NamedPathSets =
-                    importResultsDlg1.GetDataSourcePathsFile(null));
-                RunUI(() =>
+                using (new WaitDocumentChange(null, true))
                 {
-                    openDataSourceDialog1.CurrentDirectory = new MsDataFilePath(GetTestPath());
-                    openDataSourceDialog1.SelectAllFileType(UseRawFiles
-                        ? ExtensionTestContext.ExtWatersRaw
-                        : ExtensionTestContext.ExtMzml);
-                });
-                PauseForScreenShot<ImportResultsSamplesDlg>("Import Results Files form", 6);
-                OkDialog(openDataSourceDialog1, openDataSourceDialog1.Open);
+                    var importResultsDlg1 = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
+                    var openDataSourceDialog1 = ShowDialog<OpenDataSourceDialog>(() => importResultsDlg1.NamedPathSets =
+                        importResultsDlg1.GetDataSourcePathsFile(null));
+                    RunUI(() =>
+                    {
+                        openDataSourceDialog1.CurrentDirectory = new MsDataFilePath(GetTestPath());
+                        openDataSourceDialog1.SelectAllFileType(UseRawFiles
+                            ? ExtensionTestContext.ExtWatersRaw
+                            : ExtensionTestContext.ExtMzml);
+                    });
+                    PauseForScreenShot<ImportResultsSamplesDlg>("Import Results Files form", 6);
+                    OkDialog(openDataSourceDialog1, openDataSourceDialog1.Open);
 
-                var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(importResultsDlg1.OkDialog);
-                OkDialog(importResultsNameDlg, importResultsNameDlg.NoDialog);
-
-                WaitForCondition(() =>
-                    SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
+                    var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(importResultsDlg1.OkDialog);
+                    OkDialog(importResultsNameDlg, importResultsNameDlg.NoDialog);
+                }
 
                 SelectNode(SrmDocument.Level.MoleculeGroups, 0);
 
@@ -197,15 +198,15 @@ namespace pwiz.SkylineTestTutorial
                     }
                     catch(Exception x)
                     {
-                        msg += x.Message;
+                        msg = TextUtil.LineSeparate(msg, x.Message);
                     }
                 }
-                Assert.IsTrue(string.IsNullOrEmpty(msg),msg);
+                if (!string.IsNullOrEmpty(msg))
+                    Assert.IsTrue(string.IsNullOrEmpty(msg), msg);
                 RestoreViewOnScreen(9);
                 PauseForScreenShot<SkylineWindow>("Skyline window multi-replicate layout", 9);
             }
 
         }
-
     }
 }

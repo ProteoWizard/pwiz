@@ -271,17 +271,13 @@ namespace pwiz.SkylineTestFunctional
                 FieldSeparate(mzLast, zLast, t39 - halfWin, t39 + halfWin, nce, slensB));
 
             string fragmentsFirst;
-            if (!AsSmallMolecules || AsExplicitRetentionTimes)
+            if (!AsSmallMoleculesNegative)
                 fragmentsFirst = FieldSeparate("582.3190", "951.4782", "595.3086", "708.3927", "837.4353", "1017.5251");
-            else if (!AsSmallMoleculesNegative)
-                fragmentsFirst = FieldSeparate("582.3190", "595.3086", "708.3927", "837.4353", "951.4782", "1017.5251");
             else
                 fragmentsFirst = FieldSeparate("580.3044", "595.3097", "708.3938", "837.4364", "951.4793", "1017.5262");
             string fragmentsLast;
-            if (!AsSmallMolecules || AsExplicitRetentionTimes)
+            if (!AsSmallMoleculesNegative)
                 fragmentsLast = FieldSeparate("444.5500", "496.7443", "340.1615", "406.8553", "609.7794", "545.7319");
-            else if (!AsSmallMoleculesNegative)
-                fragmentsLast = FieldSeparate("340.1615", "406.8553", "444.5500", "455.1885", "488.7104", "496.7443");
             else
                 fragmentsLast = FieldSeparate("340.1626", "406.8564", "442.5355", "455.1896", "488.7115", "496.7454");
             var rtFirst = !AsExplicitRetentionTimes
@@ -312,12 +308,13 @@ namespace pwiz.SkylineTestFunctional
                 FieldSeparate(0, "0.0", "30.0", mzLast.ToString("0.0000", CultureInfo.InvariantCulture), fragmentsLast, trapCeLastTrap, "2.0", "2.0", 30, "0.0000", 0, 199));
 
             // Export Waters Synapt (trap region) scheduled Targeted list
-            ExportIsolationList(
-                "WatersTrapScheduledTargeted.mrm",
-                ExportInstrumentType.WATERS_SYNAPT_TRAP, FullScanAcquisitionMethod.Targeted, ExportMethodType.Scheduled,
-                WatersIsolationListExporter.GetHeader(_fieldSeparator),
-                FieldSeparate(0, rtFirst, mzFirst.ToString("0.0000", CultureInfo.InvariantCulture), fragmentsFirst, trapCeFirstTrap, "2.0", "2.0", 30, "0.0000", 0, 199),
-                FieldSeparate(0, rtLast, mzLast.ToString("0.0000", CultureInfo.InvariantCulture), fragmentsLast, trapCeLastTrap, "2.0", "2.0", 30, "0.0000", 0, 199));
+            if (!AsSmallMoleculesNegative || AsExplicitRetentionTimes)  // Negative ions do not match results, so need explicit RTs for scheduling
+                ExportIsolationList(
+                    "WatersTrapScheduledTargeted.mrm",
+                    ExportInstrumentType.WATERS_SYNAPT_TRAP, FullScanAcquisitionMethod.Targeted, ExportMethodType.Scheduled,
+                    WatersIsolationListExporter.GetHeader(_fieldSeparator),
+                    FieldSeparate(0, rtFirst, mzFirst.ToString("0.0000", CultureInfo.InvariantCulture), fragmentsFirst, trapCeFirstTrap, "2.0", "2.0", 30, "0.0000", 0, 199),
+                    FieldSeparate(0, rtLast, mzLast.ToString("0.0000", CultureInfo.InvariantCulture), fragmentsLast, trapCeLastTrap, "2.0", "2.0", 30, "0.0000", 0, 199));
 
             // Export Waters Synapt (transfer region) unscheduled Targeted list
             ExportIsolationList(
@@ -328,12 +325,13 @@ namespace pwiz.SkylineTestFunctional
                 FieldSeparate(0, "0.0", "30.0", mzLast.ToString("0.0000", CultureInfo.InvariantCulture), fragmentsLast, "4.0", "4.0", trapCeLastTransfer, 30, "0.0000", 0, 199));
 
             // Export Waters Synapt (transfer region) scheduled Targeted list
-            ExportIsolationList(
-                "WatersTransferScheduledTargeted.mrm",
-                ExportInstrumentType.WATERS_SYNAPT_TRANSFER, FullScanAcquisitionMethod.Targeted, ExportMethodType.Scheduled,
-                WatersIsolationListExporter.GetHeader(_fieldSeparator),
-                FieldSeparate(0, rtFirst, mzFirst.ToString("0.0000", CultureInfo.InvariantCulture), fragmentsFirst, "4.0", "4.0", trapCeFirstTransfer, 30, "0.0000", 0, 199),
-                FieldSeparate(0, rtLast, mzLast.ToString("0.0000", CultureInfo.InvariantCulture), fragmentsLast, "4.0", "4.0", trapCeLastTransfer, 30, "0.0000", 0, 199));
+            if (!AsSmallMoleculesNegative || AsExplicitRetentionTimes)  // Negative ions do not match results, so need explicit RTs for scheduling
+                ExportIsolationList(
+                    "WatersTransferScheduledTargeted.mrm",
+                    ExportInstrumentType.WATERS_SYNAPT_TRANSFER, FullScanAcquisitionMethod.Targeted, ExportMethodType.Scheduled,
+                    WatersIsolationListExporter.GetHeader(_fieldSeparator),
+                    FieldSeparate(0, rtFirst, mzFirst.ToString("0.0000", CultureInfo.InvariantCulture), fragmentsFirst, "4.0", "4.0", trapCeFirstTransfer, 30, "0.0000", 0, 199),
+                    FieldSeparate(0, rtLast, mzLast.ToString("0.0000", CultureInfo.InvariantCulture), fragmentsLast, "4.0", "4.0", trapCeLastTransfer, 30, "0.0000", 0, 199));
 
             // Export Waters Xevo unscheduled Targeted list
             ExportIsolationList(
@@ -344,12 +342,13 @@ namespace pwiz.SkylineTestFunctional
                 FieldSeparate(0, "0.0", "30.0", mzLast.ToString("0.0000", CultureInfo.InvariantCulture), fragmentsLast, trapCeLastTrap, 30, "0.0000", 0, 199));
 
             // Export Waters Xevo scheduled Targeted list
-            ExportIsolationList(
-                "WatersXevoScheduledTargeted.mrm",
-                ExportInstrumentType.WATERS_XEVO_QTOF, FullScanAcquisitionMethod.Targeted, ExportMethodType.Scheduled,
-                WatersIsolationListExporter.GetHeader(_fieldSeparator),
-                FieldSeparate(0, rtFirst, mzFirst.ToString("0.0000", CultureInfo.InvariantCulture), fragmentsFirst, trapCeFirstTrap, 30, "0.0000", 0, 199),
-                FieldSeparate(0, rtLast, mzLast.ToString("0.0000", CultureInfo.InvariantCulture), fragmentsLast, trapCeLastTrap, 30, "0.0000", 0, 199));
+            if (!AsSmallMoleculesNegative || AsExplicitRetentionTimes)  // Negative ions do not match results, so need explicit RTs for scheduling
+                ExportIsolationList(
+                    "WatersXevoScheduledTargeted.mrm",
+                    ExportInstrumentType.WATERS_XEVO_QTOF, FullScanAcquisitionMethod.Targeted, ExportMethodType.Scheduled,
+                    WatersIsolationListExporter.GetHeader(_fieldSeparator),
+                    FieldSeparate(0, rtFirst, mzFirst.ToString("0.0000", CultureInfo.InvariantCulture), fragmentsFirst, trapCeFirstTrap, 30, "0.0000", 0, 199),
+                    FieldSeparate(0, rtLast, mzLast.ToString("0.0000", CultureInfo.InvariantCulture), fragmentsLast, trapCeLastTrap, 30, "0.0000", 0, 199));
 
             // Check error if analyzer is not set correctly.
             CheckMassAnalyzer(ExportInstrumentType.AGILENT_TOF, FullScanMassAnalyzerType.tof);

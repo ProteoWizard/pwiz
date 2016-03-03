@@ -110,7 +110,9 @@ namespace pwiz.SkylineTest.Results
                 listChromatograms.Add(new ChromatogramSet(name, new[] {MsDataFileUri.Parse(path)}));
                 int len = listChromatograms.Count;
 
-                var docResults = doc.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
+                var docResults = doc.ChangeMeasuredResults(doc.Settings.MeasuredResults != null
+                    ? doc.Settings.MeasuredResults.ChangeChromatograms(listChromatograms)
+                    : new MeasuredResults(listChromatograms));
                 // Adding unloaded results should add a new null result.
                 foreach (var nodeTran in docResults.PeptideTransitions)
                 {

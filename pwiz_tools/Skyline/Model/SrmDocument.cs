@@ -258,14 +258,16 @@ namespace pwiz.Skyline.Model
             Settings = settings;
         }
 
-        private SrmDocument(SrmDocument doc, SrmSettings settings, IList<DocNode> children)
+        private SrmDocument(SrmDocument doc, SrmSettings settings, IList<DocNode> children, Action<SrmDocument> changeProps = null)
             : base(doc.Id, Annotations.EMPTY, children, false)
         {
             FormatVersion = doc.FormatVersion;
-            RevisionIndex = doc.RevisionIndex + 1;
+            RevisionIndex = doc.RevisionIndex;
             UserRevisionIndex = doc.UserRevisionIndex;
             Settings = settings;
-            IsProteinMetadataPending = CalcIsProteinMetadataPending();
+
+            if (changeProps != null)
+                changeProps(this);
         }
 
         public override AnnotationDef.AnnotationTarget AnnotationTarget { 
@@ -605,7 +607,7 @@ namespace pwiz.Skyline.Model
             docClone.RevisionIndex = RevisionIndex + 1;
 
             // Make sure peptide standards lists are up to date
-            docClone.Settings = Settings.CachePeptideStandards(Children, docClone.Children);
+            docClone.Settings = docClone.Settings.CachePeptideStandards(Children, docClone.Children);
 
             // Note protein metadata readiness
             docClone.IsProteinMetadataPending = docClone.CalcIsProteinMetadataPending();
@@ -718,6 +720,8 @@ namespace pwiz.Skyline.Model
                     newChildren = rankChildren(nodeGroup, newChildren);
                 newMoleculeGroups[i] = nodeGroup.ChangeChildrenChecked(newChildren);
             }
+            if (ArrayUtil.ReferencesEqual(children, newMoleculeGroups))
+                return children;
             return newMoleculeGroups;
         }
 
@@ -762,7 +766,11 @@ namespace pwiz.Skyline.Model
         /// <returns>A new document revision</returns>
         public SrmDocument ChangeSettingsNoDiff(SrmSettings settingsNew)
         {
-            return new SrmDocument(this, settingsNew, Children);
+            return new SrmDocument(this, settingsNew, Children, doc =>
+            {
+                doc.RevisionIndex++;
+                doc.IsProteinMetadataPending = doc.CalcIsProteinMetadataPending();
+            });
         }
 
         /// <summary>
@@ -881,17 +889,18 @@ namespace pwiz.Skyline.Model
                         (nodeGroup, children) => nodeGroup.RankChildren(settingsParallel, children));
                 }
 
-                // Don't change the children, if the resulting list contains
-                // only reference equal children of the same length and in the
-                // same order.
-                if (ArrayUtil.ReferencesEqual(childrenNew, Children))
-                    childrenNew = Children;
-
                 // Results handler changes for re-integration last only long enough
                 // to change the children
                 if (settingsNew.PeptideSettings.Integration.ResultsHandler != null)
                     settingsNew = settingsNew.ChangePeptideIntegration(i => i.ChangeResultsHandler(null));
-                return new SrmDocument(this, settingsNew, childrenNew);
+
+                // Don't change the children, if the resulting list contains
+                // only reference equal children of the same length and in the
+                // same order.
+                if (ArrayUtil.ReferencesEqual(childrenNew, Children))
+                    return ChangeSettingsNoDiff(settingsNew);
+
+                return (SrmDocument)new SrmDocument(this, settingsNew, Children).ChangeChildren(childrenNew);
             }
         }
 
