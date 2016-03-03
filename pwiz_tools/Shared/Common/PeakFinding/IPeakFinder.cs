@@ -26,7 +26,7 @@ namespace pwiz.Common.PeakFinding
         void SetChromatogram(IList<float> times, IList<float> intensities);
         IFoundPeak GetPeak(int startIndex, int endIndex);
         IList<IFoundPeak> CalcPeaks(int max, int[] idIndices);
-        IList<float> Intensities1D { get; }
+        IList<float> Intensities1d { get; }
         IList<float> Intensities2d { get; }
         bool IsHeightAsArea { get; }
     }

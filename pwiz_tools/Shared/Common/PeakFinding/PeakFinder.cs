@@ -101,7 +101,7 @@ namespace pwiz.Common.PeakFinding
 
         public bool IsHeightAsArea { get { return false; } }
 
-        public IList<float> Intensities1D
+        public IList<float> Intensities1d
         {
             get
             {

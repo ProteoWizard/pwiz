@@ -31,7 +31,6 @@ using System.Threading;
 using log4net;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
-using pwiz.Crawdad;
 
 namespace TestRunnerLib
 {
@@ -229,10 +228,17 @@ namespace TestRunnerLib
                     test.TestInitialize.Invoke(testObject, null);
 
                 if (CheckCrtLeaks > 0)
-                    CrtDebugHeap.Checkpoint();
+                {
+                    // TODO: CrtDebugHeap class used to be provided by Crawdad.dll
+                    // If we ever want to enable this funcationality again, we need to find another .dll
+                    // to put this in.
+                    //CrtDebugHeap.Checkpoint();
+                }
                 test.TestMethod.Invoke(testObject, null);
                 if (CheckCrtLeaks > 0)
-                    crtLeakedBytes = CrtDebugHeap.DumpLeaks(true);
+                {
+                    //crtLeakedBytes = CrtDebugHeap.DumpLeaks(true);
+                }
 
                 if (test.TestCleanup != null)
                     test.TestCleanup.Invoke(testObject, null);

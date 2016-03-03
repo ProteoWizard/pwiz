@@ -24,8 +24,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonUtil", "..\Shared\Com
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSGraph", "..\Shared\MSGraph\MSGraph.csproj", "{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Crawdad", "..\Shared\Crawdad\Crawdad.vcxproj", "{5C81BB57-E46C-4B3B-9764-82F835E643B8}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BiblioSpec", "..\Shared\BiblioSpec\BiblioSpec.csproj", "{32CC9B1A-9442-4B56-AF34-FB47595278A1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZedGraph", "..\Shared\zedgraph\ZedGraph.csproj", "{B99650EE-AF46-47B4-A4A9-212ADE7809B7}"

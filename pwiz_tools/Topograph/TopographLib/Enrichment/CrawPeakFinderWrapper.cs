@@ -18,13 +18,14 @@
  */
 using System;
 using System.Collections.Generic;
-using pwiz.Crawdad;
+using System.Linq;
+using pwiz.Common.PeakFinding;
 
 namespace pwiz.Topograph.Enrichment
 {
     public class CrawPeakFinderWrapper
     {
-        private readonly CrawdadPeakFinder _crawdadPeakFinder;
+        private readonly IPeakFinder _crawdadPeakFinder;
         private const int MinToleranceLen = 4;
         private const int MinToleranceSmoothFwhm = 3;
         private const float FractionFwhmLen = 0.5F;
@@ -38,20 +39,20 @@ namespace pwiz.Topograph.Enrichment
 
         public CrawPeakFinderWrapper()
         {
-            _crawdadPeakFinder = new CrawdadPeakFinder();
+            _crawdadPeakFinder = PeakFinders.NewDefaultPeakFinder();
         }
 
         public void SetChromatogram(IList<double> times, IList<double> intensities)
         {
             _times = times;
             _intensities = intensities;
-            _crawdadPeakFinder.SetChromatogram(times, intensities);
+            _crawdadPeakFinder.SetChromatogram(times.Select(t=>(float)t).ToArray(), intensities.Select(i=>(float)i).ToArray());
         }
 
-        public List<CrawdadPeak> CalcPeaks(int maxPeaks)
+        public List<IFoundPeak> CalcPeaks(int maxPeaks)
         {
-            var result = new List<CrawdadPeak>();
-            foreach (var crawdadPeak in _crawdadPeakFinder.CalcPeaks(maxPeaks))
+            var result = new List<IFoundPeak>();
+            foreach (var crawdadPeak in _crawdadPeakFinder.CalcPeaks(maxPeaks, new int[0]))
             {
                 Extend(crawdadPeak);
                 result.Add(crawdadPeak);
@@ -59,7 +60,7 @@ namespace pwiz.Topograph.Enrichment
             return result;
         }
 
-        private void Extend(CrawdadPeak crawdadPeak)
+        private void Extend(IFoundPeak crawdadPeak)
         {
             // Look a number of steps dependent on the width of the peak, since interval width
             // may vary.
@@ -69,7 +70,7 @@ namespace pwiz.Topograph.Enrichment
                 ExtendBoundary(crawdadPeak, crawdadPeak.EndIndex, 1, toleranceLen));
         }
 
-        private int ExtendBoundary(CrawdadPeak peakPrimary, int indexBoundary, int increment, int toleranceLen)
+        private int ExtendBoundary(IFoundPeak peakPrimary, int indexBoundary, int increment, int toleranceLen)
         {
             if (peakPrimary.Fwhm >= MinToleranceSmoothFwhm)
             {
@@ -84,7 +85,7 @@ namespace pwiz.Topograph.Enrichment
             return indexBoundary;
         }
 
-        private int ExtendBoundary(CrawdadPeak peakPrimary, bool useRaw, int indexBoundary, int increment, int toleranceLen)
+        private int ExtendBoundary(IFoundPeak peakPrimary, bool useRaw, int indexBoundary, int increment, int toleranceLen)
         {
             var intensities = _intensities;
             int lenIntensities = intensities.Count;

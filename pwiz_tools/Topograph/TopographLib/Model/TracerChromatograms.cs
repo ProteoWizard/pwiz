@@ -19,7 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using pwiz.Crawdad;
+using pwiz.Common.PeakFinding;
 using pwiz.Topograph.Enrichment;
 using pwiz.Topograph.Model.Data;
 using pwiz.Topograph.Util;
@@ -94,7 +94,7 @@ namespace pwiz.Topograph.Model
                 scores.Add(score);
             }
             var points = new SortedDictionary<TracerFormula, IList<double>>();
-            var peaks = new Dictionary<TracerFormula, IList<CrawdadPeak>>();
+            var peaks = new Dictionary<TracerFormula, IList<IFoundPeak>>();
             foreach (var entry in pointDict)
             {
                 points.Add(entry.Key, entry.Value);
@@ -124,15 +124,15 @@ namespace pwiz.Topograph.Model
         public IDictionary<TracerFormula, IList<double>> Points { get; private set; }
         public IList<double> Scores { get; private set; }
         public IList<double> Times { get; private set; }
-        public IDictionary<TracerFormula, IList<CrawdadPeak>> RawPeaks { get; private set; }
-        public IList<KeyValuePair<TracerFormula, CrawdadPeak>> ListPeaks()
+        public IDictionary<TracerFormula, IList<IFoundPeak>> RawPeaks { get; private set; }
+        public IList<KeyValuePair<TracerFormula, IFoundPeak>> ListPeaks()
         {
-            var list = new List<KeyValuePair<TracerFormula, CrawdadPeak>>();
+            var list = new List<KeyValuePair<TracerFormula, IFoundPeak>>();
             foreach (var entry in RawPeaks)
             {
                 foreach (var peak in entry.Value)
                 {
-                    list.Add(new KeyValuePair<TracerFormula, CrawdadPeak>(entry.Key, peak));
+                    list.Add(new KeyValuePair<TracerFormula, IFoundPeak>(entry.Key, peak));
                 }
             }
             list.Sort((e1,e2)=>(e2.Value.Area.CompareTo(e1.Value.Area)));

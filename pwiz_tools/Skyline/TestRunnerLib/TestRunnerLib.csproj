@@ -60,10 +60,6 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Crawdad, Version=1.0.5526.27976, Culture=neutral, processorArchitecture=AMD64">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Shared\Crawdad\obj\$(Platform)\Crawdad.dll</HintPath>
-    </Reference>
     <Reference Include="log4net">
       <HintPath>..\..\Shared\Lib\log4net.dll</HintPath>
     </Reference>

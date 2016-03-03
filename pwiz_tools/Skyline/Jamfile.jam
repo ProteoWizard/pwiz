@@ -77,9 +77,6 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     {
         IF EXIST "%VS120COMNTOOLS%" CALL "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
 
-        echo Building Crawdad in $(CONFIGURATION:L) configuration...
-        msbuild $(SKYLINE_PATH)/../Shared/Crawdad/CrawdadSolution.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(PWIZ_ROOT_PATH)/pwiz_tools/Shared/Crawdad/obj/$(PLATFORM) /t:Crawdad /nologo /verbosity:minimal        
-
         echo Building Skyline in $(CONFIGURATION:L) configuration...
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:Skyline /nologo /verbosity:minimal
         echo Building Skyline Test in $(CONFIGURATION:L) configuration...

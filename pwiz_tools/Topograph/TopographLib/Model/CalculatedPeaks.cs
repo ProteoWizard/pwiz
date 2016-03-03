@@ -21,7 +21,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NHibernate;
 using pwiz.Common.Collections;
-using pwiz.Crawdad;
+using pwiz.Common.PeakFinding;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Enrichment;
 using pwiz.Topograph.Model.Data;
@@ -390,11 +390,11 @@ namespace pwiz.Topograph.Model
             return points;
         }
 
-        private KeyValuePair<TracerFormula, CrawdadPeak> FindBestPeak(IEnumerable<CalculatedPeaks> otherPeaks)
+        private KeyValuePair<TracerFormula, IFoundPeak> FindBestPeak(IEnumerable<CalculatedPeaks> otherPeaks)
         {
             TracerChromatograms tracerChromatograms = GetTracerChromatograms();
             double bestScore = 0;
-            var bestPeak = new KeyValuePair<TracerFormula, CrawdadPeak>();
+            var bestPeak = new KeyValuePair<TracerFormula, IFoundPeak>();
             double bestDistance = double.MaxValue;
             double firstDetectedTime, lastDetectedTime;
             GetFirstLastTimes(otherPeaks, out firstDetectedTime, out lastDetectedTime);

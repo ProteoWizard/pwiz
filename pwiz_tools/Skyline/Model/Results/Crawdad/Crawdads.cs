@@ -17,61 +17,15 @@
  * limitations under the License.
  */
 
-using System;
 using pwiz.Common.PeakFinding;
 
 namespace pwiz.Skyline.Model.Results.Crawdad
 {
     public static class Crawdads
     {
-        private enum PeakFinderOption
-        {
-            NewPeakFinder,
-            LegacyPeakFinder,
-            ConsensusFavoringNew,
-            ConsensusFavoringLegacy,
-        }
-        private static PeakFinderOption _peakFinderOption =
-#if DEBUG
-            PeakFinderOption.ConsensusFavoringNew
-#else
-            PeakFinderOption.NewPeakFinder
-#endif
-            ;
         public static IPeakFinder NewCrawdadPeakFinder()
         {
-            ConsensusPeakFinder consensusPeakFinder;
-            switch (_peakFinderOption)
-            {
-                case PeakFinderOption.NewPeakFinder:
-                    return PeakFinders.NewDefaultPeakFinder();
-                case PeakFinderOption.LegacyPeakFinder:
-                    return new LegacyCrawdadPeakFinder();
-                case PeakFinderOption.ConsensusFavoringNew:
-                    consensusPeakFinder = new ConsensusPeakFinder(new []
-                    {
-                        PeakFinders.NewDefaultPeakFinder(),
-                        new LegacyCrawdadPeakFinder(), 
-                    });
-                    break;
-                case PeakFinderOption.ConsensusFavoringLegacy:
-                    consensusPeakFinder = new ConsensusPeakFinder(new []
-                    {
-                        new LegacyCrawdadPeakFinder(), 
-                        PeakFinders.NewDefaultPeakFinder(),
-                    });
-                    break;
-                default:
-                    throw new ArgumentException();
-            }
-#if DEBUG
-            consensusPeakFinder.ThrowOnMismatch = true;
-#endif
-            if (Program.FunctionalTest)
-            {
-                consensusPeakFinder.ThrowOnMismatch = true;
-            }
-            return consensusPeakFinder;
+            return PeakFinders.NewDefaultPeakFinder();
         }
     }
 }

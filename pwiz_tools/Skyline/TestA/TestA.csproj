@@ -174,7 +174,6 @@
     </Compile>
     <Compile Include="Results\ChromCacheMinimizerTest.cs" />
     <Compile Include="Results\AsymDiaTest.cs" />
-    <Compile Include="Results\ConsensusPeakFinderTest.cs" />
     <Compile Include="Results\FullScanTest.cs" />
     <Compile Include="Results\ImportSimTest.cs" />
     <Compile Include="Results\MsxTest.cs" />

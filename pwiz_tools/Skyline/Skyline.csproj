@@ -96,10 +96,6 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Crawdad, Version=1.0.5526.23254, Culture=neutral, processorArchitecture=AMD64">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Shared\Crawdad\obj\$(Platform)\Crawdad.dll</HintPath>
-    </Reference>
     <Reference Include="DigitalRune.Windows.Docking, Version=1.3.5.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Shared\Lib\DigitalRune.Windows.Docking.dll</HintPath>
@@ -1067,9 +1063,7 @@
     <Compile Include="Model\Results\ChromDataSet.cs" />
     <Compile Include="Model\Results\ChromHeaderInfo.cs" />
     <Compile Include="Model\Results\ChromInfoData.cs" />
-    <Compile Include="Model\Results\Crawdad\ConsensusPeakFinder.cs" />
     <Compile Include="Model\Results\Crawdad\Crawdads.cs" />
-    <Compile Include="Model\Results\Crawdad\LegacyCrawdadPeakFinder.cs" />
     <Compile Include="Model\Results\DriftTimeFinder.cs" />
     <Compile Include="Model\Results\MsDataFileScanHelper.cs" />
     <Compile Include="Model\Results\MsDataFileScanIds.cs" />

@@ -26,7 +26,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using pwiz.Common.PeakFinding;
 using pwiz.Common.SystemUtil;
-using pwiz.Crawdad;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Crawdad;
@@ -2328,7 +2327,7 @@ namespace pwiz.Skyline.Model.Results
         {
             if (Intensities == null)
                 return;
-            var peakFinder = new CrawdadPeakFinder();
+            var peakFinder = Crawdads.NewCrawdadPeakFinder();
             peakFinder.SetChromatogram(Times, Intensities);
             Intensities = peakFinder.Intensities1d.ToArray();
         }
