@@ -36,9 +36,9 @@ namespace pwiz.Common.DataAnalysis.FoldChange
     /// The contrast vector contains factors by which the fitted coefficients get multiplied
     /// to produce the final fold change result.
     /// </summary>
-    // ReSharper disable NonLocalizedString
     public class DesignMatrix
     {
+        // ReSharper disable NonLocalizedString
         private readonly double[][] _matrixColumns;
         private readonly double[][] _contrastValues;
         private readonly string[] _columnNames;

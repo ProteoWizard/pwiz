@@ -34,9 +34,9 @@ namespace pwiz.Common.DataAnalysis.Matrices
     /// but was then modified to enable a tolerance for detecting linear dependence.
     /// The logic for detecting linear dependence was taken from the R source code in the file "dqrdc2.f".
     /// </summary>
-    // ReSharper disable NonLocalizedString
     public class QrFactorization
     {
+        // ReSharper disable NonLocalizedString
         public static QrFactorization GetQrFactorization(Matrix<double> matrix, double tolerance)
         {
             double[] tau = new double[Math.Min(matrix.RowCount, matrix.ColumnCount)];
