@@ -3104,6 +3104,7 @@ namespace pwiz.Skyline
                                     // Looping here in case some other agent interrupts us with a change to Document
                                     while (newSettings.PeptideSettings.NeedsBackgroundProteomeUniquenessCheckProcessing)
                                     {
+                                        BackgroundProteomeManager.BeginForegroundLoad();  // Signal the background task to stay out of our way
                                         var manager = new BackgroundProteomeManager(); // Use the background loader logic, but in this thread
                                         var withMetaData = manager.LoadForeground(newSettings.PeptideSettings, settingsChangeMonitor);
                                         if (withMetaData == null)
@@ -3131,7 +3132,7 @@ namespace pwiz.Skyline
                 }
                 finally
                 {
-                    BackgroundProteomeManager._foregroundLoadRequested = false; // Done overriding the background loader
+                    BackgroundProteomeManager.EndForegroundLoad(); // Done overriding the background loader
                 }
             }
             while (documentChanged);

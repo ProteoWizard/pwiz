@@ -109,8 +109,6 @@ namespace pwiz.ProteomeDatabase.API
         // Close all file handles
         public void CloseDbConnection()
         {
-            if (Refcount > 1) // Don't try this unless you're the only instance using this db
-                throw new Exception("ProteomeDb locking problem"); // Not L10N
             _databaseResource.SessionFactory.Close();
         }
 
@@ -705,7 +703,7 @@ namespace pwiz.ProteomeDatabase.API
         public class MinimalProteinInfo
         {
             public string Sequence;
-            public string Id;
+            public long Id;
             public string Gene;
             public string Species;
         }
@@ -714,26 +712,21 @@ namespace pwiz.ProteomeDatabase.API
         {
             using (var session = OpenSession())
             {
-                using (IDbCommand command = session.Connection.CreateCommand())
+                var hql = "SELECT p.Sequence, p.Id, pn.Gene, pn.Species \n" + // Not L10N
+                          "FROM " + typeof(DbProtein) + " p, " + typeof(DbProteinName) + " pn\n" + // Not L10N
+                          "WHERE p.Id = pn.Protein.Id AND pn.IsPrimary <> 0";// Not L10N
+                var query = session.CreateQuery(hql);
+                foreach (object[] values in query.List())
                 {
-                    command.CommandText =
-                        "SELECT Sequence, Protein, Gene, Species \n" + // Not L10N
-                        "FROM ProteomeDbProtein \n" + // Not L10N
-                        "INNER JOIN ProteomeDbProteinName ON ProteomeDbProteinName.Protein = ProteomeDbProtein.Id \n" + // Not L10N
-                        "WHERE ProteomeDbProteinName.IsPrimary <> 0"; // Not L10N
-                    var reader = command.ExecuteReader();
-                    while (reader.Read())
+                    yield return new MinimalProteinInfo
                     {
-                        yield return new MinimalProteinInfo
-                        {
-                            Sequence = reader.IsDBNull(0) ? string.Empty : reader.GetString(0),
-                            Id = reader.GetInt64(1).ToString(),
-                            Gene = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
-                            Species = reader.IsDBNull(3) ? string.Empty : reader.GetString(3)
-                        };
-                    }
-                    yield return null; // Done
+                        Sequence = (string)values[0],
+                        Id = (long)values[1],
+                        Gene = (string)values[2],
+                        Species = (string)values[3]
+                    };
                 }
+                yield return null; // Done
             }
         }
 

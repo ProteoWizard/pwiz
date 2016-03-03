@@ -35,9 +35,8 @@ namespace pwiz.Skyline.Model.Proteome
         private static readonly object _lockLoadBackgroundProteome = new object();
 
         private SrmSettingsChangeMonitor _monitor; // Used with PeptideSettingsUI
-        public static bool _foregroundLoadRequested;  // Used with PeptideSettingsUI
 
-        public bool ForegroundLoadRequested { get { return _foregroundLoadRequested; }}
+        public bool ForegroundLoadRequested { get; private set; }  // Used with PeptideSettingsUI
 
         private WebEnabledFastaImporter _fastaImporter = new WebEnabledFastaImporter(); // Default is to actually go to the web
         public WebEnabledFastaImporter FastaImporter
@@ -152,10 +151,10 @@ namespace pwiz.Skyline.Model.Proteome
 
         protected override bool LoadBackground(IDocumentContainer container, SrmDocument document, SrmDocument docCurrent)
         {
-            return Load(container, docCurrent.Settings.PeptideSettings, docCurrent) != null;
+            return Load(container, docCurrent.Settings.PeptideSettings, docCurrent, true) != null;
         }
 
-        private BackgroundProteome Load(IDocumentContainer container, PeptideSettings settings, SrmDocument docCurrent)
+        private BackgroundProteome Load(IDocumentContainer container, PeptideSettings settings, SrmDocument docCurrent, bool isBackgroundLoad)
         {
             // Only allow one background proteome to load at a time.  This can
             // get tricky, if the user performs an undo and then a redo across
@@ -210,15 +209,16 @@ namespace pwiz.Skyline.Model.Proteome
                             proteomeDb.DatabaseLock.AcquireWriterLock(int.MaxValue); // Wait for any existing readers to complete, prevent any new ones
                             try
                             {
-                                if (proteomeDb.Refcount > 1) // This should never happen if read/write locking is functioning properly
-                                    throw new Exception("protdb threading problem"); // Not L10N
-                                proteomeDb.CloseDbConnection(); // Get rid of any file handles
-                                if (!fs.Commit())
+                                if (File.GetLastWriteTime(fs.RealName) <= File.GetLastWriteTime(fs.SafeName)) // Don't overwrite if foreground task has already updated
                                 {
-                                    if (docCurrent != null)
-                                        EndProcessing(docCurrent);
-                                    throw new IOException(string.Format(Resources.BackgroundProteomeManager_LoadBackground_Unable_to_rename_temporary_file_to__0__,
-                                            fs.RealName));
+                                    proteomeDb.CloseDbConnection(); // Get rid of any file handles
+                                    if (!fs.Commit())
+                                    {
+                                        if (docCurrent != null)
+                                            EndProcessing(docCurrent);
+                                        throw new IOException(string.Format(Resources.BackgroundProteomeManager_LoadBackground_Unable_to_rename_temporary_file_to__0__,
+                                                fs.RealName));
+                                    }
                                 }
                             }
                             finally
@@ -282,20 +282,29 @@ namespace pwiz.Skyline.Model.Proteome
         {
             if (monitor.IsCanceled())
                 return null;
-            _foregroundLoadRequested = true; // We are overriding the background loader, if it is running this will eventually halt it
+            Assume.IsTrue(ForegroundLoadRequested); // Caller should have called BeginForegroundLoad()
             lock (_lockLoadBackgroundProteome) // Wait for background loader, if any, to notice
             {
                 _monitor = monitor;
                 try
                 {
-                    return Load(null, settings, null);
+                    return Load(null, settings, null, false);
                 }
                 finally
                 {
-                    _foregroundLoadRequested = false;
                     _monitor = null;
                 }
             }
+        }
+
+        public void BeginForegroundLoad()
+        {
+            ForegroundLoadRequested = true; // We are overriding the background loader, if it is running this will eventually halt it
+        }
+
+        public void EndForegroundLoad()
+        {
+            ForegroundLoadRequested = false; // We are done overriding the background loader
         }
 
         private sealed class DigestHelper : IProgressMonitor

@@ -76,16 +76,18 @@ namespace pwiz.SkylineTestFunctional
         private void ResetDocument(bool bogus = false)
         {
             OpenDocument(bogus ? "UniqueTestBogus.sky": "UniqueTest.sky");  // Contains every protein in the protDB file, bogus version has missing metadata in the protdb
-            // Add FASTA sequence that's not in the library
-            RunUI(() => SkylineWindow.Paste(bogus? TEXT_FASTA_NONSENSE: TEXT_FASTA_SPROT));
 
             // Finish digesting and get protein metadata (should not require web access for these well formed fasta headers)
-            WaitForCondition(() =>
+            WaitForConditionUI(() =>
             {
-                var peptideSettings = SkylineWindow.Document.Settings.PeptideSettings;
+                var peptideSettings = SkylineWindow.DocumentUI.Settings.PeptideSettings;
                 var backgroundProteome = peptideSettings.BackgroundProteome;
-                return backgroundProteome.HasDigestion(peptideSettings) && !backgroundProteome.NeedsProteinMetadataSearch;
+                return backgroundProteome.HasDigestion(peptideSettings) && !backgroundProteome.NeedsProteinMetadataSearch && !SkylineWindow.DocumentUI.IsProteinMetadataPending;
             });
+
+            // Add FASTA sequence that's not in the library
+            RunUI(() => SkylineWindow.Paste(bogus ? TEXT_FASTA_NONSENSE : TEXT_FASTA_SPROT));
+
         }
 
         private void scenario(int nodeNum, int expectedMatches, int expectedMoleculeFilteredCount, UniquePeptidesDlg.UniquenessType testType, bool bogus = false)

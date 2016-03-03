@@ -103,34 +103,31 @@ namespace pwiz.Skyline.Model.Proteome
                     peptidesOfInterest.Add(seq.Key, true);
                 }
 
-                using (var proteomeDb = _parent.OpenProteomeDb())
+                var newDict = _parent.GetPeptidesAppearanceCounts(peptidesOfInterest, enzyme, peptideSettings, progressMonitor);
+                if (newDict == null)
                 {
-                    var newDict = _parent.GetPeptidesAppearanceCounts(proteomeDb, peptidesOfInterest, enzyme, peptideSettings, progressMonitor);
-                    if (newDict == null)
+                    return null; // Cancelled
+                }
+                if (!Equals(enzyme.Name, _enzymeNameForPeptideUniquenessDictDigest))
+                {
+                    _peptideUniquenessDict = new Dictionary<string, DigestionPeptideStats>();
+                }
+                else
+                {
+                    _peptideUniquenessDict = _peptideUniquenessDict.ToDictionary(s => s.Key, s => s.Value);
+                }
+                foreach (var pair in newDict)
+                {
+                    if (!_peptideUniquenessDict.ContainsKey(pair.Key))
                     {
-                        return null; // Cancelled
-                    }
-                    if (!Equals(enzyme.Name, _enzymeNameForPeptideUniquenessDictDigest))
-                    {
-                        _peptideUniquenessDict = new Dictionary<string, DigestionPeptideStats>();
+                        _peptideUniquenessDict.Add(pair.Key, pair.Value);
                     }
                     else
                     {
-                        _peptideUniquenessDict = _peptideUniquenessDict.ToDictionary(s => s.Key, s => s.Value);
+                        _peptideUniquenessDict[pair.Key] = pair.Value;
                     }
-                    foreach (var pair in newDict)
-                    {
-                        if (!_peptideUniquenessDict.ContainsKey(pair.Key))
-                        {
-                            _peptideUniquenessDict.Add(pair.Key, pair.Value);
-                        }
-                        else
-                        {
-                            _peptideUniquenessDict[pair.Key] = pair.Value;
-                        }
-                    }
-                    _enzymeNameForPeptideUniquenessDictDigest = enzyme.Name;
                 }
+                _enzymeNameForPeptideUniquenessDictDigest = enzyme.Name;
                 if (!_parent.UpdateProgressAndCheckForCancellation(progressMonitor, 100))
                 {
                     return null;  // Cancelled
@@ -218,9 +215,9 @@ namespace pwiz.Skyline.Model.Proteome
             }
         }
 
-        public Dictionary<string, DigestionPeptideStats> GetPeptidesAppearanceCounts(ProteomeDb proteomeDb, Dictionary<string, bool> peptidesOfInterest, Enzyme enzyme, PeptideSettings settings, SrmSettingsChangeMonitor progressMonitor)
+        public Dictionary<string, DigestionPeptideStats> GetPeptidesAppearanceCounts(Dictionary<string, bool> peptidesOfInterest, Enzyme enzyme, PeptideSettings settings, SrmSettingsChangeMonitor progressMonitor)
         {
-            var appearances = GetPeptidesAppearances(proteomeDb, peptidesOfInterest, enzyme, settings, progressMonitor);
+            var appearances = GetPeptidesAppearances(peptidesOfInterest, enzyme, settings, progressMonitor);
             if (appearances == null)
             {
                 return null; // Cancelled
@@ -233,13 +230,12 @@ namespace pwiz.Skyline.Model.Proteome
         /// <summary>
         /// Examine the background proteome for uniqueness information about the peptides of interest
         /// </summary>
-        /// <param name="proteomeDb">the background proteome</param>
         /// <param name="peptidesOfInterest">this is a dict instead of a list only because upstream callers have already prepared this, which can be large and expensive to construct</param>
         /// <param name="enzyme">how we digest</param>
         /// <param name="settings">details like max missed cleavages</param>
         /// <param name="progressMonitor">cancellation checker</param>
         /// <returns></returns>
-        public Dictionary<string, DigestionPeptideStatsDetailed> GetPeptidesAppearances(ProteomeDb proteomeDb,
+        public Dictionary<string, DigestionPeptideStatsDetailed> GetPeptidesAppearances(
             Dictionary<string, bool> peptidesOfInterest, Enzyme enzyme, PeptideSettings settings, SrmSettingsChangeMonitor progressMonitor)
         {
             var results = peptidesOfInterest.ToDictionary(pep => pep.Key, pep =>  new DigestionPeptideStatsDetailed());
@@ -247,38 +243,41 @@ namespace pwiz.Skyline.Model.Proteome
             var maxPeptideLength = peptidesOfInterest.Max(p => p.Key.Length); // No interest in any peptide longer than the longest one of interest
             const int DIGEST_CHUNKSIZE = 1000; // Check for cancel every N proteins
             var proteinCount = 0;
-            var goal = Math.Max(proteomeDb.GetProteinCount(),1);
-            var batchCount = 0;
-            var minimalProteinInfos = new ProteomeDb.MinimalProteinInfo[DIGEST_CHUNKSIZE];
-            foreach (var minimalProteinInfo in proteomeDb.GetMinimalProteinInfo()) // Get list of sequence, proteinID, gene, species from the protdb file
+            using (var proteomeDb = OpenProteomeDb())
             {
-                minimalProteinInfos[batchCount++] = minimalProteinInfo;
-                var pct = Math.Max(1, 100*proteinCount++/goal); // Show at least a little progressat start  to give user hope
-                if (batchCount==0 && !UpdateProgressAndCheckForCancellation(progressMonitor, pct))
+                var goal = Math.Max(proteomeDb.GetProteinCount(),1);
+                var batchCount = 0;
+                var minimalProteinInfos = new ProteomeDb.MinimalProteinInfo[DIGEST_CHUNKSIZE];
+                foreach (var minimalProteinInfo in proteomeDb.GetMinimalProteinInfo()) // Get list of sequence, proteinID, gene, species from the protdb file
                 {
-                    return null;
-                }
-                else if (((minimalProteinInfo == null) && --batchCount > 0) || batchCount == DIGEST_CHUNKSIZE)
-                {
-                    ParallelEx.For(0, batchCount, ii =>
+                    minimalProteinInfos[batchCount++] = minimalProteinInfo;
+                    var pct = Math.Max(1, 100*proteinCount++/goal); // Show at least a little progressat start  to give user hope
+                    if (batchCount==0 && !UpdateProgressAndCheckForCancellation(progressMonitor, pct))
                     {
-                        var protein = minimalProteinInfos[ii];
-                        foreach (var peptide in
-                            protease.DigestSequence(protein.Sequence, settings.DigestSettings.MaxMissedCleavages,maxPeptideLength))
+                        return null;
+                    }
+                    else if (((minimalProteinInfo == null) && --batchCount > 0) || batchCount == DIGEST_CHUNKSIZE)
+                    {
+                        ParallelEx.For(0, batchCount, ii =>
                         {
-                            DigestionPeptideStatsDetailed appearances;
-                            if (results.TryGetValue(peptide.Sequence, out appearances))
+                            var protein = minimalProteinInfos[ii];
+                            foreach (var peptide in
+                                protease.DigestSequence(protein.Sequence, settings.DigestSettings.MaxMissedCleavages, maxPeptideLength))
                             {
-                                lock (appearances)
+                                DigestionPeptideStatsDetailed appearances;
+                                if (results.TryGetValue(peptide.Sequence, out appearances))
                                 {
-                                    appearances.Proteins.Add(protein.Id);
-                                    appearances.Genes.Add(protein.Gene); // HashSet eliminates duplicates
-                                    appearances.Species.Add(protein.Species); // HashSet eliminates duplicates
+                                    lock (appearances)
+                                    {
+                                        appearances.Proteins.Add(protein.Id);
+                                        appearances.Genes.Add(protein.Gene); // HashSet eliminates duplicates
+                                        appearances.Species.Add(protein.Species); // HashSet eliminates duplicates
+                                    }
                                 }
                             }
-                        }
-                    });
-                    batchCount = 0;
+                        });
+                        batchCount = 0;
+                    }
                 }
             }
             return results;
@@ -338,13 +337,13 @@ namespace pwiz.Skyline.Model.Proteome
 
         public class DigestionPeptideStatsDetailed
         {
-            public HashSet<string> Proteins { get; protected set; }  // All proteins sequence appears in
+            public HashSet<long> Proteins { get; protected set; }  // All proteins sequence appears in
             public HashSet<string> Genes { get; protected set; }    // All genes sequence appears in
             public HashSet<string> Species { get; protected set; }   // All species sequence appears in
 
             public DigestionPeptideStatsDetailed()
             {
-                Proteins = new HashSet<string>();
+                Proteins = new HashSet<long>();
                 Genes = new HashSet<string>();
                 Species = new HashSet<string>();
             }
