@@ -2154,7 +2154,14 @@ namespace pwiz.Skyline.Controls.Graphs
                 chromGraphPrimary.RetentionPrediction = predictedRT;
                 chromGraphPrimary.RetentionWindow = window;
             }
-            chromGraphPrimary.RetentionExplicit = (nodePeps.Length == 1) ? nodePeps[0].ExplicitRetentionTime : null;
+            if (nodePeps != null && nodePeps.Any() && nodePeps.All(np => Equals(np.ExplicitRetentionTime, nodePeps[0].ExplicitRetentionTime)))
+            {
+                chromGraphPrimary.RetentionExplicit = nodePeps[0].ExplicitRetentionTime;
+            }
+            else
+            {
+                chromGraphPrimary.RetentionExplicit = null;
+            }
         }
 
 
