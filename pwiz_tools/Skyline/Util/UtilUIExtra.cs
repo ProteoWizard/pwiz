@@ -5,6 +5,8 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Util
@@ -370,6 +372,16 @@ EndSelection:<<<<<<<3
         [DllImport("user32.dll")]
         private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
 
+        public static string GetPasteErrorMessage()
+        {
+            return GetOpenClipboardMessage(Resources.ClipboardHelper_GetPasteErrorMessage_Failed_getting_data_from_the_clipboard_);
+        }
+
+        public static string GetCopyErrorMessage()
+        {
+            return GetOpenClipboardMessage(Resources.ClipboardHelper_GetCopyErrorMessage_Failed_setting_data_to_clipboard_);
+        }
+
         public static string GetOpenClipboardMessage(string prefix)
         {
             try
@@ -391,6 +403,32 @@ EndSelection:<<<<<<<3
                 return prefix;
             }
             return prefix;
+        }
+
+        public static void SetClipboardText(Control owner, string text)
+        {
+            try
+            {
+                ClipboardEx.Clear();
+                ClipboardEx.SetText(text);
+            }
+            catch (ExternalException)
+            {
+                MessageDlg.Show(FormUtil.FindTopLevelOwner(owner), GetCopyErrorMessage());
+            }
+        }
+
+        public static string GetClipboardText(Control owner)
+        {
+            try
+            {
+                return ClipboardEx.GetText();
+            }
+            catch (ExternalException)
+            {
+                MessageDlg.Show(FormUtil.FindTopLevelOwner(owner), GetPasteErrorMessage());
+                return null;
+            }
         }
     }
 }

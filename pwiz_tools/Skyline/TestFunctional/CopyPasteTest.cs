@@ -288,7 +288,7 @@ namespace pwiz.SkylineTestFunctional
             }
             catch (ExternalException)
             {
-                Assert.Fail(ClipboardHelper.GetOpenClipboardMessage("Failure getting data from the clipboard."));
+                Assert.Fail(ClipboardHelper.GetPasteErrorMessage());
             }
             return null;
         }
@@ -301,7 +301,7 @@ namespace pwiz.SkylineTestFunctional
             }
             catch (ExternalException)
             {
-                Assert.Fail(ClipboardHelper.GetOpenClipboardMessage("Failure getting data from the clipboard."));
+                Assert.Fail(ClipboardHelper.GetPasteErrorMessage());
             }
             return null;
         }

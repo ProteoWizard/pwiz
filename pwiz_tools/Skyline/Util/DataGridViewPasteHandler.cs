@@ -62,7 +62,7 @@ namespace pwiz.Skyline.Util
             }
             if (SkylineWindow.IsPasteKeys(e.KeyData))
             {
-                var clipboardText = ClipboardEx.GetText();
+                var clipboardText = ClipboardHelper.GetClipboardText(DataGridView);
                 if (null == clipboardText)
                 {
                     return;

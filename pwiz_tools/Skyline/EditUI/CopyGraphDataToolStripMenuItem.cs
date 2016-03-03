@@ -55,15 +55,7 @@ namespace pwiz.Skyline.EditUI
             {
                 return;
             }
-            try
-            {
-                ClipboardEx.Clear();
-                ClipboardEx.SetText(graphData.ToString());
-            }
-            catch (ExternalException)
-            {
-                MessageBox.Show(ClipboardHelper.GetOpenClipboardMessage(Resources.CopyGraphDataToolStripMenuItem_CopyGraphData_Failed_setting_data_to_clipboard), Program.Name);
-            }
+            ClipboardHelper.SetClipboardText(zedGraphControl, graphData.ToString());
         }
     }
 }

@@ -1046,9 +1046,7 @@ namespace pwiz.Skyline
             }
             catch (ExternalException)
             {
-                MessageDlg.Show(this,
-                                ClipboardHelper.GetOpenClipboardMessage(
-                                    Resources.SkylineWindow_Copy_Failed_setting_data_to_the_clipboard));
+                MessageDlg.Show(this, ClipboardHelper.GetCopyErrorMessage());
             }
         }
 
@@ -1075,8 +1073,7 @@ namespace pwiz.Skyline
             }
             catch (ExternalException)
             {
-                MessageDlg.Show(this, ClipboardHelper.GetOpenClipboardMessage(
-                    Resources.SkylineWindow_Paste_Failed_getting_data_from_the_clipboard));
+                MessageDlg.Show(this, ClipboardHelper.GetPasteErrorMessage());
                 return;
             }
         
@@ -1130,9 +1127,7 @@ namespace pwiz.Skyline
                 }
                 catch (Exception)
                 {
-                    MessageDlg.Show(this,
-                                    ClipboardHelper.GetOpenClipboardMessage(
-                                        Resources.SkylineWindow_Paste_Failed_getting_data_from_the_clipboard));
+                    MessageDlg.Show(this, ClipboardHelper.GetPasteErrorMessage());
                     return;
                 }
                 try

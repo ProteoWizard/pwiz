@@ -62,15 +62,7 @@ namespace pwiz.Skyline.SettingsUI
                     }
                     sb.Append('\n'); // Not L10N
                 }
-                try
-                {
-                    ClipboardEx.Clear();
-                    ClipboardEx.SetText(sb.ToString());
-                }
-                catch (ExternalException)
-                {
-                    MessageDlg.Show(this, ClipboardHelper.GetOpenClipboardMessage(Resources.RTDetails_gridStatistics_KeyDown_Failed_setting_data_to_clipboard));
-                }
+                ClipboardHelper.SetClipboardText(this, sb.ToString());
             }
         }
     }

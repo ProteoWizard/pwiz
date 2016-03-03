@@ -45,9 +45,9 @@ namespace pwiz.Skyline.SettingsUI
 
         public delegate bool ValidateCellValues(string[] values, IWin32Window parent, int lineNumber);
 
-        public static bool DoPaste(this DataGridView grid, IWin32Window parent, ValidateCellValues validate)
+        public static bool DoPaste(this DataGridView grid, Control parent, ValidateCellValues validate)
         {
-            string textClip = GetClipBoardText(parent);
+            string textClip = ClipboardHelper.GetClipboardText(parent);
             if (string.IsNullOrEmpty(textClip) || !grid.EndEdit())
                 return false;
 
@@ -62,32 +62,18 @@ namespace pwiz.Skyline.SettingsUI
             return result;
         }
 
-        public static bool DoPaste(this DataGridView grid, IWin32Window parent, ValidateCellValues validate, Action<string[]> addRow)
+        public static bool DoPaste(this DataGridView grid, Control parent, ValidateCellValues validate, Action<string[]> addRow)
         {
             return grid.DoPaste(parent, validate, (s, i) => addRow(s));
         }
 
-        private static bool DoPaste(this DataGridView grid, IWin32Window parent, ValidateCellValues validate, Action<string[], int> addRow)
+        private static bool DoPaste(this DataGridView grid, Control parent, ValidateCellValues validate, Action<string[], int> addRow)
         {
-            string textClip = GetClipBoardText(parent);
+            string textClip = ClipboardHelper.GetClipboardText(parent);
             if (string.IsNullOrEmpty(textClip) || !grid.EndEdit())
                 return false;
 
             return DoPasteText(parent, textClip, grid, validate, addRow);
-        }
-
-        private static string GetClipBoardText(IWin32Window parent)
-        {
-            try
-            {
-                return ClipboardEx.GetText();
-            }
-            catch (ExternalException)
-            {
-                MessageDlg.Show(parent, ClipboardHelper.GetOpenClipboardMessage(
-                    Resources.SettingsUIUtil_GetClipBoardText_Failed_getting_data_from_the_clipboard));
-                return null;
-            }
         }
 
         private static bool DoPasteText(IWin32Window parent, string textClip, DataGridView grid, ValidateCellValues validate, Action<string[], int> addRow)

@@ -227,7 +227,7 @@ namespace pwiz.SkylineTestUtil
             }
             catch (ExternalException)
             {
-                Assert.Fail(ClipboardHelper.GetOpenClipboardMessage("Failed to set text to the clipboard.")); // Not L10N
+                Assert.Fail(ClipboardHelper.GetPasteErrorMessage()); // Not L10N
             }
         }
 

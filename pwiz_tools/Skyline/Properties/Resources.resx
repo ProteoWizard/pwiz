@@ -343,10 +343,10 @@
   <data name="SkylineWindow_OnClosing_An_unexpected_error_has_prevented_global_settings_changes_from_this_session_from_being_saved" xml:space="preserve">
     <value>An unexpected error has prevented global settings changes from this session from being saved.</value>
   </data>
-  <data name="SkylineWindow_Copy_Failed_setting_data_to_the_clipboard" xml:space="preserve">
+  <data name="ClipboardHelper_GetCopyErrorMessage_Failed_setting_data_to_clipboard_" xml:space="preserve">
     <value>Failed setting data to the clipboard.</value>
   </data>
-  <data name="SkylineWindow_Paste_Failed_getting_data_from_the_clipboard" xml:space="preserve">
+  <data name="ClipboardHelper_GetPasteErrorMessage_Failed_getting_data_from_the_clipboard_" xml:space="preserve">
     <value>Failed getting data from the clipboard.</value>
   </data>
   <data name="SkylineWindow_Paste_proteins" xml:space="preserve">
@@ -2196,9 +2196,6 @@ Are you sure you want to continue?</value>
   <data name="PasteDlg_CheckSequence_There_is_no_sequence_for_this_protein" xml:space="preserve">
     <value>There is no sequence for this protein</value>
   </data>
-  <data name="PasteDlg_Paste_Failed_getting_data_from_the_clipboard" xml:space="preserve">
-    <value>Failed getting data from the clipboard.</value>
-  </data>
   <data name="Peptide_Validate_Peptides_without_a_protein_sequence_do_not_support_the_start_and_end_properties" xml:space="preserve">
     <value>Peptides without a protein sequence do not support the start and end properties.</value>
   </data>
@@ -3263,9 +3260,6 @@ Are you sure you want to continue?</value>
   <data name="SettingsListComboDriver_Edit_list" xml:space="preserve">
     <value>&lt;Edit list...&gt;</value>
   </data>
-  <data name="SettingsUIUtil_GetClipBoardText_Failed_getting_data_from_the_clipboard" xml:space="preserve">
-    <value>Failed getting data from the clipboard.</value>
-  </data>
   <data name="SettingsUIUtil_DoPasteText_Incorrect_number_of_columns__0__found_on_line__1__" xml:space="preserve">
     <value>Incorrect number of columns ({0}) found on line {1}.</value>
   </data>
@@ -4288,9 +4282,6 @@ Are you sure you want to continue?</value>
   </data>
   <data name="RenameProteinsDlg_UseFastaFile_Failed_reading_the_file__0__1__" xml:space="preserve">
     <value>Failed reading the file {0}. {1}</value>
-  </data>
-  <data name="RenameProteinsDlg_PasteProteins_Failed_getting_data_from_the_clipboard" xml:space="preserve">
-    <value>Failed getting data from the clipboard.</value>
   </data>
   <data name="GridViewDriver_ValidateRow_On_line__0__row_has_more_than_2_columns" xml:space="preserve">
     <value>On line {0}, row has more than 2 columns</value>

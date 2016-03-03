@@ -343,10 +343,10 @@
   <data name="SkylineWindow_OnClosing_An_unexpected_error_has_prevented_global_settings_changes_from_this_session_from_being_saved" xml:space="preserve">
     <value>予期しないエラーにより、このセッションのグローバル設定の変更を保存できませんでした。</value>
   </data>
-  <data name="SkylineWindow_Copy_Failed_setting_data_to_the_clipboard" xml:space="preserve">
+  <data name="ClipboardHelper_GetCopyErrorMessage_Failed_setting_data_to_clipboard_" xml:space="preserve">
     <value>データのクリップボードへの設定に失敗しました。</value>
   </data>
-  <data name="SkylineWindow_Paste_Failed_getting_data_from_the_clipboard" xml:space="preserve">
+  <data name="ClipboardHelper_GetPasteErrorMessage_Failed_getting_data_from_the_clipboard_" xml:space="preserve">
     <value>クリップボードからのデータの取得に失敗しました。</value>
   </data>
   <data name="SkylineWindow_Paste_proteins" xml:space="preserve">
@@ -2196,9 +2196,6 @@
   <data name="PasteDlg_CheckSequence_There_is_no_sequence_for_this_protein" xml:space="preserve">
     <value>このタンパク質にはシークエンスがありません</value>
   </data>
-  <data name="PasteDlg_Paste_Failed_getting_data_from_the_clipboard" xml:space="preserve">
-    <value>クリップボードからのデータの取得に失敗しました。</value>
-  </data>
   <data name="Peptide_Validate_Peptides_without_a_protein_sequence_do_not_support_the_start_and_end_properties" xml:space="preserve">
     <value>タンパク質シークエンスなしのペプチドは開始および終了プロパティをサポートしません。</value>
   </data>
@@ -3263,9 +3260,6 @@
   <data name="SettingsListComboDriver_Edit_list" xml:space="preserve">
     <value>&lt;リストを編集...&gt;</value>
   </data>
-  <data name="SettingsUIUtil_GetClipBoardText_Failed_getting_data_from_the_clipboard" xml:space="preserve">
-    <value>クリップボードからのデータの取得に失敗しました。</value>
-  </data>
   <data name="SettingsUIUtil_DoPasteText_Incorrect_number_of_columns__0__found_on_line__1__" xml:space="preserve">
     <value>{1}行に間違った列数 ({0}) が見つかりました。</value>
   </data>
@@ -4288,9 +4282,6 @@
   </data>
   <data name="RenameProteinsDlg_UseFastaFile_Failed_reading_the_file__0__1__" xml:space="preserve">
     <value>ファイル{0}の読み取りに失敗しました。{1}</value>
-  </data>
-  <data name="RenameProteinsDlg_PasteProteins_Failed_getting_data_from_the_clipboard" xml:space="preserve">
-    <value>クリップボードからのデータの取得に失敗しました。</value>
   </data>
   <data name="GridViewDriver_ValidateRow_On_line__0__row_has_more_than_2_columns" xml:space="preserve">
     <value>{0}行目では、行に2列以上あります</value>

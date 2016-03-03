@@ -1949,7 +1949,7 @@ namespace pwiz.Skyline.EditUI
 
         public void PasteFasta()  // For functional test use
         {
-            tbxFasta.Text = ClipboardEx.GetText();
+            tbxFasta.Text = ClipboardHelper.GetClipboardText(this);
         }
 
         public void PasteProteins()
@@ -2007,15 +2007,9 @@ namespace pwiz.Skyline.EditUI
 
         private void Paste(DataGridView dataGridView, bool enumerateProteins)
         {
-            string text;
-
-            try
+            string text = ClipboardHelper.GetClipboardText(this);
+            if (text == null)
             {
-                text = ClipboardEx.GetText();
-            }
-            catch (ExternalException)
-            {
-                MessageDlg.Show(this, ClipboardHelper.GetOpenClipboardMessage(Resources.PasteDlg_Paste_Failed_getting_data_from_the_clipboard));
                 return;
             }
 
