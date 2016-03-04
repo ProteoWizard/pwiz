@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using pwiz.Common.Graph;
 using pwiz.Skyline.Properties;
