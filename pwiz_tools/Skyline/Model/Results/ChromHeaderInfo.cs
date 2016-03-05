@@ -298,7 +298,7 @@ namespace pwiz.Skyline.Model.Results
 
         public override string ToString()
         {
-            return string.Format("{0:F04}, {1}", Precursor, NumTransitions);
+            return string.Format("{0:F04}, {1}", Precursor, NumTransitions);    // Not L10N
         }
 
         public short MaxPeakIndex
@@ -1098,7 +1098,7 @@ namespace pwiz.Skyline.Model.Results
 
         public override string ToString()
         {
-            return string.Format("rt={0:F02}, area={1}", RetentionTime, Area);
+            return string.Format("rt={0:F02}, area={1}", RetentionTime, Area);  // Not L10N
         }
 
         public FlagValues Flags
