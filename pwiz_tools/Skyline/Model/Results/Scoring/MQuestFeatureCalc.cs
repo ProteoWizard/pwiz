@@ -41,6 +41,18 @@ namespace pwiz.Skyline.Model.Results.Scoring
         public double Window { get; private set; }
     }
 
+    sealed class MaxPossibleShift
+    {
+        public MaxPossibleShift(double? analyte, double? standard)
+        {
+            Analyte = analyte;
+            Standard = standard;
+        }
+
+        public double? Analyte { get; private set; }
+        public double? Standard { get; private set; }
+    }
+
     public abstract class AbstractMQuestRetentionTimePredictionCalc : SummaryPeakFeatureCalculator
     {
         protected AbstractMQuestRetentionTimePredictionCalc(string headerName) : base(headerName) {}
@@ -582,12 +594,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 context.AddInfo(crossCorrMatrix);
             }
             if (!crossCorrMatrix.CrossCorrelations.Any())
-                return DefaultScore;
-            MaxPossibleShift = lightTransitionPeakData.Max(pd => pd.PeakData.Length);
+                return GetDefaultScore(context);
 
             var statValues = crossCorrMatrix.GetStats(GetValue);
             var statWeights = crossCorrMatrix.GetStats(GetWeight);
-            return statValues.Length == 0 ? float.NaN : Calculate(statValues, statWeights);
+            return statValues.Length == 0 ? GetDefaultScore(context) : Calculate(context, statValues, statWeights);
         }
 
         protected abstract float? GetCachedScore(PeakScoringContext context,
@@ -596,7 +607,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         protected abstract float SetCachedScore(PeakScoringContext context,
             IList<ITransitionGroupPeakData<IDetailedPeakData>> tranGroups, float score);
 
-        protected abstract float Calculate(Statistics statValues, Statistics statWeigths);
+        protected abstract float Calculate(PeakScoringContext context, Statistics statValues, Statistics statWeigths);
         
         protected abstract double GetValue(MQuestCrossCorrelation xcorr);
 
@@ -605,12 +616,10 @@ namespace pwiz.Skyline.Model.Results.Scoring
             return xcorr.AreaSum;
         }
 
-        /// <summary>
-        /// For assigning the worst possible score when all weights are zero
-        /// </summary>
-        protected int MaxPossibleShift { get; set; }
-
-        protected virtual float DefaultScore { get { return float.NaN; } }
+        protected virtual float GetDefaultScore(PeakScoringContext context)
+        {
+            return float.NaN;
+        }
 
         protected abstract IList<ITransitionGroupPeakData<TDetails>> GetTransitionGroups<TDetails>(
             IPeptidePeakData<TDetails> summaryPeakData);
@@ -712,11 +721,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
     {
         protected AbstractMQuestWeightedShapeCalc(string headerName) : base(headerName) { }
 
-        protected override float Calculate(Statistics statValues, Statistics statWeigths)
+        protected override float Calculate(PeakScoringContext context, Statistics statValues, Statistics statWeigths)
         {
             double result = statValues.Mean(statWeigths);
             if (double.IsNaN(result))
-                return DefaultScore;
+                return GetDefaultScore(context);
             return (float) result;
         }
 
@@ -727,7 +736,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             return xcorr.MaxCorr;
         }
 
-        protected override float DefaultScore { get { return 0; } }
+        protected override float GetDefaultScore(PeakScoringContext context) { return 0; }
 
         protected override float? GetCachedScore(PeakScoringContext context, IList<ITransitionGroupPeakData<IDetailedPeakData>> tranGroups)
         {
@@ -842,13 +851,13 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public abstract class AbstractMQuestWeightedCoElutionCalc<TData> : MQuestWeightedLightCalc<TData> where TData : MQuestAnalyteCrossCorrelations, new()
     {
-         protected AbstractMQuestWeightedCoElutionCalc(string headerName) : base(headerName) { }
+        protected AbstractMQuestWeightedCoElutionCalc(string headerName) : base(headerName) { }
 
-        protected override float Calculate(Statistics statValues, Statistics statWeigths)
+        protected override float Calculate(PeakScoringContext context, Statistics statValues, Statistics statWeigths)
         {
             double result = statValues.Mean(statWeigths) + statValues.StdDev(statWeigths);
             if (double.IsNaN(result))
-                return DefaultScore;
+                return GetDefaultScore(context);
             return (float) result;
         }
 
@@ -859,7 +868,13 @@ namespace pwiz.Skyline.Model.Results.Scoring
             return Math.Abs(xcorr.MaxShift);
         }
 
-        protected override float DefaultScore { get { return MaxPossibleShift; } }
+        protected override float GetDefaultScore(PeakScoringContext context)
+        {
+            MaxPossibleShift shift;
+            if (context.TryGetInfo(out shift) && shift.Analyte.HasValue)
+                return (float) shift.Analyte.Value;
+            return base.GetDefaultScore(context);
+        }
 
         protected override float? GetCachedScore(PeakScoringContext context, IList<ITransitionGroupPeakData<IDetailedPeakData>> tranGroups)
         {
@@ -1080,17 +1095,14 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 context.AddInfo(crossCorrMatrix);
             }
             if (!crossCorrMatrix.CrossCorrelations.Any())
-                return float.NaN;
-
-            var transitionPeakDatas = summaryPeakData.TransitionGroupPeakData.SelectMany(pd => pd.TransitionPeakData);
-            MaxPossibleShift = transitionPeakDatas.Max(pd => pd.PeakData.Length);
+                return GetDefaultScore(context);
 
             var statValues = crossCorrMatrix.GetStats(GetValue, FilterIons);
             var statWeights = crossCorrMatrix.GetStats(GetWeight, FilterIons);
-            return statValues.Length == 0 ? float.NaN : Calculate(statValues, statWeights);
+            return statValues.Length == 0 ? GetDefaultScore(context) : Calculate(context, statValues, statWeights);
         }
 
-        protected abstract float Calculate(Statistics statValues, Statistics statWeigths);
+        protected abstract float Calculate(PeakScoringContext context, Statistics statValues, Statistics statWeigths);
 
         protected abstract double GetValue(MQuestCrossCorrelation xcorr);
 
@@ -1105,10 +1117,10 @@ namespace pwiz.Skyline.Model.Results.Scoring
                                   .Where(xcorr => !xcorr.TranPeakData1.NodeTran.IsMs1 && !xcorr.TranPeakData2.NodeTran.IsMs1);
         }
 
-        /// <summary>
-        /// For assigning the worst possible score when all weights are zero
-        /// </summary>
-        protected int MaxPossibleShift { get; private set; }
+        protected virtual float GetDefaultScore(PeakScoringContext context)
+        {
+            return float.NaN;
+        }
     }
 
     /// <summary>
@@ -1124,7 +1136,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             get { return Resources.MQuestWeightedReferenceShapeCalc_MQuestWeightedReferenceShapeCalc_mProphet_weighted_reference_shape; }
         }
 
-        protected override float Calculate(Statistics statValues, Statistics statWeigths)
+        protected override float Calculate(PeakScoringContext context, Statistics statValues, Statistics statWeigths)
         {
             double result = statValues.Mean(statWeigths);
             if (double.IsNaN(result))
@@ -1172,11 +1184,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
             get { return Resources.MQuestWeightedReferenceCoElutionCalc_MQuestWeightedReferenceCoElutionCalc_mQuest_weighted_reference_coelution; }
         }
 
-        protected override float Calculate(Statistics statValues, Statistics statWeigths)
+        protected override float Calculate(PeakScoringContext context, Statistics statValues, Statistics statWeigths)
         {
             double result = statValues.Mean(statWeigths) + statValues.StdDev(statWeigths);
             if (double.IsNaN(result))
-                return MaxPossibleShift;
+                return GetDefaultScore(context);
             return (float) result;
         }
 
@@ -1185,6 +1197,14 @@ namespace pwiz.Skyline.Model.Results.Scoring
         protected override double GetValue(MQuestCrossCorrelation xcorr)
         {
             return Math.Abs(xcorr.MaxShift);
+        }
+
+        protected override float GetDefaultScore(PeakScoringContext context)
+        {
+            MaxPossibleShift shift;
+            if (context.TryGetInfo(out shift) && shift.Standard.HasValue)
+                return (float)shift.Standard.Value;
+            return base.GetDefaultScore(context);
         }
     }
 

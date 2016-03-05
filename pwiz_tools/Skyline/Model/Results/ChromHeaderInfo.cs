@@ -296,6 +296,11 @@ namespace pwiz.Skyline.Model.Results
         public long LocationPoints { get; private set; }
         /////////////////////////////////////////////////////////////////////
 
+        public override string ToString()
+        {
+            return string.Format("{0:F04}, {1}", Precursor, NumTransitions);
+        }
+
         public short MaxPeakIndex
         {
             get
@@ -1090,6 +1095,11 @@ namespace pwiz.Skyline.Model.Results
         public float Height { get; private set; }
         public float Fwhm { get; private set; }
         public uint FlagBits { get; private set; }
+
+        public override string ToString()
+        {
+            return string.Format("rt={0:F02}, area={1}", RetentionTime, Area);
+        }
 
         public FlagValues Flags
         {

@@ -441,12 +441,12 @@ namespace pwiz.Skyline.Model.Results
         public override string ToString()
         {
             return Peak == null ? Data.Key.ToString() :
-                String.Format("{0} - area = {1:F0}{2}{3}, start = {4}, end = {5}, rt = {6}-{7}",  // Not L10N : For debugging
+                String.Format("{0} - area = {1:F0}{2}{3}, start = {4}, end = {5}, rt = {6}-{7}>{8}",  // Not L10N : For debugging
                     Data.Key, Peak.Area,
                     Peak.Identified ? "+" : string.Empty, // Not L10N
                     DataPeak.IsForcedIntegration ? "*" : string.Empty, // Not L10N
                     Peak.StartIndex, Peak.EndIndex,
-                    Data.Times[Peak.StartIndex], Data.Times[Peak.EndIndex]);
+                    Data.Times[Peak.StartIndex], Data.Times[Peak.EndIndex], Data.Times[Peak.TimeIndex]);
         }
 
         public ChromPeak CalcChromPeak(IFoundPeak peakMax, ChromPeak.FlagValues flags)

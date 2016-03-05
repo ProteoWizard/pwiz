@@ -223,7 +223,15 @@ namespace pwiz.SkylineTestFunctional
                 VerifyScores(editDlg, true, RT_TYPES);
                 VerifyScores(editDlg, false, ANALYTE_TYPES);
                 VerifyScores(editDlg, true, STANDARD_TYPES);
-                VerifyScores(editDlg, false, REFERENCE_TYPES);
+                VerifyScores(editDlg, true, new[]
+                {
+                    typeof(MQuestWeightedReferenceCoElutionCalc)
+                });
+                VerifyScores(editDlg, false, new[]
+                {
+                    typeof(MQuestWeightedReferenceShapeCalc),
+                    typeof(MQuestReferenceCorrelationCalc)
+                });
                 VerifyScores(editDlg, false, MS1_TYPES);
                 var analyteHistograms = ANALYTE_TYPES.Select(type => GetHistogramForScore(editDlg, type)).ToArray();
                 standardLightHistogramsOnly = STANDARD_TYPES.Select(type => GetHistogramForScore(editDlg, type)).ToArray();
@@ -358,7 +366,8 @@ namespace pwiz.SkylineTestFunctional
             scores = new List<double?>();
             foreach (var scoreType in scoreTypes)
             {
-                Assert.AreEqual(IsActiveCalculator(editDlg, scoreType), isPresent);
+                Assert.AreEqual(IsActiveCalculator(editDlg, scoreType), isPresent,
+                    string.Format("Score calculator type {0} unexpectedly {1}",  scoreType, isPresent ? "disabled" : "enabled"));
                 scores.Add(ValueCalculator(editDlg, scoreType));
             }
         }

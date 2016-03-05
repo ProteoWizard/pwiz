@@ -155,11 +155,14 @@ namespace pwiz.Skyline.Model.Results
             var detailedCalcs = DetailedPeakFeatureCalculators.Select(calc => (IPeakFeatureCalculator)calc).ToList();
             foreach (var listPeakSets in _listListPeakSets)
             {
+                var maxPossibleShift = GetMaxPossibleShift(listPeakSets);
+
                 // Score the peaks under the legacy model score
                 foreach (var peakSet in listPeakSets.Where(peakSet => peakSet != null))
                 {
                     var context = new PeakScoringContext(_document);
                     context.AddInfo(_predictedRetentionTime);
+                    context.AddInfo(maxPossibleShift);
                     peakSet.ScorePeptideSets(context, detailedCalcs);
                 }
 
@@ -172,6 +175,17 @@ namespace pwiz.Skyline.Model.Results
             // Sort transition group level peaks by retention time and record the best peak
             foreach (var chromDataSet in _dataSets)
                 chromDataSet.StorePeaks();
+        }
+
+        private MaxPossibleShift GetMaxPossibleShift(IList<PeptideChromDataPeakList> listPeakSets)
+        {
+            double? maxAnalyteShift = null, maxStandardShift = null;
+            if (listPeakSets.Count > 0)
+            {
+                maxAnalyteShift = listPeakSets.Max(peakSet => peakSet.GetMaxPossibleShift(peakSet.AnalyteGroupPeakData));
+                maxStandardShift = listPeakSets.Max(peakSet => peakSet.GetMaxPossibleShift(peakSet.StandardGroupPeakData));
+            }
+            return new MaxPossibleShift(maxAnalyteShift, maxStandardShift);
         }
 
         private void SortAndLimitPeaks(List<PeptideChromDataPeakList> listPeakSets)
@@ -1041,6 +1055,17 @@ namespace pwiz.Skyline.Model.Results
         private IList<ITransitionGroupPeakData<IDetailedPeakData>> GetChangeList(ITransitionGroupPeakData<IDetailedPeakData> peakData)
         {
             return peakData.IsStandard ? StandardGroupPeakData : AnalyteGroupPeakData;
+        }
+
+        public double? GetMaxPossibleShift(IList<ITransitionGroupPeakData<IDetailedPeakData>> listPeakGroupData)
+        {
+            double? maxPossibleShift = null;
+            foreach (var transitionGroupPeakData in listPeakGroupData)
+            {
+                maxPossibleShift = Math.Max(maxPossibleShift ?? 0,
+                    transitionGroupPeakData.TransitionPeakData.Max(pd => pd.PeakData.Length));
+            }
+            return maxPossibleShift;
         }
     }
 }
