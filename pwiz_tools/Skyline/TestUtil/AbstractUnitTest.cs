@@ -199,6 +199,19 @@ namespace pwiz.SkylineTestUtil
         public void MyTestCleanup()
         {
             Cleanup();
+
+            // Delete unzipped test files if test otherwise passed to make sure file handles
+            // are not still open. Files may still be open otherwise, and trying this could
+            // mask the original error.
+            if (TestFilesDirs != null && TestContext.CurrentTestOutcome == UnitTestOutcome.Passed)
+            {
+                foreach (TestFilesDir dir in TestFilesDirs)
+                {
+                    if (dir != null)
+                        dir.Dispose();
+                }
+            }
+
             STOPWATCH.Stop();
 
             Settings.Release();

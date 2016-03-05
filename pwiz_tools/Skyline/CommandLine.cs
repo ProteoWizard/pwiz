@@ -1445,14 +1445,13 @@ namespace pwiz.Skyline
             if (libraryLinkedToDoc)
             {
                 string oldName = docNew.Settings.PeptideSettings.Libraries.LibrarySpecs[indexOldLibrary].Name;
-                var libraryOld = docNew.Settings.PeptideSettings.Libraries.GetLibrary(oldName);
-                var additionalSpectra = SpectrumMzInfo.GetInfoFromLibrary(libraryOld);
-                additionalSpectra = SpectrumMzInfo.RemoveDuplicateSpectra(additionalSpectra);
-                
-                librarySpectra = SpectrumMzInfo.MergeWithOverwrite(librarySpectra, additionalSpectra);
+                using (var libraryOld = new LibraryReference(docNew.Settings.PeptideSettings.Libraries.GetLibrary(oldName)))
+                {
+                    var additionalSpectra = SpectrumMzInfo.GetInfoFromLibrary(libraryOld.Reference);
+                    additionalSpectra = SpectrumMzInfo.RemoveDuplicateSpectra(additionalSpectra);
 
-                foreach (var stream in libraryOld.ReadStreams)
-                    stream.CloseStream();
+                    librarySpectra = SpectrumMzInfo.MergeWithOverwrite(librarySpectra, additionalSpectra);
+                }
             }
 
             if (librarySpectra.Any())
@@ -1467,18 +1466,39 @@ namespace pwiz.Skyline
                 using (var blibDb = BlibDb.CreateBlibDb(outputLibraryPath))
                 {
                     var docLibrarySpec = new BiblioSpecLiteSpec(libraryName, outputLibraryPath);
-                    var docLibrary = blibDb.CreateLibraryFromSpectra(docLibrarySpec, librarySpectra, libraryName,
-                        progressMonitor);
-                    if (docLibrary == null)
-                        return false;
-                    var newSettings = docNew.Settings.ChangePeptideLibraries(
-                        libs => libs.ChangeLibrary(docLibrary, docLibrarySpec, indexOldLibrary));
-                    docNew = docNew.ChangeSettings(newSettings, new SrmSettingsChangeMonitor(progressMonitor,
-                        Resources.SkylineWindow_ImportMassList_Finishing_up_import));
+                    using (var docLibrary = new LibraryReference(blibDb.CreateLibraryFromSpectra(
+                        docLibrarySpec, librarySpectra, libraryName, progressMonitor)))
+                    {
+                        if (docLibrary == null)
+                            return false;
+                        var newSettings = docNew.Settings.ChangePeptideLibraries(
+                            libs => libs.ChangeLibrary(docLibrary.Reference, docLibrarySpec, indexOldLibrary));
+                        docNew = docNew.ChangeSettings(newSettings, new SrmSettingsChangeMonitor(progressMonitor,
+                            Resources.SkylineWindow_ImportMassList_Finishing_up_import));
+                    }
                 }
             }
             _doc = docNew;
             return true;
+        }
+
+        private class LibraryReference : IDisposable
+        {
+            public Library Reference { get; private set; }
+
+            public LibraryReference(Library reference)
+            {
+                Reference = Reference;
+            }
+
+            public void Dispose()
+            {
+                if (Reference != null)
+                {
+                    foreach (var stream in Reference.ReadStreams)
+                        stream.CloseStream();
+                }
+            }
         }
 
         public bool CreateIrtDatabase(string irtDatabasePath, CommandArgs commandArgs)
