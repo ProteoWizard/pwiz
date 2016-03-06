@@ -1201,7 +1201,7 @@ namespace pwiz.Skyline.Util
         {
             int i = localizedStrings.IndexOf(v => Equals(v, value));
             if (i == -1)
-                throw new ArgumentException(string.Format("The string '{0}' does not match an enum value", value)); // Not L10N
+                throw new ArgumentException(string.Format("The string '{0}' does not match an enum value ({1})", value, string.Join(", ", localizedStrings))); // Not L10N
             return (TEnum) (object) i;            
         }
 
