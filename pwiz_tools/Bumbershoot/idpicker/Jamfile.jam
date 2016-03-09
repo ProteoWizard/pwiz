@@ -286,6 +286,10 @@ if $(revision-info[5]) > 0
     version-tag += "modified" ;
 }
 
+# create an IDPICKER_VERSION file which can be used by TC to parse the canonical IDPicker version
+make IDPICKER_VERSION : : @make_IDPICKER_VERSION : <location>$(PWIZ_BUILD_PATH) ;
+actions make_IDPICKER_VERSION { @($(STDOUT):E=$(version-tag:J=.)) > "$(<)" }
+
 rule msbuild_IDPicker ( targets + : sources * : properties * )
 {
     if <variant>debug in $(properties)
