@@ -95,9 +95,7 @@ namespace pwiz.Skyline.Model.Databinding
                     propertyPaths.Add(PropertyPath.Parse(databindingTableAttribute.Property));
                 }
             }
-            var newFilters =
-                propertyPaths.Select(
-                    propertyPath => new FilterSpec(propertyPath, FilterOperations.OP_IS_NOT_BLANK, null));
+            var newFilters = propertyPaths.Select(propertyPath => new FilterSpec(propertyPath, FilterPredicate.IS_NOT_BLANK));
             viewSpec = viewSpec.SetFilters(viewSpec.Filters.Concat(newFilters));
             return viewSpec;
         }

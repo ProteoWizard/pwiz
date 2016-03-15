@@ -77,7 +77,7 @@ namespace pwiz.Common.DataBinding.Controls
             if (columnFilters.Length >= 1)
             {
                 SetFilterOperation(comboOperation1, tbxOperand1, columnFilters[0]);
-                tbxOperand1.Text = columnFilters[0].Operand;
+                tbxOperand1.Text = columnFilters[0].Predicate.GetOperandDisplayText(dataSchema, propertyDescriptor.PropertyType);
             }
             if (columnFilters.Length >= 2)
             {
@@ -109,13 +109,13 @@ namespace pwiz.Common.DataBinding.Controls
             for (int i = 0; i < comboOperation.Items.Count; i++)
             {
                 FilterItem filterItem = comboOperation.Items[i] as FilterItem;
-                if (null != filterItem && Equals(columnFilter.FilterOperation, filterItem.FilterOperation))
+                if (null != filterItem && Equals(columnFilter.Predicate.FilterOperation, filterItem.FilterOperation))
                 {
                     comboOperation.SelectedIndex = i;
                     break;
                 }
             }
-            textBoxOperand.Text = columnFilter.Operand;
+            textBoxOperand.Text = columnFilter.Predicate.GetOperandDisplayText(DataSchema, PropertyDescriptor.PropertyType);
         }
 
         private RowFilter.ColumnFilter MakeColumnFilter(ComboBox comboOperation, TextBox text)
@@ -125,7 +125,9 @@ namespace pwiz.Common.DataBinding.Controls
             {
                 return null;
             }
-            return new RowFilter.ColumnFilter(PropertyDescriptor.DisplayName, filterItem.FilterOperation, text.Text);
+            var filterPredicate = FilterPredicate.CreateFilterPredicate(DataSchema, PropertyDescriptor.PropertyType,
+                filterItem.FilterOperation, text.Text);
+            return new RowFilter.ColumnFilter(PropertyDescriptor.DisplayName, filterPredicate);
         }
 
         private void FilterChanged(ComboBox comboOperation, TextBox text)
@@ -165,10 +167,10 @@ namespace pwiz.Common.DataBinding.Controls
 
         public void OkDialog()
         {
-            RowFilter = GetCurrentFilter();
             try
             {
-                RowFilter.GetPredicate(PropertyDescriptor);
+                RowFilter = GetCurrentFilter();
+                RowFilter.GetPredicate(DataSchema, PropertyDescriptor);
             }
             catch (Exception e)
             {

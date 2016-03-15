@@ -206,20 +206,19 @@ namespace pwiz.Common.DataBinding
     }
     public class FilterSpec
     {
-        public FilterSpec()
+        private FilterSpec()
         {
         }
-        public FilterSpec(PropertyPath propertyPath, IFilterOperation filterOperation, string operand)
+
+        public FilterSpec(PropertyPath propertyPath, FilterPredicate predicate)
         {
             Column = propertyPath.ToString();
-            OpName = filterOperation == null ? null : filterOperation.OpName;
-            Operand = operand;
+            Predicate = predicate;
         }
-        public FilterSpec(FilterSpec that)
+        private FilterSpec(FilterSpec that)
         {
             Column = that.Column;
-            OpName = that.OpName;
-            Operand = that.Operand;
+            Predicate = that.Predicate;
         }
         public string Column { get; private set; }
         public FilterSpec SetColumn(string column)
@@ -231,29 +230,20 @@ namespace pwiz.Common.DataBinding
         {
             return SetColumn(columnId.ToString());
         }
-        public string OpName { get; private set; }
-        public FilterSpec SetOp(string op)
+        public FilterPredicate Predicate { get; private set; }
+
+        public FilterSpec SetPredicate(FilterPredicate predicate)
         {
-            return new FilterSpec(this){OpName = op};
+            return new FilterSpec(this){Predicate = predicate};
         }
-        public IFilterOperation Operation {get { return FilterOperations.GetOperation(OpName);}}
-        public FilterSpec SetOperation(IFilterOperation operation)
-        {
-            return SetOp(operation == null ? string.Empty : operation.OpName);
-        }
-        public string Operand { get; private set; }
-        public FilterSpec SetOperand(string operand)
-        {
-            return new FilterSpec(this){Operand = operand};
-        }
+        public IFilterOperation Operation { get { return Predicate.FilterOperation; } }
         // ReSharper disable NonLocalizedString
         public static FilterSpec ReadXml(XmlReader reader)
         {
             var filterSpec = new FilterSpec
                 {
                     Column = reader.GetAttribute("column"),
-                    OpName = reader.GetAttribute("opname"),
-                    Operand = reader.GetAttribute("operand")
+                    Predicate = FilterPredicate.ReadXml(reader),
                 };
             bool empty = reader.IsEmptyElement;
             reader.ReadElementString("filter");
@@ -267,11 +257,7 @@ namespace pwiz.Common.DataBinding
         public void WriteXml(XmlWriter writer)
         {
             writer.WriteAttributeString("column", Column);
-            writer.WriteAttributeString("opname", OpName);
-            if (Operand != null)
-            {
-                writer.WriteAttributeString("operand", Operand);
-            }
+            Predicate.WriteXml(writer);
         }
         // ReSharper restore NonLocalizedString
 
@@ -279,7 +265,7 @@ namespace pwiz.Common.DataBinding
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return Equals(other.Column, Column) && Equals(other.OpName, OpName) && Equals(other.Operand, Operand);
+            return Equals(other.Column, Column) && Equals(other.Predicate, Predicate);
         }
 
         public override bool Equals(object obj)
@@ -295,8 +281,7 @@ namespace pwiz.Common.DataBinding
             unchecked
             {
                 int result = Column == null ? 0 : Column.GetHashCode();
-                result = (result*397) ^ (OpName == null ? 0 : OpName.GetHashCode());
-                result = (result*397) ^ (Operand == null ? 0 : Operand.GetHashCode());
+                result = (result*397) ^ Predicate.GetHashCode();
                 return result;
             }
         }

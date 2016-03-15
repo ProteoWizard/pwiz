@@ -55,7 +55,7 @@ namespace pwiz.Common.DataBinding
             }
             if (rowItem.PivotKeys.Count == 0)
             {
-                return FilterSpec.Operation == FilterOperations.OP_IS_BLANK ? rowItem : null;
+                return FilterSpec.Predicate.FilterOperation == FilterOperations.OP_IS_BLANK ? rowItem : null;
             }
             List<PivotKey> newPivotKeys = new List<PivotKey>();
             bool anyPivotKeysLeft = false;
@@ -88,8 +88,7 @@ namespace pwiz.Common.DataBinding
 
         private Predicate<object> MakePredicate()
         {
-            var op = FilterSpec.Operation ?? FilterOperations.OP_HAS_ANY_VALUE;
-            return op.MakePredicate(ColumnDescriptor, FilterSpec.Operand);
+            return FilterSpec.Predicate.MakePredicate(ColumnDescriptor.DataSchema, ColumnDescriptor.PropertyType);
         }
     }
 }

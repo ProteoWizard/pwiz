@@ -54,7 +54,7 @@ namespace pwiz.Common.DataBinding.Internal
             
             for (int i = 0; i < properties.Count; i++)
             {
-                columnPredicates[i] = filter.GetPredicate(properties[i]);
+                columnPredicates[i] = filter.GetPredicate(results.Parameters.ViewInfo.DataSchema, properties[i]);
             }
             var filteredRows = new List<RowItem>();
             // toString on an enum is incredibly slow, so we cache the results in 

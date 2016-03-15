@@ -201,6 +201,7 @@
     <Compile Include="DataBinding\DsvWriter.cs" />
     <Compile Include="DataBinding\FilterInfo.cs" />
     <Compile Include="DataBinding\FilterOperation.cs" />
+    <Compile Include="DataBinding\FilterPredicate.cs" />
     <Compile Include="DataBinding\Internal\AbstractQuery.cs" />
     <Compile Include="DataBinding\Internal\AbstractRowSourceWrapper.cs" />
     <Compile Include="DataBinding\Internal\BackgroundQuery.cs" />

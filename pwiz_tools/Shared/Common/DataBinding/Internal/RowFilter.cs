@@ -91,7 +91,7 @@ namespace pwiz.Common.DataBinding.Internal
             return ColumnFilters.Where(columnFilter => columnFilter.ColumnCaption == propertyDescriptor.DisplayName);
         }
 
-        public Predicate<object> GetPredicate(PropertyDescriptor propertyDescriptor)
+        public Predicate<object> GetPredicate(DataSchema dataSchema, PropertyDescriptor propertyDescriptor)
         {
             var columnFilters = GetColumnFilters(propertyDescriptor).ToArray();
             if (columnFilters.Length == 0)
@@ -99,7 +99,7 @@ namespace pwiz.Common.DataBinding.Internal
                 return null;
             }
             var predicates = columnFilters
-                .Select(filter => filter.FilterOperation.MakePredicate(propertyDescriptor, filter.Operand))
+                .Select(filter => filter.Predicate.MakePredicate(dataSchema, propertyDescriptor.PropertyType))
                 .ToArray();
             return value => predicates.All(predicate => predicate(value));
         }
@@ -156,15 +156,13 @@ namespace pwiz.Common.DataBinding.Internal
 
         public class ColumnFilter
         {
-            public ColumnFilter(String columnCaption, IFilterOperation filterOperation, String operand)
+            public ColumnFilter(String columnCaption, FilterPredicate predicate)
             {
                 ColumnCaption = columnCaption;
-                FilterOperation = filterOperation;
-                Operand = operand;
+                Predicate = predicate;
             }
             public String ColumnCaption { get; private set; }
-            public IFilterOperation FilterOperation { get; private set; }
-            public String Operand { get; private set; }
+            public FilterPredicate Predicate { get; private set; }
 
             public bool Matches(PropertyDescriptor propertyDescriptor)
             {
@@ -174,8 +172,7 @@ namespace pwiz.Common.DataBinding.Internal
             protected bool Equals(ColumnFilter other)
             {
                 return string.Equals(ColumnCaption, other.ColumnCaption) 
-                    && Equals(FilterOperation, other.FilterOperation) 
-                    && string.Equals(Operand, other.Operand);
+                    && Equals(Predicate, other.Predicate);
             }
 
             public override bool Equals(object obj)
@@ -191,8 +188,7 @@ namespace pwiz.Common.DataBinding.Internal
                 unchecked
                 {
                     int hashCode = (ColumnCaption != null ? ColumnCaption.GetHashCode() : 0);
-                    hashCode = (hashCode*397) ^ (FilterOperation != null ? FilterOperation.GetHashCode() : 0);
-                    hashCode = (hashCode*397) ^ (Operand != null ? Operand.GetHashCode() : 0);
+                    hashCode = (hashCode*397) ^ Predicate.GetHashCode();
                     return hashCode;
                 }
             }
