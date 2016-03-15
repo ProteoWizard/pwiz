@@ -18,6 +18,7 @@
 using System;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using AutoQC.Properties;
 
 namespace AutoQC
@@ -60,6 +61,8 @@ namespace AutoQC
         public static readonly byte[] entropy = Encoding.Unicode.GetBytes("Encrypt Panorama password");
 
         public PanoramaSettings Settings { get; set; }
+
+        public Uri PanoramaServerUri { get; private set; }
 
         public PanoramaSettingsTab(IAppControl appControl, IAutoQCLogger logger)
             : base(appControl, logger)
@@ -181,6 +184,7 @@ namespace AutoQC
                 return false;
             }
 
+            PanoramaServerUri = serverUri;
             Settings = panoramaSettingsUI;
             return true;
         }
@@ -271,6 +275,69 @@ namespace AutoQC
                 LogErrorOutput(e.Message);   
             }
             return string.Empty;
+        }
+    }
+
+    public class PanoramaPinger
+    {
+        private PanoramaSettingsTab _panoramaSettingsTab;
+        private IAutoQCLogger _logger;
+        private short _status; //1 = success; 2 = fail
+        private Timer _timer;
+
+        public PanoramaPinger(PanoramaSettingsTab panoramaSettingsTab, IAutoQCLogger logger)
+        {
+            _panoramaSettingsTab = panoramaSettingsTab;
+            _logger = logger;
+        }
+
+        public void PingPanoramaServer()
+        {
+            var panoramaServerUri = _panoramaSettingsTab.PanoramaServerUri;
+            if (_panoramaSettingsTab.IsSelected() &&  panoramaServerUri != null)
+            {
+                var panoramaClient = new WebPanoramaClient(panoramaServerUri);
+                try
+                {
+                    var success = panoramaClient.PingPanorama(_panoramaSettingsTab.Settings.PanoramaFolder, 
+                                                               _panoramaSettingsTab.Settings.PanoramaUserEmail,
+                                                               _panoramaSettingsTab.DecryptPassword(_panoramaSettingsTab.Settings.PanoramaPassword
+                                                              ));
+
+                    if (success && _status != 1)
+                    {
+                        _logger.Log("Successfully pinged Panorama server.");
+                        _status = 1;
+                    }
+                    if (!success && _status != 2)
+                    {
+                        _logger.LogErrorToFile("Error pinging Panorama server.  Please confirm that " + panoramaServerUri +
+                                 " is running LabKey Server 16.1 or higher.");
+                        _status = 2;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    if (_status != 2)
+                    {
+                        _logger.LogError("Error pinging Panorama server " + panoramaServerUri);
+                        _logger.LogException(ex);
+                        _status = 2;
+                    }
+                }
+            }
+        }
+
+        public void Init()
+        {
+            _timer = new Timer(e => { PingPanoramaServer(); });
+            _timer.Change(TimeSpan.FromSeconds(10), TimeSpan.FromMinutes(5)); // Ping Panorama every 5 minutes.
+        }
+
+        public void Stop()
+        {
+            _timer.Dispose();
+            _status = 0;
         }
     }
 }

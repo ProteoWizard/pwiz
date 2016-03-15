@@ -71,13 +71,18 @@ namespace AutoQCTest
             LogError(error, args);
         }
 
+        public void LogErrorToFile(string error, params object[] args)
+        {
+            LogError(error, args);
+        }
+
         private void AddToLog(string message, params object[] args)
         {
             log.Append(string.Format(message, args)).AppendLine();
             System.Diagnostics.Debug.WriteLine(message, args);
         }
 
-        public String GetLog()
+        public string GetLog()
         {
             return log.ToString();
         }

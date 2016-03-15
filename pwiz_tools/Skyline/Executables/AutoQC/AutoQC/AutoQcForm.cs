@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -48,9 +49,10 @@ namespace AutoQC
         // Background worker to run SkylineRunner
         private readonly AutoQCBackgroundWorker _worker;
         private readonly ProcessRunner _processRunner;
-
-        private readonly List<SettingsTab> _settingsTabs;
         
+        private readonly List<SettingsTab> _settingsTabs;
+
+        private PanoramaPinger _panoramaPinger;
 
         private static readonly ILog LOG = LogManager.GetLogger(typeof(AutoQCForm).Name);
 
@@ -81,7 +83,12 @@ namespace AutoQC
         {
             return (MainSettingsTab)_settingsTabs[0];
         }
-      
+
+        private PanoramaSettingsTab GetPanoramaSettingsTab()
+        {
+            return _settingsTabs.OfType<PanoramaSettingsTab>().FirstOrDefault();
+        }
+
         private async void Run()
         {
             textOutput.Text = String.Empty;
@@ -139,6 +146,12 @@ namespace AutoQC
             if (await Task.Run(() => mainSettings.ReadLastAcquiredFileDate(this, this)))
             {
                 _worker.Start(mainSettings);
+                var panoramaSettingsTab = GetPanoramaSettingsTab();
+                if (panoramaSettingsTab != null && panoramaSettingsTab.IsSelected())
+                {
+                    _panoramaPinger = new PanoramaPinger(panoramaSettingsTab, this);
+                    _panoramaPinger.Init();
+                }
             }
             else
             {
@@ -219,6 +232,10 @@ namespace AutoQC
         {
             LogWithSpace("Stopping AutoQC...");
             _worker.Stop();
+            if (_panoramaPinger != null)
+            {
+                _panoramaPinger.Stop();
+            }
         }
 
         private void SetStoppedControls()
@@ -401,7 +418,14 @@ namespace AutoQC
             Log(message, true, blankLinesBefore, blankLinesAfter, args);
         }
 
-        private void Log(string line, bool logToFile, int blankLinesBefore = 0, int blankLinesAfter = 0,
+        private void Log(string line, bool logToFile, int blankLinesBefore = 0,
+            int blankLinesAfter = 0,
+            params Object[] args)
+        {
+            Log(line, logToFile, true, blankLinesBefore, blankLinesAfter, args);
+        }
+
+        private void Log(string line, bool logToFile, bool logToOutputTab, int blankLinesBefore = 0, int blankLinesAfter = 0,
             params Object[] args)
         {
             if (args != null && args.Length > 0)
@@ -415,22 +439,26 @@ namespace AutoQC
             }
             _lastMessage = line;
 
-            RunUI(() =>
+            if (logToOutputTab)
             {
-                while (blankLinesBefore-- > 0)
+                RunUI(() =>
                 {
-                    textOutput.AppendText(Environment.NewLine);
-                }
-                textOutput.AppendText(line + Environment.NewLine);
-                while (blankLinesAfter-- > 0)
-                {
-                    textOutput.AppendText(Environment.NewLine);
-                }
-                textOutput.SelectionStart = textOutput.TextLength;
-                textOutput.ScrollToCaret();
-                textOutput.Update();
+                    while (blankLinesBefore-- > 0)
+                    {
+                        textOutput.AppendText(Environment.NewLine);
+                    }
+                    textOutput.AppendText(line + Environment.NewLine);
+                    while (blankLinesAfter-- > 0)
+                    {
+                        textOutput.AppendText(Environment.NewLine);
+                    }
+                    textOutput.SelectionStart = textOutput.TextLength;
+                    textOutput.ScrollToCaret();
+                    textOutput.Update();
 
-            });
+                });
+            }
+
             if (logToFile)
             {
                 LOG.Info(line);
@@ -440,7 +468,7 @@ namespace AutoQC
         private void LogException(Exception ex, bool logToFile)
         {
             LogError(ex.Message, false);
-            LogError("Exception details can be found in the AutoQC log in {0} ", GetLogDirectory());
+            LogErrorOutput("Exception details can be found in the AutoQC log in {0} ", GetLogDirectory());
             if (logToFile)
             {
                 LOG.Error(ex.Message, ex); // Include stacktrace of the exception.
@@ -462,31 +490,48 @@ namespace AutoQC
             LogError(message, true, blankLinesBefore, blankLinesAfter, args);
         }
 
+        public void LogErrorToFile(string message, params object[] args)
+        {
+            LogError(message,
+                true, // Print to log file 
+                false,  // Do not print to output tab
+                0, 0, args);  
+        }
+
         private void LogError(string line, bool logToFile, int blankLinesBefore = 0, int blankLinesAfter = 0, params Object[] args)
+        {
+            LogError(line, logToFile, true, blankLinesBefore, blankLinesAfter, args);
+        }
+
+        private void LogError(string line, bool logToFile, bool logToOutputTab, int blankLinesBefore = 0, int blankLinesAfter = 0, params Object[] args)
         {
             if (args != null && args.Length > 0)
             {
                 line = string.Format(line, args);
             }
-            RunUI(() =>
+            if (logToOutputTab)
             {
-                line = "ERROR: " + line;
-                textOutput.SelectionStart = textOutput.TextLength;
-                textOutput.SelectionLength = 0;
-                textOutput.SelectionColor = Color.Red;
-                while (blankLinesBefore-- > 0)
+                RunUI(() =>
                 {
-                    textOutput.AppendText(Environment.NewLine);
-                }
-                textOutput.AppendText(line + Environment.NewLine);
-                while (blankLinesAfter-- > 0)
-                {
-                    textOutput.AppendText(Environment.NewLine);
-                }
-                textOutput.SelectionColor = textOutput.ForeColor;
-                textOutput.ScrollToCaret();
-                textOutput.Update();
-            });
+                    line = "ERROR: " + line;
+                    textOutput.SelectionStart = textOutput.TextLength;
+                    textOutput.SelectionLength = 0;
+                    textOutput.SelectionColor = Color.Red;
+                    while (blankLinesBefore-- > 0)
+                    {
+                        textOutput.AppendText(Environment.NewLine);
+                    }
+                    textOutput.AppendText(line + Environment.NewLine);
+                    while (blankLinesAfter-- > 0)
+                    {
+                        textOutput.AppendText(Environment.NewLine);
+                    }
+                    textOutput.SelectionColor = textOutput.ForeColor;
+                    textOutput.ScrollToCaret();
+                    textOutput.Update();
+                });
+            }
+
             if (logToFile)
             {
                 LOG.Error(line);
@@ -677,6 +722,8 @@ namespace AutoQC
         // Log error to Output tab only
         void LogErrorOutput(string error, params object[] args);
         void LogErrorOutput(string error, int blankLinesBefore, int blankLinesAfter, params object[] args);
+        // Log error to log file only
+        void LogErrorToFile(string error, params object[] args);
     }
 
     public interface IProcessControl

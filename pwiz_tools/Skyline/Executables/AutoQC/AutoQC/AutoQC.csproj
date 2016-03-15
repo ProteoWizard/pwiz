@@ -105,6 +105,7 @@
     <Compile Include="AutoQCBackgroundWorker.cs" />
     <Compile Include="AutoQCFileSystemWatcher.cs" />
     <Compile Include="ImportContext.cs" />
+    <Compile Include="NetworkDriveUtil.cs" />
     <Compile Include="PanoramaSettings.cs" />
     <Compile Include="ProcessInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

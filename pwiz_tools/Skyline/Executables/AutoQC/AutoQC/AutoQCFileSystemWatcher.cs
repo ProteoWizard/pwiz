@@ -38,9 +38,11 @@ namespace AutoQC
         private Queue<RawFile> _retryFiles; 
 
         private FileSystemWatcher _fileWatcher;
+        private bool _dataInDirectories;
+        private NetworkDriveUtil _networkDrive;
 
         private bool _cancelled;
-        private bool _folderAvailable;
+        private bool _folderAvailable = true;
 
         private int _acquisitionTimeSetting;
 
@@ -57,11 +59,13 @@ namespace AutoQC
             _fileWatcher = InitFileSystemWatcher();
 
             _logger = logger;
+
+            _networkDrive = new NetworkDriveUtil(this, logger);
         }
 
         private FileSystemWatcher InitFileSystemWatcher()
         {
-            FileSystemWatcher fileWatcher = new FileSystemWatcher();
+            var fileWatcher = new FileSystemWatcher();
             fileWatcher.Created += (s, e) => FileAdded(e);
             fileWatcher.Error += (s, e) => OnFileWatcherError(e);
             return fileWatcher;
@@ -76,7 +80,7 @@ namespace AutoQC
 
             _fileWatcher.EnableRaisingEvents = false;
 
-            _fileWatcher.Filter = GetFileFilter(mainSettings.InstrumentType);
+            _fileWatcher.Filter = GetFileFilter(mainSettings.InstrumentType, out _dataInDirectories);
 
             _fileWatcher.Path = mainSettings.FolderToWatch;
 
@@ -99,30 +103,80 @@ namespace AutoQC
             return new AcquisitionTimeFileStatus(mainSettings.AcquisitionTime);
         }
 
-        private static string GetFileFilter(string instrument)
+        private static string GetFileFilter(string instrument, out bool dataInDirectories)
         {
             var ext = ".*";
             if (instrument.Equals(MainSettings.THERMO))
             {
                 ext = THERMO_EXT;
+                dataInDirectories = false;
             }
             else if (instrument.Equals(MainSettings.SCIEX))
             {
                 ext = SCIEX_EXT;
+                dataInDirectories = false;
             }
             else if (instrument.Equals(MainSettings.WATERS))
             {
                 // Waters: .raw directory
                 ext = WATERS_EXT;
+                dataInDirectories = true;
             }
             else if (instrument.Equals(MainSettings.AGILENT))
             {
                 // Agilent: .d directory
                 ext = AGILENT_EXT;
+                dataInDirectories = true;
+            }
+            else
+            {
+                dataInDirectories = false;
             }
             // TODO: We need to support other instrument vendors
-           
             return "*" + ext;
+        }
+
+        public void Pause()
+        {
+            _fileWatcher.EnableRaisingEvents = false;
+        }
+
+        public void Restart(DateTime timeDisconnected)
+        {
+            if (_cancelled)
+            {
+                _logger.Log("FileSystemWatcher cancelled. ");
+                return;
+            }
+
+            _logger.Log("Reconnected. Re-initializing FileSystemWatcher...");
+
+            var filter = _fileWatcher.Filter;
+            var path = _fileWatcher.Path;
+
+            _fileWatcher.Dispose();
+            _fileWatcher = null;
+            _fileWatcher = InitFileSystemWatcher();
+            _fileWatcher.Filter = filter;
+            _fileWatcher.Path = path;
+
+            _logger.Log("Looking for raw data added to directory while the folder was unavailable.");
+
+            var files = GetExistingFiles();
+
+            _folderAvailable = true;
+
+            _fileWatcher.EnableRaisingEvents = true;
+
+            foreach (var file in files)
+            {
+                var fileInfo = new FileInfo(file);
+
+                if (fileInfo.CreationTime <= timeDisconnected) continue;
+
+                _logger.Log("Adding {0}.", fileInfo.Name);
+                _dataFiles.Enqueue(file);
+            }
         }
 
         public void Stop()
@@ -133,8 +187,13 @@ namespace AutoQC
 
         void FileAdded(FileSystemEventArgs e)
         {
-            _logger.Log("File {0} added to directory.", e.Name);
-            _dataFiles.Enqueue(e.FullPath);
+            var path = e.FullPath;
+            if ((_dataInDirectories && Directory.Exists(path))
+                || (!_dataInDirectories && File.Exists(path)))
+            {
+                _logger.Log("{0} added to directory.", e.Name);
+                _dataFiles.Enqueue(e.FullPath);   
+            }
         }
 
         void OnFileWatcherError(ErrorEventArgs e)
@@ -148,6 +207,11 @@ namespace AutoQC
             return _folderAvailable;
         }
 
+        public bool RawDataExists(string filePath)
+        {
+            return _dataInDirectories ? Directory.Exists(filePath) : File.Exists(filePath);
+        }
+
         public void WaitForFileReady(string filePath)
         {
             _cancelled = false;
@@ -155,9 +219,9 @@ namespace AutoQC
             var counter = 0;
             while (true)
             {
-                if (!(new FileInfo(filePath).Exists))
+                if (!RawDataExists(filePath))
                 {
-                    throw new FileStatusException(string.Format("{0}: {1}", FileStatusException.DOES_NOT_EXIST, filePath));
+                    throw new FileStatusException(string.Format("{0} {1}", filePath, FileStatusException.DOES_NOT_EXIST));
                 }
 
                 var fileStatus= _fileStatusChecker.CheckStatus(filePath);
@@ -174,7 +238,7 @@ namespace AutoQC
 
                 if (counter % 10 == 0)
                 {
-                    _logger.Log("File {0} is being acquired. Waiting...", Path.GetFileName(filePath));
+                    _logger.Log("{0} is being acquired. Waiting...", Path.GetFileName(filePath));
                 }
                 counter++;
                 // Wait for 60 seconds.
@@ -185,7 +249,7 @@ namespace AutoQC
                     return;
                 }
             }
-            _logger.Log("File {0} is ready", Path.GetFileName(filePath));
+            _logger.Log("{0} is ready", Path.GetFileName(filePath));
         }
 
         public string GetFile()
@@ -193,12 +257,8 @@ namespace AutoQC
             // If we are monitoring a network mapped drive, make sure that we can still connect to it.
             // If we lose connection to a networked drive, FileSystemWatcher does not fire any new events
             // even after the connection is re-established.
-            if(!Directory.Exists(_fileWatcher.Path))
-            {
-                _logger.LogError("Folder is not accessible: {0}.", _fileWatcher.Path);
-                WaitToReconnect();
-            }
-            
+            _networkDrive.EnsureDrive(_fileWatcher.Path);
+        
             if (_dataFiles.IsEmpty)
             {
                 return null;
@@ -209,61 +269,13 @@ namespace AutoQC
             return filePath;
         }
 
-        private void WaitToReconnect()
-        {
-            var timeDisconnected = DateTime.Now.AddMilliseconds(-(AutoQCBackgroundWorker.WAIT_FOR_NEW_FILE));
-
-            var filter = _fileWatcher.Filter;
-            var path = _fileWatcher.Path;
-
-            const int waitTime = 10000; // 10 seconds
-
-            _fileWatcher.EnableRaisingEvents = false;
-
-            while (!Directory.Exists(path))
-            {
-                _logger.Log("Waiting to reconnect to folder " + path);
-                Thread.Sleep(waitTime);
-                if (_cancelled)
-                {
-                    _logger.Log("FileSystemWatcher cancelled. ");
-                    return;
-                }
-            }
-
-            _logger.Log("Reconnected. Re-initializing FileSystemWatcher...");
-            
-            _fileWatcher.Dispose();
-            _fileWatcher = null;
-            _fileWatcher = InitFileSystemWatcher();
-            _fileWatcher.Filter = filter;
-            _fileWatcher.Path = path;
-            
-            _logger.Log("Looking for files added to directory while the folder was unavailable.");
-
-            var files = GetExistingFiles();
-
-            _folderAvailable = true;
-
-            _fileWatcher.EnableRaisingEvents = true;
-
-            foreach (var file in files)
-            {
-                var fileInfo = new FileInfo(file);
-
-                if (fileInfo.CreationTime <= timeDisconnected) continue;
-
-                _logger.Log("Adding file {0}.", fileInfo.Name);
-                _dataFiles.Enqueue(file);
-            }
-        }
-
         public List<string> GetExistingFiles()
         {
-            var filesAndDirectories = new List<string>();
-            filesAndDirectories.AddRange(Directory.GetFiles(_fileWatcher.Path, _fileWatcher.Filter));
-            filesAndDirectories.AddRange(Directory.GetDirectories(_fileWatcher.Path, _fileWatcher.Filter));
-            return filesAndDirectories;
+            var rawData = new List<string>();
+            rawData.AddRange(_dataInDirectories
+                ? Directory.GetDirectories(_fileWatcher.Path, _fileWatcher.Filter)
+                : Directory.GetFiles(_fileWatcher.Path, _fileWatcher.Filter));
+            return rawData;
         }
 
         public string GetDirectory()
@@ -300,7 +312,7 @@ namespace AutoQC
 
     public class FileStatusException : Exception
     {
-        public const string DOES_NOT_EXIST = "File does not exist";
+        public const string DOES_NOT_EXIST = "does not exist";
 
         public FileStatusException(string message) : base(message)
         {

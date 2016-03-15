@@ -179,7 +179,7 @@ namespace AutoQC
                         DateTime acqDate = new DateTime();
                         try
                         {
-                            acqDate = DateTime.Parse(values[2]);
+                            acqDate = DateTime.Parse(values[1]); // Acquired time, not modified time.
                         }
                         catch (Exception e)
                         {

@@ -64,7 +64,7 @@ namespace AutoQCTest
             backgroundWorker.Start(mainSettings);
             Assert.IsTrue(backgroundWorker.IsRunning());
 
-            // Create a new file in the test directory.
+            // Create a new file in the test directory.        
             Thread.Sleep(1000);
             CreateNewFile(testDir, "test1.txt");
 
@@ -80,15 +80,15 @@ namespace AutoQCTest
             CreateNewFile(testDir, "test2.txt");
 
             // Wait till the the file has been processed. 
-            // Process4 returns exit code 1 both times. This should stop the program.
+            // Process4 returns exit code 1. This should put the file in the re-import queue.
             while (!processControl.IsDone())
             {
                 Thread.Sleep(500);
             }
    
             // Assert.IsTrue(appControl.Waiting);
-            Thread.Sleep(2 * AutoQCBackgroundWorker.WAIT_5SEC);
-            Assert.IsTrue(appControl.Stopped);
+            Thread.Sleep(2 * AutoQCBackgroundWorker.WAIT_FOR_NEW_FILE);
+            //Assert.IsTrue(appControl.Waiting);
 
             Assert.AreEqual(Regex.Replace(logger.GetLog(), @"\s+", ""),
                 Regex.Replace(GetExpectedLog_ProcessNew(), @"\s+", ""));
@@ -133,10 +133,10 @@ namespace AutoQCTest
             sb.Append("Process3 exited successfully.").AppendLine();
             sb.Append("Running Process4 with args:").AppendLine();
             sb.Append("Process4 exited with error code 1.").AppendLine();
-            sb.Append("Process4 returned an error. Trying again...").AppendLine();
-            sb.Append("Process4 exited with error code 1.").AppendLine();
+            //sb.Append("Process4 returned an error. Trying again...").AppendLine();
+            //sb.Append("Process4 exited with error code 1.").AppendLine();
             sb.Append("Process4 returned an error. Exceeded maximum try count.  Giving up...");
-            sb.Append("Finished importing files.");
+            //sb.Append("Finished importing files.");
             return sb.ToString();
         }
 

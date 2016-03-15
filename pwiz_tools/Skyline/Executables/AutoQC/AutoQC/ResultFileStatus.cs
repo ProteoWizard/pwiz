@@ -21,7 +21,7 @@ using MSFileReaderLib;
 
 namespace AutoQC
 {
-    public enum Status { Ready, Waiting, ExceedMaximumAcquiTime }
+    public enum Status { Ready, Waiting, ExceedMaximumAcquiTime}
     
     interface IResultFileStatus
     {
@@ -90,6 +90,19 @@ namespace AutoQC
 
         public Status CheckStatus(string filePath)
         {
+            if (File.Exists(filePath))
+            {
+                return GetFileStatus(filePath);
+            }
+            if (Directory.Exists(filePath))
+            {
+                return GetDirectoryStatus(filePath);
+            }
+            throw new FileStatusException(string.Format("Error getting status for {0}", filePath));
+        }
+
+        private Status GetFileStatus(string filePath)
+        {
             // Get the time elapsed since the file was first created.
             DateTime createTime;
             DateTime lastModifiedTime;
@@ -108,10 +121,20 @@ namespace AutoQC
                 // If the file was copied to the directory, its "creation time" will be later than the 
                 // "last write time". In this case use the "last write time" otherwise we will have to 
                 // wait for "acquisition time" to elapse before the file is considered "ready" to import.
-                createTime = lastModifiedTime;
+                return Status.Ready;
             }
 
-            return createTime.AddMinutes(_acquisitionTime) < DateTime.Now ? Status.Ready : Status.Waiting;
+            return createTime.AddMinutes(_acquisitionTime) < DateTime.Now ? Status.Ready : Status.Waiting;    
+        }
+
+        private Status GetDirectoryStatus(string filePath)
+        {
+            var files = Directory.GetFiles(filePath, "*", SearchOption.AllDirectories);
+            return files.Length > 0 ?
+                GetFileStatus(files[0]) : // Check only for one file. If this directory was copied
+                                          // The "creation time" for the first one we encounter should be later
+                                          // that the "last write time". 
+                Status.Waiting;
         }
     }
 }

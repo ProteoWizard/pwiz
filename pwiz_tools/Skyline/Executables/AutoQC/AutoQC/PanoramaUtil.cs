@@ -97,7 +97,7 @@ namespace AutoQC
             return Call(serverUri, "project", folder, "getContainers", queryString); // Not L10N
         }
 
-        private static Uri Call(Uri serverUri, string controller, string folderPath, string method, string query, bool isApi = false)
+        internal static Uri Call(Uri serverUri, string controller, string folderPath, string method, string query, bool isApi = false)
         {
             string path = "labkey/" + controller + "/" + (folderPath ?? string.Empty) + // Not L10N
                           "/" + method + (isApi ? ".api" : ".view"); // Not L10N
@@ -254,6 +254,7 @@ namespace AutoQC
         PanoramaState IsPanorama();
         UserState IsValidUser(string username, string password);
         FolderState IsValidFolder(string folderPath, string username, string password);
+        bool PingPanorama(string folderPath, string username, string password);
     }
 
     public class WebPanoramaClient : IPanoramaClient
@@ -390,7 +391,7 @@ namespace AutoQC
                 using (var webClient = new WebClient())
                 {
                     webClient.Headers.Add(HttpRequestHeader.Authorization, Server.GetBasicAuthHeader(username, password));
-                    var folderInfo = webClient.UploadString(uri, PanoramaUtil.FORM_POST, string.Empty); // Not L10N
+                    var folderInfo = webClient.UploadString(uri, PanoramaUtil.FORM_POST, string.Empty);
                     JToken response = JObject.Parse(folderInfo);
 
                     // User needs write permissions to publish to the folder
@@ -416,6 +417,30 @@ namespace AutoQC
                 else throw;
             }
             return FolderState.valid;
+        }
+
+        public bool PingPanorama(string folderPath, string username, string password)
+        {
+            try
+            {
+                var uri = PanoramaUtil.Call(ServerUri, "targetedms", folderPath, "autoQCPing", "", true);
+
+                using (var webClient = new WebClient())
+                {
+                    webClient.Headers.Add(HttpRequestHeader.Authorization, Server.GetBasicAuthHeader(username, password));
+                    webClient.UploadString(uri, PanoramaUtil.FORM_POST, string.Empty);                  
+                }
+            }
+            catch (WebException ex)
+            {
+                var response = ex.Response as HttpWebResponse;
+                if (response != null && response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    return false;
+                }
+                else throw;
+            }
+            return true;
         }
     }
     public class PanoramaServerException : Exception

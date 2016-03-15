@@ -104,7 +104,7 @@ namespace AutoQC
                 if (filePath != null)
                 {
                     var importContext = new ImportContext(filePath) { TotalImportCount = _totalImportCount };
-                    ImportFile(e, importContext);
+                    bool success = ImportFile(e, importContext);
 
                     
                     if (!_fileWatcher.IsFolderAvailable())
@@ -113,8 +113,13 @@ namespace AutoQC
                         continue;
                     }
 
-                    // Make one last attempt to import any old files.
-                    TryReimportOldFiles(e, true);
+                    if (success)
+                    {
+                        // Make one last attempt to import any old files. 
+                        // Any files that still do not import successfully
+                        // will be removed from the re-import queue.
+                        TryReimportOldFiles(e, true);
+                    }
 
                     inWait = false;
                 }
@@ -145,12 +150,29 @@ namespace AutoQC
                 if (forceImport || file.TryReimport())
                 {
                     var importContext = new ImportContext(file.FilePath) { TotalImportCount = _totalImportCount };
-                    _logger.Log("Attempting to re-import file {0}.", file.FilePath);
-                    if (!ImportFile(e, importContext, false))
+                    _logger.Log("Attempting to re-import {0}.", file.FilePath);
+                    if (!ImportFile(e, importContext, false)) 
                     {
-                        _logger.Log("Adding file to re-import queue: {0}", file.FilePath);
-                        file.LastImportTime = DateTime.Now;
-                        failed.Add(file);
+                        if (forceImport)
+                        {
+                            // forceImport is true when we attempt to import failed files after successfully importing a newer file.
+                            // If the file still fails to import we will not add it back to the re-import queue.
+                            _logger.Log("{0} failed to import successfully. Skipping...", file.FilePath);     
+                        }
+                        else
+                        {
+                            if (_fileWatcher.RawDataExists(file.FilePath))
+                            {
+                                _logger.Log("Adding {0} to re-import queue.", file.FilePath);
+                                file.LastImportTime = DateTime.Now;
+                                failed.Add(file);   
+                            }
+                            else
+                            {
+                                _logger.Log("{0} no longer exists. Skipping...", file.FilePath);
+                            }
+                            
+                        }        
                     }
                 }
                 else
@@ -161,7 +183,10 @@ namespace AutoQC
 
             foreach (var file in failed)
             {
-                _fileWatcher.AddToReimportQueue(file);
+                if (_fileWatcher.RawDataExists(file.FilePath))
+                {
+                    _fileWatcher.AddToReimportQueue(file);
+                }
             }
         }
 
@@ -223,10 +248,10 @@ namespace AutoQC
                 }
 
                 var filePath = importContext.GetCurrentFile();
-                if (!(new FileInfo(filePath).Exists))
+                if (!_fileWatcher.RawDataExists(filePath))
                 {
                     // User may have deleted this file.
-                    Log("File {0} no longer exists. Skipping...", filePath);
+                    Log("{0} no longer exists. Skipping...", filePath);
                     continue;
                 }
 
@@ -234,7 +259,7 @@ namespace AutoQC
                 if (fileLastWriteTime.CompareTo(_lastAcquiredFileDate.AddSeconds(1)) < 0)
                 {
                     Log(
-                        "File {0} was acquired ({1}) before the acquisition date ({2}) on the last imported file in the Skyline document. Skipping...",
+                        "{0} was acquired ({1}) before the acquisition date ({2}) on the last imported file in the Skyline document. Skipping...",
                         Path.GetFileName(filePath),
                         fileLastWriteTime,
                         _lastAcquiredFileDate);
@@ -257,9 +282,9 @@ namespace AutoQC
             }
             catch (FileStatusException fse)
             {
-                if (!FileStatusException.DOES_NOT_EXIST.Equals(fse.Message))
+                if (fse.Message.Contains(FileStatusException.DOES_NOT_EXIST))
                 {
-                    _logger.LogError("File does not exist: {0}.", filePath);
+                    _logger.LogError("{0} does not exist.", filePath);
                 }
                 else
                 {
@@ -268,8 +293,7 @@ namespace AutoQC
                 // Put the file in the re-import queue
                 if (addToReimportQueueOnFailure)
                 {
-                    _logger.Log("Adding file to re-import queue: {0}", filePath);
-                    _fileWatcher.AddToReimportQueue(filePath);
+                    AddToReimportQueue(filePath);
                 }
                 return false;
             }
@@ -284,13 +308,18 @@ namespace AutoQC
             {
                 if (addToReimportQueueOnFailure)
                 {
-                    _logger.Log("Adding file to re-import queue: {0}", filePath);
-                    _fileWatcher.AddToReimportQueue(filePath);
+                    AddToReimportQueue(filePath);
                 }
                 return false;
             }
 
             return true;
+        }
+
+        private void AddToReimportQueue(string filePath)
+        {
+            _logger.Log("Adding {0} to re-import queue.", filePath);
+            _fileWatcher.AddToReimportQueue(filePath);
         }
 
         private bool ProcessOneFile(ImportContext importContext)
