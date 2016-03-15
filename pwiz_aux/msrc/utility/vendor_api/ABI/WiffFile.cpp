@@ -711,8 +711,8 @@ void SpectrumImpl::getData(bool doCentroid, std::vector<double>& mz, std::vector
             for (size_t i=0; i < numPoints; ++i)
             {
                 PeakClass^ peak = peakList[(int)i];
-                mz[i] = peak->apexX;
-                intensities[i] = peak->apexY;
+                mz[i] = peak->xValue;
+                intensities[i] = peak->area;
             }
         }
         else
