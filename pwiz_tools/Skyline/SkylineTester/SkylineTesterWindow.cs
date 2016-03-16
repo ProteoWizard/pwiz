@@ -608,6 +608,8 @@ namespace SkylineTester
                 runLoopsCount,
                 runIndefinitely,
                 testsTestSmallMolecules,
+                repeat,
+                randomize,
                 offscreen,
                 testsEnglish,
                 testsChinese,
@@ -649,6 +651,8 @@ namespace SkylineTester
                 nightlyBuildType,
                 nightlyBuildTrunk,
                 nightlyRunPerfTests,
+                nightlyRandomize,
+                nightlyRepeat,
                 nightlyTestSmallMolecules,
                 nightlyBranch,
                 nightlyBranchUrl,
@@ -1002,8 +1006,10 @@ namespace SkylineTester
         public Label            NightlyLabelLeaks           { get { return nightlyLabelLeaks; } }
         public Label            NightlyLabelTestsRun        { get { return nightlyLabelTestsRun; } }
         public ZedGraphControl  NightlyGraphMemory          { get { return nightlyGraphMemory; } }
+        public CheckBox         NightlyRandomize            { get { return nightlyRandomize; } }
         public Label            NightlyRoot                 { get { return nightlyRoot; } }
         public ComboBox         NightlyRunDate              { get { return nightlyRunDate; } }
+        public ComboBox         NightlyRepeat          { get { return nightlyRepeat; } }
         public CheckBox         NightlyTestSmallMolecules { get { return nightlyTestSmallMolecules; } }
         public CheckBox         NightlyRunPerfTests         { get { return nightlyRunPerfTests; } }
         public DateTimePicker   NightlyStartTime            { get { return nightlyStartTime; } }
@@ -1043,6 +1049,8 @@ namespace SkylineTester
         public CheckBox         StartSln                    { get { return startSln; } }
         public TabControl       Tabs                        { get { return tabs; } }
         public CheckBox         TestsTestSmallMolecules { get { return testsTestSmallMolecules; } }
+        public CheckBox         TestsRandomize              { get { return randomize; } }
+        public ComboBox         TestsRepeatCount            { get { return repeat; } }
         public MyTreeView       TestsTree                   { get { return testsTree; } }
         public CheckBox         TestsChinese                { get { return testsChinese; } }
         public CheckBox         TestsEnglish                { get { return testsEnglish; } }

@@ -70,5 +70,17 @@ namespace SkylineNightly.Properties {
                 this["ReleaseBranch"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool StressTests {
+            get {
+                return ((bool)(this["StressTests"]));
+            }
+            set {
+                this["StressTests"] = value;
+            }
+        }
     }
 }

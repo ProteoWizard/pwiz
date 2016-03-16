@@ -69,6 +69,15 @@ namespace SkylineTester
             if (MainWindow.TestsTestSmallMolecules.Checked)
                 args.Append(" testsmallmolecules=on");
 
+            if (MainWindow.TestsRandomize.Checked)
+                args.Append(" random=on");
+
+            int count;
+            if (!int.TryParse(MainWindow.TestsRepeatCount.Text, out count))
+                count = 0;
+            if (count > 0)
+               args.Append(" repeat=" + MainWindow.TestsRepeatCount.Text);
+
             var cultures = new List<CultureInfo>();
             if (MainWindow.TestsEnglish.Checked)
                 cultures.Add(new CultureInfo("en-US"));

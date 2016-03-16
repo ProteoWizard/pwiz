@@ -33,7 +33,7 @@ namespace SkylineNightly
             InitializeComponent();
             startTime.Value = DateTime.Parse(Settings.Default.StartTime);
             textBoxFolder.Text = Settings.Default.NightlyFolder;
-            comboBoxOptions.SelectedIndex = Settings.Default.ReleaseBranch ? 2 : (Settings.Default.PerfTests ? 1 : 0);
+            comboBoxOptions.SelectedIndex = Settings.Default.StressTests ? 3 : (Settings.Default.ReleaseBranch ? 2 : (Settings.Default.PerfTests ? 1 : 0));
             if (string.IsNullOrEmpty(textBoxFolder.Text))
                 textBoxFolder.Text = Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
@@ -64,8 +64,9 @@ namespace SkylineNightly
             if (!Directory.Exists(nightlyFolder))
                 Directory.CreateDirectory(nightlyFolder);
             Settings.Default.NightlyFolder = nightlyFolder;
-            Settings.Default.PerfTests = comboBoxOptions.SelectedIndex > 0;
-            Settings.Default.ReleaseBranch = comboBoxOptions.SelectedIndex > 1;
+            Settings.Default.PerfTests = comboBoxOptions.SelectedIndex == 1;
+            Settings.Default.ReleaseBranch = comboBoxOptions.SelectedIndex == 2;
+            Settings.Default.StressTests = comboBoxOptions.SelectedIndex == 3;
             Settings.Default.Save();
 
             // Create new scheduled task to run the nightly build.
@@ -103,6 +104,9 @@ namespace SkylineNightly
                             break;
                         case 2:
                             arg = Program.SCHEDULED_RELEASE_BRANCH_ARG;
+                            break;
+                        case 3:
+                            arg = Program.SCHEDULED_STRESSTESTS_ARG;
                             break;
                     }
                     td.Actions.Add(new ExecAction(assembly.Location, arg)); // Not L10N

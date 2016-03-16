@@ -256,7 +256,14 @@ namespace SkylineTester
             var buildRoot = Path.Combine(MainWindow.GetNightlyBuildRoot(), "pwiz");
             TabBuild.CreateBuildCommands(branchUrl, buildRoot, architectureList, true, false, false); // Just build Skyline.exe without testing it - that's about to happen anyway
 
-            MainWindow.AddTestRunner("offscreen=on quality=on pass0=on pass1=on loop=-1 random=off" + (MainWindow.NightlyRunPerfTests.Checked ? " perftests=on" : "") + (MainWindow.NightlyTestSmallMolecules.Checked ? " testsmallmolecules=on" : ""));
+            int count;
+            if (!int.TryParse(MainWindow.NightlyRepeat.Text, out count))
+                count = 0;
+            MainWindow.AddTestRunner("offscreen=on quality=on pass0=on pass1=on loop=-1" + 
+                (MainWindow.NightlyRunPerfTests.Checked ? " perftests=on" : string.Empty) +
+                (MainWindow.NightlyTestSmallMolecules.Checked ? " testsmallmolecules=on" : string.Empty) +
+                (MainWindow.NightlyRandomize.Checked ? " random=on" : " random=off") +
+                (count > 1 ? " repeat=" + MainWindow.NightlyRepeat.Text : string.Empty));
             MainWindow.CommandShell.Add("# Nightly finished.");
 
             MainWindow.RunCommands();

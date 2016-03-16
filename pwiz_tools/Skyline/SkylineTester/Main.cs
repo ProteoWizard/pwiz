@@ -174,7 +174,7 @@ namespace SkylineTester
 
             var testRunner = Path.Combine(GetSelectedBuildDir(), "TestRunner.exe");
             _testRunnerIndex = commandShell.Add(
-                "{0} random=off status=on results={1} {2}{3}",
+                "{0} status=on results={1} {2}{3}",
                 testRunner.Quote(),
                 _resultsDir.Quote(),
                 AccessInternet.Checked ? "internet=on " : "",

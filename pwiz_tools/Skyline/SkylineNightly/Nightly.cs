@@ -21,6 +21,7 @@ using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -49,6 +50,7 @@ namespace SkylineNightly
         private const string TEAM_CITY_USER_PASSWORD = "guest";
         private const string LABKEY_URL = "https://skyline.gs.washington.edu/labkey/testresults/home/development/Nightly%20x64/post.view?";
         private const string LABKEY_PERF_URL = "https://skyline.gs.washington.edu/labkey/testresults/home/development/Performance%20Tests/post.view?";
+        private const string LABKEY_STRESS_URL = "https://skyline.gs.washington.edu/labkey/testresults/home/development/StressTests/post.view?";
         private const string LABKEY_RELEASE_PERF_URL = "https://skyline.gs.washington.edu/labkey/testresults/home/development/Release%20Branch/post.view?";
 
         private DateTime _startTime;
@@ -58,6 +60,7 @@ namespace SkylineNightly
         private readonly Xml _leaks;
         private Xml _pass;
         private readonly string _logDir;
+        static string _logDirScreengrabs;
         private string PwizDir
         {
             get
@@ -79,6 +82,7 @@ namespace SkylineNightly
             // Locate relevant directories.
             var nightlyDir = GetNightlyDir();
             _logDir = Path.Combine(nightlyDir, "Logs");
+            _logDirScreengrabs = Path.Combine(_logDir, "NightlyScreengrabs");
             // First guess at working directory
             _skylineTesterDir = Path.Combine(nightlyDir, "SkylineTesterForNightly");
 
@@ -86,7 +90,39 @@ namespace SkylineNightly
             _duration = TimeSpan.FromHours(9);
         }
 
-        public enum RunMode { nightly, nightly_with_perftests, release_branch_with_perftests}
+        public class PeriodicScreengrabs
+        {
+            public void DoWork()
+            {
+                while (_logDirScreengrabs != null)
+                {
+                    // Once started, continue until exit
+                    var now = DateTime.Now.ToString(CultureInfo.InvariantCulture).Replace('/','_').Replace(' ','_').Replace(':','_');
+                    var s = 0;
+                    foreach (var screen in Screen.AllScreens) // Handle multi-monitor
+                    {
+                        // Create a new bitmap.
+                        var bmpScreenshot = new Bitmap(screen.Bounds.Width, screen.Bounds.Height,
+                            PixelFormat.Format32bppArgb);
+
+                        // Create a graphics object from the bitmap.
+                        var gfxScreenshot = Graphics.FromImage(bmpScreenshot);
+
+                        // Take the screenshot from the upper left corner to the right bottom corner.
+                        gfxScreenshot.CopyFromScreen(screen.Bounds.X, screen.Bounds.Y,
+                            0, 0, screen.Bounds.Size, CopyPixelOperation.SourceCopy);
+
+                        // Save the screenshot
+                        var name = now + "_screen" + s +".png";
+                        var fileScreenshot = Path.Combine(_logDirScreengrabs, name);
+                        bmpScreenshot.Save(fileScreenshot, ImageFormat.Png);
+                    }
+                    Thread.Sleep(60000); // 1 frame per minute
+                }
+            }
+        }
+
+        public enum RunMode { nightly, nightly_with_perftests, release_branch_with_perftests, nightly_with_stresstests}
 
         /// <summary>
         /// Run nightly build/test and report results to server.
@@ -129,9 +165,18 @@ namespace SkylineNightly
             // Create log file.
             if (!Directory.Exists(_logDir))
                 Directory.CreateDirectory(_logDir);
+            if (Directory.Exists(_logDirScreengrabs))
+                Directory.Delete(_logDirScreengrabs, true);
+            Directory.CreateDirectory(_logDirScreengrabs);
             _logFile = Path.Combine(nightlyDir, "SkylineNightly.log");
             Delete(_logFile);
             Log(DateTime.Now.ToShortDateString());
+
+            // Start a thread to capture the screen once a minute to help track down anything that escapes the logs
+            Log("Screengrabs will be written once every 60 seconds to " + _logDirScreengrabs);
+            var screenGrabber = new PeriodicScreengrabs();
+            var screenGrabberThread = new Thread(screenGrabber.DoWork);
+            screenGrabberThread.Start();
 
             // Delete source tree and old SkylineTester.
             Delete(skylineNightlySkytr);
@@ -225,6 +270,8 @@ namespace SkylineNightly
                     skylineTester.GetChild("buildRoot").Set(_skylineTesterDir);
                     skylineTester.GetChild("nightlyRunPerfTests").Set(withPerfTests?"true":"false");
                     skylineTester.GetChild("nightlyDuration").Set(_duration.Hours.ToString());
+                    skylineTester.GetChild("nightlyRepeat").Set(mode == RunMode.nightly_with_stresstests ? "100" : "1");
+                    skylineTester.GetChild("nightlyRandomize").Set(mode == RunMode.nightly_with_stresstests ? "on" : "off");
                     if (!string.IsNullOrEmpty(branchUrl) && !branchUrl.Contains("trunk"))
                     {
                         skylineTester.GetChild("nightlyBuildTrunk").Set("false");
@@ -455,6 +502,8 @@ namespace SkylineNightly
                 url = LABKEY_RELEASE_PERF_URL;
             else if (mode == RunMode.nightly_with_perftests)
                 url = LABKEY_PERF_URL;
+            else if (mode == RunMode.nightly_with_stresstests)
+                url = LABKEY_STRESS_URL;
             else
                 url = LABKEY_URL;
             PostToLink(url, xml);

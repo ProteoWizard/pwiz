@@ -27,6 +27,7 @@ namespace SkylineNightly
     {
         public const string SCHEDULED_ARG = "scheduled"; // Not L10N
         public const string SCHEDULED_PERFTESTS_ARG = SCHEDULED_ARG + "_with_perftests"; // Not L10N
+        public const string SCHEDULED_STRESSTESTS_ARG = SCHEDULED_ARG + "_with_stresstests"; // Not L10N
         public const string SCHEDULED_RELEASE_BRANCH_ARG = SCHEDULED_ARG + "_release_branch"; // Not L10N
         public const string PARSE_ARG = "parse"; // Not L10N
         public const string POST_ARG = "post"; // Not L10N
@@ -52,6 +53,13 @@ namespace SkylineNightly
             {
                 case SCHEDULED_PERFTESTS_ARG:
                     runMode = Nightly.RunMode.nightly_with_perftests;
+                    nightly.Run(runMode);
+                    nightly.Parse();
+                    nightly.Post(runMode);
+                    break;
+
+                case SCHEDULED_STRESSTESTS_ARG:
+                    runMode = Nightly.RunMode.nightly_with_stresstests;
                     nightly.Run(runMode);
                     nightly.Parse();
                     nightly.Post(runMode);
