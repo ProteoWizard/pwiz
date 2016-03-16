@@ -949,7 +949,7 @@ namespace SkylineTester
             this.randomize.Name = "randomize";
             this.randomize.Size = new System.Drawing.Size(152, 17);
             this.randomize.TabIndex = 7;
-            this.randomize.Text = "TestsRandomize test order";
+            this.randomize.Text = "Randomize test order";
             this.randomize.UseVisualStyleBackColor = true;
             // 
             // repeat
@@ -2375,7 +2375,7 @@ namespace SkylineTester
             this.label33.Name = "label33";
             this.label33.Size = new System.Drawing.Size(696, 44);
             this.label33.TabIndex = 34;
-            this.label33.Text = "Skyline nightly build/test (normally you conigure this using the SkylineNightly a" +
+            this.label33.Text = "Skyline nightly build/test (normally you configure this using the SkylineNightly a" +
     "pp)";
             this.label33.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
