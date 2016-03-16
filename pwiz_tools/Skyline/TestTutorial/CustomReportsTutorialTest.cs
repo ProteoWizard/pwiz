@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -354,7 +355,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 viewEditor.FilterTab.AddSelectedColumn();
                 Assert.IsTrue(viewEditor.FilterTab.SetFilterOperation(0, FilterOperations.OP_IS_GREATER_THAN));
-                viewEditor.FilterTab.SetFilterOperand(0, ".2");
+                viewEditor.FilterTab.SetFilterOperand(0, .2.ToString(CultureInfo.CurrentCulture));
             });
             PauseForScreenShot<ViewEditor.FilterView>("Customize View - Filter tab", 22);
             RunUI(viewEditor.OkDialog);
