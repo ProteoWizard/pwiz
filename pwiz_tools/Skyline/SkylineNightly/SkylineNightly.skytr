@@ -4,7 +4,7 @@
   <nightlyRoot></nightlyRoot>
   <nightlyDuration>9</nightlyDuration>
   <nightlyBuildType>1</nightlyBuildType>
-  <nightlyRepeatCount>1</nightlyRepeatCount>
+  <nightlyRepeat>1</nightlyRepeat>
   <nightlyRandomize>false</nightlyRandomize>
   <nightlyBuildTrunk>true</nightlyBuildTrunk>
   <nightlyRunPerfTests>false</nightlyRunPerfTests>
