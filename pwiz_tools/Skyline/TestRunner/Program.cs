@@ -484,6 +484,8 @@ namespace TestRunner
                     for (int i = 0; i < languagesThisTest.Length; i++)
                     {
                         runTests.Language = new CultureInfo(languagesThisTest[i]);
+                        var stopWatch = new Stopwatch();
+                        stopWatch.Start(); // Limit the repeats in case of very long tests
                         for (int repeatCounter = 1; repeatCounter <= repeat; repeatCounter++)
                         {
                             if (test.IsPerfTest && ((pass > perfPass) || (repeatCounter > 1)))
@@ -501,6 +503,12 @@ namespace TestRunner
                             {
                                 removeList.Add(test);
                                 i = languages.Length - 1;   // Don't run other languages.
+                                break;
+                            }
+                            int maxSecondsPerTestPerLanguage = 5*60 / languagesThisTest.Length; // We'd like no more than 5 minutes per test across all languages when doing stess tests
+                            if (stopWatch.Elapsed.TotalSeconds > maxSecondsPerTestPerLanguage && repeatCounter <= repeat - 1)
+                            {
+                                runTests.Log(string.Format("# Breaking repeat test at count {0} of requested {1} (at {2} minutes), to allow other tests and languages to run.\r\n", repeatCounter, repeat, stopWatch.Elapsed.TotalMinutes));
                                 break;
                             }
                         }
