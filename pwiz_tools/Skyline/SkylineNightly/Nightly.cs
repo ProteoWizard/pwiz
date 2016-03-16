@@ -224,7 +224,7 @@ namespace SkylineNightly
                 }
                 catch (Exception ex)
                 {
-                    Log("Exception while downloading SkylineTester: " + ex.Message);
+                    Log("Exception while downloading SkylineTester: " + ex.Message + " (Probably still being built, will retry every 60 seconds for 30 minutes.)");
                     if (i == attempts-1)
                     {
                         LogAndThrow("Unable to download SkylineTester");
@@ -271,7 +271,7 @@ namespace SkylineNightly
                     skylineTester.GetChild("nightlyRunPerfTests").Set(withPerfTests?"true":"false");
                     skylineTester.GetChild("nightlyDuration").Set(_duration.Hours.ToString());
                     skylineTester.GetChild("nightlyRepeat").Set(mode == RunMode.nightly_with_stresstests ? "100" : "1");
-                    skylineTester.GetChild("nightlyRandomize").Set(mode == RunMode.nightly_with_stresstests ? "on" : "off");
+                    skylineTester.GetChild("nightlyRandomize").Set(mode == RunMode.nightly_with_stresstests ? "true" : "false");
                     if (!string.IsNullOrEmpty(branchUrl) && !branchUrl.Contains("trunk"))
                     {
                         skylineTester.GetChild("nightlyBuildTrunk").Set("false");
