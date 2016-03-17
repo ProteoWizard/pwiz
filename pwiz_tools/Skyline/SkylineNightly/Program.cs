@@ -98,6 +98,7 @@ namespace SkylineNightly
                     nightly.Post(runMode, Path.ChangeExtension(args[0], ".xml")); // Not L10N
                     break;
             }
+            nightly.Finish(); // Kill the screengrab thread, if any, so we can exit
         }
     }
 }

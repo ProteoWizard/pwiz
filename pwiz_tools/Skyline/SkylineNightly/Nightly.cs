@@ -313,6 +313,11 @@ namespace SkylineNightly
             _duration = DateTime.Now - startTime;
         }
 
+        public void Finish()
+        {
+            _logDirScreengrabs = null; // Signal the screengrab thread that we're done
+        }
+
         private void DownloadSkylineTester(string skylineTesterZip, RunMode mode)
         {
             using (var client = new WebClient())
