@@ -60,6 +60,7 @@ namespace TestRunner
                 "?;/?;-?;help;skylinetester;debug;results;" +
                 "test;skip;filter;form;" +
                 "loop=0;repeat=1;pause=0;random=off;offscreen=on;multi=1;wait=off;internet=off;" +
+                "maxsecondspertest=-1;" +
                 "demo=off;showformnames=off;showpages=off;status=off;buildcheck=0;screenshotlist;" +
                 "quality=off;pass0=off;pass1=off;" +
                 "perftests=off;" +
@@ -254,6 +255,7 @@ namespace TestRunner
             var formList = commandLineArgs.ArgAsString("form");
             var pauseDialogs = (string.IsNullOrEmpty(formList)) ? null : formList.Split(',');
             var results = commandLineArgs.ArgAsString("results");
+            var maxSecondsPerTest = commandLineArgs.ArgAsDouble("maxsecondspertest");
 
             // Check to see if we actually have any perf tests, so we don't chat about them consfusingly in the log
             perftests &= testList.Any(t => t.IsPerfTest);
@@ -505,11 +507,14 @@ namespace TestRunner
                                 i = languages.Length - 1;   // Don't run other languages.
                                 break;
                             }
-                            int maxSecondsPerTestPerLanguage = 5*60 / languagesThisTest.Length; // We'd like no more than 5 minutes per test across all languages when doing stess tests
-                            if (stopWatch.Elapsed.TotalSeconds > maxSecondsPerTestPerLanguage && repeatCounter <= repeat - 1)
+                            if ( maxSecondsPerTest > 0)
                             {
-                                runTests.Log(string.Format("# Breaking repeat test at count {0} of requested {1} (at {2} minutes), to allow other tests and languages to run.\r\n", repeatCounter, repeat, stopWatch.Elapsed.TotalMinutes));
-                                break;
+                                var maxSecondsPerTestPerLanguage = maxSecondsPerTest / languagesThisTest.Length; // We'd like no more than 5 minutes per test across all languages when doing stess tests
+                                if (stopWatch.Elapsed.TotalSeconds > maxSecondsPerTestPerLanguage && repeatCounter <= repeat - 1)
+                                {
+                                    runTests.Log(string.Format("# Breaking repeat test at count {0} of requested {1} (at {2} minutes), to allow other tests and languages to run.\r\n", repeatCounter, repeat, stopWatch.Elapsed.TotalMinutes));
+                                    break;
+                                }
                             }
                         }
                         if (profiling)
@@ -801,8 +806,13 @@ Here is a list of recognized arguments:
                                     This can help diagnose consistent memory leaks, in contrast
                                     with a leak that occurs only the first time a test is run.
 
+    maxsecondspertest=[n]           Used in conjunction with the repeat value, this limits the
+                                    amount of time a repeated test will take to no more than ""n"" 
+                                    seconds, where  n is an integer greater than 0.  If this time 
+                                    is exceeded, the test will not be repeated further.
+
     random=[on|off]                 Run the tests in random order (random=on, the default)
-                                    or alphabetic order (random=off).  Each test is run
+                                    or alphabetic order (random=off).  Each test is selected
                                     exactly once per loop, regardless of the order.
                                     
     offscreen=[on|off]              Set offscreen=on (the default) to keep Skyline windows

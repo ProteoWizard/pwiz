@@ -401,17 +401,18 @@ namespace SkylineNightly
 
         private int ParseTests(string log)
         {
-            var startTest = new Regex(@"\r\n\[\d\d:\d\d\] +(\d+).(\d+) +(\S+) +\((\w\w)\) ", RegexOptions.Compiled);
+            var startTest = new Regex(@"\r\n\[(\d\d:\d\d)\] +(\d+).(\d+) +(\S+) +\((\w\w)\) ", RegexOptions.Compiled);
             var endTest = new Regex(@" \d+ failures, ([\.\d]+)/([\.\d]+) MB, (\d+) sec\.\r\n", RegexOptions.Compiled);
 
             string lastPass = null;
             int testCount = 0;
             for (var startMatch = startTest.Match(log); startMatch.Success; startMatch = startMatch.NextMatch())
             {
-                var passId = startMatch.Groups[1].Value;
-                var testId = startMatch.Groups[2].Value;
-                var name = startMatch.Groups[3].Value;
-                var language = startMatch.Groups[4].Value;
+                var timestamp = startMatch.Groups[1].Value;
+                var passId = startMatch.Groups[2].Value;
+                var testId = startMatch.Groups[3].Value;
+                var name = startMatch.Groups[4].Value;
+                var language = startMatch.Groups[5].Value;
 
                 var endMatch = endTest.Match(log, startMatch.Index);
                 var managed = endMatch.Groups[1].Value;
@@ -432,6 +433,7 @@ namespace SkylineNightly
                 test["id"] = testId;
                 test["name"] = name;
                 test["language"] = language;
+                test["timestamp"] = timestamp;
                 test["duration"] = duration;
                 test["managed"] = managed;
                 test["total"] = total;
@@ -445,7 +447,7 @@ namespace SkylineNightly
         {
             var startFailure = new Regex(@"\r\n!!! (\S+) FAILED\r\n", RegexOptions.Compiled);
             var endFailure = new Regex(@"\r\n!!!\r\n", RegexOptions.Compiled);
-            var failureTest = new Regex(@"\r\n\[\d\d:\d\d\] +(\d+).(\d+) +(\S+)\s+\(+(\S+)\)",
+            var failureTest = new Regex(@"\r\n\[(\d\d:\d\d)\] +(\d+).(\d+) +(\S+)\s+\(+(\S+)\)",
                 RegexOptions.Compiled | RegexOptions.RightToLeft);
 
             for (var startMatch = startFailure.Match(log); startMatch.Success; startMatch = startMatch.NextMatch())
@@ -453,15 +455,17 @@ namespace SkylineNightly
                 var name = startMatch.Groups[1].Value;
                 var endMatch = endFailure.Match(log, startMatch.Index);
                 var failureTestMatch = failureTest.Match(log, startMatch.Index);
-                var passId = failureTestMatch.Groups[1].Value;
-                var testId = failureTestMatch.Groups[2].Value;
-                var language = failureTestMatch.Groups[4].Value;
+                var timestamp = failureTestMatch.Groups[1].Value;
+                var passId = failureTestMatch.Groups[2].Value;
+                var testId = failureTestMatch.Groups[3].Value;
+                var language = failureTestMatch.Groups[5].Value;
                 if (string.IsNullOrEmpty(passId) || string.IsNullOrEmpty(testId))
                     continue;
                 var failureDescription = log.Substring(startMatch.Index + startMatch.Length,
                     endMatch.Index - startMatch.Index - startMatch.Length);
                 var failure = _failures.Append("failure");
                 failure["name"] = name;
+                failure["timestamp"] = timestamp;
                 failure["pass"] = passId;
                 failure["test"] = testId;
                 failure["language"] = language;

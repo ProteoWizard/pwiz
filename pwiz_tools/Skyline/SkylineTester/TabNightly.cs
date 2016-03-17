@@ -263,7 +263,8 @@ namespace SkylineTester
                 (MainWindow.NightlyRunPerfTests.Checked ? " perftests=on" : string.Empty) +
                 (MainWindow.NightlyTestSmallMolecules.Checked ? " testsmallmolecules=on" : string.Empty) +
                 (MainWindow.NightlyRandomize.Checked ? " random=on" : " random=off") +
-                (count > 1 ? " repeat=" + MainWindow.NightlyRepeat.Text : string.Empty));
+                (count > 1 ? " repeat=" + MainWindow.NightlyRepeat.Text : string.Empty) +
+                (count > 1 ? " maxsecondspertest=600" : string.Empty));
             MainWindow.CommandShell.Add("# Nightly finished.");
 
             MainWindow.RunCommands();
