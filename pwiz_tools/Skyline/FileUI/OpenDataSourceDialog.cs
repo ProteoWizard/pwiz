@@ -375,6 +375,7 @@ namespace pwiz.Skyline.FileUI
                         if (MultiButtonMsgDlg.Show(this, exception.Message, Resources.OpenDataSourceDialog_populateListViewFromDirectory_Retry) != DialogResult.Cancel)
                         {
                             _chorusSession.RetryFetchContents(chorusAccount, chorusUrl);
+                            isComplete = false;
                         }
                     }
                     if (!isComplete)

@@ -101,18 +101,27 @@ namespace pwiz.Common.PeakFinding
             {
                 if (chromatogram[i] < threshold)
                 {
-                    if (chromatogram.Skip(i + 1).Take(SWITCH_LENGTH).All(value => value >= threshold))
+                    if (SubList(chromatogram, i + 1, SWITCH_LENGTH).All(value => value >= threshold))
                     {
                         _plusCrosses.Add(i);
                     }
                 }
                 if (chromatogram[i] > threshold)
                 {
-                    if (chromatogram.Skip(i + 1).Take(SWITCH_LENGTH).All(value => value <= threshold))
+                    if (SubList(chromatogram, i + 1, SWITCH_LENGTH).All(value => value <= threshold))
                     {
                         _minusCrosses.Add(i);
                     }
                 }
+            }
+        }
+
+        private IEnumerable<T> SubList<T>(IList<T> list, int start, int count)
+        {
+            int max = Math.Min(list.Count, start + count);
+            for (int i = start; i < max; i++)
+            {
+                yield return list[i];
             }
         }
 

@@ -78,7 +78,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
                 {
                     peptidesBySequence.TryGetValue(chromatogramGroup.ModifiedSequence, out peptideDocNode);
                 }
-                bool isFirstPassPeptide = peptideDocNode == null ||
+                bool isFirstPassPeptide = peptideDocNode != null &&
                                           _retentionTimePredictor.IsFirstPassPeptide(peptideDocNode);
                 if (_firstPass == isFirstPassPeptide)
                 {
