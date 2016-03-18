@@ -365,7 +365,7 @@ namespace pwiz.Skyline.Model.Results
         public static IList<float?> GetEmptyRatios(int countRatios)
         {
             int i = countRatios - 1;
-            return i <= EMPTY_RATIOS.Length ? EMPTY_RATIOS[i] : new float?[countRatios];
+            return i < EMPTY_RATIOS.Length ? EMPTY_RATIOS[i] : new float?[countRatios];
         }
 
         private ImmutableList<float?> _ratios;
