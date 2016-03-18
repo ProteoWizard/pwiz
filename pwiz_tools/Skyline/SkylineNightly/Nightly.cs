@@ -96,26 +96,33 @@ namespace SkylineNightly
             {
                 while (_logDirScreengrabs != null)
                 {
-                    // Once started, continue until exit
-                    var now = DateTime.Now.ToString(CultureInfo.InvariantCulture).Replace('/','_').Replace(' ','_').Replace(':','_');
-                    var s = 0;
-                    foreach (var screen in Screen.AllScreens) // Handle multi-monitor
+                    try
                     {
-                        // Create a new bitmap.
-                        var bmpScreenshot = new Bitmap(screen.Bounds.Width, screen.Bounds.Height,
-                            PixelFormat.Format32bppArgb);
+                        // Once started, continue until exit
+                        var now = DateTime.Now.ToString(CultureInfo.InvariantCulture).Replace('/','_').Replace(' ','_').Replace(':','_');
+                        var s = 0;
+                        foreach (var screen in Screen.AllScreens) // Handle multi-monitor
+                        {
+                            // Create a new bitmap.
+                            var bmpScreenshot = new Bitmap(screen.Bounds.Width, screen.Bounds.Height,
+                                PixelFormat.Format32bppArgb);
 
-                        // Create a graphics object from the bitmap.
-                        var gfxScreenshot = Graphics.FromImage(bmpScreenshot);
+                            // Create a graphics object from the bitmap.
+                            var gfxScreenshot = Graphics.FromImage(bmpScreenshot);
 
-                        // Take the screenshot from the upper left corner to the right bottom corner.
-                        gfxScreenshot.CopyFromScreen(screen.Bounds.X, screen.Bounds.Y,
-                            0, 0, screen.Bounds.Size, CopyPixelOperation.SourceCopy);
+                            // Take the screenshot from the upper left corner to the right bottom corner.
+                            gfxScreenshot.CopyFromScreen(screen.Bounds.X, screen.Bounds.Y,
+                                0, 0, screen.Bounds.Size, CopyPixelOperation.SourceCopy);
 
-                        // Save the screenshot
-                        var name = now + "_screen" + s +".png";
-                        var fileScreenshot = Path.Combine(_logDirScreengrabs, name);
-                        bmpScreenshot.Save(fileScreenshot, ImageFormat.Png);
+                            // Save the screenshot
+                            var name = now + "_screen" + s +".png";
+                            var fileScreenshot = Path.Combine(_logDirScreengrabs, name);
+                            bmpScreenshot.Save(fileScreenshot, ImageFormat.Png);
+                        }
+                    }
+                    catch
+                    {
+                        // Not a big deal if this doesn't work for some reason, just carry on
                     }
                     Thread.Sleep(60000); // 1 frame per minute
                 }
@@ -165,18 +172,26 @@ namespace SkylineNightly
             // Create log file.
             if (!Directory.Exists(_logDir))
                 Directory.CreateDirectory(_logDir);
-            if (Directory.Exists(_logDirScreengrabs))
-                Directory.Delete(_logDirScreengrabs, true);
-            Directory.CreateDirectory(_logDirScreengrabs);
             _logFile = Path.Combine(nightlyDir, "SkylineNightly.log");
             Delete(_logFile);
             Log(DateTime.Now.ToShortDateString());
 
-            // Start a thread to capture the screen once a minute to help track down anything that escapes the logs
-            Log("Screengrabs will be written once every 60 seconds to " + _logDirScreengrabs);
-            var screenGrabber = new PeriodicScreengrabs();
-            var screenGrabberThread = new Thread(screenGrabber.DoWork);
-            screenGrabberThread.Start();
+            try
+            {
+                if (Directory.Exists(_logDirScreengrabs))
+                    Directory.Delete(_logDirScreengrabs, true);
+                Directory.CreateDirectory(_logDirScreengrabs);
+                // Start a thread to capture the screen once a minute to help track down anything that escapes the logs
+                Log("Screengrabs will be written once every 60 seconds to " + _logDirScreengrabs);
+                var screenGrabber = new PeriodicScreengrabs();
+                var screenGrabberThread = new Thread(screenGrabber.DoWork);
+                screenGrabberThread.Start();
+            }
+            catch (Exception x)
+            {
+                _logDirScreengrabs = null;
+                Log("Unable to start screengrab thread, proceeding anyway: " + x.Message);
+            }
 
             // Delete source tree and old SkylineTester.
             Delete(skylineNightlySkytr);
