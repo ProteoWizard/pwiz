@@ -77,7 +77,8 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public bool Accept(string sequence, double precursorMz, IonType type, int cleavageOffset, double ionMz, int start, int end, double startMz)
         {
-            if (Filter.ExclusionUseDIAWindow && FullScan.IsolationScheme.MayFallIntoSameWindow(ionMz, precursorMz))
+            if (Filter.ExclusionUseDIAWindow && FullScan.IsolationScheme != null &&
+                FullScan.IsolationScheme.MayFallIntoSameWindow(ionMz, precursorMz))
             {
                 return false;
             }
