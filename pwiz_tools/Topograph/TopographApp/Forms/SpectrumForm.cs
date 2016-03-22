@@ -173,10 +173,9 @@ namespace pwiz.Topograph.ui.Forms
                         if (comboChromatogram.SelectedIndex >= 0 && null == _chromatogramDatas[comboChromatogram.SelectedIndex])
                         {
                             string chromatogramName;
-                            bool negativeCharge; // CONSIDER: Is this important in Topograph?
                             float[] timeArray;
                             float[] intensityArray;
-                            msDataFileImpl.GetChromatogram(comboChromatogram.SelectedIndex, out chromatogramName, out negativeCharge, out timeArray, out intensityArray);
+                            msDataFileImpl.GetChromatogram(comboChromatogram.SelectedIndex, out chromatogramName, out timeArray, out intensityArray);
                             _chromatogramDatas[comboChromatogram.SelectedIndex] = new ChromatogramData(chromatogramName, timeArray, intensityArray);
                         }
                         _spectrumData = _spectrumData ?? new SpectrumData(msDataFileImpl, ScanIndex);
