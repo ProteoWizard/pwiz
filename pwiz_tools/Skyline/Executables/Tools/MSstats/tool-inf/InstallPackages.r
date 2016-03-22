@@ -60,13 +60,13 @@ biocLite("MSnbase")
 #}
 
 
-if (!is.element("MSstats",packages) || packageVersion("MSstats") < "3.3.4" ){
+if (!is.element("MSstats",packages) || packageVersion("MSstats") < "3.3.8" ){
 directory <- tempdir()
 directory<-gsub("\\", "/", directory, fixed = TRUE)
-filename <- "MSstats_3.3.4.tar.gz"
+filename <- "MSstats_3.3.8.tar.gz"
 path <- file.path(directory, filename)
 #MSstatsPackage <-normalizePath(path)
-download.file("http://www.stat.purdue.edu/~choi67/MSstats_3.3.4.tar.gz",path)
+download.file("http://www.stat.purdue.edu/~choi67/MSstats_3.3.8.tar.gz",path)
 
 install.packages(path, repos = NULL, type="source")
 }

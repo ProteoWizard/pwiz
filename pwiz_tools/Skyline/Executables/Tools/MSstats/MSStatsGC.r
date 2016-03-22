@@ -145,16 +145,25 @@ runComparison <- function() {
 		comparison <- rbind(comparison, matrix(temp, nrow=1))
 
 		#inputrowname <- arguments[2]
+		
 		namepos <- alllevel[temp > 0]
+		
 		if(length(namepos) != 1){
+			
 			namepos <- paste(temp[temp >0][1], "(", paste(namepos, collapse = "+"), ")", sep="")
+		
 		}
 		
+		
 		nameneg <- alllevel[temp < 0]
+		
 		if(length(namepos) != 1){
+			
 			nameneg <- paste(temp[temp >0][1], "(", paste(nameneg, collapse = "+"), ")", sep="")
+		
 		}
 
+		
 		inputrowname <- paste(namepos, nameneg, sep='-')
 
 		row.names(comparison)[k] <- inputrowname 
