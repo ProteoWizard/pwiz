@@ -294,38 +294,51 @@ namespace pwiz.SkylineTestFunctional
 
         public void RemoveImportedResults()
         {
-            var manageResults = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);
-            RunUI(manageResults.RemoveAllReplicates);
-            OkDialog(manageResults, manageResults.OkDialog);
+            using (new WaitDocumentChange())
+            {
+                var manageResults = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);
+                RunUI(manageResults.RemoveAllReplicates);
+                OkDialog(manageResults, manageResults.OkDialog);
+            }
             RunUI(() => SkylineWindow.SaveDocument());
         }
 
         public void SetStandardType(string standardType)
         {
-            var peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-            RunUI(() => peptideSettingsDlg.SelectedInternalStandardTypeName = standardType);
-            OkDialog(peptideSettingsDlg, peptideSettingsDlg.OkDialog);
+            var currentTypes = SkylineWindow.Document.Settings.PeptideSettings.Modifications.InternalStandardTypes;
+            if (currentTypes.Count == 1 && Equals(standardType, currentTypes.First().ToString()))
+                return;
+
+            using (new WaitDocumentChange())
+            {
+                var peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+                RunUI(() => peptideSettingsDlg.SelectedInternalStandardTypeName = standardType);
+                OkDialog(peptideSettingsDlg, peptideSettingsDlg.OkDialog);
+            }
         }
 
         protected void ImportFiles()
         {
             ImportFile(TestFilesDir.GetTestPath("olgas_S130501_009_StC-DosR_B4.wiff"));
             ImportFile(TestFilesDir.GetTestPath("olgas_S130501_010_StC-DosR_C4.wiff"));
-            WaitForCondition(2 * 60 * 1000, () => SkylineWindow.Document.IsLoaded);    // 2 minutes
+            WaitForDocumentLoaded(2*60*1000);     // 2 minutes
         }
 
         protected void ImportFile(string fileName)
         {
-            var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
-            RunUI(() =>
+            using (new WaitDocumentChange())
             {
-                importResultsDlg.RadioAddNewChecked = true;
-                var path = new KeyValuePair<string, MsDataFileUri[]>[1];
-                path[0] = new KeyValuePair<string, MsDataFileUri[]>(Path.GetFileNameWithoutExtension(fileName),
-                                            new[] { MsDataFileUri.Parse(fileName) });
-                importResultsDlg.NamedPathSets = path;
-            });
-            OkDialog(importResultsDlg, importResultsDlg.OkDialog);
+                var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
+                RunUI(() =>
+                {
+                    importResultsDlg.RadioAddNewChecked = true;
+                    var path = new KeyValuePair<string, MsDataFileUri[]>[1];
+                    path[0] = new KeyValuePair<string, MsDataFileUri[]>(Path.GetFileNameWithoutExtension(fileName),
+                                                new[] { MsDataFileUri.Parse(fileName) });
+                    importResultsDlg.NamedPathSets = path;
+                });
+                OkDialog(importResultsDlg, importResultsDlg.OkDialog);
+            }
             WaitForCondition(2 * 60 * 1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);    // 2 minutes
         }
 
