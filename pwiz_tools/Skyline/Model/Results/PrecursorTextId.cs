@@ -18,19 +18,20 @@
  */
 using System.Collections;
 using System.Collections.Generic;
+using pwiz.ProteowizardWrapper;
 
 namespace pwiz.Skyline.Model.Results
 {
     public struct PrecursorTextId
     {
-        public PrecursorTextId(double precursorMz, string textId, ChromExtractor extractor) : this()
+        public PrecursorTextId(SignedMz precursorMz, string textId, ChromExtractor extractor) : this()
         {
             PrecursorMz = precursorMz;
             TextId = textId;
             Extractor = extractor;
         }
 
-        public double PrecursorMz { get; private set; }
+        public SignedMz PrecursorMz { get; private set; }
         public string TextId { get; private set; }  // Peptide Modifed Sequence or custom ion ID
         public ChromExtractor Extractor { get; private set; }
 

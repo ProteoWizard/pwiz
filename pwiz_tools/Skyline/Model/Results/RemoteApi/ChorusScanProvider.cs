@@ -51,7 +51,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
         public TransitionFullScanInfo[] Transitions { get; private set; }
         public MsDataSpectrum[] GetMsDataFileSpectraWithCommonRetentionTime(int dataFileSpectrumStartIndex)
         {
-            double precursor = Transitions.Select(transition => transition.PrecursorMz).FirstOrDefault();
+            SignedMz precursor = Transitions.Select(transition => transition.PrecursorMz).FirstOrDefault();
             ChorusAccount chorusAccount = ChorusUrl.FindChorusAccount(Settings.Default.ChorusAccountList);
             return _chorusSession.GetSpectra(chorusAccount, ChorusUrl, Source, precursor, dataFileSpectrumStartIndex);
         }

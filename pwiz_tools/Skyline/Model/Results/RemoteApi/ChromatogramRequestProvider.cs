@@ -18,6 +18,7 @@
  */
 using System.Collections.Generic;
 using pwiz.Common.Collections;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.RemoteApi.GeneratedCode;
 
@@ -121,9 +122,9 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
                 }
                 foreach (var chromatogram in chromatogramGroup.Chromatogram)
                 {
-                    yield return new ChromKey(chromatogramGroup.ModifiedSequence, chromatogramGroup.PrecursorMz, 
+                    yield return new ChromKey(chromatogramGroup.ModifiedSequence, new SignedMz(chromatogramGroup.PrecursorMz), 
                         null, 0,
-                        chromatogram.ProductMz, 0, chromatogram.MzWindow, chromSource, chromExtractor, false, false,
+                        new SignedMz(chromatogram.ProductMz), 0, chromatogram.MzWindow, chromSource, chromExtractor, false, false,
                         null, null);    // Optional retention and drift times not used in this provider
                 }
             }

@@ -526,7 +526,7 @@ namespace pwiz.Skyline.Model.Results
         {
             public PeptidePrecursorMz(PeptideDocNode nodePeptide,
                                       TransitionGroupDocNode nodeGroup,
-                                      double precursorMz)
+                                      SignedMz precursorMz)
             {
                 NodePeptide = nodePeptide;
                 NodeGroup = nodeGroup;
@@ -535,7 +535,7 @@ namespace pwiz.Skyline.Model.Results
 
             public PeptideDocNode NodePeptide { get; private set; }
             public TransitionGroupDocNode NodeGroup { get; private set; }
-            public double PrecursorMz { get; private set; }
+            public SignedMz PrecursorMz { get; private set; }
         }
 
         private IEnumerable<PeptidePrecursorMz> Precursors
@@ -634,6 +634,7 @@ namespace pwiz.Skyline.Model.Results
 
             // Otherwise, add it to the dictionary by its peptide GlobalIndex to make
             // sure precursors are grouped by peptide
+            Assume.IsTrue(peptidePrecursorMz.PrecursorMz.IsNegative == chromDataSet.PrecursorMz.IsNegative);
             var nodePep = peptidePrecursorMz.NodePeptide;
             var key = nodePep.SequenceKey;
             if (!dictPeptideChromData.TryGetValue(key, out pepDataSets))
@@ -841,8 +842,8 @@ namespace pwiz.Skyline.Model.Results
             // Find the first precursor m/z that is greater than or equal to the
             // minimum possible match value
             string modSeq = chromDataSet.ModifiedSequence;
-            double minMzMatch = chromDataSet.PrecursorMz - TransitionInstrument.MAX_MZ_MATCH_TOLERANCE;
-            double maxMzMatch = chromDataSet.PrecursorMz + TransitionInstrument.MAX_MZ_MATCH_TOLERANCE;
+            var minMzMatch = chromDataSet.PrecursorMz - TransitionInstrument.MAX_MZ_MATCH_TOLERANCE;
+            var maxMzMatch = chromDataSet.PrecursorMz + TransitionInstrument.MAX_MZ_MATCH_TOLERANCE;
             var lookup = new PeptidePrecursorMz(null, null, minMzMatch);
             int i = listMzPrecursors.BinarySearch(lookup, MZ_COMPARER);
             if (i < 0)
@@ -850,7 +851,7 @@ namespace pwiz.Skyline.Model.Results
             // Enumerate all possible matching precursor values, collecting the ones
             // with potentially matching product ions
             var listMatchingGroups = new List<Tuple<PeptidePrecursorMz, ChromDataSet, IList<ChromData>>>();
-            for (; i < listMzPrecursors.Count && listMzPrecursors[i].PrecursorMz <= maxMzMatch; i++)
+            for (; i < listMzPrecursors.Count && listMzPrecursors[i].PrecursorMz <= maxMzMatch && listMzPrecursors[i].PrecursorMz.IsNegative == maxMzMatch.IsNegative; i++)
             {
                 var peptidePrecursorMz = listMzPrecursors[i];
                 if (modSeq != null && !string.Equals(modSeq, peptidePrecursorMz.NodePeptide.RawTextId)) // ModifiedSequence for peptides, other id for customIons
@@ -866,6 +867,7 @@ namespace pwiz.Skyline.Model.Results
                 var groupData = GetMatchingData(nodeGroup, chromDataSet);
                 if (groupData != null)
                 {
+                    Assume.IsTrue(chromDataSet.PrecursorMz.IsNegative == peptidePrecursorMz.PrecursorMz.IsNegative);
                     listMatchingGroups.Add(new Tuple<PeptidePrecursorMz, ChromDataSet, IList<ChromData>>(peptidePrecursorMz, chromDataSet, groupData));
                 }
             }
@@ -895,13 +897,14 @@ namespace pwiz.Skyline.Model.Results
 
                 // If this is single matching, as in full-scan filtering, return only nodes
                 // matching a single precursor m/z value.  The one closest to the data.
-                double? bestMz = null;
+                var bestMz = SignedMz.EMPTY;
                 if (singleMatch)
                 {
-                    double matchMz = chromDataSet.PrecursorMz;
+                    var matchMz = chromDataSet.PrecursorMz;
                     foreach (var match in listMatchingGroups)
                     {
-                        double currentMz = match.Item1.PrecursorMz;
+                        Assume.IsTrue(match.Item1.PrecursorMz.IsNegative == chromDataSet.PrecursorMz.IsNegative);
+                        var currentMz = match.Item1.PrecursorMz;
                         if (!bestMz.HasValue || Math.Abs(matchMz - currentMz) < Math.Abs(matchMz - bestMz.Value))
                             bestMz = currentMz;
                     }
@@ -1022,6 +1025,7 @@ namespace pwiz.Skyline.Model.Results
                     // Current transition and current chromatogram are an mz match
                     // If next chromatogram matches better, just advance in chromatogram list and continue
                     double delta = Math.Abs(tc.Mz - tt.Mz);
+                    Assume.IsTrue(tc.Mz.IsNegative == tt.Mz.IsNegative);
                     List<MzIndexChromData> tc2 = null;
                     // Handle the case where there are both ms1 and sim chromatograms
                     // Or where Q1-Q3 pair is selected more than once, probably with different RT windows
@@ -1039,6 +1043,7 @@ namespace pwiz.Skyline.Model.Results
                     }
                     if (icNext < cc && delta > Math.Abs(listMzIndexChromatograms[icNext].Mz - tt.Mz))
                     {
+                        Assume.IsTrue(listMzIndexChromatograms[icNext].Mz.IsNegative == tt.Mz.IsNegative);
                         ic = NextChrom(ic, tc, tc2, null, listMatchingData);
                     }
                     // or next transition matches better, just advance in transition list and continue
@@ -1103,27 +1108,28 @@ namespace pwiz.Skyline.Model.Results
 
         private class MzIndexChromData
         {
-            public MzIndexChromData(double mz, int index, ChromData chrom)
+            public MzIndexChromData(SignedMz mz, int index, ChromData chrom)
             {
                 Mz = mz;
                 Index = index;
                 Chrom = chrom;
             }
 
-            public double Mz { get; private set; }
+            public SignedMz Mz { get; private set; }
             public int Index { get; private set; }
             public ChromData Chrom { get; private set; }
         }
 
         private class MzTrans
         {
-            public MzTrans(double mz, TransitionDocNode trans)
+            public MzTrans(SignedMz mz, TransitionDocNode trans)
             {
                 Mz = mz;
                 Trans = trans;
+                Assume.IsTrue(mz.IsNegative == (trans.Transition.Charge<0));
             }
 
-            public double Mz { get; private set; }
+            public SignedMz Mz { get; private set; }
             public TransitionDocNode Trans { get; private set; }
         }
 

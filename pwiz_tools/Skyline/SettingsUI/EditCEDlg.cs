@@ -440,8 +440,8 @@ namespace pwiz.Skyline.SettingsUI
             get
             {
                 return (from nodeGroup in _dictGroupToOptTotals.Keys
-                        orderby nodeGroup.PrecursorMz
-                        select nodeGroup.PrecursorMz).ToArray();
+                        orderby nodeGroup.PrecursorMz.Value
+                        select nodeGroup.PrecursorMz.Value).ToArray();  // CONSIDER(bspratt) - this ignores polarity, is that proper?
             }
         }
 

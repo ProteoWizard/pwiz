@@ -79,16 +79,18 @@ namespace pwiz.Skyline.Model.Results
             if (!q1FilterValues.Any())  // As is small molecule docs with mz values only, no formulas
                 return;
 
+            var signedQ1FilterValues = q1FilterValues.Select(q => new SignedMz(q, charge < 0)).ToList();
+
             // Use the filtering algorithm that will be used on real data to determine the
             // expected proportions of the mass distribution that will end up filtered into
             // peaks
             // CONSIDER: Mass accuracy information is not calculated here
-            var key = new PrecursorTextId(q1FilterValues[monoMassIndex], null, ChromExtractor.summed);
+            var key = new PrecursorTextId(signedQ1FilterValues[monoMassIndex], null, ChromExtractor.summed);
             var filter = new SpectrumFilterPair(key, PeptideDocNode.UNKNOWN_COLOR, 0, null, null, null, null, 0, false, false);
-            filter.AddQ1FilterValues(q1FilterValues, calcFilterWindow);
+            filter.AddQ1FilterValues(signedQ1FilterValues, calcFilterWindow);
 
             var expectedSpectrum = filter.FilterQ1SpectrumList(new[] { new MsDataSpectrum
-            { Mzs = massDistribution.Keys.ToArray(), Intensities = massDistribution.Values.ToArray() } });
+            { Mzs = massDistribution.Keys.ToArray(), Intensities = massDistribution.Values.ToArray(), NegativeCharge = (charge < 0) } });
 
             int startIndex = expectedSpectrum.Intensities.IndexOf(inten => inten >= minimumAbundance);
             if (startIndex == -1)

@@ -185,7 +185,7 @@ namespace pwiz.Skyline.Model
                         continue;
                     int productCharge = nodeTran.Transition.Charge;
                     float productMz = (float)nodeTran.Mz;
-                    var chromInfo = chromGroupInfo.GetTransitionInfo(productMz, _matchTolerance);
+                    var chromInfo = chromGroupInfo.GetTransitionInfo(nodeTran.Mz, _matchTolerance);
                     // Sometimes a transition in the transition group does not have results for a particular file
                     // If this happens just skip it for that file
                     if (chromInfo == null)

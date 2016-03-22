@@ -1243,17 +1243,18 @@ namespace pwiz.Skyline.Model
             var pepGroup = new PeptideGroup();
             var note = Annotations.Merge(new Annotations(TestingNonProteomicBaseName, null, 0));  // Tag it as not needing/wanting canonical small molecule sort - these need to be at the doc end, always
             var pep = new Peptide(new DocNodeCustomIon("C16O4H4", TestingNonProteomicMoleculeName)); // Not L10N
-            const int charge = -1; // Negative charge for maximum test value, since that's new too
+            var peptideGroupDocNodes = existingPeptideGroups as PeptideGroupDocNode[] ?? existingPeptideGroups.ToArray();
+            var autoManageChildren = (!peptideGroupDocNodes.Any()) || peptideGroupDocNodes.First().AutoManageChildren; // Try to look like any existing
+            var hasPrecursorTransitions = (!peptideGroupDocNodes.Any()) || peptideGroupDocNodes.Any(n => n.Molecules.Any(p => p.TransitionGroups.Any(t => t.Transitions.Any(r => r.Transition.IsPrecursor())))); // Try to look like any existing
+            var hasNegativePrecursors = (peptideGroupDocNodes.Any()) && peptideGroupDocNodes.Any(n => n.Molecules.Any(p => p.TransitionGroups.Any(t => t.Transitions.Any(r => r.Transition.IsNegative())))); // Try to look like any existing
+
+            var charge = hasNegativePrecursors  ? - 1 : 1; // Negative charge for maximum test value, but only if it's likely that results data has negative ion mode scans
             var tranGroup = new TransitionGroup(pep, pep.CustomIon, charge, IsotopeLabelType.light);
             var tranPrecursor = new Transition(tranGroup, IonType.precursor, 0, 0, charge, null, pep.CustomIon);
             // Specify formula
             var tranFragment = new Transition(tranGroup, charge, 0, new DocNodeCustomIon("C2H2O2", TestingNonProteomicFragmentName)); // Not L10N
             // Specify mass
             var tranFragment2 = new Transition(tranGroup, charge, 0, new DocNodeCustomIon(tranFragment.CustomIon.MonoisotopicMass, tranFragment.CustomIon.AverageMass, TestingNonProteomicFragment2Name)); // Not L10N
-
-            var peptideGroupDocNodes = existingPeptideGroups as PeptideGroupDocNode[] ?? existingPeptideGroups.ToArray();
-            bool autoManageChildren = (!peptideGroupDocNodes.Any()) || peptideGroupDocNodes.First().AutoManageChildren; // Try to look like any existing
-            var hasPrecursorTransitions = (!peptideGroupDocNodes.Any()) || peptideGroupDocNodes.Any(n => n.Molecules.Any(p => p.TransitionGroups.Any(t => t.Transitions.Any(r => r.Transition.IsPrecursor())))); // Try to look like any existing
 
             // Use any existing isotope distribution info
             var transitionGroups =

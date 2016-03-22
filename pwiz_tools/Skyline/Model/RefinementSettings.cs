@@ -750,7 +750,7 @@ namespace pwiz.Skyline.Model
                                 null, null, transitionGroupDocNode.ExplicitValues, resultsNew, null,
                                 transitionGroupDocNode.AutoManageChildren);
                             var mzShift = invertCharges ? 2.0 * BioMassCalc.MassProton : 0;  // We removed hydrogen rather than added
-                            Assume.IsTrue((Math.Abs(newTransitionGroupDocNode.PrecursorMz + mzShift - transitionGroupDocNode.PrecursorMz) - Math.Abs(transitionGroupDocNode.TransitionGroup.PrecursorCharge * BioMassCalc.MassElectron)) <= 1E-5);
+                            Assume.IsTrue((Math.Abs(newTransitionGroupDocNode.PrecursorMz + mzShift - transitionGroupDocNode.PrecursorMz.Value) - Math.Abs(transitionGroupDocNode.TransitionGroup.PrecursorCharge * BioMassCalc.MassElectron)) <= 1E-5);
 
                             foreach (var transition in transitionGroupDocNode.Transitions)
                             {
@@ -802,7 +802,7 @@ namespace pwiz.Skyline.Model
                                 var newTransitionDocNode = new TransitionDocNode(newTransition, transition.Annotations.Merge(note),
                                     null, mass, transition.IsotopeDistInfo, null,
                                     transition.Results);
-                                Assume.IsTrue((Math.Abs(newTransitionDocNode.Mz + mzShiftTransition - transition.Mz) - Math.Abs(transitionGroupDocNode.TransitionGroup.PrecursorCharge * BioMassCalc.MassElectron)) <= 1E-5, String.Format("unexpected mz difference {0}-{1}={2}", newTransitionDocNode.Mz , transition.Mz, newTransitionDocNode.Mz - transition.Mz)); // Not L10N
+                                Assume.IsTrue((Math.Abs(newTransitionDocNode.Mz + mzShiftTransition - transition.Mz.Value) - Math.Abs(transitionGroupDocNode.TransitionGroup.PrecursorCharge * BioMassCalc.MassElectron)) <= 1E-5, String.Format("unexpected mz difference {0}-{1}={2}", newTransitionDocNode.Mz , transition.Mz, newTransitionDocNode.Mz - transition.Mz.Value)); // Not L10N
                                 newTransitionGroupDocNode =
                                     (TransitionGroupDocNode)newTransitionGroupDocNode.Add(newTransitionDocNode);
                             }

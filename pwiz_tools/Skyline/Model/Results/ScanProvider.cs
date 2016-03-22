@@ -32,8 +32,8 @@ namespace pwiz.Skyline.Model.Results
         public ChromSource Source;
         public int[][] ScanIndexes;
         public Color Color;
-        public double PrecursorMz;
-        public double ProductMz;
+        public SignedMz PrecursorMz;
+        public SignedMz ProductMz;
         public double? ExtractionWidth;
         public double? IonMobilityValue;
         public double? IonMobilityExtractionWidth;

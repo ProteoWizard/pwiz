@@ -23,6 +23,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using pwiz.Common.PeakFinding;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -124,9 +125,9 @@ namespace pwiz.Skyline.Model.Results
             get { return _listChromData.Count > 0 ? BestChromatogram.Key.TextId : null; }
         }
 
-        public double PrecursorMz
+        public SignedMz PrecursorMz
         {
-            get { return _listChromData.Count > 0 ? BestChromatogram.Key.Precursor : 0; }
+            get { return _listChromData.Count > 0 ? BestChromatogram.Key.Precursor : SignedMz.ZERO; }
         }
 
         public ChromExtractor Extractor

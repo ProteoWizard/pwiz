@@ -209,7 +209,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
         }
 
         public MsDataSpectrum[] GetSpectra(ChorusAccount chorusAccount, ChorusUrl chorusUrl, ChromSource source,
-            double precursor, int scanId)
+            SignedMz precursor, int scanId)
         {
             string strSource;
             int msLevel = 1;
@@ -235,7 +235,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
                 chorusUrl.ServerUrl,
                 chorusUrl.FileId,
                 strSource,
-                precursor,
+                precursor.RawValue,  // This will be a negative value for negative ion mode data
                 scanId);
             // ReSharper restore NonLocalizedString
 

@@ -8914,4 +8914,7 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="UniquePeptidesDlg_SelectPeptidesWithNumberOfMatchesAtOrBelowThreshold_These_proteins_include_" xml:space="preserve">
     <value>These proteins include:</value>
   </data>
+  <data name="Transition_Validate_Precursor_and_product_ion_polarity_do_not_agree_" xml:space="preserve">
+    <value>Precursor and product ion polarity do not agree.</value>
+  </data>
 </root>

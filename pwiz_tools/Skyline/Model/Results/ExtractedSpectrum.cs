@@ -18,6 +18,7 @@
  */
 
 using System.Drawing;
+using pwiz.ProteowizardWrapper;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -25,7 +26,7 @@ namespace pwiz.Skyline.Model.Results
     {
         public ExtractedSpectrum(string textId,
                                  Color peptideColor,
-                                 double precursorMz,
+                                 SignedMz precursorMz,
                                  double ionMobilityValue,
                                  double ionMobilityExtractionWidth,
                                  ChromExtractor chromExtractor,
@@ -48,7 +49,7 @@ namespace pwiz.Skyline.Model.Results
 
         public string TextId { get; private set; } // Peptide modified sequence or custom ion id
         public Color PeptideColor { get; private set; }
-        public double PrecursorMz { get; private set; }
+        public SignedMz PrecursorMz { get; private set; }
         public double IonMobilityValue { get; private set; }
         public double IonMobilityExtractionWidth { get; private set; }
         public int FilterIndex { get; private set; }

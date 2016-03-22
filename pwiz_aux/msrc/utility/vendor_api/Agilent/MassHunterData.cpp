@@ -209,6 +209,7 @@ struct ChromatogramImpl : public Chromatogram
     virtual int getTotalDataPoints() const;
     virtual void getXArray(automation_vector<double>& x) const;
     virtual void getYArray(automation_vector<float>& y) const;
+    virtual IonPolarity getIonPolarity() const;
 
     private:
     gcroot<MHDAC::IBDAChromData^> chromData_;
@@ -220,16 +221,19 @@ PWIZ_API_DECL
 bool Transition::operator< (const Transition& rhs) const
 {
     if (type == rhs.type)
-        if (Q1 == rhs.Q1)
-            if (Q3 == rhs.Q3)
-                if (acquiredTimeRange.start == rhs.acquiredTimeRange.start)
-                    return acquiredTimeRange.end < rhs.acquiredTimeRange.end;
+        if (ionPolarity == rhs.ionPolarity)
+            if (Q1 == rhs.Q1)
+                if (Q3 == rhs.Q3)
+                    if (acquiredTimeRange.start == rhs.acquiredTimeRange.start)
+                        return acquiredTimeRange.end < rhs.acquiredTimeRange.end;
+                    else
+                        return acquiredTimeRange.start < rhs.acquiredTimeRange.start;
                 else
-                    return acquiredTimeRange.start < rhs.acquiredTimeRange.start;
+                    return Q3 < rhs.Q3;
             else
-                return Q3 < rhs.Q3;
+                return Q1 < rhs.Q1;
         else
-            return Q1 < rhs.Q1;
+            return (ionPolarity < rhs.ionPolarity);
     else
         return type < rhs.type;
 }
@@ -666,6 +670,12 @@ void ChromatogramImpl::getYArray(automation_vector<float>& y) const
 {
     try {return ToAutomationVector(chromData_->YArray, y);} CATCH_AND_FORWARD
 }
+
+IonPolarity ChromatogramImpl::getIonPolarity() const
+{
+    try { return (IonPolarity)chromData_->IonPolarity; } CATCH_AND_FORWARD
+}
+
 
 
 } // Agilent

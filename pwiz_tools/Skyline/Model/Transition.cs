@@ -373,6 +373,11 @@ namespace pwiz.Skyline.Model
             return IsPrecursor(IonType);
         }
 
+        public bool IsNegative()
+        {
+            return Charge < 0;
+        }
+
         public bool IsCustom()
         {
             return IsCustom(IonType, Group);
@@ -484,6 +489,10 @@ namespace pwiz.Skyline.Model
                                 DecoyMassShift, MIN_PRODUCT_DECOY_MASS_SHIFT, MAX_PRODUCT_DECOY_MASS_SHIFT));
                     }
                 }
+            }
+            if (Charge < 0 != Group.PrecursorCharge < 0)
+            {
+                throw new InvalidDataException(Resources.Transition_Validate_Precursor_and_product_ion_polarity_do_not_agree_);
             }
         }
 

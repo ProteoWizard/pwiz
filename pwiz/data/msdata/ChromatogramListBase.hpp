@@ -44,6 +44,11 @@ class PWIZ_API_DECL ChromatogramListBase : public ChromatogramList
     /// set DataProcessing
     virtual void setDataProcessingPtr(DataProcessingPtr dp) {dp_ = dp;}
 
+    const char* polarityStringForFilter(CVID polarityType) const
+    {
+        return (polarityType == MS_negative_scan) ? "- " : ""; // For backward compatibility, let assumptions about postive ion mode remain
+    }
+
     protected:
 
     DataProcessingPtr dp_;

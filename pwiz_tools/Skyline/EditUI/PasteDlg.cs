@@ -2428,6 +2428,17 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
+        // For test support
+        public List<string> GetColumnNames()
+        {
+            return
+                gridViewTransitionList.Columns.OfType<DataGridViewColumn>()
+                    .Where(c => c.Visible)
+                    .OrderBy(c => c.DisplayIndex)
+                    .Select(c => c.Name)
+                    .ToList();
+        }
+
         public int GetUsableColumnCount()
         {
             return gridViewTransitionList.Columns.GetColumnCount(DataGridViewElementStates.Visible) -

@@ -106,6 +106,8 @@ namespace pwiz.SkylineTestFunctional
             const string line4 = "\r\nMyMolecule3\tMyMol3\tMyFrag3\tH2\tH\t\t\t1\t1";
 
             // Provoke some errors
+            TestError(line1.Replace("\t-2\t-2", "\t-2\t2"), // precursor and charge polarities disagree
+                Resources.Transition_Validate_Precursor_and_product_ion_polarity_do_not_agree_);
             TestError(line1.Replace("C34H12O4", "C77H12O4"), // mz and formula disagree
                 String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Error_on_line__0___Precursor_m_z__1__does_not_agree_with_value__2__as_calculated_from_ion_formula_and_charge_state__delta____3___Transition_Settings___Instrument___Method_match_tolerance_m_z____4_____Correct_the_m_z_value_in_the_table__or_leave_it_blank_and_Skyline_will_calculate_it_for_you_,
                 1, (float)precursorMzAtZNeg2, 500.0373, 258, docEmpty.Settings.TransitionSettings.Instrument.MzMatchTolerance));

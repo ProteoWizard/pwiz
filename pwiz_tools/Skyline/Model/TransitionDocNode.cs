@@ -22,6 +22,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using pwiz.Common.SystemUtil;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
@@ -55,9 +56,9 @@ namespace pwiz.Skyline.Model
             if (losses != null)
                 massH -= losses.Mass;
             if (id.IsCustom())
-                Mz = BioMassCalc.CalculateIonMz(massH, id.Charge);
+                Mz = new SignedMz(BioMassCalc.CalculateIonMz(massH, id.Charge), id.IsNegative());
             else
-                Mz = SequenceMassCalc.GetMZ(massH, id.Charge) + SequenceMassCalc.GetPeptideInterval(id.DecoyMassShift);
+                Mz = new SignedMz(SequenceMassCalc.GetMZ(massH, id.Charge) + SequenceMassCalc.GetPeptideInterval(id.DecoyMassShift), id.IsNegative());
             IsotopeDistInfo = isotopeDistInfo;
             LibInfo = libInfo;
             Results = results;
@@ -77,7 +78,7 @@ namespace pwiz.Skyline.Model
             return new TransitionLossEquivalentKey(parent, this, Losses); 
         }
 
-        public double Mz { get; private set; }
+        public SignedMz Mz { get; private set; }
 
         public double GetIonMass()
         {

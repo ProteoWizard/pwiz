@@ -27,6 +27,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using pwiz.MSGraph;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
@@ -715,7 +716,7 @@ namespace pwiz.Skyline.SettingsUI
                                 ChromatogramInfo chromatogramInfo;
                                 TransitionChromInfo transitionChromInfo;
                                 var chromData = libraryChromGroup.ChromDatas[iChromData];
-                                GraphSpectrum.MakeChromatogramInfo(0.0, libraryChromGroup, chromData, out chromatogramInfo, out transitionChromInfo);
+                                GraphSpectrum.MakeChromatogramInfo(SignedMz.ZERO, libraryChromGroup, chromData, out chromatogramInfo, out transitionChromInfo);
                                 var nodeGroup = new TransitionGroupDocNode(transitionGroup, new TransitionDocNode[0]);
                                 var color =
                                     GraphChromatogram.COLORS_LIBRARY[iChromData%GraphChromatogram.COLORS_LIBRARY.Length];

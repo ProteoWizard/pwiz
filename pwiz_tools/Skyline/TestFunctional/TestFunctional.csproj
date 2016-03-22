@@ -192,6 +192,7 @@
     <Compile Include="ManageResultsTest.cs" />
     <Compile Include="MiscFormsTest.cs" />
     <Compile Include="MultiSelectTest.cs" />
+    <Compile Include="NegativeIonChromatogramsTest.cs" />
     <Compile Include="NeutralLossLibraryTest.cs" />
     <Compile Include="NeutralLossTest.cs" />
     <Compile Include="PasteMoleculesTest.cs" />
@@ -321,6 +322,7 @@
     <None Include="LiveReportsFilterTest.zip" />
     <None Include="ManageLibraryRunsTest.zip" />
     <None Include="ManageResultsTest.zip" />
+    <None Include="NegativeIonChromatogramsTest.zip" />
     <None Include="NeutralLossLibraryTest.zip" />
     <None Include="OptimizeTest.zip" />
     <None Include="PasteMoleculeTest.zip" />

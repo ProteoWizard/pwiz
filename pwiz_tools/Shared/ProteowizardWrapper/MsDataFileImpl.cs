@@ -93,7 +93,8 @@ namespace pwiz.ProteowizardWrapper
         public const string PREFIX_SINGLE = "SRM SIC "; // Not L10N
         public const string PREFIX_PRECURSOR = "SIM SIC "; // Not L10N
 
-        public static bool? IsNegativeChargeId(string id) // We currently ignore chromatogram polarity, but we may encounter it in mzML so must at least be able to recognize it
+
+        public static bool? IsNegativeChargeIdNullable(string id)
         {
             if (id.StartsWith("+ ")) // Not L10N
                 return false;
@@ -104,7 +105,7 @@ namespace pwiz.ProteowizardWrapper
 
         public static bool IsSingleIonCurrentId(string id)
         {
-            if (IsNegativeChargeId(id).HasValue)
+            if (IsNegativeChargeIdNullable(id).HasValue)
                 id = id.Substring(2);
             return id.StartsWith(PREFIX_SINGLE) || id.StartsWith(PREFIX_PRECURSOR);
         }
@@ -630,6 +631,7 @@ namespace pwiz.ProteowizardWrapper
                 DriftTimeMsec = GetDriftTimeMsec(spectrum),
                 Precursors = GetPrecursors(spectrum),
                 Centroided = IsCentroided(spectrum),
+                NegativeCharge = NegativePolarity(spectrum)
             };
             if (spectrum.binaryDataArrays.Count <= 1)
             {
@@ -741,6 +743,14 @@ namespace pwiz.ProteowizardWrapper
         private static bool IsCentroided(Spectrum spectrum)
         {
             return spectrum.hasCVParam(CVID.MS_centroid_spectrum);
+        }
+
+        private static bool NegativePolarity(Spectrum spectrum)
+        {
+            var param = spectrum.cvParamChild(CVID.MS_scan_polarity);
+            if (param.empty())
+                return false;  // Assume positive if undeclared
+            return (param.cvid == CVID.MS_negative_scan);
         }
 
         public bool IsSrmSpectrum(int scanIndex)
@@ -865,13 +875,14 @@ namespace pwiz.ProteowizardWrapper
 
         private static MsPrecursor[] GetPrecursors(Spectrum spectrum)
         {
+            bool negativePolarity = NegativePolarity(spectrum);
             return spectrum.precursors.Select(p =>
                 new MsPrecursor
                     {
-                        PrecursorMz = GetPrecursorMz(p),
+                        PrecursorMz = GetPrecursorMz(p, negativePolarity),
                         PrecursorDriftTimeMsec = GetPrecursorDriftTimeMsec(p),
                         PrecursorCollisionEnergy = GetPrecursorCollisionEnergy(p),
-                        IsolationWindowTargetMz = GetIsolationWindowValue(p, CVID.MS_isolation_window_target_m_z),
+                        IsolationWindowTargetMz = new SignedMz(GetIsolationWindowValue(p, CVID.MS_isolation_window_target_m_z), negativePolarity),
                         IsolationWindowLower = GetIsolationWindowValue(p, CVID.MS_isolation_window_lower_offset),
                         IsolationWindowUpper = GetIsolationWindowValue(p, CVID.MS_isolation_window_upper_offset),
                     }).ToArray();
@@ -879,6 +890,7 @@ namespace pwiz.ProteowizardWrapper
 
         private static MsPrecursor[] GetMs1Precursors(Spectrum spectrum)
         {
+            bool negativePolarity = NegativePolarity(spectrum);
             return spectrum.scanList.scans[0].scanWindows.Select(s =>
                 {
                     double windowStart = s.cvParam(CVID.MS_scan_window_lower_limit).value;
@@ -886,20 +898,20 @@ namespace pwiz.ProteowizardWrapper
                     double isolationWidth = (windowEnd - windowStart) / 2;
                     return new MsPrecursor
                         {
-                            IsolationWindowTargetMz = windowStart + isolationWidth,
+                            IsolationWindowTargetMz = new SignedMz(windowStart + isolationWidth, negativePolarity),
                             IsolationWindowLower = isolationWidth,
                             IsolationWindowUpper = isolationWidth
                         };
                 }).ToArray();
         }
 
-        private static double? GetPrecursorMz(Precursor precursor)
+        private static SignedMz GetPrecursorMz(Precursor precursor, bool negativePolarity)
         {
             // CONSIDER: Only the first selected ion m/z is considered for the precursor m/z
             var selectedIon = precursor.selectedIons.FirstOrDefault();
             if (selectedIon == null)
-                return null;
-            return selectedIon.cvParam(CVID.MS_selected_ion_m_z).value;
+                return SignedMz.EMPTY;
+            return new SignedMz(selectedIon.cvParam(CVID.MS_selected_ion_m_z).value, negativePolarity);
         }
 
         private const string USERPARAM_DRIFT_TIME = "drift time"; // Not L10N
@@ -1044,24 +1056,212 @@ namespace pwiz.ProteowizardWrapper
         }
     }
 
+    
+    /// <summary>
+    /// We need a way to distinguish chromatograms for negative ion modes from those for positive.
+    /// The idea of m/z is inherently "positive", in the sense of sorting etc, so we carry around 
+    /// the m/z value, and a sign flag, and when we sort it's by sign then by (normally positive) m/z.  
+    /// The m/z value *could* be negative as a result of an arithmetic operator, that has a special
+    /// meaning for comparisons but doesn't happen in normal use.
+    /// There's a lot of operator magic here to minimize code changes where we used to implement mz 
+    /// values as simple doubles.
+    /// </summary>
+    public struct SignedMz : IComparable, IEquatable<SignedMz>, IFormattable
+    {
+        private readonly double? _mz;
+        private readonly bool _isNegative;
+
+        public SignedMz(double? mz, bool isNegative)
+        {
+            _mz = mz;
+            _isNegative = isNegative;
+        }
+
+        public SignedMz(double? mz)  // For deserialization - a negative value is taken to mean negative polarity
+        {
+            _isNegative = (mz??0) < 0;
+            _mz = mz.HasValue ? Math.Abs(mz.Value) : (double?) null;
+        }
+
+        public static readonly SignedMz EMPTY = new SignedMz(null, false);
+        public static readonly SignedMz ZERO = new SignedMz(0);
+
+        public double Value
+        {
+            get { return _mz.Value; }
+        }
+
+        public double GetValueOrDefault()
+        {
+            return HasValue? Value : 0.0;
+        }
+
+        /// <summary>
+        /// For serialization etc - returns a negative number if IsNegative is true 
+        /// </summary>
+        public double? RawValue
+        {
+            get { return _mz.HasValue ? (_isNegative ? -_mz.Value : _mz.Value) : _mz;  }
+        }
+
+        public bool IsNegative
+        {
+            get { return _isNegative; }
+        }
+
+        public bool HasValue
+        {
+            get { return _mz.HasValue; }
+        }
+
+        public static implicit operator double(SignedMz mz)
+        {
+            return mz.Value;
+        }
+
+        public static implicit operator double?(SignedMz mz)
+        {
+            return mz._mz;
+        }
+
+        public static SignedMz operator +(SignedMz mz, double step)
+        {
+            return new SignedMz(mz.Value + step, mz.IsNegative);
+        }
+
+        public static SignedMz operator -(SignedMz mz, double step)
+        {
+            return new SignedMz(mz.Value - step, mz.IsNegative);
+        }
+
+        public static SignedMz operator +(SignedMz mz, SignedMz step)
+        {
+            if (mz.IsNegative != step.IsNegative)
+                throw new InvalidOperationException("polarity mismatch"); // Not L10N
+            return new SignedMz(mz.Value + step.Value, mz.IsNegative);
+        }
+
+        public static SignedMz operator -(SignedMz mz, SignedMz step)
+        {
+            if (mz.IsNegative != step.IsNegative)
+                throw new InvalidOperationException("polarity mismatch"); // Not L10N
+            return new SignedMz(mz.Value - step.Value, mz.IsNegative);
+        }
+
+        public static bool operator <(SignedMz mzA, SignedMz mzB)
+        {
+            return mzA.CompareTo(mzB) < 0;
+        }
+
+        public static bool operator <=(SignedMz mzA, SignedMz mzB)
+        {
+            return mzA.CompareTo(mzB) <= 0;
+        }
+
+        public static bool operator >=(SignedMz mzA, SignedMz mzB)
+        {
+            return mzA.CompareTo(mzB) >= 0;
+        }
+
+        public static bool operator >(SignedMz mzA, SignedMz mzB)
+        {
+            return mzA.CompareTo(mzB) > 0;
+        }
+
+        public static bool operator ==(SignedMz mzA, SignedMz mzB)
+        {
+            return mzA.CompareTo(mzB) == 0;
+        }
+
+        public static bool operator !=(SignedMz mzA, SignedMz mzB)
+        {
+            return !(mzA == mzB);
+        }
+
+        public bool Equals(SignedMz other)
+        {
+            return CompareTo(other) == 0;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            return obj is SignedMz && Equals((SignedMz)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return RawValue.GetHashCode();
+        }
+
+        public string ToString(string format, IFormatProvider formatProvider)
+        {
+            return Value.ToString(format, formatProvider);
+        }
+
+        public int CompareTo(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return -1;
+            if (obj.GetType() != GetType()) return -1;
+            return CompareTo((SignedMz)obj);
+        }
+
+        public int CompareTo(SignedMz other)
+        {
+            if (_mz.HasValue != other.HasValue)
+            {
+                return _mz.HasValue ? 1 : -1;
+            }
+            if (IsNegative != other.IsNegative)
+            {
+                return IsNegative ? -1 : 1;
+            }
+            // Same sign
+            if (_mz.HasValue)
+                return Value.CompareTo(other.Value);
+            return 0; // Both empty
+        }
+
+        public int CompareTolerant(SignedMz other, float tolerance)
+        {
+            if (_mz.HasValue != other.HasValue)
+            {
+                return _mz.HasValue ? 1 : -1;
+            }
+            if (IsNegative != other.IsNegative)
+            {
+                return IsNegative ? -1 : 1; // Not interested in tolerance when signs disagree 
+            }
+            // Same sign
+            if (Math.Abs(Value - other.Value) <= tolerance)
+                return 0;
+            return Value.CompareTo(other.Value);
+        }
+
+        public SignedMz ChangeMz(double mz)
+        {
+            return new SignedMz(mz, IsNegative);  // New mz, same polarity
+        }
+    }
+
     public struct MsPrecursor
     {
-        public double? PrecursorMz { get; set; }
+        public SignedMz PrecursorMz { get; set; }
         public double? PrecursorDriftTimeMsec { get; set; }
         public double? PrecursorCollisionEnergy  { get; set; }
-        public double? IsolationWindowTargetMz { get; set; }
+        public SignedMz IsolationWindowTargetMz { get; set; }
         public double? IsolationWindowUpper { get; set; }
         public double? IsolationWindowLower { get; set; }
-        public double? IsolationMz
+        public SignedMz IsolationMz
         {
             get
             {
-                double? targetMz = IsolationWindowTargetMz ?? PrecursorMz;
+                var targetMz = IsolationWindowTargetMz.HasValue ? IsolationWindowTargetMz : PrecursorMz;
                 // If the isolation window is not centered around the target m/z, then return a
                 // m/z value that is centered in the isolation window.
                 if (targetMz.HasValue && IsolationWindowUpper.HasValue && IsolationWindowLower.HasValue &&
                         IsolationWindowUpper.Value != IsolationWindowLower.Value)
-                    return (targetMz.Value * 2 + IsolationWindowUpper.Value - IsolationWindowLower.Value) / 2.0;
+                    return new SignedMz((targetMz * 2 + IsolationWindowUpper.Value - IsolationWindowLower.Value) / 2.0, targetMz.IsNegative);
                 return targetMz;
             }
         }
@@ -1095,6 +1295,7 @@ namespace pwiz.ProteowizardWrapper
         public double? DriftTimeMsec { get; set; }
         public MsPrecursor[] Precursors { get; set; }
         public bool Centroided { get; set; }
+        public bool NegativeCharge { get; set; } // True if negative ion mode
         public double[] Mzs { get; set; }
         public double[] Intensities { get; set; }
 

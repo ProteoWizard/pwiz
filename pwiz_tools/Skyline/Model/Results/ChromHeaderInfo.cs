@@ -183,6 +183,7 @@ namespace pwiz.Skyline.Model.Results
             has_ms1_scan_ids = 0x08,
             has_sim_scan_ids = 0x10,
             has_frag_scan_ids = 0x20,
+            polarity_negative = 0x40, // When set, only use negative scans.
         }
 
         /// <summary>
@@ -196,7 +197,7 @@ namespace pwiz.Skyline.Model.Results
         /// Constructs header struct with TextIdIndex and TextIdCount left to be initialized
         /// in a subsequent call to <see cref="CalcTextIdIndex"/>.
         /// </summary>
-        public ChromGroupHeaderInfo5(double precursor, int fileIndex,
+        public ChromGroupHeaderInfo5(SignedMz precursor, int fileIndex,
                                      int numTransitions, int startTransitionIndex,
                                      int numPeaks, int startPeakIndex, int startScoreIndex, int maxPeakIndex,
                                      int numPoints, int compressedSize, long location, FlagValues flags,
@@ -210,14 +211,22 @@ namespace pwiz.Skyline.Model.Results
         /// <summary>
         /// Cunstructs header struct with all values populated.
         /// </summary>
-        public ChromGroupHeaderInfo5(double precursor, int textIdIndex, int textIdLen, int fileIndex,
+        public ChromGroupHeaderInfo5(SignedMz precursor, int textIdIndex, int textIdLen, int fileIndex,
                                      int numTransitions, int startTransitionIndex,
                                      int numPeaks, int startPeakIndex, int startScoreIndex, int maxPeakIndex,
                                      int numPoints, int compressedSize, long location, FlagValues flags,
                                      int statusId, int statusRank)
             : this()
         {
-            Precursor = precursor;
+            _precursor = precursor.Value;
+            if (precursor.IsNegative)
+            {
+                flags |= FlagValues.polarity_negative;
+            }
+            else
+            {
+                flags &= ~FlagValues.polarity_negative;
+            }
             TextIdIndex = textIdIndex;
             TextIdLen = CheckUShort(textIdLen);
             FileIndex = CheckUShort(fileIndex);
@@ -237,7 +246,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public ChromGroupHeaderInfo5(ChromGroupHeaderInfo headerInfo)
-            : this(headerInfo.Precursor,
+            : this(new SignedMz(headerInfo.Precursor),
             headerInfo.FileIndex,
             headerInfo.NumTransitions,
             headerInfo.StartTransitionIndex,
@@ -292,7 +301,7 @@ namespace pwiz.Skyline.Model.Results
         public ushort Align1 { get; private set; }
         public ushort StatusId { get; private set; }
         public ushort StatusRank { get; private set; }
-        public double Precursor { get; private set; }
+        private double _precursor { get; set; } // Has to be combined with flag bits to create signedMz for Precursor
         public long LocationPoints { get; private set; }
         /////////////////////////////////////////////////////////////////////
 
@@ -318,6 +327,16 @@ namespace pwiz.Skyline.Model.Results
         public bool HasMs1ScanIds { get { return (Flags & FlagValues.has_ms1_scan_ids) != 0; } }
         public bool HasFragmentScanIds { get { return (Flags & FlagValues.has_frag_scan_ids) != 0; } }
         public bool HasSimScanIds { get { return (Flags & FlagValues.has_sim_scan_ids) != 0; } }
+
+        public bool NegativeCharge
+        {
+            get { return (Flags & FlagValues.polarity_negative) != 0; }
+        }
+
+        public SignedMz Precursor
+        {
+            get { return new SignedMz(_precursor, NegativeCharge); }
+        }
 
         public bool HasStatusId { get { return ((short)StatusId) != -1; } }
         public bool HasStatusRank { get { return ((short)StatusRank) != -1; } }
@@ -1507,14 +1526,14 @@ namespace pwiz.Skyline.Model.Results
 
     public class ChromKey : IComparable<ChromKey>
     {
-        public static readonly ChromKey EMPTY = new ChromKey(null, 0, 0, 0,
-            0, 0, 0, ChromSource.unknown, ChromExtractor.summed, false, false, null, null);
+        public static readonly ChromKey EMPTY = new ChromKey(null, SignedMz.ZERO, 0, 0,
+            SignedMz.ZERO, 0, 0, ChromSource.unknown, ChromExtractor.summed, false, false, null, null);
 
         public ChromKey(byte[] textIdBytes,
                         int textIdIndex,
                         int textIdLen,
-                        double precursor,
-                        double product,
+                        SignedMz precursor,
+                        SignedMz product,
                         double extractionWidth,
                         double ionMobilityValue,
                         double ionMobilityExtractionWidth,
@@ -1541,10 +1560,10 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public ChromKey(string textId,
-                        double precursor,
+                        SignedMz precursor,
                         double? ionMobilityValue,
                         double ionMobilityExtractionWidth,
-                        double product,
+                        SignedMz product,
                         double ceValue,
                         double extractionWidth,
                         ChromSource source,
@@ -1570,10 +1589,10 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public string TextId { get; private set; }  // Modified sequence or custom ion id
-        public double Precursor { get; private set; }
+        public SignedMz Precursor { get; private set; }
         public float IonMobilityValue { get; private set; } // Dimensionless here - depends on source files
         public float IonMobilityExtractionWidth { get; private set; } // Dimensionless here - depends on source files
-        public double Product { get; private set; }
+        public SignedMz Product { get; private set; }
         public float CollisionEnergy { get; private set; }
         public float ExtractionWidth { get; private set; }
         public ChromSource Source { get; private set; }
@@ -1614,8 +1633,8 @@ namespace pwiz.Skyline.Model.Results
         public override string ToString()
         {
             if (TextId != null)
-                return string.Format("{0:F04}, {1:F04} im{4:F04} - {2} - {3}", Precursor, Product, Source, TextId, IonMobilityValue); // Not L10N
-            return string.Format("{0:F04}, {1:F04} im{3:F04} - {2}", Precursor, Product, Source, IonMobilityValue); // Not L10N
+                return string.Format("{0:F04}, {1:F04} im{4:F04} - {2} - {3}", Precursor.RawValue, Product.RawValue, Source, TextId, IonMobilityValue); // Not L10N
+            return string.Format("{0:F04}, {1:F04} im{3:F04} - {2}", Precursor.RawValue, Product.RawValue, Source, IonMobilityValue); // Not L10N
         }
 
         public int CompareTo(ChromKey key)
@@ -1625,10 +1644,10 @@ namespace pwiz.Skyline.Model.Results
 
         public int CompareTolerant(ChromKey key, float tolerance)
         {
-            return CompareTo(key, (mz1, mz2) => CompareTolerant(mz1, mz2, tolerance));
+            return CompareTo(key, (mz1, mz2) => mz1.CompareTolerant(mz2, tolerance));
         }
 
-        private int CompareTo(ChromKey key, Func<double, double, int> compareMz)
+        private int CompareTo(ChromKey key, Func<SignedMz, SignedMz, int> compareMz)
         {
             int c;
 
@@ -1672,7 +1691,7 @@ namespace pwiz.Skyline.Model.Results
             return ComparePrecursors(key, (mz1, mz2) => mz1.CompareTo(mz2));
         }
 
-        private int ComparePrecursors(ChromKey key, Func<double, double, int> compareMz)
+        private int ComparePrecursors(ChromKey key, Func<SignedMz, SignedMz, int> compareMz)
         {
             // Order by precursor m/z, peptide sequence/custom ion id, extraction method
             int c = compareMz(Precursor, key.Precursor);
@@ -1708,11 +1727,9 @@ namespace pwiz.Skyline.Model.Results
             return key.Source.CompareTo(Source);
         }
 
-        public static int CompareTolerant(double f1, double f2, float tolerance)
+        public static int CompareTolerant(SignedMz f1, SignedMz f2, float tolerance)
         {
-            if (Math.Abs(f1 - f2) <= tolerance)
-                return 0;
-            return (f1 > f2 ? 1 : -1);
+            return f1.CompareTolerant(f2, tolerance);
         }
 
         private const string SUFFIX_CE = "CE="; // Not L10N
@@ -1724,14 +1741,14 @@ namespace pwiz.Skyline.Model.Results
             return MsDataFileImpl.IsSingleIonCurrentId(id); // || id.StartsWith(PREFIX_TOTAL); Skip the TICs, since Skyline calculates these
         }
 
-        public static ChromKey FromId(string id, bool parseCE)
+        public static ChromKey FromId(string idIn, bool parseCE)
         {
             try
             {
-                if (MsDataFileImpl.IsNegativeChargeId(id).HasValue) // We currently ignore chromatogram polarity, but we may encounter it in mzML so must at least be able to recognize it
-                    id = id.Substring(2);
-
                 double precursor, product;
+                var isNegativeChargeNullable = MsDataFileImpl.IsNegativeChargeIdNullable(idIn);
+                bool isNegativeCharge = isNegativeChargeNullable ?? false;
+                var id = isNegativeChargeNullable.HasValue ? idIn.Substring(2) : idIn;
                 if (id.StartsWith(MsDataFileImpl.PREFIX_TOTAL))
                 {
                     precursor = double.Parse(id.Substring(MsDataFileImpl.PREFIX_TOTAL.Length), CultureInfo.InvariantCulture);
@@ -1788,11 +1805,11 @@ namespace pwiz.Skyline.Model.Results
                         ceValue = Math.Abs(ceParsed);
                     }
                 }
-                return new ChromKey(null, precursor, 0, 0, product, ceValue, 0, ChromSource.fragment, ChromExtractor.summed, false, true, null, null);
+                return new ChromKey(null, new SignedMz(precursor, isNegativeCharge), 0, 0, new SignedMz(product, isNegativeCharge), ceValue, 0, ChromSource.fragment, ChromExtractor.summed, false, true, null, null);
             }
             catch (FormatException)
             {
-                throw new InvalidDataException(string.Format(Resources.ChromKey_FromId_Invalid_chromatogram_ID__0__found_Failure_parsing_mz_values, id));
+                throw new InvalidDataException(string.Format(Resources.ChromKey_FromId_Invalid_chromatogram_ID__0__found_Failure_parsing_mz_values, idIn));
             }
         }
 
@@ -1890,7 +1907,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         internal ChromGroupHeaderInfo5 Header { get { return _groupHeaderInfo; } }
-        public double PrecursorMz { get { return _groupHeaderInfo.Precursor; } }
+        public SignedMz PrecursorMz { get { return new SignedMz(_groupHeaderInfo.Precursor, _groupHeaderInfo.NegativeCharge); } }
         public MsDataFileUri FilePath { get { return _allFiles[_groupHeaderInfo.FileIndex].FilePath; } }
         public DateTime FileWriteTime { get { return _allFiles[_groupHeaderInfo.FileIndex].FileWriteTime; } }
         public DateTime? RunStartTime { get { return _allFiles[_groupHeaderInfo.FileIndex].RunStartTime; } }
@@ -1941,9 +1958,9 @@ namespace pwiz.Skyline.Model.Results
                                         ScanIndexes);
         }
 
-        protected double GetProduct(int index)
+        protected SignedMz GetProduct(int index)
         {
-            return _allTransitions[index].Product;
+            return new SignedMz(_allTransitions[index].Product, _groupHeaderInfo.NegativeCharge);
         }
 
         protected ChromTransition GetChromTransition(int index)
@@ -1951,7 +1968,7 @@ namespace pwiz.Skyline.Model.Results
             return _allTransitions[index];
         }
 
-        public ChromatogramInfo GetTransitionInfo(float productMz, float tolerance)
+        public ChromatogramInfo GetTransitionInfo(SignedMz productMz, float tolerance)
         {
             int startTran = _groupHeaderInfo.StartTransitionIndex;
             int endTran = startTran + _groupHeaderInfo.NumTransitions;
@@ -1984,7 +2001,7 @@ namespace pwiz.Skyline.Model.Results
                        : null;
         }
 
-        public ChromatogramInfo[] GetAllTransitionInfo(float productMz, float tolerance, OptimizableRegression regression)
+        public ChromatogramInfo[] GetAllTransitionInfo(SignedMz productMz, float tolerance, OptimizableRegression regression)
         {
             if (regression == null)
             {
@@ -2040,7 +2057,7 @@ namespace pwiz.Skyline.Model.Results
                 int end = start + _groupHeaderInfo.NumTransitions;
                 for (int i = start; i < end; i++)
                 {
-                    if (ChromKey.CompareTolerant((float)nodeTran.Mz, GetProduct(i), tolerance) == 0)
+                    if (ChromKey.CompareTolerant(nodeTran.Mz, GetProduct(i), tolerance) == 0)
                     {
                         match++;
                         if (!multiMatch)
@@ -2171,7 +2188,7 @@ namespace pwiz.Skyline.Model.Results
             Intensities = intensities;
         }
 
-        public double ProductMz
+        public SignedMz ProductMz
         {
             get { return GetProduct(_groupHeaderInfo.StartTransitionIndex + _transitionIndex); }
         }

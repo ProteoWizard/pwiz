@@ -127,7 +127,7 @@ namespace pwiz.Skyline.Model.Results
             foreach (var set in _dataSets.ToArray())
             {
                 Color peptideColor = NodePep != null ? NodePep.Color : PeptideDocNode.UNKNOWN_COLOR;
-                if (!set.Load(provider, NodePep != null ? NodePep.ModifiedSequence : null, peptideColor))
+                if (!set.Load(provider, NodePep != null ? NodePep.RawTextId : null, peptideColor))
                     _dataSets.Remove(set);
             }
             //Console.Out.WriteLine("Ending {0} {1} {2}", NodePep, _dataSets.Count, RuntimeHelpers.GetHashCode(this));

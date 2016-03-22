@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections;
+using pwiz.ProteowizardWrapper;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -52,7 +53,7 @@ namespace pwiz.Skyline.Model.Results
         /// Return doc node for a peptide associated with a given precursor Mz.  May return
         /// null if the precursor Mz lies outside the matching tolerance setting.
         /// </summary>
-        public PeptideDocNode FindPeptide(double precursorMz)
+        public PeptideDocNode FindPeptide(SignedMz precursorMz)
         {
             if (_precursorMzPeptideList.Count == 0)
                 return null;
@@ -80,14 +81,14 @@ namespace pwiz.Skyline.Model.Results
 
         private sealed class PeptidePrecursorMz
         {
-            public PeptidePrecursorMz(PeptideDocNode nodePeptide, double precursorMz)
+            public PeptidePrecursorMz(PeptideDocNode nodePeptide, SignedMz precursorMz)
             {
                 NodePeptide = nodePeptide;
                 PrecursorMz = precursorMz;
             }
 
             public PeptideDocNode NodePeptide { get; private set; }
-            public double PrecursorMz { get; private set; }
+            public SignedMz PrecursorMz { get; private set; }
 
             public static readonly MzComparer COMPARER = new MzComparer();
 

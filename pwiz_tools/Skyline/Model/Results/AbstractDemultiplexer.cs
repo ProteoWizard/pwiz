@@ -432,7 +432,7 @@ namespace pwiz.Skyline.Model.Results
                 var deconvRegion = _isoMapper.GetDeconvRegion(deconvIndices[deconvSpecIndex]);
                 var precursor = new MsPrecursor
                     {
-                        PrecursorMz = deconvRegion.CenterMz,
+                        PrecursorMz = new SignedMz(deconvRegion.CenterMz, originalSpectrum.NegativeCharge) ,
                         IsolationWindowLower =  deconvRegion.Width/2.0,
                         IsolationWindowUpper =  deconvRegion.Width/2.0
                     };
@@ -630,7 +630,7 @@ namespace pwiz.Skyline.Model.Results
                 }
 
                 // use the Skyline document isolation scheme to determine the boundaries of the isolation window
-                double isolationCenter = precursor.IsolationMz.Value;
+                var isolationCenter = precursor.IsolationMz;
                 double? isolationWidth = null;
                 filter.CalcDiaIsolationValues(ref isolationCenter, ref isolationWidth);
                 if (!isolationWidth.HasValue)

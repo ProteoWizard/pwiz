@@ -155,6 +155,7 @@ struct PWIZ_API_DECL Transition
     double Q1;
     double Q3;
     TimeRange acquiredTimeRange;
+    IonPolarity ionPolarity;
 
     bool operator< (const Transition& rhs) const;
 };
@@ -176,6 +177,7 @@ struct PWIZ_API_DECL Chromatogram
     virtual int getTotalDataPoints() const = 0;
     virtual void getXArray(automation_vector<double>& x) const = 0;
     virtual void getYArray(automation_vector<float>& y) const = 0;
+    virtual IonPolarity getIonPolarity() const = 0;
 
     virtual ~Chromatogram() {}
 };

@@ -80,6 +80,7 @@ public:
         string filter;
         double q1, q3;
         double q3Offset;
+        CVID polarityType;
     };
 
     mutable vector<IndexEntry> index_;

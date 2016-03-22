@@ -292,9 +292,9 @@ namespace pwiz.SkylineTest
                    "Peptide,ID,Type,Precursor,Product,RT,RT Window,CE,Polarity\r\nmolecule_light,1,,59.999451,59.999451,3.45,4.56,-4.7,0\r\nmolecule_light,1,,59.999451,54.999451,3.45,4.56,-4.7,0\r\n");
                 Assert.AreEqual(1, count);
                 // Try negative charges
-                count = ExportAll(DOC_MOLECULES.Replace(" charge=\"", " charge=\"-"), 8, CreateShimadzuExporter, ExportStrategy.Single, 2, null,
+                count = ExportAll(DOC_MOLECULES.Replace("charge=\"", "charge=\"-"), 8, CreateShimadzuExporter, ExportStrategy.Single, 2, null,
                    ExportMethodType.Scheduled, RefinementSettings.ConvertToSmallMoleculesMode.none,
-                   "Peptide,ID,Type,Precursor,Product,RT,RT Window,CE,Polarity\r\nmolecule_light,1,,60.000549,60.000549,3.45,4.56,4.7,1\r\nmolecule_light,1,,60.000549,54.999451,3.45,4.56,4.7,1\r\n");
+                   "Peptide,ID,Type,Precursor,Product,RT,RT Window,CE,Polarity\r\nmolecule_light,1,,60.000549,60.000549,3.45,4.56,4.7,1\r\nmolecule_light,1,,60.000549,55.000549,3.45,4.56,4.7,1\r\n");
                 Assert.AreEqual(1, count);
             }
             count = ExportAll(DOC_0_1_PEPTIDES_NO_EMPTY, 37, CreateBrukerExporter, ExportStrategy.Single, 2, null,

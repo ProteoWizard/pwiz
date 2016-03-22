@@ -570,10 +570,12 @@ namespace pwiz.Skyline.Model.Results
             // is only one precursor match per file.
             if (listChrom.Count > 1)
             {
-                double precursorMz = nodeGroup.PrecursorMz;
+                var precursorMz = nodeGroup.PrecursorMz;
                 var listChromFinal = new List<ChromatogramGroupInfo>();
                 foreach (var chromInfo in listChrom)
                 {
+                    // Polarity matching should have happened in the TryLoad
+                    Assume.IsTrue(chromInfo.PrecursorMz.IsNegative == precursorMz.IsNegative);
                     var filePath = chromInfo.FilePath;
                     int fileIndex = listChromFinal.IndexOf(info => Equals(filePath, info.FilePath));
                     if (fileIndex == -1)

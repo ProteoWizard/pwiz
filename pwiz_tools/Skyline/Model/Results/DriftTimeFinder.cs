@@ -191,7 +191,7 @@ namespace pwiz.Skyline.Model.Results
             var apexRT = GetApexRT(nodeGroup, resultIndex, chromFileInfo, true) ??
                 GetApexRT(nodeGroup, resultIndex, chromFileInfo, false);
 
-            Assume.IsTrue(Math.Abs(chromInfo.PrecursorMz - pair.NodeGroup.PrecursorMz) < 1.0E-9, "mismatch in precursor values"); // Not L10N
+            Assume.IsTrue(chromInfo.PrecursorMz.CompareTolerant(pair.NodeGroup.PrecursorMz, 1.0E-9f) == 0 , "mismatch in precursor values"); // Not L10N
             // Only use the transitions currently enabled
             var transitionPointSets = chromInfo.TransitionPointSets.Where(
                 tp => nodeGroup.Transitions.Any(
@@ -331,6 +331,7 @@ namespace pwiz.Skyline.Model.Results
                 double totalIntensity = 0;
                 foreach (var t in transitions)
                 {
+                    Assume.IsTrue(t.ProductMz.IsNegative == scan.NegativeCharge);  // It would be strange if associated scan did not have same polarity
                     var mzPeak = t.ProductMz;
                     var halfwin = (t.ExtractionWidth ?? tolerance)/2;
                     var mzLow = mzPeak - halfwin;

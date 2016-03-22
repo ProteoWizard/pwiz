@@ -176,6 +176,10 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_ABI::chromatogram(size_t index, b
             //result->product.isolationWindow.set(MS_isolation_window_lower_offset, ie.q3, MS_m_z);
             //result->product.isolationWindow.set(MS_isolation_window_upper_offset, ie.q3, MS_m_z);
 
+            CVID polarityType = ABI::translate(experiment->getPolarity());
+            if (polarityType != CVID_Unknown)
+                result->set(polarityType);
+
             result->setTimeIntensityArrays(std::vector<double>(), std::vector<double>(), UO_minute, MS_number_of_detector_counts);
 
             vector<double> times, intensities;
@@ -234,7 +238,8 @@ PWIZ_API_DECL void ChromatogramList_ABI::createIndex() const
                 ie.index = index_.size()-1;
 
                 std::ostringstream oss;
-                oss << "SRM SIC Q1=" << ie.q1 <<
+                oss << polarityStringForFilter(ABI::translate(ie.experiment->getPolarity())) <<
+                        "SRM SIC Q1=" << ie.q1 <<
                        " Q3=" << ie.q3 <<
                        " sample=" << ie.sample <<
                        " period=" << ie.period <<

@@ -89,6 +89,8 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
     result->index = ci.index;
     result->id = ci.id;
     result->set(ci.chromatogramType);
+    if (ci.polarityType != CVID_Unknown)
+        result->set(ci.polarityType);
 
     rawfile_->setCurrentController(ci.controllerType, ci.controllerNumber);
 
@@ -147,6 +149,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
             ActivationType activationType = filterParser.activationType_;
             if (activationType == ActivationType_Unknown)
                 activationType = ActivationType_CID; // assume CID
+            string polarity = polarityStringForFilter(ci.polarityType);
 
             SetActivationType(activationType, result->precursor.activation);
             if (filterParser.activationType_ == ActivationType_CID)
@@ -164,7 +167,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
 
             ChromatogramDataPtr cd = rawfile_->getChromatogramData(
                 Type_MassRange, Operator_None, Type_MassRange,
-                "SRM ms2 " + q1 + " [" + q3Range + "]", q3Range, "", 0,
+                polarity + "SRM ms2 " + q1 + " [" + q3Range + "]", q3Range, "", 0,
                 0, rawfile_->rt(rawfile_->value(NumSpectra)),
                 Smoothing_None, 0);
             pwiz::msdata::TimeIntensityPair* data = reinterpret_cast<pwiz::msdata::TimeIntensityPair*>(cd->data());
@@ -254,6 +257,7 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
                     ci.index = index_.size()-1;
                     ci.id = "TIC";
                     ci.chromatogramType = MS_TIC_chromatogram;
+                    ci.polarityType = CVID_Unknown;
                     idMap_[ci.id] = ci.index;
 
                     // for certain filter types, support additional chromatograms
@@ -295,7 +299,10 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
                                     ci.index = index_.size()-1;
                                     ci.q1 = filterParser.precursorMZs_[0];
                                     ci.q3 = (filterParser.scanRangeMin_[j] + filterParser.scanRangeMax_[j]) / 2.0;
-                                    ci.id = (format("SRM SIC %s,%.10g", std::locale::classic())
+                                    ci.polarityType = translate(filterParser.polarityType_);
+                                    string polarity = polarityStringForFilter(ci.polarityType);
+                                    ci.id = (format("%sSRM SIC %s,%.10g", std::locale::classic())
+                                             % polarity
                                              % precursorMZ
                                              % ci.q3
                                             ).str();
@@ -326,6 +333,7 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
                                             ).str();
                                     // this should be q1Offset
                                     ci.q3Offset = (filterParser.scanRangeMax_[j] - filterParser.scanRangeMin_[j]) / 2.0;
+                                    ci.polarityType = translate(filterParser.polarityType_);
                                     idMap_[ci.id] = ci.index;
                                 }
                             }
@@ -357,6 +365,7 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
                     ci.index = index_.size()-1;
                     ci.id = "Total Scan";
                     ci.chromatogramType = MS_absorption_chromatogram;
+                    ci.polarityType = CVID_Unknown;
                     idMap_[ci.id] = ci.index;
                 }
                 break; // case Controller_PDA
@@ -371,6 +380,7 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
                     ci.index = index_.size()-1;
                     ci.id = "ECD";
                     ci.chromatogramType = MS_emission_chromatogram;
+                    ci.polarityType = CVID_Unknown;
                     idMap_[ci.id] = ci.index;
                 }
 

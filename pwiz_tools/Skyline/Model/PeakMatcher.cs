@@ -87,7 +87,7 @@ namespace pwiz.Skyline.Model
             var abundances = new IonAbundances();
             foreach (var nodeTran in nodeTranGroup.Transitions)
             {
-                var chromInfoCached = chromGroupInfo.GetTransitionInfo((float) nodeTran.Mz, mzMatchTolerance);
+                var chromInfoCached = chromGroupInfo.GetTransitionInfo(nodeTran.Mz, mzMatchTolerance);
                 if (chromInfoCached == null)
                     continue;
 
@@ -295,7 +295,7 @@ namespace pwiz.Skyline.Model
             var largestPeak = ChromPeak.EMPTY;
             foreach (var peak in
                      from transitionDocNode in nodeTranGroup.Transitions
-                     select chromGroupInfo.GetTransitionInfo((float) transitionDocNode.Mz, mzMatchTolerance)
+                     select chromGroupInfo.GetTransitionInfo(transitionDocNode.Mz, mzMatchTolerance)
                      into chromInfo where chromInfo != null
                      select chromInfo.GetPeak(peakIndex))
             {
@@ -504,7 +504,7 @@ namespace pwiz.Skyline.Model
             {
                 foreach (var nodeTran in nodeTranGroup.Transitions)
                 {
-                    var chromInfoCached = chromGroupInfo.GetTransitionInfo((float) nodeTran.Mz, mzMatchTolerance);
+                    var chromInfoCached = chromGroupInfo.GetTransitionInfo(nodeTran.Mz, mzMatchTolerance);
                     if (chromInfoCached == null)
                         continue;
 

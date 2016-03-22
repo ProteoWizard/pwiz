@@ -143,7 +143,7 @@ namespace pwiz.Skyline.Model.Results
 
             bool fixCEOptForShimadzu = dataFile.IsShimadzuFile;
             int indexPrecursor = -1;
-            double lastPrecursor = 0;
+            var lastPrecursor = SignedMz.ZERO;
             for (int i = 0; i < len; i++)
             {
                 int index;
@@ -181,7 +181,8 @@ namespace pwiz.Skyline.Model.Results
             _chromIds.Sort((p1, p2) => p1.Key.CompareTo(p2.Key));
 
             int indexLast = 0;
-            double lastPrecursor = 0, lastProduct = 0;
+            var lastPrecursor = SignedMz.ZERO;
+            var lastProduct = SignedMz.ZERO;
             for (int i = 0; i < _chromIds.Count; i++)
             {
                 var chromKey = _chromIds[i].Key;

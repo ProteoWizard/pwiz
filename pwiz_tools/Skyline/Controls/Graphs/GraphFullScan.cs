@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.MSGraph;
@@ -398,17 +399,21 @@ namespace pwiz.Skyline.Controls.Graphs
             // Assign each point to a transition point list, or else the default point list.
             IList<double> mzs;
             IList<double> intensities;
+            bool negativeScan;
             if (_msDataFileScanHelper.MsDataSpectra.Length == 1)
             {
                 mzs = _msDataFileScanHelper.MsDataSpectra[0].Mzs;
                 intensities = _msDataFileScanHelper.MsDataSpectra[0].Intensities;
+                negativeScan = _msDataFileScanHelper.MsDataSpectra[0].NegativeCharge;
             }
             else
             {
+                // Ion mobility being shown as 2-D spectrum
                 mzs = new List<double>();
                 intensities = new List<double>();
 
                 var fullScans = _msDataFileScanHelper.GetFilteredScans();
+                negativeScan = fullScans.Any() && fullScans.First().NegativeCharge;
 
                 double minMz;
                 var indices = new int[fullScans.Length];
@@ -428,9 +433,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 for (int j = 0; j < _msDataFileScanHelper.ScanProvider.Transitions.Length; j++)
                 {
                     var transition = _msDataFileScanHelper.ScanProvider.Transitions[j];
+                    // Polarity should match, because these are the spectra used for extraction
+                    Assume.IsTrue(transition.PrecursorMz.IsNegative == negativeScan);
                     if (transition.Source != _msDataFileScanHelper.Source ||
-                        mz <= transition.ProductMz - transition.ExtractionWidth/2 ||
-                        mz > transition.ProductMz + transition.ExtractionWidth/2)
+                        mz <= transition.ProductMz.Value - transition.ExtractionWidth/2 ||
+                        mz > transition.ProductMz.Value + transition.ExtractionWidth/2)
                         continue;
                     assignedPointList = pointLists[j];
                     break;

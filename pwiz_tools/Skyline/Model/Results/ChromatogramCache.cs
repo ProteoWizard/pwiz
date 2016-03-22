@@ -24,6 +24,7 @@ using System.Linq;
 using System.Text;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -32,6 +33,7 @@ namespace pwiz.Skyline.Model.Results
 {
     public sealed class ChromatogramCache : Immutable, IDisposable
     {
+        public const int FORMAT_VERSION_CACHE_11 = 11; // Introduces signed mz - no alignments change, just a new flags bit
         public const int FORMAT_VERSION_CACHE_10 = 10; // Introduces waters lockmass correction in MSDataFileUri syntax
         public const int FORMAT_VERSION_CACHE_9 = 9; // Introduces abbreviated scan ids
         public const int FORMAT_VERSION_CACHE_8 = 8; // Introduces ion mobility data
@@ -49,7 +51,7 @@ namespace pwiz.Skyline.Model.Results
 
         public static int FORMAT_VERSION_CACHE
         {
-            get { return FORMAT_VERSION_CACHE_10; }
+            get { return FORMAT_VERSION_CACHE_11; }
         }
 
         // Set default block size for scoures BlockedArray<float>
@@ -321,7 +323,7 @@ namespace pwiz.Skyline.Model.Results
         private bool TryLoadChromInfo(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup,
                                       float tolerance, out ChromGroupHeaderInfo5[] headerInfos)
         {
-            float precursorMz = nodeGroup != null ? (float)nodeGroup.PrecursorMz : 0;
+            var precursorMz =  nodeGroup != null ? nodeGroup.PrecursorMz : SignedMz.ZERO;
             double? explicitRT = null;
             if (nodePep != null && nodePep.ExplicitRetentionTime != null)
                 explicitRT = nodePep.ExplicitRetentionTime.RetentionTime;
@@ -425,14 +427,14 @@ namespace pwiz.Skyline.Model.Results
             return true;
         }
 
-        private int FindEntry(float precursorMz, float tolerance)
+        private int FindEntry(SignedMz precursorMz, float tolerance)
         {
             if (_chromatogramEntries == null)
                 return -1;
             return FindEntry(precursorMz, tolerance, 0, _chromatogramEntries.Length - 1);
         }
 
-        private int FindEntry(double precursorMz, float tolerance, int left, int right)
+        private int FindEntry(SignedMz precursorMz, float tolerance, int left, int right)
         {
             // Binary search for the right precursorMz
             if (left > right)
@@ -451,13 +453,13 @@ namespace pwiz.Skyline.Model.Results
             return mid;
         }
 
-        private static int CompareMz(double precursorMz1, double precursorMz2, float tolerance)
+        private static int CompareMz(SignedMz precursorMz1, SignedMz precursorMz2, float tolerance)
         {
             return ChromKey.CompareTolerant(precursorMz1, precursorMz2,
                 tolerance);
         }
 
-        private static bool MatchMz(double mz1, double mz2, float tolerance)
+        private static bool MatchMz(SignedMz mz1, SignedMz mz2, float tolerance)
         {
             return CompareMz(mz1, mz2, tolerance) == 0;
         }
@@ -1258,7 +1260,7 @@ namespace pwiz.Skyline.Model.Results
                 {
                     int tranIndex = groupInfo.StartTransitionIndex + j;
                     var tranInfo = _chromTransitions[tranIndex];
-                    double product = tranInfo.Product;
+                    var product = new SignedMz(tranInfo.Product, groupInfo.NegativeCharge);
                     float extractionWidth = tranInfo.ExtractionWidth;
                     ChromSource source = tranInfo.Source;
                     ChromKey key = new ChromKey(_textIdBytes, groupInfo.TextIdIndex, groupInfo.TextIdLen,

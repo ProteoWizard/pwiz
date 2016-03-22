@@ -3265,7 +3265,7 @@ namespace pwiz.Skyline.Model
         public static string GetHeader(char fieldSeparator)
         {
             return
-                ";Funtion channel,Retention Time Start,Retention Time End,Set Mass,Mass Fragments 1,2,3,4,5,6,Trap CE Start,Trap CE End," + // Not L10N
+                ";Function channel,Retention Time Start,Retention Time End,Set Mass,Mass Fragments 1,2,3,4,5,6,Trap CE Start,Trap CE End," + // Not L10N
                 "Transfer CE Start,Transfer CE End,CV,EDCMass,DT Start,DT End,compound name".Replace(',', fieldSeparator); // Not L10N
         }
 
@@ -3286,7 +3286,7 @@ namespace pwiz.Skyline.Model
 
             var transitions = GetTransitionsInBestOrder(nodeTranGroup, nodeTranGroupPrimary).ToArray();
 
-            // Funtion channel
+            // Function channel
             writer.Write(0);
             writer.Write(FieldSeparator);
             // Retention Time Start, Retention Time End

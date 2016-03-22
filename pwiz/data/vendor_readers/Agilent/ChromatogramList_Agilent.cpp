@@ -109,6 +109,9 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Agilent::chromatogram(size_t inde
         {
             pwiz::vendor_api::Agilent::ChromatogramPtr chromatogramPtr(rawfile_->getChromatogram(ci.transition));
 
+            CVID polarityType = Agilent::translateAsPolarityType(chromatogramPtr->getIonPolarity());
+            if (polarityType != CVID_Unknown)
+                result->set(polarityType);
             result->precursor.isolationWindow.set(MS_isolation_window_target_m_z, ci.transition.Q1, MS_m_z);
             result->precursor.activation.set(MS_CID);
             result->precursor.activation.set(MS_collision_energy, chromatogramPtr->getCollisionEnergy());
@@ -139,6 +142,9 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Agilent::chromatogram(size_t inde
         case MS_SIM_chromatogram:
         {
             pwiz::vendor_api::Agilent::ChromatogramPtr chromatogramPtr(rawfile_->getChromatogram(ci.transition));
+            CVID polarityType = Agilent::translateAsPolarityType(chromatogramPtr->getIonPolarity());
+            if (polarityType != CVID_Unknown)
+                result->set(polarityType);
 
             result->precursor.isolationWindow.set(MS_isolation_window_target_m_z, ci.transition.Q1, MS_m_z);
 
@@ -186,8 +192,10 @@ PWIZ_API_DECL void ChromatogramList_Agilent::createIndex() const
         ci.chromatogramType = transition.type == Transition::MRM ? MS_SRM_chromatogram
                                                                  : MS_SIM_chromatogram;
         ci.transition = transition;
+        string polarity = polarityStringForFilter((transition.ionPolarity == IonPolarity_Negative) ? MS_negative_scan : MS_positive_scan);
         if (ci.chromatogramType == MS_SRM_chromatogram)
-            ci.id = (format("SRM SIC Q1=%.10g Q3=%.10g start=%.10g end=%.10g")
+            ci.id = (format("%sSRM SIC Q1=%.10g Q3=%.10g start=%.10g end=%.10g")
+                     % polarity
                      % transition.Q1
                      % transition.Q3
                      % transition.acquiredTimeRange.start

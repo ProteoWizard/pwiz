@@ -81,10 +81,10 @@ namespace pwiz.Skyline.Model.Results
 
                     if (!firstPass)
                     {
-                        var key = new PrecursorTextId(0, null, ChromExtractor.summed);  // TIC
+                        var key = new PrecursorTextId(SignedMz.ZERO, null, ChromExtractor.summed);  // TIC
                         dictPrecursorMzToFilter.Add(key, new SpectrumFilterPair(key, PeptideDocNode.UNKNOWN_COLOR, dictPrecursorMzToFilter.Count,
                             _instrument.MinTime, _instrument.MaxTime, null, null, 0, _isHighAccMsFilter, _isHighAccProductFilter));
-                        key = new PrecursorTextId(0, null, ChromExtractor.base_peak);   // BPC
+                        key = new PrecursorTextId(SignedMz.ZERO, null, ChromExtractor.base_peak);   // BPC
                         dictPrecursorMzToFilter.Add(key, new SpectrumFilterPair(key, PeptideDocNode.UNKNOWN_COLOR, dictPrecursorMzToFilter.Count,
                             _instrument.MinTime, _instrument.MaxTime, null, null, 0, _isHighAccMsFilter, _isHighAccProductFilter));
                     }
@@ -190,7 +190,7 @@ namespace pwiz.Skyline.Model.Results
 
                         SpectrumFilterPair filter;
                         string textId = nodePep.RawTextId; // Modified Sequence for peptides, or some other string for custom ions
-                        double mz = nodeGroup.PrecursorMz;
+                        var mz = new SignedMz(nodeGroup.PrecursorMz, nodeGroup.PrecursorCharge < 0);
                         var key = new PrecursorTextId(mz, textId, ChromExtractor.summed);
                         if (!dictPrecursorMzToFilter.TryGetValue(key, out filter))
                         {
@@ -357,7 +357,7 @@ namespace pwiz.Skyline.Model.Results
         }
         */
 
-        private IEnumerable<double> GetMS1MzValues(TransitionGroupDocNode nodeGroup)
+        private IEnumerable<SignedMz> GetMS1MzValues(TransitionGroupDocNode nodeGroup)
         {
             var isotopePeaks = nodeGroup.IsotopeDist;
             if (isotopePeaks == null)
@@ -370,7 +370,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 // Otherwise, return all possible isotope peaks
                 for (int i = 0; i < isotopePeaks.CountPeaks; i++)
-                    yield return isotopePeaks.GetMZI(isotopePeaks.PeakIndexToMassIndex(i));
+                    yield return new SignedMz(isotopePeaks.GetMZI(isotopePeaks.PeakIndexToMassIndex(i)), nodeGroup.PrecursorCharge < 0);
             }
         }
 
@@ -551,7 +551,8 @@ namespace pwiz.Skyline.Model.Results
             {
                 double isolationWidth = _instrument.MaxMz - _instrument.MinMz;
                 double isolationMz = _instrument.MinMz + isolationWidth / 2;
-                yield return new IsolationWindowFilter(isolationMz, isolationWidth);
+                // CONSIDER: Negative polarity MSe?
+                yield return new IsolationWindowFilter(new SignedMz(isolationMz, false), isolationWidth);
             }
             else if (precursors.Count > 0)
             {
@@ -566,13 +567,13 @@ namespace pwiz.Skyline.Model.Results
 
         private struct IsolationWindowFilter
         {
-            public IsolationWindowFilter(double? isolationMz, double? isolationWidth) : this()
+            public IsolationWindowFilter(SignedMz isolationMz, double? isolationWidth) : this()
             {
                 IsolationMz = isolationMz;
                 IsolationWidth = isolationWidth;
             }
 
-            public double? IsolationMz { get; private set; }
+            public SignedMz IsolationMz { get; private set; }
             public double? IsolationWidth { get; private set; }
 
             #region object overrides
@@ -594,7 +595,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 unchecked
                 {
-                    return ((IsolationMz.HasValue ? IsolationMz.Value.GetHashCode() : 0) * 397) ^
+                    return (IsolationMz.GetHashCode() * 397) ^
                         (IsolationWidth.HasValue ? IsolationWidth.Value.GetHashCode() : 0);
                 }
             }
@@ -622,7 +623,7 @@ namespace pwiz.Skyline.Model.Results
             var filterPairs = new List<SpectrumFilterPair>();
             if (acquisitionMethod == FullScanAcquisitionMethod.DIA)
             {
-                double isoTargMz = isoWin.IsolationMz.Value;
+                var isoTargMz = isoWin.IsolationMz;
                 double? isoTargWidth = isoWin.IsolationWidth;
                 if (!ignoreIsolationScheme)
                 {
@@ -652,7 +653,7 @@ namespace pwiz.Skyline.Model.Results
                 double mzDeltaEpsilon = Math.Min(_instrument.MzMatchTolerance, .0001);
 
                 // Isolation width for single is based on the instrument m/z match tolerance
-                double isoTargMz = isoWin.IsolationMz.Value;
+                var isoTargMz = isoWin.IsolationMz;
                 var isoWinSingle = new IsolationWindowFilter(isoTargMz, _instrument.MzMatchTolerance * 2);
 
                 foreach (var filterPair in FindFilterPairs(isoWinSingle, FullScanAcquisitionMethod.DIA, true))
@@ -682,7 +683,7 @@ namespace pwiz.Skyline.Model.Results
             return filterPairs;
         }
 
-        public void CalcDiaIsolationValues(ref double isolationTargetMz,
+        public void CalcDiaIsolationValues(ref SignedMz isolationTargetMz,
                                             ref double? isolationWidth)
         {
             double isolationWidthValue;
@@ -722,7 +723,7 @@ namespace pwiz.Skyline.Model.Results
                 }
 
                 isolationWidthValue = isolationWindow.End - isolationWindow.Start;
-                isolationTargetMz = isolationWindow.Start + isolationWidthValue/2;
+                isolationTargetMz = isolationTargetMz.ChangeMz(isolationWindow.Start + isolationWidthValue / 2);
             }
 
                 // MSe just uses the instrument isolation window

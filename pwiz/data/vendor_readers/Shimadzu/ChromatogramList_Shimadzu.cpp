@@ -159,7 +159,8 @@ PWIZ_API_DECL void ChromatogramList_Shimadzu::createIndex() const
         IndexEntry& ci = index_.back();
         ci.index = index_.size()-1;
         ci.transition = transition;
-        ci.id = (format("SRM SIC Q1=%.10g Q3=%.10g Channel=%d Event=%d Segment=%d CE=%.10g"/* start=%.10g end=%.10g"*/)
+        ci.id = (format("%sSRM SIC Q1=%.10g Q3=%.10g Channel=%d Event=%d Segment=%d CE=%.10g"/* start=%.10g end=%.10g"*/)
+                    % polarityStringForFilter((transition.polarity == 1) ? MS_negative_scan : MS_positive_scan)
                     % transition.Q1
                     % transition.Q3
                     % transition.channel

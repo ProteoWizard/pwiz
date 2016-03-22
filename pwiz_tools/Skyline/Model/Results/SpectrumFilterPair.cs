@@ -52,13 +52,13 @@ namespace pwiz.Skyline.Model.Results
 
             if (Q1 == 0)
             {
-                Ms1ProductFilters = new[] {new SpectrumProductFilter(0, 0)};
+                Ms1ProductFilters = new[] {new SpectrumProductFilter(SignedMz.ZERO, 0)};
             }
         }
 
         public SpectrumFilterPair(ChromatogramRequestDocumentChromatogramGroup requestGroup)
         {
-            Q1 = requestGroup.PrecursorMz;
+            Q1 = new SignedMz(requestGroup.PrecursorMz);
             ModifiedSequence = requestGroup.ModifiedSequence;
             switch (requestGroup.Extractor)
             {
@@ -98,7 +98,7 @@ namespace pwiz.Skyline.Model.Results
         public bool HighAccQ3 { get; private set; }
         public string ModifiedSequence { get; private set; }
         public Color PeptideColor { get; private set; }
-        public double Q1 { get; private set; }
+        public SignedMz Q1 { get; private set; }
         public double? MinTime { get; private set; }
         public double? MaxTime { get; private set; }
         private double? MinDriftTimeMsec { get; set; }
@@ -108,7 +108,7 @@ namespace pwiz.Skyline.Model.Results
         private SpectrumProductFilter[] SimProductFilters { get; set; }
         public SpectrumProductFilter[] Ms2ProductFilters { get; set; }
 
-        public void AddQ1FilterValues(IEnumerable<double> filterValues, Func<double, double> getFilterWindow)
+        public void AddQ1FilterValues(IEnumerable<SignedMz> filterValues, Func<double, double> getFilterWindow)
         {
             AddFilterValues(MergeFilters(Ms1ProductFilters, filterValues).Distinct(), getFilterWindow,
                 filters => Ms1ProductFilters = filters);
@@ -116,20 +116,20 @@ namespace pwiz.Skyline.Model.Results
             SimProductFilters = Ms1ProductFilters.Select(f => new SpectrumProductFilter(f.TargetMz, f.FilterWidth)).ToArray();
         }
 
-        public void AddQ3FilterValues(IEnumerable<double> filterValues, Func<double, double> getFilterWindow)
+        public void AddQ3FilterValues(IEnumerable<SignedMz> filterValues, Func<double, double> getFilterWindow)
         {
             AddFilterValues(MergeFilters(Ms2ProductFilters, filterValues).Distinct(), getFilterWindow,
                 filters => Ms2ProductFilters = filters);
         }
 
-        private static IEnumerable<double> MergeFilters(IEnumerable<SpectrumProductFilter> existing, IEnumerable<double> added)
+        private static IEnumerable<SignedMz> MergeFilters(IEnumerable<SpectrumProductFilter> existing, IEnumerable<SignedMz> added)
         {
             if (existing == null)
                 return added;
             return existing.Select(f => f.TargetMz).Union(added);
         }
 
-        private static void AddFilterValues(IEnumerable<double> filterValues,
+        private static void AddFilterValues(IEnumerable<SignedMz> filterValues,
                                             Func<double, double> getFilterWindow,
                                             Action<SpectrumProductFilter[]> setProductFilters)
         {
@@ -197,6 +197,10 @@ namespace pwiz.Skyline.Model.Results
                     rtCount++;
                     lastRT = rt;
                 }
+
+                // Filter on scan polarity
+                if (Q1.IsNegative != spectrum.NegativeCharge)
+                    continue;
 
                 // Filter on drift time, if any
                 Assume.IsTrue(!useDriftTimeHighEnergyOffset || spectrum.Id.StartsWith("2")); // Not L10N
@@ -319,6 +323,7 @@ namespace pwiz.Skyline.Model.Results
 
         public IEnumerable<ChromatogramRequestDocumentChromatogramGroup> ToChromatogramRequestDocumentChromatogramGroups()
         {
+            // TODO(bspratt) how to communicate scan polarity to Chorus?
             if (null != Ms1ProductFilters)
             {
                 var chromatograms = new List<ChromatogramRequestDocumentChromatogramGroupChromatogram>();
@@ -326,7 +331,7 @@ namespace pwiz.Skyline.Model.Results
                 {
                     var product = new ChromatogramRequestDocumentChromatogramGroupChromatogram
                     {
-                        ProductMz = spectrumProductFilter.TargetMz,
+                        ProductMz = spectrumProductFilter.TargetMz.RawValue.Value, // Negative ion mode values serialize as negative numbers
                         MzWindow = spectrumProductFilter.FilterWidth,
                     };
                     chromatograms.Add(product);
@@ -343,7 +348,7 @@ namespace pwiz.Skyline.Model.Results
                 {
                     var product = new ChromatogramRequestDocumentChromatogramGroupChromatogram
                     {
-                        ProductMz = spectrumProductFilter.TargetMz,
+                        ProductMz = spectrumProductFilter.TargetMz.RawValue.Value, // Negative ion mode values serialize as negative numbers
                         MzWindow = spectrumProductFilter.FilterWidth,
                     };
                     chromatograms.Add(product);
@@ -413,7 +418,7 @@ namespace pwiz.Skyline.Model.Results
             ChromatogramRequestDocumentChromatogramGroup docFilterPair = new ChromatogramRequestDocumentChromatogramGroup
             {
                 ModifiedSequence = ModifiedSequence,
-                PrecursorMz = Q1,
+                PrecursorMz = Q1.RawValue.Value,  // A negative ion mode precursor will be serialized as a negative mz value
                 MassErrors = calculateMassErrors,
             };
             switch (Extractor)
@@ -492,13 +497,18 @@ namespace pwiz.Skyline.Model.Results
 
     public class SpectrumProductFilter
     {
-        public SpectrumProductFilter(double targetMz, double filterWidth)
+        public SpectrumProductFilter(double targetMz, double filterWidth) :
+            this(new SignedMz(targetMz), filterWidth)
+        {
+        }
+
+        public SpectrumProductFilter(SignedMz targetMz, double filterWidth)
         {
             TargetMz = targetMz;
             FilterWidth = filterWidth;
         }
 
-        public double TargetMz { get; private set; }
+        public SignedMz TargetMz { get; private set; }
         public double FilterWidth { get; private set; }
         public int FilterId { get; set; }
 

@@ -94,6 +94,10 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index
     result->id = ie.id;
     result->set(ie.chromatogramType);
 
+    PwizPolarityType polarityType = WatersToPwizPolarityType(rawdata_->Info.GetIonMode(ie.function));
+    if (polarityType != PolarityType_Unknown)
+        result->set(translate(polarityType));
+
     switch (ie.chromatogramType)
     {
         case MS_TIC_chromatogram:
@@ -232,7 +236,8 @@ PWIZ_API_DECL void ChromatogramList_Waters::createIndex() const
             {
                 ie.Q3 = productMZs[i];
                 ie.chromatogramType = MS_SRM_chromatogram;
-                oss << "SRM SIC Q1=" << ie.Q1 <<
+                oss << polarityStringForFilter((WatersToPwizPolarityType(rawdata_->Info.GetIonMode(ie.function)) == PolarityType_Negative) ? MS_negative_scan : MS_positive_scan) <<
+                       "SRM SIC Q1=" << ie.Q1 <<
                        " Q3=" << ie.Q3 <<
                        " function=" << (function + 1) <<
                        " offset=" << ie.offset;

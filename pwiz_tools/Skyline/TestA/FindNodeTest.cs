@@ -78,7 +78,7 @@ namespace pwiz.SkylineTestA
                 pathFound = doc.SearchDocumentForString(pathFound, listPeptides[x-1].ToString().ToLower(), displaySettings, true, false);
                 Assert.AreEqual(doc.GetPathTo((int)SrmDocument.Level.Molecules, x-1), pathFound);
                 // Test parents can find children.
-                pathFound = doc.SearchDocumentForString(pathFound, String.Format("{0:F04}", listTransitionGroups[x * 2 - 1].PrecursorMz), displaySettings, 
+                pathFound = doc.SearchDocumentForString(pathFound, String.Format("{0:F04}", listTransitionGroups[x * 2 - 1].PrecursorMz.Value), displaySettings, 
                     false, true);
                 Assert.AreEqual(doc.GetPathTo((int)SrmDocument.Level.TransitionGroups, x * 2 - 1), pathFound);
                 // Test Children can find parents.
@@ -87,7 +87,7 @@ namespace pwiz.SkylineTestA
             }
 
             // Test wrapping in search up.
-            pathFound = doc.SearchDocumentForString(pathFound, String.Format("{0:F04}", listTransitionGroups[listTransitionGroups.Count - 1].PrecursorMz), 
+            pathFound = doc.SearchDocumentForString(pathFound, String.Format("{0:F04}", listTransitionGroups[listTransitionGroups.Count - 1].PrecursorMz.Value), 
                 displaySettings, false, true);
             Assert.AreEqual(doc.GetPathTo((int)SrmDocument.Level.TransitionGroups, listTransitionGroups.Count - 1), pathFound);
             

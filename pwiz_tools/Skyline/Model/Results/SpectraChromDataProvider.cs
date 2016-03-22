@@ -219,7 +219,7 @@ namespace pwiz.Skyline.Model.Results
             var chromMapSim = new ChromDataCollectorSet(ChromSource.sim, TimeSharing.grouped, _allChromData, _blockWriter);
             var chromMaps = new[] {chromMap, chromMapSim, chromMapMs1};
 
-            var dictPrecursorMzToIndex = new Dictionary<double, int>(); // For SRM processing
+            var dictPrecursorMzToIndex = new Dictionary<SignedMz, int>(); // For SRM processing
 
             var peptideFinder = _spectra.HasSrmSpectra ? new PeptideFinder(_document) : null;
 
@@ -237,7 +237,7 @@ namespace pwiz.Skyline.Model.Results
                 {
                     var dataSpectrum = _spectra.CurrentSpectrum;
 
-                    double precursorMz = dataSpectrum.Precursors[0].PrecursorMz ?? 0;
+                    var precursorMz = dataSpectrum.Precursors[0].PrecursorMz;
                     int filterIndex;
                     if (!dictPrecursorMzToIndex.TryGetValue(precursorMz, out filterIndex))
                     {
@@ -459,7 +459,7 @@ namespace pwiz.Skyline.Model.Results
         private void ProcessSrmSpectrum(double time,
                                                string modifiedSequence,
                                                Color peptideColor,
-                                               double precursorMz,
+                                               SignedMz precursorMz,
                                                int filterIndex,
                                                double[] mzs,
                                                double[] intensities,
@@ -470,7 +470,7 @@ namespace pwiz.Skyline.Model.Results
             float[] intensityFloats = new float[intensities.Length];
             for (int i = 0; i < intensities.Length; i++)
                 intensityFloats[i] = (float) intensities[i];
-            var productFilters = mzs.Select(mz => new SpectrumProductFilter(mz, 0)).ToArray();
+            var productFilters = mzs.Select(mz => new SpectrumProductFilter(new SignedMz(mz, precursorMz.IsNegative), 0)).ToArray();
             var spectrum = new ExtractedSpectrum(modifiedSequence, peptideColor, precursorMz, ionMobilityValue, ionMobilityExtractionWidth,
                 ChromExtractor.summed, filterIndex, productFilters, intensityFloats, null);
             chromMap.ProcessExtractedSpectrum((float)time, _collectors, -1, spectrum, null);
@@ -1308,7 +1308,7 @@ namespace pwiz.Skyline.Model.Results
 
         public void ProcessExtractedSpectrum(float time, SpectraChromDataProvider.Collectors chromatograms, int scanId, ExtractedSpectrum spectrum, Action<int, ChromCollector> addCollector)
         {
-            double precursorMz = spectrum.PrecursorMz;
+            var precursorMz = spectrum.PrecursorMz;
             double? ionMobilityValue = spectrum.IonMobilityValue;
             double ionMobilityExtractionWidth = spectrum.IonMobilityExtractionWidth;
             string textId = spectrum.TextId;
@@ -1393,7 +1393,7 @@ namespace pwiz.Skyline.Model.Results
 
     internal sealed class ChromDataCollector
     {
-        public ChromDataCollector(string modifiedSequence, double precursorMz, double ? ionMobilityValue, double ionMobilityExtractionWidth, int statusId, bool isGroupedTime)
+        public ChromDataCollector(string modifiedSequence, SignedMz precursorMz, double ? ionMobilityValue, double ionMobilityExtractionWidth, int statusId, bool isGroupedTime)
         {
             ModifiedSequence = modifiedSequence;
             PrecursorMz = precursorMz;
@@ -1409,7 +1409,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public string ModifiedSequence { get; private set; }
-        public double PrecursorMz { get; private set; }
+        public SignedMz PrecursorMz { get; private set; }
         public double? IonMobilityValue { get; private set; }
         public double IonMobilityExtractionWidth { get; private set; }
         public int StatusId { get; private set; }
