@@ -110,7 +110,8 @@ namespace pwiz.Skyline.Model
 
                 // Force a document changed notification, since loading blocks them
                 // from triggering new processing, but new processing may have accumulated
-                OnDocumentChanged(container, new DocumentChangedEventArgs(docCurrent));
+                if (!container.IsClosing)
+                    OnDocumentChanged(container, new DocumentChangedEventArgs(docCurrent));
             }
             catch (Exception exception)
             {

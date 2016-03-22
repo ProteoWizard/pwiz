@@ -110,6 +110,11 @@ namespace pwiz.Skyline.Model
         /// </summary>
         /// <param name="listener">The event handler to remove</param>
         void Unlisten(EventHandler<DocumentChangedEventArgs> listener);
+
+        /// <summary>
+        /// Returns true if the container is in teardown, and we should not attempt any document changes.
+        /// </summary>
+        bool IsClosing { get; }
     }
 
     /// <summary>

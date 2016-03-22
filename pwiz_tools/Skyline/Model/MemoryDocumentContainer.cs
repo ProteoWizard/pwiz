@@ -121,6 +121,8 @@ namespace pwiz.Skyline.Model
         {
             DocumentChangedEvent -= listener;
         }
+
+        public bool IsClosing { get { return false; } }
     }
 
     public class ResultsMemoryDocumentContainer : MemoryDocumentContainer, IDisposable

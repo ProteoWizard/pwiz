@@ -426,6 +426,8 @@ namespace pwiz.Skyline
             }
         }
 
+        public bool IsClosing { get { return _closing; } }
+
         public bool CopyMenuItemEnabled()
         {
             return copyMenuItem.Enabled;
