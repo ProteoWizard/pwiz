@@ -538,11 +538,31 @@ namespace pwiz.Skyline.Model.Lib
                     double predictedMz = SequenceMassCalc.GetMZ(predictedMass, charge);
                     if (Ordinal > 0)
                     {
-                        IonType2 = type;
-                        Charge2 = charge;
-                        Ordinal2 = ordinal;
-                        Losses2 = losses;
-                        PredictedMz2 = predictedMz;
+                        // If first type was excluded from causing a ranking, but second does, then make it the first
+                        // Otherwise, this can cause very mysterious failures to rank transitions that appear in the
+                        // document.
+                        if (Rank == 0 && ApplyRanking(rp, type, offset, losses, charge, filter, start, end, startMz, ionMz))
+                        {
+                            IonType2 = IonType;
+                            Charge2 = Charge;
+                            Ordinal2 = Ordinal;
+                            Losses2 = Losses;
+                            PredictedMz2 = PredictedMz;
+
+                            IonType = type;
+                            Charge = charge;
+                            Ordinal = ordinal;
+                            Losses = losses;
+                            PredictedMz = predictedMz;
+                        }
+                        else
+                        {
+                            IonType2 = type;
+                            Charge2 = charge;
+                            Ordinal2 = ordinal;
+                            Losses2 = losses;
+                            PredictedMz2 = predictedMz;
+                        }
                         rp.matched = true;
                         return false;
                     }
@@ -552,18 +572,8 @@ namespace pwiz.Skyline.Model.Lib
                     {
                         rp.Seen(predictedMz);
 
-                        // Avoid ranking precursor ions without losses, if the precursor isotopes will
-                        // not be taken from product ions
-                        if (!rp.excludePrecursorIsotopes || type != IonType.precursor || losses != null)
-                        {
-                            if (!filter || rp.tranSettings.Accept(rp.sequence, rp.precursorMz, type, offset, ionMz, start, end, startMz))
-                            {
-                                if (!rp.matchAll || (rp.minMz <= ionMz && ionMz <= rp.maxMz &&
-                                                     rp.rankTypes.Contains(type) &&
-                                                     (rp.rankCharges.Contains(charge) || type == IonType.precursor)))
-                                    Rank = rp.RankNext();
-                            }
-                        }
+                        ApplyRanking(rp, type, offset, losses, charge, filter, start, end, startMz, ionMz);
+
                         IonType = type;
                         Charge = charge;
                         Ordinal = ordinal;
@@ -577,6 +587,27 @@ namespace pwiz.Skyline.Model.Lib
                 if (rp.HasLosses)
                     return true;
                 return (ionMz <= ObservedMz);
+            }
+
+            private bool ApplyRanking(RankParams rp, IonType type, int offset, TransitionLosses losses, int charge, bool filter,
+                int start, int end, double startMz, double ionMz)
+            {
+                // Avoid ranking precursor ions without losses, if the precursor isotopes will
+                // not be taken from product ions
+                if (!rp.excludePrecursorIsotopes || type != IonType.precursor || losses != null)
+                {
+                    if (!filter || rp.tranSettings.Accept(rp.sequence, rp.precursorMz, type, offset, ionMz, start, end, startMz))
+                    {
+                        if (!rp.matchAll || (rp.minMz <= ionMz && ionMz <= rp.maxMz &&
+                                             rp.rankTypes.Contains(type) &&
+                                             (rp.rankCharges.Contains(charge) || type == IonType.precursor)))
+                        {
+                            Rank = rp.RankNext();
+                            return true;
+                        }
+                    }
+                }
+                return false;
             }
         }
 
