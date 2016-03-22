@@ -3100,7 +3100,7 @@ namespace pwiz.Skyline
                                     while (newSettings.PeptideSettings.NeedsBackgroundProteomeUniquenessCheckProcessing)
                                     {
                                         BackgroundProteomeManager.BeginForegroundLoad();  // Signal the background task to stay out of our way
-                                        var manager = new BackgroundProteomeManager(); // Use the background loader logic, but in this thread
+                                        var manager = BackgroundProteomeManager; // Use the background loader logic, but in this thread
                                         var withMetaData = manager.LoadForeground(newSettings.PeptideSettings, settingsChangeMonitor);
                                         if (withMetaData == null)
                                         {
