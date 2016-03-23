@@ -88,7 +88,7 @@ namespace pwiz.SkylineTestFunctional
                 }
             }
 
-            Assert.AreEqual(60, countPeaksProperPolarity, "countPeaksProperPolarity");
+            Assert.AreEqual(60, countPeaksProperPolarity, "countPeaksProperPolarity: " + string.Join(", ",properList));
             Assert.AreEqual(30, countPeaksNegPolarity, "countPeaksNegPolarity");
             Assert.AreEqual(30, countPeaksNoPolarity, "countPeaksNoPolarity");
             testFilesDir.Dispose();
