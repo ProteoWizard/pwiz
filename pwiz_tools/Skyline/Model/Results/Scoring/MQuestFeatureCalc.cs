@@ -263,23 +263,23 @@ namespace pwiz.Skyline.Model.Results.Scoring
             //           by multiple high scoring charge states, but not decreased by the addition
             //           of low scoring charge states. For now we just take the maximum score, since
             //           this is fast and easy to code correctly.
-            float maxDotProduct = 0;
+            float maxDotProduct = float.MinValue;
             foreach (var pdGroup in tranGroupPeakDatas)
             {
-                var pds = pdGroup.TransitionPeakData.Where(pd => pd.NodeTran != null && pd.NodeTran.HasDistInfo).ToList();
-                if (!pds.Any())
+                var pds = pdGroup.Ms1TranstionPeakData;
+                if (!pds.Any(pd => pd.NodeTran.HasDistInfo))
                     continue;
                 var peakAreas = pds.Select(pd => (double)pd.PeakData.Area);
-                var isotopeProportions = pds.Select(pd => (double)pd.NodeTran.IsotopeDistInfo.Proportion);
+                var isotopeProportions = pds.Select(pd => pd.NodeTran.HasDistInfo ? pd.NodeTran.IsotopeDistInfo.Proportion : 0.0);
                 var statPeakAreas = new Statistics(peakAreas);
                 var statIsotopeProportions = new Statistics(isotopeProportions);
                 var isotopeDotProduct = (float)statPeakAreas.NormalizedContrastAngleSqrt(statIsotopeProportions);
                 if (double.IsNaN(isotopeDotProduct))
-                    isotopeDotProduct = 0;
+                    isotopeDotProduct = float.MinValue;
                 if (isotopeDotProduct > maxDotProduct)
                     maxDotProduct = isotopeDotProduct;
             }
-            if (maxDotProduct == 0)
+            if (maxDotProduct == float.MinValue)
                 return float.NaN;
             return maxDotProduct;
         }
