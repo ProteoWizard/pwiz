@@ -61,9 +61,11 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            scenario(0, 0, PeptideFilter.PeptideUniquenessConstraint.gene, new Dictionary<string, int>()); // Verify that empty docs don't cause problems
+
             OpenDocument("UniqueTest.sky"); // Contains all the same proteins that are found in the protDB file
 
-            scenario(UNFILTERED_PEPTIDE_COUNT, PeptideFilter.PeptideUniquenessConstraint.none, // No change from initial state
+            scenario(UNFILTERED_PEPTIDE_COUNT, PROTEINS_COUNT, PeptideFilter.PeptideUniquenessConstraint.none, // No change from initial state
                 new Dictionary<string, int>
                 {
                     {"sp|P20050|HOP1_YEAST", HOP1_PEPTIDE_COUNT},
@@ -72,7 +74,7 @@ namespace pwiz.SkylineTestFunctional
                     {"sp|P10636|TAU_HUMAN", TAU_HUMAN_PEPTIDE_COUNT}, // "this protein is is seen in human, and mouse.  In both cases, there are a ton of isoforms (9 for human, 6 for mouse)."
                 });
 
-            scenario(UNIQUE_BY_PROTEINS_PEPTIDE_COUNT, PeptideFilter.PeptideUniquenessConstraint.protein, 
+            scenario(UNIQUE_BY_PROTEINS_PEPTIDE_COUNT, PROTEINS_COUNT, PeptideFilter.PeptideUniquenessConstraint.protein, 
                 new Dictionary<string, int>
                 {
                     {"sp|P20050|HOP1_YEAST", HOP1_PEPTIDE_COUNT}, // Unaffected - "HOP1 -- this protein has no isoforms, and is only present in yeast."
@@ -81,7 +83,7 @@ namespace pwiz.SkylineTestFunctional
                     {"sp|P10636|TAU_HUMAN", 0}, // "this protein is is seen in human, and mouse.  In both cases, there are a ton of isoforms (9 for human, 6 for mouse)."
                 });
 
-            scenario(UNIQUE_BY_GENE_PEPTIDE_COUNT, PeptideFilter.PeptideUniquenessConstraint.gene,
+            scenario(UNIQUE_BY_GENE_PEPTIDE_COUNT, PROTEINS_COUNT, PeptideFilter.PeptideUniquenessConstraint.gene,
                 new Dictionary<string, int>
                 {
                     {"sp|P20050|HOP1_YEAST", HOP1_PEPTIDE_COUNT}, // Unaffected - "HOP1 -- this protein has no isoforms, and is only present in yeast."
@@ -97,7 +99,7 @@ namespace pwiz.SkylineTestFunctional
                     {"sp|P10636-9|TAU_HUMAN", TAU_HUMAN_9_UNIQUE_PEPTIDE_COUNT}, // ATKQVQRRPPPAGPRSE portion of sequence is unique to this protein
                 });
 
-            scenario(UNIQUE_BY_SPECIES_PEPTIDE_COUNT, PeptideFilter.PeptideUniquenessConstraint.species,
+            scenario(UNIQUE_BY_SPECIES_PEPTIDE_COUNT, PROTEINS_COUNT, PeptideFilter.PeptideUniquenessConstraint.species,
                 new Dictionary<string, int>
                 {
                     {"sp|P20050|HOP1_YEAST", HOP1_PEPTIDE_COUNT}, // Unaffected - "HOP1 -- this protein has no isoforms, and is only present in yeast."
@@ -113,7 +115,7 @@ namespace pwiz.SkylineTestFunctional
                     {"sp|P10636-9|TAU_HUMAN", TAU_HUMAN_9_UNIQUE_PEPTIDE_COUNT}, // ATKQVQRRPPPAGPRSE portion of sequence is unique to this protein
                 });
 
-            scenario(UNIQUE_BY_PROTEINS_PEPTIDE_COUNT, PeptideFilter.PeptideUniquenessConstraint.protein,
+            scenario(UNIQUE_BY_PROTEINS_PEPTIDE_COUNT, PROTEINS_COUNT, PeptideFilter.PeptideUniquenessConstraint.protein,
                 new Dictionary<string, int>
                 {
                     {"sp|P20050|HOP1_YEAST", HOP1_PEPTIDE_COUNT}, // Unaffected - "HOP1 -- this protein has no isoforms, and is only present in yeast."
@@ -130,7 +132,7 @@ namespace pwiz.SkylineTestFunctional
                     {"sp|P10636-9|TAU_HUMAN", 2}, // ATKQVQRRPPPAGPRSE portion of sequence is unique to this protein
                 });
 
-            scenario(UNFILTERED_PEPTIDE_COUNT, PeptideFilter.PeptideUniquenessConstraint.none,
+            scenario(UNFILTERED_PEPTIDE_COUNT, PROTEINS_COUNT, PeptideFilter.PeptideUniquenessConstraint.none,
                 new Dictionary<string, int>
                 {
                     {"sp|P20050|HOP1_YEAST", HOP1_PEPTIDE_COUNT},
@@ -140,7 +142,7 @@ namespace pwiz.SkylineTestFunctional
 
         }
 
-        public static void scenario(int finalPeptideCount, PeptideFilter.PeptideUniquenessConstraint testType,
+        public static void scenario(int finalPeptideCount, int proteinsCount, PeptideFilter.PeptideUniquenessConstraint testType,
             Dictionary<string,int> dictProteinPrecursorCounts)
         {
             var doc = SkylineWindow.Document;
@@ -158,7 +160,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 WaitForDocumentChange(doc);
             }
-            AssertEx.IsDocumentState(SkylineWindow.Document, null, PROTEINS_COUNT, finalPeptideCount, finalPeptideCount, null);
+            AssertEx.IsDocumentState(SkylineWindow.Document, null, proteinsCount, finalPeptideCount, finalPeptideCount, null);
 
             // Check selected proteins for proper peptide count
             if (dictProteinPrecursorCounts != null)

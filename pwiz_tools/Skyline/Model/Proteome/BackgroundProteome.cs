@@ -72,6 +72,10 @@ namespace pwiz.Skyline.Model.Proteome
                             _parent.DatabaseInvalid = true;  // Note this breaks immutabilty, but has been that way forever
                         }
                     }
+                    else
+                    {
+                        _needsProteinMetadataSearch = false; // No parent, no proteins, no search needed
+                    }
                 }
                 return _needsProteinMetadataSearch.Value;
             }
@@ -239,6 +243,10 @@ namespace pwiz.Skyline.Model.Proteome
             Dictionary<string, bool> peptidesOfInterest, Enzyme enzyme, PeptideSettings settings, SrmSettingsChangeMonitor progressMonitor)
         {
             var results = peptidesOfInterest.ToDictionary(pep => pep.Key, pep =>  new DigestionPeptideStatsDetailed());
+            if (results.Count == 0)
+            {
+                return results;
+            }
             var protease = new ProteaseImpl(enzyme);
             var maxPeptideLength = peptidesOfInterest.Max(p => p.Key.Length); // No interest in any peptide longer than the longest one of interest
             const int DIGEST_CHUNKSIZE = 1000; // Check for cancel every N proteins

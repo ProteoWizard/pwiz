@@ -39,6 +39,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         private PeptideFilter.PeptideUniquenessConstraint _cancellationCheckType;
         private string _initialBackgroundProteome;
         private string _newBackgroundProteome;
+        private string _skyfile;
+        private bool _quickexit;
 
         // Scenarios to test:
         // 0) Background proteome nicely digested and metatdata resolved
@@ -51,9 +53,11 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         {
             AllowInternetAccess = true; // Testing cancellation of web lookup is integral to this test
             TestFilesZip = "https://skyline.gs.washington.edu/perftests/PerfUniquePeptidesTest.zip";
+            _skyfile = "lots_of_human_proteins.sky";
             _cancellationCheckType = cancellationCheckType;
             _initialBackgroundProteome = initialBackgroundProteome;
             _newBackgroundProteome = newBackgroundProteome;
+            _quickexit = false;
             RunFunctionalTest();
         }
 
@@ -93,6 +97,17 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             scenario(PeptideFilter.PeptideUniquenessConstraint.species, "human_and_yeast.protdb", "human_and_yeast_no_metadata.protdb");
         }
 
+        [TestMethod]
+        public void UniquePeptides5PerfTest()
+        {
+            // Just verify that we've fixed a problem with opening files with uniqueness mode already turned on
+            AllowInternetAccess = true; // Testing cancellation of web lookup is integral to this test
+            TestFilesZip = "https://skyline.gs.washington.edu/perftests/PerfUniquePeptidesTest5.zip";
+            _skyfile = "minimal.sky";
+            _quickexit = true;
+            RunFunctionalTest();
+        }
+
         protected override void DoTest()
         {
             runScenario(_cancellationCheckType, 
@@ -105,8 +120,14 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             // In each scenario we want to test:
             //  a) Cancellation while protdb processing in is progress
             //  b) Proper changes to document when we eventually don't cancel
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("lots_of_human_proteins.sky")));
+            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath(_skyfile)));
             WaitForDocumentLoaded();
+            if (_quickexit)
+            {
+                // Just wanted to see if it loads OK
+                RunUI(() => SkylineWindow.NewDocument(true)); // Force protdb shutdown
+                return;
+            }
             RunUI(() => { SkylineWindow.CollapseProteins(); }); // Things get pretty slow when trying to show tens of thousands of peptides
 
             if (initialBackgroundProteome != null)

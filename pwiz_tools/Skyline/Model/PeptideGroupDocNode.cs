@@ -190,7 +190,13 @@ namespace pwiz.Skyline.Model
                         uniquenessDict = settingsNew.PeptideSettings.Filter.CheckPeptideUniqueness(settingsNew, sequences, diff.Monitor);
                     }
                     // ReSharper disable once PossibleNullReferenceException
-                    peptideDocNodes = peptideDocNodesUnique.Where(p => uniquenessDict[p.Peptide.Sequence]);
+                    peptideDocNodes = peptideDocNodesUnique.Where(p =>
+                    {
+                        // It's possible during document load for uniqueness dict to get out of synch, so be 
+                        // cautious with lookup and just return false of not found. Final document change will clean that up.
+                        bool isUnique;
+                        return uniquenessDict.TryGetValue(p.Peptide.Sequence, out isUnique) && isUnique;
+                    });
                 }
                 
                 foreach(var nodePep in peptideDocNodes)
