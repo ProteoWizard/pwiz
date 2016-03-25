@@ -42,8 +42,11 @@ namespace pwiz.Common.PeakFinding
             if (intensities.Count > 0)
             {
                 float maxIntensityFloat = intensities.Max();
-                maxIntensityIndex = intensities.IndexOf(maxIntensityFloat);
-                baselineIntensity = intensities.Min();
+                if (maxIntensityFloat > 0)
+                {
+                    maxIntensityIndex = intensities.IndexOf(maxIntensityFloat);
+                    baselineIntensity = intensities.Min();
+                }
             }
             int fwhm = 6;
             if (maxIntensityIndex != -1)
