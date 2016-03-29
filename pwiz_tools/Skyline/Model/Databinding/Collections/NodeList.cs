@@ -108,7 +108,7 @@ namespace pwiz.Skyline.Model.Databinding.Collections
             }
             for (int i = 0; i < ancestor.Length; i++)
             {
-                if (!Equals(ancestor.GetIdentity(i), child.GetIdentity(i)))
+                if (!ReferenceEquals(ancestor.GetIdentity(i), child.GetIdentity(i)))
                 {
                     return false;
                 }
