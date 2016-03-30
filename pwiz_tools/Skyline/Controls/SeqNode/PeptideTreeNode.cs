@@ -606,7 +606,8 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public static bool HasPeptideTip(PeptideDocNode nodePep, SrmSettings settings)
         {
-            return nodePep.Peptide.Begin.HasValue ||
+            return nodePep.IsDecoy ||
+                   nodePep.Peptide.Begin.HasValue ||
                    nodePep.Rank.HasValue ||
                    nodePep.Note != null ||
                    // With one child, its tip detail will be appended
@@ -650,6 +651,13 @@ namespace pwiz.Skyline.Controls.SeqNode
                     size = table.CalcDimensions(g);
                     table.Draw(g);
                     return new Size((int)Math.Round(size.Width + 2), (int)Math.Round(size.Height + 2));
+                }
+                if (peptide.IsDecoy)
+                {
+                    string sourceText = nodePep.SourceTextId
+                        .Replace(".0]", "]")    // Not L10
+                        .Replace(".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator);   // Not L10N
+                    table.AddDetailRow("Source", sourceText, rt);
                 }
 
                 if (nodePep.Children.Count > 1)

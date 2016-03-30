@@ -251,13 +251,19 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// <summary>
     /// Calculates the shape correlation score between MS1 ions and MS2 ions
     /// </summary>
-    public class NextGenCrossWeightedShapeCalc : MQuestWeightedShapeCalc
+    public class NextGenCrossWeightedShapeCalc : AbstractMQuestWeightedShapeCalc<NextGenCrossCorrelations>
     {
         public NextGenCrossWeightedShapeCalc() : base("Precursor-product shape score") { } // Not L10N?
 
         public override string Name
         {
             get { return Resources.NextGenCrossWeightedShapeCalc_NextGenCrossWeightedShapeCalc_Precursor_product_shape_score; }
+        }
+
+        protected override IList<ITransitionGroupPeakData<TData>> GetTransitionGroups<TData>(
+            IPeptidePeakData<TData> summaryPeakData)
+        {
+            return MQuestHelpers.GetBestAvailableGroups(summaryPeakData);
         }
 
         protected override IList<ITransitionPeakData<IDetailedPeakData>> FilterIons(IList<ITransitionGroupPeakData<IDetailedPeakData>> tranGroupPeakDatas)
@@ -303,6 +309,10 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             return score;
         }
+    }
+
+    public class NextGenCrossCorrelations : MQuestAnalyteCrossCorrelations
+    {
     }
 
     /// <summary>

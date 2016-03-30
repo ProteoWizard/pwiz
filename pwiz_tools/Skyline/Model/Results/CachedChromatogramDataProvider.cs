@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -37,6 +39,11 @@ namespace pwiz.Skyline.Model.Results
         
         private readonly float? _maxRetentionTime;
         private readonly float? _maxIntensity;
+
+        /// <summary>
+        /// The number of chromatograms read so far.
+        /// </summary>
+        private int _readChromatograms;
 
         public CachedChromatogramDataProvider(ChromatogramCache cache,
                                               SrmDocument document,
@@ -87,7 +94,12 @@ namespace pwiz.Skyline.Model.Results
             if (tranInfo.ScanIndexes != null)
                 scanIndexes = tranInfo.ScanIndexes[(int) chromKeyIndices.Key.Source];
 
-            SetPercentComplete(100 * id / _chromKeyIndices.Length);
+            // Assume that each chromatogram will be read once, though this may
+            // not always be completely true.
+            _readChromatograms++;
+
+            // But avoid reaching 100% before reading is actually complete
+            SetPercentComplete(Math.Min(99, 100 * _readChromatograms / _chromKeyIndices.Length));
 
             extra = new ChromExtra(chromKeyIndices.StatusId, chromKeyIndices.StatusRank);
 
