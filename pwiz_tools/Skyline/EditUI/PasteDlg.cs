@@ -1106,25 +1106,28 @@ namespace pwiz.Skyline.EditUI
                                 var pepPath = new IdentityPath(pathPepGroup, pep.Id);
                                 var ionMonoMz = BioMassCalc.CalculateIonMz(pep.CustomIon.MonoisotopicMass, charge);
                                 var ionAverageMz = BioMassCalc.CalculateIonMz(pep.CustomIon.AverageMass, charge);
+                                var mzMatchTolerance = document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+                                var labelType = precursor.IsotopeLabelType ?? IsotopeLabelType.light;
                                 // Match existing molecule if same name (if any) and same formula (if any) and similar m/z at the precursor charge
                                 // (we don't just check mass since we don't have a tolerance value for that)
                                 // Or same name If any) and identical formula when stripped of labels
-                                // Or same name, no formula, and different isotope labels
+                                // Or same name, no formula, and different isotope labels or matching label and mz
                                 if (Equals(pep.CustomIon.Name, precursor.Name) &&
                                     ((Equals(pep.CustomIon.Formula, precursor.Formula) &&
-                                    Math.Abs(ionMonoMz - precursorMonoMz) <= document.Settings.TransitionSettings.Instrument.MzMatchTolerance &&
-                                    Math.Abs(ionAverageMz - precursorAverageMz) <= document.Settings.TransitionSettings.Instrument.MzMatchTolerance) ||
+                                    Math.Abs(ionMonoMz - precursorMonoMz) <= mzMatchTolerance &&
+                                    Math.Abs(ionAverageMz - precursorAverageMz) <= mzMatchTolerance) ||
                                     (!Equals(pep.CustomIon.Formula, precursor.Formula) && 
                                     Equals(pep.CustomIon.UnlabeledFormula, BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula(precursor.Formula))) ||
                                     (string.IsNullOrEmpty(pep.CustomIon.Formula) && string.IsNullOrEmpty(precursor.Formula) &&
-                                    !pep.TransitionGroups.Any(t => Equals(t.TransitionGroup.LabelType, precursor.IsotopeLabelType??IsotopeLabelType.light))) ))
+                                    (!pep.TransitionGroups.Any(t => Equals(t.TransitionGroup.LabelType, labelType)) || // First label of this kind
+                                     pep.TransitionGroups.Any(t => Equals(t.TransitionGroup.LabelType, labelType) && Math.Abs(precursor.Mz-t.PrecursorMz) <= mzMatchTolerance))))) // Matches precursor mz of similar labels
                                 {
                                     pepFound = true;
                                     bool tranGroupFound = false;
                                     foreach (var tranGroup in pep.TransitionGroups)
                                     {
                                         var pathGroup = new IdentityPath(pepPath, tranGroup.Id);
-                                        if (Math.Abs(tranGroup.PrecursorMz - precursor.Mz) <= document.Settings.TransitionSettings.Instrument.MzMatchTolerance)
+                                        if (Math.Abs(tranGroup.PrecursorMz - precursor.Mz) <= mzMatchTolerance)
                                         {
                                             tranGroupFound = true;
                                             var tranFound = false;

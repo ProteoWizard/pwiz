@@ -657,18 +657,26 @@ namespace pwiz.SkylineTestFunctional
             WaitForConditionUI(() => pasteDlg2.GetUsableColumnCount() == columnOrder.ToList().Count);
 
             const string transistionList =
+                "Amino Acids B\tAlaB\t\tlight\t\t\t225\t44\t-1\t-1\t3\n" +
+                "Amino Acids B\tArgB\t\tlight\t\t\t310\t217\t-1\t-1\t19\n" +
                 "Amino Acids\tAla\t\tlight\t\t\t225\t44\t1\t1\t3\n" +
                 "Amino Acids\tAla\t\theavy\t\t\t229\t48\t1\t1\t4\n" + // NB we ignore RT conflicts
                 "Amino Acids\tArg\t\tlight\t\t\t310\t217\t1\t1\t19\n" +
-                "Amino Acids\tArg\t\theavy\t\t\t312\t219\t1\t1\t19\n";
+                "Amino Acids\tArg\t\theavy\t\t\t312\t219\t1\t1\t19\n" +
+                "Amino Acids B\tAlaB\t\tlight\t\t\t225\t45\t-1\t-1\t3\n" +
+                "Amino Acids B\tAlaB\t\theavy\t\t\t229\t48\t-1\t-1\t4\n" + // NB we ignore RT conflicts
+                "Amino Acids B\tAlaB\t\theavy\t\t\t229\t49\t-1\t-1\t4\n" + // NB we ignore RT conflicts
+                "Amino Acids B\tArgB\t\tlight\t\t\t310\t218\t-1\t-1\t19\n" +
+                "Amino Acids B\tArgB\t\theavy\t\t\t312\t219\t-1\t-1\t19\n" +
+                "Amino Acids B\tArgB\t\theavy\t\t\t312\t220\t-1\t-1\t19\n";
 
 
             SetClipboardText(transistionList);
             RunUI(pasteDlg2.PasteTransitions);
             OkDialog(pasteDlg2, pasteDlg2.OkDialog);
             var pastedDoc = WaitForDocumentChange(docOrig);
-            Assert.AreEqual(1, pastedDoc.MoleculeGroupCount);
-            Assert.AreEqual(2, pastedDoc.MoleculeCount);
+            Assert.AreEqual(2, pastedDoc.MoleculeGroupCount);
+            Assert.AreEqual(4, pastedDoc.MoleculeCount);
             
             RunUI(() => SkylineWindow.NewDocument(true));
             RunUI(() => Settings.Default.CustomMoleculeTransitionInsertColumnsList = saveColumnOrder);
