@@ -100,7 +100,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         public abstract IList<IPeakFeatureCalculator> PeakFeatureCalculators { get; }
         public abstract IPeakScoringModel Train(IList<IList<float[]>> targets, IList<IList<float[]>> decoys, LinearModelParams initParameters,
             bool includeSecondBest = false, bool preTrain = true, IProgressMonitor progressMonitor = null);
-        public double Score(IList<float> features)
+        public virtual double Score(IList<float> features)
         {
             return Parameters.Score(features);
         }
@@ -500,19 +500,6 @@ namespace pwiz.Skyline.Model.Results.Scoring
         PeakIdentification Identified { get; }
         bool? IsTruncated { get; }
         // ReSharper restore UnusedMemberInSuper.Global
-    }
-
-    public static class PeakScoringModel
-    {
-        private static readonly IPeakScoringModel[] MODELS =
-        {
-            new LegacyScoringModel(LegacyScoringModel.DEFAULT_NAME)
-        };
-
-        public static IEnumerable<IPeakScoringModel> Models
-        {
-            get { return MODELS; }
-        }
     }
 
     public static class PeakFeatureCalculator

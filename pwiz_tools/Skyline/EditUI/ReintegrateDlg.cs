@@ -78,11 +78,15 @@ namespace pwiz.Skyline.EditUI
             {
                 try
                 {
-                    if (_driverPeakScoringModel.SelectedItem == null || !_driverPeakScoringModel.SelectedItem.IsTrained)
+                    var scoringModel = _driverPeakScoringModel.SelectedItem;
+                    if (Equals(scoringModel, LegacyScoringModel.DEFAULT_UNTRAINED_MODEL))
+                    {
+                        scoringModel = LegacyScoringModel.DEFAULT_MODEL;
+                    }
+                    if (scoringModel == null || !scoringModel.IsTrained)
                     {
                         throw new InvalidDataException(Resources.ReintegrateDlg_OkDialog_You_must_train_and_select_a_model_in_order_to_reintegrate_peaks_);
                     }
-                    var scoringModel = _driverPeakScoringModel.SelectedItem;
                     var resultsHandler = new MProphetResultsHandler(Document, scoringModel)
                     {
                         QValueCutoff = qCutoff,

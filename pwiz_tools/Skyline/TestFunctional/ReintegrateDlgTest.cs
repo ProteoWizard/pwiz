@@ -70,11 +70,6 @@ namespace pwiz.SkylineTestFunctional
             WaitForDocumentLoaded();
             var reintegrateDlgNoModel = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
             RunUI(() => reintegrateDlgNoModel.ReintegrateAll = true);
-            RunDlg<MessageDlg>(reintegrateDlgNoModel.OkDialog, messageBox =>
-            {
-                AssertEx.AreComparableStrings(Resources.ReintegrateDlg_OkDialog_You_must_train_and_select_a_model_in_order_to_reintegrate_peaks_, messageBox.Message);
-                messageBox.OkDialog();
-            });
             OkDialog(reintegrateDlgNoModel, reintegrateDlgNoModel.CancelDialog);
 
             // 4. No value for q cutoff gives error message

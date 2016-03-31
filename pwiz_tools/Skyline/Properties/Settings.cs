@@ -2030,7 +2030,7 @@ namespace pwiz.Skyline.Properties
     {
         private static readonly PeakScoringModelSpec[] DEFAULTS =
         {
-            new LegacyScoringModel(LegacyScoringModel.DEFAULT_NAME)
+            LegacyScoringModel.DEFAULT_UNTRAINED_MODEL
         };
 
         public override PeakScoringModelSpec EditItem(Control owner, PeakScoringModelSpec item,

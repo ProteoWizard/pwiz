@@ -2556,7 +2556,7 @@ namespace pwiz.Skyline.Model.DocSettings
     {
         public PeptideIntegration(PeakScoringModelSpec peakScoringModel)
         {
-            PeakScoringModel = peakScoringModel ?? new LegacyScoringModel(LegacyScoringModel.DEFAULT_NAME);
+            PeakScoringModel = peakScoringModel ?? LegacyScoringModel.DEFAULT_UNTRAINED_MODEL;
         }
 
         public PeakScoringModelSpec PeakScoringModel { get; private set; }

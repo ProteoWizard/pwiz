@@ -17,8 +17,10 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
@@ -37,12 +39,12 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public static LinearModelParams DEFAULT_PARAMS { get { return new LinearModelParams(DEFAULT_WEIGHTS); } }
 
-        public static LegacyScoringModel DEFAULT_MODEL { get; private set; }
+        public static readonly LegacyScoringModel DEFAULT_MODEL = new DefaultScoringModel();
 
-        static LegacyScoringModel()
-        {
-            DEFAULT_MODEL =  new LegacyScoringModel(DEFAULT_NAME, DEFAULT_PARAMS);
-        }
+        // Special placeholder model to use as the default.  It's "untrained", so it will never be persisted, but when
+        // it needs to be used, "DEFAULT_MODEL" gets used instead.
+        public static readonly LegacyScoringModel DEFAULT_UNTRAINED_MODEL 
+            = new LegacyScoringModel(DEFAULT_NAME);
 
         // Weighting coefficients.
         private const double W0 = 1.0;  // Log intensity
@@ -246,5 +248,32 @@ namespace pwiz.Skyline.Model.Results.Scoring
         }
 
         #endregion
+
+        /// <summary>
+        /// Special type of scoring model which is tolerant of missing features.
+        /// This is the scoring model which gets used by PeptideChromDataPeakList.ScorePeptideSets.
+        /// If any features are missing (NaN), they get replaced with zero before scoring.
+        /// </summary>
+        private class DefaultScoringModel : LegacyScoringModel
+        {
+            public DefaultScoringModel() : base(DEFAULT_NAME, DEFAULT_PARAMS)
+            {
+            }
+
+            public override double Score(IList<float> features)
+            {
+                if (features.Any(float.IsNaN))
+                {
+                    // Replace any NaN's with 0 so that we behave the same as PeptideChromDataPeakList.ScorePeptideSets
+                    features = features.Select(feature => float.IsNaN(feature) ? 0 : feature).ToArray();
+                }
+                return base.Score(features);
+            }
+
+            public override void WriteXml(XmlWriter writer)
+            {
+                throw new InvalidOperationException();
+            }
+        }
     }
 }
