@@ -17733,6 +17733,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Source.
+        /// </summary>
+        public static string PeptideTreeNode_RenderTip_Source {
+            get {
+                return ResourceManager.GetString("PeptideTreeNode_RenderTip_Source", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to External Tools.
         /// </summary>
         public static string PersistedViews_ExternalToolsGroup_External_Tools {

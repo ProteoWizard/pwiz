@@ -8917,4 +8917,7 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="Transition_Validate_Precursor_and_product_ion_polarity_do_not_agree_" xml:space="preserve">
     <value>Precursor and product ion polarity do not agree.</value>
   </data>
+  <data name="PeptideTreeNode_RenderTip_Source" xml:space="preserve">
+    <value>Source</value>
+  </data>
 </root>

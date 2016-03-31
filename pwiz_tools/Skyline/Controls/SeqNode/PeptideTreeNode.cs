@@ -655,9 +655,9 @@ namespace pwiz.Skyline.Controls.SeqNode
                 if (peptide.IsDecoy)
                 {
                     string sourceText = nodePep.SourceTextId
-                        .Replace(".0]", "]")    // Not L10
+                        .Replace(".0]", "]")    // Not L10N
                         .Replace(".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator);   // Not L10N
-                    table.AddDetailRow("Source", sourceText, rt);
+                    table.AddDetailRow(Resources.PeptideTreeNode_RenderTip_Source, sourceText, rt);
                 }
 
                 if (nodePep.Children.Count > 1)
