@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.OleDb;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -28,6 +27,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
+using Excel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
@@ -275,49 +275,59 @@ namespace pwiz.SkylineTestUtil
 
         protected static string GetExcelFileText(string filePath, string page, int columns, bool hasHeader)
         {
-            bool legacyFile = filePath.EndsWith(".xls");
-            try
+            bool[] legacyFileValues = new[] {false};
+            if (filePath.EndsWith(".xls"))
             {
-                string connectionString = GetExcelConnectionString(filePath, hasHeader, legacyFile);
-                return GetExcelFileText(connectionString, page, columns);
+                legacyFileValues = new[] {true, false};
             }
-            catch (Exception)
-            {
-                if (!legacyFile)
-                    throw;
 
-                // In case the system running this does not have the legacy adapter
-                string connectionString = GetExcelConnectionString(filePath, hasHeader, false);
-                return GetExcelFileText(connectionString, page, columns);
-            }
-        }
-
-        private static string GetExcelFileText(string connectionString, string page, int columns)
-        {
-            var adapter = new OleDbDataAdapter(String.Format("SELECT * FROM [{0}$]", page), connectionString); // Not L10N
-            var ds = new DataSet();
-            adapter.Fill(ds, "TransitionListTable");
-            DataTable data = ds.Tables["TransitionListTable"];
-            var sb = new StringBuilder();
-            foreach (DataRow row in data.Rows)
+            foreach (bool legacyFile in legacyFileValues)
             {
-                for (int i = 0; i < columns; i++)
+                using (var stream = File.OpenRead(filePath))
                 {
-                    if (i > 0)
-                        sb.Append('\t');
-                    sb.Append(row[i] ?? String.Empty);
+                    IExcelDataReader excelDataReader;
+                    if (legacyFile)
+                    {
+                        excelDataReader = ExcelReaderFactory.CreateBinaryReader(stream);
+                    }
+                    else
+                    {
+                        excelDataReader = ExcelReaderFactory.CreateOpenXmlReader(stream);
+                    }
+                    if (excelDataReader == null)
+                    {
+                        continue;
+                    }
+                    return GetExcelReaderText(excelDataReader, page, columns, hasHeader);
                 }
-                sb.AppendLine();
             }
-            return sb.ToString();
+            throw new InvalidDataException("Unable to read Excel file " + filePath);
         }
 
-        private static string GetExcelConnectionString(string filePath, bool hasHeader, bool legacyFile)
+        private static string GetExcelReaderText(IExcelDataReader excelDataReader, string page, int columns, bool hasHeader)
         {
-            string connectionFormat = legacyFile // Not L10N
-                ? "Provider=Microsoft.Jet.OLEDB.4.0; data source={0}; Extended Properties=\"Excel 8.0;HDR={1}\""
-                : "Provider=Microsoft.ACE.OLEDB.12.0;Password=\"\";User ID=Admin;Data Source={0};Mode=Share Deny Write;Extended Properties=\"HDR={1};\";Jet OLEDB:Engine Type=37";
-            return String.Format(connectionFormat, filePath, hasHeader ? "YES" : "NO");
+            var dataSet = excelDataReader.AsDataSet();
+            foreach (DataTable dataTable in dataSet.Tables)
+            {
+                if (dataTable.TableName != page)
+                {
+                    continue;
+                }
+                var sb = new StringBuilder();
+                for (int iRow = hasHeader ? 1 : 0; iRow < dataTable.Rows.Count; iRow++)
+                {
+                    DataRow row = dataTable.Rows[iRow];
+                    for (int i = 0; i < columns; i++)
+                    {
+                        if (i > 0)
+                            sb.Append('\t');
+                        sb.Append(row[i] ?? String.Empty);
+                    }
+                    sb.AppendLine();
+                }
+                return sb.ToString();
+            }
+            throw new ArgumentException("Could not find page " + page);
         }
 
         private static IEnumerable<Form> OpenForms
