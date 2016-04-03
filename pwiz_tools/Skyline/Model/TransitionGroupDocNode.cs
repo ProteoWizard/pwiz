@@ -845,12 +845,14 @@ namespace pwiz.Skyline.Model
                     var modsLossOld = modsOld.NeutralLossModifications.ToArray();
                     if (modsNew.MaxNeutralLosses < modsOld.MaxNeutralLosses ||
                         !ArrayUtil.EqualsDeep(modsLossNew, modsLossOld) ||
+                        !ArrayUtil.EqualsDeep(settingsNew.TransitionSettings.Filter.MeasuredIons, diff.SettingsOld.TransitionSettings.Filter.MeasuredIons) ||
                         !Equals(settingsNew.TransitionSettings.Instrument, diff.SettingsOld.TransitionSettings.Instrument))
                     {
                         IList<DocNode> childrenNew = new List<DocNode>();
                         foreach (TransitionDocNode nodeTransition in nodeResult.Children)
                         {
                             if (nodeTransition.IsLossPossible(modsNew.MaxNeutralLosses, modsLossNew) &&
+                                settingsNew.TransitionSettings.Filter.IsAvailableReporterIon(nodeTransition) &&
                                 settingsNew.TransitionSettings.Instrument.IsMeasurable(nodeTransition.Mz, precursorMz))
                                 childrenNew.Add(nodeTransition);
                         }

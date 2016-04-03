@@ -1,9 +1,29 @@
-﻿using System;
+﻿/*
+ * Original author: Brian Pratt <bspratt .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2015 University of Washington - Seattle, WA
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -137,18 +157,23 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(editMeasuredIonList,editMeasuredIonList.OkDialog);
             RunUI(() =>
             {
-                tranSettings.SetListAlwaysAdd(0,true);
-                tranSettings.SetListAlwaysAdd(0,true);
-                tranSettings.SetListAlwaysAdd(1,true);
+                tranSettings.SetListAlwaysAdd(0,true);  // optional water
+                tranSettings.SetListAlwaysAdd(0,true);  // default water
+                tranSettings.SetListAlwaysAdd(1,true);  // optional carbon
             });
             OkDialog(tranSettings,tranSettings.OkDialog);
-            IdentityPath path;
-            var newDoc = SkylineWindow.Document.ImportFasta(new StringReader(">peptide1\nPEPMCIDEPR"),
-                true, IdentityPath.ROOT, out path);
-            TransitionGroupDocNode nodeGroup = newDoc.PeptideTransitionGroups.ElementAt(0);
+            RunUI(() => SkylineWindow.ImportFasta(new StringReader(">peptide1\nPEPMCIDEPR"), 2, true, string.Empty));
+            var newDoc = SkylineWindow.Document;
 
             var water = new MeasuredIon("Water", "H2O", null, null, 1);
-            var carbon = new MeasuredIon("Carbon", "CO2", null, null, 1,true);
+            var carbon = new MeasuredIon("Carbon", "CO2", null, null, 1, true);
+
+            var nodeTranFirst = newDoc.MoleculeTransitions.ElementAt(0);
+            Assert.IsTrue(nodeTranFirst.Transition.IsCustom());
+            Assert.AreEqual(water.CustomIon, nodeTranFirst.Transition.CustomIon);
+
+            // Sort-of unit test forray away from actually using the UI
+            var nodeGroup = newDoc.PeptideTransitionGroups.ElementAt(0);
 
             var filteredWaterNodes = TransitionGroupTreeNode.GetChoices(nodeGroup, newDoc.Settings,
                     newDoc.Peptides.ElementAt(0).ExplicitMods, true)
@@ -171,6 +196,41 @@ namespace pwiz.SkylineTestFunctional
 
             Assert.AreEqual(0, filteredCarbonNodes.Count());
             Assert.AreEqual(1, unfilteredCarbonNodes.Count());
+
+            // Back to the UI: make sure removing the custom ion from settings
+            // removes it from the document, which was once an issue that lead
+            // to a document that could not be roundtripped
+            RunUI(() => SkylineWindow.SelectedPath = newDoc.GetPathTo((int) SrmDocument.Level.TransitionGroups, 0));
+            // Add carbon ion
+            RunDlg<PopupPickList>(SkylineWindow.ShowPickChildrenInTest, dlg =>
+            {
+                dlg.ApplyFilter(false);
+                dlg.ToggleItem(2);  // precursor, water, carbon
+                dlg.OnOk();
+            });
+            var docWithCarbon = WaitForDocumentChange(newDoc);
+            var nodeTranCarbon = docWithCarbon.MoleculeTransitions.ElementAt(1);
+            Assert.IsTrue(nodeTranCarbon.Transition.IsCustom());
+            Assert.AreEqual(carbon.CustomIon, nodeTranCarbon.Transition.CustomIon);
+
+            RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, tranSettings2 =>
+            {
+                tranSettings2.SetListAlwaysAdd(0, false);  // remove water
+                tranSettings2.OkDialog();
+            });
+            var docWithoutWater = WaitForDocumentChange(docWithCarbon);
+            Assert.AreEqual(0, docWithoutWater.PeptideTransitions.Count(t => Equals(water.CustomIon, t.Transition.CustomIon)));
+            Assert.AreEqual(1, docWithoutWater.PeptideTransitions.Count(t => Equals(carbon.CustomIon, t.Transition.CustomIon)));
+            AssertEx.RoundTrip(docWithoutWater);
+
+            RunDlg<PopupPickList>(SkylineWindow.ShowPickChildrenInTest, dlg =>
+            {
+                dlg.AutoManageChildren = true;
+                dlg.OnOk();
+            });
+            var docWithoutCustom = WaitForDocumentChange(docWithoutWater);
+            Assert.AreEqual(0, docWithoutCustom.PeptideTransitions.Count(t => t.Transition.IsCustom()));
+            AssertEx.RoundTrip(docWithoutCustom);
         }
     }
 }

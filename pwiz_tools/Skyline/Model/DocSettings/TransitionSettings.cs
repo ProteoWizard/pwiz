@@ -665,6 +665,17 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         /// <summary>
+        /// Returns false if the transition is a reporter type custom ion that is no longer
+        /// available in the settings.
+        /// </summary>
+        public bool IsAvailableReporterIon(TransitionDocNode nodeTransition)
+        {
+            if (!nodeTransition.Transition.IsCustom() || nodeTransition.Transition.IsNonReporterCustomIon())
+                return true;
+            return MeasuredIons.Contains(m => Equals(m.CustomIon, nodeTransition.Transition.CustomIon));
+        }
+
+        /// <summary>
         /// A m/z window width around the precursor m/z where transitions are not allowed.
         /// </summary>
         public double PrecursorMzWindow { get; private set; }
