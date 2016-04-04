@@ -109,6 +109,10 @@ bool MzIdentMLReader::parseFile(){
         boost::split(pathParts, fileIterator->first, boost::is_any_of(";"));
         string specFileroot = getFileRoot(pathParts[0]);
         setSpecFileName(specFileroot.c_str(), specExtensions);
+        string filename = getSpecFileName();
+        if (filename.length() >= 6 && filename.substr(filename.length() - 6) == ".mzXML") {
+            lookUpBy_ = SCAN_NUM_ID;
+        }
 
         string sourceFile = pathParts[1];
         if (!mapSourceFiles[sourceFile].empty())
@@ -178,19 +182,15 @@ void MzIdentMLReader::collectPsms(){
                             curPSM_->specKey = result.cvParam(MS_scan_number_s__OBSOLETE).valueAs<int>();
                         } else {
                             // If still no scan number, look for it in the spectrum id
-                            vector<string> parts;
-                            boost::split(parts, idStr, boost::is_any_of(" "));
-                            for (vector<string>::const_iterator i = parts.begin(); i != parts.end(); ++i) {
-                                if (idStr.compare(0, 6, "scan=") == 0) {
-                                    curPSM_->specKey = boost::lexical_cast<int>(idStr.substr(5));
-                                    break;
-                                }
-                            }
+                            stringToScan(idStr, curPSM_);
                         }
                         break;
                     default:
                         curPSM_->specName = idStr;
                         break;
+                }
+                if (curPSM_->specKey < 0) {
+                    stringToScan(curPSM_->specName, curPSM_);
                 }
                 curPSM_->score = score;
                 curPSM_->charge = item.chargeState;
@@ -307,6 +307,18 @@ bool MzIdentMLReader::passThreshold(double score)
             return score >= scoreThreshold_;
     }
     Verbosity::error("Can't determine cutoff score, unknown analysis type");
+    return false;
+}
+
+bool MzIdentMLReader::stringToScan(const string& name, PSM* psm) {
+    vector<string> parts;
+    boost::split(parts, name, boost::is_any_of(" "));
+    for (vector<string>::const_iterator i = parts.begin(); i != parts.end(); ++i) {
+        if (i->compare(0, 5, "scan=") == 0) {
+            psm->specKey = boost::lexical_cast<int>(i->substr(5));
+            return true;
+        }
+    }
     return false;
 }
 

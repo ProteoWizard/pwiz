@@ -63,6 +63,7 @@ namespace BiblioSpec{
         void extractModifications(pwiz::identdata::PeptidePtr peptide, PSM* psm);
         double getScore(const pwiz::identdata::SpectrumIdentificationItem& item);
         bool passThreshold(double score);
+        static bool stringToScan(const std::string& name, PSM* psm);
     };
 } // namespace
 
