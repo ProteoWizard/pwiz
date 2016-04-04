@@ -123,6 +123,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AddTransitionsTest.cs" />
+    <Compile Include="AntivirusExclusionTest.cs" />
     <Compile Include="BookmarkEnumeratorTest.cs" />
     <Compile Include="IdentityTest.cs" />
     <Compile Include="InternetAccessTest.cs" />
