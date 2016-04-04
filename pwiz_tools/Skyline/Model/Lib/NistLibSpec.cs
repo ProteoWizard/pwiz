@@ -1028,14 +1028,24 @@ namespace pwiz.Skyline.Model.Lib
             byte[] peaksCompressed = new byte[info.CompressedSize];
             lock (ReadStream)
             {
-                Stream fs = ReadStream.Stream;
+                try
+                {
+                    Stream fs = ReadStream.Stream;
 
-                // Seek to stored location
-                fs.Seek(info.Location, SeekOrigin.Begin);
+                    // Seek to stored location
+                    fs.Seek(info.Location, SeekOrigin.Begin);
 
-                // Single read to get all the peaks
-                if (fs.Read(peaksCompressed, 0, peaksCompressed.Length) < peaksCompressed.Length)
-                    throw new IOException(Resources.NistLibraryBase_ReadSpectrum_Failure_trying_to_read_peaks);
+                    // Single read to get all the peaks
+                    if (fs.Read(peaksCompressed, 0, peaksCompressed.Length) < peaksCompressed.Length)
+                        throw new IOException(Resources.NistLibraryBase_ReadSpectrum_Failure_trying_to_read_peaks);
+                }
+                catch (Exception)
+                {
+                    // If an exception is thrown, close the stream in case the failure is something
+                    // like a network failure that can be remedied by re-opening the stream.
+                    ReadStream.CloseStream();
+                    throw;
+                }
             }
 
             int mzBytes = sizeof(float)*info.NumPeaks;

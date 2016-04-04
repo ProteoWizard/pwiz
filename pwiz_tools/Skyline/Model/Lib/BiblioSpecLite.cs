@@ -873,30 +873,33 @@ namespace pwiz.Skyline.Model.Lib
 
         protected override SpectrumPeaksInfo.MI[] ReadSpectrum(BiblioLiteSpectrumInfo info)
         {
-            try
+            lock (_sqliteConnection)
             {
-                lock (_sqliteConnection)
+                try
                 {
-                    using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
-                    {
-                        select.CommandText = "SELECT * FROM [RefSpectraPeaks] WHERE [RefSpectraID] = ?"; // Not L10N
-                        select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long)info.Id));
-
-                        using (SQLiteDataReader reader = select.ExecuteReader())
+                        using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
                         {
-                            if (reader.Read())
+                            select.CommandText = "SELECT * FROM [RefSpectraPeaks] WHERE [RefSpectraID] = ?"; // Not L10N
+                            select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long)info.Id));
+
+                            using (SQLiteDataReader reader = select.ExecuteReader())
                             {
-                                int numPeaks = info.NumPeaks;
-                                return ReadPeaks(reader, numPeaks);
+                                if (reader.Read())
+                                {
+                                    int numPeaks = info.NumPeaks;
+                                    return ReadPeaks(reader, numPeaks);
+                                }
                             }
                         }
-                    }
                 }
-            }
-            catch (SQLiteException x)
-            {                
-                throw new IOException(string.Format(Resources.BiblioSpecLiteLibrary_ReadSpectrum_Unexpected_SQLite_failure_reading__0__,
-                                                    FilePath), x);
+                catch (SQLiteException x)
+                {
+                    // If an exception is thrown, close the stream in case the failure is something
+                    // like a network failure that can be remedied by re-opening the stream.
+                    _sqliteConnection.CloseStream();
+                    throw new IOException(string.Format(Resources.BiblioSpecLiteLibrary_ReadSpectrum_Unexpected_SQLite_failure_reading__0__,
+                                                        FilePath), x);
+                }
             }
 
             return null;

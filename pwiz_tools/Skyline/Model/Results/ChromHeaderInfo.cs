@@ -2074,12 +2074,22 @@ namespace pwiz.Skyline.Model.Results
             byte[] pointsCompressed = new byte[_groupHeaderInfo.CompressedSize];
             lock(stream)
             {
-                // Seek to stored location
-                stream.Seek(_groupHeaderInfo.LocationPoints, SeekOrigin.Begin);
+                try
+                {
+                    // Seek to stored location
+                    stream.Seek(_groupHeaderInfo.LocationPoints, SeekOrigin.Begin);
 
-                // Single read to get all the points
-                if (stream.Read(pointsCompressed, 0, pointsCompressed.Length) < pointsCompressed.Length)
-                    throw new IOException(Resources.ChromatogramGroupInfo_ReadChromatogram_Failure_trying_to_read_points);
+                    // Single read to get all the points
+                    if (stream.Read(pointsCompressed, 0, pointsCompressed.Length) < pointsCompressed.Length)
+                        throw new IOException(Resources.ChromatogramGroupInfo_ReadChromatogram_Failure_trying_to_read_points);
+                }
+                catch (Exception)
+                {
+                    // If an exception is thrown, close the stream in case the failure is something
+                    // like a network failure that can be remedied by re-opening the stream.
+                    cache.ReadStream.CloseStream();
+                    throw;
+                }
             }
 
             int numPoints = _groupHeaderInfo.NumPoints;
