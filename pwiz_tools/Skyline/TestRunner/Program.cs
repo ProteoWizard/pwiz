@@ -458,7 +458,7 @@ namespace TestRunner
             }
 
             int perfPass = pass; // We'll run perf tests just once per language, and only in one language (french) if english and french (along with any others) are both enabled
-            bool warnedPass2PerfTest = false;
+            bool needsPerfTestPass2Warning = testList.Any(t => t.IsPerfTest); // No perf tests, no warning
             bool flip=true;
             var perfTestsFrenchOnly = perftests && languages.Any(l => l.StartsWith("en")) && languages.Any(l => l.StartsWith("fr"));
 
@@ -475,11 +475,11 @@ namespace TestRunner
 
                     // Perf Tests are generally too lengthy to run multiple times (but non-english format check is useful)
                     var languagesThisTest = (test.IsPerfTest && perfTestsFrenchOnly) ? new[] { "fr" } : languages;
-                    if (perfTestsFrenchOnly && !warnedPass2PerfTest)
+                    if (perfTestsFrenchOnly && needsPerfTestPass2Warning)
                     {
                         // NB the phrase "# Perf tests" in a log is a key for SkylineNightly to post to a different URL - so don't mess with this.
                         runTests.Log("# Perf tests will be run only once, and only in French.  To run perf tests in other languages, enable all but English.\r\n");
-                        warnedPass2PerfTest = true;
+                        needsPerfTestPass2Warning = false;
                     }
 
                     // Run once (or repeat times) for each language.
@@ -493,11 +493,11 @@ namespace TestRunner
                             if (test.IsPerfTest && ((pass > perfPass) || (repeatCounter > 1)))
                             {
                                 // Perf Tests are generally too lengthy to run multiple times (but per-language check is useful)
-                                if (!warnedPass2PerfTest)
+                                if (needsPerfTestPass2Warning)
                                 {
                                     // NB the phrase "# Perf tests" in a log is a key for SkylineNightly to post to a different URL - so don't mess with this.
                                     runTests.Log("# Perf tests will be run only once per language.\r\n");
-                                    warnedPass2PerfTest = true;
+                                    needsPerfTestPass2Warning = false;
                                 }
                                 break;
                             }
