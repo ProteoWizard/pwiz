@@ -142,14 +142,30 @@ namespace SkylineNightly
 
             bool withPerfTests = mode != RunMode.nightly;
 
-            if (withPerfTests)
-                _duration = TimeSpan.FromHours(12);
+            if (mode == RunMode.nightly_with_stresstests)
+            {
+                _duration = TimeSpan.FromHours(168);  // Let it go as long as a week
+            }
+            else if (withPerfTests)
+            {
+                _duration = TimeSpan.FromHours(12); // Let it go a bit longer than standard 9 hours
+            }
 
-            // Kill any other instance of SkylineNightly.
+            // Kill any other instance of SkylineNightly, unless this is
+            // the StressTest mode.
             foreach (var process in Process.GetProcessesByName("skylinenightly"))
             {
                 if (process.Id != Process.GetCurrentProcess().Id)
-                    process.Kill();
+                {
+                    if (mode == RunMode.nightly_with_stresstests)
+                    {
+                        Application.Exit();  // Just let the already (long!) running process do its thing
+                    }
+                    else
+                    {
+                        process.Kill();
+                    }
+                }
             }
 
             // Kill processes started within the nightly directory.
@@ -284,7 +300,7 @@ namespace SkylineNightly
                     skylineTester.GetChild("nightlyRoot").Set(nightlyDir);
                     skylineTester.GetChild("buildRoot").Set(_skylineTesterDir);
                     skylineTester.GetChild("nightlyRunPerfTests").Set(withPerfTests?"true":"false");
-                    skylineTester.GetChild("nightlyDuration").Set(_duration.Hours.ToString());
+                    skylineTester.GetChild("nightlyDuration").Set(((int)_duration.TotalHours).ToString());
                     skylineTester.GetChild("nightlyRepeat").Set(mode == RunMode.nightly_with_stresstests ? "100" : "1");
                     skylineTester.GetChild("nightlyRandomize").Set(mode == RunMode.nightly_with_stresstests ? "true" : "false");
                     if (!string.IsNullOrEmpty(branchUrl) && !branchUrl.Contains("trunk"))

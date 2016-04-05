@@ -2329,7 +2329,7 @@ namespace SkylineTester
             // 
             this.nightlyDuration.Location = new System.Drawing.Point(85, 45);
             this.nightlyDuration.Maximum = new decimal(new int[] {
-            23,
+            168, // As in stress tests
             0,
             0,
             0});

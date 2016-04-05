@@ -87,29 +87,15 @@ namespace SkylineNightly
                     if (scheduledTime < now + TimeSpan.FromMinutes(1) && scheduledTime + TimeSpan.FromMinutes(3) > now)
                         scheduledTime = now + TimeSpan.FromMinutes(2);
                     dt.StartBoundary = scheduledTime;
-                    dt.ExecutionTimeLimit = new TimeSpan(23, 30, 0);
+                    var runType = RunType();
+                    var maxHours = runType.Equals(Program.SCHEDULED_STRESSTESTS_ARG) ? 167 : 23;
+                    dt.ExecutionTimeLimit = new TimeSpan(maxHours, 30, 0);
                     dt.Enabled = true;
                     td.Settings.WakeToRun = true;
 
                     // Add an action that will launch SkylineTester whenever the trigger fires
                     var assembly = Assembly.GetExecutingAssembly();
-                    string arg;
-                    switch (comboBoxOptions.SelectedIndex)
-                    {
-                        default:
-                            arg = Program.SCHEDULED_ARG;
-                            break;
-                        case 1:
-                            arg = Program.SCHEDULED_PERFTESTS_ARG;
-                            break;
-                        case 2:
-                            arg = Program.SCHEDULED_RELEASE_BRANCH_ARG;
-                            break;
-                        case 3:
-                            arg = Program.SCHEDULED_STRESSTESTS_ARG;
-                            break;
-                    }
-                    td.Actions.Add(new ExecAction(assembly.Location, arg)); // Not L10N
+                    td.Actions.Add(new ExecAction(assembly.Location, runType)); // Not L10N
 
                     // Register the task in the root folder
                     ts.RootFolder.RegisterTaskDefinition(Nightly.NIGHTLY_TASK_NAME, td);
@@ -119,10 +105,31 @@ namespace SkylineNightly
             Close();
         }
 
+        private string RunType()
+        {
+            string arg;
+            switch (comboBoxOptions.SelectedIndex)
+            {
+                default:
+                    arg = Program.SCHEDULED_ARG;
+                    break;
+                case 1:
+                    arg = Program.SCHEDULED_PERFTESTS_ARG;
+                    break;
+                case 2:
+                    arg = Program.SCHEDULED_RELEASE_BRANCH_ARG;
+                    break;
+                case 3:
+                    arg = Program.SCHEDULED_STRESSTESTS_ARG;
+                    break;
+            }
+            return arg;
+        }
+
         private void StartTimeChanged(object sender, EventArgs e)
         {
             var end = startTime.Value + TimeSpan.FromHours(9);
-            endTime.Text = end.ToShortTimeString();
+            endTime.Text = (RunType().Equals(Program.SCHEDULED_STRESSTESTS_ARG))?"no limit":end.ToShortTimeString(); // Not L10N
         }
 
         private void Now_Click(object sender, EventArgs e)
@@ -146,6 +153,11 @@ namespace SkylineNightly
                     textBoxFolder.Text = dlg.SelectedPath;
                 }
             }
+        }
+
+        private void comboBoxOptions_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            StartTimeChanged(sender, e); // End time display may depend on run type
         }
     }
 }

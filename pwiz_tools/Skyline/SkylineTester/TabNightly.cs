@@ -259,13 +259,12 @@ namespace SkylineTester
             int stressTestLoopCount;
             if (!int.TryParse(MainWindow.NightlyRepeat.Text, out stressTestLoopCount))
                 stressTestLoopCount = 0;
-            MainWindow.AddTestRunner("offscreen=on quality=on loop=-1" +
-                (stressTestLoopCount > 1 ? " pass0=off pass1=off " : "pass0=on pass1=on ") + // Skip the special passes if we're here to do stresstests
+            MainWindow.AddTestRunner("offscreen=on quality=on loop=-1 " +
+                (stressTestLoopCount > 1 ? "pass0=off pass1=off " : "pass0=on pass1=on ") + // Skip the special passes if we're here to do stresstests
                 (MainWindow.NightlyRunPerfTests.Checked ? " perftests=on" : string.Empty) +
                 (MainWindow.NightlyTestSmallMolecules.Checked ? " testsmallmolecules=on" : string.Empty) +
                 (MainWindow.NightlyRandomize.Checked ? " random=on" : " random=off") +
-                (stressTestLoopCount > 1 ? " repeat=" + MainWindow.NightlyRepeat.Text : string.Empty) +
-                (stressTestLoopCount > 1 ? " maxsecondspertest=600" : string.Empty));
+                (stressTestLoopCount > 1 ? " repeat=" + MainWindow.NightlyRepeat.Text : string.Empty));
             MainWindow.CommandShell.Add("# Nightly finished.");
 
             MainWindow.RunCommands();

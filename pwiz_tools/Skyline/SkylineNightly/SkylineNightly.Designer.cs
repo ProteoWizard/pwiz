@@ -157,6 +157,7 @@
             // 
             // comboBoxOptions
             // 
+            this.comboBoxOptions.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxOptions.FormattingEnabled = true;
             this.comboBoxOptions.Items.AddRange(new object[] {
             "Trunk",
@@ -167,6 +168,7 @@
             this.comboBoxOptions.Name = "comboBoxOptions";
             this.comboBoxOptions.Size = new System.Drawing.Size(223, 21);
             this.comboBoxOptions.TabIndex = 12;
+            this.comboBoxOptions.SelectedIndexChanged += new System.EventHandler(this.comboBoxOptions_SelectedIndexChanged);
             // 
             // labelOptions
             // 
