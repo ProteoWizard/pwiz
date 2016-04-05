@@ -37,7 +37,7 @@ namespace pwiz.SkylineTest
     public class AntivirusExclusionTest : AbstractUnitTest
     {
         [TestMethod]
-        public void AntivirusTestExclusion()
+        public void AaantivirusTestExclusion() // Intentional misspelling to encourage this as first test in nightlies
         {
             var eicarTestString = @"X5O!P%@AP[4\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*"; // See http://www.eicar.org/86-0-Intended-use.html
             var eicarTestFile = "eicar_fake_threat.com";
