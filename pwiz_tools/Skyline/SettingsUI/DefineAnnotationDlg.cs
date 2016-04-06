@@ -39,7 +39,7 @@ namespace pwiz.Skyline.SettingsUI
         public DefineAnnotationDlg(IEnumerable<AnnotationDef> existing)
         {
             InitializeComponent();
-
+            comboType.SelectedIndex = 0;
             Icon = Resources.Skyline;
             checkedListBoxAppliesTo.Items.Clear();
             foreach (var annotationTarget in new[]

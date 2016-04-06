@@ -134,6 +134,11 @@ namespace pwiz.Skyline.Model
             return type == IonType.precursor;
         }
 
+        public static bool IsFragment(IonType type)
+        {
+            return type >= 0;
+        }
+
         public static bool IsCustom(IonType type, TransitionGroup parent)
         {
             return type == IonType.custom || (type == IonType.precursor && parent.IsCustomIon);

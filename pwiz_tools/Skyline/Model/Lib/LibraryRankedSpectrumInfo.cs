@@ -513,8 +513,8 @@ namespace pwiz.Skyline.Model.Lib
 
             private bool MatchNext(RankParams rp, IonType type, int offset, TransitionLosses losses, int charge, int len, bool filter, int end, int start, double startMz)
             {
-                bool precursorMatch = Transition.IsPrecursor(type);
-                double ionMass = !precursorMatch ? rp.massesMatch[(int)type, offset] : rp.massPreMatch;
+                bool isFragment = Transition.IsFragment(type);
+                double ionMass = isFragment ? rp.massesMatch[(int)type, offset] : rp.massPreMatch;
                 if (losses != null)
                     ionMass -= losses.Mass;
                 double ionMz = SequenceMassCalc.GetMZ(ionMass, charge);
@@ -532,7 +532,7 @@ namespace pwiz.Skyline.Model.Lib
 
                     int ordinal = Transition.OffsetToOrdinal(type, offset, len + 1);
                     // If this m/z aready matched a different ion, just remember the second ion.
-                    double predictedMass = !precursorMatch ? rp.massesPredict[(int)type, offset] : rp.massPrePredict;
+                    double predictedMass = isFragment ? rp.massesPredict[(int)type, offset] : rp.massPrePredict;
                     if (losses != null)
                         predictedMass -= losses.Mass;
                     double predictedMz = SequenceMassCalc.GetMZ(predictedMass, charge);

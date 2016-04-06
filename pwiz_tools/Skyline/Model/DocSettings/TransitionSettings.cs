@@ -615,6 +615,7 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 if (value.Count == 0)
                     throw new InvalidDataException(Resources.TransitionFilter_IonTypes_At_least_one_ion_type_is_required);
+                TypeSafeEnum.ValidateList(value);
                 _ionTypes = MakeReadOnly(value);
             }
         }
@@ -889,8 +890,22 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public static IonType[] ParseTypes(string s, IonType[] defaultTypes)
         {
-            return ArrayUtil.Parse(s, v => (IonType) Enum.Parse(typeof (IonType), v.ToLowerInvariant().Replace(PRECURSOR_ION_CHAR, IonType.precursor.ToString())),
-                                   TextUtil.SEPARATOR_CSV, defaultTypes);
+            return ArrayUtil.Parse(s, ParseIonType, TextUtil.SEPARATOR_CSV, defaultTypes);
+        }
+
+        public static IonType ParseIonType(string s)
+        {
+            s = s.ToLowerInvariant();
+            if (s == PRECURSOR_ION_CHAR)
+            {
+                return IonType.precursor;
+            }
+            IonType ionType = TypeSafeEnum.Parse<IonType>(s);
+            if (ionType == IonType.custom)
+            {
+                throw new ArgumentException();
+            }
+            return ionType;
         }
 
         #endregion

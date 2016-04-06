@@ -170,8 +170,6 @@ namespace pwiz.SkylineTestTutorial
                     // p.6
                     transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.Filter;
                     transitionSettingsUI.FragmentTypes += ", p";
-                    if (AsSmallMolecules)
-                        transitionSettingsUI.FragmentTypes += ", custom";
                 });
                 PauseForScreenShot<TransitionSettingsUI.FilterTab>("Transition Settings - Filter tab", 9);
 
@@ -182,12 +180,8 @@ namespace pwiz.SkylineTestTutorial
                 Assert.AreEqual(FullScanPrecursorIsotopes.Count, tranSettingsFullScan.FullScan.PrecursorIsotopes);
                 Assert.AreEqual(FullScanMassAnalyzerType.qit, tranSettingsFullScan.FullScan.PrecursorMassAnalyzer);
                 Assert.AreEqual(FullScanAcquisitionMethod.Targeted, tranSettingsFullScan.FullScan.AcquisitionMethod);
-                if (AsSmallMolecules)
-                    Assert.IsTrue(ArrayUtil.EqualsDeep(new[] { IonType.y, IonType.b, IonType.precursor, IonType.custom },
-                                                       tranSettingsFullScan.Filter.IonTypes));
-                else
-                    Assert.IsTrue(ArrayUtil.EqualsDeep(new[] { IonType.y, IonType.b, IonType.precursor },
-                                                   tranSettingsFullScan.Filter.IonTypes));
+                Assert.IsTrue(ArrayUtil.EqualsDeep(new[] { IonType.y, IonType.b, IonType.precursor },
+                    tranSettingsFullScan.Filter.IonTypes));
             }
 
             RunUI(() => SkylineWindow.ExpandPrecursors());

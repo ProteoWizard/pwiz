@@ -57,16 +57,20 @@ namespace pwiz.SkylineTestUtil
         public static void ThrowsException<TEx>(Func<object> throwEx, string message = null)
             where TEx : Exception
         {
+            bool exceptionThrown = false;
             try
             {
                 throwEx();
-                Assert.Fail("Exception expected");
             }
             catch (TEx x)
             {
                 if (message != null)
                     AreComparableStrings(message, x.Message);
+                exceptionThrown = true;
             }
+            // Assert that an exception was thrown. We do this outside of the catch block
+            // so that the AssertFailedException will not get caught if TEx is Exception.
+            Assert.IsTrue(exceptionThrown, "Exception expected");
         }
 
 

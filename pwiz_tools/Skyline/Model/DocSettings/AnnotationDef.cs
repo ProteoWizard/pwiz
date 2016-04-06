@@ -24,6 +24,7 @@ using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -46,6 +47,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public const string ANNOTATION_PREFIX = "annotation_"; // Not L10N
 
         private ImmutableList<string> _items;
+        private TypeSafeEnum<AnnotationType> _type;
 
         public AnnotationDef(String name, AnnotationTargetSet annotationTargets, AnnotationType type, IList<String> items) : base(name)
         {
@@ -58,7 +60,7 @@ namespace pwiz.Skyline.Model.DocSettings
         }
         
         public AnnotationTargetSet AnnotationTargets { get; private set; }
-        public AnnotationType Type { get; private set; }
+        public AnnotationType Type { get { return _type; } private set { _type = value; } }
         public Type ValueType
         {
             get
@@ -158,7 +160,9 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             base.ReadXml(reader);
             AnnotationTargets = AnnotationTargetSet.Parse(reader.GetAttribute(Attr.targets));
-            Type = reader.GetEnumAttribute(Attr.type, AnnotationType.text);
+            // In older documents, it's possible for the "type" attribute value to be "-1".
+            Type = TypeSafeEnum.ValidateOrDefault(reader.GetEnumAttribute(Attr.type, AnnotationType.text),
+                AnnotationType.text);
             var items = new List<string>();
             if (reader.IsEmptyElement)
             {
