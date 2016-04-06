@@ -408,7 +408,7 @@ namespace pwiz.Skyline.Model.Results
         /// Do initial grouping of and ranking of peaks using the Crawdad
         /// peak detector.
         /// </summary>
-        public void PickChromatogramPeaks(double[] retentionTimes, bool isAlignedTimes, ExplicitRetentionTimeInfo explicitRT)
+        public void PickChromatogramPeaks(double[] retentionTimes, bool isAlignedTimes)
         {
             // Make sure chromatograms are in sorted order
             _listChromData.Sort();
@@ -427,8 +427,6 @@ namespace pwiz.Skyline.Model.Results
             _listChromData.ForEach(chromData => chromData.FindPeaks(retentionTimes,
                 // But only for fragment ions to allow hidden MS1 isotopes to participate
                 hasDocNode && chromData.Key.Source == ChromSource.fragment));
-
-            RemoveProductConflictsByTime(explicitRT);
 
             // Merge sort all peaks into a single list
             IList<ChromDataPeak> allPeaks = SplitMS(MergePeaks());
@@ -543,63 +541,6 @@ namespace pwiz.Skyline.Model.Results
 
 //            if (retentionTimes.Length > 0 && !_listPeakSets[0].Identified)
 //                Console.WriteLine("Idenifications outside peaks.");
-        }
-
-        private void RemoveProductConflictsByTime(ExplicitRetentionTimeInfo explicitRT)
-        {
-            // Check for chromatograms with identical Q1>Q3 pairs but different RT windows.
-            // Pick the one whose center of gravity most nearly matches the explict RT value if any
-            for (var i = 0; i < _listChromData.Count - 1;)
-            {
-                var iNext = i + 1;
-                var chromData = _listChromData[i];
-                var chromDataNext = _listChromData[iNext];
-                var goodChromDataExplicitRT = (explicitRT == null) || chromData.RawTimes.First() <= explicitRT.RetentionTime && explicitRT.RetentionTime <= chromData.RawTimes.Last();
-
-                if (chromData.Key.Product != chromDataNext.Key.Product ||
-                    // Only do this for fragments, because MS1 and SIM are allowed to match
-                    chromData.Key.Source != ChromSource.fragment ||
-                    chromDataNext.Key.Source != ChromSource.fragment)
-                {
-                    if (!goodChromDataExplicitRT)
-                    {
-                        _listChromData.RemoveAt(i); // Explicit time is not within the time range
-                    }
-                    else
-                    {
-                        i++; // Just advance
-                    }
-                    continue;
-                }
-
-                if (explicitRT != null)
-                {
-                    var goodChromDataNextExplicitRT = chromDataNext.RawTimes.First() <= explicitRT.RetentionTime && explicitRT.RetentionTime <= chromDataNext.RawTimes.Last();
-                    // Pick the one that's best centered on predicted time (per Will T's suggestion)
-                    // Actually that's not ideal, some chromatograms are mostly empty on one end or the other.  Look at the "center of gravity" instead.
-                    if (!goodChromDataExplicitRT)
-                    {
-                        _listChromData.RemoveAt(i); // Explicit time is not within the time range
-                    }
-                    else if (!goodChromDataNextExplicitRT)
-                    {
-                        _listChromData.RemoveAt(iNext); // Explicit time is not within the time range
-                    }
-                    else if (Math.Abs(explicitRT.RetentionTime - chromData.RawCenterOfGravityTime) <= Math.Abs(explicitRT.RetentionTime - chromDataNext.RawCenterOfGravityTime))
-                    {
-                        _listChromData.RemoveAt(iNext);
-                    }
-                    else
-                    {
-                        _listChromData.RemoveAt(i);
-                    }
-                }
-                else
-                {
-                    // Just pick the first one
-                    _listChromData.RemoveAt(iNext);
-                }
-            }
         }
 
         /// <summary>

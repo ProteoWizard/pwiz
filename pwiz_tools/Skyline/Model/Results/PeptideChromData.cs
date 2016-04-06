@@ -45,7 +45,6 @@ namespace pwiz.Skyline.Model.Results
         private RetentionTimePrediction _predictedRetentionTime;
         private double[] _retentionTimes;
         private bool _isAlignedTimes;
-        private ExplicitRetentionTimeInfo _explicitRetentionTimeInfo;
         private readonly bool _isProcessedScans;
 
         public PeptideChromDataSets(PeptideDocNode nodePep,
@@ -154,7 +153,7 @@ namespace pwiz.Skyline.Model.Results
 
             // Pick peak groups at the precursor level
             foreach (var chromDataSet in _dataSets)
-                chromDataSet.PickChromatogramPeaks(_retentionTimes, _isAlignedTimes, _explicitRetentionTimeInfo);
+                chromDataSet.PickChromatogramPeaks(_retentionTimes, _isAlignedTimes);
 
             // Merge where possible and pick peak groups at the peptide level
             _listListPeakSets.Clear();
