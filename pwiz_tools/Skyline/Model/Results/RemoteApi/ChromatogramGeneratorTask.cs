@@ -139,7 +139,15 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             var tranInfo = chromGroupInfo.GetTransitionInfo(chromKeyIndices.TranIndex);
             times = tranInfo.Times;
             if (times.Length == 0)
-                throw new IOException(Resources.ChromatogramGeneratorTask_GetChromatogram_Unexpected_zero_length_chromatogram_returned_from_Chorus_);
+            {
+                // Chorus returns zero length chromatogram to indicate that no spectra matched
+                // the precursor filter.
+                times = null;
+                scanIds = null;
+                intensities = null;
+                massErrors = null;
+                return false;
+            }
             if (null != tranInfo.ScanIndexes)
             {
                 scanIds = tranInfo.ScanIndexes[(short) chromKeyIndices.Key.Source];
