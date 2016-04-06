@@ -27,7 +27,7 @@ using pwiz.Skyline.Model.Results.Scoring;
 
 namespace pwiz.Skyline.Model.Results
 {
-    internal sealed class ChromData
+    internal sealed class ChromData : IComparable<ChromData>
     {
         /// <summary>
         /// Maximum number of peaks to label on a graph
@@ -68,6 +68,10 @@ namespace pwiz.Skyline.Model.Results
             RawIntensities = Intensities = intensities;
             RawMassErrors = massErrors;
             RawScanIds = ScanIndexes = scanIds;
+            if (result)
+            {
+                Key = Key.ChangeOptionalTimes(RawTimes.First(), RawTimes.Last(), RawCenterOfGravityTime);
+            }
             return result;
         }
 
@@ -418,6 +422,21 @@ namespace pwiz.Skyline.Model.Results
             }
             return 0;
         }
+
+        public int CompareTo(ChromData other)
+        {
+            if (null == other)
+            {
+                return 1;
+            }
+            var result = Key.CompareTo(other.Key);
+            if (result == 0)
+            {
+                result = ProviderId.CompareTo(other.ProviderId);
+            }
+            return result;
+        }
+
     }
 
     internal sealed class ChromDataPeak : ITransitionPeakData<IDetailedPeakData>, IDetailedPeakData

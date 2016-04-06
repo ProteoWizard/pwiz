@@ -68,9 +68,9 @@ namespace pwiz.Skyline.Model.Results
                                  : document.Settings.TransitionSettings.FullScan.IsEnabled;
         }
 
-        public override IEnumerable<KeyValuePair<ChromKey, int>> ChromIds
+        public override IEnumerable<ChromKeyProviderIdPair> ChromIds
         {
-            get { return _chromKeyIndices.Select((v, i) => new KeyValuePair<ChromKey, int>(v.Key, i)); }
+            get { return _chromKeyIndices.Select((v, i) => new ChromKeyProviderIdPair(v.Key, i)); }
         }
 
         public override bool GetChromatogram(

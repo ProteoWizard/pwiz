@@ -66,7 +66,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public ChromData BestChromatogram { get { return _listChromData[0]; } }
-        public IEnumerable<ChromData> Chromatograms { get { return _listChromData; } }
+        public IList<ChromData> Chromatograms { get { return _listChromData; } }
 
         /// <summary>
         /// The number of transitions or chromatograms associated with this transition group
@@ -216,7 +216,7 @@ namespace pwiz.Skyline.Model.Results
                     Add(chromData);
             }
             // Enforce expected sorting if product ions are coming from different groups
-            _listChromData.Sort((d1, d2) => d1.Key.CompareTo(d2.Key));
+            _listChromData.Sort();
         }
 
         public bool Load(ChromDataProvider provider, string modifiedSequence, Color peptideColor)
@@ -229,7 +229,7 @@ namespace pwiz.Skyline.Model.Results
             return _listChromData.Count > 0;
         }
 
-        private float MinRawTime
+        internal float MinRawTime
         {
             get
             {
@@ -257,7 +257,7 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        private float MaxRawTime
+        internal float MaxRawTime
         {
             get
             {
@@ -408,10 +408,10 @@ namespace pwiz.Skyline.Model.Results
         /// Do initial grouping of and ranking of peaks using the Crawdad
         /// peak detector.
         /// </summary>
-        public void PickChromatogramPeaks(double[] retentionTimes, bool isAlignedTimes)
+        public void PickChromatogramPeaks(double[] retentionTimes, bool isAlignedTimes, ExplicitRetentionTimeInfo explicitRT)
         {
             // Make sure chromatograms are in sorted order
-            _listChromData.Sort((c1, c2) => c1.Key.CompareTo(c2.Key));
+            _listChromData.Sort();
 
             // Mark all optimization chromatograms
             MarkOptimizationData();
@@ -428,7 +428,7 @@ namespace pwiz.Skyline.Model.Results
                 // But only for fragment ions to allow hidden MS1 isotopes to participate
                 hasDocNode && chromData.Key.Source == ChromSource.fragment));
 
-            RemoveProductConflictsByTime(retentionTimes);
+            RemoveProductConflictsByTime(explicitRT);
 
             // Merge sort all peaks into a single list
             IList<ChromDataPeak> allPeaks = SplitMS(MergePeaks());
@@ -545,34 +545,47 @@ namespace pwiz.Skyline.Model.Results
 //                Console.WriteLine("Idenifications outside peaks.");
         }
 
-        private void RemoveProductConflictsByTime(double[] retentionTimes)
+        private void RemoveProductConflictsByTime(ExplicitRetentionTimeInfo explicitRT)
         {
             // Check for chromatograms with identical Q1>Q3 pairs but different RT windows.
-            // Pick the one whose center most nearly matches the explict RT value if any
+            // Pick the one whose center of gravity most nearly matches the explict RT value if any
             for (var i = 0; i < _listChromData.Count - 1;)
             {
                 var iNext = i + 1;
                 var chromData = _listChromData[i];
                 var chromDataNext = _listChromData[iNext];
+                var goodChromDataExplicitRT = (explicitRT == null) || chromData.RawTimes.First() <= explicitRT.RetentionTime && explicitRT.RetentionTime <= chromData.RawTimes.Last();
 
                 if (chromData.Key.Product != chromDataNext.Key.Product ||
                     // Only do this for fragments, because MS1 and SIM are allowed to match
                     chromData.Key.Source != ChromSource.fragment ||
                     chromDataNext.Key.Source != ChromSource.fragment)
                 {
-                    i++; // Just advance
+                    if (!goodChromDataExplicitRT)
+                    {
+                        _listChromData.RemoveAt(i); // Explicit time is not within the time range
+                    }
+                    else
+                    {
+                        i++; // Just advance
+                    }
                     continue;
                 }
 
-                if (retentionTimes.Length > 0) 
+                if (explicitRT != null)
                 {
-                    var it0 = retentionTimes.IndexOf(t => chromData.RawTimes.First() <= t && t <= chromData.RawTimes.Last());
-                    var it1 = retentionTimes.IndexOf(t => chromDataNext.RawTimes.First() <= t && t <= chromDataNext.RawTimes.Last());
+                    var goodChromDataNextExplicitRT = chromDataNext.RawTimes.First() <= explicitRT.RetentionTime && explicitRT.RetentionTime <= chromDataNext.RawTimes.Last();
                     // Pick the one that's best centered on predicted time (per Will T's suggestion)
                     // Actually that's not ideal, some chromatograms are mostly empty on one end or the other.  Look at the "center of gravity" instead.
-                    var t0 = retentionTimes[Math.Max(0, it0)]; // Raw times range might not include any expected RT
-                    var t1 = retentionTimes[Math.Max(0, it1)]; 
-                    if (Math.Abs(t0 - chromData.RawCenterOfGravityTime) <= Math.Abs(t1 - chromDataNext.RawCenterOfGravityTime))
+                    if (!goodChromDataExplicitRT)
+                    {
+                        _listChromData.RemoveAt(i); // Explicit time is not within the time range
+                    }
+                    else if (!goodChromDataNextExplicitRT)
+                    {
+                        _listChromData.RemoveAt(iNext); // Explicit time is not within the time range
+                    }
+                    else if (Math.Abs(explicitRT.RetentionTime - chromData.RawCenterOfGravityTime) <= Math.Abs(explicitRT.RetentionTime - chromDataNext.RawCenterOfGravityTime))
                     {
                         _listChromData.RemoveAt(iNext);
                     }

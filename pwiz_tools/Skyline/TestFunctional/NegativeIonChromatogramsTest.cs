@@ -87,10 +87,13 @@ namespace pwiz.SkylineTestFunctional
                     i++;
                 }
             }
-
-            Assert.AreEqual(60, countPeaksProperPolarity, "countPeaksProperPolarity: " + string.Join(", ",properList));
-            Assert.AreEqual(30, countPeaksNegPolarity, "countPeaksNegPolarity");
-            Assert.AreEqual(30, countPeaksNoPolarity, "countPeaksNoPolarity");
+            // There are 236 total transitions
+            Assert.AreEqual(186, countPeaksProperPolarity, "countPeaksProperPolarity: " + string.Join(", ",properList));
+            // 135 of them are positive, so will not match chromatograms artificially marked negative in the mzML
+            Assert.AreEqual(93, countPeaksNegPolarity, "countPeaksNegPolarity");
+            // 131 are negative, so will not match chromatograms artificially marked positive in the mzML
+            Assert.AreEqual(94, countPeaksNoPolarity, "countPeaksNoPolarity");
+            // Note that 93+94 != 186 : as it happens there is a negative transition 136,136 that matches when it's faked up as postive
             testFilesDir.Dispose();
         }
 

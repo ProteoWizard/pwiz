@@ -116,9 +116,9 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             }
         }
 
-        public IEnumerable<KeyValuePair<ChromKey, int>> ChromIds
+        public IEnumerable<ChromKeyProviderIdPair> ChromIds
         {
-            get { return _chromKeys.Select((key, index) => new KeyValuePair<ChromKey, int>(key.Key, index)); }
+            get { return _chromKeys.Select((key, index) => new ChromKeyProviderIdPair(key.Key, index)); }
         }
 
         public bool GetChromatogram(ChromKey chromKey, out float[] times, out int[] scanIds, out float[] intensities, out float[] massErrors)

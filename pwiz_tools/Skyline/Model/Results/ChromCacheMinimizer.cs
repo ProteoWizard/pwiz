@@ -52,14 +52,14 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public delegate void ProgressCallback(MinStatistics minStatistics);
 
-        private int CompareLocation(ChromGroupHeaderInfo5 chromGroupHeaderInfo1, ChromGroupHeaderInfo5 chromGroupHeaderInfo2)
+        private int CompareLocation(ChromGroupHeaderInfo chromGroupHeaderInfo1, ChromGroupHeaderInfo chromGroupHeaderInfo2)
         {
             return chromGroupHeaderInfo1.LocationPoints.CompareTo(chromGroupHeaderInfo2.LocationPoints);
         }
 
         public SrmDocument Document { get; private set; }
         public ChromatogramCache ChromatogramCache { get; private set; }
-        public IList<ChromGroupHeaderInfo5> ChromGroupHeaderInfos
+        public IList<ChromGroupHeaderInfo> ChromGroupHeaderInfos
         {
             get; private set;
         }
@@ -77,7 +77,7 @@ namespace pwiz.Skyline.Model.Results
 
             var chromGroupHeaderToIndex =
                 ChromGroupHeaderInfos
-                    .Select((cghi, index) => new KeyValuePair<ChromGroupHeaderInfo5, int>(cghi, index))
+                    .Select((cghi, index) => new KeyValuePair<ChromGroupHeaderInfo, int>(cghi, index))
                     .ToDictionary(kvp => kvp.Key, kvp=>kvp.Value);
             var chromGroups = new ChromatogramGroupInfo[ChromGroupHeaderInfos.Count];
             var transitionGroups = new List<TransitionGroupDocNode>[ChromGroupHeaderInfos.Count];
@@ -226,14 +226,14 @@ namespace pwiz.Skyline.Model.Results
 
         internal class MinimizedChromGroup
         {
-            public MinimizedChromGroup(ChromGroupHeaderInfo5 chromGroupHeaderInfo)
+            public MinimizedChromGroup(ChromGroupHeaderInfo chromGroupHeaderInfo)
             {
                 ChromGroupHeaderInfo = chromGroupHeaderInfo;
                 OptimizedFirstScan = 0;
                 OptimizedLastScan = chromGroupHeaderInfo.NumPoints - 1;
             }
 
-            public ChromGroupHeaderInfo5 ChromGroupHeaderInfo { get; private set; }
+            public ChromGroupHeaderInfo ChromGroupHeaderInfo { get; private set; }
 
             public ICollection<int> RetainedTransitionIndexes { get; set; }
             public float? OptimizedStartTime { get; private set; }
@@ -261,7 +261,7 @@ namespace pwiz.Skyline.Model.Results
                 OptimizedEndTime = times[lastIndex];
             }
 
-            public static MinimizedChromGroup Discard(ChromGroupHeaderInfo5 chromGroupHeaderInfo)
+            public static MinimizedChromGroup Discard(ChromGroupHeaderInfo chromGroupHeaderInfo)
             {
                 return new MinimizedChromGroup(chromGroupHeaderInfo)
                            {
@@ -339,7 +339,7 @@ namespace pwiz.Skyline.Model.Results
 
             static unsafe MinStatisticsCollector()
             {
-                CHROM_GROUP_HEADER_INFO_SIZE = sizeof(ChromGroupHeaderInfo5);
+                CHROM_GROUP_HEADER_INFO_SIZE = sizeof(ChromGroupHeaderInfo);
                 PEAK_SIZE = sizeof(ChromPeak);
                 TRANSITION_SIZE = sizeof(ChromTransition);
             }
@@ -348,7 +348,7 @@ namespace pwiz.Skyline.Model.Results
             private readonly int[] _fileIndexToReplicateIndex;
             private int _processedGroupCount;
 
-            private static long GetFileSize(ChromGroupHeaderInfo5 chromGroupHeaderInfo)
+            private static long GetFileSize(ChromGroupHeaderInfo chromGroupHeaderInfo)
             {
                 return CHROM_GROUP_HEADER_INFO_SIZE + chromGroupHeaderInfo.CompressedSize
                        + chromGroupHeaderInfo.NumPeaks * chromGroupHeaderInfo.NumTransitions * PEAK_SIZE
@@ -447,7 +447,7 @@ namespace pwiz.Skyline.Model.Results
             private readonly FileStream _outputStreamScores;
             private int _peakCount;
             private int _scoreCount;
-            private readonly List<ChromGroupHeaderInfo5> _chromGroupHeaderInfos = new List<ChromGroupHeaderInfo5>();
+            private readonly List<ChromGroupHeaderInfo> _chromGroupHeaderInfos = new List<ChromGroupHeaderInfo>();
             private readonly List<ChromTransition> _transitions = new List<ChromTransition>();
             private readonly List<Type> _scoreTypes;
 
@@ -574,7 +574,7 @@ namespace pwiz.Skyline.Model.Results
                 byte[] pointsCompressed = points.Compress(3);
                 int lenCompressed = pointsCompressed.Length;
                 _outputStream.Write(pointsCompressed, 0, lenCompressed);
-                var header = new ChromGroupHeaderInfo5(originalHeader.Precursor,
+                var header = new ChromGroupHeaderInfo(originalHeader.Precursor,
                                                       originalHeader.TextIdIndex,
                                                       originalHeader.TextIdLen,
                                                       fileIndex,
@@ -586,10 +586,12 @@ namespace pwiz.Skyline.Model.Results
                                                       maxPeakIndex,
                                                       numPoints,
                                                       pointsCompressed.Length,
+                                                      points.Length,
                                                       location,
                                                       originalHeader.Flags,
                                                       originalHeader.StatusId,
-                                                      originalHeader.StatusRank);
+                                                      originalHeader.StatusRank,
+                                                      originalHeader.StartTime, originalHeader.EndTime);
                 _chromGroupHeaderInfos.Add(header);
             }
 

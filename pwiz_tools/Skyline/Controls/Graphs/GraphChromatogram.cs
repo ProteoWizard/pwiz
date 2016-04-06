@@ -1240,7 +1240,7 @@ namespace pwiz.Skyline.Controls.Graphs
             int numTrans = displayTrans.Length;
             int numSteps = 0;
             bool allowEmpty = false;
-
+            
             if (IsSingleTransitionDisplay && nodeTranSelected != null)
             {
                 if (!displayTrans.Contains(nodeTranSelected))
@@ -2055,7 +2055,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var peptideDocNode = peptideDocNodes[displayPeptides[i].PeptideIndex];
 
                 // Intersect best peak with summed transition.
-                if (bestPeakInfo != null && sumInfo.Times.Length > 0)
+                if (bestPeakInfo != null && sumInfo.Times != null && sumInfo.Times.Length > 0)
                 {
                     float startRetentionTime = Math.Max(bestPeakInfo.StartRetentionTime, sumInfo.Times[0]);
                     float endRetentionTime = Math.Min(bestPeakInfo.EndRetentionTime, sumInfo.Times[sumInfo.Times.Length - 1]);

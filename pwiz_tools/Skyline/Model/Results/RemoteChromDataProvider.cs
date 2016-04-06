@@ -60,12 +60,12 @@ namespace pwiz.Skyline.Model.Results
             _chromTaskLists = new ChromTaskList[_chromatogramRequestProviders.Length];
         }
 
-        public override IEnumerable<KeyValuePair<ChromKey, int>> ChromIds
+        public override IEnumerable<ChromKeyProviderIdPair> ChromIds
         {
             get
             {
                 return _chromatogramRequestProviders.SelectMany(chromRequestProvider => chromRequestProvider.ChromKeys)
-                    .Select((key, index) => new KeyValuePair<ChromKey, int>(key, index));
+                    .Select((key, index) => new ChromKeyProviderIdPair(key, index));
             }
         }
 

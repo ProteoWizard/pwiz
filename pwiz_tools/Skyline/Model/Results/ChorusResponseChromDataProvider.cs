@@ -49,7 +49,7 @@ namespace pwiz.Skyline.Model.Results
                 chromFileInfo.FilePath, chromFileInfo, null, progressStatus, startPercent, endPercent, loader);
         }
 
-        public override IEnumerable<KeyValuePair<ChromKey, int>> ChromIds
+        public override IEnumerable<ChromKeyProviderIdPair> ChromIds
         {
             get { return _cachedChromatogramDataProvider.ChromIds; }
         }

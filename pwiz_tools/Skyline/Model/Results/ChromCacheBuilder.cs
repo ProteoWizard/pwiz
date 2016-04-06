@@ -555,15 +555,15 @@ namespace pwiz.Skyline.Model.Results
 
         public static IEnumerable<ChromDataSet> GetChromDataSets(ChromDataProvider provider, bool isTimeNormalArea)
         {
-            var listKeyIndex = new List<KeyValuePair<ChromKey, int>>(provider.ChromIds);
-            listKeyIndex.Sort((p1, p2) => p1.Key.CompareTo(p2.Key));
+            var listKeyIndex = new List<ChromKeyProviderIdPair>(provider.ChromIds);
+            listKeyIndex.Sort();
 
             ChromKey lastKey = ChromKey.EMPTY;
             ChromDataSet chromDataSet = null;
             foreach (var keyIndex in listKeyIndex)
             {
                 var key = keyIndex.Key;
-                var chromData = new ChromData(key, keyIndex.Value);
+                var chromData = new ChromData(key, keyIndex.ProviderId);
 
                 if (chromDataSet != null && key.ComparePrecursors(lastKey) == 0)
                 {
@@ -578,13 +578,14 @@ namespace pwiz.Skyline.Model.Results
                 }
                 lastKey = key;
             }
-
+            // Caution: for SRM data, we may have just grouped chromatograms that will eventually
+            // prove to have discontiguous RT spans once we load them and have time data.
             yield return chromDataSet;
         }
 //        public static IEnumerable<ChromDataSet> GetChromDataSets(ChromDataProvider provider, bool isTimeNormalArea)
 //        {
-//            var listKeyIndex = new List<KeyValuePair<ChromKey, int>>(provider.ChromIds);
-//            listKeyIndex.Sort((p1, p2) => p1.Key.CompareTo(p2.Key));
+//            var listKeyIndex = new List<ChromKeyProviderIdPair>(provider.ChromIds);
+//            listKeyIndex.Sort();
 //           
 //            List<ChromDataSet> chromDataSets = new List<ChromDataSet>();
 //            ChromKey lastKey = ChromKey.EMPTY;
@@ -858,13 +859,14 @@ namespace pwiz.Skyline.Model.Results
                     continue;
 
                 var nodeGroup = peptidePrecursorMz.NodeGroup;
+                var explicitRetentionTimeInfo = peptidePrecursorMz.NodePeptide.ExplicitRetentionTime;
                 if (listMatchingGroups.Count > 0)
                 {
                     // If the current chromDataSet has already been used, make a copy.
                     chromDataSet = new ChromDataSet(chromDataSet.IsTimeNormalArea,
                         chromDataSet.Chromatograms.Select(c => c.CloneForWrite()).ToArray());
                 }
-                var groupData = GetMatchingData(nodeGroup, chromDataSet);
+                var groupData = GetMatchingData(nodeGroup, chromDataSet, explicitRetentionTimeInfo);
                 if (groupData != null)
                 {
                     Assume.IsTrue(chromDataSet.PrecursorMz.IsNegative == peptidePrecursorMz.PrecursorMz.IsNegative);
@@ -969,11 +971,11 @@ namespace pwiz.Skyline.Model.Results
         }
 
 // ReSharper disable SuggestBaseTypeForParameter
-        private static IList<ChromData> GetMatchingData(TransitionGroupDocNode nodeGroup, ChromDataSet chromDataSet)
+        private static IList<ChromData> GetMatchingData(TransitionGroupDocNode nodeGroup, ChromDataSet chromDataSet, ExplicitRetentionTimeInfo explicitRT)
 // ReSharper restore SuggestBaseTypeForParameter
         {
             // Look for potential product ion matches
-            var listMatchingData = GetBestMatching(chromDataSet.Chromatograms, nodeGroup.Transitions);
+            var listMatchingData = GetBestMatching(chromDataSet.Chromatograms, nodeGroup.Transitions, explicitRT);
 
             // Only return a match, if at least two product ions match, or the precursor
             // has only a single product ion, and it matches
@@ -993,7 +995,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         private static List<ChromDataTrans> GetBestMatching(
-            IEnumerable<ChromData> chromatograms, IEnumerable<TransitionDocNode> transitions)
+            IEnumerable<ChromData> chromatograms, IEnumerable<TransitionDocNode> transitions, ExplicitRetentionTimeInfo explicitRT)
         {
             var listMatchingData = new List<IndexChromDataTrans>();
             const float tolerance = (float)TransitionInstrument.MAX_MZ_MATCH_TOLERANCE;
@@ -1019,6 +1021,12 @@ namespace pwiz.Skyline.Model.Results
                         it = itNext;
                     else
                         ic = NextChrom(ic, tc, null, null, listMatchingData);
+                }
+                else if (explicitRT != null && tc.Chrom.RawTimes != null &&
+                         (explicitRT.RetentionTime < tc.Chrom.RawTimes.First() || tc.Chrom.RawTimes.Last() < explicitRT.RetentionTime))
+                {
+                    // Current transition mz matches, but retention time range does not contain explicitRT
+                    it = itNext;  // Just advance in transition list and continue
                 }
                 else
                 {
@@ -1216,9 +1224,11 @@ namespace pwiz.Skyline.Model.Results
 
             // Add new chromatogram data set, if not empty
             if (chromDataSet != null)
-                _chromDataSets.Add(chromDataSet);
+            {
+                if (chromDataSet.FilterByRetentionTime())
+                    _chromDataSets.Add(chromDataSet);
+            }
         }
-
 
         private void WriteChromDataSets(PeptideChromDataSets chromDataSets)
         {
@@ -1243,6 +1253,7 @@ namespace pwiz.Skyline.Model.Results
                 // Compress the data (can be huge for AB data with lots of zeros)
                 byte[] pointsCompressed = points.Compress(3);
                 int lenCompressed = pointsCompressed.Length;
+                int lenUncompressed = points.Length;
                 _fs.Stream.Write(pointsCompressed, 0, lenCompressed);
 
                 // Use existing scores, if they have already been added
@@ -1267,23 +1278,23 @@ namespace pwiz.Skyline.Model.Results
                 }
 
                 // Add to header list
-                ChromGroupHeaderInfo5.FlagValues flags = 0;
+                ChromGroupHeaderInfo.FlagValues flags = 0;
                 if (massErrors != null)
-                    flags |= ChromGroupHeaderInfo5.FlagValues.has_mass_errors;
+                    flags |= ChromGroupHeaderInfo.FlagValues.has_mass_errors;
                 if (chromDataSet.HasCalculatedMzs)
-                    flags |= ChromGroupHeaderInfo5.FlagValues.has_calculated_mzs;
+                    flags |= ChromGroupHeaderInfo.FlagValues.has_calculated_mzs;
                 if (chromDataSet.Extractor == ChromExtractor.base_peak)
-                    flags |= ChromGroupHeaderInfo5.FlagValues.extracted_base_peak;
+                    flags |= ChromGroupHeaderInfo.FlagValues.extracted_base_peak;
                 if (scanIds != null)
                 {
                     if (scanIds[(int) ChromSource.ms1] != null)
-                        flags |= ChromGroupHeaderInfo5.FlagValues.has_ms1_scan_ids;
+                        flags |= ChromGroupHeaderInfo.FlagValues.has_ms1_scan_ids;
                     if (scanIds[(int) ChromSource.fragment] != null)
-                        flags |= ChromGroupHeaderInfo5.FlagValues.has_frag_scan_ids;
+                        flags |= ChromGroupHeaderInfo.FlagValues.has_frag_scan_ids;
                     if (scanIds[(int) ChromSource.sim] != null)
-                        flags |= ChromGroupHeaderInfo5.FlagValues.has_sim_scan_ids;
+                        flags |= ChromGroupHeaderInfo.FlagValues.has_sim_scan_ids;
                 }
-                var header = new ChromGroupHeaderInfo5(chromDataSet.PrecursorMz,
+                var header = new ChromGroupHeaderInfo(chromDataSet.PrecursorMz,
                     0,
                     chromDataSet.Count,
                     _listTransitions.Count,
@@ -1293,10 +1304,13 @@ namespace pwiz.Skyline.Model.Results
                     chromDataSet.MaxPeakIndex,
                     times.Length,
                     lenCompressed,
+                    lenUncompressed,
                     location,
                     flags,
                     chromDataSet.StatusId,
-                    chromDataSet.StatusRank);
+                    chromDataSet.StatusRank,
+                    chromDataSet.MinRawTime,
+                    chromDataSet.MaxRawTime);
 
                 header.CalcTextIdIndex(chromDataSet.ModifiedSequence, _dictSequenceToByteIndex, _listTextIdBytes);
 

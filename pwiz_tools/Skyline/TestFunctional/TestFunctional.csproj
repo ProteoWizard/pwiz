@@ -160,6 +160,7 @@
     <Compile Include="EditDialogsTest.cs" />
     <Compile Include="EditSettingsTypesTest.cs" />
     <Compile Include="EmptyFunctionalTest.cs" />
+    <Compile Include="ExplicitRTTest.cs" />
     <Compile Include="ExportChromatogramTest.cs" />
     <Compile Include="ExportIsolationListTest.cs" />
     <Compile Include="ExportDiaListTest.cs" />
@@ -300,6 +301,7 @@
     <None Include="DocumentGridTest.zip" />
     <None Include="DocumentSizeErrorTest.zip" />
     <None Include="EditNoteTest.zip" />
+    <None Include="ExplicitRTTest.zip" />
     <None Include="ExportChromatogramTest.zip" />
     <None Include="ExportIsolationListTest.zip" />
     <None Include="ExportMethodDialogTest.zip" />

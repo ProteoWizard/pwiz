@@ -30,7 +30,7 @@ using pwiz.Skyline.Controls;
 namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
-    /// Functional test for CE Optimization.
+    /// Functional test for handling of older doc formats.
     /// </summary>
     [TestClass]
     public class ImportDocTest : AbstractFunctionalTest
@@ -69,7 +69,7 @@ namespace pwiz.SkylineTestFunctional
             for (int i = 0; i < _documentPaths.Length; i++)
             {
                 _cachePaths[i] = ChromatogramCache.FinalPathForName(_documentPaths[i], null);
-                _cacheSizes[i] = new FileInfo(_cachePaths[i]).Length;
+                _cacheSizes[i] = new FileInfo(_cachePaths[i]).Length;  // Actual length of the file
             }
 
             var docEmpty = SkylineWindow.Document;
@@ -470,6 +470,11 @@ namespace pwiz.SkylineTestFunctional
                 cacheSize += (sizeof(int) + sizeof(long)) * fileCachedCount;
                 // And scan ids location to global header
                 cacheSize += sizeof(long);
+            }
+            if (ChromatogramCache.FORMAT_VERSION_CACHE >= ChromatogramCache.FORMAT_VERSION_CACHE_11)
+            {
+                // Version 11 adds uncompressed buffer size for convenience, and some time span metadata
+                cacheSize += ChromGroupHeaderInfo.DeltaSize11 * dataGroupCount;
             }
             return cacheSize;
         }

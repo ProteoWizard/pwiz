@@ -76,7 +76,7 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromatogramLoadingStatus LoadingStatus { get { return (ChromatogramLoadingStatus) Status; } }
 
-        public abstract IEnumerable<KeyValuePair<ChromKey, int>> ChromIds { get; }
+        public abstract IEnumerable<ChromKeyProviderIdPair> ChromIds { get; }
 
         public virtual byte[] MSDataFileScanIdBytes { get { return new byte[0]; } }
 
@@ -100,8 +100,7 @@ namespace pwiz.Skyline.Model.Results
 
     internal sealed class ChromatogramDataProvider : ChromDataProvider
     {
-        private readonly List<KeyValuePair<ChromKey, int>> _chromIds =
-            new List<KeyValuePair<ChromKey, int>>();
+        private readonly List<ChromKeyProviderIdPair> _chromIds = new List<ChromKeyProviderIdPair>();
         private readonly int[] _chromIndices;
 
         private MsDataFileImpl _dataFile;
@@ -158,7 +157,7 @@ namespace pwiz.Skyline.Model.Results
                     lastPrecursor = chromKey.Precursor;
                     indexPrecursor++;
                 }
-                var ki = new KeyValuePair<ChromKey, int>(chromKey, index);
+                var ki = new ChromKeyProviderIdPair(chromKey, index);
                 _chromIndices[index] = indexPrecursor;
                 _chromIds.Add(ki);
             }
@@ -178,7 +177,7 @@ namespace pwiz.Skyline.Model.Results
         private void FixCEOptForShimadzu()
         {
             // Need to sort by keys to ensure everything is in the right order.
-            _chromIds.Sort((p1, p2) => p1.Key.CompareTo(p2.Key));
+            _chromIds.Sort();
 
             int indexLast = 0;
             var lastPrecursor = SignedMz.ZERO;
@@ -238,12 +237,12 @@ namespace pwiz.Skyline.Model.Results
             {
                 var chromId = _chromIds[start + i];
                 var chromKeyNew = chromId.Key.ChangeOptimizationStep(step);
-                _chromIds[start + i] = new KeyValuePair<ChromKey, int>(chromKeyNew, chromId.Value);
+                _chromIds[start + i] = new ChromKeyProviderIdPair(chromKeyNew, chromId.ProviderId);
                 step--;
             }
         }
 
-        public override IEnumerable<KeyValuePair<ChromKey, int>> ChromIds
+        public override IEnumerable<ChromKeyProviderIdPair> ChromIds
         {
             get { return _chromIds; }
         }

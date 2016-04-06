@@ -45,6 +45,7 @@ namespace pwiz.Skyline.Model.Results
         private RetentionTimePrediction _predictedRetentionTime;
         private double[] _retentionTimes;
         private bool _isAlignedTimes;
+        private ExplicitRetentionTimeInfo _explicitRetentionTimeInfo;
         private readonly bool _isProcessedScans;
 
         public PeptideChromDataSets(PeptideDocNode nodePep,
@@ -61,6 +62,16 @@ namespace pwiz.Skyline.Model.Results
             _isProcessedScans = isProcessedScans;
         }
 
+        public PeptideChromDataSets(PeptideChromDataSets other)
+        {
+            NodePep = other.NodePep;
+            FileInfo = other.FileInfo;
+            DetailedPeakFeatureCalculators = other.DetailedPeakFeatureCalculators;
+            _document = other._document;
+            _retentionTimes = new double[0];
+            _isProcessedScans = other._isProcessedScans;
+        }
+
         public PeptideDocNode NodePep { get; private set; }
 
         public ChromFileInfo FileInfo { get; private set; }
@@ -72,6 +83,8 @@ namespace pwiz.Skyline.Model.Results
         public double[] RetentionTimes { set { _retentionTimes = value; } }
 
         public bool IsAlignedTimes { set { _isAlignedTimes = value; } }
+
+        public ExplicitRetentionTimeInfo ExplicitRetentionTime { get { return NodePep != null ? NodePep.ExplicitRetentionTime : null; }}
 
         public ChromKey FirstKey
         {
@@ -141,7 +154,7 @@ namespace pwiz.Skyline.Model.Results
 
             // Pick peak groups at the precursor level
             foreach (var chromDataSet in _dataSets)
-                chromDataSet.PickChromatogramPeaks(_retentionTimes, _isAlignedTimes);
+                chromDataSet.PickChromatogramPeaks(_retentionTimes, _isAlignedTimes, _explicitRetentionTimeInfo);
 
             // Merge where possible and pick peak groups at the peptide level
             _listListPeakSets.Clear();
@@ -408,7 +421,7 @@ namespace pwiz.Skyline.Model.Results
                 intervalDelta = TIME_MIN_DELTA;  // For breakpoint setting
             double start, end;
             GetExtents(_isProcessedScans, intervalDelta, out start, out end);
-            double pointsMinDelta = (end - start)/ChromGroupHeaderInfo5.MAX_POINTS;
+            double pointsMinDelta = (end - start)/ChromGroupHeaderInfo.MAX_POINTS;
             if (intervalDelta < pointsMinDelta)
                 intervalDelta = pointsMinDelta;  // For breakpoint setting
             return intervalDelta;
@@ -774,6 +787,35 @@ namespace pwiz.Skyline.Model.Results
                 }
             }
             return false;
+        }
+
+        public bool FilterByRetentionTime()
+        {
+            // Now that we have times loaded, apply explicit RT filter if any
+            if (ExplicitRetentionTime != null)
+            {
+                double explicitRT = ExplicitRetentionTime.RetentionTime;
+                for (var i = DataSets.Count - 1; i >= 0 ; i--)
+                {
+                    var dataSet = DataSets[i];
+                    if (explicitRT < dataSet.MinRawTime || dataSet.MaxRawTime < explicitRT)
+                    {
+                        DataSets.RemoveAt(i);
+                    }
+                    else
+                    {
+                        for (var j = dataSet.Chromatograms.Count - 1; j >= 0; j--)
+                        {
+                            var chrom = dataSet.Chromatograms[j];
+                            if (explicitRT < chrom.Times.First() || chrom.Times.Last() < explicitRT)
+                            {
+                                dataSet.Chromatograms.RemoveAt(j);
+                            }
+                        }
+                    }
+                }
+            }
+            return DataSets.Any();
         }
 
         private bool HasEquivalentGroupNode(TransitionGroupDocNode nodeGroup)

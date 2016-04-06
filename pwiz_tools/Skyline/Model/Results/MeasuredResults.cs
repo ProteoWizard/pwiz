@@ -533,6 +533,7 @@ namespace pwiz.Skyline.Model.Results
             // In small molecule SRM, it's not at all unusual to have the same Q1>Q3
             // pair repeatedly, at different retention times, so we use explicit RT to disambiguate if available
             int maxTranMatch = 1;
+            var minErrRT = double.MaxValue;
 
             var listChrom = new List<ChromatogramGroupInfo>();
             foreach (var cache in Caches)
@@ -549,10 +550,28 @@ namespace pwiz.Skyline.Model.Results
                     // If the chromatogram set has an optimization function, then the number
                     // of matching chromatograms per transition is a reflection of better
                     // matching.  Otherwise, we only expect one match per transition.
+                    //
+                    // For small molecules we will likely have to select from several chromInfos all with same Q1>Q3,
+                    // so we examine peaks for match with explicitRT if provided
                     bool multiMatch = chromatogram.OptimizationFunction != null;
-                    int tranMatch = chromInfo.MatchTransitions(nodeGroup, tolerance, multiMatch);
-                    if (tranMatch >= maxTranMatch)
+                    double errRT;
+                    int tranMatch = chromInfo.MatchTransitions(nodePep, nodeGroup, tolerance, multiMatch, out errRT);
+                    // CONSIDER: This is pretty tricky code, and we are currently favoring
+                    //           peak proximity to explicit retention time over number of matching
+                    //           transitions.
+                    if (tranMatch >= maxTranMatch  || errRT < minErrRT)
                     {
+                        if (errRT < minErrRT)
+                        {
+                            // This is the closest peak we've found to the explicit RT
+                            listChrom.Clear();
+                            minErrRT = errRT;
+                        }  
+                        else if (errRT > minErrRT)
+                        {
+                            // This is not the closest peak we've found to the explicit RT, skip it
+                            continue;
+                        }
                         // If new maximum, clear anything collected at the previous maximum
                         if (tranMatch > maxTranMatch)
                             listChrom.Clear();

@@ -476,13 +476,13 @@ namespace pwiz.Skyline.Model.Results
             chromMap.ProcessExtractedSpectrum((float)time, _collectors, -1, spectrum, null);
         }
 
-        public override IEnumerable<KeyValuePair<ChromKey, int>> ChromIds
+        public override IEnumerable<ChromKeyProviderIdPair> ChromIds
         {
             get
             {
-                var chromIds = new KeyValuePair<ChromKey, int>[_collectors.ChromKeys.Count];
+                var chromIds = new ChromKeyProviderIdPair[_collectors.ChromKeys.Count];
                 for (int i = 0; i < chromIds.Length; i++)
-                    chromIds[i] = new KeyValuePair<ChromKey, int>(_collectors.ChromKeys[i], i); 
+                    chromIds[i] = new ChromKeyProviderIdPair(_collectors.ChromKeys[i], i); 
                 return chromIds;
             }
         }

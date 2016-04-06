@@ -774,9 +774,20 @@ namespace pwiz.Skyline.Controls.Graphs
             transitionChromInfo = new TransitionChromInfo(null, 0, chromPeak, new float?[0], Annotations.EMPTY,
                                                             UserSet.FALSE);
             var peaks = new[] {chromPeak};
-            var header = new ChromGroupHeaderInfo5(new ChromGroupHeaderInfo(
-              (float)precursorMz, 0, 1, 0, peaks.Length, 0, 0,
-              chromGroup.Times.Length, 0, 0));
+            var header = new ChromGroupHeaderInfo(precursorMz, 
+              0,  // file index
+              1, // numTransitions
+              0, // startTransitionIndex
+              peaks.Length, // numPeaks
+              0, // startPeakIndex
+              0, // startscoreindex
+              0,// maxPeakIndex
+              chromGroup.Times.Length, // numPoints
+              0, // compressedSize
+              0, // uncompressedsize
+              0,  //location
+              0, -1, -1, null, null);
+
             chromatogramInfo = new ChromatogramInfo(header,
                     new Dictionary<Type, int>(), 0,
                     new ChromCachedFile[0],

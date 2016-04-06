@@ -31,7 +31,7 @@ namespace pwiz.Skyline.Model.Results
 
         protected readonly List<ChromCachedFile> _listCachedFiles = new List<ChromCachedFile>();
         protected readonly List<ChromTransition> _listTransitions = new List<ChromTransition>();
-        protected readonly List<ChromGroupHeaderInfo5> _listGroups = new List<ChromGroupHeaderInfo5>();
+        protected readonly List<ChromGroupHeaderInfo> _listGroups = new List<ChromGroupHeaderInfo>();
         protected readonly List<byte> _listTextIdBytes = new List<byte>();
         protected readonly List<Type> _listScoreTypes = new List<Type>();
         protected readonly FileSaver _fs;
