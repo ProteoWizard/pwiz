@@ -1127,8 +1127,15 @@ namespace pwiz.Skyline.Util
 
             if (!string.IsNullOrEmpty(SafeName))
             {
-                if (_streamManager.Exists(SafeName))
-                    _streamManager.Delete(SafeName);
+                try
+                {
+                    if (_streamManager.Exists(SafeName))
+                        _streamManager.Delete(SafeName);
+                }
+                catch (Exception e)
+                {
+                    Trace.TraceWarning("Exception in FileSaver.Dispose: {0}", e); // Not L10N
+                }
                 // Make sure any further calls to Dispose() do nothing.
                 SafeName = null;
             }          
