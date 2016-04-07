@@ -193,13 +193,10 @@ namespace pwiz.Skyline.Model
 
         protected bool CompleteProcessing(IDocumentContainer container, SrmDocument docNew, SrmDocument docOriginal)
         {
-            lock (_processing)
-            {
-                if (!container.SetDocument(docNew, docOriginal))
-                    return false;
+            if (!container.SetDocument(docNew, docOriginal))
+                return false;
 
-                EndProcessing(docOriginal);
-            }
+            EndProcessing(docOriginal);
             return true;
         }
 
