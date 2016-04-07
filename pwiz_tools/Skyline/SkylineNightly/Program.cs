@@ -29,6 +29,7 @@ namespace SkylineNightly
         public const string SCHEDULED_PERFTESTS_ARG = SCHEDULED_ARG + "_with_perftests"; // Not L10N
         public const string SCHEDULED_STRESSTESTS_ARG = SCHEDULED_ARG + "_with_stresstests"; // Not L10N
         public const string SCHEDULED_RELEASE_BRANCH_ARG = SCHEDULED_ARG + "_release_branch"; // Not L10N
+        public const string SCHEDULED_INTEGRATION_ARG = SCHEDULED_ARG + "_integration_branch"; // Not L10N
         public const string PARSE_ARG = "parse"; // Not L10N
         public const string POST_ARG = "post"; // Not L10N
 
@@ -51,32 +52,24 @@ namespace SkylineNightly
 
             switch (args[0].ToLower())
             {
+                case SCHEDULED_INTEGRATION_ARG:
+                    nightly.RunAndPost(Nightly.RunMode.nightly_integration);
+                    break;
+
                 case SCHEDULED_PERFTESTS_ARG:
-                    runMode = Nightly.RunMode.nightly_with_perftests;
-                    nightly.Run(runMode);
-                    nightly.Parse();
-                    nightly.Post(runMode);
+                    nightly.RunAndPost(Nightly.RunMode.nightly_with_perftests);
                     break;
 
                 case SCHEDULED_STRESSTESTS_ARG:
-                    runMode = Nightly.RunMode.nightly_with_stresstests;
-                    nightly.Run(runMode);
-                    nightly.Parse();
-                    nightly.Post(runMode);
+                    nightly.RunAndPost(Nightly.RunMode.nightly_with_stresstests);
                     break;
 
                 case SCHEDULED_RELEASE_BRANCH_ARG:
-                    runMode = Nightly.RunMode.release_branch_with_perftests;
-                    nightly.Run(runMode);
-                    nightly.Parse();
-                    nightly.Post(runMode);
+                    nightly.RunAndPost(Nightly.RunMode.release_branch_with_perftests);
                     break;
 
                 case SCHEDULED_ARG:
-                    runMode = Nightly.RunMode.nightly;
-                    nightly.Run(runMode);
-                    nightly.Parse();
-                    nightly.Post(runMode);
+                    nightly.RunAndPost(Nightly.RunMode.nightly);
                     break;
 
                 case PARSE_ARG:

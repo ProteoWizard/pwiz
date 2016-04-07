@@ -122,6 +122,9 @@ namespace SkylineNightly
                 case 3:
                     arg = Program.SCHEDULED_STRESSTESTS_ARG;
                     break;
+                case 4:
+                    arg = Program.SCHEDULED_INTEGRATION_ARG;
+                    break;
             }
             return arg;
         }

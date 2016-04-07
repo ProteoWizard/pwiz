@@ -52,6 +52,10 @@ namespace SkylineNightly
         private const string LABKEY_PERF_URL = "https://skyline.gs.washington.edu/labkey/testresults/home/development/Performance%20Tests/post.view?";
         private const string LABKEY_STRESS_URL = "https://skyline.gs.washington.edu/labkey/testresults/home/development/NightlyStress/post.view?";
         private const string LABKEY_RELEASE_PERF_URL = "https://skyline.gs.washington.edu/labkey/testresults/home/development/Release%20Branch/post.view?";
+        private const string LABKEY_INTEGRATION_URL = "https://skyline.gs.washington.edu/labkey/project/home/development/Integration/post.view";
+
+        // Current integration branch is MultiFileLoad
+        private const string SVN_INTEGRATION_BRANCH_URL = "https://svn.code.sf.net/p/proteowizard/code/branches/work/20151014_MultiFileLoad";
 
         private DateTime _startTime;
         private string _logFile;
@@ -131,7 +135,14 @@ namespace SkylineNightly
             }
         }
 
-        public enum RunMode { nightly, nightly_with_perftests, release_branch_with_perftests, nightly_with_stresstests}
+        public enum RunMode { nightly, nightly_with_perftests, release_branch_with_perftests, nightly_with_stresstests, nightly_integration }
+
+        public void RunAndPost(RunMode mode)
+        {
+            Run(mode);
+            Parse();
+            Post(mode);
+        }
 
         /// <summary>
         /// Run nightly build/test and report results to server.
@@ -142,7 +153,7 @@ namespace SkylineNightly
             var nightlyDir = GetNightlyDir();
             var skylineNightlySkytr = Path.Combine(nightlyDir, "SkylineNightly.skytr");
 
-            bool withPerfTests = mode != RunMode.nightly;
+            bool withPerfTests = mode != RunMode.nightly && mode != RunMode.nightly_integration;
 
             if (mode == RunMode.nightly_with_stresstests)
             {
@@ -283,6 +294,11 @@ namespace SkylineNightly
                 branchUrl =
                     lines[1].Split(new[] {"URL: "}, StringSplitOptions.None)[1].Split(new[] {"/SVN_info"},StringSplitOptions.None)[0];
             }
+            // Or if we are running the integration build, then we use the trunk SkylineTester, but have it build the branch TestRunner.exe
+            else if (mode == RunMode.nightly_integration)
+            {
+                branchUrl = SVN_INTEGRATION_BRANCH_URL;
+            }
 
             // Create ".skytr" file to execute nightly build in SkylineTester.
             var assembly = Assembly.GetExecutingAssembly();
@@ -410,6 +426,7 @@ namespace SkylineNightly
 
             var hasPerftests = log.Contains("# Perf tests");
             var isTrunk = !log.Contains("Testing branch at");
+            var isIntegration = log.Contains(SVN_INTEGRATION_BRANCH_URL);
 
             _nightly["id"] = Environment.MachineName;
             _nightly["os"] = Environment.OSVersion;
@@ -429,7 +446,7 @@ namespace SkylineNightly
             }
             return isTrunk
                 ? (hasPerftests ? RunMode.nightly_with_perftests : RunMode.nightly)
-                : RunMode.release_branch_with_perftests;
+                : (isIntegration ? RunMode.nightly_integration : RunMode.release_branch_with_perftests);
         }
 
         private int ParseTests(string log)
@@ -540,7 +557,9 @@ namespace SkylineNightly
             var xml = File.ReadAllText(xmlFile);
             string url;
             // Post to server.
-            if (mode == RunMode.release_branch_with_perftests)
+            if (mode == RunMode.nightly_integration)
+                url = LABKEY_INTEGRATION_URL;
+            else if (mode == RunMode.release_branch_with_perftests)
                 url = LABKEY_RELEASE_PERF_URL;
             else if (mode == RunMode.nightly_with_perftests)
                 url = LABKEY_PERF_URL;
