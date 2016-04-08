@@ -22,7 +22,6 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using pwiz.Skyline.Model.Results.RemoteApi.GeneratedCode;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results.RemoteApi
