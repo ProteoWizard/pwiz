@@ -198,6 +198,7 @@ namespace SkylineTester
                     catch (Exception e)
                     {
                         Log(Environment.NewLine + "!!!! COMMAND FAILED !!!! " + e);
+                        CommandsDone(false);    // Quit if any command fails
                     }
                     _workingDirectory = DefaultDirectory;
                     return;

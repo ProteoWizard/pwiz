@@ -236,7 +236,21 @@ namespace SkylineTester
             revisionWorker.RunWorkerAsync();
 
             _updateTimer = new Timer {Interval = 300};
-            _updateTimer.Tick += (s, a) => RunUI(UpdateNightly);
+            _updateTimer.Tick += (s, a) => RunUI(() =>
+            {
+                try
+                {
+                    UpdateNightly();
+                }
+                catch (Exception x)
+                {
+                    _updateTimer.Stop();
+
+                    MessageBox.Show(string.Format("Unexpected Error: {0}", x));
+
+                    Stop(false);
+                }
+            });
 
             _stopTimer = new Timer {Interval = (int) MainWindow.NightlyDuration.Value*60*60*1000};
             _stopTimer.Tick += (s, a) => RunUI(() =>
