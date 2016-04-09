@@ -196,14 +196,11 @@ namespace SkylineNightly
                 }
             }
 
-            _startTime = DateTime.Now;
-
-            // Create log file.
+            // Create place to put run logs
             if (!Directory.Exists(_logDir))
                 Directory.CreateDirectory(_logDir);
-            _logFile = Path.Combine(nightlyDir, "SkylineNightly.log");
-            Delete(_logFile);
-            Log(DateTime.Now.ToShortDateString());
+            // Start the nightly log file
+            StartLog();
 
             try
             {
@@ -362,6 +359,16 @@ namespace SkylineNightly
             _duration = DateTime.Now - startTime;
         }
 
+        public void StartLog()
+        {
+            _startTime = DateTime.Now;
+
+            // Create log file.
+            _logFile = Path.Combine(GetNightlyDir(), "SkylineNightly.log");
+            Delete(_logFile);
+            Log(DateTime.Now.ToShortDateString());
+        }
+
         public void Finish()
         {
             _logDirScreengrabs = null; // Signal the screengrab thread that we're done
@@ -425,8 +432,8 @@ namespace SkylineNightly
             ParseLeaks(log);
 
             var hasPerftests = log.Contains("# Perf tests");
-            var isTrunk = !log.Contains("Testing branch at");
             var isIntegration = log.Contains(SVN_INTEGRATION_BRANCH_URL);
+            var isTrunk = !isIntegration && !log.Contains("Testing branch at");
 
             _nightly["id"] = Environment.MachineName;
             _nightly["os"] = Environment.OSVersion;

@@ -51,7 +51,7 @@ namespace SkylineNightly
                 // Much better to just use a directory at the root of either a
                 // larger D: drive, or the C: drive.
                 string defaultDir = @"D:\Nightly"; // Not L10N
-                if (!Directory.Exists(@"D:\"))
+                if (!Directory.Exists(@"D:\")) // Not L10N
                     defaultDir = @"C:\Nightly"; // Not L10N
                 textBoxFolder.Text = Path.Combine(defaultDir);
             }
