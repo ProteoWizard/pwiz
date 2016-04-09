@@ -38,10 +38,9 @@
             this.labelSoftwareVersion.AutoSize = true;
             this.labelSoftwareVersion.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold);
             this.labelSoftwareVersion.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.labelSoftwareVersion.Location = new System.Drawing.Point(13, 9);
-            this.labelSoftwareVersion.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.labelSoftwareVersion.Location = new System.Drawing.Point(10, 7);
             this.labelSoftwareVersion.Name = "labelSoftwareVersion";
-            this.labelSoftwareVersion.Size = new System.Drawing.Size(145, 25);
+            this.labelSoftwareVersion.Size = new System.Drawing.Size(117, 20);
             this.labelSoftwareVersion.TabIndex = 11;
             this.labelSoftwareVersion.Text = "SkylineTester";
             // 
@@ -50,10 +49,9 @@
             this.linkLabel1.AutoSize = true;
             this.linkLabel1.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.linkLabel1.LinkArea = new System.Windows.Forms.LinkArea(241, 15);
-            this.linkLabel1.Location = new System.Drawing.Point(16, 38);
-            this.linkLabel1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.linkLabel1.Location = new System.Drawing.Point(12, 31);
             this.linkLabel1.Name = "linkLabel1";
-            this.linkLabel1.Size = new System.Drawing.Size(398, 108);
+            this.linkLabel1.Size = new System.Drawing.Size(337, 92);
             this.linkLabel1.TabIndex = 12;
             this.linkLabel1.TabStop = true;
             this.linkLabel1.Text = resources.GetString("linkLabel1.Text");
@@ -62,15 +60,17 @@
             // 
             // AboutWindow
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(444, 170);
+            this.ClientSize = new System.Drawing.Size(363, 138);
             this.Controls.Add(this.labelSoftwareVersion);
             this.Controls.Add(this.linkLabel1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "AboutWindow";
+            this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "About SkylineTester";
             this.ResumeLayout(false);

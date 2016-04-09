@@ -33,11 +33,28 @@ namespace SkylineNightly
             InitializeComponent();
             startTime.Value = DateTime.Parse(Settings.Default.StartTime);
             textBoxFolder.Text = Settings.Default.NightlyFolder;
-            comboBoxOptions.SelectedIndex = Settings.Default.StressTests ? 3 : (Settings.Default.ReleaseBranch ? 2 : (Settings.Default.PerfTests ? 1 : 0));
+            if (Settings.Default.IntegrationBranch)
+                comboBoxOptions.SelectedIndex = 4;
+            else if (Settings.Default.StressTests)
+                comboBoxOptions.SelectedIndex = 3;
+            else if (Settings.Default.ReleaseBranch)
+                comboBoxOptions.SelectedIndex = 2;
+            else if (Settings.Default.PerfTests)
+                comboBoxOptions.SelectedIndex = 1;
+            else
+                comboBoxOptions.SelectedIndex = 0;
             if (string.IsNullOrEmpty(textBoxFolder.Text))
-                textBoxFolder.Text = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-                    "SkylineNightly"); // Not L10N
+            {
+                // Nightly test directory based on user Documents directory
+                // requires extra knowledge and set-up to disable Windows indexing
+                // and possibly other services like automated back-ups.
+                // Much better to just use a directory at the root of either a
+                // larger D: drive, or the C: drive.
+                string defaultDir = @"D:\Nightly"; // Not L10N
+                if (!Directory.Exists(@"D:\"))
+                    defaultDir = @"C:\Nightly"; // Not L10N
+                textBoxFolder.Text = Path.Combine(defaultDir);
+            }
 
             using (var ts = new TaskService())
             {
@@ -57,9 +74,10 @@ namespace SkylineNightly
             var nightlyFolder = textBoxFolder.Text;
             if (!Path.IsPathRooted(nightlyFolder))
             {
-                nightlyFolder = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-                    nightlyFolder);
+                // ReSharper disable once LocalizableElement
+                MessageBox.Show(this, "Relative paths to the Documents folder are no longer allowed.\r\n" + // Not L10N
+                                      "Please specify a full path, ideally outside your Documents folder."); // Not L10N
+                return;
             }
             if (!Directory.Exists(nightlyFolder))
                 Directory.CreateDirectory(nightlyFolder);
@@ -67,6 +85,7 @@ namespace SkylineNightly
             Settings.Default.PerfTests = comboBoxOptions.SelectedIndex == 1;
             Settings.Default.ReleaseBranch = comboBoxOptions.SelectedIndex == 2;
             Settings.Default.StressTests = comboBoxOptions.SelectedIndex == 3;
+            Settings.Default.IntegrationBranch = comboBoxOptions.SelectedIndex == 4;
             Settings.Default.Save();
 
             // Create new scheduled task to run the nightly build.

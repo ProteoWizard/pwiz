@@ -93,6 +93,7 @@
             this.MinimizeBox = false;
             this.MinimumSize = new System.Drawing.Size(280, 112);
             this.Name = "FindWindow";
+            this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Find...";
             this.ResumeLayout(false);

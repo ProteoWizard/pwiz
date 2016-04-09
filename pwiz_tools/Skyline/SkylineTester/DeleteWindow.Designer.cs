@@ -84,7 +84,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(539, 87);
+            this.ClientSize = new System.Drawing.Size(539, 91);
             this.ControlBox = false;
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.progressBarDelete);
@@ -96,6 +96,7 @@
             this.MinimizeBox = false;
             this.MinimumSize = new System.Drawing.Size(192, 125);
             this.Name = "DeleteWindow";
+            this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Deleting...";
             this.panel1.ResumeLayout(false);

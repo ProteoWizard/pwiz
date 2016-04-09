@@ -52,7 +52,7 @@ namespace SkylineNightly
         private const string LABKEY_PERF_URL = "https://skyline.gs.washington.edu/labkey/testresults/home/development/Performance%20Tests/post.view?";
         private const string LABKEY_STRESS_URL = "https://skyline.gs.washington.edu/labkey/testresults/home/development/NightlyStress/post.view?";
         private const string LABKEY_RELEASE_PERF_URL = "https://skyline.gs.washington.edu/labkey/testresults/home/development/Release%20Branch/post.view?";
-        private const string LABKEY_INTEGRATION_URL = "https://skyline.gs.washington.edu/labkey/project/home/development/Integration/post.view";
+        private const string LABKEY_INTEGRATION_URL = "https://skyline.gs.washington.edu/labkey/testresults/home/development/Integration/post.view";
 
         // Current integration branch is MultiFileLoad
         private const string SVN_INTEGRATION_BRANCH_URL = "https://svn.code.sf.net/p/proteowizard/code/branches/work/20151014_MultiFileLoad";
@@ -633,6 +633,8 @@ namespace SkylineNightly
             var nightlyDir = Settings.Default.NightlyFolder;
             return Path.IsPathRooted(nightlyDir)
                 ? nightlyDir
+                // Kept for backward compatibility, but we don't allow this anymore, because the Documents
+                // folder is a terrible place to be running these high-use, nightly tests from.
                 : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), nightlyDir);
         }
 
