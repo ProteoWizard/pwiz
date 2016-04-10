@@ -31,6 +31,7 @@ namespace SkylineNightly
         public const string SCHEDULED_STRESSTESTS_ARG = SCHEDULED_ARG + "_with_stresstests"; // Not L10N
         public const string SCHEDULED_RELEASE_BRANCH_ARG = SCHEDULED_ARG + "_release_branch"; // Not L10N
         public const string SCHEDULED_INTEGRATION_ARG = SCHEDULED_ARG + "_integration_branch"; // Not L10N
+        public const string SCHEDULED_INTEGRATION_TRUNK_ARG = SCHEDULED_ARG + "_integration_and_trunk"; // Not L10N
         public const string PARSE_ARG = "parse"; // Not L10N
         public const string POST_ARG = "post"; // Not L10N
 
@@ -73,27 +74,33 @@ namespace SkylineNightly
                     break;
 
                 case SCHEDULED_INTEGRATION_ARG:
-                    message = string.Format("Run {0}", arg); // Not L10N
+                    message = string.Format("Completed {0}", arg); // Not L10N
                     nightly.RunAndPost(Nightly.RunMode.nightly_integration);
                     break;
 
+                case SCHEDULED_INTEGRATION_TRUNK_ARG:
+                    message = string.Format("Completed {0}", arg); // Not L10N
+                    nightly.RunAndPost(Nightly.RunMode.nightly_integration);
+                    nightly.RunAndPost(Nightly.RunMode.nightly);
+                    break;
+
                 case SCHEDULED_PERFTESTS_ARG:
-                    message = string.Format("Run {0}", arg); // Not L10N
+                    message = string.Format("Completed {0}", arg); // Not L10N
                     nightly.RunAndPost(Nightly.RunMode.nightly_with_perftests);
                     break;
 
                 case SCHEDULED_STRESSTESTS_ARG:
-                    message = string.Format("Run {0}", arg); // Not L10N
+                    message = string.Format("Completed {0}", arg); // Not L10N
                     nightly.RunAndPost(Nightly.RunMode.nightly_with_stresstests);
                     break;
 
                 case SCHEDULED_RELEASE_BRANCH_ARG:
-                    message = string.Format("Run {0}", arg); // Not L10N
+                    message = string.Format("Completed {0}", arg); // Not L10N
                     nightly.RunAndPost(Nightly.RunMode.release_branch_with_perftests);
                     break;
 
                 case SCHEDULED_ARG:
-                    message = string.Format("Run {0}", arg); // Not L10N
+                    message = string.Format("Completed {0}", arg); // Not L10N
                     nightly.RunAndPost(Nightly.RunMode.nightly);
                     break;
 
@@ -127,9 +134,10 @@ namespace SkylineNightly
                     nightly.Post(runMode, Path.ChangeExtension(arg, ".xml")); // Not L10N
                     break;
             }
-            MessageBox.Show(message);
             // ReSharper restore LocalizableElement
             nightly.Finish(); // Kill the screengrab thread, if any, so we can exit
+            // Give some indication that this process ran on this machine
+            MessageBox.Show(message);
         }
     }
 }

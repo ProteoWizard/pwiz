@@ -33,8 +33,13 @@ namespace SkylineNightly
             InitializeComponent();
             startTime.Value = DateTime.Parse(Settings.Default.StartTime);
             textBoxFolder.Text = Settings.Default.NightlyFolder;
-            if (Settings.Default.IntegrationBranch)
-                comboBoxOptions.SelectedIndex = 4;
+            if (Settings.Default.IntegrationBranchRun != 0)
+            {
+                if (Settings.Default.IntegrationBranchRun == 1)
+                    comboBoxOptions.SelectedIndex = 4;
+                else
+                    comboBoxOptions.SelectedIndex = 5;
+            }
             else if (Settings.Default.StressTests)
                 comboBoxOptions.SelectedIndex = 3;
             else if (Settings.Default.ReleaseBranch)
@@ -85,7 +90,12 @@ namespace SkylineNightly
             Settings.Default.PerfTests = comboBoxOptions.SelectedIndex == 1;
             Settings.Default.ReleaseBranch = comboBoxOptions.SelectedIndex == 2;
             Settings.Default.StressTests = comboBoxOptions.SelectedIndex == 3;
-            Settings.Default.IntegrationBranch = comboBoxOptions.SelectedIndex == 4;
+            if (comboBoxOptions.SelectedIndex == 4)
+                Settings.Default.IntegrationBranchRun = 1;
+            else if (comboBoxOptions.SelectedIndex == 5)
+                Settings.Default.IntegrationBranchRun = 2;
+            else
+                Settings.Default.IntegrationBranchRun = 0;
             Settings.Default.Save();
 
             // Create new scheduled task to run the nightly build.
@@ -143,6 +153,9 @@ namespace SkylineNightly
                     break;
                 case 4:
                     arg = Program.SCHEDULED_INTEGRATION_ARG;
+                    break;
+                case 5:
+                    arg = Program.SCHEDULED_INTEGRATION_TRUNK_ARG;
                     break;
             }
             return arg;

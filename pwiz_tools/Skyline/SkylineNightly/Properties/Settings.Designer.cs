@@ -85,13 +85,13 @@ namespace SkylineNightly.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool IntegrationBranch {
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int IntegrationBranchRun {
             get {
-                return ((bool)(this["IntegrationBranch"]));
+                return ((int)(this["IntegrationBranchRun"]));
             }
             set {
-                this["IntegrationBranch"] = value;
+                this["IntegrationBranchRun"] = value;
             }
         }
     }

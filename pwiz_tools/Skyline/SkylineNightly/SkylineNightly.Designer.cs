@@ -164,7 +164,8 @@
             "Trunk with Perf Tests",
             "Release Branch with Perf Tests",
             "Trunk with Stress Tests",
-            "Integration"});
+            "Integration",
+            "Integration and Trunk"});
             this.comboBoxOptions.Location = new System.Drawing.Point(68, 113);
             this.comboBoxOptions.Name = "comboBoxOptions";
             this.comboBoxOptions.Size = new System.Drawing.Size(223, 21);
