@@ -554,12 +554,13 @@ namespace pwiz.SkylineTestUtil
             return WaitForCondition(millis, func, null, false);
         }
 
-        public static bool WaitForCondition(int millis, Func<bool> func, string timeoutMessage = null, bool failOnTimeout = true)
+        public static bool WaitForCondition(int millis, Func<bool> func, string timeoutMessage = null, bool failOnTimeout = true, bool throwOnProgramException = true)
         {
             int waitCycles = GetWaitCycles(millis);
             for (int i = 0; i < waitCycles; i++)
             {
-                Assert.IsFalse(Program.TestExceptions.Any(), "Exception while running test");
+                if (throwOnProgramException)
+                    Assert.IsFalse(Program.TestExceptions.Any(), "Exception while running test");
 
                 if (func())
                     return true;
@@ -595,12 +596,13 @@ namespace pwiz.SkylineTestUtil
             return WaitForConditionUI(millis, func, null, false);
         }
 
-        public static bool WaitForConditionUI(int millis, Func<bool> func, string timeoutMessage = null, bool failOnTimeout = true)
+        public static bool WaitForConditionUI(int millis, Func<bool> func, string timeoutMessage = null, bool failOnTimeout = true, bool throwOnProgramException = true)
         {
             int waitCycles = GetWaitCycles(millis);
             for (int i = 0; i < waitCycles; i++)
             {
-                Assert.IsFalse(Program.TestExceptions.Any(), "Exception while running test");
+                if (throwOnProgramException)
+                    Assert.IsFalse(Program.TestExceptions.Any(), "Exception while running test");
 
                 bool isCondition = false;
                 Program.MainWindow.Invoke(new Action(() => isCondition = func()));
@@ -618,9 +620,9 @@ namespace pwiz.SkylineTestUtil
             return false;
         }
 
-        public static void WaitForGraphs()
+        public static void WaitForGraphs(bool throwOnProgramException = true)
         {
-            WaitForConditionUI(() => !SkylineWindow.IsGraphUpdatePending);
+            WaitForConditionUI(WAIT_TIME, () => !SkylineWindow.IsGraphUpdatePending, null, true, false);
         }
 
         // Pause a test so we can play with the UI manually.
@@ -883,7 +885,7 @@ namespace pwiz.SkylineTestUtil
                 // holds no file handles.
                 var docNew = new SrmDocument(SrmSettingsList.GetDefault());
                 RunUI(() => SkylineWindow.SwitchDocument(docNew, null));
-                WaitForGraphs();
+                WaitForGraphs(false);
 
                 // Restore minimal View to close dock windows.
                 RestoreMinimalView();
@@ -960,7 +962,7 @@ namespace pwiz.SkylineTestUtil
                 typeof(AbstractFunctionalTest).Namespace + ".minimal.sky.view"); // Not L10N
             Assert.IsNotNull(layoutStream);
             RunUI(() => SkylineWindow.LoadLayout(layoutStream));
-            WaitForConditionUI(() => true);
+            WaitForConditionUI(WAIT_TIME, () => true, null, true, false);
         }
 
         public void RestoreViewOnScreen(int pageNum)
