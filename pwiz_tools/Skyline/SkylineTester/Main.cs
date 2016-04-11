@@ -173,19 +173,51 @@ namespace SkylineTester
                 Try.Multi<Exception>(() => Directory.Delete(_resultsDir, true), 4, false);
 
             var testRunner = Path.Combine(GetSelectedBuildDir(), "TestRunner.exe");
-            _testRunnerIndex = commandShell.Add(
-                "{0} status=on results={1} {2}{3}",
-                testRunner.Quote(),
-                _resultsDir.Quote(),
-                AccessInternet.Checked ? "internet=on " : "",
-                args);
+            _testRunnerIndex = new List<int>();
+
+            //
+            // Isolate each test in its own testrunner if we're repeating each test individually
+            //
+            int repeatCount = 0;
+            if (args.Contains("repeat="))
+            {
+                repeatCount = Int32.Parse(args.Split(new[] { "repeat=" }, StringSplitOptions.None)[1].Split(' ')[0]);
+            }
+            if (repeatCount > 1 && args.Contains("test=\"@"))
+            {
+                // Pick apart a string like to get at the filename for the list of tests
+                // offscreen=True loop=1 testsmallmolecules=on repeat=100 language=en-US,fr-FR perftests=on test=\"@I:\\Dev\\bg_trunk\\pwiz_tools\\Skyline\\SkylineTester test list.txt\"
+                var argparts = args.Split(new[] { "test=\"@" }, StringSplitOptions.None);
+                var newArgs = argparts[0] + argparts[1].Split('\"')[1];
+                var tests = File.ReadAllLines(argparts[1].Split('\"')[0]);
+                var count = args.Split(new[] {"repeat="}, StringSplitOptions.None)[1].Split(' ')[0];
+                CommandShell.Log(string.Format("Running {0} tests {1} times each per language.  Each test will be run in its own TestRunner.exe to minimize cross-test interactions.", tests.Length, count));
+                foreach (var test in tests)
+                {
+                    _testRunnerIndex.Add(commandShell.Add(
+                        "{0} status=on results={1} {2}{3}",
+                        testRunner.Quote(),
+                        _resultsDir.Quote(),
+                        AccessInternet.Checked ? "internet=on " : "",
+                        newArgs + " test=\"" + test + "\""));
+                }
+            }
+            else
+            {
+                _testRunnerIndex.Add(commandShell.Add(
+                    "{0} status=on results={1} {2}{3}",
+                    testRunner.Quote(),
+                    _resultsDir.Quote(),
+                    AccessInternet.Checked ? "internet=on " : "",
+                    args));
+            }
         }
 
         public void ClearLog()
         {
             commandShell.ClearLog();
             _tabOutput.ClearErrors();
-            _testRunnerIndex = int.MaxValue;
+            _testRunnerIndex = new List<int>(new[] { int.MaxValue });
         }
 
         public void RunCommands()
@@ -199,21 +231,21 @@ namespace SkylineTester
         {
             get
             {
-                return (commandShell.NextCommand == _testRunnerIndex + 1)
+                return (commandShell.NextCommand == _testRunnerIndex.Last() + 1)
                     ? commandShell.ProcessId
                     : 0;
             }
         }
 
-        private int _testRunnerIndex;
+        private List<int> _testRunnerIndex;
 
         public void CommandsDone(bool success)
         {
             commandShell.UpdateLog();
 
-            if (commandShell.NextCommand > _testRunnerIndex)
+            if (commandShell.NextCommand > _testRunnerIndex.Last())
             {
-                _testRunnerIndex = int.MaxValue;
+                _testRunnerIndex = new List<int>(new[]{int.MaxValue});
 
                 // Report test results.
                 var testRunner = Path.Combine(GetSelectedBuildDir(), "TestRunner.exe");

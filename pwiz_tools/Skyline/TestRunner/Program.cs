@@ -109,6 +109,7 @@ namespace TestRunner
             var log = new StreamWriter(logStream);
 
             bool allTestsPassed = true;
+            bool exceptionThrown = false;
 
             try
             {
@@ -200,6 +201,7 @@ namespace TestRunner
                     Console.WriteLine(e.InnerException.StackTrace);
                 }
                 allTestsPassed = false;
+                exceptionThrown = true;
             }
 
             // Display report.
@@ -214,7 +216,7 @@ namespace TestRunner
             if (commandLineArgs.ArgAsBool("wait"))
                 Console.ReadKey();
 
-            return allTestsPassed ? 0 : 1;
+            return !exceptionThrown ? 0 : 1;
         }
 
         private static DirectoryInfo GetSkylineDirectory()
@@ -291,7 +293,7 @@ namespace TestRunner
                     testList.Count,
                     testList.Count < unfilteredTestList.Count ? "/" + unfilteredTestList.Count : "",
                     (loopCount <= 0) ? " forever" : (loopCount == 1) ? "" : " in " + loopCount + " loops",
-                    (repeat <= 1) ? "" : ", repeated " + repeat + " times each");
+                    (repeat <= 1) ? "" : ", repeated " + repeat + " times each per language");
             }
 
             // Get list of languages
