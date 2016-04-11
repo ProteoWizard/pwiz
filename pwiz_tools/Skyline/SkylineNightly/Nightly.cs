@@ -38,7 +38,7 @@ namespace SkylineNightly
     // ReSharper disable NonLocalizedString
     public class Nightly
     {
-        public const string NIGHTLY_TASK_NAME = "Skyline nightly build";
+        private const string NIGHTLY_TASK_NAME = "Skyline nightly build";
 
         private const string TEAM_CITY_BUILD_URL = "https://teamcity.labkey.org/viewType.html?buildTypeId={0}";
         private const string TEAM_CITY_ZIP_URL = "https://teamcity.labkey.org/repository/download/{0}/{1}:id/SkylineTester.zip";
@@ -93,6 +93,9 @@ namespace SkylineNightly
             // Default duration.
             _duration = TimeSpan.FromHours(9);
         }
+
+        public static string NightlyTaskName { get { return NIGHTLY_TASK_NAME; } }
+        public static string NightlyTaskNameWithUser { get { return string.Format("{0} ({1})", NIGHTLY_TASK_NAME, Environment.UserName);} }
 
         public class PeriodicScreengrabs
         {

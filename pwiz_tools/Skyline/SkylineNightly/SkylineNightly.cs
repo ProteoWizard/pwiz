@@ -63,7 +63,7 @@ namespace SkylineNightly
 
             using (var ts = new TaskService())
             {
-                var task = ts.FindTask(Nightly.NIGHTLY_TASK_NAME);
+                var task = ts.FindTask(Nightly.NightlyTaskName) ?? ts.FindTask(Nightly.NightlyTaskNameWithUser);
                 enabled.Checked = (task != null);
             }
         }
@@ -101,7 +101,8 @@ namespace SkylineNightly
             // Create new scheduled task to run the nightly build.
             using (var ts = new TaskService())
             {
-                ts.RootFolder.DeleteTask(Nightly.NIGHTLY_TASK_NAME, false);
+                ts.RootFolder.DeleteTask(Nightly.NightlyTaskName, false);
+                ts.RootFolder.DeleteTask(Nightly.NightlyTaskNameWithUser, false);
                 if (enabled.Checked)
                 {
                     // Create a new task definition and assign properties
@@ -127,7 +128,7 @@ namespace SkylineNightly
                     td.Actions.Add(new ExecAction(assembly.Location, runType)); // Not L10N
 
                     // Register the task in the root folder
-                    ts.RootFolder.RegisterTaskDefinition(Nightly.NIGHTLY_TASK_NAME, td);
+                    ts.RootFolder.RegisterTaskDefinition(Nightly.NightlyTaskNameWithUser, td);
                 }
             }
 
