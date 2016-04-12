@@ -296,6 +296,15 @@ namespace pwiz.Skyline.Model
             }));
         }
 
+        public void InsertSmallMoleculeTransitionList(string textCSV)
+        {
+            Program.MainWindow.Invoke(new Action(() =>
+            {
+                _skylineWindow.InsertSmallMoleculeTransitionList(textCSV,
+                    Resources.ToolService_InsertSmallMoleculeTransitionList_Insert_Small_Molecule_Transition_List);
+            }));
+        }
+
         public void AddSpectralLibrary(string libraryName, string libraryPath)
         {
             var librarySpec = LibrarySpec.CreateFromPath(libraryName, libraryPath);

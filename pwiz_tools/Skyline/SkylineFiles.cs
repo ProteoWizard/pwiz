@@ -1549,6 +1549,51 @@ namespace pwiz.Skyline
                 SequenceTree.SelectedPath = selectPath;
         }
 
+        public void InsertSmallMoleculeTransitionList(string csvText, string description)
+        {
+            IdentityPath selectPath = null;
+
+            var docCurrent = DocumentUI;
+
+            SrmDocument docNew = null;
+            using (var longWaitDlg = new LongWaitDlg(this) { Text = description })
+            {
+                var smallMoleculeTransitionListReader = new SmallMoleculeTransitionListCSVReader(csvText);
+                IdentityPath firstAdded;
+                longWaitDlg.PerformWork(this, 1000, () => docNew = smallMoleculeTransitionListReader.CreateTargets(docCurrent, null, out firstAdded));  // CONSIDER: cancelable / progress monitor ?  This is normally pretty quick.
+
+                if (docNew == null)
+                    return;
+
+                if (longWaitDlg.IsDocumentChanged(docCurrent))
+                {
+                    MessageDlg.Show(this, Resources.SkylineWindow_ImportFasta_Unexpected_document_change_during_operation);
+                    return;
+                }
+            }
+
+            var enumGroupsCurrent = docCurrent.MoleculeGroups.GetEnumerator();
+            foreach (PeptideGroupDocNode nodePepGroup in docNew.MoleculeGroups)
+            {
+                if (enumGroupsCurrent.MoveNext() &&
+                    !ReferenceEquals(nodePepGroup, enumGroupsCurrent.Current))
+                {
+                    selectPath = new IdentityPath(nodePepGroup.Id);
+                    break;
+                }
+            }
+
+            ModifyDocument(description, doc =>
+            {
+                if (!ReferenceEquals(doc, docCurrent))
+                    throw new InvalidDataException(Resources.SkylineWindow_ImportFasta_Unexpected_document_change_during_operation);
+                return docNew;
+            });
+
+            if (selectPath != null)
+                SequenceTree.SelectedPath = selectPath;
+        }
+
         private void importMassListMenuItem_Click(object sender, EventArgs e)
         {
             using (OpenFileDialog dlg = new OpenFileDialog

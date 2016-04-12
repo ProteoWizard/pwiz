@@ -97,6 +97,23 @@ namespace pwiz.SkylineTestA
             AssertEx.Contains(output, CommandArgs.WarnArgRequirementText(CommandArgs.ARG_IMPORT_PEPTIDE_SEARCH_FILE, CommandArgs.ARG_IMPORT_PEPTIDE_SEARCH_MODS));
         }
 
+        [TestMethod]
+        public void ConsoleImportSmallMoleculesTest()
+        {
+            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            var docPath = testFilesDir.GetTestPath("blank.sky");
+            var smallmolPath = testFilesDir.GetTestPath("smallmolecules.txt");
+            var outPath = testFilesDir.GetTestPath("import-smallmol.sky");
+            var output = RunCommand("--in=" + docPath,
+                "--out=" + outPath,
+                "--import-transition-list=" + smallmolPath);
+            AssertEx.Contains(output, string.Format(Resources.CommandLine_ImportTransitionList_Importing_transiton_list__0____,
+                Path.GetFileName(smallmolPath))); 
+            var doc = ResultsUtil.DeserializeDocument(outPath);
+            Assert.AreEqual(2, doc.MoleculeGroupCount);
+            Assert.AreEqual(4, doc.MoleculeCount);
+        }
+        
         private static string RunCommand(params string[] inputArgs)
         {
             var consoleBuffer = new StringBuilder();

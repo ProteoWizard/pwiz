@@ -20,6 +20,7 @@
 using System.Linq;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
@@ -89,6 +90,9 @@ namespace pwiz.SkylineTestFunctional
                 var libraryPath = TestFilesDir.GetTestPath("ABRF_sPRG_HCD.blib");
                 _testToolClient.TestAddSpectralLibrary("Test library", libraryPath);
 
+                // Test small molecule transition list insert
+                _testToolClient.InsertSmallMoleculeTransitionList(GetSmallMoleculeTransitionsText());
+
                 // Exit the test tool.
                 _testToolClient.Exit();
 
@@ -125,6 +129,37 @@ MDVIPMVRNVRPLTYTSRRFEIRTLTPPLIIYANSQTKLNTARKSAVKVPLGKPFSRLWV
 NGSGSIRPNIWKQVVTMVVNEIIFHPGITLSRLQSRCREVLSLHEISEICKWLLERQVLI
 TTDFDGYWVNHNWYSIYEST*
 ";
+
+        private string GetSmallMoleculeTransitionsText()
+        {
+            var header = string.Join(",", new string[]
+            {
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.namePrecursor,
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.nameProduct,
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.labelType,
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.formulaProduct,
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.mzPrecursor,
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.mzProduct,
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargeProduct,
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.rtPrecursor,
+           });
+           return header + "\n" +
+               "Amino Acids B,AlaB,,light,,,225,44,-1,-1,3\n" +
+                "Amino Acids B,ArgB,,light,,,310,217,-1,-1,19\n" +
+                "Amino Acids,Ala,,light,,,225,44,1,1,3\n" +
+                "Amino Acids,Ala,,heavy,,,229,48,1,1,4\n" + // NB we ignore RT conflicts
+                "Amino Acids,Arg,,light,,,310,217,1,1,19\n" +
+                "Amino Acids,Arg,,heavy,,,312,219,1,1,19\n" +
+                "Amino Acids B,AlaB,,light,,,225,45,-1,-1,3\n" +
+                "Amino Acids B,AlaB,,heavy,,,229,48,-1,-1,4\n" + // NB we ignore RT conflicts
+                "Amino Acids B,AlaB,,heavy,,,229,49,-1,-1,4\n" + // NB we ignore RT conflicts
+                "Amino Acids B,ArgB,,light,,,310,218,-1,-1,19\n" +
+                "Amino Acids B,ArgB,,heavy,,,312,219,-1,-1,19\n" +
+                "Amino Acids B,ArgB,,heavy,,,312,220,-1,-1,19\n";
+            }
 
         private void CheckCommunication()
         {

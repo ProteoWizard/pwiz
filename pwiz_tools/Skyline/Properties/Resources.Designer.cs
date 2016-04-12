@@ -12353,6 +12353,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error on line {0}, column{1}: {2}.
+        /// </summary>
+        public static string InsertSmallMoleculeTransitionList_InsertSmallMoleculeTransitionList_Error_on_line__0___column_1____2_ {
+            get {
+                return ResourceManager.GetString("InsertSmallMoleculeTransitionList_InsertSmallMoleculeTransitionList_Error_on_line" +
+                        "__0___column_1____2_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unexpected line in instrument config: {0}.
         /// </summary>
         public static string InstrumentInfoUtil_ReadInstrumentConfig_Unexpected_line_in_instrument_config__0__ {
@@ -22884,6 +22894,18 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error reading column headers, did not recognize:
+        ///{0}
+        ///Supported values include:
+        ///{1}.
+        /// </summary>
+        public static string SmallMoleculeTransitionListReader_SmallMoleculeTransitionListReader_ {
+            get {
+                return ResourceManager.GetString("SmallMoleculeTransitionListReader_SmallMoleculeTransitionListReader_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &quot;{0}&quot; is not a valid setting for full scan special handling.
         /// </summary>
         public static string SpecialHandlingType_Validate___0___is_not_a_valid_setting_for_full_scan_special_handling {
@@ -24627,6 +24649,16 @@ namespace pwiz.Skyline.Properties {
         public static string ToolService_ImportFasta_Insert_proteins {
             get {
                 return ResourceManager.GetString("ToolService_ImportFasta_Insert_proteins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Insert Small Molecule Transition List.
+        /// </summary>
+        public static string ToolService_InsertSmallMoleculeTransitionList_Insert_Small_Molecule_Transition_List {
+            get {
+                return ResourceManager.GetString("ToolService_InsertSmallMoleculeTransitionList_Insert_Small_Molecule_Transition_Li" +
+                        "st", resourceCulture);
             }
         }
         

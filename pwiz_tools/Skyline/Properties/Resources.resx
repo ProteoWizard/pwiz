@@ -8920,4 +8920,16 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="PeptideTreeNode_RenderTip_Source" xml:space="preserve">
     <value>Source</value>
   </data>
+  <data name="ToolService_InsertSmallMoleculeTransitionList_Insert_Small_Molecule_Transition_List" xml:space="preserve">
+    <value>Insert Small Molecule Transition List</value>
+  </data>
+  <data name="InsertSmallMoleculeTransitionList_InsertSmallMoleculeTransitionList_Error_on_line__0___column_1____2_" xml:space="preserve">
+    <value>Error on line {0}, column{1}: {2}</value>
+  </data>
+  <data name="SmallMoleculeTransitionListReader_SmallMoleculeTransitionListReader_" xml:space="preserve">
+    <value>Error reading column headers, did not recognize:
+{0}
+Supported values include:
+{1}</value>
+  </data>
 </root>

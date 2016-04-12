@@ -112,6 +112,11 @@ namespace TestInteractiveTool
                 _toolClient.ImportFasta(textFasta);
             }
 
+            public void InsertSmallMoleculeTransitionList(string textCommaSeperatedValues)
+            {
+                _toolClient.InsertSmallMoleculeTransitionList(textCommaSeperatedValues);
+            }
+
             public void TestAddSpectralLibrary(string libraryName, string libraryPath)
             {
                 _toolClient.AddSpectralLibrary(libraryName, libraryPath);

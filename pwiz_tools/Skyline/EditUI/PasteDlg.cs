@@ -478,13 +478,6 @@ namespace pwiz.Skyline.EditUI
             return peptideGroupDocNode != null && peptideGroupDocNode.IsPeptideList;
         }
 
-        private static string NullForEmpty(string str)
-        {
-            if (str == null)
-                return null;
-            return (str.Length == 0) ? null : str;
-        }
-
         private SrmDocument AddProteins(SrmDocument document, ref IdentityPath selectedPath)
         {
             if (tabControl1.SelectedTab != tabPageProteinList)
@@ -500,11 +493,11 @@ namespace pwiz.Skyline.EditUI
                     continue;
                 }
                 var pastedMetadata = new ProteinMetadata(proteinName,
-                    Convert.ToString(row.Cells[colProteinDescription.Index].Value),
-                    NullForEmpty(Convert.ToString(row.Cells[colProteinPreferredName.Index].Value)),
-                    NullForEmpty(Convert.ToString(row.Cells[colProteinAccession.Index].Value)),
-                    NullForEmpty(Convert.ToString(row.Cells[colProteinGene.Index].Value)),
-                    NullForEmpty(Convert.ToString(row.Cells[colProteinSpecies.Index].Value)));
+                    Convert.ToString(row.Cells[colProteinDescription.Index].Value), 
+                    SmallMoleculeTransitionListReader.NullForEmpty(Convert.ToString(row.Cells[colProteinPreferredName.Index].Value)), 
+                    SmallMoleculeTransitionListReader.NullForEmpty(Convert.ToString(row.Cells[colProteinAccession.Index].Value)),
+                    SmallMoleculeTransitionListReader.NullForEmpty(Convert.ToString(row.Cells[colProteinGene.Index].Value)), 
+                    SmallMoleculeTransitionListReader.NullForEmpty(Convert.ToString(row.Cells[colProteinSpecies.Index].Value)));
                 FastaSequence fastaSequence = null;
                 if (!backgroundProteome.IsNone)
                 {
@@ -586,455 +579,7 @@ namespace pwiz.Skyline.EditUI
             var col = gridViewTransitionList.Columns[name];
             return col == null ? -1: gridViewTransitionList.Columns.IndexOf(col);
         }
-
-        private int INDEX_MOLECULE_GROUP { get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.moleculeGroup); } } 
-        private int INDEX_MOLECULE_NAME { get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.namePrecursor); } }
-        private int INDEX_PRODUCT_NAME { get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.nameProduct); } }
-        private int INDEX_MOLECULE_FORMULA { get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.formulaPrecursor); } }
-        private int INDEX_PRODUCT_FORMULA { get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.formulaProduct); } }
-        private int INDEX_MOLECULE_MZ { get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.mzPrecursor); } }
-        private int INDEX_PRODUCT_MZ { get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.mzProduct); } }
-        private int INDEX_MOLECULE_CHARGE { get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.chargePrecursor); } }
-        private int INDEX_PRODUCT_CHARGE { get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.chargeProduct); } }
-        private int INDEX_LABEL_TYPE { get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.labelType); } }
-        private int INDEX_RETENTION_TIME { get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.rtPrecursor); } }
-        private int INDEX_RETENTION_TIME_WINDOW { get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.rtWindowPrecursor); } }
-        private int INDEX_COLLISION_ENERGY { get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.cePrecursor); } }
-        private int INDEX_NOTE { get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.note); } }
-        private int INDEX_MOLECULE_DRIFT_TIME_MSEC { get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.dtPrecursor); } }
-        private int INDEX_HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC { get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.dtHighEnergyOffset); } }
-        private int INDEX_SLENS { get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.slens); } }
-        private int INDEX_CONE_VOLTAGE { get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.coneVoltage); } }
-        private int INDEX_COMPENSATION_VOLTAGE { get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.compensationVoltage); } }
-        private int INDEX_DECLUSTERING_POTENTIAL { get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.declusteringPotential); } }
-
-        private static int? ValidateFormulaWithMz(SrmDocument document, ref string moleculeFormula, double mz, int? charge, out double monoMass, out double averageMass, out double? mzCalc)
-        {
-            // Is the ion's formula the old style where user expected us to add a hydrogen?
-            var tolerance = document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
-            int massShift;
-            var ion = new DocNodeCustomIon(moleculeFormula);
-            monoMass = ion.GetMass(MassType.Monoisotopic);
-            averageMass = ion.GetMass(MassType.Average);
-            double mass = (document.Settings.TransitionSettings.Prediction.FragmentMassType == MassType.Monoisotopic)
-                ? monoMass
-                : averageMass;
-            // Does given charge, if any, agree with mass and mz?
-            mzCalc = charge.HasValue ? BioMassCalc.CalculateIonMz(mass, charge.Value) : (double?)null;
-            if (mzCalc.HasValue && tolerance >= (Math.Abs(mzCalc.Value - mz)))
-            {
-                return charge;
-            }
-            int nearestCharge;
-            charge = TransitionCalc.CalcCharge(mass, mz, tolerance, true, TransitionGroup.MIN_PRECURSOR_CHARGE,
-                TransitionGroup.MAX_PRECURSOR_CHARGE, new int[0],
-                TransitionCalc.MassShiftType.none, out massShift, out nearestCharge);
-            if (!charge.HasValue)
-            {
-                // That formula and this mz don't yield a reasonable charge state - try adding an H
-                var ion2 = new DocNodeCustomIon(BioMassCalc.AddH(ion.Formula));
-                monoMass = ion2.GetMass(MassType.Monoisotopic);
-                averageMass = ion2.GetMass(MassType.Average);
-                mass = (document.Settings.TransitionSettings.Prediction.FragmentMassType == MassType.Monoisotopic)
-                    ? monoMass
-                    : averageMass;
-                charge = TransitionCalc.CalcCharge(mass, mz, tolerance, true, TransitionGroup.MIN_PRECURSOR_CHARGE,
-                    TransitionGroup.MAX_PRECURSOR_CHARGE, new int[0], TransitionCalc.MassShiftType.none, out massShift, out nearestCharge);
-                if (charge.HasValue)
-                {
-                    moleculeFormula = ion2.Formula;
-                }
-                else
-                {
-                    monoMass = 0;
-                    averageMass = 0;
-                }
-            }
-            return charge;
-        }
-
-        private double ValidateFormulaWithCharge(SrmDocument document, string moleculeFormula, int charge, out double monoMass, out double averageMass)
-        {
-            var massType = document.Settings.TransitionSettings.Prediction.PrecursorMassType;
-            var ion = new DocNodeCustomIon(moleculeFormula);
-            double mass = ion.GetMass(massType);
-            monoMass = ion.GetMass(MassType.Monoisotopic);
-            averageMass = ion.GetMass(MassType.Average);
-            return BioMassCalc.CalculateIonMz(mass, charge);
-        }
-
-        private class MoleculeInfo
-        {
-            public string Name { get; private set; }
-            public string Formula { get; private set; }
-            public string Note { get; private set; }
-            public double Mz { get; private set; }
-            public int Charge { get; private set; }
-            public double MonoMass { get; private set; }
-            public double AverageMass { get; private set; }
-            public IsotopeLabelType IsotopeLabelType { get; private set;  }
-            public ExplicitRetentionTimeInfo ExplicitRetentionTime { get; private set; }
-            public ExplicitTransitionGroupValues ExplicitTransitionGroupValues { get; private set; }
-            public MoleculeInfo(string name, string formula, int charge, double mz, double monoMass, double averageMass,
-                IsotopeLabelType isotopeLabelType,
-                ExplicitRetentionTimeInfo explicitRetentionTime,
-                ExplicitTransitionGroupValues explicitTransitionGroupValues,
-                string note)
-            {
-                Name = name;
-                Formula = formula;
-                Charge = charge;
-                Mz = mz;
-                MonoMass = monoMass;
-                AverageMass = averageMass;
-                IsotopeLabelType = isotopeLabelType;
-                ExplicitRetentionTime = explicitRetentionTime;
-                ExplicitTransitionGroupValues = explicitTransitionGroupValues;
-                Note = note;
-            }
-
-            public DocNodeCustomIon ToCustomIon()
-            {
-                return new DocNodeCustomIon(Formula, MonoMass, AverageMass, Name);
-            }
-        }
-
-        // We need some combination of:
-        //  Formula and mz
-        //  Formula and charge
-        //  mz and charge
-        private MoleculeInfo ReadPrecursorOrProductColumns(SrmDocument document, 
-            DataGridViewRow row, 
-            bool getPrecursorColumns)
-        {
-            int indexName = getPrecursorColumns ? INDEX_MOLECULE_NAME : INDEX_PRODUCT_NAME;
-            int indexFormula = getPrecursorColumns ? INDEX_MOLECULE_FORMULA : INDEX_PRODUCT_FORMULA;
-            int indexMz = getPrecursorColumns ? INDEX_MOLECULE_MZ : INDEX_PRODUCT_MZ;
-            int indexCharge = getPrecursorColumns ? INDEX_MOLECULE_CHARGE : INDEX_PRODUCT_CHARGE;
-            var name = NullForEmpty(Convert.ToString(row.Cells[indexName].Value));
-            var formula = NullForEmpty(Convert.ToString(row.Cells[indexFormula].Value));
-            var note = NullForEmpty(Convert.ToString(row.Cells[INDEX_NOTE].Value));
-            IsotopeLabelType isotopeLabelType = null;
-            double mz;
-            bool badMz = false;
-            if (!double.TryParse(Convert.ToString(row.Cells[indexMz].Value), out mz))
-            {
-                if (!String.IsNullOrEmpty(Convert.ToString(row.Cells[indexMz].Value)))
-                {
-                    badMz = true;
-                }
-                mz = 0;
-            }
-            if ((mz < 0) || badMz)
-            {
-                ShowTransitionError(new PasteError
-                {
-                    Column = indexMz,
-                    Line = row.Index,
-                    Message = String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_m_z_value__0_, Convert.ToString(row.Cells[indexMz].Value))
-                });
-                return null;
-            }
-            int? charge = null;
-            int trycharge;
-            if (int.TryParse(Convert.ToString(row.Cells[indexCharge].Value), out trycharge))
-                charge = trycharge;
-            else if (!String.IsNullOrEmpty(Convert.ToString(row.Cells[indexCharge].Value)))
-            {
-                ShowTransitionError(new PasteError
-                {
-                    Column = indexCharge,
-                    Line = row.Index,
-                    Message = String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_charge_value__0_, Convert.ToString(row.Cells[indexCharge].Value))
-                });
-                return null;
-            }
-            double dtmp;
-            double? collisionEnergy = null;
-            double? slens = null;
-            double? coneVoltage = null;
-            double? retentionTime = null;
-            double? retentionTimeWindow = null;
-            double? declusteringPotential = null;
-            double? compensationVoltage = null;
-            if (getPrecursorColumns)
-            {
-                var label = NullForEmpty(Convert.ToString(row.Cells[INDEX_LABEL_TYPE].Value));
-                if (label != null)
-                {
-                    var typedMods = DocumentUiContainer.Document.Settings.PeptideSettings.Modifications.GetModificationsByName(label);
-                    if (typedMods == null)
-                    {
-                        ShowTransitionError(new PasteError
-                        {
-                            Column = INDEX_LABEL_TYPE,
-                            Line = row.Index,
-                            Message = string.Format(Resources.SrmDocument_ReadLabelType_The_isotope_modification_type__0__does_not_exist_in_the_document_settings, label)
-                        });
-                        return null;
-                    }
-                    isotopeLabelType = typedMods.LabelType;
-                }
-                if (double.TryParse(Convert.ToString(row.Cells[INDEX_COLLISION_ENERGY].Value), out dtmp))
-                    collisionEnergy = dtmp;
-                else if (!String.IsNullOrEmpty(Convert.ToString(row.Cells[INDEX_COLLISION_ENERGY].Value)))
-                {
-                    ShowTransitionError(new PasteError
-                    {
-                        Column = INDEX_COLLISION_ENERGY,
-                        Line = row.Index,
-                        Message = String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_collision_energy_value__0_, Convert.ToString(row.Cells[INDEX_COLLISION_ENERGY].Value))
-                    });
-                    return null;
-                }
-                if (double.TryParse(Convert.ToString(row.Cells[INDEX_SLENS].Value), out dtmp))
-                    slens = dtmp;
-                else if (!String.IsNullOrEmpty(Convert.ToString(row.Cells[INDEX_SLENS].Value)))
-                {
-                    ShowTransitionError(new PasteError
-                    {
-                        Column = INDEX_SLENS,
-                        Line = row.Index,
-                        Message = String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_S_Lens_value__0_, Convert.ToString(row.Cells[INDEX_SLENS].Value))
-                    });
-                    return null;
-                }
-                if (double.TryParse(Convert.ToString(row.Cells[INDEX_CONE_VOLTAGE].Value), out dtmp))
-                    coneVoltage = dtmp;
-                else if (!String.IsNullOrEmpty(Convert.ToString(row.Cells[INDEX_CONE_VOLTAGE].Value)))
-                {
-                    ShowTransitionError(new PasteError
-                    {
-                        Column = INDEX_CONE_VOLTAGE,
-                        Line = row.Index,
-                        Message = String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_cone_voltage_value__0_, Convert.ToString(row.Cells[INDEX_CONE_VOLTAGE].Value))
-                    });
-                    return null;
-                }
-                if (double.TryParse(Convert.ToString(row.Cells[INDEX_DECLUSTERING_POTENTIAL].Value), out dtmp))
-                    declusteringPotential = dtmp;
-                else if (!string.IsNullOrEmpty(Convert.ToString(row.Cells[INDEX_DECLUSTERING_POTENTIAL].Value)))
-                {
-                    ShowTransitionError(new PasteError
-                    {
-                        Column = INDEX_DECLUSTERING_POTENTIAL,
-                        Line = row.Index,
-                        Message = String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_declustering_potential__0_, Convert.ToString(row.Cells[INDEX_DECLUSTERING_POTENTIAL].Value))
-                    });
-                    return null;
-                }
-                if (double.TryParse(Convert.ToString(row.Cells[INDEX_COMPENSATION_VOLTAGE].Value), out dtmp))
-                    compensationVoltage = dtmp;
-                else if (!string.IsNullOrEmpty(Convert.ToString(row.Cells[INDEX_COMPENSATION_VOLTAGE].Value)))
-                {
-                    ShowTransitionError(new PasteError
-                    {
-                        Column = INDEX_COMPENSATION_VOLTAGE,
-                        Line = row.Index,
-                        Message = String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_compensation_voltage__0_, Convert.ToString(row.Cells[INDEX_COMPENSATION_VOLTAGE].Value))
-                    });
-                    return null;
-                }
-                if (double.TryParse(Convert.ToString(row.Cells[INDEX_RETENTION_TIME].Value), out dtmp))
-                    retentionTime = dtmp;
-                else if (!String.IsNullOrEmpty(Convert.ToString(row.Cells[INDEX_RETENTION_TIME].Value)))
-                {
-                    ShowTransitionError(new PasteError
-                    {
-                        Column = INDEX_RETENTION_TIME,
-                        Line = row.Index,
-                        Message = String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_retention_time_value__0_, Convert.ToString(row.Cells[INDEX_RETENTION_TIME].Value))
-                    });
-                    return null;
-                }
-                if (double.TryParse(Convert.ToString(row.Cells[INDEX_RETENTION_TIME_WINDOW].Value), out dtmp))
-                {
-                    retentionTimeWindow = dtmp;
-                    if (!retentionTime.HasValue)
-                    {
-                        ShowTransitionError(new PasteError
-                        {
-                            Column = INDEX_RETENTION_TIME_WINDOW,
-                            Line = row.Index,
-                            Message = Resources.Peptide_ExplicitRetentionTimeWindow_Explicit_retention_time_window_requires_an_explicit_retention_time_value_
-                        });
-                        return null;
-                    }
-                }
-                else if (!String.IsNullOrEmpty(Convert.ToString(row.Cells[INDEX_RETENTION_TIME_WINDOW].Value)))
-                {
-                    ShowTransitionError(new PasteError
-                    {
-                        Column = INDEX_RETENTION_TIME_WINDOW,
-                        Line = row.Index,
-                        Message = String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_retention_time_window_value__0_, Convert.ToString(row.Cells[INDEX_RETENTION_TIME_WINDOW].Value))
-                    });
-                    return null;
-                }
-            }
-            double? driftTimePrecursorMsec = null;
-            if (double.TryParse(Convert.ToString(row.Cells[INDEX_MOLECULE_DRIFT_TIME_MSEC].Value), out dtmp))
-                driftTimePrecursorMsec = dtmp;
-            else if (!String.IsNullOrEmpty(Convert.ToString(row.Cells[INDEX_MOLECULE_DRIFT_TIME_MSEC].Value)))
-            {
-                ShowTransitionError(new PasteError
-                {
-                    Column = INDEX_MOLECULE_DRIFT_TIME_MSEC,
-                    Line = row.Index,
-                    Message = String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_drift_time_value__0_, Convert.ToString(row.Cells[INDEX_MOLECULE_DRIFT_TIME_MSEC].Value))
-                });
-                return null;
-            }
-            double? driftTimeHighEnergyOffsetMsec = null;
-            if (double.TryParse(Convert.ToString(row.Cells[INDEX_HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC].Value), out dtmp))
-                driftTimeHighEnergyOffsetMsec = dtmp;
-            else if (!String.IsNullOrEmpty(Convert.ToString(row.Cells[INDEX_HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC].Value)))
-            {
-                ShowTransitionError(new PasteError
-                {
-                    Column = INDEX_HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC,
-                    Line = row.Index,
-                    Message = String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_drift_time_high_energy_offset_value__0_, Convert.ToString(row.Cells[INDEX_HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC].Value))
-                });
-                return null;
-            }
-            string errMessage = String.Format(getPrecursorColumns
-                ? Resources.PasteDlg_ValidateEntry_Error_on_line__0___Precursor_needs_values_for_any_two_of__Formula__m_z_or_Charge_
-                : Resources.PasteDlg_ValidateEntry_Error_on_line__0___Product_needs_values_for_any_two_of__Formula__m_z_or_Charge_, row.Index+1);
-            int errColumn = indexFormula;
-            int countValues = 0;
-            if (charge.HasValue && charge.Value != 0)
-                countValues++;
-            if (mz > 0)
-                countValues++;
-            if (NullForEmpty(formula) != null)
-                countValues++;
-            if (countValues >= 2) // Do we have at least 2 of charge, mz, formula?
-            {
-                double monoMass;
-                double averageMmass;
-                if (driftTimePrecursorMsec.HasValue)
-                {
-                    if (!driftTimeHighEnergyOffsetMsec.HasValue)
-                    {
-                        driftTimeHighEnergyOffsetMsec = 0;
-                    }
-                }
-                else
-                {
-                    driftTimeHighEnergyOffsetMsec = null; // Offset without a base value isn't useful
-                }
-                var retentionTimeInfo = retentionTime.HasValue
-                    ? new ExplicitRetentionTimeInfo(retentionTime.Value, retentionTimeWindow)
-                    : null;
-                var explicitTransitionGroupValues = new ExplicitTransitionGroupValues(collisionEnergy, driftTimePrecursorMsec, driftTimeHighEnergyOffsetMsec, slens, 
-                    coneVoltage, declusteringPotential, compensationVoltage);
-                var massOk = true;
-                var massTooLow = false;
-                string massErrMsg = null;
-                var absCharge = Math.Abs(charge ?? 0);
-                if (getPrecursorColumns && absCharge != 0 && (absCharge < TransitionGroup.MIN_PRECURSOR_CHARGE || absCharge > TransitionGroup.MAX_PRECURSOR_CHARGE))
-                {
-                    errMessage = String.Format(Resources.Transition_Validate_Precursor_charge__0__must_be_non_zero_and_between__1__and__2__,
-                        charge, -TransitionGroup.MAX_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE);
-                    errColumn = indexCharge;
-                }
-                else if (!getPrecursorColumns && absCharge != 0 && (absCharge < Transition.MIN_PRODUCT_CHARGE || absCharge > Transition.MAX_PRODUCT_CHARGE))
-                {
-                    errMessage = String.Format(Resources.Transition_Validate_Product_ion_charge__0__must_be_non_zero_and_between__1__and__2__,
-                        charge, -Transition.MAX_PRODUCT_CHARGE, Transition.MAX_PRODUCT_CHARGE);
-                    errColumn = indexCharge;
-                }
-                else if (NullForEmpty(formula) != null)
-                {
-                    // We have a formula
-                    try
-                    {
-                        if (mz > 0)
-                        {
-                            // Is the ion's formula the old style where user expected us to add a hydrogen? 
-                            double? mzCalc;
-                            charge = ValidateFormulaWithMz(document, ref formula, mz, charge, out monoMass, out averageMmass, out mzCalc);
-                            row.Cells[indexFormula].Value = formula;
-                            massOk = monoMass < CustomIon.MAX_MASS && averageMmass < CustomIon.MAX_MASS &&
-                                     !(massTooLow = charge.HasValue && (monoMass < CustomIon.MIN_MASS || averageMmass < CustomIon.MIN_MASS)); // Null charge => masses are 0 but meaningless
-                            if (massOk)
-                            {
-                                if (charge.HasValue)
-                                {
-                                    row.Cells[indexCharge].Value = charge.Value;
-                                    return new MoleculeInfo(name, formula, charge.Value, mz, monoMass, averageMmass, isotopeLabelType, retentionTimeInfo, explicitTransitionGroupValues, note);
-                                }
-                                else if (mzCalc.HasValue)
-                                {
-                                    // There was an initial charge value, but it didn't make sense with formula and proposed mz
-                                    errMessage = String.Format(getPrecursorColumns
-                                        ? Resources.PasteDlg_ReadPrecursorOrProductColumns_Error_on_line__0___Precursor_m_z__1__does_not_agree_with_value__2__as_calculated_from_ion_formula_and_charge_state__delta____3___Transition_Settings___Instrument___Method_match_tolerance_m_z____4_____Correct_the_m_z_value_in_the_table__or_leave_it_blank_and_Skyline_will_calculate_it_for_you_
-                                        : Resources.PasteDlg_ReadPrecursorOrProductColumns_Error_on_line__0___Product_m_z__1__does_not_agree_with_value__2__as_calculated_from_ion_formula_and_charge_state__delta____3___Transition_Settings___Instrument___Method_match_tolerance_m_z____4_____Correct_the_m_z_value_in_the_table__or_leave_it_blank_and_Skyline_will_calculate_it_for_you_,
-                                        row.Index + 1, (float)mz, (float)mzCalc.Value, (float)(mzCalc.Value - mz), (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance);
-                                    errColumn = indexMz;
-                                }
-                                else
-                                {
-                                    // No charge state given, and mz makes no sense with formula
-                                    errMessage = String.Format(getPrecursorColumns
-                                        ? Resources.PasteDlg_ValidateEntry_Error_on_line__0___Precursor_formula_and_m_z_value_do_not_agree_for_any_charge_state_
-                                        : Resources.PasteDlg_ValidateEntry_Error_on_line__0___Product_formula_and_m_z_value_do_not_agree_for_any_charge_state_, row.Index+1);
-                                    errColumn = indexMz;
-                                }
-                            }
-                        }
-                        else if (charge.HasValue)
-                        {
-                            // Get the mass from the formula, and mz from that and charge
-                            mz = ValidateFormulaWithCharge(document, formula, charge.Value, out monoMass, out averageMmass);
-                            massOk = !((monoMass >= CustomIon.MAX_MASS || averageMmass >= CustomIon.MAX_MASS)) &&
-                                     !(massTooLow = (monoMass < CustomIon.MIN_MASS || averageMmass < CustomIon.MIN_MASS));
-                            row.Cells[indexMz].Value = mz;
-                            if (massOk)
-                                return new MoleculeInfo(name, formula, charge.Value, mz, monoMass, averageMmass, isotopeLabelType, retentionTimeInfo, explicitTransitionGroupValues, note);
-                        }
-                    }
-                    catch (InvalidDataException x)
-                    {
-                        massOk = false;
-                        massErrMsg = x.Message;
-                    }
-                } 
-                else if (mz != 0 && charge.HasValue)
-                {
-                    // No formula, just use charge and m/z
-                    monoMass = averageMmass = BioMassCalc.CalculateIonMassFromMz(mz, charge.Value);
-                    massOk = monoMass < CustomIon.MAX_MASS && averageMmass < CustomIon.MAX_MASS &&
-                             !(massTooLow = (monoMass < CustomIon.MIN_MASS || averageMmass < CustomIon.MIN_MASS));
-                    errColumn = indexMz;
-                    if (massOk)
-                        return new MoleculeInfo(name, formula, charge.Value, mz, monoMass, averageMmass, isotopeLabelType, retentionTimeInfo, explicitTransitionGroupValues, note);
-                }
-                if (massTooLow)
-                {
-                    errMessage = massErrMsg ?? string.Format(
-                        Resources
-                            .EditCustomMoleculeDlg_OkDialog_Custom_molecules_must_have_a_mass_greater_than_or_equal_to__0__,
-                        CustomIon.MIN_MASS);
-                }
-                else if (!massOk)
-                {
-                    errMessage = massErrMsg ?? string.Format(
-                        Resources
-                            .EditCustomMoleculeDlg_OkDialog_Custom_molecules_must_have_a_mass_less_than_or_equal_to__0__,
-                        CustomIon.MAX_MASS);
-                }
-            }
-            ShowTransitionError(new PasteError
-            {
-                Column = errColumn,
-                Line = row.Index,
-                Message = errMessage
-            });
-            return null;
-        }
-
+        
         private SrmDocument AddTransitionList(SrmDocument document, ref IdentityPath selectedPath)
         {
             if (tabControl1.SelectedTab != tabPageTransitionList)
@@ -1058,147 +603,9 @@ namespace pwiz.Skyline.EditUI
                 }
                 Settings.Default.CustomMoleculeTransitionInsertColumnsList = active;
 
-                // We will accept a completely empty product list as meaning 
-                // "these are all precursor transitions"
-                var requireProductInfo = false;
-                for (var i = 0; i < gridViewTransitionList.RowCount - 1; i++)
-                {
-                    var row = gridViewTransitionList.Rows[i];
-                    var productMz = row.Cells[INDEX_PRODUCT_MZ].Value;
-                    var productFormula = row.Cells[INDEX_PRODUCT_FORMULA].Value;
-                    var productCharge = row.Cells[INDEX_PRODUCT_CHARGE].Value;
-                    if ((productMz != null && productMz.ToString().Length > 0) ||
-                        (productFormula != null && productFormula.ToString().Length > 0) ||
-                        (productCharge != null && productCharge.ToString().Length > 0))
-                    {
-                        requireProductInfo = true; // Product list is not completely empty
-                        break;
-                    }
-                }
-
-                // For each row in the grid, add to or begin MoleculeGroup|Molecule|TransitionList tree
-                for(int i = 0; i < gridViewTransitionList.RowCount - 1; i ++)
-                {
-                    DataGridViewRow row = gridViewTransitionList.Rows[i];
-                    var precursor = ReadPrecursorOrProductColumns(document, row, true); // Get molecule values
-                    if (precursor == null)
-                        return null;
-                    if (requireProductInfo && ReadPrecursorOrProductColumns(document, row, false) == null)
-                    {
-                        return null;
-                    }
-                    var charge = precursor.Charge;
-                    var precursorMonoMz = BioMassCalc.CalculateIonMz(precursor.MonoMass, charge);
-                    var precursorAverageMz = BioMassCalc.CalculateIonMz(precursor.AverageMass, charge);
-
-                    // Preexisting molecule group?
-                    bool pepGroupFound = false;
-                    foreach (var pepGroup in document.MoleculeGroups)
-                    {
-                        var pathPepGroup = new IdentityPath(pepGroup.Id);
-                        if (Equals(pepGroup.Name, Convert.ToString(row.Cells[INDEX_MOLECULE_GROUP].Value)))
-                        {
-                            // Found a molecule group with the same name - can we find an existing transition group to which we can add a transition?
-                            pepGroupFound = true;
-                            bool pepFound = false;
-                            foreach (var pep in pepGroup.SmallMolecules)
-                            {
-                                var pepPath = new IdentityPath(pathPepGroup, pep.Id);
-                                var ionMonoMz = BioMassCalc.CalculateIonMz(pep.CustomIon.MonoisotopicMass, charge);
-                                var ionAverageMz = BioMassCalc.CalculateIonMz(pep.CustomIon.AverageMass, charge);
-                                var mzMatchTolerance = document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
-                                var labelType = precursor.IsotopeLabelType ?? IsotopeLabelType.light;
-                                // Match existing molecule if same name (if any) and same formula (if any) and similar m/z at the precursor charge
-                                // (we don't just check mass since we don't have a tolerance value for that)
-                                // Or same name If any) and identical formula when stripped of labels
-                                // Or same name, no formula, and different isotope labels or matching label and mz
-                                if (Equals(pep.CustomIon.Name, precursor.Name) &&
-                                    ((Equals(pep.CustomIon.Formula, precursor.Formula) &&
-                                    Math.Abs(ionMonoMz - precursorMonoMz) <= mzMatchTolerance &&
-                                    Math.Abs(ionAverageMz - precursorAverageMz) <= mzMatchTolerance) ||
-                                    (!Equals(pep.CustomIon.Formula, precursor.Formula) && 
-                                    Equals(pep.CustomIon.UnlabeledFormula, BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula(precursor.Formula))) ||
-                                    (string.IsNullOrEmpty(pep.CustomIon.Formula) && string.IsNullOrEmpty(precursor.Formula) &&
-                                    (!pep.TransitionGroups.Any(t => Equals(t.TransitionGroup.LabelType, labelType)) || // First label of this kind
-                                     pep.TransitionGroups.Any(t => Equals(t.TransitionGroup.LabelType, labelType) && Math.Abs(precursor.Mz-t.PrecursorMz) <= mzMatchTolerance))))) // Matches precursor mz of similar labels
-                                {
-                                    pepFound = true;
-                                    bool tranGroupFound = false;
-                                    foreach (var tranGroup in pep.TransitionGroups)
-                                    {
-                                        var pathGroup = new IdentityPath(pepPath, tranGroup.Id);
-                                        if (Math.Abs(tranGroup.PrecursorMz - precursor.Mz) <= mzMatchTolerance)
-                                        {
-                                            tranGroupFound = true;
-                                            var tranFound = false;
-                                            try
-                                            {
-                                                var tranNode = GetMoleculeTransition(document, row, pep.Peptide, tranGroup.TransitionGroup, requireProductInfo);
-                                                if (tranNode == null)
-                                                    return null;
-                                                foreach (var tran in tranGroup.Transitions)
-                                                {
-                                                    if (Equals(tranNode.Transition.CustomIon,tran.Transition.CustomIon))
-                                                    {
-                                                        tranFound = true;
-                                                        break;
-                                                    }
-                                                }
-                                                if (!tranFound)
-                                                {
-                                                    document = (SrmDocument) document.Add(pathGroup, tranNode);
-                                                }
-                                            }
-                                            catch (InvalidDataException e)
-                                            {
-                                                // Some error we didn't catch in the basic checks
-                                                ShowTransitionError(new PasteError
-                                                {
-                                                    Column = 0,
-                                                    Line = row.Index,
-                                                    Message = e.Message
-                                                });
-                                                return null;
-                                            }
-                                            break;
-                                        }
-                                    }
-                                    if (!tranGroupFound)
-                                    {
-                                        var node = GetMoleculeTransitionGroup(document, row, pep.Peptide, requireProductInfo);
-                                        if (node == null)
-                                            return null;
-                                        document =
-                                            (SrmDocument)
-                                                document.Add(pepPath, node);
-                                    }
-                                    break;
-                                }   
-                            }
-                            if (!pepFound)
-                            {
-                                var node = GetMoleculePeptide(document, row, pepGroup.PeptideGroup, requireProductInfo);
-                                if (node == null)
-                                    return null;
-                                document =
-                                    (SrmDocument)
-                                        document.Add(pathPepGroup,node);
-                            }
-                            break;
-                        }
-                    }
-                    if (!pepGroupFound)
-                    {
-                        var node = GetMoleculePeptideGroup(document, row, requireProductInfo);
-                        if (node == null)
-                            return null;
-                        IdentityPath first;
-                        IdentityPath next;
-                        document =
-                                document.AddPeptideGroups(new[] {node}, false,null
-                                    , out first,out next);
-                    }
-                }
+                var importer = new  SmallMoleculeTransitionListPasteHandler(this);
+                IdentityPath firstAdded;
+                document = importer.CreateTargets(document, null, out firstAdded);
             }
             else
             {
@@ -1374,128 +781,6 @@ namespace pwiz.Skyline.EditUI
                 }
             }
             return document;
-        }
-
-        private PeptideGroupDocNode GetMoleculePeptideGroup(SrmDocument document, DataGridViewRow row, bool requireProductInfo)
-        {
-            var pepGroup = new PeptideGroup();
-            var pep = GetMoleculePeptide(document, row, pepGroup, requireProductInfo);
-            if (pep == null)
-                return null;
-            var name = Convert.ToString(row.Cells[INDEX_MOLECULE_GROUP].Value);
-            if (string.IsNullOrEmpty(name))
-                name = document.GetPeptideGroupId(true);
-            var metadata = new ProteinMetadata(name, string.Empty).SetWebSearchCompleted();  // FUTURE: some kind of lookup for small molecules
-            return new PeptideGroupDocNode(pepGroup, metadata, new[] {pep});
-        }
-
-        private PeptideDocNode GetMoleculePeptide(SrmDocument document, DataGridViewRow row, PeptideGroup group, bool requireProductInfo)
-        {
-
-            DocNodeCustomIon ion;
-            MoleculeInfo moleculeInfo;
-            try
-            {
-                moleculeInfo = ReadPrecursorOrProductColumns(document, row, true); // Re-read the precursor columns
-                if (moleculeInfo == null)
-                    return null; // Some failure, but exception was already handled
-                ion = new DocNodeCustomIon(moleculeInfo.Formula, moleculeInfo.MonoMass, moleculeInfo.AverageMass,
-                    Convert.ToString(row.Cells[INDEX_MOLECULE_NAME].Value)); // Short name
-            }
-            catch (ArgumentException e)
-            {
-                ShowTransitionError(new PasteError
-                {
-                    Column    = INDEX_MOLECULE_FORMULA,
-                    Line = row.Index, 
-                    Message = e.Message
-                });
-                return null;
-            }
-            try
-            {
-                var pep = new Peptide(ion);
-                var tranGroup = GetMoleculeTransitionGroup(document, row, pep, requireProductInfo);
-                if (tranGroup == null)
-                    return null;
-                return new PeptideDocNode(pep, document.Settings, null, null, moleculeInfo.ExplicitRetentionTime, new[] { tranGroup }, true);
-            }
-            catch (InvalidOperationException e)
-            {
-                ShowTransitionError(new PasteError
-                {
-                    Column = INDEX_MOLECULE_FORMULA,
-                    Line = row.Index,
-                    Message = e.Message
-                });
-                return null;
-            }
-        }
-
-        private TransitionGroupDocNode GetMoleculeTransitionGroup(SrmDocument document, DataGridViewRow row, Peptide pep, bool requireProductInfo)
-        {
-            var moleculeInfo = ReadPrecursorOrProductColumns(document, row, true); // Re-read the precursor columns
-            if (!document.Settings.TransitionSettings.IsMeasurablePrecursor(moleculeInfo.Mz))
-            {
-                ShowTransitionError(new PasteError
-                {
-                    Column = INDEX_MOLECULE_MZ,
-                    Line = row.Index,
-                    Message = string.Format(Resources.PasteDlg_GetMoleculeTransitionGroup_The_precursor_m_z__0__is_not_measureable_with_your_current_instrument_settings_, moleculeInfo.Mz)
-                });
-                return null;
-            }
-            
-            var customIon = moleculeInfo.ToCustomIon();
-            var isotopeLabelType = moleculeInfo.IsotopeLabelType ?? IsotopeLabelType.light;
-            var group = new TransitionGroup(pep, customIon, moleculeInfo.Charge, isotopeLabelType);
-            try
-            {
-                var tran = GetMoleculeTransition(document, row, pep, group, requireProductInfo);
-                if (tran == null)
-                    return null;
-                return new TransitionGroupDocNode(group, document.Annotations, document.Settings, null,
-                    null, moleculeInfo.ExplicitTransitionGroupValues, null, new[] {tran}, true);
-            }
-            catch (InvalidDataException e)
-            {
-                ShowTransitionError(new PasteError
-                {
-                    Column = INDEX_PRODUCT_MZ, // Don't actually know that mz was the issue, but at least it's the right row, and in the product columns
-                    Line = row.Index,
-                    Message = e.Message
-                });
-                return null;
-            }
-        }
-
-        private TransitionDocNode GetMoleculeTransition(SrmDocument document, DataGridViewRow row, Peptide pep, TransitionGroup group, bool requireProductInfo)
-        {
-            var massType =
-                document.Settings.TransitionSettings.Prediction.FragmentMassType;
-
-            var molecule = ReadPrecursorOrProductColumns(document, row, !requireProductInfo); // Re-read the product columns, or copy precursor
-            if (requireProductInfo && molecule == null)
-            {
-                return null;
-            }
-            var ion = molecule.ToCustomIon();
-            var ionType = (!requireProductInfo || // We inspected the input list and found only precursor info
-                          ((ion.MonoisotopicMass.Equals(pep.CustomIon.MonoisotopicMass) &&
-                           ion.AverageMass.Equals(pep.CustomIon.AverageMass)))) // Same mass, must be a precursor transition
-                ? IonType.precursor
-                : IonType.custom;
-            double mass = ion.GetMass(massType);
-
-            var transition = new Transition(group, molecule.Charge, null, ion, ionType);
-            var annotations = document.Annotations;
-            if (!string.IsNullOrEmpty(molecule.Note))
-            {
-                var note = document.Annotations.Note;
-                note = string.IsNullOrEmpty(note) ? molecule.Note : (note + "\r\n" + molecule.Note); // Not L10N
-                annotations = new Annotations(note, document.Annotations.ListAnnotations(), 0);
-            }
-            return new TransitionDocNode(transition, annotations, null, mass, null, null, null);
         }
 
         private static PeptideGroupDocNode FindPeptideGroupDocNode(SrmDocument document, PeptideGroupDocNode nodePepGroup)
@@ -2294,6 +1579,33 @@ namespace pwiz.Skyline.EditUI
             public const string declusteringPotential = "DeclusteringPotential"; // Not L10N
             public const string note = "Note"; // Not L10N
             public const string labelType = "LabelType"; // Not L10N
+
+            public static List<string> KnownHeaders()
+            {
+                return new List<string>(new[]
+                {
+                    moleculeGroup,
+                    namePrecursor,
+                    nameProduct,
+                    formulaPrecursor,
+                    formulaProduct,
+                    mzPrecursor,
+                    mzProduct,
+                    chargePrecursor,
+                    chargeProduct,
+                    rtPrecursor,
+                    rtWindowPrecursor,
+                    cePrecursor,
+                    dtPrecursor,
+                    dtHighEnergyOffset,
+                    slens,
+                    coneVoltage,
+                    compensationVoltage,
+                    declusteringPotential,
+                    note,
+                    labelType,
+                });
+            }
         }
         private void UpdateMoleculeType()
         {
@@ -2446,6 +1758,40 @@ namespace pwiz.Skyline.EditUI
         {
             return gridViewTransitionList.Columns.GetColumnCount(DataGridViewElementStates.Visible) -
                    gridViewTransitionList.Columns.GetColumnCount(DataGridViewElementStates.ReadOnly);
+        }
+
+        class SmallMoleculeTransitionListPasteHandler : SmallMoleculeTransitionListReader
+        {
+            private readonly PasteDlg _pasteDlg;
+
+            public SmallMoleculeTransitionListPasteHandler(PasteDlg pasteDlg)
+            {
+                _pasteDlg = pasteDlg;
+                for (var i = 0; i < _pasteDlg.gridViewTransitionList.RowCount - 1; i++)
+                {
+                    var cells = new List<string>();
+                    for (var col = 0; col < _pasteDlg.gridViewTransitionList.Rows[i].Cells.Count; col++)
+                    {
+                        cells.Add(Convert.ToString(_pasteDlg.gridViewTransitionList.Rows[i].Cells[col].Value));
+                    }
+                    Rows.Add(new Row(this, i, cells));
+                }
+            }
+
+            public override void UpdateCellBackingStore(int row, int col, object value)
+            {
+                _pasteDlg.gridViewTransitionList.Rows[row].Cells[col].Value = value;
+            }
+
+            public override int ColumnIndex(string name)
+            {
+                return _pasteDlg.ColumnIndex(name);
+            }
+
+            public override void ShowTransitionError(PasteError error)
+            {
+                _pasteDlg.ShowTransitionError(error);
+            }
         }
     }
 

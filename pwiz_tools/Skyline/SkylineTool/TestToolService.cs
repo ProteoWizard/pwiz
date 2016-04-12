@@ -31,6 +31,7 @@ namespace SkylineTool
         Version[] TestVersionArray();
         Chromatogram[] TestChromatogramArray();
         void ImportFasta(string fasta);
+        void InsertSmallMoleculeTransitionList(string textCSV);
         void TestAddSpectralLibrary(string libraryName, string libraryPath);
 
         void TestSelect(string link);
@@ -96,6 +97,11 @@ namespace SkylineTool
         public void ImportFasta(string textFasta)
         {
             RemoteCall(ImportFasta, textFasta);
+        }
+
+        public void InsertSmallMoleculeTransitionList(string textCSV)
+        {
+            RemoteCall(InsertSmallMoleculeTransitionList, textCSV);
         }
 
         public void TestAddSpectralLibrary(string libraryName, string libraryPath)

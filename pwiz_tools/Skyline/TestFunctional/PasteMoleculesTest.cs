@@ -94,6 +94,7 @@ namespace pwiz.SkylineTestFunctional
 
             var docEmpty = SkylineWindow.Document;
 
+            TestToolServiceAccess();
             TestLabelsNoFormulas();
             TestPrecursorTransitions();
             TestTransitionListArrangementAndReporting();
@@ -606,9 +607,9 @@ namespace pwiz.SkylineTestFunctional
             });
             WaitForConditionUI(() => pasteDlg4.GetUsableColumnCount() == columnOrder.ToList().Count);
             const string impliedLabeled =
-                "Oly\tlager\tbubbles\t452\t\t\t\t1\t\tmacrobrew\theavy" + "\n" +
-                "Oly\tlager\tfoam\t234\t\t\t\t1\t\tmacrobrew\tlight";
-            SetClipboardText(impliedLabeled);
+                "Oly\tlager\tbubbles\t452.1\t\t\t\t1\t\tmacrobrew\theavy" + "\n" +
+                "Oly\tlager\tfoam\t234.5\t\t\t\t1\t\tmacrobrew\tlight";
+            SetClipboardText(impliedLabeled.Replace(".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator));
             RunUI(pasteDlg4.PasteTransitions);
             OkDialog(pasteDlg4, pasteDlg4.OkDialog);
             pastedDoc = WaitForDocumentChange(docOrig);
@@ -622,6 +623,101 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(() => SkylineWindow.NewDocument(true));
             RunUI(() => Settings.Default.CustomMoleculeTransitionInsertColumnsList = saveColumnOrder);
+        }
+
+        private void TestToolServiceAccess()
+        {
+            // Test the tool service logic without actually using tool service (there's a test for that too)
+            var header = string.Join(",", new string[]
+            {
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.namePrecursor,
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.nameProduct,
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.labelType,
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.formulaProduct,
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.mzPrecursor,
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.mzProduct,
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargeProduct,
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.rtPrecursor,
+           });
+           var textCSV = header + "\n" +
+                "Amino Acids B,AlaB,,light,,,225.1,44,-1,-1,3\n" +
+                "Amino Acids B,ArgB,,light,,,310.2,217,-1,-1,19\n" +
+                "Amino Acids,Ala,,light,,,225,44,1,1,3\n" +
+                "Amino Acids,Ala,,heavy,,,229,48,1,1,4\n" + // NB we ignore RT conflicts
+                "Amino Acids,Arg,,light,,,310,217,1,1,19\n" +
+                "Amino Acids,Arg,,heavy,,,312,219,1,1,19\n" +
+                "Amino Acids B,AlaB,,light,,,225.1,45,-1,-1,3\n" +
+                "Amino Acids B,AlaB,,heavy,,,229,48,-1,-1,4\n" + // NB we ignore RT conflicts
+                "Amino Acids B,AlaB,,heavy,,,229,49,-1,-1,4\n" + // NB we ignore RT conflicts
+                "Amino Acids B,ArgB,,light,,,310.2,218,-1,-1,19\n" +
+                "Amino Acids B,ArgB,,heavy,,,312,219,-1,-1,19\n" +
+                "Amino Acids B,ArgB,,heavy,,,312,220,-1,-1,19\n";
+
+            var docOrig = SkylineWindow.Document;
+            SkylineWindow.Invoke(new Action(() =>
+            {
+                SkylineWindow.InsertSmallMoleculeTransitionList(textCSV, Resources.ToolService_InsertSmallMoleculeTransitionList_Insert_Small_Molecule_Transition_List);
+            }));
+
+            var pastedDoc = WaitForDocumentChange(docOrig);
+            Assert.AreEqual(2, pastedDoc.MoleculeGroupCount);
+            Assert.AreEqual(4, pastedDoc.MoleculeCount);
+
+            // Now feed it some nonsense headers, verify helpful error message
+            var textCSV2 = textCSV.Replace(PasteDlg.SmallMoleculeTransitionListColumnHeaders.labelType, "labbel").Replace(PasteDlg.SmallMoleculeTransitionListColumnHeaders.moleculeGroup,"grommet");
+            AssertEx.ThrowsException<LineColNumberedIoException>(() => SkylineWindow.Invoke(new Action(() =>
+            {
+                SkylineWindow.InsertSmallMoleculeTransitionList(textCSV2,
+                    Resources.ToolService_InsertSmallMoleculeTransitionList_Insert_Small_Molecule_Transition_List);
+            })),
+                string.Format(Resources.SmallMoleculeTransitionListReader_SmallMoleculeTransitionListReader_,
+                    TextUtil.LineSeparate(new[] { "grommet", "labbel"}),
+                    TextUtil.LineSeparate(PasteDlg.SmallMoleculeTransitionListColumnHeaders.KnownHeaders())));
+            // This should still be close enough to correct that we can tell that's what the user was going for
+            Assert.IsTrue(SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(textCSV2));
+           
+
+            // And check for handling of localization
+            var textCSV3 = textCSV.Replace(',', TextUtil.GetCsvSeparator(LocalizationHelper.CurrentCulture)).Replace(".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator);
+            RunUI(() => SkylineWindow.NewDocument(true));
+            docOrig =  WaitForDocumentChange(pastedDoc);
+            SkylineWindow.Invoke(new Action(() =>
+            {
+                SkylineWindow.InsertSmallMoleculeTransitionList(textCSV3, Resources.ToolService_InsertSmallMoleculeTransitionList_Insert_Small_Molecule_Transition_List);
+            }));
+
+            pastedDoc = WaitForDocumentChange(docOrig);
+            Assert.AreEqual(2, pastedDoc.MoleculeGroupCount);
+            Assert.AreEqual(4, pastedDoc.MoleculeCount);
+
+            // Check our ability to help users with localized headers understand that we need standard strings
+            // They might reasonably guess that we would support the names visible in the pasteDlg, but we prefer internal space-free names
+            var textCSV4 = textCSV3.Replace(PasteDlg.SmallMoleculeTransitionListColumnHeaders.namePrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Name);
+            AssertEx.ThrowsException<LineColNumberedIoException>(() => SkylineWindow.Invoke(new Action(() =>
+            {
+                SkylineWindow.InsertSmallMoleculeTransitionList(textCSV4,
+                    Resources.ToolService_InsertSmallMoleculeTransitionList_Insert_Small_Molecule_Transition_List);
+            })),
+                string.Format(Resources.SmallMoleculeTransitionListReader_SmallMoleculeTransitionListReader_,
+                    Resources.PasteDlg_UpdateMoleculeType_Precursor_Name,
+                    TextUtil.LineSeparate(PasteDlg.SmallMoleculeTransitionListColumnHeaders.KnownHeaders())));
+            // This should still be close enough to correct that we can tell that's what the user was going for
+            Assert.IsTrue(SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(textCSV4));
+
+            // Check ability to paste into the Skyline window
+            RunUI(() => SkylineWindow.NewDocument(true));
+            docOrig = WaitForDocumentChange(pastedDoc);
+            RunUI(() =>
+            {
+                SetClipboardText(textCSV);
+                SkylineWindow.Paste();
+            });
+            pastedDoc = WaitForDocumentChange(docOrig);
+            Assert.AreEqual(2, pastedDoc.MoleculeGroupCount);
+            Assert.AreEqual(4, pastedDoc.MoleculeCount);
         }
 
         private void TestLabelsNoFormulas()

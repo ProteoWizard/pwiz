@@ -1133,6 +1133,28 @@ namespace pwiz.Skyline.Model
                                           out List<PeptideGroupDocNode> peptideGroups)
         {
             MassListImporter importer = new MassListImporter(this, inputs);
+
+            // Is this a small molecule transition list, or trying to be?
+            if (SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(importer.Inputs.ReadLines()))
+            {
+                var docNewSmallMolecules = this;
+                irtPeptides = new List<MeasuredRetentionTime>();
+                librarySpectra = new List<SpectrumMzInfo>();
+                peptideGroups = new List<PeptideGroupDocNode>();
+                errorList = new List<TransitionImportErrorInfo>();
+                firstAdded = null;
+                try
+                {
+                    var reader = new SmallMoleculeTransitionListCSVReader(importer.Inputs.ReadLines());
+                    docNewSmallMolecules = reader.CreateTargets(this, to, out firstAdded);
+                }
+                catch (LineColNumberedIoException x)
+                {
+                    errorList.Add(new TransitionImportErrorInfo(x.PlainMessage, x.ColumnIndex, x.LineNumber));  // CONSIDER: worth the effort to pull row and column info from error message?
+                }
+                return docNewSmallMolecules;
+            }
+
             IdentityPath nextAdd;
             peptideGroups = importer.Import(progressMonitor, out irtPeptides, out librarySpectra, out errorList).ToList();
             var docNew = AddPeptideGroups(peptideGroups, false, to, out firstAdded, out nextAdd);

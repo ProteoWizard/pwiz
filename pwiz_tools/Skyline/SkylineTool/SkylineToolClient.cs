@@ -96,6 +96,11 @@ namespace SkylineTool
             _client.ImportFasta(textFasta);
         }
 
+        public void InsertSmallMoleculeTransitionList(string textCSV)
+        {
+            _client.InsertSmallMoleculeTransitionList(textCSV);
+        }
+
         public void AddSpectralLibrary(string libraryName, string libraryPath)
         {
             _client.AddSpectralLibrary(libraryName, libraryPath);
@@ -179,6 +184,11 @@ namespace SkylineTool
             public void ImportFasta(string textFasta)
             {
                 RemoteCall(ImportFasta, textFasta);
+            }
+
+            public void InsertSmallMoleculeTransitionList(string textCSV)
+            {
+                RemoteCall(InsertSmallMoleculeTransitionList, textCSV);
             }
 
             public void AddSpectralLibrary(string libraryName, string libraryPath)
