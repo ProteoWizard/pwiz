@@ -196,34 +196,34 @@ namespace TestRunnerLib
                     Language.TwoLetterISOLanguageName);
             }
 
-            // Create test class.
-            var testObject = Activator.CreateInstance(test.TestClassType);
-
-            // Set the TestContext.
-            TestContext.Properties["AccessInternet"] = AccessInternet.ToString();
-            TestContext.Properties["RunPerfTests"] = RunPerfTests.ToString();
-            TestContext.Properties["TestSmallMolecules"] = TestSmallMolecules.ToString();
-            TestContext.Properties["LiveReports"] = LiveReports.ToString();
-            if (test.SetTestContext != null)
-            {
-                var context = new object[] { TestContext };
-                test.SetTestContext.Invoke(testObject, context);
-            }
-
-            // Switch to selected culture.
-            var saveCulture = Thread.CurrentThread.CurrentCulture;
-            var saveUICulture = Thread.CurrentThread.CurrentUICulture;
-            LocalizationHelper.CurrentCulture = LocalizationHelper.CurrentUICulture = Language;
-            LocalizationHelper.InitThread();
-
-            long crtLeakedBytes = 0;
-
-            // Run the test and time it.
             Exception exception = null;
             var stopwatch = new Stopwatch();
             stopwatch.Start();
+            var saveCulture = Thread.CurrentThread.CurrentCulture;
+            var saveUICulture = Thread.CurrentThread.CurrentUICulture;
+            long crtLeakedBytes = 0;
+
             try
             {
+                // Create test class.
+                var testObject = Activator.CreateInstance(test.TestClassType);
+
+                // Set the TestContext.
+                TestContext.Properties["AccessInternet"] = AccessInternet.ToString();
+                TestContext.Properties["RunPerfTests"] = RunPerfTests.ToString();
+                TestContext.Properties["TestSmallMolecules"] = TestSmallMolecules.ToString();
+                TestContext.Properties["LiveReports"] = LiveReports.ToString();
+                if (test.SetTestContext != null)
+                {
+                    var context = new object[] { TestContext };
+                    test.SetTestContext.Invoke(testObject, context);
+                }
+
+                // Switch to selected culture.
+                LocalizationHelper.CurrentCulture = LocalizationHelper.CurrentUICulture = Language;
+                LocalizationHelper.InitThread();
+
+                // Run the test and time it.
                 if (test.TestInitialize != null)
                     test.TestInitialize.Invoke(testObject, null);
 
@@ -285,9 +285,11 @@ namespace TestRunnerLib
                 FailureCounts[test.TestMethod.Name]++;
             else
                 FailureCounts[test.TestMethod.Name] = 1;
+            var message = exception.InnerException == null ? exception.Message : exception.InnerException.Message;
+            var stackTrace = exception.InnerException == null ? exception.StackTrace : exception.InnerException.StackTrace;
             var failureInfo = "# " + test.TestMethod.Name + "FAILED:\n" +
-                exception.InnerException.Message + "\n" +
-                exception.InnerException.StackTrace;
+                message + "\n" +
+                stackTrace;
             if (ErrorCounts.ContainsKey(failureInfo))
                 ErrorCounts[failureInfo]++;
             else
@@ -296,8 +298,8 @@ namespace TestRunnerLib
             Log(
                 "{0,3} failures, {1:F2}/{2:F1} MB\r\n\r\n!!! {3} FAILED\r\n{4}\r\n{5}\r\n!!!\r\n\r\n",
                 FailureCount, managedMemory, TotalMemory, test.TestMethod.Name,
-                exception.InnerException.Message,
-                exception.InnerException.StackTrace);
+                message,
+                stackTrace);
             return false;
         }
 
