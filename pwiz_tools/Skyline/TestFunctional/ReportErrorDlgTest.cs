@@ -63,19 +63,16 @@ namespace pwiz.SkylineTestFunctional
                 skippedReportForm.SetFormProperties(true, true, "yuval", "text");
             });
             var messageDlg = ShowDialog<MessageDlg>(() => skippedReportForm.OkDialog(false));
-            RunUI(() =>
-            {
-                Assert.AreEqual(messageDlg.Message, Resources.SkippedReportErrorDlg_btnOK_Click_No_Email);
-                messageDlg.OkDialog();
-            });
+            RunUI(() => Assert.AreEqual(messageDlg.Message, Resources.SkippedReportErrorDlg_btnOK_Click_No_Email));
+            OkDialog(messageDlg, messageDlg.OkDialog);
             RunUI(() =>
             {
                 Assert.IsNotNull(skippedReportForm);
                 Assert.IsTrue(skippedReportForm.ScreenShots.Count > 0);
                 skippedReportForm.IsTest = true;
                 skippedReportForm.SetFormProperties(true, true, "yuval@uw.edu", "text");
-                skippedReportForm.OkDialog(false);
             });
+            OkDialog(skippedReportForm, () => skippedReportForm.OkDialog(false));
         }
 
         private void ReportException(Exception x)

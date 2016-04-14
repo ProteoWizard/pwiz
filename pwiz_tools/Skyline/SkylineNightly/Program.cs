@@ -81,6 +81,7 @@ namespace SkylineNightly
                 case SCHEDULED_INTEGRATION_TRUNK_ARG:
                     message = string.Format("Completed {0}", arg); // Not L10N
                     nightly.RunAndPost(Nightly.RunMode.nightly_integration);
+                    nightly = new Nightly();
                     nightly.RunAndPost(Nightly.RunMode.nightly);
                     break;
 
