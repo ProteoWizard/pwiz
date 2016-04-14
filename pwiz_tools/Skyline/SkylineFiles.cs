@@ -1552,43 +1552,54 @@ namespace pwiz.Skyline
         public void InsertSmallMoleculeTransitionList(string csvText, string description)
         {
             IdentityPath selectPath = null;
-
-            var docCurrent = DocumentUI;
-
-            SrmDocument docNew = null;
-            using (var longWaitDlg = new LongWaitDlg(this) { Text = description })
-            {
-                var smallMoleculeTransitionListReader = new SmallMoleculeTransitionListCSVReader(csvText);
-                IdentityPath firstAdded;
-                longWaitDlg.PerformWork(this, 1000, () => docNew = smallMoleculeTransitionListReader.CreateTargets(docCurrent, null, out firstAdded));  // CONSIDER: cancelable / progress monitor ?  This is normally pretty quick.
-
-                if (docNew == null)
-                    return;
-
-                if (longWaitDlg.IsDocumentChanged(docCurrent))
-                {
-                    MessageDlg.Show(this, Resources.SkylineWindow_ImportFasta_Unexpected_document_change_during_operation);
-                    return;
-                }
-            }
-
-            var enumGroupsCurrent = docCurrent.MoleculeGroups.GetEnumerator();
-            foreach (PeptideGroupDocNode nodePepGroup in docNew.MoleculeGroups)
-            {
-                if (enumGroupsCurrent.MoveNext() &&
-                    !ReferenceEquals(nodePepGroup, enumGroupsCurrent.Current))
-                {
-                    selectPath = new IdentityPath(nodePepGroup.Id);
-                    break;
-                }
-            }
-
+            Exception modifyingDocumentException = null;
             ModifyDocument(description, doc =>
             {
-                if (!ReferenceEquals(doc, docCurrent))
-                    throw new InvalidDataException(Resources.SkylineWindow_ImportFasta_Unexpected_document_change_during_operation);
-                return docNew;
+                try
+                {
+                    SrmDocument docNew = null;
+                    selectPath = null;
+                    using (var longWaitDlg = new LongWaitDlg(this) {Text = description})
+                    {
+                        var smallMoleculeTransitionListReader = new SmallMoleculeTransitionListCSVReader(csvText);
+                        IdentityPath firstAdded;
+                        longWaitDlg.PerformWork(this, 1000,
+                            () => docNew = smallMoleculeTransitionListReader.CreateTargets(doc, null, out firstAdded));
+                            // CONSIDER: cancelable / progress monitor ?  This is normally pretty quick.
+
+                        if (docNew == null)
+                            return doc;
+                    }
+
+                    var enumGroupsCurrent = doc.MoleculeGroups.GetEnumerator();
+                    foreach (PeptideGroupDocNode nodePepGroup in docNew.MoleculeGroups)
+                    {
+                        if (enumGroupsCurrent.MoveNext() &&
+                            !ReferenceEquals(nodePepGroup, enumGroupsCurrent.Current))
+                        {
+                            selectPath = new IdentityPath(nodePepGroup.Id);
+                            break;
+                        }
+                    }
+
+                    return docNew;
+                }
+                catch (Exception x)
+                {
+                    modifyingDocumentException = x;
+                    return doc;
+                }
             });
+            if (modifyingDocumentException != null)
+            {
+                // If the exception is an IOException, we rethrow it in case it has line/col information
+                if (modifyingDocumentException is IOException)
+                {
+                    throw modifyingDocumentException;
+                }
+                // Otherwise, we wrap the exception to preserve the callstack
+                throw new AggregateException(modifyingDocumentException);
+            }
 
             if (selectPath != null)
                 SequenceTree.SelectedPath = selectPath;
