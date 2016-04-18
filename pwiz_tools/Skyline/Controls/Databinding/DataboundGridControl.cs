@@ -500,24 +500,30 @@ namespace pwiz.Skyline.Controls.Databinding
 
         private void DisplayError(BindingManagerDataErrorEventArgs e)
         {
-            lock (_errorMessageLock)
+            try
             {
-                _errorMessagePending = false;
-            }
-            if (_suppressErrorMessages)
-            {
-                return;
-            }
-            string message = TextUtil.LineSeparate(
-                Resources.DataboundGridControl_DisplayError_An_error_occured_while_displaying_the_data_rows_,
-                e.Exception.Message,
-                Resources.DataboundGridControl_DisplayError_Do_you_want_to_continue_to_see_these_error_messages_
-                );
+                if (_suppressErrorMessages)
+                {
+                    return;
+                }
+                string message = TextUtil.LineSeparate(
+                    Resources.DataboundGridControl_DisplayError_An_error_occured_while_displaying_the_data_rows_,
+                    e.Exception.Message,
+                    Resources.DataboundGridControl_DisplayError_Do_you_want_to_continue_to_see_these_error_messages_
+                    );
 
-            var alertDlg = new AlertDlg(message, MessageBoxButtons.YesNo) {Exception = e.Exception};
-            if (alertDlg.ShowAndDispose(this) == DialogResult.No)
+                var alertDlg = new AlertDlg(message, MessageBoxButtons.YesNo) {Exception = e.Exception};
+                if (alertDlg.ShowAndDispose(this) == DialogResult.No)
+                {
+                    _suppressErrorMessages = true;
+                }
+            }
+            finally
             {
-                _suppressErrorMessages = true;
+                lock (_errorMessageLock)
+                {
+                    _errorMessagePending = false;
+                }
             }
         }
     }
