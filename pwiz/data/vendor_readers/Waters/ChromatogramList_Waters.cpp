@@ -94,9 +94,12 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index
     result->id = ie.id;
     result->set(ie.chromatogramType);
 
-    PwizPolarityType polarityType = WatersToPwizPolarityType(rawdata_->Info.GetIonMode(ie.function));
-    if (polarityType != PolarityType_Unknown)
-        result->set(translate(polarityType));
+    if (ie.function >= 0)
+    {
+        PwizPolarityType polarityType = WatersToPwizPolarityType(rawdata_->Info.GetIonMode(ie.function));
+        if (polarityType != PolarityType_Unknown)
+            result->set(translate(polarityType));
+    }
 
     switch (ie.chromatogramType)
     {
@@ -194,6 +197,7 @@ PWIZ_API_DECL void ChromatogramList_Waters::createIndex() const
     IndexEntry& ie = index_.back();
     ie.index = index_.size()-1;
     ie.id = "TIC";
+    ie.function = -1;
     ie.chromatogramType = MS_TIC_chromatogram;
     idToIndexMap_[ie.id] = ie.index;
 
