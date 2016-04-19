@@ -43,6 +43,10 @@ namespace pwiz.Skyline.Model.RetentionTimes
             return new IPooledStream[0];
         }
 
+        public override void ClearCache()
+        {
+        }
+
         protected override bool IsCanceled(IDocumentContainer container, object tag)
         {
             return !ReferenceEquals(container.Document, tag);

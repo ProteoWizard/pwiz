@@ -115,6 +115,13 @@ namespace pwiz.Skyline.Model
         /// Returns true if the container is in teardown, and we should not attempt any document changes.
         /// </summary>
         bool IsClosing { get; }
+
+        /// <summary>
+        /// Tracking active background loaders for a container - helps in test harness SkylineWindow teardown
+        /// </summary>
+        IEnumerable<BackgroundLoader> BackgroundLoaders { get; }
+        void AddBackgroundLoader(BackgroundLoader loader);
+        void RemoveBackgroundLoader(BackgroundLoader loader);
     }
 
     /// <summary>

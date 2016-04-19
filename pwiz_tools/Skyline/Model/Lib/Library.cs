@@ -50,6 +50,14 @@ namespace pwiz.Skyline.Model.Lib
             public bool IsLoaded { get; set; }
         }
 
+        public override void ClearCache()
+        {
+            lock(_loadedLibraries)
+            {
+                _loadedLibraries.Clear();
+            }
+        }
+
         protected override bool StateChanged(SrmDocument document, SrmDocument previous)
         {
             return previous == null ||
@@ -130,7 +138,6 @@ namespace pwiz.Skyline.Model.Lib
                     // If nothing changed, end without changing the document.
                     if (!changed)
                     {
-                        EndProcessing(docCurrent);
                         return false;
                     }
                     libraries = libraries.ChangeLibraries(list.ToArray());
@@ -159,6 +166,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 foreach (var library in dictLibraries.Values)
                     library.ReadStream.CloseStream();
+                EndProcessing(docCurrent);
             }
 
             return true;
@@ -191,7 +199,7 @@ namespace pwiz.Skyline.Model.Lib
                 }
             }
 
-            lock (_loadingLibraries)
+            lock (_loadedLibraries)
             {
                 _loadingLibraries.Remove(spec.Name);
                 if (loadLock.Library != null)

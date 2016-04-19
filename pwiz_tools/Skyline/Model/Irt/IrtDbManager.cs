@@ -47,6 +47,15 @@ namespace pwiz.Skyline.Model.Irt
         private readonly Dictionary<string, RCalcIrt> _loadedCalculators =
             new Dictionary<string, RCalcIrt>();
 
+        // For use on container shutdown, clear caches to restore minimal memory footprint
+        public override void ClearCache()
+        {
+            lock (_loadedCalculators)
+            {
+                _loadedCalculators.Clear();
+            }
+        }
+
         protected override bool StateChanged(SrmDocument document, SrmDocument previous)
         {
             if (previous == null)

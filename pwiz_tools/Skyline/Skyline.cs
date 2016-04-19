@@ -111,6 +111,7 @@ namespace pwiz.Skyline
         private readonly TaskbarProgress _taskbarProgress = new TaskbarProgress();
         private readonly Timer _timerProgress;
         private readonly Timer _timerGraphs;
+        private readonly List<BackgroundLoader> _backgroundLoaders;
 
         /// <summary>
         /// Constructor for the main window of the Skyline program.
@@ -125,6 +126,8 @@ namespace pwiz.Skyline
                 redoMenuItem, redoToolBarButton,
                 RunUIAction);
             undoRedoButtons.AttachEventHandlers();
+
+            _backgroundLoaders = new List<BackgroundLoader>();
 
             _graphSpectrumSettings = new GraphSpectrumSettings(UpdateSpectrumGraph);
 
@@ -427,6 +430,24 @@ namespace pwiz.Skyline
         }
 
         public bool IsClosing { get { return _closing; } }
+
+        /// <summary>
+        /// Tracking active background loaders for a container - helps in test harness SkylineWindow teardown
+        /// </summary>
+        public IEnumerable<BackgroundLoader> BackgroundLoaders
+        {
+            get { return _backgroundLoaders; }
+        }
+
+        public void AddBackgroundLoader(BackgroundLoader loader)
+        {
+            _backgroundLoaders.Add(loader);
+        }
+
+        public void RemoveBackgroundLoader(BackgroundLoader loader)
+        {
+            _backgroundLoaders.Remove(loader);
+        }
 
         public bool CopyMenuItemEnabled()
         {
@@ -844,6 +865,11 @@ namespace pwiz.Skyline
             ToolReportCache.Instance.Register(null);
 
             DatabaseResources.ReleaseAll(); // Let go of protDB SessionFactories
+
+            foreach (var loader in BackgroundLoaders)
+            {
+                loader.ClearCache();
+            }
 
             if (!Program.FunctionalTest)
                 LogManager.GetLogger(typeof(SkylineWindow)).Info("Skyline closed.\r\n-----------------------"); // Not L10N

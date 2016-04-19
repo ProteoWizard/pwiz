@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
 
@@ -41,11 +42,13 @@ namespace pwiz.Skyline.Model
         public void Register(IDocumentContainer container)
         {
             container.Listen(OnDocumentChanged);
+            container.AddBackgroundLoader(this);  // Useful information for enforcing orderly test shutdown
         }
 
         public void Unregister(IDocumentContainer container)
         {
             container.Unlisten(OnDocumentChanged);
+            container.RemoveBackgroundLoader(this);  // Useful information for enforcing orderly test shutdown
         }
 
         protected void OnDocumentChanged(object sender, DocumentChangedEventArgs e)
@@ -91,6 +94,9 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        // For use on container shutdown, clear anything cached to restore minimal memory footprint
+        public abstract void ClearCache();
+
         private void OnLoadBackground(IDocumentContainer container, SrmDocument document)
         {
             try
@@ -107,6 +113,9 @@ namespace pwiz.Skyline.Model
                 }
 
                 LoadBackground(container, document, docCurrent);
+
+                // Did the container change out its document while we were working?
+                EndProcessingNotInContainer(container);
 
                 // Force a document changed notification, since loading blocks them
                 // from triggering new processing, but new processing may have accumulated
@@ -191,20 +200,55 @@ namespace pwiz.Skyline.Model
             return UpdateProgressResponse.normal;
         }
 
+        private bool IsProcessing(SrmDocument document)
+        {
+            lock (_processing)
+            {
+                return _processing.ContainsKey(document.Id.GlobalIndex);
+            }
+        }
+
+        public bool AnyProcessing()
+        {
+            lock (_processing)
+            {
+                return _processing.Count > 0;
+            }
+        }
+
         protected bool CompleteProcessing(IDocumentContainer container, SrmDocument docNew, SrmDocument docOriginal)
         {
-            if (!container.SetDocument(docNew, docOriginal))
+            // Has docOriginal already been removed from the processing list?  If so, don't attempt an update.
+            if (IsProcessing(docOriginal) && !container.SetDocument(docNew, docOriginal))
                 return false;
 
             EndProcessing(docOriginal);
             return true;
         }
 
-        protected void EndProcessing(SrmDocument document)
+        private void EndProcessingNotInContainer(IDocumentContainer container)
         {
             lock (_processing)
             {
-                _processing.Remove(document.Id.GlobalIndex);
+                foreach (var idContainer in _processing.ToArray())
+                {
+                    var docNew = container.Document;
+                    if (ReferenceEquals(idContainer.Value, container) && idContainer.Key != docNew.Id.GlobalIndex)
+                        EndProcessing(idContainer.Key);
+                }
+            }
+        }
+
+        protected void EndProcessing(SrmDocument document)
+        {
+            EndProcessing(document.Id.GlobalIndex);
+        }
+
+        protected void EndProcessing(int documentId)
+        {
+            lock (_processing)
+            {
+                _processing.Remove(documentId);
             }
         }
 

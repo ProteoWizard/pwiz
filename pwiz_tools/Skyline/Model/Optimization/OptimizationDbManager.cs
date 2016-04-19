@@ -38,6 +38,15 @@ namespace pwiz.Skyline.Model.Optimization
         private readonly Dictionary<string, OptimizationLibrary> _loadedLibraries =
             new Dictionary<string, OptimizationLibrary>();
 
+        // For use on container shutdown, clear caches to restore minimal memory footprint
+        public override void ClearCache()
+        {
+            lock (_loadedLibraries)
+            {
+                _loadedLibraries.Clear();
+            }
+        }
+
         protected override bool StateChanged(SrmDocument document, SrmDocument previous)
         {
             if (previous == null)

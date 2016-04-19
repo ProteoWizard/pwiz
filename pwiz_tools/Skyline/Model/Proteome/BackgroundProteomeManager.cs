@@ -45,6 +45,10 @@ namespace pwiz.Skyline.Model.Proteome
             set { _fastaImporter = value; }  // Tests may override with an object that simulates web access
         }
 
+        public override void ClearCache()
+        {
+        }
+
         protected override bool StateChanged(SrmDocument document, SrmDocument previous)
         {
             if (previous == null)
@@ -196,7 +200,7 @@ namespace pwiz.Skyline.Model.Proteome
                             success = digestHelper.LookupProteinMetadata(ref progressStatus);
                         else
                             success = digestHelper.Digest(ref progressStatus, true); // Delay indexing until we copy the file back
-                        if (!success)
+                        if (digestHelper.IsCanceled || !success)
                         {
                             // Processing was canceled
                             if (docCurrent != null)

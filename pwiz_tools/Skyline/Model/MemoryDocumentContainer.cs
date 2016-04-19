@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.IonMobility;
@@ -34,7 +35,8 @@ namespace pwiz.Skyline.Model
     {
         private SrmDocument _document;
         private event EventHandler<DocumentChangedEventArgs> DocumentChangedEvent;
-
+        private readonly List<BackgroundLoader> _backgroundLoaders = new List<BackgroundLoader>();
+             
         private static readonly object CHANGE_EVENT_LOCK = new object();
 
         public SrmDocument Document
@@ -123,6 +125,25 @@ namespace pwiz.Skyline.Model
         }
 
         public bool IsClosing { get { return false; } }
+
+        /// <summary>
+        /// Tracking active background loaders for a container - helps in test harness teardown
+        /// </summary>
+        public IEnumerable<BackgroundLoader> BackgroundLoaders
+        {
+            get {  return _backgroundLoaders; }
+        }
+        
+        public void AddBackgroundLoader(BackgroundLoader loader)
+        {
+            _backgroundLoaders.Add(loader);
+        }
+
+        public void RemoveBackgroundLoader(BackgroundLoader loader)
+        {
+            _backgroundLoaders.Remove(loader);
+        }
+
     }
 
     public class ResultsMemoryDocumentContainer : MemoryDocumentContainer, IDisposable
@@ -173,6 +194,10 @@ namespace pwiz.Skyline.Model
         {
             // Release current document to ensure the streams are closed on it
             SetDocument(new SrmDocument(SrmSettingsList.GetDefault()), Document);
+            foreach (var loader in BackgroundLoaders)
+            {
+                loader.ClearCache();
+            }
         }
     }
 }

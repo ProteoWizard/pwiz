@@ -49,6 +49,14 @@ namespace pwiz.Skyline.Model.Proteome
             set { _fastaImporter = value; }  // Tests may override with an object that simulates web access, bad web access, etc
         }
 
+        public override void ClearCache()
+        {
+            lock (_processedNodes)
+            {
+                _processedNodes.Clear();
+            }
+        }
+
         protected override bool StateChanged(SrmDocument document, SrmDocument previous)
         {
             // We're interested if the document has unresolved protein metadata.
@@ -101,9 +109,12 @@ namespace pwiz.Skyline.Model.Proteome
         protected override bool LoadBackground(IDocumentContainer container, SrmDocument document,
             SrmDocument docCurrent)
         {
-            if (!FastaImporter.HasWebAccess()) // Do we even have web access?
-                return false; // Return silently rather than flashing the progress bar
 
+            if (!FastaImporter.HasWebAccess()) // Do we even have web access?
+            {
+                EndProcessing(container.Document);
+                return false; // Return silently rather than flashing the progress bar
+            }
             SrmDocument docNew, docOrig;
             do
             {
@@ -203,6 +214,11 @@ namespace pwiz.Skyline.Model.Proteome
                                     {
                                         // That didn't parse well enough to make a search term, or didn't add any new info - just set it as searched so we don't keep trying
                                         _processedNodes.Add(node.Id.GlobalIndex, proteinMetadata.SetWebSearchCompleted());
+                                        if (progressMonitor.IsCanceled)
+                                        {
+                                            progressMonitor.UpdateProgress(progressStatus.Cancel());
+                                            return null;
+                                        }
                                         progressMonitor.UpdateProgress(progressStatus = progressStatus.ChangePercentComplete(100 * nResolved++ / nUnresolved));
                                         proteinMetadata = null;  // No search to be done
                                     }
@@ -234,6 +250,11 @@ namespace pwiz.Skyline.Model.Proteome
                             {
                                 Debug.Assert(!result.GetProteinMetadata().NeedsSearch());
                                 _processedNodes.Add(docNodesWithUnresolvedProteinMetadata[result].Id.GlobalIndex, result.GetProteinMetadata());
+                                if (progressMonitor.IsCanceled)
+                                {
+                                    progressMonitor.UpdateProgress(progressStatus.Cancel());
+                                    return null;
+                                }
                                 progressMonitor.UpdateProgress(progressStatus = progressStatus.ChangePercentComplete(100 * nResolved++ / nUnresolved));
                             }
                         }                        

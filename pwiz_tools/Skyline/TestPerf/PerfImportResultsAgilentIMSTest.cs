@@ -96,6 +96,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             Stopwatch loadStopwatch = new Stopwatch();
             loadStopwatch.Start();
             var manageResults = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);
+            var doc = SkylineWindow.Document;
             RunUI(() =>
             {
                 // Just reload the CE22 stuff, using the RT info from the MS1 scan
@@ -103,6 +104,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 manageResults.ReimportResults();
                 manageResults.OkDialog();
             });
+            WaitForDocumentChange(doc);
             WaitForCondition(waitTimeMillis, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
             loadStopwatch.Stop();
 

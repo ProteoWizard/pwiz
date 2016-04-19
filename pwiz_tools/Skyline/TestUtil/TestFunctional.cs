@@ -625,6 +625,26 @@ namespace pwiz.SkylineTestUtil
             WaitForConditionUI(WAIT_TIME, () => !SkylineWindow.IsGraphUpdatePending, null, true, false);
         }
 
+        private static void WaitForBackgroundLoaders()
+        {
+            if (!WaitForCondition(WAIT_TIME, () => !SkylineWindow.BackgroundLoaders.Any(bgl => bgl.AnyProcessing()), null, false))
+            {
+                var activeLoaders = new List<string>();
+                foreach (var loader in SkylineWindow.BackgroundLoaders)
+                {
+                    if (loader.AnyProcessing())
+                    {
+                        activeLoaders.Add(loader.GetType().FullName);
+                    }
+                }
+                if (activeLoaders.Any())
+                {
+                    activeLoaders.Add("Open forms: " + GetOpenFormsString()); // Not L10N
+                    Assert.Fail("One or more background loaders did not exit properly: " + TextUtil.LineSeparate(activeLoaders)); // Not L10N
+                }
+            }
+        }
+
         // Pause a test so we can play with the UI manually.
         public static void PauseTest(string description = null)
         {
@@ -886,7 +906,8 @@ namespace pwiz.SkylineTestUtil
                 var docNew = new SrmDocument(SrmSettingsList.GetDefault());
                 RunUI(() => SkylineWindow.SwitchDocument(docNew, null));
                 WaitForGraphs(false);
-
+                // Wait for any background loaders to notice the change and stop what they're doing
+                WaitForBackgroundLoaders();
                 // Restore minimal View to close dock windows.
                 RestoreMinimalView();
 
@@ -951,7 +972,7 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        
+
         /// <summary>
         /// Restore minimal view layout in order to close extra windows. 
         /// </summary>

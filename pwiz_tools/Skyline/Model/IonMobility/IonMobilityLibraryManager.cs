@@ -39,6 +39,15 @@ namespace pwiz.Skyline.Model.IonMobility
         private readonly Dictionary<string, IonMobilityLibrary> _loadedIonMobilityeLibraries =
             new Dictionary<string, IonMobilityLibrary>();
 
+        // For use on container shutdown, clear caches to restore minimal memory footprint
+        public override void ClearCache()
+        {
+            lock (_loadedIonMobilityeLibraries)
+            {
+                _loadedIonMobilityeLibraries.Clear();
+            }
+        }
+
         protected override bool StateChanged(SrmDocument document, SrmDocument previous)
         {
             return !ReferenceEquals(GetIonMobilityLibrary(document), GetIonMobilityLibrary(previous));

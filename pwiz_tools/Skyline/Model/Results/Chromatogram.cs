@@ -52,6 +52,10 @@ namespace pwiz.Skyline.Model.Results
             return !ReferenceEquals(document.Settings.MeasuredResults, previous.Settings.MeasuredResults);
         }
 
+        public override void ClearCache()
+        {
+        }
+
         protected override string IsNotLoadedExplained(SrmDocument document)
         {
             SrmSettings settings = document.Settings;
