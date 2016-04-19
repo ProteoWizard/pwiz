@@ -48,7 +48,7 @@ namespace pwiz.SkylineTestTutorial
             //IsPauseForScreenShots = true;
             TestFilesZipPaths = new[]
             {
-                @"http://www.srmcourse.ch/tutorials2014/USB.zip",
+                @"http://targetedproteomics.ethz.ch/tutorials2014/USB.zip",
                 @"TestTutorial\SRMViews.zip"
             };
             RunFunctionalTest();
@@ -68,7 +68,7 @@ namespace pwiz.SkylineTestTutorial
 
         protected override void DoTest()
         {
-            LinkPdf = "http://www.srmcourse.ch/tutorials2014/Tutorial-1_Settings.pdf";
+            LinkPdf = "http://targetedproteomics.ethz.ch/tutorials2014/Tutorial-1_Settings.pdf";
 
             //Tutorial 1
             string fastaFile = GetTestPath("Tutorial-1_Settings/TubercuList_v2-6.fasta.txt");
@@ -206,7 +206,7 @@ namespace pwiz.SkylineTestTutorial
 
 
             //Tutorial 2
-            LinkPdf = "http://www.srmcourse.ch/tutorials2014/Tutorial-2_TransitionList.pdf";
+            LinkPdf = "http://targetedproteomics.ethz.ch//tutorials2014/Tutorial-2_TransitionList.pdf";
 
             RunUI(() => { });
             SetExcelFileClipboardText(GetTestPath(@"Tutorial-2_TransitionList\\target_peptides.xlsx"), "Sheet1", 1,
@@ -294,7 +294,7 @@ namespace pwiz.SkylineTestTutorial
             WaitForClosedForm(exportDlg2);
 
             //Tutorial 4-A
-            LinkPdf = "http://www.srmcourse.ch/tutorials2014/Tutorial-4_Parameters.pdf";
+            LinkPdf = "http://targetedproteomics.ethz.ch/tutorials2014/Tutorial-4_Parameters.pdf";
 
             SrmDocument smallDocument = SkylineWindow.Document;
             PeptideGroupDocNode[] newProteins = smallDocument.PeptideGroups.Take(0).ToArray();
