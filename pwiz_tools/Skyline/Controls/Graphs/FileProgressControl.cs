@@ -133,7 +133,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     if (Error == null)
                     {
-                        Error = string.Format("At {0}:\n{1}\n", DateTime.Now.ToShortTimeString(),
+                        Error = string.Format(Resources.FileProgressControl_SetStatus_, DateTime.Now.ToShortTimeString(),
                             ExceptionUtil.GetMessage(status.ErrorException));
                         _errorCount++;
                         if (_errorLog.Count == 3)
@@ -231,7 +231,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             sb.AppendLine().AppendLine();
             if (_errorCount > 3)
-                sb.AppendLine("...");
+                sb.AppendLine("..."); // Not L10N
             return sb.ToString();
         }
 

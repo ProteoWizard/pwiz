@@ -536,7 +536,7 @@ namespace pwiz.Skyline
                 {
                     NoAllChromatogramsGraph = true;
                 }
-                else if (IsNameValue(pair, "log-file"))
+                else if (IsNameValue(pair, "log-file")) // Not L10N
                 {
                     LogFile = pair.Value;
                 }
@@ -555,7 +555,7 @@ namespace pwiz.Skyline
                     }
                     Directory.SetCurrentDirectory(pair.Value);
                 }
-                else if (IsNameValue(pair, "import-threads"))
+                else if (IsNameValue(pair, "import-threads")) // Not L10N
                 {
                     ImportThreads = int.Parse(pair.Value);
                 }

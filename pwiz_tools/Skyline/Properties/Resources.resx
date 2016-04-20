@@ -9002,4 +9002,10 @@ Supported values include:
 Here are the last 3 errors:
 </value>
   </data>
+  <data name="FileProgressControl_SetStatus_" xml:space="preserve">
+    <value>At {0}:
+{1}
+</value>
+    <comment>used for user-facing error messages when importing results</comment>
+  </data>
 </root>
