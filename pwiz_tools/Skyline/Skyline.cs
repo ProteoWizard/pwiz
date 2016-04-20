@@ -133,7 +133,7 @@ namespace pwiz.Skyline
             _graphSpectrumSettings = new GraphSpectrumSettings(UpdateSpectrumGraph);
 
             _listProgress = new List<IProgressStatus>();
-            _timerProgress = new Timer { Interval = 750 };
+            _timerProgress = new Timer { Interval = 100 };
             _timerProgress.Tick += UpdateProgressUI;
             _timerGraphs = new Timer { Interval = 100 };
             _timerGraphs.Tick += UpdateGraphPanes;
@@ -4352,16 +4352,6 @@ namespace pwiz.Skyline
             }
             while (!SetListProgress(listNew, listOriginal));
 
-            if (final)
-            {
-                _removeStatusAlarms.Run(this, 500, status, () => RemoveProgress(status));
-
-                // Import progress needs to know about this status immediately.  It might be gone by
-                // the time the update progress interval comes around next time.
-                if (ImportingResultsWindow != null && status is MultiProgressStatus)
-                    RunUIAction(() => UpdateImportProgress(status as MultiProgressStatus));
-            }
-
             // If the status is first in the queue and it is beginning, initialize
             // the progress UI.
             bool begin = status.IsBegin || (!final && !_timerProgress.Enabled);
@@ -4373,6 +4363,13 @@ namespace pwiz.Skyline
             // make sure user sees the change.
             else if (final)
             {
+                // Import progress needs to know about this status immediately.  It might be gone by
+                // the time the update progress interval comes around next time.
+                if (ImportingResultsWindow != null && status is MultiProgressStatus)
+                    RunUIAction(() => UpdateImportProgress(status as MultiProgressStatus));
+
+                RemoveProgress(status);
+
                 // Only wait for an error, since it is expected that e
                 // may be modified by return of this function call
                 if (status.IsError)
