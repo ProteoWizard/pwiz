@@ -1355,19 +1355,29 @@ namespace pwiz.SkylineTestTutorial
         private void SimpleGroupComparisons()
         {
             const string comparisonName = "Healthy v. Diseased";
+            const string controlAnnoation = "Condition";
+            const string controlValue = "Healthy";
+            const string caseValue = "Diseased";
+            const string idendityAnnotation = "SubjectId";
+
+            var docBeforeComparison = SkylineWindow.Document;
             var documentSettingsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
             RunUI(() => documentSettingsDlg.GetTabControl().SelectedIndex = 1);
             var editGroupComparisonDlg = ShowDialog <EditGroupComparisonDlg>(documentSettingsDlg.AddGroupComparison);
             RunUI(() =>
             {
                 editGroupComparisonDlg.TextBoxName.Text = comparisonName;
-                editGroupComparisonDlg.ComboControlAnnotation.SelectedItem = "Condition";
+                Assert.IsTrue(editGroupComparisonDlg.ComboControlAnnotation.Items.Contains(controlAnnoation));
+                editGroupComparisonDlg.ComboControlAnnotation.SelectedItem = controlAnnoation;
             });
+            WaitForConditionUI(2000, () => editGroupComparisonDlg.ComboControlValue.Items.Contains(controlValue));
             RunUI(() =>
             {
-                editGroupComparisonDlg.ComboControlValue.SelectedItem = "Healthy";
-                editGroupComparisonDlg.ComboCaseValue.SelectedItem = "Diseased";
-                editGroupComparisonDlg.ComboIdentityAnnotation.SelectedItem = "SubjectId";
+                editGroupComparisonDlg.ComboControlValue.SelectedItem = controlValue;
+                editGroupComparisonDlg.ComboCaseValue.SelectedItem = caseValue;
+                Assert.IsTrue(editGroupComparisonDlg.ComboCaseValue.Items.Contains(caseValue));
+                editGroupComparisonDlg.ComboIdentityAnnotation.SelectedItem = idendityAnnotation;
+                Assert.IsTrue(editGroupComparisonDlg.ComboIdentityAnnotation.Items.Contains(idendityAnnotation));
                 editGroupComparisonDlg.ComboNormalizationMethod.SelectedItem = NormalizationMethod.GLOBAL_STANDARDS;
                 editGroupComparisonDlg.TextBoxConfidenceLevel.Text = 99.ToString(CultureInfo.CurrentCulture);
                 editGroupComparisonDlg.RadioScopePerProtein.Checked = true;
@@ -1376,6 +1386,15 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(editGroupComparisonDlg, editGroupComparisonDlg.OkDialog);
             PauseForScreenShot<DocumentSettingsDlg>("Document Settings", 65);
             OkDialog(documentSettingsDlg, documentSettingsDlg.OkDialog);
+            var docAfterComparison = WaitForDocumentChange(docBeforeComparison);
+            var groupComparisonDefs = docAfterComparison.Settings.DataSettings.GroupComparisonDefs;
+            Assert.AreEqual(1, groupComparisonDefs.Count);
+            var groupComparison = groupComparisonDefs[0];
+            Assert.AreEqual(comparisonName, groupComparison.Name);
+            Assert.AreEqual(controlAnnoation, groupComparison.ControlAnnotation);
+            Assert.AreEqual(controlValue, groupComparison.ControlValue);
+            Assert.AreEqual(caseValue, groupComparison.CaseValue);
+            Assert.AreEqual(idendityAnnotation, groupComparison.IdentityAnnotation);
             RunUI(() => SkylineWindow.ShowGroupComparisonWindow(comparisonName));
             var foldChangeGrid = FindOpenForm<FoldChangeGrid>();
             WaitForConditionUI(() => foldChangeGrid.DataboundGridControl.IsComplete &&
@@ -1472,7 +1491,13 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot<FoldChangeGrid>("Healthy v. Diseased:Grid", 69);
             var messageDlg = ShowDialog<MultiButtonMsgDlg>(foldChangeGrid.FoldChangeBindingSource.ViewContext.Delete);
             PauseForScreenShot<MultiButtonMsgDlg>("Are you sure you want to delete...", 69);
+            var docBefore = SkylineWindow.Document;
             OkDialog(messageDlg, messageDlg.BtnYesClick);
+            WaitForDocumentChange(docBefore);   // Avoid tearing down the test before the deletion is complete
+
+            OkDialog(settingsForm, () => settingsForm.Close());
+            OkDialog(foldChangeGrid, () => foldChangeGrid.Close());
+            OkDialog(foldChangeGraph, () => foldChangeGraph.Close());
         }
 
         private static void TestApplyToAll()

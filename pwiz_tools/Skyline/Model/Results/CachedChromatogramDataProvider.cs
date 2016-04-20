@@ -50,13 +50,15 @@ namespace pwiz.Skyline.Model.Results
                                               MsDataFileUri dataFilePath,
                                               ChromFileInfo fileInfo,
                                               bool? singleMatchMz,
-                                              ProgressStatus status,
+                                              IProgressStatus status,
                                               int startPercent,
                                               int endPercent,
                                               ILoadMonitor loader)
             : base(fileInfo, status, startPercent, endPercent, loader)
         {
-            _cache = cache;
+            // Need a newly loaded copy to allow for concurrent loading for multiple cached files
+            _cache = ChromatogramCache.Load(cache.CachePath, new ProgressStatus(), loader);
+
             _fileIndex = cache.CachedFiles.IndexOf(f => Equals(f.FilePath, dataFilePath));
             _chromKeyIndices = cache.GetChromKeys(dataFilePath).OrderBy(v => v.LocationPoints).ToArray();
             _cache.GetStatusDimensions(dataFilePath, out _maxRetentionTime, out _maxIntensity);
@@ -104,9 +106,9 @@ namespace pwiz.Skyline.Model.Results
             extra = new ChromExtra(chromKeyIndices.StatusId, chromKeyIndices.StatusRank);
 
             // Display in AllChromatogramsGraph
-            if (chromKeyIndices.Key.Precursor != 0)
+            if (chromKeyIndices.Key.Precursor != 0 && Status is ChromatogramLoadingStatus)
             {
-                LoadingStatus.Transitions.AddTransition(
+                ((ChromatogramLoadingStatus)Status).Transitions.AddTransition(
                     modifiedSequence,
                     peptideColor,
                     chromKeyIndices.StatusId,

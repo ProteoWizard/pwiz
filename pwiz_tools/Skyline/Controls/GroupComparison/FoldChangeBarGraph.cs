@@ -82,7 +82,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         protected override void OnHandleDestroyed(EventArgs e)
         {
-            if (_skylineWindow != null)
+            if (_skylineWindow != null && _skylineWindow.SequenceTree != null)
             {
                 _skylineWindow.SequenceTree.AfterSelect -= SequenceTreeOnAfterSelect;
                 _skylineWindow = null;

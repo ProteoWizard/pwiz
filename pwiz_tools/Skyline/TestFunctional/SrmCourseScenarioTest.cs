@@ -85,7 +85,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Check changed result state
             const int pepStandardCount = 13, tranStandardCount = 34;
-            document = SkylineWindow.Document;
+            document = WaitForDocumentChange(document);
             AssertEx.IsDocumentState(document, null, protCount, pepCount, pepCount*2, tranCount*2);
             int[] missingHeavy = {1, 1, 2, 2};
             for (int i = 0; i < EXPECTED_REPLICATES.Length; i++)
@@ -141,12 +141,11 @@ namespace pwiz.SkylineTestFunctional
             var manageResults = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);
             var rescoreResultsDlg = ShowDialog<RescoreResultsDlg>(manageResults.Rescore);
             RunUI(() => rescoreResultsDlg.Rescore(false));
-            WaitForCondition(5 * 60 * 1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);    // 5 minutes
             WaitForClosedForm(rescoreResultsDlg);
             WaitForClosedForm(manageResults);
-            WaitForConditionUI(() => FindOpenForm<AllChromatogramsGraph>() == null);
+            var documentRescore = WaitForDocumentChangeLoaded(document, 5 * 60 * 1000);    // 5 minutes
+            WaitForClosedForm<AllChromatogramsGraph>();
 
-            var documentRescore = SkylineWindow.Document;
             VerifyUserSets(documentRescore, matchedUserSetGroups, matchedUserSetTrans);
 
             // Test corrected scoring model
@@ -173,7 +172,8 @@ namespace pwiz.SkylineTestFunctional
                 });
                 OkDialog(reintegrateDlg, reintegrateDlg.OkDialog);
             }
-            documentRescore = WaitForDocumentChange(documentRescore);
+            WaitForClosedForm<AllChromatogramsGraph>();
+            documentRescore = WaitForDocumentChangeLoaded(documentRescore);
 
             matchedUserSetGroups = new[]
             {

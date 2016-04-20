@@ -17,10 +17,14 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -32,24 +36,33 @@ namespace pwiz.Skyline.Controls.Graphs
     /// </summary>
     public partial class AllChromatogramsGraph : FormEx
     {
-        private MsDataFileUri _currentFilePath;
-        private readonly int _adjustLayoutForMultifile;
         private readonly Stopwatch _stopwatch;
+        private int _selected = -1;
+        private bool _selectionIsSticky;
+        private readonly int _multiFileWindowWidth;
+        private readonly List<MsDataFileUri> _partialProgressList = new List<MsDataFileUri>();
+        private readonly Timer _timer;
+        private DateTime _retryTime;
+        private int _nextRetry;
+        private ImportResultsRetryCountdownDlg _retryDlg;
+
+        private const int RETRY_INTERVAL = 10;
+        private const int RETRY_COUNTDOWN = 30;
 
         //private static readonly Log LOG = new Log<AllChromatogramsGraph>();
 
         public AllChromatogramsGraph()
         {
             InitializeComponent();
+            toolStrip1.Renderer = new CustomToolStripProfessionalRenderer();
 
             // Keep VS designer from crashing.
             if (Program.MainWindow == null)
                 return;
 
             Icon = Resources.Skyline;
-            lblFileName.Text = string.Empty;
-            lblFileCount.Text = string.Empty;
-            
+            _multiFileWindowWidth = Size.Width;
+
             // Restore window placement.
             if (Program.DemoMode)
             {
@@ -70,45 +83,224 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
             Move += WindowMove;
-            FormClosing += AllChromatogramsGraph_FormClosing;
 
-            // Assume just one file.
-            panelMultifileProgress.Visible = false;
-            _adjustLayoutForMultifile = panelMultifileProgress.Top - panelFileProgress.Top;
-            panelFileProgress.Top = panelMultifileProgress.Top;
-            panelGraph.Height += _adjustLayoutForMultifile;
-            btnCancelFile.Visible = false;
+            flowFileStatus.Controls.Clear();    // Remove designer controls.
+
+            btnAutoCloseWindow.Image = imageListPushPin.Images[Settings.Default.ImportResultsAutoCloseWindow ? 1 : 0];
+            btnAutoScaleGraphs.Image = imageListLock.Images[Settings.Default.ImportResultsAutoScaleGraph ? 1 : 0];
 
             _stopwatch = new Stopwatch();
             _stopwatch.Start();
+            _retryTime = DateTime.MaxValue;
+            _timer = new Timer {Interval = 1000};
+            _timer.Tick += _timer_Tick;
+            _timer.Start();
         }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            _timer.Dispose();
+        }
+
+        private void _timer_Tick(object sender, EventArgs e)
+        {
+            // Update timer and overall progress bar.
+            lblDuration.Text = _stopwatch.Elapsed.ToString(@"hh\:mm\:ss"); // Not L10N
+
+            // Determine if we should automatically retry any failed file.
+            if (_retryTime <= DateTime.Now)
+            {
+                _retryTime = DateTime.MaxValue;
+                _retryDlg = new ImportResultsRetryCountdownDlg(RETRY_COUNTDOWN, 
+                    () =>
+                    {
+                        for (int i = 0; i < flowFileStatus.Controls.Count; i++)
+                        {
+                            var control = (FileProgressControl) flowFileStatus.Controls[_nextRetry];
+                            if (++_nextRetry == flowFileStatus.Controls.Count)
+                                _nextRetry = 0;
+                            if (control.Error != null)
+                            {
+                                ChromatogramManager.RemoveFile(control.FilePath);
+                                Retry(control.Status);
+                                break;
+                            }
+                        }
+                        _retryDlg.Dispose();
+                    },
+                    () =>
+                    {
+                        _stopwatch.Stop();
+                        _timer.Stop();
+                        _retryDlg.Dispose();
+                    });
+                _retryDlg.ShowDialog(this);
+            }
+        }
+
+        public ChromatogramManager ChromatogramManager { get; set; }
 
         public bool Canceled { get; private set; }
 
-        // AllChromatogramsGraph still has work to do processing chromatogram data
-        // even after the user closes the window, so we just hide the window instead
-        // of actually closing it.
-        private void AllChromatogramsGraph_FormClosing(object sender, FormClosingEventArgs e)
+        public string Error { get { return textBoxError.Text; } }
+
+        public FileProgressControl SelectedControl 
+        { 
+            get
+            {
+                return _selected >= 0 && _selected < flowFileStatus.Controls.Count
+                    ? (FileProgressControl) flowFileStatus.Controls[_selected]
+                    : null;
+            }
+        }
+
+        public int Selected
         {
-            e.Cancel = true;
-            Hide();
+            get { return _selected; }
+            set
+            {
+                if (_selected != value)
+                {
+                    SetSelectedControl(false);
+                    _selected = value;
+                    SetSelectedControl(true);
+                    RefreshSelectedControl();
+                }
+            }
+        }
+
+        private void SetSelectedControl(bool selected)
+        {
+            if (SelectedControl != null)
+                SelectedControl.Selected = selected;
+        }
+
+        private void RefreshSelectedControl()
+        {
+            if (SelectedControl == null)
+                return;
+            flowFileStatus.AutoScroll = true;
+            flowFileStatus.ScrollControlIntoView(SelectedControl);
+            SelectedControl.Invalidate();
+            graphChromatograms.IsCanceled = SelectedControl.IsCanceled;
+            if (SelectedControl.Error != null)
+            {
+                textBoxError.Text = SelectedControl.GetErrorLog(cbMoreInfo.Checked);
+                ShowControl(panelError);
+            }
+            else if (SelectedControl.Progress == 0)
+            {
+                labelFileName.Text = Path.GetFileNameWithoutExtension(SelectedControl.FilePath.GetFilePath());
+                ShowControl(labelFileName);
+            }
+            else
+            {
+                graphChromatograms.Key = SelectedControl.FilePath.GetFilePath();
+                ShowControl(graphChromatograms);
+            }
+        }
+
+        public IEnumerable<FileStatus> Files
+        {
+            get
+            {
+                foreach (FileProgressControl control in flowFileStatus.Controls)
+                {
+                    yield return new FileStatus
+                    {
+                        FilePath = control.FilePath,
+                        Error = control.Error
+                    };
+                }
+            }
+        }
+
+        public class FileStatus
+        {
+            public MsDataFileUri FilePath { get; set; }
+            public string Error { get; set; }
+        }
+
+        public void RetryImport(int index)
+        {
+            Retry(((FileProgressControl) flowFileStatus.Controls[index]).Status);
+        }
+
+        public bool IsComplete(int index)
+        {
+            return ((FileProgressControl) flowFileStatus.Controls[index]).Status.IsComplete;
+        }
+
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            switch (keyData)
+            {
+                case Keys.Up:
+                    if (Selected > 0)
+                        Selected--;
+                    break;
+                    
+                case Keys.Down:
+                    if (Selected < flowFileStatus.Controls.Count - 1)
+                        Selected++;
+                    break;
+
+                default:
+                    return base.ProcessCmdKey(ref msg, keyData);
+            }
+
+            return true;
         }
 
         /// <summary>
-        /// Prepare to close this window for real (instead of just hiding it).
+        /// Show final results of import before closing window.
         /// </summary>
         public void Finish()
         {
-            asyncGraph.Finish();
-            FormClosing -= AllChromatogramsGraph_FormClosing;
+            // During retry interval, don't change anything.
+            if (_retryTime < DateTime.MaxValue)
+                return;
 
-            // FOR PERFORMANCE TESTING:
-//            _stopwatch.Stop();
-//            if (Program.MainWindow != null && Program.MainWindow.DocumentFilePath != null)
-//            {
-//                File.WriteAllText(Path.ChangeExtension(Program.MainWindow.DocumentFilePath, ".txt"),
-//                    _stopwatch.Elapsed.TotalSeconds.ToString("N0"));
-//            }
+            _partialProgressList.Clear();
+
+            // Finish all files and remove from status.
+            bool hadErrors = false;
+            if (Settings.Default.ImportResultsDoAutoRetry)
+            {
+                foreach (FileProgressControl control in flowFileStatus.Controls)
+                {
+                    control.Finish();
+                    if (control.Error != null)
+                        hadErrors = true;
+                }
+            }
+
+            if (hadErrors)
+            {
+                _retryTime = DateTime.Now + TimeSpan.FromSeconds(RETRY_INTERVAL);
+            }
+            else
+            {
+                _stopwatch.Stop();
+                _timer.Stop();
+            }
+
+            progressBarTotal.Visible = false;
+            btnCancel.Visible = false;
+            btnHide.Text = Resources.AllChromatogramsGraph_Finish_Close;
+        }
+
+        public bool HasErrors
+        {
+            get
+            {
+                foreach (FileProgressControl control in flowFileStatus.Controls)
+                {
+                    if (control.Error != null)
+                        return true;
+                }
+                return false;
+            }
         }
 
         private void WindowMove(object sender, EventArgs e)
@@ -121,89 +313,311 @@ namespace pwiz.Skyline.Controls.Graphs
         /// Display chromatogram data. 
         /// </summary>
         /// <param name="status"></param>
-        public void UpdateStatus(ChromatogramLoadingStatus status)
+        public void UpdateStatus(MultiProgressStatus status)
         {
-            // Update progress bars and progress labels.
-            var fileCount = Math.Max(1, status.SegmentCount - 1);
-
-            // Update file label.
-            if (status.Segment == status.SegmentCount-1)
-            {
-                lblFileName.Visible = false;
-                progressBarFile.Visible = false;
-                lblFileCount.Text = Resources.AllChromatogramsGraph_UpdateStatus_Joining_chromatograms___;
-            }
+            // Update overall progress bar.
+            if (_partialProgressList.Count == 0)
+                progressBarTotal.Value = status.PercentComplete;
             else
             {
-                progressBarFile.Value = status.ZoomedPercentComplete;
-
-                // Clear graph when a new file starts loading.
-                if (null != status.FilePath && _currentFilePath != status.FilePath)
+                int percentComplete = 0;
+                foreach (var path in _partialProgressList)
                 {
-                    _currentFilePath = status.FilePath;
-//                    LOG.Info("Showing " + _currentFilePath);    // Not L10N
-                    lblFileName.Text = status.FilePath.GetFileName() + status.FilePath.GetSampleName();
-                    asyncGraph.ClearGraph(status);
+                    var matchingStatus = FindStatus(status, path);
+                    if (matchingStatus != null)
+                    {
+                        percentComplete += matchingStatus.IsFinal ? 100 : matchingStatus.PercentComplete;
+                    }
                 }
-
-                lblFileCount.Text = string.Format(Resources.AllChromatogramsGraph_UpdateStatus__0__of__1__files, status.Segment + 1, fileCount);
+                progressBarTotal.Value = percentComplete/_partialProgressList.Count;
             }
 
-            // Show multi-file progress bar if we have more than one file to import.
-            if (fileCount != 1)
+            // Add any new files.
+            AddProgressControls(status);
+
+            // Cancel missing files.
+            CancelMissingFiles(status);
+
+            if (Selected < 0)
+                Selected = 0;
+
+            // Update progress control for each file.
+            for (int i = 0; i < status.ProgressList.Count; i++)
             {
-                if (Visible && !panelMultifileProgress.Visible)
+                var loadingStatus = status.ProgressList[i];
+                graphChromatograms.UpdateStatus(loadingStatus);
+                var progressControl = FindProgressControl(loadingStatus.FilePath);
+                bool wasError = progressControl.Error != null;
+                progressControl.SetStatus(loadingStatus);
+                if (loadingStatus.IsError && !wasError)
                 {
-                    panelMultifileProgress.Visible = true;
-                    panelFileProgress.Top -= _adjustLayoutForMultifile;
-                    panelGraph.Height -= _adjustLayoutForMultifile;
-                    // TODO: uncomment this when single file cancellation works
-                    //btnCancelFile.Visible = true;
+                    if (!_selectionIsSticky)
+                    {
+                        _selectionIsSticky = true;
+                        Selected = i;
+                    }
+                    RemoveFailedFile(loadingStatus);
                 }
-                progressBarAllFiles.Value = status.PercentComplete;
             }
 
-            // Show warning message if necessary.
-            if (status.WarningMessage != null)
+            RefreshSelectedControl();
+
+            // Update status for a single file.
+            if (flowFileStatus.Controls.Count == 1)
             {
-                lblWarning.Text = status.WarningMessage;
-                lblWarning.Visible = true;
-                asyncGraph.Height = lblWarning.Top - 7;
-            }
-            else
-            {
-                lblWarning.Visible = false;
-                asyncGraph.Height = panelFileProgress.Top - 7;
+                Width = _multiFileWindowWidth - panelFileList.Width;
+                panelFileList.Visible = false;
+                btnAutoScaleGraphs.Visible = false;
+                if (status.ProgressList.Any())
+                {
+                    var loadingStatus = status.ProgressList[0];
+                    if (loadingStatus.IsCanceled)
+                        Cancel(loadingStatus);
+                }
+                return;
             }
 
-            lblDuration.Text = _stopwatch.Elapsed.ToString(@"hh\:mm\:ss"); // Not L10N
+            Width = _multiFileWindowWidth;
+            panelFileList.Visible = true;
+            btnAutoScaleGraphs.Visible = true;
+            graphChromatograms.ScaleIsLocked = !Settings.Default.ImportResultsAutoScaleGraph;
+
+            // If a file is successfully completed, automatically select another loading file.
+            if (!_selectionIsSticky && (SelectedControl == null || SelectedControl.Progress == 100))
+            {
+                for (int i = Selected + 1; i < flowFileStatus.Controls.Count; i++)
+                {
+                    var control = (FileProgressControl) flowFileStatus.Controls[i];
+                    if (!control.IsCanceled && control.Progress > 0 && control.Progress < 100)
+                        Selected = i;
+                }
+            }
+
+            if (!Finished)
+            {
+                btnCancel.Visible = true;
+                btnHide.Text = Resources.AllChromatogramsGraph_UpdateStatus_Hide;
+                progressBarTotal.Visible = true;
+                _stopwatch.Start();
+                _timer.Start();
+            }
         }
+
+        private void ShowControl(Control control)
+        {
+            panelError.Visible = ReferenceEquals(control, panelError);
+            labelFileName.Visible = ReferenceEquals(control, labelFileName);
+            graphChromatograms.Visible = ReferenceEquals(control, graphChromatograms);
+        }
+
+        private ChromatogramLoadingStatus FindStatus(MultiProgressStatus status, MsDataFileUri filePath)
+        {
+            foreach (ChromatogramLoadingStatus loadingStatus in status.ProgressList)
+            {
+                if (loadingStatus.FilePath.Equals(filePath))
+                {
+                    return loadingStatus;
+                }
+            }
+            return null;
+        }
+
+        private void AddProgressControls(MultiProgressStatus status)
+        {
+            // Match each file status with a progress control.
+            bool first = true;
+            foreach (var loadingStatus in status.ProgressList)
+            {
+                var filePath = loadingStatus.FilePath;
+                var progressControl = FindProgressControl(filePath);
+                if (progressControl != null)
+                    continue;
+
+                // Create a progress control for new file.
+                progressControl = new FileProgressControl
+                {
+                    Number = flowFileStatus.Controls.Count + 1,
+                    FilePath = filePath
+                };
+                progressControl.SetToolTip(toolTip1, filePath.GetFilePath());
+                int index = progressControl.Number - 1;
+                progressControl.ControlMouseDown += (sender, args) => { Selected = index; };
+                var thisLoadingStatus = loadingStatus;
+                progressControl.Retry += (sender, args) => Retry(thisLoadingStatus);
+                progressControl.Cancel += (sender, args) => Cancel(thisLoadingStatus);
+                progressControl.ShowGraph += (sender, args) => ShowGraph();
+                progressControl.ShowLog += (sender, args) => ShowLog();
+                flowFileStatus.Controls.Add(progressControl);
+                progressControl.BackColor = SystemColors.Control;
+                
+                if (first)
+                {
+                    first = false;
+                    progressControl.Selected = true;
+                }
+            }
+
+            foreach (FileProgressControl progressControl in flowFileStatus.Controls)
+            {
+                progressControl.Width = flowFileStatus.Width - 2 -
+                                        (flowFileStatus.VerticalScroll.Visible
+                                            ? SystemInformation.VerticalScrollBarWidth
+                                            : 0);
+            }
+        }
+
+        private void CancelMissingFiles(MultiProgressStatus status)
+        {
+            foreach (FileProgressControl progressControl in flowFileStatus.Controls)
+            {
+                if (!progressControl.IsComplete && !progressControl.IsCanceled)
+                {
+                    bool found = false;
+                    foreach (var loadingStatus in status.ProgressList)
+                    {
+                        if (progressControl.FilePath.Equals(loadingStatus.FilePath))
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found)
+                        progressControl.IsCanceled = true;
+                }
+            }
+        }
+
+        private FileProgressControl FindProgressControl(MsDataFileUri filePath)
+        {
+            foreach (FileProgressControl fileProgressControl in flowFileStatus.Controls)
+            {
+                if (fileProgressControl.FilePath.Equals(filePath))
+                    return fileProgressControl;
+            }
+            return null;
+        }
+
+        private void Retry(ChromatogramLoadingStatus status)
+        {
+            ChromatogramManager.RemoveFile(status.FilePath);
+            if (!_partialProgressList.Contains(status.FilePath))
+                _partialProgressList.Add(status.FilePath);
+            graphChromatograms.ClearGraph(status.FilePath);
+            for (int i = 0; i < flowFileStatus.Controls.Count; i++)
+            {
+                var control = (FileProgressControl) flowFileStatus.Controls[i];
+                if (control.FilePath.Equals(status.FilePath))
+                {
+                    control.Reset();
+                    Selected = i;
+                    break;
+                }
+            }
+
+            // Add this file back into the chromatogram set for each of its replicates.
+            ModifyDocument(Resources.AllChromatogramsGraph_Retry_Retry_import_results, monitor =>
+            {
+                Program.MainWindow.ModifyDocumentNoUndo(doc =>
+                    {
+                        var oldResults = doc.Settings.MeasuredResults ??
+                                         new MeasuredResults(new ChromatogramSet[0]);
+                        var newResults = oldResults.AddDataFile(status.FilePath, status.ReplicateNames);
+                        return doc.ChangeMeasuredResults(newResults, monitor);
+                    });
+            });
+        }
+
+        private void ModifyDocument(string message, Action<SrmSettingsChangeMonitor> modifyAction)
+        {
+            using (var longWaitDlg = new LongWaitDlg(Program.MainWindow)
+            {
+                Text = Text, // Same as dialog box
+                Message = message,
+                ProgressValue = 0
+            })
+            {
+                longWaitDlg.PerformWork(this, 800, progressMonitor =>
+                {
+                    using (var settingsChangeMonitor = new SrmSettingsChangeMonitor(progressMonitor, message, Program.MainWindow))
+                    {
+                        modifyAction(settingsChangeMonitor);
+                    }
+                });
+            }
+        }
+
+        private void Cancel(ChromatogramLoadingStatus status)
+        {
+            // Remove this file from document.
+            var canceledPath = status.FilePath;
+            ModifyDocument(Resources.AllChromatogramsGraph_Cancel_Cancel_file_import,
+                monitor => Program.MainWindow.ModifyDocumentNoUndo(
+                    doc => FilterFiles(doc, info => !info.FilePath.Equals(canceledPath))));
+        }
+
+        private void RemoveFailedFile(ChromatogramLoadingStatus status)
+        {
+            // Remove this file from document.
+            var canceledPath = status.FilePath;
+            ModifyDocument(Resources.AllChromatogramsGraph_RemoveFailedFile_Remove_failed_file,
+                monitor => Program.MainWindow.ModifyDocumentNoUndo(
+                    doc => FilterFiles(doc, info => !info.FilePath.Equals(canceledPath))));
+        }
+
+        private void ShowGraph()
+        {
+            ShowControl(graphChromatograms);
+        }
+
+        private void ShowLog()
+        {
+            ShowControl(panelError);
+        }
+
 
         // Close the window.
         private void btnClose_Click(object sender, EventArgs e)
         {
-            Hide();
+            ClickClose();
+        }
+
+        public void ClickClose()
+        {
+            if (Finished)
+                Program.MainWindow.DestroyAllChromatogramsGraph();
+            else
+                Hide();
+        }
+
+        public bool Finished
+        {
+            get
+            {
+                foreach (FileProgressControl control in flowFileStatus.Controls)
+                {
+                    if (!control.IsCanceled && control.Error == null && control.Progress < 100)
+                        return false;
+                }
+                return true;
+            }
         }
 
         // Cancel all uncached files.
         private void btnCancel_Click(object sender, EventArgs e)
         {
-            Canceled = true;
-            Hide();
+            ClickCancel();
+        }
+
+        public void ClickCancel()
+        {
+            graphChromatograms.IsCanceled = Canceled = true;
             Program.MainWindow.ModifyDocument(Resources.AllChromatogramsGraph_btnCancel_Click_Cancel_import,
-                                              doc => FilterFiles(doc, info => IsCachedFile(doc, info)));
+                doc => FilterFiles(doc, info => IsCachedFile(doc, info)));
         }
 
         private bool IsCachedFile(SrmDocument doc, ChromFileInfo info)
         {
             return doc.Settings.MeasuredResults.IsCachedFile(info.FilePath);
-        }
-
-        // Cancel one file.
-        private void btnCancelFile_Click(object sender, EventArgs e)
-        {
-            Program.MainWindow.ModifyDocument(Resources.AllChromatogramsGraph_btnCancelFile_Click_Cancel_file,
-                                              doc => FilterFiles(doc, info => !Equals(info.FilePath, _currentFilePath)));
         }
 
         /// <summary>
@@ -224,6 +638,60 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             return doc.ChangeMeasuredResults(measuredResultsNew);
+        }
+
+        private void btnAutoCloseWindow_Click(object sender, EventArgs e)
+        {
+            ClickAutoCloseWindow();
+        }
+
+        public void ClickAutoCloseWindow()
+        {
+            Settings.Default.ImportResultsAutoCloseWindow = !Settings.Default.ImportResultsAutoCloseWindow;
+            btnAutoCloseWindow.Image = imageListPushPin.Images[Settings.Default.ImportResultsAutoCloseWindow ? 1 : 0];
+        }
+
+        private void btnAutoScaleGraphs_Click(object sender, EventArgs e)
+        {
+            ClickAutoScaleGraphs();
+        }
+
+        public void ClickAutoScaleGraphs()
+        {
+            Settings.Default.ImportResultsAutoScaleGraph = !Settings.Default.ImportResultsAutoScaleGraph;
+            btnAutoScaleGraphs.Image = imageListLock.Images[Settings.Default.ImportResultsAutoScaleGraph ? 1 : 0];
+            graphChromatograms.ScaleIsLocked = !Settings.Default.ImportResultsAutoScaleGraph;
+        }
+
+        private void cbShowErrorDetails_CheckedChanged(object sender, EventArgs e)
+        {
+            textBoxError.Text = SelectedControl.GetErrorLog(cbMoreInfo.Checked);
+        }
+
+        private void btnCopyText_Click(object sender, EventArgs e)
+        {
+            ClipboardEx.SetText(SelectedControl.GetErrorLog(cbMoreInfo.Checked));
+        }
+    }
+
+    public class DisabledRichTextBox : RichTextBox
+    {
+        private const int WM_SETFOCUS = 0x07;
+        private const int WM_ENABLE = 0x0A;
+        private const int WM_SETCURSOR = 0x20;
+
+        protected override void WndProc(ref Message m)
+        {
+            if (!(m.Msg == WM_SETFOCUS || m.Msg == WM_ENABLE || m.Msg == WM_SETCURSOR))
+                base.WndProc(ref m);
+        }
+    }
+
+    class CustomToolStripProfessionalRenderer : ToolStripProfessionalRenderer
+    {
+        protected override void OnRenderToolStripBorder(ToolStripRenderEventArgs e)
+        {
+            // Don't draw a border
         }
     }
 }

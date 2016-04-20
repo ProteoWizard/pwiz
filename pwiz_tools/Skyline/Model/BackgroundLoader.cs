@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
@@ -30,6 +31,8 @@ namespace pwiz.Skyline.Model
 
         private readonly Dictionary<int, IDocumentContainer> _processing =
             new Dictionary<int, IDocumentContainer>();
+
+        protected bool IsMultiThreadAware { get; set; }
 
         public event EventHandler<ProgressUpdateEventArgs> ProgressUpdateEvent;
 
@@ -64,14 +67,17 @@ namespace pwiz.Skyline.Model
                     EndProcessing(document);
                 else
                 {
-                    int docIndex = document.Id.GlobalIndex;
-                    lock (_processing)
+                    if (!IsMultiThreadAware)
                     {
-                        // Keep track of the documents being processed, to avoid running
-                        // processing on the same document on multiple threads.
-                        if (_processing.ContainsKey(docIndex))
-                            return;
-                        _processing.Add(docIndex, container);
+                        int docIndex = document.Id.GlobalIndex;
+                        lock (_processing)
+                        {
+                            // Keep track of the documents being processed, to avoid running
+                            // processing on the same document on multiple threads.
+                            if (_processing.ContainsKey(docIndex))
+                                return;
+                            _processing.Add(docIndex, container);
+                        }
                     }
 
                     Action<IDocumentContainer, SrmDocument> loader = OnLoadBackground;
@@ -90,7 +96,10 @@ namespace pwiz.Skyline.Model
             foreach (var id in GetOpenStreams(previous))
             {
                 if (!set.Contains(id.GlobalIndex))
+                {
+                    // DebugLog.Info("{0}. {1} - {2}", id.GlobalIndex, id.GetType(), id.IsOpen ? "removed" : "checked");  // Not L10N
                     id.CloseStream();
+                }
             }
         }
 
@@ -103,6 +112,7 @@ namespace pwiz.Skyline.Model
             {
                 // Made on a new thread.
                 LocalizationHelper.InitThread(GetType().Name + " thread"); // Not L10N
+                Thread.CurrentThread.Priority = ThreadPriority.BelowNormal;
                 SrmDocument docCurrent = container.Document;
                 // If the document identity has changed, or the current document is loaded,
                 // then end the processing.
@@ -117,10 +127,13 @@ namespace pwiz.Skyline.Model
                 // Did the container change out its document while we were working?
                 EndProcessingNotInContainer(container);
 
-                // Force a document changed notification, since loading blocks them
-                // from triggering new processing, but new processing may have accumulated
-                if (!container.IsClosing)
-                    OnDocumentChanged(container, new DocumentChangedEventArgs(docCurrent));
+                if (!IsMultiThreadAware)
+                {
+                    // Force a document changed notification, since loading blocks them
+                    // from triggering new processing, but new processing may have accumulated
+                    if (!container.IsClosing)
+                        OnDocumentChanged(container, new DocumentChangedEventArgs(docCurrent));
+                }
             }
             catch (Exception exception)
             {
@@ -189,7 +202,7 @@ namespace pwiz.Skyline.Model
         protected abstract bool LoadBackground(IDocumentContainer container,
             SrmDocument document, SrmDocument docCurrent);
 
-        protected UpdateProgressResponse UpdateProgress(ProgressStatus status)
+        public UpdateProgressResponse UpdateProgress(IProgressStatus status)
         {
             if (ProgressUpdateEvent != null)
             {
@@ -219,8 +232,13 @@ namespace pwiz.Skyline.Model
         protected bool CompleteProcessing(IDocumentContainer container, SrmDocument docNew, SrmDocument docOriginal)
         {
             // Has docOriginal already been removed from the processing list?  If so, don't attempt an update.
-            if (IsProcessing(docOriginal) && !container.SetDocument(docNew, docOriginal))
-                return false;
+            // Unless the brackground loader handles its own thread safety, in which case the processing list
+            // is not used.
+            if (IsMultiThreadAware || IsProcessing(docOriginal))
+            {
+                if (!container.SetDocument(docNew, docOriginal))
+                    return false;
+            }
 
             EndProcessing(docOriginal);
             return true;
@@ -252,7 +270,11 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        protected class LoadMonitor : ILoadMonitor
+        public virtual void ResetProgress(SrmDocument document)
+        {            
+        }
+
+        public class LoadMonitor : ILoadMonitor
         {
             private readonly BackgroundLoader _manager;
             private readonly IDocumentContainer _container;
@@ -265,7 +287,11 @@ namespace pwiz.Skyline.Model
                 _tag = tag;
             }
 
-            public IStreamManager StreamManager
+            protected LoadMonitor()
+            {
+            }
+
+            public virtual IStreamManager StreamManager
             {
                 get { return _manager.StreamManager; }
             }
@@ -274,19 +300,21 @@ namespace pwiz.Skyline.Model
             /// Cancels loading, if the <see cref="SrmDocument"/> for which it is
             /// being loaded is found not to contain the library.
             /// </summary>
-            public bool IsCanceled
+            public virtual bool IsCanceled
             {
-                get
-                {
-                    return _manager.IsCanceled(_container, _tag);
-                }
+                get { return IsCanceledItem(_tag); }
+            }
+
+            protected bool IsCanceledItem(object tag)
+            {
+                return _manager.IsCanceled(_container, tag);
             }
 
             /// <summary>
             /// Updates progress reporting for this operation.
             /// </summary>
             /// <param name="status"></param>
-            public UpdateProgressResponse UpdateProgress(ProgressStatus status)
+            public virtual UpdateProgressResponse UpdateProgress(IProgressStatus status)
             {
                 return _manager.UpdateProgress(status);
             }
@@ -324,7 +352,7 @@ namespace pwiz.Skyline.Model
             get { return _monitor.IsCanceled; }
         }
 
-        public UpdateProgressResponse UpdateProgress(ProgressStatus status)
+        public UpdateProgressResponse UpdateProgress(IProgressStatus status)
         {
             return _monitor.UpdateProgress(status);
         }

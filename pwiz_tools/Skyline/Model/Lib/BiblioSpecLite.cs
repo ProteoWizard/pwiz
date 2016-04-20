@@ -409,7 +409,7 @@ namespace pwiz.Skyline.Model.Lib
         // ReSharper restore InconsistentNaming
         // ReSharper restore UnusedMember.Local
 
-        private bool CreateCache(ILoadMonitor loader, ProgressStatus status, int percent)
+        private bool CreateCache(ILoadMonitor loader, IProgressStatus status, int percent)
         {
             var sm = loader.StreamManager;
             EnsureConnections(sm);
@@ -683,7 +683,7 @@ namespace pwiz.Skyline.Model.Lib
             return false;
         }
 
-        private bool Load(ILoadMonitor loader, ProgressStatus status, bool cached)
+        private bool Load(ILoadMonitor loader, IProgressStatus status, bool cached)
         {
             try
             {
@@ -1366,7 +1366,7 @@ namespace pwiz.Skyline.Model.Lib
             using (var saver = new FileSaver(FilePath))
             {
                 var blibFilter = new BlibFilter();
-                var status = new ProgressStatus(Resources.BiblioSpecLiteLibrary_DeleteDataFiles_Removing_library_runs_from_document_library_);
+                IProgressStatus status = new ProgressStatus(Resources.BiblioSpecLiteLibrary_DeleteDataFiles_Removing_library_runs_from_document_library_);
                 if (!blibFilter.Filter(FilePathRedundant, saver.SafeName, monitor, ref status))
                     throw new IOException(string.Format(Resources.BiblioSpecLiteLibrary_DeleteDataFiles_Failed_attempting_to_filter_redundant_library__0__to__1_, FilePathRedundant, FilePath));
 

@@ -975,7 +975,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                                           IEnumerable<IRetentionTimeProvider> providers,
                                           int countProviders)
             {
-                var status = new ProgressStatus(Resources.LibraryGridViewDriver_ProcessRetentionTimes_Adding_retention_times);
+                IProgressStatus status = new ProgressStatus(Resources.LibraryGridViewDriver_ProcessRetentionTimes_Adding_retention_times);
                 var dictPeptideAverages = new Dictionary<string, IrtPeptideAverages>();
                 int runCount = 0;
                 int regressionLineCount = 0;

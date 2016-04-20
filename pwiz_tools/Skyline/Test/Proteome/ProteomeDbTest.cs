@@ -53,7 +53,7 @@ namespace pwiz.SkylineTest.Proteome
                 using (ProteomeDb proteomeDb = ProteomeDb.CreateProteomeDb(protDbPath))
                 {
                     Enzyme trypsin = EnzymeList.GetDefault();
-                    var status = new ProgressStatus(string.Empty);
+                    IProgressStatus status = new ProgressStatus(string.Empty);
                     using (var reader = new StreamReader(fastaPath))
                     {
                         proteomeDb.AddFastaFile(reader, new SilentProgressMonitor(), ref status, true); // Delay indexing
@@ -111,7 +111,7 @@ namespace pwiz.SkylineTest.Proteome
 
                     WebEnabledFastaImporter searcher = new WebEnabledFastaImporter(doActualWebAccess ? null :new WebEnabledFastaImporter.FakeWebSearchProvider());
                     bool searchComplete;
-                    var status = new ProgressStatus(string.Empty);
+                    IProgressStatus status = new ProgressStatus(string.Empty);
                     Assert.IsTrue(proteomeDb.LookupProteinMetadata(new SilentProgressMonitor(), ref status, searcher, false, out searchComplete)); // add any missing protein metadata
                     Assert.IsTrue(searchComplete);
 

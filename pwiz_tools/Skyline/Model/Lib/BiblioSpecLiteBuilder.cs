@@ -97,7 +97,7 @@ namespace pwiz.Skyline.Model.Lib
         public bool BuildLibrary(IProgressMonitor progress)
         {
             _ambiguousMatches = null;
-            ProgressStatus status = new ProgressStatus(Resources.BiblioSpecLiteBuilder_BuildLibrary_Preparing_to_build_library);
+            IProgressStatus status = new ProgressStatus(Resources.BiblioSpecLiteBuilder_BuildLibrary_Preparing_to_build_library);
             progress.UpdateProgress(status);
             if (InputFiles.Any(f => f.EndsWith(EXT_PILOT)))
             {

@@ -42,6 +42,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 SkylineWindow.OpenFile(TestFilesDir.GetTestPath("LiveReportsErrorTest.sky"));
             });
+            WaitForDocumentLoaded();
             TestDocumentGridErrors();
             TestFoldChangeGridErrors();
         }

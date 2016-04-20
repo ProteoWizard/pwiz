@@ -440,7 +440,6 @@ namespace pwiz.Skyline
 
             DestroyImmediateWindow();
             HideFindResults(true);
-            DestroyAllChromatogramsGraph();
             foreach (GraphChromatogram graphChrom in _listGraphChrom)
                 DestroyGraphChrom(graphChrom);
             _listGraphChrom.Clear();
@@ -455,13 +454,16 @@ namespace pwiz.Skyline
             EnsureFloatingWindowsVisible();
         }
 
-        private void DestroyAllChromatogramsGraph()
+        public void DestroyAllChromatogramsGraph()
         {
-            if (_allChromatogramsGraph != null)
+            _listProgress.Clear();
+            if (ImportingResultsWindow != null)
             {
-                _allChromatogramsGraph.Finish();
-                _allChromatogramsGraph.Close();
-                _allChromatogramsGraph = null;
+                ImportingResultsWindow.Close();
+                ImportingResultsWindow = null;
+
+                // Reset progress for the current document
+                _chromatogramManager.ResetProgress(Document);
             }
         }
 

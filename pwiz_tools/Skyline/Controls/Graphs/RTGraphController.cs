@@ -98,7 +98,7 @@ namespace pwiz.Skyline.Controls.Graphs
             get
             {
                 var regressionGraphPane = GraphSummary.GraphPanes.FirstOrDefault() as RTLinearRegressionGraphPane;
-                return (regressionGraphPane != null ? regressionGraphPane.RegressionRefined : null);
+                return (regressionGraphPane != null && regressionGraphPane.IsRefined ? regressionGraphPane.RegressionRefined : null);
             }
         }
 

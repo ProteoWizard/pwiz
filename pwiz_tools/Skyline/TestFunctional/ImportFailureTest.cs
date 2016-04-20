@@ -17,10 +17,9 @@
  * limitations under the License.
  */
 
-using System;
 using System.IO;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.SkylineTestUtil;
 
@@ -46,39 +45,65 @@ namespace pwiz.SkylineTestFunctional
             string succeeds2File = TestFilesDir.GetTestPath(SUCCEEDS2_FILE_NAME);
             string failsFile = TestFilesDir.GetTestPath(FAILS_FILE_NAME);
             File.Copy(succeedsFile, succeeds2File);
-            var docOriginal = WaitForDocumentLoaded();
+            var doc = WaitForDocumentLoaded();
 
-            // Cancel after failure
-            var docCancel = ImportFailure(docOriginal, dlg => dlg.BtnCancelClick(), FAILS_FILE_NAME, SUCCEEDS_FILE_NAME);
-            Assert.IsFalse(docCancel.Settings.HasResults);
-            
-            // Skip after failure
-            var docSkip = ImportFailure(docCancel, dlg => dlg.Btn1Click(), FAILS_FILE_NAME, SUCCEEDS_FILE_NAME);
-            Assert.IsTrue(docSkip.Settings.HasResults);
-            Assert.AreEqual(1, docSkip.Settings.MeasuredResults.Chromatograms.Count);
+            // Import one failing and one okay file.
+            doc = ImportFailure(doc, FAILS_FILE_NAME, SUCCEEDS_FILE_NAME);
+            Assert.IsTrue(doc.Settings.HasResults);
+            var files = SkylineWindow.ImportingResultsWindow.Files.ToArray();
+            Assert.AreEqual(failsFile, files[0].FilePath.GetFilePath());
+            Assert.IsNotNull(files[0].Error);
+            Assert.AreEqual(succeedsFile, files[1].FilePath.GetFilePath());
+            Assert.IsNull(files[1].Error);
+            Assert.AreEqual(1, doc.Settings.MeasuredResults.Chromatograms.Count);
             Assert.AreEqual(Path.GetFileNameWithoutExtension(SUCCEEDS_FILE_NAME),
-                docSkip.Settings.MeasuredResults.Chromatograms[0].Name);
+                doc.Settings.MeasuredResults.Chromatograms[0].Name);
+            RunUI(() => SkylineWindow.DestroyAllChromatogramsGraph());
 
-            // Retry after failure
-            ImportResultsAsync(FAILS_FILE_NAME, SUCCEEDS2_FILE_NAME);
-            var dlgImportFailed = WaitForOpenForm<MultiButtonMsgDlg>();
-            OkDialog(dlgImportFailed, () => dlgImportFailed.Btn0Click());
-            var dlgImportFailed2 = WaitForOpenForm<MultiButtonMsgDlg>();
-            var docBeforeSuccess = SkylineWindow.Document;
+            // Import another okay file, followed by failing file.
+            doc = ImportFailure(doc, SUCCEEDS2_FILE_NAME, FAILS_FILE_NAME);
+            files = SkylineWindow.ImportingResultsWindow.Files.ToArray();
+            Assert.AreEqual(succeeds2File, files[0].FilePath.GetFilePath());
+            Assert.IsNull(files[0].Error);
+            Assert.AreEqual(failsFile, files[1].FilePath.GetFilePath());
+            Assert.IsNotNull(files[1].Error);
+            Assert.AreEqual(2, doc.Settings.MeasuredResults.Chromatograms.Count);
+            Assert.AreEqual(Path.GetFileNameWithoutExtension(SUCCEEDS_FILE_NAME),
+                doc.Settings.MeasuredResults.Chromatograms[0].Name);
+            Assert.AreEqual(Path.GetFileNameWithoutExtension(SUCCEEDS2_FILE_NAME),
+                doc.Settings.MeasuredResults.Chromatograms[1].Name);
+
+            // Fix failure and retry.
             File.Copy(succeedsFile, failsFile, true);
-            RunUI(() => dlgImportFailed2.Btn0Click());
-            var docAfterSuccess = WaitForDocumentChangeLoaded(docBeforeSuccess);
-            Assert.AreEqual(3, docAfterSuccess.Settings.MeasuredResults.Chromatograms.Count);
+            RunUI(() => SkylineWindow.ImportingResultsWindow.ClickAutoCloseWindow());
+            RunUI(() => SkylineWindow.ImportingResultsWindow.RetryImport(1));
+            doc = WaitForDocumentChangeLoaded(doc); 
+            WaitForConditionUI(() => SkylineWindow.ImportingResultsWindow.IsComplete(1));
+            files = SkylineWindow.ImportingResultsWindow.Files.ToArray();
+            Assert.AreEqual(2, files.Length);
+            Assert.AreEqual(succeeds2File, files[0].FilePath.GetFilePath());
+            Assert.IsNull(files[0].Error);
+            Assert.AreEqual(failsFile, files[1].FilePath.GetFilePath());
+            Assert.IsNull(files[1].Error);
+
+            Assert.AreEqual(3, doc.Settings.MeasuredResults.Chromatograms.Count);
+            Assert.AreEqual(Path.GetFileNameWithoutExtension(SUCCEEDS_FILE_NAME),
+                doc.Settings.MeasuredResults.Chromatograms[0].Name);
+            Assert.AreEqual(Path.GetFileNameWithoutExtension(SUCCEEDS2_FILE_NAME),
+                doc.Settings.MeasuredResults.Chromatograms[1].Name);
             Assert.AreEqual(Path.GetFileNameWithoutExtension(FAILS_FILE_NAME),
-                docAfterSuccess.Settings.MeasuredResults.Chromatograms[1].Name);
+                doc.Settings.MeasuredResults.Chromatograms[2].Name);
+
+            RunUI(() => SkylineWindow.DestroyAllChromatogramsGraph());
         }
 
-        private SrmDocument ImportFailure(SrmDocument doc, Action<MultiButtonMsgDlg> act, params string[] dataFiles)
+        private SrmDocument ImportFailure(SrmDocument doc, params string[] dataFiles)
         {
+            // Keep import progress window open after failure.
             ImportResultsAsync(dataFiles);
-            var dlgImportFailed = WaitForOpenForm<MultiButtonMsgDlg>();
-            RunUI(() => act(dlgImportFailed));
-            return WaitForDocumentChangeLoaded(doc);
+            doc = WaitForDocumentChangeLoaded(doc);
+            WaitForConditionUI(() => SkylineWindow.ImportingResultsWindow.Finished);
+            return doc;
         }
     }
 }

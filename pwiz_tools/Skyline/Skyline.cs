@@ -64,6 +64,8 @@ using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using MultiException = pwiz.Skyline.Model.MultiException;
+using MultiProgressStatus = pwiz.Skyline.Model.MultiProgressStatus;
 using PasteFormat = pwiz.Skyline.EditUI.PasteFormat;
 using Peptide = pwiz.Skyline.Model.Peptide;
 using Timer = System.Windows.Forms.Timer;
@@ -102,12 +104,11 @@ namespace pwiz.Skyline
         private readonly LibraryManager _libraryManager;
         private readonly LibraryBuildNotificationHandler _libraryBuildNotificationHandler;
         private readonly ChromatogramManager _chromatogramManager;
-        private AllChromatogramsGraph _allChromatogramsGraph;
 
         public event EventHandler<DocumentChangedEventArgs> DocumentChangedEvent;
         public event EventHandler<DocumentChangedEventArgs> DocumentUIChangedEvent;
 
-        private List<ProgressStatus> _listProgress;
+        private List<IProgressStatus> _listProgress;
         private readonly TaskbarProgress _taskbarProgress = new TaskbarProgress();
         private readonly Timer _timerProgress;
         private readonly Timer _timerGraphs;
@@ -131,7 +132,7 @@ namespace pwiz.Skyline
 
             _graphSpectrumSettings = new GraphSpectrumSettings(UpdateSpectrumGraph);
 
-            _listProgress = new List<ProgressStatus>();
+            _listProgress = new List<IProgressStatus>();
             _timerProgress = new Timer { Interval = 750 };
             _timerProgress.Tick += UpdateProgressUI;
             _timerGraphs = new Timer { Interval = 100 };
@@ -145,7 +146,7 @@ namespace pwiz.Skyline
             _backgroundProteomeManager = new BackgroundProteomeManager();
             _backgroundProteomeManager.ProgressUpdateEvent += UpdateProgress;
             _backgroundProteomeManager.Register(this);
-            _chromatogramManager = new ChromatogramManager { SupportAllGraphs = !Program.NoAllChromatogramsGraph };
+            _chromatogramManager = new ChromatogramManager(false) { SupportAllGraphs = !Program.NoAllChromatogramsGraph };
             _chromatogramManager.ProgressUpdateEvent += UpdateProgress;
             _chromatogramManager.Register(this);
             _irtDbManager = new IrtDbManager();
@@ -225,6 +226,8 @@ namespace pwiz.Skyline
             NewDocument();
             chorusRequestToolStripMenuItem.Visible = Settings.Default.EnableChorus;
         }
+
+        public AllChromatogramsGraph ImportingResultsWindow { get; private set; }
 
         protected override void OnShown(EventArgs e)
         {
@@ -575,42 +578,13 @@ namespace pwiz.Skyline
             {
                 using (var undo = BeginUndo(description, undoState))
                 {
-                    SrmDocument docOriginal;
-                    SrmDocument docNew;
-                    do
-                    {
-                        // Make sure cancel is enabled if it is going to be disabled below
-                        if (onModifying != null)
-                            onModifying();
-
-                        docOriginal = Document;
-                        docNew = act(docOriginal);
-
-                        // If no change has been made, return without committing a
-                        // new undo record to the undo stack.
-                        if (ReferenceEquals(docOriginal, docNew))
-                            return;
-
-                        // And mark the document as changed by the user.
-                        docNew = docNew.IncrementUserRevisionIndex();
-
-                        // It's now too late to quit - if caller has a cancel button or equivalent it should be disabled now,
-                        // as leaving it enabled during what could be a long period of updating (including UI, possibly) can
-                        // lead to confusing behavior.  Possibly there are other reasons to provide a onModified Action, but this 
-                        // is the original use case.
-                        if (onModified != null)
-                        {
-                            onModified();
-                        }
-                    }
-                    while (!SetDocument(docNew, docOriginal));
-                    
-                    undo.Commit();
+                    if (ModifyDocumentInner(act, onModifying, onModified))
+                        undo.Commit();
                 }
             }
             catch (IdentityNotFoundException)
             {
-                MessageBox.Show(this, Resources.SkylineWindow_ModifyDocument_Failure_attempting_to_modify_the_document, Program.Name);
+                MessageDlg.Show(this, Resources.SkylineWindow_ModifyDocument_Failure_attempting_to_modify_the_document);
             }
             catch (InvalidDataException x)
             {
@@ -622,8 +596,51 @@ namespace pwiz.Skyline
             }
         }
 
+        public void ModifyDocumentNoUndo(Func<SrmDocument, SrmDocument> act)
+        {
+            ModifyDocumentInner(act, null, null);
+        }
+
+        private bool ModifyDocumentInner(Func<SrmDocument, SrmDocument> act, Action onModifying, Action onModified)
+        {
+            SrmDocument docOriginal;
+            SrmDocument docNew;
+            do
+            {
+                // Make sure cancel is enabled if it is going to be disabled below
+                if (onModifying != null)
+                    onModifying();
+
+                docOriginal = Document;
+                docNew = act(docOriginal);
+
+                // If no change has been made, return without committing a
+                // new undo record to the undo stack.
+                if (ReferenceEquals(docOriginal, docNew))
+                    return false;
+
+                // And mark the document as changed by the user.
+                docNew = docNew.IncrementUserRevisionIndex();
+
+                // It's now too late to quit - if caller has a cancel button or equivalent it should be disabled now,
+                // as leaving it enabled during what could be a long period of updating (including UI, possibly) can
+                // lead to confusing behavior.  Possibly there are other reasons to provide a onModified Action, but this 
+                // is the original use case.
+                if (onModified != null)
+                {
+                    onModified();
+                }
+            }
+            while (!SetDocument(docNew, docOriginal));
+
+            return true;
+        }
+
         public void SwitchDocument(SrmDocument document, string pathOnDisk)
         {
+            // Get rid of any existing import progress UI
+            DestroyAllChromatogramsGraph();
+
             // Some hoops are jumped through here to make sure the
             // document path is correct for listeners on the Document
             // at the time the document change event notifications
@@ -852,6 +869,17 @@ namespace pwiz.Skyline
             }
 
             _closing = true;
+
+            // Stop listening for progress from background loaders
+            _libraryManager.ProgressUpdateEvent -= UpdateProgress;
+            _backgroundProteomeManager.ProgressUpdateEvent -= UpdateProgress;
+            _chromatogramManager.ProgressUpdateEvent -= UpdateProgress;
+            _irtDbManager.ProgressUpdateEvent -= UpdateProgress;
+            _optDbManager.ProgressUpdateEvent -= UpdateProgress;
+            _retentionTimeManager.ProgressUpdateEvent -= UpdateProgress;
+            _ionMobilityLibraryManager.ProgressUpdateEvent -= UpdateProgress;
+            _proteinMetadataManager.ProgressUpdateEvent -= UpdateProgress;
+            
             DestroyAllChromatogramsGraph();
 
             base.OnClosing(e);
@@ -859,6 +887,8 @@ namespace pwiz.Skyline
 
         protected override void OnClosed(EventArgs e)
         {
+            _chromatogramManager.Dispose();
+
             _timerGraphs.Dispose();
             _timerProgress.Dispose();
 
@@ -3505,6 +3535,7 @@ namespace pwiz.Skyline
         }
 
         public static TextBoxStreamWriterHelper _skylineTextBoxStreamWriterHelper;
+        private readonly Alarms _removeStatusAlarms = new Alarms();
 
         private ImmediateWindow CreateImmediateWindow()
         {
@@ -4267,9 +4298,9 @@ namespace pwiz.Skyline
             }
         }
 
-        private List<ProgressStatus> ListProgress { get { return _listProgress; } }
+        private List<IProgressStatus> ListProgress { get { return _listProgress; } }
 
-        private bool SetListProgress(List<ProgressStatus> listNew, List<ProgressStatus> listOriginal)
+        private bool SetListProgress(List<IProgressStatus> listNew, List<IProgressStatus> listOriginal)
         {
             var listResult = Interlocked.CompareExchange(ref _listProgress, listNew, listOriginal);
 
@@ -4285,7 +4316,7 @@ namespace pwiz.Skyline
             }
         }
 
-        UpdateProgressResponse IProgressMonitor.UpdateProgress(ProgressStatus status)
+        UpdateProgressResponse IProgressMonitor.UpdateProgress(IProgressStatus status)
         {
             var args = new ProgressUpdateEventArgs(status);
             UpdateProgress(this, args);
@@ -4300,35 +4331,44 @@ namespace pwiz.Skyline
             var final = status.IsFinal;
 
             int i;
-            List<ProgressStatus> listOriginal, listNew;
+            List<IProgressStatus> listOriginal, listNew;
             do
             {
                 listOriginal = ListProgress;
-                listNew = new List<ProgressStatus>(listOriginal);
+                listNew = new List<IProgressStatus>(listOriginal);
 
                 // Replace existing status, if it is already being tracked.
                 for (i = 0; i < listNew.Count; i++)
                 {
                     if (ReferenceEquals(listNew[i].Id, status.Id))
                     {
-                        if (final)
-                            listNew.RemoveAt(i);
-                        else
-                            listNew[i] = status;
+                        listNew[i] = status;
                         break;
                     }
                 }
                 // Or add this status, if it is not in the list.
-                if (!final && i == listNew.Count)
+                if (i == listNew.Count)
                     listNew.Add(status);
             }
             while (!SetListProgress(listNew, listOriginal));
+
+            if (final)
+            {
+                _removeStatusAlarms.Run(this, 500, status, () => RemoveProgress(status));
+
+                // Import progress needs to know about this status immediately.  It might be gone by
+                // the time the update progress interval comes around next time.
+                if (ImportingResultsWindow != null && status is MultiProgressStatus)
+                    RunUIAction(() => UpdateImportProgress(status as MultiProgressStatus));
+            }
 
             // If the status is first in the queue and it is beginning, initialize
             // the progress UI.
             bool begin = status.IsBegin || (!final && !_timerProgress.Enabled);
             if (i == 0 && begin)
-                RunUIActionAsync(BeginProgressUI, status);
+            {
+                RunUIAction(BeginProgressUI, e);
+            }
             // If it is a final state, and it is being shown, or there was an error
             // make sure user sees the change.
             else if (final)
@@ -4342,9 +4382,22 @@ namespace pwiz.Skyline
             }
         }
 
-        private void BeginProgressUI(ProgressStatus status)
+        private void RemoveProgress(IProgressStatus status)
+        {
+            List<IProgressStatus> listOriginal, listNew;
+            do
+            {
+                listOriginal = ListProgress;
+                listNew = new List<IProgressStatus>(listOriginal);
+                listNew.Remove(status);
+            }
+            while (!SetListProgress(listNew, listOriginal));
+        }
+
+        private void BeginProgressUI(ProgressUpdateEventArgs e)
         {
             _timerProgress.Start();
+            UpdateProgressUI();
         }
 
         private void CompleteProgressUI(ProgressUpdateEventArgs e)
@@ -4355,27 +4408,35 @@ namespace pwiz.Skyline
             var status = e.Progress; 
             if (status.IsComplete)
             {
-                if (statusProgress.Visible)
-                    statusProgress.Value = status.PercentComplete;
+                statusProgress.Value = 100;
             }
             else
             {
                 // If an error, show the message before removing status
                 if (status.IsError)
-                {
-                    if (!ShowProgressErrorUI(e))
-                        return;
-                }
+                    ShowProgressErrorUI(e);
 
                 // Update the progress UI immediately
-                UpdateProgressUI(this, new EventArgs());
+                UpdateProgressUI();
             }
         }
 
-        private bool ShowProgressErrorUI(ProgressUpdateEventArgs e)
+        private void ShowProgressErrorUI(ProgressUpdateEventArgs e)
         {
             var x = e.Progress.ErrorException;
-            var message = x.Message;
+
+            var multiException = x as MultiException;
+            if (multiException != null)
+            {
+                // The next update to the UI will display errors.
+                if (ImportingResultsWindow == null)
+                    ImportingResultsWindow = new AllChromatogramsGraph { Owner = this, ChromatogramManager = _chromatogramManager };
+                ImportingResultsWindow.Show();
+                ImportingResultsWindow.UpdateStatus((MultiProgressStatus) e.Progress);
+                return;
+            }
+
+            var message = ExceptionUtil.GetMessage(x);
 
             // Drill down to see if the innermost exception was an out-of-memory exception.
             var innerException = x;
@@ -4383,53 +4444,11 @@ namespace pwiz.Skyline
                 innerException = innerException.InnerException;
             if (innerException is OutOfMemoryException)
             {
-                string memoryMessage = string.Format(Resources.SkylineWindow_CompleteProgressUI_Ran_Out_Of_Memory, Program.Name);
+                message = string.Format(Resources.SkylineWindow_CompleteProgressUI_Ran_Out_Of_Memory, Program.Name);
                 if (!Install.Is64Bit && Environment.Is64BitOperatingSystem)
                 {
-                    memoryMessage += string.Format(Resources.SkylineWindow_CompleteProgressUI_version_issue, Program.Name);
+                    message += string.Format(Resources.SkylineWindow_CompleteProgressUI_version_issue, Program.Name);
                 }
-                message = TextUtil.LineSeparate(message, memoryMessage);
-            }
-
-            var xImport = x as ChromCacheBuildException;
-            if (xImport != null)
-            {
-                message = TextUtil.LineSeparate(message, string.Empty, Resources.SkylineWindow_ShowProgressErrorUI_Do_you_want_to_continue_);
-                // Try to show the error message, but the SkylineWindow may be disposed by the test thread, so ignore the exception.
-                try
-                {
-                    MultiButtonMsgDlg dlg;
-                    if (e.Progress.SegmentCount < 3)
-                    {
-                        // 2 files and 1 for joining
-                        dlg = new MultiButtonMsgDlg(message, Resources.SkylineWindow_ShowProgressErrorUI_Retry);
-                    }
-                    else
-                    {
-                        dlg = new MultiButtonMsgDlg(message, Resources.SkylineWindow_ShowProgressErrorUI_Retry,
-                            Resources.SkylineWindow_ShowProgressErrorUI_Skip, true);
-                    }
-                    dlg.Exception = xImport;
-                    var result = dlg.ShowAndDispose(this);
-                    switch (result)
-                    {
-                        case DialogResult.OK:
-                        case DialogResult.Yes:
-                            e.Response = UpdateProgressResponse.option1;
-                            break;
-                        case DialogResult.No:
-                            e.Response = UpdateProgressResponse.option2;
-                            break;
-                        default:
-                            e.Response = UpdateProgressResponse.cancel;
-                            break;
-                    }
-                }
-                catch (Exception)
-                {
-                    return false;
-                }
-                return true;
             }
 
             // Try to show the error message, but the SkylineWindow may be disposed by the test thread, so ignore the exception.
@@ -4438,11 +4457,16 @@ namespace pwiz.Skyline
                 // TODO: Get topmost window
                 MessageDlg.ShowWithException(this, message, x);
             }
-            catch (Exception)
+            catch
             {
-                return false;
+                // ignored
             }
-            return true;
+        }
+
+        private int GetFileCount(IProgressStatus status)
+        {
+            var multiStatus = status as MultiProgressStatus;
+            return multiStatus == null ? status.SegmentCount - 1 : multiStatus.ProgressList.Count;
         }
 
         public void UpdateTaskbarProgress(int? percentComplete)
@@ -4456,7 +4480,7 @@ namespace pwiz.Skyline
             }
         }
 
-        private void UpdateProgressUI(object sender, EventArgs e)
+        private void UpdateProgressUI(object sender = null, EventArgs e = null)
         {
             if (statusStrip.IsDisposed)
                 return;
@@ -4470,17 +4494,19 @@ namespace pwiz.Skyline
                 statusGeneral.Text = Resources.SkylineWindow_UpdateProgressUI_Ready;
                 _timerProgress.Stop();
 
-                if (_allChromatogramsGraph != null)
+                if (ImportingResultsWindow != null)
                 {
-                    if (!_allChromatogramsGraph.Canceled)
-                        Settings.Default.AutoShowAllChromatogramsGraph = _allChromatogramsGraph.Visible;
-                    DestroyAllChromatogramsGraph();
+                    if (!ImportingResultsWindow.Canceled)
+                        Settings.Default.AutoShowAllChromatogramsGraph = ImportingResultsWindow.Visible;
+                    ImportingResultsWindow.Finish();
+                    if (!ImportingResultsWindow.HasErrors && Settings.Default.ImportResultsAutoCloseWindow)
+                        DestroyAllChromatogramsGraph();
                 }
             }
             else
             {
                 // Update the status bar with the first progress status.
-                ProgressStatus status = listProgress[0];
+                var status = listProgress[0];
                 statusProgress.Value = status.PercentComplete;
                 statusProgress.Visible = true;
                 UpdateTaskbarProgress(status.PercentComplete);
@@ -4490,25 +4516,28 @@ namespace pwiz.Skyline
                     return;
 
                 // Update chromatogram graph if we are importing a data file.
-                var loadingStatus = listProgress.FirstOrDefault(s => s is ChromatogramLoadingStatus) as ChromatogramLoadingStatus;
-                if (loadingStatus != null && loadingStatus.Importing)
-                {
-                    buttonShowAllChromatograms.Visible = true;
-                    if (_allChromatogramsGraph == null)
-                    {
-                        _allChromatogramsGraph = new AllChromatogramsGraph {Owner = this};
-                        if (Settings.Default.AutoShowAllChromatogramsGraph)
-                            _allChromatogramsGraph.Show();
-                    }
-                    _allChromatogramsGraph.UpdateStatus(loadingStatus);
-                }
+                var multiStatus = listProgress.LastOrDefault(s => s is MultiProgressStatus) as MultiProgressStatus;
+                if (multiStatus != null)
+                    UpdateImportProgress(multiStatus);
             }
+        }
+
+        private void UpdateImportProgress(MultiProgressStatus multiStatus)
+        {
+            buttonShowAllChromatograms.Visible = statusProgress.Visible = !multiStatus.IsFinal;
+            if (ImportingResultsWindow == null)
+            {
+                ImportingResultsWindow = new AllChromatogramsGraph { Owner = this, ChromatogramManager = _chromatogramManager };
+                if (Settings.Default.AutoShowAllChromatogramsGraph)
+                    ImportingResultsWindow.Show();
+            }
+            ImportingResultsWindow.UpdateStatus(multiStatus);
         }
 
         private void buttonShowAllChromatograms_ButtonClick(object sender, EventArgs e)
         {
-            if (_allChromatogramsGraph != null)
-                _allChromatogramsGraph.Show();
+            if (ImportingResultsWindow != null)
+                ImportingResultsWindow.Show();
         }
 
         Point INotificationContainer.NotificationAnchor
@@ -4531,9 +4560,18 @@ namespace pwiz.Skyline
             _libraryBuildNotificationHandler.RemoveLibraryBuildNotification();
         }
 
-        public string Status
+        public bool StatusContains(string format)
         {
-            get { return statusGeneral.Text; }
+            // Since status is updated on a timer, first check if there is any progress status
+            // and use the latest, if there is. Otherwise, use the status bar text.
+            string start = format.Split('{').First();
+            string end = format.Split('}').Last();
+            foreach (var progressStatus in ListProgress)
+            {
+                if (progressStatus.Message.Contains(start) && progressStatus.Message.Contains(end))
+                    return true;
+            }
+            return statusGeneral.Text.Contains(start) && statusGeneral.Text.Contains(end);
         }
         #endregion
 

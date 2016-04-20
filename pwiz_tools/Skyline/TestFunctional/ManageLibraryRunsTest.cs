@@ -115,16 +115,17 @@ namespace pwiz.SkylineTestFunctional
                 }
             }
 
-            RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults, dlg =>
+            using (new WaitDocumentChange(null, true))
             {
-                dlg.SelectReplicatesTab();
-                dlg.SelectedChromatograms = new[] { chromToRemove };
-                dlg.RemoveReplicates();
-                dlg.IsRemoveCorrespondingLibraries = true;
-                dlg.OkDialog();
-            });
-
-            WaitForDocumentLoaded();
+                RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults, dlg =>
+                {
+                    dlg.SelectReplicatesTab();
+                    dlg.SelectedChromatograms = new[] {chromToRemove};
+                    dlg.RemoveReplicates();
+                    dlg.IsRemoveCorrespondingLibraries = true;
+                    dlg.OkDialog();
+                });
+            }
 
             // Make sure the replicate was removed
             var updatedChromatograms = SkylineWindow.Document.Settings.MeasuredResults.Chromatograms;
@@ -146,6 +147,8 @@ namespace pwiz.SkylineTestFunctional
             var matchingFile = SkylineWindow.Document.Settings.MeasuredResults.FindMatchingMSDataFile(MsDataFileUri.Parse(dataFileToRemove));
             Assert.IsNotNull(matchingFile);
 
+            var docBefore = SkylineWindow.Document;
+
             RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults, dlg =>
             {
                 dlg.SelectLibraryRunsTab();
@@ -158,7 +161,7 @@ namespace pwiz.SkylineTestFunctional
                 dlg.OkDialog();
             });
 
-            WaitForDocumentLoaded();
+            WaitForDocumentChangeLoaded(docBefore);
 
             // Make sure the data file was removed, but the document library still exisits
             Assert.IsNotNull(DocumentLibrary);

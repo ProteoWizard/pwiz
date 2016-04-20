@@ -25,11 +25,17 @@ namespace pwiz.Skyline.Controls.Graphs
     /// </summary>
     public class Animation
     {
-        private readonly double _startValue;
-        private readonly double _endValue;
+        private bool _firstTime = true;
+        private double _startValue;
+        private double _endValue;
         private readonly int _updateMsec;
-        private readonly DateTime _startTime;
+        private DateTime _startTime;
         private double[] _scaleFactors;
+
+        public Animation(int updateMsec)
+        {
+            _updateMsec = updateMsec;
+        }
 
         /// <summary>
         /// Create an animation object that can smoothly animate between values.
@@ -37,14 +43,18 @@ namespace pwiz.Skyline.Controls.Graphs
         /// <param name="startValue">Value at start of animation.</param>
         /// <param name="endValue">Value at end of animation.</param>
         /// <param name="steps">Number of steps in the animation.</param>
-        /// <param name="updateMsec">Expected update interval in milliseconds.</param>
         /// <param name="acceleration">Acceleration rate (how fast the animation speeds up and slows down).</param>
-        public Animation(double startValue, double endValue, int steps, int updateMsec = 200, double acceleration = 1.4)
+        public void SetTarget(double startValue, double endValue, int steps, double acceleration = 1.4)
         {
+            if (_firstTime || endValue == startValue || endValue == _endValue)
+            {
+                Value = _endValue = endValue;
+                return;
+            }
+
             _startValue = startValue;
-            _endValue = endValue;
-            _updateMsec = updateMsec;
             _startTime = DateTime.Now;
+            _endValue = endValue;
 
             // Calculate smoothly accelerating and decelerating scale factors.
             steps |= 1;
@@ -67,7 +77,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public double Value { get; private set; }
 
-        public bool Done { get { return _scaleFactors == null; } }
+        public bool IsActive { get { return _firstTime || _scaleFactors != null; } }
 
         /// <summary>
         /// Do the next step of the animation.
@@ -91,6 +101,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     Value = _endValue;
                 }
             }
+            _firstTime = false;
 
             return Value;
         }

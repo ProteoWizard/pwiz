@@ -20,6 +20,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
@@ -136,6 +137,7 @@ namespace pwiz.SkylineTestFunctional
                 }
                 Assert.AreEqual(filenames.Length * document.MoleculeCount, nResults);
             }
+            WaitForClosedForm<AllChromatogramsGraph>();
         }
 
         private SrmDocument InitExplicitRTDocument(TestFilesDir testFilesDir, string fileName, out string docPath)

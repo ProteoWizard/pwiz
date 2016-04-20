@@ -2079,6 +2079,11 @@ namespace pwiz.Skyline
 
         private void importResultsMenuItem_Click(object sender, EventArgs e)
         {
+            if (ImportingResultsWindow != null)
+            {
+                ImportingResultsWindow.Show();
+                return;
+            }
             ImportResults();
         }
 

@@ -2133,5 +2133,53 @@ namespace pwiz.Skyline.Properties {
                 this["RTPointsType"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool ImportResultsAutoCloseWindow {
+            get {
+                return ((bool)(this["ImportResultsAutoCloseWindow"]));
+            }
+            set {
+                this["ImportResultsAutoCloseWindow"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ImportResultsAutoScaleGraph {
+            get {
+                return ((bool)(this["ImportResultsAutoScaleGraph"]));
+            }
+            set {
+                this["ImportResultsAutoScaleGraph"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int ImportResultsSimultaneousFiles {
+            get {
+                return ((int)(this["ImportResultsSimultaneousFiles"]));
+            }
+            set {
+                this["ImportResultsSimultaneousFiles"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ImportResultsDoAutoRetry {
+            get {
+                return ((bool)(this["ImportResultsDoAutoRetry"]));
+            }
+            set {
+                this["ImportResultsDoAutoRetry"] = value;
+            }
+        }
     }
 }

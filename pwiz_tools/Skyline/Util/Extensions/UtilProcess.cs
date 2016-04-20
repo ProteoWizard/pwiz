@@ -24,18 +24,18 @@ namespace pwiz.Skyline.Util.Extensions
 {
     public static class UtilProcess
     {
-        public static void RunProcess(this ProcessStartInfo psi, IProgressMonitor progress, ref ProgressStatus status)
+        public static void RunProcess(this ProcessStartInfo psi, IProgressMonitor progress, ref IProgressStatus status)
         {
             psi.RunProcess(null, null, progress, ref status);
         }
 
         public static void RunProcess(this ProcessStartInfo psi, string stdin)
         {
-            var statusTemp = new ProgressStatus(string.Empty);
+            IProgressStatus statusTemp = new ProgressStatus(string.Empty);
             psi.RunProcess(stdin, null, null, ref statusTemp);
         }
 
-        public static void RunProcess(this ProcessStartInfo psi, string stdin, string messagePrefix, IProgressMonitor progress, ref ProgressStatus status)
+        public static void RunProcess(this ProcessStartInfo psi, string stdin, string messagePrefix, IProgressMonitor progress, ref IProgressStatus status)
         {
             var processRunner = new ProcessRunner
                                     {

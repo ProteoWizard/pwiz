@@ -46,6 +46,7 @@
     <DeploymentItem filename="quantitation_2.xsd" />
   </Deployment>
   <Execution>
+    <Timeouts runTimeout="2400000" testTimeout="240000" />
     <TestTypeSpecific>
       <UnitTestRunConfig testTypeId="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b">
         <AssemblyResolution>

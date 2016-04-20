@@ -465,6 +465,8 @@ namespace SkylineTester
             statusLabel.Text = status;
         }
 
+        private bool _buildDebug;
+
         public enum BuildDirs
         {
             bin32,
@@ -479,7 +481,7 @@ namespace SkylineTester
 
         private string[] GetPossibleBuildDirs()
         {
-            return new[]
+            var dirs = new[]
             {
                 Path.GetFullPath(Path.Combine(ExeDir, @"..\..\x86\Release")),
                 Path.GetFullPath(Path.Combine(ExeDir, @"..\..\x64\Release")),
@@ -490,6 +492,9 @@ namespace SkylineTester
                 GetZipPath(32),
                 GetZipPath(64),
             };
+            if (_buildDebug)
+                dirs = dirs.Select(dir => dir.Replace(@"\Release", @"\Debug")).ToArray();
+            return dirs;
         }
 
         public void FindBuilds()
@@ -497,13 +502,13 @@ namespace SkylineTester
             var buildDirs = GetPossibleBuildDirs();
 
             // Determine which builds exist.
-            for (int i = 0; i < buildDirs.Length; i++)
+            CheckBuildDirExistence(buildDirs);
+            if (buildDirs.All(dir => dir == null))
             {
-                if (!File.Exists(Path.Combine(buildDirs[i], "Skyline.exe")) &&
-                    !File.Exists(Path.Combine(buildDirs[i], "Skyline-daily.exe")))
-                {
-                    buildDirs[i] = null;
-                }
+                _buildDebug = true;
+                buildDirs = GetPossibleBuildDirs();
+                CheckBuildDirExistence(buildDirs);
+                _buildDebug = buildDirs.Any(dir => dir != null);
             }
 
             // Hide builds that don't exist.
@@ -522,6 +527,18 @@ namespace SkylineTester
 
             // Select first available build if previously selected build doesn't exist.
             SelectBuild(buildDirs[(int) SelectedBuild] != null ? SelectedBuild : (BuildDirs) defaultIndex);
+        }
+
+        private static void CheckBuildDirExistence(string[] buildDirs)
+        {
+            for (int i = 0; i < buildDirs.Length; i++)
+            {
+                if (!File.Exists(Path.Combine(buildDirs[i], "Skyline.exe")) &&
+                    !File.Exists(Path.Combine(buildDirs[i], "Skyline-daily.exe")))
+                {
+                    buildDirs[i] = null;
+                }
+            }
         }
 
         public void SelectBuild(BuildDirs select)

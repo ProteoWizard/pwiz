@@ -30,6 +30,7 @@ using pwiz.Skyline.Alerts;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 // This code is associated with the DocumentGrid.

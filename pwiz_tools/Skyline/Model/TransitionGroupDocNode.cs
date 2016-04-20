@@ -1636,7 +1636,8 @@ namespace pwiz.Skyline.Model
                 }
                 for (int iChrom = 0; iChrom < _listResultCalcs.Count; iChrom++)
                 {
-                    foreach (var fileStep in GetTransitionFileSteps(iChrom).ToArray())
+                    var arrayFileSteps = GetTransitionFileSteps(iChrom).ToArray();
+                    foreach (var fileStep in arrayFileSteps)
                     {
                         int countInfo = 0, countLibTrans = 0, countIsoTrans = 0;
                         ChromFileInfoId fileId = fileStep.FileId;
@@ -1723,7 +1724,7 @@ namespace pwiz.Skyline.Model
                 if (chromInfoList == null)
                     return null;
                 return chromInfoList.FirstOrDefault(chromInfo =>
-                    Equals(fileId, chromInfo.FileId) && optStep == chromInfo.OptimizationStep);
+                    ReferenceEquals(fileId, chromInfo.FileId) && optStep == chromInfo.OptimizationStep);
             }
 
             private void SetTransitionChromInfo(int iTran, int iChrom, ChromFileInfoId fileId, int optStep,
@@ -1731,7 +1732,7 @@ namespace pwiz.Skyline.Model
             {
                 var chromInfoList = _arrayTransitionChromInfoSets[iTran].ChromInfoLists[iChrom];
                 int chromInfoIndex = chromInfoList.IndexOf(chromInfo =>
-                    Equals(fileId, chromInfo.FileId) && optStep == chromInfo.OptimizationStep);
+                    ReferenceEquals(fileId, chromInfo.FileId) && optStep == chromInfo.OptimizationStep);
                 chromInfoList[chromInfoIndex] = transitionChromInfo;
             }
 
@@ -1781,7 +1782,7 @@ namespace pwiz.Skyline.Model
                 
                 private bool Equals(FileStep other)
                 {
-                    return Equals(other.FileId, FileId) &&
+                    return ReferenceEquals(other.FileId, FileId) &&
                         other.OptimizationStep == OptimizationStep;
                 }
 
@@ -1796,7 +1797,7 @@ namespace pwiz.Skyline.Model
                 {
                     unchecked
                     {
-                        return (FileId.GetHashCode() * 397) ^ OptimizationStep;
+                        return (FileId.GlobalIndex.GetHashCode() * 397) ^ OptimizationStep;
                     }
                 }
 

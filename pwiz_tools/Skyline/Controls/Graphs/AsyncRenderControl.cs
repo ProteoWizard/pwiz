@@ -35,6 +35,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private readonly RenderContext _context = new RenderContext();
         private readonly AutoResetEvent _startBackgroundRender = new AutoResetEvent(false);
         private readonly string _backgroundThreadName;
+        private bool _started;
 
         //private static readonly Log LOG = new Log<AsyncRenderControl>();
 
@@ -50,22 +51,16 @@ namespace pwiz.Skyline.Controls.Graphs
             FrameMilliseconds = 100;
         }
 
-        protected override void OnLoad(EventArgs e)
+        protected override void OnPaint(PaintEventArgs e)
         {
-            // Keep VS designer from crashing.
-            if (Program.MainWindow == null)
+            if (Width < 100 || Height <  100 || _started || Program.MainWindow == null)
                 return;
 
+            _started = true;
             pictureBox.SizeMode = PictureBoxSizeMode.StretchImage;
-            pictureBox.Width = Width;
-            pictureBox.Height = Height;
-            pictureBox.Image = new Bitmap(Width, Height);
 
             lock (_context)
             {
-                _context._renderBitmap = new Bitmap(Width, Height);
-                _context._fullFrame = true;
-                
                 // NOTE: We create our a timer manually instead of using a designer component
                 // because we want the timer to continue ticking even when the window is
                 // closed.  Some subclasses may need to render even without a window to
@@ -76,10 +71,11 @@ namespace pwiz.Skyline.Controls.Graphs
                     lock (_context)
                     {
                         // Don't render if window is not visible.
-                        if (!IsVisible)
+                        if (!IsVisible || _context._renderBitmap == null)
                         {
                             _context._fullFrame = true;
                             _context._invalidRect.Width = 0;
+                            _context._renderBitmap = null;
                             _context._updateTimer.Interval = 500;
                             return;
                         }
@@ -87,10 +83,9 @@ namespace pwiz.Skyline.Controls.Graphs
                         // For full frame, swap bitmap buffers.
                         if (_context._invalidRect.Width == Width)
                         {
-                            var swap = (Bitmap) pictureBox.Image;
                             pictureBox.Image = _context._renderBitmap;
+                            pictureBox.Invalidate(_context._invalidRect);
                             pictureBox.Update();
-                            _context._renderBitmap = swap;
                         }
 
                         // For partial frame, copy pixels from rendering buffer.
@@ -108,6 +103,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             pictureBox.Update();
                         }
 
+                        _context._renderBitmap = null;
                         _context._invalidRect.Width = 0;
                         _context._updateTimer.Interval = FrameMilliseconds;
                     }
@@ -118,6 +114,16 @@ namespace pwiz.Skyline.Controls.Graphs
 
             ActionUtil.RunAsync(BackgroundRender, _backgroundThreadName);
             StartBackgroundRendering();
+        }
+
+        protected void ShowBitmap(Bitmap renderBitmap)
+        {
+            lock (_context)
+            {
+                pictureBox.Image = renderBitmap;
+                pictureBox.Invalidate();
+                pictureBox.Update();
+            }
         }
 
         protected int FrameMilliseconds { get; set; }
@@ -153,7 +159,10 @@ namespace pwiz.Skyline.Controls.Graphs
         protected void StartBackgroundRendering()
         {
             if (IsVisible)
+            {
+                _context._renderBitmap = new Bitmap(Width, Height);
                 _startBackgroundRender.Set();
+            }
         }
 
         /// <summary>

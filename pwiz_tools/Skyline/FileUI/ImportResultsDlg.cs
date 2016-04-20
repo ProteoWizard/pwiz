@@ -89,7 +89,9 @@ namespace pwiz.Skyline.FileUI
             }
             comboOptimizing.SelectedIndex = 0;
 
+            comboSimultaneousFiles.SelectedIndex = Settings.Default.ImportResultsSimultaneousFiles;
             cbShowAllChromatograms.Checked = Settings.Default.AutoShowAllChromatogramsGraph;
+            cbAutoRetry.Checked = Settings.Default.ImportResultsDoAutoRetry;
         }
 
         private string DefaultNewName
@@ -154,6 +156,13 @@ namespace pwiz.Skyline.FileUI
                     comboOptimizing.SelectedItem = value;
                 }
             }
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            Settings.Default.ImportResultsSimultaneousFiles = comboSimultaneousFiles.SelectedIndex;
+            Settings.Default.ImportResultsDoAutoRetry = cbAutoRetry.Checked;
+            base.OnClosed(e);
         }
 
         public void OkDialog()

@@ -542,15 +542,14 @@ namespace pwiz.SkylineTestTutorial
             ImportResultsDlg importResultsDlg3 = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
             RunUI(() => importResultsDlg3.NamedPathSets = importResultsDlg3.GetDataSourcePathsFileReplicates(
                 new[] { MsDataFileUri.Parse(GetTestPath(@"TOF\6-BSA-500fmol" + ExtAgilentRaw)) }));
-            var messageDlg = ShowDialog<MessageDlg>(importResultsDlg3.OkDialog);
+            var importProgress = ShowDialog<AllChromatogramsGraph>(importResultsDlg3.OkDialog);
+            WaitForDocumentChangeLoaded(docCalibrate1);
             RunUI(() => AssertEx.AreComparableStrings(Resources.NoFullScanFilteringException_NoFullScanFilteringException_To_extract_chromatograms_from__0__full_scan_settings_must_be_enabled_,
-                                                      messageDlg.Message, 1));
-            PauseForScreenShot<MessageDlg>("Error message (expected)", 27);
-            
-            OkDialog(messageDlg, messageDlg.OkDialog);
-
+                                                      importProgress.Error, 1));
+            WaitForConditionUI(() => importProgress.Finished);
             RunUI(() =>
             {
+                importProgress.ClickClose();
                 SkylineWindow.Undo();
             });
 

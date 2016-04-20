@@ -838,6 +838,8 @@ namespace pwiz.SkylineTestUtil
                     "Timeout {0} seconds exceeded in WaitForSkyline", waitCycles * SLEEP_INTERVAL / 1000); // Not L10N
                 }
                 Settings.Default.Reset();
+                Settings.Default.ImportResultsAutoCloseWindow = true;
+                Settings.Default.ImportResultsSimultaneousFiles = 2;    // use maximum threads for multiple file import
                 RunTest();
             }
             catch (Exception x)
@@ -846,6 +848,7 @@ namespace pwiz.SkylineTestUtil
                 Program.AddTestException(x);
             }
 
+            Settings.Default.Reset();
             EndTest();
         }
 
@@ -905,6 +908,16 @@ namespace pwiz.SkylineTestUtil
                 // holds no file handles.
                 var docNew = new SrmDocument(SrmSettingsList.GetDefault());
                 RunUI(() => SkylineWindow.SwitchDocument(docNew, null));
+
+                WaitForCondition(1000, () => !FileStreamManager.Default.HasPooledStreams, string.Empty, false);
+                if (FileStreamManager.Default.HasPooledStreams)
+                {
+                    // Just write to console to provide more information. This should cause a failure
+                    // trying to remove the test directory, which will provide a path to the problem file
+                    Console.WriteLine(TextUtil.LineSeparate("Streams left open:", string.Empty,
+                        FileStreamManager.Default.ReportPooledStreams()));
+                }
+
                 WaitForGraphs(false);
                 // Wait for any background loaders to notice the change and stop what they're doing
                 WaitForBackgroundLoaders();

@@ -172,7 +172,7 @@ namespace pwiz.Skyline.Model
 
         public SrmDocument Import(TextReader reader, IProgressMonitor progressMonitor, long lineCount, bool isMinutes, bool removeMissing = false, bool changePeaks = true)
         {
-            var status = new ProgressStatus(Resources.PeakBoundaryImporter_Import_Importing_Peak_Boundaries);
+            IProgressStatus status = new ProgressStatus(Resources.PeakBoundaryImporter_Import_Importing_Peak_Boundaries);
             double timeConversionFactor = isMinutes ? 1.0 : 60.0;
             int linesRead = 0;
             int progressPercent = 0;

@@ -184,7 +184,7 @@ namespace pwiz.Skyline.Model.Proteome
                                    needsProteinMetadataSearch;
 
                 string name = originalBackgroundProteome.Name;
-                ProgressStatus progressStatus =
+                IProgressStatus progressStatus =
                     new ProgressStatus(string.Format(getMetadata?Resources.BackgroundProteomeManager_LoadBackground_Resolving_protein_details_for__0__proteome:Resources.BackgroundProteomeManager_LoadBackground_Digesting__0__proteome, name));
                 try
                 {
@@ -268,7 +268,7 @@ namespace pwiz.Skyline.Model.Proteome
             while (!CompleteProcessing(container, docNew, docCurrent));
         }
 
-        private void UpdateProcessingProgress(ProgressStatus progress)
+        private void UpdateProcessingProgress(IProgressStatus progress)
         {
             if (_monitor == null) // Using this with PeptideSettingsUI?
             {
@@ -321,7 +321,7 @@ namespace pwiz.Skyline.Model.Proteome
             private readonly string _pathProteome;
             private readonly bool _isTemporary;  // Are we doing this work on a temporary copy of the DB?
 
-            private ProgressStatus _progressStatus;
+            private IProgressStatus _progressStatus;
 
             public DigestHelper(BackgroundProteomeManager manager,
                                 IDocumentContainer container,
@@ -340,7 +340,7 @@ namespace pwiz.Skyline.Model.Proteome
                 _isTemporary = isTemporary;
             }
 
-            public bool Digest(ref ProgressStatus progressStatus, bool delayDbIndexing)
+            public bool Digest(ref IProgressStatus progressStatus, bool delayDbIndexing)
             {
                 using (var proteomeDb = ProteomeDb.OpenProteomeDb(_pathProteome,_isTemporary))
                 {
@@ -355,7 +355,7 @@ namespace pwiz.Skyline.Model.Proteome
                 }
             }
 
-            public bool LookupProteinMetadata(ref ProgressStatus progressStatus)
+            public bool LookupProteinMetadata(ref IProgressStatus progressStatus)
             {
 
                 using (var proteomeDb = ProteomeDb.OpenProteomeDb(_pathProteome, _isTemporary))
@@ -371,8 +371,8 @@ namespace pwiz.Skyline.Model.Proteome
                         if (useWeb == 1 && !_manager.FastaImporter.HasWebAccess()) // Do we even have web access?
                         {
                             _progressStatus =
-                                _progressStatus.ChangeMessage(Resources.DigestHelper_LookupProteinMetadata_Unable_to_access_internet_to_resolve_protein_details_).
-                                ChangeWarningMessage(Resources.DigestHelper_LookupProteinMetadata_Unable_to_access_internet_to_resolve_protein_details_).Cancel();
+                                _progressStatus.ChangeMessage(Resources.DigestHelper_LookupProteinMetadata_Unable_to_access_internet_to_resolve_protein_details_)
+                                    .ChangeWarningMessage(Resources.DigestHelper_LookupProteinMetadata_Unable_to_access_internet_to_resolve_protein_details_).Cancel();
                             result = false;
                         }
                         else
@@ -394,7 +394,7 @@ namespace pwiz.Skyline.Model.Proteome
                 get { return _container != null && (_manager.StateChanged(_container.Document, _document) || _manager.ForegroundLoadRequested) || _manager.IsCanceled(_container, _document); }
             }
 
-            public UpdateProgressResponse UpdateProgress(ProgressStatus status)
+            public UpdateProgressResponse UpdateProgress(IProgressStatus status)
             {
                 if (IsCanceled)
                 {

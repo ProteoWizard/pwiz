@@ -210,7 +210,7 @@ added as a seperate replicate.
     <value>NoControl</value>
   </data>
   <data name="radioAddExisting.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 212</value>
+    <value>16, 212</value>
   </data>
   <data name="radioAddExisting.Size" type="System.Drawing.Size, System.Drawing">
     <value>173, 17</value>
@@ -363,7 +363,7 @@ and a specific name.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;labelTuning.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="comboTuning.Location" type="System.Drawing.Point, System.Drawing">
     <value>171, 54</value>
@@ -387,7 +387,7 @@ and a specific name.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;comboTuning.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="cbShowAllChromatograms.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -396,7 +396,7 @@ and a specific name.</value>
     <value>NoControl</value>
   </data>
   <data name="cbShowAllChromatograms.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 283</value>
+    <value>35, 84</value>
   </data>
   <data name="cbShowAllChromatograms.Size" type="System.Drawing.Size, System.Drawing">
     <value>191, 17</value>
@@ -414,10 +414,10 @@ and a specific name.</value>
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;cbShowAllChromatograms.Parent" xml:space="preserve">
-    <value>$this</value>
+    <value>panel1</value>
   </data>
   <data name="&gt;&gt;cbShowAllChromatograms.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="labelOptimizing.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -426,7 +426,7 @@ and a specific name.</value>
     <value>NoControl</value>
   </data>
   <data name="labelOptimizing.Location" type="System.Drawing.Point, System.Drawing">
-    <value>34, 38</value>
+    <value>31, 38</value>
   </data>
   <data name="labelOptimizing.Size" type="System.Drawing.Size, System.Drawing">
     <value>58, 13</value>
@@ -474,7 +474,7 @@ and a specific name.</value>
     <value>False</value>
   </data>
   <data name="comboName.Location" type="System.Drawing.Point, System.Drawing">
-    <value>30, 249</value>
+    <value>34, 248</value>
   </data>
   <data name="comboName.Size" type="System.Drawing.Size, System.Drawing">
     <value>209, 21</value>
@@ -504,7 +504,7 @@ and a specific name.</value>
     <value>NoControl</value>
   </data>
   <data name="labelNameAdd.Location" type="System.Drawing.Point, System.Drawing">
-    <value>30, 232</value>
+    <value>31, 232</value>
   </data>
   <data name="labelNameAdd.Size" type="System.Drawing.Size, System.Drawing">
     <value>38, 13</value>
@@ -531,7 +531,7 @@ and a specific name.</value>
     <value>False</value>
   </data>
   <data name="textName.Location" type="System.Drawing.Point, System.Drawing">
-    <value>31, 173</value>
+    <value>34, 172</value>
   </data>
   <data name="textName.Size" type="System.Drawing.Size, System.Drawing">
     <value>209, 20</value>
@@ -584,6 +584,114 @@ and a specific name.</value>
   <data name="&gt;&gt;labelNameNew.ZOrder" xml:space="preserve">
     <value>12</value>
   </data>
+  <data name="label1.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>32, 15</value>
+  </data>
+  <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>145, 13</value>
+  </data>
+  <data name="label1.TabIndex" type="System.Int32, mscorlib">
+    <value>15</value>
+  </data>
+  <data name="label1.Text" xml:space="preserve">
+    <value>Files to &amp;import simultaneously:</value>
+  </data>
+  <data name="&gt;&gt;label1.Name" xml:space="preserve">
+    <value>label1</value>
+  </data>
+  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
+    <value>panel1</value>
+  </data>
+  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="comboSimultaneousFiles.Items" xml:space="preserve">
+    <value>One at a time</value>
+  </data>
+  <data name="comboSimultaneousFiles.Items1" xml:space="preserve">
+    <value>Several</value>
+  </data>
+  <data name="comboSimultaneousFiles.Items2" xml:space="preserve">
+    <value>Many </value>
+  </data>
+  <data name="comboSimultaneousFiles.Location" type="System.Drawing.Point, System.Drawing">
+    <value>35, 31</value>
+  </data>
+  <data name="comboSimultaneousFiles.Size" type="System.Drawing.Size, System.Drawing">
+    <value>131, 21</value>
+  </data>
+  <data name="comboSimultaneousFiles.TabIndex" type="System.Int32, mscorlib">
+    <value>16</value>
+  </data>
+  <data name="&gt;&gt;comboSimultaneousFiles.Name" xml:space="preserve">
+    <value>comboSimultaneousFiles</value>
+  </data>
+  <data name="&gt;&gt;comboSimultaneousFiles.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboSimultaneousFiles.Parent" xml:space="preserve">
+    <value>panel1</value>
+  </data>
+  <data name="&gt;&gt;comboSimultaneousFiles.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="cbAutoRetry.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbAutoRetry.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="cbAutoRetry.Location" type="System.Drawing.Point, System.Drawing">
+    <value>35, 61</value>
+  </data>
+  <data name="cbAutoRetry.Size" type="System.Drawing.Size, System.Drawing">
+    <value>182, 17</value>
+  </data>
+  <data name="cbAutoRetry.TabIndex" type="System.Int32, mscorlib">
+    <value>17</value>
+  </data>
+  <data name="cbAutoRetry.Text" xml:space="preserve">
+    <value>Automatic &amp;retry after import failure</value>
+  </data>
+  <data name="&gt;&gt;cbAutoRetry.Name" xml:space="preserve">
+    <value>cbAutoRetry</value>
+  </data>
+  <data name="&gt;&gt;cbAutoRetry.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbAutoRetry.Parent" xml:space="preserve">
+    <value>panel1</value>
+  </data>
+  <data name="&gt;&gt;cbAutoRetry.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="panel1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>-2, 292</value>
+  </data>
+  <data name="panel1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>378, 141</value>
+  </data>
+  <data name="panel1.TabIndex" type="System.Int32, mscorlib">
+    <value>17</value>
+  </data>
+  <data name="&gt;&gt;panel1.Name" xml:space="preserve">
+    <value>panel1</value>
+  </data>
+  <data name="&gt;&gt;panel1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panel1.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;panel1.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
@@ -591,7 +699,7 @@ and a specific name.</value>
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>374, 312</value>
+    <value>374, 409</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>
@@ -609,6 +717,6 @@ and a specific name.</value>
     <value>ImportResultsDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

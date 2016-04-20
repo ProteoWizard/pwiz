@@ -169,6 +169,16 @@ namespace pwiz.Skyline.Util
         /// <param name="pathCache">Path of potential cache</param>
         /// <returns>True if path is cached</returns>
         bool IsCached(string path, string pathCache);
+
+        /// <summary>
+        /// True when the pool contains open streams. Useful for debugging
+        /// </summary>
+        bool HasPooledStreams { get; }
+
+        /// <summary>
+        /// Returns a string enumeration of the open streams and their GlobalIndex values. Useful for debugging
+        /// </summary>
+        string ReportPooledStreams();
     }
 
     /// <summary>
@@ -245,6 +255,30 @@ namespace pwiz.Skyline.Util
             {
                 stream.CloseStream();
                 act();
+            }
+        }
+
+        public bool HasPooledConnections
+        {
+            get
+            {
+                lock (this)
+                {
+                    return _connections.Count > 0;
+                }
+            }
+        }
+
+        public string ReportPooledConnections()
+        {
+            lock (this)
+            {
+                var sb = new StringBuilder();
+                foreach (var connection in _connections)
+                {
+                    sb.AppendLine(string.Format("{0}. {1}", connection.Key, connection.Value)); // Not L10N
+                }
+                return sb.ToString();
             }
         }
     }
@@ -505,6 +539,16 @@ namespace pwiz.Skyline.Util
 
         private FileStreamManager()
         {            
+        }
+
+        public bool HasPooledStreams
+        {
+            get { return _connectionPool.HasPooledConnections; }
+        }
+
+        public string ReportPooledStreams()
+        {
+            return _connectionPool.ReportPooledConnections();
         }
 
         public Stream CreateStream(string path, FileMode mode, bool buffered)
@@ -934,7 +978,7 @@ namespace pwiz.Skyline.Util
     public sealed class StreamReaderWithProgress : StreamReader
     {
         private readonly IProgressMonitor _progressMonitor;
-        private ProgressStatus _status;
+        private IProgressStatus _status;
         private readonly long _totalBytes;
         private long _bytesRead;
 
@@ -960,7 +1004,7 @@ namespace pwiz.Skyline.Util
     public class XmlWriterWithProgress : XmlTextWriter
     {
         private readonly IProgressMonitor _progressMonitor;
-        private ProgressStatus _status;
+        private IProgressStatus _status;
         private readonly int _transitionCount;
         private int _transitionsWritten;
 

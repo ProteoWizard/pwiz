@@ -55,7 +55,7 @@ namespace pwiz.Common.SystemUtil
         /// <param name="consumeThreads">How many threads to use to consume work items (0 to consume items synchronously).</param>
         /// <param name="consumeName">Name prefix for consumption threads (null for synchronous consumption).</param>
         /// <param name="maxQueueSize">Maximum number of work items to be queued at any time.</param>
-        public void RunAsync(int consumeThreads, string consumeName, int maxQueueSize = -1)
+        public void RunAsync(int consumeThreads, string consumeName, int maxQueueSize = int.MaxValue)
         {
             RunAsync(consumeThreads, consumeName, 0, null, maxQueueSize);
         }
@@ -69,39 +69,51 @@ namespace pwiz.Common.SystemUtil
         /// <param name="produceThreads">How many threads to use to produce work items (0 to produce items synchronously).</param>
         /// <param name="produceName">Name prefix for production threads (null for synchronous production).</param>
         /// <param name="maxQueueSize">Maximum number of work items to be queued at any time.</param>
-        public void RunAsync(int consumeThreads, string consumeName, int produceThreads, string produceName, int maxQueueSize = -1)
+        public void RunAsync(int consumeThreads, string consumeName, int produceThreads, string produceName, int maxQueueSize = int.MaxValue)
         {
             // Create a queue and a number of threads to work on queued items.
             // First thread to call RunAsync wins.
             lock (_queueLock)
             {
                 if (_queue != null)
-                    return;
-                _queue = maxQueueSize > 0
-                    ? new BlockingCollection<TItem>(maxQueueSize)
-                    : new BlockingCollection<TItem>();
+                {
+                    if (((consumeThreads == 0 && _consumeThreads == null) || (consumeThreads > 0 && _consumeThreads != null && consumeThreads == _consumeThreads.Length)) &&
+                        ((produceThreads == 0 && _produceThreads == null) || (produceThreads > 0 && _produceThreads != null && produceThreads == _produceThreads.Length)) &&
+                        _queue.BoundedCapacity == maxQueueSize)
+                        return;
+                    Abort();
+                }
+                _queue = new BlockingCollection<TItem>(maxQueueSize);
             }
 
             _threadExit = new CountdownEvent(consumeThreads);
+
+            _produceThreads = null;
             if (produceThreads > 0)
+            {
                 _produceThreads = new Thread[produceThreads];
-            if (consumeThreads > 0)
-                _consumeThreads = new Thread[consumeThreads];
-            for (int i = 0; i < produceThreads; i++)
-            {
-                _produceThreads[i] = new Thread(Produce)
+                for (int i = 0; i < produceThreads; i++)
                 {
-                    Name = produceThreads <= 1 ? produceName : produceName + " (" + (i + 1) + ")"    // Not L10N
-                };
-                _produceThreads[i].Start(i);
+                    _produceThreads[i] = new Thread(Produce)
+                    {
+                        Name = produceThreads <= 1 ? produceName : produceName + " (" + (i + 1) + ")"    // Not L10N
+                    };
+                    _produceThreads[i].Start(i);
+                }
             }
-            for (int i = 0; i < consumeThreads; i++)
+
+            _consumeThreads = null;
+            if (consumeThreads > 0)
             {
-                _consumeThreads[i] = new Thread(Consume)
+                _consumeThreads = new Thread[consumeThreads];
+                for (int i = 0; i < consumeThreads; i++)
                 {
-                    Name = consumeThreads <= 1 ? consumeName : consumeName + " (" + (i + 1) + ")"    // Not L10N
-                };
-                _consumeThreads[i].Start(i);
+                    _consumeThreads[i] = new Thread(Consume)
+                    {
+                        Name = consumeThreads <= 1 ? consumeName : consumeName + " (" + (i + 1) + ")" // Not L10N
+                    };
+                    _consumeThreads[i].Start(i);
+                }
             }
         }
 
@@ -161,7 +173,15 @@ namespace pwiz.Common.SystemUtil
             {
                 SetException(ex);
             }
-            _threadExit.Signal();
+            try
+            {
+                _threadExit.Signal();
+            }
+            catch
+            {
+                // ignored
+                // InvalidOperationException occurs sometimes during shutdown
+            }
         }
 
         private void SetException(Exception ex)

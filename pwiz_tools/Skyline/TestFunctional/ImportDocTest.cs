@@ -206,18 +206,19 @@ namespace pwiz.SkylineTestFunctional
             // An undo followed by a redo should not change that
             Assert.AreEqual(9, SkylineWindow.Document.RevisionIndex);
             RunUI(SkylineWindow.Undo);
-            Assert.AreEqual(6, SkylineWindow.Document.RevisionIndex);
+            Assert.AreEqual(5, SkylineWindow.Document.RevisionIndex);
             Assert.AreEqual(newCacheLen, new FileInfo(cachePersistPath).Length);
             RunUI(SkylineWindow.Redo);
             Assert.AreEqual(9, SkylineWindow.Document.RevisionIndex);
             Assert.AreEqual(newCacheLen, new FileInfo(cachePersistPath).Length);
             // Undo followed by a save, should reduce cache to previous size
             RunUI(SkylineWindow.Undo);
+            WaitForDocumentLoaded(5000);
             Assert.AreEqual(6, SkylineWindow.Document.RevisionIndex);
             RunUI(() => SkylineWindow.SaveDocument());
             Assert.AreEqual(startCacheLen, new FileInfo(cachePersistPath).Length);
             Assert.AreEqual(7, SkylineWindow.Document.RevisionIndex);
-            Thread.Sleep(10);  // Wait 10 ms to make sure the cache change in Redo registers as a cache modification
+            Thread.Sleep(1000);  // Wait 10 ms to make sure the cache change in Redo registers as a cache modification
             // After which, a redo should return the document to the add state and
             // restore the cache
             RunUI(SkylineWindow.Redo);
@@ -410,6 +411,7 @@ namespace pwiz.SkylineTestFunctional
             // Undo and save should have set the main cache back to the initial state
             RunUI(SkylineWindow.Undo);
             Assert.AreEqual(docInitial, SkylineWindow.Document);
+            WaitForDocumentLoaded();
             RunUI(() => SkylineWindow.SaveDocument());
             Assert.AreEqual(startCacheLen, new FileInfo(cachePersistPath).Length);
             // And the original caches should remain unchanged

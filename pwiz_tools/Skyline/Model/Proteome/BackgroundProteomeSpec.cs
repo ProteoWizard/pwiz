@@ -94,7 +94,7 @@ namespace pwiz.Skyline.Model.Proteome
 
         public Digestion Digest(Enzyme enzyme, DigestSettings digestSettings, ILoadMonitor loader)
         {
-            var progressStatus = new ProgressStatus(string.Format(Resources.BackgroundProteomeSpec_Digest_Digesting__0__, enzyme.Name));
+            IProgressStatus progressStatus = new ProgressStatus(string.Format(Resources.BackgroundProteomeSpec_Digest_Digesting__0__, enzyme.Name));
             loader.UpdateProgress(progressStatus);
             using (var proteomeDb = OpenProteomeDb())
             {

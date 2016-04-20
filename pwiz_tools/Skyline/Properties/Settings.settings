@@ -533,5 +533,17 @@
     <Setting Name="RTPointsType" Type="System.String" Scope="User">
       <Value Profile="(Default)">targets</Value>
     </Setting>
+    <Setting Name="ImportResultsAutoCloseWindow" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="ImportResultsAutoScaleGraph" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ImportResultsSimultaneousFiles" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="ImportResultsDoAutoRetry" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

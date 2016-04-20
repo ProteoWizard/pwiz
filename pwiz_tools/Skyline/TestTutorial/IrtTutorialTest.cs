@@ -704,6 +704,7 @@ namespace pwiz.SkylineTestTutorial
                 });
             }
             WaitForDocumentLoaded(5 * 60 * 1000);    // 5 minutes
+            WaitForClosedForm<AllChromatogramsGraph>();
         }
 
         private static void VerifyRTRegression(double slope, double intercept, double r)

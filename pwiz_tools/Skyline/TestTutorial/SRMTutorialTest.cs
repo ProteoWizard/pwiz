@@ -60,12 +60,6 @@ namespace pwiz.SkylineTestTutorial
             return TestFilesDirs[0].GetTestPath(Path.Combine(folder, relativePath));
         }
 
-        private bool StatusContains(string format)
-        {
-            return SkylineWindow.Status.Contains(format.Split('{').First()) &&
-                   SkylineWindow.Status.Contains(format.Split('}').Last());
-        }
-
         protected override void DoTest()
         {
             LinkPdf = "http://targetedproteomics.ethz.ch/tutorials2014/Tutorial-1_Settings.pdf";
@@ -147,12 +141,13 @@ namespace pwiz.SkylineTestTutorial
 
             OkDialog(pepSettings, pepSettings.OkDialog);
 
-            WaitForCondition(
-                () => StatusContains(Resources.BackgroundProteomeSpec_Digest_Digesting__0__));
-            WaitForCondition(
-                () => StatusContains(Resources.BackgroundProteomeManager_LoadBackground_Resolving_protein_details_for__0__proteome) ||
-                      StatusContains(ProteomeDatabase.Properties.Resources.ProteomeDb_LookupProteinMetadata_Retrieving_details_for__0__proteins));
-            WaitForCondition(() => SkylineWindow.Status.Contains(Resources.SkylineWindow_UpdateProgressUI_Ready));
+            WaitForConditionUI(
+                () => SkylineWindow.StatusContains(Resources.BackgroundProteomeSpec_Digest_Digesting__0__));
+            WaitForConditionUI(
+                () => SkylineWindow.StatusContains(Resources.BackgroundProteomeManager_LoadBackground_Resolving_protein_details_for__0__proteome) ||
+                      SkylineWindow.StatusContains(ProteomeDatabase.Properties.Resources.ProteomeDb_LookupProteinMetadata_Retrieving_details_for__0__proteins));
+            WaitForConditionUI(() => SkylineWindow.StatusContains(Resources.SkylineWindow_UpdateProgressUI_Ready));
+            WaitForBackgroundProteomeLoaderCompleted();
             WaitForDocumentLoaded();
 
             var transitionDlg = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
@@ -211,6 +206,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => { });
             SetExcelFileClipboardText(GetTestPath(@"Tutorial-2_TransitionList\\target_peptides.xlsx"), "Sheet1", 1,
                 false);
+            var docBeforePaste = SkylineWindow.Document;
             var peptidePasteDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPastePeptidesDlg);
             var matchingDlg = ShowDialog<FilterMatchedPeptidesDlg>(peptidePasteDlg.PastePeptides);
             PauseForScreenShot("Filter Peptides", 1);
@@ -218,7 +214,8 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(peptidePasteDlg, peptidePasteDlg.OkDialog);
 
             int expectedTrans = TransitionGroup.IsAvoidMismatchedIsotopeTransitions ? 306 : 313;
-            AssertEx.IsDocumentState(SkylineWindow.Document, null, 10, 30, 68, expectedTrans);
+            var docAfterPaste = WaitForDocumentChange(docBeforePaste);
+            AssertEx.IsDocumentState(docAfterPaste, null, 10, 30, 68, expectedTrans);
             RunUI(() =>
             {
                 SkylineWindow.ExpandProteins();
@@ -441,6 +438,7 @@ namespace pwiz.SkylineTestTutorial
                 WaitForClosedForm(importResultsDlg);
             }
             WaitForDocumentLoaded();
+            WaitForClosedForm<AllChromatogramsGraph>();
         }
     }
 }

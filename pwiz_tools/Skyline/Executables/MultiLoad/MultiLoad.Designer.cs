@@ -95,6 +95,7 @@
             this.comboModel.FormattingEnabled = true;
             this.comboModel.Items.AddRange(new object[] {
             "mz5-centroid",
+            "mzml-centroid",
             "wiff"});
             this.comboModel.Location = new System.Drawing.Point(12, 63);
             this.comboModel.Name = "comboModel";
@@ -109,7 +110,8 @@
             "No UI",
             "Show import progress",
             "Hide import progress",
-            "Disable import progress"});
+            "Disable import progress",
+            "Command line"});
             this.comboUI.Location = new System.Drawing.Point(12, 38);
             this.comboUI.Name = "comboUI";
             this.comboUI.Size = new System.Drawing.Size(136, 21);

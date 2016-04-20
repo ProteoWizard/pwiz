@@ -147,6 +147,7 @@
       <HintPath>..\..\libraries\SQLite\$(PLATFORM)\System.Data.SQLite.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="System.Management" />
     <Reference Include="System.Web" />
     <Reference Include="System.Data.DataSetExtensions">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -320,13 +321,31 @@
     <Compile Include="Controls\FindResultsForm.Designer.cs">
       <DependentUpon>FindResultsForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Graphs\AsyncChromatogramsGraph2.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\Graphs\AsyncChromatogramsGraph2.Designer.cs">
+      <DependentUpon>AsyncChromatogramsGraph2.cs</DependentUpon>
+    </Compile>
     <Compile Include="Controls\Graphs\Calibration\CalibrationForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Controls\Graphs\Calibration\CalibrationForm.Designer.cs">
       <DependentUpon>CalibrationForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Graphs\FileProgressControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\Graphs\FileProgressControl.Designer.cs">
+      <DependentUpon>FileProgressControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="Controls\Graphs\GraphFontSize.cs" />
+    <Compile Include="Controls\Graphs\ImportResultsRetryCountdownDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\Graphs\ImportResultsRetryCountdownDlg.Designer.cs">
+      <DependentUpon>ImportResultsRetryCountdownDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="Controls\GroupComparison\BaseGroupComparisonSettings.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -367,9 +386,6 @@
     </Compile>
     <Compile Include="Controls\Graphs\AreaReplicateGraphPane.cs" />
     <Compile Include="Controls\Graphs\AreaPeptideGraphPane.cs" />
-    <Compile Include="Controls\Graphs\AsyncChromatogramsGraph.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
     <Compile Include="Controls\Graphs\AsyncRenderControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -841,6 +857,8 @@
     <Compile Include="Model\Lib\ChromLib\Data\SampleFile.cs" />
     <Compile Include="Model\Lib\ChromLib\Data\Transition.cs" />
     <Compile Include="Model\MProphetResultsHandler.cs" />
+    <Compile Include="Model\MultiFileLoader.cs" />
+    <Compile Include="Model\MultiProgressStatus.cs" />
     <Compile Include="Model\OptimizationStep.cs" />
     <Compile Include="Model\DocSettings\IsotopeEnrichments.cs" />
     <Compile Include="Model\DocSettings\Loss.cs" />
@@ -1580,6 +1598,9 @@
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Databinding\EditGroupComparisonDlg.zh-CHS.resx" />
+    <EmbeddedResource Include="Controls\Graphs\AsyncChromatogramsGraph2.resx">
+      <DependentUpon>AsyncChromatogramsGraph2.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\Calibration\CalibrationForm.ja.resx">
       <DependentUpon>CalibrationForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -1588,6 +1609,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\Calibration\CalibrationForm.zh-CHS.resx">
       <DependentUpon>CalibrationForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\FileProgressControl.resx">
+      <DependentUpon>FileProgressControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\ImportResultsRetryCountdownDlg.resx">
+      <DependentUpon>ImportResultsRetryCountdownDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\EditGroupComparisonDlg.ja.resx">
       <DependentUpon>EditGroupComparisonDlg.cs</DependentUpon>
@@ -1807,12 +1834,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\AlignmentForm.zh-CHS.resx">
       <DependentUpon>AlignmentForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Controls\Graphs\AllChromatogramsGraph.ja.resx">
-      <DependentUpon>AllChromatogramsGraph.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Controls\Graphs\AllChromatogramsGraph.zh-CHS.resx">
-      <DependentUpon>AllChromatogramsGraph.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\AsyncRenderControl.ja.resx">
       <DependentUpon>AsyncRenderControl.cs</DependentUpon>
@@ -2231,6 +2252,9 @@
     <EmbeddedResource Include="Resources\PeptideList.bmp" />
     <EmbeddedResource Include="Resources\StartPage\WizardPeptideSearchDIA.png" />
     <EmbeddedResource Include="Resources\StartPage\WizardPeptideSearchPRM.png" />
+    <Content Include="Resources\Locked.bmp" />
+    <Content Include="Resources\Pindownlight.bmp" />
+    <Content Include="Resources\Pinleftlight.bmp" />
     <Content Include="Resources\Replicate.bmp" />
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\APOA1.sky" />
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\Biognosys.sky" />
@@ -2240,6 +2264,8 @@
     <None Include="Resources\StartPage\GroupedStudies_thumb.jpg" />
     <None Include="Resources\StartPage\DIA_thumb.jpg" />
     <None Include="Resources\StartPage\SmallMolecule_thumb.jpg" />
+    <Content Include="Resources\Unlocked.bmp" />
+    <Content Include="Resources\warning.png" />
     <Content Include="SkylineProcessRunner.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

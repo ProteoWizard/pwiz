@@ -371,7 +371,7 @@ namespace pwiz.Skyline.Model.Lib
                 get { return false; }
             }
 
-            public UpdateProgressResponse UpdateProgress(ProgressStatus status)
+            public UpdateProgressResponse UpdateProgress(IProgressStatus status)
             {
                 return _manager.UpdateProgress(status);
             }

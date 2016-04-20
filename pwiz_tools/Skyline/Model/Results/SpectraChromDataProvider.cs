@@ -71,7 +71,7 @@ namespace pwiz.Skyline.Model.Results
             SrmDocument document,
             IRetentionTimePredictor retentionTimePredictor,
             string cachePath, // We'll write tempfiles in this directory
-            ProgressStatus status,
+            IProgressStatus status,
             int startPercent,
             int endPercent,
             IProgressMonitor loader)
@@ -119,8 +119,8 @@ namespace pwiz.Skyline.Model.Results
             }
 
             // Get data object used to graph all of the chromatograms.
-            if (_loader.HasUI)
-                _allChromData = LoadingStatus.Transitions;
+            if (_loader.HasUI && Status is ChromatogramLoadingStatus)
+                _allChromData = ((ChromatogramLoadingStatus) Status).Transitions;
 
             try
             {
@@ -449,7 +449,10 @@ namespace pwiz.Skyline.Model.Results
                 foreach (var spectrum in filter.Extract(rt, spectra))
                 {
                     if (_loader.IsCanceled)
+                    {
+                        _loader.UpdateProgress(Status = Status.Cancel());
                         throw new LoadCanceledException(Status);
+                    }
 
                     chromMap.ProcessExtractedSpectrum((float) rt, _collectors, GetScanIdIndex(scanId), spectrum, AddChromCollector);
                 }
@@ -530,7 +533,7 @@ namespace pwiz.Skyline.Model.Results
         {
             var statusId = _collectors.ReleaseChromatogram(id, _chromGroups,
                 out times, out intensities, out massErrors, out scanIndexes);
-            extra = new ChromExtra(statusId, LoadingStatus.Transitions.GetRank(id));  // TODO: Get rank
+            extra = new ChromExtra(statusId, 0);
 
             // Each chromatogram will be read only once!
             _readChromatograms++;
@@ -565,12 +568,12 @@ namespace pwiz.Skyline.Model.Results
 
         public override double? MaxRetentionTime
         {
-            get { return LoadingStatus.Transitions.MaxRetentionTime; }
+            get { return Status is ChromatogramLoadingStatus ? ((ChromatogramLoadingStatus)Status).Transitions.MaxRetentionTime : 0; }
         }
 
         public override double? MaxIntensity
         {
-            get { return LoadingStatus.Transitions.MaxIntensity; }
+            get { return Status is ChromatogramLoadingStatus ? ((ChromatogramLoadingStatus)Status).Transitions.MaxIntensity : 0; }
         }
 
         public override bool IsProcessedScans
@@ -1033,7 +1036,7 @@ namespace pwiz.Skyline.Model.Results
                 lock (this)
                 {
                     _retentionTime = float.MaxValue;
-                    Monitor.Pulse(this);
+                    Monitor.PulseAll(this);
                 }
             }
 
@@ -1042,7 +1045,7 @@ namespace pwiz.Skyline.Model.Results
                 lock (this)
                 {
                     _retentionTime = retentionTime;
-                    Monitor.Pulse(this);
+                    Monitor.PulseAll(this);
                 }
             }
 

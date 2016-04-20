@@ -51,15 +51,17 @@ namespace pwiz.Skyline
 {
     public class CommandLine : IDisposable
     {
-        private readonly CommandStatusWriter _out;
+        private CommandStatusWriter _out;
 
         private SrmDocument _doc;
         private string _skylineFile;
 
         private ExportCommandProperties _exportProperties;
 
-        // Number of results files imported
-        private int _importCount;
+        /// <summary>
+        /// True if any results files were imported successfully.
+        /// </summary>
+        private bool _importedResults;
 
         public CommandLine(CommandStatusWriter output)
         {
@@ -68,14 +70,41 @@ namespace pwiz.Skyline
 
         public SrmDocument Document { get { return _doc; } }
 
+        public CommandLine()
+            : this(new CommandStatusWriter(new StringWriter()))
+        {
+        }
+
+        public ResultsMemoryDocumentContainer DocContainer { get; private set; }
+
         public void Run(string[] args)
         {
+            _importedResults = false;
+
             var commandArgs = new CommandArgs(_out, _doc != null);
 
             if(!commandArgs.ParseArgs(args))
             {
                 _out.WriteLine(Resources.CommandLine_Run_Exiting___);
                 return;
+            }
+
+            if (!string.IsNullOrEmpty(commandArgs.LogFile))
+            {
+                var oldOut = _out;
+                try
+                {
+                    _out = new CommandStatusWriter(new StreamWriter(commandArgs.LogFile)) { IsTimeStamped = oldOut.IsTimeStamped };
+                }
+                catch (Exception)
+                {
+                    oldOut.WriteLine(Resources.CommandLine_Run_Error__Failed_to_open_log_file__0_, commandArgs.LogFile);
+                    return;
+                }
+                using (oldOut)
+                {
+                    oldOut.WriteLine(Resources.CommandLine_Run_Writing_to_log_file__0_, commandArgs.LogFile);
+                }
             }
 
             // First come the commands that do not depend on an --in command to run.
@@ -104,14 +133,33 @@ namespace pwiz.Skyline
                 return;
             }
 
-            string skylineFile = commandArgs.SkylineFile;
-            if ((skylineFile != null && !OpenSkyFile(skylineFile)) ||
-                (skylineFile == null && _doc == null))
+            _skylineFile = commandArgs.SkylineFile;
+            if ((_skylineFile != null && !OpenSkyFile(_skylineFile)) ||
+                (_skylineFile == null && _doc == null))
             {
                 _out.WriteLine(Resources.CommandLine_Run_Exiting___);
                 return;
             }
 
+            try
+            {
+                using (DocContainer = new ResultsMemoryDocumentContainer(null, _skylineFile))
+                {
+                    DocContainer.ProgressMonitor = new CommandProgressMonitor(_out, new ProgressStatus());
+                    DocContainer.SetDocument(_doc, null);
+
+                    ProcessDocument(commandArgs);
+                    PerformExportOperations(commandArgs);
+                }
+            }
+            finally
+            {
+                DocContainer = null;
+            }
+        }
+
+        private void ProcessDocument(CommandArgs commandArgs)
+        {
             if (commandArgs.FullScanSetting)
             {
                 if (!SetFullScanSettings(commandArgs))
@@ -134,7 +182,8 @@ namespace pwiz.Skyline
                 }
                 catch (Exception x)
                 {
-                    _out.WriteLine(Resources.CommandLine_Run_Error__Failed_importing_the_file__0____1_, commandArgs.FastaPath, x.Message);
+                    _out.WriteLine(Resources.CommandLine_Run_Error__Failed_importing_the_file__0____1_, commandArgs.FastaPath,
+                        x.Message);
                     return;
                 }
             }
@@ -148,7 +197,8 @@ namespace pwiz.Skyline
                 }
                 catch (Exception x)
                 {
-                    _out.WriteLine(Resources.CommandLine_Run_Error__Failed_importing_the_file__0____1_, commandArgs.TransitionListPath, x.Message);
+                    _out.WriteLine(Resources.CommandLine_Run_Error__Failed_importing_the_file__0____1_,
+                        commandArgs.TransitionListPath, x.Message);
                     return;
                 }
             }
@@ -156,9 +206,7 @@ namespace pwiz.Skyline
             if (commandArgs.ImportingSearch)
             {
                 if (!ImportSearch(commandArgs))
-                {
                     return;
-                }
             }
 
             if (commandArgs.RemovingResults && !commandArgs.RemoveBeforeDate.HasValue)
@@ -168,41 +216,8 @@ namespace pwiz.Skyline
 
             if (commandArgs.ImportingResults)
             {
-                OptimizableRegression optimize = null;
-                try
-                {
-                    if (_doc != null)
-                        optimize = _doc.Settings.TransitionSettings.Prediction.GetOptimizeFunction(commandArgs.ImportOptimizeType);
-                }
-                catch (Exception x)
-                {
-                    _out.WriteLine(Resources.CommandLine_Run_Error__Failed_to_get_optimization_function__0____1_, commandArgs.ImportOptimizeType, x.Message);
-                }
-
-                if (commandArgs.ImportingReplicateFile)
-                {
-                    // If expected results are not imported successfully, terminate
-                    if (!ImportResultsFile(commandArgs.ReplicateFile.ChangeParameters(_doc, commandArgs.LockMassParameters),
-                                           commandArgs.ReplicateName,
-                                           commandArgs.ImportBeforeDate,
-                                           commandArgs.ImportOnOrAfterDate,
-                                           optimize,
-                                           commandArgs.ImportAppend,
-                                           commandArgs.ImportDisableJoining))
-                        return;
-                }
-                else if(commandArgs.ImportingSourceDirectory)
-                {
-                    // If expected results are not imported successfully, terminate
-                    if(!ImportResultsInDir(commandArgs.ImportSourceDirectory,
-                                           commandArgs.ImportNamingPattern,
-                                           commandArgs.LockMassParameters,
-                                           commandArgs.ImportBeforeDate,
-                                           commandArgs.ImportOnOrAfterDate,
-                                           optimize,
-                                           commandArgs.ImportDisableJoining))
-                        return;
-                }
+                if (!ImportResults(commandArgs))
+                    return;
             }
 
             WaitForDocumentLoaded();
@@ -226,7 +241,77 @@ namespace pwiz.Skyline
 
                 _skylineFile = saveFile;
             }
+        }
 
+        private void WaitForDocumentLoaded()
+        {
+            if (_doc != null && !_doc.IsLoaded)
+            {
+                DocContainer.SetDocument(_doc, DocContainer.Document, true);
+                _doc = DocContainer.Document;
+            }
+        }
+
+        private bool ImportResults(CommandArgs commandArgs)
+        {
+            DocContainer.ChromatogramManager.LoadingThreads = commandArgs.ImportThreads;
+
+            OptimizableRegression optimize = null;
+            try
+            {
+                if (_doc != null)
+                    optimize = _doc.Settings.TransitionSettings.Prediction.GetOptimizeFunction(commandArgs.ImportOptimizeType);
+            }
+            catch (Exception x)
+            {
+                _out.WriteLine(Resources.CommandLine_Run_Error__Failed_to_get_optimization_function__0____1_,
+                    commandArgs.ImportOptimizeType, x.Message);
+            }
+
+            if (commandArgs.ImportingReplicateFile)
+            {
+                var listNamedPaths = new List<KeyValuePair<string, MsDataFileUri[]>>();
+                if (!string.IsNullOrEmpty(commandArgs.ReplicateName))
+                {
+                    var files = commandArgs.ReplicateFile.ToArray();
+                    listNamedPaths.Add(new KeyValuePair<string, MsDataFileUri[]>(commandArgs.ReplicateName, files));
+                }
+                else
+                {
+                    foreach (var dataFile in commandArgs.ReplicateFile)
+                    {
+                        listNamedPaths.Add(new KeyValuePair<string, MsDataFileUri[]>(
+                            dataFile.GetFileNameWithoutExtension(),
+                            new[] {dataFile}));
+                    }
+                }
+
+                // If expected results are not imported successfully, terminate
+                if (!ImportDataFilesWithAppend(listNamedPaths,
+                        commandArgs.LockMassParameters,
+                        commandArgs.ImportBeforeDate,
+                        commandArgs.ImportOnOrAfterDate,
+                        optimize,
+                        commandArgs.ImportDisableJoining, commandArgs.ImportAppend))
+                    return false;
+            }
+            else if (commandArgs.ImportingSourceDirectory)
+            {
+                // If expected results are not imported successfully, terminate
+                if (!ImportResultsInDir(commandArgs.ImportSourceDirectory,
+                        commandArgs.ImportNamingPattern,
+                        commandArgs.LockMassParameters,
+                        commandArgs.ImportBeforeDate,
+                        commandArgs.ImportOnOrAfterDate,
+                        optimize,
+                        commandArgs.ImportDisableJoining))
+                    return false;
+            }
+            return true;
+        }
+
+        private void PerformExportOperations(CommandArgs commandArgs)
+        {
             if (commandArgs.ExportingReport)
             {
                 ExportReport(commandArgs.ReportName, commandArgs.ReportFile,
@@ -235,7 +320,8 @@ namespace pwiz.Skyline
 
             if (commandArgs.ExportingChromatograms)
             {
-                ExportChromatograms(commandArgs.ChromatogramsFile, commandArgs.ChromatogramsPrecursors, commandArgs.ChromatogramsProducts,
+                ExportChromatograms(commandArgs.ChromatogramsFile, commandArgs.ChromatogramsPrecursors,
+                    commandArgs.ChromatogramsProducts,
                     commandArgs.ChromatogramsBasePeaks, commandArgs.ChromatogramsTics);
             }
 
@@ -286,7 +372,7 @@ namespace pwiz.Skyline
             {
                 // Publish the document to the given Panorama server if new results were added to the document
                 // OR no results files were given on the command-line for importing to the document. 
-                if (_importCount > 0 || !commandArgs.ImportingResults)
+                if (_importedResults || !commandArgs.ImportingResults)
                 {
                     // Publish document to the given folder on the Panorama Server
                     var panoramaHelper = new PanoramaPublishHelper(_out);
@@ -295,20 +381,7 @@ namespace pwiz.Skyline
                 }
                 else
                 {
-                    _out.WriteLine(Resources.CommandLine_Run_No_new_results_added__Skipping_Panorama_import_);  
-                }
-            }
-        }
-
-        private void WaitForDocumentLoaded()
-        {
-            if (_doc != null && !_doc.IsLoaded)
-            {
-                IProgressMonitor progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
-                using (var docContainer = new ResultsMemoryDocumentContainer(null, _skylineFile) { ProgressMonitor = progressMonitor })
-                {
-                    docContainer.SetDocument(_doc, null, true);
-                    _doc = docContainer.Document;
+                    _out.WriteLine(Resources.CommandLine_Run_No_new_results_added__Skipping_Panorama_import_);
                 }
             }
         }
@@ -391,7 +464,7 @@ namespace pwiz.Skyline
                 _out.WriteLine(XmlUtil.GetInvalidDataMessage(skylineFile, x));
                 return false;
             }
-            _skylineFile = skylineFile;
+
             return true;
         }
 
@@ -629,44 +702,114 @@ namespace pwiz.Skyline
                 return false;
             }
 
-            bool hasMultiple = listNamedPaths.SelectMany(pair => pair.Key).Count() > 1;
+            return ImportDataFiles(listNamedPaths, lockMassParameters, importBefore, importOnOrAfter, optimize, disableJoining);
+        }
+
+        private bool ImportDataFiles(IList<KeyValuePair<string, MsDataFileUri[]>> listNamedPaths, LockMassParameters lockMassParameters,
+            DateTime? importBefore, DateTime? importOnOrAfter, OptimizableRegression optimize, bool disableJoining)
+        {
+            var namesAndFilePaths = GetNamesAndFilePaths(listNamedPaths).ToArray();
+            bool hasMultiple = namesAndFilePaths.Length > 1;
             if (hasMultiple || disableJoining)
             {
                 // Join at the end
                 _doc = _doc.ChangeSettingsNoDiff(_doc.Settings.ChangeIsResultsJoiningDisabled(true));
             }
 
-            // Import files one at a time
-            foreach (var namedPaths in listNamedPaths)
+            DocContainer.SetDocument(_doc, DocContainer.Document, true);
+
+            // Add files to import list
+            _out.WriteLine();
+            for (int i = 0; i < namesAndFilePaths.Length; i++)
             {
-                string replicateName = namedPaths.Key;
-                var files = namedPaths.Value;
-                foreach (var file in files)
+                var namePath = namesAndFilePaths[i];
+                if (!ImportResultsFile(namePath.FilePath.ChangeParameters(_doc, lockMassParameters), namePath.ReplicateName, importBefore, importOnOrAfter, optimize))
+                    return false;
+                _out.WriteLine("{0}. {1}", i + 1, namePath.FilePath); // Not L10N
+            }
+            _out.WriteLine();
+
+            DocContainer.WaitForComplete();
+            var multiStatus = DocContainer.LastProgress as MultiProgressStatus;
+            _doc = DocContainer.Document;
+            DocContainer.ResetProgress();
+
+            if (_doc.Settings.HasResults && multiStatus != null)
+            {
+                // Store whether anything imported successfully.
+                // CONSIDER: Should this be changed to store whether their were no errors? May be strange
+                //           to continue upload to Panorama after reporting import errors.
+                _importedResults = multiStatus.ProgressList.Any(s => s.IsComplete);
+
+                if (multiStatus.IsError)
                 {
-                    if (!ImportResultsFile(file.ChangeParameters(_doc, lockMassParameters), replicateName, importBefore, importOnOrAfter, optimize))
-                        return false;
+                    var chromatograms = new List<ChromatogramSet>();
+                    for (int i = 0; i < _doc.Settings.MeasuredResults.Chromatograms.Count; i++)
+                    {
+                        var modifiedSet = RemoveErrors(_doc.Settings.MeasuredResults.Chromatograms[i], multiStatus);
+                        if (modifiedSet != null)
+                            chromatograms.Add(modifiedSet);
+                    }
+                    _doc = _doc.ChangeMeasuredResults(chromatograms.Any() ?
+                        _doc.Settings.MeasuredResults.ChangeChromatograms(chromatograms) : null);
                 }
             }
 
             if (hasMultiple && !disableJoining)
             {
                 // Allow joining to happen
-                var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
-                using (var docContainer = new ResultsMemoryDocumentContainer(null, _skylineFile) { ProgressMonitor = progressMonitor })
+                _doc = _doc.ChangeSettingsNoDiff(_doc.Settings.ChangeIsResultsJoiningDisabled(false));
+                if (!_doc.IsLoaded)
                 {
-                    _doc = _doc.ChangeSettingsNoDiff(_doc.Settings.ChangeIsResultsJoiningDisabled(false));
+                    DocContainer.SetDocument(_doc, DocContainer.Document, true);
+                    _doc = DocContainer.Document;
+                    DocContainer.ResetProgress();
+                    // If not fully loaded now, there must have been an error.
                     if (!_doc.IsLoaded)
-                    {
-                        docContainer.SetDocument(_doc, null, true);
-                        _doc = docContainer.Document;
-                        // If not fully loaded now, there must have been an error.
-                        if (!_doc.IsLoaded)
-                            return false;
-                    }
+                        return false;
                 }
             }
 
             return true;
+        }
+
+        private ChromatogramSet RemoveErrors(ChromatogramSet set, MultiProgressStatus multiStatus)
+        {
+            var dataFiles = set.MSDataFilePaths.ToList();
+            int originalCount = dataFiles.Count;
+            for (int i = originalCount - 1; i >= 0; i--)
+            {
+                var status = multiStatus.GetStatus(dataFiles[i]);
+                if (status != null && status.IsError)
+                    dataFiles.RemoveAt(i);
+            }
+
+            if (dataFiles.Count == 0)
+                return null;
+            return dataFiles.Count == originalCount ? set : set.ChangeMSDataFilePaths(dataFiles);
+        }
+
+        private IEnumerable<NameAndPath> GetNamesAndFilePaths(IList<KeyValuePair<string, MsDataFileUri[]>> listNamedPaths)
+        {
+            foreach (var namedPaths in listNamedPaths)
+            {
+                foreach (var file in namedPaths.Value)
+                {
+                    yield return new NameAndPath(namedPaths.Key, file);
+                }
+            }
+        }
+
+        private struct NameAndPath
+        {
+            public NameAndPath(string replicateName, MsDataFileUri filePath) : this()
+            {
+                ReplicateName = replicateName;
+                FilePath = filePath;
+            }
+
+            public string ReplicateName { get; private set; }
+            public MsDataFileUri FilePath { get; private set; }
         }
 
         private IList<KeyValuePair<string, MsDataFileUri[]>> GetDataSources(string sourceDir, Regex namingPattern)
@@ -845,38 +988,52 @@ namespace pwiz.Skyline
             return true;
         }
 
-        public bool ImportResultsFile(MsDataFileUri replicateFile, string replicateName, DateTime? importBefore, DateTime? importOnOrAfter,
-            OptimizableRegression optimize, bool append, bool disableJoining)
+        private bool ImportDataFilesWithAppend(IList<KeyValuePair<string, MsDataFileUri[]>> listNamedPaths, LockMassParameters lockMassParameters,
+            DateTime? importBefore, DateTime? importOnOrAfter, OptimizableRegression optimize, bool disableJoining, bool append)
         {
-            if (string.IsNullOrEmpty(replicateName))
-                replicateName = replicateFile.GetFileNameWithoutExtension();
-
-            if(_doc.Settings.HasResults && _doc.Settings.MeasuredResults.ContainsChromatogram(replicateName))
+            for (int i = 0; i < listNamedPaths.Count; i++)
             {
-                if (!append)
+                var namedPath = listNamedPaths[i];
+                string replicateName = namedPath.Key;
+                if (_doc.Settings.HasResults && _doc.Settings.MeasuredResults.ContainsChromatogram(replicateName))
                 {
-                    // CONSIDER: Error? Check if the replicate contains the file?
-                    //           It does not seem right to just continue on to export a report
-                    //           or new method without the results added.
-                    _out.WriteLine(Resources.CommandLine_ImportResultsFile_Warning__The_replicate__0__already_exists_in_the_given_document_and_the___import_append_option_is_not_specified___The_replicate_will_not_be_added_to_the_document_, replicateName);
-                    return true;
-                }
-                
-                // If we are appending to an existing replicate in the document
-                // make sure this file is not already in the replicate.
-                ChromatogramSet chromatogram;
-                int index;
-                _doc.Settings.MeasuredResults.TryGetChromatogramSet(replicateName, out chromatogram, out index);
+                    if (!append)
+                    {
+                        // CONSIDER: Error? Check if the replicate contains the file?
+                        //           It does not seem right to just continue on to export a report
+                        //           or new method without the results added.
+                        _out.WriteLine(Resources.CommandLine_ImportResultsFile_Warning__The_replicate__0__already_exists_in_the_given_document_and_the___import_append_option_is_not_specified___The_replicate_will_not_be_added_to_the_document_, replicateName);
+                        return true;
+                    }
 
-                string replicateFileString = replicateFile.ToString();
-                if (chromatogram.MSDataFilePaths.Any(filePath=>StringComparer.OrdinalIgnoreCase.Equals(filePath, replicateFileString)))
-                {
-                    _out.WriteLine(Resources.CommandLine_ImportResultsFile__0______1___Note__The_file_has_already_been_imported__Ignoring___, replicateName, replicateFile);
-                    return true;
+                    var replicateFiles = namedPath.Value;
+                    var newFiles = new List<MsDataFileUri>();
+                    foreach (var replicateFile in replicateFiles)
+                    {
+                        // If we are appending to an existing replicate in the document
+                        // make sure this file is not already in the replicate.
+                        ChromatogramSet chromatogram;
+                        int index;
+                        _doc.Settings.MeasuredResults.TryGetChromatogramSet(replicateName, out chromatogram, out index);
+
+                        string replicateFileString = replicateFile.ToString();
+                        if (chromatogram.MSDataFilePaths.Any(filePath => StringComparer.OrdinalIgnoreCase.Equals(filePath, replicateFileString)))
+                        {
+                            _out.WriteLine(Resources.CommandLine_ImportResultsFile__0______1___Note__The_file_has_already_been_imported__Ignoring___, replicateName, replicateFile);
+                        }
+                        else
+                        {
+                            newFiles.Add(replicateFile);
+                        }
+                    }
+                    if (newFiles.Count == 0)
+                        return true;
+                    if (newFiles.Count != replicateFiles.Length)
+                        listNamedPaths[i] = new KeyValuePair<string, MsDataFileUri[]>(replicateName, newFiles.ToArray());
                 }
             }
 
-            return ImportResultsFile(replicateFile, replicateName, importBefore, importOnOrAfter, optimize, disableJoining);
+            return ImportDataFiles(listNamedPaths, lockMassParameters, importBefore, importOnOrAfter, optimize, disableJoining);
         }
 
         public bool ImportResultsFile(MsDataFileUri replicateFile, string replicateName, DateTime? importBefore, DateTime? importOnOrAfter,
@@ -914,49 +1071,12 @@ namespace pwiz.Skyline
                 return true;
             }
 
+            if (disableJoining)
+                _doc = _doc.ChangeSettingsNoDiff(_doc.Settings.ChangeIsResultsJoiningDisabled(true));
+
             //This function will also detect whether the replicate exists in the document
-            ProgressStatus status;
-            SrmDocument newDoc;
-            IProgressMonitor progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
+            ImportResults(DocContainer, replicateName, replicateFile, optimize);
 
-            try
-            {
-                if (disableJoining)
-                    _doc = _doc.ChangeSettingsNoDiff(_doc.Settings.ChangeIsResultsJoiningDisabled(true));
-
-                newDoc = ImportResults(_doc,_skylineFile, replicateName, replicateFile, optimize, progressMonitor, out status);
-            }
-            catch (Exception x)
-            {
-                _out.WriteLine(Resources.CommandLine_ImportResultsFile_Error__Failed_importing_the_results_file__0__, replicateFile);
-                _out.WriteLine(x.Message);
-                return false;
-            }
-
-            status = status ?? new ProgressStatus(string.Empty).Complete();
-            if (status.IsError && status.ErrorException != null)
-            {
-                if (status.ErrorException is MissingDataException)
-                {
-                    _out.WriteLine(Resources.CommandLine_ImportResultsFile_Warning__Failed_importing_the_results_file__0____Ignoring___, replicateFile);
-                    _out.WriteLine(status.ErrorException.Message);
-                    return true;
-                }
-                _out.WriteLine(Resources.CommandLine_ImportResultsFile_Error__Failed_importing_the_results_file__0__, replicateFile);
-                _out.WriteLine(status.ErrorException.Message);
-                return false;
-            }
-            if (!status.IsComplete || ReferenceEquals(_doc, newDoc))
-            {
-                _out.WriteLine(Resources.CommandLine_ImportResultsFile_Error__Failed_importing_the_results_file__0__, replicateFile);
-                return false;
-            }
-
-            _doc = newDoc;
-
-            _out.WriteLine(Resources.CommandLine_ImportResultsFile_Results_added_from__0__to_replicate__1__, replicateFile.GetFileName(), replicateName);
-            //the file was imported successfully
-            _importCount++;
             return true;
         }
 
@@ -1120,15 +1240,17 @@ namespace pwiz.Skyline
 
         private void ImportFoundResultsFiles(CommandArgs commandArgs, ImportPeptideSearch import)
         {
+            var listNamedPaths = new List<KeyValuePair<string, MsDataFileUri[]>>();
             foreach (var resultFile in import.GetFoundResultsFiles())
             {
                 var filePath = new MsDataFilePath(resultFile.Path);
                 if (!_doc.Settings.HasResults || _doc.Settings.MeasuredResults.FindMatchingMSDataFile(filePath) == null)
                 {
-                    if (!ImportResultsFile(filePath.ChangeParameters(_doc, commandArgs.LockMassParameters), resultFile.Name, null, null, null))
-                        break; // Lots of work completed, still want to save
+                    listNamedPaths.Add(new KeyValuePair<string, MsDataFileUri[]>(resultFile.Name, new [] {filePath}));
                 }
             }
+
+            ImportDataFiles(listNamedPaths, null, null, null, null, false);
         }
 
         private bool ReintegratePeaks(CommandArgs commandArgs)
@@ -1688,7 +1810,7 @@ namespace pwiz.Skyline
                         _out.WriteLine(Resources.CommandLine_ExportLiveReport_Check_to_make_sure_it_is_not_read_only_);
                     }
 
-                    var status = new ProgressStatus(string.Empty);
+                    IProgressStatus status = new ProgressStatus(string.Empty);
                     IProgressMonitor broker = new CommandProgressMonitor(_out, status);
 
                     using (var writer = new StreamWriter(saver.SafeName))
@@ -2379,52 +2501,40 @@ namespace pwiz.Skyline
         /// This function will add the given replicate, from dataFile, to the given document. If the replicate
         /// does not exist, it will be added. If it does exist, it will be appended to.
         /// </summary>
-        public static SrmDocument ImportResults(SrmDocument doc, string docPath, string replicate, MsDataFileUri dataFile,
-                                                OptimizableRegression optimize, IProgressMonitor progressMonitor, out ProgressStatus status)
+        public void ImportResults(MemoryDocumentContainer docContainer,
+            string replicate, MsDataFileUri dataFile, OptimizableRegression optimize)
         {
-            using (var docContainer = new ResultsMemoryDocumentContainer(null, docPath) {ProgressMonitor = progressMonitor})
+            SrmDocument docOriginal, docAdded;
+            do
             {
-                // Make sure library loading happens, which may not happen, if the doc
-                // parameter is used as the baseline document.
-                docContainer.SetDocument(doc, null);
+                docOriginal= docContainer.Document;
 
-                SrmDocument docAdded;
-                do
+                var listChromatograms = new List<ChromatogramSet>();
+
+                if (docOriginal.Settings.HasResults)
+                    listChromatograms.AddRange(docOriginal.Settings.MeasuredResults.Chromatograms);
+
+                int indexChrom = listChromatograms.IndexOf(chrom => chrom.Name.Equals(replicate));
+                if (indexChrom != -1)
                 {
-                    doc = docContainer.Document;
-
-                    var listChromatograms = new List<ChromatogramSet>();
-
-                    if (doc.Settings.HasResults)
-                        listChromatograms.AddRange(doc.Settings.MeasuredResults.Chromatograms);
-
-                    int indexChrom = listChromatograms.IndexOf(chrom => chrom.Name.Equals(replicate));
-                    if (indexChrom != -1)
-                    {
-                        var chromatogram = listChromatograms[indexChrom];
-                        var paths = chromatogram.MSDataFilePaths;
-                        var listFilePaths = paths.ToList();
-                        listFilePaths.Add(dataFile);
-                        listChromatograms[indexChrom] = chromatogram.ChangeMSDataFilePaths(listFilePaths);
-                    }
-                    else
-                    {
-                        listChromatograms.Add(new ChromatogramSet(replicate, new[] {dataFile.Normalize()},
-                            Annotations.EMPTY, optimize));
-                    }
-
-                    var results = doc.Settings.HasResults
-                                      ? doc.Settings.MeasuredResults.ChangeChromatograms(listChromatograms)
-                                      : new MeasuredResults(listChromatograms, doc.Settings.IsResultsJoiningDisabled);
-
-                    docAdded = doc.ChangeMeasuredResults(results);
+                    var chromatogram = listChromatograms[indexChrom];
+                    var paths = chromatogram.MSDataFilePaths;
+                    var listFilePaths = paths.ToList();
+                    listFilePaths.Add(dataFile);
+                    listChromatograms[indexChrom] = chromatogram.ChangeMSDataFilePaths(listFilePaths);
                 }
-                while (!docContainer.SetDocument(docAdded, doc, true));
+                else
+                {
+                    listChromatograms.Add(new ChromatogramSet(replicate, new[] { dataFile.Normalize() }, Annotations.EMPTY, optimize));
+                }
 
-                status = docContainer.LastProgress;
+                var results = docOriginal.Settings.HasResults
+                                  ? docOriginal.Settings.MeasuredResults.ChangeChromatograms(listChromatograms)
+                                  : new MeasuredResults(listChromatograms, docOriginal.Settings.IsResultsJoiningDisabled);
 
-                return docContainer.Document;
+                docAdded = docOriginal.ChangeMeasuredResults(results);
             }
+            while (!docContainer.SetDocument(docAdded, docOriginal));
         }
 
         /// <summary>
@@ -2528,7 +2638,7 @@ namespace pwiz.Skyline
                     else
                     {
                         _statusWriter.WriteLine(
-							Resources.PanoramaPublishHelper_PublishDocToPanorama_An_error_occurred_on_the_Panorama_server___0___importing_the_file_, 
+                            Resources.PanoramaPublishHelper_PublishDocToPanorama_An_error_occurred_on_the_Panorama_server___0___importing_the_file_, 
                             panoramaEx.ServerUrl);
                         _statusWriter.WriteLine(
                             Resources.PanoramaPublishHelper_PublishDocToPanorama_Error_details_can_be_found_at__0_,
@@ -2760,7 +2870,7 @@ namespace pwiz.Skyline
 
     internal class CommandProgressMonitor : IProgressMonitor
     {
-        private ProgressStatus _currentProgress;
+        private IProgressStatus _currentProgress;
         private readonly DateTime _waitStart;
         private DateTime _lastOutput;
         private string _lastMessage;
@@ -2769,7 +2879,7 @@ namespace pwiz.Skyline
         private Thread _waitingThread;
         private volatile bool _waiting;
 
-        public CommandProgressMonitor(TextWriter outWriter, ProgressStatus status)
+        public CommandProgressMonitor(TextWriter outWriter, IProgressStatus status)
         {
             _out = outWriter;
             _waitStart = _lastOutput = DateTime.Now;
@@ -2782,9 +2892,9 @@ namespace pwiz.Skyline
             get { return false; }
         }
 
-        UpdateProgressResponse IProgressMonitor.UpdateProgress(ProgressStatus status)
+        public UpdateProgressResponse UpdateProgress(IProgressStatus status)
         {
-            UpdateProgress(status);
+            UpdateProgressInternal(status);
 
             return UpdateProgressResponse.normal;
         }
@@ -2793,7 +2903,7 @@ namespace pwiz.Skyline
 
         public Exception ErrorException { get { return _currentProgress != null ? _currentProgress.ErrorException : null; } }
 
-        private void UpdateProgress(ProgressStatus status)
+        private void UpdateProgressInternal(IProgressStatus status)
         {
             if (status.PercentComplete != -1)
             {
@@ -2813,12 +2923,19 @@ namespace pwiz.Skyline
                 return;
             }
 
-            bool writeMessage = !string.IsNullOrEmpty(status.Message) &&
-                                (_lastMessage == null || !ReferenceEquals(status.Message, _lastMessage));
+            bool writeMessage = !string.IsNullOrEmpty(status.Message) && status.Message != _lastMessage;
 
             if (status.IsError)
             {
-                _out.WriteLine(Resources.CommandLine_GeneralException_Error___0_, status.ErrorException.Message);
+                var multiStatus = status as MultiProgressStatus;
+                if (multiStatus != null)
+                {
+                    WriteMultiStatusErrors(multiStatus);
+                }
+                else
+                {
+                    _out.WriteLine(Resources.CommandLine_GeneralException_Error___0_, status.ErrorException.Message);
+                }
                 writeMessage = false;
             }
             else if (status.PercentComplete == -1)
@@ -2831,12 +2948,28 @@ namespace pwiz.Skyline
             }
             else if (_currentProgress != null && status.PercentComplete != _currentProgress.PercentComplete)
             {
-                // If writing a message at the same time as updating percent complete,
-                // put them both on the same line
-                if (writeMessage)
-                    _out.WriteLine("{0}% - {1}", status.PercentComplete, status.Message); // Not L10N
+                var multiStatus = status as MultiProgressStatus;
+                if (multiStatus != null)
+                {
+                    // Display completion percentages for multiple tasks
+                    var sb = new StringBuilder();
+                    for (int i = 0; i < multiStatus.ProgressList.Count; i++)
+                    {
+                        var progressStatus = multiStatus.ProgressList[i];
+                        if (progressStatus.State == ProgressState.running)
+                            sb.Append(string.Format("[{0:##0}] {1:#0}%  ", i+1, progressStatus.PercentComplete)); // Not L10N
+                    }
+                    _out.WriteLine(sb.ToString());
+                }
                 else
-                    _out.WriteLine("{0}%", status.PercentComplete); // Not L10N
+                {
+                    // If writing a message at the same time as updating percent complete,
+                    // put them both on the same line
+                    if (writeMessage)
+                        _out.WriteLine("{0}% - {1}", status.PercentComplete, status.Message); // Not L10N
+                    else
+                        _out.WriteLine("{0}%", status.PercentComplete); // Not L10N
+                }
             }
             else if (writeMessage)
             {
@@ -2847,6 +2980,27 @@ namespace pwiz.Skyline
                 _lastMessage = status.Message;
             _lastOutput = currentTime;
             _currentProgress = status;
+        }
+
+        private void WriteMultiStatusErrors(MultiProgressStatus multiStatus)
+        {
+            for (int i = 0; i < multiStatus.ProgressList.Count; i++)
+            {
+                var progressStatus = multiStatus.ProgressList[i];
+                if (progressStatus.IsError)
+                {
+                    var rawPath = progressStatus.Message;
+                    var missingDataException = progressStatus.ErrorException as MissingDataException;
+                    if (missingDataException != null)
+                        rawPath = missingDataException.FilePath;
+                    _out.WriteLine(
+                        Resources.CommandLine_ImportResultsFile_Warning__Failed_importing_the_results_file__0____Ignoring___,
+                        rawPath);
+                    _out.WriteLine(Resources.CommandProgressMonitor_UpdateProgressInternal_Message__ +
+                                   progressStatus.ErrorException.Message);
+                    _out.WriteLine();
+                }
+            }
         }
 
         private void Wait()

@@ -46,6 +46,11 @@
             this.labelNameAdd = new System.Windows.Forms.Label();
             this.textName = new System.Windows.Forms.TextBox();
             this.labelNameNew = new System.Windows.Forms.Label();
+            this.label1 = new System.Windows.Forms.Label();
+            this.comboSimultaneousFiles = new System.Windows.Forms.ComboBox();
+            this.panel1 = new System.Windows.Forms.Panel();
+            this.cbAutoRetry = new System.Windows.Forms.CheckBox();
+            this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // helpTip
@@ -157,15 +162,47 @@
             resources.ApplyResources(this.labelNameNew, "labelNameNew");
             this.labelNameNew.Name = "labelNameNew";
             // 
+            // label1
+            // 
+            resources.ApplyResources(this.label1, "label1");
+            this.label1.Name = "label1";
+            // 
+            // comboSimultaneousFiles
+            // 
+            this.comboSimultaneousFiles.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboSimultaneousFiles.FormattingEnabled = true;
+            this.comboSimultaneousFiles.Items.AddRange(new object[] {
+            resources.GetString("comboSimultaneousFiles.Items"),
+            resources.GetString("comboSimultaneousFiles.Items1"),
+            resources.GetString("comboSimultaneousFiles.Items2")});
+            resources.ApplyResources(this.comboSimultaneousFiles, "comboSimultaneousFiles");
+            this.comboSimultaneousFiles.Name = "comboSimultaneousFiles";
+            // 
+            // panel1
+            // 
+            this.panel1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panel1.Controls.Add(this.cbAutoRetry);
+            this.panel1.Controls.Add(this.label1);
+            this.panel1.Controls.Add(this.comboSimultaneousFiles);
+            this.panel1.Controls.Add(this.cbShowAllChromatograms);
+            resources.ApplyResources(this.panel1, "panel1");
+            this.panel1.Name = "panel1";
+            // 
+            // cbAutoRetry
+            // 
+            resources.ApplyResources(this.cbAutoRetry, "cbAutoRetry");
+            this.cbAutoRetry.Name = "cbAutoRetry";
+            this.cbAutoRetry.UseVisualStyleBackColor = true;
+            // 
             // ImportResultsDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.panel1);
             this.Controls.Add(this.labelTuning);
             this.Controls.Add(this.comboTuning);
-            this.Controls.Add(this.cbShowAllChromatograms);
             this.Controls.Add(this.labelOptimizing);
             this.Controls.Add(this.comboOptimizing);
             this.Controls.Add(this.radioCreateMultipleMulti);
@@ -183,6 +220,8 @@
             this.MinimizeBox = false;
             this.Name = "ImportResultsDlg";
             this.ShowInTaskbar = false;
+            this.panel1.ResumeLayout(false);
+            this.panel1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -206,5 +245,9 @@
         private System.Windows.Forms.CheckBox cbShowAllChromatograms;
         private System.Windows.Forms.Label labelTuning;
         private System.Windows.Forms.ComboBox comboTuning;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.ComboBox comboSimultaneousFiles;
+        private System.Windows.Forms.Panel panel1;
+        private System.Windows.Forms.CheckBox cbAutoRetry;
     }
 }

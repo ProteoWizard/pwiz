@@ -88,7 +88,7 @@ namespace pwiz.Skyline.Model
             int progressPercent = -1;
 
             string line;
-            var status = new ProgressStatus(string.Empty);
+            IProgressStatus status = new ProgressStatus(string.Empty);
             while ((line = reader.ReadLine()) != null)
             {
                 linesRead++;
@@ -364,7 +364,7 @@ namespace pwiz.Skyline.Model
             irtPeptides = new List<MeasuredRetentionTime>();
             librarySpectra = new List<SpectrumMzInfo>();
             errorList = new List<TransitionImportErrorInfo>();
-            var status = new ProgressStatus(string.Empty);
+            IProgressStatus status = new ProgressStatus();
             // Get the lines used to guess the necessary columns and create the row reader
             if (progressMonitor != null)
             {

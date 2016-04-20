@@ -303,13 +303,14 @@ namespace pwiz.SkylineTestFunctional
             // 13. Title column missing causes iRT's and library to be skipped
             const string textTitleMissing = "728.88\t924.539\t\t3305.3\t0\tADSTGTLVITDPTR\tAQUA4SWATH_HMLangeA\n";
             RunUI(() => ClipboardEx.SetText(textTitleMissing));
-            RunUI(() =>
+
+            using (new WaitDocumentChange(null, true))
             {
-                SkylineWindow.Paste();
-                WaitForDocumentLoaded();
-                // Transition gets added but not iRT
-                ValidateDocAndIrt(SkylineWindow.DocumentUI, 11, 361, 10);
-            });
+                RunUI(() => SkylineWindow.Paste());
+            }
+
+            // Transition gets added but not iRT
+            RunUI(() => ValidateDocAndIrt(SkylineWindow.DocumentUI, 11, 361, 10));
 
             // 14. Same as 5 but this time do overwrite the iRT value
             LoadDocument(documentExisting);

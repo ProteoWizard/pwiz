@@ -96,7 +96,7 @@ namespace pwiz.ProteomeDatabase.API
             }
         }
 
-        private bool UpdateProgressAndCheckForCancellation(IProgressMonitor progressMonitor, ref ProgressStatus status, string message, int pctComplete)
+        private bool UpdateProgressAndCheckForCancellation(IProgressMonitor progressMonitor, ref IProgressStatus status, string message, int pctComplete)
         {
             if (progressMonitor.IsCanceled)
                 return false;
@@ -214,7 +214,7 @@ namespace pwiz.ProteomeDatabase.API
             public ICollection<DbProteinName> Names { get; private set; }
         }
 
-        public void AddFastaFile(StreamReader reader, IProgressMonitor progressMonitor, ref ProgressStatus status,  bool delayAnalyzeDb)
+        public void AddFastaFile(StreamReader reader, IProgressMonitor progressMonitor, ref IProgressStatus status,  bool delayAnalyzeDb)
         {
             Dictionary<string, ProtIdNames> proteinIds = new Dictionary<string, ProtIdNames>();
             using (ISession session = OpenWriteSession()) // This is a long session, but there's no harm since db is useless till its done
@@ -529,7 +529,7 @@ namespace pwiz.ProteomeDatabase.API
             return proteinNames.Any() ? proteinNames[0] : null;
         }
 
-        public Digestion Digest(IProtease protease, int maxMissedCleavages, IProgressMonitor progressMonitor, ref ProgressStatus status, bool delayDbIndexing = false)
+        public Digestion Digest(IProtease protease, int maxMissedCleavages, IProgressMonitor progressMonitor, ref IProgressStatus status, bool delayDbIndexing = false)
         {
             using (ISession session = OpenWriteSession())
             {
@@ -740,7 +740,7 @@ namespace pwiz.ProteomeDatabase.API
         /// <param name="parseOnly">if true, attempt to parse protein metadata from descriptions but do not proceed to web access</param>
         /// <param name="done">will return true if there is nothung more to look up</param>
         /// <returns>true on success</returns>
-        public bool LookupProteinMetadata(IProgressMonitor progressMonitor, ref ProgressStatus status, WebEnabledFastaImporter fastaImporter, bool parseOnly, out bool done)
+        public bool LookupProteinMetadata(IProgressMonitor progressMonitor, ref IProgressStatus status, WebEnabledFastaImporter fastaImporter, bool parseOnly, out bool done)
         {
             var unsearchedProteins = new List<ProteinSearchInfo>();
             done = false;

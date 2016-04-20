@@ -34,9 +34,25 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
 {
-    public sealed class ChromatogramManager : BackgroundLoader
+    public sealed class ChromatogramManager : BackgroundLoader, IDisposable
     {
+        private readonly MultiFileLoader _multiFileLoader;
+
         public bool SupportAllGraphs { get; set; }
+        public int LoadingThreads { get; set; }
+        public MultiProgressStatus Status { get { return _multiFileLoader.Status; } }
+
+        public ChromatogramManager(bool synchronousMode)
+        {
+            IsMultiThreadAware = true;
+            LoadingThreads = 1;
+            _multiFileLoader = new MultiFileLoader(synchronousMode);
+        }
+
+        public void ChangeStatus(ChromatogramLoadingStatus loadingStatus)
+        {
+            _multiFileLoader.ChangeStatus(loadingStatus);
+        }
 
         protected override bool StateChanged(SrmDocument document, SrmDocument previous)
         {
@@ -73,6 +89,22 @@ namespace pwiz.Skyline.Model.Results
             return settings.MeasuredResults.IsNotLoadedExplained;
         }
 
+        public override void ResetProgress(SrmDocument document)
+        {
+            _multiFileLoader.ResetStatus();
+            _multiFileLoader.ClearDocument(document);
+        }
+
+        public void RemoveFile(MsDataFileUri filePath)
+        {
+            _multiFileLoader.ClearFile(filePath);
+        }
+
+        public void Dispose()
+        {
+            _multiFileLoader.DoneAddingFiles();
+        }
+
         protected override IEnumerable<IPooledStream> GetOpenStreams(SrmDocument document)
         {
             if (document == null || !document.Settings.HasResults)
@@ -85,8 +117,19 @@ namespace pwiz.Skyline.Model.Results
             SrmSettings settings = container.Document.Settings;
             // If the document no longer contains any measured results, or the
             // measured results for the document are completely loaded.
-            // TODO: Allow a single file loading to be canceled by removing it
-            return !settings.HasResults || settings.MeasuredResults.IsLoaded;
+            if (!settings.HasResults || settings.MeasuredResults.IsLoaded)
+                return true;
+
+            var dataFilePath = tag as MsDataFileUri;
+            if (dataFilePath != null)
+            {
+                // Cancelled if file is no longer part of the document, or it is
+                // already loaded.
+                return 
+                    !settings.MeasuredResults.MSDataFilePaths.Contains(dataFilePath) ||
+                    settings.MeasuredResults.CachedFilePaths.Contains(dataFilePath);
+            }
+            return false;
         }
 
         private bool IsReadyToLoad(SrmDocument document)
@@ -115,8 +158,27 @@ namespace pwiz.Skyline.Model.Results
 
         protected override bool LoadBackground(IDocumentContainer container, SrmDocument document, SrmDocument docCurrent)
         {
-            var loader = new Loader(this, container, document, docCurrent);
-            loader.Load();
+            lock (this)
+            {
+                // Now that we're in the lock, we have to refresh the current document.
+                // If during the time this thread was waiting for the lock, the document
+                // has changed state in a way that means another thread will be following
+                // behind this one, or the document has become loaded, then this thread
+                // has nothing to do.
+                var docInLock = container.Document;
+                if (StateChanged(docCurrent, docInLock) || IsLoaded(docInLock))
+                    return false;
+                docCurrent = docInLock;
+
+                _multiFileLoader.InitializeThreadCount();
+
+                // The Thread.Sleep below caused many issues loading code, which were fixed
+                // This may still be good to keep around for periodic testing of synchronization logic
+//                Thread.Sleep(1000);
+
+                var loader = new Loader(this, container, document, docCurrent, _multiFileLoader);
+                loader.Load();
+            }
 
             return false;
         }
@@ -127,13 +189,16 @@ namespace pwiz.Skyline.Model.Results
             private readonly IDocumentContainer _container;
             private readonly SrmDocument _document;
             private readonly SrmDocument _docCurrent;
+            private readonly MultiFileLoader _multiFileLoader;
+            private MultiFileLoadMonitor _loadMonitor;
 
-            public Loader(ChromatogramManager manager, IDocumentContainer container, SrmDocument document, SrmDocument docCurrent)
+            public Loader(ChromatogramManager manager, IDocumentContainer container, SrmDocument document, SrmDocument docCurrent, MultiFileLoader multiFileLoader)
             {
                 _manager = manager;
                 _container = container;
                 _document = document;
                 _docCurrent = docCurrent;
+                _multiFileLoader = multiFileLoader;
             }
 
             public void Load()
@@ -146,18 +211,18 @@ namespace pwiz.Skyline.Model.Results
                 if (results.IsLoaded)
                     return;
 
-                var loadMonitor = new LoadMonitor(_manager, _container, results) {HasUI = _manager.SupportAllGraphs};
-                results.Load(_docCurrent, documentFilePath, loadMonitor, FinishLoad);
+                Assume.IsNull(_loadMonitor);
+                _loadMonitor = new MultiFileLoadMonitor(_manager, _container, results) {HasUI = _manager.SupportAllGraphs};
+                results.Load(_docCurrent, documentFilePath, _loadMonitor, _multiFileLoader, FinishLoad);
             }
 
             private void CancelLoad(MeasuredResults results)
             {
-                if (results.StatusLoading != null)
-                    _manager.UpdateProgress(results.StatusLoading.Cancel());
-                _manager.EndProcessing(_document);                
+                _manager.UpdateProgress(_manager.Status.Cancel());
+                _manager.EndProcessing(_document);
             }
 
-            private void FinishLoad(string documentPath, MeasuredResults resultsLoad, bool changeSets)
+            private void FinishLoad(string documentPath, MeasuredResults resultsLoad, MeasuredResults resultsPrevious)
             {
                 if (resultsLoad == null)
                 {
@@ -184,18 +249,12 @@ namespace pwiz.Skyline.Model.Results
                                                                                         Resources.Loader_FinishLoad_Updating_peak_statistics,
                                                                                         _container, docCurrent))
                         {
-                            if (changeSets)
-                            {
-                                // Result is empty cache, due to cancelation
-                                results = resultsLoad.Chromatograms.Count != 0 ? resultsLoad : null;
-                                docNew = docCurrent.ChangeMeasuredResults(results, settingsChangeMonitor);
-                            }
-                            else
-                            {
-                                // Otherwise, switch to new cache
+                            // First remove any chromatogram sets that were removed during processing
+                            results = results.ApplyChromatogramSetRemovals(resultsLoad, resultsPrevious);
+                            // Then update caches
+                            if (results != null)
                                 results = results.UpdateCaches(documentPath, resultsLoad);
-                                docNew = docCurrent.ChangeMeasuredResults(results, settingsChangeMonitor);
-                            }
+                            docNew = docCurrent.ChangeMeasuredResults(results, settingsChangeMonitor);
                         }
                     }
                     catch (OperationCanceledException)
@@ -205,10 +264,6 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
                 while (docNew == null || !_manager.CompleteProcessing(_container, docNew, docCurrent));
-
-                // Force a document changed event to keep progressive load going
-                // until it is complete
-                _manager.OnDocumentChanged(_container, new DocumentChangedEventArgs(docCurrent));
             }
         }
     }

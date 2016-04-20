@@ -55,7 +55,7 @@ namespace pwiz.Common.DataBinding.Internal
         }
         public IEnumerable RowSource
         {
-            get { return _rowSourceWrapper.WrappedRowSource; }
+            get { return (_rowSourceWrapper ?? RowSourceWrapper.Empty).WrappedRowSource; }
             set
             {
                 if (ReferenceEquals(value, RowSource))

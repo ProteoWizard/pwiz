@@ -35,6 +35,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Util
 {
@@ -972,7 +973,7 @@ namespace pwiz.Skyline.Util
         /// <param name="progressMonitor">Optional progress monitor for reporting progress over long periods</param>
         /// <param name="status">Optional progress status object for reporting progress</param>
         public BlockedArray(Func<int, TItem[]> readItems, int itemCount, int itemSize, int bytesPerBlock,
-            IProgressMonitor progressMonitor = null, ProgressStatus status = null)
+            IProgressMonitor progressMonitor = null, IProgressStatus status = null)
         {
             _itemCount = itemCount;
             _blocks = new List<TItem[]>();
@@ -1673,6 +1674,53 @@ namespace pwiz.Skyline.Util
         }
     }
 
+    public static class ExceptionUtil
+    {
+        public static string GetMessage(Exception ex)
+        {
+            // Drill down to see if the innermost exception was an out-of-memory exception.
+            var innerException = ex;
+            while (innerException.InnerException != null)
+                innerException = innerException.InnerException;
+            if (innerException is OutOfMemoryException)
+            {
+                string memoryMessage = String.Format(Resources.SkylineWindow_CompleteProgressUI_Ran_Out_Of_Memory, Program.Name);
+                if (!Install.Is64Bit && Environment.Is64BitOperatingSystem)
+                {
+                    memoryMessage += String.Format(Resources.SkylineWindow_CompleteProgressUI_version_issue, Program.Name);
+                }
+                return TextUtil.LineSeparate(ex.Message, memoryMessage);
+            }
+            return ex.Message;
+        }
+
+        public static string GetStackTraceText(Exception exception, StackTrace stackTraceExceptionCaughtAt = null, bool showMessage = true)
+        {
+            StringBuilder stackTrace = new StringBuilder();
+            if (showMessage)
+                stackTrace.AppendLine("Stack trace:").AppendLine(); // Not L10N
+
+            stackTrace.AppendLine(exception.StackTrace).AppendLine();
+
+            for (var x = exception.InnerException; x != null; x = x.InnerException)
+            {
+                if (ReferenceEquals(x, exception.InnerException))
+                    stackTrace.AppendLine("Inner exceptions:"); // Not L10N
+                else
+                    stackTrace.AppendLine("---------------------------------------------------------------"); // Not L10N
+                stackTrace.Append("Exception type: ").Append(x.GetType().FullName).AppendLine(); // Not L10N
+                stackTrace.Append("Error message: ").AppendLine(x.Message); // Not L10N
+                stackTrace.AppendLine(x.Message).AppendLine(x.StackTrace);
+            }
+            if (null != stackTraceExceptionCaughtAt)
+            {
+                stackTrace.AppendLine("Exception caught at: "); // Not L10N
+                stackTrace.AppendLine(stackTraceExceptionCaughtAt.ToString());
+            }
+            return stackTrace.ToString();
+        }
+    }
+
     public static class ParallelEx
     {
         // This can be set to true to make debugging easier.
@@ -1733,6 +1781,56 @@ namespace pwiz.Skyline.Util
                 if (catchClause != null)
                     catchClause(x);
             }
+        }
+    }
+
+    public class Alarms
+    {
+        private readonly Dictionary<object, AlarmInfo> _timers =
+            new Dictionary<object, AlarmInfo>();
+
+        private class AlarmInfo
+        {
+            public System.Windows.Forms.Timer Timer;
+            public long Ticks;
+        }
+
+        public void Run(Control control, int milliseconds, object id, Action action)
+        {
+            try
+            {
+                control.Invoke(new Action(() =>
+                {
+                    lock (_timers)
+                    {
+                        var alarmTicks = DateTime.Now.Ticks + milliseconds*TimeSpan.TicksPerMillisecond;
+                        if (_timers.ContainsKey(id))
+                        {
+                            if (_timers[id].Ticks <= alarmTicks)
+                                return;
+                            _timers[id].Timer.Dispose();
+                        }
+                        var timer = new System.Windows.Forms.Timer {Interval = milliseconds};
+                        timer.Tick += (sender, args) => TimerTick(id, action);
+                        _timers[id] = new AlarmInfo {Timer = timer, Ticks = alarmTicks};
+                        timer.Start();
+                    }
+                }));
+            }
+            catch (InvalidOperationException)
+            {
+            }
+        }
+
+        private void TimerTick(object id, Action action)
+        {
+            lock (_timers)
+            {
+                var alarmInfo = _timers[id];
+                _timers.Remove(id);
+                alarmInfo.Timer.Dispose();
+            }
+            action();
         }
     }
 }

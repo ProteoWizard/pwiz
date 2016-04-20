@@ -58,7 +58,7 @@ namespace pwiz.Skyline.Alerts
 
         public ReportErrorDlg(Exception e, StackTrace stackTraceExceptionCaughtAt)
         {
-            Init(e.GetType().Name, e.Message, GetStackTraceText(e, stackTraceExceptionCaughtAt));
+            Init(e.GetType().Name, e.Message, ExceptionUtil.GetStackTraceText(e, stackTraceExceptionCaughtAt));
 
             Install.InstallType installType = Install.Type;
 
@@ -187,31 +187,6 @@ namespace pwiz.Skyline.Alerts
             DialogResult = DialogResult.OK;
         }
         // ReSharper restore NonLocalizedString
-
-        protected static string GetStackTraceText(Exception exception, StackTrace stackTraceExceptionCaughtAt = null)
-        {
-            StringBuilder stackTrace = new StringBuilder("Stack trace:"); // Not L10N
-
-            stackTrace.AppendLine().AppendLine(exception.StackTrace).AppendLine();
-
-            for (var x = exception.InnerException; x != null; x = x.InnerException)
-            {
-                if (ReferenceEquals(x, exception.InnerException))
-                    stackTrace.AppendLine("Inner exceptions:"); // Not L10N
-                else
-                    stackTrace.AppendLine("---------------------------------------------------------------"); // Not L10N
-                stackTrace.Append("Exception type: ").Append(x.GetType().FullName).AppendLine(); // Not L10N
-                stackTrace.Append("Error message: ").AppendLine(x.Message); // Not L10N
-                stackTrace.AppendLine(x.Message).AppendLine(x.StackTrace);
-            }
-            if (null != stackTraceExceptionCaughtAt)
-            {
-                stackTrace.AppendLine("Exception caught at: "); // Not L10N
-                stackTrace.AppendLine(stackTraceExceptionCaughtAt.ToString());
-            }
-            return stackTrace.ToString();
-        }
-
     
         private string MessageBody
         {

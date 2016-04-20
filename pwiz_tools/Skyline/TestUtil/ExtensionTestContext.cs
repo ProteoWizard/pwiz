@@ -150,7 +150,7 @@ namespace pwiz.SkylineTestUtil
             get
             {
                 // return false to import mzML
-                return AllowVendorReaders && !IsDebugMode && !System.Diagnostics.Debugger.IsAttached;  // no waters library for debug build, or under debugger in release build
+                return AllowVendorReaders && !IsDebugMode;  // no waters library for debug build
             }
         }
 

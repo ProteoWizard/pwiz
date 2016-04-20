@@ -53,7 +53,8 @@ namespace pwiz.SkylineTestTutorial
             // Set true to look at tutorial screenshots.
             //IsPauseForScreenShots = true;
 
-            ForceMzml = true;   // 2-3x faster than raw files for this test.
+            // Multi-file import has problems with mzML on this test
+            ForceMzml = true; // (Settings.Default.ImportResultsSimultaneousFiles == 0);   // 2-3x faster than raw files for this test.
 
             LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/MethodRefine-1_4.pdf";
 

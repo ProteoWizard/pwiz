@@ -628,7 +628,7 @@ namespace pwiz.Skyline.Util
     {
         private WebClient _webClient;
         private IProgressMonitor _progressMonitor;
-        private ProgressStatus _progressStatus;
+        private IProgressStatus _progressStatus;
 
        
         public override JToken GetInfoForFolders(Server server, string folder)

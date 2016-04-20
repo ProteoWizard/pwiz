@@ -263,7 +263,7 @@ namespace pwiz.Skyline.SettingsUI
                         {
                             using (var reader = File.OpenText(fastaFilePath))
                             {
-                                var status = new ProgressStatus(longWaitDlg.Message);
+                                IProgressStatus status = new ProgressStatus(longWaitDlg.Message);
                                 proteomeDb.AddFastaFile(reader, progressMonitor, ref status, false);
                             }
                         }

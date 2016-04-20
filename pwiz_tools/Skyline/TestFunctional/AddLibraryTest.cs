@@ -88,23 +88,32 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(libName, editRtDlg.Regression.Calculator.Name);
 
             OkDialog(editRtDlg, editRtDlg.OkDialog);
+            var docChange = SkylineWindow.Document;
             var addStandardsBiognosysDlg = ShowDialog<AddIrtStandardsToDocumentDlg>(peptideSettingsUi.OkDialog);
+            docChange = WaitForDocumentChangeLoaded(docChange);
             OkDialog(addStandardsBiognosysDlg, addStandardsBiognosysDlg.BtnYesClick);
+            docChange = WaitForDocumentChange(docChange);
             VerifyAdd(1, 0);
 
             ResetModsAndSetStandards("apoa1", "apoa1.irtdb");
             var addStandardsApoa1Dlg = WaitForOpenForm<AddIrtStandardsToDocumentDlg>();
+            docChange = WaitForDocumentChange(docChange);
             OkDialog(addStandardsApoa1Dlg, addStandardsApoa1Dlg.BtnYesClick);
+            docChange = WaitForDocumentChange(docChange);
             VerifyAdd(1, 1);
 
             ResetModsAndSetStandards("pierce", "pierce.irtdb");
             var addStandardsPierceDlg = WaitForOpenForm<AddIrtStandardsToDocumentDlg>();
+            docChange = WaitForDocumentChange(docChange);
             OkDialog(addStandardsPierceDlg, addStandardsPierceDlg.BtnYesClick);
+            docChange = WaitForDocumentChange(docChange);
             VerifyAdd(1, 2);
 
             ResetModsAndSetStandards("sigma", "sigma.irtdb");
             var addStandardsSigmaDlg = WaitForOpenForm<AddIrtStandardsToDocumentDlg>();
+            docChange = WaitForDocumentChange(docChange);
             OkDialog(addStandardsSigmaDlg, addStandardsSigmaDlg.BtnYesClick);
+            WaitForDocumentChange(docChange);
             VerifyAdd(1, 2);
         }
 

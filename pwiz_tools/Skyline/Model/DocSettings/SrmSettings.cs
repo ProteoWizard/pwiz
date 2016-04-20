@@ -1759,7 +1759,7 @@ namespace pwiz.Skyline.Model.DocSettings
         private readonly IDocumentContainer _documentContainer;
         private readonly SrmDocument _startDocument;
 
-        private ProgressStatus _status;
+        private IProgressStatus _status;
         private int _groupCount;
         private int? _moleculeCount;
         private int _seenGroupCount;
@@ -1811,7 +1811,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 ChangeProgress(status => status);
         }
 
-        public void ChangeProgress(Func<ProgressStatus, ProgressStatus> change)
+        public void ChangeProgress(Func<IProgressStatus, IProgressStatus> change)
         {
             var status = _status;
             var statusNew = change(status);
