@@ -325,13 +325,21 @@ namespace pwiz.Skyline
                     commandArgs.ChromatogramsBasePeaks, commandArgs.ChromatogramsTics);
             }
 
-            if (!string.IsNullOrEmpty(commandArgs.TransListInstrumentType) &&
-                !string.IsNullOrEmpty(commandArgs.MethodInstrumentType))
+            var exportTypes =
+                (string.IsNullOrEmpty(commandArgs.IsolationListInstrumentType) ? 0 : 1) +
+                (string.IsNullOrEmpty(commandArgs.TransListInstrumentType) ? 0 : 1) +
+                (string.IsNullOrEmpty(commandArgs.MethodInstrumentType) ? 0 : 1);
+            if (exportTypes > 1)
             {
                 _out.WriteLine(Resources.CommandLine_Run_Error__You_cannot_simultaneously_export_a_transition_list_and_a_method___Neither_will_be_exported__);
             }
             else
             {
+                if (commandArgs.ExportingIsolationList)
+                {
+                    ExportInstrumentFile(ExportFileType.IsolationList, commandArgs);
+                }
+
                 if (commandArgs.ExportingTransitionList)
                 {
                     ExportInstrumentFile(ExportFileType.List, commandArgs);
@@ -2241,9 +2249,22 @@ namespace pwiz.Skyline
                 _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Warning__The_add_energy_ramp_parameter_is_only_applicable_for_Thermo_transition_lists__This_parameter_will_be_ignored_);
             }
 
-            string instrument = Equals(type, ExportFileType.List)
-                                    ? args.TransListInstrumentType
-                                    : args.MethodInstrumentType;
+            string instrument;
+            switch (type)
+            {
+                case ExportFileType.IsolationList:
+                    instrument = args.IsolationListInstrumentType;
+                    break;
+                case ExportFileType.List:
+                    instrument = args.TransListInstrumentType;
+                    break;
+                case ExportFileType.Method:
+                    instrument = args.MethodInstrumentType;
+                    break;
+                default:
+                    instrument = string.Empty;
+                    break;
+            }
             if (!CheckInstrument(instrument, _doc))
             {
                 _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Warning__The_vendor__0__does_not_match_the_vendor_in_either_the_CE_or_DP_prediction_setting___Continuing_exporting_a_transition_list_anyway___, instrument);
@@ -2277,10 +2298,10 @@ namespace pwiz.Skyline
              * documentation after all...
              */
 
-            if(Equals(type, ExportFileType.Method))
+            if (Equals(type, ExportFileType.Method))
             {
                 string extension = Path.GetExtension(args.TemplateFile);
-                if(!Equals(ExportInstrumentType.MethodExtension(args.MethodInstrumentType),extension))
+                if (!Equals(ExportInstrumentType.MethodExtension(args.MethodInstrumentType), extension))
                 {
                     _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Error__The_template_extension__0__does_not_match_the_expected_extension_for_the_instrument__1___No_method_will_be_exported_, extension,args.MethodInstrumentType);
                     return;
@@ -2332,7 +2353,7 @@ namespace pwiz.Skyline
                 TransitionFullScan.MassAnalyzerToString(
                     _doc.Settings.TransitionSettings.FullScan.ProductMassAnalyzer);
 
-            if(!Equals(args.ExportMethodType, ExportMethodType.Standard))
+            if (!Equals(args.ExportMethodType, ExportMethodType.Standard))
             {
                 if (Equals(args.ExportMethodType, ExportMethodType.Triggered))
                 {
@@ -2362,7 +2383,7 @@ namespace pwiz.Skyline
                     }
                     if (!canTrigger)
                     {
-                        _out.WriteLine(Equals(type, ExportFileType.List)
+                        _out.WriteLine(!Equals(type, ExportFileType.Method)
                                                ? Resources.CommandLine_ExportInstrumentFile_No_list_will_be_exported_
                                                : Resources.CommandLine_ExportInstrumentFile_No_method_will_be_exported_);
                         return;
@@ -2401,7 +2422,7 @@ namespace pwiz.Skyline
                     {
                         _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Error__To_export_a_scheduled_method__you_must_first_import_results_for_all_peptides_in_the_document_);
                     }
-                    _out.WriteLine(Equals(type, ExportFileType.List)
+                    _out.WriteLine(!Equals(type, ExportFileType.Method)
                                            ? Resources.CommandLine_ExportInstrumentFile_No_list_will_be_exported_
                                            : Resources.CommandLine_ExportInstrumentFile_No_method_will_be_exported_);
                     return;
@@ -2413,7 +2434,7 @@ namespace pwiz.Skyline
                 }
                 else
                 {
-                    if(args.SchedulingReplicate.Equals("LAST")) // Not L10N
+                    if (args.SchedulingReplicate.Equals("LAST")) // Not L10N
                     {
                         _exportProperties.SchedulingReplicateNum = _doc.Settings.MeasuredResults.Chromatograms.Count - 1;
                     }
@@ -2424,7 +2445,7 @@ namespace pwiz.Skyline
                         {
                             _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Error__the_specified_replicate__0__does_not_exist_in_the_document_,
                                            args.SchedulingReplicate);
-                            _out.WriteLine(Equals(type, ExportFileType.List)
+                            _out.WriteLine(!Equals(type, ExportFileType.Method)
                                                    ? Resources.CommandLine_ExportInstrumentFile_No_list_will_be_exported_
                                                    : Resources.CommandLine_ExportInstrumentFile_No_method_will_be_exported_);
                             return;
@@ -2448,7 +2469,7 @@ namespace pwiz.Skyline
                 return;
             }
 
-            _out.WriteLine(Equals(type, ExportFileType.List)
+            _out.WriteLine(!Equals(type, ExportFileType.Method)
                                ? Resources.CommandLine_ExportInstrumentFile_List__0__exported_successfully_
                                : Resources.CommandLine_ExportInstrumentFile_Method__0__exported_successfully_,
                            Path.GetFileName(args.ExportPath));

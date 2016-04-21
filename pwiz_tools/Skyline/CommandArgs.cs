@@ -266,6 +266,28 @@ namespace pwiz.Skyline
         }
         public bool? ResolveSkyrConflictsBySkipping { get; private set; }
 
+        private string _isolationListInstrumentType;
+        public string IsolationListInstrumentType
+        {
+            get { return _isolationListInstrumentType; }
+            set
+            {
+                if (ExportInstrumentType.ISOLATION_LIST_TYPES.Any(inst => inst.Equals(value)))
+                {
+                    _isolationListInstrumentType = value;
+                }
+                else
+                {
+                    throw new ArgumentException(string.Format(Resources.CommandArgs_IsolationListInstrumentType_The_instrument_type__0__is_not_valid_for_isolation_list_export, value));
+                }
+            }
+        }
+
+        public bool ExportingIsolationList
+        {
+            get { return !string.IsNullOrEmpty(IsolationListInstrumentType); }
+        }
+
         private string _transListInstrumentType;
         public string TransListInstrumentType
         {
@@ -1146,6 +1168,24 @@ namespace pwiz.Skyline
                 else if (IsNameOnly(pair, "chromatogram-tics")) // Not L10N
                 {
                     ChromatogramsTics = true;
+                }
+                else if (IsNameValue(pair, "exp-isolationlist-instrument")) // Not L10N
+                {
+                    try
+                    {
+                        IsolationListInstrumentType = pair.Value;
+                        RequiresSkylineDocument = true;
+                    }
+                    catch (ArgumentException)
+                    {
+                        _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Warning__The_instrument_type__0__is_not_valid__Please_choose_from_,
+                            pair.Value);
+                        foreach (string str in ExportInstrumentType.ISOLATION_LIST_TYPES)
+                        {
+                            _out.WriteLine(str);
+                        }
+                        _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_No_isolation_list_will_be_exported_);
+                    }
                 }
                 else if (IsNameValue(pair, "exp-translist-instrument")) // Not L10N
                 {

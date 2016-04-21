@@ -9008,4 +9008,10 @@ Here are the last 3 errors:
 </value>
     <comment>used for user-facing error messages when importing results</comment>
   </data>
+  <data name="CommandArgs_ParseArgsInternal_No_isolation_list_will_be_exported_" xml:space="preserve">
+    <value>No isolation list will be exported.</value>
+  </data>
+  <data name="CommandArgs_IsolationListInstrumentType_The_instrument_type__0__is_not_valid_for_isolation_list_export" xml:space="preserve">
+    <value>The instrument type {0} is not valid for isolation list export</value>
+  </data>
 </root>

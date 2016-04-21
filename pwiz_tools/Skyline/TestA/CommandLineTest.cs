@@ -590,6 +590,19 @@ namespace pwiz.SkylineTestA
             Assert.IsFalse(output.Contains(Resources.CommandLineTest_ConsoleAddFastaTest_Warning));
             Assert.IsTrue(File.Exists(agilentTriggeredPath));
             Assert.AreEqual(doc.PeptideTransitionCount + 1, File.ReadAllLines(agilentTriggeredPath).Length);
+
+            // Isolation list export
+            string agilentIsolationPath = testFilesDir.GetTestPath("AgilentIsolationList.csv");
+
+            output = RunCommand("--in=" + docPath,
+                                "--exp-isolationlist-instrument=" + ExportInstrumentType.AGILENT_TOF,
+                                "--exp-strategy=single",
+                                "--exp-file=" + agilentIsolationPath);
+            Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_ExportInstrumentFile_List__0__exported_successfully_, "AgilentIsolationList.csv")));
+            Assert.IsFalse(output.Contains(Resources.CommandLineTest_ConsoleAddFastaTest_Error));
+            Assert.IsTrue(File.Exists(agilentIsolationPath));
+            doc = ResultsUtil.DeserializeDocument(docPath);
+            Assert.AreEqual(doc.PeptideTransitionGroupCount + 1, File.ReadAllLines(agilentIsolationPath).Length);
         }
 
         [TestMethod]
