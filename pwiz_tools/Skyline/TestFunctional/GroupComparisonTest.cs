@@ -49,6 +49,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 SkylineWindow.OpenFile(TestFilesDir.GetTestPath("msstatstest.sky"));
             });
+            WaitForDocumentLoaded();
             DefineOneTwoGroupComparison();
             CopyOneTwoGroupComparison();
         }
@@ -72,13 +73,16 @@ namespace pwiz.SkylineTestFunctional
                 editGroupComparisonDlg.RadioScopePerProtein.Checked = true;
             });
             var foldChangeGrid = ShowDialog<FoldChangeGrid>(editGroupComparisonDlg.ShowPreview);
-            WaitForConditionUI(() => foldChangeGrid.DataboundGridControl.RowCount == 3);
+            TryWaitForConditionUI(() => foldChangeGrid.DataboundGridControl.RowCount == 3);
             RunUI(() =>
             {
+                Assert.AreEqual(3, foldChangeGrid.DataboundGridControl.RowCount);
                 editGroupComparisonDlg.RadioScopePerPeptide.Checked = true;
             });
-            WaitForCondition(() => foldChangeGrid.DataboundGridControl.RowCount == 4);
+            TryWaitForCondition(() => foldChangeGrid.DataboundGridControl.RowCount == 4);
+            RunUI(() => Assert.AreEqual(4, foldChangeGrid.DataboundGridControl.RowCount));
             OkDialog(editGroupComparisonDlg, editGroupComparisonDlg.OkDialog);
+            WaitForClosedForm<FoldChangeGrid>();
         }
 
         /// <summary>
@@ -98,7 +102,8 @@ namespace pwiz.SkylineTestFunctional
             });
             // Show the preview window
             var foldChangeGrid = ShowDialog<FoldChangeGrid>(editGroupComparisonDlg.ShowPreview);
-            WaitForCondition(() => foldChangeGrid.DataboundGridControl.RowCount == 4);
+            TryWaitForCondition(() => foldChangeGrid.DataboundGridControl.RowCount == 4);
+            RunUI(() => Assert.AreEqual(4, foldChangeGrid.DataboundGridControl.RowCount));
             // Show the graph window
             var foldChangeGraph = ShowDialog<FoldChangeBarGraph>(foldChangeGrid.ShowGraph);
             WaitForConditionUI(() => foldChangeGraph.ZedGraphControl.GraphPane.CurveList.Any());
