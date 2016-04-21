@@ -20,7 +20,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -35,6 +34,7 @@ namespace pwiz.Skyline.Model
         private readonly bool _synchronousMode;
         private int _threadCount;
 
+        private object _statusLock;
         private MultiProgressStatus _status;
 
         public MultiFileLoader(bool synchronousMode)
@@ -43,6 +43,7 @@ namespace pwiz.Skyline.Model
             _loadingPaths = new Dictionary<MsDataFileUri, int>();
             _synchronousMode = synchronousMode;
             _threadCount = 1;
+            _statusLock = new object();
             ResetStatus();
         }
 
@@ -60,15 +61,10 @@ namespace pwiz.Skyline.Model
 
         private MultiProgressStatus ChangeStatus(Func<MultiProgressStatus, MultiProgressStatus> change)
         {
-            // Eventual consistency with immutable object to avoid the need for locking
-            MultiProgressStatus statusOriginal, statusNew;
-            do
+            lock (_statusLock)
             {
-                statusOriginal = _status;
-                statusNew = change(statusOriginal);
+                return _status = change(_status);
             }
-            while (!ReferenceEquals(Interlocked.CompareExchange(ref _status, statusNew, statusOriginal), statusOriginal));
-            return statusNew;
         }
 
         public void InitializeThreadCount()
