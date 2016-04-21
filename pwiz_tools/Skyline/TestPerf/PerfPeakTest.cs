@@ -41,10 +41,10 @@ using ZedGraph;
 
 namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the global RunPerfTests flag is set
 {
-    [TestClass]
+    //    [TestClass]       TODO(bspratt) This code was never intended by its author to be an actual test (it just uses the test framework for convenience).  It's very close to being ready for use as an actual test, but not quite, and so should be removed from our test regimen as it always fails.
     public class PerfPeakTest : AbstractFunctionalTest
     {
-        [TestMethod, Timeout(7200000)]
+//        [TestMethod, Timeout(7200000)]
         public void TestPeakPerf()
         {
             TestFilesZipPaths = new[]
