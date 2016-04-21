@@ -19,8 +19,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Text;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
@@ -442,7 +445,18 @@ namespace pwiz.SkylineTestFunctional
             // Simulate user editing the transition in the document grid
             const string noteText = "let's see some ID";
             var colNote = documentGrid.FindColumn(PropertyPath.Parse("Note"));
-            RunUI(() => documentGrid.DataGridView.Rows[0].Cells[colNote.Index].Value = noteText);
+            RunUI(() =>
+            {
+                try
+                {
+                    documentGrid.DataGridView.Rows[0].Cells[colNote.Index].Value = noteText;
+                }
+                catch (Exception x)
+                {
+                    String message = "Error setting column " + colNote.Index + " to " + noteText;
+                    HandleDocumentGridException(documentGrid.DataboundGridControl, message, x);
+                }
+            });
             WaitForCondition(() => (SkylineWindow.Document.MoleculeTransitions.Any() &&
                 SkylineWindow.Document.MoleculeTransitions.First().Note.Equals(noteText)));
 
@@ -829,6 +843,30 @@ namespace pwiz.SkylineTestFunctional
             WaitForClosedForm(keepPrefixDlg);
             WaitForClosedForm(importResultsDlg);
             WaitForDocumentLoaded();
+        }
+
+        private void HandleDocumentGridException(DataboundGridControl grid, String firstMessage, Exception exception)
+        {
+            StringBuilder message = new StringBuilder();
+            if (!string.IsNullOrEmpty(firstMessage))
+            {
+                message.AppendLine(firstMessage);
+            }
+            message.AppendLine("Column Names:" + string.Join(",", grid.ColumnHeaderNames));
+            BindingSource bindingSource = grid.BindingListSource;
+            if (bindingSource != null)
+            {
+                PropertyDescriptorCollection propertyDescriptorCollection = bindingSource.GetItemProperties(null);
+                if (propertyDescriptorCollection != null)
+                {
+                    message.AppendLine("Properties:");
+                    foreach (PropertyDescriptor prop in propertyDescriptorCollection)
+                    {
+                        message.AppendLine(prop.DisplayName + ":" + (prop.IsReadOnly ? "RO" : "Writeable"));
+                    }
+                }
+            }
+            throw new ApplicationException(message.ToString(), exception);
         }
     }  
 }
