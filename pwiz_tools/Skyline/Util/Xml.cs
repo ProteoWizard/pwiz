@@ -913,7 +913,7 @@ namespace pwiz.Skyline.Util
             return sb.ToString();
         }
 
-        public static readonly Regex REGEX_XML_ERROR = new Regex(@"\((\d+), (\d+)\)"); // Not L10N
+        public static readonly Regex REGEX_XML_ERROR = new Regex(@"\((\d+), ?(\d+)\)"); // Not L10N
 
         public static bool TryGetXmlLineColumn(string message, out int line, out int column)
         {
