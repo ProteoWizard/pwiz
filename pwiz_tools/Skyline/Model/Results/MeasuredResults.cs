@@ -1071,7 +1071,7 @@ namespace pwiz.Skyline.Model.Results
                 // Try loading the final cache from disk, if progressive loading has not started
                 string cachePath = ChromatogramCache.FinalPathForName(_documentPath, null);
                 if (!CheckFinalCache(cachePath))
-                    return;
+                    return; // Error reported
 
                 // Attempt to load any shared caches that have not been loaded yet
                 LoadSharedCaches();
@@ -1085,7 +1085,7 @@ namespace pwiz.Skyline.Model.Results
                 var dataFiles = GetDataFiles();
                 var uncachedPaths = GetUncachedPaths(dataFiles, cachedPaths, cachePath, allowLoadingPartialCaches);
                 if (uncachedPaths == null)
-                    return;
+                    return; // Error reported
 
                 // If there are uncached paths, then initialize state for loading them,
                 // and start the load for the first one.
@@ -1197,21 +1197,20 @@ namespace pwiz.Skyline.Model.Results
                 // If the final cache exists and it is not in the partial caches or partial caches
                 // contain the final cache, but it is not open (Undo-Redo case), then make sure it
                 // is reloaded from scratch, as it may have changed since it was last open.
-                bool cacheExists = File.Exists(cachePath);
-                if (_resultsClone._listPartialCaches != null && _resultsClone._cacheRecalc == null && cacheExists)
+                if (_resultsClone._cacheRecalc == null && File.Exists(cachePath))
                 {
-                    int finalIndex = _resultsClone._listPartialCaches.IndexOf(cache =>
-                        Equals(cache.CachePath, cachePath));
-                    if (finalIndex == -1 || _resultsClone._listPartialCaches[finalIndex].ReadStream.IsModified)
+                    if (_resultsClone._listPartialCaches != null)
                     {
-                        foreach (var cache in _resultsClone._listPartialCaches)
-                            cache.ReadStream.CloseStream();
-                        _resultsClone._listPartialCaches = null;
+                        int finalIndex = _resultsClone._listPartialCaches.IndexOf(cache =>
+                            Equals(cache.CachePath, cachePath));
+                        if (finalIndex == -1 || _resultsClone._listPartialCaches[finalIndex].ReadStream.IsModified)
+                        {
+                            foreach (var cache in _resultsClone._listPartialCaches)
+                                cache.ReadStream.CloseStream();
+                            _resultsClone._listPartialCaches = null;    // Drop through and reload
+                        }
                     }
-                }
-                if (_resultsClone._listPartialCaches == null && _resultsClone._cacheRecalc == null)
-                {
-                    if (cacheExists)
+                    if (_resultsClone._listPartialCaches == null)
                     {
                         var status = new ProgressStatus();
                         try

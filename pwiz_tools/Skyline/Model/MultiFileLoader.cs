@@ -48,9 +48,9 @@ namespace pwiz.Skyline.Model
 
         public MultiProgressStatus Status { get { return _status; } }
 
-        public void ChangeStatus(ChromatogramLoadingStatus loadingStatus)
+        public MultiProgressStatus ChangeStatus(ChromatogramLoadingStatus loadingStatus)
         {
-            ChangeStatus(s => s.ChangeStatus(loadingStatus));
+            return ChangeStatus(s => s.ChangeStatus(loadingStatus));
         }
 
         public void ResetStatus()
@@ -58,7 +58,7 @@ namespace pwiz.Skyline.Model
             ChangeStatus(s => new MultiProgressStatus(_synchronousMode));
         }
 
-        private void ChangeStatus(Func<MultiProgressStatus, MultiProgressStatus> change)
+        private MultiProgressStatus ChangeStatus(Func<MultiProgressStatus, MultiProgressStatus> change)
         {
             // Eventual consistency with immutable object to avoid the need for locking
             MultiProgressStatus statusOriginal, statusNew;
@@ -68,6 +68,7 @@ namespace pwiz.Skyline.Model
                 statusNew = change(statusOriginal);
             }
             while (!ReferenceEquals(Interlocked.CompareExchange(ref _status, statusNew, statusOriginal), statusOriginal));
+            return statusNew;
         }
 
         public void InitializeThreadCount()
@@ -218,8 +219,7 @@ namespace pwiz.Skyline.Model
             var loadingStatus = status as ChromatogramLoadingStatus;
             if (loadingStatus != null)
             {
-                _chromatogramManager.ChangeStatus(loadingStatus);
-                status = _chromatogramManager.Status;
+                status = _chromatogramManager.ChangeStatus(loadingStatus);
             }
             var progressResult = _chromatogramManager.UpdateProgress(status);
             return progressResult;

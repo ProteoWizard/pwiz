@@ -49,9 +49,9 @@ namespace pwiz.Skyline.Model.Results
             _multiFileLoader = new MultiFileLoader(synchronousMode);
         }
 
-        public void ChangeStatus(ChromatogramLoadingStatus loadingStatus)
+        public MultiProgressStatus ChangeStatus(ChromatogramLoadingStatus loadingStatus)
         {
-            _multiFileLoader.ChangeStatus(loadingStatus);
+            return _multiFileLoader.ChangeStatus(loadingStatus);
         }
 
         protected override bool StateChanged(SrmDocument document, SrmDocument previous)

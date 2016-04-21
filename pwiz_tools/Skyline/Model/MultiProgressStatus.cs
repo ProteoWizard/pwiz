@@ -175,7 +175,17 @@ namespace pwiz.Skyline.Model
         {
             var progressList = new List<ChromatogramLoadingStatus>(ProgressList.Count);
             foreach (var progressStatus in ProgressList)
-                progressList.Add(ReferenceEquals(status.Id, progressStatus.Id) ? status : progressStatus);
+            {
+                if (!ReferenceEquals(status.Id, progressStatus.Id))
+                    progressList.Add(progressStatus);
+                // Avoid overwriting a final status with a non-final status
+                else if (status.IsFinal || !progressStatus.IsFinal)
+                    progressList.Add(status);
+                else
+                {
+                    return this;    // The list already contains a progress value that is final
+                }
+            }
             return ChangeProp(ImClone(this), s => s.ProgressList = ImmutableList.ValueOf(progressList));
         }
 
