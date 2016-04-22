@@ -213,7 +213,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ShowPeakAreaReplicateComparison();
             });
 
-            WaitForCondition(15 * 60 * 1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded); // 10 minutes
+            WaitForDocumentLoaded(15 * 60 * 1000); // 10 minutes
 
             if (AsSmallMolecules)
             {

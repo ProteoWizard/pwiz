@@ -23,12 +23,18 @@ using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
 {
     public class MultiProgressStatus : Immutable, IProgressStatus
     {
         private readonly bool _synchronousMode;
+
+        /// <summary>
+        /// Flag indicating completeness required to get to 100%
+        /// </summary>
+        private bool _complete;
 
         public MultiProgressStatus(bool synchronousMode)
         {
@@ -49,11 +55,6 @@ namespace pwiz.Skyline.Model
         }
 
         public IProgressStatus ChangeWarningMessage(string prop)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IProgressStatus Complete()
         {
             throw new NotImplementedException();
         }
@@ -108,7 +109,15 @@ namespace pwiz.Skyline.Model
         public object Id { get; private set; }
         public int Tag { get; private set; }
 
-        public bool IsFinal { get { return ProgressList.All(loadingStatus => loadingStatus.IsFinal); } }
+        public bool IsFinal
+        {
+            get
+            {
+                var state = State;
+                return state != ProgressState.begin && state != ProgressState.running;
+            }
+        }
+
         public bool IsComplete { get { return State == ProgressState.complete; } }
         public bool IsError { get { return State == ProgressState.error; } }
         public bool IsCanceled { get { return State == ProgressState.cancelled; } }
@@ -154,7 +163,7 @@ namespace pwiz.Skyline.Model
                     return ProgressState.error;
                 if (ProgressList.Any(p => p.State == ProgressState.cancelled))
                     return ProgressState.cancelled;
-                return ProgressState.complete;
+                return _complete ? ProgressState.complete : ProgressState.running;
             }
         }
 
@@ -187,6 +196,12 @@ namespace pwiz.Skyline.Model
                 }
             }
             return ChangeProp(ImClone(this), s => s.ProgressList = ImmutableList.ValueOf(progressList));
+        }
+
+        public IProgressStatus Complete()
+        {
+            Assume.IsTrue(ProgressList.All(s => s.IsFinal));
+            return ChangeProp(ImClone(this), s => s._complete = true);
         }
 
         public IProgressStatus Cancel()

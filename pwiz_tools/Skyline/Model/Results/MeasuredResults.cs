@@ -1112,7 +1112,7 @@ namespace pwiz.Skyline.Model.Results
                     return;
 
                 // Done loading partial files for this document
-                _multiFileLoader.ClearDocument(_document);
+                _multiFileLoader.CompleteDocument(_document, _loadMonitor);
 
                 // If joining is not allowed just finish
                 var firstCache = _resultsClone._listPartialCaches[0];
@@ -1143,8 +1143,6 @@ namespace pwiz.Skyline.Model.Results
                         listPaths.Add(cache.CachePath);
                         if (Equals(cachePath, cache.CachePath))
                             streamDestination = cache.ReadStream;
-                        else
-                            cache.ReadStream.CloseStream();
                     }
 
                     var streamRecalc = ReleaseCacheRecalc();

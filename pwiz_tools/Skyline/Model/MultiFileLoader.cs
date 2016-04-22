@@ -54,6 +54,11 @@ namespace pwiz.Skyline.Model
             return ChangeStatus(s => s.ChangeStatus(loadingStatus));
         }
 
+        public MultiProgressStatus CompleteStatus()
+        {
+            return ChangeStatus(s => (MultiProgressStatus) s.Complete());
+        }
+
         public void ResetStatus()
         {
             ChangeStatus(s => new MultiProgressStatus(_synchronousMode));
@@ -150,6 +155,13 @@ namespace pwiz.Skyline.Model
                 if (_loadingPaths.Count == 0)
                     ResetStatus();
             }
+        }
+
+        public void CompleteDocument(SrmDocument document, MultiFileLoadMonitor loadMonitor)
+        {
+            if (Status.ProgressList.Any())
+                loadMonitor.UpdateProgress(CompleteStatus());
+            ClearDocument(document);
         }
 
         public void ClearDocument(SrmDocument document)
