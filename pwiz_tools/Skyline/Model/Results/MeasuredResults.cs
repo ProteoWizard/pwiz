@@ -697,8 +697,9 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
                 // Always take the existing final cache forward.  It will be optimized
-                // on save.
-                if (results._cacheFinal != null)
+                // on save.  Unless it has already been modified, in which case it needs
+                // to be reloaded to know what is now in it.
+                if (results._cacheFinal != null && !results._cacheFinal.ReadStream.IsModified)
                     listPartialCaches.Insert(0, results._cacheFinal);
                 results._cacheFinal = null;
                 results._listPartialCaches = ImmutableList.ValueOf(listPartialCaches.Count == 0 ? null : listPartialCaches);
@@ -1093,11 +1094,16 @@ namespace pwiz.Skyline.Model.Results
                 if (uncachedCount > 0)
                 {
                     // Checkpoint any partial cache changes, in case subsequent builds fail
-                    if (!ArrayUtil.ReferencesEqual(_resultsClone._listPartialCaches,
-                                                   _document.Settings.MeasuredResults._listPartialCaches))
+                    var resultsCurrent = _document.Settings.MeasuredResults;
+                    if (!ArrayUtil.ReferencesEqual(_resultsClone._listPartialCaches, resultsCurrent._listPartialCaches))
                     {
-                        Complete(_resultsClone, false);
-                        return;
+                        // Only if this will change the MeasuredResults, causing us to return here
+                        var resultsMerged = resultsCurrent.UpdateCaches(_documentPath, _resultsClone);
+                        if (!ReferenceEquals(resultsMerged._listPartialCaches, resultsCurrent._listPartialCaches))
+                        {
+                            Complete(_resultsClone, false);
+                            return;
+                        }
                     }
 
                     // Start loading uncached paths in parallel.
