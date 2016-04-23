@@ -519,7 +519,7 @@ namespace pwiz.SkylineTestFunctional
                 return doc;
             }));
             OkDialog(libraryDlgAll, libraryDlgAll.Btn0Click);
-            WaitForCondition(6000, () => SkylineWindow.Document.PeptideCount == 355); // Was 3sec wait, but that timed out under dotCover
+            TryWaitForCondition(6000, () => SkylineWindow.Document.PeptideCount == 355); // Was 3sec wait, but that timed out under dotCover
             RunUI(() =>
             {
                 ValidateDocAndIrt(SkylineWindow.DocumentUI, 355, 355, 10);
@@ -584,7 +584,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(libraryDlgYes, libraryDlgYes.Btn0Click);
             var libraryDlgOverwriteYes = WaitForOpenForm<MultiButtonMsgDlg>();
             RunUI(libraryDlgOverwriteYes.Btn0Click);
-            WaitForCondition(3000, () => SkylineWindow.Document.PeptideCount == 345);
+            TryWaitForCondition(6000, () => SkylineWindow.Document.PeptideCount == 345);    // Peptide count checked below
             RunUI(() =>
             {
                 var calculator = ValidateDocAndIrt(SkylineWindow.DocumentUI, 345, 355, 10);
@@ -652,7 +652,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(libraryDlgYesNew, libraryDlgYesNew.Btn0Click);
             var libraryDlgOverwrite = WaitForOpenForm<MultiButtonMsgDlg>();
             RunUI(libraryDlgOverwrite.Btn0Click);
-            WaitForCondition(3000, () => SkylineWindow.Document.PeptideCount == 345);
+            TryWaitForCondition(6000, () => SkylineWindow.Document.PeptideCount == 345); // Peptide count checked below
             RunUI(() =>
             {
                 var calculator = ValidateDocAndIrt(SkylineWindow.DocumentUI, 345, 355, 10);
@@ -691,7 +691,7 @@ namespace pwiz.SkylineTestFunctional
 
             // 28.  Do exactly the same thing over again, should happen silently, with only a prompt to add library info
             RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textConflict), libraryDlgRepeat => libraryDlgRepeat.Btn0Click());
-            WaitForCondition(3000, () => SkylineWindow.Document.PeptideCount == 690);
+            TryWaitForCondition(6000, () => SkylineWindow.Document.PeptideCount == 690); // Peptide count checked below
             RunUI(() =>
             {
                 ValidateDocAndIrt(SkylineWindow.DocumentUI, 690, 355, 10);
@@ -791,7 +791,7 @@ namespace pwiz.SkylineTestFunctional
                 return doc;
             }));
             OkDialog(libraryInterleaved, libraryInterleaved.Btn0Click);
-            WaitForCondition(3000, () => SkylineWindow.Document.PeptideCount == 6);
+            TryWaitForCondition(6000, () => SkylineWindow.Document.PeptideCount == 6);  // Peptide count checked below
             // WaitForDocumentLoaded();    TODO: Fix loading with iRT calc but no iRT peptides
             RunUI(() =>
             {
@@ -829,7 +829,8 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(libraryInterleavedIrt, libraryInterleavedIrt.Btn0Click);
             var libraryDlgOverwriteIrt = WaitForOpenForm<MultiButtonMsgDlg>();
             RunUI(libraryDlgOverwriteIrt.Btn0Click);
-            WaitForCondition(3000, () => SkylineWindow.Document.PeptideCount == 6);
+            TryWaitForCondition(6000, () => SkylineWindow.Document.PeptideCount == 6);
+            Assert.AreEqual(6, SkylineWindow.Document.PeptideCount);
             var irtValue = SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator.ScoreSequence("AAAAAAAAAAAAAAAGAAGK");
             Assert.IsNotNull(irtValue);
             Assert.AreEqual(irtValue.Value, 52.407, 1e-3);
@@ -841,7 +842,8 @@ namespace pwiz.SkylineTestFunctional
             RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textInterleavedIrtNoLib), addIrtDlg => addIrtDlg.Btn0Click());
             var irtOverwriteNoLib = WaitForOpenForm<MultiButtonMsgDlg>();
             OkDialog(irtOverwriteNoLib, irtOverwriteNoLib.Btn1Click);
-            WaitForCondition(3000, () => SkylineWindow.Document.PeptideCount == 6);
+            TryWaitForCondition(6000, () => SkylineWindow.Document.PeptideCount == 6);
+            Assert.AreEqual(6, SkylineWindow.Document.PeptideCount);
             var irtValueNoLib = SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator.ScoreSequence("AAAAAAAAAAAAAAAGAAGK");
             Assert.IsNotNull(irtValueNoLib);
             Assert.AreEqual(irtValueNoLib.Value, 52.407, 1e-3);
@@ -901,48 +903,24 @@ namespace pwiz.SkylineTestFunctional
             string textModPrefix = "PrecursorMz\tProductMz\tPeptideSequence\tProteinName\n" + 1013.9 + "\t" + 868.39 + "\t";
             string textModUnreadMod = textModPrefix + "PVIC[CAM]ATQM[bad_mod_&^$]LESMTYNPR\t1/YAL038W\n";
             RunUI(() => ClipboardEx.SetText(textModUnreadMod));
-            RunUI(() =>
-            {
-                SkylineWindow.Paste();
-                WaitForCondition(3000, () => SkylineWindow.DocumentUI.PeptideCount == 1);
-                var peptideNode = SkylineWindow.DocumentUI.Peptides.First();
-                Assert.AreEqual(peptideNode.ModifiedSequence, textModifiedSeqExpected);
-            });
+            RunUI(() => PasteOnePeptide(textModifiedSeqExpected));
 
             // When there are no mods, default to the approach of deducing modified state from precursor mz
             LoadDocument(documentModMatcher);
             string textModNone = textModPrefix + "PVICATQMLESMTYNPR\t1/YAL038W\n";
             RunUI(() => ClipboardEx.SetText(textModNone));
-            RunUI(() =>
-            {
-                SkylineWindow.Paste();
-                WaitForCondition(3000, () => SkylineWindow.DocumentUI.PeptideCount == 1);
-                var peptideNode = SkylineWindow.DocumentUI.Peptides.First();
-                Assert.AreEqual(peptideNode.ModifiedSequence, textModifiedSeqExpected);
-            });
+            RunUI(() => PasteOnePeptide(textModifiedSeqExpected));
 
             // By specifying mods explicitly, we can distinguish between oxidations at two different sites
             LoadDocument(documentModMatcher);
             string textModFirst = textModPrefix + "PVIC[+57]ATQM[+16]LESMTYNPR\t1/YAL038W\n";
             RunUI(() => ClipboardEx.SetText(textModFirst));
-            RunUI(() =>
-            {
-                SkylineWindow.Paste();
-                WaitForCondition(3000, () => SkylineWindow.DocumentUI.PeptideCount == 1);
-                var peptideNode = SkylineWindow.DocumentUI.Peptides.First();
-                Assert.AreEqual(peptideNode.ModifiedSequence, textModifiedSeqExpected);
-            });
+            RunUI(() => PasteOnePeptide(textModifiedSeqExpected));
 
             LoadDocument(documentModMatcher);
             string textModSecond = textModPrefix + "PVIC[+" + string.Format("{0:F01}", 57) + "]ATQMLESM[+" + string.Format("{0:F01}", 16) + "]TYNPR\t1/YAL038W\n";
             RunUI(() => ClipboardEx.SetText(textModSecond));
-            RunUI(() =>
-            {
-                SkylineWindow.Paste();
-                WaitForCondition(3000, () => SkylineWindow.DocumentUI.PeptideCount == 1);
-                var peptideNode = SkylineWindow.DocumentUI.Peptides.First();
-                Assert.AreEqual(peptideNode.ModifiedSequence, "PVIC[+57.0]ATQMLESM[+16.0]TYNPR");
-            });
+            RunUI(() => PasteOnePeptide("PVIC[+57.0]ATQMLESM[+16.0]TYNPR"));
 
 
             // Test a difficult case containing modifications of the same peptide at two different sites, make sure Skyline handles it correctly
@@ -1003,6 +981,15 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.SaveDocument());
             // Reload to test that appropriate modifications have actually been added to the document
             LoadDocument(skyChooseSeqCol);
+        }
+
+        private static void PasteOnePeptide(string textModifiedSeqExpected)
+        {
+            SkylineWindow.Paste();
+            TryWaitForCondition(3000, () => SkylineWindow.DocumentUI.PeptideCount == 1);
+            Assert.AreEqual(1, SkylineWindow.DocumentUI.PeptideCount);
+            var peptideNode = SkylineWindow.DocumentUI.Peptides.First();
+            Assert.AreEqual(textModifiedSeqExpected, peptideNode.ModifiedSequence);
         }
 
         protected void TestBlankDocScenario()

@@ -200,6 +200,11 @@ namespace pwiz.ProteomeDatabase.Fasta
 
         }
 
+        public bool IsAccessFaked
+        {
+            get { return _webSearchProvider is FakeWebSearchProvider; }
+        }
+
         /// <summary>
         /// Quick, cheap check for internet access (uniprot access, specifically)
         /// </summary>

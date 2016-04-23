@@ -146,6 +146,7 @@ namespace pwiz.SkylineTestFunctional
             });
             Assert.IsNotNull(previousPeptide);
             Assert.AreEqual(0, peptideIndex);
+            Assert.AreEqual(3, previousPeptide.Charge, "Expected charge 3 on " + previousPeptide.DisplayString);
 
             // Now try to select a different peptide and check to see if the
             // selection changes
@@ -158,11 +159,14 @@ namespace pwiz.SkylineTestFunctional
             ViewLibraryPepInfo selPeptide = new ViewLibraryPepInfo();
             RunUI(() =>
             {
+                Assert.AreEqual(selectPeptideIndex, pepList.SelectedIndex); // Did selection change work?
+
                 selPeptide = (ViewLibraryPepInfo)pepList.SelectedItem;
             });
             Assert.IsNotNull(selPeptide);
             if (Equals(previousPeptide, selPeptide))
-                Assert.AreNotEqual(previousPeptide, selPeptide);
+                Assert.AreNotEqual(previousPeptide.DisplayString, selPeptide.DisplayString);
+            Assert.AreEqual(2, selPeptide.Charge, "Expected charge 2 on " + selPeptide.DisplayString);
 
             // Click the "Next" link
             RunUI(() =>

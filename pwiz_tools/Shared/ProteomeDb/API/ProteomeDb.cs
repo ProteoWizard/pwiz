@@ -100,7 +100,8 @@ namespace pwiz.ProteomeDatabase.API
         {
             if (progressMonitor.IsCanceled)
                 return false;
-            progressMonitor.UpdateProgress(status = status.ChangeMessage(message).ChangePercentComplete(pctComplete));
+            if (pctComplete != status.PercentComplete)
+                progressMonitor.UpdateProgress(status = status.ChangeMessage(message).ChangePercentComplete(pctComplete));
             return true;
         }
 
@@ -578,10 +579,11 @@ namespace pwiz.ProteomeDatabase.API
                 var proteinsList = new Protein[proteinCount];
                 var truncatedSequences = new HashSet<string>[proteinCount]; // One hashset of sequences for each protein of interest
                 const int N_DIGEST_THREADS = 16; // Arbitrary value - do a progress/canel check every nth protein
+                string message = string.Format(Resources.ProteomeDb_Digest_Digesting__0__proteins, proteinCount);
                 for (var i = 0; i < proteinCount; i += N_DIGEST_THREADS)
                 {
                     var endRange = Math.Min(proteinCount, i + N_DIGEST_THREADS);
-                    if (!UpdateProgressAndCheckForCancellation(progressMonitor, ref status, string.Format(Resources.ProteomeDb_Digest_Digesting__0__proteins, proteinCount), 50 * endRange / proteinCount))
+                    if (!UpdateProgressAndCheckForCancellation(progressMonitor, ref status, message, 50 * endRange / proteinCount))
                     {
                         return null;
                     }
@@ -643,7 +645,7 @@ namespace pwiz.ProteomeDatabase.API
                             for (int i = 0; i < proteinCount; i++)
                             {
                                 var protein = proteinsList[i];
-                                if (!UpdateProgressAndCheckForCancellation(progressMonitor, ref status, string.Format(Resources.ProteomeDb_Digest_Digesting__0__proteins, proteinCount), 50 * (proteinCount + i) / proteinCount))
+                                if (!UpdateProgressAndCheckForCancellation(progressMonitor, ref status, message, 50 * (proteinCount + i) / proteinCount))
                                 {
                                     return null;
                                 }
@@ -840,8 +842,12 @@ namespace pwiz.ProteomeDatabase.API
                         {
                             if (result != null)
                             {
-                                if (!UpdateProgressAndCheckForCancellation(progressMonitor, ref status, string.Format(Resources.ProteomeDb_LookupProteinMetadata_Retrieving_details_for__0__proteins,
-                                            unsearchedProteins.Count), 100*resultsCount++/unsearchedCount))
+                                string message = string.Format(Resources.ProteomeDb_LookupProteinMetadata_Retrieving_details_for__0__proteins,
+                                                               unsearchedProteins.Count);
+                                // Make it clearer when web access is faked during testing
+                                if (fastaImporter.IsAccessFaked)
+                                    message = "FAKED: " + message;  // Not L10N
+                                if (!UpdateProgressAndCheckForCancellation(progressMonitor, ref status, message, 100*resultsCount++/unsearchedCount))
                                 {
                                     return false;
                                 }
