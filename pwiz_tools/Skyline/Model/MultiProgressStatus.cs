@@ -24,6 +24,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model
 {
@@ -35,6 +36,11 @@ namespace pwiz.Skyline.Model
         /// Flag indicating completeness required to get to 100%
         /// </summary>
         private bool _complete;
+
+        /// <summary>
+        /// Support cancelation with empty list
+        /// </summary>
+        private bool _cancelled;
 
         public MultiProgressStatus(bool synchronousMode)
         {
@@ -123,6 +129,8 @@ namespace pwiz.Skyline.Model
         public bool IsCanceled { get { return State == ProgressState.cancelled; } }
         public bool IsBegin { get { return State == ProgressState.begin; } }
 
+        public bool IsEmpty { get { return ProgressList.Count == 0; } }
+
         public MultiProgressStatus Add(ChromatogramLoadingStatus status)
         {
             var uniqueList = new List<ChromatogramLoadingStatus>();
@@ -161,7 +169,7 @@ namespace pwiz.Skyline.Model
                     return ProgressState.running;
                 if (ProgressList.Any(p => p.State == ProgressState.error))
                     return ProgressState.error;
-                if (ProgressList.Any(p => p.State == ProgressState.cancelled))
+                if (ProgressList.Any(p => p.State == ProgressState.cancelled) || _cancelled)
                     return ProgressState.cancelled;
                 return _complete ? ProgressState.complete : ProgressState.running;
             }
@@ -200,7 +208,9 @@ namespace pwiz.Skyline.Model
 
         public IProgressStatus Complete()
         {
-            Assume.IsTrue(ProgressList.All(s => s.IsFinal));
+            var notFinal = ProgressList.Where(s => !s.IsFinal).ToArray();
+            Assume.IsFalse(notFinal.Any(), TextUtil.LineSeparate("Completing with non-final loading:",
+                TextUtil.LineSeparate(notFinal.Select(s => string.Format("{0} {1}% - {2}", s.State, s.PercentComplete, s.FilePath)))));
             return ChangeProp(ImClone(this), s => s._complete = true);
         }
 
@@ -212,6 +222,7 @@ namespace pwiz.Skyline.Model
             return ChangeProp(ImClone(this), s =>
             {
                 s.ProgressList = ImmutableList.ValueOf(progressList);
+                s._cancelled = true;
             });
         }
 

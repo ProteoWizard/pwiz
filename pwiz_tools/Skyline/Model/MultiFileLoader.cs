@@ -59,6 +59,11 @@ namespace pwiz.Skyline.Model
             return ChangeStatus(s => (MultiProgressStatus) s.Complete());
         }
 
+        public MultiProgressStatus CancelStatus()
+        {
+            return ChangeStatus(s => (MultiProgressStatus)s.Cancel());
+        }
+
         public void ResetStatus()
         {
             ChangeStatus(s => new MultiProgressStatus(_synchronousMode));

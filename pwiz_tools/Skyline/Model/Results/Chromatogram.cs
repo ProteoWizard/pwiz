@@ -95,6 +95,12 @@ namespace pwiz.Skyline.Model.Results
             _multiFileLoader.ClearDocument(document);
         }
 
+        public void CancelProgress()
+        {
+            if (!_multiFileLoader.Status.IsEmpty)
+                UpdateProgress(_multiFileLoader.CancelStatus());
+        }
+
         public void RemoveFile(MsDataFileUri filePath)
         {
             _multiFileLoader.ClearFile(filePath);
@@ -218,7 +224,7 @@ namespace pwiz.Skyline.Model.Results
 
             private void CancelLoad(MeasuredResults results)
             {
-                _manager.UpdateProgress(_manager.Status.Cancel());
+                _manager.CancelProgress();
                 _manager.EndProcessing(_document);
             }
 

@@ -4524,6 +4524,7 @@ namespace pwiz.Skyline
             buttonShowAllChromatograms.Visible = statusProgress.Visible = !multiStatus.IsFinal;
             if (ImportingResultsWindow == null)
             {
+                Assume.IsFalse(multiStatus.IsEmpty);    // Should never be starting results window with empty status
                 ImportingResultsWindow = new AllChromatogramsGraph { Owner = this, ChromatogramManager = _chromatogramManager };
                 if (Settings.Default.AutoShowAllChromatogramsGraph)
                     ImportingResultsWindow.Show();

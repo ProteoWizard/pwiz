@@ -1162,7 +1162,7 @@
     <value>MiddleLeft</value>
   </data>
   <data name="statusProgress.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 21</value>
+    <value>100, 16</value>
   </data>
   <data name="statusProgress.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
