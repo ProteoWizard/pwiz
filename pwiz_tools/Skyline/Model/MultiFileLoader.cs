@@ -162,11 +162,16 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public void CompleteDocument(SrmDocument document, MultiFileLoadMonitor loadMonitor)
+        public bool CompleteDocument(SrmDocument document, MultiFileLoadMonitor loadMonitor)
         {
+            // Refuse completion, if anything is still not final
+            if (Status.ProgressList.Any(s => !s.IsFinal))
+                return false;
+
             if (Status.ProgressList.Any())
                 loadMonitor.UpdateProgress(CompleteStatus());
             ClearDocument(document);
+            return true;
         }
 
         public void ClearDocument(SrmDocument document)

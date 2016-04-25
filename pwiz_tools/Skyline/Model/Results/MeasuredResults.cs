@@ -1117,8 +1117,9 @@ namespace pwiz.Skyline.Model.Results
                 if (_resultsClone._listPartialCaches == null)
                     return;
 
-                // Done loading partial files for this document
-                _multiFileLoader.CompleteDocument(_document, _loadMonitor);
+                // Only finish if the multi-file loader is done with the document
+                if (!_multiFileLoader.CompleteDocument(_document, _loadMonitor))
+                    return;
 
                 // If joining is not allowed just finish
                 var firstCache = _resultsClone._listPartialCaches[0];
