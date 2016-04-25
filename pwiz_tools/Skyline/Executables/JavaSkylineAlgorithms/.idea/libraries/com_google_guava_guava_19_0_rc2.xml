@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="com.google.guava:guava:19.0-rc2" type="repository">
+    <properties maven-id="com.google.guava:guava:19.0-rc2" />
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/google/guava/guava/19.0-rc2/guava-19.0-rc2.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
