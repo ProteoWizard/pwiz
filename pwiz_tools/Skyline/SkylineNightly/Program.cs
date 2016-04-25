@@ -32,6 +32,7 @@ namespace SkylineNightly
         public const string SCHEDULED_RELEASE_BRANCH_ARG = SCHEDULED_ARG + "_release_branch"; // Not L10N
         public const string SCHEDULED_INTEGRATION_ARG = SCHEDULED_ARG + "_integration_branch"; // Not L10N
         public const string SCHEDULED_INTEGRATION_TRUNK_ARG = SCHEDULED_ARG + "_integration_and_trunk"; // Not L10N
+        public const string SCHEDULED_PERFTEST_AND_TRUNK_ARG = SCHEDULED_ARG + "_perftests_and_trunk"; // Not L10N
         public const string PARSE_ARG = "parse"; // Not L10N
         public const string POST_ARG = "post"; // Not L10N
 
@@ -61,62 +62,76 @@ namespace SkylineNightly
                 return;
             }
 
-            var nightly = new Nightly();
             Nightly.RunMode runMode;
 
             // ReSharper disable LocalizableElement
             string arg = args[0].ToLower();
+            var nightly = new Nightly(arg);
             string message;
+            string errMessage = string.Empty;
+            string errMessage2= string.Empty;
             switch (arg)
             {
                 case HELP_ARG:
                     message = string.Format("Usage: SkylineNightly [" + string.Join(" | ", ARG_NAMES) + "]"); // Not L10N
                     break;
-
+                    
+                // Run the current integration branch
                 case SCHEDULED_INTEGRATION_ARG:
                     message = string.Format("Completed {0}", arg); // Not L10N
-                    nightly.RunAndPost(Nightly.RunMode.nightly_integration);
+                    errMessage = nightly.RunAndPost(Nightly.RunMode.nightly_integration);
                     break;
 
+                // For machines that can test all day and all night:
+                // Run current integration branch, then normal
                 case SCHEDULED_INTEGRATION_TRUNK_ARG:
                     message = string.Format("Completed {0}", arg); // Not L10N
-                    nightly.RunAndPost(Nightly.RunMode.nightly_integration);
-                    nightly = new Nightly();
-                    nightly.RunAndPost(Nightly.RunMode.nightly);
+                    errMessage = nightly.RunAndPost(Nightly.RunMode.nightly_integration);
+                    nightly = new Nightly(SCHEDULED_INTEGRATION_ARG);
+                    errMessage2 = nightly.RunAndPost(Nightly.RunMode.nightly);
+                    break;
+
+                // For machines that can test all day and all night:
+                // Run perftests mode, then normal
+                case SCHEDULED_PERFTEST_AND_TRUNK_ARG: 
+                    message = string.Format("Completed {0}", arg); // Not L10N
+                    errMessage = nightly.RunAndPost(Nightly.RunMode.nightly_with_perftests);
+                    nightly = new Nightly(SCHEDULED_ARG);
+                    errMessage2 = nightly.RunAndPost(Nightly.RunMode.nightly); // Not L10N
                     break;
 
                 case SCHEDULED_PERFTESTS_ARG:
                     message = string.Format("Completed {0}", arg); // Not L10N
-                    nightly.RunAndPost(Nightly.RunMode.nightly_with_perftests);
+                    errMessage = nightly.RunAndPost(Nightly.RunMode.nightly_with_perftests);
                     break;
 
                 case SCHEDULED_STRESSTESTS_ARG:
                     message = string.Format("Completed {0}", arg); // Not L10N
-                    nightly.RunAndPost(Nightly.RunMode.nightly_with_stresstests);
+                    errMessage = nightly.RunAndPost(Nightly.RunMode.nightly_with_stresstests);
                     break;
 
                 case SCHEDULED_RELEASE_BRANCH_ARG:
                     message = string.Format("Completed {0}", arg); // Not L10N
-                    nightly.RunAndPost(Nightly.RunMode.release_branch_with_perftests);
+                    errMessage = nightly.RunAndPost(Nightly.RunMode.release_branch_with_perftests);
                     break;
 
                 case SCHEDULED_ARG:
                     message = string.Format("Completed {0}", arg); // Not L10N
-                    nightly.RunAndPost(Nightly.RunMode.nightly);
+                    errMessage = nightly.RunAndPost(Nightly.RunMode.nightly);
                     break;
 
                 case PARSE_ARG:
                     message = string.Format("Parse and post log {0}", nightly.GetLatestLog()); // Not L10N
                     nightly.StartLog();
                     runMode = nightly.Parse();
-                    nightly.Post(runMode);
+                    errMessage = nightly.Post(runMode);
                     break;
 
                 case POST_ARG:
                     message = string.Format("Post existing XML {0}", nightly.GetLatestLog()); // Not L10N
                     nightly.StartLog();
                     runMode = nightly.Parse(null, true);
-                    nightly.Post(runMode);
+                    errMessage = nightly.Post(runMode);
                     break;
 
                 default:
@@ -132,13 +147,21 @@ namespace SkylineNightly
                         message = string.Format("Post existing XML {0}", arg); // Not L10N
                         runMode = nightly.Parse(Path.ChangeExtension(arg, ".log"), true); // Scan the log file for this XML // Not L10N
                     }
-                    nightly.Post(runMode, Path.ChangeExtension(arg, ".xml")); // Not L10N
+                    errMessage = nightly.Post(runMode, Path.ChangeExtension(arg, ".xml")); // Not L10N
                     break;
             }
             // ReSharper restore LocalizableElement
             nightly.Finish(); // Kill the screengrab thread, if any, so we can exit
             // Give some indication that this process ran on this machine
-            MessageBox.Show(message);
+            if (!string.IsNullOrEmpty(errMessage))
+            {
+                message += "\n" + errMessage; // Not L10N
+            }
+            if (!string.IsNullOrEmpty(errMessage2))
+            {
+                message += "\n" + errMessage2; // Not L10N
+            }
+            MessageBox.Show(message, "SkylineNightly"); // Not L10N
         }
     }
 }

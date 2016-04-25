@@ -158,6 +158,9 @@ namespace SkylineNightly
                 case 5:
                     arg = Program.SCHEDULED_INTEGRATION_TRUNK_ARG;
                     break;
+                case 6:
+                    arg = Program.SCHEDULED_PERFTEST_AND_TRUNK_ARG;
+                    break;
             }
             return arg;
         }

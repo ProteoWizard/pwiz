@@ -77,7 +77,7 @@ namespace SkylineNightly
         private TimeSpan _duration;
         private string _skylineTesterDir;
 
-        public Nightly()
+        public Nightly(string runMode)
         {
             _nightly = new Xml("nightly");
             _failures = _nightly.Append("failures");
@@ -87,8 +87,8 @@ namespace SkylineNightly
             var nightlyDir = GetNightlyDir();
             _logDir = Path.Combine(nightlyDir, "Logs");
             _logDirScreengrabs = Path.Combine(_logDir, "NightlyScreengrabs");
-            // First guess at working directory
-            _skylineTesterDir = Path.Combine(nightlyDir, "SkylineTesterForNightly");
+            // First guess at working directory - distinguish between run types for machines that do double duty
+            _skylineTesterDir = Path.Combine(nightlyDir, "SkylineTesterForNightly_"+runMode);
 
             // Default duration.
             _duration = TimeSpan.FromHours(9);
@@ -140,18 +140,26 @@ namespace SkylineNightly
 
         public enum RunMode { nightly, nightly_with_perftests, release_branch_with_perftests, nightly_with_stresstests, nightly_integration }
 
-        public void RunAndPost(RunMode mode)
+        public string RunAndPost(RunMode mode)
         {
-            Run(mode);
+            var runResult = Run(mode) ?? string.Empty;
             Parse();
-            Post(mode);
+            var postResult = Post(mode);
+            if (!string.IsNullOrEmpty(postResult))
+            {
+                if (!string.IsNullOrEmpty(runResult))
+                    runResult += "\n"; // Not L10N
+                runResult += postResult;
+            }
+            return runResult;
         }
 
         /// <summary>
         /// Run nightly build/test and report results to server.
         /// </summary>
-        public void Run(RunMode mode)
+        public string Run(RunMode mode)
         {
+            string result = string.Empty;
             // Locate relevant directories.
             var nightlyDir = GetNightlyDir();
             var skylineNightlySkytr = Path.Combine(nightlyDir, "SkylineNightly.skytr");
@@ -308,8 +316,8 @@ namespace SkylineNightly
             {
                 if (stream == null)
                 {
-                    LogAndThrow("Embedded resource is broken");
-                    return; // Just so we don't get the "possible null" warning below
+                    LogAndThrow(result = "Embedded resource is broken");
+                    return result; 
                 }
                 using (var reader = new StreamReader(stream))
                 {
@@ -346,20 +354,20 @@ namespace SkylineNightly
             var skylineTesterProcess = Process.Start(processInfo);
             if (skylineTesterProcess == null)
             {
-                LogAndThrow("SkylineTester did not start");
-                return; // Just so we don't get the "possible null" warning below
+                LogAndThrow(result = "SkylineTester did not start");
+                return result; 
             }
             Log("SkylineTester started");
             if (!skylineTesterProcess.WaitForExit(durationSeconds*1000))
             {
                 SaveErrorScreenshot();
-                skylineTesterProcess.Kill();
-                Log("SkylineTester killed after " + durationSeconds + " second WaitForExit timeout");
+                Log(result = "SkylineTester has exceeded its " + durationSeconds + " second WaitForExit timeout.  You should investigate.");
             }
             else
                 Log("SkylineTester finished");
 
             _duration = DateTime.Now - startTime;
+            return result;
         }
 
         public void StartLog()
@@ -558,11 +566,11 @@ namespace SkylineNightly
         /// <summary>
         /// Post the latest results to the server.
         /// </summary>
-        public void Post(RunMode mode, string xmlFile = null)
+        public string Post(RunMode mode, string xmlFile = null)
         {
             xmlFile = xmlFile ?? GetLatestXml();
             if (xmlFile == null)
-                return;
+                return string.Empty;
             
             var xml = File.ReadAllText(xmlFile);
             string url;
@@ -577,7 +585,7 @@ namespace SkylineNightly
                 url = LABKEY_STRESS_URL;
             else
                 url = LABKEY_URL;
-            PostToLink(url, xml);
+            return PostToLink(url, xml);
         }
 
         public string GetLatestLog()
@@ -604,8 +612,9 @@ namespace SkylineNightly
         /// <summary>
         /// Post data to the given link URL.
         /// </summary>
-        private void PostToLink(string link, string postData)
+        private string PostToLink(string link, string postData)
         {
+            var errmessage = string.Empty;
             Log("Posting results to " + link); // Not L10N
             for (var retry = 5; retry > 0; retry--)
             {
@@ -616,26 +625,28 @@ namespace SkylineNightly
                     var result = client.PostAsync(link, content);
                     if (result == null)
                     {
-                        Log("no response"); // Not L10N
+                        Log(errmessage = "no response from server when posting results"); // Not L10N
                     }
                     else
                     {
                         if (result.Result.IsSuccessStatusCode)
-                            return;
+                            return errmessage;
                         Log(result.Result.ToString());
                     }
                 }
                 catch (Exception e)
                 {
-                    Log(e.ToString());
+                    Log(errmessage = e.ToString());
                 }
                 if (retry > 1)
                 {
                     Thread.Sleep(30000);
                     Log("Retrying post"); // Not L10N
+                    errmessage = String.Empty;
                 }
             }
-            Log("Failed to post results"); // Not L10N
+            Log(errmessage = "Failed to post results: " + errmessage); // Not L10N
+            return errmessage;
         }
 
         private static string GetNightlyDir()
