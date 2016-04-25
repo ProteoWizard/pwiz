@@ -24,6 +24,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model
 {
@@ -165,10 +166,17 @@ namespace pwiz.Skyline.Model
         public bool CompleteDocument(SrmDocument document, MultiFileLoadMonitor loadMonitor)
         {
             // Refuse completion, if anything is still not final
-            if (Status.ProgressList.Any(s => !s.IsFinal))
+            var status = Status;
+            var notFinal = status.ProgressList.Where(s => !s.IsFinal).ToArray();
+            if (notFinal.Any())
+            {
+                // Write output in attempt to associate new hangs in nightly tests with the return false below
+                Console.WriteLine(TextUtil.LineSeparate("*** Attempt to complete document with non-final status ***",   // Not L10N
+                    TextUtil.LineSeparate(notFinal.Select(s => string.Format("{0} {1}% - {2}", s.State, s.PercentComplete, s.FilePath))))); // Not L10N
                 return false;
+            }
 
-            if (Status.ProgressList.Any())
+            if (status.ProgressList.Any())
                 loadMonitor.UpdateProgress(CompleteStatus());
             ClearDocument(document);
             return true;

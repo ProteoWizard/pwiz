@@ -209,8 +209,11 @@ namespace pwiz.Skyline.Model
         public IProgressStatus Complete()
         {
             var notFinal = ProgressList.Where(s => !s.IsFinal).ToArray();
-            Assume.IsFalse(notFinal.Any(), TextUtil.LineSeparate("Completing with non-final loading:",
-                TextUtil.LineSeparate(notFinal.Select(s => string.Format("{0} {1}% - {2}", s.State, s.PercentComplete, s.FilePath)))));
+            if (notFinal.Any())
+            {
+                Assume.Fail(TextUtil.LineSeparate("Completing with non-final status:",  // Not L10N
+                    TextUtil.LineSeparate(notFinal.Select(s => string.Format("{0} {1}% - {2}", s.State, s.PercentComplete, s.FilePath))))); // Not L10N
+            }
             return ChangeProp(ImClone(this), s => s._complete = true);
         }
 
