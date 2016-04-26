@@ -167,7 +167,7 @@ namespace pwiz.Skyline.Model.Results
                 FixCEOptForShimadzu();
 
             if (_chromIds.Count == 0)
-                throw new NoSrmDataException(dataFile.FilePath);
+                throw new NoSrmDataException(FileInfo.FilePath);
 
             SetPercentComplete(50);
         }

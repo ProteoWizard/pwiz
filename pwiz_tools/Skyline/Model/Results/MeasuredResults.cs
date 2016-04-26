@@ -1452,7 +1452,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 var x = status.ErrorException;
                 
-                var xBuild = x as ChromCacheBuildException;
+                var xBuild = x as DataFileException;
                 if (xBuild != null)
                 {
                     var newMeasuredResults = _document.Settings.MeasuredResults.FilterFiles(info => !Equals(info.FilePath, xBuild.ImportPath));

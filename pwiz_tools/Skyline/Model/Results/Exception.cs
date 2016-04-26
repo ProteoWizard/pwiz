@@ -27,54 +27,51 @@ namespace pwiz.Skyline.Model.Results
 {
     internal class NoSrmDataException : MissingDataException
     {
-        public NoSrmDataException(string filePath)
-            : base(Resources.NoSrmDataException_NoSrmDataException_No_SRM_MRM_data_found_in__0__, filePath)
+        public NoSrmDataException(MsDataFileUri importPath)
+            : base(Resources.NoSrmDataException_NoSrmDataException_No_SRM_MRM_data_found_in__0__, importPath)
         {
         }
     }
 
     internal class NoFullScanDataException : MissingDataException
     {
-        public NoFullScanDataException(string filePath)
-            : base(Resources.NoFullScanDataException_NoFullScanDataException_No_scans_in__0__match_the_current_filter_settings_, filePath)
+        public NoFullScanDataException(MsDataFileUri importPath)
+            : base(Resources.NoFullScanDataException_NoFullScanDataException_No_scans_in__0__match_the_current_filter_settings_, importPath)
         {
         }
     }
 
     internal class NoFullScanFilteringException : MissingDataException
     {
-        public NoFullScanFilteringException(string fileName)
-            : base(Resources.NoFullScanFilteringException_NoFullScanFilteringException_To_extract_chromatograms_from__0__full_scan_settings_must_be_enabled_, fileName)
+        public NoFullScanFilteringException(MsDataFileUri importPath)
+            : base(Resources.NoFullScanFilteringException_NoFullScanFilteringException_To_extract_chromatograms_from__0__full_scan_settings_must_be_enabled_, importPath)
         {
         }
     }
 
-    internal class NoCentroidedDataException : IOException
+    internal class NoCentroidedDataException : MissingDataException
     {
-        public NoCentroidedDataException(string fileName, Exception innerException)
-            : base(string.Format(Resources.NoCentroidedDataException_NoCentroidedDataException_No_centroided_data_available_for_file___0_____Adjust_your_Full_Scan_settings_, fileName), innerException)
+        public NoCentroidedDataException(MsDataFileUri importPath, Exception innerException)
+            : base(Resources.NoCentroidedDataException_NoCentroidedDataException_No_centroided_data_available_for_file___0_____Adjust_your_Full_Scan_settings_, importPath, innerException)
         {
         }
     }
 
-    internal class MissingDataException : IOException
+    internal class MissingDataException : DataFileException
     {
-        public MissingDataException(string messageFormat, string fileName)
-            : base(string.Format(messageFormat, fileName))
+        public MissingDataException(string messageFormat, MsDataFileUri importPath)
+            : base(string.Format(messageFormat, importPath), importPath)
         {
             MessageFormat = messageFormat;
-            FilePath = fileName;
         }
 
-        public MissingDataException(string messageFormat, string fileName, Exception innerException)
-            : base(string.Format(messageFormat, fileName), innerException)
+        public MissingDataException(string messageFormat, MsDataFileUri importPath, Exception innerException)
+            : base(string.Format(messageFormat, importPath.GetFilePath()), importPath, innerException)
         {
             MessageFormat = messageFormat;
-            FilePath = fileName;
         }
 
         public string MessageFormat { get; private set; }
-        public string FilePath { get; private set; }
     }
 
     internal class LoadCanceledException : IOException
@@ -88,7 +85,7 @@ namespace pwiz.Skyline.Model.Results
         public IProgressStatus Status { get; private set; }
     }
 
-    internal class ChromCacheBuildException : IOException
+    internal class ChromCacheBuildException : DataFileException
     {
         private static string GetMessage(MsDataFileUri importPath, Exception x)
         {
@@ -100,7 +97,19 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public ChromCacheBuildException(MsDataFileUri importPath, Exception innerException)
-            : base(GetMessage(importPath, innerException), innerException)
+            : base(GetMessage(importPath, innerException), importPath, innerException)
+        {
+        }
+    }
+
+    internal class DataFileException : IOException
+    {
+        public DataFileException(string message, MsDataFileUri importPath) : base(message)
+        {
+            ImportPath = importPath;
+        }
+
+        public DataFileException(string message, MsDataFileUri importPath, Exception innerException) : base(message, innerException)
         {
             ImportPath = importPath;
         }

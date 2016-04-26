@@ -35,7 +35,6 @@ namespace pwiz.Skyline.Model.Results
 {
     internal sealed class SpectraChromDataProvider : ChromDataProvider
     {
-        private readonly string _filePath;
         private readonly string _cachePath;
         private Collectors _collectors;
         private Spectra _spectra;
@@ -78,7 +77,6 @@ namespace pwiz.Skyline.Model.Results
             : base(fileInfo, status, startPercent, endPercent, loader)
         {
             _document = document;
-            _filePath = dataFile.FilePath;
             _cachePath = cachePath;
 
             // If no SRM spectra, then full-scan filtering must be enabled
@@ -86,7 +84,7 @@ namespace pwiz.Skyline.Model.Results
             if (!_isSrm)
             {
                 if (!document.Settings.TransitionSettings.FullScan.IsEnabled)
-                    throw new NoFullScanFilteringException(dataFile.FilePath);
+                    throw new NoFullScanFilteringException(FileInfo.FilePath);
 
                 // Only use the retention time predictor on non-SRM data, and only when
                 // there are enough transitions to cause performance issues with extracting
@@ -323,7 +321,7 @@ namespace pwiz.Skyline.Model.Results
             }
 
             if (chromMap.Count == 0 && chromMapMs1.Count == 0 && chromMapSim.Count == 0)
-                throw new NoFullScanDataException(_filePath);
+                throw new NoFullScanDataException(FileInfo.FilePath);
         }
 
         private void AddChromCollector(int productFilterId, ChromCollector collector)

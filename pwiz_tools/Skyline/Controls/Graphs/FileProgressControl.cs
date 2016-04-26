@@ -150,8 +150,6 @@ namespace pwiz.Skyline.Controls.Graphs
                         labelStatus.Visible = true;
                         btnRetry.Text = Resources.FileProgressControl_SetStatus_Retry;
                         btnRetry.Visible = true;
-                        if (Selected)
-                            btnRetry.Focus();
                         _backColor = _failColor;
                     }
                 }
@@ -164,8 +162,6 @@ namespace pwiz.Skyline.Controls.Graphs
                     labelStatus.Visible = true;
                     btnRetry.Text = Resources.FileProgressControl_SetStatus_Retry;
                     btnRetry.Visible = true;
-                    if (Selected)
-                        btnRetry.Focus();
                     _backColor = _cancelColor;
                 }
                 else if (status.IsComplete)
@@ -181,8 +177,6 @@ namespace pwiz.Skyline.Controls.Graphs
                     labelStatus.Visible = false;
                     btnRetry.Text = Resources.FileProgressControl_SetStatus_Cancel;
                     btnRetry.Visible = true;
-                    if (Selected)
-                        btnRetry.Focus();
                     _backColor = _okColor;
                 }
                 Invalidate();

@@ -255,7 +255,7 @@ namespace pwiz.SkylineTestA.Results
                     listResults = new List<ChromatogramSet> { new ChromatogramSet("rep1", new[] { new MsDataFilePath(filePath, null, true) }), };
                     docContainer.ChangeMeasuredResults(new MeasuredResults(listResults.ToArray()), 1, 1, 1);
                 },
-                    string.Format(Resources.NoCentroidedDataException_NoCentroidedDataException_No_centroided_data_available_for_file___0_____Adjust_your_Full_Scan_settings_, fileName));
+                    string.Format(Resources.NoCentroidedDataException_NoCentroidedDataException_No_centroided_data_available_for_file___0_____Adjust_your_Full_Scan_settings_, filePath));
 
                 // Import FT data with only MS1
                 docPath = testFilesDir.GetTestPath("Yeast_HI3 Peptides_test.sky");

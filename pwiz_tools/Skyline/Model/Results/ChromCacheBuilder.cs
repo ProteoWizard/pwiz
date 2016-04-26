@@ -298,7 +298,7 @@ namespace pwiz.Skyline.Model.Results
             }
             catch (MissingDataException x)
             {
-                ExitRead(new MissingDataException(x.MessageFormat, MSDataFilePath.GetFilePath(), x));
+                ExitRead(new MissingDataException(x.MessageFormat, MSDataFilePath, x));
             }
             catch (Exception x)
             {
@@ -312,11 +312,11 @@ namespace pwiz.Skyline.Model.Results
                 }
                 else if (missingDataX != null)
                 {
-                    ExitRead(new MissingDataException(missingDataX.MessageFormat, MSDataFilePath.GetSampleOrFileName(), missingDataX));
+                    ExitRead(new MissingDataException(missingDataX.MessageFormat, MSDataFilePath, missingDataX));
                 }
                 else if (x.Message.Contains("PeakDetector::NoVendorPeakPickingException")) // Not L10N
                 {
-                    ExitRead(new NoCentroidedDataException(MSDataFilePath.GetFileName(), x));
+                    ExitRead(new NoCentroidedDataException(MSDataFilePath, x));
                 }
                 else
                 {

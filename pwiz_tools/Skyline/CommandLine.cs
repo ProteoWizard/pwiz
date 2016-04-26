@@ -3013,7 +3013,7 @@ namespace pwiz.Skyline
                     var rawPath = progressStatus.Message;
                     var missingDataException = progressStatus.ErrorException as MissingDataException;
                     if (missingDataException != null)
-                        rawPath = missingDataException.FilePath;
+                        rawPath = missingDataException.ImportPath.GetFilePath();
                     _out.WriteLine(
                         Resources.CommandLine_ImportResultsFile_Warning__Failed_importing_the_results_file__0____Ignoring___,
                         rawPath);

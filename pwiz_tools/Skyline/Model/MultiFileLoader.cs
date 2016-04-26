@@ -35,7 +35,7 @@ namespace pwiz.Skyline.Model
         private readonly bool _synchronousMode;
         private int _threadCount;
 
-        private object _statusLock;
+        private readonly object _statusLock;
         private MultiProgressStatus _status;
 
         public MultiFileLoader(bool synchronousMode)

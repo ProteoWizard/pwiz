@@ -4328,6 +4328,11 @@ namespace pwiz.Skyline
         private void UpdateProgress(object sender, ProgressUpdateEventArgs e)
         {
             var status = e.Progress;
+            var multiStatus = status as MultiProgressStatus;
+            if (multiStatus != null && multiStatus.IsEmpty)
+            {
+                Assume.Fail("Setting empty multi-status");  // Not L10N
+            }
             var final = status.IsFinal;
 
             int i;
@@ -4337,18 +4342,27 @@ namespace pwiz.Skyline
                 listOriginal = ListProgress;
                 listNew = new List<IProgressStatus>(listOriginal);
 
-                // Replace existing status, if it is already being tracked.
-                for (i = 0; i < listNew.Count; i++)
+                // Find the status being updated in the list
+                Assume.IsNotNull(status);
+                Assume.IsFalse(listNew.Any(s => s == null));
+                i = listNew.IndexOf(s => ReferenceEquals(s.Id, status.Id));
+                // If final, remove the status if present
+                if (final)
                 {
-                    if (ReferenceEquals(listNew[i].Id, status.Id))
-                    {
-                        listNew[i] = status;
-                        break;
-                    }
+                    if (i != -1)
+                        listNew.RemoveAt(i);
                 }
-                // Or add this status, if it is not in the list.
-                if (i == listNew.Count)
+                // Otherwise, if present update the status
+                else if (i != -1)
+                {
+                    listNew[i] = status;
+                }
+                // Or add it if not
+                else
+                {
+                    i = listNew.Count;
                     listNew.Add(status);
+                }
             }
             while (!SetListProgress(listNew, listOriginal));
 
@@ -4368,8 +4382,6 @@ namespace pwiz.Skyline
                 if (ImportingResultsWindow != null && status is MultiProgressStatus)
                     RunUIAction(() => UpdateImportProgress(status as MultiProgressStatus));
 
-                RemoveProgress(status);
-
                 // Only wait for an error, since it is expected that e
                 // may be modified by return of this function call
                 if (status.IsError)
@@ -4377,18 +4389,6 @@ namespace pwiz.Skyline
                 else if (i == 0)
                     RunUIActionAsync(CompleteProgressUI, e);
             }
-        }
-
-        private void RemoveProgress(IProgressStatus status)
-        {
-            List<IProgressStatus> listOriginal, listNew;
-            do
-            {
-                listOriginal = ListProgress;
-                listNew = new List<IProgressStatus>(listOriginal);
-                listNew.Remove(status);
-            }
-            while (!SetListProgress(listNew, listOriginal));
         }
 
         private void BeginProgressUI(ProgressUpdateEventArgs e)
@@ -4460,38 +4460,22 @@ namespace pwiz.Skyline
             }
         }
 
-        private int GetFileCount(IProgressStatus status)
-        {
-            var multiStatus = status as MultiProgressStatus;
-            return multiStatus == null ? status.SegmentCount - 1 : multiStatus.ProgressList.Count;
-        }
-
-        public void UpdateTaskbarProgress(int? percentComplete)
-        {
-            if (!percentComplete.HasValue)
-                _taskbarProgress.SetState(Handle, TaskbarProgress.TaskbarStates.NoProgress);
-            else
-            {
-                _taskbarProgress.SetState(Handle, TaskbarProgress.TaskbarStates.Normal);
-                _taskbarProgress.SetValue(Handle, percentComplete.Value, 100);                
-            }
-        }
-
         private void UpdateProgressUI(object sender = null, EventArgs e = null)
         {
             if (statusStrip.IsDisposed)
                 return;
 
             var listProgress = ListProgress;
-            if (listProgress.Count == 0)
+            // First deal with AllChromatogramsGraph window
+            if (!Program.NoAllChromatogramsGraph)
             {
-                statusProgress.Visible = false;
-                UpdateTaskbarProgress(null);
-                buttonShowAllChromatograms.Visible = false;
-                statusGeneral.Text = Resources.SkylineWindow_UpdateProgressUI_Ready;
-                _timerProgress.Stop();
-
-                if (ImportingResultsWindow != null)
+                // Update chromatogram graph if we are importing a data file.
+                var multiStatus = listProgress.LastOrDefault(s => s is MultiProgressStatus) as MultiProgressStatus;
+                if (multiStatus != null)
+                {
+                    UpdateImportProgress(multiStatus);
+                }
+                else if (ImportingResultsWindow != null)
                 {
                     if (!ImportingResultsWindow.Canceled)
                         Settings.Default.AutoShowAllChromatogramsGraph = ImportingResultsWindow.Visible;
@@ -4499,6 +4483,16 @@ namespace pwiz.Skyline
                     if (!ImportingResultsWindow.HasErrors && Settings.Default.ImportResultsAutoCloseWindow)
                         DestroyAllChromatogramsGraph();
                 }
+            }
+
+            // Next deal with status bar, which may also show status for MultiProgressStatus objects
+            if (listProgress.Count == 0)
+            {
+                statusProgress.Visible = false;
+                UpdateTaskbarProgress(null);
+                buttonShowAllChromatograms.Visible = false;
+                statusGeneral.Text = Resources.SkylineWindow_UpdateProgressUI_Ready;
+                _timerProgress.Stop();
             }
             else
             {
@@ -4508,14 +4502,17 @@ namespace pwiz.Skyline
                 statusProgress.Visible = true;
                 UpdateTaskbarProgress(status.PercentComplete);
                 statusGeneral.Text = status.Message;
+            }
+        }
 
-                if (Program.NoAllChromatogramsGraph)
-                    return;
-
-                // Update chromatogram graph if we are importing a data file.
-                var multiStatus = listProgress.LastOrDefault(s => s is MultiProgressStatus) as MultiProgressStatus;
-                if (multiStatus != null)
-                    UpdateImportProgress(multiStatus);
+        public void UpdateTaskbarProgress(int? percentComplete)
+        {
+            if (!percentComplete.HasValue)
+                _taskbarProgress.SetState(Handle, TaskbarProgress.TaskbarStates.NoProgress);
+            else
+            {
+                _taskbarProgress.SetState(Handle, TaskbarProgress.TaskbarStates.Normal);
+                _taskbarProgress.SetValue(Handle, percentComplete.Value, 100);
             }
         }
 
