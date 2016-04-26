@@ -802,6 +802,7 @@ namespace pwiz.SkylineTestUtil
                     catch (Exception x)
                     {
                         Program.AddTestException(x);
+                        FileStreamManager.Default.CloseAllStreams();
                     }
                 }
             }

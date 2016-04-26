@@ -281,6 +281,16 @@ namespace pwiz.Skyline.Util
                 return sb.ToString();
             }
         }
+
+        public void DisposeAll()
+        {
+            lock (this)
+            {
+                foreach (var connection in _connections.Values)
+                    connection.Dispose();
+                _connections.Clear();
+            }
+        }
     }
 
     /// <summary>
@@ -549,6 +559,11 @@ namespace pwiz.Skyline.Util
         public string ReportPooledStreams()
         {
             return _connectionPool.ReportPooledConnections();
+        }
+
+        public void CloseAllStreams()
+        {
+            _connectionPool.DisposeAll();
         }
 
         public Stream CreateStream(string path, FileMode mode, bool buffered)

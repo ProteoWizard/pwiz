@@ -680,6 +680,9 @@ namespace pwiz.Skyline.Model.Lib
                     return true;
             }
 
+            // Close any streams that got opened
+            foreach (var pooledStream in ReadStreams)
+                pooledStream.CloseStream();
             return false;
         }
 
@@ -772,9 +775,6 @@ namespace pwiz.Skyline.Model.Lib
                             if (loader.IsCanceled)
                             {
                                 loader.UpdateProgress(status.Cancel());
-                                // Close any streams that got opened
-                                foreach (var pooledStream in ReadStreams)
-                                    pooledStream.CloseStream();
                                 return false;
                             }
                             // If not cancelled, update progress.
