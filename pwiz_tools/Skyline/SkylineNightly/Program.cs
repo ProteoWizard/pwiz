@@ -124,6 +124,7 @@ namespace SkylineNightly
                     message = string.Format("Parse and post log {0}", nightly.GetLatestLog()); // Not L10N
                     nightly.StartLog();
                     runMode = nightly.Parse();
+                    message += string.Format(" as runmode {0}", runMode); // Not L10N
                     errMessage = nightly.Post(runMode);
                     break;
 
@@ -131,6 +132,7 @@ namespace SkylineNightly
                     message = string.Format("Post existing XML {0}", nightly.GetLatestLog()); // Not L10N
                     nightly.StartLog();
                     runMode = nightly.Parse(null, true);
+                    message += string.Format(" as runmode {0}", runMode); // Not L10N
                     errMessage = nightly.Post(runMode);
                     break;
 
@@ -147,6 +149,7 @@ namespace SkylineNightly
                         message = string.Format("Post existing XML {0}", arg); // Not L10N
                         runMode = nightly.Parse(Path.ChangeExtension(arg, ".log"), true); // Scan the log file for this XML // Not L10N
                     }
+                    message += string.Format(" as runmode {0}", runMode); // Not L10N
                     errMessage = nightly.Post(runMode, Path.ChangeExtension(arg, ".xml")); // Not L10N
                     break;
             }
