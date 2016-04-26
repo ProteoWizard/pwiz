@@ -237,8 +237,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (_selected != value)
                 {
                     _selected = value;
-                    if (_selected && btnRetry.Visible)
-                        btnRetry.Focus();
                     Invalidate();
                 }
             }

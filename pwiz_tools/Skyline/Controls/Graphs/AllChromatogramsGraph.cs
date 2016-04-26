@@ -354,6 +354,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         _selectionIsSticky = true;
                         Selected = i;
+                        flowFileStatus.ScrollControlIntoView(progressControl);
                     }
                     RemoveFailedFile(loadingStatus);
                 }
@@ -388,7 +389,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     var control = (FileProgressControl) flowFileStatus.Controls[i];
                     if (!control.IsCanceled && control.Progress > 0 && control.Progress < 100)
+                    {
                         Selected = i;
+                        flowFileStatus.ScrollControlIntoView(control);
+                    }
                 }
             }
 
