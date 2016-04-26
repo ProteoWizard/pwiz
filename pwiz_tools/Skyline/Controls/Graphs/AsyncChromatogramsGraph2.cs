@@ -19,20 +19,15 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Windows.Forms;
-using pwiz.MSGraph;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public partial class AsyncChromatogramsGraph2 : MSGraphControl
+    public partial class AsyncChromatogramsGraph2 : AsyncRenderControl
     {
-        private const int NORMAL_TICKCOUNT = 3;
-        private const int ANIMATE_TICKCOUNT = 1;
-        private const int ANIMATE_UPDATERATE = 100;
+        private const int ANIMATE_UPDATERATE = 100;             // animate 10 frames/sec.
         private const int STEPS_FOR_INTENSITY_ANIMATION = 6;    // half a second for growing peaks and adjusting intensity axis
         private const int STEPS_FOR_TIME_AXIS_ANIMATION = 10;   // one second for adjusting time axis
 
@@ -45,43 +40,73 @@ namespace pwiz.Skyline.Controls.Graphs
         private readonly Color _unfinishedLineColor = Color.FromArgb(170, 170, 170);
         private readonly Color _dimColor = Color.FromArgb(128, Color.LightGray);
 
+        // Hold rendering information for each graph
+        private class GraphInfo
+        {
+            public GraphPane GraphPane;
+            public List<CurveInfo> ActiveCurves;
+            public CurveInfo LastCurve;
+            public float MaxX;
+            public float MaxY;
+            public float? CurrentTime;
+        }
+
+        private GraphPane _templatePane;
+        private GraphPane _graphPane;
+        private BoxObj _canceledBox;
+        private TextObj _canceledText;
         private readonly Dictionary<string, GraphInfo> _graphs = new Dictionary<string, GraphInfo>();
         private string _key;
-        private int _tickCount = int.MaxValue;
         private bool _scaleIsLocked;
-        private bool _fullRender;
         private readonly Animation _xAxisAnimation = new Animation(ANIMATE_UPDATERATE);
         private readonly Animation _yAxisAnimation = new Animation(ANIMATE_UPDATERATE);
-        private readonly BoxObj _canceledBox;
-        private readonly TextObj _canceledText;
         private double _renderMin;
         private double _renderMax;
 
         public AsyncChromatogramsGraph2()
+            : base("AllChromatograms background render") // Not L10N
         {
             InitializeComponent();
+        }
+
+        /// <summary>
+        /// Start animation timer on load.
+        /// </summary>
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+            if (DesignMode) return;
+
             timer.Interval = ANIMATE_UPDATERATE;
             timer.Tick += timer_Tick;
+        }
 
-            GraphPane.Chart.Border.IsVisible = false;
-            GraphPane.Chart.Fill.IsVisible = false;
-            GraphPane.Chart.Fill = new Fill(_backgroundGradientColor1, _backgroundGradientColor2, 45.0f);
-            GraphPane.Border.IsVisible = false;
-            GraphPane.Title.IsVisible = true;
+        /// <summary>
+        /// Initialize graph renderer on the background thread.
+        /// </summary>
+        protected override void BackgroundInitialize()
+        {
+            // The template pane is a blank graph that will be cloned to create a graph for each imported file.
+            _templatePane = new GraphPane();
+            _templatePane.Chart.Border.IsVisible = false;
+            _templatePane.Chart.Fill.IsVisible = false;
+            _templatePane.Chart.Fill = new Fill(_backgroundGradientColor1, _backgroundGradientColor2, 45.0f);
+            _templatePane.Border.IsVisible = false;
+            _templatePane.Title.IsVisible = true;
 
-            GraphPane.XAxis.Title.Text = Resources.AsyncChromatogramsGraph_AsyncChromatogramsGraph_Retention_Time;
-            GraphPane.XAxis.MinorTic.IsOpposite = false;
-            GraphPane.XAxis.MajorTic.IsOpposite = false;
-            GraphPane.XAxis.Scale.Min = 0.0;
-            GraphPane.XAxis.Scale.Max = X_AXIS_START;
+            _templatePane.XAxis.Title.Text = Resources.AsyncChromatogramsGraph_AsyncChromatogramsGraph_Retention_Time;
+            _templatePane.XAxis.MinorTic.IsOpposite = false;
+            _templatePane.XAxis.MajorTic.IsOpposite = false;
+            _templatePane.XAxis.Scale.Min = 0.0;
+            _templatePane.XAxis.Scale.Max = X_AXIS_START;
 
-            GraphPane.YAxis.Title.Text = Resources.AsyncChromatogramsGraph_AsyncChromatogramsGraph_Intensity;
-            GraphPane.YAxis.MinorTic.IsOpposite = false;
-            GraphPane.YAxis.MajorTic.IsOpposite = false;
-            GraphPane.YAxis.Scale.Min = 0.0;
-            GraphPane.YAxis.Scale.Max = Y_AXIS_START;
+            _templatePane.YAxis.Title.Text = Resources.AsyncChromatogramsGraph_AsyncChromatogramsGraph_Intensity;
+            _templatePane.YAxis.MinorTic.IsOpposite = false;
+            _templatePane.YAxis.MajorTic.IsOpposite = false;
+            _templatePane.YAxis.Scale.Min = 0.0;
+            _templatePane.YAxis.Scale.Max = Y_AXIS_START;
 
-            GraphHelper.FormatGraphPane(GraphPane);
+            GraphHelper.FormatGraphPane(_templatePane);
 
             _canceledBox = new BoxObj(0, 0, 1, 1, _dimColor, _dimColor)
             {
@@ -92,12 +117,139 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 FontSpec = new FontSpec("Arial", 24, Color.Gray, true, false, false)    // Not L10N
                 {
-                    Border = new Border {IsVisible = false},
+                    Border = new Border { IsVisible = false },
                     Fill = new Fill()
                 },
-                Location = { AlignH = AlignH.Center, AlignV = AlignV.Center, CoordinateFrame = CoordType.ChartFraction},
+                Location = { AlignH = AlignH.Center, AlignV = AlignV.Center, CoordinateFrame = CoordType.ChartFraction },
                 ZOrder = ZOrder.A_InFront
             };
+        }
+
+        /// <summary>
+        /// Update status (main thread).
+        /// </summary>
+        public void UpdateStatus(ChromatogramLoadingStatus status)
+        {
+            // Create info for new file.
+            var key = status.FilePath.GetFilePath();
+            var info = GetInfo(key);
+            if (info == null)
+            {
+                info = _graphs[key] = new GraphInfo
+                {
+                    GraphPane = _templatePane.Clone(),
+                    ActiveCurves = new List<CurveInfo>()
+                };
+                info.GraphPane.Title.Text = status.FilePath.GetFileNameWithoutExtension();
+            }
+
+            // Create curve information from the transition data.
+            List<ChromatogramLoadingStatus.TransitionData.Peak> bin;
+            while (status.Transitions.BinnedPeaks.TryDequeue(out bin))
+            {
+                if (status.Transitions.Progressive)
+                    ProcessBinProgressive(bin, info);
+                else
+                    ProcessBinSRM(bin, info);
+            }
+
+            if (status.Transitions.Progressive)
+            {
+                info.CurrentTime = status.Transitions.CurrentTime;
+                info.MaxX = Math.Max(info.MaxX, status.Transitions.MaxRetentionTime);
+            }
+            else
+            {
+                info.CurrentTime = null;
+            }
+            status.Transitions.MaxIntensity = info.MaxY;
+        }
+
+        /// <summary>
+        /// This is the rendering loop, called periodically to update the graph.
+        /// </summary>
+        private void timer_Tick(object sender, EventArgs e)
+        {
+            var info = GetInfo(Key);
+            if (info == null)
+                return;
+
+            // Find new maximum values on x and y axes.
+            float maxX, maxY;
+            Rescale(info, out maxX, out maxY);
+            if (maxY == 0.0)
+                return;
+
+            // Start scaling animation if necessary.
+            _xAxisAnimation.SetTarget(info.GraphPane.XAxis.Scale.Max, maxX, STEPS_FOR_TIME_AXIS_ANIMATION);
+            _yAxisAnimation.SetTarget(info.GraphPane.YAxis.Scale.Max, maxY * 1.1, STEPS_FOR_INTENSITY_ANIMATION);
+
+            // Tell Zedgraph if axes are being changed.
+            if (_xAxisAnimation.IsActive || _yAxisAnimation.IsActive)
+            {
+                info.GraphPane.XAxis.Scale.Max = _xAxisAnimation.Step();
+                info.GraphPane.YAxis.Scale.Max = _yAxisAnimation.Step();
+                info.GraphPane.AxisChange();
+                Invalidate();
+            }
+            else if (_renderMax > _renderMin)
+            {
+                // Render incremental changes to current graph.
+                var p1 = info.GraphPane.GeneralTransform(_renderMin, 0, CoordType.AxisXYScale);
+                var p2 = info.GraphPane.GeneralTransform(_renderMax, 0, CoordType.AxisXYScale);
+                int x = (int)p1.X - 1;
+                int y = 0;
+                int width = (int)(p2.X + PROGRESS_LINE_WIDTH) - x + 2;
+                int height = (int)p1.Y + 2;
+                Invalidate(new Rectangle(x, y, width, height));
+            }
+
+            _renderMin = double.MaxValue;
+            _renderMax = double.MinValue;
+        }
+
+        /// <summary>
+        /// Determine maximum values for x and y axes, possibly across all importing files.
+        /// </summary>
+        private void Rescale(GraphInfo info, out float maxX, out float maxY)
+        {
+            // Scale axis depending on whether the axes are locked between graphs.
+            maxX = info.MaxX;
+            maxY = info.MaxY;
+            if (ScaleIsLocked)
+            {
+                foreach (var pair in _graphs)
+                {
+                    maxX = Math.Max(maxX, pair.Value.MaxX);
+                    maxY = Math.Max(maxY, pair.Value.MaxY);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Copy graphics on main thread to freeze them for background rendering.
+        /// </summary>
+        protected override void CopyState()
+        {
+            var info = GetInfo(Key);
+            if (info != null)
+            {
+                _graphPane = info.GraphPane.Clone();
+                AddUnfinishedLine(_graphPane, info.CurrentTime);
+            }
+        }
+
+        /// <summary>
+        /// Render content to a bitmap.
+        /// </summary>
+        protected override void Render(Bitmap bitmap, Rectangle renderRect)
+        {
+            using (var graphics = Graphics.FromImage(bitmap))
+            {
+                graphics.SetClip(renderRect);
+                _graphPane.ReSize(graphics, new RectangleF(0, 0, bitmap.Width, bitmap.Height));
+                _graphPane.Draw(graphics);
+            }
         }
 
         public string Key 
@@ -108,8 +260,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (_key != value)
                 {
                     _key = value;
-                    NewGraph();
-                    Render();
+                    Redraw();
                 }
             }
         }
@@ -123,128 +274,51 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 if (_scaleIsLocked != value)
                 {
-                    _scaleIsLocked = value; 
-                    _fullRender = true;
+                    _scaleIsLocked = value;
+                    Redraw();
                 }
             }
         }
 
-        private void timer_Tick(object sender, EventArgs e)
+        /// <summary>
+        /// Redraw a graph entirely when we switch between graphs.
+        /// </summary>
+        public void Redraw()
         {
-            if (--_tickCount <= 0)
-                Render();
-        }
-
-        private class GraphInfo
-        {
-            public string FileName;
-            public CurveList Curves;
-            public List<CurveInfo> ActiveCurves;
-            public CurveInfo LastCurve;
-            public float MaxX;
-            public float MaxY;
-            public float? CurrentTime;
-        }
-
-        private void Render()
-        {
-            lock (_graphs)
+            _renderMin = double.MaxValue;
+            _renderMax = double.MinValue;
+            var info = GetInfo(Key);
+            if (info != null)
             {
-                // No graph to render yet.
-                GraphInfo info;
-                if (Key == null || !_graphs.TryGetValue(Key, out info))
-                {
-                    _tickCount = int.MaxValue;
-                    return;
-                }
-
-                // Scale axis depending on whether the axes are locked between graphs.
-                float maxX = info.MaxX;
-                float maxY = info.MaxY;
-                if (ScaleIsLocked)
-                {
-                    foreach (var pair in _graphs)
-                    {
-                        maxX = Math.Max(maxX, pair.Value.MaxX);
-                        maxY = Math.Max(maxY, pair.Value.MaxY);
-                    }
-                }
-
-                if (maxY == 0.0)
-                    return;
-
-                var graphPane = GraphPane;
-                graphPane.Title.Text = info.FileName;
-                graphPane.CurveList = info.Curves;
-
-                _xAxisAnimation.SetTarget(graphPane.XAxis.Scale.Max, maxX, STEPS_FOR_TIME_AXIS_ANIMATION);
-                _yAxisAnimation.SetTarget(graphPane.YAxis.Scale.Max, maxY*1.1, STEPS_FOR_INTENSITY_ANIMATION);
-
-                if (_xAxisAnimation.IsActive || _yAxisAnimation.IsActive)
-                {
-                    _fullRender = true;
-                    graphPane.XAxis.Scale.Max = _xAxisAnimation.Step();
-                    graphPane.YAxis.Scale.Max = _yAxisAnimation.Step();
-                    AxisChange();
-                }
-
-                ShowUnfinishedLine(info.CurrentTime);
-
-                if (_fullRender)
-                {
-                    _fullRender = false;
-                    Invalidate();
-                }
-                else if (_renderMax > _renderMin)
-                {
-                    // Render incremental changes to current graph.
-                    var p1 = graphPane.GeneralTransform(_renderMin, 0, CoordType.AxisXYScale);
-                    var p2 = graphPane.GeneralTransform(_renderMax, 0, CoordType.AxisXYScale);
-                    int x = (int)p1.X - 1;
-                    int y = 0;
-                    int width = (int)(p2.X + PROGRESS_LINE_WIDTH) - x + 2;
-                    int height = (int)p1.Y + 2;
-                    Invalidate(new Rectangle(x, y, width, height));
-                }
-
-                if (info.CurrentTime.HasValue)
-                    _renderMin = _renderMax = info.CurrentTime.Value;
+                float maxX, maxY;
+                Rescale(info, out maxX, out maxY);
+                info.GraphPane.XAxis.Scale.Max = maxX;
+                info.GraphPane.YAxis.Scale.Max = maxY * 1.1;
+                info.GraphPane.AxisChange();
+                Invalidate();
             }
-
-            Update();
-            _tickCount = _xAxisAnimation.IsActive || _yAxisAnimation.IsActive ? ANIMATE_TICKCOUNT : NORMAL_TICKCOUNT;
         }
 
-        private void NewGraph()
+        private GraphInfo GetInfo(string key)
         {
-            GraphPane.GraphObjList.Clear();
-            _fullRender = true;
+            return key != null && _graphs.ContainsKey(key) ? _graphs[key] : null;
         }
 
-        private void ShowUnfinishedLine(float? currentTime)
+        private void AddUnfinishedLine(GraphPane graphPane, float? currentTime)
         {
             if (IsCanceled)
             {
-                NewGraph();
-                GraphPane.GraphObjList.Add(_canceledBox);
-                GraphPane.GraphObjList.Add(_canceledText);
+                graphPane.GraphObjList.Add(_canceledBox);
+                graphPane.GraphObjList.Add(_canceledText);
             }
-            else if (GraphPane.YAxis.Scale.Max > GraphPane.YAxis.Scale.Min &&
-                currentTime.HasValue && currentTime.Value < GraphPane.XAxis.Scale.Max * 0.95)
+            else if (graphPane.YAxis.Scale.Max > graphPane.YAxis.Scale.Min &&
+                currentTime.HasValue && currentTime.Value < graphPane.XAxis.Scale.Max * 0.95)
             {
-                if (GraphPane.GraphObjList.Count == 0)
-                    _fullRender = true;
-                else
-                {
-                    GraphPane.GraphObjList.Clear();
-                    _renderMax = currentTime.Value;
-                }
-
                 var unfinishedBox = new BoxObj(
                     currentTime.Value,
-                    GraphPane.YAxis.Scale.Max,
-                    GraphPane.XAxis.Scale.Max - currentTime.Value,
-                    GraphPane.YAxis.Scale.Max - GraphPane.YAxis.Scale.Min,
+                    graphPane.YAxis.Scale.Max,
+                    graphPane.XAxis.Scale.Max - currentTime.Value,
+                    graphPane.YAxis.Scale.Max - graphPane.YAxis.Scale.Min,
                     Color.White, Color.White)
                 {
                     Location = {CoordinateFrame = CoordType.AxisXYScale},
@@ -254,21 +328,21 @@ namespace pwiz.Skyline.Controls.Graphs
                 var unfinishedLine = new LineObj(
                     _unfinishedLineColor,
                     currentTime.Value,
-                    GraphPane.YAxis.Scale.Max,
+                    graphPane.YAxis.Scale.Max,
                     currentTime.Value,
-                    GraphPane.YAxis.Scale.Min)
+                    graphPane.YAxis.Scale.Min)
                 {
                     Location = {CoordinateFrame = CoordType.AxisXYScale},
                     Line = {Width = PROGRESS_LINE_WIDTH},
                     ZOrder = ZOrder.D_BehindAxis
                 };
 
-                GraphPane.GraphObjList.Add(unfinishedBox);
-                GraphPane.GraphObjList.Add(unfinishedLine);
+                graphPane.GraphObjList.Add(unfinishedBox);
+                graphPane.GraphObjList.Add(unfinishedLine);
             }
             else
             {
-                NewGraph();
+                graphPane.GraphObjList.Clear();
             }
         }
 
@@ -277,49 +351,6 @@ namespace pwiz.Skyline.Controls.Graphs
             lock (_graphs)
             {
                 _graphs.Remove(filePath.GetFilePath());
-            }
-        }
-
-        /// <summary>
-        /// Update status.
-        /// </summary>
-        public void UpdateStatus(ChromatogramLoadingStatus status)
-        {
-            lock (_graphs)
-            {
-                // Create info for new file.
-                var key = status.FilePath.GetFilePath();
-                GraphInfo info;
-                if (!_graphs.TryGetValue(key, out info))
-                {
-                    info = _graphs[key] = new GraphInfo
-                    {
-                        FileName = status.FilePath.GetFileNameWithoutExtension(),
-                        Curves = new CurveList(),
-                        ActiveCurves = new List<CurveInfo>()
-                    };
-                }
-
-                List<ChromatogramLoadingStatus.TransitionData.Peak> bin;
-                while (status.Transitions.BinnedPeaks.TryDequeue(out bin))
-                {
-                    if (status.Transitions.Progressive)
-                        ProcessBinProgressive(bin, info);
-                    else
-                        ProcessBinSRM(bin, info);
-                }
-
-                if (status.Transitions.Progressive)
-                {
-                    info.CurrentTime = status.Transitions.CurrentTime;
-                    info.MaxX = Math.Max(info.MaxX, status.Transitions.MaxRetentionTime);
-                }
-                else
-                {
-                    info.CurrentTime = null;
-                }
-                status.Transitions.MaxIntensity = info.MaxY;
-                _tickCount = 0;
             }
         }
 
@@ -363,7 +394,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (curve == null)
                 {
                     curve = new CurveInfo(bin[i].ModifiedSequence, bin[i].Color, retentionTime, intensity);
-                    info.Curves.Insert(0, curve.Curve);
+                    info.GraphPane.CurveList.Insert(0, curve.Curve);
                     info.ActiveCurves.Add(curve);
                 }
                 // Add preceding zero if necessary.
@@ -409,7 +440,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (info.LastCurve == null || !ReferenceEquals(peak.ModifiedSequence, info.LastCurve.ModifiedSequence))
                 {
                     info.LastCurve = new CurveInfo(peak.ModifiedSequence, peak.Color, retentionTime, intensity);
-                    info.Curves.Add(info.LastCurve.Curve);
+                    info.GraphPane.CurveList.Add(info.LastCurve.Curve);
                     continue;
                 }
 
@@ -492,11 +523,6 @@ namespace pwiz.Skyline.Controls.Graphs
                     InsertAt(index + 1, Curve.Points[index].X + ChromatogramLoadingStatus.TIME_RESOLUTION, 0);
                 }
             }
-        }
-
-        private void AsyncChromatogramsGraph2_ContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip, Point mousePt, ContextMenuObjectState objState)
-        {
-            ZedGraphHelper.BuildContextMenu(sender, menuStrip);
         }
     }
 }

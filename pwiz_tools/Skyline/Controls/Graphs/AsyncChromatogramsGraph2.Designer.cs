@@ -40,12 +40,8 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.IsEnableHPan = false;
-            this.IsEnableHZoom = false;
-            this.IsEnableWheelZoom = false;
-            this.Name = "AsyncChromatogramsGraph2";
+            this.Name = "asyncChromatogramsGraph";
             this.Size = new System.Drawing.Size(436, 291);
-            this.ContextMenuBuilder += new ZedGraph.ZedGraphControl.ContextMenuBuilderEventHandler(this.AsyncChromatogramsGraph2_ContextMenuBuilder);
             this.ResumeLayout(false);
 
         }
