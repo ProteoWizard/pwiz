@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
 
@@ -69,7 +70,6 @@ namespace SkylineNightly
             var nightly = new Nightly(arg);
             string message;
             string errMessage = string.Empty;
-            string errMessage2= string.Empty;
             switch (arg)
             {
                 case HELP_ARG:
@@ -85,19 +85,25 @@ namespace SkylineNightly
                 // For machines that can test all day and all night:
                 // Run current integration branch, then normal
                 case SCHEDULED_INTEGRATION_TRUNK_ARG:
-                    message = string.Format("Completed {0}", arg); // Not L10N
+                    message = string.Format("Completed part one of {0}", arg); // Not L10N
                     errMessage = nightly.RunAndPost(Nightly.RunMode.nightly_integration);
+                    Report(nightly, message, errMessage);
+
+                    message = string.Format("Completed part two of {0}", arg); // Not L10N
                     nightly = new Nightly(SCHEDULED_INTEGRATION_ARG);
-                    errMessage2 = nightly.RunAndPost(Nightly.RunMode.nightly);
+                    errMessage = nightly.RunAndPost(Nightly.RunMode.nightly);
                     break;
 
                 // For machines that can test all day and all night:
-                // Run perftests mode, then normal
+                // Run normal mode, then perftests
                 case SCHEDULED_PERFTEST_AND_TRUNK_ARG: 
-                    message = string.Format("Completed {0}", arg); // Not L10N
-                    errMessage = nightly.RunAndPost(Nightly.RunMode.nightly_with_perftests);
-                    nightly = new Nightly(SCHEDULED_ARG);
-                    errMessage2 = nightly.RunAndPost(Nightly.RunMode.nightly); // Not L10N
+                    message = string.Format("Completed part one of {0}", arg); // Not L10N
+                    errMessage = nightly.RunAndPost(Nightly.RunMode.nightly);
+                    Report(nightly, message, errMessage);
+
+                    message = string.Format("Completed part two of {0}", arg); // Not L10N
+                    nightly = new Nightly(SCHEDULED_PERFTESTS_ARG);
+                    errMessage = nightly.RunAndPost(Nightly.RunMode.nightly_with_perftests); // Not L10N
                     break;
 
                 case SCHEDULED_PERFTESTS_ARG:
@@ -122,7 +128,7 @@ namespace SkylineNightly
 
                 case PARSE_ARG:
                     message = string.Format("Parse and post log {0}", nightly.GetLatestLog()); // Not L10N
-                    nightly.StartLog();
+                    nightly.StartLog(Nightly.RunMode.parse);
                     runMode = nightly.Parse();
                     message += string.Format(" as runmode {0}", runMode); // Not L10N
                     errMessage = nightly.Post(runMode);
@@ -130,22 +136,23 @@ namespace SkylineNightly
 
                 case POST_ARG:
                     message = string.Format("Post existing XML {0}", nightly.GetLatestLog()); // Not L10N
-                    nightly.StartLog();
+                    nightly.StartLog(Nightly.RunMode.post);
                     runMode = nightly.Parse(null, true);
                     message += string.Format(" as runmode {0}", runMode); // Not L10N
                     errMessage = nightly.Post(runMode);
                     break;
 
                 default:
-                    nightly.StartLog();
                     var extension = Path.GetExtension(arg).ToLower();
                     if (extension == ".log") // Not L10N
                     {
+                        nightly.StartLog(Nightly.RunMode.parse);
                         message = string.Format("Parse and post log {0}", arg); // Not L10N
                         runMode = nightly.Parse(arg); // Create the xml for this log file
                     }
                     else
                     {
+                        nightly.StartLog(Nightly.RunMode.post);
                         message = string.Format("Post existing XML {0}", arg); // Not L10N
                         runMode = nightly.Parse(Path.ChangeExtension(arg, ".log"), true); // Scan the log file for this XML // Not L10N
                     }
@@ -153,18 +160,27 @@ namespace SkylineNightly
                     errMessage = nightly.Post(runMode, Path.ChangeExtension(arg, ".xml")); // Not L10N
                     break;
             }
-            // ReSharper restore LocalizableElement
+
+            Report(nightly, message, errMessage);
             nightly.Finish(); // Kill the screengrab thread, if any, so we can exit
-            // Give some indication that this process ran on this machine
+        }
+
+        private static void Report(Nightly nightly, string message, string errMessage)
+        {
+            // Leave a note for the user, in a way that won't interfere with our next run
+            nightly.Log("Done.  Exit message:"); // Not L10N
+            nightly.Log(message);
             if (!string.IsNullOrEmpty(errMessage))
+                nightly.Log(errMessage);
+            var process = new Process
             {
-                message += "\n" + errMessage; // Not L10N
-            }
-            if (!string.IsNullOrEmpty(errMessage2))
-            {
-                message += "\n" + errMessage2; // Not L10N
-            }
-            MessageBox.Show(message, "SkylineNightly"); // Not L10N
+                StartInfo =
+                {
+                    FileName = "notepad.exe", // Not L10N
+                    Arguments = nightly.LogFileName
+                }
+            };
+            process.Start();
         }
     }
 }

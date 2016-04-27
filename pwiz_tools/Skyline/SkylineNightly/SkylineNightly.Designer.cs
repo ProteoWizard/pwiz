@@ -166,7 +166,7 @@
             "Trunk with Stress Tests",
             "Integration",
             "Integration then Trunk (24 hour cycle)",
-            "Perf Tests then Trunk (24 hour cycle)"});
+            "Trunk then Perf Tests (24 hour cycle)"});
             this.comboBoxOptions.Location = new System.Drawing.Point(68, 113);
             this.comboBoxOptions.Name = "comboBoxOptions";
             this.comboBoxOptions.Size = new System.Drawing.Size(223, 21);

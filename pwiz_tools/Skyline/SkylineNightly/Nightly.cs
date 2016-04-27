@@ -55,10 +55,10 @@ namespace SkylineNightly
         private const string LABKEY_INTEGRATION_URL = "https://skyline.gs.washington.edu/labkey/testresults/home/development/Integration/post.view";
 
         // Current integration branch is MultiFileLoad
-        private const string SVN_INTEGRATION_BRANCH_URL = "https://svn.code.sf.net/p/proteowizard/code/branches/work/20151014_MultiFileLoad";
+        private const string SVN_INTEGRATION_BRANCH_URL = "https://svn.code.sf.net/p/proteowizard/code/branches/work20160427_MultiFileUtimate";
 
         private DateTime _startTime;
-        private string _logFile;
+        public string LogFileName { get; private set; }
         private readonly Xml _nightly;
         private readonly Xml _failures;
         private readonly Xml _leaks;
@@ -138,7 +138,7 @@ namespace SkylineNightly
             }
         }
 
-        public enum RunMode { nightly, nightly_with_perftests, release_branch_with_perftests, nightly_with_stresstests, nightly_integration }
+        public enum RunMode { parse, post, nightly, nightly_with_perftests, release_branch_with_perftests, nightly_with_stresstests, nightly_integration }
 
         public string RunAndPost(RunMode mode)
         {
@@ -211,7 +211,7 @@ namespace SkylineNightly
             if (!Directory.Exists(_logDir))
                 Directory.CreateDirectory(_logDir);
             // Start the nightly log file
-            StartLog();
+            StartLog(mode);
 
             try
             {
@@ -370,14 +370,13 @@ namespace SkylineNightly
             return result;
         }
 
-        public void StartLog()
+        public void StartLog(RunMode runMode)
         {
             _startTime = DateTime.Now;
 
             // Create log file.
-            _logFile = Path.Combine(GetNightlyDir(), "SkylineNightly.log");
-            Delete(_logFile);
-            Log(DateTime.Now.ToShortDateString());
+            LogFileName = Path.Combine(_logDir, string.Format("SkylineNightly-{0}-{1}.log", runMode, _startTime.ToString("yyyy-MM-dd-HH-mm", CultureInfo.InvariantCulture)));
+            Log(_startTime.ToShortDateString());
         }
 
         public void Finish()
@@ -719,7 +718,7 @@ namespace SkylineNightly
             }
         }
 
-        private string Log(string message)
+        internal string Log(string message)
         {
             var time = DateTime.Now;
             var timestampedMessage = string.Format(
@@ -728,8 +727,8 @@ namespace SkylineNightly
                 time.Minute.ToString("D2"),
                 time.Second.ToString("D2"),
                 message);
-            if (_logFile != null)
-                File.AppendAllText(_logFile, timestampedMessage
+            if (LogFileName != null)
+                File.AppendAllText(LogFileName, timestampedMessage
                               + Environment.NewLine);
             return timestampedMessage;
         }
