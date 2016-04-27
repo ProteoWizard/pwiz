@@ -34,8 +34,8 @@ namespace pwiz.Skyline.Controls.Graphs
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(AllChromatogramsGraph));
             this.imageListLock = new System.Windows.Forms.ImageList(this.components);
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.btnHide = new System.Windows.Forms.Button();
             this.imageListPushPin = new System.Windows.Forms.ImageList(this.components);
+            this.btnHide = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.labelFileName = new System.Windows.Forms.Label();
             this.panelError = new System.Windows.Forms.Panel();
@@ -52,7 +52,6 @@ namespace pwiz.Skyline.Controls.Graphs
             this.lblDuration = new System.Windows.Forms.Label();
             this.progressBarTotal = new System.Windows.Forms.ProgressBar();
             this.graphChromatograms = new pwiz.Skyline.Controls.Graphs.AsyncChromatogramsGraph2();
-            this.elapsedTimer = new System.Windows.Forms.Timer(this.components);
             this.panelError.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             this.panelFileList.SuspendLayout();
@@ -67,6 +66,13 @@ namespace pwiz.Skyline.Controls.Graphs
             this.imageListLock.Images.SetKeyName(0, "Locked.bmp");
             this.imageListLock.Images.SetKeyName(1, "Unlocked.bmp");
             // 
+            // imageListPushPin
+            // 
+            this.imageListPushPin.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("imageListPushPin.ImageStream")));
+            this.imageListPushPin.TransparentColor = System.Drawing.Color.Transparent;
+            this.imageListPushPin.Images.SetKeyName(0, "Pindownlight.bmp");
+            this.imageListPushPin.Images.SetKeyName(1, "Pinleftlight.bmp");
+            // 
             // btnHide
             // 
             resources.ApplyResources(this.btnHide, "btnHide");
@@ -75,13 +81,6 @@ namespace pwiz.Skyline.Controls.Graphs
             this.toolTip1.SetToolTip(this.btnHide, resources.GetString("btnHide.ToolTip"));
             this.btnHide.UseVisualStyleBackColor = true;
             this.btnHide.Click += new System.EventHandler(this.btnClose_Click);
-            // 
-            // imageListPushPin
-            // 
-            this.imageListPushPin.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("imageListPushPin.ImageStream")));
-            this.imageListPushPin.TransparentColor = System.Drawing.Color.Transparent;
-            this.imageListPushPin.Images.SetKeyName(0, "Pindownlight.bmp");
-            this.imageListPushPin.Images.SetKeyName(1, "Pinleftlight.bmp");
             // 
             // btnCancel
             // 
@@ -198,15 +197,25 @@ namespace pwiz.Skyline.Controls.Graphs
             // graphChromatograms
             // 
             resources.ApplyResources(this.graphChromatograms, "graphChromatograms");
+            this.graphChromatograms.EditButtons = System.Windows.Forms.MouseButtons.Left;
+            this.graphChromatograms.EditModifierKeys = System.Windows.Forms.Keys.None;
             this.graphChromatograms.IsCanceled = false;
+            this.graphChromatograms.IsEnableHPan = false;
+            this.graphChromatograms.IsEnableHZoom = false;
+            this.graphChromatograms.IsEnableVPan = false;
+            this.graphChromatograms.IsEnableVZoom = false;
+            this.graphChromatograms.IsEnableWheelZoom = false;
+            this.graphChromatograms.IsZoomOnMouseCenter = true;
             this.graphChromatograms.Key = null;
             this.graphChromatograms.Name = "graphChromatograms";
             this.graphChromatograms.ScaleIsLocked = false;
-            // 
-            // elapsedTimer
-            // 
-            this.elapsedTimer.Enabled = true;
-            this.elapsedTimer.Interval = 500;
+            this.graphChromatograms.ScrollGrace = 0D;
+            this.graphChromatograms.ScrollMaxX = 0D;
+            this.graphChromatograms.ScrollMaxY = 0D;
+            this.graphChromatograms.ScrollMaxY2 = 0D;
+            this.graphChromatograms.ScrollMinX = 0D;
+            this.graphChromatograms.ScrollMinY = 0D;
+            this.graphChromatograms.ScrollMinY2 = 0D;
             // 
             // AllChromatogramsGraph
             // 
@@ -264,6 +273,5 @@ namespace pwiz.Skyline.Controls.Graphs
         private System.Windows.Forms.Panel panelError;
         private System.Windows.Forms.Button btnCopyText;
         private System.Windows.Forms.CheckBox cbMoreInfo;
-        private System.Windows.Forms.Timer elapsedTimer;
     }
 }

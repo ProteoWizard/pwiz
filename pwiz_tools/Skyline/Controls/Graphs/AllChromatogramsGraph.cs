@@ -36,11 +36,12 @@ namespace pwiz.Skyline.Controls.Graphs
     /// </summary>
     public partial class AllChromatogramsGraph : FormEx
     {
-        private Stopwatch _stopwatch;
+        private readonly Stopwatch _stopwatch;
         private int _selected = -1;
         private bool _selectionIsSticky;
-        private int _multiFileWindowWidth;
+        private readonly int _multiFileWindowWidth;
         private readonly List<MsDataFileUri> _partialProgressList = new List<MsDataFileUri>();
+        private readonly Timer _timer;
         private DateTime _retryTime;
         private int _nextRetry;
         private ImportResultsRetryCountdownDlg _retryDlg;
@@ -54,12 +55,10 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             InitializeComponent();
             toolStrip1.Renderer = new CustomToolStripProfessionalRenderer();
-        }
 
-        protected override void OnLoad(EventArgs e)
-        {
-            base.OnLoad(e);
-            if (DesignMode) return;
+            // Keep VS designer from crashing.
+            if (Program.MainWindow == null)
+                return;
 
             Icon = Resources.Skyline;
             _multiFileWindowWidth = Size.Width;
@@ -93,15 +92,17 @@ namespace pwiz.Skyline.Controls.Graphs
             _stopwatch = new Stopwatch();
             _stopwatch.Start();
             _retryTime = DateTime.MaxValue;
-            elapsedTimer.Tick += ElapsedTimer_Tick;
+            _timer = new Timer {Interval = 1000};
+            _timer.Tick += _timer_Tick;
+            _timer.Start();
         }
 
         protected override void OnClosed(EventArgs e)
         {
-            graphChromatograms.Finish();
+            _timer.Dispose();
         }
 
-        private void ElapsedTimer_Tick(object sender, EventArgs e)
+        private void _timer_Tick(object sender, EventArgs e)
         {
             // Update timer and overall progress bar.
             lblDuration.Text = _stopwatch.Elapsed.ToString(@"hh\:mm\:ss"); // Not L10N
@@ -130,7 +131,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     () =>
                     {
                         _stopwatch.Stop();
-                        elapsedTimer.Stop();
+                        _timer.Stop();
                         _retryDlg.Dispose();
                     });
                 _retryDlg.ShowDialog(this);
@@ -281,7 +282,7 @@ namespace pwiz.Skyline.Controls.Graphs
             else
             {
                 _stopwatch.Stop();
-                elapsedTimer.Stop();
+                _timer.Stop();
             }
 
             progressBarTotal.Visible = false;
@@ -402,7 +403,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 btnHide.Text = Resources.AllChromatogramsGraph_UpdateStatus_Hide;
                 progressBarTotal.Visible = true;
                 _stopwatch.Start();
-                elapsedTimer.Start();
+                _timer.Start();
             }
         }
 
