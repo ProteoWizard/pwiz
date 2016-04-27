@@ -585,6 +585,7 @@ namespace pwiz.SkylineTestFunctional
             var libraryDlgOverwriteYes = WaitForOpenForm<MultiButtonMsgDlg>();
             RunUI(libraryDlgOverwriteYes.Btn0Click);
             TryWaitForCondition(6000, () => SkylineWindow.Document.PeptideCount == 345);    // Peptide count checked below
+            WaitForDocumentLoaded();
             RunUI(() =>
             {
                 var calculator = ValidateDocAndIrt(SkylineWindow.DocumentUI, 345, 355, 10);
@@ -653,6 +654,7 @@ namespace pwiz.SkylineTestFunctional
             var libraryDlgOverwrite = WaitForOpenForm<MultiButtonMsgDlg>();
             RunUI(libraryDlgOverwrite.Btn0Click);
             TryWaitForCondition(6000, () => SkylineWindow.Document.PeptideCount == 345); // Peptide count checked below
+            WaitForDocumentLoaded();
             RunUI(() =>
             {
                 var calculator = ValidateDocAndIrt(SkylineWindow.DocumentUI, 345, 355, 10);
