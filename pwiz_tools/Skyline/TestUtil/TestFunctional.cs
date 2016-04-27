@@ -494,9 +494,20 @@ namespace pwiz.SkylineTestUtil
             if (threadExceptionDialog != null)
             {
                 // Locate the details text box, return the contents - much more informative than the dialog title
-                result = threadExceptionDialog.Controls.Cast<Control>().Where(control => control.GetType() == typeof (TextBox)).Aggregate(result, (current, control) => current + (": " + control.Text));
+                result = threadExceptionDialog.Controls.Cast<Control>()
+                    .Where(control => control is TextBox)
+                    .Aggregate(result, (current, control) => current + ": " + GetExceptionText(control));
             }
             return result;
+        }
+
+        private static string GetExceptionText(Control control)
+        {
+            string text = control.Text;
+            int assembliesIndex = text.IndexOf("************** Loaded Assemblies **************", StringComparison.Ordinal);
+            if (assembliesIndex != -1)
+                text = text.Substring(0, assembliesIndex).TrimEnd();
+            return text;
         }
 
         private static string GetOpenFormsString()
