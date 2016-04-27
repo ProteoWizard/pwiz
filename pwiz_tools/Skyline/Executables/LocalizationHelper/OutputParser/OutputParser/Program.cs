@@ -30,7 +30,7 @@ namespace OutputParser
         {
             const int EXIT_SUCCESS = 0;
             const int EXIT_ERROR = 1;
-            const int MAX_ISSUES_ALLOWED = 2; // should be changed to permit more or less issues allowed before build fails
+            const int MAX_ISSUES_ALLOWED = 0; // should be changed to permit more or less issues allowed before build fails
             string NON_LOCALIZED_STRING = "NonLocalizedString"; // Exact name of the error that R# will throw for missing L10Ns
 
             bool containsNonLocalizedStrings = false;
