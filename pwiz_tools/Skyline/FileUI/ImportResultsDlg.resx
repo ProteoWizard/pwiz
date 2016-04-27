@@ -396,7 +396,7 @@ and a specific name.</value>
     <value>NoControl</value>
   </data>
   <data name="cbShowAllChromatograms.Location" type="System.Drawing.Point, System.Drawing">
-    <value>35, 84</value>
+    <value>17, 84</value>
   </data>
   <data name="cbShowAllChromatograms.Size" type="System.Drawing.Size, System.Drawing">
     <value>191, 17</value>
@@ -588,7 +588,7 @@ and a specific name.</value>
     <value>True</value>
   </data>
   <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>32, 15</value>
+    <value>14, 15</value>
   </data>
   <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
     <value>145, 13</value>
@@ -621,7 +621,7 @@ and a specific name.</value>
     <value>Many </value>
   </data>
   <data name="comboSimultaneousFiles.Location" type="System.Drawing.Point, System.Drawing">
-    <value>35, 31</value>
+    <value>17, 31</value>
   </data>
   <data name="comboSimultaneousFiles.Size" type="System.Drawing.Size, System.Drawing">
     <value>131, 21</value>
@@ -648,16 +648,16 @@ and a specific name.</value>
     <value>NoControl</value>
   </data>
   <data name="cbAutoRetry.Location" type="System.Drawing.Point, System.Drawing">
-    <value>35, 61</value>
+    <value>17, 61</value>
   </data>
   <data name="cbAutoRetry.Size" type="System.Drawing.Size, System.Drawing">
-    <value>182, 17</value>
+    <value>137, 17</value>
   </data>
   <data name="cbAutoRetry.TabIndex" type="System.Int32, mscorlib">
     <value>17</value>
   </data>
   <data name="cbAutoRetry.Text" xml:space="preserve">
-    <value>Automatic &amp;retry after import failure</value>
+    <value>&amp;Retry after import failure</value>
   </data>
   <data name="&gt;&gt;cbAutoRetry.Name" xml:space="preserve">
     <value>cbAutoRetry</value>
