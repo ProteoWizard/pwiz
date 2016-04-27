@@ -64,7 +64,6 @@ namespace SkylineNightly
         private readonly Xml _leaks;
         private Xml _pass;
         private readonly string _logDir;
-        static string _logDirScreengrabs;
         private string PwizDir
         {
             get
@@ -86,7 +85,10 @@ namespace SkylineNightly
             // Locate relevant directories.
             var nightlyDir = GetNightlyDir();
             _logDir = Path.Combine(nightlyDir, "Logs");
-            _logDirScreengrabs = Path.Combine(_logDir, "NightlyScreengrabs");
+            // Clean up after any old screengrab directories
+            var logDirScreengrabs = Path.Combine(_logDir, "NightlyScreengrabs");
+            if (Directory.Exists(logDirScreengrabs))
+                Directory.Delete(logDirScreengrabs, true);
             // First guess at working directory - distinguish between run types for machines that do double duty
             _skylineTesterDir = Path.Combine(nightlyDir, "SkylineTesterForNightly_"+runMode);
 
@@ -97,44 +99,28 @@ namespace SkylineNightly
         public static string NightlyTaskName { get { return NIGHTLY_TASK_NAME; } }
         public static string NightlyTaskNameWithUser { get { return string.Format("{0} ({1})", NIGHTLY_TASK_NAME, Environment.UserName);} }
 
-        public class PeriodicScreengrabs
+        public void Finish(string message, string errMessage)
         {
-            public void DoWork()
+            // Leave a note for the user, in a way that won't interfere with our next run
+            Log("Done.  Exit message:"); // Not L10N
+            Log(message);
+            if (!string.IsNullOrEmpty(errMessage))
+                Log(errMessage);
+            if (string.IsNullOrEmpty(LogFileName))
             {
-                while (_logDirScreengrabs != null)
+                MessageBox.Show(message, "SkylineNIghtly Help");
+            }
+            else
+            {
+                var process = new Process
                 {
-                    try
+                    StartInfo =
                     {
-                        // Once started, continue until exit
-                        var now = DateTime.Now.ToString(CultureInfo.InvariantCulture).Replace('/','_').Replace(' ','_').Replace(':','_');
-                        var s = 0;
-                        foreach (var screen in Screen.AllScreens) // Handle multi-monitor
-                        {
-                            // Create a new bitmap.
-                            using(var bmpScreenshot = new Bitmap(screen.Bounds.Width, screen.Bounds.Height,
-                                PixelFormat.Format32bppArgb))
-                            {
-                                // Create a graphics object from the bitmap.
-                                using(var gfxScreenshot = Graphics.FromImage(bmpScreenshot))
-                                {
-                                    // Take the screenshot from the upper left corner to the right bottom corner.
-                                    gfxScreenshot.CopyFromScreen(screen.Bounds.X, screen.Bounds.Y,
-                                        0, 0, screen.Bounds.Size, CopyPixelOperation.SourceCopy);
-
-                                    // Save the screenshot
-                                    var name = now + "_screen" + s +".png";
-                                    var fileScreenshot = Path.Combine(_logDirScreengrabs, name);
-                                    bmpScreenshot.Save(fileScreenshot, ImageFormat.Png);
-                                }                                
-                            }
-                        }
+                        FileName = "notepad.exe", // Not L10N
+                        Arguments = LogFileName
                     }
-                    catch
-                    {
-                        // Not a big deal if this doesn't work for some reason, just carry on
-                    }
-                    Thread.Sleep(60000); // 1 frame per minute
-                }
+                };
+                process.Start();
             }
         }
 
@@ -212,23 +198,6 @@ namespace SkylineNightly
                 Directory.CreateDirectory(_logDir);
             // Start the nightly log file
             StartLog(mode);
-
-            try
-            {
-                if (Directory.Exists(_logDirScreengrabs))
-                    Directory.Delete(_logDirScreengrabs, true);
-                Directory.CreateDirectory(_logDirScreengrabs);
-                // Start a thread to capture the screen once a minute to help track down anything that escapes the logs
-                Log("Screengrabs will be written once every 60 seconds to " + _logDirScreengrabs);
-                var screenGrabber = new PeriodicScreengrabs();
-                var screenGrabberThread = new Thread(screenGrabber.DoWork);
-                screenGrabberThread.Start();
-            }
-            catch (Exception x)
-            {
-                _logDirScreengrabs = null;
-                Log("Unable to start screengrab thread, proceeding anyway: " + x.Message);
-            }
 
             // Delete source tree and old SkylineTester.
             Delete(skylineNightlySkytr);
@@ -379,11 +348,6 @@ namespace SkylineNightly
             Log(_startTime.ToShortDateString());
         }
 
-        public void Finish()
-        {
-            _logDirScreengrabs = null; // Signal the screengrab thread that we're done
-        }
-
         private void DownloadSkylineTester(string skylineTesterZip, RunMode mode)
         {
             using (var client = new WebClient())
@@ -428,8 +392,8 @@ namespace SkylineNightly
         public RunMode Parse(string logFile = null, bool parseOnlyNoXmlOut = false)
         {
             logFile = logFile ?? GetLatestLog();
-            if (logFile == null)
-                throw new Exception("cannot locate current log");
+            if (logFile == null || !File.Exists(logFile))
+                throw new Exception(string.Format("cannot locate {0}", logFile ?? "current log"));
             var log = File.ReadAllText(logFile);
 
             // Extract all test lines.

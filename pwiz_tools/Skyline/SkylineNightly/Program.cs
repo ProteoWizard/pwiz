@@ -18,7 +18,6 @@
  */
 
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
 
@@ -45,7 +44,9 @@ namespace SkylineNightly
             SCHEDULED_ARG,
             SCHEDULED_RELEASE_BRANCH_ARG,
             SCHEDULED_INTEGRATION_ARG,
+            SCHEDULED_INTEGRATION_TRUNK_ARG,
             SCHEDULED_PERFTESTS_ARG,
+            SCHEDULED_PERFTEST_AND_TRUNK_ARG,
             SCHEDULED_STRESSTESTS_ARG
         };
 
@@ -87,7 +88,7 @@ namespace SkylineNightly
                 case SCHEDULED_INTEGRATION_TRUNK_ARG:
                     message = string.Format("Completed part one of {0}", arg); // Not L10N
                     errMessage = nightly.RunAndPost(Nightly.RunMode.nightly_integration);
-                    Report(nightly, message, errMessage);
+                    nightly.Finish(message, errMessage);
 
                     message = string.Format("Completed part two of {0}", arg); // Not L10N
                     nightly = new Nightly(SCHEDULED_INTEGRATION_ARG);
@@ -99,7 +100,7 @@ namespace SkylineNightly
                 case SCHEDULED_PERFTEST_AND_TRUNK_ARG: 
                     message = string.Format("Completed part one of {0}", arg); // Not L10N
                     errMessage = nightly.RunAndPost(Nightly.RunMode.nightly);
-                    Report(nightly, message, errMessage);
+                    nightly.Finish(message, errMessage);
 
                     message = string.Format("Completed part two of {0}", arg); // Not L10N
                     nightly = new Nightly(SCHEDULED_PERFTESTS_ARG);
@@ -161,26 +162,7 @@ namespace SkylineNightly
                     break;
             }
 
-            Report(nightly, message, errMessage);
-            nightly.Finish(); // Kill the screengrab thread, if any, so we can exit
-        }
-
-        private static void Report(Nightly nightly, string message, string errMessage)
-        {
-            // Leave a note for the user, in a way that won't interfere with our next run
-            nightly.Log("Done.  Exit message:"); // Not L10N
-            nightly.Log(message);
-            if (!string.IsNullOrEmpty(errMessage))
-                nightly.Log(errMessage);
-            var process = new Process
-            {
-                StartInfo =
-                {
-                    FileName = "notepad.exe", // Not L10N
-                    Arguments = nightly.LogFileName
-                }
-            };
-            process.Start();
+            nightly.Finish(message, errMessage);
         }
     }
 }
