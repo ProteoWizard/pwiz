@@ -50,6 +50,13 @@ namespace SkylineNightly
             SCHEDULED_STRESSTESTS_ARG
         };
 
+        private static void PerformTests(Nightly.RunMode runMode, string message)
+        {
+            var nightly = new Nightly(runMode);
+            var errMessage = nightly.RunAndPost();
+            nightly.Finish(message, errMessage);            
+        }
+
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
@@ -68,101 +75,94 @@ namespace SkylineNightly
 
             // ReSharper disable LocalizableElement
             string arg = args[0].ToLower();
-            var nightly = new Nightly(arg);
             string message;
             string errMessage = string.Empty;
+            Nightly nightly;
             switch (arg)
             {
                 case HELP_ARG:
+                    nightly = new Nightly(Nightly.RunMode.trunk);
                     message = string.Format("Usage: SkylineNightly [" + string.Join(" | ", ARG_NAMES) + "]"); // Not L10N
+                    nightly.Finish(message, errMessage);
                     break;
                     
                 // Run the current integration branch
                 case SCHEDULED_INTEGRATION_ARG:
-                    message = string.Format("Completed {0}", arg); // Not L10N
-                    errMessage = nightly.RunAndPost(Nightly.RunMode.nightly_integration);
+                    PerformTests(Nightly.RunMode.integration, string.Format("Completed {0}", arg)); // Not L10N
                     break;
 
                 // For machines that can test all day and all night:
                 // Run current integration branch, then normal
                 case SCHEDULED_INTEGRATION_TRUNK_ARG:
-                    message = string.Format("Completed part one of {0}", arg); // Not L10N
-                    errMessage = nightly.RunAndPost(Nightly.RunMode.nightly_integration);
-                    nightly.Finish(message, errMessage);
-
-                    message = string.Format("Completed part two of {0}", arg); // Not L10N
-                    nightly = new Nightly(SCHEDULED_INTEGRATION_ARG);
-                    errMessage = nightly.RunAndPost(Nightly.RunMode.nightly);
+                    PerformTests(Nightly.RunMode.integration, string.Format("Completed part one of {0}", arg)); // Not L10N
+                    PerformTests(Nightly.RunMode.trunk, string.Format("Completed part two of {0}", arg)); // Not L10N
                     break;
 
                 // For machines that can test all day and all night:
                 // Run normal mode, then perftests
-                case SCHEDULED_PERFTEST_AND_TRUNK_ARG: 
-                    message = string.Format("Completed part one of {0}", arg); // Not L10N
-                    errMessage = nightly.RunAndPost(Nightly.RunMode.nightly);
-                    nightly.Finish(message, errMessage);
-
-                    message = string.Format("Completed part two of {0}", arg); // Not L10N
-                    nightly = new Nightly(SCHEDULED_PERFTESTS_ARG);
-                    errMessage = nightly.RunAndPost(Nightly.RunMode.nightly_with_perftests); // Not L10N
+                case SCHEDULED_PERFTEST_AND_TRUNK_ARG:
+                    PerformTests(Nightly.RunMode.trunk, string.Format("Completed part one of {0}", arg)); // Not L10N
+                    PerformTests(Nightly.RunMode.perf, string.Format("Completed part two of {0}", arg)); // Not L10N
                     break;
 
                 case SCHEDULED_PERFTESTS_ARG:
-                    message = string.Format("Completed {0}", arg); // Not L10N
-                    errMessage = nightly.RunAndPost(Nightly.RunMode.nightly_with_perftests);
+                    PerformTests(Nightly.RunMode.perf, string.Format("Completed {0}", arg)); // Not L10N
                     break;
 
                 case SCHEDULED_STRESSTESTS_ARG:
-                    message = string.Format("Completed {0}", arg); // Not L10N
-                    errMessage = nightly.RunAndPost(Nightly.RunMode.nightly_with_stresstests);
+                    PerformTests(Nightly.RunMode.stress, string.Format("Completed {0}", arg)); // Not L10N
                     break;
 
                 case SCHEDULED_RELEASE_BRANCH_ARG:
-                    message = string.Format("Completed {0}", arg); // Not L10N
-                    errMessage = nightly.RunAndPost(Nightly.RunMode.release_branch_with_perftests);
+                    PerformTests(Nightly.RunMode.release, string.Format("Completed {0}", arg)); // Not L10N
                     break;
 
                 case SCHEDULED_ARG:
-                    message = string.Format("Completed {0}", arg); // Not L10N
-                    errMessage = nightly.RunAndPost(Nightly.RunMode.nightly);
+                    PerformTests(Nightly.RunMode.trunk, string.Format("Completed {0}", arg)); // Not L10N
                     break;
 
                 case PARSE_ARG:
+                    nightly = new Nightly(Nightly.RunMode.parse);
                     message = string.Format("Parse and post log {0}", nightly.GetLatestLog()); // Not L10N
                     nightly.StartLog(Nightly.RunMode.parse);
                     runMode = nightly.Parse();
                     message += string.Format(" as runmode {0}", runMode); // Not L10N
                     errMessage = nightly.Post(runMode);
+                    nightly.Finish(message, errMessage);
                     break;
 
                 case POST_ARG:
+                    nightly = new Nightly(Nightly.RunMode.post);
                     message = string.Format("Post existing XML {0}", nightly.GetLatestLog()); // Not L10N
                     nightly.StartLog(Nightly.RunMode.post);
                     runMode = nightly.Parse(null, true);
                     message += string.Format(" as runmode {0}", runMode); // Not L10N
                     errMessage = nightly.Post(runMode);
+                    nightly.Finish(message, errMessage);
                     break;
 
                 default:
                     var extension = Path.GetExtension(arg).ToLower();
                     if (extension == ".log") // Not L10N
                     {
+                        nightly = new Nightly(Nightly.RunMode.parse);
                         nightly.StartLog(Nightly.RunMode.parse);
                         message = string.Format("Parse and post log {0}", arg); // Not L10N
                         runMode = nightly.Parse(arg); // Create the xml for this log file
                     }
                     else
                     {
+                        nightly = new Nightly(Nightly.RunMode.post);
                         nightly.StartLog(Nightly.RunMode.post);
                         message = string.Format("Post existing XML {0}", arg); // Not L10N
                         runMode = nightly.Parse(Path.ChangeExtension(arg, ".log"), true); // Scan the log file for this XML // Not L10N
                     }
                     message += string.Format(" as runmode {0}", runMode); // Not L10N
                     errMessage = nightly.Post(runMode, Path.ChangeExtension(arg, ".xml")); // Not L10N
+                    nightly.Finish(message, errMessage);
                     break;
             }
 
-            nightly.Finish(message, errMessage);
         }
     }
 }

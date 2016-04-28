@@ -64,6 +64,7 @@ namespace SkylineNightly
         private readonly Xml _leaks;
         private Xml _pass;
         private readonly string _logDir;
+        private readonly RunMode _runMode;
         private string PwizDir
         {
             get
@@ -76,8 +77,9 @@ namespace SkylineNightly
         private TimeSpan _duration;
         private string _skylineTesterDir;
 
-        public Nightly(string runMode)
+        public Nightly(RunMode runMode)
         {
+            _runMode = runMode;
             _nightly = new Xml("nightly");
             _failures = _nightly.Append("failures");
             _leaks = _nightly.Append("leaks");
@@ -108,7 +110,7 @@ namespace SkylineNightly
                 Log(errMessage);
             if (string.IsNullOrEmpty(LogFileName))
             {
-                MessageBox.Show(message, "SkylineNIghtly Help");
+                MessageBox.Show(message, "SkylineNightly Help");
             }
             else
             {
@@ -124,13 +126,13 @@ namespace SkylineNightly
             }
         }
 
-        public enum RunMode { parse, post, nightly, nightly_with_perftests, release_branch_with_perftests, nightly_with_stresstests, nightly_integration }
+        public enum RunMode { parse, post, trunk, perf, release, stress, integration }
 
-        public string RunAndPost(RunMode mode)
+        public string RunAndPost()
         {
-            var runResult = Run(mode) ?? string.Empty;
+            var runResult = Run() ?? string.Empty;
             Parse();
-            var postResult = Post(mode);
+            var postResult = Post(_runMode);
             if (!string.IsNullOrEmpty(postResult))
             {
                 if (!string.IsNullOrEmpty(runResult))
@@ -143,16 +145,16 @@ namespace SkylineNightly
         /// <summary>
         /// Run nightly build/test and report results to server.
         /// </summary>
-        public string Run(RunMode mode)
+        public string Run()
         {
             string result = string.Empty;
             // Locate relevant directories.
             var nightlyDir = GetNightlyDir();
             var skylineNightlySkytr = Path.Combine(nightlyDir, "SkylineNightly.skytr");
 
-            bool withPerfTests = mode != RunMode.nightly && mode != RunMode.nightly_integration;
+            bool withPerfTests = _runMode != RunMode.trunk && _runMode != RunMode.integration;
 
-            if (mode == RunMode.nightly_with_stresstests)
+            if (_runMode == RunMode.stress)
             {
                 _duration = TimeSpan.FromHours(168);  // Let it go as long as a week
             }
@@ -167,7 +169,7 @@ namespace SkylineNightly
             {
                 if (process.Id != Process.GetCurrentProcess().Id)
                 {
-                    if (mode == RunMode.nightly_with_stresstests)
+                    if (_runMode == RunMode.stress)
                     {
                         Application.Exit();  // Just let the already (long!) running process do its thing
                     }
@@ -197,7 +199,7 @@ namespace SkylineNightly
             if (!Directory.Exists(_logDir))
                 Directory.CreateDirectory(_logDir);
             // Start the nightly log file
-            StartLog(mode);
+            StartLog(_runMode);
 
             // Delete source tree and old SkylineTester.
             Delete(skylineNightlySkytr);
@@ -240,7 +242,7 @@ namespace SkylineNightly
             {
                 try
                 {
-                    DownloadSkylineTester(skylineTesterZip, mode);
+                    DownloadSkylineTester(skylineTesterZip, _runMode);
                     break;
                 }
                 catch (Exception ex)
@@ -272,7 +274,7 @@ namespace SkylineNightly
                     lines[1].Split(new[] {"URL: "}, StringSplitOptions.None)[1].Split(new[] {"/SVN_info"},StringSplitOptions.None)[0];
             }
             // Or if we are running the integration build, then we use the trunk SkylineTester, but have it build the branch TestRunner.exe
-            else if (mode == RunMode.nightly_integration)
+            else if (_runMode == RunMode.integration)
             {
                 branchUrl = SVN_INTEGRATION_BRANCH_URL;
             }
@@ -296,8 +298,8 @@ namespace SkylineNightly
                     skylineTester.GetChild("buildRoot").Set(_skylineTesterDir);
                     skylineTester.GetChild("nightlyRunPerfTests").Set(withPerfTests?"true":"false");
                     skylineTester.GetChild("nightlyDuration").Set(((int)_duration.TotalHours).ToString());
-                    skylineTester.GetChild("nightlyRepeat").Set(mode == RunMode.nightly_with_stresstests ? "100" : "1");
-                    skylineTester.GetChild("nightlyRandomize").Set(mode == RunMode.nightly_with_stresstests ? "true" : "false");
+                    skylineTester.GetChild("nightlyRepeat").Set(_runMode == RunMode.stress ? "100" : "1");
+                    skylineTester.GetChild("nightlyRandomize").Set(_runMode == RunMode.stress ? "true" : "false");
                     if (!string.IsNullOrEmpty(branchUrl) && !branchUrl.Contains("trunk"))
                     {
                         skylineTester.GetChild("nightlyBuildTrunk").Set("false");
@@ -353,7 +355,7 @@ namespace SkylineNightly
             using (var client = new WebClient())
             {
                 client.Credentials = new NetworkCredential(TEAM_CITY_USER_NAME, TEAM_CITY_USER_PASSWORD);
-                var buildType = (mode == RunMode.release_branch_with_perftests)
+                var buildType = (mode == RunMode.release)
                     ? TEAM_CITY_BUILD_TYPE_RELEASE_64
                     : TEAM_CITY_BUILD_TYPE;
                 var buildPageUrl = string.Format(TEAM_CITY_BUILD_URL, buildType);
@@ -426,8 +428,8 @@ namespace SkylineNightly
                 File.WriteAllText(xmlFile, _nightly.ToString());
             }
             return isTrunk
-                ? (hasPerftests ? RunMode.nightly_with_perftests : RunMode.nightly)
-                : (isIntegration ? RunMode.nightly_integration : RunMode.release_branch_with_perftests);
+                ? (hasPerftests ? RunMode.perf : RunMode.trunk)
+                : (isIntegration ? RunMode.integration : RunMode.release);
         }
 
         private int ParseTests(string log)
@@ -538,13 +540,13 @@ namespace SkylineNightly
             var xml = File.ReadAllText(xmlFile);
             string url;
             // Post to server.
-            if (mode == RunMode.nightly_integration)
+            if (mode == RunMode.integration)
                 url = LABKEY_INTEGRATION_URL;
-            else if (mode == RunMode.release_branch_with_perftests)
+            else if (mode == RunMode.release)
                 url = LABKEY_RELEASE_PERF_URL;
-            else if (mode == RunMode.nightly_with_perftests)
+            else if (mode == RunMode.perf)
                 url = LABKEY_PERF_URL;
-            else if (mode == RunMode.nightly_with_stresstests)
+            else if (mode == RunMode.stress)
                 url = LABKEY_STRESS_URL;
             else
                 url = LABKEY_URL;
