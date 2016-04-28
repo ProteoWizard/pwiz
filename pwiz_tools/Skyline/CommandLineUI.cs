@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
@@ -190,18 +189,7 @@ namespace pwiz.Skyline
         {
             get
             {
-                while (true)
-                {
-                    try
-                    {
-                        return Application.OpenForms.Cast<Form>().ToArray();
-                    }
-                    catch (InvalidOperationException)
-                    {
-                        // Application.OpenForms might be modified during the iteration.
-                        // If that happens, go through the list again.
-                    }
-                }
+                return FormUtil.OpenForms;
             }
         }
 

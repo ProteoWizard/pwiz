@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using ZedGraph;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Properties;
@@ -50,7 +51,7 @@ namespace pwiz.SkylineTestFunctional
                 .Select(spec => Path.GetFileName(spec.FilePath)).ToArray());
             WaitForDocumentLoaded();
             // Test that AutoZoomNone and AutoZoomBestPeak work
-            var graphChromatogram = Application.OpenForms.OfType<GraphChromatogram>().First();
+            var graphChromatogram = FormUtil.OpenForms.OfType<GraphChromatogram>().First();
             var graphChromatogramGraphControl = AllControls(graphChromatogram).OfType<ZedGraphControl>().First();
             RunUI(() =>
                 {
@@ -76,8 +77,8 @@ namespace pwiz.SkylineTestFunctional
             // Ensure that we zoomed out when the selected transition group changed
             Assert.AreEqual(graphChromatogramGraphControl.GraphPane.XAxis.Scale.Min, 0.0, 1.0);
 
-            var peakAreaSummary = Application.OpenForms.OfType<GraphSummary>().First();
-            var graphLibraryMatch = Application.OpenForms.OfType<GraphSpectrum>().First();
+            var peakAreaSummary = FormUtil.OpenForms.OfType<GraphSummary>().First();
+            var graphLibraryMatch = FormUtil.OpenForms.OfType<GraphSpectrum>().First();
             var libraryMatchGraphControl = AllControls(graphLibraryMatch).OfType<ZedGraphControl>().First();
             RunUI(() =>
                 {

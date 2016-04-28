@@ -17,6 +17,8 @@
  * limitations under the License.
  */
 
+using System;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace pwiz.Common.SystemUtil
@@ -91,6 +93,28 @@ namespace pwiz.Common.SystemUtil
         public static bool IsSuitableDialogOwner(Form form)
         {
             return form.ShowInTaskbar || form.Modal;
+        }
+
+        /// <summary>
+        /// Returns all open forms in the application.
+        /// Thread-safe version of <see cref="Application.OpenForms"/>.
+        /// </summary>
+        public static Form[] OpenForms
+        {
+            get
+            {
+                while (true)
+                {
+                    try
+                    {
+                        return Application.OpenForms.OfType<Form>().ToArray();
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        // Collection was modified. Try again.
+                    }
+                }
+            }
         }
     }
 }

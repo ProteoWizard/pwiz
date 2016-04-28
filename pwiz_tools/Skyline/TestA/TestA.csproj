@@ -144,6 +144,7 @@
     <Compile Include="ExportMethodShimadzuTest.cs" />
     <Compile Include="FastaImporterTest.cs" />
     <Compile Include="FindNodeTest.cs" />
+    <Compile Include="FormUtilTest.cs" />
     <Compile Include="FullScanPrecursorTest.cs" />
     <Compile Include="InstrumentInfoUtilTest.cs" />
     <Compile Include="IonMobilityUnitTest.cs" />
