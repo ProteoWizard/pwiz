@@ -358,7 +358,7 @@ namespace pwiz.SkylineTestTutorial
                 viewEditor.FilterTab.SetFilterOperand(0, .2.ToString(CultureInfo.CurrentCulture));
             });
             PauseForScreenShot<ViewEditor.FilterView>("Customize View - Filter tab", 22);
-            RunUI(viewEditor.OkDialog);
+            OkDialog(viewEditor, viewEditor.OkDialog);
             PauseForScreenShot<DocumentGridForm>("Document Grid filtered", 23);
             RunUI(documentGridForm.Close);
             RunDlg<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg, findPeptideDlg =>
