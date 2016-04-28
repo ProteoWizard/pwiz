@@ -4298,15 +4298,6 @@ namespace pwiz.Skyline
             }
         }
 
-        private List<IProgressStatus> ListProgress { get { return _listProgress; } }
-
-        private bool SetListProgress(List<IProgressStatus> listNew, List<IProgressStatus> listOriginal)
-        {
-            var listResult = Interlocked.CompareExchange(ref _listProgress, listNew, listOriginal);
-
-            return ReferenceEquals(listResult, listOriginal);
-        }
-
         bool IProgressMonitor.IsCanceled
         {
             get
@@ -4335,41 +4326,37 @@ namespace pwiz.Skyline
             }
             var final = status.IsFinal;
 
-            int i;
-            List<IProgressStatus> listOriginal, listNew;
-            do
+            bool first;
+            lock (_listProgress)
             {
-                listOriginal = ListProgress;
-                listNew = new List<IProgressStatus>(listOriginal);
-
                 // Find the status being updated in the list
                 Assume.IsNotNull(status);
-                Assume.IsFalse(listNew.Any(s => s == null));
-                i = listNew.IndexOf(s => ReferenceEquals(s.Id, status.Id));
+                Assume.IsFalse(_listProgress.Any(s => s == null));
+                int i = _listProgress.IndexOf(s => ReferenceEquals(s.Id, status.Id));
                 // If final, remove the status if present
                 if (final)
                 {
                     if (i != -1)
-                        listNew.RemoveAt(i);
+                        _listProgress.RemoveAt(i);
                 }
                 // Otherwise, if present update the status
                 else if (i != -1)
                 {
-                    listNew[i] = status;
+                    _listProgress[i] = status;
                 }
                 // Or add it if not
                 else
                 {
-                    i = listNew.Count;
-                    listNew.Add(status);
+                    i = _listProgress.Count;
+                    _listProgress.Add(status);
                 }
+                first = i == 0;
             }
-            while (!SetListProgress(listNew, listOriginal));
 
             // If the status is first in the queue and it is beginning, initialize
             // the progress UI.
             bool begin = status.IsBegin || (!final && !_timerProgress.Enabled);
-            if (i == 0 && begin)
+            if (first && begin)
             {
                 RunUIAction(BeginProgressUI, e);
             }
@@ -4386,7 +4373,7 @@ namespace pwiz.Skyline
                 // may be modified by return of this function call
                 if (status.IsError)
                     RunUIAction(CompleteProgressUI, e);
-                else if (i == 0)
+                else if (first)
                     RunUIActionAsync(CompleteProgressUI, e);
             }
         }
@@ -4465,12 +4452,21 @@ namespace pwiz.Skyline
             if (statusStrip.IsDisposed)
                 return;
 
-            var listProgress = ListProgress;
+            IProgressStatus status = null;
+            MultiProgressStatus multiStatus = null;
+            lock (_listProgress)
+            {
+                if (_listProgress.Count != 0)
+                {
+                    status = _listProgress[0];
+                    multiStatus = _listProgress.LastOrDefault(s => s is MultiProgressStatus) as MultiProgressStatus;
+                }
+            }
+
             // First deal with AllChromatogramsGraph window
             if (!Program.NoAllChromatogramsGraph)
             {
                 // Update chromatogram graph if we are importing a data file.
-                var multiStatus = listProgress.LastOrDefault(s => s is MultiProgressStatus) as MultiProgressStatus;
                 if (multiStatus != null)
                 {
                     UpdateImportProgress(multiStatus);
@@ -4486,7 +4482,7 @@ namespace pwiz.Skyline
             }
 
             // Next deal with status bar, which may also show status for MultiProgressStatus objects
-            if (listProgress.Count == 0)
+            if (status == null)
             {
                 statusProgress.Visible = false;
                 UpdateTaskbarProgress(null);
@@ -4497,7 +4493,6 @@ namespace pwiz.Skyline
             else
             {
                 // Update the status bar with the first progress status.
-                var status = listProgress[0];
                 statusProgress.Value = status.PercentComplete;
                 statusProgress.Visible = true;
                 UpdateTaskbarProgress(status.PercentComplete);
@@ -4561,10 +4556,13 @@ namespace pwiz.Skyline
             // and use the latest, if there is. Otherwise, use the status bar text.
             string start = format.Split('{').First();
             string end = format.Split('}').Last();
-            foreach (var progressStatus in ListProgress)
+            lock (_listProgress)
             {
-                if (progressStatus.Message.Contains(start) && progressStatus.Message.Contains(end))
-                    return true;
+                foreach (var progressStatus in _listProgress)
+                {
+                    if (progressStatus.Message.Contains(start) && progressStatus.Message.Contains(end))
+                        return true;
+                }
             }
             return statusGeneral.Text.Contains(start) && statusGeneral.Text.Contains(end);
         }
