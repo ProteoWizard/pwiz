@@ -55,7 +55,7 @@ namespace SkylineNightly
         private const string LABKEY_INTEGRATION_URL = "https://skyline.gs.washington.edu/labkey/testresults/home/development/Integration/post.view";
 
         // Current integration branch is MultiFileLoad
-        private const string SVN_INTEGRATION_BRANCH_URL = "https://svn.code.sf.net/p/proteowizard/code/branches/work20160427_MultiFileUtimate";
+        private const string SVN_INTEGRATION_BRANCH_URL = "https://svn.code.sf.net/p/proteowizard/code/branches/work/20160427_MultiFileUtimate";
 
         private DateTime _startTime;
         public string LogFileName { get; private set; }
