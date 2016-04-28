@@ -262,9 +262,10 @@ namespace pwiz.Skyline.SettingsUI
         {
             get
             {
-                for (int i = Application.OpenForms.Count - 1; i >= 0; i--)
+                Form[] openForms = FormUtil.OpenForms;
+                for (int i = openForms.Length - 1; i >= 0; i--)
                 {
-                    Form form = Application.OpenForms[i];
+                    Form form = openForms[i];
                     if (form is BuildLibraryNotification)
                         continue;
                     return form;

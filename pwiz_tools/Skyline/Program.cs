@@ -308,7 +308,7 @@ namespace pwiz.Skyline
 
         private static void SystemEventsOnDisplaySettingsChanged(object sender, EventArgs eventArgs)
         {
-            foreach (Form form in Application.OpenForms)
+            foreach (Form form in FormUtil.OpenForms)
             {
                 Rectangle rcForm = form.Bounds;
                 var screen = Screen.FromControl(form);

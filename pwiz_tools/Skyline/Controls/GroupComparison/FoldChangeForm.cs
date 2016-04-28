@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Properties;
@@ -127,7 +128,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
         public static T FindForm<T>(IDocumentContainer documentContainer, string groupComparisonName) 
             where T : FoldChangeForm
         {
-            foreach (var form in Application.OpenForms.OfType<T>())
+            foreach (var form in FormUtil.OpenForms.OfType<T>())
             {
                 var foldChangeBindingSource = form.FoldChangeBindingSource;
                 if (null == foldChangeBindingSource)
@@ -197,7 +198,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
         {
             var groupComparisonNames = new HashSet<string>(
                 documentContainer.Document.Settings.DataSettings.GroupComparisonDefs.Select(def => def.Name));
-            foreach (var form in Application.OpenForms.OfType<FoldChangeForm>())
+            foreach (var form in FormUtil.OpenForms.OfType<FoldChangeForm>())
             {
                 if (!ReferenceEquals(documentContainer, form._documentContainer))
                 {

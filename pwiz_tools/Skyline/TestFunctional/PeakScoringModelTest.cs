@@ -25,6 +25,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.EditUI;
@@ -369,7 +370,7 @@ namespace pwiz.SkylineTestFunctional
             var isDecoys = new List<bool> { false, false, false, false, false, true };
             RunUI(() =>
                 {
-                    var findResultsForm = Application.OpenForms.OfType<FindResultsForm>().FirstOrDefault();
+                    var findResultsForm = FormUtil.OpenForms.OfType<FindResultsForm>().FirstOrDefault();
                     Assert.IsNotNull(findResultsForm);
                     // There are 6 peptides for which scores are missing
                     Assert.AreEqual(6, findResultsForm.ItemCount);
