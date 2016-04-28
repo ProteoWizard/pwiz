@@ -25,7 +25,6 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
@@ -219,7 +218,7 @@ namespace pwiz.SkylineTestTutorial
             var isDecoys = new List<bool> {false, false, false, false, false, true};
             RunUI(() =>
             {
-                findResultsForm = FormUtil.OpenForms.OfType<FindResultsForm>().FirstOrDefault();
+                findResultsForm = Application.OpenForms.OfType<FindResultsForm>().FirstOrDefault();
                 Assert.IsNotNull(findResultsForm);
 // ReSharper disable once PossibleNullReferenceException
                 Assert.AreEqual(findResultsForm.ItemCount, 6);
@@ -457,7 +456,7 @@ namespace pwiz.SkylineTestTutorial
             });
             OkDialog(reintegrateDlgDia, reintegrateDlgDia.OkDialog);
 
-            findResultsForm = FormUtil.OpenForms.OfType<FindResultsForm>().FirstOrDefault();
+            findResultsForm = Application.OpenForms.OfType<FindResultsForm>().FirstOrDefault();
             Assert.IsNotNull(findResultsForm);
             Assert.AreEqual(34 + (TestSmallMolecules ? 1 : 0), findResultsForm.ItemCount);
         }

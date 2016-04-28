@@ -1759,7 +1759,7 @@ namespace pwiz.Skyline
 //            {
 //                DisplayFindResult(results[0]);
 //            }
-            var findResultsForm = FormUtil.OpenForms.OfType<FindResultsForm>().FirstOrDefault();
+            var findResultsForm = Application.OpenForms.OfType<FindResultsForm>().FirstOrDefault();
             if (findResultsForm == null)
             {
                 findResultsForm = new FindResultsForm(this, results);
@@ -1774,7 +1774,7 @@ namespace pwiz.Skyline
 
         public void HideFindResults(bool destroy = false)
         {
-            var findResultsForm = FormUtil.OpenForms.OfType<FindResultsForm>().FirstOrDefault();
+            var findResultsForm = Application.OpenForms.OfType<FindResultsForm>().FirstOrDefault();
             if (findResultsForm != null)
             {
                 findResultsForm.HideOnClose = !destroy;

@@ -27,7 +27,6 @@ using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using NHibernate.Util;
 using pwiz.Common.DataBinding;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
@@ -3318,7 +3317,7 @@ namespace pwiz.Skyline
 
         public AlignmentForm ShowRetentionTimeAlignmentForm()
         {
-            var form = FormUtil.OpenForms.OfType<AlignmentForm>().FirstOrDefault();
+            var form = Application.OpenForms.OfType<AlignmentForm>().FirstOrDefault();
             if (form == null)
             {
                 form = new AlignmentForm(this);

@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using DigitalRune.Windows.Docking;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.GroupComparison;
@@ -99,7 +98,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             }
             else
             {
-                barGraphs = FormUtil.OpenForms.OfType<FoldChangeBarGraph>();
+                barGraphs = Application.OpenForms.OfType<FoldChangeBarGraph>();
             }
             foreach (var form in barGraphs)
             {
@@ -128,7 +127,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         public void ShowChangeSettings()
         {
-            foreach (var form in FormUtil.OpenForms.OfType<GroupComparisonSettingsForm>())
+            foreach (var form in Application.OpenForms.OfType<GroupComparisonSettingsForm>())
             {
                 if (ReferenceEquals(form.GroupComparisonModel, FoldChangeBindingSource.GroupComparisonModel))
                 {

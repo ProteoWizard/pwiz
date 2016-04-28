@@ -189,7 +189,18 @@ namespace pwiz.Skyline
         {
             get
             {
-                return FormUtil.OpenForms;
+                while (true)
+                {
+                    try
+                    {
+                        return Application.OpenForms.Cast<Form>().ToArray();
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        // Application.OpenForms might be modified during the iteration.
+                        // If that happens, go through the list again.
+                    }
+                }
             }
         }
 

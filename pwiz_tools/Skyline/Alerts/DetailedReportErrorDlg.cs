@@ -26,7 +26,6 @@ using System.Net.Mail;
 using System.Windows.Forms;
 using System.Xml.Serialization;
 using DigitalRune.Windows.Docking;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -234,7 +233,19 @@ namespace pwiz.Skyline.Alerts
         {
             get
             {
-                return FormUtil.OpenForms;
+                for (int i = 0; i < 10; i++)
+                {
+                    try
+                    {
+                        return Application.OpenForms.Cast<Form>().ToArray();
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        // Application.OpenForms might be modified during the iteration.
+                        // If that happens, go through the list again.
+                    }
+                }
+                return new Form[0];
             }
         }
         
