@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
