@@ -54,7 +54,7 @@ namespace SkylineNightly
         private const string LABKEY_RELEASE_PERF_URL = "https://skyline.gs.washington.edu/labkey/testresults/home/development/Release%20Branch/post.view?";
         private const string LABKEY_INTEGRATION_URL = "https://skyline.gs.washington.edu/labkey/testresults/home/development/Integration/post.view";
 
-        // Current integration branch is MultiFileLoad
+        // Current integration branch is MultiFileUltimate
         private const string SVN_INTEGRATION_BRANCH_URL = "https://svn.code.sf.net/p/proteowizard/code/branches/work/20160427_MultiFileUtimate";
 
         private DateTime _startTime;
@@ -556,9 +556,8 @@ namespace SkylineNightly
         {
             var directory = new DirectoryInfo(_logDir);
             var logFile = directory.GetFiles()
-                .Where(f => f.Name.EndsWith(".log"))
+                .Where(f => f.Name.StartsWith(Environment.MachineName) && f.Name.EndsWith(".log"))
                 .OrderByDescending(f => f.LastWriteTime)
-                .SkipWhile(f => f.Name == "Summary.log" || f.Name.StartsWith("SkylineNightly"))
                 .First();
             return logFile == null ? null : logFile.FullName;
         }
