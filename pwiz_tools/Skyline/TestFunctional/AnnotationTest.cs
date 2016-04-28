@@ -148,6 +148,7 @@ namespace pwiz.SkylineTestFunctional
                     viewEditor.ChooseColumnsTab.AddSelectedColumn();
                     viewEditor.OkDialog();
                 });
+            WaitForConditionUI(() => resultsGridForm.IsComplete);
             // Set the annotation value on the first two rows in the ResultsGrid.
             // The annotation is a dropdown with values {blank, "a", "b", "c"}
             DataGridViewCell cell;
@@ -254,7 +255,9 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Nodes[0].Nodes[0];
             });
             WaitForGraphPanesToUpdate();
+            Assert.AreEqual(4, resultsGridForm.SelectedIdentityPaths.Count());
             var docBeforeEdit = SkylineWindow.Document;
+            WaitForConditionUI(() => resultsGridForm.IsComplete);
             RunUI(() =>
             {
                 var transitionNoteColumn =
