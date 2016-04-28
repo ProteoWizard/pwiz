@@ -50,11 +50,19 @@ namespace SkylineNightly
             SCHEDULED_STRESSTESTS_ARG
         };
 
-        private static void PerformTests(Nightly.RunMode runMode, string message)
+        private static void PerformTests(Nightly.RunMode runMode, string arg, bool killExistingProcesses = true)
         {
             var nightly = new Nightly(runMode);
-            var errMessage = nightly.RunAndPost();
-            nightly.Finish(message, errMessage);            
+            var errMessage = nightly.RunAndPost(killExistingProcesses);
+            var message = string.Format("Completed {0}", arg); // Not L10N
+            nightly.Finish(message, errMessage);
+        }
+
+        private static void PerformTests(Nightly.RunMode runMode1, Nightly.RunMode runMode2, string arg)
+        {
+            PerformTests(runMode1, string.Format("part one of {0}", arg));  // Not L10N
+            // Don't kill existing test processes for the second run, we'd like to keep any hangs around for forensics
+            PerformTests(runMode2, string.Format("part two of {0}", arg), false);  // Not L10N
         }
 
         /// <summary>
@@ -94,31 +102,29 @@ namespace SkylineNightly
                 // For machines that can test all day and all night:
                 // Run current integration branch, then normal
                 case SCHEDULED_INTEGRATION_TRUNK_ARG:
-                    PerformTests(Nightly.RunMode.integration, string.Format("Completed part one of {0}", arg)); // Not L10N
-                    PerformTests(Nightly.RunMode.trunk, string.Format("Completed part two of {0}", arg)); // Not L10N
+                    PerformTests(Nightly.RunMode.integration, Nightly.RunMode.trunk, arg);
                     break;
 
                 // For machines that can test all day and all night:
                 // Run normal mode, then perftests
                 case SCHEDULED_PERFTEST_AND_TRUNK_ARG:
-                    PerformTests(Nightly.RunMode.trunk, string.Format("Completed part one of {0}", arg)); // Not L10N
-                    PerformTests(Nightly.RunMode.perf, string.Format("Completed part two of {0}", arg)); // Not L10N
+                    PerformTests(Nightly.RunMode.trunk, Nightly.RunMode.perf, arg);
                     break;
 
                 case SCHEDULED_PERFTESTS_ARG:
-                    PerformTests(Nightly.RunMode.perf, string.Format("Completed {0}", arg)); // Not L10N
+                    PerformTests(Nightly.RunMode.perf, arg); // Not L10N
                     break;
 
                 case SCHEDULED_STRESSTESTS_ARG:
-                    PerformTests(Nightly.RunMode.stress, string.Format("Completed {0}", arg)); // Not L10N
+                    PerformTests(Nightly.RunMode.stress, arg); // Not L10N
                     break;
 
                 case SCHEDULED_RELEASE_BRANCH_ARG:
-                    PerformTests(Nightly.RunMode.release, string.Format("Completed {0}", arg)); // Not L10N
+                    PerformTests(Nightly.RunMode.release, arg); // Not L10N
                     break;
 
                 case SCHEDULED_ARG:
-                    PerformTests(Nightly.RunMode.trunk, string.Format("Completed {0}", arg)); // Not L10N
+                    PerformTests(Nightly.RunMode.trunk, arg); // Not L10N
                     break;
 
                 // Reparse and post the most recent log
