@@ -122,7 +122,10 @@ namespace pwiz.Skyline.Model.Irt
                 // Change the document to use the new calculator and regression information.
                 docCurrent = container.Document;
                 if (!ReferenceEquals(rtRegression, docCurrent.Settings.PeptideSettings.Prediction.RetentionTime))
+                {
+                    EndProcessing(document);
                     return false;
+                }
                 docNew = docCurrent.ChangeSettings(docCurrent.Settings.ChangePeptidePrediction(predict =>
                     predict.ChangeRetentionTime(rtRegressionNew)));
             }

@@ -89,7 +89,10 @@ namespace pwiz.Skyline.Model.Optimization
                 // Change the document to use the new library
                 docCurrent = container.Document;
                 if (!ReferenceEquals(GetOptimizationLibrary(docCurrent), GetOptimizationLibrary(container.Document)))
+                {
+                    EndProcessing(document);
                     return false;
+                }
                 docNew = docCurrent.ChangeSettings(docCurrent.Settings.ChangeTransitionPrediction(predict =>
                     predict.ChangeOptimizationLibrary(lib)));
             }
