@@ -117,7 +117,8 @@ namespace SkylineNightly
                     if (scheduledTime < now + TimeSpan.FromMinutes(1) && scheduledTime + TimeSpan.FromMinutes(3) > now)
                         scheduledTime = now + TimeSpan.FromMinutes(2);
                     dt.StartBoundary = scheduledTime;
-                    var runType = RunType();
+                    int durationHours;
+                    var runType = RunType(out durationHours);
                     var maxHours = runType.Equals(Program.SCHEDULED_STRESSTESTS_ARG) ? 167 : 23;
                     dt.ExecutionTimeLimit = new TimeSpan(maxHours, 30, 0);
                     dt.Enabled = true;
@@ -135,31 +136,38 @@ namespace SkylineNightly
             Close();
         }
 
-        private string RunType()
+        private string RunType(out int durationHours)
         {
             string arg;
             switch (comboBoxOptions.SelectedIndex)
             {
                 default:
                     arg = Program.SCHEDULED_ARG;
+                    durationHours = Nightly.DEFAULT_DURATION_HOURS;
                     break;
                 case 1:
                     arg = Program.SCHEDULED_PERFTESTS_ARG;
+                    durationHours = Nightly.PERF_DURATION_HOURS;
                     break;
                 case 2:
                     arg = Program.SCHEDULED_RELEASE_BRANCH_ARG;
+                    durationHours = Nightly.PERF_DURATION_HOURS;
                     break;
                 case 3:
                     arg = Program.SCHEDULED_STRESSTESTS_ARG;
+                    durationHours = -1; // Unlimited
                     break;
                 case 4:
                     arg = Program.SCHEDULED_INTEGRATION_ARG;
+                    durationHours = Nightly.DEFAULT_DURATION_HOURS;
                     break;
                 case 5:
                     arg = Program.SCHEDULED_INTEGRATION_TRUNK_ARG;
+                    durationHours = Nightly.DEFAULT_DURATION_HOURS + Nightly.DEFAULT_DURATION_HOURS;
                     break;
                 case 6:
                     arg = Program.SCHEDULED_PERFTEST_AND_TRUNK_ARG;
+                    durationHours = Nightly.DEFAULT_DURATION_HOURS + Nightly.PERF_DURATION_HOURS;
                     break;
             }
             return arg;
@@ -167,8 +175,10 @@ namespace SkylineNightly
 
         private void StartTimeChanged(object sender, EventArgs e)
         {
-            var end = startTime.Value + TimeSpan.FromHours(9);
-            endTime.Text = (RunType().Equals(Program.SCHEDULED_STRESSTESTS_ARG))?"no limit":end.ToShortTimeString(); // Not L10N
+            int durationHours;
+            var runType = RunType(out durationHours);
+            var end = startTime.Value + TimeSpan.FromHours(durationHours);
+            endTime.Text = (runType.Equals(Program.SCHEDULED_STRESSTESTS_ARG))?"no limit":end.ToShortTimeString(); // Not L10N
         }
 
         private void Now_Click(object sender, EventArgs e)

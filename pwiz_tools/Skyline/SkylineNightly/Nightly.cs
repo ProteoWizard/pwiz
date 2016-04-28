@@ -77,6 +77,9 @@ namespace SkylineNightly
         private TimeSpan _duration;
         private string _skylineTesterDir;
 
+        public const int DEFAULT_DURATION_HOURS = 9;
+        public const int PERF_DURATION_HOURS = 12;
+
         public Nightly(RunMode runMode)
         {
             _runMode = runMode;
@@ -95,7 +98,7 @@ namespace SkylineNightly
             _skylineTesterDir = Path.Combine(nightlyDir, "SkylineTesterForNightly_"+runMode);
 
             // Default duration.
-            _duration = TimeSpan.FromHours(9);
+            _duration = TimeSpan.FromHours(DEFAULT_DURATION_HOURS);
         }
 
         public static string NightlyTaskName { get { return NIGHTLY_TASK_NAME; } }
@@ -160,7 +163,7 @@ namespace SkylineNightly
             }
             else if (withPerfTests)
             {
-                _duration = TimeSpan.FromHours(12); // Let it go a bit longer than standard 9 hours
+                _duration = TimeSpan.FromHours(PERF_DURATION_HOURS); // Let it go a bit longer than standard 9 hours
             }
 
             if (killExistingProcesses)

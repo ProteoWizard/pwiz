@@ -165,8 +165,8 @@
             "Release Branch with Perf Tests",
             "Trunk with Stress Tests",
             "Integration",
-            "Integration then Trunk (24 hour cycle)",
-            "Trunk then Perf Tests (24 hour cycle)"});
+            "Integration then Trunk (Dedicated)",
+            "Trunk then Perf Tests (Dedicated)"});
             this.comboBoxOptions.Location = new System.Drawing.Point(68, 113);
             this.comboBoxOptions.Name = "comboBoxOptions";
             this.comboBoxOptions.Size = new System.Drawing.Size(223, 21);
