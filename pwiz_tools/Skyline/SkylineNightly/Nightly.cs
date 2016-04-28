@@ -131,8 +131,8 @@ namespace SkylineNightly
         public string RunAndPost()
         {
             var runResult = Run() ?? string.Empty;
-            Parse();
-            var postResult = Post(_runMode);
+            Parse(LogFileName);
+            var postResult = Post(_runMode, LogFileName);
             if (!string.IsNullOrEmpty(postResult))
             {
                 if (!string.IsNullOrEmpty(runResult))
@@ -391,9 +391,8 @@ namespace SkylineNightly
             return true;
         }
 
-        public RunMode Parse(string logFile = null, bool parseOnlyNoXmlOut = false)
+        public RunMode Parse(string logFile, bool parseOnlyNoXmlOut = false)
         {
-            logFile = logFile ?? GetLatestLog();
             if (logFile == null || !File.Exists(logFile))
                 throw new Exception(string.Format("cannot locate {0}", logFile ?? "current log"));
             var log = File.ReadAllText(logFile);
@@ -531,11 +530,11 @@ namespace SkylineNightly
         /// <summary>
         /// Post the latest results to the server.
         /// </summary>
-        public string Post(RunMode mode, string xmlFile = null)
+        public string Post(RunMode mode, string xmlFile)
         {
-            xmlFile = xmlFile ?? GetLatestXml();
             if (xmlFile == null)
                 return string.Empty;
+            xmlFile = Path.ChangeExtension(xmlFile, ".xml"); // In case it's actually the log file name
             
             var xml = File.ReadAllText(xmlFile);
             string url;
@@ -559,19 +558,9 @@ namespace SkylineNightly
             var logFile = directory.GetFiles()
                 .Where(f => f.Name.EndsWith(".log"))
                 .OrderByDescending(f => f.LastWriteTime)
-                .SkipWhile(f => f.Name == "Summary.log")
+                .SkipWhile(f => f.Name == "Summary.log" || f.Name.StartsWith("SkylineNightly"))
                 .First();
             return logFile == null ? null : logFile.FullName;
-        }
-
-        public string GetLatestXml()
-        {
-            var directory = new DirectoryInfo(_logDir);
-            var xmlFile = directory.GetFiles()
-                .OrderByDescending(f => f.LastWriteTime)
-                .SkipWhile(f => !f.Name.EndsWith(".xml"))
-                .First();
-            return xmlFile == null ? null : xmlFile.FullName;
         }
 
         /// <summary>

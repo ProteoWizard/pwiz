@@ -121,23 +121,25 @@ namespace SkylineNightly
                     PerformTests(Nightly.RunMode.trunk, string.Format("Completed {0}", arg)); // Not L10N
                     break;
 
+                // Reparse and post the most recent log
                 case PARSE_ARG:
                     nightly = new Nightly(Nightly.RunMode.parse);
                     message = string.Format("Parse and post log {0}", nightly.GetLatestLog()); // Not L10N
                     nightly.StartLog(Nightly.RunMode.parse);
-                    runMode = nightly.Parse();
+                    runMode = nightly.Parse(nightly.GetLatestLog());
                     message += string.Format(" as runmode {0}", runMode); // Not L10N
-                    errMessage = nightly.Post(runMode);
+                    errMessage = nightly.Post(runMode, nightly.GetLatestLog());
                     nightly.Finish(message, errMessage);
                     break;
 
+                // Post the XML for the latest log without regenerating it
                 case POST_ARG:
                     nightly = new Nightly(Nightly.RunMode.post);
-                    message = string.Format("Post existing XML {0}", nightly.GetLatestLog()); // Not L10N
+                    message = string.Format("Post existing XML for {0}", nightly.GetLatestLog()); // Not L10N
                     nightly.StartLog(Nightly.RunMode.post);
-                    runMode = nightly.Parse(null, true);
+                    runMode = nightly.Parse(nightly.GetLatestLog(), true); // "true" means skip XML generation, just parse to figure out mode
                     message += string.Format(" as runmode {0}", runMode); // Not L10N
-                    errMessage = nightly.Post(runMode);
+                    errMessage = nightly.Post(runMode, nightly.GetLatestLog());
                     nightly.Finish(message, errMessage);
                     break;
 
