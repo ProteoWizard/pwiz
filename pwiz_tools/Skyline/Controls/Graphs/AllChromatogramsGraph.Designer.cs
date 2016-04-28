@@ -34,8 +34,8 @@ namespace pwiz.Skyline.Controls.Graphs
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(AllChromatogramsGraph));
             this.imageListLock = new System.Windows.Forms.ImageList(this.components);
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.imageListPushPin = new System.Windows.Forms.ImageList(this.components);
             this.btnHide = new System.Windows.Forms.Button();
+            this.imageListPushPin = new System.Windows.Forms.ImageList(this.components);
             this.btnCancel = new System.Windows.Forms.Button();
             this.labelFileName = new System.Windows.Forms.Label();
             this.panelError = new System.Windows.Forms.Panel();
@@ -66,13 +66,6 @@ namespace pwiz.Skyline.Controls.Graphs
             this.imageListLock.Images.SetKeyName(0, "Locked.bmp");
             this.imageListLock.Images.SetKeyName(1, "Unlocked.bmp");
             // 
-            // imageListPushPin
-            // 
-            this.imageListPushPin.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("imageListPushPin.ImageStream")));
-            this.imageListPushPin.TransparentColor = System.Drawing.Color.Transparent;
-            this.imageListPushPin.Images.SetKeyName(0, "Pindownlight.bmp");
-            this.imageListPushPin.Images.SetKeyName(1, "Pinleftlight.bmp");
-            // 
             // btnHide
             // 
             resources.ApplyResources(this.btnHide, "btnHide");
@@ -81,6 +74,13 @@ namespace pwiz.Skyline.Controls.Graphs
             this.toolTip1.SetToolTip(this.btnHide, resources.GetString("btnHide.ToolTip"));
             this.btnHide.UseVisualStyleBackColor = true;
             this.btnHide.Click += new System.EventHandler(this.btnClose_Click);
+            // 
+            // imageListPushPin
+            // 
+            this.imageListPushPin.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("imageListPushPin.ImageStream")));
+            this.imageListPushPin.TransparentColor = System.Drawing.Color.Transparent;
+            this.imageListPushPin.Images.SetKeyName(0, "Pindownlight.bmp");
+            this.imageListPushPin.Images.SetKeyName(1, "Pinleftlight.bmp");
             // 
             // btnCancel
             // 
@@ -219,11 +219,9 @@ namespace pwiz.Skyline.Controls.Graphs
             // 
             // AllChromatogramsGraph
             // 
-            this.AcceptButton = this.btnHide;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.Window;
-            this.CancelButton = this.btnCancel;
             this.ControlBox = false;
             this.Controls.Add(this.panelError);
             this.Controls.Add(this.graphChromatograms);

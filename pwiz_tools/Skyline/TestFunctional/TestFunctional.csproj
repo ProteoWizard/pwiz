@@ -178,6 +178,7 @@
     <Compile Include="ExplicitVariableTest.cs" />
     <Compile Include="ImportFailureTest.cs" />
     <Compile Include="ImportPeptideSearchTest.cs" />
+    <Compile Include="ImportResultsCancelTest.cs" />
     <Compile Include="InsertModTest.cs" />
     <Compile Include="InsertTest.cs" />
     <Compile Include="InstallToolsTest.cs" />

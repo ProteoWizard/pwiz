@@ -125,7 +125,7 @@
         AAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4w
         LCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkFAQAAACZTeXN0
         ZW0uV2luZG93cy5Gb3Jtcy5JbWFnZUxpc3RTdHJlYW1lcgEAAAAERGF0YQcCAgAAAAkDAAAADwMAAABY
-        JAAAAk1TRnQBSQFMAgEBAgEAAagBAgGoAQIBIAEAASABAAT/ARkBAAj/AUIBTQE2BwABNgMAASgDAAGA
+        JAAAAk1TRnQBSQFMAgEBAgEAAbABAgGwAQIBIAEAASABAAT/ARkBAAj/AUIBTQE2BwABNgMAASgDAAGA
         AwABIAMAAQEBAAEYBgABMBIAAfQBtAL0AbQC9AG0AvQBtAL0AbQC9AG0AvQBtAL0AbQC9AG0AvQBtAL0
         AbQC9AG0AvQBtAL0AbQC9AG0AvQBtAL0AbQC9AG0AvQBtAL0AbQC9AG0AvQBtAL0AbQC9AG0AvQBtAL0
         AbQC9AG0AvQBtAL0AbQC9AG0AvQBtAH0AfcB5wH3AfQBtAL0AbQC9AG0AvQBtAL0AbQC9AG0AvQBtAL0
@@ -286,6 +286,45 @@
   <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>120, 17</value>
   </metadata>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="btnHide.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Right</value>
+  </data>
+  <data name="btnHide.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="btnHide.Location" type="System.Drawing.Point, System.Drawing">
+    <value>608, 0</value>
+  </data>
+  <data name="btnHide.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="btnHide.Size" type="System.Drawing.Size, System.Drawing">
+    <value>94, 21</value>
+  </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="btnHide.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="btnHide.Text" xml:space="preserve">
+    <value>&amp;Hide</value>
+  </data>
+  <data name="btnHide.ToolTip" xml:space="preserve">
+    <value>Hide</value>
+  </data>
+  <data name="&gt;&gt;btnHide.Name" xml:space="preserve">
+    <value>btnHide</value>
+  </data>
+  <data name="&gt;&gt;btnHide.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnHide.Parent" xml:space="preserve">
+    <value>panel2</value>
+  </data>
+  <data name="&gt;&gt;btnHide.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
   <metadata name="imageListPushPin.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>322, 17</value>
   </metadata>
@@ -294,7 +333,7 @@
         AAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4w
         LCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkFAQAAACZTeXN0
         ZW0uV2luZG93cy5Gb3Jtcy5JbWFnZUxpc3RTdHJlYW1lcgEAAAAERGF0YQcCAgAAAAkDAAAADwMAAADO
-        IwAAAk1TRnQBSQFMAgEBAgEAAbABAgGwAQIBIAEAASABAAT/ARkBAAj/AUIBTQE2BwABNgMAASgDAAGA
+        IwAAAk1TRnQBSQFMAgEBAgEAAbgBAgG4AQIBIAEAASABAAT/ARkBAAj/AUIBTQE2BwABNgMAASgDAAGA
         AwABIAMAAQEBAAEYBgABMBIAAfQBtAL0AbQC9AG0AvQBtAL0AbQC9AG0AvQBtAL0AbQC9AG0AvQBtAL0
         AbQC9AG0AvQBtAH0AeUBxQHnAtcB2gLXAdoC1wHaAeUBxQHnAfQBtAL0AbQC9AG0AvQBtAL0AbQC9AG0
         AvQBtAL0AbQC9AG0AvQBtAL0AbQC9AG0AvQBtAH0AfcB5wH3AfQBtAL0AbQC9AG0AvQBtAL0AbQC9AG0
@@ -449,45 +488,6 @@
         AbQB9MAAAUIBTQE+BwABPgMAASgDAAGAAwABIAMAAQEBAAEBBgABAhYAA///AP8AAwAL
 </value>
   </data>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="btnHide.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Right</value>
-  </data>
-  <data name="btnHide.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="btnHide.Location" type="System.Drawing.Point, System.Drawing">
-    <value>608, 0</value>
-  </data>
-  <data name="btnHide.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="btnHide.Size" type="System.Drawing.Size, System.Drawing">
-    <value>94, 21</value>
-  </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="btnHide.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="btnHide.Text" xml:space="preserve">
-    <value>&amp;Hide</value>
-  </data>
-  <data name="btnHide.ToolTip" xml:space="preserve">
-    <value>Hide</value>
-  </data>
-  <data name="&gt;&gt;btnHide.Name" xml:space="preserve">
-    <value>btnHide</value>
-  </data>
-  <data name="&gt;&gt;btnHide.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnHide.Parent" xml:space="preserve">
-    <value>panel2</value>
-  </data>
-  <data name="&gt;&gt;btnHide.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
@@ -534,7 +534,7 @@
     <value>220, 0</value>
   </data>
   <data name="labelFileName.Size" type="System.Drawing.Size, System.Drawing">
-    <value>483, 337</value>
+    <value>491, 337</value>
   </data>
   <data name="labelFileName.TabIndex" type="System.Int32, mscorlib">
     <value>23</value>
@@ -645,7 +645,7 @@
     <value>220, 0</value>
   </data>
   <data name="panelError.Size" type="System.Drawing.Size, System.Drawing">
-    <value>483, 337</value>
+    <value>491, 337</value>
   </data>
   <data name="panelError.TabIndex" type="System.Int32, mscorlib">
     <value>25</value>
@@ -687,7 +687,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnAutoCloseWindow.Size" type="System.Drawing.Size, System.Drawing">
-    <value>30, 20</value>
+    <value>22, 20</value>
   </data>
   <data name="btnAutoCloseWindow.ToolTipText" xml:space="preserve">
     <value>Auto hide</value>
@@ -711,19 +711,19 @@
     <value>Magenta</value>
   </data>
   <data name="btnAutoScaleGraphs.Size" type="System.Drawing.Size, System.Drawing">
-    <value>30, 20</value>
+    <value>22, 20</value>
   </data>
   <data name="btnAutoScaleGraphs.ToolTipText" xml:space="preserve">
     <value>Lock graph scaling</value>
   </data>
   <data name="toolStrip1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>703, 0</value>
+    <value>711, 0</value>
   </data>
   <data name="toolStrip1.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 0, 0, 0</value>
   </data>
   <data name="toolStrip1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>31, 337</value>
+    <value>23, 337</value>
   </data>
   <data name="toolStrip1.TabIndex" type="System.Int32, mscorlib">
     <value>21</value>
@@ -936,7 +936,7 @@
     <value>0, 0, 0, 0</value>
   </data>
   <data name="graphChromatograms.Size" type="System.Drawing.Size, System.Drawing">
-    <value>483, 337</value>
+    <value>491, 337</value>
   </data>
   <data name="graphChromatograms.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>

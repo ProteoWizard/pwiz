@@ -654,7 +654,7 @@ namespace pwiz.Skyline.Controls.Graphs
             Settings.Default.ImportResultsAutoCloseWindow = !Settings.Default.ImportResultsAutoCloseWindow;
             btnAutoCloseWindow.Image = imageListPushPin.Images[Settings.Default.ImportResultsAutoCloseWindow ? 1 : 0];
         }
-
+         
         private void btnAutoScaleGraphs_Click(object sender, EventArgs e)
         {
             ClickAutoScaleGraphs();
@@ -676,6 +676,32 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             ClipboardEx.SetText(SelectedControl.GetErrorLog(cbMoreInfo.Checked));
         }
+
+        #region Testing Support
+
+        public int ProgressTotalPercent
+        {
+            get
+            {
+                return (100*(progressBarTotal.Value - -progressBarTotal.Minimum))/(progressBarTotal.Maximum - progressBarTotal.Minimum);
+            }
+        }
+
+        // Click the button for this named file - first click is cancel, which toggles to retry
+        public void FileButtonClick(string name)
+        {
+            foreach (FileProgressControl control in flowFileStatus.Controls)
+            {
+                if (control.FilePath.GetFileName().Contains(name))
+                {
+                    control.ButtonClick();
+                    break;
+                }
+            }
+        }
+
+        #endregion
+
     }
 
     public class DisabledRichTextBox : RichTextBox

@@ -268,8 +268,13 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void btnRetry_Click(object sender, EventArgs e)
         {
+            ButtonClick();
+        }
+
+        public void ButtonClick()
+        {
             ControlOnMouseDown(this, new MouseEventArgs(MouseButtons.Left, 1, 0, 0, 0));
-            var buttonText = ((Button) sender).Text;
+            var buttonText = btnRetry.Text;
             if (buttonText == Resources.FileProgressControl_SetStatus_Retry)
             {
                 if (Retry != null)
@@ -284,13 +289,13 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 if (ShowGraph != null)
                     ShowGraph(this, null);
-                ((Button)sender).Text = Resources.FileProgressControl_btnRetry_Click_Log;
+                btnRetry.Text = Resources.FileProgressControl_btnRetry_Click_Log;
             }
             else if (buttonText == Resources.FileProgressControl_btnRetry_Click_Log)
             {
                 if (ShowLog != null)
                     ShowLog(this, null);
-                ((Button)sender).Text = Resources.FileProgressControl_btnRetry_Click_Graph;
+                btnRetry.Text = Resources.FileProgressControl_btnRetry_Click_Graph;
             }
         }
     }
