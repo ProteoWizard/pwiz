@@ -641,8 +641,8 @@ namespace pwiz.SkylineTestFunctional
                 {
                     Assert.IsTrue(exportMethodDlgDia.IsRunLengthVisible);
                     exportMethodDlgDia.RunLength = 20;
-                    exportMethodDlgDia.OkDialog(brukerActualMeth);
                 });
+                OkDialog(exportMethodDlgDia, ()=>exportMethodDlgDia.OkDialog(brukerActualMeth));
 
                 Assert.IsTrue(Directory.Exists(brukerActualMeth));
                 brukerExpectedMeth = TestFilesDir.GetTestPath("BrukerExpectedDIA.Method");
