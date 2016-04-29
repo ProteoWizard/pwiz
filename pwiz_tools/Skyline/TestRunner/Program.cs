@@ -263,14 +263,14 @@ namespace TestRunner
             // which may have shown up by default
             if (!perftests)
             {
-                for (var t = testList.Count; t-- < 0; )
+                for (var t = testList.Count; t-- > 0; )
                 {
                     if (testList[t].IsPerfTest)
                     {
                         testList.RemoveAt(t);
                     }
                 }
-                for (var ut = unfilteredTestList.Count; ut-- < 0; )
+                for (var ut = unfilteredTestList.Count; ut-- > 0; )
                 {
                     if (unfilteredTestList[ut].IsPerfTest)
                     {
