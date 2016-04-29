@@ -134,8 +134,8 @@ namespace SkylineNightly
         public string RunAndPost(bool killExistingProcesses)
         {
             var runResult = Run(killExistingProcesses) ?? string.Empty;
-            Parse(LogFileName);
-            var postResult = Post(_runMode, LogFileName);
+            Parse();
+            var postResult = Post(_runMode);
             if (!string.IsNullOrEmpty(postResult))
             {
                 if (!string.IsNullOrEmpty(runResult))
@@ -400,8 +400,10 @@ namespace SkylineNightly
             return true;
         }
 
-        public RunMode Parse(string logFile, bool parseOnlyNoXmlOut = false)
+        public RunMode Parse(string logFile = null, bool parseOnlyNoXmlOut = false)
         {
+            if (logFile == null)
+                logFile = GetLatestLog();
             if (logFile == null || !File.Exists(logFile))
                 throw new Exception(string.Format("cannot locate {0}", logFile ?? "current log"));
             var log = File.ReadAllText(logFile);
@@ -539,11 +541,15 @@ namespace SkylineNightly
         /// <summary>
         /// Post the latest results to the server.
         /// </summary>
-        public string Post(RunMode mode, string xmlFile)
+        public string Post(RunMode mode, string xmlFile = null)
         {
             if (xmlFile == null)
-                return string.Empty;
-            xmlFile = Path.ChangeExtension(xmlFile, ".xml"); // In case it's actually the log file name
+            {
+                xmlFile = GetLatestLog();    // Change extension to .xml below
+                if (xmlFile == null)
+                    return string.Empty;
+                xmlFile = Path.ChangeExtension(xmlFile, ".xml"); // In case it's actually the log file name
+            }
             
             var xml = File.ReadAllText(xmlFile);
             string url;
