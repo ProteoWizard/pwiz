@@ -544,9 +544,9 @@ namespace pwiz.SkylineTestTutorial
                 new[] { MsDataFileUri.Parse(GetTestPath(@"TOF\6-BSA-500fmol" + ExtAgilentRaw)) }));
             var importProgress = ShowDialog<AllChromatogramsGraph>(importResultsDlg3.OkDialog);
             WaitForDocumentChangeLoaded(docCalibrate1);
+            WaitForConditionUI(() => importProgress.Finished);
             RunUI(() => AssertEx.AreComparableStrings(Resources.NoFullScanFilteringException_NoFullScanFilteringException_To_extract_chromatograms_from__0__full_scan_settings_must_be_enabled_,
                                                       importProgress.Error, 1));
-            WaitForConditionUI(() => importProgress.Finished);
             RunUI(() =>
             {
                 importProgress.ClickClose();
