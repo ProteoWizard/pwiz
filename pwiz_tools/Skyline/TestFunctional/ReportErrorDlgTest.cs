@@ -51,6 +51,7 @@ namespace pwiz.SkylineTestFunctional
                 skippedReportForm2.SetFormProperties(true, true, "yuval@uw.edu", "text");
                 skippedReportForm2.OkDialog(false);
             });
+            WaitForClosedForm(reportErrorDlg);
 
             ReportException(new Exception());
             var reportErrorDlg2 = WaitForOpenForm<ReportErrorDlg>();
@@ -73,6 +74,7 @@ namespace pwiz.SkylineTestFunctional
                 skippedReportForm.SetFormProperties(true, true, "yuval@uw.edu", "text");
             });
             OkDialog(skippedReportForm, () => skippedReportForm.OkDialog(false));
+            WaitForClosedForm(reportErrorDlg2);
         }
 
         private void ReportException(Exception x)
