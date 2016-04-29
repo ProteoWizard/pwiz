@@ -189,7 +189,7 @@ namespace pwiz.Skyline
             }
         }
 
-        public bool OpenSharedFile(string zipPath)
+        public bool OpenSharedFile(string zipPath, FormEx parentWindow = null)
         {
             try
             {
@@ -200,7 +200,7 @@ namespace pwiz.Skyline
                     Text = Resources.SkylineWindow_OpenSharedFile_Extracting_Files,
                 })
                 {
-                    longWaitDlg.PerformWork(this, 1000, sharing.Extract);
+                    longWaitDlg.PerformWork(parentWindow ?? this, 1000, sharing.Extract);
                     if (longWaitDlg.IsCanceled)
                         return false;
                 }
@@ -209,7 +209,7 @@ namespace pwiz.Skyline
                 // as the active directory for the next open command.
                 Settings.Default.ActiveDirectory = Path.GetDirectoryName(sharing.DocumentPath);
 
-                return OpenFile(sharing.DocumentPath);
+                return OpenFile(sharing.DocumentPath, parentWindow);
             }
             catch (ZipException zipException)
             {

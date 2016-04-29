@@ -605,6 +605,8 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromGroupHeaderInfo(ChromGroupHeaderInfo5 headerInfo)
             : this(headerInfo.Precursor,
+            headerInfo.TextIdIndex,
+            headerInfo.TextIdLen,
             headerInfo.FileIndex,
             headerInfo.NumTransitions,
             headerInfo.StartTransitionIndex,

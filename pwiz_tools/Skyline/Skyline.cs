@@ -277,7 +277,7 @@ namespace pwiz.Skyline
 
             if (pathOpen.EndsWith(SrmDocumentSharing.EXT))
             {
-                return OpenSharedFile(pathOpen);
+                return OpenSharedFile(pathOpen, parentWindow);
             }
             else
             {
