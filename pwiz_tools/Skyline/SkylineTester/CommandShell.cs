@@ -30,6 +30,8 @@ namespace SkylineTester
 {
     public class CommandShell : RichTextBox
     {
+        public static int MAX_PROCESS_SILENCE_MINUTES = 60; // If a process is silent longer than this, assume it's hung
+
         public string DefaultDirectory { get; set; }
         public Button StopButton { get; set; }
         public Func<string, bool> FilterFunc { get; set; }
@@ -277,6 +279,7 @@ namespace SkylineTester
             _process.Start();
             _process.BeginOutputReadLine();
             _process.BeginErrorReadLine();
+            LastOutputTime = DateTime.Now;
         }
 
         public int ProcessId
@@ -284,11 +287,14 @@ namespace SkylineTester
             get { return _process != null ? _process.Id : 0; }
         }
 
+        private DateTime LastOutputTime { get; set; }
+
         /// <summary>
         /// Handle a line of output/error data from the process.
         /// </summary>
         private void HandleOutput(object sender, DataReceivedEventArgs e)
         {
+            LastOutputTime = DateTime.Now;
             Log(e.Data);
         }
 
@@ -300,7 +306,18 @@ namespace SkylineTester
             try
             {
                 if (_process != null && !_process.HasExited)
-                    ProcessUtilities.KillProcessTree(_process);
+                {
+                    // If process has been quiet for a very long time, don't kill it, for forensic purposes
+                    if ((DateTime.Now - LastOutputTime).TotalMinutes > MAX_PROCESS_SILENCE_MINUTES)
+                    {
+                        Log(string.Format("{0} has been silent for more than {1} minutes.  Leaving it running for forensic purposes.",
+                           _process.Modules[0].FileName, MAX_PROCESS_SILENCE_MINUTES));
+                    }
+                    else
+                    {
+                        ProcessUtilities.KillProcessTree(_process);
+                    }
+                }
             }
             // ReSharper disable once EmptyGeneralCatchClause
             catch (Exception)
