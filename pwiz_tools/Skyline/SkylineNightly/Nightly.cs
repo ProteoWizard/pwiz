@@ -322,8 +322,14 @@ namespace SkylineNightly
                 }
             }
 
+
             // Start SkylineTester to do the build.
             var skylineTesterExe = Path.Combine(_skylineTesterDir, "SkylineTester Files", "SkylineTester.exe");
+            Log(string.Format("Starting {0} with config file {1}, which contains:", skylineTesterExe, skylineNightlySkytr));
+            foreach (var line in File.ReadAllLines(skylineNightlySkytr))
+            {
+                Log(line);
+            }
 
             var processInfo = new ProcessStartInfo(skylineTesterExe, skylineNightlySkytr)
             {
@@ -529,8 +535,14 @@ namespace SkylineNightly
 
         private string ParseBuildRoot(string log)
         {
-            var brPattern = new Regex(@"Deleting Build directory\.\.\.\r\n\> rmdir /s ""(\S+)""", RegexOptions.Compiled);
-            var match = brPattern.Match(log); 
+            // Look for:  > "C:\Program Files (x86)\Subversion\bin\svn.exe" checkout "https://svn.code.sf.net/p/proteowizard/code/trunk/pwiz" "C:\Nightly\SkylineTesterForNightly_trunk\pwiz"
+            var brPattern = new Regex(@".*"".*svn\.exe"" checkout "".*"" ""(.*)""", RegexOptions.Compiled);
+            var match = brPattern.Match(log);
+            if (!match.Success)
+            {
+                brPattern = new Regex(@"Deleting Build directory\.\.\.\r\n\> rmdir /s ""(\S+)""", RegexOptions.Compiled);
+                match = brPattern.Match(log);
+            }
             if (match.Success)
             {
                 return match.Groups[1].Value;
