@@ -527,7 +527,7 @@ namespace pwiz.SkylineTestUtil
             {
                 var alertDlg = FindOpenForm<AlertDlg>();
                 if (alertDlg != null)
-                    Assert.Fail("Unexpected alert found: {0}", alertDlg.DetailMessage);
+                    Assert.Fail("Unexpected alert found: {0}", TextUtil.LineSeparate(alertDlg.Message, alertDlg.DetailMessage));
                 return SkylineWindow.DocumentUI.IsLoaded;
             });
             WaitForProteinMetadataBackgroundLoaderCompleted(millis);  // make sure document is stable
