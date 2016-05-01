@@ -52,6 +52,7 @@ namespace pwiz.Skyline.Controls.Graphs
             this.lblDuration = new System.Windows.Forms.Label();
             this.progressBarTotal = new System.Windows.Forms.ProgressBar();
             this.graphChromatograms = new pwiz.Skyline.Controls.Graphs.AsyncChromatogramsGraph2();
+            this.elapsedTimer = new System.Windows.Forms.Timer(this.components);
             this.panelError.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             this.panelFileList.SuspendLayout();
@@ -197,25 +198,15 @@ namespace pwiz.Skyline.Controls.Graphs
             // graphChromatograms
             // 
             resources.ApplyResources(this.graphChromatograms, "graphChromatograms");
-            this.graphChromatograms.EditButtons = System.Windows.Forms.MouseButtons.Left;
-            this.graphChromatograms.EditModifierKeys = System.Windows.Forms.Keys.None;
             this.graphChromatograms.IsCanceled = false;
-            this.graphChromatograms.IsEnableHPan = false;
-            this.graphChromatograms.IsEnableHZoom = false;
-            this.graphChromatograms.IsEnableVPan = false;
-            this.graphChromatograms.IsEnableVZoom = false;
-            this.graphChromatograms.IsEnableWheelZoom = false;
-            this.graphChromatograms.IsZoomOnMouseCenter = true;
             this.graphChromatograms.Key = null;
             this.graphChromatograms.Name = "graphChromatograms";
             this.graphChromatograms.ScaleIsLocked = false;
-            this.graphChromatograms.ScrollGrace = 0D;
-            this.graphChromatograms.ScrollMaxX = 0D;
-            this.graphChromatograms.ScrollMaxY = 0D;
-            this.graphChromatograms.ScrollMaxY2 = 0D;
-            this.graphChromatograms.ScrollMinX = 0D;
-            this.graphChromatograms.ScrollMinY = 0D;
-            this.graphChromatograms.ScrollMinY2 = 0D;
+            // 
+            // elapsedTimer
+            // 
+            this.elapsedTimer.Enabled = true;
+            this.elapsedTimer.Interval = 500;
             // 
             // AllChromatogramsGraph
             // 
@@ -271,5 +262,6 @@ namespace pwiz.Skyline.Controls.Graphs
         private System.Windows.Forms.Panel panelError;
         private System.Windows.Forms.Button btnCopyText;
         private System.Windows.Forms.CheckBox cbMoreInfo;
+        private System.Windows.Forms.Timer elapsedTimer;
     }
 }
