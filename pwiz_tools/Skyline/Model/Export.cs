@@ -800,6 +800,7 @@ namespace pwiz.Skyline.Model
         }
 
         protected override void WriteTransition(TextWriter writer,
+                                                int fileNumber,
                                                 PeptideGroupDocNode nodePepGroup,
                                                 PeptideDocNode nodePep,
                                                 TransitionGroupDocNode nodeTranGroup,
@@ -993,6 +994,7 @@ namespace pwiz.Skyline.Model
         }
 
         protected override void WriteTransition(TextWriter writer,
+                                                int fileNumber,
                                                 PeptideGroupDocNode nodePepGroup,
                                                 PeptideDocNode nodePep,
                                                 TransitionGroupDocNode nodeTranGroup,
@@ -1095,6 +1097,7 @@ namespace pwiz.Skyline.Model
     {
         public double? RunLength { get; set; }
         private readonly Dictionary<GroupStepKey, int> _peptidesSeen = new Dictionary<GroupStepKey, int>();
+        private int LastFileNumber { get; set; }
 
         private struct GroupStepKey
         {
@@ -1134,6 +1137,7 @@ namespace pwiz.Skyline.Model
         public ShimadzuMassListExporter(SrmDocument document)
             : base(document, null)
         {
+            LastFileNumber = -1;
         }
 
         protected override string InstrumentType
@@ -1167,6 +1171,7 @@ namespace pwiz.Skyline.Model
         }
 
         protected override void WriteTransition(TextWriter writer,
+                                                int fileNumber,
                                                 PeptideGroupDocNode nodePepGroup,
                                                 PeptideDocNode nodePep,
                                                 TransitionGroupDocNode nodeTranGroup,
@@ -1174,6 +1179,13 @@ namespace pwiz.Skyline.Model
                                                 TransitionDocNode nodeTran,
                                                 int step)
         {
+            if (fileNumber != LastFileNumber)
+            {
+                // When generating multiple files, Shimadzu expects each one to start from ID 1,
+                // so reset if this is a new file
+                _peptidesSeen.Clear();
+                LastFileNumber = fileNumber;
+            }
             var compound = GetCompound(nodePep, nodeTranGroup) +
                   "_" + nodeTranGroup.TransitionGroup.LabelType; // Not L10N
             if (step != 0)
@@ -1464,6 +1476,7 @@ namespace pwiz.Skyline.Model
         }
 
         protected override void WriteTransition(TextWriter writer,
+                                                int fileNumber,
                                                 PeptideGroupDocNode nodePepGroup,
                                                 PeptideDocNode nodePep,
                                                 TransitionGroupDocNode nodeTranGroup,
@@ -1816,6 +1829,7 @@ namespace pwiz.Skyline.Model
 
 
         protected override void WriteTransition(TextWriter writer,
+                                                int fileNumber,
                                                 PeptideGroupDocNode nodePepGroup,
                                                 PeptideDocNode nodePep,
                                                 TransitionGroupDocNode nodeTranGroup,
@@ -2398,7 +2412,7 @@ namespace pwiz.Skyline.Model
         /// <summary>
         /// Stubbed out override of abstract function not used in this class
         /// </summary>
-        protected override void WriteTransition(TextWriter writer, PeptideGroupDocNode nodePepGroup, PeptideDocNode nodePep,
+        protected override void WriteTransition(TextWriter writer, int fileNumber, PeptideGroupDocNode nodePepGroup, PeptideDocNode nodePep,
             TransitionGroupDocNode nodeTranGroup, TransitionGroupDocNode nodeTranGroupPrimary, TransitionDocNode nodeTran,
             int step)
         {
@@ -2480,6 +2494,7 @@ namespace pwiz.Skyline.Model
         }
 
         protected override void WriteTransition(TextWriter writer,
+                                                int fileNumber,
                                                 PeptideGroupDocNode nodePepGroup,
                                                 PeptideDocNode nodePep,
                                                 TransitionGroupDocNode nodeTranGroup,
@@ -2660,6 +2675,7 @@ namespace pwiz.Skyline.Model
         }
 
         protected override void WriteTransition(TextWriter writer,
+                                                int fileNumber,
                                                 PeptideGroupDocNode nodePepGroup,
                                                 PeptideDocNode nodePep,
                                                 TransitionGroupDocNode nodeTranGroup,
@@ -2737,6 +2753,7 @@ namespace pwiz.Skyline.Model
         }
 
         protected override void WriteTransition(TextWriter writer,
+                                                int fileNumber,
                                                 PeptideGroupDocNode nodePepGroup,
                                                 PeptideDocNode nodePep,
                                                 TransitionGroupDocNode nodeTranGroup,
@@ -2898,6 +2915,7 @@ namespace pwiz.Skyline.Model
         }
 
         protected override void WriteTransition(TextWriter writer,
+                                                int fileNumber,
                                                 PeptideGroupDocNode nodePepGroup,
                                                 PeptideDocNode nodePep,
                                                 TransitionGroupDocNode nodeTranGroup,
@@ -2985,6 +3003,7 @@ namespace pwiz.Skyline.Model
         }
 
         protected override void WriteTransition(TextWriter writer,
+                                                int fileNumber,
                                                 PeptideGroupDocNode nodePepGroup,
                                                 PeptideDocNode nodePep,
                                                 TransitionGroupDocNode nodeTranGroup,
@@ -3116,6 +3135,7 @@ namespace pwiz.Skyline.Model
         // ReSharper restore NonLocalizedString
 
         protected override void WriteTransition(TextWriter writer,
+                                                int fileNumber,
                                                 PeptideGroupDocNode nodePepGroup,
                                                 PeptideDocNode nodePep,
                                                 TransitionGroupDocNode nodeTranGroup,
@@ -3275,6 +3295,7 @@ namespace pwiz.Skyline.Model
         }
 
         protected override void WriteTransition(TextWriter writer,
+                                                int fileNumber,
                                                 PeptideGroupDocNode nodePepGroup,
                                                 PeptideDocNode nodePep,
                                                 TransitionGroupDocNode nodeTranGroup,

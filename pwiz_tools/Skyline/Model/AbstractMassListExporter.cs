@@ -685,6 +685,7 @@ namespace pwiz.Skyline.Model
         protected virtual void WriteHeaders(TextWriter writer) { /* No headers by default */ }
 
         protected abstract void WriteTransition(TextWriter writer,
+                                                int fileNumber,
                                                 PeptideGroupDocNode nodePepGroup,
                                                 PeptideDocNode nodePep,
                                                 TransitionGroupDocNode nodeTranGroup,
@@ -941,7 +942,7 @@ namespace pwiz.Skyline.Model
                 if (!HasFile)
                     throw new IOException(Resources.FileIterator_WriteTransition_Unexpected_failure_writing_transitions);
 
-                exporter.WriteTransition(_writer, seq, peptide, group, groupPrimary, transition, step);
+                exporter.WriteTransition(_writer, FileCount, seq, peptide, group, groupPrimary, transition, step);
 
                 // If not full-scan, count transtions
                 if (!_isPrecursorLimited)
