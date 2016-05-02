@@ -21,8 +21,10 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Management;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -433,7 +435,31 @@ namespace SkylineTester
 
         protected override void OnClosing(CancelEventArgs e)
         {
-            if (_runningTab != null)
+            // If there are tests running, check with user before actually shutting down.
+
+            // Skip that check if we were launched by SkylineNightly, it's on a schedule an knows what it wants.
+            bool interactive;
+            try
+            {
+                // From http://stackoverflow.com/questions/2531837/how-can-i-get-the-pid-of-the-parent-process-of-my-application
+                var myId = Process.GetCurrentProcess().Id;
+                var query = string.Format("SELECT ParentProcessId FROM Win32_Process WHERE ProcessId = {0}", myId);
+                var search = new ManagementObjectSearcher("root\\CIMV2", query);
+                var results = search.Get().GetEnumerator();
+                results.MoveNext();
+                var queryObj = results.Current;
+                var parentId = (uint) queryObj["ParentProcessId"];
+                var parent = Process.GetProcessById((int) parentId);
+                // Only go interactive if our parent process is not named "SkylineNightly"
+                interactive = CultureInfo.InvariantCulture.CompareInfo.IndexOf(parent.ProcessName, "SkylineNightly", CompareOptions.IgnoreCase) < 0;
+            }
+            catch
+            {
+                // Some error fetching parent process info, err on side of caution
+                interactive = true;
+            }
+
+            if (interactive && _runningTab != null)
             {
                 if (MessageBox.Show(string.Format("Tests are running. Are you sure you want to end all tests and close {0}?", Text),
                     Text, MessageBoxButtons.OKCancel) != DialogResult.OK)
