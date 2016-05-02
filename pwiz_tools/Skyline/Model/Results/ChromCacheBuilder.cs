@@ -454,8 +454,8 @@ namespace pwiz.Skyline.Model.Results
                                      _currentFileInfo.Flags,
                                      _currentFileInfo.LastWriteTime,
                                      _currentFileInfo.StartTime,
-                                     0,//LoadingStatus.Transitions.MaxRetentionTime,
-                                     0,//LoadingStatus.Transitions.MaxIntensity,
+                                     (float) (provider.MaxRetentionTime ?? 0),
+                                     (float) (provider.MaxIntensity ?? 0),
                                      _currentFileInfo.SizeScanIds,
                                      _currentFileInfo.LocationScanIds,
                                      _currentFileInfo.InstrumentInfoList));
