@@ -684,6 +684,7 @@ namespace pwiz.SkylineTestTutorial
             //Give the Raw files some time to be processed.
             WaitForCondition(15 * 60 * 1000, () => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded); // 15 minutes                  
             RunUI(() => SkylineWindow.ShowGraphSpectrum(false));
+            WaitForGraphs();
             RunUI(() =>
             {
                 Assert.IsFalse(SkylineWindow.IsGraphSpectrumVisible);
