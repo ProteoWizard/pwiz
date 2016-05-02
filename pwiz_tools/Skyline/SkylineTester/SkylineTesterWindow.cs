@@ -431,6 +431,20 @@ namespace SkylineTester
 
         #endregion
 
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            if (_runningTab != null)
+            {
+                if (MessageBox.Show(string.Format("Tests are running. Are you sure you want to end all tests and close {0}?", Text),
+                    Text, MessageBoxButtons.OKCancel) != DialogResult.OK)
+                {
+                    e.Cancel = true;
+                    return;
+                }
+            }
+            base.OnClosing(e);
+        }
+
         protected override void OnClosed(EventArgs e)
         {
             _runningTab = null;

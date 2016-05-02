@@ -75,7 +75,10 @@ namespace pwiz.Skyline.Util
             if (Program.FunctionalTest)
             {
                 // Track undisposed forms.
-                _undisposedForms.Add(this);
+                lock (_undisposedForms)
+                {
+                    _undisposedForms.Add(this);
+                }
             }
 
             if (ShowFormNames)
@@ -93,7 +96,12 @@ namespace pwiz.Skyline.Util
         protected override void Dispose(bool disposing)
         {
             if (Program.FunctionalTest && disposing)
-                _undisposedForms.Remove(this);
+            {
+                lock (_undisposedForms)
+                {
+                    _undisposedForms.Remove(this);
+                }
+            }
 
             base.Dispose(disposing);
         }
@@ -108,11 +116,14 @@ namespace pwiz.Skyline.Util
 
         public static void CheckAllFormsDisposed()
         {
-            if (_undisposedForms.Count != 0)
+            lock (_undisposedForms)
             {
-                var formType = _undisposedForms[0].GetType().Name;
-                _undisposedForms.Clear();
-                throw new ApplicationException(formType + " was not disposed"); // Not L10N
+                if (_undisposedForms.Count != 0)
+                {
+                    var formType = _undisposedForms[0].GetType().Name;
+                    _undisposedForms.Clear();
+                    throw new ApplicationException(formType + " was not disposed"); // Not L10N
+                }
             }
         }
 
