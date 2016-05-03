@@ -457,7 +457,6 @@ namespace pwiz.Skyline
 
         public void DestroyAllChromatogramsGraph()
         {
-            _listProgress.Clear();
             if (ImportingResultsWindow != null)
             {
                 ImportingResultsWindow.Close();
