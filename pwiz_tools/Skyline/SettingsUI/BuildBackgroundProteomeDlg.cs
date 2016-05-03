@@ -116,7 +116,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private void btnCreate_Click(object sender, EventArgs e)
         {
-            string filterProtDb = TextUtil.FileDialogFiltersAll(FILTER_PROTDB);
+            string filterProtDb = TextUtil.FileDialogFilters(FILTER_PROTDB);
 
             string fileName;
             using (var saveFileDialog = new SaveFileDialog
