@@ -439,8 +439,6 @@ namespace SkylineTester
             if (_runningTab != null)
             {
                 // Skip that check if we closed programatically.
-                var why = e as FormClosingEventArgs;
-                var interactive = why == null || why.CloseReason == CloseReason.UserClosing;
                 bool isNightly;
                 try
                 {
@@ -461,16 +459,13 @@ namespace SkylineTester
                     isNightly = false;
                 }
 
-                if (interactive)
+                var message = isNightly
+                    ? string.Format("The currently running tests are part of a SkylineNightly run. Are you sure you want to end all tests and close {0}?  Doing so will result in SkylineNightly sending a truncated test report.", Text)
+                    : string.Format("Tests are running. Are you sure you want to end all tests and close {0}?", Text);
+                if (MessageBox.Show(message, Text, MessageBoxButtons.OKCancel) != DialogResult.OK)
                 {
-                    var message = isNightly
-                        ? string.Format("The currently running tests are part of a SkylineNightly run. Are you sure you want to end all tests and close {0}?  Doing so will result in SkylineNightly sending a truncated test report.", Text)
-                        : string.Format("Tests are running. Are you sure you want to end all tests and close {0}?", Text);
-                    if (MessageBox.Show(message, Text, MessageBoxButtons.OKCancel) != DialogResult.OK)
-                    {
-                        e.Cancel = true;
-                        return;
-                    }
+                    e.Cancel = true;
+                    return;
                 }
             }
             base.OnClosing(e);

@@ -256,8 +256,12 @@ namespace SkylineTester
 
             commandShell.Done(success);
 
-            if (_runningTab != null && _runningTab.Stop(success))
+            var runningTab = _runningTab;
+            if (runningTab != null && runningTab.Stop(success))
+            {
                 _runningTab = null;
+                runningTab.Stopped();
+            }
             if (_runningTab == null)
                 Done();
         }

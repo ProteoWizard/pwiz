@@ -50,6 +50,11 @@ namespace SkylineTester
             return true;
         }
 
+        public virtual void Stopped()
+        {
+            // Only Nightly tab uses this to close the window
+        }
+
         public virtual int Find(string text, int position)
         {
             return MainWindow.FindOutput(text, position);

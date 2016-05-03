@@ -190,10 +190,14 @@ namespace SkylineTester
             MainWindow.Summary.Save();
             MainWindow.NewNightlyRun = null;
 
+            return true;
+        }
+
+        public override void Stopped()
+        {
+            // Once everything is fully stopped, close the main window, if appropriate
             if (MainWindow.NightlyExit.Checked)
                 RunUI(() => MainWindow.Close());
-            
-            return true;
         }
 
         public override void MemoryGraphClick(int index)
