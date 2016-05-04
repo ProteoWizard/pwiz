@@ -2053,11 +2053,14 @@ namespace pwiz.Skyline.Model
 
                 ResultsCount++;
 
-                Assume.IsTrue(ReferenceEquals(info.FileId, FileId),
-                             string.Format(
-                                 Resources
-                                     .TransitionGroupChromInfoCalculator_AddChromInfo_Grouping_transitions_from_file__0__with_file__1__,
-                                 info.FileIndex, FileId.GlobalIndex));
+                if (!ReferenceEquals(info.FileId, FileId))
+                {
+                    Assume.IsTrue(ReferenceEquals(info.FileId, FileId),
+                                 string.Format(
+                                     Resources
+                                         .TransitionGroupChromInfoCalculator_AddChromInfo_Grouping_transitions_from_file__0__with_file__1__,
+                                     info.FileIndex, FileId.GlobalIndex));
+                }
                 FileId = info.FileId;
                 FileOrder = Settings.MeasuredResults.Chromatograms[ResultsIndex].IndexOfId(FileId);
 
