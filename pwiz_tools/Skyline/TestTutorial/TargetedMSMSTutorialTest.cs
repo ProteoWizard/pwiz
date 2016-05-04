@@ -339,7 +339,7 @@ namespace pwiz.SkylineTestTutorial
             
             var ambiguousDlg = ShowDialog<MessageDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
             RunUI(ambiguousDlg.OkDialog);
-            doc = WaitForDocumentChange(doc);
+            doc = WaitForDocumentChangeLoaded(doc);
 
             // Verify document library was built
             string docLibPath = BiblioSpecLiteSpec.GetLibraryFileName(documentFile);
@@ -354,7 +354,8 @@ namespace pwiz.SkylineTestTutorial
             // All the test results files are in the same directory as the 
             // document file, so all the files should be found, and we should
             // just be able to move to the next page.
-            RunUI(() => Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page));
+            TryWaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page);
+            RunUI(() => Assert.AreEqual(ImportPeptideSearchDlg.Pages.chromatograms_page, importPeptideSearchDlg.CurrentPage));
             var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(() => importPeptideSearchDlg.ClickNextButton());
 
             OkDialog(importResultsNameDlg, importResultsNameDlg.YesDialog);
