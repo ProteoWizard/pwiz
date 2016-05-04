@@ -328,12 +328,14 @@ void BlibFilter::buildNonRedundantLib()
                 scoreType == "SEQUEST XCORR" ||
                 scoreType == "MAXQUANT SCORE" ||
                 scoreType == "MORPHEUS SCORE" ||
-                scoreType == "MSGF+ SCORE") {
+                scoreType == "MSGF+ SCORE" ||
+                scoreType == "PEAKS CONFIDENCE SCORE" ||
+                scoreType == "BYONIC SCORE") {
                 higherIsBetter_[scoreTypeId] = false;
-            } else
-            if (scoreType == "PROTEIN PILOT CONFIDENCE" ||
+            } else if (
+                scoreType == "PROTEIN PILOT CONFIDENCE" ||
                 scoreType == "SCAFFOLD SOMETHING" ||
-                scoreType == "PEAKS CONFIDENCE SCORE") {
+                scoreType == "PEPTIDE SHAKER CONFIDENCE") {
                 higherIsBetter_[scoreTypeId] = true;
             } else {
                 Verbosity::warn("Don't know if higher or lower is better: %s", scoreType.c_str());

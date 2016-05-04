@@ -442,7 +442,7 @@ int BlibBuilder::parseNextSwitch(int i, int argc, char* argv[])
         scoreThresholds[MAXQUANT] = 1 - probability_cutoff;
         scoreThresholds[MORPHEUS] = 1 - probability_cutoff;
         scoreThresholds[MSGF] = 1 - probability_cutoff;
-        scoreThresholds[PEAKS] = probability_cutoff;
+        scoreThresholds[PEAKS] = 1 - probability_cutoff;
         scoreThresholds[BYONIC] = 1 - probability_cutoff;
         scoreThresholds[PEPTIDE_SHAKER] = probability_cutoff;
     } else if (switchName == 'l' && ++i < argc) {

@@ -285,7 +285,7 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
            (analysisType_ == MORPHEUS_ANALYSIS && score_name == "psm q-value") ||
            (analysisType_ == MSGF_ANALYSIS && score_name == "qvalue")) {
            pepProb = getDoubleRequiredAttrValue("value", attr);
-       } else if (analysisType_ == PEAKS_ANALYSIS && score_name == "-10lgP") {
+       } else if (analysisType_ == PEAKS_ANALYSIS && score_name == "-10lgp") {
            pepProb = getDoubleRequiredAttrValue("value", attr);
            // Reverse -10 log p transform
            pepProb = pow(10, pepProb / -10.0);
@@ -430,7 +430,7 @@ bool PepXMLreader::scorePasses(double score){
     case MORPHEUS_ANALYSIS:
     case MSGF_ANALYSIS:
     case PEAKS_ANALYSIS:
-        if(score < probCutOff){
+        if(score <= probCutOff){
             return true;
         }
         break;
