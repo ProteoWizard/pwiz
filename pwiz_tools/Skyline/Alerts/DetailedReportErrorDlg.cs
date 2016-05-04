@@ -23,6 +23,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Net.Mail;
+using System.Text;
 using System.Windows.Forms;
 using System.Xml.Serialization;
 using DigitalRune.Windows.Docking;
@@ -35,7 +36,7 @@ namespace pwiz.Skyline.Alerts
 {
     public partial class DetailedReportErrorDlg : FormEx
     {
-        public string SkylineFile = string.Empty;
+        public byte[] SkylineFileBytes;
         public string Email;
         public string Message;
         public List<Image> ScreenShots;
@@ -155,13 +156,13 @@ namespace pwiz.Skyline.Alerts
                 Email = textBoxEmail.Text;
             }
             
-            // Writes .sky file to string to be later posted to the skyline exceptions website.
+            // Writes .sky file to byte array to be later posted to the skyline exceptions website.
             if (checkBoxSkyFile.Checked)
             {
                 var xmlSerializer = new XmlSerializer(typeof(SrmDocument));
-                StringWriter fileWriter = new StringWriter();
-                xmlSerializer.Serialize(fileWriter, Program.ActiveDocument);
-                SkylineFile = fileWriter.ToString();
+                MemoryStream memoryStream = new MemoryStream();
+                xmlSerializer.Serialize(new StreamWriter(memoryStream, Encoding.UTF8), Program.ActiveDocument);
+                SkylineFileBytes = memoryStream.ToArray();
             }           
           
             Message = textBoxMsg.Text;

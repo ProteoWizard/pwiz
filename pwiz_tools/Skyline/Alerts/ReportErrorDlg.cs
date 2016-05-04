@@ -133,7 +133,7 @@ namespace pwiz.Skyline.Alerts
             {
                 if (detailedReportErrorDlg.ShowDialog(this) == DialogResult.OK)
                 {
-                    var skyFile = detailedReportErrorDlg.SkylineFile;
+                    var skyFile = detailedReportErrorDlg.SkylineFileBytes;
                      _email = detailedReportErrorDlg.Email;
                     _message = detailedReportErrorDlg.Message;
 
@@ -148,7 +148,7 @@ namespace pwiz.Skyline.Alerts
             }
         }
 
-        private void SendErrorReportAttachment(string exceptionType, IEnumerable<Image> screenShots, string skyFile, bool isTest)
+        private void SendErrorReportAttachment(string exceptionType, IEnumerable<Image> screenShots, byte[] skyFileBytes, bool isTest)
         {
             if (isTest) // We don't want to be submitting an exception every time the ReportErrorDlgTest is run.
             {
@@ -175,10 +175,8 @@ namespace pwiz.Skyline.Alerts
                 files.Add(name, memoryStream.ToArray());
             }
 
-            if (!string.IsNullOrEmpty(skyFile))
+            if (skyFileBytes != null)
             {
-                byte[] skyFileBytes = new byte[skyFile.Length * sizeof(char)];
-                Buffer.BlockCopy(skyFile.ToCharArray(), 0, skyFileBytes, 0, skyFileBytes.Length);
                 files.Add("skylineFile.sky", skyFileBytes); // Not L10N
             }
        
