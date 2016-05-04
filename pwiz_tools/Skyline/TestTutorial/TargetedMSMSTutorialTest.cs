@@ -355,7 +355,15 @@ namespace pwiz.SkylineTestTutorial
             // document file, so all the files should be found, and we should
             // just be able to move to the next page.
             TryWaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page);
-            RunUI(() => Assert.AreEqual(ImportPeptideSearchDlg.Pages.chromatograms_page, importPeptideSearchDlg.CurrentPage));
+            var correctPage = false;
+            ImportPeptideSearchDlg.Pages currentPage = 0;
+            RunUI(() => correctPage = ImportPeptideSearchDlg.Pages.chromatograms_page == (currentPage = importPeptideSearchDlg.CurrentPage));
+            if (!correctPage)
+            {
+                WaitForConditionUI(1, // Immediate timeout - just want the richer error message that WaitForConditionUI provides
+                    () => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page,
+                    string.Format("Expected to be on chromatograms_page, on {0} instead", currentPage));
+            }
             var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(() => importPeptideSearchDlg.ClickNextButton());
 
             OkDialog(importResultsNameDlg, importResultsNameDlg.YesDialog);
