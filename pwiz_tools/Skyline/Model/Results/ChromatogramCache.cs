@@ -192,7 +192,10 @@ namespace pwiz.Skyline.Model.Results
 
         public IEnumerable<float> GetCachedScores(int index)
         {
-            return _scores.Skip(index).Take(_scoreTypeIndices.Count);
+            for (int i = 0; i < _scoreTypeIndices.Count; i++)
+            {
+                yield return _scores[index + i];
+            }
         }
 
         /// <summary>

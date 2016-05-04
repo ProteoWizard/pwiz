@@ -56,7 +56,14 @@ namespace pwiz.Skyline.Controls.Databinding
                         Settings.Default.DocumentGridView = view.ViewGroup.Id.ViewName(view.Name).ToString();
                     }
                 }
-                Text = TabText = title;
+                if (TabText != title)
+                {
+                    TabText = title;
+                }
+                if (Text != title)
+                {
+                    Text = title;
+                }
             }
         }
 
