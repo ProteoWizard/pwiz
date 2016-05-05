@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
+using System.Linq;
 using Ionic.Zip;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
@@ -114,8 +115,7 @@ namespace pwiz.SkylineTestFunctional
                           newFileSet[blibName].UncompressedSize);
             Assert.IsTrue(newSize >
                           newFileSet[redundantBlibName].UncompressedSize);
-            WaitForLibraries();
-
+            WaitForDocumentLoaded();
 
             // Remove the last replicate from the document.
             // Share the minimal document
@@ -127,7 +127,9 @@ namespace pwiz.SkylineTestFunctional
                                              {
                                                  var chromatograms =
                                                      doc1.Settings.MeasuredResults.Chromatograms;
+                                                 Assert.AreEqual(2, chromatograms.Count);
                                                  dlg.SelectedChromatograms = new[] { chromatograms[1] };
+                                                 Assert.AreEqual(1, dlg.SelectedChromatograms.Count());
                                                  dlg.RemoveReplicates();
                                                  dlg.OkDialog();
                                              });

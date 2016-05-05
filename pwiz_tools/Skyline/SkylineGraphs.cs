@@ -457,6 +457,13 @@ namespace pwiz.Skyline
 
         public void DestroyAllChromatogramsGraph()
         {
+            // Remove any multi-progress left in the list
+            lock (_listProgress)
+            {
+                int multiIndex = _listProgress.IndexOf(s => s is MultiProgressStatus);
+                if (multiIndex != -1)
+                    _listProgress.RemoveAt(multiIndex);
+            }
             if (ImportingResultsWindow != null)
             {
                 ImportingResultsWindow.Close();
