@@ -184,7 +184,7 @@ namespace pwiz.Skyline.Model.Proteome
         private bool UpdateProgressAndCheckForCancellation(SrmSettingsChangeMonitor progressMonitor, int pctComplete)
         {
             if (progressMonitor == null)
-                return false;
+                return true;  // It certainly wasn't cancelled
             if (progressMonitor.IsCanceled())
                 return false;
             var message = Resources.BackgroundProteome_GetUniquenessDict_Examining_background_proteome_for_uniqueness_constraints;

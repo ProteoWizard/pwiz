@@ -95,7 +95,13 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public PeptideSettings ChangeBackgroundProteome(BackgroundProteome prop)
         {
-            return ChangeProp(ImClone(this), im => im.BackgroundProteome = prop);
+            var result =  ChangeProp(ImClone(this), im => im.BackgroundProteome = prop);
+            if (prop == null || prop.IsNone)
+            {
+                // Can't do peptide uniqueness checks without a background proteome
+                result = result.ChangeFilter(result.Filter.ChangePeptideUniqueness(PeptideFilter.PeptideUniquenessConstraint.none));
+            }
+            return result;
         }
 
         public PeptideSettings ChangePrediction(PeptidePrediction prop)
