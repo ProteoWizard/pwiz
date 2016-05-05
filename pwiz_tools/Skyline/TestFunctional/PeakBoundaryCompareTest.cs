@@ -219,6 +219,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(messageDlg.Message, string.Format(Resources.AddPeakCompareDlg_OkDialog_The_imported_file_does_not_contain_any_peak_boundaries_for__0__transition_group___file_pairs___These_chromatograms_will_be_treated_as_if_no_boundary_was_selected_,
                                                               3));
             OkDialog(messageDlg, messageDlg.Btn1Click);
+            TryWaitForConditionUI(() => comparePeakPickingDlg.ComparePeakBoundariesList.Any(comparer => comparer.FileName == "OpenSwathFillIn"));
             RunUI(() =>
             {
                 var comparerFillIn = comparePeakPickingDlg.ComparePeakBoundariesList.FirstOrDefault(comparer => comparer.FileName == "OpenSwathFillIn");
@@ -405,7 +406,13 @@ namespace pwiz.SkylineTestFunctional
                                             int detailsChoices, 
                                             int compareChoices)
         {
-            WaitForConditionUI(() => Equals(Math.Max(comparePeakPickingDlg.CountRocCurves - 1, 0), rocCurves), "unexpected rocCurves count");  // Use WaitForCondition instead of Assert.AreEqual to avoid race conditions
+            TryWaitForConditionUI(() => Equals(rocCurves, Math.Max(comparePeakPickingDlg.CountRocCurves - 1, 0)));  // Use WaitForCondition instead of Assert.AreEqual to avoid race conditions
+            int actualRocCurves = Math.Max(comparePeakPickingDlg.CountRocCurves - 1, 0);
+            if (!Equals(rocCurves, actualRocCurves))
+            {
+                Assert.Fail(TextUtil.LineSeparate(string.Format("Expecting {0} ROC curves - 1, found {1}", rocCurves, actualRocCurves),
+                    TextUtil.LineSeparate(comparePeakPickingDlg.ZedGraphRoc.GraphPane.CurveList.Select(c => c.Label.Text))));
+            }
             Assert.AreEqual(Math.Max(comparePeakPickingDlg.CountQCurves - 2, 0), qCurves);
             Assert.AreEqual(comparePeakPickingDlg.CountDetailsItems, detailsChoices);
             Assert.AreEqual(comparePeakPickingDlg.CountCompare1Items, compareChoices);

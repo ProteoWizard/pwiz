@@ -251,7 +251,8 @@ namespace pwiz.Skyline.Model
                 }
                 if (Document.Settings.HasOptimizationLibraryPersisted)
                 {
-                    tempDir = new TemporaryDirectory();
+                    if (tempDir == null)
+                        tempDir = new TemporaryDirectory();
                     string tempDbPath = Document.Settings.TransitionSettings.Prediction.OptimizedLibrary.PersistMinimized(
                             tempDir.DirPath, Document);
                     if (tempDbPath != null)
@@ -260,7 +261,8 @@ namespace pwiz.Skyline.Model
                 if (Document.Settings.HasIonMobilityLibraryPersisted)
                 {
                     // Minimize any persistable drift time predictor
-                    tempDir = new TemporaryDirectory();
+                    if (tempDir == null)
+                        tempDir = new TemporaryDirectory();
                     string tempDbPath = Document.Settings.PeptideSettings.Prediction.DriftTimePredictor
                         .IonMobilityLibrary.PersistMinimized(tempDir.DirPath, Document);
                     if (tempDbPath != null)
@@ -294,12 +296,19 @@ namespace pwiz.Skyline.Model
                 else
                 {
                     // If minimizing changed the document, then serialize and archive the new document
-                    var stringWriter = new XmlStringWriter();
-                    using (var writer = new XmlTextWriter(stringWriter) { Formatting = Formatting.Indented })
+                    if (tempDir == null)
+                        tempDir = new TemporaryDirectory();
+                    string fileName = Path.GetFileName(DocumentPath) ?? string.Empty;
+                    string tempDocPath = Path.Combine(tempDir.DirPath, fileName);
+                    using (var writer = new XmlWriterWithProgress(tempDocPath, fileName, Encoding.UTF8,
+                        Document.MoleculeTransitionCount, ProgressMonitor)
+                    {
+                        Formatting = Formatting.Indented
+                    })
                     {
                         XmlSerializer ser = new XmlSerializer(typeof(SrmDocument));
                         ser.Serialize(writer, Document);
-                        zip.AddEntry(Path.GetFileName(DocumentPath), stringWriter.ToString(), Encoding.UTF8);
+                        zip.AddFile(tempDocPath, string.Empty);
                     }
                 }
                 Save(zip);
