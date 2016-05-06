@@ -36,7 +36,7 @@ namespace pwiz.Skyline.Controls.Graphs
     /// </summary>
     public partial class AllChromatogramsGraph : FormEx
     {
-        private Stopwatch _stopwatch;
+        private readonly Stopwatch _stopwatch;
         private int _selected = -1;
         private bool _selectionIsSticky;
         private int _multiFileWindowWidth;
@@ -54,6 +54,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             InitializeComponent();
             toolStrip1.Renderer = new CustomToolStripProfessionalRenderer();
+            _stopwatch = new Stopwatch();
         }
 
         protected override void OnLoad(EventArgs e)
@@ -90,7 +91,6 @@ namespace pwiz.Skyline.Controls.Graphs
             btnAutoCloseWindow.Image = imageListPushPin.Images[Settings.Default.ImportResultsAutoCloseWindow ? 1 : 0];
             btnAutoScaleGraphs.Image = imageListLock.Images[Settings.Default.ImportResultsAutoScaleGraph ? 1 : 0];
 
-            _stopwatch = new Stopwatch();
             _stopwatch.Start();
             _retryTime = DateTime.MaxValue;
             elapsedTimer.Tick += ElapsedTimer_Tick;

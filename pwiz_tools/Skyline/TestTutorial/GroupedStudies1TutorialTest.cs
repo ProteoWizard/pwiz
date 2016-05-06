@@ -156,9 +156,8 @@ namespace pwiz.SkylineTestTutorial
                 Assert.AreEqual("Rat (GPM) (Rat_plasma2)", gridView.CurrentCell.Value);
                 SkylineWindow.ShowDocumentGrid(false);
 
-                // TODO(donmarsh): Adding this line tests importing without ever showing the all chromatograms graph
-                // which needs to work.
-                //Settings.Default.AutoShowAllChromatogramsGraph = IsPauseForScreenShots;
+                // Adding this line tests importing without ever showing the all chromatograms graph.
+                Settings.Default.AutoShowAllChromatogramsGraph = IsPauseForScreenShots;
             });
 
             if (IsFullData)

@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Threading;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using ZedGraph;
@@ -64,7 +63,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private double _renderMin;
         private double _renderMax;
         private double _lastTime;
-        private readonly ManualResetEvent _backgroundInitialized = new ManualResetEvent(false);
+        private bool _backgroundInitialized;
 
         public AsyncChromatogramsGraph2()
             : base("AllChromatograms background render") // Not L10N
@@ -87,7 +86,7 @@ namespace pwiz.Skyline.Controls.Graphs
         /// <summary>
         /// Initialize graph renderer on the background thread.
         /// </summary>
-        protected override void BackgroundInitialize()
+        private void BackgroundInitialize()
         {
             // The template pane is a blank graph that will be cloned to create a graph for each imported file.
             _templatePane = new GraphPane();
@@ -126,9 +125,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 Location = { AlignH = AlignH.Center, AlignV = AlignV.Center, CoordinateFrame = CoordType.ChartFraction },
                 ZOrder = ZOrder.A_InFront
             };
-
-            // Background rendering thread is ready to go.
-            _backgroundInitialized.Set();
         }
 
         /// <summary>
@@ -136,8 +132,11 @@ namespace pwiz.Skyline.Controls.Graphs
         /// </summary>
         public void UpdateStatus(ChromatogramLoadingStatus status)
         {
-            // Wait for background rendering to be ready.
-            _backgroundInitialized.WaitOne();
+            if (!_backgroundInitialized)
+            {
+                _backgroundInitialized = true;
+                BackgroundInitialize();
+            }
 
             // Create info for new file.
             var key = status.FilePath.GetFilePath();
@@ -249,9 +248,6 @@ namespace pwiz.Skyline.Controls.Graphs
         /// </summary>
         protected override void CopyState()
         {
-            // Wait for background rendering to be ready.
-            _backgroundInitialized.WaitOne();
-
             var info = GetInfo(Key);
             if (info != null)
             {

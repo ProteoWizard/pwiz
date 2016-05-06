@@ -124,9 +124,6 @@ namespace pwiz.Skyline.Controls.Graphs
         /// </summary>
         private void BackgroundRender()
         {
-            // Initialize on the background thread.
-            BackgroundInitialize();
-
             while (true)
             {
                 try
@@ -182,13 +179,6 @@ namespace pwiz.Skyline.Controls.Graphs
                     StartRender();
                 }
             }
-        }
-
-        /// <summary>
-        /// Override to perform initialization on the background thread.
-        /// </summary>
-        protected virtual void BackgroundInitialize()
-        {
         }
 
         /// <summary>
