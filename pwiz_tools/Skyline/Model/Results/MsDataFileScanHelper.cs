@@ -230,8 +230,10 @@ namespace pwiz.Skyline.Model.Results
 
                     lock (this)
                     {
-                        while ((_scanProvider == null || _scanIndexNext < 0) && _oldScanProviders.Count == 0)
+                        while (!_disposing && (_scanProvider == null || _scanIndexNext < 0) && _oldScanProviders.Count == 0)
                             Monitor.Wait(this);
+                        if (_disposing)
+                            break;
 
                         scanProvider = _scanProvider;
                         internalScanIndex = _scanIndexNext;
