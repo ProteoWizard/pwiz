@@ -155,6 +155,10 @@ namespace pwiz.SkylineTestTutorial
                 Assert.AreEqual("Rat (GPM) (Rat_plasma2)", gridView.Rows[49].Cells[columnLibraryName.Index].Value);
                 Assert.AreEqual("Rat (GPM) (Rat_plasma2)", gridView.CurrentCell.Value);
                 SkylineWindow.ShowDocumentGrid(false);
+
+                // TODO(donmarsh): Adding this line tests importing without ever showing the all chromatograms graph
+                // which needs to work.
+                //Settings.Default.AutoShowAllChromatogramsGraph = IsPauseForScreenShots;
             });
 
             if (IsFullData)
@@ -189,13 +193,17 @@ namespace pwiz.SkylineTestTutorial
                     GetHfRawTestPath("H_162_REP3" + ExtThermoRaw));
             }
 
-            var allChrom = WaitForOpenForm<AllChromatogramsGraph>();
+            AllChromatogramsGraph allChrom = null;
+            if (Settings.Default.AutoShowAllChromatogramsGraph)
+            {
+                allChrom = WaitForOpenForm<AllChromatogramsGraph>();
 
-            PauseForScreenShot<AllChromatogramsGraph>("Loading Chromatograms form", 5);
+                PauseForScreenShot<AllChromatogramsGraph>("Loading Chromatograms form", 5);
+            }
 
             RunUI(() =>
             {
-                if (allChrom.Visible)
+                if (allChrom != null && allChrom.Visible)
                     allChrom.Hide();
                 // Keep all chromatograms graph from popping up on every RestoreViewOnScreen call below
                 Settings.Default.AutoShowAllChromatogramsGraph = false;
