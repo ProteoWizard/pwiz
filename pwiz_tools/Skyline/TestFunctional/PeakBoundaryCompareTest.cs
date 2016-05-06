@@ -410,6 +410,10 @@ namespace pwiz.SkylineTestFunctional
             int actualRocCurves = Math.Max(comparePeakPickingDlg.CountRocCurves - 1, 0);
             if (!Equals(rocCurves, actualRocCurves))
             {
+                var alertDlg = FindOpenForm<AlertDlg>();
+                if (alertDlg != null)
+                    Assert.Fail("Unexpected alert found: {0}", alertDlg.Message);
+
                 Assert.Fail(TextUtil.LineSeparate(string.Format("Expecting {0} ROC curves - 1, found {1}", rocCurves, actualRocCurves),
                     TextUtil.LineSeparate(comparePeakPickingDlg.ZedGraphRoc.GraphPane.CurveList.Select(c => c.Label.Text))));
             }

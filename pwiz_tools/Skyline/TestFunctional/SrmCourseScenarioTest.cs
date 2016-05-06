@@ -113,7 +113,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Remove heavies from standards
             RunUI(() => SkylineWindow.RemoveMissingResults());
-            document = WaitForDocumentChange(document);
+            document = WaitForDocumentChangeLoaded(document);
 
             AssertEx.IsDocumentState(document, null, protCount, pepCount,
                 pepCount * 2 - pepStandardCount, tranCount * 2 - tranStandardCount);

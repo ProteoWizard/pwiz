@@ -28,6 +28,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Irt;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -648,13 +649,24 @@ namespace pwiz.SkylineTestFunctional
                 messageDlg.Btn1Click();
             });
             var dlgOverwrite = WaitForOpenForm<MultiButtonMsgDlg>();
+            RunUI(() => Assert.AreEqual(TextUtil.LineSeparate(string.Format(Resources.SkylineWindow_ImportMassList_The_iRT_calculator_already_contains__0__of_the_imported_peptides_, 1),
+                Resources.SkylineWindow_ImportMassList_Keep_the_existing_iRT_value_or_overwrite_with_the_imported_value_), dlgOverwrite.Message));
             OkDialog(dlgOverwrite, dlgOverwrite.Btn1Click);
             var libraryDlgYesNew = WaitForOpenForm<MultiButtonMsgDlg>();
+            RunUI(() => Assert.AreEqual(Resources.SkylineWindow_ImportMassList_The_transition_list_appears_to_contain_spectral_library_intensities___Create_a_document_library_from_these_intensities_,
+                libraryDlgYesNew.Message));
             OkDialog(libraryDlgYesNew, libraryDlgYesNew.Btn0Click);
             var libraryDlgOverwrite = WaitForOpenForm<MultiButtonMsgDlg>();
-            RunUI(libraryDlgOverwrite.Btn0Click);
+            string libraryName = Path.GetFileNameWithoutExtension(documentBlank) + BiblioSpecLiteSpec.ASSAY_NAME;
+            RunUI(() => Assert.AreEqual(string.Format(Resources.SkylineWindow_ImportMassList_There_is_an_existing_library_with_the_same_name__0__as_the_document_library_to_be_created___Overwrite_this_library_or_skip_import_of_library_intensities_, libraryName),
+                libraryDlgOverwrite.Message));
+            OkDialog(libraryDlgOverwrite, libraryDlgOverwrite.Btn0Click);
             TryWaitForCondition(6000, () => SkylineWindow.Document.PeptideCount == 345); // Peptide count checked below
             WaitForDocumentLoaded();
+            var openAlert = FindOpenForm<AlertDlg>();
+            if (openAlert != null)
+                Assert.Fail("Found unexpected alert: {0}", openAlert.Message);
+
             RunUI(() =>
             {
                 var calculator = ValidateDocAndIrt(SkylineWindow.DocumentUI, 345, 355, 10);

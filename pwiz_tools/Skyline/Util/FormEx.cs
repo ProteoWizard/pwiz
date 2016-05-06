@@ -23,6 +23,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
 using pwiz.Common.Controls;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Util
 {
@@ -103,7 +104,14 @@ namespace pwiz.Skyline.Util
                 }
             }
 
-            base.Dispose(disposing);
+            try
+            {
+                base.Dispose(disposing);
+            }
+            catch (InvalidOperationException x)
+            {                
+                throw new InvalidOperationException(TextUtil.LineSeparate(string.Format("Exception thrown attempting to dispose {0}", GetType()), x.Message), x); // Not L10N
+            }
         }
 
         public void CheckDisposed()
