@@ -699,6 +699,15 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        public IEnumerable<string> GetErrorMessages()
+        {
+            foreach (FileProgressControl control in flowFileStatus.Controls)
+            {
+                if (control.Error != null)
+                    yield return control.Error;
+            }
+        }
+
         #endregion
 
     }

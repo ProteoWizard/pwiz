@@ -598,7 +598,7 @@ namespace pwiz.ProteowizardWrapper
                     if (!_scanCache.TryGetSpectrum(spectrumIndex, out returnSpectrum))
                     {
                         // spectrum not in the cache, pull it from the file
-                        returnSpectrum = GetSpectrum(SpectrumList.spectrum(spectrumIndex, true));
+                        returnSpectrum = GetSpectrum(SpectrumList.spectrum(spectrumIndex, true), spectrumIndex);
                         // add it to the cache
                         _scanCache.Add(spectrumIndex, returnSpectrum);
                     }
@@ -606,12 +606,12 @@ namespace pwiz.ProteowizardWrapper
                 }
                 using (var spectrum = SpectrumList.spectrum(spectrumIndex, true))
                 {
-                    return GetSpectrum(spectrum);
+                    return GetSpectrum(spectrum, spectrumIndex);
                 }
             }
         }
 
-        private MsDataSpectrum GetSpectrum(Spectrum spectrum)
+        private MsDataSpectrum GetSpectrum(Spectrum spectrum, int spectrumIndex)
         {
             if (spectrum == null)
             {
@@ -622,9 +622,16 @@ namespace pwiz.ProteowizardWrapper
                     Intensities = new double[0]
                 };
             }
+            string idText = spectrum.id;
+            if (idText.Trim().Length == 0)
+            {
+                throw new ArgumentException(string.Format("Empty spectrum ID (and index = {0}) for scan {1}",
+                    spectrum.index, spectrumIndex)); // Not L10N
+            }
+
             var msDataSpectrum = new MsDataSpectrum
             {
-                Id = id.abbreviate(spectrum.id),
+                Id = id.abbreviate(idText),
                 Level = GetMsLevel(spectrum) ?? 0,
                 Index = spectrum.index,
                 RetentionTime = GetStartTime(spectrum),
@@ -720,7 +727,7 @@ namespace pwiz.ProteowizardWrapper
         {
             using (var spectrum = SpectrumList.spectrum(scanIndex, true))
             {
-                return GetSpectrum(IsSrmSpectrum(spectrum) ? spectrum : null);
+                return GetSpectrum(IsSrmSpectrum(spectrum) ? spectrum : null, scanIndex);
             }
         }
 

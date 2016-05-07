@@ -41,6 +41,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 
@@ -690,13 +691,32 @@ namespace pwiz.SkylineTestTutorial
                 importResultsDlg2.OkDialog();
             });
             //Give the Raw files some time to be processed.
-            WaitForCondition(15 * 60 * 1000, () => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded); // 15 minutes                  
+            WaitForCondition(15 * 60 * 1000, () => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded); // 15 minutes  
+            WaitForConditionUI(() =>
+            {
+                var acg = FindOpenForm<AllChromatogramsGraph>();
+                if (acg == null)
+                    return true;
+                if (acg.HasErrors)
+                    Assert.Fail(TextUtil.LineSeparate("Unexpected import errors:", TextUtil.LineSeparate(acg.GetErrorMessages())));
+                return false;
+            });    
             RunUI(() => SkylineWindow.ShowGraphSpectrum(false));
             WaitForGraphs();
+            TryWaitForConditionUI(() => SkylineWindow.GraphChromatograms.Count(graphChrom => !graphChrom.IsHidden) == 6);
             RunUI(() =>
             {
                 Assert.IsFalse(SkylineWindow.IsGraphSpectrumVisible);
-                Assert.AreEqual(6, SkylineWindow.GraphChromatograms.Count(graphChrom => !graphChrom.IsHidden));
+                var listGraphs = SkylineWindow.GraphChromatograms.Where(graphChrom => !graphChrom.IsHidden).ToList();
+                if (listGraphs.Count != 6)
+                {
+                    string hiddenGraphs = string.Empty;
+                    var listHidden = SkylineWindow.GraphChromatograms.Where(graphChrom => graphChrom.IsHidden).ToList();
+                    if (listHidden.Count != 0)
+                        hiddenGraphs = TextUtil.LineSeparate(string.Empty, "Hidden:", TextUtil.LineSeparate(listHidden.Select(g => g.TabText)));
+                    Assert.Fail(TextUtil.LineSeparate(string.Format("Expecting 6 visible graphs but found {0}", listGraphs.Count),
+                        TextUtil.LineSeparate(listGraphs.Select(g => g.TabText)), hiddenGraphs));
+                }
                 var chromGraphs = SkylineWindow.GraphChromatograms.ToArray();
                 Assert.AreEqual(6, chromGraphs.Length);
             });
