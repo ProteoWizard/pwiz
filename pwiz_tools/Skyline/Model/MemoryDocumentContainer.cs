@@ -108,9 +108,16 @@ namespace pwiz.Skyline.Model
             // Unblock the waiting thread, if there was a cancel or error
             lock (CHANGE_EVENT_LOCK)
             {
-                // Keep track of last progress, but do not overwrite an error
-                if (LastProgress == null || !LastProgress.IsError)
-                    LastProgress = (!e.Progress.IsComplete ? e.Progress : null);
+                // Keep track of last progress, but do not overwrite an error, unless
+                // this is a MultiProgressStatus, where useful information may be added
+                // even after the first error.
+                var multiProgress = e.Progress as MultiProgressStatus;
+                if (multiProgress != null || LastProgress == null || !LastProgress.IsError)
+                {
+                    // Keep MultiProgressStatus around, even when it is completed
+                    LastProgress = multiProgress != null || !e.Progress.IsComplete
+                        ? e.Progress : null;
+                }
                 if (e.Progress.IsCanceled || e.Progress.IsError)
                     Monitor.Pulse(CHANGE_EVENT_LOCK);
             }

@@ -104,7 +104,7 @@ namespace pwiz.SkylineTestUtil
 
         public void AssertComplete()
         {
-            if (LastProgress == null) return;
+            if (LastProgress == null || LastProgress.IsComplete) return;
             if (LastProgress.IsError)
                 Assert.Fail(LastProgress.ErrorException.ToString());
 

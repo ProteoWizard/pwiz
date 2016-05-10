@@ -292,13 +292,12 @@ namespace pwiz.SkylineTestA
 
             //Attach replicate
             var commandLine = new CommandLine();
-            using (var docContainer = new ResultsMemoryDocumentContainer(doc, docPath))
+            using (var docContainer = new ResultsTestDocumentContainer(doc, docPath))
             {
                 commandLine.ImportResults(docContainer, replicate, MsDataFileUri.Parse(rawPath), null);
                 docContainer.WaitForComplete();
+                docContainer.AssertComplete();  // No errors
                 doc = docContainer.Document;
-                var progressStatus = docContainer.LastProgress;
-                Assert.IsNull(progressStatus);                
             }
 
             MemoryDocumentContainer memoryDocumentContainer = new MemoryDocumentContainer();
@@ -338,13 +337,12 @@ namespace pwiz.SkylineTestA
             //Attach replicate
             SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
             var commandLine = new CommandLine();
-            using (var docContainer = new ResultsMemoryDocumentContainer(doc, docPath))
+            using (var docContainer = new ResultsTestDocumentContainer(doc, docPath))
             {
                 commandLine.ImportResults(docContainer, replicate, MsDataFileUri.Parse(rawPath), null);
                 docContainer.WaitForComplete();
+                docContainer.AssertComplete();  // No errors
                 doc = docContainer.Document;
-                var status = docContainer.LastProgress;
-                Assert.IsNull(status);
             }
 
             //First, programmatically generate the report
