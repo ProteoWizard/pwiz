@@ -163,10 +163,10 @@ namespace pwiz.SkylineTestFunctional
             });
             // Remove an unchecked model using the EditListDlg, show that it doesn't affect the graph, etc
             RemoveComparer(comparePeakPickingDlg, "skyline_default_plus");
+            CheckNumberComparisons(comparePeakPickingDlg, 2, 2, 2, 2);
+            CheckNumberResults(comparePeakPickingDlg, numberResults);
             RunUI(() =>
             {
-                CheckNumberComparisons(comparePeakPickingDlg, 2, 2, 2, 2);
-                CheckNumberResults(comparePeakPickingDlg, numberResults);
                 Assert.AreEqual(4, comparePeakPickingDlg.ComparePeakBoundariesList.Count); 
             });
 
@@ -249,11 +249,8 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(messageDlgNull.Message, string.Format(Resources.AddPeakCompareDlg_OkDialog_The_imported_file_does_not_contain_any_peak_boundaries_for__0__transition_group___file_pairs___These_chromatograms_will_be_treated_as_if_no_boundary_was_selected_,
                                                               342));
             OkDialog(messageDlgNull, messageDlgNull.Btn1Click);
-            RunUI(() =>
-            {
-                CheckNumberComparisons(comparePeakPickingDlg, 4, 4, 4, 4);
-                CheckNumberResults(comparePeakPickingDlg, numberResults);
-            });
+            CheckNumberComparisons(comparePeakPickingDlg, 4, 4, 4, 4);
+            CheckNumberResults(comparePeakPickingDlg, numberResults);
 
             // Unrecognized peptide leads to message box warning, but otherwise ok
             var peakBoundariesFilePeptide = GetLocalizedFile("OpenSwathPeaksBadPeptide.csv");
@@ -275,11 +272,8 @@ namespace pwiz.SkylineTestFunctional
                                                                      "",
                                                                      Resources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_Continue_peak_boundary_import_ignoring_this_peptide_));
             OkDialog(messageDlgPeptide, messageDlgPeptide.Btn1Click);
-            RunUI(() =>
-            {
-                CheckNumberComparisons(comparePeakPickingDlg, 5, 5, 5, 5);
-                CheckNumberResults(comparePeakPickingDlg, numberResults);
-            });
+            CheckNumberComparisons(comparePeakPickingDlg, 5, 5, 5, 5);
+            CheckNumberResults(comparePeakPickingDlg, numberResults);
 
             // Unrecognized file leads to message box warning, but otherwise ok
             var peakBoundariesFileFile = GetLocalizedFile("OpenSwathPeaksBadFile.csv");
@@ -301,11 +295,8 @@ namespace pwiz.SkylineTestFunctional
                                                                              "",
                                                                              Resources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_Continue_peak_boundary_import_ignoring_this_file_));
             OkDialog(messageDlgFile, messageDlgFile.Btn1Click);
-            RunUI(() =>
-            {
-                CheckNumberComparisons(comparePeakPickingDlg, 6, 6, 6, 6);
-                CheckNumberResults(comparePeakPickingDlg, numberResults);
-            });
+            CheckNumberComparisons(comparePeakPickingDlg, 6, 6, 6, 6);
+            CheckNumberResults(comparePeakPickingDlg, numberResults);
 
             // Import based on peak apex rather than boundaries works OK
             var peakBoundariesApex = GetLocalizedFile("OpenSwathPeaksApex.csv");
