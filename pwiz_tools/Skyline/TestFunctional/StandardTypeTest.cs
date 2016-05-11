@@ -266,6 +266,7 @@ namespace pwiz.SkylineTestFunctional
                 }
             });
             var previewReportDlg = ShowDialog<DocumentGridForm>(viewEditor.ShowPreview);
+            WaitForConditionUI(() => previewReportDlg.IsComplete);
 
             RunUI(() =>
             {
