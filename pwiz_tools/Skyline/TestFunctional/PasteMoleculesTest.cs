@@ -444,9 +444,9 @@ namespace pwiz.SkylineTestFunctional
             WaitForCondition(() => (documentGrid.RowCount == 32));  // Let it initialize
             // Simulate user editing the transition in the document grid
             const string noteText = "let's see some ID";
-            var colNote = documentGrid.FindColumn(PropertyPath.Parse("Note"));
             RunUI(() =>
             {
+                var colNote = documentGrid.FindColumn(PropertyPath.Parse("Note"));
                 try
                 {
                     documentGrid.DataGridView.Rows[0].Cells[colNote.Index].Value = noteText;
