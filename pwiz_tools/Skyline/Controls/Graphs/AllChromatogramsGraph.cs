@@ -704,7 +704,7 @@ namespace pwiz.Skyline.Controls.Graphs
             foreach (FileProgressControl control in flowFileStatus.Controls)
             {
                 if (control.Error != null)
-                    yield return control.Error;
+                    yield return control.GetErrorLog(true);
             }
         }
 

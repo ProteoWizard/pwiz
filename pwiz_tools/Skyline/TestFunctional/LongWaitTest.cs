@@ -36,30 +36,37 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             // Test non-cancellable dialog.
-            using (var longWaitDlg = new LongWaitDlg(null, false))
+            RunUI(() => // Must start from same thread as Program.MainWindow
             {
-                longWaitDlg.PerformWork(Program.MainWindow, 20, () =>
+                using (var longWaitDlg = new LongWaitDlg(null, false))
                 {
-                    for (int i = 0; i < 100; i += 10)
+                    longWaitDlg.PerformWork(Program.MainWindow, 20, () =>
                     {
-                        Thread.Sleep(5);
-                        longWaitDlg.ProgressValue = i;
-                    }
-                });
-            }
+                        for (int i = 0; i < 100; i += 10)
+                        {
+                            Thread.Sleep(5);
+                            longWaitDlg.ProgressValue = i;
+                        }
+                    });
+                }
+                
+            });
 
             // Show cancellable dialog if we're running this Form from SkylineTester.
             if (Program.PauseForms != null && Program.PauseForms.Contains(typeof(LongWaitDlg).Name))
             {
-                using (var longWaitDlg = new LongWaitDlg())
+                RunUI(() => // Must start from same thread as Program.MainWindow
                 {
-                    longWaitDlg.PerformWork(Program.MainWindow, 0, () =>
+                    using (var longWaitDlg = new LongWaitDlg())
                     {
-                        WaitForOpenForm<LongWaitDlg>();
-                        longWaitDlg.CancelButton.PerformClick();
-                    });
-                    Assert.IsTrue(longWaitDlg.IsCanceled);
-                }
+                        longWaitDlg.PerformWork(Program.MainWindow, 0, () =>
+                        {
+                            WaitForOpenForm<LongWaitDlg>();
+                            longWaitDlg.CancelButton.PerformClick();
+                        });
+                        Assert.IsTrue(longWaitDlg.IsCanceled);
+                    }
+                });
             }
         }
     }

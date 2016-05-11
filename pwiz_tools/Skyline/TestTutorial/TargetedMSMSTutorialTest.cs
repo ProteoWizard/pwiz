@@ -394,6 +394,7 @@ namespace pwiz.SkylineTestTutorial
             WaitForClosedForm(importPeptideSearchDlg);
             PauseForScreenShot<AllChromatogramsGraph>("Loading chromatograms window", 18);
             WaitForDocumentChangeLoaded(doc, 15 * 60 * 1000); // 15 minutes
+            WaitForClosedAllChromatogramsGraph();
 
             expectedTransitionGroupCount = 10; // Expect this many with results
             expectedTransitionCount = 87; // Expect this many with results
@@ -692,15 +693,7 @@ namespace pwiz.SkylineTestTutorial
             });
             //Give the Raw files some time to be processed.
             WaitForCondition(15 * 60 * 1000, () => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded); // 15 minutes  
-            WaitForConditionUI(() =>
-            {
-                var acg = FindOpenForm<AllChromatogramsGraph>();
-                if (acg == null)
-                    return true;
-                if (acg.HasErrors)
-                    Assert.Fail(TextUtil.LineSeparate("Unexpected import errors:", TextUtil.LineSeparate(acg.GetErrorMessages())));
-                return false;
-            });    
+            WaitForClosedAllChromatogramsGraph();
             RunUI(() => SkylineWindow.ShowGraphSpectrum(false));
             WaitForGraphs();
             TryWaitForConditionUI(() => SkylineWindow.GraphChromatograms.Count(graphChrom => !graphChrom.IsHidden) == 6);

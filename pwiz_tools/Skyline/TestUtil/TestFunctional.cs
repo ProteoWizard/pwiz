@@ -35,6 +35,7 @@ using pwiz.ProteomeDatabase.Fasta;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
@@ -474,6 +475,19 @@ namespace pwiz.SkylineTestUtil
             }
 
             Assert.Fail("Timeout {0} seconds exceeded in WaitForClosedForm. Open forms: {1}", waitCycles * SLEEP_INTERVAL / 1000, GetOpenFormsString()); // Not L10N
+        }
+
+        public static void WaitForClosedAllChromatogramsGraph()
+        {
+            WaitForConditionUI(() =>
+            {
+                var acg = FindOpenForm<AllChromatogramsGraph>();
+                if (acg == null)
+                    return true;
+                if (acg.HasErrors)
+                    Assert.Fail(TextUtil.LineSeparate("Unexpected import errors:", TextUtil.LineSeparate(acg.GetErrorMessages())));
+                return false;
+            });
         }
 
         private static string GetTextForForm(Control form)
