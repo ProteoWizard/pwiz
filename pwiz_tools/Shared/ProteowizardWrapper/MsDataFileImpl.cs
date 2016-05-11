@@ -625,8 +625,8 @@ namespace pwiz.ProteowizardWrapper
             string idText = spectrum.id;
             if (idText.Trim().Length == 0)
             {
-                throw new ArgumentException(string.Format("Empty spectrum ID (and index = {0}) for scan {1}",
-                    spectrum.index, spectrumIndex)); // Not L10N
+                throw new ArgumentException(string.Format("Empty spectrum ID (and index = {0}) for scan {1}", // Not L10N
+                    spectrum.index, spectrumIndex)); 
             }
 
             var msDataSpectrum = new MsDataSpectrum
