@@ -206,14 +206,16 @@ namespace pwiz.SkylineTestFunctional
             // An undo followed by a redo should not change that
             Assert.AreEqual(9, SkylineWindow.Document.RevisionIndex);
             RunUI(SkylineWindow.Undo);
-            Assert.AreEqual(5, SkylineWindow.Document.RevisionIndex);
+            WaitForDocumentLoaded(5000);
+            Assert.AreEqual(6, SkylineWindow.Document.RevisionIndex);
             Assert.AreEqual(newCacheLen, new FileInfo(cachePersistPath).Length);
             RunUI(SkylineWindow.Redo);
+            WaitForDocumentLoaded(5000);    // Necessary? Have seen intermittent failures in this area
             Assert.AreEqual(9, SkylineWindow.Document.RevisionIndex);
             Assert.AreEqual(newCacheLen, new FileInfo(cachePersistPath).Length);
             // Undo followed by a save, should reduce cache to previous size
             RunUI(SkylineWindow.Undo);
-            WaitForDocumentLoaded(5000);
+            WaitForDocumentLoaded(5000);    // Necessary? Have seen intermittent failures in this area
             Assert.AreEqual(6, SkylineWindow.Document.RevisionIndex);
             RunUI(() => SkylineWindow.SaveDocument());
             Assert.AreEqual(startCacheLen, new FileInfo(cachePersistPath).Length);
