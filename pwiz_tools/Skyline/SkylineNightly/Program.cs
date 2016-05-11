@@ -33,6 +33,7 @@ namespace SkylineNightly
         public const string SCHEDULED_INTEGRATION_ARG = SCHEDULED_ARG + "_integration_branch"; // Not L10N
         public const string SCHEDULED_INTEGRATION_TRUNK_ARG = SCHEDULED_ARG + "_integration_and_trunk"; // Not L10N
         public const string SCHEDULED_PERFTEST_AND_TRUNK_ARG = SCHEDULED_ARG + "_perftests_and_trunk"; // Not L10N
+        public const string SCHEDULED_TRUNK_AND_TRUNK_ARG = SCHEDULED_ARG + "_trunk_and_trunk"; // Not L10N
         public const string PARSE_ARG = "parse"; // Not L10N
         public const string POST_ARG = "post"; // Not L10N
 
@@ -47,22 +48,23 @@ namespace SkylineNightly
             SCHEDULED_INTEGRATION_TRUNK_ARG,
             SCHEDULED_PERFTESTS_ARG,
             SCHEDULED_PERFTEST_AND_TRUNK_ARG,
+            SCHEDULED_TRUNK_AND_TRUNK_ARG,
             SCHEDULED_STRESSTESTS_ARG
         };
 
-        private static void PerformTests(Nightly.RunMode runMode, string arg, bool killExistingProcesses = true)
+        private static void PerformTests(Nightly.RunMode runMode, string arg, string decorateSrcDirName = null)
         {
-            var nightly = new Nightly(runMode);
-            var errMessage = nightly.RunAndPost(killExistingProcesses);
+            var nightly = new Nightly(runMode, decorateSrcDirName);
+            var errMessage = nightly.RunAndPost();
             var message = string.Format("Completed {0}", arg); // Not L10N
             nightly.Finish(message, errMessage);
         }
 
         private static void PerformTests(Nightly.RunMode runMode1, Nightly.RunMode runMode2, string arg)
         {
-            PerformTests(runMode1, string.Format("part one of {0}", arg));  // Not L10N
+            PerformTests(runMode1, string.Format("part one of {0}", arg), runMode1 == runMode2 ? "A" : null);  // Not L10N
             // Don't kill existing test processes for the second run, we'd like to keep any hangs around for forensics
-            PerformTests(runMode2, string.Format("part two of {0}", arg), false);  // Not L10N
+            PerformTests(runMode2, string.Format("part two of {0}", arg), runMode1 == runMode2 ? "B" : null);  // Not L10N
         }
 
         /// <summary>
@@ -109,6 +111,12 @@ namespace SkylineNightly
                 // Run normal mode, then perftests
                 case SCHEDULED_PERFTEST_AND_TRUNK_ARG:
                     PerformTests(Nightly.RunMode.trunk, Nightly.RunMode.perf, arg);
+                    break;
+
+                // For machines that can test all day and all night:
+                // Run normal mode, then run it again
+                case SCHEDULED_TRUNK_AND_TRUNK_ARG:
+                    PerformTests(Nightly.RunMode.trunk, Nightly.RunMode.trunk, arg);
                     break;
 
                 case SCHEDULED_PERFTESTS_ARG:

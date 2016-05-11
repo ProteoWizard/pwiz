@@ -80,7 +80,7 @@ namespace SkylineNightly
         public const int DEFAULT_DURATION_HOURS = 9;
         public const int PERF_DURATION_HOURS = 12;
 
-        public Nightly(RunMode runMode)
+        public Nightly(RunMode runMode, string decorateSrcDirName = null)
         {
             _runMode = runMode;
             _nightly = new Xml("nightly");
@@ -95,7 +95,7 @@ namespace SkylineNightly
             if (Directory.Exists(logDirScreengrabs))
                 Directory.Delete(logDirScreengrabs, true);
             // First guess at working directory - distinguish between run types for machines that do double duty
-            _skylineTesterDir = Path.Combine(nightlyDir, "SkylineTesterForNightly_"+runMode);
+            _skylineTesterDir = Path.Combine(nightlyDir, "SkylineTesterForNightly_"+runMode + (decorateSrcDirName ?? string.Empty));
 
             // Default duration.
             _duration = TimeSpan.FromHours(DEFAULT_DURATION_HOURS);
@@ -131,9 +131,9 @@ namespace SkylineNightly
 
         public enum RunMode { parse, post, trunk, perf, release, stress, integration }
 
-        public string RunAndPost(bool killExistingProcesses)
+        public string RunAndPost()
         {
-            var runResult = Run(killExistingProcesses) ?? string.Empty;
+            var runResult = Run() ?? string.Empty;
             Parse();
             var postResult = Post(_runMode);
             if (!string.IsNullOrEmpty(postResult))
@@ -148,7 +148,7 @@ namespace SkylineNightly
         /// <summary>
         /// Run nightly build/test and report results to server.
         /// </summary>
-        public string Run(bool killExistingProcesses)
+        public string Run()
         {
             string result = string.Empty;
             // Locate relevant directories.
@@ -166,41 +166,40 @@ namespace SkylineNightly
                 _duration = TimeSpan.FromHours(PERF_DURATION_HOURS); // Let it go a bit longer than standard 9 hours
             }
 
-            if (killExistingProcesses)
+            // Kill any other instance of SkylineNightly, unless this is
+            // the StressTest mode, in which case assume that a previous invocation
+            // is still running and just exit to stay out of its way.
+            foreach (var process in Process.GetProcessesByName("skylinenightly"))
             {
-                // Kill any other instance of SkylineNightly, unless this is
-                // the StressTest mode, in which case assume that a previous invocation
-                // is still running and just stay out of its way.
-                foreach (var process in Process.GetProcessesByName("skylinenightly"))
+                if (process.Id != Process.GetCurrentProcess().Id)
                 {
-                    if (process.Id != Process.GetCurrentProcess().Id)
+                    if (_runMode == RunMode.stress)
                     {
-                        if (_runMode == RunMode.stress)
-                        {
-                            Application.Exit();  // Just let the already (long!) running process do its thing
-                        }
-                        else
-                        {
-                            process.Kill();
-                        }
+                        Application.Exit();  // Just let the already (long!) running process do its thing
+                    }
+                    else
+                    {
+                        process.Kill();
                     }
                 }
+            }
 
-                // Kill processes started within the nightly directory - most likely SkylineTester and/or TestRunner.
-                foreach (var process in Process.GetProcesses())
+            // Kill processes started within the proposed working directory - most likely SkylineTester and/or TestRunner.
+            // This keeps stuck tests around for 24 hours, which should be sufficient, but allows us to replace directory
+            // on a daily basis - otherwise we could fill the hard drive on smaller machines
+            foreach (var process in Process.GetProcesses())
+            {
+                try
                 {
-                    try
+                    if (process.Modules[0].FileName.StartsWith(_skylineTesterDir) &&
+                        process.Id != Process.GetCurrentProcess().Id)
                     {
-                        if (process.Modules[0].FileName.StartsWith(nightlyDir) &&
-                            process.Id != Process.GetCurrentProcess().Id)
-                        {
-                            process.Kill();
-                        }
+                        process.Kill();
                     }
-                    // ReSharper disable once EmptyGeneralCatchClause
-                    catch (Exception)
-                    {
-                    }
+                }
+                // ReSharper disable once EmptyGeneralCatchClause
+                catch (Exception)
+                {
                 }
             }
 

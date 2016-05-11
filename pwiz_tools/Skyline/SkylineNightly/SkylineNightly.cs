@@ -169,6 +169,10 @@ namespace SkylineNightly
                     arg = Program.SCHEDULED_PERFTEST_AND_TRUNK_ARG;
                     durationHours = Nightly.DEFAULT_DURATION_HOURS + Nightly.PERF_DURATION_HOURS;
                     break;
+                case 7:
+                    arg = Program.SCHEDULED_TRUNK_AND_TRUNK_ARG;
+                    durationHours = 2 * Nightly.DEFAULT_DURATION_HOURS;
+                    break;
             }
             return arg;
         }
