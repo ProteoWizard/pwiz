@@ -270,8 +270,10 @@ public:
                         test_invariant();
                     }
                 }
-                if (this->maxbufsize(n) > this->desired_readbuf_len) {
+                else {
+                    // Failed to reallocate. So, stick with the old size and stop trying.
                     this->desired_readbuf_len = this->maxbufsize(n);
+                    break;
                 }
             }
         }
