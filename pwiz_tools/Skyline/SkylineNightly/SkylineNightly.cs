@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
@@ -33,7 +34,25 @@ namespace SkylineNightly
             InitializeComponent();
             startTime.Value = DateTime.Parse(Settings.Default.StartTime);
             textBoxFolder.Text = Settings.Default.NightlyFolder;
-            if (Settings.Default.IntegrationBranchRun != 0)
+            RunTypes = new List<string>()
+            {
+                Program.SCHEDULED_ARG, // Trunk
+                Program.SCHEDULED_PERFTESTS_ARG, // Trunk with Perf Tests
+                Program.SCHEDULED_RELEASE_BRANCH_ARG, // Release Branch with Perf Tests
+                Program.SCHEDULED_STRESSTESTS_ARG, // Trunk with Stress Tests
+                Program.SCHEDULED_INTEGRATION_ARG, // Integration
+                Program.SCHEDULED_INTEGRATION_TRUNK_ARG, // Integration then Trunk (Dedicated)
+                Program.SCHEDULED_PERFTEST_AND_TRUNK_ARG, // Trunk then Perf Tests (Dedicated)
+                Program.SCHEDULED_TRUNK_AND_TRUNK_ARG, // Trunk then Trunk again (Dedicated)
+            };
+            if (!string.IsNullOrEmpty(Settings.Default.ScheduledArg))  // Older installations won't have this
+            {
+                if (!RunTypes.Contains(Settings.Default.ScheduledArg))
+                    comboBoxOptions.SelectedIndex = 0; // trunk
+                else
+                    comboBoxOptions.SelectedIndex = RunTypes.IndexOf(Settings.Default.ScheduledArg);
+            }
+            else if (Settings.Default.IntegrationBranchRun != 0)
             {
                 if (Settings.Default.IntegrationBranchRun == 1)
                     comboBoxOptions.SelectedIndex = 4;
@@ -68,6 +87,8 @@ namespace SkylineNightly
             }
         }
 
+        public List<string> RunTypes;
+
         private void Cancel(object sender, EventArgs e)
         {
             Close();
@@ -96,6 +117,7 @@ namespace SkylineNightly
                 Settings.Default.IntegrationBranchRun = 2;
             else
                 Settings.Default.IntegrationBranchRun = 0;
+            Settings.Default.ScheduledArg = RunTypes[comboBoxOptions.SelectedIndex];
             Settings.Default.Save();
 
             // Create new scheduled task to run the nightly build.
