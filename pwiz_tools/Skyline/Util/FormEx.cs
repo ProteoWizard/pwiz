@@ -109,8 +109,12 @@ namespace pwiz.Skyline.Util
                 base.Dispose(disposing);
             }
             catch (InvalidOperationException x)
-            {                
-                throw new InvalidOperationException(TextUtil.LineSeparate(string.Format("Exception thrown attempting to dispose {0}", GetType()), x.Message), x); // Not L10N
+            {
+                var message = TextUtil.LineSeparate(
+                    string.Format("Exception thrown attempting to dispose {0}", GetType()), // Not L10N
+                    x.Message,
+                    "Exception caught at: " + new StackTrace()); // Not L10N
+                throw new InvalidOperationException(message, x);
             }
         }
 
