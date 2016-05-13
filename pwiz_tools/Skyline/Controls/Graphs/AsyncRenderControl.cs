@@ -94,19 +94,18 @@ namespace pwiz.Skyline.Controls.Graphs
             Assume.IsFalse(InvokeRequired);
 
             // Atomic test to see if background rendering thread is active.
-            if (Interlocked.CompareExchange(ref _rendering, 1, 0) == 0)
+            if (Width > 0 && Height > 0 &&
+                Interlocked.CompareExchange(ref _rendering, 1, 0) == 0)
             {
+                _renderRect = _pendingRect;
+                _pendingRect = Rectangle.Empty;
+
                 // Allocate or resize image.
                 if (pictureBox.Image == null || pictureBox.Width != Width || pictureBox.Height != Height)
                 {
                     pictureBox.Image = new Bitmap(Width, Height);
                     _renderRect = new Rectangle(0, 0, Width, Height);
                 }
-                else
-                {
-                    _renderRect = _pendingRect;
-                }
-                _pendingRect = Rectangle.Empty;
 
                 // Allocate or resize offscreen buffer.
                 if (_bitmap == null || _bitmap.Width != Width || _bitmap.Height != Height)
