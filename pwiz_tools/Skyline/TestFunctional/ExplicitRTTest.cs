@@ -137,7 +137,7 @@ namespace pwiz.SkylineTestFunctional
                 }
                 Assert.AreEqual(filenames.Length * document.MoleculeCount, nResults);
             }
-            WaitForClosedForm<AllChromatogramsGraph>();
+            WaitForClosedAllChromatogramsGraph();
         }
 
         private SrmDocument InitExplicitRTDocument(TestFilesDir testFilesDir, string fileName, out string docPath)

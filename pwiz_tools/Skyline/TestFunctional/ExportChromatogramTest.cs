@@ -61,7 +61,7 @@ namespace pwiz.SkylineTestFunctional
             var missingPeptidesMessage = ShowDialog<MessageDlg>(SkylineWindow.ShowChromatogramFeaturesDialog);
             Assert.AreEqual(Resources.SkylineWindow_ShowChromatogramFeaturesDialog_The_document_must_have_targets_for_which_to_export_chromatograms_,
                             missingPeptidesMessage.Message);
-            RunUI(missingPeptidesMessage.OkDialog);
+            OkDialog(missingPeptidesMessage, missingPeptidesMessage.OkDialog);
             TestSmallMolecules = save;
 
             // 3. Exporting with no files selected throws exception

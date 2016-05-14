@@ -509,7 +509,7 @@ namespace pwiz.SkylineTestUtil
             string text = control.Text;
             int assembliesIndex = text.IndexOf("************** Loaded Assemblies **************", StringComparison.Ordinal);
             if (assembliesIndex != -1)
-                text = text.Substring(0, assembliesIndex).TrimEnd();
+                text = text.Substring(0, assembliesIndex) + "------------- End ThreadExceptionDialog Stack -------------";
             return text;
         }
 

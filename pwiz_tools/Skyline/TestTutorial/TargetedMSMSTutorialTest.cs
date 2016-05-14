@@ -543,7 +543,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 ConvertDocumentToSmallMolecules(AsSmallMoleculesTestMode);
             }
-            var docCalibrate1 = SkylineWindow.Document;
+            var docCalibrate1 = WaitForDocumentLoaded();
             const int pepCount1 = 5, preCount1 = 5, tranCount1 = 30;
             AssertEx.IsDocumentState(docCalibrate1, null, 1, pepCount1, preCount1, tranCount1);
 

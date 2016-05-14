@@ -106,8 +106,7 @@ namespace pwiz.SkylineTestFunctional
             SetClipboardTextUI(PEPTIDES_CLIPBOARD_TEXT_GARBAGE);
             RunDlg<MessageDlg>(insertPeptidesDlg1.PastePeptides, messageDlg => messageDlg.OkDialog());
             Assert.AreEqual(1, insertPeptidesDlg1.PeptideRowCount);
-            RunUI(insertPeptidesDlg1.Close);
-            WaitForClosedForm(insertPeptidesDlg);
+            OkDialog(insertPeptidesDlg1, insertPeptidesDlg1.Close);
 
             // Test pasting a transition list.
             SetClipboardTextUI(TransitionsClipboardText);
