@@ -117,7 +117,7 @@ namespace pwiz.Skyline.Alerts
         {
             using (this)
             {
-                return ShowWithTimeout(parent, Message);
+                return ShowWithTimeout(parent, GetTitleAndMessageDetail());
             }
         }
 
@@ -136,6 +136,11 @@ namespace pwiz.Skyline.Alerts
 
         public void CopyMessage()
         {
+            ClipboardEx.SetText(GetTitleAndMessageDetail());
+        }
+
+        private string GetTitleAndMessageDetail()
+        {
             const string separator = "---------------------------"; // Not L10N
             List<string> lines = new List<String>();
             lines.Add(separator);
@@ -151,7 +156,7 @@ namespace pwiz.Skyline.Alerts
             }
             lines.Add(separator);
             lines.Add(string.Empty);
-            ClipboardEx.SetText(TextUtil.LineSeparate(lines));
+            return TextUtil.LineSeparate(lines);
         }
 
         private void btnMoreInfo_Click(object sender, EventArgs e)
