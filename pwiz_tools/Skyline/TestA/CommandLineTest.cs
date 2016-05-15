@@ -1287,6 +1287,73 @@ namespace pwiz.SkylineTestA
 
         }
 
+        //[TestMethod]
+        // TODO: Uncomment this test when it can clean up before/after itself
+        public void ConsolePanoramaImportTest()
+        {
+            bool useRaw = ExtensionTestContext.CanImportThermoRaw && ExtensionTestContext.CanImportWatersRaw;
+            string testZipPath = useRaw
+                                     ? @"TestA\ImportAllCmdLineTest.zip"
+                                     : @"TestA\ImportAllCmdLineTestMzml.zip";
+            string extRaw = useRaw
+                                ? ".raw"
+                                : ".mzML";
+
+            var testFilesDir = new TestFilesDir(TestContext, testZipPath);
+
+            // Contents:
+            // ImportAllCmdLineTest
+            //   -- REP01
+            //       -- CE_Vantage_15mTorr_0001_REP1_01.raw|mzML
+            //       -- CE_Vantage_15mTorr_0001_REP1_02.raw|mzML
+            //   -- REP02
+            //       -- CE_Vantage_15mTorr_0001_REP2_01.raw|mzML
+            //       -- CE_Vantage_15mTorr_0001_REP2_02.raw|mzML
+            //   -- 160109_Mix1_calcurve_070.mzML
+            //   -- 160109_Mix1_calcurve_073.mzML
+            //   -- 160109_Mix1_calcurve_071.raw (Waters .raw directory)
+            //   -- 160109_Mix1_calcurve_074.raw (Waters .raw directory)
+            //   -- bad_file.raw (Should not be imported. Only in ImportAllCmdLineTest.zip)
+            //   -- bad_file_folder
+            //       -- bad_file.raw (Should not be imported. Only in ImportAllCmdLineTest.zip)
+            //   -- FullScan.RAW|mzML (should not be imported)
+            //   -- FullScan_folder
+            //       -- FullScan.RAW|mzML (should not be imported)
+
+            var docPath = testFilesDir.GetTestPath("test.sky");
+
+            // Test: Import a file to an empty document and upload to the panorama server
+            var rawPath = new MsDataFilePath(testFilesDir.GetTestPath(@"REP01\CE_Vantage_15mTorr_0001_REP1_01" + extRaw));
+            var msg = RunCommand("--in=" + docPath,
+                             "--import-file=" + rawPath.FilePath,
+                //"--import-on-or-after=1/1/2014",
+                             "--save",
+                             "--panorama-server=https://panoramaweb.org",
+                             "--panorama-folder=/MacCoss/SkylineUploadTest/",
+                             "--panorama-username=skylinetest@proteinms.net",
+                             "--panorama-password=skylinetest");
+
+            SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
+            Assert.AreEqual(1, doc.Settings.MeasuredResults.Chromatograms.Count);
+            Assert.IsFalse(msg.Contains("Skipping Panorama import."), msg);
+
+
+            // Test: Import a second file and upload to the panorama server
+            rawPath = new MsDataFilePath(testFilesDir.GetTestPath(@"REP01\CE_Vantage_15mTorr_0001_REP1_02" + extRaw));
+            msg = RunCommand("--in=" + docPath,
+                             "--import-file=" + rawPath.FilePath,
+                             "--save",
+                             "--panorama-server=https://panoramaweb.org",
+                             "--panorama-folder=/MacCoss/SkylineUploadTest/",
+                             "--panorama-username=skylinetest@proteinms.net",
+                             "--panorama-password=skylinetest");
+
+
+            doc = ResultsUtil.DeserializeDocument(docPath);
+            Assert.AreEqual(2, doc.Settings.MeasuredResults.Chromatograms.Count);
+            Assert.IsFalse(msg.Contains("Skipping Panorama import."), msg);
+        }
+
         [TestMethod]
         public void ConsoleAddToolTest()
         {

@@ -742,24 +742,32 @@ namespace pwiz.Skyline
             _doc = DocContainer.Document;
             DocContainer.ResetProgress();
 
-            if (_doc.Settings.HasResults && multiStatus != null)
+            if (_doc.Settings.HasResults)
             {
-                // Store whether anything imported successfully.
-                // CONSIDER: Should this be changed to store whether their were no errors? May be strange
-                //           to continue upload to Panorama after reporting import errors.
-                _importedResults = multiStatus.ProgressList.Any(s => s.IsComplete);
-
-                if (multiStatus.IsError)
+                if (multiStatus == null)
                 {
-                    var chromatograms = new List<ChromatogramSet>();
-                    for (int i = 0; i < _doc.Settings.MeasuredResults.Chromatograms.Count; i++)
+                    // Can happen with import when joining is required
+                    _importedResults = true;
+                }
+                else
+                {
+                    // Store whether anything imported successfully.
+                    // CONSIDER: Should this be changed to store whether their were no errors? May be strange
+                    //           to continue upload to Panorama after reporting import errors.
+                    _importedResults = multiStatus.ProgressList.Any(s => s.IsComplete);
+
+                    if (multiStatus.IsError)
                     {
-                        var modifiedSet = RemoveErrors(_doc.Settings.MeasuredResults.Chromatograms[i], multiStatus);
-                        if (modifiedSet != null)
-                            chromatograms.Add(modifiedSet);
+                        var chromatograms = new List<ChromatogramSet>();
+                        for (int i = 0; i < _doc.Settings.MeasuredResults.Chromatograms.Count; i++)
+                        {
+                            var modifiedSet = RemoveErrors(_doc.Settings.MeasuredResults.Chromatograms[i], multiStatus);
+                            if (modifiedSet != null)
+                                chromatograms.Add(modifiedSet);
+                        }
+                        _doc = _doc.ChangeMeasuredResults(chromatograms.Any() ? 
+                            _doc.Settings.MeasuredResults.ChangeChromatograms(chromatograms) : null);
                     }
-                    _doc = _doc.ChangeMeasuredResults(chromatograms.Any() ?
-                        _doc.Settings.MeasuredResults.ChangeChromatograms(chromatograms) : null);
                 }
             }
 
