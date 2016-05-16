@@ -444,10 +444,22 @@ namespace SkylineNightly
                 machineName = mnMatch.Groups[1].Value.ToUpperInvariant();
             }
 
+            // See if we can parse revision info from the log
+            int? revisionInfo = null;
+            // Checked out revision 9708.
+            var reRevision = new Regex(@"\nChecked out revision (\d+)\.\r\n", RegexOptions.Compiled); // As in "Checked out revision 9708."
+            var revMatch = reRevision.Match(log);
+            if (revMatch.Success)
+            {
+                int r;
+                if (int.TryParse(revMatch.Groups[1].Value, out r))
+                    revisionInfo = r;
+            }
+
             _nightly["id"] = machineName;
             _nightly["os"] = Environment.OSVersion;
             var buildroot = ParseBuildRoot(log);
-            _nightly["revision"] = GetRevision(buildroot);
+            _nightly["revision"] = revisionInfo ?? GetRevision(buildroot);
             _nightly["start"] = _startTime;
             _nightly["duration"] = (int)_duration.TotalMinutes;
             _nightly["testsrun"] = testCount;
