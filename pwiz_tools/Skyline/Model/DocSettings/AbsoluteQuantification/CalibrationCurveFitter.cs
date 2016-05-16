@@ -66,6 +66,10 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         public double? GetPeptideConcentration(ChromatogramSet chromatogramSet)
         {
+            if (null == chromatogramSet)
+            {
+                return null;
+            }
             double concentrationMultiplier = PeptideQuantifier.PeptideDocNode.ConcentrationMultiplier.GetValueOrDefault(1.0);
             return chromatogramSet.AnalyteConcentration*concentrationMultiplier;
         }
@@ -232,7 +236,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         public double? GetSpecifiedXValue(int replicateIndex)
         {
-            double? peptideConcentration = GetPeptideConcentration(SrmSettings.MeasuredResults.Chromatograms[replicateIndex]);
+            double? peptideConcentration = GetPeptideConcentration(GetChromatogramSet(replicateIndex));
             if (peptideConcentration.HasValue)
             {
                 if (HasExternalStandards() && HasInternalStandardConcentration())
@@ -287,19 +291,17 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         public QuantificationResult GetQuantificationResult(int replicateIndex)
         {
             QuantificationResult result = new QuantificationResult();
-
             CalibrationCurve calibrationCurve = GetCalibrationCurve();
             result = result.ChangeNormalizedArea(GetNormalizedPeakArea(replicateIndex));
             if (HasExternalStandards() || HasInternalStandardConcentration())
             {
                 double? calculatedConcentration = GetCalculatedConcentration(calibrationCurve, replicateIndex);
                 result = result.ChangeCalculatedConcentration(calculatedConcentration);
-                double? expectedConcentration = GetPeptideConcentration(SrmSettings.MeasuredResults.Chromatograms[replicateIndex]);
+                double? expectedConcentration = GetPeptideConcentration(GetChromatogramSet(replicateIndex));
                 result = result.ChangeAccuracy(calculatedConcentration / expectedConcentration);
                 result = result.ChangeUnits(SrmSettings.PeptideSettings.Quantification.Units);
             }
             return result;
-
         }
 
         public static String AppendUnits(String title, String units)
@@ -337,6 +339,19 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 return string.Format(QuantificationStrings.CalibrationCurveFitter_ConcentrationRatioText__0___1__Concentration_Ratio, numerator.First().Title, denominator.Title);
             }
             return string.Format(QuantificationStrings.CalibrationCurveFitter_ConcentrationRatioText_Concentration_Ratio_to__0_, denominator.Title);
+        }
+
+        private ChromatogramSet GetChromatogramSet(int replicateIndex)
+        {
+            if (!SrmSettings.HasResults)
+            {
+                return null;
+            }
+            if (replicateIndex < 0 || replicateIndex >= SrmSettings.MeasuredResults.Chromatograms.Count)
+            {
+                return null;
+            }
+            return SrmSettings.MeasuredResults.Chromatograms[replicateIndex];
         }
     }
 }
