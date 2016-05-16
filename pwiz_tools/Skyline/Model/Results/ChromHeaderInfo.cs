@@ -2019,7 +2019,7 @@ namespace pwiz.Skyline.Model.Results
         public double? OptionalMaxTime { get; private set; }
         public double? OptionalCenterOfGravityTime { get; private set; } // Only used in SRM, to help disambiguate chromatograms with same Q1>Q3 but different retention time intervals
 
-        public double? OptionalMidTime { get { return OptionalMaxTime.HasValue && OptionalMinTime.HasValue ? (OptionalMaxTime.Value + OptionalMinTime.Value)/2 : (double?) null; } }
+        public double? OptionalMidTime { get { return OptionalMaxTime.HasValue && OptionalMinTime.HasValue && (OptionalMaxTime > OptionalMinTime) ? (OptionalMaxTime.Value + OptionalMinTime.Value) / 2 : (double?)null; } }
 
         public bool IsEmpty { get { return Precursor == 0 && Product == 0 && Source == ChromSource.unknown; } }
 
@@ -2118,10 +2118,15 @@ namespace pwiz.Skyline.Model.Results
             // For SRM data, order by time to handle discontiguous chromatograms
             if (OptionalMidTime.HasValue && key.OptionalMidTime.HasValue)
             {
-                if (key.OptionalMinTime.Value > OptionalMaxTime.Value)
-                    return 1;
-                if (OptionalMaxTime.Value < key.OptionalMinTime.Value)
-                    return -1;
+                c = OptionalMinTime.Value.CompareTo(key.OptionalMinTime.Value);
+                if (c==0)
+                    c = key.OptionalMaxTime.Value.CompareTo(OptionalMaxTime.Value);
+                if (c != 0)
+                    return c;
+            }
+            else if (OptionalMidTime.HasValue != key.OptionalMidTime.HasValue)
+            {
+                return OptionalMidTime.HasValue ? 1 : -1;  // Don't really expect to be here, but best to be fully transitive
             }
 
             // Order by scan-type source, product m/z, extraction width
