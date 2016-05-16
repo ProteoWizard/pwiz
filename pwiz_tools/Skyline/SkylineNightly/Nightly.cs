@@ -413,6 +413,15 @@ namespace SkylineNightly
                 throw new Exception(string.Format("cannot locate {0}", logFile ?? "current log"));
             var log = File.ReadAllText(logFile);
 
+            // Extract log start time from log contents
+            var reStartTime = new Regex(@"\n\# Nightly started (.*)\r\n", RegexOptions.Compiled); // As in "# Nightly started Thursday, May 12, 2016 8:00 PM"
+            var stMatch = reStartTime.Match(log);
+            if (stMatch.Success)
+            {
+                var dateTimeStr = stMatch.Groups[1].Value;
+                DateTime.TryParse(dateTimeStr, out _startTime);
+            }
+
             // Extract all test lines.
             var testCount = ParseTests(log);
 
@@ -426,7 +435,16 @@ namespace SkylineNightly
             var isIntegration = log.Contains(SVN_INTEGRATION_BRANCH_URL);
             var isTrunk = !isIntegration && !log.Contains("Testing branch at");
 
-            _nightly["id"] = Environment.MachineName;
+            var machineName = Environment.MachineName;
+            // Get machine name from logfile name, in case it's not from this machine
+            var reMachineName = new Regex(@"(.*)_\d+\-\d+\-\d+_\d+\-\d+\-\d+\.\w+", RegexOptions.Compiled); // As in "NATBR-LAB-PC_2016-05-12_20-00-19.log"
+            var mnMatch = reMachineName.Match(Path.GetFileName(logFile));
+            if (mnMatch.Success)
+            {
+                machineName = mnMatch.Groups[1].Value.ToUpperInvariant();
+            }
+
+            _nightly["id"] = machineName;
             _nightly["os"] = Environment.OSVersion;
             var buildroot = ParseBuildRoot(log);
             _nightly["revision"] = GetRevision(buildroot);
