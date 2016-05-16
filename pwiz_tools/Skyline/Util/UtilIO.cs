@@ -1429,7 +1429,21 @@ namespace pwiz.Skyline.Util
             {
                 bool processFinished = false;
                 process.Exited += (sender, args) => processFinished = true;
-                process.Start();
+                try
+                {
+                    process.Start();
+                }
+                catch (System.ComponentModel.Win32Exception win32Exception)
+                {
+                    const int ERROR_CANCELLED = 1223;
+                    // If the user cancelled running as an administrator, then try again
+                    // not as administrator
+                    if (runAsAdministrator && win32Exception.NativeErrorCode == ERROR_CANCELLED)
+                    {
+                        return RunProcess(arguments, false, writer);
+                    }
+                    throw;
+                }
 
                 var namedPipeServerConnector = new NamedPipeServerConnector();
                 if (namedPipeServerConnector.WaitForConnection(pipeStream, pipeName))
