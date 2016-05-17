@@ -1220,6 +1220,7 @@ namespace pwiz.SkylineTestUtil
         public void ImportResultsFile(string fileName, int waitForLoadSeconds = 420, string expectedErrorMessage = null,
             LockMassParameters lockMassParameters = null)
         {
+            var docBefore = SkylineWindow.Document;
             var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
             RunDlg<OpenDataSourceDialog>(() => importResultsDlg.NamedPathSets = importResultsDlg.GetDataSourcePathsFile(null),
                openDataSourceDialog =>
@@ -1228,15 +1229,20 @@ namespace pwiz.SkylineTestUtil
                    openDataSourceDialog.Open();
                });
             WaitForConditionUI(() => importResultsDlg.NamedPathSets != null);
-            RunUI(importResultsDlg.OkDialog);
-            if (lockMassParameters != null)
+            if (lockMassParameters == null)
             {
-                var dlg = WaitForOpenForm<ImportResultsLockMassDlg>();
-                dlg.LockmassPositive = lockMassParameters.LockmassPositive ?? 0;
-                dlg.LockmassNegative = lockMassParameters.LockmassNegative ?? 0;
-                dlg.LockmassTolerance = lockMassParameters.LockmassTolerance ?? 0;
-                dlg.OkDialog();
-            } 
+                OkDialog(importResultsDlg, importResultsDlg.OkDialog);
+            }
+            else
+            {
+                RunDlg<ImportResultsLockMassDlg>(importResultsDlg.OkDialog, dlg =>
+                {
+                    dlg.LockmassPositive = lockMassParameters.LockmassPositive ?? 0;
+                    dlg.LockmassNegative = lockMassParameters.LockmassNegative ?? 0;
+                    dlg.LockmassTolerance = lockMassParameters.LockmassTolerance ?? 0;
+                    dlg.OkDialog();
+                });
+            }
             if (expectedErrorMessage != null)
             {
                 var dlg = WaitForOpenForm<MessageDlg>();
@@ -1245,8 +1251,8 @@ namespace pwiz.SkylineTestUtil
             }
             else
             {
-                WaitForCondition(waitForLoadSeconds * 1000,
-                    () => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
+                WaitForDocumentChangeLoaded(docBefore, waitForLoadSeconds*1000);
+                WaitForClosedAllChromatogramsGraph();
             }
         }
 

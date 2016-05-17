@@ -174,7 +174,9 @@ namespace pwiz.SkylineTestFunctional
                 OkDialog(editDlg, editDlg.CancelDialog);
                 OkDialog(editList, editList.OkDialog);
                 RunUI(() => reintegrateDlg.ComboPeakScoringModelSelected = "test2");
+                var docBefore = SkylineWindow.Document;
                 OkDialog(reintegrateDlg, reintegrateDlg.OkDialog);
+                WaitForDocumentChange(docBefore);
             }
         }
 
