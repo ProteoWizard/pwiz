@@ -1170,27 +1170,35 @@ namespace pwiz.Skyline.EditUI
         {
             bool error = false;
             IdentityPath newSelectedPath = SelectedPath;
-            Program.MainWindow.ModifyDocument(Description, 
-                                              document =>
-                                                  {
-                                                      newSelectedPath = SelectedPath;
-                                                      int emptyPeptideGroups;
-                                                      var newDocument = GetNewDocument(document, false, ref newSelectedPath, out emptyPeptideGroups);
-                                                      if (newDocument == null)
-                                                      {
-                                                          error = true;
-                                                          return document;
-                                                      }
-                                                      // CONSIDER: This can show message boxes requesting user input
-                                                      //           Should it really be in the ModifyDocument function?
-                                                      newDocument = ImportFastaHelper.HandleEmptyPeptideGroups(this, emptyPeptideGroups, newDocument);
-                                                      if (newDocument == null)
-                                                      {
-                                                          error = true;
-                                                          return document;
-                                                      }
-                                                      return newDocument;
-                                                  });
+            bool? keepEmptyProteins = null;
+            Program.MainWindow.ModifyDocument(
+                Description,
+                document =>
+                {
+                    newSelectedPath = SelectedPath;
+                    int emptyPeptideGroups;
+                    var newDocument = GetNewDocument(document, false, ref newSelectedPath, out emptyPeptideGroups);
+                    if (newDocument == null)
+                    {
+                        error = true;
+                        return document;
+                    }
+                    if (!keepEmptyProteins.HasValue)
+                    {
+                        keepEmptyProteins = ImportFastaHelper.AskWhetherToKeepEmptyProteins(this, emptyPeptideGroups);
+                        if (!keepEmptyProteins.HasValue)
+                        {
+                            // Cancelled
+                            error = true;
+                            return document;
+                        }
+                    }
+                    if (!keepEmptyProteins.Value)
+                    {
+                        newDocument = ImportPeptideSearch.RemoveEmptyProteins(newDocument);
+                    }
+                    return newDocument;
+                });
             if (error)
             {
                 return;
@@ -1966,23 +1974,44 @@ namespace pwiz.Skyline.EditUI
 
         public static SrmDocument HandleEmptyPeptideGroups(IWin32Window parent, int emptyPeptideGroups, SrmDocument docCurrent)
         {
-            SrmDocument docNew = docCurrent;
-            if (emptyPeptideGroups > FastaImporter.MaxEmptyPeptideGroupCount)
+            switch (AskWhetherToKeepEmptyProteins(parent, emptyPeptideGroups))
             {
-                MessageDlg.Show(parent, String.Format(Resources.SkylineWindow_ImportFasta_This_operation_discarded__0__proteins_with_no_peptides_matching_the_current_filter_settings_, emptyPeptideGroups));
+                case null:
+                    return null;
+                case true:
+                    return docCurrent;
+                case false:
+                    return ImportPeptideSearch.RemoveEmptyProteins(docCurrent);
+                default:
+                    throw new InvalidOperationException();
             }
-            else if (emptyPeptideGroups > 0)
+        }
+
+        /// <summary>
+        /// Display the dialog that says "This operation has added X new proteins with no peptides meeting your filter criteria".
+        /// </summary>
+        /// <returns>
+        /// null if the user cancels, true/false for whether the user says whether they want to keep empty proteins.
+        /// Also returns true if there were so many empty peptide groups that they have already been removed.
+        /// </returns>
+        public static bool? AskWhetherToKeepEmptyProteins(IWin32Window parent, int numberOfEmptyPeptideGroups)
+        {
+            if (numberOfEmptyPeptideGroups > FastaImporter.MaxEmptyPeptideGroupCount)
             {
-                using (var dlg = new EmptyProteinsDlg(emptyPeptideGroups))
+                MessageDlg.Show(parent, String.Format(Resources.SkylineWindow_ImportFasta_This_operation_discarded__0__proteins_with_no_peptides_matching_the_current_filter_settings_, numberOfEmptyPeptideGroups));
+                return true;
+            }
+            else if (numberOfEmptyPeptideGroups > 0)
+            {
+                using (var dlg = new EmptyProteinsDlg(numberOfEmptyPeptideGroups))
                 {
                     if (dlg.ShowDialog(parent) == DialogResult.Cancel)
                         return null;
                     // Remove all empty proteins, if requested by the user.
-                    if (!dlg.IsKeepEmptyProteins)
-                        docNew = ImportPeptideSearch.RemoveEmptyProteins(docNew);
+                    return dlg.IsKeepEmptyProteins;
                 }
             }
-            return docNew;
+            return true;
         }
     }
 }
