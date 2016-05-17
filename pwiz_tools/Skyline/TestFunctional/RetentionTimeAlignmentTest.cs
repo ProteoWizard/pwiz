@@ -56,13 +56,16 @@ namespace pwiz.SkylineTestFunctional
             SetTransitionSettings();
             InsertPeptides();
             RunUI(() => SkylineWindow.SaveDocument(TestFilesDir.GetTestPath("RetentionTimeAlignmentTest.sky")));
-            ImportResultsFile("S_1.mzML");
-            ImportResultsFile("S_10.mzML");
-            WaitForDocumentLoaded();
             var document = SkylineWindow.Document;
+            ImportResultsFile("S_1.mzML");
+            document = WaitForDocumentChangeLoaded(document);
+            ImportResultsFile("S_10.mzML");
+            document = WaitForDocumentChangeLoaded(document);
+            var chromNames = document.Settings.MeasuredResults.Chromatograms.Select(c=>c.Name).ToArray();
             CollectionAssert.AreEqual(
                 new[]{"S_1", "S_10"}, 
-                document.Settings.MeasuredResults.Chromatograms.Select(c=>c.Name).ToArray());
+                chromNames,
+                "expected two chromatograms, named S_1 and S_10 - got " + string.Join(", ", chromNames));
             var peptideWithOneId =
                 document.Peptides.First(
                     peptideDocNode => seqWithOneId.Equals(peptideDocNode.Peptide.Sequence));
