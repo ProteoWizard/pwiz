@@ -150,13 +150,6 @@ namespace pwiz.SkylineTest.Results
                         }
                         Thread.Sleep(10);
                     }
-                    if (!cancelOccurred)
-                    {
-                        Assert.Fail("Attempt to cancel results load failed. {0}",
-                            docContainer.LastProgress != null && docContainer.LastProgress.ErrorException != null
-                                ? docContainer.LastProgress.ErrorException.Message : string.Empty);
-                    }
-
                     // Wait up to 20 seconds for the cache to be removed
                     bool cacheRemoved = false;
                     for (int i = 0; i < 200; i++)
@@ -175,6 +168,12 @@ namespace pwiz.SkylineTest.Results
                             // Allow a single failure where we end up with the final cache instead of a cancelation
                             FileEx.SafeDelete(docPath);
                             continue;   // Try again
+                        }
+                        if (!cancelOccurred)
+                        {
+                            Assert.Fail("Attempt to cancel results load failed on try {0}. {1}", tries + 1,
+                                docContainer.LastProgress != null && docContainer.LastProgress.ErrorException != null
+                                    ? docContainer.LastProgress.ErrorException.Message : string.Empty);
                         }
                         Assert.Fail(TextUtil.LineSeparate("Failed to remove cache file. Found files:", TextUtil.LineSeparate(Directory.GetFiles(dirPath))));
                     }

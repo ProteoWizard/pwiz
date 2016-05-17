@@ -87,10 +87,19 @@ namespace pwiz.SkylineTestUtil
             {
                 throwEx();
             }
-            catch (TEx)
+            catch (TEx x)
             {
-                Assert.Fail("Unexception expected");
+                Assert.Fail(TextUtil.LineSeparate(string.Format("Unexpected exception: {0}", x.Message), x.StackTrace));
             }
+        }
+
+        public static void AreNoExceptions(IList<Exception> exceptions)
+        {
+            if (exceptions.Count == 0)
+                return;
+
+            Assert.Fail(TextUtil.LineSeparate(exceptions.Count == 1 ? "Unexpected exception:" : "Unexpected exceptions:",
+                TextUtil.LineSeparate(exceptions.Select(x => TextUtil.LineSeparate(x.Message, ExceptionUtil.GetStackTraceText(x, null, false), string.Empty)))));
         }
 
         public static void Contains(string value, params string[] parts)

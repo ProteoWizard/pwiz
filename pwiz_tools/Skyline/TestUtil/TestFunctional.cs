@@ -501,6 +501,15 @@ namespace pwiz.SkylineTestUtil
                     .Where(control => control is TextBox)
                     .Aggregate(result, (current, control) => current + ": " + GetExceptionText(control));
             }
+            var alertDlg = form as AlertDlg;
+            if (alertDlg != null)
+            {
+                result = alertDlg.Message;
+                if (!string.IsNullOrEmpty(alertDlg.DetailMessage))
+                {
+                    result = TextUtil.LineSeparate(result, alertDlg.DetailMessage, "------------- End AlertDlg Stack -------------");
+                }
+            }
             return result;
         }
 
@@ -509,7 +518,7 @@ namespace pwiz.SkylineTestUtil
             string text = control.Text;
             int assembliesIndex = text.IndexOf("************** Loaded Assemblies **************", StringComparison.Ordinal);
             if (assembliesIndex != -1)
-                text = text.Substring(0, assembliesIndex) + "------------- End ThreadExceptionDialog Stack -------------";
+                text = TextUtil.LineSeparate(text.Substring(0, assembliesIndex).Trim(), "------------- End ThreadExceptionDialog Stack -------------");
             return text;
         }
 
@@ -960,34 +969,14 @@ namespace pwiz.SkylineTestUtil
                 Program.AddTestException(x);
             }
 
-            foreach (var messageDlg in OpenForms.OfType<MessageDlg>())
-            {
-// ReSharper disable LocalizableElement
-                Console.WriteLine("\n\nOpen MessageDlg: {0}\n", messageDlg.Message); // Not L10N
-// ReSharper restore LocalizableElement
-            }
-
             // Actually throwing an exception can cause an infinite loop in MSTest
             var openForms = OpenForms.Where(form => !(form is SkylineWindow)).ToList();
             Program.TestExceptions.AddRange(
                 from form in openForms
                 select new AssertFailedException(
                     String.Format("Form of type {0} left open at end of test", form.GetType()))); // Not L10N
-            RunUI(() =>
-            {
-                foreach (var form in openForms)
-                {
-                    try
-                    {
-                        form.Close();
-                    }
-// ReSharper disable EmptyGeneralCatchClause
-                    catch
-// ReSharper restore EmptyGeneralCatchClause
-                    {
-                    }
-                }
-            });
+            while (openForms.Count > 0)
+                CloseOpenForm(openForms.First(), openForms);
 
             _testCompleted = true;
 
@@ -1004,6 +993,37 @@ namespace pwiz.SkylineTestUtil
 // ReSharper restore EmptyGeneralCatchClause
             {
             }
+        }
+
+        private void CloseOpenForm(Form formToClose, List<Form> openForms)
+        {
+            openForms.Remove(formToClose);
+            // Close any owned forms, since they may be pushing message loops that would keep this form
+            // from closing.
+            foreach (var ownedForm in formToClose.OwnedForms)
+            {
+                CloseOpenForm(ownedForm, openForms);
+            }
+
+            var messageDlg = formToClose as AlertDlg;
+            // ReSharper disable LocalizableElement
+            if (messageDlg == null)
+                Console.WriteLine("\n\nClosing open form of type {0}\n", formToClose.GetType()); // Not L10N
+            else
+                Console.WriteLine("\n\nClosing open MessageDlg: {0}\n", TextUtil.LineSeparate(messageDlg.Message, messageDlg.DetailMessage)); // Not L10N
+            // ReSharper restore LocalizableElement
+
+            RunUI(() =>
+            {
+                try
+                {
+                    formToClose.Close();
+                }
+                catch
+                {
+                    // Ignore exceptions
+                }
+            });
         }
 
 

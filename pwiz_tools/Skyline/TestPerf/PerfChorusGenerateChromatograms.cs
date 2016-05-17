@@ -57,7 +57,7 @@ namespace TestPerf
                 Thread.Sleep(100);
             }
             DateTime endTime = DateTime.Now;
-            Assert.AreEqual(0, chromTaskList.ListExceptions().Count);
+            AssertEx.AreNoExceptions(chromTaskList.ListExceptions());
             Console.Out.WriteLine("Elapsed time {0}", endTime.Subtract(startTime));
         }
         [TestMethod]
@@ -83,7 +83,7 @@ namespace TestPerf
                     Thread.Sleep(100);
                 }
                 DateTime endTime = DateTime.Now;
-                Assert.AreEqual(0, chromTaskList.ListExceptions().Count);
+                AssertEx.AreNoExceptions(chromTaskList.ListExceptions());
                 Console.Out.WriteLine("*******************************************");
                 Console.Out.WriteLine("Chromatograms per chunk: {0}", chunkChromatogramCount);
                 Console.Out.WriteLine("Number of chunks: {0}", chromTaskList.TaskCount);
