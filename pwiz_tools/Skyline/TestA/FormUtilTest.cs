@@ -39,6 +39,10 @@ namespace pwiz.SkylineTestA
             const int numberOfFormsToCreate = 25;
             int numberOfFormsCreated = 0;
             int numberOfFormsDestroyed = 0;
+            // Application.ThreadContext constructor is not thread safe, so we only construct
+            // one form at a time.
+            object formConstructorLock = new object();
+
             var threads = new List<Thread>();
             while (threads.Count < 3)
             {
@@ -51,7 +55,12 @@ namespace pwiz.SkylineTestA
                         {
                             return;
                         }
-                        using (var alertDlg = new AlertDlg("TestFormUtilOpenForms Form number " + formNumber))
+                        AlertDlg alertDlg;
+                        lock (formConstructorLock)
+                        {
+                            alertDlg = new AlertDlg("TestFormUtilOpenForms Form number " + formNumber);
+                        }
+                        using (alertDlg)
                         {
                             alertDlg.Shown += (sender, args) => alertDlg.BeginInvoke(new Action(() => alertDlg.Close()));
                             alertDlg.ShowDialog();
