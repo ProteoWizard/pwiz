@@ -114,7 +114,10 @@ namespace pwiz.SkylineTestTutorial
 
             PauseForScreenShot<PeptideSettingsUI.DigestionTab>("Peptide Settings - Digestion tab", 6); // Not L10N
 
+            var docB = SkylineWindow.Document;
             OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
+            
+            WaitForDocumentChange(docB);
 
             if (!TryWaitForCondition(() =>
                 SkylineWindow.Document.Settings.PeptideSettings.Libraries.IsLoaded &&
