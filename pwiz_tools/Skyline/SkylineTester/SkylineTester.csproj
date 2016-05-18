@@ -252,6 +252,10 @@
       <Project>{E3F0E34F-F9E6-4360-996F-E2054E4FA1AE}</Project>
       <Name>TestRunnerLib</Name>
     </ProjectReference>
+    <ProjectReference Include="..\TestUtil\TestUtil.csproj">
+      <Project>{1a76f2b4-353a-4bcf-9d15-70d4b387e480}</Project>
+      <Name>TestUtil</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0">

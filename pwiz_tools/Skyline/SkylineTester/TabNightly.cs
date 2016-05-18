@@ -281,6 +281,7 @@ namespace SkylineTester
                 (stressTestLoopCount > 1 || MainWindow.NightlyRunPerfTests.Checked ? "pass0=off pass1=off " : "pass0=on pass1=on ") + // Skip the special passes if we're here to do stresstests or perftests
                 (MainWindow.NightlyRunPerfTests.Checked ? " perftests=on" : string.Empty) +
                 (MainWindow.NightlyTestSmallMolecules.Checked ? " testsmallmolecules=on" : string.Empty) +
+                " runsmallmoleculeversions=on" + // Run any provided tests that convert the document to small molecules (this is different from testsmallmolecules, which just adds the magic test node to every doc in every test)
                 (MainWindow.NightlyRandomize.Checked ? " random=on" : " random=off") +
                 (stressTestLoopCount > 1 ? " repeat=" + MainWindow.NightlyRepeat.Text : string.Empty));
             MainWindow.CommandShell.Add("# Nightly finished.");

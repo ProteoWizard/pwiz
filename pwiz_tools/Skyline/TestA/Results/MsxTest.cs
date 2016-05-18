@@ -46,6 +46,12 @@ namespace pwiz.SkylineTestA.Results
         [TestMethod]
         public void TestDemuxAsSmallMolecules()
         {
+            if (!RunSmallMoleculeTestVersions)
+            {
+                Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
+                return;
+            }
+
             TestSmallMolecules = false; // Don't need that magic extra node
             DoTestDemux(true);
         }

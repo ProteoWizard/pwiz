@@ -64,6 +64,7 @@ namespace TestRunner
                 "demo=off;showformnames=off;showpages=off;status=off;buildcheck=0;screenshotlist;" +
                 "quality=off;pass0=off;pass1=off;" +
                 "perftests=off;" +
+                "runsmallmoleculeversions=off;" +
                 "testsmallmolecules=off;" +
                 "clipboardcheck=off;profile=off;vendors=on;language=fr-FR,en-US;" +
                 "log=TestRunner.log;report=TestRunner.log";
@@ -244,7 +245,8 @@ namespace TestRunner
             bool offscreen = commandLineArgs.ArgAsBool("offscreen");
             bool internet = commandLineArgs.ArgAsBool("internet");
             bool perftests = commandLineArgs.ArgAsBool("perftests");
-            bool testsmallmolecules = commandLineArgs.ArgAsBool("testsmallmolecules");
+            bool addsmallmoleculenodes = commandLineArgs.ArgAsBool("testsmallmolecules"); // Add the magic small molecule test node to every document?
+            bool runsmallmoleculeversions = commandLineArgs.ArgAsBool("runsmallmoleculeversions"); // Run the various tests that are versions of other tests with the document completely converted to small molecules?
             bool useVendorReaders = commandLineArgs.ArgAsBool("vendors");
             bool showStatus = commandLineArgs.ArgAsBool("status");
             bool showFormNames = commandLineArgs.ArgAsBool("showformnames");
@@ -294,7 +296,8 @@ namespace TestRunner
             }
 
             var runTests = new RunTests(
-                demoMode, buildMode, offscreen, internet, showStatus, perftests, testsmallmolecules,
+                demoMode, buildMode, offscreen, internet, showStatus, perftests, addsmallmoleculenodes,
+                runsmallmoleculeversions,
                 pauseDialogs, pauseSeconds, useVendorReaders, timeoutMultiplier, 
                 results, log);
 
@@ -345,7 +348,7 @@ namespace TestRunner
                 runTests.AccessInternet = false;
                 runTests.LiveReports = false;
                 runTests.RunPerfTests = false;
-                runTests.TestSmallMolecules = false;
+                runTests.AddSmallMoleculeNodes = false;
                 runTests.CheckCrtLeaks = CrtLeakThreshold;
                 bool warnedPass0PerfTest = false;
                 for (int testNumber = 0; testNumber < testList.Count; testNumber++)
@@ -368,7 +371,7 @@ namespace TestRunner
                 runTests.AccessInternet = internet;
                 runTests.LiveReports = true;
                 runTests.RunPerfTests = perftests;
-                runTests.TestSmallMolecules = testsmallmolecules;
+                runTests.AddSmallMoleculeNodes = addsmallmoleculenodes;
                 runTests.CheckCrtLeaks = 0;
 
                 foreach (var removeTest in removeList)
@@ -547,7 +550,7 @@ namespace TestRunner
                 foreach (var removeTest in removeList)
                     testList.Remove(removeTest);
                 removeList.Clear();
-                runTests.TestSmallMolecules = testsmallmolecules && (flip = !flip); // Do this in every other pass, so we get it both ways
+                runTests.AddSmallMoleculeNodes = addsmallmoleculenodes && (flip = !flip); // Do this in every other pass, so we get it both ways
             }
 
             return runTests.FailureCount == 0;

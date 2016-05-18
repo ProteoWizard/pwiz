@@ -117,7 +117,8 @@ namespace SkylineTester
                 MainWindow.Pass1.Checked.ToString(),
                 MainWindow.QualityChooseTests.Checked ? TabTests.GetTestList() : "",
                 MainWindow.QualityChooseTests.Checked ? " perftests=on" : "",  // In case any perf tests are explicitly selected - no harm if they aren't
-                MainWindow.QualtityTestSmallMolecules.Checked ? " testsmallmolecules=on" : "");
+                MainWindow.QualityRunSmallMoleculeVersions.Checked ? " runsmallmoleculeversions=on" : "",
+                MainWindow.QualityAddSmallMoleculeNodes.Checked ? " testsmallmolecules=on" : "");
             MainWindow.AddTestRunner(args);
 
             MainWindow.RunCommands();
@@ -270,7 +271,12 @@ namespace SkylineTester
 
             if (lastTestResult != null)
             {
+                // Deal with 
+                // "[14:38] 2.2 AgilentMseChromatogramTestAsSmallMolecules (zh) 0 failures, 1.25/51.5 MB, 0 sec."
+                // or
+                // "[14:38] 2.2 AgilentMseChromatogramTestAsSmallMolecules (zh) (RunSmallMoleculeTestVersions=False, skipping.) 0 failures, 1.25/51.5 MB, 0 sec."
                 var line = Regex.Replace(lastTestResult, @"\s+", " ").Trim();
+                line = line.Replace(pwiz.SkylineTestUtil.AbstractUnitTest.MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION, " ");
                 var parts = line.Split(' ');
                 var failures = int.Parse(parts[4]);
                 var managedMemory = Double.Parse(parts[6].Split('/')[0]);

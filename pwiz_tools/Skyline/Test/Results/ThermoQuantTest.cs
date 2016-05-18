@@ -217,6 +217,12 @@ namespace pwiz.SkylineTest.Results
 
         public void DoThermoRatioTest(RefinementSettings.ConvertToSmallMoleculesMode smallMoleculesTestMode)
         {
+            if (smallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none && !RunSmallMoleculeTestVersions)
+            {
+                System.Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
+                return;
+            }
+
             TestSmallMolecules = false;  // We do this explicitly
 
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);

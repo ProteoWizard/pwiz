@@ -59,6 +59,12 @@ namespace pwiz.SkylineTest.Results
 
         public void DoAgilentMseChromatogramTest(RefinementSettings.ConvertToSmallMoleculesMode asSmallMolecules)
         {
+            if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.none && !RunSmallMoleculeTestVersions)
+            {
+                System.Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
+                return;
+            }
+
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
             TestSmallMolecules = false; // We have an explicit test for that here
 

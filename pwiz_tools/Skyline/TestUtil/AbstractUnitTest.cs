@@ -42,6 +42,9 @@ namespace pwiz.SkylineTestUtil
     {
         private static readonly Stopwatch STOPWATCH = new Stopwatch();
 
+        // NB this text needs to agree with that in UpdateRun() in pwiz_tools\Skyline\SkylineTester\TabQuality.cs
+        public const string MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION = " (RunSmallMoleculeTestVersions=False, skipping.) "; // Not L10N
+
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable MemberCanBeProtected.Global
         public TestContext TestContext { get; set; }
@@ -57,9 +60,26 @@ namespace pwiz.SkylineTestUtil
         protected bool RunPerfTests
         {
             get { return GetBoolValue("RunPerfTests", false); }  // Return false if unspecified
-            set { TestContext.Properties["RunPerfTests"] = value ? "true" : "false";  }
+            set { TestContext.Properties["RunPerfTests"] = value ? "true" : "false"; }
         }
 
+        /// <summary>
+        /// This controls whether we run the various tests that are small molecule versions of our standard tests,
+        /// for example DocumentExportImportTestAsSmallMolecules().  Such tests convert the entire document to small
+        /// molecule representations before proceeding.
+        /// Not to be confused with the "TestSmallMolecules"
+        /// propery below, which just adds an extra small molecule node to all tests and leaves them otherwise unchanged.
+        /// </summary>
+        protected bool RunSmallMoleculeTestVersions
+        {
+            get { return GetBoolValue("RunSmallMoleculeTestVersions", false); }  // Return false if unspecified
+            set { TestContext.Properties["RunSmallMoleculeTestVersions"] = value ? "true" : "false"; }
+        }
+
+        /// <summary>
+        /// Determines whether or not to add a special small molecule node to each document for test purposes.  Not commonly used.
+        /// See RunSmallMoleculeTestVersions above.
+        /// </summary>
         private bool? _testSmallMolecules;
         public bool TestSmallMolecules
         {

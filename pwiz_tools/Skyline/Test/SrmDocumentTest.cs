@@ -265,6 +265,12 @@ namespace pwiz.SkylineTest
 
         public void DoDocumentExportImportTest(RefinementSettings.ConvertToSmallMoleculesMode asSmallMolecules)
         {
+            if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.none && !RunSmallMoleculeTestVersions)
+            {
+                Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
+                return;
+            }
+
             TestSmallMolecules = false; // We wouldn't expect a mixed peptide and non-peptide mass list to work.
 
             int count = ExportAll(DOC_0_1_PEPTIDES_NO_EMPTY, 4, CreateWatersExporter, ExportStrategy.Single, 2, null,

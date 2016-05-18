@@ -367,7 +367,7 @@ namespace SkylineTester
                 foreach (var test in tutorialTests.ToArray())
                 {
                     // Remove any tutorial tests we've hacked for small molecule testing - not of interest to localizers
-                    if (test.Contains("AsSmallMolecules"))
+                    if (test.Contains("AsSmallMolecule"))
                         tutorialTests.Remove(test);
                 }
                 var tutorialNodes = new TreeNode[tutorialTests.Count];
@@ -664,7 +664,7 @@ namespace SkylineTester
                 runLoops,
                 runLoopsCount,
                 runIndefinitely,
-                testsTestSmallMolecules,
+                testsAddSmallMoleculeNodes,
                 repeat,
                 randomize,
                 offscreen,
@@ -696,7 +696,7 @@ namespace SkylineTester
                 qualityPassDefinite,
                 qualityPassCount,
                 qualityPassIndefinite,
-                qualityTestSmallMolecules,
+                qualityAddSmallMoleculeNodes,
                 pass0,
                 pass1,
                 qualityAllTests,
@@ -1086,7 +1086,8 @@ namespace SkylineTester
         public NumericUpDown    QualityPassCount            { get { return qualityPassCount; } }
         public RadioButton      QualityPassDefinite         { get { return qualityPassDefinite; } }
         public Label            QualityTestName             { get { return qualityTestName; } }
-        public CheckBox         QualtityTestSmallMolecules { get { return qualityTestSmallMolecules; } }
+        public CheckBox         QualityAddSmallMoleculeNodes { get { return qualityAddSmallMoleculeNodes; } }
+        public CheckBox         QualityRunSmallMoleculeVersions { get { return qualityRunSmallMoleculeVersions; } }
         public WindowThumbnail  QualityThumbnail            { get { return qualityThumbnail; } }
         public Button           RunBuild                    { get { return runBuild; } }
         public CheckBox         RunBuildVerificationTests   { get { return runBuildVerificationTests; } }
@@ -1105,7 +1106,8 @@ namespace SkylineTester
         public RadioButton      SkipCheckedTests            { get { return skipCheckedTests; } }
         public CheckBox         StartSln                    { get { return startSln; } }
         public TabControl       Tabs                        { get { return tabs; } }
-        public CheckBox         TestsTestSmallMolecules { get { return testsTestSmallMolecules; } }
+        public CheckBox         TestsAddSmallMoleculeNodes { get { return testsAddSmallMoleculeNodes; } }
+        public CheckBox         TestsRunSmallMoleculeVersions { get {  return testsRunSmallMoleculeVersions;} }
         public CheckBox         TestsRandomize              { get { return randomize; } }
         public ComboBox         TestsRepeatCount            { get { return repeat; } }
         public MyTreeView       TestsTree                   { get { return testsTree; } }

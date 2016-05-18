@@ -102,6 +102,12 @@ namespace pwiz.SkylineTest.Results
         private void WatersImsMseChromatogramTest(DriftFilterType mode,
             RefinementSettings.ConvertToSmallMoleculesMode asSmallMolecules = RefinementSettings.ConvertToSmallMoleculesMode.none)
         {
+            if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.none && !RunSmallMoleculeTestVersions)
+            {
+                Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
+                return;
+            }
+
             string subdir = (asSmallMolecules == RefinementSettings.ConvertToSmallMoleculesMode.none) ? null : asSmallMolecules.ToString();
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE, subdir);
             TestSmallMolecules = false; // Don't need that extra magic node
