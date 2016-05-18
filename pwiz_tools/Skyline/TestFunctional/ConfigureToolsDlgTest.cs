@@ -325,7 +325,11 @@ namespace pwiz.SkylineTestFunctional
             });
             string reportText1 =
                 "PeptideSequence,ProteinName,ReplicateName,PrecursorMz,PrecursorCharge,ProductMz,ProductCharge,FragmentIon,RetentionTime,Area,Background,PeakRank"; // Not L10N
-            WaitForConditionUI(() => SkylineWindow.ImmediateWindow.TextContent.Contains(reportText1));
+            string actualText=String.Empty;
+            if (!TryWaitForConditionUI(() => (actualText=SkylineWindow.ImmediateWindow.TextContent).Contains(reportText1)))
+            {
+                Assert.Fail(@"ImmediateWindow.TextContent ""{0}"" does not contain expected string ""{1}""", actualText??String.Empty, reportText1);
+            }
             // Make sure the running EXE does not cause test to fail, because it is locked.
             WaitForCondition(() =>
             {
