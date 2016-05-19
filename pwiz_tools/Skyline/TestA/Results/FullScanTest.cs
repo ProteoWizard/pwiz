@@ -388,6 +388,12 @@ namespace pwiz.SkylineTestA.Results
         [TestMethod]
         public void FullScanSettingsTestAsSmallMolecules()
         {
+            if (!RunSmallMoleculeTestVersions)
+            {
+                Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
+                return;
+            }
+
             List<SrmDocument> docCheckpoints;
             List<SrmDocument> docCheckpointsSM;
 
@@ -404,12 +410,6 @@ namespace pwiz.SkylineTestA.Results
             TestSmallMolecules = false; // Don't need that magic extra node, we have an explicit test
 
             docCheckPoints = new List<SrmDocument>();
-
-            if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.none && !RunSmallMoleculeTestVersions)
-            {
-                Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
-                return;
-            }
 
             var doc = ResultsUtil.DeserializeDocument("MultiLabel.sky", GetType());
             var refine = new RefinementSettings();
