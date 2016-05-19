@@ -2175,7 +2175,8 @@ namespace pwiz.Skyline.Controls.Graphs
             if (settings.TransitionSettings.FullScan.IsEnabled &&
                 settings.PeptideSettings.Libraries.IsLoaded)
             {
-                var transitionGroups = nodeGroups.Select(nodeGroup => nodeGroup.TransitionGroup).ToArray();
+                var nodeGroupsArray = nodeGroups.ToArray();
+                var transitionGroups = nodeGroupsArray.Select(nodeGroup => nodeGroup.TransitionGroup).ToArray();
                 if (Settings.Default.ShowPeptideIdTimes)
                 {
                     var listTimes = new List<double>();
@@ -2187,15 +2188,22 @@ namespace pwiz.Skyline.Controls.Graphs
                                                           lookupMods, FilePath, out labelType, out retentionTimes))
                         {
                             listTimes.AddRange(retentionTimes);
-                            var selectedSpectrum = _stateProvider.SelectedSpectrum;
-                            if (selectedSpectrum != null && Equals(FilePath, selectedSpectrum.FilePath))
-                            {
-                                chromGraphPrimary.SelectedRetentionMsMs = selectedSpectrum.RetentionTime;
-                            }
                         }
+                    }
+                    var selectedSpectrum = _stateProvider.SelectedSpectrum;
+                    if (selectedSpectrum != null && Equals(FilePath, selectedSpectrum.FilePath))
+                    {
+                        chromGraphPrimary.SelectedRetentionMsMs = selectedSpectrum.RetentionTime;
                     }
                     if (listTimes.Count > 0)
                         chromGraphPrimary.RetentionMsMs = listTimes.ToArray();
+
+                    if (settings.PeptideSettings.Libraries.HasMidasLibrary)
+                    {
+                        chromGraphPrimary.MidasRetentionMsMs = settings.PeptideSettings.Libraries.MidasLibraries.SelectMany(
+                            lib => lib.GetSpectraByPrecursor(chromGraphPrimary.Chromatogram.FilePath, chromGraphPrimary.Chromatogram.PrecursorMz))
+                            .Select(s => s.RetentionTime).ToArray();
+                    }
                 }
                 if (Settings.Default.ShowAlignedPeptideIdTimes)
                 {
@@ -2209,7 +2217,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 if (Settings.Default.ShowUnalignedPeptideIdTimes)
                 {
-                    var listTimes = new List<double>(settings.GetRetentionTimesNotAlignedTo(FilePath, lookupSequence, lookupMods));
+                    var precursorMzs = nodeGroupsArray.Select(nodeGroup => nodeGroup.PrecursorMz).ToArray();
+                    var listTimes = new List<double>(settings.GetRetentionTimesNotAlignedTo(FilePath, lookupSequence, lookupMods, precursorMzs));
                     if (listTimes.Count > 0)
                     {
                         var sortedTimes = listTimes.Distinct().ToArray();
@@ -2901,6 +2910,11 @@ namespace pwiz.Skyline.Controls.Graphs
         public double[] RetentionMsMs
         {
             get { return GetTimes(g => g.RetentionMsMs); }
+        }
+
+        public double[] MidasRetentionMsMs
+        {
+            get { return GetTimes(g => g.MidasRetentionMsMs); }
         }
 
         public double[] AlignedRetentionMsMs

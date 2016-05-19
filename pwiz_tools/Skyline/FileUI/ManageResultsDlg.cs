@@ -24,9 +24,11 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
+using NHibernate.Util;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Lib.Midas;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -59,22 +61,28 @@ namespace pwiz.Skyline.FileUI
                 listResults.SelectedIndices.Add(0);
             }
 
+            DocumentLibrarySpecs = new List<LibrarySpec>();
+            DocumentLibraries = new List<Library>();
+
             var libraries = settings.PeptideSettings.Libraries;
-            if (libraries.HasLibraries && libraries.HasDocumentLibrary)
+            if (libraries.HasLibraries && (libraries.HasDocumentLibrary || libraries.HasMidasLibrary))
             {
-                DocumentLibrarySpec = libraries.LibrarySpecs.FirstOrDefault(x => x.IsDocumentLibrary);
-                if (null != DocumentLibrarySpec)
+                foreach (var documentLibrarySpec in libraries.LibrarySpecs.Where(x => x.IsDocumentLibrary || x is MidasLibSpec))
                 {
-                    DocumentLibrary = libraryManager.TryGetLibrary(DocumentLibrarySpec);
-                    if (null != DocumentLibrary)
+                    var documentLibrary = libraryManager.TryGetLibrary(documentLibrarySpec);
+                    if (null != documentLibrary)
                     {
-                        foreach (var dataFile in DocumentLibrary.LibraryDetails.DataFiles)
+                        DocumentLibrarySpecs.Add(documentLibrarySpec);
+                        DocumentLibraries.Add(documentLibrary);
+                        foreach (var dataFile in documentLibrary.LibraryDetails.DataFiles)
                         {
                             listLibraries.Items.Add(dataFile);
                         }
-                        listLibraries.SelectedIndices.Add(0);
                     }
                 }
+
+                if (listLibraries.Items.Any())
+                    listLibraries.SelectedIndices.Add(0);
             }
             if (listLibraries.Items.Count == 0)
             {
@@ -100,8 +108,8 @@ namespace pwiz.Skyline.FileUI
         }
 
         public IDocumentUIContainer DocumentUIContainer { get; private set; }
-        public LibrarySpec DocumentLibrarySpec { get; private set; }
-        public Library DocumentLibrary { get; private set; }
+        public List<LibrarySpec> DocumentLibrarySpecs { get; private set; }
+        public List<Library> DocumentLibraries { get; private set; }
         public List<string> LibraryRunsRemovedList { get; private set; }
         public IEnumerable<ChromatogramSet> ChromatogramsRemovedList { get; private set; } 
 
@@ -195,18 +203,21 @@ namespace pwiz.Skyline.FileUI
                 {
                     foreach (var chromFileInfo in chrom.MSDataFileInfos)
                     {
-                        foreach (var dataFile in DocumentLibrary.LibraryDetails.DataFiles)
+                        foreach (var documentLibrary in DocumentLibraries)
                         {
-                            if (MeasuredResults.IsBaseNameMatch(chromFileInfo.FilePath.GetFileNameWithoutExtension(),
-                                                            Path.GetFileNameWithoutExtension(dataFile)))
+                            foreach (var dataFile in documentLibrary.LibraryDetails.DataFiles)
                             {
-                                int foundIndex = listLibraries.FindString(dataFile);
-                                if (ListBox.NoMatches != foundIndex)
+                                if (MeasuredResults.IsBaseNameMatch(chromFileInfo.FilePath.GetFileNameWithoutExtension(),
+                                    Path.GetFileNameWithoutExtension(dataFile)))
                                 {
-                                    LibraryRunsRemovedList.Add(dataFile);
-                                    listLibraries.Items.RemoveAt(foundIndex);
-                                    if (listLibraries.Items.Count == 0)
-                                        return;
+                                    int foundIndex = listLibraries.FindString(dataFile);
+                                    if (ListBox.NoMatches != foundIndex)
+                                    {
+                                        LibraryRunsRemovedList.Add(dataFile);
+                                        listLibraries.Items.RemoveAt(foundIndex);
+                                        if (listLibraries.Items.Count == 0)
+                                            return;
+                                    }
                                 }
                             }
                         }
@@ -294,7 +305,7 @@ namespace pwiz.Skyline.FileUI
         {
             using (new UpdateList(this, listResults))
             {
-                ChromatogramsRemovedList = listResults.Items.Cast<ManageResultsAction>().Select(a => a.Chromatograms);
+                ChromatogramsRemovedList = listResults.Items.Cast<ManageResultsAction>().Select(a => a.Chromatograms).ToArray();
                 listResults.Items.Clear();
             }
             UpdateReplicatesButtons();

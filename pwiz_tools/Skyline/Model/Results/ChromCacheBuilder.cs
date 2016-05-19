@@ -217,7 +217,7 @@ namespace pwiz.Skyline.Model.Results
                         if (null == inFile)
                         {
                             _currentFileInfo = new FileBuildInfo(fileInfo.RunStartTime,
-                                fileInfo.FileWriteTime ?? DateTime.Now, new MsInstrumentConfigInfo[0], null);
+                                fileInfo.FileWriteTime ?? DateTime.Now, new MsInstrumentConfigInfo[0], null, false);
                         }
                         else
                         {
@@ -264,6 +264,7 @@ namespace pwiz.Skyline.Model.Results
                     }
 
                     _currentFileInfo.IsSingleMatchMz = provider.IsSingleMzMatch;
+                    _currentFileInfo.HasMidasSpectra = provider.HasMidasSpectra;
 
                     // Start multiple threads to perform peak scoring.
                     _chromDataSets = new QueueWorker<PeptideChromDataSets>(null, ScoreWriteChromDataSets);
@@ -353,7 +354,8 @@ namespace pwiz.Skyline.Model.Results
             return new FileBuildInfo(cachedFile.RunStartTime,
                                      cachedFile.FileWriteTime,
                                      cachedFile.InstrumentInfoList,
-                                     cachedFile.IsSingleMatchMz);
+                                     cachedFile.IsSingleMatchMz,
+                                     cachedFile.HasMidasSpectra);
         }
 
         private MsDataFileImpl GetMsDataFile(string dataFilePathPart, int sampleIndex, LockMassParameters lockMassParameters, MsInstrumentConfigInfo msInstrumentConfigInfo, bool enableSimSpectrum, bool requireCentroidedMS1, bool requireCentroidedMS2)
@@ -1370,14 +1372,15 @@ namespace pwiz.Skyline.Model.Results
             : this(file.RunStartTime,
                    ChromCachedFile.GetLastWriteTime(new MsDataFilePath(file.FilePath)),
                    file.GetInstrumentConfigInfoList(),
-                   null)
+                   null, false)
         {
         }
 
         public FileBuildInfo(DateTime? startTime,
             DateTime lastWriteTime,
             IEnumerable<MsInstrumentConfigInfo> instrumentInfoList,
-            bool? isSingleMatchMz)
+            bool? isSingleMatchMz,
+            bool hasMidasSpectra)
         {
             StartTime = startTime;
             LastWriteTime = lastWriteTime;
@@ -1395,13 +1398,26 @@ namespace pwiz.Skyline.Model.Results
             get { return ChromCachedFile.IsSingleMatchMzFlags(Flags); }
             set
             {
-                Flags = 0;
+                Flags &= ~ChromCachedFile.FlagValues.single_match_mz_known;
+                Flags &= ~ChromCachedFile.FlagValues.single_match_mz;
                 if (value.HasValue)
                 {
                     Flags |= ChromCachedFile.FlagValues.single_match_mz_known;
                     if (value.Value)
                         Flags |= ChromCachedFile.FlagValues.single_match_mz;
                 }
+            }
+        }
+
+        public bool HasMidasSpectra
+        {
+            get { return (Flags & ChromCachedFile.FlagValues.has_midas_spectra) != 0; }
+            set
+            {
+                if (value)
+                    Flags |= ChromCachedFile.FlagValues.has_midas_spectra;
+                else
+                    Flags &= ~ChromCachedFile.FlagValues.has_midas_spectra;
             }
         }
 

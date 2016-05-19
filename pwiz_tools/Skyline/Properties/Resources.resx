@@ -9014,4 +9014,28 @@ Here are the last 3 errors:
   <data name="CommandArgs_IsolationListInstrumentType_The_instrument_type__0__is_not_valid_for_isolation_list_export" xml:space="preserve">
     <value>The instrument type {0} is not valid for isolation list export</value>
   </data>
+  <data name="MidasLibrary_SpecFilter_MIDAS_Spectral_Library" xml:space="preserve">
+    <value>MIDAS Spectral Library</value>
+  </data>
+  <data name="ViewLibSpectrumGraphItem_Title__0__1_" xml:space="preserve">
+    <value>{0}{1} m/z</value>
+  </data>
+  <data name="SkylineWindow_ManageResults_Failed_to_remove_library_runs_from_the_MIDAS_library_" xml:space="preserve">
+    <value>Failed to remove library runs from the MIDAS library.</value>
+  </data>
+  <data name="MidasLibrary_AddSpectra_Error_loading_MIDAS_library_for_adding_spectra_" xml:space="preserve">
+    <value>Error loading MIDAS library for adding spectra.</value>
+  </data>
+  <data name="MidasLibrary_AddSpectra_Adding_spectra_to_MIDAS_library" xml:space="preserve">
+    <value>Adding spectra to MIDAS library</value>
+  </data>
+  <data name="MidasLibrary_Load_Loading_MIDAS_library" xml:space="preserve">
+    <value>Loading MIDAS library</value>
+  </data>
+  <data name="MidasLibrary_Load_Error_reading_LibInfo_from_MIDAS_library" xml:space="preserve">
+    <value>Error reading LibInfo from MIDAS library</value>
+  </data>
+  <data name="MidasLibrary_AddSpectra_Reading_MIDAS_spectra" xml:space="preserve">
+    <value>Reading MIDAS spectra</value>
+  </data>
 </root>

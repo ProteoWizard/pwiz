@@ -611,7 +611,8 @@ namespace pwiz.Skyline.Model.Results
             value,
             use_for_retention_time_prediction,
             analyte_concentration,
-            sample_type
+            sample_type,
+            has_midas_spectra,
         }
 
         private static readonly IXmlElementHelper<OptimizableRegression>[] OPTIMIZATION_HELPERS =
@@ -640,14 +641,17 @@ namespace pwiz.Skyline.Model.Results
             if (helper != null)
                 OptimizationFunction = helper.Deserialize(reader);
 
-            var msDataFilePaths = new List<MsDataFileUri>();
+            var chromFileInfos = new List<ChromFileInfo>();
             var fileLoadIds = new List<string>();
             while (reader.IsStartElement(EL.sample_file) ||
                     reader.IsStartElement(EL.replicate_file) ||
                     reader.IsStartElement(EL.chromatogram_file))
             {
                 // Note that the file path is actually be a URI that encodes things like lockmass correction as well as filename
-                msDataFilePaths.Add(MsDataFileUri.Parse(reader.GetAttribute(ATTR.file_path)));
+                ChromFileInfo chromFileInfo = new ChromFileInfo(MsDataFileUri.Parse(reader.GetAttribute(ATTR.file_path)));
+                chromFileInfo = chromFileInfo.ChangeHasMidasSpectra(reader.GetBoolAttribute(ATTR.has_midas_spectra, false));
+                chromFileInfos.Add(chromFileInfo);
+                
                 string id = reader.GetAttribute(ATTR.id) ?? GetOrdinalSaveId(fileLoadIds.Count);
                 fileLoadIds.Add(id);
                 reader.Read();
@@ -659,7 +663,7 @@ namespace pwiz.Skyline.Model.Results
             }
             Annotations = SrmDocument.ReadAnnotations(reader);
 
-            MSDataFileInfos = msDataFilePaths.ConvertAll(path => new ChromFileInfo(path));
+            MSDataFileInfos = chromFileInfos;
             _fileLoadIds = fileLoadIds.ToArray();
 
             // Consume end tag
@@ -702,6 +706,7 @@ namespace pwiz.Skyline.Model.Results
                 {
                     writer.WriteAttribute(ATTR.modified_time, XmlConvert.ToString((DateTime)fileInfo.FileWriteTime, "yyyy-MM-ddTHH:mm:ss")); // Not L10N
                 }
+                writer.WriteAttribute(ATTR.has_midas_spectra, fileInfo.HasMidasSpectra, false);
 
                 // instrument information
                 WriteInstrumentConfigList(writer, fileInfo.InstrumentInfoList);
@@ -839,6 +844,7 @@ namespace pwiz.Skyline.Model.Results
         public DateTime? RunStartTime { get; private set; }
         public double MaxRetentionTime { get; private set; }
         public double MaxIntensity { get; private set; }
+        public bool HasMidasSpectra { get; private set; }
 
         public IList<MsInstrumentConfigInfo> InstrumentInfoList
         {
@@ -860,6 +866,11 @@ namespace pwiz.Skyline.Model.Results
             return ChangeProp(ImClone(this), im => im.FilePath = prop);
         }
 
+        public ChromFileInfo ChangeHasMidasSpectra(bool prop)
+        {
+            return ChangeProp(ImClone(this), im => im.HasMidasSpectra = prop);
+        }
+
         public ChromFileInfo ChangeInfo(ChromCachedFile fileInfo)
         {
             return ChangeProp(ImClone(this), im =>
@@ -870,6 +881,7 @@ namespace pwiz.Skyline.Model.Results
                                                      im.InstrumentInfoList = fileInfo.InstrumentInfoList.ToArray();
                                                      im.MaxRetentionTime = fileInfo.MaxRetentionTime;
                                                      im.MaxIntensity = fileInfo.MaxIntensity;
+                                                     im.HasMidasSpectra = fileInfo.HasMidasSpectra;
                                                  });
         }
 
@@ -902,6 +914,8 @@ namespace pwiz.Skyline.Model.Results
                 return false;
             if (!other.MaxRetentionTime.Equals(MaxRetentionTime))
                 return false;
+            if (HasMidasSpectra != other.HasMidasSpectra)
+                return false;
             if (!ArrayUtil.EqualsDeep(other.InstrumentInfoList, InstrumentInfoList))
                 return false;
             if (!ArrayUtil.EqualsDeep(other.RetentionTimeAlignments, RetentionTimeAlignments))
@@ -931,6 +945,7 @@ namespace pwiz.Skyline.Model.Results
                          (RetentionTimeAlignments == null ? 0 : RetentionTimeAlignments.GetHashCodeDeep());
                 result = (result * 397) ^ MaxIntensity.GetHashCode();
                 result = (result * 397) ^ MaxRetentionTime.GetHashCode();
+                result = (result*397) ^ HasMidasSpectra.GetHashCode();
                 return result;
             }
         }

@@ -91,6 +91,8 @@ namespace pwiz.Skyline.Model.Results
 
         public abstract bool IsSingleMzMatch { get; }
 
+        public virtual bool HasMidasSpectra { get { return false; } }
+
         public abstract void ReleaseMemory();
 
         public abstract void Dispose();
@@ -168,6 +170,9 @@ namespace pwiz.Skyline.Model.Results
 
             if (_chromIds.Count == 0)
                 throw new NoSrmDataException(FileInfo.FilePath);
+
+            // CONSIDER(kaipot): Some way to support mzML files converted from MIDAS wiff files
+            _hasMidasSpectra = (dataFile.IsABFile) && SpectraChromDataProvider.HasSpectrumData(dataFile);
 
             SetPercentComplete(50);
         }
@@ -316,6 +321,9 @@ namespace pwiz.Skyline.Model.Results
         {
             get { return false; }
         }
+
+        private bool _hasMidasSpectra;
+        public override bool HasMidasSpectra { get { return _hasMidasSpectra; } }
 
         public static bool HasChromatogramData(MsDataFileImpl dataFile)
         {
