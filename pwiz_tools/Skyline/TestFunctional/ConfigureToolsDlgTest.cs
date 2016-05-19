@@ -297,7 +297,7 @@ namespace pwiz.SkylineTestFunctional
                     configureToolsDlg.RemoveAllTools();
                     configureToolsDlg.AddDialog("ImWindowTest", exePath, _empty, _empty, true,
                                                 Resources.ReportSpecList_GetDefaults_Peptide_RT_Results); // Report passed via stdin. // Not L10N
-                    configureToolsDlg.AddDialog("ImWindowTestWithMacro", exePath, ToolMacros.INPUT_REPORT_TEMP_PATH,
+                    configureToolsDlg.AddDialog("ImWindowTestWithMacro", exePath, "\"" + ToolMacros.INPUT_REPORT_TEMP_PATH + "\"",
                                                 _empty, true, Resources.ReportSpecList_GetDefaults_Transition_Results);
                     // Report passed as an argument. // Not L10N
                     Assert.AreEqual(2, configureToolsDlg.ToolList.Count);
