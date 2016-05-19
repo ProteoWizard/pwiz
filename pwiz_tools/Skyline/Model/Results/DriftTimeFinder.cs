@@ -247,6 +247,12 @@ namespace pwiz.Skyline.Model.Results
                     //Id = nodeTran.Id
                 });
             }
+
+            if (!transitions.Any())
+            {
+                return true; // Nothing to do at this ms level
+            }
+
             var chorusUrl = filePath as ChorusUrl;
             IScanProvider scanProvider;
             if (null == chorusUrl)
