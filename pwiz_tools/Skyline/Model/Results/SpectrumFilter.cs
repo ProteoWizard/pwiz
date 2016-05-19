@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -603,8 +604,9 @@ namespace pwiz.Skyline.Model.Results
             #endregion
         }
 
-        private readonly Dictionary<IsolationWindowFilter, IList<SpectrumFilterPair>> _filterPairDictionary =
-            new Dictionary<IsolationWindowFilter, IList<SpectrumFilterPair>>();
+        // Has to be concurrent, because both the spectrum reader thread and chromatogram extraction thread use this
+        private readonly IDictionary<IsolationWindowFilter, IList<SpectrumFilterPair>> _filterPairDictionary =
+            new ConcurrentDictionary<IsolationWindowFilter, IList<SpectrumFilterPair>>();
 
         private IEnumerable<SpectrumFilterPair> FindFilterPairs(IsolationWindowFilter isoWin,
                                                                 FullScanAcquisitionMethod acquisitionMethod, bool ignoreIsolationScheme = false)
