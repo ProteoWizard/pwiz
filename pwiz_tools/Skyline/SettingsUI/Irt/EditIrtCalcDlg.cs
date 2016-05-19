@@ -1053,20 +1053,19 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 var standardPeptides = StandardPeptideList.OrderBy(peptide => peptide.Irt).ToArray();
 
                 var listTimes = new List<double>();
+                var listIrts = new List<double>();
                 foreach (var standardPeptide in standardPeptides)
                 {
                     double? time = retentionTimes.GetRetentionTime(standardPeptide.PeptideModSeq);
                     if (!time.HasValue)
                         continue;
                     listTimes.Add(time.Value);
+                    listIrts.Add(standardPeptide.Irt);
                 }
-                var listIrts = standardPeptides.Select(peptide => peptide.Irt).ToList();
-                if (listTimes.Count == standardPeptides.Length)
-                {
-                    RegressionLine line;
-                    if (RCalcIrt.TryGetRegressionLine(listTimes, listIrts, out line))
-                        return line;
-                }
+
+                RegressionLine line;
+                if (RCalcIrt.TryGetRegressionLine(listTimes, listIrts, out line))
+                    return line;
 
                 if (Items.Count > 0)
                 {
