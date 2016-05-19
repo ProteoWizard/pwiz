@@ -1832,7 +1832,7 @@ namespace pwiz.Skyline
                     using (var writer = new StreamWriter(saver.SafeName))
                     {
                         viewContext.Export(broker, ref status, viewInfo, writer,
-                            new DsvWriter(reportInvariant ? CultureInfo.InvariantCulture : LocalizationHelper.CurrentCulture, reportColSeparator));
+                            viewContext.GetDsvWriter(reportColSeparator));
                     }
 
                     broker.UpdateProgress(status.Complete());

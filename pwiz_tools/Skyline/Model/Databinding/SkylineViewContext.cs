@@ -34,6 +34,7 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.Databinding.Entities;
+using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -234,8 +235,28 @@ namespace pwiz.Skyline.Model.Databinding
                 char separator = saveFileDialog.FilterIndex == 2
                     ? TextUtil.SEPARATOR_TSV
                     : TextUtil.GetCsvSeparator(DataSchema.DataSchemaLocalizer.FormatProvider);
-                return ExportToFile(owner, viewInfo, saveFileDialog.FileName, new DsvWriter(DataSchema.DataSchemaLocalizer.FormatProvider, separator));
+                return ExportToFile(owner, viewInfo, saveFileDialog.FileName, GetDsvWriter(separator));
             }
+        }
+
+        public bool IsInvariantLanguage()
+        {
+            return ReferenceEquals(DataSchema.DataSchemaLocalizer, DataSchemaLocalizer.INVARIANT);
+        }
+
+        public DsvWriter GetDsvWriter(char separator)
+        {
+            DsvWriter dsvWriter = new DsvWriter(DataSchema.DataSchemaLocalizer.FormatProvider, separator);
+            if (IsInvariantLanguage())
+            {
+                dsvWriter.NumberFormatOverride = Formats.RoundTrip;
+            }
+            return dsvWriter;
+        }
+
+        public DsvWriter GetCsvWriter()
+        {
+            return GetDsvWriter(TextUtil.GetCsvSeparator(DataSchema.DataSchemaLocalizer.FormatProvider));
         }
 
         public bool ExportToFile(Control owner, ViewInfo viewInfo, string fileName, DsvWriter dsvWriter)
@@ -629,6 +650,19 @@ namespace pwiz.Skyline.Model.Databinding
             // Disable sorting by clicking on column headers because DataboundGridForm shows
             // context menu on left click.
             column.SortMode = DataGridViewColumnSortMode.Programmatic;
+            if (IsInvariantLanguage())
+            {
+                // When outputting floats and doubles as "Invariant" (e.g. for external tools) 
+                // always use the Round Trip number format
+                var type = propertyDescriptor.PropertyType;
+                if (type == typeof (float) ||
+                    type == typeof (float?) ||
+                    type == typeof (double) ||
+                    type == typeof (double?))
+                {
+                    column.DefaultCellStyle.Format = Formats.RoundTrip;
+                }
+            }
             return column;
         }
 

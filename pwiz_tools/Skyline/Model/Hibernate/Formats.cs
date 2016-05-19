@@ -36,6 +36,7 @@ namespace pwiz.Skyline.Model.Hibernate
         public const string FoldChange = "0.####";
         public const string CalibrationCurve = "0.0000E+0";
         public const string Concentration = "0.####";
+        public const string RoundTrip = "R";
         // ReSharper enable NonLocalizedString
     }
 }

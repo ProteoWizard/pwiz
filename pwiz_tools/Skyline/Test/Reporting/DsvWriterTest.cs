@@ -44,7 +44,7 @@ namespace pwiz.SkylineTest.Reporting
             SkylineViewContext viewContext = new DocumentGridViewContext(skylineDataSchema);
 
             string testFile = Path.Combine(TestContext.TestDir, "TestInvariantExport.csv");
-            var dsvWriter = new DsvWriter(CultureInfo.InvariantCulture, ',');
+            var dsvWriter = viewContext.GetCsvWriter();
             viewContext.ExportToFile(null, GetTestReport(skylineDataSchema), testFile, dsvWriter);
             string strExported = File.ReadAllText(testFile);
             Assert.AreEqual(ExpectedInvariantReport, strExported);
@@ -62,8 +62,7 @@ namespace pwiz.SkylineTest.Reporting
             SkylineViewContext viewContext = new DocumentGridViewContext(skylineDataSchema);
 
             string testFile = Path.Combine(TestContext.TestDir, "TestExportWithCurrentLanguage.csv");
-            char separator = TextUtil.GetCsvSeparator(cultureInfo);
-            var dsvWriter = new DsvWriter(cultureInfo, separator);
+            var dsvWriter = viewContext.GetCsvWriter();
             viewContext.ExportToFile(null, GetTestReport(skylineDataSchema), testFile, dsvWriter);
             string strExported = File.ReadAllText(testFile);
             var actualLines = strExported.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
@@ -72,7 +71,7 @@ namespace pwiz.SkylineTest.Reporting
             var invariantHeaders = expectedLines[0].Split(',');
             var expectedHeaders =
                 invariantHeaders.Select(header => ColumnCaptions.ResourceManager.GetString(header, cultureInfo) ?? header).ToArray();
-            var actualHeaders = actualLines[0].Split(separator);
+            var actualHeaders = actualLines[0].Split(TextUtil.GetCsvSeparator(cultureInfo));
             CollectionAssert.AreEqual(expectedHeaders, actualHeaders);
             // If the language in English, then the exported report will be identical to the invariant report except for the headers
             if (cultureInfo.Name == "en-US")

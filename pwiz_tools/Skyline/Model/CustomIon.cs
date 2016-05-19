@@ -225,18 +225,10 @@ namespace pwiz.Skyline.Model
 
         public void WriteXml(XmlWriter writer)
         {
-            if (Formula != null)
-            {
-                writer.WriteAttribute(ATTR.ion_formula, Formula);
-                writer.WriteAttributeNullable(ATTR.mass_average, AverageMass);
-                writer.WriteAttributeNullable(ATTR.mass_monoisotopic, MonoisotopicMass);
-            }
-            else
-            {
-                // Without a formula we can't rederive masses, so write at higher precision
-                writer.WriteAttributeNullableRoundTrip(ATTR.mass_average, AverageMass);
-                writer.WriteAttributeNullableRoundTrip(ATTR.mass_monoisotopic, MonoisotopicMass);
-            }
+            if (Formula != null)    
+                writer.WriteAttributeIfString(ATTR.ion_formula, Formula);
+            writer.WriteAttributeNullable(ATTR.mass_average, AverageMass);
+            writer.WriteAttributeNullable(ATTR.mass_monoisotopic, MonoisotopicMass);
             if (Name != null)
                 writer.WriteAttribute(ATTR.custom_ion_name, Name);
         }

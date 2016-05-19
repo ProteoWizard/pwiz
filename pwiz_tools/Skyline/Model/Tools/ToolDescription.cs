@@ -807,8 +807,7 @@ namespace pwiz.Skyline.Model.Tools
                 new ProgressStatus(string.Format(Resources.ReportSpec_ReportToCsvString_Exporting__0__report,
                     reportTitle));
             var writer = new StringWriter();
-            if (viewContext.Export(progressMonitor, ref status, viewInfo, writer, 
-                new DsvWriter(CultureInfo.InvariantCulture, TextUtil.SEPARATOR_CSV)))
+            if (viewContext.Export(progressMonitor, ref status, viewInfo, writer, viewContext.GetCsvWriter()))
             {
                 return writer.ToString();
             }

@@ -27,6 +27,7 @@ using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -124,7 +125,7 @@ namespace pwiz.Skyline.Controls.Databinding
             {
                 return viewContext.Export(this, viewInfo);
             }
-            return viewContext.ExportToFile(this, viewInfo, filename, new DsvWriter(InvariantLanguage ? CultureInfo.InvariantCulture : LocalizationHelper.CurrentCulture, separator));
+            return viewContext.ExportToFile(this, viewInfo, filename, viewContext.GetDsvWriter(separator));
         }
 
         private void Repopulate()

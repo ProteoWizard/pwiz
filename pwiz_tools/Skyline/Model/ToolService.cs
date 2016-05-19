@@ -100,7 +100,7 @@ namespace pwiz.Skyline.Model
                 viewSpec.Name));
             var writer = new StringWriter();
             if (viewContext.Export(progressMonitor, ref status, viewContext.GetViewInfo(null, viewSpec), writer,
-                new DsvWriter(CultureInfo.InvariantCulture, TextUtil.SEPARATOR_CSV)))
+                viewContext.GetCsvWriter()))
             {
                 return writer.ToString();
             }

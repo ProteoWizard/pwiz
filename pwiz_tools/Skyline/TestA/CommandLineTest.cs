@@ -307,8 +307,7 @@ namespace pwiz.SkylineTestA
             ViewInfo viewInfo = viewContext.GetViewInfo(PersistedViews.MainGroup.Id.ViewName(reportName));
             StringWriter writer = new StringWriter();
             IProgressStatus status = new ProgressStatus("Exporting report");
-            viewContext.Export(null, ref status, viewInfo, writer,
-                new DsvWriter(CultureInfo.CurrentCulture, TextUtil.GetCsvSeparator(LocalizationHelper.CurrentCulture)));
+            viewContext.Export(null, ref status, viewInfo, writer, viewContext.GetCsvWriter());
             var programmaticReport = writer.ToString();
 
             RunCommand("--in=" + docPath,

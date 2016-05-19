@@ -39,6 +39,7 @@ namespace pwiz.Common.DataBinding
 
         public CultureInfo CultureInfo { get; private set; }
         public char Separator { get; private set; }
+        public string NumberFormatOverride { get; set; }
 
         /// <summary>
         /// Writes out a row containing the column headers.
@@ -99,6 +100,10 @@ namespace pwiz.Common.DataBinding
                     try
                     {
                         var doubleValue = Convert.ToDouble(value);
+                        if (null != NumberFormatOverride)
+                        {
+                            return doubleValue.ToString(NumberFormatOverride, CultureInfo);
+                        }
                         if (null == formatAttribute || null == formatAttribute.Format)
                         {
                             return doubleValue.ToString(CultureInfo);

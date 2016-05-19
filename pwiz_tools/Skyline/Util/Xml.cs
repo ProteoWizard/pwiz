@@ -26,6 +26,7 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 
@@ -274,12 +275,6 @@ namespace pwiz.Skyline.Util
                 writer.WriteAttribute(name, value.Value);
         }
 
-        public static void WriteAttributeNullableRoundTrip(this XmlWriter writer, Enum name, double? value)
-        {
-            if (value.HasValue)
-                writer.WriteAttributeString(name, value.Value.ToString("G17", CultureInfo.InvariantCulture)); // Not L10N
-        }
-
         public static void WriteAttributeIfString(this XmlWriter writer, Enum name, string value)
         {
             if (!string.IsNullOrEmpty(value))
@@ -315,12 +310,12 @@ namespace pwiz.Skyline.Util
 
         public static void WriteAttribute(this XmlWriter writer, Enum name, double value)
         {
-            writer.WriteAttributeString(name, value.ToString(CultureInfo.InvariantCulture));
+            writer.WriteAttributeString(name, value.ToString(Formats.RoundTrip, CultureInfo.InvariantCulture));
         }
 
         public static void WriteAttribute(this XmlWriter writer, Enum name, float value)
         {
-            writer.WriteAttributeString(name, value.ToString(CultureInfo.InvariantCulture));
+            writer.WriteAttributeString(name, value.ToString(Formats.RoundTrip, CultureInfo.InvariantCulture));
         }
 
         public static void WriteStartElement(this XmlWriter writer, Enum name)
@@ -399,17 +394,12 @@ namespace pwiz.Skyline.Util
 
         public static void WriteAttribute(this XmlWriter writer, string name, double value)
         {
-            writer.WriteAttributeString(name, value.ToString(CultureInfo.InvariantCulture));
-        }
-
-        public static void WriteAttributeRoundTrip(this XmlWriter writer, string name, double value)
-        {
-            writer.WriteAttribute(name, value.ToString("G17", CultureInfo.InvariantCulture)); // Not L10N
+            writer.WriteAttributeString(name, value.ToString(Formats.RoundTrip, CultureInfo.InvariantCulture));
         }
 
         public static void WriteAttribute(this XmlWriter writer, string name, float value)
         {
-            writer.WriteAttributeString(name, value.ToString(CultureInfo.InvariantCulture));
+            writer.WriteAttributeString(name, value.ToString(Formats.RoundTrip, CultureInfo.InvariantCulture));
         }
 
         public static void WriteElement<TChild>(this XmlWriter writer, TChild child)
@@ -421,12 +411,12 @@ namespace pwiz.Skyline.Util
 
         public static void WriteElementString(this XmlWriter writer, Enum name, double child)
         {
-            writer.WriteElementString(name, child.ToString(CultureInfo.InvariantCulture));
+            writer.WriteElementString(name, child.ToString(Formats.RoundTrip, CultureInfo.InvariantCulture));
         }
 
         public static void WriteElementString(this XmlWriter writer, Enum name, float child)
         {
-            writer.WriteElementString(name, child.ToString(CultureInfo.InvariantCulture));
+            writer.WriteElementString(name, child.ToString(Formats.RoundTrip, CultureInfo.InvariantCulture));
         }
 
         public static void WriteElementString<TChild>(this XmlWriter writer, Enum name, TChild child)
@@ -438,12 +428,12 @@ namespace pwiz.Skyline.Util
 
         public static void WriteElementString(this XmlWriter writer, string name, double child)
         {
-            writer.WriteElementString(name, child.ToString(CultureInfo.InvariantCulture));
+            writer.WriteElementString(name, child.ToString(Formats.RoundTrip, CultureInfo.InvariantCulture));
         }
 
         public static void WriteElementString(this XmlWriter writer, string name, float child)
         {
-            writer.WriteElementString(name, child.ToString(CultureInfo.InvariantCulture));
+            writer.WriteElementString(name, child.ToString(Formats.RoundTrip, CultureInfo.InvariantCulture));
         }
 
         public static void WriteElementString<TChild>(this XmlWriter writer, string name, TChild child)
