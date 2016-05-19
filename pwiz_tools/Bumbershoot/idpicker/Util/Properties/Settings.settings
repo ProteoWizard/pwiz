@@ -81,6 +81,7 @@
   &lt;string&gt;Phenyx zscore;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Off zscore&lt;/string&gt;
   &lt;string&gt;Sequest optimized;MonteCarlo;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Linear sequest:xcorr;1 Ascending Linear sequest:deltacn&lt;/string&gt;
   &lt;string&gt;Sequest XCorr;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Off sequest:xcorr&lt;/string&gt;
+  &lt;string&gt;SpectraST optimized;MonteCarlo;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Linear dot;1 Ascending Linear delta;1 Descending Linear dot_bias&lt;/string&gt;
   &lt;string&gt;TagRecon optimized;MonteCarlo;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Linear myrimatch:mvh;1 Ascending Linear xcorr&lt;/string&gt;
   &lt;string&gt;TagRecon MVH;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Off myrimatch:mvh&lt;/string&gt;
   &lt;string&gt;TagRecon XCorr;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Off xcorr&lt;/string&gt;

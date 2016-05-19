@@ -1983,27 +1983,27 @@ namespace IDPicker
         #region Tutorial menu handlers
         private void glossaryToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Process.Start("http://fenchurch.mc.vanderbilt.edu/bumbershoot/idpicker/TutorialGlossary.html");
+            Process.Start("http://j.mp/idpicker-tutorial-0-glossary");
         }
 
         private void dataImportToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Process.Start("http://fenchurch.mc.vanderbilt.edu/bumbershoot/idpicker/TutorialDataImport.html");
+            Process.Start("http://j.mp/idpicker-tutorial-1-data-import");
         }
 
         private void proteinViewToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Process.Start("http://fenchurch.mc.vanderbilt.edu/bumbershoot/idpicker/TutorialProteinView.html");
+            Process.Start("http://j.mp/idpicker-tutorial-2-protein-view");
         }
 
         private void geneFeaturesToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Process.Start("http://fenchurch.mc.vanderbilt.edu/bumbershoot/idpicker/TutorialGeneFeatures.html");
+            Process.Start("http://j.mp/idpicker-tutorial-3-gene-features");
         }
 
         private void netGestaltToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Process.Start("http://fenchurch.mc.vanderbilt.edu/bumbershoot/idpicker/TutorialNetGestalt.html");
+            Process.Start("http://j.mp/idpicker-tutorial-4-netgestalt");
         }
         #endregion
 
