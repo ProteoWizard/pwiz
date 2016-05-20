@@ -19,6 +19,7 @@
 
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest
@@ -57,6 +58,14 @@ namespace pwiz.SkylineTest
             if (!eicarTestString.Equals(test))
             {
                 Assert.Fail("Could not read contents of the (completely harmless!) antivirus test file \"eicar_fake_threat.com\", probably because it was quarantined by antivirus software.  If your antivirus flagged on \"eicar_fake_threat.com\", don't panic - that's part of the test (see http://www.eicar.org/86-0-Intended-use.html).  Now go exclude the test directory from further antivirus scrutiny, as it causes file locking problems in the tests.");
+            }
+            if (File.Exists(eicarTestFile))  // Don't leave this lying around - it can cause problems with automated backups etc
+            {
+                Helpers.TryTwice(() =>
+                {
+                    File.WriteAllText(eicarTestFile, string.Empty); // So antivirus doesn't flag on recycle bin
+                    File.Delete(eicarTestFile);
+                }); 
             }
         }
     }
