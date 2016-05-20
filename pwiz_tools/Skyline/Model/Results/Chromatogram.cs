@@ -248,6 +248,12 @@ namespace pwiz.Skyline.Model.Results
                         CancelLoad(resultsLoad);
                         return;
                     }
+                    else if (results.IsLoaded)
+                    {
+                        // No need to continue
+                        _manager.EndProcessing(_document);
+                        return;
+                    }
 
                     try
                     {
@@ -545,6 +551,7 @@ namespace pwiz.Skyline.Model.Results
             }
 
             string dataFileName = Path.GetFileName(dataFilePath.FilePath);
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
             if (null != dataFileName)
             {
                 // Check the most common case where the file is in the same directory
