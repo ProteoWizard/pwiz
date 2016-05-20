@@ -1263,7 +1263,7 @@ namespace MSConvertGUI
             this.SetDefaultsButton.Name = "SetDefaultsButton";
             this.SetDefaultsButton.Size = new System.Drawing.Size(407, 28);
             this.SetDefaultsButton.TabIndex = 32;
-            this.SetDefaultsButton.Text = "Use these settings next time I start MSConvert";
+            this.SetDefaultsButton.Text = "Use these settings next time I start MSConvertGUI";
             this.SetDefaultsButton.UseVisualStyleBackColor = true;
             this.SetDefaultsButton.Click += new System.EventHandler(this.SetDefaultsButton_Click);
             // 
@@ -1274,7 +1274,7 @@ namespace MSConvertGUI
             this.AboutButton.Name = "AboutButton";
             this.AboutButton.Size = new System.Drawing.Size(175, 28);
             this.AboutButton.TabIndex = 33;
-            this.AboutButton.Text = "About MSConvert";
+            this.AboutButton.Text = "About MSConvertGUI";
             this.AboutButton.UseVisualStyleBackColor = true;
             this.AboutButton.Click += new System.EventHandler(this.AboutButtonClick);
             // 
@@ -1314,7 +1314,7 @@ namespace MSConvertGUI
             this.Controls.Add(this.SlidingPanel);
             this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.Name = "MainForm";
-            this.Text = "MSConvert";
+            this.Text = "MSConvertGUI";
             this.Load += new System.EventHandler(this.MainForm_Load);
             ((System.ComponentModel.ISupportInitialize)(this.FilterDGV)).EndInit();
             this.FilterGB.ResumeLayout(false);

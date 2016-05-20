@@ -40,9 +40,9 @@ namespace MSConvertGUI
         string AboutButtonHelpText = "Each control has a \"tooltip\": let your cursor rest atop a control for a moment to see a help message for that control.\r\n\r\n" +
             "For more in depth help, visit http://proteowizard.sourceforge.net/tools.shtml .  " +
             "The documentation there describing the command line version of msconvert will be useful for understanding this " +
-            "program, especially filters.  Actually, you will generally find the command line version to be more complete and " +
+            "program, especially filters.\r\n\r\nActually, you will generally find the command line version to be more current, complete and " +
             "flexible than this GUI version and may wish to treat this program as a learning tool for using the command line " +
-            "version.\r\n\r\nHere are the various tooltips in a more long lasting form:";
+            "version.\r\n\r\nTo repeat: IF YOU DO NOT SEE A NEEDED OPTION OR FILTER HERE, TRY USING THE COMMAND LINE VERSION (\"MSCONVERT.EXE\") INSTEAD.\r\n\r\nHere are the various tooltips in a more long lasting form:";
         System.Collections.SortedList sortedToolTips = new System.Collections.SortedList();
 
         private IList<KeyValuePair<string, string>> thresholdTypes = new KeyValuePair<string, string>[]
@@ -69,7 +69,7 @@ namespace MSConvertGUI
             cmdline_args = args;
             InitializeComponent();
 
-            Text = "MSConvert" + (Environment.Is64BitProcess ? " (64-bit)" : "");
+            Text = "MSConvertGUI" + (Environment.Is64BitProcess ? " (64-bit)" : "");
         }
 
         private void setFileBoxText(string text)
@@ -757,7 +757,7 @@ namespace MSConvertGUI
             setToolTip(this.ScanNumberHigh, "Highest scan number to include in the conversion (may be left blank).", "Subset");
             setToolTip(this.SubsetPanel, "Set values for one or more subset filters, then click Add.", "Subset");
             setToolTip(this.FilterBox, "This chooses the type of filter that you want to add next.");
-            setToolTip(this.AboutButton, "Provides information on using MSConvert.");
+            setToolTip(this.AboutButton, "Provides information on using MSConvertGUI.");
             setToolTip(this.FilterGB, "Use these controls to add to the conversion filter list.  The order of the filter list is significant.  In particular, vendor-supplied peakPicking must be first since it only works on raw, untransformed data.");
             setToolTip(this.StartButton, "Click here to begin the conversion process.");
             setToolTip(this.RemoveFileButton, "Select a file to be removed from the conversion list, then click here.");
