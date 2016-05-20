@@ -170,7 +170,6 @@ namespace pwiz.Skyline.Controls.Graphs
         public double RetentionWindow { get; set; }
 
         public double[] RetentionMsMs { get; set; }
-        public double[] MidasRetentionMsMs { get; set; }
         public double? SelectedRetentionMsMs { get; set; }
 
         public double[] AlignedRetentionMsMs { get; set; }
@@ -420,16 +419,6 @@ namespace pwiz.Skyline.Controls.Graphs
                         AddRetentionTimeAnnotation(graphPane, g, annotations, ptTop,
                             Resources.ChromGraphItem_AddAnnotations_ID, GraphObjType.ms_ms_id, color,
                             ScaleRetentionTime(retentionTime));
-                    }
-                }
-                if (MidasRetentionMsMs != null)
-                {
-                    foreach (var retentionTime in MidasRetentionMsMs)
-                    {
-                        var color = SelectedRetentionMsMs.HasValue && Equals((float) retentionTime, (float) SelectedRetentionMsMs)
-                            ? ColorSelected
-                            : COLOR_MSMSID_TIME;
-                        AddRetentionTimeAnnotation(graphPane, g, annotations, ptTop, string.Empty, GraphObjType.midas_spectrum, color, ScaleRetentionTime(retentionTime));
                     }
                 }
                 if (AlignedRetentionMsMs != null)
@@ -730,8 +719,11 @@ namespace pwiz.Skyline.Controls.Graphs
         public ScaledRetentionTime FindSpectrumRetentionTime(GraphObj graphObj)
         {
             var tag = graphObj.Tag as GraphObjTag;
-            if (null == tag || !ReferenceEquals(this, tag.ChromGraphItem) ||
-                (GraphObjType.ms_ms_id != tag.GraphObjType && GraphObjType.midas_spectrum != tag.GraphObjType))
+            if (null == tag || !ReferenceEquals(this, tag.ChromGraphItem))
+            {
+                return ScaledRetentionTime.ZERO;
+            }
+            if (GraphObjType.ms_ms_id != tag.GraphObjType)
             {
                 return ScaledRetentionTime.ZERO;
             }
@@ -806,7 +798,6 @@ namespace pwiz.Skyline.Controls.Graphs
             invalid,
 // ReSharper restore UnusedMember.Local
             ms_ms_id,
-            midas_spectrum,
             predicted_rt_window,
             aligned_ms_id,
             unaligned_ms_id,

@@ -45,8 +45,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>9283</ApplicationRevision>
-    <ApplicationVersion>3.5.1.9283</ApplicationVersion>
+    <ApplicationRevision>9711</ApplicationRevision>
+    <ApplicationVersion>3.5.1.9711</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -856,11 +856,6 @@
     <Compile Include="Model\Lib\ChromLib\Data\Protein.cs" />
     <Compile Include="Model\Lib\ChromLib\Data\SampleFile.cs" />
     <Compile Include="Model\Lib\ChromLib\Data\Transition.cs" />
-    <Compile Include="Model\Lib\Midas\DbSpectrum.cs" />
-    <Compile Include="Model\Lib\Midas\DbResultsFile.cs" />
-    <Compile Include="Model\Lib\Midas\DbLibInfo.cs" />
-    <Compile Include="Model\Lib\Midas\MidasLibrary.cs" />
-    <Compile Include="Model\Lib\Midas\MidasLibSpec.cs" />
     <Compile Include="Model\MProphetResultsHandler.cs" />
     <Compile Include="Model\MultiFileLoader.cs" />
     <Compile Include="Model\MultiProgressStatus.cs" />
@@ -2260,9 +2255,6 @@
     <Content Include="Resources\Locked.bmp" />
     <Content Include="Resources\Pindownlight.bmp" />
     <Content Include="Resources\Pinleftlight.bmp" />
-    <EmbeddedResource Include="Model\Lib\Midas\mapping.xml">
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
     <Content Include="Resources\Replicate.bmp" />
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\APOA1.sky" />
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\Biognosys.sky" />

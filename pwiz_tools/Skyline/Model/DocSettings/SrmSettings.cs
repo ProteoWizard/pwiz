@@ -27,7 +27,6 @@ using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
-using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Optimization;
@@ -39,7 +38,6 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Model.Lib;
-using pwiz.Skyline.Model.Lib.Midas;
 
 namespace pwiz.Skyline.Model.DocSettings
 {
@@ -885,7 +883,7 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         public double[] GetRetentionTimesNotAlignedTo(MsDataFileUri fileNotAlignedTo, string peptideSequence,
-            ExplicitMods explicitMods, SignedMz[] precursorMzs)
+            ExplicitMods explicitMods)
         {
             var times = new List<double>();
             string basename = fileNotAlignedTo.GetFileNameWithoutExtension();
@@ -893,28 +891,27 @@ namespace pwiz.Skyline.Model.DocSettings
             var modifiedSequences = GetTypedSequences(peptideSequence, explicitMods)
                 .Select(typedSequence => typedSequence.ModifiedSequence).ToArray();
 
-            foreach (var library in PeptideSettings.Libraries.Libraries.Where(library => library != null))
+            foreach (var library in PeptideSettings.Libraries.Libraries)
             {
-                if (library is MidasLibrary)
+                if (null == library)
                 {
-                    foreach (var midasSpectra in precursorMzs.Select(precursorMz => GetMidasSpectra(precursorMz.Value)))
-                    {
-                        times.AddRange(midasSpectra.Where(spectrum => spectrum.RetentionTime.HasValue && !Equals(spectrum.FileName, fileNotAlignedTo.GetFileName()))
-                                                   .Select(spectrum => spectrum.RetentionTime.GetValueOrDefault()));
-                    }
+                    continue;
                 }
-                else
+                foreach (var source in library.ListRetentionTimeSources())
                 {
-                    foreach (var source in library.ListRetentionTimeSources())
+                    if (MeasuredResults.IsBaseNameMatch(source.Name, basename))
                     {
-                        if (MeasuredResults.IsBaseNameMatch(source.Name, basename) ||
-                            (null != fileAlignments && null != fileAlignments.RetentionTimeAlignments.Find(source.Name)))
+                        continue;
+                    }
+                    if (null != fileAlignments)
+                    {
+                        if (null != fileAlignments.RetentionTimeAlignments.Find(source.Name))
                         {
                             continue;
                         }
-                        int? indexIgnore = null;
-                        times.AddRange(library.GetRetentionTimesWithSequences(source.Name, modifiedSequences, ref indexIgnore));
                     }
+                    int? indexIgnore = null;
+                    times.AddRange(library.GetRetentionTimesWithSequences(source.Name, modifiedSequences, ref indexIgnore));
                 }
             }
             return times.ToArray();
@@ -1008,12 +1005,6 @@ namespace pwiz.Skyline.Model.DocSettings
                    let key = new LibKey(typedSequence.ModifiedSequence, charge)
                    from spectrumInfo in libraries.GetSpectra(key, typedSequence.LabelType, true)
                    select spectrumInfo;
-        }
-
-        public IEnumerable<SpectrumInfo> GetMidasSpectra(double precursorMz)
-        {
-            return PeptideSettings.Libraries.MidasLibraries.SelectMany(
-                lib => lib.GetSpectra(new LibKey(precursorMz), IsotopeLabelType.light, LibraryRedundancy.all));
         }
 
         /// <summary>

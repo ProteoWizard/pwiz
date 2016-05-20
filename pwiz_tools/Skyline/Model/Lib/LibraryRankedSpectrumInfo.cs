@@ -94,21 +94,13 @@ namespace pwiz.Skyline.Model.Lib
             var calcMatchPre = settings.GetPrecursorCalc(labelType, lookupMods);
             var calcMatch = settings.GetFragmentCalc(labelType, lookupMods);
             var calcPredict = settings.GetFragmentCalc(group.LabelType, lookupMods);
-            if (!string.IsNullOrEmpty(rp.sequence))
-            {
-                rp.precursorMz = SequenceMassCalc.GetMZ(calcMatchPre.GetPrecursorMass(rp.sequence), rp.precursorCharge);
-                rp.massPreMatch = calcMatch.GetPrecursorFragmentMass(rp.sequence);
-                rp.massesMatch = calcMatch.GetFragmentIonMasses(rp.sequence);
-            }
-            else
-            {
-                rp.precursorMz = 0.0;
-                rp.massPreMatch = 0.0;
-                rp.massesMatch = new double[0, 0];
-            }
+            rp.precursorMz = SequenceMassCalc.GetMZ(calcMatchPre.GetPrecursorMass(rp.sequence),
+                                                    rp.precursorCharge);
+            rp.massPreMatch = calcMatch.GetPrecursorFragmentMass(rp.sequence);
             rp.massPrePredict = rp.massPreMatch;
+            rp.massesMatch = calcMatch.GetFragmentIonMasses(rp.sequence);
             rp.massesPredict = rp.massesMatch;
-            if (!ReferenceEquals(calcPredict, calcMatch) && !string.IsNullOrEmpty(rp.sequence))
+            if (!ReferenceEquals(calcPredict, calcMatch))
             {
                 rp.massPrePredict = calcPredict.GetPrecursorFragmentMass(rp.sequence);
                 rp.massesPredict = calcPredict.GetFragmentIonMasses(rp.sequence);

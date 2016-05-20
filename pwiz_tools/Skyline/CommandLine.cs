@@ -36,7 +36,6 @@ using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.BlibData;
-using pwiz.Skyline.Model.Lib.Midas;
 using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
@@ -1697,8 +1696,6 @@ namespace pwiz.Skyline
                 librarySpec = new NistLibSpec(name, path);
             else if (Equals(ext, SpectrastSpec.EXT))
                 librarySpec = new SpectrastSpec(name, path);
-            else if (Equals(ext, MidasLibSpec.EXT))
-                librarySpec = new MidasLibSpec(name, path);
             else
             {
                 _out.WriteLine(Resources.CommandLine_SetLibrary_Error__The_file__0__is_not_a_supported_spectral_library_file_format_, path);

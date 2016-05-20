@@ -1718,7 +1718,6 @@ namespace pwiz.Skyline.Model.Results
         {
             single_match_mz_known = 0x01,
             single_match_mz = 0x02,
-            has_midas_spectra = 0x04
         }
 
         public static DateTime GetLastWriteTime(MsDataFileUri filePath)
@@ -1731,11 +1730,6 @@ namespace pwiz.Skyline.Model.Results
             if ((flags & FlagValues.single_match_mz_known) == 0)
                 return null;
             return (flags & FlagValues.single_match_mz) != 0;            
-        }
-
-        private static bool HasMidasSpectraFlags(FlagValues flags)
-        {
-            return (flags & FlagValues.has_midas_spectra) != 0;
         }
 
         public ChromCachedFile(MsDataFileUri filePath, FlagValues flags, DateTime fileWriteTime, DateTime? runStartTime,
@@ -1784,11 +1778,6 @@ namespace pwiz.Skyline.Model.Results
         public bool? IsSingleMatchMz
         {
             get { return IsSingleMatchMzFlags(Flags); }
-        }
-
-        public bool HasMidasSpectra
-        {
-            get { return HasMidasSpectraFlags(Flags); }
         }
 
         public ChromCachedFile RelocateScanIds(long locationScanIds)

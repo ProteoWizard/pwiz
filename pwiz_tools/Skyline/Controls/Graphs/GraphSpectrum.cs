@@ -363,15 +363,15 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             // Check for appropriate spectrum to load
-            SrmSettings settings = DocumentUI.Settings;
-            PeptideLibraries libraries = settings.PeptideSettings.Libraries;
             bool available = false;
-            if (nodeGroup == null || (!nodeGroup.HasLibInfo && !libraries.HasMidasLibrary))
+            if (nodeGroup == null || !nodeGroup.HasLibInfo)
             {
                 _spectra = null;
             }
             else
             {
+                SrmSettings settings = DocumentUI.Settings;
+                PeptideLibraries libraries = settings.PeptideSettings.Libraries;
                 TransitionGroup group = nodeGroup.TransitionGroup;
                 TransitionDocNode transition = (nodeTranTree == null ? null : nodeTranTree.DocNode);
                 string lookupSequence = group.Peptide.TextId; // Sequence or custom ion id
@@ -391,7 +391,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         {
                             try
                             {
-                                UpdateSpectra(nodeGroup, lookupSequence, lookupMods);
+                                UpdateSpectra(group, lookupSequence, lookupMods);
                                 UpdateToolbar();
                             }
                             catch (Exception)
@@ -627,17 +627,15 @@ namespace pwiz.Skyline.Controls.Graphs
             return index;
         }
 
-        private void UpdateSpectra(TransitionGroupDocNode nodeGroup, string lookupSequence, ExplicitMods lookupMods)
+        private void UpdateSpectra(TransitionGroup group, string lookupSequence, ExplicitMods lookupMods)
         {
-            _spectra = GetSpectra(nodeGroup, lookupSequence, lookupMods);
-            if (!_spectra.Any())
-                _spectra = null;
+            _spectra = GetSpectra(group, lookupSequence, lookupMods);
         }
 
-        private IList<SpectrumDisplayInfo> GetSpectra(TransitionGroupDocNode nodeGroup, string lookupSequence, ExplicitMods lookupMods)
+        private IList<SpectrumDisplayInfo> GetSpectra(TransitionGroup group, string lookupSequence, ExplicitMods lookupMods)
         {
             var settings = DocumentUI.Settings;
-            var charge = nodeGroup.PrecursorCharge;
+            int charge = group.PrecursorCharge;
             var spectra = settings.GetBestSpectra(lookupSequence, charge, lookupMods).Select(s => new SpectrumDisplayInfo(s)).ToList();
             // Showing redundant spectra is only supported for full-scan filtering when
             // the document has results files imported.
@@ -648,8 +646,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 var spectraRedundant = new List<SpectrumDisplayInfo>();
                 var dictReplicateNameFiles = new Dictionary<string, HashSet<string>>();
-                foreach (var spectrumInfo in settings.GetRedundantSpectra(lookupSequence, charge, nodeGroup.TransitionGroup.LabelType, lookupMods).Concat(
-                                             settings.GetMidasSpectra(nodeGroup.PrecursorMz)))
+                foreach (var spectrumInfo in settings.GetRedundantSpectra(lookupSequence, charge, group.LabelType, lookupMods))
                 {
                     var matchingFile = settings.MeasuredResults.FindMatchingMSDataFile(MsDataFileUri.Parse(spectrumInfo.FilePath));
                     if (matchingFile == null)

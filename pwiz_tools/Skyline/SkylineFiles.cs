@@ -47,7 +47,6 @@ using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.BlibData;
-using pwiz.Skyline.Model.Lib.Midas;
 using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
@@ -2342,60 +2341,30 @@ namespace pwiz.Skyline
                                 var libs = new List<Library>(lib.Libraries);
                                 for (int i = 0; i < libSpecs.Count; i++)
                                 {
-                                    if (libSpecs[i].IsDocumentLibrary || libSpecs[i] is MidasLibSpec)
+                                    if (libSpecs[i].IsDocumentLibrary)
                                     {
                                         libSpecs.RemoveAt(i);
                                         libs.RemoveAt(i);
                                     }
                                 }
                                 return lib.ChangeDocumentLibrary(false)
-                                          .ChangeLibraries(libSpecs.ToArray(), libs.ToArray());
+                                    .ChangeLibraries(libSpecs.ToArray(), libs.ToArray());
                             }));
                         }
                         else if (dlg.LibraryRunsRemovedList.Count > 0)
                         {
-                            var releaseLibraries = false;
                             BiblioSpecLiteLibrary docBlib;
                             if (DocumentUI.Settings.PeptideSettings.Libraries.TryGetDocumentLibrary(out docBlib))
                             {
                                 try
                                 {
                                     docBlib.DeleteDataFiles(dlg.LibraryRunsRemovedList.ToArray(), this);
-                                    releaseLibraries = true;
+                                    _libraryManager.ReloadLibrary(this, dlg.DocumentLibrarySpec);
                                 }
                                 catch (Exception x)
                                 {
                                     throw new IOException(TextUtil.LineSeparate(Resources.SkylineWindow_ManageResults_Failed_to_remove_library_runs_from_the_document_library_, x.Message));
                                 }
-                            }
-
-                            foreach (var midasLib in DocumentUI.Settings.PeptideSettings.Libraries.MidasLibraries)
-                            {
-                                try
-                                {
-                                    midasLib.RemoveResultsFiles(dlg.LibraryRunsRemovedList.ToArray());
-                                    releaseLibraries = true;
-                                }
-                                catch (Exception x)
-                                {
-                                    throw new IOException(TextUtil.LineSeparate(Resources.SkylineWindow_ManageResults_Failed_to_remove_library_runs_from_the_MIDAS_library_, x.Message));
-                                }
-                            }
-
-                            if (releaseLibraries)
-                            {
-                                var libSpecs = dlg.DocumentLibrarySpecs.ToArray();
-                                var libSpecNames = libSpecs.Select(libSpec => libSpec.Name);
-                                _libraryManager.ReleaseLibraries(libSpecs);
-                                var settings = doc.Settings.ChangePeptideLibraries(lib =>
-                                {
-                                    var listLib = new List<Library>(lib.Libraries);
-                                    var i = lib.LibrarySpecs.IndexOf(spec => libSpecNames.Contains(spec.Name));
-                                    if (i != -1)
-                                        listLib[i] = null;
-                                    return lib.ChangeLibraries(listLib);
-                                });
-                                doc = doc.ChangeSettings(settings);
                             }
                         }
 
@@ -2403,23 +2372,6 @@ namespace pwiz.Skyline
                         if (results == null)
                             return doc;
                         var listChrom = new List<ChromatogramSet>(dlg.Chromatograms);
-
-                        // Set HasMidasSpectra = false for file infos
-                        var removedFileNames = dlg.LibraryRunsRemovedList.Select(Path.GetFileName).ToArray();
-                        for (var i = 0; i < listChrom.Count; i++)
-                        {
-                            var infos = new List<ChromFileInfo>();
-                            foreach (var info in listChrom[i].MSDataFileInfos)
-                            {
-                                var infoToAdd = info.HasMidasSpectra && removedFileNames.Contains(info.FilePath.GetFileName())
-                                    ? info.ChangeHasMidasSpectra(false)
-                                    : info;
-                                infos.Add(infoToAdd);
-                            }
-                            if (!ArrayUtil.ReferencesEqual(listChrom[i].MSDataFileInfos, infos))
-                                listChrom[i] = listChrom[i].ChangeMSDataFileInfos(infos);
-                        }
-
                         if (ArrayUtil.ReferencesEqual(results.Chromatograms, listChrom))
                             return doc;
                         results = listChrom.Count > 0 ? results.ChangeChromatograms(listChrom.ToArray()) : null;
@@ -2442,9 +2394,6 @@ namespace pwiz.Skyline
 
                             string docLibCachePath = BiblioSpecLiteLibrary.GetLibraryCachePath(docLibPath);
                             FileEx.SafeDelete(docLibCachePath);
-
-                            string midasLibPath = MidasLibSpec.GetLibraryFileName(DocumentFilePath);
-                            FileEx.SafeDelete(midasLibPath);
                         }
                         catch (FileEx.DeleteException deleteException)
                         {

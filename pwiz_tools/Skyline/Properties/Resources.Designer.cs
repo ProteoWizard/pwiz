@@ -14541,60 +14541,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Adding spectra to MIDAS library.
-        /// </summary>
-        public static string MidasLibrary_AddSpectra_Adding_spectra_to_MIDAS_library {
-            get {
-                return ResourceManager.GetString("MidasLibrary_AddSpectra_Adding_spectra_to_MIDAS_library", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Error loading MIDAS library for adding spectra..
-        /// </summary>
-        public static string MidasLibrary_AddSpectra_Error_loading_MIDAS_library_for_adding_spectra_ {
-            get {
-                return ResourceManager.GetString("MidasLibrary_AddSpectra_Error_loading_MIDAS_library_for_adding_spectra_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Reading MIDAS spectra.
-        /// </summary>
-        public static string MidasLibrary_AddSpectra_Reading_MIDAS_spectra {
-            get {
-                return ResourceManager.GetString("MidasLibrary_AddSpectra_Reading_MIDAS_spectra", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Error reading LibInfo from MIDAS library.
-        /// </summary>
-        public static string MidasLibrary_Load_Error_reading_LibInfo_from_MIDAS_library {
-            get {
-                return ResourceManager.GetString("MidasLibrary_Load_Error_reading_LibInfo_from_MIDAS_library", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Loading MIDAS library.
-        /// </summary>
-        public static string MidasLibrary_Load_Loading_MIDAS_library {
-            get {
-                return ResourceManager.GetString("MidasLibrary_Load_Loading_MIDAS_library", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to MIDAS Spectral Library.
-        /// </summary>
-        public static string MidasLibrary_SpecFilter_MIDAS_Spectral_Library {
-            get {
-                return ResourceManager.GetString("MidasLibrary_SpecFilter_MIDAS_Spectral_Library", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to The cache file has not been loaded yet..
         /// </summary>
         public static string MinimizeResultsDlg_ChromCacheMinimizer_The_cache_file_has_not_been_loaded_yet {
@@ -22095,16 +22041,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to remove library runs from the MIDAS library..
-        /// </summary>
-        public static string SkylineWindow_ManageResults_Failed_to_remove_library_runs_from_the_MIDAS_library_ {
-            get {
-                return ResourceManager.GetString("SkylineWindow_ManageResults_Failed_to_remove_library_runs_from_the_MIDAS_library_" +
-                        "", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Manage results.
         /// </summary>
         public static string SkylineWindow_ManageResults_Manage_results {
@@ -27271,15 +27207,6 @@ namespace pwiz.Skyline.Properties {
         public static string ViewLibraryPepMatching_AddProteomePeptides_Skipping__0__already_present {
             get {
                 return ResourceManager.GetString("ViewLibraryPepMatching_AddProteomePeptides_Skipping__0__already_present", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0}{1} m/z.
-        /// </summary>
-        public static string ViewLibSpectrumGraphItem_Title__0__1_ {
-            get {
-                return ResourceManager.GetString("ViewLibSpectrumGraphItem_Title__0__1_", resourceCulture);
             }
         }
         

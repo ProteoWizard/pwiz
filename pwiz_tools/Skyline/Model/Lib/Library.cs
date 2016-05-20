@@ -12,14 +12,13 @@
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY C:\proj\pwiz\pwiz\pwiz_tools\Skyline\Model\Lib\Library.csKIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -31,12 +30,10 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib.ChromLib;
-using pwiz.Skyline.Model.Lib.Midas;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
-using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Lib
 {
@@ -64,22 +61,13 @@ namespace pwiz.Skyline.Model.Lib
         protected override bool StateChanged(SrmDocument document, SrmDocument previous)
         {
             return previous == null ||
-                !ReferenceEquals(document.Settings.PeptideSettings.Libraries, previous.Settings.PeptideSettings.Libraries) ||
-                !ReferenceEquals(document.Settings.MeasuredResults, previous.Settings.MeasuredResults);
+                !ReferenceEquals(document.Settings.PeptideSettings.Libraries,
+                                    previous.Settings.PeptideSettings.Libraries);
         }
 
         protected override string IsNotLoadedExplained(SrmDocument document)
         {
             PeptideLibraries libraries = document.Settings.PeptideSettings.Libraries;
-            if (document.Settings.MeasuredResults != null)
-            {
-                var missingFiles = MidasLibrary.GetMissingFiles(document, new Library[0]);
-                if (missingFiles.Any())
-                {
-                    return TextUtil.LineSeparate("MIDAS library is missing files:", // Not L10N
-                        TextUtil.LineSeparate(missingFiles));
-                }
-            }
             return !libraries.HasLibraries ? null : libraries.IsNotLoadedExplained;
         }
 
@@ -100,11 +88,6 @@ namespace pwiz.Skyline.Model.Lib
             if (tag == null)
                 return false;
             PeptideLibraries libraries = container.Document.Settings.PeptideSettings.Libraries;
-            var missingMidasFiles = tag as string[];
-            if (missingMidasFiles != null)
-            {
-                return !missingMidasFiles.SequenceEqual(MidasLibrary.GetMissingFiles(container.Document, new Library[0]));
-            }
             return !libraries.LibrarySpecs.Contains((LibrarySpec)tag);
         }
 
@@ -126,27 +109,6 @@ namespace pwiz.Skyline.Model.Lib
                         return false;
                     }
                     dictLibraries.Add(spec.Name, library);
-                }
-
-                var missingMidasFiles = MidasLibrary.GetMissingFiles(document, libraries.Libraries);
-                var midasLibSpec = libraries.MidasLibrarySpecs.FirstOrDefault();
-                var newMidasLibSpec = missingMidasFiles.Any() && midasLibSpec == null;
-                MidasLibrary midasLibrary = null;
-                if (missingMidasFiles.Any())
-                {
-                    if (midasLibSpec == null)
-                    {
-                        // Need to add MIDAS LibSpec to document
-                        var midasLibPath = MidasLibSpec.GetLibraryFileName(container.DocumentFilePath);
-                        midasLibSpec = (MidasLibSpec)LibrarySpec.CreateFromPath(MidasLibSpec.DEFAULT_NAME, midasLibPath);
-                    }
-                    MidasLibrary.AddSpectra(midasLibSpec.FilePath, missingMidasFiles.Select(f => new MsDataFilePath(f)).ToArray(), new LoadMonitor(this, container, null));
-                    if (!newMidasLibSpec)
-                        ReloadLibraries(container, midasLibSpec);
-                    midasLibrary = (MidasLibrary) LoadLibrary(midasLibSpec, () => new LoadMonitor(this, container, !newMidasLibSpec ? midasLibSpec : null));
-
-                    if (!dictLibraries.ContainsKey(midasLibSpec.Name))
-                        dictLibraries.Add(midasLibSpec.Name, midasLibrary);
                 }
 
                 SrmDocument docNew;
@@ -174,32 +136,18 @@ namespace pwiz.Skyline.Model.Lib
                         }
                     }
                     // If nothing changed, end without changing the document.
-                    if (!changed && !newMidasLibSpec)
+                    if (!changed)
                     {
                         return false;
                     }
-
-                    docNew = null;
-                    if (newMidasLibSpec)
-                    {
-                        // We need to add this MIDAS LibrarySpec to the document
-                        var libSpecs = libraries.LibrarySpecs.ToList();
-                        libSpecs.Add(midasLibSpec);
-                        docNew = docCurrent.ChangeSettings(docCurrent.Settings.ChangePeptideLibraries(libs => libs.ChangeLibrarySpecs(libSpecs)));
-                        libraries = docNew.Settings.PeptideSettings.Libraries;
-                        list.Add(midasLibrary);
-                        docNew.Settings.UpdateLists(container.DocumentFilePath);
-                    }
-
                     libraries = libraries.ChangeLibraries(list.ToArray());
                     using (var settingsChangeMonitor = new SrmSettingsChangeMonitor(
                             new LoadMonitor(this, container, null), Resources.LibraryManager_LoadBackground_Updating_library_settings_for__0_, container, docCurrent))
                     {
                         try
                         {
-                            docNew = docNew ?? docCurrent;
-                            docNew = docNew.ChangeSettings(docNew.Settings.ChangePeptideSettings(
-                                docNew.Settings.PeptideSettings.ChangeLibraries(libraries)), settingsChangeMonitor);
+                            docNew = docCurrent.ChangeSettings(docCurrent.Settings.ChangePeptideSettings(
+                                docCurrent.Settings.PeptideSettings.ChangeLibraries(libraries)), settingsChangeMonitor);
                         }
                         catch (InvalidDataException x)
                         {
@@ -216,7 +164,7 @@ namespace pwiz.Skyline.Model.Lib
             }
             finally
             {
-                foreach (var library in dictLibraries.Values.Where(lib => lib.ReadStream != null))
+                foreach (var library in dictLibraries.Values)
                     library.ReadStream.CloseStream();
                 EndProcessing(docCurrent);
             }
@@ -269,27 +217,23 @@ namespace pwiz.Skyline.Model.Lib
             return LoadLibrary(spec, () => new LoadMonitor(this, container, spec));
         }
 
-        public void ReloadLibraries(IDocumentContainer container, params LibrarySpec[] specs)
+        public void ReloadLibrary(IDocumentContainer container, LibrarySpec spec)
         {
             lock (_loadedLibraries)
             {
-                foreach (var spec in specs)
-                {
-                    _loadedLibraries.Remove(spec.Name);
-                }
+                string name = spec.Name;
+                _loadedLibraries.Remove(name);
 
-                ForDocumentLibraryReload(container, specs.Select(spec => spec.Name).ToArray());
+                ForDocumentLibraryReload(container, name);
             }
         }
 
-        public void ReleaseLibraries(params LibrarySpec[] specs)
+        public void ReleaseLibrary(LibrarySpec spec)
         {
             lock (_loadedLibraries)
             {
-                foreach (var spec in specs)
-                {
-                    _loadedLibraries.Remove(spec.Name);
-                }
+                string name = spec.Name;
+                _loadedLibraries.Remove(name);
             }
         }
 
@@ -370,14 +314,14 @@ namespace pwiz.Skyline.Model.Lib
                     // make sure it is reloaded into the document, by resetting all
                     // library-specs.  Do this inside the lock to avoid library loading
                     // happening during this check.
-                    ForDocumentLibraryReload(container, new[] {name});
+                    ForDocumentLibraryReload(container, name);
                 }
 
                 return success;
-            }
+            }            
         }
 
-        private static void ForDocumentLibraryReload(IDocumentContainer container, string[] specs)
+        private static void ForDocumentLibraryReload(IDocumentContainer container, string name)
         {
             var docOriginal = container.Document;
             if (docOriginal == null)
@@ -385,7 +329,7 @@ namespace pwiz.Skyline.Model.Lib
             var librarySettings = docOriginal.Settings.PeptideSettings.Libraries;
             if (!librarySettings.HasLibraries)
                 return;
-            int iSpec = librarySettings.LibrarySpecs.IndexOf(spec => spec != null && specs.Contains(spec.Name));
+            int iSpec = librarySettings.LibrarySpecs.IndexOf(spec => spec != null && Equals(name, spec.Name));
             if (iSpec == -1 || librarySettings.Libraries[iSpec] == null)
                 return;
 
@@ -398,7 +342,7 @@ namespace pwiz.Skyline.Model.Lib
                         lib =>
                             {
                                 var listLib = new List<Library>(lib.Libraries);
-                                int i = lib.LibrarySpecs.IndexOf(spec => specs.Contains(spec.Name));
+                                int i = lib.LibrarySpecs.IndexOf(spec => Equals(name, spec.Name));
                                 if (i != -1)
                                     listLib[i] = null;
                                 return lib.ChangeLibraries(listLib);
@@ -1140,8 +1084,6 @@ namespace pwiz.Skyline.Model.Lib
                 return new NistLibSpec(name, path);
             else if (Equals(ext, SpectrastSpec.EXT))
                 return new SpectrastSpec(name, path);
-            else if (Equals(ext, MidasLibSpec.EXT))
-                return new MidasLibSpec(name, path);
             return null;
         }
 
@@ -1719,8 +1661,6 @@ namespace pwiz.Skyline.Model.Lib
     /// </summary>
     public struct LibKey
     {
-        private const byte PRECURSOR_MAGIC_BYTE = (byte) '#';
-
         private readonly byte[] _key;
 
         public LibKey(string sequence, int charge)
@@ -1735,27 +1675,14 @@ namespace pwiz.Skyline.Model.Lib
             Array.Copy(sequence, start, _key, 1, len);
         }
 
-        public LibKey(double precursorMz, double? retentionTime = null)
-        {
-            _key = !retentionTime.HasValue ? new byte[1 + sizeof(double)] : new byte[1 + 2*sizeof(double)];
-            _key[0] = PRECURSOR_MAGIC_BYTE;
-            Array.Copy(BitConverter.GetBytes(precursorMz), 0, _key, 1, sizeof(double));
-            if (retentionTime.HasValue)
-                Array.Copy(BitConverter.GetBytes(retentionTime.Value), 0, _key, 1 + sizeof(double), sizeof(double));
-        }
-
         private LibKey(byte[] key)
         {
             _key = key;
         }
 
-        public bool IsPrecursorKey { get { return _key.Length >= 1 + sizeof(double) && _key[0] == PRECURSOR_MAGIC_BYTE; } }
-        public bool HasRetentionTime { get { return IsPrecursorKey && _key.Length >= 1 + 2*sizeof(double); } }
-        public string Sequence { get { return !IsPrecursorKey ? Encoding.UTF8.GetString(_key, 1, _key.Length - 1) : string.Empty; } }
-        public int Charge { get { return !IsPrecursorKey ? _key[0] : 0; } }
-        public bool IsModified { get { return !IsPrecursorKey && _key.Contains((byte)'['); } } // Not L10N
-        public double? PrecursorMz { get { return IsPrecursorKey ? BitConverter.ToDouble(_key, 1) : default(double?); } }
-        public double? RetentionTime { get { return HasRetentionTime ? BitConverter.ToDouble(_key, 1 + sizeof(double)) : default(double?); } }
+        public string Sequence { get { return Encoding.UTF8.GetString(_key, 1, _key.Length - 1); } }
+        public int Charge { get { return _key[0]; } }
+        public bool IsModified { get { return _key.Contains((byte)'['); } } // Not L10N
 
         /// <summary>
         /// Only for use by <see cref="LibSeqKey"/>
@@ -1795,8 +1722,6 @@ namespace pwiz.Skyline.Model.Lib
         {
             get
             {
-                if (IsPrecursorKey)
-                    yield break;
                 for (int i = 1; i < _key.Length; i++)
                 {
                     char aa = (char)_key[i];
@@ -1855,13 +1780,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public override string ToString()
         {
-            if (!IsPrecursorKey)
-                return Sequence + Transition.GetChargeIndicator(Charge);
-            var precursor = PrecursorMz.GetValueOrDefault().ToString("0.000", CultureInfo.CurrentCulture); // Not L10N
-            if (!HasRetentionTime)
-                return precursor;
-            var rt = RetentionTime.GetValueOrDefault().ToString("0.000", CultureInfo.CurrentCulture); // Not L10N
-            return string.Format("{0} ({1})", precursor, rt); // Not L10N
+            return Sequence + Transition.GetChargeIndicator(Charge);
         }
 
         #endregion

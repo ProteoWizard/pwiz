@@ -260,8 +260,6 @@ namespace pwiz.Skyline.SettingsUI
         public ViewLibraryPepInfo AssociateMatchingPeptide(ViewLibraryPepInfo pepInfo, int charge, SrmSettingsDiff settingsDiff)
         {
             var key = pepInfo.Key;
-            if (key.IsPrecursorKey)
-                return pepInfo;
 
             var settings = _chargeSettingsMap[charge];
             // Change current document settings to match the current library and change the charge filter to

@@ -256,8 +256,7 @@ namespace pwiz.Skyline.Model
         public const double FORMAT_VERSION_3_5 = 3.5; // Release format
         public const double FORMAT_VERSION_3_51 = 3.51; // Adds document GUID and Panorama URI
         public const double FORMAT_VERSION_3_52 = 3.52; // Cleans up potential ambiguity around explicit vs calculated slens and cone voltage
-        public const double FORMAT_VERSION_3_53 = 3.53; // Adds MIDAS library support
-        public const double FORMAT_VERSION = FORMAT_VERSION_3_53;
+        public const double FORMAT_VERSION = FORMAT_VERSION_3_52;
 
         public const int MAX_PEPTIDE_COUNT = 100*1000;
         public const int MAX_TRANSITION_COUNT = 6*MAX_PEPTIDE_COUNT; // Modern DIA experiments may often have 6 transitions per peptide
