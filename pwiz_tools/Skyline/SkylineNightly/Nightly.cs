@@ -755,28 +755,35 @@ namespace SkylineNightly
             // Capture the screen in hopes of finding exception dialogs etc
             // From http://stackoverflow.com/questions/362986/capture-the-screen-into-a-bitmap
 
-            foreach (var screen in Screen.AllScreens) // Handle multi-monitor
+            try
             {
-                // Create a new bitmap.
-                using (var bmpScreenshot = new Bitmap(screen.Bounds.Width, screen.Bounds.Height, PixelFormat.Format32bppArgb))
+                foreach (var screen in Screen.AllScreens) // Handle multi-monitor
                 {
-                    // Create a graphics object from the bitmap.
-                    using (var gfxScreenshot = Graphics.FromImage(bmpScreenshot))
+                    // Create a new bitmap.
+                    using (var bmpScreenshot = new Bitmap(screen.Bounds.Width, screen.Bounds.Height, PixelFormat.Format32bppArgb))
                     {
-                        // Take the screenshot from the upper left corner to the right bottom corner.
-                        gfxScreenshot.CopyFromScreen(screen.Bounds.X, screen.Bounds.Y,
-                            0, 0, screen.Bounds.Size, CopyPixelOperation.SourceCopy);
+                        // Create a graphics object from the bitmap.
+                        using (var gfxScreenshot = Graphics.FromImage(bmpScreenshot))
+                        {
+                            // Take the screenshot from the upper left corner to the right bottom corner.
+                            gfxScreenshot.CopyFromScreen(screen.Bounds.X, screen.Bounds.Y,
+                                0, 0, screen.Bounds.Size, CopyPixelOperation.SourceCopy);
 
-                        // Save the screenshot
-                        const string basename = "SkylineNightly_error_screenshot";
-                        const string ext = ".png";
-                        var fileScreenshot = Path.Combine(GetNightlyDir(), basename + ext);
-                        for (var retry = 0; File.Exists(fileScreenshot); retry++)
-                            fileScreenshot = Path.Combine(GetNightlyDir(), basename + "_" + retry + ext);
-                        bmpScreenshot.Save(fileScreenshot, ImageFormat.Png);
-                        Log("Diagnostic screenshot saved to \"" + fileScreenshot + "\"");
+                            // Save the screenshot
+                            const string basename = "SkylineNightly_error_screenshot";
+                            const string ext = ".png";
+                            var fileScreenshot = Path.Combine(GetNightlyDir(), basename + ext);
+                            for (var retry = 0; File.Exists(fileScreenshot); retry++)
+                                fileScreenshot = Path.Combine(GetNightlyDir(), basename + "_" + retry + ext);
+                            bmpScreenshot.Save(fileScreenshot, ImageFormat.Png);
+                            Log("Diagnostic screenshot saved to \"" + fileScreenshot + "\"");
+                        }
                     }
                 }
+            }
+            catch (Exception x)
+            {
+                Log("Could not create diagnostic screenshot: got exception \"" + x.Message + "\"");
             }
         }
     }
