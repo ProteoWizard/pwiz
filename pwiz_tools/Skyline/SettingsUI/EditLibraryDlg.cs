@@ -27,6 +27,7 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.ChromLib;
+using pwiz.Skyline.Model.Lib.Midas;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -207,7 +208,8 @@ namespace pwiz.Skyline.SettingsUI
                 CheckPathExists = true,
                 SupportMultiDottedExtensions = true,
                 DefaultExt = BiblioSpecLibSpec.EXT,
-                Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(Resources.EditLibraryDlg_GetLibraryPath_Spectral_Libraries, BiblioSpecLiteSpec.EXT, ChromatogramLibrarySpec.EXT, XHunterLibSpec.EXT, NistLibSpec.EXT, SpectrastSpec.EXT),
+                Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(Resources.EditLibraryDlg_GetLibraryPath_Spectral_Libraries,
+                                                                                 BiblioSpecLiteSpec.EXT, ChromatogramLibrarySpec.EXT, XHunterLibSpec.EXT, NistLibSpec.EXT, SpectrastSpec.EXT, MidasLibSpec.EXT),
                                                        TextUtil.FileDialogFilter(Resources.EditLibraryDlg_GetLibraryPath_Legacy_Libraries, BiblioSpecLibSpec.EXT))
             })
             {

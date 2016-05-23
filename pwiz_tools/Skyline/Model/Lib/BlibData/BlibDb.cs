@@ -27,6 +27,7 @@ using NHibernate;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.ProteomeDatabase.Util;
+using pwiz.Skyline.Model.Lib.Midas;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -799,6 +800,9 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 }
             }
 
+            foreach (var midasLibSpec in pepLibraries.MidasLibrarySpecs)
+                setUsedLibrarySpecs.Add(midasLibSpec);
+
             var listLibraries = new List<Library>();
             var listLibrarySpecs = new List<LibrarySpec>();
             var dictOldNameToNew = new Dictionary<string, string>();
@@ -814,7 +818,20 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                         continue;
 
                     string baseName = Path.GetFileNameWithoutExtension(librarySpec.FilePath);
-                    string fileName = GetUniqueName(baseName, usedNames) + BiblioSpecLiteSpec.EXT;
+                    string fileName = GetUniqueName(baseName, usedNames);
+
+                    if (librarySpec is MidasLibSpec)
+                    {
+                        listLibrarySpecs.Add(librarySpec);
+                        listLibraries.Add(pepLibraries.Libraries[i]);
+                        fileName += MidasLibSpec.EXT;
+                        File.Copy(librarySpec.FilePath, Path.Combine(pathDirectory, fileName));
+                        dictOldNameToNew.Add(librarySpec.Name, librarySpec.Name);
+                        continue;
+                    }
+
+                    fileName += BiblioSpecLiteSpec.EXT;
+
                     using (var blibDb = CreateBlibDb(Path.Combine(pathDirectory, fileName)))
                     {
                         blibDb.ProgressMonitor = progressMonitor;

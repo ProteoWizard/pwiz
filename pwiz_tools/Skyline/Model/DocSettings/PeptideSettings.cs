@@ -30,6 +30,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.ChromLib;
+using pwiz.Skyline.Model.Lib.Midas;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
@@ -1833,6 +1834,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public bool HasDocumentLibrary { get; private set; }
 
         public bool HasLibraries { get { return _librarySpecs.Count > 0; } }
+        public bool HasMidasLibrary { get { return _librarySpecs.Any(libSpec => libSpec is MidasLibSpec); } }
 
         public IList<LibrarySpec> LibrarySpecs
         {
@@ -1853,10 +1855,20 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
+        public IEnumerable<MidasLibSpec> MidasLibrarySpecs
+        {
+            get { return _librarySpecs.Where(libSpec => libSpec is MidasLibSpec).Cast<MidasLibSpec>(); }
+        }
+
         public IList<Library> Libraries
         {
             get { return _libraries; }
             private set { _libraries = MakeReadOnly(value); }
+        }
+
+        public IEnumerable<MidasLibrary> MidasLibraries
+        {
+            get { return _libraries.Where(lib => lib is MidasLibrary).Cast<MidasLibrary>(); }
         }
 
         public IList<Library> DisconnectedLibraries
@@ -2366,22 +2378,24 @@ namespace pwiz.Skyline.Model.DocSettings
         // Support for serializing multiple library types
         private static readonly IXmlElementHelper<Library>[] LIBRARY_HELPERS =
         {
-            new XmlElementHelperSuper<BiblioSpecLibrary, Library>(),                 
+            new XmlElementHelperSuper<BiblioSpecLibrary, Library>(),
             new XmlElementHelperSuper<BiblioSpecLiteLibrary, Library>(),
             new XmlElementHelperSuper<ChromatogramLibrary, Library>(),
-            new XmlElementHelperSuper<XHunterLibrary, Library>(),                 
+            new XmlElementHelperSuper<XHunterLibrary, Library>(),
             new XmlElementHelperSuper<NistLibrary, Library>(),
             new XmlElementHelperSuper<SpectrastLibrary, Library>(),
+            new XmlElementHelperSuper<MidasLibrary, Library>(),
         };
 
         private static readonly IXmlElementHelper<LibrarySpec>[] LIBRARY_SPEC_HELPERS =
         {
-            new XmlElementHelperSuper<BiblioSpecLibSpec, LibrarySpec>(),                 
-            new XmlElementHelperSuper<BiblioSpecLiteSpec, LibrarySpec>(),                 
-            new XmlElementHelperSuper<ChromatogramLibrarySpec, LibrarySpec>(), 
-            new XmlElementHelperSuper<XHunterLibSpec, LibrarySpec>(),                 
-            new XmlElementHelperSuper<NistLibSpec, LibrarySpec>(),                 
-            new XmlElementHelperSuper<SpectrastSpec, LibrarySpec>(),                 
+            new XmlElementHelperSuper<BiblioSpecLibSpec, LibrarySpec>(),
+            new XmlElementHelperSuper<BiblioSpecLiteSpec, LibrarySpec>(),
+            new XmlElementHelperSuper<ChromatogramLibrarySpec, LibrarySpec>(),
+            new XmlElementHelperSuper<XHunterLibSpec, LibrarySpec>(),
+            new XmlElementHelperSuper<NistLibSpec, LibrarySpec>(),
+            new XmlElementHelperSuper<SpectrastSpec, LibrarySpec>(),
+            new XmlElementHelperSuper<MidasLibSpec, LibrarySpec>(), 
         };
 
         public static IXmlElementHelper<LibrarySpec>[] LibrarySpecXmlHelpers
@@ -2392,10 +2406,10 @@ namespace pwiz.Skyline.Model.DocSettings
         private static readonly IXmlElementHelper<SpectrumHeaderInfo>[] LIBRARY_HEADER_HELPERS =
         {
             new XmlElementHelperSuper<BiblioSpecSpectrumHeaderInfo, SpectrumHeaderInfo>(),
-            new XmlElementHelperSuper<ChromLibSpectrumHeaderInfo, SpectrumHeaderInfo>(), 
-            new XmlElementHelperSuper<XHunterSpectrumHeaderInfo, SpectrumHeaderInfo>(),                 
-            new XmlElementHelperSuper<NistSpectrumHeaderInfo, SpectrumHeaderInfo>(),                 
-            new XmlElementHelperSuper<SpectrastSpectrumHeaderInfo, SpectrumHeaderInfo>(),                 
+            new XmlElementHelperSuper<ChromLibSpectrumHeaderInfo, SpectrumHeaderInfo>(),
+            new XmlElementHelperSuper<XHunterSpectrumHeaderInfo, SpectrumHeaderInfo>(),
+            new XmlElementHelperSuper<NistSpectrumHeaderInfo, SpectrumHeaderInfo>(),
+            new XmlElementHelperSuper<SpectrastSpectrumHeaderInfo, SpectrumHeaderInfo>(),
         };
 
         public static IXmlElementHelper<SpectrumHeaderInfo>[] SpectrumHeaderXmlHelpers

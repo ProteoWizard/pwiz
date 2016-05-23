@@ -220,10 +220,18 @@ namespace pwiz.Skyline.Model.Lib
         {
             get
             {
-                var dataFiles = (from sourceFile in _librarySourceFiles
+                string[] dataFiles;
+                if (_librarySourceFiles == null)
+                {
+                    dataFiles = new string[] {};
+                }
+                else
+                {
+                    dataFiles = (from sourceFile in _librarySourceFiles
                                  let fileName = sourceFile.FilePath
                                  where fileName != null
                                  select fileName).ToArray();
+                }
 
                 LibraryDetails details = new LibraryDetails
                                              {
@@ -242,7 +250,7 @@ namespace pwiz.Skyline.Model.Lib
                 // If the total number of spectra in the library is more than the number
                 // of  non-redundant spectra, we will provide that information to the user.
                 int allSpecCount = RetentionTimesPsmCount();
-                int numBestSpectra = _libraryEntries.Length; // number of spectra read from the RefSpectra table
+                int numBestSpectra = _libraryEntries != null ? _libraryEntries.Length : 0; // number of spectra read from the RefSpectra table
                 
                 if (numBestSpectra < allSpecCount)
                 {

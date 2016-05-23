@@ -40,6 +40,7 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.Lib.Midas;
 using ZedGraph;
 using pwiz.Skyline.Util.Extensions;
 using Label = System.Windows.Forms.Label;
@@ -283,7 +284,7 @@ namespace pwiz.Skyline.SettingsUI
         private void ViewLibraryDlg_Shown(object sender, EventArgs e)
         {
             textPeptide.Focus();
-            if (MatchModifications())
+            if (_selectedLibrary is MidasLibrary || MatchModifications())
                 UpdateListPeptide(0);
         }
 
@@ -336,7 +337,7 @@ namespace pwiz.Skyline.SettingsUI
 
         protected override void OnHandleDestroyed(EventArgs e)
         {
-            if (_selectedLibrary != null)
+            if (_selectedLibrary != null && _selectedLibrary.ReadStream != null)
                 _selectedLibrary.ReadStream.CloseStream();
             _documentUiContainer.UnlistenUI(OnDocumentChange);
 
@@ -380,7 +381,7 @@ namespace pwiz.Skyline.SettingsUI
         private void LoadLibrary()
         {
             LibrarySpec selectedLibrarySpec = _selectedSpec = _driverLibraries.SelectedItem;
-            if (_selectedLibrary != null)
+            if (_selectedLibrary != null && _selectedLibrary.ReadStream != null)
                 _selectedLibrary.ReadStream.CloseStream();
             _selectedLibrary = selectedLibrarySpec != null ? _libraryManager.TryGetLibrary(selectedLibrarySpec) : null;
             if (_selectedLibrary == null)
@@ -573,7 +574,22 @@ namespace pwiz.Skyline.SettingsUI
             try
             {
                 int index = GetIndexOfSelectedPeptide();
-                btnAdd.Enabled = (-1 != index);
+                bool isSequenceLibrary = !(_selectedLibrary is MidasLibrary);
+                if (isSequenceLibrary)
+                    btnAdd.Enabled = -1 != index;
+                else
+                    btnAdd.Enabled = btnAddAll.Enabled = cbAssociateProteins.Enabled = false;
+
+                btnAIons.Enabled = btnBIons.Enabled = btnCIons.Enabled = btnXIons.Enabled = btnYIons.Enabled = btnZIons.Enabled
+                    = toolStripSeparator1.Enabled = toolStripSeparator2.Enabled = charge1Button.Enabled = charge2Button.Enabled
+                    = aionsContextMenuItem.Enabled = bionsContextMenuItem.Enabled = cionsContextMenuItem.Enabled
+                    = xionsContextMenuItem.Enabled = yionsContextMenuItem.Enabled = zionsContextMenuItem.Enabled
+                    = precursorIonContextMenuItem.Enabled = chargesContextMenuItem.Enabled
+                    = toolStripSeparator11.Enabled = toolStripSeparator12.Enabled = toolStripSeparator13.Enabled
+                    = ranksContextMenuItem.Enabled = ionMzValuesContextMenuItem.Enabled
+                    = observedMzValuesContextMenuItem.Enabled = duplicatesContextMenuItem.Enabled
+                    = isSequenceLibrary;
+
                 if (-1 != index)
                 {
                     SpectrumPeaksInfo spectrum;
@@ -593,14 +609,14 @@ namespace pwiz.Skyline.SettingsUI
 
                         ExplicitMods mods;
                         var pepInfo = (ViewLibraryPepInfo)listPeptide.SelectedItem;
-                        var nodPep = pepInfo.PeptideNode;
-                        if (nodPep != null)
+                        var nodePep = pepInfo.PeptideNode;
+                        if (nodePep != null)
                         {
-                            mods = nodPep.ExplicitMods;
+                            mods = nodePep.ExplicitMods;
                             // Should always be just one child.  The child that matched this spectrum.
-                            transitionGroup = nodPep.TransitionGroups.First().TransitionGroup;
+                            transitionGroup = nodePep.TransitionGroups.First().TransitionGroup;
                         }
-                        else
+                        else if (!pepInfo.Key.IsPrecursorKey)
                         {
                             var peptide = new Peptide(null, _peptides[index].GetAASequence(_lookupPool),
                                                       null, null, 0);
@@ -625,6 +641,14 @@ namespace pwiz.Skyline.SettingsUI
                             }
 
                             mods = new ExplicitMods(peptide, staticModList, new TypedExplicitModifications[0]);
+                        }
+                        else
+                        {
+                            // Create custom ion node for midas library
+                            var precursor = pepInfo.Key.PrecursorMz.GetValueOrDefault();
+                            var peptide = new Peptide(new DocNodeCustomIon(precursor, precursor, precursor.ToString(CultureInfo.CurrentCulture)));
+                            transitionGroup = new TransitionGroup(peptide, 0, IsotopeLabelType.light, true, null);
+                            mods = new ExplicitMods(peptide, new ExplicitMod[0], new TypedExplicitModifications[0]);
                         }
 
                         // Make sure the types and charges in the settings are at the head
@@ -661,7 +685,7 @@ namespace pwiz.Skyline.SettingsUI
                                 libraryChromGroup = _selectedLibrary.LoadChromatogramData(spectrumInfo.SpectrumKey);
                             }
                         }
-                        GraphItem = new ViewLibSpectrumGraphItem(spectrumInfoR, transitionGroup, _selectedLibrary)
+                        GraphItem = new ViewLibSpectrumGraphItem(spectrumInfoR, transitionGroup, _selectedLibrary, pepInfo.Key)
                         {
                             ShowTypes = types,
                             ShowCharges = charges,
@@ -760,14 +784,14 @@ namespace pwiz.Skyline.SettingsUI
                 SetGraphItem(new UnavailableMSGraphItem());
             }
 
-            btnAIons.Checked = Settings.Default.ShowAIons;
-            btnBIons.Checked = Settings.Default.ShowBIons;
-            btnCIons.Checked = Settings.Default.ShowCIons;
-            btnXIons.Checked = Settings.Default.ShowXIons;
-            btnYIons.Checked = Settings.Default.ShowYIons;
-            btnZIons.Checked = Settings.Default.ShowZIons;
-            charge1Button.Checked = Settings.Default.ShowCharge1;
-            charge2Button.Checked = Settings.Default.ShowCharge2;
+            btnAIons.Checked = btnAIons.Enabled && Settings.Default.ShowAIons;
+            btnBIons.Checked = btnBIons.Enabled && Settings.Default.ShowBIons;
+            btnCIons.Checked = btnCIons.Enabled && Settings.Default.ShowCIons;
+            btnXIons.Checked = btnXIons.Enabled && Settings.Default.ShowXIons;
+            btnYIons.Checked = btnYIons.Enabled && Settings.Default.ShowYIons;
+            btnZIons.Checked = btnZIons.Enabled && Settings.Default.ShowZIons;
+            charge1Button.Checked = charge1Button.Enabled && Settings.Default.ShowCharge1;
+            charge2Button.Checked = charge2Button.Enabled && Settings.Default.ShowCharge2;
         }
 
         private void SetGraphItem(IMSGraphItemInfo item)
@@ -1048,7 +1072,7 @@ namespace pwiz.Skyline.SettingsUI
                 UpdateViewLibraryDlg();
 
                 _matcher.ClearMatches();
-                if (MatchModifications())
+                if (_selectedLibrary is MidasLibrary || MatchModifications())
                     UpdateListPeptide(0);
             }
         }
@@ -1722,7 +1746,9 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         private string GetPepInfoComparisonString(ViewLibraryPepInfo pep)
         {
-            return pep.GetAASequence(_lookupPool) + _pluses.Substring(0, pep.Charge);
+            return !pep.Key.IsPrecursorKey
+                ? pep.GetAASequence(_lookupPool) + _pluses.Substring(0, pep.Charge)
+                : pep.DisplayString;
         }
 
         private static readonly string _pluses;
@@ -2037,14 +2063,16 @@ namespace pwiz.Skyline.SettingsUI
         public class ViewLibSpectrumGraphItem : AbstractSpectrumGraphItem
         {
             private readonly Library _library;
+            private readonly LibKey _key;
             private string LibraryName { get { return _library.Name; } }
             private TransitionGroup TransitionGroup { get; set; }
 
-            public ViewLibSpectrumGraphItem(LibraryRankedSpectrumInfo spectrumInfo, TransitionGroup group, Library lib)
+            public ViewLibSpectrumGraphItem(LibraryRankedSpectrumInfo spectrumInfo, TransitionGroup group, Library lib, LibKey key)
                 : base(spectrumInfo)
             {
                 TransitionGroup = group;
                 _library = lib;
+                _key = key;
             }
 
             protected override bool IsMatch(double predictedMz)
@@ -2060,11 +2088,9 @@ namespace pwiz.Skyline.SettingsUI
                     if (!string.IsNullOrEmpty(libraryNamePrefix))
                         libraryNamePrefix += " - "; // Not L10N
 
-                    string sequence = TransitionGroup.Peptide.Sequence;
-                    int charge = TransitionGroup.PrecursorCharge;
-
-                    return string.Format(Resources.ViewLibSpectrumGraphItem_Title__0__1__Charge__2__, libraryNamePrefix,
-                                         sequence, charge);
+                    return !_key.IsPrecursorKey
+                        ? string.Format(Resources.ViewLibSpectrumGraphItem_Title__0__1__Charge__2__, libraryNamePrefix, TransitionGroup.Peptide.Sequence, TransitionGroup.PrecursorCharge)
+                        : string.Format(Resources.ViewLibSpectrumGraphItem_Title__0__1_, libraryNamePrefix, _key.PrecursorMz.GetValueOrDefault());
                 }
             }
         }
