@@ -561,8 +561,9 @@ namespace pwiz.SkylineTestTutorial
             var importProgress = ShowDialog<AllChromatogramsGraph>(importResultsDlg3.OkDialog);
             WaitForDocumentChangeLoaded(docCalibrate1);
             WaitForConditionUI(() => importProgress.Finished);
-            RunUI(() => AssertEx.AreComparableStrings(Resources.NoFullScanFilteringException_NoFullScanFilteringException_To_extract_chromatograms_from__0__full_scan_settings_must_be_enabled_,
-                                                      importProgress.Error, 1));
+            string expectedErrorFormat = Resources.NoFullScanFilteringException_NoFullScanFilteringException_To_extract_chromatograms_from__0__full_scan_settings_must_be_enabled_;
+            WaitForConditionUI(() => !string.IsNullOrEmpty(importProgress.Error), "Missing expected error text: " + expectedErrorFormat);
+            RunUI(() => AssertEx.AreComparableStrings(expectedErrorFormat, importProgress.Error, 1));
             RunUI(() =>
             {
                 importProgress.ClickClose();
