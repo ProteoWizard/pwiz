@@ -160,6 +160,7 @@
     <Compile Include="MProphetScoringModelTest.cs" />
     <Compile Include="MQuestScoringTest.cs" />
     <Compile Include="MSstats\Averaging\MSstatsAveragingTest.cs" />
+    <Compile Include="MSstats\Normalization\MsStatsNormalizationTest.cs" />
     <Compile Include="MSstats\WithRunQuantification\GroupComparisonRunQuantificationTest.cs" />
     <Compile Include="MSstats\MsStatsTest.cs" />
     <Compile Include="MSstats\MsStatsTestUtil.cs" />
@@ -257,6 +258,13 @@
     <EmbeddedResource Include="MSstats\WithRunQuantification\result_newtesting_v2.csv" />
     <EmbeddedResource Include="MSstats\Averaging\RatPlasmaTestingResult.csv" />
     <EmbeddedResource Include="MSstats\Averaging\Rat_plasma.sky" />
+    <EmbeddedResource Include="MSstats\Normalization\MSstats_report.skyr" />
+    <EmbeddedResource Include="MSstats\Normalization\BrudererSubset.sky" />
+    <EmbeddedResource Include="MSstats\Normalization\BrudererSubset_MSstatsInput.csv" />
+    <EmbeddedResource Include="MSstats\Normalization\BrudererSubsetNoNormalization_dataProcessedData.csv" />
+    <EmbeddedResource Include="MSstats\Normalization\BrudererSubsetNoNormalization_TestingResult.csv" />
+    <EmbeddedResource Include="MSstats\Normalization\BrudererSubsetEqualizeMedians_dataProcessedData.csv" />
+    <EmbeddedResource Include="MSstats\Normalization\BrudererSubsetEqualizeMedians_TestingResult.csv" />
     <None Include="PeakBoundaryTest.zip" />
     <None Include="PwizFileInfoTest.zip" />
     <None Include="modmatch.sky" />

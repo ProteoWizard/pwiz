@@ -1452,8 +1452,8 @@ namespace pwiz.SkylineTestTutorial
                 OkDialog(quickFilterForm, quickFilterForm.OkDialog);
             }
             WaitForConditionUI(() => foldChangeGrid.DataboundGridControl.IsComplete);
-            WaitForConditionUI(() => 14 == foldChangeGrid.DataboundGridControl.RowCount);
-            RunUI(() => Assert.AreEqual(14, foldChangeGrid.DataboundGridControl.RowCount));
+            WaitForConditionUI(() => 11 == foldChangeGrid.DataboundGridControl.RowCount);
+            RunUI(() => Assert.AreEqual(11, foldChangeGrid.DataboundGridControl.RowCount));
             PauseForScreenShot<FoldChangeBarGraph>("Right click on the graph and choose Copy", 67);
             WaitForConditionUI(() => foldChangeGrid.DataboundGridControl.IsComplete);
             var settingsForm = ShowDialog<GroupComparisonSettingsForm>(foldChangeGrid.ShowChangeSettings);

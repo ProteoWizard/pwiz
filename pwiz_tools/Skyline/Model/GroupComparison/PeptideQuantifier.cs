@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model.DocSettings;
@@ -35,6 +36,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         public QuantificationSettings QuantificationSettings { get; private set; }
         public NormalizationMethod NormalizationMethod { get {return QuantificationSettings.NormalizationMethod;} }
         public ICollection<IsotopeLabelType> MeasuredLabelTypes { get; set; }
+        public NormalizationData NormalizationData { get; set; }
 
         public IsotopeLabelType RatioLabelType
         {
@@ -160,6 +162,19 @@ namespace pwiz.Skyline.Model.GroupComparison
                 if (Equals(NormalizationMethod, NormalizationMethod.GLOBAL_STANDARDS))
                 {
                     denominator = srmSettings.CalcGlobalStandardArea(replicateIndex, chromInfo.FileId);
+                }
+                else if (Equals(NormalizationMethod, NormalizationMethod.EQUALIZE_MEDIANS))
+                {
+                    if (null == NormalizationData)
+                    {
+                        throw new InvalidOperationException(string.Format("Normalization method '{0}' is not supported here.", NormalizationMethod));
+                    }
+                    double? median = NormalizationData.GetMedian(chromInfo.FileId, transitionGroup.TransitionGroup.LabelType);
+                    if (!median.HasValue)
+                    {
+                        return null;
+                    }
+                    denominator = Math.Pow(2.0, median.Value);
                 }
             }
             return new Quantity(normalizedArea, denominator);

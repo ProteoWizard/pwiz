@@ -116,7 +116,8 @@ namespace pwiz.Skyline.Model.GroupComparison
         {
             var result = new List<NormalizationMethod>
             {
-                NONE
+                NONE,
+                EQUALIZE_MEDIANS,
             };
             if (document.Settings.HasGlobalStandardArea)
             {

@@ -447,6 +447,12 @@
       <DependentUpon>GroupComparisonSettingsForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\GroupComparison\GroupComparisonViewContext.cs" />
+    <Compile Include="Controls\GroupComparison\MsStatsLogoForm.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\GroupComparison\MsStatsLogoForm.Designer.cs">
+      <DependentUpon>MsStatsLogoForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Controls\ImmediateWindow.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -825,6 +831,7 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
     </Compile>
+    <Compile Include="Model\GroupComparison\NormalizationData.cs" />
     <Compile Include="Model\GroupComparison\NormalizationMethod.cs" />
     <Compile Include="Model\ExplicitTransitionGroupValues.cs" />
     <Compile Include="Model\GroupComparison\PeptideQuantifier.cs" />
@@ -1673,6 +1680,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\GroupComparisonSettingsForm.zh-CHS.resx">
       <DependentUpon>GroupComparisonSettingsForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\GroupComparison\MsStatsLogoForm.resx">
+      <DependentUpon>MsStatsLogoForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Startup\ActionBoxControl.ja.resx">
       <DependentUpon>ActionBoxControl.cs</DependentUpon>

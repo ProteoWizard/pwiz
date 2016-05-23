@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<views>
+  <view name="MSstats Input" rowsource="pwiz.Skyline.Model.Databinding.Entities.Transition" sublist="Results!*">
+    <column name="Precursor.Peptide.Protein.Name" />
+    <column name="Precursor.Peptide.ModifiedSequence" />
+    <column name="Precursor.Charge" />
+    <column name="FragmentIon" />
+    <column name="ProductCharge" />
+    <column name="Precursor.IsotopeLabelType" />
+    <column name="Results!*.Value.PrecursorResult.PeptideResult.ResultFile.Replicate.&quot;annotation_Condition&quot;" />
+    <column name="Results!*.Value.PrecursorResult.PeptideResult.ResultFile.Replicate.&quot;annotation_BioReplicate&quot;" />
+    <column name="Results!*.Value.PrecursorResult.PeptideResult.ResultFile.FileName" />
+    <column name="Results!*.Value.Area" />
+    <column name="Precursor.Peptide.StandardType" />
+    <column name="Results!*.Value.Truncated" />
+    <filter column="Results!*.Value" opname="isnotnullorblank" />
+    <filter column="Precursor.IsDecoy" opname="&lt;&gt;" operand="True" />
+  </view>
+</views>

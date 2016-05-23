@@ -274,7 +274,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             List<GroupComparisonResult> results = new List<GroupComparisonResult>();
             if (groupComparer.IsValid)
             {
-                var peptideGroups = document.PeptideGroups.ToArray();
+                var peptideGroups = document.MoleculeGroups.ToArray();
                 for (int i = 0; i < peptideGroups.Length; i++)
                 {
                     int percentComplete = 100 * i / peptideGroups.Length;
@@ -291,7 +291,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                     }
                     else
                     {
-                        peptides = peptideGroup.Peptides;
+                        peptides = peptideGroup.Molecules;
                     }
                     foreach (var peptide in peptides)
                     {

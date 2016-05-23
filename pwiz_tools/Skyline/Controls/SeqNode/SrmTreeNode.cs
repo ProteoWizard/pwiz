@@ -340,34 +340,6 @@ namespace pwiz.Skyline.Controls.SeqNode
             }
         }
 
-        #region object overrides
-
-        /// <summary>
-        /// Node equality determined as content equality between the
-        /// <see cref="Model"/> property of two tree nodes.
-        /// </summary>
-        /// <param name="obj">Other tree node to compare against</param>
-        /// <returns>Tree if the <see cref="Model"/> properties are equal</returns>
-        public bool Equals(SrmTreeNode obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            return Equals(obj.Model, Model);
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != typeof (SrmTreeNode)) return false;
-            return Equals((SrmTreeNode) obj);
-        }
-
-        public override int GetHashCode()
-        {
-            return Tag.GetHashCode();
-        }
-
         public DataObject ProvideData()
         {
             return GetNodeData();
@@ -381,9 +353,6 @@ namespace pwiz.Skyline.Controls.SeqNode
 
             return data;
         }
-
-        #endregion // object overrides
-
     }
 
     /// <summary>

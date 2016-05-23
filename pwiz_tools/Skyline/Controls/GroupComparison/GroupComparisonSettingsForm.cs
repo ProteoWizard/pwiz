@@ -23,6 +23,7 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.GroupComparison
 {
@@ -114,6 +115,11 @@ namespace pwiz.Skyline.Controls.GroupComparison
         public override TextBox TextBoxConfidenceLevel { get { return tbxConfidenceLevel; } }
         public override RadioButton RadioScopePerProtein { get { return radioScopeProtein; } }
         public override RadioButton RadioScopePerPeptide { get { return radioScopePeptide; } }
+
+        private void linkLabelMsStats_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            
+        }
 
     }
 }

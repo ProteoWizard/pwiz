@@ -31,6 +31,7 @@ namespace pwiz.Skyline.Model.GroupComparison
     {
         private readonly IList<KeyValuePair<int, ReplicateDetails>> _replicateIndexes;
         private QrFactorizationCache _qrFactorizationCache;
+        private NormalizationData _normalizationData;
         public GroupComparer(GroupComparisonDef comparisonDef, SrmDocument document, QrFactorizationCache qrFactorizationCache)
         {
             SrmDocument = document;
@@ -83,7 +84,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         public IList<IsotopeLabelType> ListLabelTypes(PeptideGroupDocNode protein, PeptideDocNode peptideDocNode)
         {
             var labelTypes = new HashSet<IsotopeLabelType>();
-            var peptides = peptideDocNode == null ? protein.Peptides : new[] {peptideDocNode};
+            var peptides = peptideDocNode == null ? protein.Molecules : new[] {peptideDocNode};
             foreach (var peptide in peptides)
             {
                 foreach (var precursor in peptide.TransitionGroups)
@@ -295,7 +296,10 @@ namespace pwiz.Skyline.Model.GroupComparison
                     QuantificationSettings quantificationSettings = QuantificationSettings.DEFAULT
                         .ChangeNormalizationMethod(ComparisonDef.NormalizationMethod)
                         .ChangeMsLevel(selector.MsLevel);
-                    var peptideQuantifier = new PeptideQuantifier(selector.Protein, peptide, quantificationSettings);
+                    var peptideQuantifier = new PeptideQuantifier(selector.Protein, peptide, quantificationSettings)
+                    {
+                        NormalizationData = GetNormalizationData()
+                    };
                     if (null != selector.LabelType)
                     {
                         peptideQuantifier.MeasuredLabelTypes = ImmutableList.Singleton(selector.LabelType);
@@ -316,6 +320,15 @@ namespace pwiz.Skyline.Model.GroupComparison
                     }
                 }
             }
+        }
+
+        public NormalizationData GetNormalizationData()
+        {
+            if (!NormalizationMethod.EQUALIZE_MEDIANS.Equals(ComparisonDef.NormalizationMethod))
+            {
+                return null;
+            }
+            return _normalizationData = _normalizationData ?? NormalizationData.GetNormalizationData(SrmDocument);
         }
 
         public struct RunAbundance

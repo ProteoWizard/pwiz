@@ -51,6 +51,7 @@
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
             this.radioScopePeptide = new System.Windows.Forms.RadioButton();
             this.radioScopeProtein = new System.Windows.Forms.RadioButton();
+            this.msStatsLogoForm1 = new pwiz.Skyline.Controls.GroupComparison.MsStatsLogoForm();
             this.groupBoxScope.SuspendLayout();
             this.flowLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
@@ -198,12 +199,18 @@
             this.radioScopeProtein.UseVisualStyleBackColor = true;
             this.radioScopeProtein.CheckedChanged += new System.EventHandler(this.radioScope_CheckedChanged);
             // 
+            // msStatsLogoForm1
+            // 
+            resources.ApplyResources(this.msStatsLogoForm1, "msStatsLogoForm1");
+            this.msStatsLogoForm1.Name = "msStatsLogoForm1";
+            // 
             // EditGroupComparisonDlg
             // 
             this.AcceptButton = this.btnOK;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.msStatsLogoForm1);
             this.Controls.Add(this.groupBoxScope);
             this.Controls.Add(this.lblPercent);
             this.Controls.Add(this.tbxConfidenceLevel);
@@ -260,5 +267,6 @@
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
         private System.Windows.Forms.RadioButton radioScopePeptide;
         private System.Windows.Forms.RadioButton radioScopeProtein;
+        private MsStatsLogoForm msStatsLogoForm1;
     }
 }

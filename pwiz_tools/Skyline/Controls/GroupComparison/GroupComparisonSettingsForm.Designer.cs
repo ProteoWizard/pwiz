@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(GroupComparisonSettingsForm));
             this.groupBoxScope = new System.Windows.Forms.GroupBox();
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
@@ -46,6 +47,8 @@
             this.lblControlAnnotation = new System.Windows.Forms.Label();
             this.comboControlValue = new System.Windows.Forms.ComboBox();
             this.comboControlAnnotation = new System.Windows.Forms.ComboBox();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.msStatsLogoForm1 = new pwiz.Skyline.Controls.GroupComparison.MsStatsLogoForm();
             this.groupBoxScope.SuspendLayout();
             this.flowLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
@@ -160,10 +163,16 @@
             this.comboControlAnnotation.FormattingEnabled = true;
             this.comboControlAnnotation.Name = "comboControlAnnotation";
             // 
+            // msStatsLogoForm1
+            // 
+            resources.ApplyResources(this.msStatsLogoForm1, "msStatsLogoForm1");
+            this.msStatsLogoForm1.Name = "msStatsLogoForm1";
+            // 
             // GroupComparisonSettingsForm
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.msStatsLogoForm1);
             this.Controls.Add(this.groupBoxScope);
             this.Controls.Add(this.lblPercent);
             this.Controls.Add(this.tbxConfidenceLevel);
@@ -210,5 +219,7 @@
         private System.Windows.Forms.Label lblControlAnnotation;
         private System.Windows.Forms.ComboBox comboControlValue;
         private System.Windows.Forms.ComboBox comboControlAnnotation;
+        private System.Windows.Forms.ToolTip toolTip1;
+        private MsStatsLogoForm msStatsLogoForm1;
     }
 }
