@@ -167,7 +167,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                 {
                     if (null == NormalizationData)
                     {
-                        throw new InvalidOperationException(string.Format("Normalization method '{0}' is not supported here.", NormalizationMethod));
+                        throw new InvalidOperationException(string.Format("Normalization method '{0}' is not supported here.", NormalizationMethod)); // Not L10N
                     }
                     double? median = NormalizationData.GetMedian(chromInfo.FileId, transitionGroup.TransitionGroup.LabelType);
                     if (!median.HasValue)

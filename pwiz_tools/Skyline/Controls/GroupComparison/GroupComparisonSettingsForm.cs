@@ -23,7 +23,6 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.GroupComparison
 {
