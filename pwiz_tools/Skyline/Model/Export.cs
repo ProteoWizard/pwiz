@@ -947,6 +947,8 @@ namespace pwiz.Skyline.Model
         protected readonly Dictionary<string, int> _compoundCounts = new Dictionary<string, int>();
         protected const int MAX_COMPOUND_NAME = 10;
 
+        protected bool USE_COMPOUND_COUNT_WORKAROUND { get { return true; } }
+
         public ThermoQuantivaMassListExporter(SrmDocument document)
             : base(document)
         {
@@ -1012,15 +1014,18 @@ namespace pwiz.Skyline.Model
                 compound += '.' + step.ToString(CultureInfo);
             }
 
-            if (!_compoundCounts.ContainsKey(compound))
+            if (USE_COMPOUND_COUNT_WORKAROUND)
             {
-                _compoundCounts[compound] = 0;
-            }
-            else
-            {
-                int compoundStep = ++_compoundCounts[compound] / MAX_COMPOUND_NAME + 1;
-                if (compoundStep > 1)
-                    compound += '.' + compoundStep;
+                if (!_compoundCounts.ContainsKey(compound))
+                {
+                    _compoundCounts[compound] = 0;
+                }
+                else
+                {
+                    int compoundStep = ++_compoundCounts[compound]/MAX_COMPOUND_NAME + 1;
+                    if (compoundStep > 1)
+                        compound += '.' + compoundStep;
+                }
             }
             writer.WriteDsvField(compound, FieldSeparator);
             writer.Write(FieldSeparator);
@@ -1079,7 +1084,7 @@ namespace pwiz.Skyline.Model
 
             writer.Write(nodeTranGroup.PrecursorCharge>0?"Positive":"Negative"); // Not L10N
             writer.Write(FieldSeparator);
-            writer.Write(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo));
+            writer.Write((Math.Truncate(1000*nodeTranGroup.PrecursorMz)/1000).ToString(CultureInfo));
             writer.Write(FieldSeparator);
             writer.Write(GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), step).ToString(CultureInfo));
             writer.Write(FieldSeparator);
