@@ -154,8 +154,8 @@ namespace pwiz.SkylineTestFunctional
                 peptideSettingsUI.SelectedTab = PeptideSettingsUI.TABS.Digest;
                 expectChange = peptideSettingsUI.ComboPeptideUniquenessConstraintSelected != testType;
                 peptideSettingsUI.ComboPeptideUniquenessConstraintSelected = testType;
-                peptideSettingsUI.OkDialog();
             });
+            OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
             if (expectChange)
             {
                 WaitForDocumentChange(doc);
