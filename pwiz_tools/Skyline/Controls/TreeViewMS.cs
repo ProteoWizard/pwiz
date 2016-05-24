@@ -356,6 +356,7 @@ namespace pwiz.Skyline.Controls
 
             // Draw all nodes exposed in the paint clipping rectangle.
             var drawRect = e.Graphics.ClipBounds;
+            drawRect.Intersect(e.ClipRectangle);
             int bottom = (int)drawRect.Bottom;
             for (var node = TopNode;
                 node != null && node.Bounds.Top <= bottom;
