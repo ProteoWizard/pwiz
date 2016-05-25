@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using MathNet.Numerics.Providers.LinearAlgebra;
 
 namespace pwiz.Skyline.Model.GroupComparison
 {
