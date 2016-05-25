@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using MathNet.Numerics.Providers.LinearAlgebra;
 
 namespace pwiz.Skyline.Model.GroupComparison
 {
@@ -112,13 +113,16 @@ namespace pwiz.Skyline.Model.GroupComparison
             return IsotopeLabelTypeName.GetHashCode();
         }
 
-        public static IList<NormalizationMethod> ListNormalizationMethods(SrmDocument document)
+        public static IList<NormalizationMethod> ListNormalizationMethods(SrmDocument document, bool includeEqualizeMedians)
         {
             var result = new List<NormalizationMethod>
             {
-                NONE,
-                EQUALIZE_MEDIANS,
+                NONE
             };
+            if (includeEqualizeMedians)
+            {
+                result.Add(EQUALIZE_MEDIANS);
+            }
             if (document.Settings.HasGlobalStandardArea)
             {
                 result.Add(GLOBAL_STANDARDS);
