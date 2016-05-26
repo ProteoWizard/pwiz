@@ -9014,6 +9014,9 @@ Here are the last 3 errors:
   <data name="CommandArgs_IsolationListInstrumentType_The_instrument_type__0__is_not_valid_for_isolation_list_export" xml:space="preserve">
     <value>The instrument type {0} is not valid for isolation list export</value>
   </data>
+  <data name="DeconvolutionMethod_FAST_OVERLAP_Fast_Overlap" xml:space="preserve">
+    <value>Fast Overlap (Experimental)</value>
+  </data>
   <data name="MidasLibrary_SpecFilter_MIDAS_Spectral_Library" xml:space="preserve">
     <value>MIDAS Spectral Library</value>
   </data>

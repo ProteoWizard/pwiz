@@ -44,6 +44,7 @@ namespace pwiz.Skyline.Model.DocSettings
             public const string ALL_IONS = "All Ions";    // Not L10N?
             public const string OVERLAP = "Overlap"; // Not L10N?
             public const string OVERLAP_MULTIPLEXED = "Overlap Multiplexed"; // Not L10N?
+            public const string FAST_OVERLAP = "Fast Overlap"; // Not L10N
 
             public static void Validate(string specialHandling)
             {
@@ -52,7 +53,8 @@ namespace pwiz.Skyline.Model.DocSettings
                     !Equals(specialHandling, MS_E) &&
                     !Equals(specialHandling, ALL_IONS) &&
                     !Equals(specialHandling, OVERLAP) &&
-                    !Equals(specialHandling, OVERLAP_MULTIPLEXED))
+                    !Equals(specialHandling, OVERLAP_MULTIPLEXED) &&
+                    !Equals(specialHandling, FAST_OVERLAP))
                 {
                     throw new InvalidDataException(string.Format(
                         Resources.SpecialHandlingType_Validate___0___is_not_a_valid_setting_for_full_scan_special_handling, specialHandling));

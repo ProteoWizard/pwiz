@@ -96,7 +96,8 @@ namespace pwiz.Skyline.SettingsUI
                 EditIsolationSchemeDlg.DeconvolutionMethod.NONE,
                 EditIsolationSchemeDlg.DeconvolutionMethod.MSX,
                 EditIsolationSchemeDlg.DeconvolutionMethod.OVERLAP,
-                EditIsolationSchemeDlg.DeconvolutionMethod.MSX_OVERLAP
+                EditIsolationSchemeDlg.DeconvolutionMethod.MSX_OVERLAP,
+                EditIsolationSchemeDlg.DeconvolutionMethod.FAST_OVERLAP
             });
             comboDeconv.SelectedItem = EditIsolationSchemeDlg.DeconvolutionMethod.NONE;
 
@@ -396,7 +397,8 @@ namespace pwiz.Skyline.SettingsUI
             {
                 return
                     ((Equals(comboDeconv.SelectedItem, EditIsolationSchemeDlg.DeconvolutionMethod.OVERLAP) ||
-                     Equals(comboDeconv.SelectedItem, EditIsolationSchemeDlg.DeconvolutionMethod.MSX_OVERLAP))
+                     Equals(comboDeconv.SelectedItem, EditIsolationSchemeDlg.DeconvolutionMethod.MSX_OVERLAP) ||
+                     Equals(comboDeconv.SelectedItem, EditIsolationSchemeDlg.DeconvolutionMethod.FAST_OVERLAP))
                         ? 50
                         : 0);
             }

@@ -78,6 +78,11 @@ namespace pwiz.Skyline.SettingsUI
             {
                 get { return Resources.DeconvolutionMethod_MSX_OVERLAP_Overlap_and_MSX; }
             }
+
+            public static string FAST_OVERLAP
+            {
+                get { return Resources.DeconvolutionMethod_FAST_OVERLAP_Fast_Overlap; }
+            }
         };
 
         public EditIsolationSchemeDlg(IEnumerable<IsolationScheme> existing)
@@ -107,7 +112,8 @@ namespace pwiz.Skyline.SettingsUI
                 DeconvolutionMethod.NONE,
                 DeconvolutionMethod.MSX,
                 DeconvolutionMethod.OVERLAP,
-                DeconvolutionMethod.MSX_OVERLAP
+                DeconvolutionMethod.MSX_OVERLAP,
+                DeconvolutionMethod.FAST_OVERLAP
             };
             comboDeconv.Items.AddRange(deconvOptions);
             comboDeconv.SelectedItem = DeconvolutionMethod.NONE;
@@ -225,6 +231,8 @@ namespace pwiz.Skyline.SettingsUI
                     return DeconvolutionMethod.MSX;
                 case (IsolationScheme.SpecialHandlingType.OVERLAP_MULTIPLEXED):
                     return DeconvolutionMethod.MSX_OVERLAP;
+                case (IsolationScheme.SpecialHandlingType.FAST_OVERLAP):
+                    return DeconvolutionMethod.FAST_OVERLAP;
                 default:
                     return DeconvolutionMethod.NONE;
             }
@@ -238,6 +246,8 @@ namespace pwiz.Skyline.SettingsUI
                 return IsolationScheme.SpecialHandlingType.MULTIPLEXED;
             else if (deconvType == DeconvolutionMethod.MSX_OVERLAP)
                 return IsolationScheme.SpecialHandlingType.OVERLAP_MULTIPLEXED;
+            else if (deconvType == DeconvolutionMethod.FAST_OVERLAP)
+                return IsolationScheme.SpecialHandlingType.FAST_OVERLAP;
             else return IsolationScheme.SpecialHandlingType.NONE;
         }
 
@@ -896,7 +906,8 @@ namespace pwiz.Skyline.SettingsUI
             get
             {
                 return Equals(comboDeconvPre.SelectedItem, DeconvolutionMethod.OVERLAP) ||
-                       Equals(comboDeconvPre.SelectedItem, DeconvolutionMethod.MSX_OVERLAP);
+                       Equals(comboDeconvPre.SelectedItem, DeconvolutionMethod.MSX_OVERLAP) ||
+                       Equals(comboDeconvPre.SelectedItem, DeconvolutionMethod.FAST_OVERLAP);
             }
         }
 

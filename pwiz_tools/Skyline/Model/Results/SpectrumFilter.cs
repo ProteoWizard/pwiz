@@ -506,7 +506,8 @@ namespace pwiz.Skyline.Model.Results
                 ? IsolationScheme.SpecialHandlingType.NONE
                 : _fullScan.IsolationScheme.SpecialHandling;
             bool ignoreIso = handlingType == IsolationScheme.SpecialHandlingType.OVERLAP ||
-                             handlingType == IsolationScheme.SpecialHandlingType.OVERLAP_MULTIPLEXED;
+                             handlingType == IsolationScheme.SpecialHandlingType.OVERLAP_MULTIPLEXED ||
+                             handlingType == IsolationScheme.SpecialHandlingType.FAST_OVERLAP;
             
             foreach (var isoWin in GetIsolationWindows(spectra[0].Precursors))
             {
@@ -530,7 +531,8 @@ namespace pwiz.Skyline.Model.Results
                 ? IsolationScheme.SpecialHandlingType.NONE
                 : _fullScan.IsolationScheme.SpecialHandling;
             bool ignoreIso = handlingType == IsolationScheme.SpecialHandlingType.OVERLAP ||
-                             handlingType == IsolationScheme.SpecialHandlingType.OVERLAP_MULTIPLEXED;
+                             handlingType == IsolationScheme.SpecialHandlingType.OVERLAP_MULTIPLEXED ||
+                             handlingType == IsolationScheme.SpecialHandlingType.FAST_OVERLAP;
 
             foreach (var isoWin in GetIsolationWindows(precursors))
             {

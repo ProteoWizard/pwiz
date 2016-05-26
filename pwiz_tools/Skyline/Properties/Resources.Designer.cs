@@ -6814,6 +6814,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Fast Overlap (Experimental).
+        /// </summary>
+        public static string DeconvolutionMethod_FAST_OVERLAP_Fast_Overlap {
+            get {
+                return ResourceManager.GetString("DeconvolutionMethod_FAST_OVERLAP_Fast_Overlap", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Overlap and MSX.
         /// </summary>
         public static string DeconvolutionMethod_MSX_OVERLAP_Overlap_and_MSX {

@@ -751,6 +751,8 @@ namespace pwiz.Skyline.Model.Results
                         return new MsxDemultiplexer(_dataFile, _filter);
                     case IsolationScheme.SpecialHandlingType.OVERLAP_MULTIPLEXED:
                         return new MsxOverlapDemultiplexer(_dataFile, _filter);
+                    case IsolationScheme.SpecialHandlingType.FAST_OVERLAP:
+                        return new FastOverlapDemultiplexer(_dataFile);
                     default:
                         return null;
                 }

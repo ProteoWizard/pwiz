@@ -57,7 +57,8 @@ namespace pwiz.Skyline.SettingsUI
                 return;
 
             bool overlap = Equals(deconv, EditIsolationSchemeDlg.DeconvolutionMethod.MSX_OVERLAP) ||
-                           Equals(deconv, EditIsolationSchemeDlg.DeconvolutionMethod.OVERLAP);
+                           Equals(deconv, EditIsolationSchemeDlg.DeconvolutionMethod.OVERLAP) ||
+                           Equals(deconv, EditIsolationSchemeDlg.DeconvolutionMethod.FAST_OVERLAP);
             
 
             //Setup Graph
