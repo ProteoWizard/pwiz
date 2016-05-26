@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Linq;
 using System.Collections;
 using System.ComponentModel;
@@ -40,6 +41,16 @@ namespace pwiz.Common.DataBinding.Controls
         {
             base.DataSource = BindingListView = new BindingListView(taskScheduler);
             BindingListView.UnhandledExceptionEvent += BindingListViewOnUnhandledException;
+            BindingListView.AllRowsChanged += BindingListViewOnAllRowsChanged;
+        }
+
+        private void BindingListViewOnAllRowsChanged(object sender, EventArgs eventArgs)
+        {
+            var handler = AllRowsChanged;
+            if (null != handler)
+            {
+                handler(this, eventArgs);
+            }
         }
 
         protected override void Dispose(bool disposing)
@@ -131,5 +142,12 @@ namespace pwiz.Common.DataBinding.Controls
                 return !BindingListView.IsRequerying;
             }
         }
+
+        /// <summary>
+        /// Event which fires when all rows of data have potentially changed.
+        /// We try to avoid firing a ListChangeType.Reset event because that resets the
+        /// current cell in the DataGridView to the beginning of the row.
+        /// </summary>
+        public event EventHandler AllRowsChanged;
     }
 }

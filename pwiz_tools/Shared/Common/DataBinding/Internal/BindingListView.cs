@@ -377,9 +377,13 @@ namespace pwiz.Common.DataBinding.Internal
 
         protected void OnAllRowsChanged()
         {
-            for (int i = 0; i < Count; i++)
+            // When all of the rows might have changed, we would like to send a ListChangeType.Reset
+            // event, but that resets the current cell to the start of the row.
+            // Instead, we fire the AllRowsChanged event which the BoundDataGridView pays attention to.
+            var handler = AllRowsChanged;
+            if (handler != null)
             {
-                OnListChanged(new ListChangedEventArgs(ListChangedType.ItemChanged, i));
+                handler(this, EventArgs.Empty);
             }
         }
 
@@ -396,6 +400,7 @@ namespace pwiz.Common.DataBinding.Internal
         }
 
         public event EventHandler<BindingManagerDataErrorEventArgs> UnhandledExceptionEvent;
+        public event EventHandler AllRowsChanged;
 
         public void OnUnhandledException(Exception exception)
         {

@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -35,6 +36,7 @@ namespace pwiz.Common.DataBinding.Controls
     /// </summary>
     public class BoundDataGridView : DataGridView
     {
+        private BindingListSource _bindingListSource;
         private IViewContext _viewContext;
         private IList<PropertyDescriptor> _itemProperties;
 
@@ -59,8 +61,25 @@ namespace pwiz.Common.DataBinding.Controls
                     DataError += _viewContext.OnDataError;
                 }
             }
+            if (!ReferenceEquals(_bindingListSource, bindingListSource))
+            {
+                if (_bindingListSource != null)
+                {
+                    _bindingListSource.AllRowsChanged -= BindingListSourceOnAllRowsChanged;
+                }
+                _bindingListSource = bindingListSource;
+                if (_bindingListSource != null)
+                {
+                    _bindingListSource.AllRowsChanged += BindingListSourceOnAllRowsChanged;
+                }
+            }
             UpdateColumns();
             base.OnDataBindingComplete(e);
+        }
+
+        private void BindingListSourceOnAllRowsChanged(object sender, EventArgs eventArgs)
+        {
+            Invalidate();
         }
 
         protected virtual void UpdateColumns()
