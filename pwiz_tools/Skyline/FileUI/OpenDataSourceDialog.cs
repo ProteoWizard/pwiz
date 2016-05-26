@@ -399,32 +399,9 @@ namespace pwiz.Skyline.FileUI
                     Array.Sort(arraySubDirInfo, (d1, d2) => string.Compare(d1.Name, d2.Name, StringComparison.CurrentCultureIgnoreCase));
                     arrayFileInfo = dirInfo.GetFiles();
                     Array.Sort(arrayFileInfo, (f1, f2) => string.Compare(f1.Name, f2.Name, StringComparison.CurrentCultureIgnoreCase));
-                }
-                catch (Exception x)
-                {
-                    var message = TextUtil.LineSeparate(
-                        Resources.OpenDataSourceDialog_populateListViewFromDirectory_An_error_occurred_attempting_to_retrieve_the_contents_of_this_directory,
-                        x.Message);
-                    // Might throw access violation.
-                    MessageBox.Show(this, message, Program.Name);
-                    return;
-                }
 
-                // Calculate information about the files, allowing the user to cancel
-                foreach (var info in arraySubDirInfo)
-                {
-                    listSourceInfo.Add(getSourceInfo(info));
-                    Application.DoEvents();
-                    if (_abortPopulateList)
-                    {
-                        //MessageBox.Show( "abort" );
-                        break;
-                    }
-                }
-
-                if (!_abortPopulateList)
-                {
-                    foreach (var info in arrayFileInfo)
+                    // Calculate information about the files, allowing the user to cancel
+                    foreach (var info in arraySubDirInfo)
                     {
                         listSourceInfo.Add(getSourceInfo(info));
                         Application.DoEvents();
@@ -434,7 +411,30 @@ namespace pwiz.Skyline.FileUI
                             break;
                         }
                     }
-                }                
+
+                    if (!_abortPopulateList)
+                    {
+                        foreach (var info in arrayFileInfo)
+                        {
+                            listSourceInfo.Add(getSourceInfo(info));
+                            Application.DoEvents();
+                            if (_abortPopulateList)
+                            {
+                                //MessageBox.Show( "abort" );
+                                break;
+                            }
+                        }
+                    }
+                }
+                catch (Exception x)
+                {
+                    var message = TextUtil.LineSeparate(
+                        Resources.OpenDataSourceDialog_populateListViewFromDirectory_An_error_occurred_attempting_to_retrieve_the_contents_of_this_directory,
+                        x.Message);
+                    // Might throw access violation.
+                    MessageDlg.ShowWithException(this, message, x);
+                    return;
+                }
             }
 
             // Populate the list
