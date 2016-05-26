@@ -4514,20 +4514,32 @@ namespace pwiz.Skyline
         private void UpdateImportProgress(MultiProgressStatus multiStatus)
         {
             buttonShowAllChromatograms.Visible = statusProgress.Visible = !multiStatus.IsFinal;
-            if (ImportingResultsWindow == null)
+            if (ImportingResultsWindow == null && !multiStatus.IsFinal)
             {
                 Assume.IsFalse(multiStatus.IsEmpty);    // Should never be starting results window with empty status
                 ImportingResultsWindow = new AllChromatogramsGraph { Owner = this, ChromatogramManager = _chromatogramManager };
                 if (Settings.Default.AutoShowAllChromatogramsGraph)
                     ImportingResultsWindow.Show();
             }
-            ImportingResultsWindow.UpdateStatus(multiStatus);
+            if (ImportingResultsWindow != null)
+                ImportingResultsWindow.UpdateStatus(multiStatus);
+        }
+
+        public void ShowAllChromatogramsGraph()
+        {
+            if (ImportingResultsWindow != null)
+            {
+                if (ImportingResultsWindow.Visible)
+                    ImportingResultsWindow.Activate();
+                else
+                    ImportingResultsWindow.Show();
+                UpdateProgressUI(); // Sets selected control
+            }
         }
 
         private void buttonShowAllChromatograms_ButtonClick(object sender, EventArgs e)
         {
-            if (ImportingResultsWindow != null)
-                ImportingResultsWindow.Show();
+            ShowAllChromatogramsGraph();
         }
 
         Point INotificationContainer.NotificationAnchor

@@ -78,19 +78,25 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        // User is presented these options for file load parallelism
+        public enum ImportResultsSimultaneousFileOptions
+        {
+            one_at_a_time, several, many
+        }
+
         public void InitializeThreadCount()
         {
-            switch (Settings.Default.ImportResultsSimultaneousFiles)
+            switch ((ImportResultsSimultaneousFileOptions)Settings.Default.ImportResultsSimultaneousFiles)
             {
-                case 0:
+                case ImportResultsSimultaneousFileOptions.one_at_a_time:
                     _threadCount = 1;
                     break;
 
-                case 1:
+                case ImportResultsSimultaneousFileOptions.several:
                     _threadCount = Math.Max(1, Environment.ProcessorCount / 4);
                     break;
 
-                case 2:
+                case ImportResultsSimultaneousFileOptions.many:
                     _threadCount = Math.Max(1, Environment.ProcessorCount / 2);
                     break;
             }
@@ -245,7 +251,12 @@ namespace pwiz.Skyline.Model
             var loadingStatus = status as ChromatogramLoadingStatus;
             if (loadingStatus != null)
             {
-                status = _chromatogramManager.ChangeStatus(loadingStatus);
+                // If the ChromatogramManager has alread had its status reset, avoid calling
+                // UpdateProgress with the empty status
+                var multiStatus = _chromatogramManager.ChangeStatus(loadingStatus);
+                if (multiStatus.IsEmpty)
+                    return UpdateProgressResponse.normal;
+                status = multiStatus;
             }
             var progressResult = _chromatogramManager.UpdateProgress(status);
             return progressResult;

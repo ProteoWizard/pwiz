@@ -139,7 +139,7 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // Paste a protein list
-            var document = WaitForProteinMetadataBackgroundLoaderCompletedUI();
+            var document = WaitForDocumentLoaded();
             RunUI(() =>
                       {
                           SetClipboardText(PROTEINLIST_CLIPBOARD_TEXT);

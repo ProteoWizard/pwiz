@@ -39,7 +39,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private readonly Stopwatch _stopwatch;
         private int _selected = -1;
         private bool _selectionIsSticky;
-        private int _multiFileWindowWidth;
+        private readonly int _multiFileWindowWidth;
         private readonly List<MsDataFileUri> _partialProgressList = new List<MsDataFileUri>();
         private DateTime _retryTime;
         private int _nextRetry;
@@ -55,6 +55,7 @@ namespace pwiz.Skyline.Controls.Graphs
             InitializeComponent();
             toolStrip1.Renderer = new CustomToolStripProfessionalRenderer();
             _stopwatch = new Stopwatch();
+            _multiFileWindowWidth = Size.Width;
         }
 
         protected override void OnLoad(EventArgs e)
@@ -63,7 +64,6 @@ namespace pwiz.Skyline.Controls.Graphs
             if (DesignMode) return;
 
             Icon = Resources.Skyline;
-            _multiFileWindowWidth = Size.Width;
 
             // Restore window placement.
             if (Program.DemoMode)

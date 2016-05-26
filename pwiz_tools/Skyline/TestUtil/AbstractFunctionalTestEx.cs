@@ -86,7 +86,9 @@ namespace pwiz.SkylineTestUtil
         /// <param name="expectedErrorMessage">anticipated error dialog message, if any</param>
         public void ImportResults(string[] dataFiles, LockMassParameters lockMassParameters, int waitForLoadSeconds = 420, string expectedErrorMessage = null)
         {
-            ImportResultsAsync(dataFiles, lockMassParameters);
+            ImportResultsAsync(dataFiles, lockMassParameters, expectedErrorMessage);
+            if (expectedErrorMessage != null)
+                return;
             WaitForConditionUI(waitForLoadSeconds*1000,
                 () => {
                     var document = SkylineWindow.DocumentUI;
@@ -104,7 +106,7 @@ namespace pwiz.SkylineTestUtil
             ImportResults(dataFiles, null);
         }
 
-        public void ImportResultsAsync(params string[] dataFiles)
+        public void ImportResultsAsync(params string[] dataFiles )
         {
             ImportResultsAsync(dataFiles, null);
         }

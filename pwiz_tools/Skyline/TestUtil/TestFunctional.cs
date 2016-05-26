@@ -383,9 +383,9 @@ namespace pwiz.SkylineTestUtil
             return waitCycles;
         }
 
-        public static TDlg WaitForOpenForm<TDlg>() where TDlg : Form
+        public static TDlg TryWaitForOpenForm<TDlg>(int millis = WAIT_TIME) where TDlg : Form
         {
-            int waitCycles = GetWaitCycles();
+            int waitCycles = GetWaitCycles(millis);
             for (int i = 0; i < waitCycles; i++)
             {
                 Assert.IsFalse(Program.TestExceptions.Any(), "Exception while running test");
@@ -422,10 +422,19 @@ namespace pwiz.SkylineTestUtil
                 }
 
                 Thread.Sleep(SLEEP_INTERVAL);
-                if (i == waitCycles - 1)
-                    Assert.Fail("Timeout {0} seconds exceeded in WaitForOpenForm({1}). Open forms: {2}", waitCycles * SLEEP_INTERVAL / 1000, typeof(TDlg).Name, GetOpenFormsString()); // Not L10N
             }
             return null;
+        }
+
+        public static TDlg WaitForOpenForm<TDlg>(int millis = WAIT_TIME) where TDlg : Form
+        {
+            var result = TryWaitForOpenForm<TDlg>(millis);
+            if (result == null)
+            {
+                int waitCycles = GetWaitCycles(millis);
+                Assert.Fail("Timeout {0} seconds exceeded in WaitForOpenForm({1}). Open forms: {2}", waitCycles * SLEEP_INTERVAL / 1000, typeof(TDlg).Name, GetOpenFormsString()); // Not L10N
+            }
+            return result;
         }
 
         private void PauseForForm(Type formType)
@@ -553,7 +562,7 @@ namespace pwiz.SkylineTestUtil
                     Assert.Fail("Unexpected alert found: {0}", TextUtil.LineSeparate(alertDlg.Message, alertDlg.DetailMessage));
                 return SkylineWindow.DocumentUI.IsLoaded;
             });
-            WaitForProteinMetadataBackgroundLoaderCompleted(millis);  // make sure document is stable
+            WaitForProteinMetadataBackgroundLoaderCompletedUI(millis);  // make sure document is stable
             return SkylineWindow.Document;
         }
 
