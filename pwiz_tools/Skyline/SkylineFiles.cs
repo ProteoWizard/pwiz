@@ -2402,23 +2402,9 @@ namespace pwiz.Skyline
                         var results = doc.Settings.MeasuredResults;
                         if (results == null)
                             return doc;
-                        var listChrom = new List<ChromatogramSet>(dlg.Chromatograms);
 
                         // Set HasMidasSpectra = false for file infos
-                        var removedFileNames = dlg.LibraryRunsRemovedList.Select(Path.GetFileName).ToArray();
-                        for (var i = 0; i < listChrom.Count; i++)
-                        {
-                            var infos = new List<ChromFileInfo>();
-                            foreach (var info in listChrom[i].MSDataFileInfos)
-                            {
-                                var infoToAdd = info.HasMidasSpectra && removedFileNames.Contains(info.FilePath.GetFileName())
-                                    ? info.ChangeHasMidasSpectra(false)
-                                    : info;
-                                infos.Add(infoToAdd);
-                            }
-                            if (!ArrayUtil.ReferencesEqual(listChrom[i].MSDataFileInfos, infos))
-                                listChrom[i] = listChrom[i].ChangeMSDataFileInfos(infos);
-                        }
+                        var listChrom = MidasLibrary.UnflagFiles(dlg.Chromatograms, dlg.LibraryRunsRemovedList.Select(Path.GetFileName)).ToList();
 
                         if (ArrayUtil.ReferencesEqual(results.Chromatograms, listChrom))
                             return doc;

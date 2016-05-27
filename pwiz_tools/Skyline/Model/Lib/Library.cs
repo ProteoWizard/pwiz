@@ -132,6 +132,7 @@ namespace pwiz.Skyline.Model.Lib
                 var midasLibSpec = libraries.MidasLibrarySpecs.FirstOrDefault();
                 var newMidasLibSpec = missingMidasFiles.Any() && midasLibSpec == null;
                 MidasLibrary midasLibrary = null;
+                var failedMidasFiles = new List<MsDataFilePath>();
                 if (missingMidasFiles.Any())
                 {
                     if (midasLibSpec == null)
@@ -140,13 +141,21 @@ namespace pwiz.Skyline.Model.Lib
                         var midasLibPath = MidasLibSpec.GetLibraryFileName(container.DocumentFilePath);
                         midasLibSpec = (MidasLibSpec)LibrarySpec.CreateFromPath(MidasLibSpec.DEFAULT_NAME, midasLibPath);
                     }
-                    MidasLibrary.AddSpectra(midasLibSpec.FilePath, missingMidasFiles.Select(f => new MsDataFilePath(f)).ToArray(), new LoadMonitor(this, container, null));
-                    if (!newMidasLibSpec)
-                        ReloadLibraries(container, midasLibSpec);
-                    midasLibrary = (MidasLibrary) LoadLibrary(midasLibSpec, () => new LoadMonitor(this, container, !newMidasLibSpec ? midasLibSpec : null));
+                    MidasLibrary.AddSpectra(midasLibSpec.FilePath, missingMidasFiles.Select(f => new MsDataFilePath(f)).ToArray(), new LoadMonitor(this, container, null), out failedMidasFiles);
+                    if (failedMidasFiles.Count < missingMidasFiles.Length)
+                    {
+                        if (!newMidasLibSpec)
+                            ReloadLibraries(container, midasLibSpec);
+                        midasLibrary = (MidasLibrary) LoadLibrary(midasLibSpec, () => new LoadMonitor(this, container, !newMidasLibSpec ? midasLibSpec : null));
 
-                    if (!dictLibraries.ContainsKey(midasLibSpec.Name))
-                        dictLibraries.Add(midasLibSpec.Name, midasLibrary);
+                        if (!dictLibraries.ContainsKey(midasLibSpec.Name))
+                            dictLibraries.Add(midasLibSpec.Name, midasLibrary);
+                    }
+                    else
+                    {
+                        midasLibSpec = null;
+                        newMidasLibSpec = false;
+                    }
                 }
 
                 SrmDocument docNew;
@@ -174,30 +183,38 @@ namespace pwiz.Skyline.Model.Lib
                         }
                     }
                     // If nothing changed, end without changing the document.
-                    if (!changed && !newMidasLibSpec)
+                    if (!changed && !newMidasLibSpec && !failedMidasFiles.Any())
                     {
                         return false;
                     }
 
-                    docNew = null;
+                    docNew = docCurrent;
                     if (newMidasLibSpec)
                     {
                         // We need to add this MIDAS LibrarySpec to the document
                         var libSpecs = libraries.LibrarySpecs.ToList();
                         libSpecs.Add(midasLibSpec);
-                        docNew = docCurrent.ChangeSettings(docCurrent.Settings.ChangePeptideLibraries(libs => libs.ChangeLibrarySpecs(libSpecs)));
+                        docNew = docNew.ChangeSettings(docNew.Settings.ChangePeptideLibraries(libs => libs.ChangeLibrarySpecs(libSpecs)));
                         libraries = docNew.Settings.PeptideSettings.Libraries;
                         list.Add(midasLibrary);
                         docNew.Settings.UpdateLists(container.DocumentFilePath);
                     }
-
                     libraries = libraries.ChangeLibraries(list.ToArray());
+
+                    if (failedMidasFiles.Any() && docNew.Settings.HasResults)
+                    {
+                        var newChromatograms = MidasLibrary.UnflagFiles(docNew.Settings.MeasuredResults.Chromatograms, failedMidasFiles.Select(file => file.GetFileName())).ToList();
+                        if (!ArrayUtil.ReferencesEqual(docNew.Settings.MeasuredResults.Chromatograms, newChromatograms))
+                        {
+                            docNew = docNew.ChangeMeasuredResults(docNew.Settings.MeasuredResults.ChangeChromatograms(newChromatograms));
+                        }
+                    }
+
                     using (var settingsChangeMonitor = new SrmSettingsChangeMonitor(
                             new LoadMonitor(this, container, null), Resources.LibraryManager_LoadBackground_Updating_library_settings_for__0_, container, docCurrent))
                     {
                         try
                         {
-                            docNew = docNew ?? docCurrent;
                             docNew = docNew.ChangeSettings(docNew.Settings.ChangePeptideSettings(
                                 docNew.Settings.PeptideSettings.ChangeLibraries(libraries)), settingsChangeMonitor);
                         }

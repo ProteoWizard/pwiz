@@ -136,6 +136,32 @@ namespace pwiz.Skyline.Model.Lib.Midas
             return midasFiles.Where(f => !libFiles.Contains(Path.GetFileName(f))).ToArray();
         }
 
+        public static IEnumerable<ChromatogramSet> UnflagFiles(IEnumerable<ChromatogramSet> chromatograms, IEnumerable<string> filenames)
+        {
+            var arrFiles = new HashSet<string>(filenames);
+            if (!arrFiles.Any())
+            {
+                foreach (var chromSet in chromatograms)
+                    yield return chromSet;
+                yield break;
+            }
+
+            foreach (var chromSet in chromatograms)
+            {
+                var infos = new List<ChromFileInfo>();
+                foreach (var info in chromSet.MSDataFileInfos)
+                {
+                    var infoToAdd = info.HasMidasSpectra && arrFiles.Contains(info.FilePath.GetFileName())
+                        ? info.ChangeHasMidasSpectra(false)
+                        : info;
+                    infos.Add(infoToAdd);
+                }
+                yield return !ArrayUtil.ReferencesEqual(chromSet.MSDataFileInfos, infos)
+                    ? chromSet.ChangeMSDataFileInfos(infos)
+                    : chromSet;
+            }
+        }
+
         private static IEnumerable<double> ReadChromPrecursorsFromMsd(MsDataFileImpl msd, IProgressMonitor monitor)
         {
             for (var i = 0; i < msd.ChromatogramCount; i++)
@@ -490,12 +516,13 @@ namespace pwiz.Skyline.Model.Lib.Midas
             }
         }
 
-        public static void AddSpectra(string midasLibPath, MsDataFilePath[] resultsFiles, ILoadMonitor monitor)
+        public static void AddSpectra(string midasLibPath, MsDataFilePath[] resultsFiles, ILoadMonitor monitor, out List<MsDataFilePath> failedFiles)
         {
             // Get spectra from results files
             var newSpectra = new List<DbSpectrum>();
             var progress = new ProgressStatus(string.Empty).ChangeMessage(Resources.MidasLibrary_AddSpectra_Reading_MIDAS_spectra);
             const int percentResultsFiles = 80;
+            failedFiles = new List<MsDataFilePath>();
             for (var i = 0; i < resultsFiles.Length; i++)
             {
                 var resultsFile = resultsFiles[i];
@@ -515,9 +542,10 @@ namespace pwiz.Skyline.Model.Lib.Midas
                         }
                     }
                 }
-                catch
+                catch (Exception x)
                 {
-                    // ignored
+                    monitor.UpdateProgress(progress.ChangeErrorException(x));
+                    failedFiles.Add(resultsFile);
                 }
                 if (monitor.IsCanceled)
                 {
@@ -525,6 +553,13 @@ namespace pwiz.Skyline.Model.Lib.Midas
                     return;
                 }
             }
+
+            if (!newSpectra.Any())
+            {
+                monitor.UpdateProgress(progress.Complete());
+                return;
+            }
+
             progress = progress.ChangePercentComplete(percentResultsFiles);
             monitor.UpdateProgress(progress);
 
