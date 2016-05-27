@@ -139,7 +139,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public ChromatogramManager ChromatogramManager { get; set; }
 
-        public bool Canceled { get; private set; }
+        public bool IsUserCanceled { get; private set; }
 
         public string Error { get { return textBoxError.Text; } }
 
@@ -225,9 +225,14 @@ namespace pwiz.Skyline.Controls.Graphs
             Retry(((FileProgressControl) flowFileStatus.Controls[index]).Status);
         }
 
-        public bool IsComplete(int index)
+        public bool IsItemComplete(int index)
         {
             return ((FileProgressControl) flowFileStatus.Controls[index]).Status.IsComplete;
+        }
+
+        public bool IsItemCanceled(int index)
+        {
+            return ((FileProgressControl)flowFileStatus.Controls[index]).Status.IsCanceled;
         }
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
@@ -613,7 +618,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void ClickCancel()
         {
-            graphChromatograms.IsCanceled = Canceled = true;
+            graphChromatograms.IsCanceled = IsUserCanceled = true;
             Program.MainWindow.ModifyDocument(Resources.AllChromatogramsGraph_btnCancel_Click_Cancel_import,
                 doc => FilterFiles(doc, info => IsCachedFile(doc, info)));
         }

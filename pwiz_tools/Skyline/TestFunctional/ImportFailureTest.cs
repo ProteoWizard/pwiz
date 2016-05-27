@@ -78,7 +78,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.ImportingResultsWindow.ClickAutoCloseWindow());
             RunUI(() => SkylineWindow.ImportingResultsWindow.RetryImport(1));
             doc = WaitForDocumentChangeLoaded(doc); 
-            WaitForConditionUI(() => SkylineWindow.ImportingResultsWindow.IsComplete(1));
+            WaitForConditionUI(() => SkylineWindow.ImportingResultsWindow.IsItemComplete(1));
             files = SkylineWindow.ImportingResultsWindow.Files.ToArray();
             Assert.AreEqual(2, files.Length);
             Assert.AreEqual(succeeds2File, files[0].FilePath.GetFilePath());

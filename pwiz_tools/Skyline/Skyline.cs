@@ -4473,7 +4473,7 @@ namespace pwiz.Skyline
                 }
                 else if (ImportingResultsWindow != null)
                 {
-                    if (!ImportingResultsWindow.Canceled)
+                    if (!ImportingResultsWindow.IsUserCanceled)
                         Settings.Default.AutoShowAllChromatogramsGraph = ImportingResultsWindow.Visible;
                     ImportingResultsWindow.Finish();
                     if (!ImportingResultsWindow.HasErrors && Settings.Default.ImportResultsAutoCloseWindow)

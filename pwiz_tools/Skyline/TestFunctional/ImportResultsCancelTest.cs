@@ -32,7 +32,7 @@ namespace pwiz.SkylineTestFunctional
         /// <summary>
         /// Verify that the import results cancel button works
         /// </summary>
-      //  [TestMethod]  // TODO uncomment this when this test actually passes.  It works fine on its own in Test Explorer, but when run in a loop in SkylineTester it tends to fail, and/or issue warnings like "*** Attempt to complete document with non-final status ***"
+        //[TestMethod]  // TODO uncomment this when this test actually passes.  It works fine on its own in Test Explorer, but when run in a loop in SkylineTester it tends to fail, and/or issue warnings like "*** Attempt to complete document with non-final status ***"
         public void TestImportResultsCancel()
         {
             Run(@"TestFunctional\RetentionTimeFilterTest.zip");
@@ -44,6 +44,8 @@ namespace pwiz.SkylineTestFunctional
             TestCancellation(false);  // Start with progress window invisible
         }
 
+        private const int maxTries = 10;
+
         private void TestCancellation(bool initiallyVisible)
         {
             var files = new[] {"8fmol.mz5", "20fmol.mz5", "40fmol.mz5", "200fmol.mz5"};
@@ -52,9 +54,10 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => { SkylineWindow.SaveDocument(TestFilesDir.GetTestPath(skyfile)); });  // Make a clean copy
 
             // Try individual cancellation - can be timing dependent (do we get to the cancel button quickly enough?) so allow some retry
-            for (var retry = 10; retry-- > 0;)
+            for (int retry = 0; retry < maxTries; retry++)
             {
                 OpenDocument(skyfile);
+                Assert.IsFalse(SkylineWindow.Document.Settings.HasResults);
                 Settings.Default.AutoShowAllChromatogramsGraph = initiallyVisible; // Start with progress window hidden?
                 Settings.Default.ImportResultsSimultaneousFiles =
                     (int) MultiFileLoader.ImportResultsSimultaneousFileOptions.many; // Ensure all buttons are enabled
@@ -80,9 +83,11 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
                 WaitForCondition(30*1000, () => dlg2.ProgressTotalPercent >= 1); // Get a least a little way in
-                var cancelTarget = files[retry%4].Replace(".mz5", "");
+                int cancelIndex = retry%4;
+                var cancelTarget = files[cancelIndex].Replace(".mz5", "");
                 RunUI(() => dlg2.FileButtonClick(cancelTarget));
                 WaitForDocumentLoaded();
+                WaitForClosedAllChromatogramsGraph();
                 foreach (var file in files)
                 {
                     int index;
@@ -94,38 +99,22 @@ namespace pwiz.SkylineTestFunctional
                     if (!chromatogramSetName.Equals(cancelTarget))
                     {
                         // Should always find it since we didn't try to cancel this one
-                        Assert.AreNotEqual(-1, index);
+                        Assert.AreNotEqual(-1, index, string.Format("Missing chromatogram set {0} after cancelling {1}", chromatogramSetName, cancelTarget));
                     }
-                    else
+                    else if (index == -1)
                     {
-                        // Should not find anything by that name, but sometimes we're not quick enough on the cancel button
-                        if (retry == 0)
-                        {
-                            if (index != -1)
-                                Assert.Fail("Failed to cancel individual file import");
-                                    // No more retries, declare failure or success
-                        }
-                        else if (index == -1)
-                        {
-                            retry = 0; // Success, no more retry needed
-                        }
-                        else
-                        {
-                            break; // Go back and retry
-                        }
+                        retry = maxTries; // Success, no more retry needed
+                    }
+                    else if (retry == maxTries - 1)
+                    {
+                        Assert.Fail("Failed to cancel individual file import");
                     }
                 }
             }
 
             // Cancelled load should revert to initial document
-            OpenDocument("RetentionTimeFilterTest.sky");
-            var docUnloaded = SkylineWindow.Document;
-            ImportResultsAsync(files);
-            var dlg = WaitForOpenForm<AllChromatogramsGraph>();
-            WaitForCondition(30*1000, () => dlg.ProgressTotalPercent >= 1); // Get a least a little way in
-            RunUI(() => dlg.ClickCancel()); // Simulate user clicking the cancel button        
-            Assert.AreEqual(docUnloaded, SkylineWindow.Document);
-            Assert.IsFalse(SkylineWindow.Document.Settings.HasResults);
+            CancelAll(files, false);
+            CancelAll(files, true);
 
             // Now try a proper import
             Settings.Default.AutoShowAllChromatogramsGraph = initiallyVisible;
@@ -143,11 +132,56 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNotNull(dlgACG.SelectedControl, "unable to select a loader control in chromatogram progress window");
             Assert.IsTrue(dlgACG.Width > 500, "Initially hidden chromatogram progress window did not size properly when enabled by user"); // Did it resize properly?
             WaitForDocumentLoaded();
+            WaitForClosedAllChromatogramsGraph();
             AssertResult.IsDocumentResultsState(SkylineWindow.Document, "8fmol", 4, 4, 0, 13, 0);
             AssertResult.IsDocumentResultsState(SkylineWindow.Document, "20fmol", 5, 5, 0, 13, 0);
             AssertResult.IsDocumentResultsState(SkylineWindow.Document, "40fmol", 3, 3, 0, 11, 0);
             AssertResult.IsDocumentResultsState(SkylineWindow.Document, "200fmol", 4, 4, 0, 12, 0);
         }
-    }
 
+        private void CancelAll(string[] files, bool closeOnFinish)
+        {
+            Settings.Default.ImportResultsAutoCloseWindow = closeOnFinish;
+
+            for (int retry = 0; retry < maxTries; retry++)
+            {
+                OpenDocument("RetentionTimeFilterTest.sky");
+                Assert.IsFalse(SkylineWindow.Document.Settings.HasResults);
+                var docUnloaded = SkylineWindow.Document;
+                ImportResultsAsync(files);
+                var dlg = WaitForOpenForm<AllChromatogramsGraph>();
+                RunUI(dlg.ClickCancel);
+                if (closeOnFinish)
+                    WaitForClosedAllChromatogramsGraph();
+                WaitForDocumentLoaded();
+                if (SkylineWindow.Document.Settings.HasResults)
+                {
+                    if (!closeOnFinish)
+                        OkDialog(dlg, dlg.ClickClose);
+                }
+                else
+                {
+                    Assert.AreEqual(docUnloaded, SkylineWindow.Document);
+                    if (!closeOnFinish)
+                    {
+                        WaitForConditionUI(() =>
+                        {
+                            for (int i = 0; i < files.Length; i++)
+                            {
+                                if (!dlg.IsItemCanceled(i))
+                                    return false;
+                            }
+                            return true;
+                        });
+                        RunUI(() =>
+                        {
+                            Assert.IsTrue(dlg.IsUserCanceled);
+                            dlg.ClickClose();
+                        });
+                    }
+                    break;
+                }
+            }
+        }
+    }
 }

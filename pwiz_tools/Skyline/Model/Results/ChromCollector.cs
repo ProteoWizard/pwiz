@@ -652,10 +652,12 @@ namespace pwiz.Skyline.Model.Results
                     // We make some effort to generate unique file names so that more than one instance
                     // of Skyline can load the same raw data file simultaneously.
                     var xicDir = GetSpillDirectory(cachePath);
-                    Directory.CreateDirectory(xicDir);
-                    string fileName = Path.Combine(xicDir,
-                        "xic" + "_" + DateTime.Now.ToString("yyyyMMddHHmmssfff") + "_" + Guid.NewGuid() + ".tmp"); // Not L10N
-                    Stream = File.Create(fileName, ushort.MaxValue, FileOptions.DeleteOnClose);
+                    Helpers.Try<Exception>(() =>
+                    {
+                        string fileName = FileStreamManager.Default.GetTempFileName(xicDir, "xic"); // Not L10N
+                        Stream = File.Create(fileName, ushort.MaxValue, FileOptions.DeleteOnClose);
+                    },
+                    2, 100);
                 }
                 return Stream;
             }
