@@ -79,6 +79,7 @@
             // 
             // AssociateProteinsDlg
             // 
+            this.AcceptButton = this.btnApplyChanges;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;

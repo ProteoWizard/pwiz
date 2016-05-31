@@ -67,6 +67,11 @@ namespace pwiz.Skyline.EditUI
         // find matches using the background proteome
         public void UseBackgroundProteome()
         {
+            if (_parent.Document.Settings.PeptideSettings.BackgroundProteome == BackgroundProteome.NONE)
+            {
+                MessageDlg.Show(this, Resources.AssociateProteinsDlg_UseBackgroundProteome_No_background_proteome_defined);
+                return;
+            }
             checkBoxListMatches.Items.Clear();
             BackgroundProteome proteome = _parent.Document.Settings.PeptideSettings.BackgroundProteome;
             var proteinAssociations = new List<KeyValuePair<FastaSequence, List<PeptideDocNode>>>();

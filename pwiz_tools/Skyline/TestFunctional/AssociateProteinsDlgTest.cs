@@ -22,9 +22,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.SkylineTestUtil;
+using Resources = pwiz.Skyline.Properties.Resources;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -66,10 +68,18 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         private void TestUseBackgroundProteome()
         {
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("AssociateProteinsTest.sky")));
+            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("AssociateProteinsTest-NoBg.sky")));
             var associateProteinsDlg = ShowDialog<AssociateProteinsDlg>(SkylineWindow.ShowAssociateProteinsDlg);
-            RunUI(associateProteinsDlg.UseBackgroundProteome);
-            TestDialog(associateProteinsDlg, ImportType.BGPROTEOME);
+            RunDlg<MessageDlg>(associateProteinsDlg.UseBackgroundProteome, messageDlg =>
+            {
+                AssertEx.AreComparableStrings(Resources.AssociateProteinsDlg_UseBackgroundProteome_No_background_proteome_defined, messageDlg.Message);
+                messageDlg.OkDialog();
+            });
+            OkDialog(associateProteinsDlg, associateProteinsDlg.CancelButton.PerformClick);
+            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("AssociateProteinsTest.sky")));
+            var associateProteinsDlg2 = ShowDialog<AssociateProteinsDlg>(SkylineWindow.ShowAssociateProteinsDlg);
+            RunUI(associateProteinsDlg2.UseBackgroundProteome);
+            TestDialog(associateProteinsDlg2, ImportType.BGPROTEOME);
         }
 
 

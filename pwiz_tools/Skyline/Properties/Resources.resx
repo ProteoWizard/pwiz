@@ -9053,4 +9053,8 @@ Here are the last 3 errors:
   <data name="MidasLibrary_AddSpectra_Reading_MIDAS_spectra" xml:space="preserve">
     <value>Reading MIDAS spectra</value>
   </data>
+  <data name="AssociateProteinsDlg_UseBackgroundProteome_No_background_proteome_defined" xml:space="preserve">
+    <value>No background proteome defined, see the Digestion tab in Peptide Settings for more information.</value>
+    <comment>If background proteome is set to "None" and user attempts to "Use background proteome" when associating proteins</comment>
+  </data>
 </root>

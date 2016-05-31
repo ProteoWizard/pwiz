@@ -1483,6 +1483,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No background proteome defined, see the Digestion tab in Peptide Settings for more information..
+        /// </summary>
+        public static string AssociateProteinsDlg_UseBackgroundProteome_No_background_proteome_defined {
+            get {
+                return ResourceManager.GetString("AssociateProteinsDlg_UseBackgroundProteome_No_background_proteome_defined", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No matches were found using the background proteome..
         /// </summary>
         public static string AssociateProteinsDlg_UseBackgroundProteome_No_matches_were_found_using_the_background_proteome_ {

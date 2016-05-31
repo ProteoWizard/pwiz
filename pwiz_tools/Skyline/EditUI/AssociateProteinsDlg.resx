@@ -214,7 +214,7 @@
     <value>3</value>
   </data>
   <data name="btnApplyChanges.Text" xml:space="preserve">
-    <value>Apply</value>
+    <value>OK</value>
   </data>
   <data name="&gt;&gt;btnApplyChanges.Name" xml:space="preserve">
     <value>btnApplyChanges</value>
