@@ -655,10 +655,10 @@
     <value>Top, Right</value>
   </data>
   <data name="comboStandards.Location" type="System.Drawing.Point, System.Drawing">
-    <value>251, 155</value>
+    <value>202, 155</value>
   </data>
   <data name="comboStandards.Size" type="System.Drawing.Size, System.Drawing">
-    <value>121, 21</value>
+    <value>170, 21</value>
   </data>
   <data name="comboStandards.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>

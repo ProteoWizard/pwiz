@@ -2289,6 +2289,7 @@
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\Pierce.sky" />
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\Sigma.sky" />
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\CiRT.sky" />
+    <EmbeddedResource Include="Model\Irt\StandardsDocuments\Sciex.sky" />
     <None Include="Resources\StartPage\GroupedStudies_thumb.jpg" />
     <None Include="Resources\StartPage\DIA_thumb.jpg" />
     <None Include="Resources\StartPage\SmallMolecule_thumb.jpg" />
