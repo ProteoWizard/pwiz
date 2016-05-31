@@ -28,6 +28,7 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using Excel;
+using Microsoft.Diagnostics.Runtime;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
@@ -540,7 +541,57 @@ namespace pwiz.SkylineTestUtil
                 if (!string.IsNullOrEmpty(state))
                    result += " Also, document is not fully loaded: \"" + state + "\"";
             }
+            result += GetAllThreadsStackTraces();
             return result;
+        }
+
+        private static string GetAllThreadsStackTraces()
+        {
+            // Adapted from:
+            // http://stackoverflow.com/questions/2057781/is-there-a-way-to-get-the-stacktraces-for-all-threads-in-c-like-java-lang-thre
+            //
+            // Requires NuGet package ClrMd from Microsoft (prerelease version 0.8.31-beta as of 5/25/2016)
+            //
+            // N.B. this doesn't show line numbers - that apparently can be done using the techniques at
+            // https://github.com/Microsoft/clrmd/blob/master/src/FileAndLineNumbers/Program.cs
+
+            var result = "\r\nCould not get stack traces of running threads.\r\n";
+            try
+            {
+                var pid = System.Diagnostics.Process.GetCurrentProcess().Id;
+
+                using (var dataTarget = DataTarget.AttachToProcess(pid, 5000, AttachFlag.Passive))
+                {
+                    var runtime = dataTarget.ClrVersions[0].CreateRuntime();
+                    if (runtime != null)
+                    {
+                        result = string.Empty;
+                        foreach (var t in runtime.Threads)
+                        {
+                            result += "Thread Id " + t.ManagedThreadId + "\r\n";
+                            var exception = t.CurrentException;
+                            if (exception != null)
+                            {
+                                result += string.Format("  CurrentException: {0:X} ({1}), HRESULT={2:X}\r\n", exception.Address, exception.Type.Name, exception.HResult);
+                            }
+                            if (t.StackTrace.Any())
+                            {
+                                result += "   Stacktrace:\r\n";
+                                foreach (var frame in t.StackTrace)
+                                {
+                                    result += String.Format("    {0,12:x} {1,12:x} {2}\r\n", frame.InstructionPointer, frame.StackPointer, frame.DisplayString);
+                                }
+                            }
+                        }
+                    }
+                    result += "End of managed threads list.\r\n";
+                }
+            }
+            catch
+            {
+                // ignored
+            }
+            return "\r\nCurrent managed thread stack traces: \r\n" + result;
         }
 
         public static SrmDocument WaitForDocumentChange(SrmDocument docCurrent)
