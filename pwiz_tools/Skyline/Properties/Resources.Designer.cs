@@ -1464,6 +1464,44 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Associated proteins.
+        /// </summary>
+        public static string AssociateProteinsDlg_ApplyChanges_Associated_proteins {
+            get {
+                return ResourceManager.GetString("AssociateProteinsDlg_ApplyChanges_Associated_proteins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No matches were found using the imported fasta file..
+        /// </summary>
+        public static string AssociateProteinsDlg_FindProteinMatchesWithFasta_No_matches_were_found_using_the_imported_fasta_file_ {
+            get {
+                return ResourceManager.GetString("AssociateProteinsDlg_FindProteinMatchesWithFasta_No_matches_were_found_using_the_" +
+                        "imported_fasta_file_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No matches were found using the background proteome..
+        /// </summary>
+        public static string AssociateProteinsDlg_UseBackgroundProteome_No_matches_were_found_using_the_background_proteome_ {
+            get {
+                return ResourceManager.GetString("AssociateProteinsDlg_UseBackgroundProteome_No_matches_were_found_using_the_backgr" +
+                        "ound_proteome_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There was an error reading from the file..
+        /// </summary>
+        public static string AssociateProteinsDlg_UseFastaFile_There_was_an_error_reading_from_the_file_ {
+            get {
+                return ResourceManager.GetString("AssociateProteinsDlg_UseFastaFile_There_was_an_error_reading_from_the_file_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Intensity.
         /// </summary>
         public static string AsyncChromatogramsGraph_AsyncChromatogramsGraph_Intensity {

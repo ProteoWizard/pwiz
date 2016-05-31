@@ -291,6 +291,7 @@ namespace pwiz.Skyline
             this.removeMissingResultsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator45 = new System.Windows.Forms.ToolStripSeparator();
             this.acceptProteinsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.associateFASTAMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.renameProteinsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.sortProteinsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.sortProteinsByNameToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -2246,6 +2247,7 @@ namespace pwiz.Skyline
             this.removeMissingResultsMenuItem,
             this.toolStripSeparator45,
             this.acceptProteinsMenuItem,
+            this.associateFASTAMenuItem,
             this.renameProteinsMenuItem,
             this.sortProteinsMenuItem,
             this.toolStripSeparator43,
@@ -2298,6 +2300,12 @@ namespace pwiz.Skyline
             this.acceptProteinsMenuItem.Name = "acceptProteinsMenuItem";
             resources.ApplyResources(this.acceptProteinsMenuItem, "acceptProteinsMenuItem");
             this.acceptProteinsMenuItem.Click += new System.EventHandler(this.acceptProteinsMenuItem_Click);
+            // 
+            // associateFASTAMenuItem
+            // 
+            this.associateFASTAMenuItem.Name = "associateFASTAMenuItem";
+            resources.ApplyResources(this.associateFASTAMenuItem, "associateFASTAMenuItem");
+            this.associateFASTAMenuItem.Click += new System.EventHandler(this.associateFASTAMenuItem_Click);
             // 
             // renameProteinsMenuItem
             // 
@@ -3744,6 +3752,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem timeCorrelationContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem timeResidualsContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem removeEmptyPeptidesMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem associateFASTAMenuItem;
         private System.Windows.Forms.ToolStripMenuItem timePointsContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem timeTargetsContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem timeStandardsContextMenuItem;

@@ -16,6 +16,7 @@ AllChromatogramsGraph,*
 AreaChartPropertyDlg,TestEditDialogs
 AreaGraphController,TestEditDialogs
 ArrangeGraphsGroupedDlg,TestManageResults
+AssociateProteinsDlg, TestAssociateProteins
 BuildBackgroundProteomeDlg,TestBackgroundProteome
 BuildLibraryDlg,TestFullScanId
 BuildLibraryNotification,*

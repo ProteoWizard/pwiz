@@ -9014,6 +9014,18 @@ Here are the last 3 errors:
   <data name="CommandArgs_IsolationListInstrumentType_The_instrument_type__0__is_not_valid_for_isolation_list_export" xml:space="preserve">
     <value>The instrument type {0} is not valid for isolation list export</value>
   </data>
+  <data name="AssociateProteinsDlg_ApplyChanges_Associated_proteins" xml:space="preserve">
+    <value>Associated proteins</value>
+  </data>
+  <data name="AssociateProteinsDlg_FindProteinMatchesWithFasta_No_matches_were_found_using_the_imported_fasta_file_" xml:space="preserve">
+    <value>No matches were found using the imported fasta file.</value>
+  </data>
+  <data name="AssociateProteinsDlg_UseBackgroundProteome_No_matches_were_found_using_the_background_proteome_" xml:space="preserve">
+    <value>No matches were found using the background proteome.</value>
+  </data>
+  <data name="AssociateProteinsDlg_UseFastaFile_There_was_an_error_reading_from_the_file_" xml:space="preserve">
+    <value>There was an error reading from the file.</value>
+  </data>
   <data name="DeconvolutionMethod_FAST_OVERLAP_Fast_Overlap" xml:space="preserve">
     <value>Fast Overlap (Experimental)</value>
   </data>

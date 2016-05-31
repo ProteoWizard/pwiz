@@ -146,6 +146,7 @@
   <ItemGroup>
     <Compile Include="AccessServerTest.cs" />
     <Compile Include="AddLibraryTest.cs" />
+    <Compile Include="AssociateProteinsDlgTest.cs" />
     <Compile Include="CalibrationTest.cs" />
     <Compile Include="ChorusFunctionalTest.cs" />
     <Compile Include="DocumentGridClipboardOperationsTest.cs" />

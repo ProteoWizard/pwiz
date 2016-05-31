@@ -121,14 +121,19 @@ namespace pwiz.Skyline.Model.Proteome
                 {
                     return null;
                 }
-                List<ProteinMetadata> alternativeProteins = new List<ProteinMetadata>();
-                foreach (var alternativeName in protein.AlternativeNames)
-                {
-                    alternativeProteins.Add(alternativeName);
-                }
                 foundMetadata = protein.ProteinMetadata;
-                return new FastaSequence(protein.ProteinMetadata.Name, protein.ProteinMetadata.Description, alternativeProteins, protein.Sequence);
+                return MakeFastaSequence(protein);
             }
+        }
+
+        public FastaSequence MakeFastaSequence(Protein protein)
+        {
+            List<ProteinMetadata> alternativeProteins = new List<ProteinMetadata>();
+            foreach (var alternativeName in protein.AlternativeNames)
+            {
+                alternativeProteins.Add(alternativeName);
+            }
+            return new FastaSequence(protein.ProteinMetadata.Name, protein.ProteinMetadata.Description, alternativeProteins, protein.Sequence);
         }
 
         public override bool Equals(object obj)

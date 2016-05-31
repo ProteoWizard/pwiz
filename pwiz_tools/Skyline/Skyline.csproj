@@ -475,6 +475,12 @@
       <DependentUpon>ColumnChooser.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\ResultsGridForm.cs" />
+    <Compile Include="EditUI\AssociateProteinsDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditUI\AssociateProteinsDlg.Designer.cs">
+      <DependentUpon>AssociateProteinsDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="FileUI\ImportResultsLockMassDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -1732,6 +1738,9 @@
     <EmbeddedResource Include="EditUI\AddPeakCompareDlg.zh-CHS.resx">
       <DependentUpon>AddPeakCompareDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\AssociateProteinsDlg.resx">
+      <DependentUpon>AssociateProteinsDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\ComparePeakPickingDlg.ja.resx">
       <DependentUpon>ComparePeakPickingDlg.cs</DependentUpon>

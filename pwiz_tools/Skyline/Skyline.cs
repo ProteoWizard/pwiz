@@ -4766,6 +4766,19 @@ namespace pwiz.Skyline
         {
             return Equals(pasteMenuItem.ShortcutKeys, keys);
         }
+        
+        private void associateFASTAMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowAssociateProteinsDlg();
+        }
+
+        public void ShowAssociateProteinsDlg()
+        {
+            using (var associateFasta = new AssociateProteinsDlg(this))
+            {
+                associateFasta.ShowDialog(this);
+            }
+        }
     }
 }
 
