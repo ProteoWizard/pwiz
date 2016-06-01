@@ -26,30 +26,6 @@ namespace pwiz.Skyline.Model.Irt
                 MakePeptide("LFLQFGAQGSPFLK", 100.00), // Not L10N
             });
 
-        public static readonly IrtStandard SCIEX = new IrtStandard("SCIEX PepCalMix (iRT-C18)", "Sciex.sky", // Not L10N
-            new [] {
-                MakePeptide("AETSELHTSLK",        -9.80), // Not L10N
-                MakePeptide("GAYVEVTAK",          -4.28), // Not L10N
-                MakePeptide("IGNEQGVSR",         -33.40), // Not L10N
-                MakePeptide("LVGTPAEER",         -15.97), // Not L10N
-                MakePeptide("LDSTSIPVAK",          7.68), // Not L10N
-                MakePeptide("AGLIVAEGVTK",        26.55), // Not L10N
-                MakePeptide("LGLDFDSFR",          76.94), // Not L10N
-                MakePeptide("GFTAYYIPR",          49.96), // Not L10N
-                MakePeptide("SGGLLWQLVR",         92.48), // Not L10N
-                MakePeptide("AVGANPEQLTR",         1.98), // Not L10N
-                MakePeptide("SAEGLDASASLR",       11.30), // Not L10N
-                MakePeptide("VFTPLEVDVAK",        57.16), // Not L10N
-                MakePeptide("YIELAPGVDNSK",       28.76), // Not L10N
-                MakePeptide("DGTFAVDGPGVIAK",     40.23), // Not L10N
-                MakePeptide("VGNEIQYVALR",        40.69), // Not L10N
-                MakePeptide("ALENDIGVPSDATVK",    31.43), // Not L10N
-                MakePeptide("AVYFYAPQIPLYANK",    83.76), // Not L10N
-                MakePeptide("TVESLFPEEAETPGSAVR", 57.27), // Not L10N
-                MakePeptide("SPYVITGPGVVEYK",     45.99), // Not L10N
-                MakePeptide("YDSINNTEVSGIR",      18.28), // Not L10N
-            });
-
         public static readonly IrtStandard PIERCE = new IrtStandard("Pierce (iRT-C18)", "Pierce.sky", // Not L10N
             new[] {
                 MakePeptide("SSAAPPPPPR",       -27.60), // Not L10N
@@ -66,6 +42,30 @@ namespace pwiz.Skyline.Model.Irt
                 MakePeptide("LTILEELR",          71.78), // Not L10N
                 MakePeptide("ELASGLSFPVGFK",     79.61), // Not L10N
                 MakePeptide("LSSEAPALFQFDLK",    90.41), // Not L10N
+            });
+
+        public static readonly IrtStandard SCIEX = new IrtStandard("SCIEX PepCalMix (iRT-C18)", "Sciex.sky", // Not L10N
+            new[] {
+                MakePeptide("AETSELHTSLK",        -9.99), // Not L10N
+                MakePeptide("GAYVEVTAK",          -4.26), // Not L10N
+                MakePeptide("IGNEQGVSR",         -35.06), // Not L10N
+                MakePeptide("LVGTPAEER",         -16.52), // Not L10N
+                MakePeptide("LDSTSIPVAK",          7.23), // Not L10N
+                MakePeptide("AGLIVAEGVTK",        28.13), // Not L10N
+                MakePeptide("LGLDFDSFR",          78.77), // Not L10N
+                MakePeptide("GFTAYYIPR",          51.02), // Not L10N
+                MakePeptide("SGGLLWQLVR",         94.08), // Not L10N
+                MakePeptide("AVGANPEQLTR",         1.89), // Not L10N
+                MakePeptide("SAEGLDASASLR",       11.86), // Not L10N
+                MakePeptide("VFTPLEVDVAK",        58.06), // Not L10N
+                MakePeptide("YIELAPGVDNSK",       29.75), // Not L10N
+                MakePeptide("DGTFAVDGPGVIAK",     40.06), // Not L10N
+                MakePeptide("VGNEIQYVALR",        41.56), // Not L10N
+                MakePeptide("ALENDIGVPSDATVK",    31.04), // Not L10N
+                MakePeptide("AVYFYAPQIPLYANK",    82.89), // Not L10N
+                MakePeptide("TVESLFPEEAETPGSAVR", 57.69), // Not L10N
+                MakePeptide("SPYVITGPGVVEYK",     45.47), // Not L10N
+                MakePeptide("YDSINNTEVSGIR",      18.26), // Not L10N
             });
 
         public static readonly IrtStandard SIGMA = new IrtStandard("Sigma (iRT-C18)", "Sigma.sky", // Not L10N
@@ -236,7 +236,7 @@ namespace pwiz.Skyline.Model.Irt
             });
 
         public static readonly ImmutableList<IrtStandard> ALL = ImmutableList.ValueOf(new[] {
-            NULL, BIOGNOSYS, SCIEX, PIERCE, SIGMA, APOA1, CIRT_SHORT
+            NULL, BIOGNOSYS, PIERCE, SCIEX, SIGMA, APOA1, CIRT_SHORT
         });
 
         public IrtStandard(string name, string skyFile, IEnumerable<DbIrtPeptide> peptides)
