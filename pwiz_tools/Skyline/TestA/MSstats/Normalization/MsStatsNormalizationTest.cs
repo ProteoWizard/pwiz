@@ -208,7 +208,7 @@ namespace pwiz.SkylineTestA.MSstats.Normalization
                     Assert.AreEqual(expectedResult.TValue, foldChange.TValue, 1E-5);
                     Assert.AreEqual(expectedResult.PValue, foldChange.PValue, 1E-5);
                 }
-                else
+                else if (!SrmDocument.IsSpecialNonProteomicTestDocNode(protein)) // Avoid the special small molecule test nodes
                 {
                     Assert.IsNull(groupComparisonResult);
                     var standardPeptides = protein.Molecules.Where(mol => !string.IsNullOrEmpty(mol.GlobalStandardType)).ToArray();
