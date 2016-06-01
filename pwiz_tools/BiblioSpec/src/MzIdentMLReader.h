@@ -45,7 +45,8 @@ namespace BiblioSpec{
                         SCAFFOLD_ANALYSIS,
                         BYONIC_ANALYSIS,
                         MSGF_ANALYSIS,
-                        PEPTIDESHAKER_ANALYSIS };
+                        PEPTIDESHAKER_ANALYSIS,
+                        MASCOT_ANALYSIS };
 
         ANALYSIS analysisType_;
         pwiz::identdata::IdentDataFile* pwizReader_;

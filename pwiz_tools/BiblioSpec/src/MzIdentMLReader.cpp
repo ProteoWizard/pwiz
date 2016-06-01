@@ -97,6 +97,9 @@ bool MzIdentMLReader::parseFile(){
         case PEPTIDESHAKER_ANALYSIS:
             scoreType = PEPTIDE_SHAKER_CONFIDENCE;
             break;
+        case MASCOT_ANALYSIS:
+            scoreType = MASCOT_IONS_SCORE;
+            break;
     }
 
     map<string, vector<PSM*> >::iterator fileIterator = fileMap_.begin();
@@ -285,8 +288,16 @@ double MzIdentMLReader::getScore(const SpectrumIdentificationItem& item){
                 analysisType_ = MSGF_ANALYSIS;
                 scoreThreshold_ = getScoreThreshold(MSGF);
             }
-            if (analysisType_ = MSGF_ANALYSIS)
+            if (analysisType_ == MSGF_ANALYSIS)
                 return boost::lexical_cast<double>(it->value);
+        } else if (name == "Mascot:expectation value") {
+            if (analysisType_ == UNKNOWN_ANALYSIS) {
+                analysisType_ = MASCOT_ANALYSIS;
+                scoreThreshold_ = getScoreThreshold(MASCOT);
+            }
+            if (analysisType_ == MASCOT_ANALYSIS) {
+                return boost::lexical_cast<double>(it->value);
+            }
         }
     }
 
@@ -299,6 +310,7 @@ bool MzIdentMLReader::passThreshold(double score)
     switch (analysisType_) {
         // Scores where lower is better
         case BYONIC_ANALYSIS:
+        case MASCOT_ANALYSIS:
         case MSGF_ANALYSIS:
             return score <= scoreThreshold_;
         // Scores where higher is better
