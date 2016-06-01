@@ -31,7 +31,7 @@ namespace pwiz.Skyline.Alerts
     /// Use for a <see cref="MessageBox"/> substitute that can be
     /// detected and closed by automated functional tests.
     /// </summary>
-    public partial class AlertDlg : FormEx
+    public partial class AlertDlg : FormExDetailed
     {
         private const int MAX_HEIGHT = 500;
         private readonly int _originalFormHeight;
@@ -137,6 +137,11 @@ namespace pwiz.Skyline.Alerts
         public void CopyMessage()
         {
             ClipboardEx.SetText(GetTitleAndMessageDetail());
+        }
+
+        public override string DetailedMessage
+        {
+            get { return GetTitleAndMessageDetail();  }
         }
 
         private string GetTitleAndMessageDetail()

@@ -316,6 +316,11 @@ namespace pwiz.Skyline.Model
         public SrmSettings Settings { get; private set; }
 
         /// <summary>
+        /// Convenience access to the <see cref="MeasuredResults"/> for easier debugging.
+        /// </summary>
+        public MeasuredResults MeasuredResults { get { return Settings.MeasuredResults; } }
+
+        /// <summary>
         /// Node level depths below this node
         /// </summary>
 // ReSharper disable InconsistentNaming

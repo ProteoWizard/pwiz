@@ -511,14 +511,10 @@ namespace pwiz.SkylineTestUtil
                     .Where(control => control is TextBox)
                     .Aggregate(result, (current, control) => current + ": " + GetExceptionText(control));
             }
-            var alertDlg = form as AlertDlg;
-            if (alertDlg != null)
+            var detailDlg = form as FormExDetailed;
+            if (detailDlg != null)
             {
-                result = alertDlg.Message;
-                if (!string.IsNullOrEmpty(alertDlg.DetailMessage))
-                {
-                    result = TextUtil.LineSeparate(result, alertDlg.DetailMessage, "------------- End AlertDlg Stack -------------");
-                }
+                result = detailDlg.DetailedMessage;
             }
             return result;
         }
@@ -654,13 +650,13 @@ namespace pwiz.SkylineTestUtil
                 if (func())
                     return true;
                 Thread.Sleep(SLEEP_INTERVAL);
-                if (failOnTimeout && (i == waitCycles - 1))
-                {
-                    var msg = (timeoutMessage == null)
-                        ? string.Empty
-                        : " (" + timeoutMessage + ")";
-                    Assert.Fail("Timeout {0} seconds exceeded in WaitForCondition{1}. Open forms: {2}", waitCycles * SLEEP_INTERVAL / 1000, msg, GetOpenFormsString()); // Not L10N
-                }
+            }
+            if (failOnTimeout)
+            {
+                var msg = (timeoutMessage == null)
+                    ? string.Empty
+                    : " (" + timeoutMessage + ")";
+                Assert.Fail("Timeout {0} seconds exceeded in WaitForCondition{1}. Open forms: {2}", waitCycles * SLEEP_INTERVAL / 1000, msg, GetOpenFormsString()); // Not L10N
             }
             return false;
         }
@@ -698,13 +694,13 @@ namespace pwiz.SkylineTestUtil
                 if (isCondition)
                     return true;
                 Thread.Sleep(SLEEP_INTERVAL);
-                if (failOnTimeout && (i == waitCycles - 1))
-                {
-                    var msg = (timeoutMessage == null) 
-                        ? string.Empty
-                        : " (" + timeoutMessage + ")";
-                    Assert.Fail("Timeout {0} seconds exceeded in WaitForConditionUI{1}. Open forms: {2}", waitCycles * SLEEP_INTERVAL / 1000, msg, GetOpenFormsString()); // Not L10N
-                }
+            }
+            if (failOnTimeout)
+            {
+                var msg = (timeoutMessage == null)
+                    ? string.Empty
+                    : " (" + timeoutMessage + ")";
+                Assert.Fail("Timeout {0} seconds exceeded in WaitForConditionUI{1}. Open forms: {2}", waitCycles * SLEEP_INTERVAL / 1000, msg, GetOpenFormsString()); // Not L10N
             }
             return false;
         }

@@ -195,4 +195,9 @@ namespace pwiz.Skyline.Util
             CancelButton.PerformClick();
         }
     }
+
+    public abstract class FormExDetailed : FormEx
+    {
+        public abstract string DetailedMessage { get; }
+    }
 }

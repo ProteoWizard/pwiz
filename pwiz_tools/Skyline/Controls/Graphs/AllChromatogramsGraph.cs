@@ -22,19 +22,21 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
     /// <summary>
     /// A window that progressively displays chromatogram data during file import.
     /// </summary>
-    public partial class AllChromatogramsGraph : FormEx
+    public partial class AllChromatogramsGraph : FormExDetailed
     {
         private readonly Stopwatch _stopwatch;
         private int _selected = -1;
@@ -710,6 +712,24 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 if (control.Error != null)
                     yield return control.GetErrorLog(true);
+            }
+        }
+
+        public override string DetailedMessage
+        {
+            get
+            {
+                var sb = new StringBuilder();
+                foreach (FileProgressControl control in flowFileStatus.Controls)
+                {
+                    if (control.Error != null)
+                        sb.AppendLine(string.Format("{0}: Error - {1}", control.FilePath, control.Error));
+                    else if (control.IsCanceled)
+                        sb.AppendLine(string.Format("{0}: Canceled", control.FilePath));
+                    else
+                        sb.AppendLine(string.Format("{0}: {1}%", control.FilePath, control.Progress));
+                }
+                return TextUtil.LineSeparate(sb.ToString(), string.Format("Total complete: {0}%", ProgressTotalPercent));
             }
         }
 
