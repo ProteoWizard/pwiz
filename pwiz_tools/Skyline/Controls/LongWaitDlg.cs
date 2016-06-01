@@ -81,7 +81,7 @@ namespace pwiz.Skyline.Controls
 
         public override string DetailedMessage
         {
-            get { return string.Format("[{0}] {1} ({2}%)", Text, Message, ProgressValue); }
+            get { return string.Format("[{0}] {1} ({2}%)", Text, Message, ProgressValue); } // Not L10N
         }
 
         public bool IsCancellable { get; private set; }

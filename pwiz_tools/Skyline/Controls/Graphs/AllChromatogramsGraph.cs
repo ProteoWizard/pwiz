@@ -723,13 +723,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 foreach (FileProgressControl control in flowFileStatus.Controls)
                 {
                     if (control.Error != null)
-                        sb.AppendLine(string.Format("{0}: Error - {1}", control.FilePath, control.Error));
+                        sb.AppendLine(string.Format("{0}: Error - {1}", control.FilePath, control.Error)); // Not L10N
                     else if (control.IsCanceled)
-                        sb.AppendLine(string.Format("{0}: Canceled", control.FilePath));
+                        sb.AppendLine(string.Format("{0}: Canceled", control.FilePath)); // Not L10N
                     else
-                        sb.AppendLine(string.Format("{0}: {1}%", control.FilePath, control.Progress));
+                        sb.AppendLine(string.Format("{0}: {1}%", control.FilePath, control.Progress)); // Not L10N
                 }
-                return TextUtil.LineSeparate(sb.ToString(), string.Format("Total complete: {0}%", ProgressTotalPercent));
+                return TextUtil.LineSeparate(sb.ToString(), string.Format("Total complete: {0}%", ProgressTotalPercent)); // Not L10N
             }
         }
 
