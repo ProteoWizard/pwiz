@@ -484,12 +484,15 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.NoDiff(File.ReadAllText(abSciexExpected), File.ReadAllText(abSciexActual));
 
             // Thermo transition list
+            for (var with_slens = 0; with_slens < 2; with_slens++)
             {
+                var slens = with_slens > 0;
                 RunDlg<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List),
                     exportMethodDlg =>
                     {
                         exportMethodDlg.InstrumentType = ExportInstrumentType.THERMO;
                         exportMethodDlg.ExportStrategy = ExportStrategy.Single;
+                        exportMethodDlg.UseSlens = slens;
 
                         // change Method type to "Triggered"
                         exportMethodDlg.MethodType = ExportMethodType.Triggered;
@@ -498,9 +501,14 @@ namespace pwiz.SkylineTestFunctional
                         Assert.IsFalse(exportMethodDlg.IsOptimizeTypeEnabled);
                         exportMethodDlg.OkDialog(thermoActual);
                     });
+                var expected = File.ReadAllText(thermoExpected);
+                if (slens)
+                {
+                    expected = expected.Replace(",1,1", ",50,1,1"); // Additional column for slens value of 50
+                }
+                AssertEx.NoDiff(expected, File.ReadAllText(thermoActual));
             }
 
-            AssertEx.NoDiff(File.ReadAllText(thermoExpected), File.ReadAllText(thermoActual));
 
             ExportWithExplicitCollisionEnergyValues(thermoActual);
 
