@@ -273,7 +273,7 @@ namespace pwiz.Skyline
                 try
                 {
                     document = ConnectDocument(parentWindow ?? this, document, path);
-                    if (document == null || !CheckResults(document, path))
+                    if (document == null || !CheckResults(document, path, parentWindow))
                         return false;
 
                     // Make sure settings lists contain correct values for
@@ -701,7 +701,7 @@ namespace pwiz.Skyline
             return null;
         }
 
-        private bool CheckResults(SrmDocument document, string path)
+        private bool CheckResults(SrmDocument document, string path, FormEx parent)
         {
             string pathCache = ChromatogramCache.FinalPathForName(path, null);
             if (!document.Settings.HasResults)
@@ -764,8 +764,7 @@ namespace pwiz.Skyline
                                     string.Empty,
                                     Resources.SkylineWindow_CheckResults_Click_OK_to_open_the_document_anyway);
 
-                if (MessageBox.Show(this, message, Program.Name,
-                        MessageBoxButtons.OKCancel) == DialogResult.Cancel)
+                if (MultiButtonMsgDlg.Show(parent ?? this, message, MultiButtonMsgDlg.BUTTON_OK) == DialogResult.Cancel)
                 {
                     return false;
                 }                    

@@ -1605,14 +1605,38 @@ namespace pwiz.Skyline.Controls.Graphs
                                                ref double bestStartTime,
                                                ref double bestEndTime)
         {
-            // Construct and add graph items for all relevant transition groups.
+            for (int i = 0; i < _nodeGroups.Length; i++)
+            {
+                TransitionGroupDocNode nodeGroup = _nodeGroups[i];
+                ChromatogramGroupInfo groupInfo = ChromGroupInfos[i];
+                if (nodeGroup == null || groupInfo == null)
+                {
+                    continue;
+                }
+                List<ChromGraphItem> chromGraphItems = GetOptimizationTotalGraphItems(timeRegressionFunction,
+                    chromatograms, mzMatchTolerance,
+                    nodeGroup, groupInfo, ref bestStartTime, ref bestEndTime);
+                foreach (var graphItem in chromGraphItems)
+                {
+                    _graphHelper.AddChromatogram(new PaneKey(nodeGroup), graphItem);
+                }
+            }
+        }
+
+        private List<ChromGraphItem> GetOptimizationTotalGraphItems(
+            IRegressionFunction timeRegressionFunction,
+            ChromatogramSet chromatograms,
+            float mzMatchTolerance,
+            TransitionGroupDocNode nodeGroup,
+            ChromatogramGroupInfo chromGroupInfo,
+            ref double bestStartTime,
+            ref double bestEndTime)
+        {
+            List<ChromGraphItem> chromGraphItems = new List<ChromGraphItem>();
             float fontSize = FontSize;
             int lineWidth = LineWidth;
             int iColor = 0;
 
-            // Get the one and only group
-            var nodeGroup = _nodeGroups[0];
-            var chromGroupInfo = ChromGroupInfos[0];
             ChromFileInfoId fileId = chromatograms.FindFile(chromGroupInfo);
 
             int numPeaks = chromGroupInfo.NumPeaks;
@@ -1621,7 +1645,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // of this transition group.
             var listChromInfoSets = new List<ChromatogramInfo[]>();
             var listTranisitionChromInfoSets = new List<TransitionChromInfo[]>();
-            int totalOptCount = chromatograms.OptimizationFunction.StepCount*2 + 1;
+            int totalOptCount = chromatograms.OptimizationFunction.StepCount * 2 + 1;
             foreach (TransitionDocNode nodeTran in nodeGroup.Children)
             {
                 var infos = chromGroupInfo.GetAllTransitionInfo(nodeTran.Mz, mzMatchTolerance,
@@ -1637,17 +1661,14 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 listChromInfoSets.Add(infos);
                 var transitionChromInfos = new TransitionChromInfo[totalOptCount];
-                int steps = infos.Length/2;
-                int offset = totalOptCount/2 - steps;
+                int steps = infos.Length / 2;
+                int offset = totalOptCount / 2 - steps;
                 for (int i = 0; i < infos.Length; i++)
                 {
                     transitionChromInfos[i + offset] = GetTransitionChromInfo(nodeTran, _chromIndex, fileId, i - steps);
                 }
                 listTranisitionChromInfoSets.Add(transitionChromInfos);
             }
-
-            if (listChromInfoSets.Count == 0 || totalOptCount == 0)
-                throw new InvalidDataException(Resources.GraphChromatogram_DisplayOptimizationTotals_No_optimization_data_available);
 
             // Enumerate optimization steps, grouping the data into graph data by step
             var listGraphData = new List<OptimizationGraphData>();
@@ -1728,7 +1749,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             // Create graph items
-            int totalSteps = totalOptCount/2;
+            int totalSteps = totalOptCount / 2;
             for (int i = 0; i < listGraphData.Count; i++)
             {
                 var graphData = listGraphData[i];
@@ -1766,11 +1787,12 @@ namespace pwiz.Skyline.Controls.Graphs
                                                        color,
                                                        fontSize,
                                                        width);
-                    _graphHelper.AddChromatogram(PaneKey.PRECURSORS, graphItem);
+                    chromGraphItems.Add(graphItem);
                 }
 
                 iColor++;
             }
+            return chromGraphItems;
         }
 
         private static ChromatogramInfo[] ResizeArrayChromInfo(ChromatogramInfo[] arrayChromInfo, int numStepsExpected)
