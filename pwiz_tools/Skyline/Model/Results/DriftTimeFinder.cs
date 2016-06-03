@@ -180,6 +180,8 @@ namespace pwiz.Skyline.Model.Results
         private bool ProcessChromInfo(MsDataFileUri filePath, ChromatogramGroupInfo chromInfo, PeptidePrecursorPair pair,
             TransitionGroupDocNode nodeGroup, float tolerance, LibKey libKey)
         {
+            if (chromInfo.NumPeaks == 0)  // Due to data polarity mismatch, probably
+                return true;
             Assume.IsTrue(chromInfo.BestPeakIndex != -1);
             var resultIndex = _document.Settings.MeasuredResults.Chromatograms.IndexOf(c => c.GetFileInfo(filePath) != null);
             if (resultIndex == -1)
