@@ -1166,7 +1166,10 @@ namespace pwiz.Skyline.Model.Results
                 int sizeArrayErrors = numPoints*sizeof(short);
                 for (int i = 0; i < numTrans; i++, offset += sizeArrayErrors)
                 {
-                    Buffer.BlockCopy(massErrors[i], 0, points, offset, sizeArrayErrors);
+                    if (massErrors[i] != null)
+                    {
+                        Buffer.BlockCopy(massErrors[i], 0, points, offset, sizeArrayErrors);
+                    }
                 }
             }
 

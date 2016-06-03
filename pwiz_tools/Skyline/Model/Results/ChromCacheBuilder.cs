@@ -451,7 +451,10 @@ namespace pwiz.Skyline.Model.Results
             //LOG.InfoFormat("Scans read: {0}", MSDataFilePath.GetFileName());  // Not L10N
             _chromDataSets.DoneAdding(true);
             //LOG.InfoFormat("Peak scoring/writing finished: {0}", MSDataFilePath.GetFileName());  // Not L10N
-
+            if (_chromDataSets.Exception != null)
+            {
+                throw new ChromCacheBuildException(MSDataFilePath, _chromDataSets.Exception);
+            }
             _listCachedFiles.Add(new ChromCachedFile(MSDataFilePath,
                                      _currentFileInfo.Flags,
                                      _currentFileInfo.LastWriteTime,
@@ -1335,6 +1338,10 @@ namespace pwiz.Skyline.Model.Results
                         chromData.Key.IonMobilityValue,
                         chromData.Key.IonMobilityExtractionWidth,
                         chromData.Key.Source);
+                    if (massErrors != null && chromData.MassErrors10X == null)
+                    {
+                        chromTran.MissingMassErrors = true;
+                    }
                     _listTransitions.Add(chromTran);
 
                     // Make sure all transitions have the same number of peaks, as this is a cache requirement

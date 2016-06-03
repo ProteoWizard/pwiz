@@ -179,9 +179,12 @@ namespace pwiz.Skyline.Model.Results
         {
             get
             {
-                return _listChromData.First().MassErrors10X != null
-                           ? _listChromData.ConvertAll(data => data.MassErrors10X).ToArray()
-                           : null;
+                // Return null if none of the chromData's has mass errors.
+                if (_listChromData.All(chromData => chromData.MassErrors10X == null))
+                {
+                    return null;
+                }
+                return _listChromData.Select(chromData => chromData.MassErrors10X).ToArray();
             }
         }
 

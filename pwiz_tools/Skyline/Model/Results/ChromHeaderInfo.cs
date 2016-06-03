@@ -1226,9 +1226,15 @@ namespace pwiz.Skyline.Model.Results
         [Flags]
         public enum FlagValues
         {
-            source1 =       0x01,   // unknown = 00, fragment = 01
-            source2 =       0x02,   // ms1     = 10, sim      = 11
+            unknown = 0x00,
+            ms1 = 0x01,
+            fragment = 0x02,
+            sim = 0x03,
+
+            missing_mass_errors = 0x04,
         }
+
+        const FlagValues MASK_SOURCE = (FlagValues) 0x03;
 
         public ChromTransition(double product, float extractionWidth, float ionMobilityValue, float ionMobilityExtractionWidth, ChromSource source) : this()
         {
@@ -1257,20 +1263,23 @@ namespace pwiz.Skyline.Model.Results
         public ushort FlagBits { get; private set; }
         public ushort Align1 { get; private set; }  // Explicitly declaring alignment padding the compiler will add anyway
 
-        public FlagValues Flags { get { return (FlagValues) FlagBits; } }
+        public FlagValues Flags
+        {
+            get { return (FlagValues) FlagBits; }
+            set { FlagBits = (ushort) value; }
+        }
 
         public ChromSource Source
         {
             get
             {
-                // CONSIDER: Could just mask and cast
-                switch (Flags & (FlagValues.source1 | FlagValues.source2))
+                switch (Flags & MASK_SOURCE)
                 {
-                    case 0:
+                    case FlagValues.unknown:
                         return ChromSource.unknown;
-                    case FlagValues.source2:
+                    case FlagValues.fragment:
                         return ChromSource.fragment;
-                    case FlagValues.source1:
+                    case FlagValues.ms1:
                         return ChromSource.ms1;
                     default:
                         return ChromSource.sim;
@@ -1278,23 +1287,28 @@ namespace pwiz.Skyline.Model.Results
             }
             set
             {
-                FlagBits = (ushort) GetFlags(value);
+                Flags = GetSourceFlags(value) | (Flags & ~MASK_SOURCE);
             }
         }
 
-        public FlagValues GetFlags(ChromSource source)
+        public bool MissingMassErrors
         {
-            // CONSIDER: Could just cast
+            get { return (Flags & FlagValues.missing_mass_errors) != 0; }
+            set { Flags = (Flags & ~FlagValues.missing_mass_errors) | (value ? FlagValues.missing_mass_errors : 0); }
+        }
+
+        public static FlagValues GetSourceFlags(ChromSource source)
+        {
             switch (source)
             {
                 case ChromSource.unknown:
-                    return 0;
+                    return FlagValues.unknown;
                 case ChromSource.fragment:
-                    return FlagValues.source2;
+                    return FlagValues.fragment;
                 case ChromSource.ms1:
-                    return FlagValues.source1;
+                    return FlagValues.ms1;
                 default:
-                    return FlagValues.source1 | FlagValues.source2;
+                    return FlagValues.sim;
             }
         }
 
@@ -2723,7 +2737,7 @@ namespace pwiz.Skyline.Model.Results
             if (intensities != null)
                 Intensities = intensities[transitionIndex];
             MassError10XArray = massError10Xs;
-            if (MassError10XArray != null)
+            if (!ChromTransition.MissingMassErrors && MassError10XArray != null)
                 MassError10Xs = massError10Xs[transitionIndex];
             ScanIndexes = scanIndexes;
         }
