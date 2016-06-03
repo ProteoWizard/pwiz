@@ -446,7 +446,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
         public static string ValidateCharge(int charge)
         {
-            if (charge < 1 || charge > TransitionGroup.MAX_PRECURSOR_CHARGE)
+            if (charge == 0 || Math.Abs(charge) > TransitionGroup.MAX_PRECURSOR_CHARGE)
                 return String.Format(Resources.EditDriftTimePredictorDlg_ValidateCharge_The_entry__0__is_not_a_valid_charge__Precursor_charges_must_be_integer_values_between_1_and__1__, charge, TransitionGroup.MAX_PRECURSOR_CHARGE);
             return null;
         }

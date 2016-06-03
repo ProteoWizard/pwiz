@@ -1769,7 +1769,7 @@ namespace pwiz.Skyline.Model.Lib
         public bool IsPrecursorKey { get { return _key.Length >= 1 + sizeof(double) && _key[0] == PRECURSOR_MAGIC_BYTE; } }
         public bool HasRetentionTime { get { return IsPrecursorKey && _key.Length >= 1 + 2*sizeof(double); } }
         public string Sequence { get { return !IsPrecursorKey ? Encoding.UTF8.GetString(_key, 1, _key.Length - 1) : string.Empty; } }
-        public int Charge { get { return !IsPrecursorKey ? _key[0] : 0; } }
+        public int Charge { get { return !IsPrecursorKey ? (sbyte)_key[0] : 0; } }
         public bool IsModified { get { return !IsPrecursorKey && _key.Contains((byte)'['); } } // Not L10N
         public double? PrecursorMz { get { return IsPrecursorKey ? BitConverter.ToDouble(_key, 1) : default(double?); } }
         public double? RetentionTime { get { return HasRetentionTime ? BitConverter.ToDouble(_key, 1 + sizeof(double)) : default(double?); } }
