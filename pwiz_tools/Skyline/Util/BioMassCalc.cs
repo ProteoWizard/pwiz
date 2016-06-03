@@ -430,6 +430,13 @@ namespace pwiz.Skyline.Util
             desc = desc.Trim();
             while (desc.Length > 0)
             {
+                if (desc.StartsWith("-")) // Not L10N
+                {
+                    // As is deprotonation description ie C12H8O2-H (=C12H7O2) or even C12H8O2-H2O (=C12H6O)
+                    desc = desc.Substring(1);
+                    totalMass -= ParseMass(ref desc);
+                    break;
+                }
                 string sym = NextSymbol(desc);
                 double massAtom = GetMass(sym);
 
@@ -489,6 +496,13 @@ namespace pwiz.Skyline.Util
             desc = desc.Trim();
             while (desc.Length > 0)
             {
+                if (desc.StartsWith("-")) // Not L10N
+                {
+                    // As is deprotonation description ie C12H8O2-H (=C12H7O2) or even C12H8O2-H2O (=C12H6O)
+                    desc = desc.Substring(1);
+                    ParseCounts(ref desc, dictAtomCounts, !negative);
+                    break;
+                }
                 string sym = NextSymbol(desc);
                 double massAtom = GetMass(sym);
 

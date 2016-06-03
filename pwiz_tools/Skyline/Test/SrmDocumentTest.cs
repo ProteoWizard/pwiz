@@ -23,6 +23,8 @@ using System.Linq;
 using System.Xml;
 using pwiz.Skyline.Model;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.V01;
 using pwiz.Skyline.Properties;
@@ -99,6 +101,24 @@ namespace pwiz.SkylineTest
             AssertEx.IsDocumentState(doc, null, 1, 1, 1, 1);
             Assert.AreEqual("C12H99", doc.MoleculeTransitionGroups.First().CustomIon.Formula);
             Assert.AreEqual(doc.Molecules.First().CustomIon , doc.MoleculeTransitionGroups.First().CustomIon);
+        }
+
+        [TestMethod]
+        public void MoleculeParseTest()
+        {
+            // Verify handling of simple formula arithmetic as used in ion forumlas
+            const string C12H8S2O6 = "C12H8S2O6";
+            const string SO4 = "SO4";
+            Assert.AreEqual(311.976229, BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(C12H8S2O6),.00001);
+            var subtracted = C12H8S2O6+"-"+SO4;
+            AssertEx.ThrowsException<ArgumentException>(() => Molecule.ParseExpressionToDictionary(subtracted + subtracted));  // More than one subtraction operation not supported
+            Assert.AreEqual(BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(subtracted), BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(C12H8S2O6) - BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(SO4));
+            Assert.AreEqual(BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(C12H8S2O6+SO4), BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(C12H8S2O6) + BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(SO4));
+            var desc = subtracted;
+            var counts = new Dictionary<string, int>();
+            var expected = new Dictionary<string,int> {{"C",12},{"H",8},{"S",1},{"O",2}};
+            BioMassCalc.MONOISOTOPIC.ParseCounts(ref desc, counts, false);
+            Assert.IsTrue(CollectionUtil.EqualsDeep(expected, counts));
         }
 
         [TestMethod]

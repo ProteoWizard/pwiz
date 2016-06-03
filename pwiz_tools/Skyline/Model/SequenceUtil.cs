@@ -330,7 +330,7 @@ namespace pwiz.Skyline.Model
 
             public static MoleculeUnsorted Parse(string formula)
             {
-                return new MoleculeUnsorted(Molecule.ParseToDictionary(formula));
+                return new MoleculeUnsorted(Molecule.ParseExpressionToDictionary(formula)); // Deal with formulae that may have ionization info like "C3H4-H"
             }
 
             public MoleculeUnsorted SetElementCount(string element, int count)

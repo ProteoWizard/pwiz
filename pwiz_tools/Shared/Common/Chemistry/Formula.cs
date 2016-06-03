@@ -251,6 +251,34 @@ namespace pwiz.Common.Chemistry
             return result;
         }
 
+        // Handle formulae which may contain subtractions, as is deprotonation description ie C12H8O2-H (=C12H7O2) or even C12H8O2-H2O (=C12H6O)
+        public static Dictionary<String, int> ParseExpressionToDictionary(string expression)
+        {
+            var parts = expression.Split('-');
+            if (parts.Length > 2)
+            {
+                throw new ArgumentException("Molecular formula subtraction expressions are limited a single operation"); // Not L10N
+            }
+            var result = ParseToDictionary(parts[0]);
+            if (parts.Length > 1)
+            {
+                var subtractive = ParseToDictionary(parts[1]);
+                foreach (var element in subtractive)
+                {
+                    int previous;
+                    if (result.TryGetValue(element.Key, out previous))
+                    {
+                        result[element.Key] = previous - element.Value;
+                    }
+                    else
+                    {
+                        result.Add(element.Key, -element.Value);  // Seems weird, but possibly describing a proton lost from something other that H?
+                    }
+                }
+            }
+            return result;
+        }
+
         public static T FromDict(ImmutableSortedList<string, int> dict)
         {
             return new T {Dictionary = dict};
