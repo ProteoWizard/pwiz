@@ -918,7 +918,7 @@ namespace pwiz.Skyline.FileUI
 
         private void lookInComboBox_DrawItem( object sender, DrawItemEventArgs e )
         {
-            if( e.Index < 0 )
+            if( e.Index < 0 || e.Index >= lookInComboBox.Items.Count)
                 return;
 
             TreeNode node = (TreeNode) lookInComboBox.Items[e.Index];
