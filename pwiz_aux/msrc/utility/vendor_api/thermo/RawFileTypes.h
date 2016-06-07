@@ -165,7 +165,7 @@ inline InstrumentModelType parseInstrumentModelType(const std::string& instrumen
     else if (type == "MALDI LTQ XL")            return InstrumentModelType_MALDI_LTQ_XL;
     else if (type == "MALDI LTQ ORBITRAP")      return InstrumentModelType_MALDI_LTQ_Orbitrap;
     else if (type == "TSQ QUANTUM")             return InstrumentModelType_TSQ_Quantum;
-    else if (type == "TSQ QUANTUM ACCESS")      return InstrumentModelType_TSQ_Quantum_Access;
+    else if (bal::contains(type, "TSQ QUANTUM ACCESS")) return InstrumentModelType_TSQ_Quantum_Access;
     else if (type == "TSQ QUANTUM ULTRA")       return InstrumentModelType_TSQ_Quantum_Ultra;
     else if (type == "TSQ QUANTUM ULTRA AM")    return InstrumentModelType_TSQ_Quantum_Ultra_AM;
     else if (type == "TSQ VANTAGE STANDARD")    return InstrumentModelType_TSQ_Vantage_Standard;
