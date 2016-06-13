@@ -44,6 +44,7 @@
 #include "pwiz/analysis/spectrum_processing/SpectrumList_LockmassRefiner.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_ChargeStateCalculator.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_3D.hpp"
+#include "pwiz/analysis/spectrum_processing/SpectrumList_IonMobility.hpp"
 #include "pwiz/analysis/chromatogram_processing/ChromatogramList_XICGenerator.hpp"
 #include <boost/shared_ptr.hpp>
 #include <boost/logic/tribool.hpp>
@@ -378,6 +379,29 @@ public ref class SpectrumList_3D : public msdata::SpectrumList
     /// works only on SpectrumList_Waters and SpectrumList_Agilent
     /// </summary>
     static bool accept(msdata::SpectrumList^ inner);
+};
+
+/// <summary>
+/// SpectrumList implementation that provides access to vendor-specific ion mobility functions
+/// </summary>
+public ref class SpectrumList_IonMobility : public msdata::SpectrumList
+{
+    DEFINE_INTERNAL_LIST_WRAPPER_CODE(SpectrumList_IonMobility, pwiz::analysis::SpectrumList_IonMobility)
+
+    public:
+
+    SpectrumList_IonMobility(msdata::SpectrumList^ inner);
+
+    /// <summary>
+    /// works only on SpectrumList_Agilent
+    /// </summary>
+    static bool accept(msdata::SpectrumList^ inner);
+
+    /// returns collisional cross-section associated with the drift time (specified in milliseconds)
+    virtual double driftTimeToCCS(double driftTime, double mz, int charge);
+
+    /// returns the drift time (in milliseconds) associated with the given collisional cross-section
+    virtual double ccsToDriftTime(double ccs, double mz, int charge);
 };
 
 public ref class ChromatogramList_XICGenerator : public msdata::ChromatogramList

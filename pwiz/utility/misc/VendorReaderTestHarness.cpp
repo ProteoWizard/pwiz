@@ -558,6 +558,7 @@ int testReader(const Reader& reader, const vector<string>& args, bool testAccept
         throw runtime_error(string("Invalid arguments: ") + bal::join(args, " ") +
                             "\nUsage: " + args[0] + " [-v] [--generate-mzML] <source path 1> [source path 2] ..."); 
 
+    int totalTests = 0, failedTests = 0;
     bfs::detail::utf8_codecvt_facet utf8;
     for (size_t i = 0; i < rawpaths.size(); ++i)
     {
@@ -572,7 +573,15 @@ int testReader(const Reader& reader, const vector<string>& args, bool testAccept
                 generate(reader, rawpath);
             else
             {
-                test(reader, testAcceptOnly, requireUnicodeSupport, rawpath);
+                ++totalTests;
+                try
+                {
+                    test(reader, testAcceptOnly, requireUnicodeSupport, rawpath);
+                }
+                catch (exception& e)
+                {
+                    ++failedTests;
+                }
 
                 /* TODO: there are issues to be resolved here but not just simple crashes
                 testThreadSafety(1, reader, testAcceptOnly, requireUnicodeSupport, rawpath);
@@ -595,6 +604,9 @@ int testReader(const Reader& reader, const vector<string>& args, bool testAccept
             }
         }
     }
+
+    if (failedTests > 0)
+        throw runtime_error("failed " + lexical_cast<string>(failedTests) + " of " + lexical_cast<string>(totalTests) + " tests");
 
     return 0;
 }

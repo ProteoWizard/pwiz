@@ -139,6 +139,10 @@ MidacDataImpl::MidacDataImpl(const std::string& path)
 
             imsReader_ = MIDAC::MidacFileAccess::ImsDataReader(filepath);
 
+            imsCcsReader_ = gcnew MIDAC::ImsCcsInfoReader();
+
+            imsCcsReader_->Read(filepath);
+
             // Force read of some data before we start; gets some assertions out of the way.
             imsReader_->FrameInfo(1)->FrameUnitConverter;
         }
@@ -221,6 +225,16 @@ int MidacDataImpl::getTotalIonMobilityFramesPresent() const
 FramePtr MidacDataImpl::getIonMobilityFrame(int frameIndex) const
 {
     try {return FramePtr(new FrameImpl(imsReader_, frameIndex));} CATCH_AND_FORWARD
+}
+
+double MidacDataImpl::driftTimeToCCS(double driftTimeInMilliseconds, double mz, int charge) const
+{
+    try { return imsCcsReader_->CcsFromDriftTime(driftTimeInMilliseconds, mz, charge); } CATCH_AND_FORWARD
+}
+
+double MidacDataImpl::ccsToDriftTime(double ccs, double mz, int charge) const
+{
+    try { return imsCcsReader_->DriftTimeFromCcs(ccs, mz, charge); } CATCH_AND_FORWARD
 }
 
 ScanRecordPtr MidacDataImpl::getScanRecord(int rowNumber) const
@@ -326,7 +340,7 @@ IonPolarity MidacScanRecord::getIonPolarity() const
 
 double MidacScanRecord::getMZOfInterest() const
 {
-    try {return specDetails_->MzOfInterestRanges != nullptr && specDetails_->MzOfInterestRanges->Length > 0 ? (frameInfo_->SpectrumDetails->MzOfInterestRanges[0]->Max + frameInfo_->SpectrumDetails->MzOfInterestRanges[0]->Min) / 2.0 : 0;} CATCH_AND_FORWARD
+    try {return specDetails_->MzOfInterestRanges != nullptr && specDetails_->MzOfInterestRanges->Length > 0 && !specDetails_->MzOfInterestRanges[0]->IsEmpty ? specDetails_->MzOfInterestRanges[0]->Center : 0;} CATCH_AND_FORWARD
 }
 
 int MidacScanRecord::getTimeSegment() const
@@ -341,7 +355,13 @@ double MidacScanRecord::getFragmentorVoltage() const
 
 double MidacScanRecord::getCollisionEnergy() const
 {
-    try {return specDetails_->FragmentationEnergyRange != nullptr ? specDetails_->FragmentationEnergyRange->Min : 0;} CATCH_AND_FORWARD
+    // From an email from MattC 6/3/2016
+    // I've confirmed that half the scans have 0,0 and half have 0,48 for FragmentationEnergyRange. But I'm not exactly sure what you would consider a "fix" here for the ramped case 
+    // since we can only have one CE value for the scan in the mzML data model.Do you want the halfway point between min / max or do you want the max ? IIRC, we've been using Min 
+    // because in the non-ramped case, Min is actually set but Max is often 0.
+    //
+    // So now we take the max of min and max (!) - bspratt
+    try { return specDetails_->FragmentationEnergyRange != nullptr ? max(specDetails_->FragmentationEnergyRange->Min, specDetails_->FragmentationEnergyRange->Max) : 0; } CATCH_AND_FORWARD
 }
 
 bool MidacScanRecord::getIsFragmentorVoltageDynamic() const

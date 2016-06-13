@@ -377,8 +377,8 @@ ContinuousInterval::ContinuousInterval(double begin, double end)
 SpectrumList_3D::SpectrumList_3D(msdata::SpectrumList^ inner)
     : msdata::SpectrumList(0)
 {
-        base_ = new b::SpectrumList_3D(*inner->base_);
-        msdata::SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
+    base_ = new b::SpectrumList_3D(*inner->base_);
+    msdata::SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
 }
 
 Spectrum3D^ SpectrumList_3D::spectrum3d(double scanStartTime, System::Collections::Generic::IEnumerable<ContinuousInterval>^ driftTimeRanges)
@@ -404,6 +404,29 @@ Spectrum3D^ SpectrumList_3D::spectrum3d(double scanStartTime, System::Collection
 bool SpectrumList_3D::accept(msdata::SpectrumList^ inner)
 {
     return b::SpectrumList_3D::accept(*inner->base_);
+}
+
+
+SpectrumList_IonMobility::SpectrumList_IonMobility(msdata::SpectrumList^ inner)
+    : msdata::SpectrumList(0)
+{
+    base_ = new b::SpectrumList_IonMobility(*inner->base_);
+    msdata::SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
+}
+
+double SpectrumList_IonMobility::driftTimeToCCS(double driftTime, double mz, int charge)
+{
+    try { return base_->driftTimeToCCS(driftTime, mz, charge); } CATCH_AND_FORWARD
+}
+
+double SpectrumList_IonMobility::ccsToDriftTime(double ccs, double mz, int charge)
+{
+    try { return base_->ccsToDriftTime(ccs, mz, charge); } CATCH_AND_FORWARD
+}
+
+bool SpectrumList_IonMobility::accept(msdata::SpectrumList^ inner)
+{
+    return b::SpectrumList_IonMobility::accept(*inner->base_);
 }
 
 

@@ -110,6 +110,8 @@ class MassHunterDataImpl : public MassHunterData
     virtual bool hasIonMobilityData() const;
     virtual int getTotalIonMobilityFramesPresent() const;
     virtual FramePtr getIonMobilityFrame(int frameIndex) const;
+    virtual double driftTimeToCCS(double driftTimeInMilliseconds, double mz, int charge) const { throw runtime_error("[MassHunterDataImpl::driftTimeToCCS] not available on non-IMS data"); }
+    virtual double ccsToDriftTime(double ccs, double mz, int charge) const { throw runtime_error("[MassHunterDataImpl::ccsToDriftTime] not available on non-IMS data"); }
 
     virtual const set<Transition>& getTransitions() const;
     virtual ChromatogramPtr getChromatogram(const Transition& transition) const;

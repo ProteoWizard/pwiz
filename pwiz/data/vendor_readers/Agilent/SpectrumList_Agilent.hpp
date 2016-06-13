@@ -62,6 +62,9 @@ class PWIZ_API_DECL SpectrumList_Agilent : public SpectrumListBase
 
     virtual pwiz::analysis::Spectrum3DPtr spectrum3d(double scanStartTime, const boost::icl::interval_set<double>& driftTimeRanges) const;
 
+    virtual double driftTimeToCCS(double driftTime, double mz, int charge) const;
+    virtual double ccsToDriftTime(double ccs, double mz, int charge) const;
+
 #ifdef PWIZ_READER_AGILENT
     SpectrumList_Agilent(const MSData& msd, MassHunterDataPtr rawfile, const Reader::Config& config);
 

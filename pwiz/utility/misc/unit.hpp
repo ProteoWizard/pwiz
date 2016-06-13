@@ -83,15 +83,24 @@ inline std::string quote_string(const string& str) {return "\"" + str + "\"";}
 
 
 #define unit_assert(x) \
-    (!(x) ? throw std::runtime_error(unit_assert_message(__FILE__, __LINE__, #x)) : 0) 
+    (!(x) ? throw std::runtime_error(unit_assert_message(__FILE__, __LINE__, #x)) : 0)
+
+#define unit_assert_to_stream(x, os) \
+    ((os) << (!(x) ? unit_assert_message(__FILE__, __LINE__, #x) + "\n" : ""))
 
 
 #define unit_assert_operator_equal(expected, actual) \
     (!(expected == actual) ? throw std::runtime_error(unit_assert_equal_message(__FILE__, __LINE__, lexical_cast<string>(expected), lexical_cast<string>(actual), #actual)) : 0)
 
+#define unit_assert_operator_equal_to_stream(expected, actual, os) \
+    ((os) << (!(expected == actual) ? unit_assert_equal_message(__FILE__, __LINE__, lexical_cast<string>(expected), lexical_cast<string>(actual), #actual) + "\n" : ""))
+
 
 #define unit_assert_equal(x, y, epsilon) \
     (!(fabs((x)-(y)) <= (epsilon)) ? throw std::runtime_error(unit_assert_numeric_equal_message(__FILE__, __LINE__, (x), (y), (epsilon))) : 0)
+
+#define unit_assert_equal_to_stream(x, y, epsilon, os) \
+    ((os) << (!(fabs((x)-(y)) <= (epsilon)) ? unit_assert_numeric_equal_message(__FILE__, __LINE__, (x), (y), (epsilon)) + "\n" : ""))
 
 
 #define unit_assert_throws(x, exception) \

@@ -289,6 +289,8 @@ class PWIZ_API_DECL MassHunterData
     virtual bool hasIonMobilityData() const = 0;
     virtual int getTotalIonMobilityFramesPresent() const = 0;
     virtual FramePtr getIonMobilityFrame(int frameIndex) const = 0;
+    virtual double driftTimeToCCS(double driftTimeInMilliseconds, double mz, int charge) const = 0;
+    virtual double ccsToDriftTime(double ccs, double mz, int charge) const = 0;
 
     virtual const std::set<Transition>& getTransitions() const = 0;
     virtual ChromatogramPtr getChromatogram(const Transition& transition) const = 0;
