@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -62,11 +63,30 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            TestUniqueness();
             TestImportModifications();
             TestSkipWhenNoModifications();
             TestWizardBuildDocumentLibraryAndFinish();
             TestWizardCancel();
             TestWizardExcludeSpectrumSourceFiles();
+        }
+
+        /// <summary>
+        /// A quick unit test for the name->path name uniqueness enforcement code.
+        /// </summary>
+        private void TestUniqueness()
+        {
+            const string PREFIX = "prefix1";
+            var names = new[] { PREFIX + "a", PREFIX + "b", PREFIX };
+            Assert.AreEqual(PREFIX, ImportResultsDlg.GetCommonPrefix(names)); // Check common prefix code while we're at it
+            var list = new List<ImportPeptideSearch.FoundResultsFile>();
+            list.Add(new ImportPeptideSearch.FoundResultsFile( PREFIX + "a","path1"));
+            list.Add(new ImportPeptideSearch.FoundResultsFile( PREFIX + "b","path2"));
+            list.Add(new ImportPeptideSearch.FoundResultsFile( PREFIX + "a","path3"));
+            var result = ImportResultsControl.EnsureUniqueNames(list);
+            Assert.AreEqual(list[0].Name, result[0].Name);
+            Assert.AreEqual(list[1].Name, result[1].Name);
+            Assert.AreEqual(list[2].Name + "2", result[2].Name);
         }
 
         /// <summary>

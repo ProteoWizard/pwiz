@@ -46,12 +46,25 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public event EventHandler<ResultsFilesEventArgs> ResultsFilesChanged;
         private Form WizardForm { get { return FormEx.GetParentForm(this); } }
 
+        public static List<ImportPeptideSearch.FoundResultsFile> EnsureUniqueNames(List<ImportPeptideSearch.FoundResultsFile> files)
+        {
+            var result = new List<ImportPeptideSearch.FoundResultsFile>();
+            // Enforce uniqueness in names (might be constructed from list of files a.raw, a.mzML)
+            var names = ImportResultsDlg.EnsureUniqueNames(files.Select(f => f.Name).ToList());
+            for (var i = 0; i < files.Count; i++)
+            {
+                result.Add(new ImportPeptideSearch.FoundResultsFile(names[i], files[i].Path));
+            }
+            return result;
+        }
+
         public List<ImportPeptideSearch.FoundResultsFile> FoundResultsFiles
         {
             get { return ImportPeptideSearch.GetFoundResultsFiles(ExcludeSpectrumSourceFiles).ToList(); }
             set
             {
-                ImportPeptideSearch.SpectrumSourceFiles = value.ToDictionary(v => v.Name,
+                var files = EnsureUniqueNames(value); // May change names to ensure uniqueness
+                ImportPeptideSearch.SpectrumSourceFiles = files.ToDictionary(v => v.Name,
                     v => new ImportPeptideSearch.FoundResultsFilePossibilities(v.Name, v.Path));
             }
         }

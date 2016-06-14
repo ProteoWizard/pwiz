@@ -477,24 +477,37 @@ namespace pwiz.Skyline.FileUI
             return false;
         }
 
+        public static List<string> EnsureUniqueNames(List<string> names, HashSet<string> reservedNames = null)
+        {
+            var setUsedNames = reservedNames ?? new HashSet<string>();
+            var result = new List<string>();
+            for (int i = 0; i < names.Count; i++)
+            {
+                string baseName = names[i];
+                // Make sure the next name added is unique
+                string name = (baseName.Length != 0 ? baseName : "1"); // Not L10N
+                for (int suffix = 2; setUsedNames.Contains(name); suffix++)
+                    name = baseName + suffix;
+                result.Add(name);
+                // Add this name to the used set
+                setUsedNames.Add(name);
+            }
+            return result;
+        }
+
         private void EnsureUniqueNames()
         {
             var setUsedNames = new HashSet<string>();
             foreach (var item in comboName.Items)
                 setUsedNames.Add(item.ToString());
+            var names = EnsureUniqueNames(NamedPathSets.Select(n => n.Key).ToList(), setUsedNames);
             for (int i = 0; i < NamedPathSets.Length; i++)
             {
                 var namedPathSet = NamedPathSets[i];
                 string baseName = namedPathSet.Key;
-                // Make sure the next name added is unique
-                string name = (baseName.Length != 0 ? baseName : "1"); // Not L10N
-                for (int suffix = 2; setUsedNames.Contains(name); suffix++)
-                    name = baseName + suffix;
-                // If a change was made, update the named path sets
+                string name = names[i];
                 if (!Equals(name, baseName))
                     NamedPathSets[i] = new KeyValuePair<string, MsDataFileUri[]>(name, namedPathSet.Value);
-                // Add this name to the used set
-                setUsedNames.Add(name);
             }
         }
 
