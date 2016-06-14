@@ -2177,11 +2177,12 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public PeptideLibraries Disconnect()
         {
-            var libClone = ImClone(this);
-            libClone._disconnectedLibraries = _libraries;
-            libClone.Libraries = new Library[0];
-            libClone.LibrarySpecs = new LibrarySpec[0];
-            return libClone;
+            return ChangeProp(ImClone(this), im =>
+            {
+                im._disconnectedLibraries = _libraries;
+                im.Libraries = new Library[0];
+                im.LibrarySpecs = new LibrarySpec[0];
+            });
         }
 
         public delegate string FindLibrary(string libraryName, string fileName);
@@ -2290,6 +2291,10 @@ namespace pwiz.Skyline.Model.DocSettings
                 // Not possible to reconcile until Document Library is loaded.
                 return;
             }
+
+            // In case library specs got disconnected
+            if (!LibrarySpecs.Any())
+                return;
 
             // Look for the rank ID in the specified LibrarySpecs.
             // They should all have it, or this is not a valid ranking.
