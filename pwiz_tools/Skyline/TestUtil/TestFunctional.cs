@@ -28,7 +28,7 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using Excel;
-using Microsoft.Diagnostics.Runtime;
+// using Microsoft.Diagnostics.Runtime; only needed for stack dump logic, which is currently disabled
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
@@ -537,10 +537,16 @@ namespace pwiz.SkylineTestUtil
                 if (!string.IsNullOrEmpty(state))
                    result += " Also, document is not fully loaded: \"" + state + "\"";
             }
-            result += GetAllThreadsStackTraces();
+            // Without line numbers, this isn't terribly useful.  Disable for now.
+            // result += GetAllThreadsStackTraces();
             return result;
         }
 
+        /*
+         * Without line numbers, this turns out to be not all that useful, so disable for now at least.  
+         * See https://github.com/Microsoft/clrmd/blob/master/src/FileAndLineNumbers/Program.cs if you want to make that work.
+         * I (bspratt) stopped short of that only because it looked like it *might* introduce config issues but did not investigatge to see if that was actually a problem.
+         * 
         private static string GetAllThreadsStackTraces()
         {
             // Adapted from:
@@ -589,6 +595,7 @@ namespace pwiz.SkylineTestUtil
             }
             return "\r\nCurrent managed thread stack traces: \r\n" + result;
         }
+        */
 
         public static SrmDocument WaitForDocumentChange(SrmDocument docCurrent)
         {
