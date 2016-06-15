@@ -9057,4 +9057,7 @@ Here are the last 3 errors:
     <value>No background proteome defined, see the Digestion tab in Peptide Settings for more information.</value>
     <comment>If background proteome is set to "None" and user attempts to "Use background proteome" when associating proteins</comment>
   </data>
+  <data name="ExportMethodDlg_cbIgnoreProteins_CheckedChanged_Grouping_peptides_by_protein_has_not_yet_been_implemented_for_scheduled_methods_" xml:space="preserve">
+    <value>Grouping peptides by protein has not yet been implemented for scheduled methods.</value>
+  </data>
 </root>

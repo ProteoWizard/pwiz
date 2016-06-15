@@ -201,6 +201,7 @@
             this.cbIgnoreProteins.Name = "cbIgnoreProteins";
             this.helpTip.SetToolTip(this.cbIgnoreProteins, resources.GetString("cbIgnoreProteins.ToolTip"));
             this.cbIgnoreProteins.UseVisualStyleBackColor = true;
+            this.cbIgnoreProteins.CheckedChanged += new System.EventHandler(this.cbIgnoreProteins_CheckedChanged);
             // 
             // helpTip
             // 

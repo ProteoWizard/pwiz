@@ -93,7 +93,7 @@ namespace pwiz.Skyline.FileUI
             // Init dialog values from settings.
             ExportStrategy = Helpers.ParseEnum(Settings.Default.ExportMethodStrategy, ExportStrategy.Single);
 
-            IgnoreProteins = Settings.Default.ExportIgnoreProteins;
+            IgnoreProteins = !Equals(ExportStrategy, ExportStrategy.Buckets) ? Settings.Default.ExportIgnoreProteins : true;
 
             // Start with method type as Standard until after instrument type is set
             comboTargetType.Items.Add(ExportMethodType.Standard.GetLocalizedString());
@@ -1258,6 +1258,8 @@ namespace pwiz.Skyline.FileUI
             cbIgnoreProteins.Enabled = radioBuckets.Checked;
             if (!radioBuckets.Checked)
                 cbIgnoreProteins.Checked = false;
+            else if (!Equals(comboTargetType.SelectedItem, ExportMethodType.Standard.GetLocalizedString()))
+                cbIgnoreProteins.Checked = true;
 
             if (radioSingle.Checked)
             {
@@ -1338,6 +1340,10 @@ namespace pwiz.Skyline.FileUI
             bool standard = (targetType == ExportMethodType.Standard);
             bool triggered = (targetType == ExportMethodType.Triggered);
 
+            if (targetType != ExportMethodType.Standard && cbIgnoreProteins.Enabled)
+            {
+                cbIgnoreProteins.Checked = true;
+            }
             if (triggered && !(InstrumentType == ExportInstrumentType.ABI || InstrumentType == ExportInstrumentType.ABI_QTRAP))
             {
                 comboOptimizing.Enabled = false;
@@ -1675,6 +1681,15 @@ namespace pwiz.Skyline.FileUI
         {
             CalcMethodCount();
             panelSciexTune.Visible = comboOptimizing.SelectedItem.ToString().Equals(ExportOptimize.COV);
+        }
+
+        private void cbIgnoreProteins_CheckedChanged(object sender, EventArgs e)
+        {
+            if (!cbIgnoreProteins.Checked && radioBuckets.Checked && !Equals(comboTargetType.SelectedItem, ExportMethodType.Standard.GetLocalizedString()))
+            {
+                cbIgnoreProteins.Checked = true;
+                MessageDlg.Show(this, Resources.ExportMethodDlg_cbIgnoreProteins_CheckedChanged_Grouping_peptides_by_protein_has_not_yet_been_implemented_for_scheduled_methods_);
+            }
         }
 
         #region Functional Test Support

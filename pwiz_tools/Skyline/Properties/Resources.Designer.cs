@@ -9722,6 +9722,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Grouping peptides by protein has not yet been implemented for scheduled methods..
+        /// </summary>
+        public static string ExportMethodDlg_cbIgnoreProteins_CheckedChanged_Grouping_peptides_by_protein_has_not_yet_been_implemented_for_scheduled_methods_ {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_cbIgnoreProteins_CheckedChanged_Grouping_peptides_by_protein_has_" +
+                        "not_yet_been_implemented_for_scheduled_methods_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Export of DIA isolation lists is not yet supported for {0}..
         /// </summary>
         public static string ExportMethodDlg_comboInstrument_SelectedIndexChanged_Export_of_DIA_isolation_lists_is_not_yet_supported_for__0__ {
