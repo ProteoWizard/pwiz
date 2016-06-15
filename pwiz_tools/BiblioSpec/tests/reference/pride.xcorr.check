@@ -16,8 +16,8 @@ id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	num
 3	ITGAQVGTGCGTLNDGK	825.140014648438	2	ITGAQVGTGC[+57.0]GTLNDGK	-	-	1	480	0.0	0	0.0	30.3008333333333	1	8450	3.9148	12
 4	CICDPGYSGPTCK	758.119995117188	2	C[+57.0]IC[+57.0]DPGYSGPTC[+57.0]K	-	-	1	230	0.0	0	0.0	30.1805	1	8427	3.3241	12
 5	CICDPGYSGPTCK	758.650024414063	2	C[+57.0]IC[+57.0]DPGYSGPTC[+57.0]K	-	-	1	334	0.0	0	0.0	30.1648333333333	1	8424	3.2001	12
-id	fileName
-1	/BiblioSpec/tests/inputs/test.xcorr.pride.xml
+id	fileName	cutoffScore
+1	/BiblioSpec/tests/inputs/test.xcorr.pride.xml	-1.0
 id	scoreType
 0	UNKNOWN
 1	PERCOLATOR QVALUE

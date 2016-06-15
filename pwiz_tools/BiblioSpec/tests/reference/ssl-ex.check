@@ -15,8 +15,8 @@ id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	num
 7	IEEELGDK	466.73317647844	2	IEEELGDK	-	-	1	3401	0.0	0	0.0	5.9557066	1	18	0.0	1
 8	KVESLGSPSGATK	630.84322647844	2	KVESLGSPSGATK	-	-	1	2849	0.0	0	0.0	6.096598	1	19	0.0	1
 9	AENITLCSITKKGVPLVTLSNGD	620.55365147266	4	AENITLCSITKKGVPLVTLS[+80.0]NGD[+21.0]	-	-	1	2056	0.0	0	0.0	8.7613	1	20	0.0	1
-id	fileName
-1	/BiblioSpec/tests/inputs/extra-cols.ms2
+id	fileName	cutoffScore
+1	/BiblioSpec/tests/inputs/extra-cols.ms2	-1.0
 id	scoreType
 0	UNKNOWN
 1	PERCOLATOR QVALUE

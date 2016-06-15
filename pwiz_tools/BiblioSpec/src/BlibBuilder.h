@@ -111,6 +111,7 @@ class BlibBuilder : public BlibMaker
                    float* pI);
   int getCacheThreshold(){ return fileSizeThresholdForCaching; }
   static string generateModifiedSeq(const char* unmodSeq, const vector<SeqMod>& mods);
+  virtual double getCutoffScore() const;
 
  protected:
   int parseNextSwitch(int i, int argc, char* argv[]);
@@ -120,6 +121,7 @@ class BlibBuilder : public BlibMaker
   enum STDIN_LIST { FILENAMES, UNMODIFIED_SEQUENCES, MODIFIED_SEQUENCES };
   //double probability_cutoff;
   double scoreThresholds[NUM_BUILD_INPUTS]; // replaces probability_cutoff
+  double explicitCutoff;
   int level_compress;
   int fileSizeThresholdForCaching; // for parsing .dat files
   vector<char*> input_files;

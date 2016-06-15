@@ -8,8 +8,8 @@ id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	num
 4	HSTVFDNLPNPEDR	547.59	3	HSTVFDNLPNPEDR	-	-	1	2072	0.0	0	0.0	1.3441	1	7	6.13762005164793e-08	16
 5	HSTVFDNLPNPEDR	820.89	2	HSTVFDNLPNPEDR	-	-	1	1321	0.0	0	0.0	1.42176666666667	1	8	1.0e-09	16
 6	LVNELTEFAK	582.8105	2	LVNELTEFAK	-	-	1	798	0.0	0	0.0	1.70296666666667	1	12	0.000377572190925416	16
-id	fileName
-1	/BiblioSpec/tests/inputs/peaksdb.mzXML
+id	fileName	cutoffScore
+1	/BiblioSpec/tests/inputs/peaksdb.mzXML	-1.0
 id	scoreType
 0	UNKNOWN
 1	PERCOLATOR QVALUE

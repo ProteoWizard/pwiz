@@ -19,9 +19,9 @@ id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	num
 3	KLKVIPK	419.819219960391	2	K[+4.0]LK[+4.0]VIPK[+4.0]	-	-	1	100	0.0	0	0.0	2.24853	1	6	0.002	1
 4	MASASGAMAK	481.220159901797	2	M[+16.0]ASASGAM[+16.0]AK[+4.0]	-	-	1	120	0.0	0	0.0	2.85028666666667	1	9	0.01	1
 5	RPVTPKK	413.769812001406	2	RPVTPKK	-	-	1	175	0.0	0	0.0	2.87913166666667	2	10	0.002	1
-id	fileName
-1	D:/Elite_MAM/MITO_03.raw
-2	X:/Test.raw
+id	fileName	cutoffScore
+1	D:/Elite_MAM/MITO_03.raw	-1.0
+2	X:/Test.raw	-1.0
 id	scoreType
 0	UNKNOWN
 1	PERCOLATOR QVALUE

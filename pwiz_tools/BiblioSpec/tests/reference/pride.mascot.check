@@ -12,8 +12,8 @@ id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	num
 3	LVHDVGALNDTAVLSEAALR	703.038776	3	L[+42.0]VHDVGALN[+1.0]DTAVLSEAALR	-	-	1	92	0.0	0	0.0	0.0	1	32036	33.66	5
 4	SDSLAVAK	395.719025	2	SDSLAVAK	-	-	1	140	0.0	0	0.0	0.0	1	17239	47.98	5
 5	LTGLFPSLVNK	717.397978	2	L[+42.0]TGLFPSLVN[+203.1]K	-	-	1	166	0.0	0	0.0	0.0	1	19539	28.68	5
-id	fileName
-1	/BiblioSpec/tests/inputs/test.mascot.pride.xml
+id	fileName	cutoffScore
+1	/BiblioSpec/tests/inputs/test.mascot.pride.xml	-1.0
 id	scoreType
 0	UNKNOWN
 1	PERCOLATOR QVALUE

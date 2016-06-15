@@ -5,8 +5,8 @@ id	RefSpectraID	position	mass
 2	1	12	15.9949
 id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobilityValue	ionMobilityType	ionMobilityHighEnergyDriftTimeOffsetMsec	retentionTime	fileID	SpecIDinFile	score	scoreType
 1	LCYVALDFEQEMATAASSSSLEK	856.39	3	LC[+160.2]YVALDFEQEM[+16.0]ATAASSSSLEK	-	-	1	296	0.0	0	0.0	81.12245	1	23406	0.0	1
-id	fileName
-1	/BiblioSpec/tests/inputs/bracket-perc.ms2
+id	fileName	cutoffScore
+1	/BiblioSpec/tests/inputs/bracket-perc.ms2	-1.0
 id	scoreType
 0	UNKNOWN
 1	PERCOLATOR QVALUE

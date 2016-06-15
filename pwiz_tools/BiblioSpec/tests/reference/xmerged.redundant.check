@@ -203,10 +203,10 @@ id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	num
 173	FLTIDIEPDIETLLSQGASA	1067.215332	2	FLTIDIEPDIETLLSQGASA	-	-	1	125	0.0	0	0.0	21.9445	3	860	0.9934	2
 174	NGVAIVDIVDPLISLSGEYSIIGR	834.6853027	3	NGVAIVDIVDPLISLSGEYSIIGR	-	-	1	67	0.0	0	0.0	22.6118333333333	3	884	0.9962	2
 175	NGVAIVDIVDPLISLSGEYSIIGR	1251.654541	2	NGVAIVDIVDPLISLSGEYSIIGR	-	-	1	178	0.0	0	0.0	22.668	3	886	0.9928	2
-id	fileName
-1	/BiblioSpec/tests/inputs/demo-copy.cms2
-2	/BiblioSpec/tests/inputs/demo.ms2
-3	/BiblioSpec/tests/inputs/CAexample.mzXML
+id	fileName	cutoffScore
+1	/BiblioSpec/tests/inputs/demo-copy.cms2	-1.0
+2	/BiblioSpec/tests/inputs/demo.ms2	-1.0
+3	/BiblioSpec/tests/inputs/CAexample.mzXML	-1.0
 id	scoreType
 0	UNKNOWN
 1	PERCOLATOR QVALUE

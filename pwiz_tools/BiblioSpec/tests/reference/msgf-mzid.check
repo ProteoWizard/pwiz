@@ -7,8 +7,8 @@ id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	num
 3	GGESIMNAQSQPQA	709.3134765625	2	GGESIMNAQSQPQA	-	-	1	613	0.0	0	0.0	32.900438333333	1	10071	0.0	15
 4	VIYTTNAVEAVHRQFRKLTK	792.46	3	VIYTTNAVEAVHRQFRKLTK	-	-	1	527	0.0	0	0.0	32.906203333333	1	10074	0.0	15
 5	VMRMLR	403.73	2	VMRMLR	-	-	1	355	0.0	0	0.0	32.902475	1	10072	0.0	15
-id	fileName
-1	/BiblioSpec/tests/inputs/msgf-test.mzML
+id	fileName	cutoffScore
+1	/BiblioSpec/tests/inputs/msgf-test.mzML	-1.0
 id	scoreType
 0	UNKNOWN
 1	PERCOLATOR QVALUE

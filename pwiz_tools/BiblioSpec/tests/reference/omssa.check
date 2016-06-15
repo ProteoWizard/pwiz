@@ -5,8 +5,8 @@ id	RefSpectraID	position	mass
 id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobilityValue	ionMobilityType	ionMobilityHighEnergyDriftTimeOffsetMsec	retentionTime	fileID	SpecIDinFile	score	scoreType
 1	MPCTEDYLSLILNR	842.345336914062	2	M[+16.0]PCTEDYLSLILNR	-	-	1	316	0.0	0	0.0	54.4525	1	11633	1.0e-14	10
 2	MPCTEDYLSLILNR	834.34521484375	2	MPCTEDYLSLILNR	-	-	1	553	0.0	0	0.0	55.5641666666667	1	11885	8.0e-15	10
-id	fileName
-1	/BiblioSpec/tests/inputs/OMSSA.mzXML
+id	fileName	cutoffScore
+1	/BiblioSpec/tests/inputs/OMSSA.mzXML	-1.0
 id	scoreType
 0	UNKNOWN
 1	PERCOLATOR QVALUE
