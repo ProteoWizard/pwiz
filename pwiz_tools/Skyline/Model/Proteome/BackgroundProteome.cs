@@ -411,7 +411,8 @@ namespace pwiz.Skyline.Model.Proteome
                 return false;
             }
             if (DatabaseInvalid != that.DatabaseInvalid 
-                || DatabaseValidated != that.DatabaseValidated)
+                || DatabaseValidated != that.DatabaseValidated
+                || NeedsProteinMetadataSearch != that.NeedsProteinMetadataSearch)
             {
                 return false;
             }
