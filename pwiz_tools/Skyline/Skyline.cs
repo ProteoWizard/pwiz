@@ -881,8 +881,6 @@ namespace pwiz.Skyline
             _proteinMetadataManager.ProgressUpdateEvent -= UpdateProgress;
             
             DestroyAllChromatogramsGraph();
-            // Switch in a blank document so all background loaders know to stop doing work
-            SetDocument(new SrmDocument(SrmSettingsList.GetDefault()), Document);
 
             base.OnClosing(e);
         }
