@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using pwiz.Common.Collections;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -134,7 +135,7 @@ namespace pwiz.Skyline.Model.Results
     /// </summary>
     public interface IBlockedList
     {
-        void WriteBlock(FileStream fileStream);
+        void WriteBlock(Stream fileStream);
     }
 
     /// <summary>
@@ -272,29 +273,21 @@ namespace pwiz.Skyline.Model.Results
         /// <summary>
         /// Write finished block to disk.
         /// </summary>
-        public void WriteBlock(FileStream fileStream)
+        public void WriteBlock(Stream fileStream)
         {
             Assume.IsTrue(_blocksInMemory == 1);
             WriteData(_block, fileStream);
             _blocksOnDisk++;
         }
 
-        private void WriteData(Block block, FileStream fileStream)
+        private void WriteData(Block block, Stream fileStream)
         {
             // Create back link to previous spilled block.
-            var lastFilePosition = new[] {_filePosition};
+            var lastFilePosition = _filePosition;
             _filePosition = (int) fileStream.Position;
-            FastWrite.WriteInts(fileStream.SafeFileHandle, lastFilePosition, 0, 1);
+            PrimitiveArrays.WriteOneValue(fileStream, lastFilePosition);
 
-            // Write one data block.
-            if (typeof (TData) == typeof (short))
-                FastWrite.WriteShorts(fileStream.SafeFileHandle, (short[]) (object) block._data, 0, _blockSize);
-            else if (typeof (TData) == typeof (int))
-                FastWrite.WriteInts(fileStream.SafeFileHandle, (int[])(object) block._data, 0, _blockSize);
-            else if (typeof (TData) == typeof (float))
-                FastWrite.WriteFloats(fileStream.SafeFileHandle, (float[])(object) block._data, 0, _blockSize);
-            else
-                Assume.Fail();
+            PrimitiveArrays.Write(fileStream, block._data);
         }
 
         /// <summary>
@@ -517,11 +510,13 @@ namespace pwiz.Skyline.Model.Results
                 string cachePath = null;
                 for (int i = 0; i < _spillFiles.Length; i++)
                 {
-                    var stream = _spillFiles[i].Stream;
-                    if (stream != null)
+                    if (_spillFiles[i].FileName != null)
                     {
-                        cachePath = stream.Name;
-                        stream.Dispose();
+                        cachePath = _spillFiles[i].FileName;
+                    }
+                    if (_spillFiles[i].Stream != null)
+                    {
+                        _spillFiles[i].Stream.Dispose();
                     }
                 }
 
@@ -557,7 +552,7 @@ namespace pwiz.Skyline.Model.Results
         /// <summary>
         /// Return (or possibly create) a spill file stream for the given group.
         /// </summary>
-        public FileStream GetFileStream(int chromIndex)
+        public Stream GetFileStream(int chromIndex)
         {
             int groupIndex = GetGroupIndex(chromIndex);
             return _spillFiles[groupIndex].CreateFileStream(_cachePath);
@@ -642,10 +637,10 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         private class SpillFile
         {
-            public FileStream Stream { get; private set; }
+            public BufferedStream Stream { get; private set; }
             public float MaxTime { get; set; }
             
-            public FileStream CreateFileStream(string cachePath)
+            public BufferedStream CreateFileStream(string cachePath)
             {
                 if (Stream == null)
                 {
@@ -655,7 +650,8 @@ namespace pwiz.Skyline.Model.Results
                     Helpers.Try<Exception>(() =>
                     {
                         string fileName = FileStreamManager.Default.GetTempFileName(xicDir, "xic"); // Not L10N
-                        Stream = File.Create(fileName, ushort.MaxValue, FileOptions.DeleteOnClose);
+                        Stream = new BufferedStream(File.Create(fileName, ushort.MaxValue, FileOptions.DeleteOnClose));
+                        FileName = fileName;
                     },
                     2, 100);
                 }
@@ -666,6 +662,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 Stream.Dispose();
                 Stream = null;
+                FileName = null;
             }
 
             private static string GetSpillDirectory(string cachePath)
@@ -676,10 +673,12 @@ namespace pwiz.Skyline.Model.Results
 
             public override string ToString()
             {
-                return Stream == null
+                return FileName == null
                     ? "(none)" // Not L10N
-                    : Stream.Name.Substring(Stream.Name.Length - 8);
+                    : FileName.Substring(FileName.Length - 8);
             }
+
+            public string FileName { get; private set; }
         }
     }
 }
