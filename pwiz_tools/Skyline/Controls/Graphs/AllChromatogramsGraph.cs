@@ -375,12 +375,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 Width = _multiFileWindowWidth - panelFileList.Width;
                 panelFileList.Visible = false;
                 btnAutoScaleGraphs.Visible = false;
-                if (status.ProgressList.Any())
-                {
-                    var loadingStatus = status.ProgressList[0];
-                    if (loadingStatus.IsCanceled)
-                        Cancel(loadingStatus);
-                }
                 return;
             }
 
@@ -722,6 +716,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 var sb = new StringBuilder();
                 foreach (FileProgressControl control in flowFileStatus.Controls)
                 {
+                    if (ReferenceEquals(SelectedControl, control))
+                        sb.Append("-> ");    // Not L10N
                     if (control.Error != null)
                         sb.AppendLine(string.Format("{0}: Error - {1}", control.FilePath, control.Error)); // Not L10N
                     else if (control.IsCanceled)

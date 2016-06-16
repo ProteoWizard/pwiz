@@ -384,7 +384,7 @@ namespace pwiz.SkylineTestUtil
             return waitCycles;
         }
 
-        public static TDlg TryWaitForOpenForm<TDlg>(int millis = WAIT_TIME) where TDlg : Form
+        public static TDlg TryWaitForOpenForm<TDlg>(int millis = WAIT_TIME, Func<bool> stopCondition = null) where TDlg : Form
         {
             int waitCycles = GetWaitCycles(millis);
             for (int i = 0; i < waitCycles; i++)
@@ -421,6 +421,9 @@ namespace pwiz.SkylineTestUtil
 
                     return tForm;
                 }
+
+                if (stopCondition != null && stopCondition())
+                    break;
 
                 Thread.Sleep(SLEEP_INTERVAL);
             }

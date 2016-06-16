@@ -1270,6 +1270,9 @@ namespace pwiz.Skyline.Model.Results
                 byte[] pointsCompressed = points.Compress(3);
                 int lenCompressed = pointsCompressed.Length;
                 int lenUncompressed = points.Length;
+                if (_fs.Stream == null)
+                    throw new InvalidDataException(
+                        Resources.ChromCacheBuilder_WriteLoop_Failure_writing_cache_file);
                 _fs.Stream.Write(pointsCompressed, 0, lenCompressed);
 
                 // Use existing scores, if they have already been added

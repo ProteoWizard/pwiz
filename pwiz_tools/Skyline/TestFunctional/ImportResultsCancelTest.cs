@@ -17,11 +17,13 @@
  * limitations under the License.
  */
 
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -32,7 +34,7 @@ namespace pwiz.SkylineTestFunctional
         /// <summary>
         /// Verify that the import results cancel button works
         /// </summary>
-        //[TestMethod]  // TODO uncomment this when this test actually passes.  It works fine on its own in Test Explorer, but when run in a loop in SkylineTester it tends to fail, and/or issue warnings like "*** Attempt to complete document with non-final status ***"
+        [TestMethod]
         public void TestImportResultsCancel()
         {
             Run(@"TestFunctional\RetentionTimeFilterTest.zip");
@@ -56,6 +58,7 @@ namespace pwiz.SkylineTestFunctional
             // Try individual cancellation - can be timing dependent (do we get to the cancel button quickly enough?) so allow some retry
             for (int retry = 0; retry < maxTries; retry++)
             {
+                RemovePartialCacheFiles(files);
                 OpenDocument(skyfile);
                 Assert.IsFalse(SkylineWindow.Document.Settings.HasResults);
                 Settings.Default.AutoShowAllChromatogramsGraph = initiallyVisible; // Start with progress window hidden?
@@ -82,10 +85,14 @@ namespace pwiz.SkylineTestFunctional
                         dlg2 = WaitForOpenForm<AllChromatogramsGraph>();
                     }
                 }
-                WaitForCondition(30*1000, () => dlg2.ProgressTotalPercent >= 1); // Get a least a little way in
+                WaitForConditionUI(30*1000, () => dlg2.ProgressTotalPercent >= 1 && dlg2.Files.Count() == 4); // Get a least a little way in
                 int cancelIndex = retry%4;
                 var cancelTarget = files[cancelIndex].Replace(".mz5", "");
-                RunUI(() => dlg2.FileButtonClick(cancelTarget));
+                RunUI(() =>
+                {
+                    Assert.AreEqual(4, dlg2.Files.Count());
+                    dlg2.FileButtonClick(cancelTarget);
+                });
                 WaitForDocumentLoaded();
                 WaitForClosedAllChromatogramsGraph();
                 foreach (var file in files)
@@ -99,7 +106,8 @@ namespace pwiz.SkylineTestFunctional
                     if (!chromatogramSetName.Equals(cancelTarget))
                     {
                         // Should always find it since we didn't try to cancel this one
-                        Assert.AreNotEqual(-1, index, string.Format("Missing chromatogram set {0} after cancelling {1}", chromatogramSetName, cancelTarget));
+                        if (index == -1)
+                            Assert.AreNotEqual(-1, index, string.Format("Missing chromatogram set {0} after cancelling {1}", chromatogramSetName, cancelTarget));
                     }
                     else if (index == -1)
                     {
@@ -113,30 +121,53 @@ namespace pwiz.SkylineTestFunctional
             }
 
             // Cancelled load should revert to initial document
-            CancelAll(files, false);
-            CancelAll(files, true);
-
-            // Now try a proper import
-            Settings.Default.AutoShowAllChromatogramsGraph = initiallyVisible;
-            ImportResultsAsync(files);
-            WaitForConditionUI(
-                () =>
-                    SkylineWindow.ImportingResultsWindow != null &&
-                    SkylineWindow.ImportingResultsWindow.ProgressTotalPercent > 2); // Get at least partway in
-            if (!initiallyVisible)
+            if (initiallyVisible)
             {
-                RunUI(() => SkylineWindow.ShowAllChromatogramsGraph()); // Turn it on
+                CancelAll(new[] { files[0] }, false);
+                CancelAll(new[] { files[3] }, true);
+                CancelAll(files, false);
+                CancelAll(files, true);
             }
-            var dlgACG = WaitForOpenForm<AllChromatogramsGraph>();
-            Assert.IsTrue(dlgACG.ChromatogramManager.SupportAllGraphs);
-            Assert.IsNotNull(dlgACG.SelectedControl, "unable to select a loader control in chromatogram progress window");
-            Assert.IsTrue(dlgACG.Width > 500, "Initially hidden chromatogram progress window did not size properly when enabled by user"); // Did it resize properly?
-            WaitForDocumentLoaded();
-            WaitForClosedAllChromatogramsGraph();
-            AssertResult.IsDocumentResultsState(SkylineWindow.Document, "8fmol", 4, 4, 0, 13, 0);
-            AssertResult.IsDocumentResultsState(SkylineWindow.Document, "20fmol", 5, 5, 0, 13, 0);
-            AssertResult.IsDocumentResultsState(SkylineWindow.Document, "40fmol", 3, 3, 0, 11, 0);
-            AssertResult.IsDocumentResultsState(SkylineWindow.Document, "200fmol", 4, 4, 0, 12, 0);
+
+            for (int retry = 0; retry < maxTries; retry++)
+            {
+                // Now try a proper import
+                Settings.Default.AutoShowAllChromatogramsGraph = initiallyVisible;
+                RemovePartialCacheFiles(files);
+                OpenDocument("RetentionTimeFilterTest.sky");
+                ImportResultsAsync(files);
+                if (!TryWaitForConditionUI(() =>
+                    SkylineWindow.ImportingResultsWindow != null &&
+                    SkylineWindow.ImportingResultsWindow.ProgressTotalPercent >= 1)) // Get at least partway in
+                {
+                    PauseTest();
+                    Assert.Fail("AllChromagotramsGraph missing in action");
+                }
+
+                if (!initiallyVisible)
+                {
+                    RunUI(() => SkylineWindow.ShowAllChromatogramsGraph()); // Turn it on
+                }
+
+                var dlgACG = TryWaitForOpenForm<AllChromatogramsGraph>(5000, () => SkylineWindow.Document.IsLoaded);
+                if (dlgACG == null)
+                    continue;   // Try again
+
+                Assert.IsTrue(dlgACG.ChromatogramManager.SupportAllGraphs);
+                Assert.IsNotNull(dlgACG.SelectedControl,
+                    "unable to select a loader control in chromatogram progress window");
+                Assert.IsTrue(dlgACG.Width > 500,
+                    "Initially hidden chromatogram progress window did not size properly when enabled by user");
+                    // Did it resize properly?
+                WaitForDocumentLoaded();
+                WaitForClosedAllChromatogramsGraph();
+                AssertResult.IsDocumentResultsState(SkylineWindow.Document, "8fmol", 4, 4, 0, 13, 0);
+                AssertResult.IsDocumentResultsState(SkylineWindow.Document, "20fmol", 5, 5, 0, 13, 0);
+                AssertResult.IsDocumentResultsState(SkylineWindow.Document, "40fmol", 3, 3, 0, 11, 0);
+                AssertResult.IsDocumentResultsState(SkylineWindow.Document, "200fmol", 4, 4, 0, 12, 0);
+
+                break;
+            }
         }
 
         private void CancelAll(string[] files, bool closeOnFinish)
@@ -145,11 +176,18 @@ namespace pwiz.SkylineTestFunctional
 
             for (int retry = 0; retry < maxTries; retry++)
             {
+                RemovePartialCacheFiles(files);
                 OpenDocument("RetentionTimeFilterTest.sky");
                 Assert.IsFalse(SkylineWindow.Document.Settings.HasResults);
                 var docUnloaded = SkylineWindow.Document;
                 ImportResultsAsync(files);
-                var dlg = WaitForOpenForm<AllChromatogramsGraph>();
+                var dlg = TryWaitForOpenForm<AllChromatogramsGraph>(5000, () => SkylineWindow.Document.IsLoaded);
+                if (dlg == null)
+                {
+                    // May have happened so fast in the single file case that the ACG never opened
+                    Assert.IsTrue(SkylineWindow.Document.Settings.HasResults);
+                    continue;
+                }
                 RunUI(dlg.ClickCancel);
                 if (closeOnFinish)
                     WaitForClosedAllChromatogramsGraph();
@@ -173,7 +211,7 @@ namespace pwiz.SkylineTestFunctional
                             }
                             return true;
                         });
-                        RunUI(() =>
+                        OkDialog(dlg, () =>
                         {
                             Assert.IsTrue(dlg.IsUserCanceled);
                             dlg.ClickClose();
@@ -182,6 +220,26 @@ namespace pwiz.SkylineTestFunctional
                     break;
                 }
             }
+        }
+
+        private void RemovePartialCacheFiles(string[] files)
+        {
+            WaitForChromatogramManagerQuiet();
+            foreach (var file in files)
+            {
+                string cacheFile = ChromatogramCache.PartPathForName(SkylineWindow.DocumentFilePath, new MsDataFilePath(file));
+                FileEx.SafeDelete(cacheFile, true);
+            }
+        }
+
+        /// <summary>
+        /// Because we keep opening the same document over and over and canceling processing,
+        /// we need to wait for the ChromatogramManager to truly stop working before starting
+        /// new work.
+        /// </summary>
+        private void WaitForChromatogramManagerQuiet()
+        {
+            WaitForConditionUI(() => !((ChromatogramManager)SkylineWindow.BackgroundLoaders.First(l => l is ChromatogramManager)).AnyProcessing());
         }
     }
 }

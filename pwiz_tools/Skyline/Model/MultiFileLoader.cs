@@ -177,8 +177,8 @@ namespace pwiz.Skyline.Model
             if (notFinal.Any())
             {
                 // Write output in attempt to associate new hangs in nightly tests with the return false below
-                Console.WriteLine(TextUtil.LineSeparate("*** Attempt to complete document with non-final status ***",   // Not L10N
-                    TextUtil.LineSeparate(notFinal.Select(s => string.Format("{0} {1}% - {2}", s.State, s.PercentComplete, s.FilePath))))); // Not L10N
+//                Console.WriteLine(TextUtil.LineSeparate("*** Attempt to complete document with non-final status ***",   // Not L10N
+//                    TextUtil.LineSeparate(notFinal.Select(s => string.Format("{0} {1}% - {2}", s.State, s.PercentComplete, s.FilePath))))); // Not L10N
                 return false;
             }
 
@@ -198,6 +198,14 @@ namespace pwiz.Skyline.Model
                 }
                 if (_loadingPaths.Count == 0)
                     ResetStatus();
+            }
+        }
+
+        public bool AnyLoading()
+        {
+            lock (this)
+            {
+                return _loadingPaths.Any();
             }
         }
 

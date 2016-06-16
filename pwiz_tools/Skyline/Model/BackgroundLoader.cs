@@ -221,7 +221,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public bool AnyProcessing()
+        public virtual bool AnyProcessing()
         {
             lock (_processing)
             {

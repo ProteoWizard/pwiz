@@ -106,6 +106,11 @@ namespace pwiz.Skyline.Model.Results
             _multiFileLoader.ClearFile(filePath);
         }
 
+        public override bool AnyProcessing()
+        {
+            return _multiFileLoader.AnyLoading();
+        }
+
         public void Dispose()
         {
             _multiFileLoader.DoneAddingFiles();
