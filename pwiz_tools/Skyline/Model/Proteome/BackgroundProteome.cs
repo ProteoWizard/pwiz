@@ -39,7 +39,7 @@ namespace pwiz.Skyline.Model.Proteome
         // Info we may use to answer various questions faster the second time around, 
         // but always the same answer because we are immutable
         private readonly BackgroundProteomeMetadataCache _cache;
-        private class BackgroundProteomeMetadataCache
+        private class BackgroundProteomeMetadataCache : IEquatable<BackgroundProteomeMetadataCache>
         {
             private readonly BackgroundProteome _parent;
             private bool? _needsProteinMetadataSearch;
@@ -137,6 +137,13 @@ namespace pwiz.Skyline.Model.Proteome
                     return null;  // Cancelled
                 }
                 return _peptideUniquenessDict;
+            }
+
+            public bool Equals(BackgroundProteomeMetadataCache other)
+            {
+                return other != null &&
+                    Equals(_enzymeNameForPeptideUniquenessDictDigest, other._enzymeNameForPeptideUniquenessDictDigest) &&
+                    Equals(_needsProteinMetadataSearch, other._needsProteinMetadataSearch);
             }
         }
 
@@ -411,12 +418,15 @@ namespace pwiz.Skyline.Model.Proteome
                 return false;
             }
             if (DatabaseInvalid != that.DatabaseInvalid 
-                || DatabaseValidated != that.DatabaseValidated
-                || NeedsProteinMetadataSearch != that.NeedsProteinMetadataSearch)
+               || DatabaseValidated != that.DatabaseValidated
+               || !_digestionNames.SetEquals(that._digestionNames))
             {
                 return false;
             }
-            return _digestionNames.SetEquals(that._digestionNames);
+            lock (_cache)
+            {
+                return _cache.Equals(that._cache);
+            }
         }
         // ReSharper disable InconsistentNaming
         public enum DuplicateProteinsFilter
