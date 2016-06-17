@@ -33,9 +33,9 @@ id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	num
 25	AFHDTEWATQDPR	541.19	2	AFHDTEWATQDPR	-	-	1	149	0.0	0	0.0	16.4	2	6424	0.0	1
 26	AGHQTSAESWGTGR	421.42	2	AGHQTSAESWGTGR	-	-	1	179	0.0	0	0.0	9.971	2	3786	0.0	1
 27	AIDYVEATANSHSR	435.32	2	AIDYVEATANSHSR	-	-	1	316	0.0	0	0.0	13.178	2	5088	0.0	1
-id	fileName
-1	/BiblioSpec/tests/inputs/also-small.ms2
-2	/BiblioSpec/tests/inputs/smaller.ms2
+id	fileName	cutoffScore
+1	/BiblioSpec/tests/inputs/also-small.ms2	-1.0
+2	/BiblioSpec/tests/inputs/smaller.ms2	-1.0
 id	scoreType
 0	UNKNOWN
 1	PERCOLATOR QVALUE

@@ -8,8 +8,8 @@ id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	num
 4	LQEVIETLLSLEK	757.87	2	LQEVIETLLSLEK	-	-	1	1254	0.0	0	0.0	0.0	1	4	13.33	3
 5	GLLGCNIIPLQR	677.67	2	GLLGCNIIPLQR	-	-	1	584	0.0	0	0.0	0.0	1	5	11.08	3
 6	QVEEALHQLHAR	477.59	2	QVEEALHQLHAR	-	-	1	595	0.0	0	0.0	0.0	1	6	10.19	3
-id	fileName
-1	/BiblioSpec/tests/inputs/test.mill.pride.xml
+id	fileName	cutoffScore
+1	/BiblioSpec/tests/inputs/test.mill.pride.xml	-1.0
 id	scoreType
 0	UNKNOWN
 1	PERCOLATOR QVALUE

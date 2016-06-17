@@ -245,9 +245,9 @@ sqlite3_int64 BuildParser::insertSpectrumFilename(string& filename,
     }
     sqlite3_free_table(result);
 
-    string sql_statement = "INSERT INTO SpectrumSourceFiles(fileName) VALUES('";
+    string sql_statement = "INSERT INTO SpectrumSourceFiles(fileName, cutoffScore) VALUES('";
     sql_statement += SqliteRoutine::ESCAPE_APOSTROPHES(fullPath);
-    sql_statement += "')";
+    sql_statement += "', " + boost::lexical_cast<string>(blibMaker_.getCutoffScore()) + ")";
 
     blibMaker_.sql_stmt(sql_statement.c_str());
 

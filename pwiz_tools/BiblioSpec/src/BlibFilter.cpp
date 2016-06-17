@@ -23,8 +23,6 @@
  * This programs takes a redundant library and
  * compute all_vs_all, select one final spec into
  * the non_redundant library.
- *
- * $ LibFilter.cpp, v 1.0 2009/01/27 15:53:52 Ning Zhang Exp $
  */
 
 #include <cstdio>

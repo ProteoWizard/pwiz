@@ -11,8 +11,8 @@ id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	num
 7	LLDNAAADLAAISGQKPLITK	1062.10632324219	2	LLDNAAADLAAISGQKPLITK	-	-	1	193	0.0	0	0.0	31.1105	1	test-morpheus.9.9.2	0.0	14
 8	ADILTFHTPLFK	468.262095133464	3	ADILTFHTPLFK	-	-	1	219	0.0	0	0.0	31.107966666667	1	test-morpheus.8.8.3	0.0	14
 9	AMIEAGAAAVHFEDQLASVK	686.68642171224	3	AMIEAGAAAVHFEDQLASVK	-	-	1	539	0.0	0	0.0	31.100733333333	1	test-morpheus.5.5.3	0.0	14
-id	fileName
-1	/BiblioSpec/tests/inputs/test-morpheus.mzML
+id	fileName	cutoffScore
+1	/BiblioSpec/tests/inputs/test-morpheus.mzML	-1.0
 id	scoreType
 0	UNKNOWN
 1	PERCOLATOR QVALUE
