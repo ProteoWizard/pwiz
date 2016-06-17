@@ -110,7 +110,6 @@ namespace TestRunner
             var log = new StreamWriter(logStream);
 
             bool allTestsPassed = true;
-            bool exceptionThrown = false;
 
             try
             {
@@ -202,7 +201,6 @@ namespace TestRunner
                     Console.WriteLine(e.InnerException.StackTrace);
                 }
                 allTestsPassed = false;
-                exceptionThrown = true;
             }
 
             // Display report.
@@ -217,7 +215,7 @@ namespace TestRunner
             if (commandLineArgs.ArgAsBool("wait"))
                 Console.ReadKey();
 
-            return !exceptionThrown ? 0 : 1;
+            return allTestsPassed ? 0 : 1;
         }
 
         private static DirectoryInfo GetSkylineDirectory()
