@@ -288,9 +288,9 @@ id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	num
 197	WCTISTHEANK	449.539794921875	3	WC[+57.0]TISTHEANK	-	-	1	301	0.0	0	0.0	29.9201666666667	2	3950	0.0	4
 198	AGFAGDDAPR	488.72412109375	2	AGFAGDDAPR	-	-	1	65	0.0	0	0.0	29.9456666666667	2	3952	0.0	4
 199	KNYELLCGDNTRK	537.599060058594	3	KNYELLC[+57.0]GDNTRK	-	-	1	113	0.0	0	0.0	30.0063333333333	2	3955	0.0	4
-id	fileName	cutoffScore
-1	/BiblioSpec/tests/inputs/OR20070831_S_mix7_FTFT_06.mzML	-1.0
-2	/BiblioSpec/tests/inputs/OR20070831_S_mix7_FTFT_07.mzXML	-1.0
+id	fileName
+1	/BiblioSpec/tests/inputs/OR20070831_S_mix7_FTFT_06.mzML
+2	/BiblioSpec/tests/inputs/OR20070831_S_mix7_FTFT_07.mzXML
 id	scoreType
 0	UNKNOWN
 1	PERCOLATOR QVALUE

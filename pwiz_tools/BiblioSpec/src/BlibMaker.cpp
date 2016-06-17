@@ -341,8 +341,7 @@ void BlibMaker::createTable(const char* tableName){
         strcpy(zSql,
                "CREATE TABLE SpectrumSourceFiles (id INTEGER PRIMARY KEY "
                "autoincrement not null,"
-               "fileName VARCHAR(512),"
-               "cutoffScore REAL )" );
+               "fileName VARCHAR(512) )" );
         sql_stmt(zSql);
 
     } else if( strcmp(tableName, "ScoreTypes") == 0 ){
@@ -374,8 +373,8 @@ void BlibMaker::updateTables(){
         createTable("SpectrumSourceFiles");
 
         // add an unknown source file id
-        strcpy(zSql, "INSERT INTO SpectrumSourceFiles (fileName, cutoffScore) "
-               "VALUES ('UNKNOWN', -1)");
+        strcpy(zSql, "INSERT INTO SpectrumSourceFiles (fileName) "
+               "VALUES ('UNKNOWN')");
         sql_stmt(zSql); 
         unknown_file_id = (int)sqlite3_last_insert_rowid(db);
 
@@ -493,15 +492,15 @@ void BlibMaker::transferSpectrumFiles(const char* schemaTmp){ //i.e. db name
         if( unknown_file_id == -1 ){
             Verbosity::warn("Orignal library does not contain filenames for "
                             "the  library spectra");
-            strcpy(zSql, "INSERT INTO SpectrumSourceFiles (fileName, cutoffScore) "
-                   "VALUES ('UNKNOWN', -1)");
+            strcpy(zSql, "INSERT INTO SpectrumSourceFiles (fileName) "
+                   "VALUES ('UNKNOWN')");
             sql_stmt(zSql); 
             unknown_file_id = (int)sqlite3_last_insert_rowid(db);
         }
 
         return;
     }
-    sprintf(zSql, "SELECT id, fileName, cutoffScore FROM %s.SpectrumSourceFiles",
+    sprintf(zSql, "SELECT id, fileName FROM %s.SpectrumSourceFiles",
             schemaTmp);
     smart_stmt pStmt;
     int rc = sqlite3_prepare(db, zSql, -1, &pStmt, 0);
@@ -512,8 +511,8 @@ void BlibMaker::transferSpectrumFiles(const char* schemaTmp){ //i.e. db name
         string fileName(reinterpret_cast<const char*>(sqlite3_column_text(pStmt, 1)));
         fileName = SqliteRoutine::ESCAPE_APOSTROPHES(fileName);
         sprintf(zSql, 
-                "INSERT INTO SpectrumSourceFiles (fileName, cutoffScore) VALUES ('%s', %f)",
-                fileName.c_str(), sqlite3_column_double(pStmt, 2));
+                "INSERT INTO SpectrumSourceFiles (fileName) VALUES ('%s')",
+                fileName.c_str());
         sql_stmt(zSql);
 
         // map old id (looked up) to new (current row number)
@@ -556,8 +555,8 @@ int BlibMaker::getNewFileId(const char* libName, int specID){
         newID = it->second;
     } else {
         // insert it into the new db
-        sprintf(zSql, "INSERT INTO main.SpectrumSourceFiles(fileName, cutoffScore) "
-                "SELECT fileName, cutoffScore FROM %s.SpectrumSourceFiles "
+        sprintf(zSql, "INSERT INTO main.SpectrumSourceFiles(fileName) "
+                "SELECT fileName FROM %s.SpectrumSourceFiles "
                 "WHERE %s.SpectrumSourceFiles.id = %d",
                 libName, libName, oldFileID);
         sql_stmt(zSql);
@@ -836,10 +835,6 @@ void BlibMaker::getRevisionInfo(const char* schemaName, int* dataRev, int* schem
     *schemaVer = atoi(result[3]);
 
     sqlite3_free_table(result);
-}
-
-double BlibMaker::getCutoffScore() const {
-    return -1;
 }
 
 const char* BlibMaker::libIdFromName(const char* name)

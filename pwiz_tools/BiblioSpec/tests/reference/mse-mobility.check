@@ -18,8 +18,8 @@ id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	num
 12	NLDIERPTYTNLNR	573.634	3	NLDIERPTYTNLNR	-	-	1	29	4.23129463195801	1	-0.160294154594684	35.3055	1	126	9.4625	9
 13	SISIVGSYVGNR	626.339	2	SISIVGSYVGNR	-	-	1	15	4.53571844100952	1	-0.0669061660766603	21.7659	1	2	7.0458	9
 14	VVGLSTLPEIYEK	724.4064	2	VVGLSTLPEIYEK	-	-	1	9	5.28470277786255	1	-0.0547778341505261	25.5939	1	66	6.7097	9
-id	fileName	cutoffScore
-1	/BiblioSpec/tests/inputs/waters-mobility.final_fragment.csv	-1.0
+id	fileName
+1	/BiblioSpec/tests/inputs/waters-mobility.final_fragment.csv
 id	scoreType
 0	UNKNOWN
 1	PERCOLATOR QVALUE

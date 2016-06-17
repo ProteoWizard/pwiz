@@ -78,8 +78,8 @@ id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	num
 64	NGFQTGSASKASA	613.79	2	NGFQTGSASKASA	-	-	1	314	0.0	0	0.0	0.0	1	153	0.0	1
 65	ELESAAYDHAEPVQPEDAPQDIANDELK	1032.44	3	ELESAAYDHAEPVQPEDAPQDIANDELK	-	-	1	795	0.0	0	0.0	0.0	1	156	0.0	1
 66	NFLETVELQVGLK	745.75	2	NFLETVELQVGLK	-	-	1	635	0.0	0	0.0	0.0	1	159	0.0	1
-id	fileName	cutoffScore
-1	/BiblioSpec/tests/inputs/demo.ms2	-1.0
+id	fileName
+1	/BiblioSpec/tests/inputs/demo.ms2
 id	scoreType
 0	UNKNOWN
 1	PERCOLATOR QVALUE

@@ -9,8 +9,8 @@ id	RefSpectraID	position	mass
 id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobilityValue	ionMobilityType	ionMobilityHighEnergyDriftTimeOffsetMsec	retentionTime	fileID	SpecIDinFile	score	scoreType
 1	TPDTCPLFCDFYNPHGGCEWHYQPCGAPCLK	947.137390136719	4	TPDTC[+57.0]PLFC[+57.0]DFYNPHGGC[+57.0]EWHYQPC[+57.0]GAPC[+57.0]LK	-	-	1	754	0.0	0	0.0	43.262615	1	controllerType=0 controllerNumber=1 scan=8182	0.0	15
 2	LHNLNSNWFPEGSKPFIYQEVIDLGGEPIK	1147.91418457031	3	LHNLNSNWFPEGSKPFIYQEVIDLGGEPIK	-	-	1	588	0.0	0	0.0	57.361115	1	controllerType=0 controllerNumber=1 scan=10906	0.0	15
-id	fileName	cutoffScore
-1	/BiblioSpec/tests/inputs/ms-gfdb.mzML	-1.0
+id	fileName
+1	/BiblioSpec/tests/inputs/ms-gfdb.mzML
 id	scoreType
 0	UNKNOWN
 1	PERCOLATOR QVALUE

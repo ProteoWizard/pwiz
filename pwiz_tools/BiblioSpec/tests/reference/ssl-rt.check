@@ -6,8 +6,8 @@ id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	num
 2	ELESAAYDHAEPVQPEDAPQDIANDELK	717.06	3	ELESAAYDHAEPVQPEDAPQDIANDELK	-	-	1	108	0.0	0	0.0	8.8483	1	140	0.0	0
 3	NFLETVELQVGLK	715.07	3	NFLETVELQVGLK	-	-	1	75	0.0	0	0.0	60.0	1	142	0.0	0
 4	NFLETVELQVGLK	832.24	3	NFLETVELQVGLK	-	-	1	111	0.0	0	0.0	80.0	1	150	0.0	0
-id	fileName	cutoffScore
-1	/BiblioSpec/tests/inputs/demo.ms2	-1.0
+id	fileName
+1	/BiblioSpec/tests/inputs/demo.ms2
 id	scoreType
 0	UNKNOWN
 1	PERCOLATOR QVALUE

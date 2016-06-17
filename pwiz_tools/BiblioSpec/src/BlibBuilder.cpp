@@ -38,7 +38,7 @@ namespace BiblioSpec {
 BlibBuilder::BlibBuilder():
 level_compress(3), fileSizeThresholdForCaching(800000000),
 targetSequences(NULL), targetSequencesModified(NULL), stdinStream(&cin),
-forcedPusherInterval(-1), explicitCutoff(-1)
+forcedPusherInterval(-1)
 {
     scoreThresholds[SQT] = 0.01;    // 1% FDR
     scoreThresholds[PEPXML] = 0.95; // peptide prophet probability
@@ -430,21 +430,21 @@ int BlibBuilder::parseNextSwitch(int i, int argc, char* argv[])
             Verbosity::error("Could not open file %s as stdin.", argv[i]);
         }
     } else if (switchName == 'c' && ++i < argc) {
-        explicitCutoff = atof(argv[i]);
-        scoreThresholds[PEPXML] = explicitCutoff;
-        scoreThresholds[PROT_PILOT] = explicitCutoff;
-        scoreThresholds[SQT] = 1 - explicitCutoff;
-        scoreThresholds[MASCOT] = 1 - explicitCutoff;
-        scoreThresholds[TANDEM] = 1 - explicitCutoff;
-        scoreThresholds[SCAFFOLD] = explicitCutoff;
-        scoreThresholds[OMSSA] = 1 - explicitCutoff;
-        scoreThresholds[PROT_PROSPECT] = 1 - explicitCutoff;
-        scoreThresholds[MAXQUANT] = 1 - explicitCutoff;
-        scoreThresholds[MORPHEUS] = 1 - explicitCutoff;
-        scoreThresholds[MSGF] = 1 - explicitCutoff;
-        scoreThresholds[PEAKS] = 1 - explicitCutoff;
-        scoreThresholds[BYONIC] = 1 - explicitCutoff;
-        scoreThresholds[PEPTIDE_SHAKER] = explicitCutoff;
+        double probability_cutoff = atof(argv[i]);
+        scoreThresholds[PEPXML] = probability_cutoff;
+        scoreThresholds[PROT_PILOT] = probability_cutoff;
+        scoreThresholds[SQT] = 1 - probability_cutoff;
+        scoreThresholds[MASCOT] = 1 - probability_cutoff;
+        scoreThresholds[TANDEM] = 1 - probability_cutoff;
+        scoreThresholds[SCAFFOLD] = probability_cutoff;
+        scoreThresholds[OMSSA] = 1 - probability_cutoff;
+        scoreThresholds[PROT_PROSPECT] = 1 - probability_cutoff;
+        scoreThresholds[MAXQUANT] = 1 - probability_cutoff;
+        scoreThresholds[MORPHEUS] = 1 - probability_cutoff;
+        scoreThresholds[MSGF] = 1 - probability_cutoff;
+        scoreThresholds[PEAKS] = 1 - probability_cutoff;
+        scoreThresholds[BYONIC] = 1 - probability_cutoff;
+        scoreThresholds[PEPTIDE_SHAKER] = probability_cutoff;
     } else if (switchName == 'l' && ++i < argc) {
         level_compress = atoi(argv[i]);
     } else if (switchName == 'C' && ++i < argc) {
@@ -485,10 +485,6 @@ int BlibBuilder::parseNextSwitch(int i, int argc, char* argv[])
     }
 
     return min(argc, i + 1);
-}
-
-double BlibBuilder::getCutoffScore() const {
-    return explicitCutoff;
 }
 
 int BlibBuilder::readSequences(set<string>** seqSet, bool modified)

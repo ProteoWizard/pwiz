@@ -181,7 +181,6 @@
           <xs:attribute name="min_length" type="xs:positiveInteger" use="required"/>
           <xs:attribute name="max_length" type="xs:positiveInteger" use="required"/>
           <xs:attribute name="auto_select" type="xs:boolean"/>
-          <xs:attribute name="unique_by" type="peptide_uniqueness_constraint_type"/>          
         </xs:complexType>
       </xs:element>
       <xs:element name="peptide_libraries">
@@ -247,6 +246,7 @@
               <xs:complexType>
                 <xs:complexContent>
                   <xs:extension base="lib_type">
+                    <xs:attribute name="name" type="xs:string"/>
                     <xs:attribute name="panorama_server" type="xs:string"/>
                     <xs:attribute name="revision" type="xs:integer"/>
                   </xs:extension>
@@ -1347,14 +1347,6 @@
       <xs:enumeration value="x"/>
       <xs:enumeration value="y"/>
       <xs:enumeration value="z"/>
-    </xs:restriction>
-  </xs:simpleType>
-  <xs:simpleType name="peptide_uniqueness_constraint_type">
-    <xs:restriction base="xs:string">
-      <xs:enumeration value="none"/>
-      <xs:enumeration value="protein"/>
-      <xs:enumeration value="gene"/>
-      <xs:enumeration value="species"/>
     </xs:restriction>
   </xs:simpleType>
   <xs:complexType name="enzyme_type">

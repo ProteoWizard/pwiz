@@ -113,7 +113,6 @@ protected:
     int getSpectrumCount(const char* schemaName = NULL);
     int countSpectra(const char* schemaName = NULL);
     void getRevisionInfo(const char* schemaName, int* major, int* minor);
-    virtual double getCutoffScore() const;
 
     // Property accessors
     bool isOverwrite() const { return overwrite; };
