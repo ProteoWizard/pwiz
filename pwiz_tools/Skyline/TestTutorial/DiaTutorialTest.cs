@@ -60,7 +60,7 @@ namespace pwiz.SkylineTestTutorial
         public void TestDiaTutorial()
         {
             // Set true to look at tutorial screenshots.
-            IsPauseForScreenShots = true;
+            // IsPauseForScreenShots = true;
 
             LinkPdf = "https://skyline.gs.washington.edu/tutorials/DIA-2_6.pdf";
 
