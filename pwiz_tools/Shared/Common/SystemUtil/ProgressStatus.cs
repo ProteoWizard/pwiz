@@ -30,6 +30,7 @@ namespace pwiz.Common.SystemUtil
         ProgressState State { get; }
         string Message { get; }
         int PercentComplete { get; }
+        bool ProgressEqual(IProgressStatus status);
         Exception ErrorException { get; }
         IProgressStatus ChangePercentComplete(int percent);
         IProgressStatus ChangeMessage(string prop);
@@ -99,6 +100,10 @@ namespace pwiz.Common.SystemUtil
         public int Segment { get; private set; }
         public Exception ErrorException { get; private set; }
         public object Id { get; private set; }
+        public bool ProgressEqual(IProgressStatus status)
+        {
+            return PercentComplete == status.PercentComplete;
+        }
 
         /// <summary>
         /// Any inactive state after begin

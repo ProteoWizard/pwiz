@@ -39,13 +39,12 @@ namespace pwiz.Skyline.Model.Results
         private readonly MultiFileLoader _multiFileLoader;
 
         public bool SupportAllGraphs { get; set; }
-        public int LoadingThreads { get; set; }
+        public int? LoadingThreads { get; set; }
         public MultiProgressStatus Status { get { return _multiFileLoader.Status; } }
 
         public ChromatogramManager(bool synchronousMode)
         {
             IsMultiThreadAware = true;
-            LoadingThreads = 1;
             _multiFileLoader = new MultiFileLoader(synchronousMode);
         }
 
@@ -181,7 +180,7 @@ namespace pwiz.Skyline.Model.Results
                     return false;
                 docCurrent = docInLock;
 
-                _multiFileLoader.InitializeThreadCount();
+                _multiFileLoader.InitializeThreadCount(LoadingThreads);
 
                 // The Thread.Sleep below caused many issues loading code, which were fixed
                 // This may still be good to keep around for periodic testing of synchronization logic

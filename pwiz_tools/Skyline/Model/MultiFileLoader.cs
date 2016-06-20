@@ -83,21 +83,26 @@ namespace pwiz.Skyline.Model
             one_at_a_time, several, many
         }
 
-        public void InitializeThreadCount()
+        public void InitializeThreadCount(int? loadingThreads)
         {
-            switch ((ImportResultsSimultaneousFileOptions)Settings.Default.ImportResultsSimultaneousFiles)
+            if (loadingThreads.HasValue)
+                _threadCount = loadingThreads.Value;
+            else
             {
-                case ImportResultsSimultaneousFileOptions.one_at_a_time:
-                    _threadCount = 1;
-                    break;
+                switch (Settings.Default.ImportResultsSimultaneousFiles)
+                {
+                    case 0:
+                        _threadCount = 1;
+                        break;
 
-                case ImportResultsSimultaneousFileOptions.several:
-                    _threadCount = Math.Max(1, Environment.ProcessorCount / 4);
-                    break;
+                    case 1:
+                        _threadCount = Math.Max(1, Environment.ProcessorCount / 4);
+                        break;
 
-                case ImportResultsSimultaneousFileOptions.many:
-                    _threadCount = Math.Max(1, Environment.ProcessorCount / 2);
-                    break;
+                    case 2:
+                        _threadCount = Math.Max(1, Environment.ProcessorCount / 2);
+                        break;
+                }
             }
         }
 

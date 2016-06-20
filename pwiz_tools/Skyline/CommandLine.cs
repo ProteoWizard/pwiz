@@ -2977,7 +2977,7 @@ namespace pwiz.Skyline
                 _waitingThread = new Thread(Wait){IsBackground = true};
                 _waitingThread.Start();
             }
-            else if (_currentProgress != null && status.PercentComplete != _currentProgress.PercentComplete)
+            else if (_currentProgress != null && !status.ProgressEqual(_currentProgress))
             {
                 var multiStatus = status as MultiProgressStatus;
                 if (multiStatus != null)

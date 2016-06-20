@@ -743,7 +743,8 @@ namespace pwiz.SkylineTestUtil
         // Pause a test so we can play with the UI manually.
         public static void PauseTest(string description = null)
         {
-            PauseAndContinueForm.Show(description);
+            if (!Program.SkylineOffscreen)
+                PauseAndContinueForm.Show(description);
         }
 
         /// <summary>
@@ -795,6 +796,9 @@ namespace pwiz.SkylineTestUtil
 
         private void PauseForScreenShot(string description, int? pageNum, Type formType)
         {
+            if (Program.SkylineOffscreen)
+                return;
+
             if (IsCheckLiveReportsCompatibility)
                 CheckReportCompatibility.CheckAll(SkylineWindow.Document);
             if (IsDemoMode)

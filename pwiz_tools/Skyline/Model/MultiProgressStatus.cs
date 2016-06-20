@@ -188,6 +188,28 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        public bool ProgressEqual(IProgressStatus status)
+        {
+            var multiProgressStatus = status as MultiProgressStatus;
+            if (multiProgressStatus == null)
+                return PercentComplete == status.PercentComplete;
+            else if (ProgressList.Count != multiProgressStatus.ProgressList.Count)
+                return false;
+            else
+            {
+                for (int i = 0; i < ProgressList.Count; i++)
+                {
+                    var s1 = ProgressList[i];
+                    var s2 = multiProgressStatus.ProgressList[i];
+                    if (!ReferenceEquals(s1.Id, s2.Id))
+                        return false;
+                    if (s1.PercentComplete != s2.PercentComplete)
+                        return false;
+                }
+            }
+            return true;
+        }
+
         public MultiProgressStatus ChangeStatus(ChromatogramLoadingStatus status)
         {
             var progressList = new List<ChromatogramLoadingStatus>(ProgressList.Count);

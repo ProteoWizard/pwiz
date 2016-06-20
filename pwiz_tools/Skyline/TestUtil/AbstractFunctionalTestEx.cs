@@ -120,6 +120,7 @@ namespace pwiz.SkylineTestUtil
                 importResultsDlg.NamedPathSets =
                     importResultsDlg.GetDataSourcePathsFileReplicates(filePaths.Select(MsDataFileUri.Parse));
             });
+            var doc = SkylineWindow.Document;
             if (expectedErrorMessage != null)
             {
                 var dlg = WaitForOpenForm<MessageDlg>();
@@ -143,6 +144,8 @@ namespace pwiz.SkylineTestUtil
                 });
                 OkDialog(lockmassDlg, lockmassDlg.OkDialog);
             }
+            if (expectedErrorMessage == null)
+                WaitForDocumentChange(doc);
         }
 
         /// <summary>

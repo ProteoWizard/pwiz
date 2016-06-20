@@ -66,14 +66,14 @@ namespace pwiz.SkylineTestFunctional
                     (int) MultiFileLoader.ImportResultsSimultaneousFileOptions.many; // Ensure all buttons are enabled
                 ImportResultsAsync(files);
                 WaitForConditionUI(
-                    () =>
-                        SkylineWindow.ImportingResultsWindow != null &&
-                        SkylineWindow.ImportingResultsWindow.ProgressTotalPercent >= 1); // Get at least partway in
+                    () => SkylineWindow.Document.IsLoaded ||
+                        (SkylineWindow.ImportingResultsWindow != null &&
+                        SkylineWindow.ImportingResultsWindow.ProgressTotalPercent >= 1)); // Get at least partway in
                 if (!initiallyVisible)
                 {
                     RunUI(() => SkylineWindow.ShowAllChromatogramsGraph()); // Turn it on
                 }
-                var dlg2 = TryWaitForOpenForm<AllChromatogramsGraph>(30000);
+                var dlg2 = TryWaitForOpenForm<AllChromatogramsGraph>(30000, () => SkylineWindow.Document.IsLoaded);
                 if (dlg2 == null)
                 {
                     if (SkylineWindow.Document.IsLoaded)
