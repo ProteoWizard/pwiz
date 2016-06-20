@@ -115,7 +115,7 @@ namespace pwiz.SkylineTestFunctional
                     }
                     else if (retry == maxTries - 1)
                     {
-                        Assert.Fail("Failed to cancel individual file import");
+                        Assert.Fail("Failed to cancel individual file import after {0} tries", maxTries);
                     }
                 }
             }

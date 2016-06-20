@@ -336,7 +336,9 @@ namespace pwiz.Skyline.Model.Results
                 AddChromatogramsForFilterPair(chromMaps, filterPair);
 
             // Update time for which chromatograms are available.
-            _collectors.AddComplete(retentionTime >= 0 ? (float)retentionTime : float.MaxValue);
+            var collectors = _collectors;
+            if (collectors != null)
+                collectors.AddComplete(retentionTime >= 0 ? (float)retentionTime : float.MaxValue);
         }
 
         private void AddChromatogramsForFilterPair(ChromDataCollectorSet[] chromMaps, SpectrumFilterPair filterPair)
