@@ -764,14 +764,26 @@
   <data name="timeTargetsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>67, 22</value>
   </data>
+  <data name="timeTargetsContextMenuItem.Text" xml:space="preserve">
+    <value>Targets</value>
+  </data>
   <data name="timeStandardsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>67, 22</value>
+  </data>
+  <data name="timeStandardsContextMenuItem.Text" xml:space="preserve">
+    <value>Standards</value>
   </data>
   <data name="timeDecoysContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>67, 22</value>
   </data>
+  <data name="timeDecoysContextMenuItem.Text" xml:space="preserve">
+    <value>Decoys</value>
+  </data>
   <data name="timePointsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>177, 22</value>
+  </data>
+  <data name="timePointsContextMenuItem.Text" xml:space="preserve">
+    <value>Points</value>
   </data>
   <data name="allRTValueContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>155, 22</value>

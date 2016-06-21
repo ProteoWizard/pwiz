@@ -407,7 +407,7 @@ namespace pwiz.Skyline.Model.Results
                 doSecondPass = _retentionTimePredictor.CreateConversion();
 
                 // Let the provider know that it is now safe to use retention time prediction
-                if (provider.CompleteFirstPass())
+                if (provider.CompleteFirstPass() && doSecondPass)
                 {
                     // Then refresh the chrom data list if indicated by provider, as it should now contain more than first-pass peptides
                     listChromData = CalcPeptideChromDataSets(provider, listMzPrecursors, setInternalStandards);
