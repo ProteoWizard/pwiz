@@ -209,6 +209,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     yield return new FileStatus
                     {
                         FilePath = control.FilePath,
+                        Progress = control.Progress,
                         Error = control.Error
                     };
                 }
@@ -218,6 +219,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public class FileStatus
         {
             public MsDataFileUri FilePath { get; set; }
+            public int Progress { get; set; }
             public string Error { get; set; }
         }
 

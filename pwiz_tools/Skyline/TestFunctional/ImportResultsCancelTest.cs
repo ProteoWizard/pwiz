@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Graphs;
@@ -56,7 +57,8 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => { SkylineWindow.SaveDocument(TestFilesDir.GetTestPath(skyfile)); });  // Make a clean copy
 
             // Try individual cancellation - can be timing dependent (do we get to the cancel button quickly enough?) so allow some retry
-            for (int retry = 0; retry < maxTries; retry++)
+            int retry = 0;
+            for (; retry < maxTries; retry++)
             {
                 RemovePartialCacheFiles(files);
                 OpenDocument(skyfile);
@@ -87,14 +89,31 @@ namespace pwiz.SkylineTestFunctional
                 }
                 WaitForConditionUI(30*1000, () => dlg2.ProgressTotalPercent >= 1 && dlg2.Files.Count() == 4); // Get a least a little way in
                 int cancelIndex = retry%4;
-                var cancelTarget = files[cancelIndex].Replace(".mz5", "");
+                string cancelTarget = null;
                 RunUI(() =>
                 {
-                    Assert.AreEqual(4, dlg2.Files.Count());
-                    dlg2.FileButtonClick(cancelTarget);
+                    var fileStatus = dlg2.Files.ToArray();
+                    Assert.AreEqual(4, fileStatus.Length);
+                    for (int i = 0; i < files.Length; i++)
+                    {
+                        var statusCancel = fileStatus[(cancelIndex + i)%4];
+                        if (0 < statusCancel.Progress && statusCancel.Progress < 100)
+                        {
+                            cancelTarget = Path.GetFileNameWithoutExtension(statusCancel.FilePath.GetFilePath());
+                            dlg2.FileButtonClick(cancelTarget);
+                            Assert.AreEqual(3, SkylineWindow.Document.Settings.MeasuredResults.Chromatograms.Count);
+                            Assert.IsFalse(SkylineWindow.Document.Settings.MeasuredResults.ContainsChromatogram(cancelTarget));
+                            break;
+                        }
+                    }
                 });
                 WaitForDocumentLoaded();
                 WaitForClosedAllChromatogramsGraph();
+                
+                if (cancelTarget == null)
+                    continue;   // Found everything at 100%
+
+                int fileCheck = 0;
                 foreach (var file in files)
                 {
                     int index;
@@ -108,16 +127,22 @@ namespace pwiz.SkylineTestFunctional
                         // Should always find it since we didn't try to cancel this one
                         if (index == -1)
                             Assert.AreNotEqual(-1, index, string.Format("Missing chromatogram set {0} after cancelling {1}", chromatogramSetName, cancelTarget));
+                        fileCheck++;
                     }
                     else if (index == -1)
                     {
-                        retry = maxTries; // Success, no more retry needed
-                    }
-                    else if (retry == maxTries - 1)
-                    {
-                        Assert.Fail("Failed to cancel individual file import after {0} tries", maxTries);
+                        fileCheck++;
                     }
                 }
+                if (fileCheck == files.Length)
+                {
+                    break;  // Success
+                }
+            }
+
+            if (retry >= maxTries)
+            {
+                Assert.Fail("Failed to cancel individual file import after {0} tries", retry);
             }
 
             // Cancelled load should revert to initial document
@@ -129,7 +154,7 @@ namespace pwiz.SkylineTestFunctional
                 CancelAll(files, true);
             }
 
-            for (int retry = 0; retry < maxTries; retry++)
+            for (retry = 0; retry < maxTries; retry++)
             {
                 // Now try a proper import
                 Settings.Default.AutoShowAllChromatogramsGraph = initiallyVisible;
