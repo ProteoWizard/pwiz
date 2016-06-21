@@ -370,7 +370,7 @@ namespace pwiz.Skyline.Model
             {
                 if (progressMonitor.IsCanceled)
                     return new PeptideGroupDocNode[0];
-                status = status.ChangeMessage(Resources.MassListImporter_Import_Reading_transition_list);
+                progressMonitor.UpdateProgress(status = status.ChangeMessage(Resources.MassListImporter_Import_Reading_transition_list));
             }
 
             var lines = new List<string>(Inputs.ReadLines());
@@ -379,7 +379,7 @@ namespace pwiz.Skyline.Model
             {
                 if (progressMonitor.IsCanceled)
                     return new PeptideGroupDocNode[0];
-                status = status.ChangeMessage(Resources.MassListImporter_Import_Inspecting_peptide_sequence_information);
+                progressMonitor.UpdateProgress(status = status.ChangeMessage(Resources.MassListImporter_Import_Inspecting_peptide_sequence_information));
             }
             if (indices != null)
             {
@@ -463,7 +463,7 @@ namespace pwiz.Skyline.Model
                     {
                         string message = string.Format(Resources.MassListImporter_Import_Importing__0__,
                             _rowReader.TransitionInfo.ProteinName ?? _rowReader.TransitionInfo.PeptideSequence);
-                        status = status.ChangePercentComplete(percentComplete).ChangeMessage(message);
+                        progressMonitor.UpdateProgress(status = status.ChangePercentComplete(percentComplete).ChangeMessage(message));
                     }
                 }
 

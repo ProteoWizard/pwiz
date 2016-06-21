@@ -709,14 +709,16 @@ namespace pwiz.Skyline.Model
                 // there should be only one loss
                 TransitionLosses firstLosses = null;
                 List<TransitionLosses> allLosses = null;
+                HashSet<double> allLossMasses = null;
                 foreach (var losses in potentialLosses)
                 {
-                    var tranLosses = CalcTransitionLosses(type, cleavageOffset, massType, losses);
-                    if (tranLosses == null ||
-                            (firstLosses != null && firstLosses.Mass == tranLosses.Mass) ||
-                            (allLosses != null && allLosses.Contains(l => l.Mass == tranLosses.Mass)))
+                    double lossMass = CalcTransitionLossesMass(type, cleavageOffset, massType, losses);
+                    if (lossMass == 0 ||
+                            (firstLosses != null && firstLosses.Mass == lossMass) ||
+                            (allLossMasses != null && allLossMasses.Contains(lossMass)))
                         continue;
 
+                    var tranLosses = CalcTransitionLosses(type, cleavageOffset, massType, losses);
                     if (allLosses == null)
                     {
                         if (firstLosses == null)
@@ -724,11 +726,15 @@ namespace pwiz.Skyline.Model
                         else
                         {
                             allLosses = new List<TransitionLosses> { firstLosses };
+                            allLossMasses = new HashSet<double>();
+                            allLossMasses.Add(firstLosses.Mass);
                             firstLosses = null;
                         }
                     }
                     if (allLosses != null)
                         allLosses.Add(tranLosses);
+                    if (allLossMasses != null)
+                        allLossMasses.Add(tranLosses.Mass);
                 }
 
                 // Handle the single losses case first
@@ -749,17 +755,26 @@ namespace pwiz.Skyline.Model
         /// a specific type and cleavage offset for a single set of explicit losses.
         /// </summary>
         private static TransitionLosses CalcTransitionLosses(IonType type, int cleavageOffset,
-            MassType massType, IEnumerable<ExplicitLoss> losses)
+            MassType massType, IList<ExplicitLoss> losses)
         {
             List<TransitionLoss> listLosses = null;
-            foreach (var loss in losses)
+            for (int i = 0; i < losses.Count; i++)
             {
-                if (!Transition.IsPrecursor(type))
+                var loss = losses[i];
+                switch (type)
                 {
-                    if (Transition.IsNTerminal(type) && loss.IndexAA > cleavageOffset)
-                        continue;
-                    if (Transition.IsCTerminal(type) && loss.IndexAA <= cleavageOffset)
-                        continue;
+                    case IonType.a:
+                    case IonType.b:
+                    case IonType.c:
+                        if (loss.IndexAA > cleavageOffset)
+                            continue;
+                        break;
+                    case IonType.x:
+                    case IonType.y:
+                    case IonType.z:
+                        if (loss.IndexAA <= cleavageOffset)
+                            continue;
+                        break;
                 }
                 if (listLosses == null)
                     listLosses = new List<TransitionLoss>();
@@ -768,6 +783,33 @@ namespace pwiz.Skyline.Model
             if (listLosses == null)
                 return null;
             return  new TransitionLosses(listLosses, massType);
+        }
+
+        public static double CalcTransitionLossesMass(IonType type, int cleavageOffset,
+            MassType massType, IList<ExplicitLoss> losses)
+        {
+            double mass = 0;
+            for (int i = 0; i < losses.Count; i++)
+            {
+                var loss = losses[i];
+                switch (type)
+                {
+                    case IonType.a:
+                    case IonType.b:
+                    case IonType.c:
+                        if (loss.IndexAA > cleavageOffset)
+                            continue;
+                        break;
+                    case IonType.x:
+                    case IonType.y:
+                    case IonType.z:
+                        if (loss.IndexAA <= cleavageOffset)
+                            continue;
+                        break;
+                }
+                mass += loss.TransitionLoss.Mass;
+            }
+            return mass;
         }
 
         private static TransitionLosses GetCustomTransitionLosses(IEnumerable<ExplicitLoss> losses,MassType massType)
