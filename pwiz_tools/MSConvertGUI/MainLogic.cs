@@ -491,7 +491,7 @@ namespace MSConvertGUI
                         else
                             msg = "Note: input contains no spectra or chromatogram data.";
                         if (LogUpdate != null) LogUpdate(msg, _info);
-                        if (StatusUpdate != null) StatusUpdate(msg, ProgressBarStyle.Marquee, _info);
+                        if (StatusUpdate != null) StatusUpdate(msg, ProgressBarStyle.Continuous, _info);
                     }
 
                     if (StatusUpdate != null && msd.run.spectrumList != null)
@@ -505,7 +505,7 @@ namespace MSConvertGUI
                     ilr.addListener(this, 100);
                     msg = String.Format("Writing \"{0}\"...", outputFilename);
                     if (LogUpdate != null) LogUpdate(msg, _info);
-                    if (StatusUpdate != null) StatusUpdate(msg, ProgressBarStyle.Marquee, _info);
+                    if (StatusUpdate != null) StatusUpdate(msg, ProgressBarStyle.Continuous, _info);
                     MSDataFile.write(msd, outputFilename, config.WriteConfig, ilr);
                     ilr.removeListener(this);
                 }

@@ -21,6 +21,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -98,6 +99,14 @@ namespace MSConvertGUI
 
             foreach(DataGridViewColumn column in FilterDGV.Columns)
                 column.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+
+            foreach (int value in Enum.GetValues(typeof (PeakPickingMethod)))
+            {
+                var type = typeof (PeakPickingMethod);
+                string description = (Attribute.GetCustomAttribute(type.GetField(Enum.GetName(type, (PeakPickingMethod) value)), typeof(DescriptionAttribute)) as DescriptionAttribute).Description;
+                PeakPickingAlgorithmComboBox.Items.Add(new ListViewItem(description) {Tag = value});
+            }
+            PeakPickingAlgorithmComboBox.SelectedIndex = 0;
 
             for (int i = 0; i < cmdline_args.Count; i++)
             {
@@ -306,6 +315,15 @@ namespace MSConvertGUI
             }
         }
 
+        private enum PeakPickingMethod
+        {
+            [Description("Vendor (does not work for Waters, and it MUST be the first filter!)")]
+            Vendor,
+
+            [Description("CWT (continuous wavelet transform; works for any profile data)")]
+            Cwt
+        }
+
         private void AddFilterButton_Click(object sender, EventArgs e)
         {
             switch (FilterBox.Text)
@@ -322,13 +340,17 @@ namespace MSConvertGUI
                 case "Peak Picking":
                     if (!String.IsNullOrEmpty(PeakMSLevelLow.Text) ||
                         !String.IsNullOrEmpty(PeakMSLevelHigh.Text))
+                    {
+                        PeakPickingMethod method = (PeakPickingMethod) (PeakPickingAlgorithmComboBox.SelectedItem as ListViewItem).Tag;
                         FilterDGV.Rows.Add(new[]
                                                {
                                                    "peakPicking",
-                                                   String.Format("{0} {1}-{2}",
-                                                                 PeakPreferVendorBox.Checked.ToString().ToLower(),
+                                                   String.Format("{0} {1}msLevel={2}-{3}",
+                                                                 Enum.GetName(typeof(PeakPickingMethod), method).ToLower(),
+                                                                 method == PeakPickingMethod.Cwt ? String.Format("snr={0} peakSpace={1} ", PeakMinSnr.Text, PeakMinSpacing.Text) : String.Empty,
                                                                  PeakMSLevelLow.Text, PeakMSLevelHigh.Text)
                                                });
+                    }
                     break; 
                 case "Zero Samples":
                     String args = ZeroSamplesAddMissing.Checked ? "addMissing" : "removeExtra";
@@ -493,21 +515,13 @@ namespace MSConvertGUI
                 commandLine.Append("--numpressPic|");
 
             var msLevelsTotal = String.Empty;
-            var peakPickingTotal = String.Empty;
             var scanNumberTotal = String.Empty;
-            var preferVendor = true;
             foreach (DataGridViewRow row in FilterDGV.Rows)
             {
                 switch ((string)row.Cells[0].Value)
                 {
                     case "msLevel":
                         msLevelsTotal += (string)row.Cells[1].Value + " ";
-                        break;
-                    case "peakPicking":
-                        var splitLine = ((string)row.Cells[1].Value ?? "true").Split();
-                        preferVendor = bool.Parse(splitLine[0]);
-                        if (splitLine.Length > 1)
-                            peakPickingTotal += splitLine[1] + " ";
                         break;
                     case "scanNumber":
                         scanNumberTotal += (string)row.Cells[1].Value + " ";
@@ -520,9 +534,6 @@ namespace MSConvertGUI
 
             if (!String.IsNullOrEmpty(msLevelsTotal))
                 commandLine.AppendFormat("--filter|msLevel {0}|", msLevelsTotal.Trim());
-            if (!String.IsNullOrEmpty(peakPickingTotal))
-                commandLine.AppendFormat("--filter|peakPicking {0} {1}|", preferVendor.ToString().ToLower(),
-                                         peakPickingTotal.Trim());
             if (!String.IsNullOrEmpty(scanNumberTotal))
                 commandLine.AppendFormat("--filter|scanNumber {0}|", scanNumberTotal.Trim());
 
@@ -832,8 +843,8 @@ namespace MSConvertGUI
             setToolTip(this.MSLevelLabel, msLevelHelp,"MS Level");
             setToolTip(this.MSLevelPanel, msLevelHelp, "MS Level");
 
-            string preferVendorHelp = "Uncheck this box if you prefer ProteoWizard's peak picking algorithm to that provided by the vendor (normally the vendor code works better). Not all input formats have vendor peakpicking, but it's OK to leave this checked.";
-            setToolTip(this.PeakPreferVendorBox, preferVendorHelp,"Peak Picking");
+            string preferVendorHelp = "Choose which algorithm to use for peak picking. Normally the vendor method works better, but not all input formats support vendor peakpicking. For those formats, CWT is better.";
+            setToolTip(this.PeakPickingAlgorithmComboBox, preferVendorHelp,"Peak Picking");
             setToolTip(this.PeakPickingPanel, "Use this filter to perform peak picking (centroiding) on the input data.", "Peak Picking");
 
             string outputHelp = "Choose the directory for writing the converted file(s).";
@@ -917,6 +928,11 @@ namespace MSConvertGUI
         {  // numpress Pic and numpress Slof are mutually exclusive
             if (NumpressPicBox.Checked && NumpressSlofBox.Checked)
                 NumpressPicBox.Checked = false;
+        }
+
+        private void PeakPickingAlgorithmComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            PeakMinSnr.Enabled = PeakMinSnrLabel.Enabled = PeakMinSpacing.Enabled = PeakMinSpacingLabel.Enabled = ((PeakPickingMethod) PeakPickingAlgorithmComboBox.SelectedIndex == PeakPickingMethod.Cwt);
         }
     }
 }
