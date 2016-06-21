@@ -433,31 +433,37 @@ namespace SkylineTester
 
         #endregion
 
+        private static bool IsNightlyRun()
+        {
+            bool isNightly;
+            try
+            {
+                // From http://stackoverflow.com/questions/2531837/how-can-i-get-the-pid-of-the-parent-process-of-my-application
+                var myId = Process.GetCurrentProcess().Id;
+                var query = string.Format("SELECT ParentProcessId FROM Win32_Process WHERE ProcessId = {0}", myId);
+                var search = new ManagementObjectSearcher("root\\CIMV2", query);
+                var results = search.Get().GetEnumerator();
+                results.MoveNext();
+                var queryObj = results.Current;
+                var parentId = (uint) queryObj["ParentProcessId"];
+                var parent = Process.GetProcessById((int) parentId);
+                // Only go interactive if our parent process is not named "SkylineNightly"
+                isNightly = CultureInfo.InvariantCulture.CompareInfo.IndexOf(parent.ProcessName, "SkylineNightly", CompareOptions.IgnoreCase) >= 0;
+            }
+            catch
+            {
+                isNightly = false;
+            }
+            return isNightly;
+        }
+
         protected override void OnClosing(CancelEventArgs e)
         {
             // If there are tests running, check with user before actually shutting down.
             if (_runningTab != null)
             {
                 // Skip that check if we closed programatically.
-                bool isNightly;
-                try
-                {
-                    // From http://stackoverflow.com/questions/2531837/how-can-i-get-the-pid-of-the-parent-process-of-my-application
-                    var myId = Process.GetCurrentProcess().Id;
-                    var query = string.Format("SELECT ParentProcessId FROM Win32_Process WHERE ProcessId = {0}", myId);
-                    var search = new ManagementObjectSearcher("root\\CIMV2", query);
-                    var results = search.Get().GetEnumerator();
-                    results.MoveNext();
-                    var queryObj = results.Current;
-                    var parentId = (uint) queryObj["ParentProcessId"];
-                    var parent = Process.GetProcessById((int) parentId);
-                    // Only go interactive if our parent process is not named "SkylineNightly"
-                    isNightly = CultureInfo.InvariantCulture.CompareInfo.IndexOf(parent.ProcessName, "SkylineNightly", CompareOptions.IgnoreCase) >= 0;
-                }
-                catch
-                {
-                    isNightly = false;
-                }
+                var isNightly = IsNightlyRun();
 
                 var message = isNightly
                     ? string.Format("The currently running tests are part of a SkylineNightly run. Are you sure you want to end all tests and close {0}?  Doing so will result in SkylineNightly sending a truncated test report.", Text)
@@ -474,7 +480,8 @@ namespace SkylineTester
         protected override void OnClosed(EventArgs e)
         {
             _runningTab = null;
-            commandShell.Stop();
+            var preserveHungProcesses = IsNightlyRun();
+            commandShell.Stop(preserveHungProcesses);
             Settings.Default.SavedSettings = SaveSettings();
             Settings.Default.Save();
             base.OnClosed(e);

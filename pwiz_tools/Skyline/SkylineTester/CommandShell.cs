@@ -301,14 +301,14 @@ namespace SkylineTester
         /// <summary>
         /// Stop the running process or background thread.
         /// </summary>
-        public void Stop()
+        public void Stop(bool preserveHungProcesses = false)
         {
             try
             {
                 if (_process != null && !_process.HasExited)
                 {
                     // If process has been quiet for a very long time, don't kill it, for forensic purposes
-                    if ((DateTime.Now - LastOutputTime).TotalMinutes > MAX_PROCESS_SILENCE_MINUTES)
+                    if (preserveHungProcesses && (DateTime.Now - LastOutputTime).TotalMinutes > MAX_PROCESS_SILENCE_MINUTES)
                     {
                         Log(string.Format("{0} has been silent for more than {1} minutes.  Leaving it running for forensic purposes.",
                            _process.Modules[0].FileName, MAX_PROCESS_SILENCE_MINUTES));
