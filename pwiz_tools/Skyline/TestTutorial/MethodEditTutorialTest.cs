@@ -143,7 +143,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => SetClipboardFileText(@"MethodEdit\FASTA\fasta.txt")); // Not L10N
 
             // New in v0.7 : Skyline asks about removing empty proteins.
-            using (new CheckDocumentState(35, 25, 25, 75))
+            using (new CheckDocumentState(35, 25, 25, 75, null, true))
             {
                 var emptyProteinsDlg = ShowDialog<EmptyProteinsDlg>(SkylineWindow.Paste);
                 RunUI(() => emptyProteinsDlg.IsKeepEmptyProteins = true);
@@ -169,7 +169,7 @@ namespace pwiz.SkylineTestTutorial
 
             CheckTransitionCount("VDIIANDQGNR", 3); // Not L10N
 
-            using (new CheckDocumentState(35, 28, 31, 155))
+            using (new CheckDocumentState(35, 28, 31, 155, null, true))
             {
                 var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
                 RunUI(() =>
@@ -205,7 +205,7 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(editListUI, editListUI.OkDialog);
 
             // Limiting Peptides per Protein, p. 11
-            using (new CheckDocumentState(35, 182, 219, 1058))
+            using (new CheckDocumentState(35, 182, 219, 1058, null, true))
             {
                 RunUI(() =>
                     {
@@ -232,7 +232,7 @@ namespace pwiz.SkylineTestTutorial
                     });
             }
 
-            using (new CheckDocumentState(19, 47, 47, 223))
+            using (new CheckDocumentState(19, 47, 47, 223, null, true))
             {
                 RunUI(() =>
                     {
@@ -242,7 +242,7 @@ namespace pwiz.SkylineTestTutorial
             }
 
             // Inserting a Protein List, p. 11
-            using (new CheckDocumentState(36, 58, 58, 278))
+            using (new CheckDocumentState(36, 58, 58, 278, null, true))
             {
                 PasteDlg pasteProteinsDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteProteinsDlg);
                 RunUI(() =>
@@ -257,7 +257,7 @@ namespace pwiz.SkylineTestTutorial
                 OkDialog(pasteProteinsDlg, pasteProteinsDlg.OkDialog);
             }
 
-            using (new CheckDocumentState(24, 58, 58, 278))
+            using (new CheckDocumentState(24, 58, 58, 278, null, true))
             {
                 RunUI(() =>
                     {
@@ -267,7 +267,7 @@ namespace pwiz.SkylineTestTutorial
             }
 
             // Inserting a Peptide List, p. 13
-            using (new CheckDocumentState(25, 70, 70, 338))
+            using (new CheckDocumentState(25, 70, 70, 338, null, true))
             {
                 RunUI(() =>
                     {
@@ -282,7 +282,7 @@ namespace pwiz.SkylineTestTutorial
                 PauseForScreenShot("Main window", 16); // Not L10N
             }
 
-            using (new CheckDocumentState(35, 70, 70, 338))
+            using (new CheckDocumentState(35, 70, 70, 338, null, true))
             {
                 RunUI(() => SkylineWindow.Undo());
                 PasteDlg pastePeptidesDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPastePeptidesDlg);
@@ -301,7 +301,7 @@ namespace pwiz.SkylineTestTutorial
                                          });
             PauseForScreenShot<GraphSpectrum>("Library Match graph metafile", 18); // Not L10N
 
-            using (new CheckDocumentState(35, 64, 64, 320))
+            using (new CheckDocumentState(35, 64, 64, 320, null, true))
             {
                 RefineDlg refineDlg = ShowDialog<RefineDlg>(SkylineWindow.ShowRefineDlg);
                 RunUI(() => refineDlg.MinTransitions = 5);
@@ -316,7 +316,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.SequenceTree.SelectedNode = node;
             });
 
-            using (new CheckDocumentState(34, 63, 63, 315))
+            using (new CheckDocumentState(34, 63, 63, 315, null, true))
             {
                 var uniquePeptidesDlg = ShowDialog<UniquePeptidesDlg>(SkylineWindow.ShowUniquePeptidesDlg);
                 WaitForConditionUI(() => uniquePeptidesDlg.GetDataGridView().RowCount == 1);
@@ -349,7 +349,7 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot("(fig. 1) - For screenshot, click at the bottom of the document tree", 21); // Not L10N
 
             // Pop-up Pick-Lists, p. 21
-            using (new CheckDocumentState(36, 71, 71, 355))
+            using (new CheckDocumentState(36, 71, 71, 355, null, true))
             {
                 RunUI(() =>
                     {
