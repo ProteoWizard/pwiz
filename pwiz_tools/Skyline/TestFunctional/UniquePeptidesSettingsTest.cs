@@ -49,19 +49,50 @@ namespace pwiz.SkylineTestFunctional
         const int PROTEINS_COUNT = 24;
         const int UNFILTERED_PEPTIDE_COUNT = 414;
         const int UNIQUE_BY_PROTEINS_PEPTIDE_COUNT = 76;
-        const int UNIQUE_BY_GENE_PEPTIDE_COUNT = 104;
+        const int UNIQUE_BY_GENE_PEPTIDE_COUNT = 137;  // This value would be 104 if we didn't consider "atpb5" and "ATPB5" to be identical
+        const int BOGUS_UNIQUE_BY_GENE_PEPTIDE_COUNT = 372;  // The four listed peptides lack gene info in bogusDb, so this number is higher than the proper gene filtering
         const int UNIQUE_BY_SPECIES_PEPTIDE_COUNT = 81;
         const int HOP1_PEPTIDE_COUNT = 23;
         const int ATPB_HUMAN_PEPTIDE_COUNT = 21;
         const int ATPB_MOUSE_PEPTIDE_COUNT = 21;
-        const int ATPB_HUMAN_UNIQUE_PEPTIDE_COUNT = 3;
-        const int ATPB_MOUSE_UNIQUE_PEPTIDE_COUNT = 3;
+        const int ATPB_HUMAN_UNIQUE_BY_PROTEIN_PEPTIDE_COUNT = 3;
+        const int ATPB_HUMAN_UNIQUE_BY_GENE_PEPTIDE_COUNT = 18;
+        const int ATPB_MOUSE_UNIQUE_BY_PROTEIN_PEPTIDE_COUNT = 3;
         const int TAU_HUMAN_PEPTIDE_COUNT = 29;
         const int TAU_HUMAN_9_UNIQUE_PEPTIDE_COUNT = 2; // ATKQVQRRPPPAGPRSE portion of sequence is unique to this protein
 
         protected override void DoTest()
         {
             scenario(0, 0, PeptideFilter.PeptideUniquenessConstraint.gene, new Dictionary<string, int>()); // Verify that empty docs don't cause problems
+
+            OpenDocument("UniqueTestBogus.sky"); // Contains all the same proteins that are found in the protDB file, bogus version has missing metadata in the protdb
+
+            scenario(UNIQUE_BY_PROTEINS_PEPTIDE_COUNT, PROTEINS_COUNT, PeptideFilter.PeptideUniquenessConstraint.protein,
+                new Dictionary<string, int>
+                {
+                    {"sp|P20050|HOP1_YEAST", HOP1_PEPTIDE_COUNT}, // Unaffected - "HOP1 -- this protein has no isoforms, and is only present in yeast."
+                    {"sp|P06576|ATPB_HUMAN", ATPB_HUMAN_UNIQUE_BY_PROTEIN_PEPTIDE_COUNT}, // "ATPB -- this protein is present in yeast, mouse, and human, and is highly conserved (i.e. the sequence between the three is very similar)"
+                    {"sp|P56480|ATPB_MOUSE", ATPB_MOUSE_UNIQUE_BY_PROTEIN_PEPTIDE_COUNT}, // "ATPB -- this protein is present in yeast, mouse, and human, and is highly conserved (i.e. the sequence between the three is very similar)"
+                    {"sp|P10636|TAU_HUMAN", 0}, // "this protein is is seen in human, and mouse.  In both cases, there are a ton of isoforms (9 for human, 6 for mouse)."
+                });
+
+            scenario(UNFILTERED_PEPTIDE_COUNT, PROTEINS_COUNT, PeptideFilter.PeptideUniquenessConstraint.none, // No change from initial state
+                new Dictionary<string, int>
+                {
+                    {"sp|P20050|HOP1_YEAST", HOP1_PEPTIDE_COUNT},
+                    {"sp|P06576|ATPB_HUMAN", ATPB_HUMAN_PEPTIDE_COUNT}, // "ATPB -- this protein is present in yeast, mouse, and human, and is highly conserved (i.e. the sequence between the three is very similar)"
+                    {"sp|P56480|ATPB_MOUSE", ATPB_MOUSE_PEPTIDE_COUNT}, // "ATPB -- this protein is present in yeast, mouse, and human, and is highly conserved (i.e. the sequence between the three is very similar)"
+                    {"sp|P10636|TAU_HUMAN", TAU_HUMAN_PEPTIDE_COUNT}, // "this protein is is seen in human, and mouse.  In both cases, there are a ton of isoforms (9 for human, 6 for mouse)."
+                });
+
+            scenario(BOGUS_UNIQUE_BY_GENE_PEPTIDE_COUNT, PROTEINS_COUNT, PeptideFilter.PeptideUniquenessConstraint.gene,   // The four listed peptides lack gene info in bogusDb, so they should be unfiltered
+                new Dictionary<string, int>
+                {
+                    {"sp|P20050|HOP1_YEAST", HOP1_PEPTIDE_COUNT},
+                    {"sp|P06576|ATPB_HUMAN", ATPB_HUMAN_PEPTIDE_COUNT}, // "ATPB -- this protein is present in yeast, mouse, and human, and is highly conserved (i.e. the sequence between the three is very similar)"
+                    {"sp|P56480|ATPB_MOUSE", ATPB_MOUSE_PEPTIDE_COUNT}, // "ATPB -- this protein is present in yeast, mouse, and human, and is highly conserved (i.e. the sequence between the three is very similar)"
+                    {"sp|P10636|TAU_HUMAN", TAU_HUMAN_PEPTIDE_COUNT}, // "this protein is is seen in human, and mouse.  In both cases, there are a ton of isoforms (9 for human, 6 for mouse)."
+                });
 
             OpenDocument("UniqueTest.sky"); // Contains all the same proteins that are found in the protDB file
 
@@ -78,8 +109,8 @@ namespace pwiz.SkylineTestFunctional
                 new Dictionary<string, int>
                 {
                     {"sp|P20050|HOP1_YEAST", HOP1_PEPTIDE_COUNT}, // Unaffected - "HOP1 -- this protein has no isoforms, and is only present in yeast."
-                    {"sp|P06576|ATPB_HUMAN", ATPB_HUMAN_UNIQUE_PEPTIDE_COUNT}, // "ATPB -- this protein is present in yeast, mouse, and human, and is highly conserved (i.e. the sequence between the three is very similar)"
-                    {"sp|P56480|ATPB_MOUSE", ATPB_MOUSE_UNIQUE_PEPTIDE_COUNT}, // "ATPB -- this protein is present in yeast, mouse, and human, and is highly conserved (i.e. the sequence between the three is very similar)"
+                    {"sp|P06576|ATPB_HUMAN", ATPB_HUMAN_UNIQUE_BY_PROTEIN_PEPTIDE_COUNT}, // "ATPB -- this protein is present in yeast, mouse, and human, and is highly conserved (i.e. the sequence between the three is very similar)"
+                    {"sp|P56480|ATPB_MOUSE", ATPB_MOUSE_UNIQUE_BY_PROTEIN_PEPTIDE_COUNT}, // "ATPB -- this protein is present in yeast, mouse, and human, and is highly conserved (i.e. the sequence between the three is very similar)"
                     {"sp|P10636|TAU_HUMAN", 0}, // "this protein is is seen in human, and mouse.  In both cases, there are a ton of isoforms (9 for human, 6 for mouse)."
                 });
 
@@ -87,7 +118,7 @@ namespace pwiz.SkylineTestFunctional
                 new Dictionary<string, int>
                 {
                     {"sp|P20050|HOP1_YEAST", HOP1_PEPTIDE_COUNT}, // Unaffected - "HOP1 -- this protein has no isoforms, and is only present in yeast."
-                    {"sp|P06576|ATPB_HUMAN", ATPB_HUMAN_UNIQUE_PEPTIDE_COUNT}, // "ATPB -- this protein is present in yeast, mouse, and human, and is highly conserved (i.e. the sequence between the three is very similar)"
+                    {"sp|P06576|ATPB_HUMAN", ATPB_HUMAN_UNIQUE_BY_GENE_PEPTIDE_COUNT}, // "ATPB -- this protein is present in yeast, mouse, and human, and is highly conserved (i.e. the sequence between the three is very similar)"
                     {"sp|P10636|TAU_HUMAN", 0}, // Isoforms, so they'll not be unique per gene
                     {"sp|P10636-2|TAU_HUMAN", 0},
                     {"sp|P10636-3|TAU_HUMAN", 0},
@@ -103,7 +134,7 @@ namespace pwiz.SkylineTestFunctional
                 new Dictionary<string, int>
                 {
                     {"sp|P20050|HOP1_YEAST", HOP1_PEPTIDE_COUNT}, // Unaffected - "HOP1 -- this protein has no isoforms, and is only present in yeast."
-                    {"sp|P06576|ATPB_HUMAN", ATPB_HUMAN_UNIQUE_PEPTIDE_COUNT}, // "ATPB -- this protein is present in yeast, mouse, and human, and is highly conserved (i.e. the sequence between the three is very similar)"
+                    {"sp|P06576|ATPB_HUMAN", ATPB_HUMAN_UNIQUE_BY_PROTEIN_PEPTIDE_COUNT}, // "ATPB -- this protein is present in yeast, mouse, and human, and is highly conserved (i.e. the sequence between the three is very similar)"
                     {"sp|P10636|TAU_HUMAN", 0}, // "this protein is is seen in human, and mouse.  In both cases, there are a ton of isoforms (9 for human, 6 for mouse)."
                     {"sp|P10636-2|TAU_HUMAN", 1},
                     {"sp|P10636-3|TAU_HUMAN", 0},
@@ -119,8 +150,8 @@ namespace pwiz.SkylineTestFunctional
                 new Dictionary<string, int>
                 {
                     {"sp|P20050|HOP1_YEAST", HOP1_PEPTIDE_COUNT}, // Unaffected - "HOP1 -- this protein has no isoforms, and is only present in yeast."
-                    {"sp|P06576|ATPB_HUMAN", ATPB_HUMAN_UNIQUE_PEPTIDE_COUNT}, // "ATPB -- this protein is present in yeast, mouse, and human, and is highly conserved (i.e. the sequence between the three is very similar)"
-                    {"sp|P56480|ATPB_MOUSE", ATPB_MOUSE_UNIQUE_PEPTIDE_COUNT}, // "ATPB -- this protein is present in yeast, mouse, and human, and is highly conserved (i.e. the sequence between the three is very similar)"
+                    {"sp|P06576|ATPB_HUMAN", ATPB_HUMAN_UNIQUE_BY_PROTEIN_PEPTIDE_COUNT}, // "ATPB -- this protein is present in yeast, mouse, and human, and is highly conserved (i.e. the sequence between the three is very similar)"
+                    {"sp|P56480|ATPB_MOUSE", ATPB_MOUSE_UNIQUE_BY_PROTEIN_PEPTIDE_COUNT}, // "ATPB -- this protein is present in yeast, mouse, and human, and is highly conserved (i.e. the sequence between the three is very similar)"
                     {"sp|P10636|TAU_HUMAN", 0}, // "this protein is is seen in human, and mouse.  In both cases, there are a ton of isoforms (9 for human, 6 for mouse)."
                     {"sp|P10636-2|TAU_HUMAN", 0},
                     {"sp|P10636-3|TAU_HUMAN", 0},
@@ -160,7 +191,6 @@ namespace pwiz.SkylineTestFunctional
             {
                 WaitForDocumentChange(doc);
             }
-            AssertEx.IsDocumentState(SkylineWindow.Document, null, proteinsCount, finalPeptideCount, finalPeptideCount, null);
 
             // Check selected proteins for proper peptide count
             if (dictProteinPrecursorCounts != null)
@@ -174,6 +204,7 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
             }
+            AssertEx.IsDocumentState(SkylineWindow.Document, null, proteinsCount, finalPeptideCount, finalPeptideCount, null);
         }
 
     }

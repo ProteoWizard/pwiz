@@ -68,8 +68,10 @@ namespace pwiz.SkylineTestFunctional
         const int NON_UNIQUE_PEPTIDES_BY_PROTEIN_ATPB_MOUSE = 18;
         const int NON_UNIQUE_PEPTIDES_BY_PROTEIN_TAU_MOUSE = 13;
 
-        const int NON_UNIQUE_PEPTIDES_BY_GENE_ATPB_MOUSE = NODE_HOP_1;
+        const int NON_UNIQUE_PEPTIDES_BY_GENE_ATPB_MOUSE = 3;
         const int NON_UNIQUE_PEPTIDES_BY_GENE_TAU_MOUSE = 12;
+
+        const int NON_UNIQUE_PEPTIDES_BY_SPECIES_ATPB_MOUSE = 18;
         const int NON_UNIQUE_PEPTIDES_BY_SPECIES_TAU_MOUSE = 12;
         const int TOTAL_PEPTIDES_HOP1 = 23;
 
@@ -146,7 +148,7 @@ namespace pwiz.SkylineTestFunctional
                 UniquePeptidesDlg.UniquenessType.protein); // Multiple selection ATPB_MOUSE, HOP_1, APOF_HUMAN, only ATPB_MOUSE is affected
 
             ResetDocument();
-            scenario(new[] { NODE_ATPB_MOUSE, NODE_TAU_MOUSE, NODE_APOF_HUMAN }, 16, NON_UNIQUE_PEPTIDES_BY_PROTEIN_ATPB_MOUSE + NON_UNIQUE_PEPTIDES_BY_SPECIES_TAU_MOUSE, 
+            scenario(new[] { NODE_ATPB_MOUSE, NODE_TAU_MOUSE, NODE_APOF_HUMAN }, 16, NON_UNIQUE_PEPTIDES_BY_SPECIES_ATPB_MOUSE + NON_UNIQUE_PEPTIDES_BY_SPECIES_TAU_MOUSE, 
                 UniquePeptidesDlg.UniquenessType.species); // Multiple selection ATPB_MOUSE, TAU_MOUSE, APOF_HUMAN - many mouse peptides also appear in yeast proteins in protdb
 
             ResetDocument();
@@ -205,8 +207,8 @@ namespace pwiz.SkylineTestFunctional
 
             // Test our handling of data without gene or species info - expect to see a warning dialog
             ResetDocument(bogus:true); // Load the bogus data
-            scenario(NODE_ATPB_MOUSE, 0, 18, UniquePeptidesDlg.UniquenessType.gene, true);
-            scenario(NODE_ATPB_HUMAN, 0, 36, UniquePeptidesDlg.UniquenessType.species, true);
+            scenario(NODE_ATPB_MOUSE, 2, 0, UniquePeptidesDlg.UniquenessType.gene, true); // Can't filter by gene when there's no metadata
+            scenario(NODE_ATPB_HUMAN, 2, 0, UniquePeptidesDlg.UniquenessType.species, true); // Can't filter by species when there's no metadata
 
         }
 

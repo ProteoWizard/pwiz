@@ -359,8 +359,8 @@ namespace pwiz.Skyline.Model.Proteome
             public DigestionPeptideStatsDetailed()
             {
                 Proteins = new HashSet<long>();
-                Genes = new HashSet<string>();
-                Species = new HashSet<string>();
+                Genes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                Species = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             }
         }
 

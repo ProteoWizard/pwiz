@@ -402,7 +402,7 @@ namespace pwiz.Skyline.EditUI
         private void SelectPeptidesWithNumberOfMatchesAtOrBelowThreshold(int threshold, UniquenessType uniqueBy)
         {
             dataGridView1.EndEdit();
-            var dubious = new HashSet<string>();
+            var dubious = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             for (int rowIndex = 0; rowIndex < dataGridView1.Rows.Count; rowIndex++)
             {
                 var row = dataGridView1.Rows[rowIndex];
@@ -428,15 +428,19 @@ namespace pwiz.Skyline.EditUI
                             if (uniqueBy == UniquenessType.gene)
                             {
                                 // ReSharper disable once PossibleNullReferenceException
-                                if (string.Compare(testValA = parent.ProteinMetadata.Gene, testValB = ((ProteinColumn) dataGridView1.Columns[col].Tag).Protein.Gene, StringComparison.OrdinalIgnoreCase) != 0)
-                                    matchCount++;
+                                testValA = parent.ProteinMetadata.Gene;
+                                testValB = ((ProteinColumn) dataGridView1.Columns[col].Tag).Protein.Gene;
                             }
                             else
                             {
                                 // ReSharper disable once PossibleNullReferenceException
-                                if (string.Compare(testValA = parent.ProteinMetadata.Species, testValB = ((ProteinColumn)dataGridView1.Columns[col].Tag).Protein.Species, StringComparison.OrdinalIgnoreCase) != 0)
-                                    matchCount++;
+                                testValA = parent.ProteinMetadata.Species;
+                                testValB = ((ProteinColumn) dataGridView1.Columns[col].Tag).Protein.Species;
                             }
+                            // Can't filter on something that isn't there - require nonempty values
+                            if (!string.IsNullOrEmpty(testValA) && !string.IsNullOrEmpty(testValB) && 
+                                string.Compare(testValA, testValB, StringComparison.OrdinalIgnoreCase) != 0)
+                                matchCount++;
                             if (string.IsNullOrEmpty(testValA))
                             {
                                 dubious.Add(parent.Name);
