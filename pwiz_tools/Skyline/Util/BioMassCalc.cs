@@ -493,6 +493,10 @@ namespace pwiz.Skyline.Util
         /// <param name="negative">True if counts should be subtracted</param>
         public void ParseCounts(ref string desc, IDictionary<string, int> dictAtomCounts, bool negative)
         {
+            if (string.IsNullOrEmpty(desc))
+            {
+                return;
+            }
             desc = desc.Trim();
             while (desc.Length > 0)
             {
