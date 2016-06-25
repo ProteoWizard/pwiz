@@ -2700,12 +2700,17 @@ namespace pwiz.Skyline
                 if (showPointsTypeStandards || showPointsTypeDecoys)
                 {
                     menuStrip.Items.Insert(iInsert++, timePointsContextMenuItem);
-                    timePointsContextMenuItem.DropDownItems.Clear();
-                    timePointsContextMenuItem.DropDownItems.Add(timeTargetsContextMenuItem);
-                    if (showPointsTypeStandards)
-                        timePointsContextMenuItem.DropDownItems.Add(timeStandardsContextMenuItem);
-                    if (showPointsTypeDecoys)
-                        timePointsContextMenuItem.DropDownItems.Add(timeDecoysContextMenuItem);
+                    if (timePointsContextMenuItem.DropDownItems.Count == 0)
+                    {
+                        timePointsContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
+                        {
+                            timeTargetsContextMenuItem,
+                            timeStandardsContextMenuItem,
+                            timeDecoysContextMenuItem
+                        });
+                    }
+                    timeStandardsContextMenuItem.Visible = showPointsTypeStandards;
+                    timeDecoysContextMenuItem.Visible = showPointsTypeDecoys;
                     timeTargetsContextMenuItem.Checked = RTGraphController.PointsType == PointsTypeRT.targets;
                     timeStandardsContextMenuItem.Checked = RTGraphController.PointsType == PointsTypeRT.standards;
                     timeDecoysContextMenuItem.Checked = RTGraphController.PointsType == PointsTypeRT.decoys;
