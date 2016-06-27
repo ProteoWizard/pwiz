@@ -1123,8 +1123,16 @@ namespace pwiz.Skyline.Model
                         if (setTranPrevious != null || missmatchedEmptyReintegrated)
                             dictUserSetInfoBest = nodePrevious.FindBestUserSetInfo(iResultOld);
                     }
-                    
-                    bool loadPoints = (dictUserSetInfoBest != null || GetMatchingGroups(nodePep).Any());
+
+                    bool loadPoints;
+                    if (dictUserSetInfoBest != null)
+                    {
+                        loadPoints = dictUserSetInfoBest.Values.Any(chromInfo => !chromInfo.IsEmpty);
+                    }
+                    else
+                    {
+                        loadPoints = GetMatchingGroups(nodePep).Any();
+                    }
                     if (!measuredResults.TryLoadChromatogram(chromatograms, nodePep, this, mzMatchTolerance, loadPoints,
                                                             out arrayChromInfo))
                     {
@@ -1289,6 +1297,10 @@ namespace pwiz.Skyline.Model
                                           ChromatogramInfo info,
                                           TransitionChromInfo chromInfoBest)
         {
+            if (chromInfoBest.IsEmpty)
+            {
+                return ChromPeak.EMPTY;
+            }
             int startIndex = info.IndexOfNearestTime(chromInfoBest.StartRetentionTime);
             int endIndex = info.IndexOfNearestTime(chromInfoBest.EndRetentionTime);
             ChromPeak.FlagValues flags = 0;
