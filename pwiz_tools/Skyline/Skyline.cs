@@ -2885,9 +2885,10 @@ namespace pwiz.Skyline
                     if (ps.IsShowLibraryExplorer)
                         OwnedForms[OwnedForms.IndexOf(form => form is ViewLibraryDlg)].Activate();
 
-                    var newStandard = RCalcIrtStandard();
+                    HashSet<string> missingPeptides;
+                    var newStandard = RCalcIrtStandard(out missingPeptides);
                     if (oldStandard != newStandard)
-                        AddStandardsToDocument(newStandard);
+                        AddStandardsToDocument(newStandard, missingPeptides);
                 }
             }
 
@@ -2896,7 +2897,7 @@ namespace pwiz.Skyline
             UpdateGraphPanes();
         }
 
-        private void AddStandardsToDocument(IrtStandard standard)
+        private void AddStandardsToDocument(IrtStandard standard, ICollection<string> missingPeptides)
         {
             var standardDocReader = standard.DocumentReader;
             if (standardDocReader == null)
@@ -2904,7 +2905,7 @@ namespace pwiz.Skyline
 
             // Check if document already has the standards
             var docPeptides = Document.Peptides.Select(nodePep => nodePep.Peptide.Sequence);
-            var standardPeptides = standard.Peptides.Select(pep => pep.Sequence);
+            var standardPeptides = standard.Peptides.Select(pep => pep.Sequence).Except(missingPeptides);
             if (!standardPeptides.Except(docPeptides).Any())
                 return;
 
@@ -2928,7 +2929,7 @@ namespace pwiz.Skyline
                                                     false);
 
                         var standardPepGroup = doc.PeptideGroups.First(nodePepGroup => new IdentityPath(nodePepGroup.Id).Equals(firstAdded));
-                        var pepList = (from nodePep in standardPepGroup.Peptides let tranGroupList =
+                        var pepList = (from nodePep in standardPepGroup.Peptides.Where(pep => !missingPeptides.Contains(pep.ModifiedSequence)) let tranGroupList =
                                            (from TransitionGroupDocNode nodeTranGroup in nodePep.Children
                                             select nodeTranGroup.ChangeChildren(nodeTranGroup.Children.Take(dlg.NumTransitions).ToList()))
                                             .Cast<DocNode>().ToList()
@@ -2942,6 +2943,13 @@ namespace pwiz.Skyline
 
         private IrtStandard RCalcIrtStandard()
         {
+            HashSet<string> missingPeptides;
+            return RCalcIrtStandard(out missingPeptides);
+        }
+
+        private IrtStandard RCalcIrtStandard(out HashSet<string> missingPeptides)
+        {
+            missingPeptides = new HashSet<string>();
             var rt = Document.Settings.PeptideSettings.Prediction.RetentionTime;
             if (rt != null)
             {
@@ -2957,7 +2965,7 @@ namespace pwiz.Skyline
                         return IrtStandard.NULL;
                     }
                     if (calc != null)
-                        return IrtStandard.WhichStandard(calc.GetStandardPeptides());
+                        return IrtStandard.WhichStandard(calc.GetStandardPeptides().ToArray(), out missingPeptides);
                 }
             }
             return IrtStandard.NULL;

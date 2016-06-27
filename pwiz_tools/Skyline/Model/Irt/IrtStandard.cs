@@ -274,8 +274,12 @@ namespace pwiz.Skyline.Model.Irt
         /// <returns>True if the collection of peptides matches the set of standard peptides; false otherwise.</returns>
         public bool IsMatch(IList<DbIrtPeptide> peptides, double? irtTolerance)
         {
-            return Peptides.Count == peptides.Count &&
-                   peptides.All(peptide => MatchingStandard(peptide, irtTolerance) != null);
+            return Peptides.Count == peptides.Count && IsSubset(peptides, irtTolerance);
+        }
+
+        private bool IsSubset(ICollection<DbIrtPeptide> peptides, double? irtTolerance)
+        {
+            return peptides.Count > 0 && peptides.All(peptide => MatchingStandard(peptide, irtTolerance) != null);
         }
 
         /// <summary>
@@ -347,9 +351,11 @@ namespace pwiz.Skyline.Model.Irt
             return new DbIrtPeptide(sequence, time, true, TimeSource.peak);
         }
 
-        public static IrtStandard WhichStandard(IEnumerable<string> peptides)
+        public static IrtStandard WhichStandard(ICollection<string> peptides, out HashSet<string> missingPeptides)
         {
-            return ALL.FirstOrDefault(s => s.IsMatch(peptides.Select(p => MakePeptide(p, 0)).ToList(), null)) ?? NULL;
+            var standard = ALL.FirstOrDefault(s => s.IsSubset(peptides.Select(p => MakePeptide(p, 0)).ToList(), null)) ?? NULL;
+            missingPeptides = new HashSet<string>(standard.Peptides.Where(s => !peptides.Any(p => p.Equals(s.Sequence))).Select(s => s.Sequence));
+            return standard;
         }
 
         public override string ToString()
