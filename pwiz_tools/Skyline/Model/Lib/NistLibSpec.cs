@@ -21,10 +21,12 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Serialization;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -117,8 +119,8 @@ namespace pwiz.Skyline.Model.Lib
     [XmlRoot("nist_spectrum_info")]
     public sealed class NistSpectrumHeaderInfo : NistSpectrumHeaderInfoBase
     {
-        public NistSpectrumHeaderInfo(string libraryName, float tfRatio, float totalIntensity, int spectrumCount)
-            : base(libraryName, tfRatio, totalIntensity, spectrumCount)
+        public NistSpectrumHeaderInfo(string libraryName, float tfRatio, double? rt, double? irt, float totalIntensity, int spectrumCount)
+            : base(libraryName, tfRatio, rt, irt, totalIntensity, spectrumCount)
         {
         }
 
@@ -141,10 +143,12 @@ namespace pwiz.Skyline.Model.Lib
 
     public class NistSpectrumHeaderInfoBase : SpectrumHeaderInfo
     {
-        public NistSpectrumHeaderInfoBase(string libraryName, float tfRatio, float totalIntensity, int spectrumCount)
+        public NistSpectrumHeaderInfoBase(string libraryName, float tfRatio, double? rt, double? irt, float totalIntensity, int spectrumCount)
             : base(libraryName)
         {
             TFRatio = tfRatio;
+            RT = rt;
+            iRT = irt;
             TotalIntensity = totalIntensity;
             SpectrumCount = spectrumCount;
         }
@@ -154,6 +158,8 @@ namespace pwiz.Skyline.Model.Lib
 // ReSharper disable InconsistentNaming
         public float TFRatio { get; private set; }
 // ReSharper restore InconsistentNaming
+        public double? RT { get; private set; }
+        public double? iRT { get; private set; }
 
         public override float GetRankValue(PeptideRankId rankId)
         {
@@ -293,7 +299,7 @@ namespace pwiz.Skyline.Model.Lib
 
         protected override SpectrumHeaderInfo CreateSpectrumHeaderInfo(NistSpectrumInfo info)
         {
-            return new NistSpectrumHeaderInfo(Name, info.TFRatio, info.TotalIntensity, info.Copies);
+            return new NistSpectrumHeaderInfo(Name, info.TFRatio, info.RT, info.iRT, info.TotalIntensity, info.Copies);
         }
 
         public override LibrarySpec CreateSpec(string path)
@@ -346,7 +352,7 @@ namespace pwiz.Skyline.Model.Lib
 
     public abstract class NistLibraryBase : CachedLibrary<NistSpectrumInfo>
     {
-        private const int FORMAT_VERSION_CACHE = 4;
+        private const int FORMAT_VERSION_CACHE = 5;
 
         private static readonly Regex REGEX_BASENAME = new Regex(@"NIST_(.*)_v(\d+\.\d+)_(\d\d\d\d\-\d\d-\d\d)"); // Not L10N
 
@@ -578,24 +584,6 @@ namespace pwiz.Skyline.Model.Lib
 
             count
         }
-
-        private enum SpectrumHeaders
-        {
-//            pre_mz,
-            seq_key_hash,
-            seq_key_length,
-            charge,
-            tf_ratio,
-            total_intensity,
-            copies,
-            num_peaks,
-            compressed_size,
-            location_peaks_lo,
-            location_peaks_hi,
-            seq_len,
-
-            count
-        }
         // ReSharper restore UnusedMember.Local
 
         private bool Load(ILoadMonitor loader)
@@ -669,8 +657,6 @@ namespace pwiz.Skyline.Model.Lib
                 long locationHeaders = BitConverter.ToInt64(libHeader, ((int)LibHeaders.location_headers_lo)*4);
                 stream.Seek(locationHeaders, SeekOrigin.Begin);
 
-                countHeader = (int) SpectrumHeaders.count*4;
-                byte[] specHeader = new byte[1024];
                 byte[] specSequence = new byte[1024];
                 for (int i = 0; i < numSpectra; i++)
                 {
@@ -689,29 +675,31 @@ namespace pwiz.Skyline.Model.Lib
                     }
 
                     // Read spectrum header
-                    ReadComplete(stream, specHeader, countHeader);
-
-                    int seqKeyHash = GetInt32(specHeader, (int) SpectrumHeaders.seq_key_hash);
-                    int seqKeyLength = GetInt32(specHeader, (int) SpectrumHeaders.seq_key_length);
-                    int charge = GetInt32(specHeader, (int)SpectrumHeaders.charge);
+                    int seqKeyHash = ReadSize(stream);
+                    int seqKeyLength = ReadSize(stream);
+                    int charge = ReadSize(stream);
                     if (charge == 0 || charge > TransitionGroup.MAX_PRECURSOR_CHARGE)
                         throw new InvalidDataException(Resources.NistLibraryBase_Load_Invalid_precursor_charge_found_File_may_be_corrupted);
 
-                    float tfRatio = BitConverter.ToSingle(specHeader, ((int) SpectrumHeaders.tf_ratio)*4);
-                    float totalIntensity = BitConverter.ToSingle(specHeader, ((int)SpectrumHeaders.total_intensity) * 4);
-                    int copies = GetInt32(specHeader, (int)SpectrumHeaders.copies);                    
-                    int numPeaks = GetInt32(specHeader, (int)SpectrumHeaders.num_peaks);
-                    int compressedSize = GetInt32(specHeader, (int)SpectrumHeaders.compressed_size);
-                    long location = BitConverter.ToInt64(specHeader, ((int) SpectrumHeaders.location_peaks_lo)*4);
-                    int seqLength = GetInt32(specHeader, (int)SpectrumHeaders.seq_len);
+                    float tfRatio = PrimitiveArrays.ReadOneValue<float>(stream);
+                    bool hasRt = PrimitiveArrays.ReadOneValue<bool>(stream);
+                    double? rt = hasRt ? PrimitiveArrays.ReadOneValue<double>(stream) : (double?)null;
+                    bool hasIrt = PrimitiveArrays.ReadOneValue<bool>(stream);
+                    double? irt = hasIrt ? PrimitiveArrays.ReadOneValue<double>(stream) : (double?)null;
+                    float totalIntensity = PrimitiveArrays.ReadOneValue<float>(stream);
+                    int copies = ReadSize(stream);
+                    int numPeaks = ReadSize(stream);
+                    int compressedSize = ReadSize(stream);
+                    long location = PrimitiveArrays.ReadOneValue<long>(stream);
+                    int seqLength = ReadSize(stream);
 
                     // Read sequence information
                     ReadComplete(stream, specSequence, seqLength);
 
                     // Add new entry
                     LibKey key = new LibKey(specSequence, 0, seqLength, charge);
-                    
-                    libraryEntries[i] = new NistSpectrumInfo(key, tfRatio, totalIntensity,
+
+                    libraryEntries[i] = new NistSpectrumInfo(key, tfRatio, rt, irt, totalIntensity,
                                                               (ushort)copies, (ushort)numPeaks, compressedSize, location);
                     
                     if (seqKeyLength > 0)
@@ -772,6 +760,8 @@ namespace pwiz.Skyline.Model.Lib
         private static readonly Regex REGEX_COMMENT = new Regex(@"^Comment: ");
         private static readonly Regex REGEX_MODS = new Regex(@" Mods=([^ ]+) ");
         private static readonly Regex REGEX_TF_RATIO = new Regex(@" Tfratio=([^ ]+) ");
+        private static readonly Regex REGEX_RT = new Regex(@" RetentionTime=([^ ,]+)");
+        private static readonly Regex REGEX_IRT = new Regex(@" iRT=([^ ,]+)");
         private static readonly Regex REGEX_SAMPLE = new Regex(@" Nreps=\d+/(\d+)");  // Observer spectrum count
         private static readonly char[] MAJOR_SEP = {'/'};
         private static readonly char[] MINOR_SEP = {','};
@@ -823,6 +813,7 @@ namespace pwiz.Skyline.Model.Lib
 
                     int numPeaks = 0;
                     float tfRatio = 1000;
+                    double? rt = null, irt = null;
                     int copies = 1;
 
                     // Process until the start of the peaks
@@ -853,6 +844,14 @@ namespace pwiz.Skyline.Model.Lib
                             match = REGEX_TF_RATIO.Match(line);
                             if (match.Success)
                                 tfRatio = float.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
+
+                            match = REGEX_RT.Match(line);
+                            if (match.Success)
+                                rt = GetRetentionTime(match.Groups[1].Value);
+
+                            match = REGEX_IRT.Match(line);
+                            if (match.Success)
+                                irt = GetRetentionTime(match.Groups[1].Value);
                         }
 
                         if (line.StartsWith("_EOF_")) // Not L10N
@@ -908,7 +907,7 @@ namespace pwiz.Skyline.Model.Lib
                     outStream.Write(peaksCompressed, 0, lenCompressed);
                     
                     var key = new LibKey(sequence, charge);
-                    var info = new NistSpectrumInfo(key, tfRatio, Convert.ToSingle(totalIntensity),
+                    var info = new NistSpectrumInfo(key, tfRatio, rt, irt, Convert.ToSingle(totalIntensity),
                                                     (ushort) copies, (ushort) numPeaks, lenCompressed, location);
                     
                     libraryEntries.Add(info);
@@ -936,6 +935,24 @@ namespace pwiz.Skyline.Model.Lib
                     }
                     outStream.Write(BitConverter.GetBytes(info.Key.Charge), 0, sizeof (int));
                     outStream.Write(BitConverter.GetBytes(info.TFRatio), 0, sizeof (float));
+                    if (info.RT.HasValue)
+                    {
+                        outStream.Write(BitConverter.GetBytes(true), 0, sizeof(bool));
+                        outStream.Write(BitConverter.GetBytes(info.RT.Value), 0, sizeof(double));
+                    }
+                    else
+                    {
+                        outStream.Write(BitConverter.GetBytes(false), 0, sizeof(bool));
+                    }
+                    if (info.iRT.HasValue)
+                    {
+                        outStream.Write(BitConverter.GetBytes(true), 0, sizeof(bool));
+                        outStream.Write(BitConverter.GetBytes(info.iRT.Value), 0, sizeof(double));
+                    }
+                    else
+                    {
+                        outStream.Write(BitConverter.GetBytes(false), 0, sizeof(bool));
+                    }
                     outStream.Write(BitConverter.GetBytes(info.TotalIntensity), 0, sizeof (float));
                     outStream.Write(BitConverter.GetBytes(info.Copies), 0, sizeof (int));
                     outStream.Write(BitConverter.GetBytes(info.NumPeaks), 0, sizeof (int));
@@ -1023,6 +1040,14 @@ namespace pwiz.Skyline.Model.Lib
             return index;
         }
 
+        private static double? GetRetentionTime(string rtString)
+        {
+            double rt;
+            if (!double.TryParse(rtString.Split(MINOR_SEP).First(), out rt))
+                return null;
+            return rt/60;
+        }
+
         protected override SpectrumPeaksInfo.MI[] ReadSpectrum(NistSpectrumInfo info)
         {
             byte[] peaksCompressed = new byte[info.CompressedSize];
@@ -1062,6 +1087,19 @@ namespace pwiz.Skyline.Model.Lib
             }
 
             return arrayMI;
+        }
+
+        public override IEnumerable<SpectrumInfo> GetSpectra(LibKey key, IsotopeLabelType labelType, LibraryRedundancy redundancy)
+        {
+            int i = FindEntry(key);
+            if (i != -1)
+            {
+                yield return new SpectrumInfo(this, labelType, i)
+                {
+                    SpectrumHeaderInfo = CreateSpectrumHeaderInfo(_libraryEntries[i]),
+                    RetentionTime = _libraryEntries[i].RT
+                };
+            }
         }
 
         #region Implementation of IXmlSerializable
@@ -1137,18 +1175,22 @@ namespace pwiz.Skyline.Model.Lib
     {
         private readonly LibKey _key;
         private readonly float _tfRatio;
+        private readonly double? _rt;
+        private readonly double? _irt;
         private readonly float _totalIntensity;
         private readonly ushort _copies;
         private readonly ushort _numPeaks;
         private readonly int _compressedSize;
         private readonly long _location;
 
-        public NistSpectrumInfo(LibKey key, float tfRatio, float totalIntensity,
+        public NistSpectrumInfo(LibKey key, float tfRatio, double? rt, double? irt, float totalIntensity,
             ushort copies, ushort numPeaks, int compressedSize, long location)
         {
             _key = key;
             _totalIntensity = totalIntensity;
             _tfRatio = tfRatio;
+            _rt = rt;
+            _irt = irt;
             _copies = copies;
             _numPeaks = numPeaks;
             _compressedSize = compressedSize;
@@ -1159,6 +1201,8 @@ namespace pwiz.Skyline.Model.Lib
 // ReSharper disable InconsistentNaming
         public float TFRatio { get { return _tfRatio; } }
 // ReSharper restore InconsistentNaming
+        public double? RT { get { return _rt; } }
+        public double? iRT { get { return _irt; } }
         public float TotalIntensity { get { return _totalIntensity; } }
         public int Copies { get { return _copies; } }
         public int NumPeaks { get { return _numPeaks; } }

@@ -1624,7 +1624,7 @@ namespace pwiz.Skyline.Model.Lib
                 }
             }
         }
-        public double? RetentionTime { get; private set; }
+        public double? RetentionTime { get; set; }
         public IonMobilityInfo IonMobilityInfo { get; private set; }
         public bool IsBest { get; private set; }
 

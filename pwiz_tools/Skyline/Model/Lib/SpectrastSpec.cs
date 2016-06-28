@@ -81,8 +81,8 @@ namespace pwiz.Skyline.Model.Lib
     [XmlRoot("spectrast_spectrum_info")]
     public sealed class SpectrastSpectrumHeaderInfo : NistSpectrumHeaderInfoBase
     {
-        public SpectrastSpectrumHeaderInfo(string libraryName, float tfRatio, float totalIntensity, int spectrumCount)
-            : base(libraryName, tfRatio, totalIntensity, spectrumCount)
+        public SpectrastSpectrumHeaderInfo(string libraryName, float tfRatio, double? rt, double? irt, float totalIntensity, int spectrumCount)
+            : base(libraryName, tfRatio, rt, irt, totalIntensity, spectrumCount)
         {
         }
 
@@ -146,7 +146,7 @@ namespace pwiz.Skyline.Model.Lib
 
         protected override SpectrumHeaderInfo CreateSpectrumHeaderInfo(NistSpectrumInfo info)
         {
-            return new SpectrastSpectrumHeaderInfo(Name, info.TFRatio, info.TotalIntensity, info.Copies);
+            return new SpectrastSpectrumHeaderInfo(Name, info.TFRatio, info.RT, info.iRT, info.TotalIntensity, info.Copies);
         }
 
         public override LibrarySpec CreateSpec(string path)
