@@ -26,12 +26,13 @@ namespace pwiz.Skyline.Model.GroupComparison
 {
     public struct FoldChangeResult : IComparable
     {
-        public FoldChangeResult(double confidenceLevel, double adjustedPValue, LinearFitResult linearFitResult) : this()
+        private double _criticalValue;
+        public FoldChangeResult(double confidenceLevel, double adjustedPValue, LinearFitResult linearFitResult, double criticalValue) : this()
         {
             ConfidenceLevel = confidenceLevel;
             LinearFit = linearFitResult;
             AdjustedPValue = adjustedPValue;
-            
+            _criticalValue = criticalValue;
         }
 
         [Format(Formats.CV)]
@@ -49,8 +50,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         {
             get
             {
-                double criticalValue = GetCriticalValue(ConfidenceLevel, LinearFit.DegreesOfFreedom);
-                return Math.Pow(2.0, LinearFit.EstimatedValue - LinearFit.StandardError * criticalValue);
+                return Math.Pow(2.0, LinearFit.EstimatedValue - LinearFit.StandardError * _criticalValue);
             }
         }
 
@@ -59,8 +59,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         {
             get
             {
-                double criticalValue = GetCriticalValue(ConfidenceLevel, LinearFit.DegreesOfFreedom);
-                return Math.Pow(2.0, LinearFit.EstimatedValue + LinearFit.StandardError*criticalValue);
+                return Math.Pow(2.0, LinearFit.EstimatedValue + LinearFit.StandardError*_criticalValue);
             }
         }
 
@@ -81,7 +80,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         /// Returns the value from the Student's T-Distribution table for the particular confidence level and
         /// degrees of freedom.
         /// </summary>
-        private static double GetCriticalValue(double twoTailedConfidence, int degreesOfFreedom)
+        public static double GetCriticalValue(double twoTailedConfidence, int degreesOfFreedom)
         {
             if (degreesOfFreedom <= 0)
             {

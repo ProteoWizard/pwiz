@@ -128,7 +128,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         public void ShowChangeSettings()
         {
-            foreach (var form in FormUtil.OpenForms.OfType<GroupComparisonSettingsForm>())
+            foreach (var form in FormUtil.OpenForms.OfType<EditGroupComparisonDlg>())
             {
                 if (ReferenceEquals(form.GroupComparisonModel, FoldChangeBindingSource.GroupComparisonModel))
                 {
@@ -136,7 +136,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                     return;
                 }
             }
-            var foldChangeSettings = new GroupComparisonSettingsForm(FoldChangeBindingSource);
+            var foldChangeSettings = new EditGroupComparisonDlg(FoldChangeBindingSource);
             foldChangeSettings.Show(this);
         }
 

@@ -415,7 +415,7 @@ namespace pwiz.Skyline.Model.Tools
                         //p.Refresh();
                         p.Exited += (sender, processExitedEventArgs) => boxStreamWriterHelper.HandleProcessExit(p.Id);
                     }
-                    
+                    textWriter.WriteLine("\"" + p.StartInfo.FileName + "\" " + p.StartInfo.Arguments); // Not L10N
                 }
 //                else
 //                {

@@ -276,8 +276,12 @@ namespace pwiz.Skyline.Model.GroupComparison
         private IEnumerable<IGrouping<int, DataRowDetails>> RemoveIncompleteReplicates(IList<DataRowDetails> dataRows)
         {
             var rowsByReplicateIndex = dataRows.ToLookup(row => row.ReplicateIndex);
+            if (null != ComparisonDef.NormalizationMethod.IsotopeLabelTypeName)
+            {
+                return rowsByReplicateIndex;
+            }
             var allIdentityPaths = new HashSet<IdentityPath>();
-            allIdentityPaths.UnionWith(dataRows.Select(row=>row.IdentityPath));
+            allIdentityPaths.UnionWith(dataRows.Select(row => row.IdentityPath));
             return rowsByReplicateIndex.Where(
                 grouping => allIdentityPaths.SetEquals(grouping.Select(row => row.IdentityPath)));
         }
@@ -305,7 +309,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                         peptideQuantifier.MeasuredLabelTypes = ImmutableList.Singleton(selector.LabelType);
                     }
                     foreach (var quantityEntry in peptideQuantifier.GetTransitionIntensities(SrmDocument.Settings, 
-                                replicateEntry.Key))
+                                replicateEntry.Key, ComparisonDef.UseZeroForUnconfidentPeaks))
                     {
                         var dataRowDetails = new DataRowDetails
                         {
@@ -328,7 +332,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             {
                 return null;
             }
-            return _normalizationData = _normalizationData ?? NormalizationData.GetNormalizationData(SrmDocument);
+            return _normalizationData = _normalizationData ?? NormalizationData.GetNormalizationData(SrmDocument, ComparisonDef.UseZeroForUnconfidentPeaks);
         }
 
         public struct RunAbundance

@@ -54,6 +54,10 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public bool SkipTransitionGroup(TransitionGroupDocNode transitionGroupDocNode)
         {
+            if (transitionGroupDocNode.IsDecoy)
+            {
+                return true;
+            }
             if (null != MeasuredLabelTypes)
             {
                 if (!MeasuredLabelTypes.Contains(transitionGroupDocNode.TransitionGroup.LabelType))
@@ -85,7 +89,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             return false;
         }
 
-        public IDictionary<IdentityPath, Quantity> GetTransitionIntensities(SrmSettings srmSettings, int replicateIndex)
+        public IDictionary<IdentityPath, Quantity> GetTransitionIntensities(SrmSettings srmSettings, int replicateIndex, bool treatMissingAsZero)
         {
             var quantities = new Dictionary<IdentityPath, Quantity>();
             var transitionsToNormalizeAgainst = GetTransitionsToNormalizeAgainst(PeptideDocNode, replicateIndex);
@@ -102,7 +106,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                         continue;
                     }
                     var quantity = GetTransitionQuantity(srmSettings, transitionsToNormalizeAgainst, replicateIndex, precursor,
-                        transition);
+                        transition, treatMissingAsZero);
                     if (null != quantity)
                     {
                         IdentityPath transitionIdentityPath = new IdentityPath(PeptideGroupDocNode.PeptideGroup,
@@ -118,7 +122,8 @@ namespace pwiz.Skyline.Model.GroupComparison
             SrmSettings srmSettings,
             IDictionary<PeptideDocNode.TransitionKey, TransitionChromInfo> peptideStandards,
             int replicateIndex,
-            TransitionGroupDocNode transitionGroup, TransitionDocNode transition)
+            TransitionGroupDocNode transitionGroup, TransitionDocNode transition,
+            bool treatMissingAsZero)
         {
             if (null == transition.Results)
             {
@@ -134,11 +139,24 @@ namespace pwiz.Skyline.Model.GroupComparison
                 return null;
             }
             var chromInfo = GetTransitionChromInfo(transition, replicateIndex);
-            if (null == chromInfo || chromInfo.IsEmpty)
+            if (null == chromInfo)
             {
                 return null;
             }
-            double normalizedArea = chromInfo.Area;
+            double? normalizedArea = null;
+            if (treatMissingAsZero && HasFalseQValue(transitionGroup, replicateIndex, chromInfo.FileId))
+            {
+                normalizedArea = 0;
+            }
+            if (!normalizedArea.HasValue)
+            {
+                if (chromInfo.IsEmpty)
+                {
+                    return null;
+                }
+                normalizedArea = chromInfo.Area;
+            }
+
             double denominator = 1.0;
 
             if (null != peptideStandards)
@@ -177,7 +195,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                     denominator = Math.Pow(2.0, median.Value);
                 }
             }
-            return new Quantity(normalizedArea, denominator);
+            return new Quantity(normalizedArea.Value, denominator);
         }
 
         private TransitionChromInfo GetTransitionChromInfo(TransitionDocNode transitionDocNode, int replicateIndex)
@@ -195,10 +213,6 @@ namespace pwiz.Skyline.Model.GroupComparison
             foreach (var chromInfo in chromInfos)
             {
                 if (0 != chromInfo.OptimizationStep)
-                {
-                    continue;
-                }
-                if (chromInfo.IsEmpty)
                 {
                     continue;
                 }
@@ -278,6 +292,40 @@ namespace pwiz.Skyline.Model.GroupComparison
             }
             public double Intensity { get; private set; }
             public double Denominator { get; private set; }
+        }
+
+        public static bool HasFalseQValue(TransitionGroupDocNode transitionGroupDocNode, int replicateIndex,
+            ChromFileInfoId fileId)
+        {
+            if (null == transitionGroupDocNode.Results)
+            {
+                return false;
+            }
+            var chromInfoList = transitionGroupDocNode.Results[replicateIndex];
+            if (null == chromInfoList)
+            {
+                return false;
+            }
+            var chromInfo = chromInfoList.FirstOrDefault(ci => null != ci && ReferenceEquals(ci.FileId, fileId));
+            if (chromInfo == null)
+            {
+                return false;
+            }
+            return HasFalseQValue(chromInfo);
+        }
+        
+        public static bool HasFalseQValue(TransitionGroupChromInfo transitionGroupChromInfo)
+        {
+            string strQValue = transitionGroupChromInfo.Annotations.GetAnnotation(MProphetResultsHandler.AnnotationName);
+            if (null != strQValue)
+            {
+                double qValue;
+                if (double.TryParse(strQValue, out qValue))
+                {
+                    return qValue > .01;
+                }
+            }
+            return false;
         }
     }
 }

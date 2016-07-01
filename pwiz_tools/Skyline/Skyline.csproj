@@ -346,9 +346,6 @@
     <Compile Include="Controls\Graphs\ImportResultsRetryCountdownDlg.Designer.cs">
       <DependentUpon>ImportResultsRetryCountdownDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="Controls\GroupComparison\BaseGroupComparisonSettings.cs">
-      <SubType>Form</SubType>
-    </Compile>
     <Compile Include="Controls\GroupComparison\EditGroupComparisonDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -440,12 +437,6 @@
     </Compile>
     <Compile Include="Controls\Graphs\UniquePrefixGenerator.cs" />
     <Compile Include="Controls\GroupComparison\GroupIdentifier.cs" />
-    <Compile Include="Controls\GroupComparison\GroupComparisonSettingsForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Controls\GroupComparison\GroupComparisonSettingsForm.Designer.cs">
-      <DependentUpon>GroupComparisonSettingsForm.cs</DependentUpon>
-    </Compile>
     <Compile Include="Controls\GroupComparison\GroupComparisonViewContext.cs" />
     <Compile Include="Controls\GroupComparison\MsStatsLogoForm.cs">
       <SubType>UserControl</SubType>
@@ -1678,15 +1669,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\FoldChangeGrid.zh-CHS.resx">
       <DependentUpon>FoldChangeGrid.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Controls\GroupComparison\GroupComparisonSettingsForm.ja.resx">
-      <DependentUpon>GroupComparisonSettingsForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Controls\GroupComparison\GroupComparisonSettingsForm.resx">
-      <DependentUpon>GroupComparisonSettingsForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Controls\GroupComparison\GroupComparisonSettingsForm.zh-CHS.resx">
-      <DependentUpon>GroupComparisonSettingsForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\MsStatsLogoForm.resx">
       <DependentUpon>MsStatsLogoForm.cs</DependentUpon>

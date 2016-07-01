@@ -166,6 +166,10 @@ namespace pwiz.Skyline.Model.GroupComparison
                     if (_modelChangedListeners.Count == 0)
                     {
                         _documentContainer.Unlisten(DocumentContainerOnChange);
+                        if (_cancellationTokenSource != null)
+                        {
+                            _cancellationTokenSource.Cancel();
+                        }
                     }
                 }
             }

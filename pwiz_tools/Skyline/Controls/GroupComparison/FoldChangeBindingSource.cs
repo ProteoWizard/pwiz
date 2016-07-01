@@ -93,6 +93,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             var rows = new List<FoldChangeRow>();
             if (null != results)
             {
+                Dictionary<int, double> criticalValuesByDegreesOfFreedom = new Dictionary<int, double>();
                 var groupComparisonDef = results.GroupComparer.ComparisonDef;
                 var adjustedPValues = PValues.AdjustPValues(results.ResultRows.Select(
                     row => row.LinearFitResult.PValue)).ToArray();
@@ -106,10 +107,18 @@ namespace pwiz.Skyline.Controls.GroupComparison
                         peptide = new Model.Databinding.Entities.Peptide(_skylineDataSchema,
                             new IdentityPath(protein.IdentityPath, resultRow.Selector.Peptide.Id));
                     }
+                    double criticalValue;
+                    if (!criticalValuesByDegreesOfFreedom.TryGetValue(resultRow.LinearFitResult.DegreesOfFreedom,
+                        out criticalValue))
+                    {
+                        criticalValue = FoldChangeResult.GetCriticalValue(groupComparisonDef.ConfidenceLevel,
+                            resultRow.LinearFitResult.DegreesOfFreedom);
+                        criticalValuesByDegreesOfFreedom.Add(resultRow.LinearFitResult.DegreesOfFreedom, criticalValue);
+                    }
+                    FoldChangeResult foldChangeResult = new FoldChangeResult(groupComparisonDef.ConfidenceLevel,
+                        adjustedPValues[iRow], resultRow.LinearFitResult, criticalValue);
                     rows.Add(new FoldChangeRow(protein, peptide, resultRow.Selector.LabelType,
-                        resultRow.Selector.MsLevel, resultRow.Selector.GroupIdentifier, resultRow.ReplicateCount,
-                        new FoldChangeResult(groupComparisonDef.ConfidenceLevel,
-                            adjustedPValues[iRow], resultRow.LinearFitResult)));
+                        resultRow.Selector.MsLevel, resultRow.Selector.GroupIdentifier, resultRow.ReplicateCount, foldChangeResult));
                 }
             }
             var defaultViewSpec = GetDefaultViewSpec(rows);

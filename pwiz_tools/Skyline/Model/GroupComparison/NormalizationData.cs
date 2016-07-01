@@ -40,14 +40,18 @@ namespace pwiz.Skyline.Model.GroupComparison
             _data = data;
         }
 
-        public static NormalizationData GetNormalizationData(SrmDocument document)
+        public static NormalizationData GetNormalizationData(SrmDocument document, bool treatMissingValuesAsZero)
         {
             var intensitiesByFileAndLabelType = new Dictionary<DataKey, List<double>>();
             foreach (var peptideGroup in document.MoleculeGroups)
             {
                 foreach (var peptide in peptideGroup.Molecules)
                 {
-                    if (peptide.GlobalStandardType == PeptideDocNode.STANDARD_TYPE_IRT)
+                    if (peptide.IsDecoy)
+                    {
+                        continue;
+                    }
+                    if (PeptideDocNode.STANDARD_TYPE_IRT == peptide.GlobalStandardType)
                     {
                         continue;
                     }
@@ -59,8 +63,9 @@ namespace pwiz.Skyline.Model.GroupComparison
                             {
                                 continue;
                             }
-                            foreach (var results in transition.Results)
+                            for (int iResult = 0; iResult < transition.Results.Count; iResult++)
                             {
+                                var results = transition.Results[iResult];
                                 if (null == results)
                                 {
                                     continue;
@@ -71,9 +76,18 @@ namespace pwiz.Skyline.Model.GroupComparison
                                     {
                                         continue;
                                     }
-                                    if (chromInfo.IsEmpty || chromInfo.IsTruncated.GetValueOrDefault())
+                                    double? area = null;
+                                    if (treatMissingValuesAsZero && PeptideQuantifier.HasFalseQValue(transitionGroup, iResult, chromInfo.FileId))
                                     {
-                                        continue;
+                                        area = 0;
+                                    }
+                                    if (!area.HasValue)
+                                    {
+                                        if (chromInfo.IsEmpty || chromInfo.IsTruncated.GetValueOrDefault())
+                                        {
+                                            continue;
+                                        }
+                                        area = chromInfo.Area;
                                     }
                                     List<double> fileLabelTypeIntensities;
                                     var key = new DataKey(chromInfo.FileId, transitionGroup.TransitionGroup.LabelType);
@@ -85,7 +99,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                                     // The logarithm of the area is stored instead of the area itself.
                                     // This has a tiny impact on the way the median is calculated if there are 
                                     // an even number of values
-                                    fileLabelTypeIntensities.Add(Math.Log(chromInfo.Area, 2.0));
+                                    fileLabelTypeIntensities.Add(Math.Log(Math.Max(area.Value, 1), 2.0));
                                 }
                             }
                         }
