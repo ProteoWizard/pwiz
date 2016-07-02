@@ -58,7 +58,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             IDictionary<IdentityPath, PeptideQuantifier.Quantity> result;
             if (!_replicateQuantities.TryGetValue(replicateIndex, out result))
             {
-                result = PeptideQuantifier.GetTransitionIntensities(SrmSettings, replicateIndex);
+                result = PeptideQuantifier.GetTransitionIntensities(SrmSettings, replicateIndex, false);
                 _replicateQuantities.Add(replicateIndex, result);
             }
             return result;

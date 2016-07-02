@@ -44,7 +44,7 @@ namespace pwiz.SkylineTestA.Results
                     {
                         var expected = peptide.Results[replicateIndex].First().LabelRatios.First().Ratio.Ratio;
                         var actual = PeptideQuantifier.SumQuantities(
-                            peptideQuantifier.GetTransitionIntensities(doc.Settings, replicateIndex).Values, 
+                            peptideQuantifier.GetTransitionIntensities(doc.Settings, replicateIndex, false).Values, 
                             peptideQuantifier.NormalizationMethod).Value;
                         Assert.AreEqual(expected, actual, .0001, "Error on replicate {0}", replicateIndex);
                     }
