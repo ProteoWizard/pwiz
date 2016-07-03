@@ -1,8 +1,8 @@
-/*
- * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
+﻿/*
+ * Original author: Alex MacLean <alexmaclean2000 .at. gmail.com>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
- * Copyright 2010 University of Washington - Seattle, WA
+ * Copyright 2016 University of Washington - Seattle, WA
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+using System;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Controls;
@@ -25,28 +25,12 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public enum AreaNormalizeToView{ area_percent_view, area_maximum_view, area_ratio_view, area_global_standard_view, none }
-
-    public enum AreaScope{ document, protein }
-
-    public sealed class AreaGraphController : GraphSummary.IControllerSplit
+    class MassErrorGraphController : GraphSummary.IControllerSplit
     {
         public static GraphTypeSummary GraphType
         {
-            get { return Helpers.ParseEnum(Settings.Default.AreaGraphType, GraphTypeSummary.replicate); }
-            set { Settings.Default.AreaGraphType = value.ToString(); }
-        }
-
-        public static AreaNormalizeToView AreaView
-        {
-            get { return Helpers.ParseEnum(Settings.Default.AreaNormalizeToView, AreaNormalizeToView.none); }
-            set { Settings.Default.AreaNormalizeToView = value.ToString(); }
-        }
-
-        public static AreaScope AreaScope
-        {
-            get { return Helpers.ParseEnum(Settings.Default.PeakAreaScope, AreaScope.document); }
-            set { Settings.Default.PeakAreaScope = value.ToString(); }
+            get { return Helpers.ParseEnum(Settings.Default.MassErrorGraphType, GraphTypeSummary.replicate); }
+            set { Settings.Default.MassErrorGraphType = value.ToString(); }
         }
 
         public GraphSummary GraphSummary { get; set; }
@@ -55,22 +39,23 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void OnActiveLibraryChanged()
         {
-            if (GraphSummary.GraphPanes.OfType<AreaReplicateGraphPane>().Any())
+            if (GraphSummary.GraphPanes.OfType<MassErrorReplicateGraphPane>().Any())
                 GraphSummary.UpdateUI();
         }
 
         public void OnResultsIndexChanged()
         {
-            if (GraphSummary.GraphPanes.OfType<AreaReplicateGraphPane>().Any() /* || !Settings.Default.AreaAverageReplicates */ ||
-                    RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.single)
+            if (GraphSummary.GraphPanes.OfType<MassErrorReplicateGraphPane>().Any() /* || !Settings.Default.AreaAverageReplicates */ /*||
+                    RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.single*/)
                 GraphSummary.UpdateUI();
         }
 
         public void OnRatioIndexChanged()
         {
-            if (GraphSummary.GraphPanes.OfType<AreaReplicateGraphPane>().Any() /* || !Settings.Default.AreaAverageReplicates */)
+            if (GraphSummary.GraphPanes.OfType<MassErrorReplicateGraphPane>().Any() /* || !Settings.Default.AreaAverageReplicates */)
                 GraphSummary.UpdateUI();
         }
+
 
         public void OnUpdateGraph()
         {
@@ -79,39 +64,35 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public bool IsReplicatePane(SummaryGraphPane pane)
         {
-            return pane is AreaReplicateGraphPane;
+            return pane is MassErrorReplicateGraphPane;
         }
 
         public bool IsPeptidePane(SummaryGraphPane pane)
         {
-            return pane is AreaPeptideGraphPane;
+            return pane is MassErrorPeptideGraphPane;
         }
 
         public SummaryGraphPane CreateReplicatePane(PaneKey key)
         {
-            return new AreaReplicateGraphPane(GraphSummary, key);
+            return new MassErrorReplicateGraphPane(GraphSummary, key);
         }
 
         public SummaryGraphPane CreatePeptidePane(PaneKey key)
         {
-            return new AreaPeptideGraphPane(GraphSummary, key);
+            return new MassErrorPeptideGraphPane(GraphSummary, key);
         }
 
         public bool HandleKeyDownEvent(object sender, KeyEventArgs e)
         {
             switch (e.KeyCode)
             {
-//                case Keys.D3:
-//                    if (e.Alt)
-//                        GraphSummary.Hide();
-//                    break;
                 case Keys.F7:
                     if (!e.Alt && !(e.Shift && e.Control))
                     {
                         if (e.Control)
-                            Settings.Default.AreaGraphType = GraphTypeSummary.peptide.ToString();
+                            Settings.Default.MassErrorGraphType = GraphTypeSummary.peptide.ToString();
                         else
-                            Settings.Default.AreaGraphType = GraphTypeSummary.replicate.ToString();
+                            Settings.Default.MassErrorGraphType = GraphTypeSummary.replicate.ToString();
                         GraphSummary.UpdateUI();
                     }
                     break;

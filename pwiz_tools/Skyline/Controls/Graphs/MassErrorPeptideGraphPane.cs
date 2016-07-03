@@ -1,8 +1,8 @@
-/*
- * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
+﻿/*
+ * Original author: Alex MacLean <alexmaclean2000 .at. gmail.com>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
- * Copyright 2009 University of Washington - Seattle, WA
+ * Copyright 2016 University of Washington - Seattle, WA
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,42 +16,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    internal class AreaPeptideGraphPane : SummaryPeptideGraphPane
+    class MassErrorPeptideGraphPane : SummaryPeptideGraphPane
     {
-        public AreaPeptideGraphPane(GraphSummary graphSummary, PaneKey paneKey)
+        public MassErrorPeptideGraphPane(GraphSummary graphSummary, PaneKey paneKey)
             : base(graphSummary, paneKey)
         {
         }
 
-        protected override GraphData CreateGraphData(SrmDocument document, PeptideGroupDocNode selectedProtein, TransitionGroupDocNode selectedGroup, DisplayTypeChrom displayType)
+        protected override GraphData CreateGraphData(SrmDocument document, PeptideGroupDocNode selectedProtein,
+            TransitionGroupDocNode selectedGroup, DisplayTypeChrom displayType)
         {
             int? result = null;
-            if (RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.single)
-                result = GraphSummary.ResultsIndex;
-            return new AreaGraphData(document, selectedGroup, selectedProtein, result, displayType, PaneKey);
+            return new MassErrorGraphData(document, selectedGroup, selectedProtein, result, displayType, PaneKey);
         }
 
         protected override void UpdateAxes()
         {
-            YAxis.Title.Text = Resources.AreaPeptideGraphPane_UpdateAxes_Peak_Area; 
-
             base.UpdateAxes();
-            // reformat YAxis for labels
-            var maxY = GraphHelper.GetMaxY(CurveList, this);
-            GraphHelper.ReformatYAxis(this, maxY);
+            YAxis.Title.Text = Resources.MassErrorReplicateGraphPane_UpdateGraph_Mass_Error;
+            YAxis.Scale.MinAuto = true;
+            if (Settings.Default.MinMassError != 0)
+                YAxis.Scale.Min = Settings.Default.MinMassError;
+            if (Settings.Default.MaxMassError != 0)
+                YAxis.Scale.Max = Settings.Default.MaxMassError;
+            AxisChange();
+        }        
 
-            FixedYMin = YAxis.Scale.Min = Settings.Default.AreaLogScale ? 1 : 0;
-        }
-
-        internal class AreaGraphData : GraphData
+        internal class MassErrorGraphData : GraphData
         {
-            public AreaGraphData(SrmDocument document,
+            public MassErrorGraphData(SrmDocument document,
                                  TransitionGroupDocNode selectedGroup,
                                  PeptideGroupDocNode selectedProtein,
                                  int? result,
@@ -60,18 +60,18 @@ namespace pwiz.Skyline.Controls.Graphs
                 : base(document, selectedGroup, selectedProtein, result, displayType, null, paneKey)
             {
             }
-
-            public override double MaxValueSetting { get { return Settings.Default.PeakAreaMaxArea; } }
-            public override double MaxCVSetting { get { return Settings.Default.PeakAreaMaxCv; } }
+            
+           // public override double MaxValueSetting { get { return Settings.Default.PeakAreaMaxArea; } }
+           // public override double MaxCVSetting { get { return Settings.Default.PeakAreaMaxCv; } }
 
             protected override double? GetValue(TransitionGroupChromInfo chromInfo)
             {
-                return chromInfo.Area;
+                return chromInfo.MassError;
             }
 
             protected override double GetValue(TransitionChromInfo chromInfo)
             {
-                return chromInfo.Area;
+                return chromInfo.MassError ?? 0;
             }
         }
     }

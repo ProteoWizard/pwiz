@@ -22,6 +22,7 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Controls;
+using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -29,6 +30,8 @@ using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
+    public enum GraphTypeSummary { replicate, peptide }
+
     public partial class GraphSummary : DockableFormEx, IUpdatable, IMultipleViewProvider
     {
         private const string FONT_FACE = "Arial"; // Not L10N
@@ -58,6 +61,14 @@ namespace pwiz.Skyline.Controls.Graphs
             bool HandleKeyDownEvent(object sender, KeyEventArgs e);
 
             IFormView FormView { get; }
+        }
+
+        public interface IControllerSplit : IController
+        {
+            bool IsReplicatePane(SummaryGraphPane pane);
+            bool IsPeptidePane(SummaryGraphPane pane);
+            SummaryGraphPane CreateReplicatePane(PaneKey key);
+            SummaryGraphPane CreatePeptidePane(PaneKey key);
         }
 
         public class RTGraphView : IFormView {}
@@ -335,6 +346,102 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 pane.HandleResizeEvent();
             }
+        }
+
+        public void DoUpdateGraph(IControllerSplit graphController, GraphTypeSummary graphType)
+        {
+            var paneKeys = CalcPaneKeys(graphType);
+
+            bool panesValid = paneKeys.SequenceEqual(GraphPanes.Select(pane => pane.PaneKey));
+            if (panesValid)
+            {
+                switch (graphType)
+                {
+                    case GraphTypeSummary.replicate:
+                        panesValid = GraphPanes.All(graphController.IsReplicatePane);
+                        break;
+                    case GraphTypeSummary.peptide:
+                        panesValid = GraphPanes.All(graphController.IsPeptidePane);
+                        break;
+                }
+            }
+            if (panesValid)
+            {
+                return;
+            }
+
+            switch (graphType)
+            {
+                case GraphTypeSummary.replicate:
+                    GraphPanes = paneKeys.Select(key => graphController.CreateReplicatePane(key));
+                    break;
+                case GraphTypeSummary.peptide:
+                    GraphPanes = paneKeys.Select(key => graphController.CreatePeptidePane(key));
+                    break;
+            }
+        }
+
+        public PaneKey[] CalcPaneKeys(GraphTypeSummary graphType)
+        {
+            PaneKey[] paneKeys = null;
+            if (Settings.Default.SplitChromatogramGraph)
+            {
+                if (graphType == GraphTypeSummary.replicate)
+                {
+                    var selectedTreeNode = StateProvider.SelectedNode as SrmTreeNode;
+                    if (null != selectedTreeNode)
+                    {
+                        TransitionGroupDocNode[] transitionGroups;
+                        bool transitionSelected = false;
+                        // ReSharper disable once CanBeReplacedWithTryCastAndCheckForNull
+                        if (selectedTreeNode.Model is PeptideDocNode)
+                        {
+                            transitionGroups = ((PeptideDocNode)selectedTreeNode.Model).TransitionGroups.ToArray();
+                        }
+                        // ReSharper disable once CanBeReplacedWithTryCastAndCheckForNull
+                        else if (selectedTreeNode.Model is TransitionGroupDocNode)
+                        {
+                            transitionGroups = new[] { (TransitionGroupDocNode)selectedTreeNode.Model };
+                        }
+                        else if (selectedTreeNode.Model is TransitionDocNode)
+                        {
+                            transitionGroups = new[] { (TransitionGroupDocNode)((SrmTreeNode)selectedTreeNode.Parent).Model };
+                            transitionSelected = true;
+                        }
+                        else
+                        {
+                            transitionGroups = new TransitionGroupDocNode[0];
+                        }
+                        if (transitionGroups.Length == 1)
+                        {
+                            if (GraphChromatogram.DisplayType == DisplayTypeChrom.all
+                                || (GraphChromatogram.DisplayType == DisplayTypeChrom.single && !transitionSelected))
+                            {
+                                var transitionGroup = transitionGroups[0];
+                                bool hasPrecursors = transitionGroup.Transitions.Any(transition => transition.IsMs1);
+                                bool hasProducts = transitionGroup.Transitions.Any(transition => !transition.IsMs1);
+                                if (hasPrecursors && hasProducts)
+                                {
+                                    paneKeys = new[] { PaneKey.PRECURSORS, PaneKey.PRODUCTS };
+                                }
+                            }
+                        }
+                        else if (transitionGroups.Length > 1)
+                        {
+                            paneKeys = transitionGroups.Select(group => new PaneKey(@group))
+                                .Distinct().ToArray();
+                        }
+                    }
+                }
+                else
+                {
+                    paneKeys = StateProvider.SelectionDocument.MoleculeTransitionGroups.Select(
+                        group => new PaneKey(@group.TransitionGroup.LabelType)).Distinct().ToArray();
+                }
+            }
+            paneKeys = paneKeys ?? new[] { PaneKey.DEFAULT };
+            Array.Sort(paneKeys);
+            return paneKeys;
         }
     }
 }

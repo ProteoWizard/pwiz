@@ -34,7 +34,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public enum SummaryPeptideOrder { document, time, area }
+    public enum SummaryPeptideOrder { document, time, area, mass_error }
 
     internal abstract class SummaryPeptideGraphPane : SummaryBarGraphPaneBase
     {
@@ -144,8 +144,9 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 double yValue = _graphData.SelectedMaxY;
                 double yMin = _graphData.SelectedMinY;
+                double height = yValue - yMin;
                 GraphObjList.Add(new BoxObj(SelectedIndex + .5, yValue, 0.99,
-                                            yValue - yMin, Color.Black, Color.Empty)
+                                            height, Color.Black, Color.Empty)
                 {
                     IsClippedToChartRect = true,
                 });
@@ -314,6 +315,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 else if (peptideOrder == SummaryPeptideOrder.area)
                 {
                     listPoints.Sort(CompareGroupAreas);
+                }
+                else if (peptideOrder == SummaryPeptideOrder.mass_error)
+                {
+                    listPoints.Sort(CompareGroupMassErrors);
                 }
 
                 // Init calculated values
@@ -490,6 +495,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 return Comparer.Default.Compare(p2.AreaGroup, p1.AreaGroup);
             }
 
+            private static int CompareGroupMassErrors(GraphPointData p1, GraphPointData p2)
+            {
+                return Comparer.Default.Compare(p1.MassErrorGroup, p2.MassErrorGroup);
+            }
+
             private void LevelPointPairLists(List<PointPairList> lists)
             {
                 // Add missing points to lists to make them all of equal length
@@ -529,7 +539,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         listValues.Add(value.Value);
                 }
 
-                return CreatePointPair(iGroup, listValues, ref maxY);
+                return CreatePointPair(iGroup, listValues, ref maxY, ref minY);
             }
 
             protected abstract double? GetValue(TransitionGroupChromInfo chromInfo);
@@ -546,12 +556,12 @@ namespace pwiz.Skyline.Controls.Graphs
                         listValues.Add(GetValue(chromInfo));
                 }
 
-                return CreatePointPair(iGroup, listValues, ref maxY);
+                return CreatePointPair(iGroup, listValues, ref maxY, ref minY);
             }
 
             protected abstract double GetValue(TransitionChromInfo info);
 
-            private static PointPair CreatePointPair(int iGroup, ICollection<double> listValues, ref double maxY)
+            private static PointPair CreatePointPair(int iGroup, ICollection<double> listValues, ref double maxY, ref double minY)
             {
                 if (listValues.Count == 0)
                     return PointPairMissing(iGroup);
@@ -569,6 +579,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 else
                     pointPair = MeanErrorBarItem.MakePointPair(iGroup, statValues.Mean(), statValues.StdDev());
                 maxY = Math.Max(maxY, MeanErrorBarItem.GetYTotal(pointPair));
+                minY = Math.Min(minY, MeanErrorBarItem.GetYMin(pointPair));
                 return pointPair;
             }
 
@@ -610,6 +621,7 @@ namespace pwiz.Skyline.Controls.Graphs
             public double AreaGroup { get; private set; }
 //            public double AreaPepCharge { get; private set; }
             public double TimeGroup { get; private set; }
+            public double MassErrorGroup { get; private set; }
             public double TimePepCharge { get; private set; }
 
 // ReSharper disable SuggestBaseTypeForParameter
@@ -619,8 +631,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 var times = new List<double>();
                 foreach (TransitionGroupDocNode nodePepChild in nodePep.Children)
                 {
-                    double? meanArea, meanTime;
-                    CalcStats(nodePepChild, out meanArea, out meanTime);
+                    double? meanArea, meanTime, meanMassError;
+                    CalcStats(nodePepChild, out meanArea, out meanTime,out meanMassError);
                     if (nodeGroup.TransitionGroup.PrecursorCharge != nodePepChild.TransitionGroup.PrecursorCharge)
                         continue;
                     if (meanTime.HasValue)
@@ -629,22 +641,26 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         AreaGroup = meanArea ?? 0;
                         TimeGroup = meanTime ?? 0;
+                        MassErrorGroup = meanMassError ?? 0;
                     }
                 }
 //                AreaPepCharge = (areas.Count > 0 ? new Statistics(areas).Mean() : 0);
                 TimePepCharge = (times.Count > 0 ? new Statistics(times).Mean() : 0);
             }
 
-            private static void CalcStats(TransitionGroupDocNode nodeGroup, out double? meanArea, out double? meanTime)
+            private static void CalcStats(TransitionGroupDocNode nodeGroup, out double? meanArea, out double? meanTime, out double? meanMassError)
             {
                 var areas = new List<double>();
                 var times = new List<double>();
+                var massErrors = new List<double>();
                 foreach (var chromInfo in nodeGroup.ChromInfos)
                 {
                     if (chromInfo.Area.HasValue)
                         areas.Add(chromInfo.Area.Value);
                     if (chromInfo.RetentionTime.HasValue)
                         times.Add(chromInfo.RetentionTime.Value);
+                    if(chromInfo.MassError.HasValue)
+                        massErrors.Add(chromInfo.MassError.Value);
                 }
                 meanArea = null;
                 if (areas.Count > 0)
@@ -652,6 +668,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 meanTime = null;
                 if (times.Count > 0)
                     meanTime = new Statistics(times).Mean();
+                meanMassError = null;
+                if (massErrors.Count > 0)
+                    meanMassError = new Statistics(massErrors).Mean();
             }
         }
     }

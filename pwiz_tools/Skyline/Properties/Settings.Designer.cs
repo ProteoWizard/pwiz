@@ -2181,5 +2181,53 @@ namespace pwiz.Skyline.Properties {
                 this["ImportResultsDoAutoRetry"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ShowMassErrorGraph {
+            get {
+                return ((bool)(this["ShowMassErrorGraph"]));
+            }
+            set {
+                this["ShowMassErrorGraph"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("replicate")]
+        public string MassErrorGraphType {
+            get {
+                return ((string)(this["MassErrorGraphType"]));
+            }
+            set {
+                this["MassErrorGraphType"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public double MaxMassError {
+            get {
+                return ((double)(this["MaxMassError"]));
+            }
+            set {
+                this["MaxMassError"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public double MinMassError {
+            get {
+                return ((double)(this["MinMassError"]));
+            }
+            set {
+                this["MinMassError"] = value;
+            }
+        }
     }
 }

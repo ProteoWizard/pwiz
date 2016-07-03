@@ -51,6 +51,8 @@ namespace pwiz.SkylineTestFunctional
 
         private void TestCancellation(bool initiallyVisible)
         {
+            int initialStatusHeight = 0;
+            RunUI(() => initialStatusHeight = SkylineWindow.StatusBarHeight);
             var files = new[] {"8fmol.mz5", "20fmol.mz5", "40fmol.mz5", "200fmol.mz5"};
             OpenDocument("RetentionTimeFilterTest.sky");
             var skyfile = initiallyVisible ? "TestImportResultsCancelA.sky" : "TestImportResultsCancelB.sky";
@@ -71,6 +73,9 @@ namespace pwiz.SkylineTestFunctional
                     () => SkylineWindow.Document.IsLoaded ||
                         (SkylineWindow.ImportingResultsWindow != null &&
                         SkylineWindow.ImportingResultsWindow.ProgressTotalPercent >= 1)); // Get at least partway in
+                // Make sure status bar height does not change showing import progress
+                // Failure here is usually caused by statusProgress.Size y-dimension getting reset to 20 instead of 16
+                RunUI(() => Assert.AreEqual(initialStatusHeight, SkylineWindow.StatusBarHeight, "Progress indicator changed status bar height"));
                 if (!initiallyVisible)
                 {
                     RunUI(() => SkylineWindow.ShowAllChromatogramsGraph()); // Turn it on

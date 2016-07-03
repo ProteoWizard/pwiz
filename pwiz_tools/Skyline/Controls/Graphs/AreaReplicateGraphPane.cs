@@ -736,23 +736,6 @@ namespace pwiz.Skyline.Controls.Graphs
             return dotpValue.HasValue ? string.Format("{0}\n{1:F02}", DotpLabelText, dotpValue) : null; // Not L10N
         }
 
-        private void EmptyGraph(SrmDocument document)
-        {
-            string[] resultNames = GraphData.GetReplicateLabels(document).ToArray();
-
-            XAxis.Scale.TextLabels = resultNames;
-            var originalTextLabels = new string[XAxis.Scale.TextLabels.Length];
-            Array.Copy(XAxis.Scale.TextLabels, originalTextLabels, XAxis.Scale.TextLabels.Length);
-            OriginalXAxisLabels = originalTextLabels;
-            
-            ScaleAxisLabels();
-            // Add a missing point for each replicate name.
-            PointPairList pointPairList = new PointPairList();
-            for (int i = 0; i < resultNames.Length; i++)
-                pointPairList.Add(AreaGraphData.AreaPointPairMissing(i));
-            AxisChange();
-        }
-
         protected override int SelectedIndex
         {
             get
@@ -803,13 +786,6 @@ namespace pwiz.Skyline.Controls.Graphs
         private class AreaGraphData : GraphData
         {
             public const int RATIO_INDEX_NONE = -1;
-
-            public static PointPair AreaPointPairMissing(int xValue)
-            {
-                // Using PointPairBase.Missing caused too many problems in area graphs
-                // Zero is essentially missing for column graphs, unlike the retention time hi-lo graphs
-                return new PointPair(xValue, 0);
-            }
 
             private readonly DocNode _docNode;
             private readonly int _ratioIndex;
@@ -1044,11 +1020,6 @@ namespace pwiz.Skyline.Controls.Graphs
             private void FixupForTotals()
             {
                 NormalizeTo(1, 1);
-            }
-
-            public override PointPair PointPairMissing(int xValue)
-            {
-                return AreaPointPairMissing(xValue);
             }
 
             protected override bool IsMissingValue(TransitionChromInfoData chromInfo)

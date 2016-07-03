@@ -34,23 +34,32 @@ namespace pwiz.Skyline.Util
         private readonly GraphPane _graphPane;
         private string[] _reducedTextLabels;
         private string[] _originalTextLabels;
+        private string _maxLengthLabel;
+
         public AxisLabelScaler(GraphPane graphPane)
         {
             _graphPane = graphPane;
         }
 
         public int FirstDataIndex { get; set; }
+        public bool IsRepeatRemovalAllowed { get; set; }
+
         public RectangleF Rect
         {
             get { return _graphPane.Rect; }
         }
+
         public XAxis XAxis { get { return _graphPane.XAxis; } }
         public Chart Chart { get { return _graphPane.Chart; } }
 
         public string[] OriginalTextLabels
         {
             get { return _originalTextLabels; }
-            set { _originalTextLabels = value; }
+            set
+            {
+                _originalTextLabels = value;
+                _maxLengthLabel = null;
+            }
         }
 
         public void ScaleAxisLabels()
@@ -61,14 +70,14 @@ namespace pwiz.Skyline.Util
                 countLabels = XAxis.Scale.TextLabels.Length;
 
                 // Reset the text labels to their original values.
-                if (_reducedTextLabels != null && ArrayUtil.EqualsDeep(XAxis.Scale.TextLabels, _reducedTextLabels))
+                if (_reducedTextLabels != null && ArrayUtil.ReferencesEqual(XAxis.Scale.TextLabels, _reducedTextLabels))
                 {
                     Array.Copy(_originalTextLabels, XAxis.Scale.TextLabels, _originalTextLabels.Length);
                 }
                 // Keep the original text.
-                else
+                else if (!ArrayUtil.ReferencesEqual(XAxis.Scale.TextLabels, _originalTextLabels))
                 {
-                    _originalTextLabels = XAxis.Scale.TextLabels.ToArray();
+                    OriginalTextLabels = XAxis.Scale.TextLabels.ToArray();
                 }
             }
 
@@ -81,33 +90,41 @@ namespace pwiz.Skyline.Util
 
             var fontSpec = XAxis.Scale.FontSpec;
 
+            var originalTextCopy = XAxis.Scale.TextLabels != null ? _originalTextLabels.ToArray() : null;
             int pointSize;
             for (pointSize = (int)Settings.Default.AreaFontSize; pointSize > 4; pointSize--)
             {
                 // Start over with the original labels and a smaller font
                 if (XAxis.Scale.TextLabels != null)
-                    XAxis.Scale.TextLabels = _originalTextLabels.ToArray();
+                    XAxis.Scale.TextLabels = originalTextCopy;
 
                 using (var font = new Font(fontSpec.Family, pointSize))
                 {
                     // See if the original labels fit with this font
-                    int maxWidth = MaxWidth(font, XAxis.Scale.TextLabels);
+                    int maxWidth = _maxLengthLabel != null
+                        ? MaxWidth(font, new[] {_maxLengthLabel}, out _maxLengthLabel)
+                        : MaxWidth(font, XAxis.Scale.TextLabels, out _maxLengthLabel);
+
                     if (maxWidth <= dpAvailable)
                     {
                         ScaleToWidth(maxWidth, dxAvailable);
                         break;
                     }
 
-                    // See if they can be shortened to fit horizontally or vertically
-                    if (RemoveRepeatedLabelText(font, dxAvailable, dxAvailable) ||
-                        RemoveRepeatedLabelText(font, dyAvailable, dxAvailable))
+                    if (IsRepeatRemovalAllowed)
                     {
-                        break;
+                        // See if they can be shortened to fit horizontally or vertically
+                        if (RemoveRepeatedLabelText(font, dxAvailable, dxAvailable) ||
+                            RemoveRepeatedLabelText(font, dyAvailable, dxAvailable))
+                        {
+                            break;
+                        }
+                        originalTextCopy = _originalTextLabels.ToArray();
                     }
                 }
             }
 
-            if (XAxis.Scale.TextLabels != null && !ArrayUtil.EqualsDeep(XAxis.Scale.TextLabels, _originalTextLabels))
+            if (XAxis.Scale.TextLabels != null && !ArrayUtil.ReferencesEqual(XAxis.Scale.TextLabels, _originalTextLabels))
             {
                 _reducedTextLabels = XAxis.Scale.TextLabels.ToArray();
             }
@@ -115,13 +132,28 @@ namespace pwiz.Skyline.Util
             XAxis.Scale.FontSpec.Size = pointSize;
         }
 
-        private static int MaxWidth(Font font, IEnumerable<String> labels)
+        private static int MaxWidth(Font font, IEnumerable<String> labels, out string maxString)
         {
             var result = 0;
+            var maxLength = 0;
+            maxString = null;
             if (labels != null)
             {
                 foreach (var label in labels)
-                    result = Math.Max(result, SystemMetrics.GetTextWidth(font, label));
+                {
+                    // Not strictly guaranteed, but assume that the label with the maximum width
+                    // will be within 2 characters of the maximum string length, since actually
+                    // measuring everything can be very time consuming
+                    if (label.Length + 2 < maxLength)
+                        continue;
+                    maxLength = Math.Max(label.Length, maxLength);
+                    int labelWidth = SystemMetrics.GetTextWidth(font, label);
+                    if (labelWidth > result)
+                    {
+                        result = labelWidth;
+                        maxString = label;
+                    }
+                }
             }
             return result;
         }
@@ -143,7 +175,8 @@ namespace pwiz.Skyline.Util
         {
             while (Helpers.RemoveRepeatedLabelText(XAxis.Scale.TextLabels, FirstDataIndex))
             {
-                int maxWidth = MaxWidth(font, XAxis.Scale.TextLabels);
+                string maxLabel;
+                int maxWidth = MaxWidth(font, XAxis.Scale.TextLabels, out maxLabel);
                 if (maxWidth <= dpAvailable)
                 {
                     return maxWidth;

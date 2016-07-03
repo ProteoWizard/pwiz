@@ -154,5 +154,11 @@ namespace pwiz.Skyline.Controls.Graphs
             _axisLabelScaler.FirstDataIndex = FirstDataIndex;
             _axisLabelScaler.ScaleAxisLabels();
         }
+
+        protected bool IsRepeatRemovalAllowed
+        {
+            get { return _axisLabelScaler.IsRepeatRemovalAllowed; }
+            set { _axisLabelScaler.IsRepeatRemovalAllowed = value; }
+        }
     }
 }

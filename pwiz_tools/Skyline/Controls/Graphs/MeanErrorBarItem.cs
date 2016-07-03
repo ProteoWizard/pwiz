@@ -58,6 +58,12 @@ namespace pwiz.Skyline.Controls.Graphs
             return double.IsNaN(yTotal) ? 0 : yTotal;
         }
 
+        public static double GetYMin(PointPair pointPair)
+        {
+            var yMin = pointPair.Y - ((ErrorTag)pointPair.Tag).Error;
+            return (double.IsNaN(yMin)||yMin>0) ? 0 : yMin;
+        }
+
         public MeanErrorBarItem(String label, 
                                double[] xValues, double[] yValues, double[] errorValues,
                                Color color, Color errorColor) 

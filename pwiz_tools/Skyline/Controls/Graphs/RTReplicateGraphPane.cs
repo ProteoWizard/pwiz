@@ -216,16 +216,9 @@ namespace pwiz.Skyline.Controls.Graphs
             AxisChange();
         }
 
-        private void EmptyGraph(SrmDocument document)
+        protected override PointPair PointPairMissing(int xValue)
         {
-            string[] resultNames = GraphData.GetReplicateLabels(document).ToArray();
-            XAxis.Scale.TextLabels = resultNames;
-            ScaleAxisLabels();
-            // Add a missing point for each replicate name.
-            PointPairList pointPairList = new PointPairList();
-            for (int i = 0; i < resultNames.Length; i++)
-                pointPairList.Add(RTGraphData.RTPointPairMissing(i));
-            AxisChange();
+            return RTGraphData.RTPointPairMissing(xValue);
         }
 
         /// <summary>

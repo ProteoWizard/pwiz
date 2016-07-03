@@ -1152,8 +1152,11 @@
   <metadata name="statusStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>334, 17</value>
   </metadata>
+  <data name="statusStrip.AutoSize" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
   <data name="statusGeneral.Size" type="System.Drawing.Size, System.Drawing">
-    <value>379, 22</value>
+    <value>569, 17</value>
   </data>
   <data name="statusGeneral.Text" xml:space="preserve">
     <value>準備完了</value>
@@ -1162,7 +1165,7 @@
     <value>MiddleLeft</value>
   </data>
   <data name="statusProgress.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 16</value>
+    <value>133, 16</value>
   </data>
   <data name="statusProgress.Visible" type="System.Boolean, mscorlib">
     <value>False</value>

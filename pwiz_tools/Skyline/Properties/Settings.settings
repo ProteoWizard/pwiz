@@ -545,5 +545,17 @@
     <Setting Name="ImportResultsDoAutoRetry" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
+    <Setting Name="ShowMassErrorGraph" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="MassErrorGraphType" Type="System.String" Scope="User">
+      <Value Profile="(Default)">replicate</Value>
+    </Setting>
+    <Setting Name="MaxMassError" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="MinMassError" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

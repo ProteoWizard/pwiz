@@ -1588,6 +1588,11 @@ namespace pwiz.Skyline
         private void expandProteinsMenuItem_Click(object sender, EventArgs e) { ExpandProteins(); }
         public void ExpandProteins()
         {
+            if (Document.MoleculeCount > SequenceTree.MAX_PEPTIDE_EXPANSION)
+            {
+                MessageDlg.Show(this, Resources.SkylineWindow_ExpandProteins_The_number_of_targets_exceeds_the_limit_for_this_operation_);
+                return;
+            }
             BulkUpdateTreeNodes<TreeNode>(() =>
             {
                 foreach (PeptideGroupTreeNode node in SequenceTree.GetSequenceNodes())
@@ -1599,6 +1604,11 @@ namespace pwiz.Skyline
         private void expandPeptidesMenuItem_Click(object sender, EventArgs e) { ExpandPeptides(); }
         public void ExpandPeptides()
         {
+            if (Document.MoleculeCount > SequenceTree.MAX_PEPTIDE_EXPANSION)
+            {
+                MessageDlg.Show(this, Resources.SkylineWindow_ExpandProteins_The_number_of_targets_exceeds_the_limit_for_this_operation_);
+                return;
+            }
             BulkUpdateTreeNodes<TreeNode>(() =>
             {
                 foreach (PeptideGroupTreeNode node in SequenceTree.GetSequenceNodes())
@@ -1615,6 +1625,11 @@ namespace pwiz.Skyline
         private void expandPrecursorsMenuItem_Click(object sender, EventArgs e) { ExpandPrecursors(); }
         public void ExpandPrecursors()
         {
+            if (Document.MoleculeTransitionCount > SequenceTree.MAX_TRANSITION_EXPANSTION)
+            {
+                MessageDlg.Show(this, Resources.SkylineWindow_ExpandProteins_The_number_of_targets_exceeds_the_limit_for_this_operation_);
+                return;
+            }
             BulkUpdateTreeNodes<TreeNode>(() =>
             {
                 foreach (TreeNode node in SequenceTree.Nodes)
@@ -4217,7 +4232,9 @@ namespace pwiz.Skyline
                 _graphRetentionTime.ResultsIndex = ComboResults.SelectedIndex;
             if (_graphPeakArea != null && _graphPeakArea.ResultsIndex != ComboResults.SelectedIndex)
                 _graphPeakArea.ResultsIndex = ComboResults.SelectedIndex;
-            var liveResultsGrid = (LiveResultsGrid) _resultsGridForm;
+            if (_graphMassError != null && _graphMassError.ResultsIndex != ComboResults.SelectedIndex)
+                _graphMassError.ResultsIndex = ComboResults.SelectedIndex;
+            var liveResultsGrid = (LiveResultsGrid)_resultsGridForm;
             if (null != liveResultsGrid)
             {
                 liveResultsGrid.SetReplicateIndex(ComboResults.SelectedIndex);
@@ -4586,6 +4603,9 @@ namespace pwiz.Skyline
             }
             return statusGeneral.Text.Contains(start) && statusGeneral.Text.Contains(end);
         }
+
+        public int StatusBarHeight { get { return statusGeneral.Height; } }
+
         #endregion
 
         private void SkylineWindow_Move(object sender, EventArgs e)

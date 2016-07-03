@@ -417,19 +417,24 @@ namespace pwiz.Skyline.Controls
             return i;
         }
 
+        private ReplicateDisplay? _showReplicate;
+
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ReplicateDisplay ShowReplicate
         {
             get
             {
-                return Helpers.ParseEnum(Settings.Default.ShowTreeReplicateEnum, ReplicateDisplay.single);
+                if (_showReplicate == null)
+                    _showReplicate = Helpers.ParseEnum(Settings.Default.ShowTreeReplicateEnum, ReplicateDisplay.single);
+                return _showReplicate.Value;
             }
 
             set
             {
                 if (ShowReplicate != value)
                 {
+                    _showReplicate = value;
                     Settings.Default.ShowTreeReplicateEnum = value.ToString();
                     UpdateNodeStates();
                 }
@@ -1368,9 +1373,38 @@ namespace pwiz.Skyline.Controls
             _nodeTip.HideTip();
         }
 
-        public bool ExpandProteins { get { return !LockDefaultExpansion && Settings.Default.SequenceTreeExpandProteins; } }
-        public bool ExpandPeptides { get { return !LockDefaultExpansion && Settings.Default.SequenceTreeExpandPeptides; } }
-        public bool ExpandPrecursors { get { return !LockDefaultExpansion && Settings.Default.SequenceTreeExpandPrecursors; } }
+        public const int MAX_PEPTIDE_EXPANSION = 2000;
+        public const int MAX_TRANSITION_EXPANSTION = 10 * 1000;
+
+        public bool ExpandProteins
+        {
+            get
+            {
+                if (Document.MoleculeCount > MAX_PEPTIDE_EXPANSION)
+                    return false;
+                return !LockDefaultExpansion && Settings.Default.SequenceTreeExpandProteins;
+            }
+        }
+
+        public bool ExpandPeptides
+        {
+            get
+            {
+                if (Document.MoleculeCount > MAX_PEPTIDE_EXPANSION)
+                    return false;
+                return !LockDefaultExpansion && Settings.Default.SequenceTreeExpandPeptides;
+            }
+        }
+
+        public bool ExpandPrecursors
+        {
+            get
+            {
+                if (Document.MoleculeTransitionCount > MAX_TRANSITION_EXPANSTION)
+                    return false;
+                return !LockDefaultExpansion && Settings.Default.SequenceTreeExpandPrecursors;
+            }
+        }
 
         public bool LockDefaultExpansion { get; set; }
     }

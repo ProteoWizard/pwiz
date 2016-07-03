@@ -8960,10 +8960,10 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="AddZipToolHelper_ShouldOverwrite_Please_specify__overwrite__or__parallel__with_the___tool_zip_conflict_resolution_command_" xml:space="preserve">
     <value>Please specify 'overwrite' or 'parallel' with the --tool-zip-conflict-resolution command.</value>
   </data>
-    <data name="ChromCacheWriter_Complete_Failure_attempting_to_write_the_file__0_" xml:space="preserve">
+  <data name="ChromCacheWriter_Complete_Failure_attempting_to_write_the_file__0_" xml:space="preserve">
     <value>Failure attempting to write the file {0}</value>
   </data>
-    <data name="AsyncChromatogramsGraph2_AsyncChromatogramsGraph2_Canceled" xml:space="preserve">
+  <data name="AsyncChromatogramsGraph2_AsyncChromatogramsGraph2_Canceled" xml:space="preserve">
     <value>Canceled</value>
   </data>
   <data name="PasteDlg_AddFasta_This_must_start_with" xml:space="preserve">
@@ -9059,5 +9059,17 @@ Here are the last 3 errors:
   </data>
   <data name="ExportMethodDlg_cbIgnoreProteins_CheckedChanged_Grouping_peptides_by_protein_has_not_yet_been_implemented_for_scheduled_methods_" xml:space="preserve">
     <value>Grouping peptides by protein has not yet been implemented for scheduled methods.</value>
+  </data>
+  <data name="SkylineWindow_CreateGraphMassError_Mass_Errors" xml:space="preserve">
+    <value>Mass Errors</value>
+  </data>
+  <data name="MassErrorReplicateGraphPane_UpdateGraph_Mass_Error" xml:space="preserve">
+    <value>Mass Error (ppm)</value>
+  </data>
+  <data name="MassErrorReplicateGraphPane_UpdateGraph_Select_a_peptide_to_see_the_mass_error_graph" xml:space="preserve">
+    <value>Select a peptide to see the mass error graph</value>
+  </data>
+  <data name="SkylineWindow_ExpandProteins_The_number_of_targets_exceeds_the_limit_for_this_operation_" xml:space="preserve">
+    <value>The number of targets exceeds the limit for this operation.</value>
   </data>
 </root>

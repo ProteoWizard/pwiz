@@ -185,6 +185,7 @@ namespace pwiz.Skyline
             this.peptideOrderDocumentContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.peptideOrderRTContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.peptideOrderAreaContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.peptideOrderMassErrorContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.replicateOrderContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.replicateOrderDocumentContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.replicateOrderAcqTimeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -398,6 +399,9 @@ namespace pwiz.Skyline
             this.peakAreasMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaReplicateComparisonMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaPeptideComparisonMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.massErrorsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.massErrorReplicateComparisonMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.massErrorPeptideComparisonMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.calibrationCurveMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.groupComparisonsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.addGroupComparisonMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -438,6 +442,12 @@ namespace pwiz.Skyline
             this.issuesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator29 = new System.Windows.Forms.ToolStripSeparator();
             this.aboutMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.contextMenuMassErrors = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.massErrorGraphContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.massErrorReplicateComparisonContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.massErrorPeptideComparisonContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.massErrorPropsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.showMassErrorLegendContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenuTreeNode.SuspendLayout();
             this.contextMenuSpectrum.SuspendLayout();
             this.contextMenuChromatogram.SuspendLayout();
@@ -447,10 +457,12 @@ namespace pwiz.Skyline
             this.statusStrip.SuspendLayout();
             this.mainToolStrip.SuspendLayout();
             this.menuMain.SuspendLayout();
+            this.contextMenuMassErrors.SuspendLayout();
             this.SuspendLayout();
             // 
             // contextMenuTreeNode
             // 
+            this.contextMenuTreeNode.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.contextMenuTreeNode.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.cutContextMenuItem,
             this.copyContextMenuItem,
@@ -630,6 +642,7 @@ namespace pwiz.Skyline
             // 
             // contextMenuSpectrum
             // 
+            this.contextMenuSpectrum.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.contextMenuSpectrum.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.aionsContextMenuItem,
             this.bionsContextMenuItem,
@@ -824,6 +837,7 @@ namespace pwiz.Skyline
             // 
             // contextMenuChromatogram
             // 
+            this.contextMenuChromatogram.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.contextMenuChromatogram.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.applyPeakAllGraphMenuItem,
             this.applyPeakSubsequentGraphMenuItem,
@@ -1173,6 +1187,7 @@ namespace pwiz.Skyline
             // contextMenuRetentionTimes
             // 
             this.contextMenuRetentionTimes.AllowMerge = false;
+            this.contextMenuRetentionTimes.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.contextMenuRetentionTimes.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.timeGraphContextMenuItem,
             this.timePlotContextMenuItem,
@@ -1467,6 +1482,7 @@ namespace pwiz.Skyline
             // 
             // contextMenuPeakAreas
             // 
+            this.contextMenuPeakAreas.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.contextMenuPeakAreas.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.areaGraphContextMenuItem,
             this.peptideOrderContextMenuItem,
@@ -1510,7 +1526,8 @@ namespace pwiz.Skyline
             this.peptideOrderContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.peptideOrderDocumentContextMenuItem,
             this.peptideOrderRTContextMenuItem,
-            this.peptideOrderAreaContextMenuItem});
+            this.peptideOrderAreaContextMenuItem,
+            this.peptideOrderMassErrorContextMenuItem});
             this.peptideOrderContextMenuItem.Name = "peptideOrderContextMenuItem";
             resources.ApplyResources(this.peptideOrderContextMenuItem, "peptideOrderContextMenuItem");
             this.peptideOrderContextMenuItem.DropDownOpening += new System.EventHandler(this.peptideOrderContextMenuItem_DropDownOpening);
@@ -1532,6 +1549,12 @@ namespace pwiz.Skyline
             this.peptideOrderAreaContextMenuItem.Name = "peptideOrderAreaContextMenuItem";
             resources.ApplyResources(this.peptideOrderAreaContextMenuItem, "peptideOrderAreaContextMenuItem");
             this.peptideOrderAreaContextMenuItem.Click += new System.EventHandler(this.peptideOrderAreaContextMenuItem_Click);
+            // 
+            // peptideOrderMassErrorContextMenuItem
+            // 
+            this.peptideOrderMassErrorContextMenuItem.Name = "peptideOrderMassErrorContextMenuItem";
+            resources.ApplyResources(this.peptideOrderMassErrorContextMenuItem, "peptideOrderMassErrorContextMenuItem");
+            this.peptideOrderMassErrorContextMenuItem.Click += new System.EventHandler(this.peptideOrderMassErrorContextMenuItem_Click);
             // 
             // replicateOrderContextMenuItem
             // 
@@ -1687,6 +1710,7 @@ namespace pwiz.Skyline
             // 
             // statusStrip
             // 
+            this.statusStrip.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.statusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.statusGeneral,
             this.statusProgress,
@@ -1745,6 +1769,7 @@ namespace pwiz.Skyline
             // mainToolStrip
             // 
             this.mainToolStrip.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
+            this.mainToolStrip.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.mainToolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.newToolBarButton,
             this.openToolBarButton,
@@ -1842,6 +1867,7 @@ namespace pwiz.Skyline
             // 
             // menuMain
             // 
+            this.menuMain.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.menuMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
             this.editToolStripMenuItem,
@@ -2532,6 +2558,7 @@ namespace pwiz.Skyline
             this.toolStripSeparator10,
             this.retentionTimesMenuItem,
             this.peakAreasMenuItem,
+            this.massErrorsMenuItem,
             this.calibrationCurveMenuItem,
             this.groupComparisonsMenuItem,
             this.resultsGridMenuItem,
@@ -3051,6 +3078,27 @@ namespace pwiz.Skyline
             resources.ApplyResources(this.areaPeptideComparisonMenuItem, "areaPeptideComparisonMenuItem");
             this.areaPeptideComparisonMenuItem.Click += new System.EventHandler(this.areaPeptideComparisonMenuItem_Click);
             // 
+            // massErrorsMenuItem
+            // 
+            this.massErrorsMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.massErrorReplicateComparisonMenuItem,
+            this.massErrorPeptideComparisonMenuItem});
+            resources.ApplyResources(this.massErrorsMenuItem, "massErrorsMenuItem");
+            this.massErrorsMenuItem.Name = "massErrorsMenuItem";
+            this.massErrorsMenuItem.DropDownOpening += new System.EventHandler(this.massErrorMenuItem_DropDownOpening);
+            // 
+            // massErrorReplicateComparisonMenuItem
+            // 
+            this.massErrorReplicateComparisonMenuItem.Name = "massErrorReplicateComparisonMenuItem";
+            resources.ApplyResources(this.massErrorReplicateComparisonMenuItem, "massErrorReplicateComparisonMenuItem");
+            this.massErrorReplicateComparisonMenuItem.Click += new System.EventHandler(this.massErrorReplicateComparisonMenuItem_Click);
+            // 
+            // massErrorPeptideComparisonMenuItem
+            // 
+            this.massErrorPeptideComparisonMenuItem.Name = "massErrorPeptideComparisonMenuItem";
+            resources.ApplyResources(this.massErrorPeptideComparisonMenuItem, "massErrorPeptideComparisonMenuItem");
+            this.massErrorPeptideComparisonMenuItem.Click += new System.EventHandler(this.massErrorPeptideComparisonMenuItem_Click);
+            // 
             // calibrationCurveMenuItem
             // 
             this.calibrationCurveMenuItem.Name = "calibrationCurveMenuItem";
@@ -3320,6 +3368,49 @@ namespace pwiz.Skyline
             resources.ApplyResources(this.aboutMenuItem, "aboutMenuItem");
             this.aboutMenuItem.Click += new System.EventHandler(this.aboutMenuItem_Click);
             // 
+            // contextMenuMassErrors
+            // 
+            this.contextMenuMassErrors.ImageScalingSize = new System.Drawing.Size(20, 20);
+            this.contextMenuMassErrors.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.massErrorGraphContextMenuItem,
+            this.massErrorPropsContextMenuItem,
+            this.showMassErrorLegendContextMenuItem});
+            this.contextMenuMassErrors.Name = "contextMenuMassErrors";
+            resources.ApplyResources(this.contextMenuMassErrors, "contextMenuMassErrors");
+            // 
+            // massErrorGraphContextMenuItem
+            // 
+            this.massErrorGraphContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.massErrorReplicateComparisonContextMenuItem,
+            this.massErrorPeptideComparisonContextMenuItem});
+            this.massErrorGraphContextMenuItem.Name = "massErrorGraphContextMenuItem";
+            resources.ApplyResources(this.massErrorGraphContextMenuItem, "massErrorGraphContextMenuItem");
+            this.massErrorGraphContextMenuItem.DropDownOpening += new System.EventHandler(this.massErrorMenuItem_DropDownOpening);
+            // 
+            // massErrorReplicateComparisonContextMenuItem
+            // 
+            this.massErrorReplicateComparisonContextMenuItem.CheckOnClick = true;
+            this.massErrorReplicateComparisonContextMenuItem.Name = "massErrorReplicateComparisonContextMenuItem";
+            resources.ApplyResources(this.massErrorReplicateComparisonContextMenuItem, "massErrorReplicateComparisonContextMenuItem");
+            this.massErrorReplicateComparisonContextMenuItem.Click += new System.EventHandler(this.massErrorReplicateComparisonMenuItem_Click);
+            // 
+            // massErrorPeptideComparisonContextMenuItem
+            // 
+            this.massErrorPeptideComparisonContextMenuItem.Name = "massErrorPeptideComparisonContextMenuItem";
+            resources.ApplyResources(this.massErrorPeptideComparisonContextMenuItem, "massErrorPeptideComparisonContextMenuItem");
+            this.massErrorPeptideComparisonContextMenuItem.Click += new System.EventHandler(this.massErrorPeptideComparisonMenuItem_Click);
+            // 
+            // massErrorPropsContextMenuItem
+            // 
+            this.massErrorPropsContextMenuItem.Name = "massErrorPropsContextMenuItem";
+            resources.ApplyResources(this.massErrorPropsContextMenuItem, "massErrorPropsContextMenuItem");
+            this.massErrorPropsContextMenuItem.Click += new System.EventHandler(this.massErrorPropsContextMenuItem_Click);
+            // 
+            // showMassErrorLegendContextMenuItem
+            // 
+            this.showMassErrorLegendContextMenuItem.Name = "showMassErrorLegendContextMenuItem";
+            resources.ApplyResources(this.showMassErrorLegendContextMenuItem, "showMassErrorLegendContextMenuItem");
+            // 
             // SkylineWindow
             // 
             resources.ApplyResources(this, "$this");
@@ -3346,6 +3437,7 @@ namespace pwiz.Skyline
             this.mainToolStrip.PerformLayout();
             this.menuMain.ResumeLayout(false);
             this.menuMain.PerformLayout();
+            this.contextMenuMassErrors.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -3757,6 +3849,16 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem timeTargetsContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem timeStandardsContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem timeDecoysContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem massErrorsMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem massErrorReplicateComparisonMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem massErrorPeptideComparisonMenuItem;
+        private System.Windows.Forms.ContextMenuStrip contextMenuMassErrors;
+        private System.Windows.Forms.ToolStripMenuItem massErrorGraphContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem massErrorReplicateComparisonContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem massErrorPeptideComparisonContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem peptideOrderMassErrorContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem massErrorPropsContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem showMassErrorLegendContextMenuItem;
     }
 }
 

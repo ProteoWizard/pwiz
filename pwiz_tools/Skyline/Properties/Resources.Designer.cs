@@ -14054,6 +14054,25 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Mass Error (ppm).
+        /// </summary>
+        public static string MassErrorReplicateGraphPane_UpdateGraph_Mass_Error {
+            get {
+                return ResourceManager.GetString("MassErrorReplicateGraphPane_UpdateGraph_Mass_Error", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select a peptide to see the mass error graph.
+        /// </summary>
+        public static string MassErrorReplicateGraphPane_UpdateGraph_Select_a_peptide_to_see_the_mass_error_graph {
+            get {
+                return ResourceManager.GetString("MassErrorReplicateGraphPane_UpdateGraph_Select_a_peptide_to_see_the_mass_error_gr" +
+                        "aph", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid iRT value at precusor m/z {0} for peptide {1}..
         /// </summary>
         public static string MassListImporter_AddRow_Invalid_iRT_value_at_precusor_m_z__0__for_peptide__1_ {
@@ -21356,6 +21375,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Mass Errors.
+        /// </summary>
+        public static string SkylineWindow_CreateGraphMassError_Mass_Errors {
+            get {
+                return ResourceManager.GetString("SkylineWindow_CreateGraphMassError_Mass_Errors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Peak Areas.
         /// </summary>
         public static string SkylineWindow_CreateGraphPeakArea_Peak_Areas {
@@ -21416,6 +21444,16 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_EditNote_Edit_Note {
             get {
                 return ResourceManager.GetString("SkylineWindow_EditNote_Edit_Note", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The number of targets exceeds the limit for this operation..
+        /// </summary>
+        public static string SkylineWindow_ExpandProteins_The_number_of_targets_exceeds_the_limit_for_this_operation_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ExpandProteins_The_number_of_targets_exceeds_the_limit_for_this_ope" +
+                        "ration_", resourceCulture);
             }
         }
         

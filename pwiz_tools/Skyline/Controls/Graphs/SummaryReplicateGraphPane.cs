@@ -67,6 +67,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             XAxis.Title.Text = Resources.SummaryReplicateGraphPane_SummaryReplicateGraphPane_Replicate;
             XAxis.Type = AxisType.Text;
+            IsRepeatRemovalAllowed = true;
         }
 
         protected virtual void InitFromData(GraphData graphData)
@@ -146,6 +147,26 @@ namespace pwiz.Skyline.Controls.Graphs
             return (_replicateGroups != null ? _replicateGroups[index].ReplicateIndexes : ReplicateIndexSet.EMPTY);
         }
 
+        protected virtual PointPair PointPairMissing(int xValue)
+        {
+            return GraphData.CreatePairMissing(xValue);
+        }
+
+        protected void EmptyGraph(SrmDocument document)
+        {
+            string[] resultNames = GraphData.GetReplicateLabels(document).ToArray();
+            XAxis.Scale.TextLabels = resultNames;
+            var originalTextLabels = new string[XAxis.Scale.TextLabels.Length];
+            Array.Copy(XAxis.Scale.TextLabels, originalTextLabels, XAxis.Scale.TextLabels.Length);
+            OriginalXAxisLabels = originalTextLabels;
+
+            ScaleAxisLabels();
+            // Add a missing point for each replicate name.
+            PointPairList pointPairList = new PointPairList();
+            for (int i = 0; i < resultNames.Length; i++)
+                pointPairList.Add(PointPairMissing(i));
+            AxisChange();
+        }
 
         /// <summary>
         /// Holds the data that is currently displayed in the graph.
@@ -154,6 +175,13 @@ namespace pwiz.Skyline.Controls.Graphs
         /// </summary>
         public abstract class GraphData : Immutable
         {
+            public static PointPair CreatePairMissing(int xValue)
+            {
+                // Using PointPairBase.Missing caused too many problems in area graphs
+                // Zero is essentially missing for column graphs, unlike the retention time hi-lo graphs
+                return new PointPair(xValue, 0);
+            }
+
             private readonly SrmDocument _document;
             private readonly DocNode _docNode;
             private readonly DisplayTypeChrom _displayType;
@@ -306,7 +334,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
             public GraphValues.ReplicateGroupOp ReplicateGroupOp { get; private set; }
 
-            public abstract PointPair PointPairMissing(int xValue);
+            public virtual PointPair PointPairMissing(int xValue)
+            {
+                return CreatePairMissing(xValue);
+            }
 
             private List<PointPairList> MakePointPairLists<TChromInfoData>(
                 DisplayTypeChrom displayType, 
