@@ -146,6 +146,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var selectedTreeNode = GraphSummary.StateProvider.SelectedNode as SrmTreeNode;
             if (selectedTreeNode == null || document.FindNode(selectedTreeNode.Path) == null)
             {
+                Title.Text = Resources.AreaReplicateGraphPane_UpdateGraph_Select_a_peptide_to_see_the_peak_area_graph;
                 EmptyGraph(document);
                 return;
             }
@@ -207,6 +208,7 @@ namespace pwiz.Skyline.Controls.Graphs
             else if (!(selectedTreeNode is TransitionGroupTreeNode))
             {
                 Title.Text = Resources.AreaReplicateGraphPane_UpdateGraph_Select_a_peptide_to_see_the_peak_area_graph;
+                EmptyGraph(document);
                 CanShowPeakAreaLegend = false;
                 CanShowDotProduct = false;
                 return;

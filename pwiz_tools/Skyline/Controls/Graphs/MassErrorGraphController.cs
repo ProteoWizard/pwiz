@@ -45,8 +45,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void OnResultsIndexChanged()
         {
-            if (GraphSummary.GraphPanes.OfType<MassErrorReplicateGraphPane>().Any() /* || !Settings.Default.AreaAverageReplicates */ /*||
-                    RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.single*/)
+            if (GraphSummary.GraphPanes.OfType<MassErrorReplicateGraphPane>().Any() /* || !Settings.Default.AreaAverageReplicates */ ||
+                    RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.single)
                 GraphSummary.UpdateUI();
         }
 

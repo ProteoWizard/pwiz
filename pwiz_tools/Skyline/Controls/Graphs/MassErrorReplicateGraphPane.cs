@@ -47,6 +47,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var selectedTreeNode = GraphSummary.StateProvider.SelectedNode as SrmTreeNode;
             if (selectedTreeNode == null || document.FindNode(selectedTreeNode.Path) == null)
             {
+                Title.Text = Resources.MassErrorReplicateGraphPane_UpdateGraph_Select_a_peptide_to_see_the_mass_error_graph;
                 EmptyGraph(document);
                 return;
             }
@@ -94,6 +95,7 @@ namespace pwiz.Skyline.Controls.Graphs
             else if (!(selectedTreeNode is TransitionGroupTreeNode))
             {
                 Title.Text = Resources.MassErrorReplicateGraphPane_UpdateGraph_Select_a_peptide_to_see_the_mass_error_graph;
+                EmptyGraph(document);
                 return;
             }
             // If a precursor is going to be displayed with display type single
@@ -120,7 +122,7 @@ namespace pwiz.Skyline.Controls.Graphs
            int countLabelTypes = document.Settings.PeptideSettings.Modifications.CountLabelTypes;
            int colorOffset = 0;
            for (int i = 0; i < graphData.DocNodes.Count; i++)
-            {
+           {
                 var docNode = graphData.DocNodes[i];
                 var pointPairLists = graphData.PointPairLists[i];
                 int numSteps = pointPairLists.Count / 2;
@@ -169,31 +171,6 @@ namespace pwiz.Skyline.Controls.Graphs
                     curveItem.Tag = new IdentityPath(identityPath, docNode.Id);
                     CurveList.Add(curveItem);
                 }
-//                if (ShowSelection && maxArea > -double.MaxValue)
-//                {
-//                    double yValue;
-//                    switch (BarSettings.Type)
-//                    {
-//                        case BarType.Stack:
-//                            // The Math.Min(sumArea, .999) makes sure that if graph is in normalized view
-//                            // height of the selection rectangle does not exceed 1, so that top of the rectangle
-//                            // can be viewed when y-axis scale maximum is at 1
-//                            yValue = (areaView == AreaNormalizeToView.area_maximum_view ? Math.Min(sumArea, .999) : sumArea);
-//                            break;
-//                        case BarType.PercentStack:
-//                            yValue = 99.99;
-//                            break;
-//                        default:
-//                            // Scale the selection box to fit exactly the bar height
-//                            yValue = (areaView == AreaNormalizeToView.area_maximum_view ? Math.Min(maxArea, .999) : maxArea);
-//                            break;
-//                    }
-//                    GraphObjList.Add(new BoxObj(selectedReplicateIndex + .5, yValue, 0.99,
-//                                                yValue, Color.Black, Color.Empty)
-//                    {
-//                        IsClippedToChartRect = true,
-//                    });
-//                }
             }
 
            // Draw a box around the currently selected replicate
@@ -255,7 +232,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (chromInfo == null)
                     return null;
         
-                    return chromInfo.MassError;       
+                return chromInfo.MassError;       
             }
 
             private float? GetValue(TransitionChromInfo chromInfo)
@@ -263,7 +240,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (chromInfo == null)
                     return null;
                 
-                    return chromInfo.MassError;
+                return chromInfo.MassError;
             }
         }
     }

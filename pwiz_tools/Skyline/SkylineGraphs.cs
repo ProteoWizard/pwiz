@@ -168,8 +168,8 @@ namespace pwiz.Skyline
                 {
                     // UpdateGraphPanes can handle null values in the list, but
                     // only call it when at least one of the graphs is present.
-                    if (_graphRetentionTime != null || _graphPeakArea != null)
-                        UpdateGraphPanes(new List<IUpdatable> {_graphRetentionTime, _graphPeakArea});
+                    if (_graphRetentionTime != null || _graphPeakArea != null || _graphMassError != null)
+                        UpdateGraphPanes(new List<IUpdatable> { _graphRetentionTime, _graphPeakArea, _graphMassError });
                 }
                 return;                
             }

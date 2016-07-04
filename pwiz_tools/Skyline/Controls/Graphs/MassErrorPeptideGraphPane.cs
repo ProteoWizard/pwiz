@@ -34,6 +34,8 @@ namespace pwiz.Skyline.Controls.Graphs
             TransitionGroupDocNode selectedGroup, DisplayTypeChrom displayType)
         {
             int? result = null;
+            if (RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.single)
+                result = GraphSummary.ResultsIndex;
             return new MassErrorGraphData(document, selectedGroup, selectedProtein, result, displayType, PaneKey);
         }
 
