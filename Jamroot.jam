@@ -60,8 +60,12 @@ ECHO
 #                           (mzML, mzXML, MGF, etc - no binary formats
 #                           like mz5 or vendor-specifics )
 #
+#   There are some aliases to build commonly used subsets of pwiz:
 #
-#   If you just want to build a subset of pwiz, add a target to 
+#   msconvert (just the command-line executable, copied to <BUILD_DIR>/<TOOLSET_DIR>)
+#   executables (all the pwiz core tools, copied to <BUILD_DIR>/<TOOLSET_DIR>)
+#
+#   If you just want to build a specific subset of pwiz, add a target to 
 # your command line.  For example to build just the msdata file 
 # read/write stuff, add:
 #
