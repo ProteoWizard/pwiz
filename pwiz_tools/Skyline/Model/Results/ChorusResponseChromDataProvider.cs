@@ -83,6 +83,16 @@ namespace pwiz.Skyline.Model.Results
             get { return _cachedChromatogramDataProvider.IsSingleMzMatch; }
         }
 
+        public override bool SourceHasPositivePolarityData
+        {
+            get { return _cachedChromatogramDataProvider.SourceHasPositivePolarityData; }
+        }
+
+        public override bool SourceHasNegativePolarityData
+        {
+            get { return _cachedChromatogramDataProvider.SourceHasNegativePolarityData; }
+        }
+
         public override void ReleaseMemory()
         {
             _cachedChromatogramDataProvider.ReleaseMemory();

@@ -93,6 +93,10 @@ namespace pwiz.Skyline.Model.Results
 
         public virtual bool HasMidasSpectra { get { return false; } }
 
+        // Used for offering hints to user when document transition polarities don't agree with the raw data
+        public abstract bool SourceHasPositivePolarityData { get; }
+        public abstract bool SourceHasNegativePolarityData { get; }
+
         public abstract void ReleaseMemory();
 
         public abstract void Dispose();
@@ -104,6 +108,10 @@ namespace pwiz.Skyline.Model.Results
         private readonly int[] _chromIndices;
 
         private MsDataFileImpl _dataFile;
+        
+        private readonly bool _hasMidasSpectra;
+        private readonly bool _sourceHasNegativePolarityData;
+        private readonly bool _sourceHasPositivePolarityData;
 
         /// <summary>
         /// The number of chromatograms read so far.
@@ -156,6 +164,14 @@ namespace pwiz.Skyline.Model.Results
                 {
                     lastPrecursor = chromKey.Precursor;
                     indexPrecursor++;
+                }
+                if (chromKey.Precursor.IsNegative)
+                {
+                    _sourceHasNegativePolarityData = true;
+                }
+                else
+                {
+                    _sourceHasPositivePolarityData = true;
                 }
                 var ki = new ChromKeyProviderIdPair(chromKey, index);
                 _chromIndices[index] = indexPrecursor;
@@ -322,8 +338,20 @@ namespace pwiz.Skyline.Model.Results
             get { return false; }
         }
 
-        private bool _hasMidasSpectra;
-        public override bool HasMidasSpectra { get { return _hasMidasSpectra; } }
+        public override bool HasMidasSpectra
+        {
+            get { return _hasMidasSpectra; }
+        }
+
+        public override bool SourceHasPositivePolarityData
+        {
+            get { return _sourceHasPositivePolarityData; }
+        }
+
+        public override bool SourceHasNegativePolarityData
+        {
+            get { return _sourceHasNegativePolarityData; }
+        }
 
         public static bool HasChromatogramData(MsDataFileImpl dataFile)
         {

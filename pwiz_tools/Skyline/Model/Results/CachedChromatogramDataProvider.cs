@@ -40,6 +40,9 @@ namespace pwiz.Skyline.Model.Results
         private readonly float? _maxRetentionTime;
         private readonly float? _maxIntensity;
 
+        private readonly bool _sourceHasPositivePolarityData;
+        private readonly bool _sourceHasNegativePolarityData;
+
         /// <summary>
         /// The number of chromatograms read so far.
         /// </summary>
@@ -61,6 +64,17 @@ namespace pwiz.Skyline.Model.Results
 
             _fileIndex = cache.CachedFiles.IndexOf(f => Equals(f.FilePath, dataFilePath));
             _chromKeyIndices = cache.GetChromKeys(dataFilePath).OrderBy(v => v.LocationPoints).ToArray();
+            foreach (var c in _chromKeyIndices.Where(i => i.Key.Precursor != 0))
+            {
+                if (c.Key.Precursor.IsNegative)
+                {
+                    _sourceHasNegativePolarityData = true;
+                }
+                else
+                {
+                    _sourceHasPositivePolarityData = true;
+                }
+            }
             _cache.GetStatusDimensions(dataFilePath, out _maxRetentionTime, out _maxIntensity);
             _singleMatchMz = singleMatchMz.HasValue
                                  ? singleMatchMz.Value
@@ -136,6 +150,16 @@ namespace pwiz.Skyline.Model.Results
         public override bool IsSingleMzMatch
         {
             get { return _singleMatchMz; }
+        }
+
+        public override bool SourceHasPositivePolarityData
+        {
+            get { return _sourceHasPositivePolarityData; } 
+        }
+
+        public override bool SourceHasNegativePolarityData
+        {
+            get { return _sourceHasNegativePolarityData; }
         }
 
         public override void ReleaseMemory()

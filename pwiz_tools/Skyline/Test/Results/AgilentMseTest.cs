@@ -22,6 +22,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest.Results
@@ -51,15 +52,30 @@ namespace pwiz.SkylineTest.Results
             DoAgilentMseChromatogramTest(RefinementSettings.ConvertToSmallMoleculesMode.formulas);
         }
 
+        public enum small_mol_mode
+        {
+            simple,
+            invert_charges,
+            invert_charges_and_data
+        };
+
+        [TestMethod]
+        public void AgilentMseChromatogramTestAsNegativeSmallMolecules()
+        {
+            DoAgilentMseChromatogramTest(RefinementSettings.ConvertToSmallMoleculesMode.formulas, small_mol_mode.invert_charges, 
+                Resources.ChromCacheBuilder_BuildCache_This_document_contains_only_negative_ion_mode_transitions__and_the_imported_file_contains_only_positive_ion_mode_data_so_nothing_can_be_loaded_);
+            DoAgilentMseChromatogramTest(RefinementSettings.ConvertToSmallMoleculesMode.formulas, small_mol_mode.invert_charges_and_data);
+        }
+
         [TestMethod]
         public void AgilentMseChromatogramTestAsSmallMoleculeMasses()
         {
             DoAgilentMseChromatogramTest(RefinementSettings.ConvertToSmallMoleculesMode.masses_only);
         }
 
-        public void DoAgilentMseChromatogramTest(RefinementSettings.ConvertToSmallMoleculesMode asSmallMolecules)
+        public void DoAgilentMseChromatogramTest(RefinementSettings.ConvertToSmallMoleculesMode asSmallMolecules, small_mol_mode smallMolMode = small_mol_mode.simple, string expectedError = null)
         {
-            if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.none && !RunSmallMoleculeTestVersions)
+            if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.none && !RunSmallMoleculeTestVersions && smallMolMode == small_mol_mode.simple)
             {
                 System.Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
                 return;
@@ -73,43 +89,50 @@ namespace pwiz.SkylineTest.Results
             if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.none)
             {
                 var refine = new RefinementSettings();
-                document = refine.ConvertToSmallMolecules(document, asSmallMolecules);
+                document = refine.ConvertToSmallMolecules(document, asSmallMolecules, smallMolMode != small_mol_mode.simple);
             }
             using (var docContainer = new ResultsTestDocumentContainer(document, docPath))
             {
                 var doc = docContainer.Document;
                 var listChromatograms = new List<ChromatogramSet>();
-                var path = MsDataFileUri.Parse(@"AgilentMse\BSA-AI-0-10-25-41_first_100_scans.mzML");
+                var path = MsDataFileUri.Parse(smallMolMode == small_mol_mode.invert_charges_and_data ? @"AgilentMse\BSA-AI-0-10-25-41_first_100_scans_neg.mzML" : @"AgilentMse\BSA-AI-0-10-25-41_first_100_scans.mzML");
                 listChromatograms.Add(AssertResult.FindChromatogramSet(doc, path) ??
                         new ChromatogramSet(path.GetFileName().Replace('.', '_'), new[] { path }));
                 var docResults = doc.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
                 Assert.IsTrue(docContainer.SetDocument(docResults, doc, true));
-                docContainer.AssertComplete();
-                document = docContainer.Document;
-
-                float tolerance = (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
-                var results = document.Settings.MeasuredResults;
-                foreach (var pair in document.MoleculePrecursorPairs)
+                if (expectedError != null)
                 {
-                    ChromatogramGroupInfo[] chromGroupInfo;
-                    Assert.IsTrue(results.TryLoadChromatogram(0, pair.NodePep, pair.NodeGroup,
-                        tolerance, true, out chromGroupInfo));
-                    Assert.AreEqual(1, chromGroupInfo.Length);
+                    docContainer.AssertError(expectedError);
                 }
-
-                // now drill down for specific values
-                int nPeptides = 0;
-                foreach (var nodePep in document.Molecules.Where(nodePep => nodePep.Results[0] != null))
+                else
                 {
-                    // expecting just one peptide result in this small data set
-                    if (nodePep.Results[0].Sum(chromInfo => chromInfo.PeakCountRatio > 0 ? 1 : 0) > 0)
+                    docContainer.AssertComplete();
+                    document = docContainer.Document;
+
+                    float tolerance = (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+                    var results = document.Settings.MeasuredResults;
+                    foreach (var pair in document.MoleculePrecursorPairs)
                     {
-                        Assert.AreEqual(0.2462, (double)nodePep.GetMeasuredRetentionTime(0), .0001, "averaged retention time differs in node " + nodePep.RawTextId);
-                        Assert.AreEqual(0.3333, (double)nodePep.GetPeakCountRatio(0), 0.0001);
-                        nPeptides++;
+                        ChromatogramGroupInfo[] chromGroupInfo;
+                        Assert.IsTrue(results.TryLoadChromatogram(0, pair.NodePep, pair.NodeGroup,
+                            tolerance, true, out chromGroupInfo));
+                        Assert.AreEqual(1, chromGroupInfo.Length);
                     }
+
+                    // now drill down for specific values
+                    int nPeptides = 0;
+                    foreach (var nodePep in document.Molecules.Where(nodePep => nodePep.Results[0] != null))
+                    {
+                        // expecting just one peptide result in this small data set
+                        if (nodePep.Results[0].Sum(chromInfo => chromInfo.PeakCountRatio > 0 ? 1 : 0) > 0)
+                        {
+                            Assert.AreEqual(0.2462, (double)nodePep.GetMeasuredRetentionTime(0), .0001, "averaged retention time differs in node " + nodePep.RawTextId);
+                            Assert.AreEqual(0.3333, (double)nodePep.GetPeakCountRatio(0), 0.0001);
+                            nPeptides++;
+                        }
+                    }
+                    Assert.AreEqual(smallMolMode == small_mol_mode.invert_charges ? 0 : 1, nPeptides); // If we switched document polarity, we'd expect no chromatograms extracted
                 }
-                Assert.AreEqual(1, nPeptides);
             }
             testFilesDir.Dispose();
         }

@@ -43,6 +43,8 @@ namespace pwiz.Skyline.Model.Results
         private List<string> _scanIdList = new List<string>();
         private readonly bool _isProcessedScans;
         private bool _isSingleMzMatch;
+        private bool _sourceHasPositivePolarityData;
+        private bool _sourceHasNegativePolarityData;
 
         private readonly ChromatogramLoadingStatus.TransitionData _allChromData;
 
@@ -227,6 +229,19 @@ namespace pwiz.Skyline.Model.Results
                 {
                     CompleteChromatograms(chromMaps);
                     return;
+                }
+
+                var isNegative = _spectra.CurrentSpectrumIsNegative;
+                if (isNegative.HasValue)
+                {
+                    if (isNegative.Value)
+                    {            
+                        _sourceHasNegativePolarityData = true;
+                    }
+                    else
+                    {
+                        _sourceHasPositivePolarityData = true;
+                    }
                 }
 
                 UpdatePercentComplete();
@@ -586,6 +601,16 @@ namespace pwiz.Skyline.Model.Results
             get { return _isSingleMzMatch; }
         }
 
+        public override bool SourceHasPositivePolarityData
+        {
+            get { return _sourceHasPositivePolarityData; }
+        }
+
+        public override bool SourceHasNegativePolarityData
+        {
+            get { return _sourceHasNegativePolarityData; }
+        }
+
         public override void ReleaseMemory()
         {
         }
@@ -671,6 +696,11 @@ namespace pwiz.Skyline.Model.Results
             public MsDataSpectrum CurrentSpectrum
             {
                 get { return _currentInfo != null ? _currentInfo.DataSpectrum : null; }
+            }
+
+            public bool? CurrentSpectrumIsNegative
+            {
+                get { return _currentInfo != null ? _currentInfo.DataSpectrum.NegativeCharge : (bool?)null; }
             }
 
             public MsDataSpectrum[] CurrentSpectra

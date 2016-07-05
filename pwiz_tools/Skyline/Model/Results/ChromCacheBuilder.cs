@@ -260,7 +260,7 @@ namespace pwiz.Skyline.Model.Results
                     else
                     {
                         throw new InvalidDataException(String.Format(Resources.ChromCacheBuilder_BuildNextFileInner_The_sample__0__contains_no_usable_data,
-                                                                     dataFilePath.GetSampleOrFileName()));
+                                dataFilePath.GetSampleOrFileName()));
                     }
 
                     _currentFileInfo.IsSingleMatchMz = provider.IsSingleMzMatch;
@@ -279,6 +279,8 @@ namespace pwiz.Skyline.Model.Results
 
                     if ((inFile != null) && (inFile.GetLog() != null)) // in case perf logging is enabled
                         DebugLog.Info(inFile.GetLog());
+
+                    CheckForProviderErrors(provider);
                 }
                 finally
                 {
@@ -327,6 +329,26 @@ namespace pwiz.Skyline.Model.Results
                     // in on this channel.
                     x = x as ChromCacheBuildException ?? new ChromCacheBuildException(MSDataFilePath, x);
                     ExitRead(x);
+                }
+            }
+        }
+
+        private void CheckForProviderErrors(ChromDataProvider provider)
+        {
+            // Check for attempts to load negative data into an all-postive document, and vice versa
+            if (_document.MoleculeTransitions.Any())
+            {
+                if (_document.MoleculeTransitions.All(t => !t.Transition.IsNegative()) &&
+                    provider.SourceHasNegativePolarityData && !provider.SourceHasPositivePolarityData)
+                {
+                    throw new InvalidDataException(
+                        Resources.ChromCacheBuilder_BuildCache_This_document_contains_only_positive_ion_mode_transitions__and_the_imported_file_contains_only_negative_ion_mode_data_so_nothing_can_be_loaded___Negative_ion_mode_transitions_need_to_have_negative_charge_values_);
+                }
+                if (_document.MoleculeTransitions.All(t => t.Transition.IsNegative()) &&
+                    !provider.SourceHasNegativePolarityData && provider.SourceHasPositivePolarityData)
+                {
+                    throw new InvalidDataException(
+                        Resources.ChromCacheBuilder_BuildCache_This_document_contains_only_negative_ion_mode_transitions__and_the_imported_file_contains_only_positive_ion_mode_data_so_nothing_can_be_loaded_);
                 }
             }
         }

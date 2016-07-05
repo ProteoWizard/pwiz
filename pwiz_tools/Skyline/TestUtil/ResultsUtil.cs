@@ -113,6 +113,12 @@ namespace pwiz.SkylineTestUtil
                             : "Unexpected loader progress state \"" + LastProgress.State + "\"");
         }
 
+        public void AssertError(string expectedError)
+        {
+            Assert.IsTrue(LastProgress.IsError);
+            Assert.IsTrue(LastProgress.ErrorException.ToString().Contains(expectedError));
+        }
+
         public SrmDocument ChangeMeasuredResults(MeasuredResults measuredResults,
             int peptides, int tranGroups, int transitions)
         {

@@ -34,6 +34,9 @@ namespace pwiz.Skyline.Model.Results
         private ChromatogramRequestProvider[] _chromatogramRequestProviders;
         private ChromTaskList[] _chromTaskLists;
 
+        private bool _sourceHasPositivePolarityData;
+        private bool _sourceHasNegativePolarityData;
+
         public RemoteChromDataProvider(SrmDocument document, IRetentionTimePredictor retentionTimePredictor, ChromFileInfo chromFileInfo, IProgressStatus progressStatus, int startPercent,
             int endPercent, ILoadMonitor loader)
             : base(chromFileInfo, progressStatus, startPercent, endPercent, loader)
@@ -105,6 +108,14 @@ namespace pwiz.Skyline.Model.Results
                 if (loaded)
                 {
                     extra = new ChromExtra(id, chromKey.Precursor == 0 ? 0 : -1);
+                    if (chromKey.Precursor.IsNegative)
+                    {
+                        _sourceHasNegativePolarityData = true;
+                    }
+                    else
+                    {
+                        _sourceHasPositivePolarityData = true;
+                    }
                     if (times.Length > 0 && Status is ChromatogramLoadingStatus)
                     {
                         ((ChromatogramLoadingStatus)Status).Transitions.AddTransition(
@@ -144,6 +155,16 @@ namespace pwiz.Skyline.Model.Results
         public override bool IsSingleMzMatch
         {
             get { return true; }
+        }
+
+        public override bool SourceHasPositivePolarityData
+        {
+            get { return _sourceHasPositivePolarityData; }
+        }
+
+        public override bool SourceHasNegativePolarityData
+        {
+            get { return _sourceHasNegativePolarityData; }
         }
 
         public override void ReleaseMemory()

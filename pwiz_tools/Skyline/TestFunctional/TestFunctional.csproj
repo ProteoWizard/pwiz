@@ -201,6 +201,7 @@
     <Compile Include="NeutralLossTest.cs" />
     <Compile Include="PasteMoleculesTest.cs" />
     <Compile Include="PeakScoringModelTest.cs" />
+    <Compile Include="PolarityMismatchTest.cs" />
     <Compile Include="PrecursorTest.cs" />
     <Compile Include="ProfileImport.cs" />
     <Compile Include="ProfileMemory.cs" />
