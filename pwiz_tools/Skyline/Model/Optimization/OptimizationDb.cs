@@ -108,8 +108,13 @@ namespace pwiz.Skyline.Model.Optimization
 
         public OptimizationDb UpdateOptimizations(IList<DbOptimization> newOptimizations, IList<DbOptimization> oldOptimizations)
         {
-            var setNew = new HashSet<long>(newOptimizations.Select(opt => opt.Id.HasValue ? opt.Id.Value : 0));
-            var dictOld = oldOptimizations.ToDictionary(opt => opt.Key);
+            var setNew = new HashSet<long>(newOptimizations.Select(opt => opt.Id ?? 0));
+            var dictOld = new Dictionary<OptimizationKey, DbOptimization>();
+            foreach (var opt in oldOptimizations)
+            {
+                if (!dictOld.ContainsKey(opt.Key))
+                    dictOld.Add(opt.Key, opt);
+            }
 
             using (var session = OpenWriteSession())
             using (var transaction = session.BeginTransaction())
