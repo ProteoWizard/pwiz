@@ -209,6 +209,7 @@ private:
     void addModsToVector(vector<SeqMod>& v, const string& modifications, string modSequence);
     void addLabelModsToVector(vector<SeqMod>& v, const string& rawFile, const string& sequence, int labelingState);
     SeqMod searchForMod(vector<string>& modNames, string modSequence, int posOpenParen);
+    static int getModPosition(const string& modSeq, int posOpenParen);
     vector<SeqMod> getFixedMods(char aa, int aaPosition, const vector<const MaxQuantModification*>& mods);
 
     const escaped_list_separator<char> separator_;
