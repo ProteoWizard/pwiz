@@ -164,7 +164,11 @@ namespace pwiz.SkylineTestFunctional
             else
             {
                 ImportResultsAsync(replicatePath);
-                var importProgress = FindOpenForm<AllChromatogramsGraph>();
+                AllChromatogramsGraph importProgress = null;
+                while (importProgress == null)
+                {
+                    importProgress = FindOpenForm<AllChromatogramsGraph>();
+                }
                 WaitForConditionUI(() => !string.IsNullOrEmpty(importProgress.Error) && importProgress.Error.Contains(expectedError));
             }
             document = WaitForDocumentChangeLoaded(document);
