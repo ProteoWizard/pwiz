@@ -2485,7 +2485,7 @@ namespace pwiz.Skyline
                            Path.GetFileName(args.ExportPath));
         }
 
-        public static void SaveDocument(SrmDocument doc, string outFile, TextWriter outText)
+        public void SaveDocument(SrmDocument doc, string outFile, TextWriter outText)
         {
             // Make sure the containing directory is created
             string dirPath = Path.GetDirectoryName(outFile);
@@ -2504,6 +2504,13 @@ namespace pwiz.Skyline
 
                     writer.Flush();
                     writer.Close();
+
+                    // If the user has chosen "Save As", and the document has a
+                    // document specific spectral library, copy this library to 
+                    // the new name.
+                    if (_skylineFile != null && !Equals(_skylineFile, outFile))
+                        SaveDocumentLibraryAs(outFile);
+
                     saver.Commit();
 
                     var settings = doc.Settings;
@@ -2527,6 +2534,41 @@ namespace pwiz.Skyline
             }
         }
 
+        private void SaveDocumentLibraryAs(string outFile)
+        {
+            string oldDocLibFile = BiblioSpecLiteSpec.GetLibraryFileName(_skylineFile);
+            string oldRedundantDocLibFile = BiblioSpecLiteSpec.GetRedundantName(oldDocLibFile);
+            // If the document has a document-specific library, and the files for it
+            // exist on disk
+            var document = Document;
+            if (document.Settings.PeptideSettings.Libraries.HasDocumentLibrary
+                && File.Exists(oldDocLibFile))
+            {
+                string newDocLibFile = BiblioSpecLiteSpec.GetLibraryFileName(outFile);
+                using (var saverLib = new FileSaver(newDocLibFile))
+                {
+                    FileSaver saverRedundant = null;
+                    if (File.Exists(oldRedundantDocLibFile))
+                    {
+                        string newRedundantDocLibFile = BiblioSpecLiteSpec.GetRedundantName(outFile);
+                        saverRedundant = new FileSaver(newRedundantDocLibFile);
+                    }
+                    using (saverRedundant)
+                    {
+                        saverLib.CopyFile(oldDocLibFile);
+                        if (saverRedundant != null)
+                        {
+                            saverRedundant.CopyFile(oldRedundantDocLibFile);
+                        }
+                        saverLib.Commit();
+                        if (saverRedundant != null)
+                        {
+                            saverRedundant.Commit();
+                        }
+                    }
+                }
+            }
+        }
 
         /// <summary>
         /// This function will add the given replicate, from dataFile, to the given document. If the replicate
