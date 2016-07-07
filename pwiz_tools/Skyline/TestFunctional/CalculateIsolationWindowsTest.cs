@@ -251,23 +251,6 @@ namespace pwiz.SkylineTestFunctional
                 496.5, 499.5,
                 499.5, 502.5);
 
-            // Overlap with window optimization. Odd window width.
-            CheckWindows(() =>
-                {
-                    _calcDlg.WindowType = EditIsolationSchemeDlg.WindowType.MEASUREMENT;
-                    _calcDlg.Start = 495;
-                    _calcDlg.End = 501;
-                    _calcDlg.WindowWidth = 3;
-                    _calcDlg.Deconvolution = EditIsolationSchemeDlg.DeconvolutionMethod.OVERLAP;
-                    _calcDlg.OptimizeWindowPlacement = true;
-                },
-                495.4751, 498.4765,
-                498.4765, 501.4778,
-                501.4778, 504.4792,
-                494.4746, 497.4760,
-                497.4760, 500.4774,
-                500.4774, 503.4787);
-
             // Four windows that fit exactly.
             CheckWindows(() =>
                 {
@@ -318,6 +301,23 @@ namespace pwiz.SkylineTestFunctional
                         _calcDlg.MarginLeft.ToString();
                     Assert.IsTrue(x != null); // Just using this so ReSharper won't complain.
                 });
+            OkDialog(_calcDlg, _calcDlg.CancelButton.PerformClick);
+            _calcDlg = ShowDialog<CalculateIsolationSchemeDlg>(_editDlg.Calculate);
+            // More than max number of windows.
+            RunUI(() =>
+            {
+                _calcDlg.WindowType = EditIsolationSchemeDlg.WindowType.MEASUREMENT;
+                _calcDlg.Start = 495;
+                _calcDlg.End = 501;
+                _calcDlg.WindowWidth = 3;
+                _calcDlg.Deconvolution = EditIsolationSchemeDlg.DeconvolutionMethod.OVERLAP;
+                _calcDlg.OptimizeWindowPlacement = true;
+            });
+            RunDlg<MessageDlg>(_calcDlg.OkDialog, messageDlg =>
+            {
+                AssertEx.AreComparableStrings(Resources.CalculateIsolationSchemeDlg_OkDialog_Window_width_not_even, messageDlg.Message);
+                messageDlg.OkDialog();
+            });
 
             // Cancel all dialogs to conclude test.
             OkDialog(_calcDlg, _calcDlg.CancelButton.PerformClick);

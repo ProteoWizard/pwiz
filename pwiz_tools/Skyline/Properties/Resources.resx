@@ -9078,4 +9078,10 @@ Here are the last 3 errors:
   <data name="ChromCacheBuilder_BuildCache_This_document_contains_only_negative_ion_mode_transitions__and_the_imported_file_contains_only_positive_ion_mode_data_so_nothing_can_be_loaded_" xml:space="preserve">
     <value>This document contains only negative ion mode transitions, and the imported file contains only positive ion mode data so nothing can be loaded.</value>
   </data>
+  <data name="CalculateIsolationSchemeDlg_OkDialog_Window_width_not_even" xml:space="preserve">
+    <value>Odd numbered window widths are not supported for overlapped demultiplexing with optimized window placement selected.</value>
+  </data>
+  <data name="CalculateIsolationSchemeDlg_OkDialog_Window_width_must_be_an_integer" xml:space="preserve">
+    <value>Window width must be an integer value when optimize window placement is selected.</value>
+  </data>
 </root>

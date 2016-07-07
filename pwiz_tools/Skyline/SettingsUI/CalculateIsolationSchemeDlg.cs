@@ -262,6 +262,19 @@ namespace pwiz.Skyline.SettingsUI
                 return;
             }
 
+            // if given windowWidth is not an integer value
+            if (windowWidth % 1 != 0 && OptimizeWindowPlacement)
+            {
+                MessageDlg.Show(this, Resources.CalculateIsolationSchemeDlg_OkDialog_Window_width_must_be_an_integer);
+                return;
+            }
+
+            // if given windowWidth is odd
+            if (windowWidth % 2 != 0 && OptimizeWindowPlacement && (string) comboDeconv.SelectedItem != EditIsolationSchemeDlg.DeconvolutionMethod.NONE && (string) comboDeconv.SelectedItem != EditIsolationSchemeDlg.DeconvolutionMethod.MSX)
+            {
+                MessageDlg.Show(this, Resources.CalculateIsolationSchemeDlg_OkDialog_Window_width_not_even);
+                return;
+            }
 
             // Validate margins.
             double? margin = null;
