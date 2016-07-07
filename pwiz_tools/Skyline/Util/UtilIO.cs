@@ -1141,6 +1141,13 @@ namespace pwiz.Skyline.Util
 
         public string RealName { get; private set; }
 
+        public void CopyFile(string sourceFile)
+        {
+            // Copy the specified file to the new name using a FileSaver
+            CheckException();
+            File.Copy(sourceFile, SafeName, true);
+        }
+
         public bool Commit()
         {
             return Commit(null);

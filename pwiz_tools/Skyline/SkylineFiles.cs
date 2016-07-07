@@ -1000,10 +1000,10 @@ namespace pwiz.Skyline
                     }
                     using (saverRedundant)
                     {
-                        CopyFile(oldDocLibFile, saverLib);
+                        saverLib.CopyFile(oldDocLibFile);
                         if (saverRedundant != null)
                         {
-                            CopyFile(oldRedundantDocLibFile, saverRedundant);
+                            saverRedundant.CopyFile(oldRedundantDocLibFile);
                         }
                         saverLib.Commit();
                         if (saverRedundant != null)
@@ -1023,13 +1023,6 @@ namespace pwiz.Skyline
                 }
                 while (!SetDocument(docNew, docOriginal));
             }
-        }
-
-        private void CopyFile(string source, FileSaver destSaver)
-        {
-            // Copy the specified file to the new name using a FileSaver
-            destSaver.CheckException();
-            File.Copy(source, destSaver.SafeName, true);
         }
 
         private void SaveLayout(string fileName)
