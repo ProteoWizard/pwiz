@@ -402,6 +402,7 @@ namespace pwiz.Skyline
             this.massErrorsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.massErrorReplicateComparisonMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.massErrorPeptideComparisonMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.massErrorHistogramMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.calibrationCurveMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.groupComparisonsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.addGroupComparisonMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -446,8 +447,12 @@ namespace pwiz.Skyline
             this.massErrorGraphContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.massErrorReplicateComparisonContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.massErrorPeptideComparisonContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.massErrorHistogramContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.massErrorPropsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showMassErrorLegendContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.massErrorPointsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.massErrorTargetsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.massErrorDecoysContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenuTreeNode.SuspendLayout();
             this.contextMenuSpectrum.SuspendLayout();
             this.contextMenuChromatogram.SuspendLayout();
@@ -3074,7 +3079,8 @@ namespace pwiz.Skyline
             // 
             this.massErrorsMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.massErrorReplicateComparisonMenuItem,
-            this.massErrorPeptideComparisonMenuItem});
+            this.massErrorPeptideComparisonMenuItem,
+            this.massErrorHistogramMenuItem});
             resources.ApplyResources(this.massErrorsMenuItem, "massErrorsMenuItem");
             this.massErrorsMenuItem.Name = "massErrorsMenuItem";
             this.massErrorsMenuItem.DropDownOpening += new System.EventHandler(this.massErrorMenuItem_DropDownOpening);
@@ -3090,6 +3096,12 @@ namespace pwiz.Skyline
             this.massErrorPeptideComparisonMenuItem.Name = "massErrorPeptideComparisonMenuItem";
             resources.ApplyResources(this.massErrorPeptideComparisonMenuItem, "massErrorPeptideComparisonMenuItem");
             this.massErrorPeptideComparisonMenuItem.Click += new System.EventHandler(this.massErrorPeptideComparisonMenuItem_Click);
+            // 
+            // massErrorHistogramMenuItem
+            // 
+            this.massErrorHistogramMenuItem.Name = "massErrorHistogramMenuItem";
+            resources.ApplyResources(this.massErrorHistogramMenuItem, "massErrorHistogramMenuItem");
+            this.massErrorHistogramMenuItem.Click += new System.EventHandler(this.massErrorHistogramMenuItem_Click);
             // 
             // calibrationCurveMenuItem
             // 
@@ -3365,7 +3377,8 @@ namespace pwiz.Skyline
             this.contextMenuMassErrors.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.massErrorGraphContextMenuItem,
             this.massErrorPropsContextMenuItem,
-            this.showMassErrorLegendContextMenuItem});
+            this.showMassErrorLegendContextMenuItem,
+            this.massErrorPointsContextMenuItem});
             this.contextMenuMassErrors.Name = "contextMenuMassErrors";
             resources.ApplyResources(this.contextMenuMassErrors, "contextMenuMassErrors");
             // 
@@ -3373,7 +3386,8 @@ namespace pwiz.Skyline
             // 
             this.massErrorGraphContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.massErrorReplicateComparisonContextMenuItem,
-            this.massErrorPeptideComparisonContextMenuItem});
+            this.massErrorPeptideComparisonContextMenuItem,
+            this.massErrorHistogramContextMenuItem});
             this.massErrorGraphContextMenuItem.Name = "massErrorGraphContextMenuItem";
             resources.ApplyResources(this.massErrorGraphContextMenuItem, "massErrorGraphContextMenuItem");
             this.massErrorGraphContextMenuItem.DropDownOpening += new System.EventHandler(this.massErrorMenuItem_DropDownOpening);
@@ -3391,6 +3405,12 @@ namespace pwiz.Skyline
             resources.ApplyResources(this.massErrorPeptideComparisonContextMenuItem, "massErrorPeptideComparisonContextMenuItem");
             this.massErrorPeptideComparisonContextMenuItem.Click += new System.EventHandler(this.massErrorPeptideComparisonMenuItem_Click);
             // 
+            // massErrorHistogramContextMenuItem
+            // 
+            this.massErrorHistogramContextMenuItem.Name = "massErrorHistogramContextMenuItem";
+            resources.ApplyResources(this.massErrorHistogramContextMenuItem, "massErrorHistogramContextMenuItem");
+            this.massErrorHistogramContextMenuItem.Click += new System.EventHandler(this.massErrorHistogramMenuItem_Click);
+            // 
             // massErrorPropsContextMenuItem
             // 
             this.massErrorPropsContextMenuItem.Name = "massErrorPropsContextMenuItem";
@@ -3401,6 +3421,26 @@ namespace pwiz.Skyline
             // 
             this.showMassErrorLegendContextMenuItem.Name = "showMassErrorLegendContextMenuItem";
             resources.ApplyResources(this.showMassErrorLegendContextMenuItem, "showMassErrorLegendContextMenuItem");
+            // 
+            // massErrorPointsContextMenuItem
+            // 
+            this.massErrorPointsContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.massErrorTargetsContextMenuItem,
+            this.massErrorDecoysContextMenuItem});
+            this.massErrorPointsContextMenuItem.Name = "massErrorPointsContextMenuItem";
+            resources.ApplyResources(this.massErrorPointsContextMenuItem, "massErrorPointsContextMenuItem");
+            // 
+            // massErrorTargetsContextMenuItem
+            // 
+            this.massErrorTargetsContextMenuItem.Name = "massErrorTargetsContextMenuItem";
+            resources.ApplyResources(this.massErrorTargetsContextMenuItem, "massErrorTargetsContextMenuItem");
+            this.massErrorTargetsContextMenuItem.Click += new System.EventHandler(this.massErrorTargetsContextMenuItem_Click);
+            // 
+            // massErrorDecoysContextMenuItem
+            // 
+            this.massErrorDecoysContextMenuItem.Name = "massErrorDecoysContextMenuItem";
+            resources.ApplyResources(this.massErrorDecoysContextMenuItem, "massErrorDecoysContextMenuItem");
+            this.massErrorDecoysContextMenuItem.Click += new System.EventHandler(this.massErrorDecoysContextMenuItem_Click);
             // 
             // SkylineWindow
             // 
@@ -3850,6 +3890,11 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem peptideOrderMassErrorContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem massErrorPropsContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showMassErrorLegendContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem massErrorHistogramMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem massErrorHistogramContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem massErrorPointsContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem massErrorTargetsContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem massErrorDecoysContextMenuItem;
     }
 }
 

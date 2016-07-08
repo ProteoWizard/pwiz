@@ -9072,6 +9072,18 @@ Here are the last 3 errors:
   <data name="SkylineWindow_ExpandProteins_The_number_of_targets_exceeds_the_limit_for_this_operation_" xml:space="preserve">
     <value>The number of targets exceeds the limit for this operation.</value>
   </data>
+  <data name="MassErrorHistogramGraphPane_UpdateGraph_Count" xml:space="preserve">
+    <value>Count</value>
+  </data>
+  <data name="MassErrorHistogramGraphPane_AddLabels_Mass_Errors_Unavailable" xml:space="preserve">
+    <value>Mass Errors Unavailable</value>
+  </data>
+  <data name="MassErrorHistogramGraphPane_AddLabels_mean" xml:space="preserve">
+    <value>Mean</value>
+  </data>
+  <data name="MassErrorHistogramGraphPane_AddLabels_standard_deviation" xml:space="preserve">
+    <value>Standard Deviation</value>
+  </data>
   <data name="ChromCacheBuilder_BuildCache_This_document_contains_only_positive_ion_mode_transitions__and_the_imported_file_contains_only_negative_ion_mode_data_so_nothing_can_be_loaded___Negative_ion_mode_transitions_need_to_have_negative_charge_values_" xml:space="preserve">
     <value>This document contains only positive ion mode transitions, and the imported file contains only negative ion mode data so nothing can be loaded.  Negative ion mode transitions need to have negative charge values.</value>
   </data>

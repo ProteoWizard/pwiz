@@ -14094,6 +14094,42 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Mass Errors Unavailable.
+        /// </summary>
+        public static string MassErrorHistogramGraphPane_AddLabels_Mass_Errors_Unavailable {
+            get {
+                return ResourceManager.GetString("MassErrorHistogramGraphPane_AddLabels_Mass_Errors_Unavailable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Mean.
+        /// </summary>
+        public static string MassErrorHistogramGraphPane_AddLabels_mean {
+            get {
+                return ResourceManager.GetString("MassErrorHistogramGraphPane_AddLabels_mean", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Standard Deviation.
+        /// </summary>
+        public static string MassErrorHistogramGraphPane_AddLabels_standard_deviation {
+            get {
+                return ResourceManager.GetString("MassErrorHistogramGraphPane_AddLabels_standard_deviation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Count.
+        /// </summary>
+        public static string MassErrorHistogramGraphPane_UpdateGraph_Count {
+            get {
+                return ResourceManager.GetString("MassErrorHistogramGraphPane_UpdateGraph_Count", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Mass Error (ppm).
         /// </summary>
         public static string MassErrorReplicateGraphPane_UpdateGraph_Mass_Error {

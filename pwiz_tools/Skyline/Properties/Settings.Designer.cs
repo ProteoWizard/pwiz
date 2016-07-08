@@ -2229,5 +2229,17 @@ namespace pwiz.Skyline.Properties {
                 this["MinMassError"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("targets")]
+        public string MassErrorPointsType {
+            get {
+                return ((string)(this["MassErrorPointsType"]));
+            }
+            set {
+                this["MassErrorPointsType"] = value;
+            }
+        }
     }
 }

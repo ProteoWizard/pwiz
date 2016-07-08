@@ -3976,7 +3976,7 @@ namespace pwiz.Skyline
         
         public void ShowMassErrorReplicateComparison()
         {
-            Settings.Default.MassErrorGraphType = GraphTypeSummary.replicate.ToString();
+            Settings.Default.MassErrorGraphType = GraphTypeMassError.replicate.ToString();
             ShowGraphMassError(true);
             UpdateMassErrorGraph();
         }
@@ -3988,7 +3988,19 @@ namespace pwiz.Skyline
         
         public void ShowMassErrorPeptideGraph()
         {
-            Settings.Default.MassErrorGraphType = GraphTypeSummary.peptide.ToString();
+            Settings.Default.MassErrorGraphType = GraphTypeMassError.peptide.ToString();
+            ShowGraphMassError(true);
+            UpdateMassErrorGraph();
+        }
+
+        private void massErrorHistogramMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowMassErrorHistogramGraph();
+        }
+
+        public void ShowMassErrorHistogramGraph()
+        {
+            Settings.Default.MassErrorGraphType = GraphTypeMassError.histogram.ToString();
             ShowGraphMassError(true);
             UpdateMassErrorGraph();
         }
@@ -4004,9 +4016,11 @@ namespace pwiz.Skyline
             var graphType = MassErrorGraphController.GraphType;
             var visible = _graphMassError != null && _graphMassError.Visible;
             massErrorReplicateComparisonContextMenuItem.Checked = massErrorReplicateComparisonMenuItem.Checked =
-                visible && (graphType == GraphTypeSummary.replicate);
+                visible && (graphType == GraphTypeMassError.replicate);
             massErrorPeptideComparisonContextMenuItem.Checked = massErrorPeptideComparisonMenuItem.Checked =
-                visible && (graphType == GraphTypeSummary.peptide);
+                visible && (graphType == GraphTypeMassError.peptide);
+            massErrorHistogramContextMenuItem.Checked = massErrorHistogramMenuItem.Checked =
+                visible && (graphType == GraphTypeMassError.histogram);
         }
 
         private void BuildMassErrorGraphMenu(ToolStrip menuStrip)
@@ -4028,21 +4042,23 @@ namespace pwiz.Skyline
             // Insert skyline specific menus
             var set = Settings.Default;
             int iInsert = 0;
+            var graphType = MassErrorGraphController.GraphType;
             menuStrip.Items.Insert(iInsert++, massErrorGraphContextMenuItem);
-            if (massErrorGraphContextMenuItem.DropDownItems.Count == 0)
-            {
+            if (massErrorGraphContextMenuItem.DropDownItems.Count == 0) {
                 massErrorGraphContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                {
-                    massErrorReplicateComparisonContextMenuItem,
-                    massErrorPeptideComparisonContextMenuItem
-                });
+                    {
+                        massErrorReplicateComparisonContextMenuItem,
+                        massErrorPeptideComparisonContextMenuItem
+                    });
             }
 
-            var graphType = MassErrorGraphController.GraphType;
             menuStrip.Items.Insert(iInsert++, toolStripSeparator16);
-            AddTransitionContextMenu(menuStrip, iInsert++);
-
-            if (graphType == GraphTypeSummary.replicate)
+            if (graphType == GraphTypeMassError.peptide ||
+                graphType == GraphTypeMassError.replicate)
+            {
+                AddTransitionContextMenu(menuStrip, iInsert++);
+            }
+            if (graphType == GraphTypeMassError.replicate)
             {
                 iInsert = AddReplicateOrderAndGroupByMenuItems(menuStrip, iInsert);
                 var massErrorReplicateGraphPane = _graphMassError.GraphPanes.FirstOrDefault() as MassErrorReplicateGraphPane;
@@ -4057,19 +4073,31 @@ namespace pwiz.Skyline
                     }
                 }
             }
-            else if (graphType == GraphTypeSummary.peptide)
+            else if (graphType == GraphTypeMassError.peptide)
             {
                 AddPeptideOrderContextMenu(menuStrip, iInsert++);
                 iInsert = AddReplicatesContextMenu(menuStrip, iInsert);
                 AddScopeContextMenu(menuStrip, iInsert++);
             }
-            if (graphType == GraphTypeSummary.peptide || null != Settings.Default.GroupByReplicateAnnotation)
+            else if (graphType == GraphTypeMassError.histogram)
+            {
+                iInsert = AddReplicatesContextMenu(menuStrip, iInsert);
+                iInsert = AddPointsContextMenu(menuStrip, iInsert);
+                massErrorTargetsContextMenuItem.Checked = MassErrorGraphController.PointsType == PointsTypeMassError.targets;
+                massErrorDecoysContextMenuItem.Checked = MassErrorGraphController.PointsType == PointsTypeMassError.decoys;
+            }
+            if (graphType == GraphTypeMassError.peptide || (null != Settings.Default.GroupByReplicateAnnotation && graphType != GraphTypeMassError.histogram))
             {
                 menuStrip.Items.Insert(iInsert++, peptideCvsContextMenuItem);
                 peptideCvsContextMenuItem.Checked = set.ShowPeptideCV;
             }
-            selectionContextMenuItem.Checked = set.ShowReplicateSelection;
-            menuStrip.Items.Insert(iInsert++, selectionContextMenuItem);
+
+            if (graphType == GraphTypeMassError.peptide ||
+                graphType == GraphTypeMassError.replicate)
+            {
+                selectionContextMenuItem.Checked = set.ShowReplicateSelection;
+                menuStrip.Items.Insert(iInsert++, selectionContextMenuItem);
+            }
 
             menuStrip.Items.Insert(iInsert++, toolStripSeparator24);
             menuStrip.Items.Insert(iInsert++, massErrorPropsContextMenuItem);
@@ -4082,6 +4110,35 @@ namespace pwiz.Skyline
                 if (tag == "set_default" || tag == "show_val") // Not L10N
                     menuStrip.Items.Remove(item);
             }
+        }
+
+        private int AddPointsContextMenu(ToolStrip menuStrip, int iInsert)
+        {
+                menuStrip.Items.Insert(iInsert++, massErrorPointsContextMenuItem);
+                if (massErrorPointsContextMenuItem.DropDownItems.Count == 0) {
+                    massErrorPointsContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
+                    {
+                        massErrorTargetsContextMenuItem,
+                        massErrorDecoysContextMenuItem
+                    });
+                }
+            return iInsert;
+        }
+
+        private void massErrorTargetsContextMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowPointsTypeMassError(PointsTypeMassError.targets);
+        }
+
+        private void massErrorDecoysContextMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowPointsTypeMassError(PointsTypeMassError.decoys);
+        }
+
+        public void ShowPointsTypeMassError(PointsTypeMassError pointsTypeMassError)
+        {
+            MassErrorGraphController.PointsType = pointsTypeMassError;
+            UpdateMassErrorGraph();
         }
 
         private void massErrorPropsContextMenuItem_Click(object sender, EventArgs e)

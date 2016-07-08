@@ -25,12 +25,22 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    class MassErrorGraphController : GraphSummary.IControllerSplit
+    public enum GraphTypeMassError { peptide, replicate, histogram }
+
+    public enum PointsTypeMassError { targets, decoys }
+
+    public class MassErrorGraphController : GraphSummary.IControllerSplit
     {
-        public static GraphTypeSummary GraphType
+        public static GraphTypeMassError GraphType
         {
-            get { return Helpers.ParseEnum(Settings.Default.MassErrorGraphType, GraphTypeSummary.replicate); }
+            get { return Helpers.ParseEnum(Settings.Default.MassErrorGraphType, GraphTypeMassError.replicate); }
             set { Settings.Default.MassErrorGraphType = value.ToString(); }
+        }
+
+        public static PointsTypeMassError PointsType
+        {
+            get { return Helpers.ParseEnum(Settings.Default.MassErrorPointsType, PointsTypeMassError.targets); }
+            set { Settings.Default.MassErrorPointsType = value.ToString(); }
         }
 
         public GraphSummary GraphSummary { get; set; }
@@ -59,7 +69,21 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void OnUpdateGraph()
         {
-            GraphSummary.DoUpdateGraph(this, GraphType);
+            switch (GraphType)
+            {
+                case GraphTypeMassError.replicate:
+                    if (!(GraphSummary.GraphPanes.FirstOrDefault() is MassErrorReplicateGraphPane))
+                        GraphSummary.GraphPanes = new[] { new MassErrorReplicateGraphPane(GraphSummary, PaneKey.DEFAULT) };
+                    break;
+                case GraphTypeMassError.peptide:
+                    if (!(GraphSummary.GraphPanes.FirstOrDefault() is MassErrorPeptideGraphPane))
+                        GraphSummary.GraphPanes = new[] { new MassErrorPeptideGraphPane(GraphSummary, PaneKey.DEFAULT) };
+                    break;
+                case GraphTypeMassError.histogram:
+                    if (!(GraphSummary.GraphPanes.FirstOrDefault() is MassErrorHistogramGraphPane))
+                        GraphSummary.GraphPanes = new[] { new MassErrorHistogramGraphPane(GraphSummary) };
+                    break;
+            }
         }
 
         public bool IsReplicatePane(SummaryGraphPane pane)

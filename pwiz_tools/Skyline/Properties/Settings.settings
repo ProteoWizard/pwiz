@@ -557,5 +557,8 @@
     <Setting Name="MinMassError" Type="System.Double" Scope="User">
       <Value Profile="(Default)">0</Value>
     </Setting>
+    <Setting Name="MassErrorPointsType" Type="System.String" Scope="User">
+      <Value Profile="(Default)">targets</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
