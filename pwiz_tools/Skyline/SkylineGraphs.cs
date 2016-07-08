@@ -4085,6 +4085,7 @@ namespace pwiz.Skyline
                 iInsert = AddPointsContextMenu(menuStrip, iInsert);
                 massErrorTargetsContextMenuItem.Checked = MassErrorGraphController.PointsType == PointsTypeMassError.targets;
                 massErrorDecoysContextMenuItem.Checked = MassErrorGraphController.PointsType == PointsTypeMassError.decoys;
+                iInsert = AddBinCountContextMenu(menuStrip, iInsert);
             }
             if (graphType == GraphTypeMassError.peptide || (null != Settings.Default.GroupByReplicateAnnotation && graphType != GraphTypeMassError.histogram))
             {
@@ -4123,6 +4124,61 @@ namespace pwiz.Skyline
                     });
                 }
             return iInsert;
+        }
+
+        private int AddBinCountContextMenu(ToolStrip menuStrip, int iInsert)
+        {
+            menuStrip.Items.Insert(iInsert++, binCountContextMenuItem);
+            if (binCountContextMenuItem.DropDownItems.Count == 0) {
+                binCountContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
+                    {
+                       ppm05ContextMenuItem,
+                       ppm10ContextMenuItem,
+                       ppm15ContextMenuItem,
+                       ppm20ContextMenuItem
+                    });
+            }
+            return iInsert;
+        }
+
+        private void binCountContextMenuItem_DropDownOpening(object sender, EventArgs e)
+        {
+            UpdatePpmMenuItem(ppm05ContextMenuItem, 0.5);
+            UpdatePpmMenuItem(ppm10ContextMenuItem, 1.0);
+            UpdatePpmMenuItem(ppm15ContextMenuItem, 1.5);
+            UpdatePpmMenuItem(ppm20ContextMenuItem, 2.0);
+        }
+
+        private void UpdatePpmMenuItem(ToolStripMenuItem toolStripMenuItem, double ppm)
+        {
+            toolStripMenuItem.Checked = Settings.Default.MassErorrHistogramBinSize == ppm;
+            toolStripMenuItem.Text = string.Format("{0:F01} ppm", ppm); // Not L10N
+        }
+
+        private void ppm05ContextMenuItem_Click(object sender, EventArgs e)
+        {
+            updateBinSize(0.5);
+        }
+
+        private void ppm10ContextMenuItem_Click(object sender, EventArgs e)
+        {
+            updateBinSize(1);
+        }
+
+        private void ppm15ContextMenuItem_Click(object sender, EventArgs e)
+        {
+            updateBinSize(1.5);
+        }
+
+        private void ppm20ContextMenuItem_Click(object sender, EventArgs e)
+        {
+            updateBinSize(2);
+        }
+
+        private void updateBinSize(double bin)
+        {
+            Settings.Default.MassErorrHistogramBinSize = bin;
+            UpdateMassErrorGraph();
         }
 
         private void massErrorTargetsContextMenuItem_Click(object sender, EventArgs e)

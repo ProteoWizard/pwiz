@@ -2847,6 +2847,45 @@
   <metadata name="contextMenuMassErrors.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>446, 56</value>
   </metadata>
+  <data name="ppm05ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>298, 22</value>
+  </data>
+  <data name="ppm05ContextMenuItem.Text" xml:space="preserve">
+    <value>0.5 ppm</value>
+  </data>
+  <data name="ppm10ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>298, 22</value>
+  </data>
+  <data name="ppm10ContextMenuItem.Text" xml:space="preserve">
+    <value>1.0 ppm</value>
+  </data>
+  <data name="ppm15ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>298, 22</value>
+  </data>
+  <data name="ppm15ContextMenuItem.Text" xml:space="preserve">
+    <value>1.5 ppm</value>
+  </data>
+  <data name="ppm20ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>298, 22</value>
+  </data>
+  <data name="ppm20ContextMenuItem.Text" xml:space="preserve">
+    <value>2.0 ppm</value>
+  </data>
+  <data name="binCountContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>298, 22</value>
+  </data>
+  <data name="binCountContextMenuItem.Text" xml:space="preserve">
+    <value>Bin Width</value>
+  </data>
+  <data name="contextMenuMassErrors.Size" type="System.Drawing.Size, System.Drawing">
+    <value>299, 264</value>
+  </data>
+  <data name="&gt;&gt;contextMenuMassErrors.Name" xml:space="preserve">
+    <value>contextMenuMassErrors</value>
+  </data>
+  <data name="&gt;&gt;contextMenuMassErrors.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="massErrorReplicateComparisonContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 22</value>
   </data>
@@ -5371,6 +5410,36 @@
     <value>massErrorDecoysContextMenuItem</value>
   </data>
   <data name="&gt;&gt;massErrorDecoysContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;binCountContextMenuItem.Name" xml:space="preserve">
+    <value>binCountContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;binCountContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;ppm05ContextMenuItem.Name" xml:space="preserve">
+    <value>ppm05ContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;ppm05ContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;ppm10ContextMenuItem.Name" xml:space="preserve">
+    <value>ppm10ContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;ppm10ContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;ppm15ContextMenuItem.Name" xml:space="preserve">
+    <value>ppm15ContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;ppm15ContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;ppm20ContextMenuItem.Name" xml:space="preserve">
+    <value>ppm20ContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;ppm20ContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">

@@ -129,7 +129,6 @@ namespace pwiz.Skyline.Controls.Graphs
             private readonly PpmBinCount[] _bins;
             private readonly double _mean;
             private readonly double _stdDev;
-            private readonly double BIN_SIZE = 0.5;
 
             public GraphData(SrmDocument document, GraphData dataPrevious, int resultIndex, bool bestResult, PointsTypeMassError pointsType)
             {
@@ -153,12 +152,12 @@ namespace pwiz.Skyline.Controls.Graphs
                         if (tranIndex >= 0)
                         {
                             var chromInfo = nodeGroup.Results[tranIndex];
-                            AddChromInfo(chromInfo, dictPpmBin2ToCount, vals, BIN_SIZE);
+                            AddChromInfo(chromInfo, dictPpmBin2ToCount, vals, Settings.Default.MassErorrHistogramBinSize);
                         }
                         else
                         {
                             foreach (var chromInfo in nodeGroup.Results)
-                                AddChromInfo(chromInfo, dictPpmBin2ToCount, vals, BIN_SIZE);
+                                AddChromInfo(chromInfo, dictPpmBin2ToCount, vals, Settings.Default.MassErorrHistogramBinSize);
                         }
                     }
                 }
@@ -167,7 +166,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var i = 0;
                 foreach (var PpmBin in dictPpmBin2ToCount)
                 {
-                    _bins[i] = new PpmBinCount((float) (PpmBin.Key / (1/BIN_SIZE)), PpmBin.Value);
+                    _bins[i] = new PpmBinCount((float) (PpmBin.Key / (1 / Settings.Default.MassErorrHistogramBinSize)), PpmBin.Value);
                     i++;
                 }
 
@@ -198,12 +197,12 @@ namespace pwiz.Skyline.Controls.Graphs
             public void Graph(GraphPane graphPane, PeptideDocNode nodeSelected)
             {
                 graphPane.CurveList.Clear();
-                graphPane.BarSettings.ClusterScaleWidth = BIN_SIZE;
+                graphPane.BarSettings.ClusterScaleWidth = Settings.Default.MassErorrHistogramBinSize;
                 graphPane.BarSettings.MinClusterGap = 0;
 
                 var ps = new PointPairList();
-                foreach (var bin in _bins) 
-                    ps.Add(bin.Bin + (BIN_SIZE/2), bin.Count);
+                foreach (var bin in _bins)
+                    ps.Add(bin.Bin + (Settings.Default.MassErorrHistogramBinSize / 2), bin.Count);
 
                 graphPane.CurveList.Add(new BarItem(null, ps, Color.White));
 

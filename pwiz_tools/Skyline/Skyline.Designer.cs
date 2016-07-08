@@ -453,6 +453,11 @@ namespace pwiz.Skyline
             this.massErrorPointsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.massErrorTargetsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.massErrorDecoysContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.binCountContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.ppm05ContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.ppm10ContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.ppm15ContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.ppm20ContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenuTreeNode.SuspendLayout();
             this.contextMenuSpectrum.SuspendLayout();
             this.contextMenuChromatogram.SuspendLayout();
@@ -3378,7 +3383,8 @@ namespace pwiz.Skyline
             this.massErrorGraphContextMenuItem,
             this.massErrorPropsContextMenuItem,
             this.showMassErrorLegendContextMenuItem,
-            this.massErrorPointsContextMenuItem});
+            this.massErrorPointsContextMenuItem,
+            this.binCountContextMenuItem});
             this.contextMenuMassErrors.Name = "contextMenuMassErrors";
             resources.ApplyResources(this.contextMenuMassErrors, "contextMenuMassErrors");
             // 
@@ -3441,6 +3447,41 @@ namespace pwiz.Skyline
             this.massErrorDecoysContextMenuItem.Name = "massErrorDecoysContextMenuItem";
             resources.ApplyResources(this.massErrorDecoysContextMenuItem, "massErrorDecoysContextMenuItem");
             this.massErrorDecoysContextMenuItem.Click += new System.EventHandler(this.massErrorDecoysContextMenuItem_Click);
+            // 
+            // binCountContextMenuItem
+            // 
+            this.binCountContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.ppm05ContextMenuItem,
+            this.ppm10ContextMenuItem,
+            this.ppm15ContextMenuItem,
+            this.ppm20ContextMenuItem});
+            this.binCountContextMenuItem.Name = "binCountContextMenuItem";
+            resources.ApplyResources(this.binCountContextMenuItem, "binCountContextMenuItem");
+            this.binCountContextMenuItem.DropDownOpening += new System.EventHandler(this.binCountContextMenuItem_DropDownOpening);
+            // 
+            // ppm05ContextMenuItem
+            // 
+            this.ppm05ContextMenuItem.Name = "ppm05ContextMenuItem";
+            resources.ApplyResources(this.ppm05ContextMenuItem, "ppm05ContextMenuItem");
+            this.ppm05ContextMenuItem.Click += new System.EventHandler(this.ppm05ContextMenuItem_Click);
+            // 
+            // ppm10ContextMenuItem
+            // 
+            this.ppm10ContextMenuItem.Name = "ppm10ContextMenuItem";
+            resources.ApplyResources(this.ppm10ContextMenuItem, "ppm10ContextMenuItem");
+            this.ppm10ContextMenuItem.Click += new System.EventHandler(this.ppm10ContextMenuItem_Click);
+            // 
+            // ppm15ContextMenuItem
+            // 
+            this.ppm15ContextMenuItem.Name = "ppm15ContextMenuItem";
+            resources.ApplyResources(this.ppm15ContextMenuItem, "ppm15ContextMenuItem");
+            this.ppm15ContextMenuItem.Click += new System.EventHandler(this.ppm15ContextMenuItem_Click);
+            // 
+            // ppm20ContextMenuItem
+            // 
+            this.ppm20ContextMenuItem.Name = "ppm20ContextMenuItem";
+            resources.ApplyResources(this.ppm20ContextMenuItem, "ppm20ContextMenuItem");
+            this.ppm20ContextMenuItem.Click += new System.EventHandler(this.ppm20ContextMenuItem_Click);
             // 
             // SkylineWindow
             // 
@@ -3895,6 +3936,11 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem massErrorPointsContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem massErrorTargetsContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem massErrorDecoysContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem binCountContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem ppm05ContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem ppm10ContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem ppm15ContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem ppm20ContextMenuItem;
     }
 }
 

@@ -35,13 +35,12 @@ namespace pwiz.Skyline.Controls.Graphs
     public partial class GraphSummary : DockableFormEx, IUpdatable, IMultipleViewProvider
     {
         private const string FONT_FACE = "Arial"; // Not L10N
-        private const int FONT_SIZE = 10;
 
         public static Color ColorSelected { get { return Color.Red; } }
 
         public static FontSpec CreateFontSpec(Color color)
         {
-            return new FontSpec(FONT_FACE, FONT_SIZE, color, false, false, false, Color.Empty, null, FillType.None)
+            return new FontSpec(FONT_FACE, Settings.Default.AreaFontSize, color, false, false, false, Color.Empty, null, FillType.None)
             {
                 Border = { IsVisible = false },
                 StringAlignment = StringAlignment.Near

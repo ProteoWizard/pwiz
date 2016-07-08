@@ -560,5 +560,8 @@
     <Setting Name="MassErrorPointsType" Type="System.String" Scope="User">
       <Value Profile="(Default)">targets</Value>
     </Setting>
+    <Setting Name="MassErorrHistogramBinSize" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">0.5</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

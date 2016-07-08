@@ -2241,5 +2241,17 @@ namespace pwiz.Skyline.Properties {
                 this["MassErrorPointsType"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0.5")]
+        public double MassErorrHistogramBinSize {
+            get {
+                return ((double)(this["MassErorrHistogramBinSize"]));
+            }
+            set {
+                this["MassErorrHistogramBinSize"] = value;
+            }
+        }
     }
 }
