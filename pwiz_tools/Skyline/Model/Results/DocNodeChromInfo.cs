@@ -176,6 +176,8 @@ namespace pwiz.Skyline.Model.Results
                                         PeakIdentification identified,
                                         float? libraryDotProduct,
                                         float? isotopeDotProduct,
+                                        float? qvalue,
+                                        float? zscore,
                                         Annotations annotations,
                                         UserSet userSet)
             : base(fileId)
@@ -199,6 +201,8 @@ namespace pwiz.Skyline.Model.Results
             Identified = identified;
             LibraryDotProduct = libraryDotProduct;
             IsotopeDotProduct = isotopeDotProduct;
+            QValue = qvalue;
+            ZScore = zscore;
             Annotations = annotations;
             UserSet = userSet;
         }
@@ -229,6 +233,8 @@ namespace pwiz.Skyline.Model.Results
         public bool IsIdentified { get { return Identified != PeakIdentification.FALSE; } }
         public float? LibraryDotProduct { get; private set; }
         public float? IsotopeDotProduct { get; private set; }
+        public float? QValue { get; private set; }
+        public float? ZScore { get; private set; }
         public Annotations Annotations { get; private set; }
 
         public RatioValue GetRatio(int index)
@@ -274,7 +280,16 @@ namespace pwiz.Skyline.Model.Results
         {
             return ChangeProp(ImClone(this), im => im.LibraryDotProduct = prop);
         }
-        
+
+        public TransitionGroupChromInfo ChangeScore(float qvalue, float score)
+        {
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.QValue = qvalue;
+                im.ZScore = score;
+            });
+        }
+
         #endregion
 
         #region object overrides
@@ -301,6 +316,8 @@ namespace pwiz.Skyline.Model.Results
                    other.Identified.Equals(Identified) &&
                    other.LibraryDotProduct.Equals(LibraryDotProduct) &&
                    other.IsotopeDotProduct.Equals(IsotopeDotProduct) &&
+                   other.QValue.Equals(QValue) &&
+                   other.ZScore.Equals(ZScore) &&
                    other.Annotations.Equals(Annotations) &&
                    other.OptimizationStep.Equals(OptimizationStep) &&
                    other.Annotations.Equals(Annotations) &&
@@ -336,6 +353,8 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ Identified.GetHashCode();
                 result = (result*397) ^ (LibraryDotProduct.HasValue ? LibraryDotProduct.Value.GetHashCode() : 0);
                 result = (result*397) ^ (IsotopeDotProduct.HasValue ? IsotopeDotProduct.Value.GetHashCode() : 0);
+                result = (result*397) ^ (QValue.HasValue ? QValue.Value.GetHashCode() : 0);
+                result = (result*397) ^ (ZScore.HasValue ? ZScore.Value.GetHashCode() : 0);
                 result = (result*397) ^ OptimizationStep;
                 result = (result*397) ^ Annotations.GetHashCode();
                 result = (result*397) ^ UserSet.GetHashCode();

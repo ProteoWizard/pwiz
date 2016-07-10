@@ -257,7 +257,8 @@ namespace pwiz.Skyline.Model
         public const double FORMAT_VERSION_3_51 = 3.51; // Adds document GUID and Panorama URI
         public const double FORMAT_VERSION_3_52 = 3.52; // Cleans up potential ambiguity around explicit vs calculated slens and cone voltage
         public const double FORMAT_VERSION_3_53 = 3.53; // Adds MIDAS library support
-        public const double FORMAT_VERSION = FORMAT_VERSION_3_53;
+        public const double FORMAT_VERSION_3_54 = 3.54; // Native q values
+        public const double FORMAT_VERSION = FORMAT_VERSION_3_54;
 
         public const int MAX_PEPTIDE_COUNT = 100*1000;
         public const int MAX_TRANSITION_COUNT = 6*MAX_PEPTIDE_COUNT; // Modern DIA experiments may often have 6 transitions per peptide
@@ -1871,6 +1872,8 @@ namespace pwiz.Skyline.Model
             public const string peak_count_ratio = "peak_count_ratio";
             public const string library_dotp = "library_dotp";
             public const string isotope_dotp = "isotope_dotp";
+            public const string qvalue = "qvalue";
+            public const string zscore = "zscore";
             // ReSharper restore NonLocalizedString
         }
         // ReSharper restore InconsistentNaming
@@ -2598,11 +2601,16 @@ namespace pwiz.Skyline.Model
                 PeakIdentification.FALSE, XmlUtil.EnumCase.upper);
             float? libraryDotProduct = reader.GetNullableFloatAttribute(ATTR.library_dotp);
             float? isotopeDotProduct = reader.GetNullableFloatAttribute(ATTR.isotope_dotp);
+            float? qvalue = reader.GetNullableFloatAttribute(ATTR.qvalue);
+            float? zscore = reader.GetNullableFloatAttribute(ATTR.zscore);
             var annotations = Annotations.EMPTY;
             if (!reader.IsEmptyElement)
             {
                 reader.ReadStartElement();
                 annotations = ReadAnnotations(reader, context);
+                // Convert q value and mProphet score annotations to numbers for the ChromInfo object
+                annotations = ReadAndRemoveScoreAnnotation(annotations, MProphetResultsHandler.AnnotationName, ref qvalue);
+                annotations = ReadAndRemoveScoreAnnotation(annotations, MProphetResultsHandler.MAnnotationName, ref zscore);
             }
             // Ignore userSet during load, since all values are still calculated
             // from the child transitions.  Otherwise inconsistency is possible.
@@ -2625,8 +2633,21 @@ namespace pwiz.Skyline.Model
                                                 identified,
                                                 libraryDotProduct,
                                                 isotopeDotProduct,
+                                                qvalue,
+                                                zscore,
                                                 annotations,
                                                 userSet);
+        }
+
+        private static Annotations ReadAndRemoveScoreAnnotation(Annotations annotations, string annotationName, ref float? annotationValue)
+        {
+            string annotationText = annotations.GetAnnotation(annotationName);
+            if (string.IsNullOrEmpty(annotationText))
+                return annotations;
+            double scoreValue;
+            if (double.TryParse(annotationText, out scoreValue))
+                annotationValue = (float) scoreValue;
+            return annotations.RemoveAnnotation(annotationName);
         }
 
         /// <summary>
@@ -3520,6 +3541,8 @@ namespace pwiz.Skyline.Model
             writer.WriteAttribute(ATTR.identified, chromInfo.Identified.ToString().ToLowerInvariant());
             writer.WriteAttributeNullable(ATTR.library_dotp, chromInfo.LibraryDotProduct);
             writer.WriteAttributeNullable(ATTR.isotope_dotp, chromInfo.IsotopeDotProduct);
+            writer.WriteAttributeNullable(ATTR.qvalue, chromInfo.QValue);
+            writer.WriteAttributeNullable(ATTR.zscore, chromInfo.ZScore);
             writer.WriteAttribute(ATTR.user_set, chromInfo.UserSet);
             WriteAnnotations(writer, chromInfo.Annotations);
         }

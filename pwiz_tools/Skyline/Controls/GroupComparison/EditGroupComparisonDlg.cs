@@ -110,8 +110,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             radioScopeProtein.Checked = groupComparisonDef.PerProtein;
             radioScopePeptide.Checked = !groupComparisonDef.PerProtein;
             cbxUseZeroForUnconfidentPeaks.Checked = groupComparisonDef.UseZeroForUnconfidentPeaks;
-            cbxUseZeroForUnconfidentPeaks.Visible = GroupComparisonModel.Document.Settings.DataSettings.AnnotationDefs
-                .Any(def => def.Name == MProphetResultsHandler.AnnotationName);
+            cbxUseZeroForUnconfidentPeaks.Visible = GroupComparisonModel.Document.Settings.PeptideSettings.Integration.PeakScoringModel != null;
         }
 
         private void btnOK_Click(object sender, EventArgs e)

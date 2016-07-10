@@ -24,6 +24,7 @@ using System.Linq;
 using System.Text;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
 {
@@ -126,6 +127,22 @@ namespace pwiz.Skyline.Model
             else
                 newAnnotations.Add(name, value);      
             return new Annotations(Note, newAnnotations, ColorIndex);
+        }
+
+        public Annotations RemoveAnnotation(string name)
+        {
+            if (_annotations == null || !_annotations.ContainsKey(name))
+                return this;
+            Dictionary<string, string> newAnnotations = null;
+            if (_annotations.Count > 1)
+            {
+                newAnnotations = new Dictionary<string, string>(_annotations);
+                newAnnotations.Remove(name);
+            }
+            var result = new Annotations(Note, newAnnotations, ColorIndex);
+            if (result.IsEmpty)
+                result = EMPTY;
+            return result;
         }
 
         public Annotations ChangeAnnotation(AnnotationDef annotationDef, object value)

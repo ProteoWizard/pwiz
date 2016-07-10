@@ -316,16 +316,8 @@ namespace pwiz.Skyline.Model.GroupComparison
         
         public static bool HasFalseQValue(TransitionGroupChromInfo transitionGroupChromInfo)
         {
-            string strQValue = transitionGroupChromInfo.Annotations.GetAnnotation(MProphetResultsHandler.AnnotationName);
-            if (null != strQValue)
-            {
-                double qValue;
-                if (double.TryParse(strQValue, out qValue))
-                {
-                    return qValue > .01;
-                }
-            }
-            return false;
+            // TODO: Make it possible to set the cut-off
+            return transitionGroupChromInfo.QValue > .01;
         }
     }
 }

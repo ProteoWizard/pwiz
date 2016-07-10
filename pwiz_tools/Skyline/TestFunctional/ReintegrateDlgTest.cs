@@ -100,7 +100,6 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
                 {
                     reintegrateDlg.ReintegrateAll = false;
-                    reintegrateDlg.AddAnnotation = false;
                     reintegrateDlg.Cutoff = 0.01;
                 });
             OkDialog(reintegrateDlg, reintegrateDlg.OkDialog);
@@ -115,11 +114,8 @@ namespace pwiz.SkylineTestFunctional
                     }
                     AssertEx.FileEquals(docNewActual, docNewExpected);
                 });
-            // No annotations
-            Assert.IsFalse(SkylineWindow.Document.Settings.DataSettings.AnnotationDefs.Any());
             
-            // Moving a peak, then reintegrating causes peak to return, but only if manual override is checked
-            
+            // Moving a peak, then reintegrating causes peak to return, but only if manual override is checked            
             double? startNew = 41.0;
             double? endNew = 42.0;
             double? startOld, endOld;
@@ -207,52 +203,27 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 reintegrateDlgAnnotations.ReintegrateAll = true;
-                reintegrateDlgAnnotations.AddAnnotation = true;
             });
             OkDialog(reintegrateDlgAnnotations, reintegrateDlgAnnotations.OkDialog);
             CheckRoundTrip(); // Verify that this all serializes properly
-            // Check annotation def is added
-            var annotationDefs = SkylineWindow.Document.Settings.DataSettings.AnnotationDefs;
-            Assert.AreEqual(2, annotationDefs.Count);
-            Assert.AreEqual(1, annotationDefs[0].AnnotationTargets.Count);
-            Assert.AreEqual(AnnotationDef.AnnotationTarget.precursor_result, annotationDefs[0].AnnotationTargets.First());
-            Assert.AreEqual(AnnotationDef.AnnotationType.number, annotationDefs[0].Type);
-            Assert.AreEqual(MProphetResultsHandler.AnnotationName, annotationDefs[0].Name);
-            Assert.AreEqual(1, annotationDefs[1].AnnotationTargets.Count);
-            Assert.AreEqual(AnnotationDef.AnnotationTarget.precursor_result, annotationDefs[1].AnnotationTargets.First());
-            Assert.AreEqual(AnnotationDef.AnnotationType.number, annotationDefs[1].Type);
-            Assert.AreEqual(MProphetResultsHandler.MAnnotationName, annotationDefs[1].Name);
             // Check annotations are added
             foreach (var nodeGroup in SkylineWindow.Document.MoleculeTransitionGroups)
             {
                 foreach (var chromInfo in nodeGroup.ChromInfos)
                 {
-                    var annotations = chromInfo.Annotations.ListAnnotations();
                     if (nodeGroup.IsDecoy)
                     {
-                        Assert.AreEqual(1, annotations.Length);
-                        Assert.AreEqual(MProphetResultsHandler.MAnnotationName, annotations[0].Key);
+                        Assert.IsNull(chromInfo.QValue);
+                        Assert.IsNotNull(chromInfo.ZScore);
                     }
                     else
                     {
-                        Assert.AreEqual(2, annotations.Length);
-                        Assert.AreEqual(MProphetResultsHandler.AnnotationName, annotations[0].Key);
-                        Assert.AreEqual(MProphetResultsHandler.MAnnotationName, annotations[1].Key);
+                        Assert.IsNotNull(chromInfo.QValue);
+                        Assert.IsNotNull(chromInfo.ZScore);
                     }
 
                 }
             }
-            // Clear annotations
-            var reintegrateDlgAnnotationsRemove = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
-            RunUI(() =>
-            {
-                reintegrateDlgAnnotationsRemove.ReintegrateAll = true;
-                reintegrateDlgAnnotationsRemove.AddAnnotation = false;
-            });
-            OkDialog(reintegrateDlgAnnotationsRemove, reintegrateDlgAnnotationsRemove.OkDialog);
-            var annotationDefsRemove = SkylineWindow.Document.Settings.DataSettings.AnnotationDefs;
-            Assert.AreEqual(annotationDefsRemove.Count, 0);
-            CheckRoundTrip(); // Verify that this all serializes properly
         }
 
         private void CheckRoundTrip()

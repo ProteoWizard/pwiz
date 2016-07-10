@@ -261,7 +261,7 @@ namespace pwiz.SkylineTestUtil
                         var assembly = Assembly.GetAssembly(typeof(AssertEx));
                         var xsdName = typeof(AssertEx).Namespace + String.Format(CultureInfo.InvariantCulture, ".Schemas.Skyline_{0}.xsd", SrmDocument.FORMAT_VERSION);
                         var schemaStream = assembly.GetManifestResourceStream(xsdName);
-                        Assert.IsNotNull(schemaStream);
+                        Assert.IsNotNull(schemaStream, string.Format("Schema {0} not found in TestUtil assembly", xsdName));
                         var schemaText = (new StreamReader(schemaStream)).ReadToEnd();
                         string targetXML = null;
                         if (!(obj is SrmDocument))

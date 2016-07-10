@@ -498,6 +498,12 @@
   <data name="PrecursorNote">
     <value>Precursor Note</value>
   </data>
+  <data name="DetectionQValue">
+    <value>Detection Q Value</value>
+  </data>
+  <data name="DetectionZScore">
+    <value>Detection Z Score</value>
+  </data>
   <data name="PrecursorPeakFoundRatio">
     <value>Precursor Peak Found Ratio</value>
   </data>

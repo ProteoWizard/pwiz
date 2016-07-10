@@ -134,12 +134,10 @@ namespace pwiz.Skyline
         private const string ARG_REINTEGRATE_CREATE_MODEL = "reintegrate-create-model"; // Not L10N
         private const string ARG_REINTEGRATE_MODEL_SECOND_BEST = "reintegrate-model-second-best"; // Not L10N
         private const string ARG_REINTEGRATE_MODEL_BOTH = "reintegrate-model-both"; // Not L10N
-        private const string ARG_REINTEGRATE_ANNOTATE_SCORING = "reintegrate-annotate-scoring"; // Not L10N
         private const string ARG_REINTEGRATE_OVERWRITE_PEAKS = "reintegrate-overwrite-peaks"; // Not L10N
 
         public string ReintegratModelName { get; private set; }
         public bool IsOverwritePeaks { get; private set; }
-        public bool IsAnnotateScoring { get; private set; }
         public bool IsCreateScoringModel { get; private set; }
         public bool IsSecondBestModel { get; private set; }
         public bool IsDecoyModel { get; private set; }
@@ -1094,10 +1092,6 @@ namespace pwiz.Skyline
                     if (!IsSecondBestModel)
                         IsDecoyModel = true;
                 }
-                else if (IsNameOnly(pair, ARG_REINTEGRATE_ANNOTATE_SCORING))
-                {
-                    IsAnnotateScoring = true;
-                }
                 else if (IsNameOnly(pair, ARG_REINTEGRATE_OVERWRITE_PEAKS))
                 {
                     IsOverwritePeaks = true;
@@ -1421,8 +1415,6 @@ namespace pwiz.Skyline
             {
                 if (IsCreateScoringModel)
                     WarnArgRequirment(ARG_REINTEGRATE_MODEL_NAME, ARG_REINTEGRATE_CREATE_MODEL);
-                if (IsAnnotateScoring)
-                    WarnArgRequirment(ARG_REINTEGRATE_MODEL_NAME, ARG_REINTEGRATE_ANNOTATE_SCORING);
                 if (IsOverwritePeaks)
                     WarnArgRequirment(ARG_REINTEGRATE_MODEL_NAME, ARG_REINTEGRATE_OVERWRITE_PEAKS);
             }

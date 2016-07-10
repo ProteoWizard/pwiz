@@ -94,11 +94,7 @@ namespace pwiz.Skyline.Model
             _docCompare = docOriginal;
             if (IsModel)
             {
-                var handler = new MProphetResultsHandler(DocOriginal, PeakScoringModel)
-                {
-                    AddAnnotation = true,
-                    AddMAnnotation = true
-                };
+                var handler = new MProphetResultsHandler(DocOriginal, PeakScoringModel);
                 handler.ScoreFeatures(progressMonitor);
                 _docCompare = handler.ChangePeaks(progressMonitor);
             }
@@ -299,8 +295,9 @@ namespace pwiz.Skyline.Model
             }
             string qValueString = ChromInfoPicked.Annotations.GetAnnotation(MProphetResultsHandler.AnnotationName);
             double qValueDouble;
-            // qValue MUST be present unless the peak is null or ALL q Values are absent
-            if (!double.TryParse(qValueString, out qValueDouble))
+            if (qValueString == null)
+                QValue = ChromInfoPicked.QValue;
+            else if (!double.TryParse(qValueString, out qValueDouble))
             {
                 if (!IsMissingPickedPeak && !hasNoQValues)
                 {
@@ -312,10 +309,11 @@ namespace pwiz.Skyline.Model
             {
                 QValue = qValueDouble;
             }
-            // Same for score
             string scoreString = ChromInfoPicked.Annotations.GetAnnotation(MProphetResultsHandler.MAnnotationName);
             double scoreDouble;
-            if (!double.TryParse(scoreString, out scoreDouble))
+            if (scoreString == null)
+                Score = ChromInfoPicked.ZScore;
+            else if (!double.TryParse(scoreString, out scoreDouble))
             {
                 if (!IsMissingPickedPeak && !hasNoScores)
                 {

@@ -46,6 +46,10 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             var newDocNode = Precursor.DocNode.ChangeResults(GetResultFile().ChangeChromInfo(Precursor.DocNode.Results, newChromInfo));
             Precursor.ChangeDocNode(editDescription, newDocNode);
         }
+        [Format(Formats.PValue, NullValue = TextUtil.EXCEL_NA)]
+        public double? DetectionQValue { get { return ChromInfo.QValue; } }
+        [Format(Formats.STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
+        public double? DetectionZScore { get { return ChromInfo.ZScore; } }
         [Format(Formats.PEAK_FOUND_RATIO, NullValue = TextUtil.EXCEL_NA)]
         public double PrecursorPeakFoundRatio { get { return ChromInfo.PeakCountRatio; } }
         [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
@@ -142,12 +146,24 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public override void SetAnnotation(AnnotationDef annotationDef, object value)
         {
+            // Ignore setting of the old q value and mProphet score annoations. They are
+            // displayed for backward compatibility. Setting them manually never made and sense.
+            if (Equals(annotationDef.Name, MProphetResultsHandler.AnnotationName) ||
+                Equals(annotationDef.Name, MProphetResultsHandler.MAnnotationName))
+                return;
+
             ChangeChromInfo(EditDescription.SetAnnotation(annotationDef, value), 
                 ChromInfo.ChangeAnnotations(ChromInfo.Annotations.ChangeAnnotation(annotationDef, value)));
         }
 
         public override object GetAnnotation(AnnotationDef annotationDef)
         {
+            // Return q value and mProphet scores from their new locations
+            if (Equals(annotationDef.Name, MProphetResultsHandler.AnnotationName))
+                return DetectionQValue;
+            else if (Equals(annotationDef.Name, MProphetResultsHandler.MAnnotationName))
+                return DetectionZScore;
+
             return ChromInfo.Annotations.GetAnnotation(annotationDef);
         }
 

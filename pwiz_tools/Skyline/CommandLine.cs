@@ -1298,7 +1298,7 @@ namespace pwiz.Skyline
                     modelAndFeatures = new ModelAndFeatures(scoringModel, null);
                 }
 
-                if (!Reintegrate(modelAndFeatures, commandArgs.IsAnnotateScoring, commandArgs.IsOverwritePeaks))
+                if (!Reintegrate(modelAndFeatures, commandArgs.IsOverwritePeaks))
                     return false;
             }
             return true;
@@ -1367,15 +1367,13 @@ namespace pwiz.Skyline
             }
         }
 
-        private bool Reintegrate(ModelAndFeatures modelAndFeatures, bool isAnnotateScoring, bool isOverwritePeaks)
+        private bool Reintegrate(ModelAndFeatures modelAndFeatures, bool isOverwritePeaks)
         {
             try
             {
                 var resultsHandler = new MProphetResultsHandler(_doc, modelAndFeatures.ScoringModel, modelAndFeatures.Features)
                 {
                     OverrideManual = isOverwritePeaks,
-                    AddAnnotation = isAnnotateScoring,
-                    AddMAnnotation = isAnnotateScoring
                 };
 
                 var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));

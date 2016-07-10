@@ -396,7 +396,7 @@ and a specific name.</value>
     <value>NoControl</value>
   </data>
   <data name="cbShowAllChromatograms.Location" type="System.Drawing.Point, System.Drawing">
-    <value>17, 84</value>
+    <value>17, 64</value>
   </data>
   <data name="cbShowAllChromatograms.Size" type="System.Drawing.Size, System.Drawing">
     <value>191, 17</value>
@@ -648,7 +648,7 @@ and a specific name.</value>
     <value>NoControl</value>
   </data>
   <data name="cbAutoRetry.Location" type="System.Drawing.Point, System.Drawing">
-    <value>17, 61</value>
+    <value>17, 87</value>
   </data>
   <data name="cbAutoRetry.Size" type="System.Drawing.Size, System.Drawing">
     <value>137, 17</value>

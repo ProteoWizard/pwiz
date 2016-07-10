@@ -148,7 +148,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>7</value>
   </data>
   <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -178,7 +178,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>8</value>
   </data>
   <data name="textBoxCutoff.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -202,7 +202,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textBoxCutoff.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>6</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -229,7 +229,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>5</value>
   </data>
   <data name="reintegrateAllPeaks.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -256,7 +256,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;reintegrateAllPeaks.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>4</value>
   </data>
   <data name="reintegrateQCutoff.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -283,13 +283,13 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;reintegrateQCutoff.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>3</value>
   </data>
   <data name="checkBoxOverwrite.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="checkBoxOverwrite.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 204</value>
+    <value>15, 181</value>
   </data>
   <data name="checkBoxOverwrite.Size" type="System.Drawing.Size, System.Drawing">
     <value>160, 17</value>
@@ -310,33 +310,6 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;checkBoxOverwrite.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="checkBoxAnnotation.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="checkBoxAnnotation.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 181</value>
-  </data>
-  <data name="checkBoxAnnotation.Size" type="System.Drawing.Size, System.Drawing">
-    <value>136, 17</value>
-  </data>
-  <data name="checkBoxAnnotation.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
-  </data>
-  <data name="checkBoxAnnotation.Text" xml:space="preserve">
-    <value>A&amp;dd q value annotation</value>
-  </data>
-  <data name="&gt;&gt;checkBoxAnnotation.Name" xml:space="preserve">
-    <value>checkBoxAnnotation</value>
-  </data>
-  <data name="&gt;&gt;checkBoxAnnotation.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;checkBoxAnnotation.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;checkBoxAnnotation.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="label36.AutoSize" type="System.Boolean, mscorlib">
@@ -397,7 +370,7 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>312, 241</value>
+    <value>312, 215</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>

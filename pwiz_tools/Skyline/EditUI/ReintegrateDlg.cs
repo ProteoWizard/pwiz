@@ -91,8 +91,6 @@ namespace pwiz.Skyline.EditUI
                     {
                         QValueCutoff = qCutoff,
                         OverrideManual = checkBoxOverwrite.Checked,
-                        AddAnnotation = checkBoxAnnotation.Checked,
-                        AddMAnnotation = checkBoxAnnotation.Checked
                     };
                     longWaitDlg.PerformWork(this, 1000, pm =>
                         {
@@ -138,12 +136,6 @@ namespace pwiz.Skyline.EditUI
         {
             get { return checkBoxOverwrite.Checked; }
             set { checkBoxOverwrite.Checked = value; }
-        }
-
-        public bool AddAnnotation
-        {
-            get { return checkBoxAnnotation.Checked; }
-            set { checkBoxAnnotation.Checked = value; }
         }
 
         public bool ReintegrateAll

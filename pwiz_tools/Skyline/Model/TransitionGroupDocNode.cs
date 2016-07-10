@@ -2003,9 +2003,12 @@ namespace pwiz.Skyline.Model
                 TransitionCount = transitionCount;
                 UserSet = UserSet.FALSE;
 
-                // Use existing ratio until it can be recalculated
+                // Use existing ratios, annotations and peak scores
                 if (chromInfo != null)
                 {
+                    QValue = chromInfo.QValue;
+                    ZScore = chromInfo.ZScore;
+
                     Ratios = chromInfo.Ratios;
                     Annotations = chromInfo.Annotations;
                 }
@@ -2017,11 +2020,8 @@ namespace pwiz.Skyline.Model
 
                 if (reintegratePeak != null)
                 {
-                    // TODO: Hack! make these values not annotations
-                    if (reintegrateResults.AddAnnotation && reintegratePeak.QValue.HasValue)
-                        Annotations = Annotations.ChangeAnnotation(MProphetResultsHandler.AnnotationName, reintegratePeak.QValue.Value.ToString(CultureInfo.CurrentCulture));
-                    if (reintegrateResults.AddMAnnotation)
-                        Annotations = Annotations.ChangeAnnotation(MProphetResultsHandler.MAnnotationName, reintegratePeak.BestScore.ToString(CultureInfo.CurrentCulture));
+                    QValue = (float?) reintegratePeak.QValue;
+                    ZScore = (float?) reintegratePeak.BestScore;
                 }
             }
 
@@ -2049,6 +2049,8 @@ namespace pwiz.Skyline.Model
             private PeakIdentification Identified { get; set; }
             private float? LibraryDotProduct { get; set; }
             private float? IsotopeDotProduct { get; set; }
+            private float? QValue { get; set; }
+            private float? ZScore { get; set; }
             private IList<RatioValue> Ratios { get; set; }
             private Annotations Annotations { get; set; }
             private UserSet UserSet { get; set; }
@@ -2183,6 +2185,8 @@ namespace pwiz.Skyline.Model
                                                     Identified,
                                                     LibraryDotProduct,
                                                     IsotopeDotProduct,
+                                                    QValue,
+                                                    ZScore,
                                                     Annotations,
                                                     UserSet);
             }

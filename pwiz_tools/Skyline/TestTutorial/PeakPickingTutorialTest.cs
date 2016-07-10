@@ -292,7 +292,6 @@ namespace pwiz.SkylineTestTutorial
                 reintegrateDlgNew.ComboPeakScoringModelSelected = "test1";
                 reintegrateDlgNew.ReintegrateAll = true;
                 reintegrateDlgNew.OverwriteManual = true;
-                reintegrateDlgNew.AddAnnotation = true;
             });
             PauseForScreenShot<ReintegrateDlg>("Reintegrate form", 16);
 
@@ -315,7 +314,6 @@ namespace pwiz.SkylineTestTutorial
                     reintegrateDlgQ.ReintegrateAll = false;
                     reintegrateDlgQ.Cutoff = 0.001;
                     reintegrateDlgQ.OverwriteManual = true;
-                    reintegrateDlgQ.AddAnnotation = true;
                 });
             OkDialog(reintegrateDlgQ, reintegrateDlgQ.OkDialog);
             PauseForScreenShot("Targets view with some null peaks clipped from main window", 17);
@@ -453,7 +451,6 @@ namespace pwiz.SkylineTestTutorial
             {
                 reintegrateDlgDia.ReintegrateAll = true;
                 reintegrateDlgDia.OverwriteManual = true;
-                reintegrateDlgDia.AddAnnotation = true;
             });
             OkDialog(reintegrateDlgDia, reintegrateDlgDia.OkDialog);
 

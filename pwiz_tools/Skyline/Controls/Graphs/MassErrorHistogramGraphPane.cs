@@ -226,6 +226,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     graphPane.Title.Text = Resources.MassErrorHistogramGraphPane_AddLabels_Mass_Errors_Unavailable;
                     return;
                 }
+                graphPane.Title.Text = String.Empty;
+
                 var rectChart = graphPane.Chart.Rect;
                 var ptTop = rectChart.Location;
 

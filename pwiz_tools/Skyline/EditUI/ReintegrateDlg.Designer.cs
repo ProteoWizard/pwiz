@@ -36,7 +36,6 @@
             this.reintegrateAllPeaks = new System.Windows.Forms.RadioButton();
             this.reintegrateQCutoff = new System.Windows.Forms.RadioButton();
             this.checkBoxOverwrite = new System.Windows.Forms.CheckBox();
-            this.checkBoxAnnotation = new System.Windows.Forms.CheckBox();
             this.label36 = new System.Windows.Forms.Label();
             this.comboBoxScoringModel = new System.Windows.Forms.ComboBox();
             this.SuspendLayout();
@@ -87,12 +86,6 @@
             this.checkBoxOverwrite.Name = "checkBoxOverwrite";
             this.checkBoxOverwrite.UseVisualStyleBackColor = true;
             // 
-            // checkBoxAnnotation
-            // 
-            resources.ApplyResources(this.checkBoxAnnotation, "checkBoxAnnotation");
-            this.checkBoxAnnotation.Name = "checkBoxAnnotation";
-            this.checkBoxAnnotation.UseVisualStyleBackColor = true;
-            // 
             // label36
             // 
             resources.ApplyResources(this.label36, "label36");
@@ -114,7 +107,6 @@
             this.CancelButton = this.btnCancel;
             this.Controls.Add(this.comboBoxScoringModel);
             this.Controls.Add(this.label36);
-            this.Controls.Add(this.checkBoxAnnotation);
             this.Controls.Add(this.checkBoxOverwrite);
             this.Controls.Add(this.reintegrateQCutoff);
             this.Controls.Add(this.reintegrateAllPeaks);
@@ -141,7 +133,6 @@
         private System.Windows.Forms.RadioButton reintegrateAllPeaks;
         private System.Windows.Forms.RadioButton reintegrateQCutoff;
         private System.Windows.Forms.CheckBox checkBoxOverwrite;
-        private System.Windows.Forms.CheckBox checkBoxAnnotation;
         private System.Windows.Forms.Label label36;
         private System.Windows.Forms.ComboBox comboBoxScoringModel;
     }
