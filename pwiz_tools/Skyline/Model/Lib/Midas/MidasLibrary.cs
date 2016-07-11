@@ -299,6 +299,15 @@ namespace pwiz.Skyline.Model.Lib.Midas
                 spectrum.HasPrecursorMatch && Math.Abs(spectrum.MatchedPrecursorMz.GetValueOrDefault() - precursor) <= precursorTolerance);
         }
 
+        public IEnumerable<DbSpectrum> GetSpectraByRetentionTime(MsDataFileUri file, double precursor, double rtMin, double rtMax)
+        {
+            const double precursorTolerance = 0.001;
+            var min = rtMin - precursorTolerance;
+            var max = rtMax + precursorTolerance;
+            return GetSpectraByPrecursor(file, precursor).Where(spectrum =>
+                min <= spectrum.RetentionTime && spectrum.RetentionTime <= max);
+        }
+
         public override bool Contains(LibKey key)
         {
             if (!key.IsPrecursorKey)

@@ -1,12 +1,33 @@
-﻿using System;
+﻿/*
+ * Original author: Kaipo Tamura <kaipot .at. proteinms dot net>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2016 University of Washington - Seattle, WA
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Lib.Midas;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -64,6 +85,28 @@ namespace pwiz.SkylineTestFunctional
             CheckMidasRts(871.9516);
             CheckMidasRts(879.4339);
             CheckMidasRts(433.8791);
+
+            var peptideSettings = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            var midasBuildCancel = ShowDialog<MultiButtonMsgDlg>(peptideSettings.ShowBuildLibraryDlg);
+            Assert.AreEqual(Resources.PeptideSettingsUI_ShowBuildLibraryDlg_This_document_has_a_MIDAS_library__Would_you_like_to_build_a_spectral_library_from_it_, midasBuildCancel.Message);
+            OkDialog(midasBuildCancel, midasBuildCancel.BtnCancelClick);
+            var midasBuildNo = ShowDialog<MultiButtonMsgDlg>(peptideSettings.ShowBuildLibraryDlg);
+            var normalBuild = ShowDialog<BuildLibraryDlg>(midasBuildNo.ClickNo);
+            OkDialog(normalBuild, normalBuild.CancelDialog);
+            var midasBlib = TestFilesDir.GetTestPath("midas.blib");
+            RunUI(() => peptideSettings.ShowBuildLibraryDlg(midasBlib));
+            WaitForConditionUI(10000, () => peptideSettings.LibraryDriver.List.Count == 2);
+            RunUI(() =>
+            {
+                var libSpec = peptideSettings.LibraryDriver.List.Last();
+                Assert.AreEqual(midasBlib, libSpec.FilePath); 
+                Assert.AreEqual(MidasBlibBuilder.BLIB_NAME_SKYLINE, libSpec.Name);
+            });
+            // Test that the normal library build form appears if we already have a MIDAS blib file
+            var normalBuild2 = ShowDialog<BuildLibraryDlg>(peptideSettings.ShowBuildLibraryDlg);
+            OkDialog(normalBuild2, normalBuild2.CancelDialog);
+
+            OkDialog(peptideSettings, peptideSettings.OkDialog);
 
             var manageResults = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);
             var doc1 = doc;

@@ -14773,6 +14773,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to MIDAS Library Files.
+        /// </summary>
+        public static string MidasLibSpec_FILTER_MIDAS_Library_Files {
+            get {
+                return ResourceManager.GetString("MidasLibSpec_FILTER_MIDAS_Library_Files", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The cache file has not been loaded yet..
         /// </summary>
         public static string MinimizeResultsDlg_ChromCacheMinimizer_The_cache_file_has_not_been_loaded_yet {
@@ -18044,6 +18053,34 @@ namespace pwiz.Skyline.Properties {
         public static string PeptideSettingsUI_OkDialog_Changing_peptide_settings {
             get {
                 return ResourceManager.GetString("PeptideSettingsUI_OkDialog_Changing_peptide_settings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Create MIDAS Spectral Library.
+        /// </summary>
+        public static string PeptideSettingsUI_ShowBuildLibraryDlg_Create_MIDAS_Spectral_Library {
+            get {
+                return ResourceManager.GetString("PeptideSettingsUI_ShowBuildLibraryDlg_Create_MIDAS_Spectral_Library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finishing up building library.
+        /// </summary>
+        public static string PeptideSettingsUI_ShowBuildLibraryDlg_Finishing_up_building_library {
+            get {
+                return ResourceManager.GetString("PeptideSettingsUI_ShowBuildLibraryDlg_Finishing_up_building_library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This document has a MIDAS library. Would you like to build a spectral library from it?.
+        /// </summary>
+        public static string PeptideSettingsUI_ShowBuildLibraryDlg_This_document_has_a_MIDAS_library__Would_you_like_to_build_a_spectral_library_from_it_ {
+            get {
+                return ResourceManager.GetString("PeptideSettingsUI_ShowBuildLibraryDlg_This_document_has_a_MIDAS_library__Would_yo" +
+                        "u_like_to_build_a_spectral_library_from_it_", resourceCulture);
             }
         }
         

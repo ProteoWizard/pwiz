@@ -126,7 +126,17 @@ namespace pwiz.Skyline.Model.Lib.BlibData
         /// <param name="progressMonitor">Progress monitor to display progress in creating library</param>
         /// <returns>A library of type <see cref="BiblioSpecLiteLibrary"/></returns>
         public BiblioSpecLiteLibrary CreateLibraryFromSpectra(BiblioSpecLiteSpec librarySpec,
-                                                              List<SpectrumMzInfo> listSpectra,
+                                                              IList<SpectrumMzInfo> listSpectra,
+                                                              string libraryName,
+                                                              IProgressMonitor progressMonitor)
+        {
+            var dictionary = new Dictionary<string, IList<SpectrumMzInfo>>();
+            dictionary[string.Empty] = listSpectra;
+            return CreateLibraryFromSpectra(librarySpec, dictionary, libraryName, progressMonitor);
+        }
+
+        public BiblioSpecLiteLibrary CreateLibraryFromSpectra(BiblioSpecLiteSpec librarySpec,
+                                                              Dictionary<string, IList<SpectrumMzInfo>> listSpectra,
                                                               string libraryName,
                                                               IProgressMonitor progressMonitor)
         {
@@ -146,26 +156,30 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 int progressPercent = 0;
                 int i = 0;
                 IProgressStatus status = new ProgressStatus(Resources.BlibDb_CreateLibraryFromSpectra_Creating_spectral_library_for_imported_transition_list);
-                foreach (var spectrum in listSpectra)
+                var sourceFiles = new Dictionary<string, long>();
+                foreach (var spectraByFile in listSpectra)
                 {
-                    ++i;
-                    var dbRefSpectrum = RefSpectrumFromPeaks(spectrum);
-                    session.Save(dbRefSpectrum);
-                    dictLibrary.Add(spectrum.Key,
-                                    new BiblioLiteSpectrumInfo(spectrum.Key, dbRefSpectrum.Copies,
-                                                                dbRefSpectrum.NumPeaks,
-                                                                (int)(dbRefSpectrum.Id ?? 0),
-                                                                default(IndexedRetentionTimes),
-                                                                default(IndexedIonMobilities)));
-                    if (progressMonitor != null)
+                    foreach (var spectrum in spectraByFile.Value)
                     {
-                        if (progressMonitor.IsCanceled)
-                            return null;
-                        int progressNew = (i * 100 / listSpectra.Count);
-                        if (progressPercent != progressNew)
+                        ++i;
+                        var dbRefSpectrum = RefSpectrumFromPeaks(session, spectrum, spectraByFile.Key, sourceFiles);
+                        session.Save(dbRefSpectrum);
+                        dictLibrary.Add(spectrum.Key,
+                            new BiblioLiteSpectrumInfo(spectrum.Key, dbRefSpectrum.Copies,
+                                                       dbRefSpectrum.NumPeaks,
+                                                       (int) (dbRefSpectrum.Id ?? 0),
+                                                       default(IndexedRetentionTimes),
+                                                       default(IndexedIonMobilities)));
+                        if (progressMonitor != null)
                         {
-                            progressMonitor.UpdateProgress(status = status.ChangePercentComplete(progressNew));
-                            progressPercent = progressNew;
+                            if (progressMonitor.IsCanceled)
+                                return null;
+                            int progressNew = (i*100/listSpectra.Count);
+                            if (progressPercent != progressNew)
+                            {
+                                progressMonitor.UpdateProgress(status = status.ChangePercentComplete(progressNew));
+                                progressPercent = progressNew;
+                            }
                         }
                     }
                 }
@@ -190,11 +204,10 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             }
 
             var libraryEntries = dictLibrary.Values.ToArray();
-            return new BiblioSpecLiteLibrary(librarySpec, libLsid, majorVer, minorVer,
-                libraryEntries, FileStreamManager.Default);
+            return new BiblioSpecLiteLibrary(librarySpec, libLsid, majorVer, minorVer, libraryEntries, FileStreamManager.Default);
         }
 
-        private DbRefSpectra RefSpectrumFromPeaks(SpectrumMzInfo spectrum)
+        private DbRefSpectra RefSpectrumFromPeaks(ISession session, SpectrumMzInfo spectrum, string source, IDictionary<string, long> sourceFiles)
         {
             var peaksInfo = spectrum.SpectrumPeaks;
             var refSpectra = new DbRefSpectra
@@ -213,6 +226,13 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 PeakIntensity = IntensitiesToBytes(peaksInfo.Peaks),
                 PeakMZ = MZsToBytes(peaksInfo.Peaks)
             };
+
+            refSpectra.RetentionTimes = new List<DbRetentionTimes> { new DbRetentionTimes {
+                BestSpectrum = 1,
+                RetentionTime = spectrum.RetentionTime,
+                SpectrumSourceId = !string.IsNullOrEmpty(source) ? GetSpecturmSourceId(session, source, sourceFiles) : default(long),
+                RedundantRefSpectraId = -1
+            }};
 
             ModsFromModifiedSequence(refSpectra);
             return refSpectra;

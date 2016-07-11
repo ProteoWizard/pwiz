@@ -874,6 +874,7 @@
     <Compile Include="Model\Lib\Midas\DbSpectrum.cs" />
     <Compile Include="Model\Lib\Midas\DbResultsFile.cs" />
     <Compile Include="Model\Lib\Midas\DbLibInfo.cs" />
+    <Compile Include="Model\Lib\Midas\MidasBlibBuilder.cs" />
     <Compile Include="Model\Lib\Midas\MidasLibrary.cs" />
     <Compile Include="Model\Lib\Midas\MidasLibSpec.cs" />
     <Compile Include="Model\MProphetResultsHandler.cs" />

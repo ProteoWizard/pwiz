@@ -9102,4 +9102,16 @@ Here are the last 3 errors:
     <data name="CommandArgs_ParseArgsInternal_Error__Invalid_value___0___for__1___use___2___or___3___" xml:space="preserve">
     <value>Error: Invalid value '{0}' for {1}, use '{2}' or '{3}'.</value>
   </data>
+  <data name="MidasLibSpec_FILTER_MIDAS_Library_Files" xml:space="preserve">
+    <value>MIDAS Library Files</value>
+  </data>
+  <data name="PeptideSettingsUI_ShowBuildLibraryDlg_Create_MIDAS_Spectral_Library" xml:space="preserve">
+    <value>Create MIDAS Spectral Library</value>
+  </data>
+  <data name="PeptideSettingsUI_ShowBuildLibraryDlg_This_document_has_a_MIDAS_library__Would_you_like_to_build_a_spectral_library_from_it_" xml:space="preserve">
+    <value>This document has a MIDAS library. Would you like to build a spectral library from it?</value>
+  </data>
+  <data name="PeptideSettingsUI_ShowBuildLibraryDlg_Finishing_up_building_library" xml:space="preserve">
+    <value>Finishing up building library</value>
+  </data>
 </root>

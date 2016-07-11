@@ -201,9 +201,9 @@ namespace pwiz.Skyline.Model.Lib
                     }
                     libraries = libraries.ChangeLibraries(list.ToArray());
 
-                    if (failedMidasFiles.Any() && docNew.Settings.HasResults)
+                    if (missingMidasFiles.Any() && docNew.Settings.HasResults)
                     {
-                        var newChromatograms = MidasLibrary.UnflagFiles(docNew.Settings.MeasuredResults.Chromatograms, failedMidasFiles.Select(file => file.GetFileName())).ToList();
+                        var newChromatograms = MidasLibrary.UnflagFiles(docNew.Settings.MeasuredResults.Chromatograms, missingMidasFiles.Select(Path.GetFileName)).ToList();
                         if (!ArrayUtil.ReferencesEqual(docNew.Settings.MeasuredResults.Chromatograms, newChromatograms))
                         {
                             docNew = docNew.ChangeMeasuredResults(docNew.Settings.MeasuredResults.ChangeChromatograms(newChromatograms));
@@ -1478,6 +1478,7 @@ namespace pwiz.Skyline.Model.Lib
         public double PrecursorMz { get; set; }
         public IsotopeLabelType Label { get; set; }
         public SpectrumPeaksInfo SpectrumPeaks { get; set; }
+        public double? RetentionTime { get; set; }
 
         public const double PRECURSOR_MZ_TOL = 0.001;
 
