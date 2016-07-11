@@ -20,7 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -49,14 +48,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public void Update(SrmDocument document, int resultIndex, PointsTypeMassError pointsType)
         {
             var bestResults = ShowReplicate == ReplicateDisplay.best;
-            Data = new GraphData(document, Data, resultIndex, bestResults, pointsType);
-        }
-
-        public void Clear()
-        {
-            Data = null;
-            CurveList.Clear();
-            GraphObjList.Clear();
+            Data = new GraphData(document, resultIndex, bestResults, pointsType);
         }
 
         public override void Draw(Graphics g)
@@ -75,7 +67,6 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             GraphHelper.FormatGraphPane(this);
             var document = GraphSummary.DocumentUIContainer.DocumentUI;
-            PeptideDocNode nodeSelected = null;
             var resultIndex = ShowReplicate == ReplicateDisplay.single ? GraphSummary.ResultsIndex : -1;
             var results = document.Settings.MeasuredResults;
             var resultsAvailable = results != null;
@@ -88,37 +79,20 @@ namespace pwiz.Skyline.Controls.Graphs
                                        results.IsChromatogramSetLoaded(resultIndex);
             }
 
-            if (!resultsAvailable) 
-            {
-                Clear();
+            if (checkData)
+            {                
+                PointsTypeMassError pointsType = MassErrorGraphController.PointsType;
+                Update(resultsAvailable ? document : null, resultIndex, pointsType);
             }
-            else 
-            {
-                var nodeTree = GraphSummary.StateProvider.SelectedNode as SrmTreeNode;
-                var nodePeptide = nodeTree as PeptideTreeNode;
-                while (nodePeptide == null && nodeTree != null) 
-                {
-                    nodeTree = nodeTree.Parent as SrmTreeNode;
-                    nodePeptide = nodeTree as PeptideTreeNode;
-                }
-                if (nodePeptide != null)
-                    nodeSelected = nodePeptide.DocNode;
 
-                if (checkData)
-                {                
-                    PointsTypeMassError pointsType = MassErrorGraphController.PointsType;
-                    Update(document, resultIndex, pointsType);
-                }
-
-                Graph(nodeSelected);
-            }
+            Graph();
         }
 
-        public void Graph(PeptideDocNode nodeSelected)
+        public void Graph()
         {
             var data = Data;
             if (data != null)
-                data.Graph(this, nodeSelected);
+                data.Graph(this);
         }
 
         /// <summary>
@@ -127,56 +101,55 @@ namespace pwiz.Skyline.Controls.Graphs
         sealed class GraphData : Immutable
         {
             private readonly PpmBinCount[] _bins;
+            private readonly double _binSize;
             private readonly double _mean;
             private readonly double _stdDev;
 
-            public GraphData(SrmDocument document, GraphData dataPrevious, int resultIndex, bool bestResult, PointsTypeMassError pointsType)
+            public GraphData(SrmDocument document, int resultIndex, bool bestResult, PointsTypeMassError pointsType)
             {
                 var vals = new List<double>();
                 var dictPpmBin2ToCount = new Dictionary<int, int>();
+                _binSize = Settings.Default.MassErorrHistogramBinSize;
 
-                foreach (var nodePep in document.Molecules)
+                if (document != null)
                 {
-                    if (MassErrorGraphController.PointsType == PointsTypeMassError.decoys) 
+                    bool decoys = MassErrorGraphController.PointsType == PointsTypeMassError.decoys;
+                    foreach (var nodePep in document.Molecules)
                     {
-                        if (!nodePep.IsDecoy) continue;
-                    }
-                    else 
-                    {
-                        if (nodePep.IsDecoy) continue;
-                    }
+                        if (decoys != nodePep.IsDecoy)
+                            continue;
 
-                    var tranIndex = bestResult ? nodePep.BestResult : resultIndex;
-                    foreach (var nodeGroup in nodePep.TransitionGroups) 
-                    {
-                        if (tranIndex >= 0)
+                        var tranIndex = bestResult ? nodePep.BestResult : resultIndex;
+                        foreach (var nodeGroup in nodePep.TransitionGroups)
                         {
-                            var chromInfo = nodeGroup.Results[tranIndex];
-                            AddChromInfo(chromInfo, dictPpmBin2ToCount, vals, Settings.Default.MassErorrHistogramBinSize);
-                        }
-                        else
-                        {
-                            foreach (var chromInfo in nodeGroup.Results)
-                                AddChromInfo(chromInfo, dictPpmBin2ToCount, vals, Settings.Default.MassErorrHistogramBinSize);
+                            if (tranIndex >= 0)
+                            {
+                                var chromInfo = nodeGroup.Results[tranIndex];
+                                AddChromInfo(chromInfo, dictPpmBin2ToCount, vals);
+                            }
+                            else
+                            {
+                                foreach (var chromInfo in nodeGroup.Results)
+                                    AddChromInfo(chromInfo, dictPpmBin2ToCount, vals);
+                            }
                         }
                     }
                 }
 
                 _bins = new PpmBinCount[dictPpmBin2ToCount.Count];
                 var i = 0;
-                foreach (var PpmBin in dictPpmBin2ToCount)
+                foreach (var ppmBin in dictPpmBin2ToCount)
                 {
-                    _bins[i] = new PpmBinCount((float) (PpmBin.Key / (1 / Settings.Default.MassErorrHistogramBinSize)), PpmBin.Value);
+                    _bins[i] = new PpmBinCount((float) (ppmBin.Key * _binSize), ppmBin.Value);
                     i++;
                 }
-
 
                 var statVals = new Statistics(vals.ToArray());
                 _mean = statVals.Mean();
                 _stdDev = statVals.StdDev();
             }
 
-            private static void AddChromInfo(ChromInfoList<TransitionGroupChromInfo> chromInfos, Dictionary<int, int> dictPpmBin2ToCount, List<double> vals, double binSize)
+            private void AddChromInfo(ChromInfoList<TransitionGroupChromInfo> chromInfos, Dictionary<int, int> dictPpmBin2ToCount, List<double> vals)
             {
                 if (chromInfos == null) return;
                 foreach (var chromInfo in chromInfos) 
@@ -185,7 +158,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (massError.HasValue) 
                     {
                         vals.Add((float)massError);
-                        var ppmBin2 = (int)Math.Floor(massError.Value * (1/binSize));
+                        var ppmBin2 = (int)Math.Floor(massError.Value / _binSize);
                         if (dictPpmBin2ToCount.ContainsKey(ppmBin2))
                             dictPpmBin2ToCount[ppmBin2]++;
                         else
@@ -194,15 +167,15 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
-            public void Graph(GraphPane graphPane, PeptideDocNode nodeSelected)
+            public void Graph(GraphPane graphPane)
             {
                 graphPane.CurveList.Clear();
-                graphPane.BarSettings.ClusterScaleWidth = Settings.Default.MassErorrHistogramBinSize;
+                graphPane.BarSettings.ClusterScaleWidth = _binSize;
                 graphPane.BarSettings.MinClusterGap = 0;
 
                 var ps = new PointPairList();
                 foreach (var bin in _bins)
-                    ps.Add(bin.Bin + (Settings.Default.MassErorrHistogramBinSize / 2), bin.Count);
+                    ps.Add(bin.Bin + _binSize/2, bin.Count);
 
                 graphPane.CurveList.Add(new BarItem(null, ps, Color.White));
 
@@ -213,8 +186,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 graphPane.YAxis.Scale.MaxAuto = true;
                 graphPane.YAxis.Scale.Min = 0;
 
-                if (Settings.Default.MinMassError != 0) graphPane.XAxis.Scale.Min = Settings.Default.MinMassError;
-                if (Settings.Default.MaxMassError != 0) graphPane.XAxis.Scale.Max = Settings.Default.MaxMassError;
+                if (Settings.Default.MinMassError != 0)
+                    graphPane.XAxis.Scale.Min = Settings.Default.MinMassError;
+                if (Settings.Default.MaxMassError != 0)
+                    graphPane.XAxis.Scale.Max = Settings.Default.MaxMassError;
                 graphPane.AxisChange();
 
             }

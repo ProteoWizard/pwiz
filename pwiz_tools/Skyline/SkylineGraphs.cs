@@ -285,7 +285,7 @@ namespace pwiz.Skyline
                     if (!deserialized)
                     {
                         layoutLock.EnsureLocked();
-                        ShowGraphPeakArea(enable && Settings.Default.ShowMassErrorGraph);
+                        ShowGraphMassError(enable && Settings.Default.ShowMassErrorGraph);
                     }
                 }
                 if (_graphFullScan != null && _graphFullScan.Visible && !enable)
@@ -538,9 +538,8 @@ namespace pwiz.Skyline
             {
                 return _graphPeakArea ?? CreateGraphPeakArea();                
             }
-            if (persistentString.EndsWith("Skyline.Controls.GraphMassError") ||  // Backward compatibility // Not L10N
-                 (persistentString.StartsWith(typeof(GraphSummary).ToString()) &&
-            persistentString.EndsWith(typeof(MassErrorGraphController).Name)))
+            if (persistentString.StartsWith(typeof(GraphSummary).ToString()) &&
+                persistentString.EndsWith(typeof(MassErrorGraphController).Name))
             {
                 return _graphMassError ?? CreateGraphMassError();
             }
