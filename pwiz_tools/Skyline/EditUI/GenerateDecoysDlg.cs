@@ -75,17 +75,17 @@ namespace pwiz.Skyline.EditUI
             if (!helper.ValidateNumberTextBox(textNumberOfDecoys, 0, null, out numDecoys))
                 return;
 
-            int numComparableGroups = _document.Peptides.SelectMany(PeakFeatureEnumerator.ComparableGroups).Count();
+            int numComparableGroups = RefinementSettings.SuggestDecoyCount(_document);
             if (numComparableGroups == 0)
             {
-                helper.ShowTextBoxError(textNumberOfDecoys, Resources.GenerateDecoysDlg_OkDialog_No_precursor_models_for_decoys_were_found_, null);
+                helper.ShowTextBoxError(textNumberOfDecoys, Resources.GenerateDecoysError_No_peptide_precursor_models_for_decoys_were_found_, null);
                 return;
             }
             if (!Equals(DecoysMethod, DecoyGeneration.SHUFFLE_SEQUENCE) && numComparableGroups < numDecoys)
             {
                 helper.ShowTextBoxError(textNumberOfDecoys,
-                                        Resources.GenerateDecoysDlg_OkDialog__0__must_be_less_than_the_number_of_precursor_models_for_decoys__or_use_the___1___decoy_generation_method_,
-                                        null, DecoyGeneration.SHUFFLE_SEQUENCE);
+                                        "The number of peptides {0} must be less than the number of peptide precursor models for decoys {1}, or use the \'{2}\' decoy generation method.",
+                                        null, numComparableGroups, DecoyGeneration.SHUFFLE_SEQUENCE);
                 return;
             }
 

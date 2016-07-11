@@ -4261,10 +4261,7 @@ If you prefer you can choose to report anonymously.</value>
   <data name="magnifier_zoom_in" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\magnifier_zoom_in.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="GenerateDecoysDlg_OkDialog__0__must_be_less_than_the_number_of_precursor_models_for_decoys__or_use_the___1___decoy_generation_method_" xml:space="preserve">
-    <value>{0} must be less than the number of precursor models for decoys, or use the '{1}' decoy generation method.</value>
-  </data>
-  <data name="SrmDocument_AddIrtPeptides_Must_have_an_active_iRT_calculator_to_add_iRT_peptides" xml:space="preserve">
+    <data name="SrmDocument_AddIrtPeptides_Must_have_an_active_iRT_calculator_to_add_iRT_peptides" xml:space="preserve">
     <value>Must have an active iRT calculator to add iRT peptides.</value>
   </data>
   <data name="TransitionSettings_DoValidate_The_instrument_s_firmware_inclusion_limit_must_be_specified_before_doing_a_multiplexed_DIA_scan" xml:space="preserve">
@@ -5799,10 +5796,7 @@ If you prefer you can choose to report anonymously.</value>
   <data name="EditPeakScoringModelDlg_InitGraphPane_Peak_count" xml:space="preserve">
     <value>Peak count</value>
   </data>
-  <data name="CommandArgs_ParseArgsInternal_Error__Invalid_value___0___for__1___use__reversed__or__shuffled__" xml:space="preserve">
-    <value>Error: Invalid value '{0}' for {1}, use 'reversed' or 'shuffled'.</value>
-  </data>
-  <data name="UndoRedoList_GetLabelText_Redo_1_Action" xml:space="preserve">
+    <data name="UndoRedoList_GetLabelText_Redo_1_Action" xml:space="preserve">
     <value>Redo 1 Action</value>
   </data>
   <data name="ViewLibraryDlg_CheckLibraryInSettings_Would_you_like_to_add_it" xml:space="preserve">
@@ -6549,10 +6543,7 @@ If you prefer you can choose to report anonymously.</value>
   <data name="UnpackZipToolHelper_UnpackZipTool_The_tool___0___requires_report_type_titled___1___and_it_is_not_provided__Import_canceled_" xml:space="preserve">
     <value>The tool "{0}" requires report type titled "{1}" and it is not provided. Import canceled.</value>
   </data>
-  <data name="GenerateDecoysDlg_OkDialog_No_precursor_models_for_decoys_were_found_" xml:space="preserve">
-    <value>No precursor models for decoys were found.</value>
-  </data>
-  <data name="ExportDlgProperties_PerformLongExport_Exporting_Methods" xml:space="preserve">
+    <data name="ExportDlgProperties_PerformLongExport_Exporting_Methods" xml:space="preserve">
     <value>Exporting Methods</value>
   </data>
   <data name="ConfigureToolsDlg_btnFindCommand_Click_Batch_Files" xml:space="preserve">
@@ -9095,5 +9086,20 @@ Here are the last 3 errors:
   </data>
   <data name="CalculateIsolationSchemeDlg_OkDialog_Window_width_must_be_an_integer" xml:space="preserve">
     <value>Window width must be an integer value when optimize window placement is selected.</value>
+  </data>
+    <data name="GenerateDecoysError_No_peptide_precursor_models_for_decoys_were_found_" xml:space="preserve">
+    <value>No peptide precursor models for decoys were found.</value>
+  </data>
+    <data name="CommandLine_AddDecoys_Error__Attempting_to_add_decoys_to_document_with_decoys_" xml:space="preserve">
+    <value>Error: Attempting to add decoys to document with decoys.</value>
+  </data>
+    <data name="CommandLine_AddDecoys_Error_The_number_of_peptides" xml:space="preserve">
+    <value>Error: The number of peptides {0} must be less than the number of peptide precursor models for decoys {1}, or use {2}={3} decoy generation method.</value>
+  </data>
+    <data name="CommandLine_AddDecoys_Added__0__decoy_peptides_using___1___method" xml:space="preserve">
+    <value>Added {0} decoy peptides using '{1}' method</value>
+  </data>
+    <data name="CommandArgs_ParseArgsInternal_Error__Invalid_value___0___for__1___use___2___or___3___" xml:space="preserve">
+    <value>Error: Invalid value '{0}' for {1}, use '{2}' or '{3}'.</value>
   </data>
 </root>

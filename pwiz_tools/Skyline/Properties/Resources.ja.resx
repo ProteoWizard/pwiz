@@ -4898,13 +4898,7 @@
   <data name="TransitionGroupLibDecoy" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\TransitionGroupLibDecoy.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="GenerateDecoysDlg_OkDialog_No_precursor_models_for_decoys_were_found_" xml:space="preserve">
-    <value>デコイのプリカーサーモデルが見つかりませんでした。</value>
-  </data>
-  <data name="GenerateDecoysDlg_OkDialog__0__must_be_less_than_the_number_of_precursor_models_for_decoys__or_use_the___1___decoy_generation_method_" xml:space="preserve">
-    <value>{0}をデコイのプリカーサーモデル数より小さくするか、「{1}」デコイ生成メソッドを使用しなければなりません。</value>
-  </data>
-  <data name="AllChromatogramsGraph_UpdateStatus_Joining_chromatograms___" xml:space="preserve">
+    <data name="AllChromatogramsGraph_UpdateStatus_Joining_chromatograms___" xml:space="preserve">
     <value>クロマトグラムの結合中...</value>
   </data>
   <data name="AllChromatogramsGraph_UpdateStatus__0__of__1__files" xml:space="preserve">
@@ -8612,10 +8606,7 @@
   <data name="AlertDlg_GetDefaultButtonText__Ignore" xml:space="preserve">
     <value>無視(&amp;I)</value>
   </data>
-  <data name="CommandArgs_ParseArgsInternal_Error__Invalid_value___0___for__1___use__reversed__or__shuffled__" xml:space="preserve">
-    <value>エラー： {1}に対する値'{0}'が無効、'反転'または'配列'を使用してください。</value>
-  </data>
-  <data name="CommandArgs_ParseArgsInternal_Error__The_value___0___for__1__must_be_an_integer_" xml:space="preserve">
+    <data name="CommandArgs_ParseArgsInternal_Error__The_value___0___for__1__must_be_an_integer_" xml:space="preserve">
     <value>エラー： {1}に対する値'{0}'は、整数でなければなりません。</value>
   </data>
   <data name="CommandLine_ImportTransitionList_Importing_transiton_list__0____" xml:space="preserve">

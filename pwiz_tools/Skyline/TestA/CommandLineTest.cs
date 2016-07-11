@@ -372,6 +372,54 @@ namespace pwiz.SkylineTestA
         }
 
         [TestMethod]
+        public void ConsoleAddDecoysTest()
+        {
+            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            string docPath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
+            string outPath = testFilesDir.GetTestPath("DecoysAdded.sky");
+            string output = RunCommand("--in=" + docPath,
+                                       "--decoys-add",
+                                       "--out=" + outPath);
+            const int expectedPeptides = 7;
+            AssertEx.Contains(output, string.Format(Resources.CommandLine_AddDecoys_Added__0__decoy_peptides_using___1___method,
+                expectedPeptides, DecoyGeneration.REVERSE_SEQUENCE));
+
+            output = RunCommand("--in=" + docPath,
+                                       "--decoys-add=" + CommandArgs.ARG_DECOYS_ADD_VALUE_REVERSE);
+            AssertEx.Contains(output, string.Format(Resources.CommandLine_AddDecoys_Added__0__decoy_peptides_using___1___method,
+                expectedPeptides, DecoyGeneration.REVERSE_SEQUENCE));
+
+            output = RunCommand("--in=" + docPath,
+                                       "--decoys-add=" + CommandArgs.ARG_DECOYS_ADD_VALUE_SHUFFLE);
+            AssertEx.Contains(output, string.Format(Resources.CommandLine_AddDecoys_Added__0__decoy_peptides_using___1___method,
+                expectedPeptides, DecoyGeneration.SHUFFLE_SEQUENCE));
+
+            const string badDecoyMethod = "shift";
+            output = RunCommand("--in=" + docPath,
+                                       "--decoys-add=" + badDecoyMethod);
+            AssertEx.Contains(output, string.Format(Resources.CommandArgs_ParseArgsInternal_Error__Invalid_value___0___for__1___use___2___or___3___, badDecoyMethod,
+                CommandArgs.ArgText(CommandArgs.ARG_DECOYS_ADD), CommandArgs.ARG_DECOYS_ADD_VALUE_REVERSE, CommandArgs.ARG_DECOYS_ADD_VALUE_SHUFFLE));
+
+            output = RunCommand("--in=" + outPath,
+                                       "--decoys-add");
+            AssertEx.Contains(output, Resources.CommandLine_AddDecoys_Error__Attempting_to_add_decoys_to_document_with_decoys_);
+
+            int tooManyPeptides = expectedPeptides + 1;
+            output = RunCommand("--in=" + docPath,
+                                       "--decoys-add",
+                                       "--decoys-add-count=" + tooManyPeptides);
+            AssertEx.Contains(output, string.Format(Resources.CommandLine_AddDecoys_Error_The_number_of_peptides,
+                    tooManyPeptides, 7, CommandArgs.ArgText(CommandArgs.ARG_DECOYS_ADD), CommandArgs.ARG_DECOYS_ADD_VALUE_SHUFFLE));
+
+            const int expectFewerPeptides = 4;
+            output = RunCommand("--in=" + docPath,
+                                       "--decoys-add",
+                                       "--decoys-add-count=" + expectFewerPeptides);
+            AssertEx.Contains(output, string.Format(Resources.CommandLine_AddDecoys_Added__0__decoy_peptides_using___1___method,
+                expectFewerPeptides, DecoyGeneration.REVERSE_SEQUENCE));
+        }
+
+        [TestMethod]
         public void ConsoleMassListTest()
         {
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);

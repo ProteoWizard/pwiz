@@ -3752,12 +3752,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: Invalid value &apos;{0}&apos; for {1}, use &apos;reversed&apos; or &apos;shuffled&apos;..
+        ///   Looks up a localized string similar to Error: Invalid value &apos;{0}&apos; for {1}, use &apos;{2}&apos; or &apos;{3}&apos;..
         /// </summary>
-        public static string CommandArgs_ParseArgsInternal_Error__Invalid_value___0___for__1___use__reversed__or__shuffled__ {
+        public static string CommandArgs_ParseArgsInternal_Error__Invalid_value___0___for__1___use___2___or___3___ {
             get {
-                return ResourceManager.GetString("CommandArgs_ParseArgsInternal_Error__Invalid_value___0___for__1___use__reversed__" +
-                        "or__shuffled__", resourceCulture);
+                return ResourceManager.GetString("CommandArgs_ParseArgsInternal_Error__Invalid_value___0___for__1___use___2___or___" +
+                        "3___", resourceCulture);
             }
         }
         
@@ -4029,6 +4029,33 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("CommandArgs_WarnArgRequirment_Warning__Use_of_the_argument__0__requires_the_argum" +
                         "ent__1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Added {0} decoy peptides using &apos;{1}&apos; method.
+        /// </summary>
+        public static string CommandLine_AddDecoys_Added__0__decoy_peptides_using___1___method {
+            get {
+                return ResourceManager.GetString("CommandLine_AddDecoys_Added__0__decoy_peptides_using___1___method", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: Attempting to add decoys to document with decoys..
+        /// </summary>
+        public static string CommandLine_AddDecoys_Error__Attempting_to_add_decoys_to_document_with_decoys_ {
+            get {
+                return ResourceManager.GetString("CommandLine_AddDecoys_Error__Attempting_to_add_decoys_to_document_with_decoys_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: The number of peptides {0} must be less than the number of peptide precursor models for decoys {1}, or use {2}={3} decoy generation method..
+        /// </summary>
+        public static string CommandLine_AddDecoys_Error_The_number_of_peptides {
+            get {
+                return ResourceManager.GetString("CommandLine_AddDecoys_Error_The_number_of_peptides", resourceCulture);
             }
         }
         
@@ -11479,21 +11506,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} must be less than the number of precursor models for decoys, or use the &apos;{1}&apos; decoy generation method..
+        ///   Looks up a localized string similar to No peptide precursor models for decoys were found..
         /// </summary>
-        public static string GenerateDecoysDlg_OkDialog__0__must_be_less_than_the_number_of_precursor_models_for_decoys__or_use_the___1___decoy_generation_method_ {
+        public static string GenerateDecoysError_No_peptide_precursor_models_for_decoys_were_found_ {
             get {
-                return ResourceManager.GetString("GenerateDecoysDlg_OkDialog__0__must_be_less_than_the_number_of_precursor_models_f" +
-                        "or_decoys__or_use_the___1___decoy_generation_method_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to No precursor models for decoys were found..
-        /// </summary>
-        public static string GenerateDecoysDlg_OkDialog_No_precursor_models_for_decoys_were_found_ {
-            get {
-                return ResourceManager.GetString("GenerateDecoysDlg_OkDialog_No_precursor_models_for_decoys_were_found_", resourceCulture);
+                return ResourceManager.GetString("GenerateDecoysError_No_peptide_precursor_models_for_decoys_were_found_", resourceCulture);
             }
         }
         

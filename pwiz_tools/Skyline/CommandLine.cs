@@ -209,6 +209,12 @@ namespace pwiz.Skyline
                     return;
             }
 
+            if (commandArgs.AddDecoys)
+            {
+                if (!AddDecoys(commandArgs))
+                    return;
+            }
+
             if (commandArgs.RemovingResults && !commandArgs.RemoveBeforeDate.HasValue)
             {
                 RemoveResults(null);
@@ -1251,6 +1257,36 @@ namespace pwiz.Skyline
             // Import results
             _doc = doc;
             ImportFoundResultsFiles(commandArgs, import);
+            return true;
+        }
+
+        private bool AddDecoys(CommandArgs commandArgs)
+        {
+            if (_doc.PeptideGroups.Contains(g => g.IsDecoy))
+            {
+                _out.WriteLine(Resources.CommandLine_AddDecoys_Error__Attempting_to_add_decoys_to_document_with_decoys_);
+                return false;
+            }
+            int numComparableGroups = RefinementSettings.SuggestDecoyCount(_doc);
+            if (numComparableGroups == 0)
+            {
+                _out.WriteLine(Resources.CommandLine_GeneralException_Error___0_, Resources.GenerateDecoysError_No_peptide_precursor_models_for_decoys_were_found_);
+                return false;
+            }
+            int numDecoys = commandArgs.AddDecoysCount ?? numComparableGroups;
+            if (!Equals(commandArgs.AddDecoysType, DecoyGeneration.SHUFFLE_SEQUENCE) && numComparableGroups < numDecoys)
+            {
+                _out.WriteLine(Resources.CommandLine_AddDecoys_Error_The_number_of_peptides,
+                    numDecoys, numComparableGroups, CommandArgs.ArgText(CommandArgs.ARG_DECOYS_ADD), CommandArgs.ARG_DECOYS_ADD_VALUE_SHUFFLE);
+            }
+            var refineAddDecoys = new RefinementSettings
+            {
+                DecoysMethod = commandArgs.AddDecoysType,
+                NumberOfDecoys = numDecoys
+            };
+            int peptidesBefore = _doc.PeptideCount;
+            _doc = refineAddDecoys.GenerateDecoys(_doc);
+            _out.WriteLine(Resources.CommandLine_AddDecoys_Added__0__decoy_peptides_using___1___method, _doc.PeptideCount - peptidesBefore, commandArgs.AddDecoysType);
             return true;
         }
 

@@ -79,9 +79,11 @@ namespace pwiz.Skyline
         public LockMassParameters LockMassParameters { get { return new LockMassParameters(LockmassPositive, LockmassNegative, LockmassTolerance); } }
 
         // Decoys
-        private const string ARG_DECOYS_ADD = "decoys-add"; // Not L10N
-        private const string ARG_DECOYS_ADD_COUNT = "decoys-add-count"; // Not L10N
-        private const string ARG_DECOYS_DISCARD = "decoys-discard"; // Not L10N
+        public const string ARG_DECOYS_ADD = "decoys-add"; // Not L10N
+        public const string ARG_DECOYS_ADD_COUNT = "decoys-add-count"; // Not L10N
+        public const string ARG_DECOYS_DISCARD = "decoys-discard"; // Not L10N
+        public const string ARG_DECOYS_ADD_VALUE_SHUFFLE = "shuffle"; // Not L10N
+        public const string ARG_DECOYS_ADD_VALUE_REVERSE = "reverse"; // Not L10N
 
         public string AddDecoysType { get; private set; }
         public int? AddDecoysCount { get; private set; }
@@ -89,7 +91,7 @@ namespace pwiz.Skyline
 
         public bool AddDecoys
         {
-            get { return string.IsNullOrEmpty(AddDecoysType); }
+            get { return !string.IsNullOrEmpty(AddDecoysType); }
         }
         public bool ImportingResults
         {
@@ -888,15 +890,16 @@ namespace pwiz.Skyline
                     IrtCalcName = pair.Value;
                 }
 
-                else if (IsNameValue(pair, ARG_DECOYS_ADD))
+                else if (IsName(pair, ARG_DECOYS_ADD))
                 {
-                    if (pair.Value == "reversed")
+                    if (string.IsNullOrEmpty(pair.Value) || pair.Value == ARG_DECOYS_ADD_VALUE_REVERSE)
                         AddDecoysType = DecoyGeneration.REVERSE_SEQUENCE;
-                    else if (pair.Value == "shuffled")
+                    else if (pair.Value == ARG_DECOYS_ADD_VALUE_SHUFFLE)
                         AddDecoysType = DecoyGeneration.SHUFFLE_SEQUENCE;
                     else
                     {
-                        _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Error__Invalid_value___0___for__1___use__reversed__or__shuffled__, pair.Value, ARG_DECOYS_ADD);
+                        _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Error__Invalid_value___0___for__1___use___2___or___3___,
+                            pair.Value, ArgText(ARG_DECOYS_ADD), ARG_DECOYS_ADD_VALUE_REVERSE, ARG_DECOYS_ADD_VALUE_SHUFFLE);
                         return false;
                     }
                     RequiresSkylineDocument = true;
