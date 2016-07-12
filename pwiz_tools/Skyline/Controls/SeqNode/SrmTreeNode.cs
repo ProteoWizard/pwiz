@@ -390,6 +390,17 @@ namespace pwiz.Skyline.Controls.SeqNode
             }
         }
 
+        public void CollapseAndClear()
+        {
+            if (IsExpanded)
+                Collapse();
+            if (Nodes.Count > 0 && !(Nodes[0] is DummyNode))
+            {
+                Nodes.Clear();
+                Nodes.Add(new DummyNode());
+            }
+        }
+
         /// <summary>
         /// Called when children are updated during model changes.
         /// </summary>

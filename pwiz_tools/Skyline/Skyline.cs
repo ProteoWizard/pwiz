@@ -1646,7 +1646,7 @@ namespace pwiz.Skyline
             BulkUpdateTreeNodes<PeptideGroupTreeNode>(() =>
             {
                 foreach (PeptideGroupTreeNode node in SequenceTree.GetSequenceNodes())
-                    node.Collapse();
+                    node.CollapseAndClear();
             });
             Settings.Default.SequenceTreeExpandProteins =
                 Settings.Default.SequenceTreeExpandPeptides =
@@ -1659,8 +1659,8 @@ namespace pwiz.Skyline
             BulkUpdateTreeNodes<PeptideTreeNode>(() =>
             {
                 foreach (PeptideGroupTreeNode node in SequenceTree.GetSequenceNodes())
-                    foreach (TreeNode child in node.Nodes)
-                        child.Collapse();
+                    foreach (PeptideTreeNode child in node.Nodes)
+                        child.CollapseAndClear();
             });
             Settings.Default.SequenceTreeExpandPeptides =
                 Settings.Default.SequenceTreeExpandPrecursors = false;
@@ -1672,9 +1672,9 @@ namespace pwiz.Skyline
             BulkUpdateTreeNodes<PeptideTreeNode>(() =>
             {
                 foreach (PeptideGroupTreeNode node in SequenceTree.GetSequenceNodes())
-                    foreach (TreeNode child in node.Nodes)
-                        foreach (TreeNode grandChild in child.Nodes)
-                            grandChild.Collapse();
+                    foreach (PeptideTreeNode child in node.Nodes)
+                        foreach (TransitionGroupTreeNode grandChild in child.Nodes)
+                            grandChild.CollapseAndClear();
             });
             Settings.Default.SequenceTreeExpandPrecursors = false;
         }

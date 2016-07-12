@@ -24,6 +24,7 @@ using System.Linq;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using ZedGraph;
 using pwiz.Skyline.Util.Extensions;
 
@@ -61,6 +62,9 @@ namespace pwiz.Skyline.Controls.Graphs
             set { Settings.Default.PrimaryTransitionCountGraph = value; }
         }
 
+        private SrmDocument _documentShowing;
+        private double[] _windowsShowing;
+
         public RTScheduleGraphPane(GraphSummary graphSummary)
             : base(graphSummary)
         {
@@ -72,6 +76,13 @@ namespace pwiz.Skyline.Controls.Graphs
         public override void UpdateGraph(bool checkData)
         {
             SrmDocument document = GraphSummary.DocumentUIContainer.DocumentUI;
+            var windows = ScheduleWindows;
+            // No need to re-graph for a selection change
+            if (ReferenceEquals(document, _documentShowing) && ArrayUtil.EqualsDeep(windows, _windowsShowing))
+                return;
+
+            _documentShowing = document;
+            _windowsShowing = windows;
 
             // TODO: Make it possible to see transition scheduling when full-scan enabled.
             YAxis.Title.Text = document.Settings.TransitionSettings.FullScan.IsEnabledMsMs
@@ -81,7 +92,6 @@ namespace pwiz.Skyline.Controls.Graphs
             CurveList.Clear();
 
             AddCurve(document, Color.Blue);
-            var windows = ScheduleWindows;
             for (int i = 0; i < windows.Length; i++)
             {
                 double window = windows[i];
