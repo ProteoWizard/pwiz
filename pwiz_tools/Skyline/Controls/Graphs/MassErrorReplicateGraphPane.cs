@@ -131,6 +131,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     int step = iStep - numSteps;
                     var pointPairList = pointPairLists[iStep];
                     Color color;
+                    // ReSharper disable ExpressionIsAlwaysNull
                     var nodeGroup = docNode as TransitionGroupDocNode;
                     if (parentNode is PeptideDocNode)
                     {
@@ -149,6 +150,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         color = COLORS_TRANSITION[(iColor + colorOffset) % COLORS_TRANSITION.Length];
                     }
+                    // ReSharper restore ExpressionIsAlwaysNull
                     iColor++;
 
                     string label = graphData.DocNodeLabels[i];

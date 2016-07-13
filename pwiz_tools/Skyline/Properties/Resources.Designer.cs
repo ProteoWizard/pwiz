@@ -11506,6 +11506,17 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The number of peptides {0} must be less than the number of peptide precursor models for decoys {1}, or use the &apos;{2}&apos; decoy generation method..
+        /// </summary>
+        public static string GenerateDecoysDlg_OkDialog_The_number_of_peptides__0__must_be_less_than_the_number_of_peptide_precursor_models_for_decoys__1___or_use_the___2___decoy_generation_method_ {
+            get {
+                return ResourceManager.GetString("GenerateDecoysDlg_OkDialog_The_number_of_peptides__0__must_be_less_than_the_numbe" +
+                        "r_of_peptide_precursor_models_for_decoys__1___or_use_the___2___decoy_generation_" +
+                        "method_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No peptide precursor models for decoys were found..
         /// </summary>
         public static string GenerateDecoysError_No_peptide_precursor_models_for_decoys_were_found_ {

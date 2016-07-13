@@ -328,7 +328,7 @@ namespace pwiz.Skyline.SettingsUI
                         NotificationContainerForm.BeginInvoke(new Action(() => MessageDlg.Show(NotificationContainerForm, buildState.ExtraMessage)));
                     }
                     var thread = BackgroundEventThreads.CreateThreadForAction(frm.Notify);
-                    thread.Name = "BuildLibraryNotification";
+                    thread.Name = "BuildLibraryNotification"; // Not L10N
                     thread.IsBackground = true;
                     thread.Start();
                     Notification = frm;

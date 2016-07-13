@@ -22,7 +22,6 @@ using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -84,7 +83,7 @@ namespace pwiz.Skyline.EditUI
             if (!Equals(DecoysMethod, DecoyGeneration.SHUFFLE_SEQUENCE) && numComparableGroups < numDecoys)
             {
                 helper.ShowTextBoxError(textNumberOfDecoys,
-                                        "The number of peptides {0} must be less than the number of peptide precursor models for decoys {1}, or use the \'{2}\' decoy generation method.",
+                                        Resources.GenerateDecoysDlg_OkDialog_The_number_of_peptides__0__must_be_less_than_the_number_of_peptide_precursor_models_for_decoys__1___or_use_the___2___decoy_generation_method_,
                                         null, numComparableGroups, DecoyGeneration.SHUFFLE_SEQUENCE);
                 return;
             }
