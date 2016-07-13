@@ -316,7 +316,7 @@ namespace BiblioSpec
                 try
                 {
                     statement = getStmt(
-                        "SELECT PeptideID, MSnSpectrumInfoSpectrumID, Sequence, PercolatorqValue "
+                        "SELECT PeptideID, MSnSpectrumInfoSpectrumID, Sequence, PercolatorqValue, SpectrumFileName "
                         "FROM TargetPsms JOIN TargetPsmsMSnSpectrumInfo ON PeptideID = TargetPsmsPeptideID "
                         "WHERE PercolatorqValue <= " + lexical_cast<string>(getScoreThreshold(SQT)));
                     resultCount = getRowCount(
@@ -326,7 +326,7 @@ namespace BiblioSpec
                 catch (BlibException& e)
                 {
                     statement = getStmt(
-                        "SELECT PeptideID, MSnSpectrumInfoSpectrumID, Sequence, qValue "
+                        "SELECT PeptideID, MSnSpectrumInfoSpectrumID, Sequence, qValue, SpectrumFileName "
                         "FROM TargetPsms JOIN TargetPsmsMSnSpectrumInfo ON PeptideID = TargetPsmsPeptideID "
                         "WHERE qValue <= " + lexical_cast<string>(getScoreThreshold(SQT)));
                     resultCount = getRowCount(
@@ -431,13 +431,17 @@ namespace BiblioSpec
             curPSM_->specIndex = specId;
             curPSM_->score = qvalue;
 
-            map<int, int>::iterator fileIdMapAccess = fileIdMap.find(peptideId);
-            if (fileIdMapAccess == fileIdMap.end())
-            {
-                throw BlibException(false, "No FileID for PSM %d.", peptideId);
+            string psmFileName;
+            if (!filtered_) {
+                map<int, int>::iterator fileIdMapAccess = fileIdMap.find(peptideId);
+                if (fileIdMapAccess == fileIdMap.end()) {
+                    throw BlibException(false, "No FileID for PSM %d.", peptideId);
+                }
+                psmFileName = fileIdToName(fileIdMapAccess->second);
+                fileIdMap.erase(fileIdMapAccess);
+            } else {
+                psmFileName = lexical_cast<string>(sqlite3_column_text(statement, 4));
             }
-            string psmFileName = fileIdToName(fileIdMapAccess->second);
-            fileIdMap.erase(fileIdMapAccess);
 
             // filename
             map< string, map< PSM_SCORE_TYPE, vector<PSM*> > >::iterator fileMapAccess = fileMap_.find(psmFileName);
@@ -642,26 +646,22 @@ namespace BiblioSpec
      */
     map<int, int> MSFReader::getFileIds()
     {
-        sqlite3_stmt* statement = !filtered_ ?
-            getStmt(
+        map<int, int> fileIdMap;
+        if (!filtered_) {
+            sqlite3_stmt* statement = getStmt(
                 "SELECT PeptideID, FileID "
                 "FROM Peptides "
                 "JOIN SpectrumHeaders ON Peptides.SpectrumID = SpectrumHeaders.SpectrumID "
-                "JOIN MassPeaks ON SpectrumHeaders.MassPeakID = MassPeaks.MassPeakID") :
-            getStmt(
-                "SELECT PeptideID, FileID "
-                "FROM TargetPsms "
-                "JOIN WorkflowInputFiles ON TargetPsms.WorkflowID = WorkflowInputFiles.WorkflowID");
+                "JOIN MassPeaks ON SpectrumHeaders.MassPeakID = MassPeaks.MassPeakID");
 
-        // process each row of the returned table
-        map<int, int> fileIdMap;
-        while (hasNext(statement))
-        {
-            int peptideId = sqlite3_column_int(statement, 0);
-            int fileId = sqlite3_column_int(statement, 1);
-            fileIdMap[peptideId] = fileId;
+            // process each row of the returned table
+            while (hasNext(statement))
+            {
+                int peptideId = sqlite3_column_int(statement, 0);
+                int fileId = sqlite3_column_int(statement, 1);
+                fileIdMap[peptideId] = fileId;
+            }
         }
-
         return fileIdMap;
     }
 
