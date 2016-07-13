@@ -95,6 +95,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(normalBuild, normalBuild.CancelDialog);
             var midasBlib = TestFilesDir.GetTestPath("midas.blib");
             RunUI(() => peptideSettings.ShowBuildLibraryDlg(midasBlib));
+            WaitForOpenForm<BuildLibraryNotification>();
             WaitForConditionUI(10000, () => peptideSettings.LibraryDriver.List.Count == 2);
             RunUI(() =>
             {

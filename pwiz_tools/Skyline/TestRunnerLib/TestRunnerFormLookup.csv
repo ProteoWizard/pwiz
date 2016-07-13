@@ -159,6 +159,7 @@ StartPage.WizardTab,TestStartPageOpenRecent
 StartPage.TutorialTab,TestStartPageCheckActionBoxes
 StartPageSettingsUI,TestStartPageImport
 StatementCompletionForm,TestBackgroundProteome
+BackgroundEventThreadsTestForm,TestBackgroundEventThreads
 ToolOptionsUI,TestAccessServer
 ToolStoreDlg,TestToolStore
 ToolUpdatesDlg,TestToolUpdates

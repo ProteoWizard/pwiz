@@ -20,7 +20,6 @@
 using System;
 using System.ComponentModel;
 using System.Drawing;
-using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
@@ -328,11 +327,10 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         NotificationContainerForm.BeginInvoke(new Action(() => MessageDlg.Show(NotificationContainerForm, buildState.ExtraMessage)));
                     }
-
-                    Thread th = new Thread(frm.Notify) { Name = "BuildLibraryNotification", IsBackground = true }; // Not L10N
-                    th.SetApartmentState(ApartmentState.STA);
-                    th.Start();
-
+                    var thread = BackgroundEventThreads.CreateThreadForAction(frm.Notify);
+                    thread.Name = "BuildLibraryNotification";
+                    thread.IsBackground = true;
+                    thread.Start();
                     Notification = frm;
                 }
             }
