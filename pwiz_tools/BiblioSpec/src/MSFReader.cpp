@@ -316,7 +316,8 @@ namespace BiblioSpec
                 try
                 {
                     statement = getStmt(
-                        "SELECT PeptideID, MSnSpectrumInfoSpectrumID, Sequence, PercolatorqValue, SpectrumFileName "
+                        "SELECT PeptideID, MSnSpectrumInfoSpectrumID, Sequence, PercolatorqValue, "
+                        "WorkflowID, SpectrumFileName "
                         "FROM TargetPsms JOIN TargetPsmsMSnSpectrumInfo ON PeptideID = TargetPsmsPeptideID "
                         "WHERE PercolatorqValue <= " + lexical_cast<string>(getScoreThreshold(SQT)));
                     resultCount = getRowCount(
@@ -326,7 +327,8 @@ namespace BiblioSpec
                 catch (BlibException& e)
                 {
                     statement = getStmt(
-                        "SELECT PeptideID, MSnSpectrumInfoSpectrumID, Sequence, qValue, SpectrumFileName "
+                        "SELECT PeptideID, MSnSpectrumInfoSpectrumID, Sequence, qValue, "
+                        "WorkflowID, SpectrumFileName "
                         "FROM TargetPsms JOIN TargetPsmsMSnSpectrumInfo ON PeptideID = TargetPsmsPeptideID "
                         "WHERE qValue <= " + lexical_cast<string>(getScoreThreshold(SQT)));
                     resultCount = getRowCount(
@@ -340,7 +342,7 @@ namespace BiblioSpec
 
         initFileNameMap();
         map<int, ProcessedMsfSpectrum> processedSpectra;
-        map< int, vector<SeqMod> > modMap = getMods();
+        ModSet modSet = ModSet(msfFile_, filtered_);
         map<int, int> fileIdMap = getFileIds();
 
         // turn each row of returned table into a psm
@@ -422,12 +424,9 @@ namespace BiblioSpec
 
             curPSM_->charge = spectraChargeStates_[specId];
             curPSM_->unmodSeq = sequence;
-            map< int, vector<SeqMod> >::iterator modAccess = modMap.find(peptideId);
-            if (modAccess != modMap.end())
-            {
-                curPSM_->mods = modAccess->second;
-                modMap.erase(modAccess);
-            }
+            curPSM_->mods = !filtered_
+                ? modSet.getMods(peptideId)
+                : modSet.getMods(sqlite3_column_int(statement, 4), peptideId);
             curPSM_->specIndex = specId;
             curPSM_->score = qvalue;
 
@@ -440,7 +439,7 @@ namespace BiblioSpec
                 psmFileName = fileIdToName(fileIdMapAccess->second);
                 fileIdMap.erase(fileIdMapAccess);
             } else {
-                psmFileName = lexical_cast<string>(sqlite3_column_text(statement, 4));
+                psmFileName = lexical_cast<string>(sqlite3_column_text(statement, 5));
             }
 
             // filename
@@ -551,63 +550,46 @@ namespace BiblioSpec
         return true;
     }
 
-    /**
-     * Return a map that maps PeptideID to all SeqMods for that peptide.
-     */
-    map< int, vector<SeqMod> > MSFReader::getMods()
-    {
-        sqlite3_stmt* statement = !filtered_ ?
-            getStmt(
-                "SELECT PeptideID, Position, DeltaMass "
+    MSFReader::ModSet::ModSet(sqlite3* db, bool filtered) {
+        sqlite3_stmt* stmt = !filtered
+            ? MSFReader::getStmt(db,
+                "SELECT '0', PeptideID, Position, DeltaMass "
                 "FROM PeptidesAminoAcidModifications "
                 "JOIN AminoAcidModifications "
-                "   ON PeptidesAminoAcidModifications.AminoAcidModificationID = AminoAcidModifications.AminoAcidModificationID") :
-            getStmt(
-                "SELECT TargetPsmsPeptideID, Position, DeltaMonoisotopicMass "
+                "   ON PeptidesAminoAcidModifications.AminoAcidModificationID = AminoAcidModifications.AminoAcidModificationID")
+            : MSFReader::getStmt(db,
+                "SELECT TargetPsmsWorkflowID, TargetPsmsPeptideID, Position, DeltaMonoisotopicMass "
                 "FROM TargetPsmsFoundModifications "
                 "JOIN FoundModifications "
                 "   ON TargetPsmsFoundModifications.FoundModificationsModificationID = FoundModifications.ModificationID");
 
         // turn each row of returned table into a seqmod to be added to the map
-        map< int, vector<SeqMod> > modMap;
-        map< int, vector<SeqMod> >::iterator found;
-        int modCount = 0;
-        while (hasNext(statement))
+        while (MSFReader::hasNext(stmt))
         {
-            int peptideId = sqlite3_column_int(statement, 0);
+            int workflowId = sqlite3_column_int(stmt, 0);
+            int peptideId = sqlite3_column_int(stmt, 1);
             // mod indices are 0 based in unfiltered, 1 based in filtered
-            int pos = sqlite3_column_int(statement, 1);
-            if (!filtered_)
+            int pos = sqlite3_column_int(stmt, 2);
+            if (!filtered)
                 ++pos;
-            SeqMod mod(pos, sqlite3_column_double(statement, 2));
-            found = modMap.find(peptideId);
-            if (found == modMap.end())
-            {
-                modMap[peptideId] = vector<SeqMod>(1, mod);
-            }
-            else
-            {
-                modMap[peptideId].push_back(mod);
-            }
-            ++modCount;
+            addMod(workflowId, peptideId, pos, sqlite3_column_double(stmt, 3));
         }
 
         // get terminal mods if PeptidesTerminalModifications table exists
-        statement = getStmt(
+        stmt = MSFReader::getStmt(db,
             "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'PeptidesTerminalModifications'");
-        if (hasNext(statement) && sqlite3_column_int(statement, 0) == 1) {
-            sqlite3_finalize(statement);
-            statement = getStmt(
+        if (MSFReader::hasNext(stmt) && sqlite3_column_int(stmt, 0) == 1) {
+            sqlite3_finalize(stmt);
+            stmt = MSFReader::getStmt(db,
                 "SELECT PeptidesTerminalModifications.PeptideID, PositionType, DeltaMass, Sequence "
                 "FROM PeptidesTerminalModifications "
                 "JOIN Peptides ON PeptidesTerminalModifications.PeptideID = Peptides.PeptideID "
                 "JOIN AminoAcidModifications ON TerminalModificationID = AminoAcidModificationID");
 
             // turn each row of returned table into a seqmod to be added to the map
-            while (hasNext(statement))
-            {
-                int peptideId = sqlite3_column_int(statement, 0);
-                int positionType = sqlite3_column_int(statement, 1);
+            while (MSFReader::hasNext(stmt)) {
+                int peptideId = sqlite3_column_int(stmt, 0);
+                int positionType = sqlite3_column_int(stmt, 1);
                 int position;
                 switch (positionType) {
                 case 1:
@@ -616,29 +598,51 @@ namespace BiblioSpec
                     break;
                 case 2:
                 case 4:
-                    position = strlen((const char*)sqlite3_column_text(statement, 3));
+                    position = strlen((const char*)sqlite3_column_text(stmt, 3));
                     break;
                 default:
                     throw BlibException(false, "Unknown position type in PeptideAminoAcidModifications "
                                         "for PeptideID %d", peptideId);
                 }
-                SeqMod mod(position, sqlite3_column_double(statement, 2));
-                found = modMap.find(peptideId);
-                if (found == modMap.end())
-                {
-                    modMap[peptideId] = vector<SeqMod>(1, mod);
-                }
-                else
-                {
-                    modMap[peptideId].push_back(mod);
-                }
-                ++modCount;
+                addMod(0, peptideId, position, sqlite3_column_double(stmt, 2));
             }
         }
+    }
 
-        Verbosity::debug("%d mods found for %d peptides", modCount, modMap.size());
+    const vector<SeqMod>& MSFReader::ModSet::getMods(int peptideId) {
+        return getMods(0, peptideId);
+    }
 
-        return modMap;
+    const vector<SeqMod>& MSFReader::ModSet::getMods(int workflowId, int peptideId) {
+        map< int, map< int, vector<SeqMod> > >::const_iterator i = mods_.find(workflowId);
+        if (i != mods_.end()) {
+            const map< int, vector<SeqMod> >& workflowMap = i->second;
+            map< int, vector<SeqMod> >::const_iterator j = workflowMap.find(peptideId);
+            if (j != workflowMap.end()) {
+                return j->second;
+            }
+        }
+        return dummy_;
+    }
+
+    map< int, vector<SeqMod> >& MSFReader::ModSet::getWorkflowMap(int workflowId) {
+        map< int, map< int, vector<SeqMod> > >::iterator i = mods_.find(workflowId);
+        if (i == mods_.end()) {
+            pair< int, map< int, vector<SeqMod> > > toInsert(workflowId, map< int, vector<SeqMod> >());
+            i = mods_.insert(toInsert).first;
+        }
+        return i->second;
+    }
+
+    void MSFReader::ModSet::addMod(int workflowId, int peptideId, int position, double mass) {
+        SeqMod mod(position, mass);
+        map< int, vector<SeqMod> >& workflowMap = getWorkflowMap(workflowId);
+        map< int, vector<SeqMod> >::iterator peptideMap = workflowMap.find(peptideId);
+        if (peptideMap == workflowMap.end()) {
+            workflowMap[peptideId] = vector<SeqMod>(1, mod);
+        } else {
+            workflowMap[peptideId].push_back(mod);
+        }
     }
 
     /**
@@ -780,13 +784,14 @@ namespace BiblioSpec
     /**
      * Prepares the given string as a SQLite query and verifies the return value.
      */
-    sqlite3_stmt* MSFReader::getStmt(string query)
-    {
+    sqlite3_stmt* MSFReader::getStmt(const string& query) {
+        return getStmt(msfFile_, query);
+    }
+    
+    sqlite3_stmt* MSFReader::getStmt(sqlite3* handle, const string& query) {
         sqlite3_stmt* statement;
-        if (sqlite3_prepare(msfFile_, query.c_str(), -1, &statement, NULL) != SQLITE_OK)
-        {
-            throw BlibException("Cannot prepare SQL statement for %s: %s ",
-                                msfName_, sqlite3_errmsg(msfFile_));
+        if (sqlite3_prepare(handle, query.c_str(), -1, &statement, NULL) != SQLITE_OK) {
+            throw BlibException("Cannot prepare SQL statement: %s ", sqlite3_errmsg(handle));
         }
         return statement;
     }
@@ -797,15 +802,11 @@ namespace BiblioSpec
      */
     bool MSFReader::hasNext(sqlite3_stmt* statement)
     {
-        if (sqlite3_step(statement) == SQLITE_ROW)
-        {
-            return true;
-        }
-        else
-        {
+        if (sqlite3_step(statement) != SQLITE_ROW) {
             sqlite3_finalize(statement);
             return false;
         }
+        return true;
     }
 
     /**

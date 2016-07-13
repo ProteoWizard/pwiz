@@ -80,6 +80,21 @@ namespace BiblioSpec
             };
         };
 
+        class ModSet {
+        public:
+            ModSet(sqlite3* db, bool filtered);
+            ~ModSet() {}
+
+            const vector<SeqMod>& getMods(int peptideId);
+            const vector<SeqMod>& getMods(int workflowId, int peptideId);
+        private:
+            map< int, map< int, vector<SeqMod> > > mods_; // workflowId -> peptideId -> mods
+            vector<SeqMod> dummy_;
+
+            map< int, vector<SeqMod> >& getWorkflowMap(int workflowId);
+            void addMod(int workflowId, int peptideId, int position, double mass);
+        };
+
         sqlite3* msfFile_;
         const char* msfName_;
         int schemaVersion_;
@@ -110,8 +125,9 @@ namespace BiblioSpec
         static int ZCALLBACK ferrorMem(voidpf opaque, voidpf stream);
 
         // sqlite helper functions
-        sqlite3_stmt* getStmt(string query);
-        bool hasNext(sqlite3_stmt* statement);
+        sqlite3_stmt* getStmt(const string& query);
+        static sqlite3_stmt* getStmt(sqlite3* handle, const string& query);
+        static bool hasNext(sqlite3_stmt* statement);
         int getRowCount(string table);
 
         // SpecFileReader interface
