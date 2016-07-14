@@ -838,7 +838,7 @@ namespace pwiz.SkylineTestTutorial
                 Assert.IsNotNull(colRank);
                 var colRankByLevel = documentGrid.FindColumn(PEAK_RANK_BY_LEVEL_PATH);
                 Assert.IsNotNull(colRankByLevel);
-                string precursorText = IonType.precursor.GetLocalizedString();
+                string precursorText = IonType.precursor.ToString();    // Invariant name
 
                 foreach (DataGridViewRow row in documentGrid.DataGridView.Rows)
                 {
