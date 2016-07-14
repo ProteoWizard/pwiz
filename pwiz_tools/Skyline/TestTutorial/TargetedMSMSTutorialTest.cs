@@ -425,6 +425,8 @@ namespace pwiz.SkylineTestTutorial
             RestoreViewOnScreen(18);
             PauseForScreenShot("Main window with data imported", 19);
 
+            ValidatePeakRanks(1, 176, true);
+
             const double minDotp = 0.9;
             foreach (var nodeGroup in SkylineWindow.Document.PeptideTransitionGroups)
             {
@@ -650,6 +652,8 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => SkylineWindow.Width = 1013);
             PauseForScreenShot("Main window full gradient import of high concentration and Targets tree clipped", 31);
 
+            ValidatePeakRanks(3, 45, false);
+
             {
                 var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
                 RunUI(() =>
@@ -812,6 +816,64 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(() => SkylineWindow.SaveDocument());
             WaitForConditionUI(() => !SkylineWindow.Dirty);
+        }
+
+        private void ValidatePeakRanks(int precursorCount, int expectedRows, bool addColumns)
+        {
+            const string TRANSITIONS_ROOT = "Proteins!*.Peptides!*.Precursors!*.Transitions!*.";
+            const string FRAGMENT_ION_PATH = "FragmentIon";
+            const string RESULTS_PART = "Results!*.Value.";
+            const string PEAK_RANK_PATH = RESULTS_PART + "PeakRank";
+            const string PEAK_RANK_BY_LEVEL_PATH = RESULTS_PART + "PeakRankByLevel";
+
+            var documentGrid = ShowDialog<DocumentGridForm>(() => SkylineWindow.ShowDocumentGrid(true));
+            EnableDocumentGridColumns(documentGrid, Resources.ReportSpecList_GetDefaults_Transition_Results, expectedRows,
+                addColumns ? new[] { TRANSITIONS_ROOT + PEAK_RANK_BY_LEVEL_PATH } : null);
+            WaitForConditionUI(() => documentGrid.IsComplete && documentGrid.FindColumn(PEAK_RANK_BY_LEVEL_PATH) != null);
+            RunUI(() =>
+            {
+                var colIon = documentGrid.FindColumn(FRAGMENT_ION_PATH);
+                Assert.IsNotNull(colIon);
+                var colRank = documentGrid.FindColumn(PEAK_RANK_PATH);
+                Assert.IsNotNull(colRank);
+                var colRankByLevel = documentGrid.FindColumn(PEAK_RANK_BY_LEVEL_PATH);
+                Assert.IsNotNull(colRankByLevel);
+                string precursorText = IonType.precursor.GetLocalizedString();
+
+                foreach (DataGridViewRow row in documentGrid.DataGridView.Rows)
+                {
+                    int? peakRank = GetCellIntValue(row, colRank.DisplayIndex);
+                    int? peakRankByLevel = GetCellIntValue(row, colRankByLevel.DisplayIndex);
+                    if (row.Cells[colIon.DisplayIndex].Value.ToString().StartsWith(precursorText))
+                    {
+                        // Some overlap in peak area intensity of the M+2 ion
+                        if (peakRank < 3)
+                            Assert.AreEqual(peakRank, peakRankByLevel);
+                        else
+                            Assert.IsTrue(peakRankByLevel <= peakRank);
+                    }
+                    else
+                    {
+                        // One case where first 2 fragments are more intense than M+2
+                        if (!peakRankByLevel.HasValue)
+                            Assert.IsNull(peakRank);
+                        else if (peakRankByLevel > 2)
+                            Assert.AreEqual(peakRank - precursorCount, peakRankByLevel);
+                        else
+                            Assert.IsTrue(peakRankByLevel >= peakRank - precursorCount,
+                                string.Format("Expected {0} >= {1}", peakRankByLevel, peakRank - precursorCount));
+                    }
+                }
+            });
+            OkDialog(documentGrid, documentGrid.Close);
+        }
+
+        private int? GetCellIntValue(DataGridViewRow row, int index)
+        {
+            var value = row.Cells[index].Value;
+            if (value == null)
+                return null;
+            return int.Parse(value.ToString());
         }
 
         private void WaitForDotProducts()

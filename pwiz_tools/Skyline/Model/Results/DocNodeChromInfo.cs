@@ -452,7 +452,8 @@ namespace pwiz.Skyline.Model.Results
         public bool? IsTruncated { get; private set; }
         public bool IsIdentified { get { return Identified != PeakIdentification.FALSE; } }
         public PeakIdentification Identified { get; private set; }
-        public int Rank { get; private set; }
+        public short Rank { get; private set; }
+        public short RankByLevel { get; private set; }
 
         /// <summary>
         /// Set after creation at the peptide results calculation level
@@ -556,9 +557,14 @@ namespace pwiz.Skyline.Model.Results
             return ChangeProp(ImClone(this), im => im.Ratios = prop);
         }
 
-        public TransitionChromInfo ChangeRank(int prop)
+        public TransitionChromInfo ChangeRank(short prop)
         {
             return ChangeProp(ImClone(this), im => im.Rank = prop);
+        }
+
+        public TransitionChromInfo ChangeRankByLevel(short prop)
+        {
+            return ChangeProp(ImClone(this), im => im.RankByLevel = prop);
         }
 
         public TransitionChromInfo ChangeAnnotations(Annotations annotations)
@@ -594,6 +600,7 @@ namespace pwiz.Skyline.Model.Results
                    Equals(other.IsTruncated, IsTruncated) &&
                    Equals(other.Identified, Identified) &&
                    other.Rank == Rank &&
+                   other.RankByLevel == RankByLevel &&
                    ArrayUtil.EqualsDeep(other.Ratios, Ratios) &&
                    other.OptimizationStep.Equals(OptimizationStep) &&
                    other.Annotations.Equals(Annotations) &&
@@ -624,6 +631,7 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ Identified.GetHashCode();
                 result = (result*397) ^ (IsTruncated.HasValue ? IsTruncated.Value.GetHashCode() : 0);
                 result = (result*397) ^ Rank;
+                result = (result*397) ^ RankByLevel;
                 result = (result*397) ^ Ratios.GetHashCodeDeep();
                 result = (result*397) ^ OptimizationStep.GetHashCode();
                 result = (result*397) ^ Annotations.GetHashCode();

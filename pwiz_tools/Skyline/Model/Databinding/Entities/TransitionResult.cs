@@ -72,6 +72,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public bool? Truncated { get { return ChromInfo.IsTruncated; } }
         [Format(NullValue = TextUtil.EXCEL_NA)]
         public int? PeakRank { get { return ChromInfo.IsEmpty ? (int?)null : ChromInfo.Rank; } }
+        [Format(NullValue = TextUtil.EXCEL_NA)]
+        public int? PeakRankByLevel { get { return ChromInfo.IsEmpty ? (int?)null : ChromInfo.RankByLevel; } }
         public UserSet UserSetPeak { get { return ChromInfo.UserSet; } }
         [Format(NullValue = TextUtil.EXCEL_NA)]
         public int OptStep { get { return ChromInfo.OptimizationStep; } }

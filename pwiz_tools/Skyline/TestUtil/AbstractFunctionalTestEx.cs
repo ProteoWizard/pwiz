@@ -184,17 +184,20 @@ namespace pwiz.SkylineTestUtil
         {
             RunUI(() => documentGrid.ChooseView(viewName));
             WaitForCondition(() => (documentGrid.RowCount == expectedRows)); // Let it initialize
-            RunDlg<ViewEditor>(documentGrid.NavBar.CustomizeView,
-                viewEditor =>
-                {
-                    foreach (var colName in colNames)
+            if (colNames != null)
+            {
+                RunDlg<ViewEditor>(documentGrid.NavBar.CustomizeView,
+                    viewEditor =>
                     {
-                        Assert.IsTrue(viewEditor.ChooseColumnsTab.TrySelect(PropertyPath.Parse(colName)));
-                        viewEditor.ChooseColumnsTab.AddSelectedColumn();
-                    }
-                    viewEditor.ViewName = viewName;
-                    viewEditor.OkDialog();
-                });
+                        foreach (var colName in colNames)
+                        {
+                            Assert.IsTrue(viewEditor.ChooseColumnsTab.TrySelect(PropertyPath.Parse(colName)));
+                            viewEditor.ChooseColumnsTab.AddSelectedColumn();
+                        }
+                        viewEditor.ViewName = viewName;
+                        viewEditor.OkDialog();
+                    });
+            }
         }
 
         /// <summary>

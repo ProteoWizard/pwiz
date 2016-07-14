@@ -289,6 +289,15 @@ namespace pwiz.Skyline.Model
             return null;
         }
 
+        public int? GetPeakRankByLevel(int i)
+        {
+            // CONSIDER: Also specify the file index?
+            var chromInfo = GetChromInfoEntry(i);
+            if (chromInfo != null && chromInfo.Rank > 0)
+                return chromInfo.RankByLevel;
+            return null;
+        }
+
         public int? GetRank(int? i, bool useResults)
         {
             if (useResults && HasResults)

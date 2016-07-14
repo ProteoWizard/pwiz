@@ -447,6 +447,9 @@
   <data name="PeakRank">
     <value>Peak Rank</value>
   </data>
+  <data name="PeakRankByLevel">
+    <value>Peak Rank By Level</value>
+  </data>
   <data name="Peptide">
     <value>Peptide</value>
   </data>

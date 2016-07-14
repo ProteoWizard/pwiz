@@ -145,8 +145,14 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         private static string GetResultsText(TransitionDocNode nodeTran, int index, int indexRatio)
         {
-            int? rank = nodeTran.GetPeakRank(index);
-            string label = (rank.HasValue && rank > 0 ? string.Format(Resources.TransitionTreeNode_GetResultsText__0__, rank) : string.Empty);
+            int? rank = nodeTran.GetPeakRankByLevel(index);
+            string label = string.Empty;
+            if (rank.HasValue && rank > 0)
+            {
+                // Mark MS1 transition ranks with "i" for isotope
+                string rankText = (nodeTran.IsMs1 ? "i " : string.Empty) + rank; // Not L10N
+                label = string.Format(Resources.TransitionTreeNode_GetResultsText__0__, rankText);
+            }
             float? ratio = nodeTran.GetPeakAreaRatio(index, indexRatio);
             if (!ratio.HasValue)
                 return label;

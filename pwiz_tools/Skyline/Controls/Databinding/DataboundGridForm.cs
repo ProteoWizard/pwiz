@@ -46,10 +46,16 @@ namespace pwiz.Skyline.Controls.Databinding
         public BoundDataGridViewEx DataGridView { get { return databoundGridControl.DataGridView; } }
         public NavBar NavBar { get { return databoundGridControl.NavBar; } }
 
+        public DataGridViewColumn FindColumn(string propertyPathText)
+        {
+            return FindColumn(PropertyPath.Parse(propertyPathText));
+        }
+
         public DataGridViewColumn FindColumn(PropertyPath propertyPath)
         {
             return databoundGridControl.FindColumn(propertyPath);
         }
+
         public bool IsComplete
         {
             get

@@ -108,8 +108,7 @@ namespace pwiz.SkylineTestFunctional
             var oldDoc = SkylineWindow.Document;
             OpenDocument(docName);
             WaitForDocumentChangeLoaded(oldDoc);
-            RunUI(() => SkylineWindow.ShowDocumentGrid(true));
-            var documentGrid = WaitForOpenForm<DocumentGridForm>();
+            var documentGrid = ShowDialog<DocumentGridForm>(() => SkylineWindow.ShowDocumentGrid(true));
             RunUI(() => documentGrid.ChooseView(viewName));
             WaitForCondition(() => (documentGrid.RowCount == rowCount)); // Let it initialize
             int iteration = 0;
