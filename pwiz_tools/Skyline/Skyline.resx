@@ -2577,6 +2577,12 @@
   <data name="massErrorHistogramMenuItem.Text" xml:space="preserve">
     <value>&amp;Histogram</value>
   </data>
+  <data name="massErrorHistogram2DMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>471, 42</value>
+  </data>
+  <data name="massErrorHistogram2DMenuItem.Text" xml:space="preserve">
+    <value>2D Histogram</value>
+  </data>
   <data name="massErrorsMenuItem.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
@@ -2847,45 +2853,6 @@
   <metadata name="contextMenuMassErrors.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>446, 56</value>
   </metadata>
-  <data name="ppm05ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>298, 22</value>
-  </data>
-  <data name="ppm05ContextMenuItem.Text" xml:space="preserve">
-    <value>0.5 ppm</value>
-  </data>
-  <data name="ppm10ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>298, 22</value>
-  </data>
-  <data name="ppm10ContextMenuItem.Text" xml:space="preserve">
-    <value>1.0 ppm</value>
-  </data>
-  <data name="ppm15ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>298, 22</value>
-  </data>
-  <data name="ppm15ContextMenuItem.Text" xml:space="preserve">
-    <value>1.5 ppm</value>
-  </data>
-  <data name="ppm20ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>298, 22</value>
-  </data>
-  <data name="ppm20ContextMenuItem.Text" xml:space="preserve">
-    <value>2.0 ppm</value>
-  </data>
-  <data name="binCountContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>298, 22</value>
-  </data>
-  <data name="binCountContextMenuItem.Text" xml:space="preserve">
-    <value>Bin Width</value>
-  </data>
-  <data name="contextMenuMassErrors.Size" type="System.Drawing.Size, System.Drawing">
-    <value>299, 264</value>
-  </data>
-  <data name="&gt;&gt;contextMenuMassErrors.Name" xml:space="preserve">
-    <value>contextMenuMassErrors</value>
-  </data>
-  <data name="&gt;&gt;contextMenuMassErrors.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="massErrorReplicateComparisonContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 22</value>
   </data>
@@ -2903,6 +2870,12 @@
   </data>
   <data name="massErrorHistogramContextMenuItem.Text" xml:space="preserve">
     <value>Histogram</value>
+  </data>
+  <data name="massErrorHistogram2DContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>384, 42</value>
+  </data>
+  <data name="massErrorHistogram2DContextMenuItem.Text" xml:space="preserve">
+    <value>2D Histogram</value>
   </data>
   <data name="massErrorGraphContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>136, 22</value>
@@ -2939,6 +2912,93 @@
   </data>
   <data name="massErrorPointsContextMenuItem.Text" xml:space="preserve">
     <value>Points</value>
+  </data>
+  <data name="ppm05ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>223, 42</value>
+  </data>
+  <data name="ppm05ContextMenuItem.Text" xml:space="preserve">
+    <value>0.5 ppm</value>
+  </data>
+  <data name="ppm10ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>223, 42</value>
+  </data>
+  <data name="ppm10ContextMenuItem.Text" xml:space="preserve">
+    <value>1.0 ppm</value>
+  </data>
+  <data name="ppm15ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>223, 42</value>
+  </data>
+  <data name="ppm15ContextMenuItem.Text" xml:space="preserve">
+    <value>1.5 ppm</value>
+  </data>
+  <data name="ppm20ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>223, 42</value>
+  </data>
+  <data name="ppm20ContextMenuItem.Text" xml:space="preserve">
+    <value>2.0 ppm</value>
+  </data>
+  <data name="binCountContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>263, 42</value>
+  </data>
+  <data name="binCountContextMenuItem.Text" xml:space="preserve">
+    <value>Bin Width</value>
+  </data>
+  <data name="massErrorAllTransitionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>246, 42</value>
+  </data>
+  <data name="massErrorAllTransitionsContextMenuItem.Text" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="massErrorBestTransitionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>246, 42</value>
+  </data>
+  <data name="massErrorBestTransitionsContextMenuItem.Text" xml:space="preserve">
+    <value>Best</value>
+  </data>
+  <data name="toolStripSeparator55.Size" type="System.Drawing.Size, System.Drawing">
+    <value>243, 6</value>
+  </data>
+  <data name="MassErrorPrecursorsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>246, 42</value>
+  </data>
+  <data name="MassErrorPrecursorsContextMenuItem.Text" xml:space="preserve">
+    <value>Precursors</value>
+  </data>
+  <data name="MassErrorProductsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>246, 42</value>
+  </data>
+  <data name="MassErrorProductsContextMenuItem.Text" xml:space="preserve">
+    <value>Products</value>
+  </data>
+  <data name="massErrorTransitionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>263, 42</value>
+  </data>
+  <data name="massErrorTransitionsContextMenuItem.Text" xml:space="preserve">
+    <value>Transitions</value>
+  </data>
+  <data name="massErorrRetentionTimeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>309, 42</value>
+  </data>
+  <data name="massErorrRetentionTimeContextMenuItem.Text" xml:space="preserve">
+    <value>Retention Time</value>
+  </data>
+  <data name="massErrorMassToChargContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>309, 42</value>
+  </data>
+  <data name="massErrorMassToChargContextMenuItem.Text" xml:space="preserve">
+    <value>Mass to Charge</value>
+  </data>
+  <data name="massErrorXAxisContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>263, 42</value>
+  </data>
+  <data name="massErrorXAxisContextMenuItem.Text" xml:space="preserve">
+    <value>X-Axis</value>
+  </data>
+  <data name="massErrorlogScaleContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>263, 42</value>
+  </data>
+  <data name="massErrorlogScaleContextMenuItem.Text" xml:space="preserve">
+    <value>LogScale</value>
   </data>
   <data name="contextMenuMassErrors.Size" type="System.Drawing.Size, System.Drawing">
     <value>137, 70</value>
@@ -5118,6 +5178,12 @@
   <data name="&gt;&gt;massErrorHistogramMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;massErrorHistogram2DMenuItem.Name" xml:space="preserve">
+    <value>massErrorHistogram2DMenuItem</value>
+  </data>
+  <data name="&gt;&gt;massErrorHistogram2DMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;calibrationCurveMenuItem.Name" xml:space="preserve">
     <value>calibrationCurveMenuItem</value>
   </data>
@@ -5382,6 +5448,12 @@
   <data name="&gt;&gt;massErrorHistogramContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;massErrorHistogram2DContextMenuItem.Name" xml:space="preserve">
+    <value>massErrorHistogram2DContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;massErrorHistogram2DContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;massErrorPropsContextMenuItem.Name" xml:space="preserve">
     <value>massErrorPropsContextMenuItem</value>
   </data>
@@ -5440,6 +5512,66 @@
     <value>ppm20ContextMenuItem</value>
   </data>
   <data name="&gt;&gt;ppm20ContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;massErrorTransitionsContextMenuItem.Name" xml:space="preserve">
+    <value>massErrorTransitionsContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;massErrorTransitionsContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;massErrorAllTransitionsContextMenuItem.Name" xml:space="preserve">
+    <value>massErrorAllTransitionsContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;massErrorAllTransitionsContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;massErrorBestTransitionsContextMenuItem.Name" xml:space="preserve">
+    <value>massErrorBestTransitionsContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;massErrorBestTransitionsContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator55.Name" xml:space="preserve">
+    <value>toolStripSeparator55</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator55.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;MassErrorPrecursorsContextMenuItem.Name" xml:space="preserve">
+    <value>MassErrorPrecursorsContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;MassErrorPrecursorsContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;MassErrorProductsContextMenuItem.Name" xml:space="preserve">
+    <value>MassErrorProductsContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;MassErrorProductsContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;massErrorXAxisContextMenuItem.Name" xml:space="preserve">
+    <value>massErrorXAxisContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;massErrorXAxisContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;massErorrRetentionTimeContextMenuItem.Name" xml:space="preserve">
+    <value>massErorrRetentionTimeContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;massErorrRetentionTimeContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;massErrorMassToChargContextMenuItem.Name" xml:space="preserve">
+    <value>massErrorMassToChargContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;massErrorMassToChargContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;massErrorlogScaleContextMenuItem.Name" xml:space="preserve">
+    <value>massErrorlogScaleContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;massErrorlogScaleContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">

@@ -42,22 +42,26 @@ namespace pwiz.MSGraph
                 base.SetScale(g);
                 return;
             }
+            GraphHeatMap(this,_heatMapData,MaxDotRadius,MinDotRadius,_yMin,_yMax,true,0);
+        }
 
-            CurveList.Clear();
-            XAxis.Scale.SetupScaleData(this,  XAxis);
-            YAxis.Scale.SetupScaleData(this,  YAxis);
-            double cellWidth = Math.Abs(XAxis.Scale.ReverseTransform(MinDotRadius) - XAxis.Scale.ReverseTransform(0));
-            double cellHeight = Math.Abs(YAxis.Scale.ReverseTransform(MinDotRadius) - YAxis.Scale.ReverseTransform(0));
+        public static void GraphHeatMap(GraphPane graphPane, HeatMapData heatMapData, int maxDotRadius, int minDotRadius, float yMin, float yMax, bool logScale, int cutoff)
+        {
+            graphPane.CurveList.Clear();
+            graphPane.XAxis.Scale.SetupScaleData(graphPane, graphPane.XAxis);
+            graphPane.YAxis.Scale.SetupScaleData(graphPane, graphPane.YAxis);
+            double cellWidth = Math.Abs(graphPane.XAxis.Scale.ReverseTransform(minDotRadius) - graphPane.XAxis.Scale.ReverseTransform(0));
+            double cellHeight = Math.Abs(graphPane.YAxis.Scale.ReverseTransform(minDotRadius) - graphPane.YAxis.Scale.ReverseTransform(0));
             if (cellWidth <= 0 || double.IsNaN(cellWidth) || cellHeight <= 0 || double.IsNaN(cellHeight))
                 return;
 
             // Use log scale for heat intensity.
-            double scale = (_heatMapColors.Length - 1) / Math.Log(_heatMapData.MaxPoint.Z);
+            double scale = (_heatMapColors.Length - 1)/
+                           (logScale ? Math.Log(heatMapData.MaxPoint.Z) : heatMapData.MaxPoint.Z);
 
             // Create curves for each intensity color.
             var curves = new LineItem[_heatMapColors.Length];
-            for (int i = 0; i < curves.Length; i++)
-            {
+            for (int i = 0; i < curves.Length; i++) {
                 var color = _heatMapColors[i];
                 curves[i] = new LineItem(string.Empty)
                 {
@@ -65,7 +69,7 @@ namespace pwiz.MSGraph
                     Symbol = new Symbol
                     {
                         Border = new Border { IsVisible = false },
-                        Size = (int)(MinDotRadius + i/(double)(curves.Length-1)*(MaxDotRadius-MinDotRadius)),
+                        Size = (int)(minDotRadius + i / (double)(curves.Length - 1) * (maxDotRadius - minDotRadius)),
                         Fill = new Fill(color),
                         Type = SymbolType.Circle,
                         IsAntiAlias = true
@@ -73,26 +77,25 @@ namespace pwiz.MSGraph
                 };
                 if ((i + 1) % (_heatMapColors.Length / 4) == 0)
                 {
-                    double intensity = Math.Pow(Math.E, i / scale);
+                    double intensity = logScale ? Math.Pow(Math.E, i/scale) : i / scale;
                     curves[i].Label.Text = intensity.ToString("F0"); // Not L10N
                 }
-                CurveList.Insert(0, curves[i]);
+                graphPane.CurveList.Insert(0, curves[i]);
             }
 
             // Get points within bounds of graph/filter, with density appropriate for the current display resolution.
-            var points = _heatMapData.GetPoints(
-                XAxis.Scale.Min,
-                XAxis.Scale.Max,
-                Math.Max(YAxis.Scale.Min, _yMin),
-                Math.Min(YAxis.Scale.Max, _yMax),
+            var points = heatMapData.GetPoints(
+                graphPane.XAxis.Scale.Min,
+                graphPane.XAxis.Scale.Max,
+                Math.Max(graphPane.YAxis.Scale.Min, yMin),
+                Math.Min(graphPane.YAxis.Scale.Max, yMax),
                 cellWidth,
                 cellHeight);
 
-            foreach (var heatPoint in points)
-            {
+            foreach (var heatPoint in points) {
                 // A log scale produces a better visual display.
-                int intensity = (int)(Math.Log(heatPoint.Z) * scale);
-                if (intensity >= 0)
+                int intensity = (int) ((logScale ? Math.Log(heatPoint.Z) : heatPoint.Z)*scale);
+                if (intensity >= cutoff)
                     curves[intensity].AddPoint(heatPoint.X, heatPoint.Y);
             }
         }

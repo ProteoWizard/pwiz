@@ -104,33 +104,43 @@ namespace pwiz.Skyline.Controls.Graphs
             private readonly double _binSize;
             private readonly double _mean;
             private readonly double _stdDev;
+            private readonly TransitionMassError _transition;
 
             public GraphData(SrmDocument document, int resultIndex, bool bestResult, PointsTypeMassError pointsType)
             {
                 var vals = new List<double>();
                 var dictPpmBin2ToCount = new Dictionary<int, int>();
+                var displayType = MassErrorGraphController.HistogramDisplayType;
                 _binSize = Settings.Default.MassErorrHistogramBinSize;
+                _transition = MassErrorGraphController.HistogramTransiton;
 
                 if (document != null)
                 {
-                    bool decoys = MassErrorGraphController.PointsType == PointsTypeMassError.decoys;
+                    bool decoys = pointsType == PointsTypeMassError.decoys;
+                    bool precursors = displayType == DisplayTypeMassError.precursors;
+
                     foreach (var nodePep in document.Molecules)
                     {
                         if (decoys != nodePep.IsDecoy)
                             continue;
 
-                        var tranIndex = bestResult ? nodePep.BestResult : resultIndex;
+                        var replicateIndex = bestResult ? nodePep.BestResult : resultIndex;
                         foreach (var nodeGroup in nodePep.TransitionGroups)
                         {
-                            if (tranIndex >= 0)
+                            foreach (var nodeTran in nodeGroup.Transitions)
                             {
-                                var chromInfo = nodeGroup.Results[tranIndex];
-                                AddChromInfo(chromInfo, dictPpmBin2ToCount, vals);
-                            }
-                            else
-                            {
-                                foreach (var chromInfo in nodeGroup.Results)
+                                if (precursors != nodeTran.IsMs1)
+                                    continue;
+                                if (replicateIndex >= 0)
+                                {
+                                    var chromInfo = nodeTran.Results[replicateIndex];
                                     AddChromInfo(chromInfo, dictPpmBin2ToCount, vals);
+                                }
+                                else
+                                {
+                                    foreach (var chromInfo in nodeTran.Results)
+                                        AddChromInfo(chromInfo, dictPpmBin2ToCount, vals);
+                                }
                             }
                         }
                     }
@@ -149,11 +159,14 @@ namespace pwiz.Skyline.Controls.Graphs
                 _stdDev = statVals.StdDev();
             }
 
-            private void AddChromInfo(ChromInfoList<TransitionGroupChromInfo> chromInfos, Dictionary<int, int> dictPpmBin2ToCount, List<double> vals)
+            private void AddChromInfo(ChromInfoList<TransitionChromInfo> chromInfos, Dictionary<int, int> dictPpmBin2ToCount, List<double> vals)
             {
                 if (chromInfos == null) return;
                 foreach (var chromInfo in chromInfos) 
                 {
+                    if (chromInfo.RankByLevel != 1 && _transition == TransitionMassError.best)
+                        continue;
+
                     var massError = chromInfo.MassError;
                     if (massError.HasValue) 
                     {

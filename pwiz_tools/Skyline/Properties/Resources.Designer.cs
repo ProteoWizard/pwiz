@@ -14122,6 +14122,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to m/z.
+        /// </summary>
+        public static string MassErrorHistogram2DGraphPane_Graph_Mz {
+            get {
+                return ResourceManager.GetString("MassErrorHistogram2DGraphPane_Graph_Mz", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Retention Time.
+        /// </summary>
+        public static string MassErrorHistogram2DGraphPane_Graph_Retention_Time {
+            get {
+                return ResourceManager.GetString("MassErrorHistogram2DGraphPane_Graph_Retention_Time", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Mass Errors Unavailable.
         /// </summary>
         public static string MassErrorHistogramGraphPane_AddLabels_Mass_Errors_Unavailable {

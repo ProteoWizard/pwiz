@@ -2253,5 +2253,53 @@ namespace pwiz.Skyline.Properties {
                 this["MassErorrHistogramBinSize"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("best")]
+        public string MassErrorHistogramTransition {
+            get {
+                return ((string)(this["MassErrorHistogramTransition"]));
+            }
+            set {
+                this["MassErrorHistogramTransition"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("products")]
+        public string MassErrorHistogramDisplayType {
+            get {
+                return ((string)(this["MassErrorHistogramDisplayType"]));
+            }
+            set {
+                this["MassErrorHistogramDisplayType"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("retention_time")]
+        public string MassErrorHistogram2DXAxis {
+            get {
+                return ((string)(this["MassErrorHistogram2DXAxis"]));
+            }
+            set {
+                this["MassErrorHistogram2DXAxis"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool MassErrorHistogram2DLogScale {
+            get {
+                return ((bool)(this["MassErrorHistogram2DLogScale"]));
+            }
+            set {
+                this["MassErrorHistogram2DLogScale"] = value;
+            }
+        }
     }
 }

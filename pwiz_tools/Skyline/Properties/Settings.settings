@@ -563,5 +563,17 @@
     <Setting Name="MassErorrHistogramBinSize" Type="System.Double" Scope="User">
       <Value Profile="(Default)">0.5</Value>
     </Setting>
+    <Setting Name="MassErrorHistogramTransition" Type="System.String" Scope="User">
+      <Value Profile="(Default)">best</Value>
+    </Setting>
+    <Setting Name="MassErrorHistogramDisplayType" Type="System.String" Scope="User">
+      <Value Profile="(Default)">products</Value>
+    </Setting>
+    <Setting Name="MassErrorHistogram2DXAxis" Type="System.String" Scope="User">
+      <Value Profile="(Default)">retention_time</Value>
+    </Setting>
+    <Setting Name="MassErrorHistogram2DLogScale" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

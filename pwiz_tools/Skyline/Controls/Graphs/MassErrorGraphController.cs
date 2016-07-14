@@ -25,10 +25,16 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public enum GraphTypeMassError { peptide, replicate, histogram }
+    public enum GraphTypeMassError { peptide, replicate, histogram, histogram2D }
 
     public enum PointsTypeMassError { targets, decoys }
 
+    public enum TransitionMassError { all, best }
+
+    public enum DisplayTypeMassError { precursors, products }
+
+    public enum Histogram2DXAxis { retention_time, mass_to_charge}
+   
     public class MassErrorGraphController : GraphSummary.IControllerSplit
     {
         public static GraphTypeMassError GraphType
@@ -41,6 +47,24 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get { return Helpers.ParseEnum(Settings.Default.MassErrorPointsType, PointsTypeMassError.targets); }
             set { Settings.Default.MassErrorPointsType = value.ToString(); }
+        }
+
+        public static TransitionMassError HistogramTransiton
+        {
+            get { return Helpers.ParseEnum(Settings.Default.MassErrorHistogramTransition, TransitionMassError.best); }
+            set { Settings.Default.MassErrorHistogramTransition = value.ToString(); }
+        }
+
+        public static DisplayTypeMassError HistogramDisplayType
+        {
+            get { return Helpers.ParseEnum(Settings.Default.MassErrorHistogramDisplayType, DisplayTypeMassError.products); }
+            set { Settings.Default.MassErrorHistogramDisplayType = value.ToString(); }
+        }
+
+        public static Histogram2DXAxis Histogram2DXAxis
+        {
+            get { return Helpers.ParseEnum(Settings.Default.MassErrorHistogram2DXAxis, Histogram2DXAxis.retention_time); }
+            set { Settings.Default.MassErrorHistogram2DXAxis = value.ToString(); }
         }
 
         public GraphSummary GraphSummary { get; set; }
@@ -82,6 +106,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 case GraphTypeMassError.histogram:
                     if (!(GraphSummary.GraphPanes.FirstOrDefault() is MassErrorHistogramGraphPane))
                         GraphSummary.GraphPanes = new[] { new MassErrorHistogramGraphPane(GraphSummary) };
+                    break;
+                case GraphTypeMassError.histogram2D:
+                    if (!(GraphSummary.GraphPanes.FirstOrDefault() is MassErrorHistogram2DGraphPane))
+                        GraphSummary.GraphPanes = new[] { new MassErrorHistogram2DGraphPane(GraphSummary) };
                     break;
             }
         }

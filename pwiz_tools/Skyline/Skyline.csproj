@@ -347,6 +347,7 @@
     <Compile Include="Controls\Graphs\ImportResultsRetryCountdownDlg.Designer.cs">
       <DependentUpon>ImportResultsRetryCountdownDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Graphs\MassErrorHistogram2DGraphPane.cs" />
     <Compile Include="Controls\Graphs\MassErrorHistogramGraphPane.cs" />
     <Compile Include="Controls\GroupComparison\EditGroupComparisonDlg.cs">
       <SubType>Form</SubType>
