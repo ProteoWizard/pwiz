@@ -57,7 +57,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
         {
             LibrarySpec = chromatogramLibrarySpec;
             FilePath = LibrarySpec.FilePath;
-            CachePath = Path.Combine(Path.GetDirectoryName(FilePath) ?? string.Empty,
+            CachePath = Path.Combine(PathEx.GetDirectoryName(FilePath) ?? string.Empty,
                                      Path.GetFileNameWithoutExtension(FilePath) + EXT_CACHE);
             _libraryIrts = new ChromatogramLibraryIrt[0];
             _librarySourceFiles = new ChromatogramLibrarySourceInfo[0];

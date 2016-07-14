@@ -126,6 +126,28 @@ namespace pwiz.Common.SystemUtil
         [DllImport("shell32.dll", CharSet = CharSet.Auto)]  // Not L10N
         private static extern int SHGetKnownFolderPath(ref Guid id, int flags, IntPtr token, out IntPtr path);
 
+        /// <summary>
+        /// Wrapper around <see cref="Path.GetDirectoryName"/> which, if an error occurs, adds
+        /// the path to the exception message.
+        /// Eventually, this method might catch the exception and try to return something reasonable,
+        /// but, for now, we are trying to figure out the source of invalid paths.
+        /// </summary>
+        public static String GetDirectoryName(String path)
+        {
+            try
+            {
+                return Path.GetDirectoryName(path);
+            }
+            catch (ArgumentException e)
+            {
+                throw AddPathToArgumentException(e, path);
+            }
+        }
 
+        private static ArgumentException AddPathToArgumentException(ArgumentException argumentException, string path)
+        {
+            string messageWithPath = string.Join(Environment.NewLine, argumentException.Message, path);
+            return new ArgumentException(messageWithPath, argumentException);
+        }
     }
 }

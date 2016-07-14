@@ -212,7 +212,7 @@ namespace pwiz.Skyline.Model.Lib
             FilePath = spec.FilePath;
             
             string baseName = Path.GetFileNameWithoutExtension(FilePath) ?? string.Empty; // ReSharper
-            CachePath = Path.Combine(Path.GetDirectoryName(FilePath) ?? string.Empty, baseName + EXT_CACHE);
+            CachePath = Path.Combine(PathEx.GetDirectoryName(FilePath) ?? string.Empty, baseName + EXT_CACHE);
 
         }
 
