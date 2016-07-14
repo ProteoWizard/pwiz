@@ -2025,28 +2025,28 @@ int main(int argc, const char* argv[]){
 
     string outfile = dotless + ".mzTab";
     ofstream gfile(outfile.c_str());
-    gfile << "MTD    mzTab-version    1.0.0" << endl
-            << "MTD    mzTab-mode    Summary" << endl
-            << "MTD    mzTab-type    Identification" << endl
-            << "MTD    description    Identification of phospholpids from tandem MS spectra" << endl
-            << "MTD    ms_run[1]-location    file://" << location << endl
-            << "MTD    smallmolecule_search_engine_score[1]    [, , Greazy,]" << endl
-            << "MTD    fixed_mod[1]    [MS:1002453: No fixed modifications searched]" << endl;
+    gfile << "MTD\tmzTab-version\t1.0.0" << endl
+            << "MTD\tmzTab-mode\tSummary" << endl
+            << "MTD\tmzTab-type\tIdentification" << endl
+            << "MTD\tdescription\tIdentification of phospholpids from tandem MS spectra" << endl
+            << "MTD\tms_run[1]-location\tfile://" << location << endl
+            << "MTD\tsmallmolecule_search_engine_score[1]\t[, , Greazy,]" << endl
+            << "MTD\tfixed_mod[1]\t[MS:1002453: No fixed modifications searched]" << endl;
     int modIndex = 1;
     for (size_t i=0; i<modifications.size(); i++)
     {
-        gfile << "MTD    variable_mod[" << modIndex << "]    [CHEMMOD, CHEMMOD:" << modifications[i] << "]" << endl;
+        gfile << "MTD\tvariable_mod[" << modIndex << "]\t[CHEMMOD, CHEMMOD:" << modifications[i] << "]" << endl;
         modIndex++;
     }            
-    gfile << endl << "SMH    identifier    chemical_formula    smiles    inchi_key    description    exp_mass_to_charge    calc_mass_to_charge    charge    retention_time    taxid    species    database    database_version    spectra_ref    search_engine    best_search_engine_score    modifications    opt_ms_run[1]_all_scores" << endl;
+    gfile << endl << "SMH\tidentifier\tchemical_formula\tsmiles\tinchi_key\tdescription\texp_mass_to_charge\tcalc_mass_to_charge\tcharge\tretention_time\ttaxid\tspecies\tdatabase\tdatabase_version\tspectra_ref\tsearch_engine\tbest_search_engine_score\tmodifications\topt_ms_run[1]_all_scores" << endl;
     
     for (size_t i=0; i<lipids.size(); i++)
     {
         if (lipids[i].filled == false)
         {
-            gfile << "SML    " << lipids[i].lipidIdent << "    " << lipids[i].lipidFormula << "    " << "null    " << "null    " << "null    " 
-                << lipids[i].expMass << "    " << lipids[i].calcMass << "    " << lipids[i].charge << "    " << lipids[i].time << "    null    " << "null    " << "null    " << "null    "
-                << "ms_run[1]:scan=" << lipids[i].spectra << "    [,,Greazy,]    " << lipids[i].score << "    CHEMMOD:" << lipids[i].mod << "    " << lipids[i].scores << endl;
+            gfile << "SML\t" << lipids[i].lipidIdent << "\t" << lipids[i].lipidFormula << "\t" << "null\t" << "null\t" << "null\t" 
+                << lipids[i].expMass << "\t" << lipids[i].calcMass << "\t" << lipids[i].charge << "\t" << lipids[i].time << "\tnull\t" << "null\t" << "null\t" << "null\t"
+                << "ms_run[1]:scan=" << lipids[i].spectra << "\t[,,Greazy,]\t" << lipids[i].score << "\tCHEMMOD:" << lipids[i].mod << "\t" << lipids[i].scores << endl;
         }
     }
     cout << "done" << endl;
