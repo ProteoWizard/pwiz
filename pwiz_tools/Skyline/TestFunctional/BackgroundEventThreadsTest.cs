@@ -57,7 +57,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(1, Program.TestExceptions.Count);
             Assert.IsInstanceOfType(Program.TestExceptions.First(), typeof(TestException));
             Program.TestExceptions.Clear();
-            testForm = FindOpenForm<BackgroundEventThreadsTestForm>();
+            testForm = WaitForOpenForm<BackgroundEventThreadsTestForm>();
             Assert.IsNotNull(testForm);
             testForm.BeginInvoke(new Action(testForm.Close));
         }
