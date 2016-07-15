@@ -88,6 +88,7 @@ void BlibBuilder::usage()
         "   -u                Ignore peptides except those with the unmodified sequences from stdin.\n"
         "   -U                Ignore peptides except those with the modified sequences from stdin.\n"
         "   -C  <file size>   Minimum file size required to use caching for .dat files.  Specifiy units as B,K,G or M.  Default 800M.\n"
+        "   -c <cutoff>       Score threshold (0-1) for PSMs to be included in library. Higher threshold is more exclusive.\n"
         "   -v  <level>       Level of output to stderr (silent, error, status, warn).  Default status.\n"
         "   -L                Write status and warning messages to log file.\n"
         "   -m <size>         SQLite memory cache size in Megs. Default 250M.\n"
