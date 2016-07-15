@@ -1249,6 +1249,11 @@ namespace pwiz.ProteowizardWrapper
         {
             return new SignedMz(mz, IsNegative);  // New mz, same polarity
         }
+
+        public override string ToString()
+        {
+            return RawValue.ToString();
+        }
     }
 
     public struct MsPrecursor
