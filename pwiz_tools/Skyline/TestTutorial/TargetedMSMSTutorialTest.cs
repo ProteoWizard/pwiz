@@ -652,7 +652,8 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => SkylineWindow.Width = 1013);
             PauseForScreenShot("Main window full gradient import of high concentration and Targets tree clipped", 31);
 
-            ValidatePeakRanks(3, 45, false);
+            if (AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)  // No formula means no isotopes, so this check is not applicable
+                ValidatePeakRanks(3, 45, false);
 
             {
                 var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
