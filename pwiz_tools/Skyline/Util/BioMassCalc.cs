@@ -22,6 +22,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using pwiz.Common.Chemistry;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Util
@@ -106,6 +107,7 @@ namespace pwiz.Skyline.Util
         public const string F = "F";    // Fluorine
         public const string Na = "Na";  // Sodium
         public const string Cl = "Cl";  // Chlorine
+        public const string Cl37 = "Cl'";  // Chlorine37
         public const string K = "K";    // Potassium
         public const string Ca = "Ca";  // Calcium
         public const string Fe = "Fe";  // Iron
@@ -113,6 +115,7 @@ namespace pwiz.Skyline.Util
         public const string Cu = "Cu";  // Copper
         public const string Zn = "Zn";  // Zinc
         public const string Br = "Br";  // Bromine
+        public const string Br81 = "Br'";  // Bromine81
         public const string Mo = "Mo";  // Molybdenum
         public const string Ag = "Ag";  // Silver
         public const string I = "I";    // Iodine
@@ -131,7 +134,8 @@ namespace pwiz.Skyline.Util
 
         /// <summary>
         /// A dictionary mapping heavy isotope symbols to their correspoding
-        /// indices within the mass distributions of <see cref="IsotopeAbundances.Default"/>.
+        /// indices within the mass distributions of <see cref="IsotopeAbundances.Default"/>,
+        /// and default atom perent enrichment for <see cref="IsotopeEnrichmentItem"/>.
         /// </summary>
         private static readonly IDictionary<string, KeyValuePair<int, double>> DICT_SYMBOL_TO_ISOTOPE_INDEX =
             new Dictionary<string, KeyValuePair<int, double>>
@@ -141,6 +145,8 @@ namespace pwiz.Skyline.Util
                     { N15, new KeyValuePair<int, double>(1, 0.995) },
                     { O17, new KeyValuePair<int, double>(1, 0.99) },
                     { O18, new KeyValuePair<int, double>(2, 0.99) },
+                    { Cl37, new KeyValuePair<int, double>(1, 0.99) },  // N.B. No idea if this is a realistic value
+                    { Br81, new KeyValuePair<int, double>(1, 0.99) },  // N.B. No idea if this is a realistic value 
                 };
 
         public static IEnumerable<string> HeavySymbols { get { return DICT_SYMBOL_TO_ISOTOPE_INDEX.Keys; } }
@@ -241,6 +247,7 @@ namespace pwiz.Skyline.Util
             AddMass(Na, 22.9897677, 22.98977); //Unimod
             AddMass(S, 31.9720707, 32.065); //Unimod
             AddMass(Cl, 34.96885272, 35.453); //Unimod
+            AddMass(Cl37, 36.965902602, 36.965902602); //NIST
             AddMass(K, 38.9637074, 39.0983); //Unimod
             AddMass(Ca, 39.9625906, 40.078); //Unimod
             AddMass(Fe, 55.9349393, 55.845); //Unimod
@@ -248,6 +255,7 @@ namespace pwiz.Skyline.Util
             AddMass(Cu, 62.9295989, 63.546); //Unimod
             AddMass(Zn, 63.9291448, 65.409); //Unimod
             AddMass(Br, 78.9183361, 79.904); //Unimod
+            AddMass(Br81, 80.9162897, 80.9162897); //NIST
             AddMass(Mo, 97.9054073, 95.94); //Unimod
             AddMass(Ag, 106.905092, 107.8682); //Unimod
             AddMass(I, 126.904473, 126.90447); //Unimod
@@ -428,6 +436,15 @@ namespace pwiz.Skyline.Util
         {
             double totalMass = 0.0;
             desc = desc.Trim();
+            Molecule mol;
+            int charge;
+            string neutralFormula;
+            if (IonInfo.IsFormulaWithAdduct(desc, out mol, out charge, out neutralFormula))
+            {
+                totalMass += mol.Sum(p => p.Value*GetMass(p.Key));
+                desc = string.Empty; // Signal that we parsed the whole thing
+                return totalMass;
+            }
             while (desc.Length > 0)
             {
                 if (desc.StartsWith("-")) // Not L10N
@@ -563,6 +580,16 @@ namespace pwiz.Skyline.Util
         private void AddMass(string sym, double mono, double ave)
         {
             _atomicMasses[sym] = (MassType == MassType.Monoisotopic ? mono : ave);
+        }
+
+        /// <summary>
+        /// Return true if symbol is found in mass table
+        /// </summary>
+        /// <param name="sym"></param>
+        /// <returns></returns>
+        public bool IsKnownSymbol(string sym)
+        {
+            return _atomicMasses.ContainsKey(sym);
         }
 
         /// <summary>

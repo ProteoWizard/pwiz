@@ -42,6 +42,8 @@
             this.textConeVoltage = new System.Windows.Forms.TextBox();
             this.textDeclusteringPotential = new System.Windows.Forms.TextBox();
             this.textCompensationVoltage = new System.Windows.Forms.TextBox();
+            this.textCharge = new System.Windows.Forms.TextBox();
+            this.textName = new System.Windows.Forms.TextBox();
             this.btnOK = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.groupBoxOptionalValues = new System.Windows.Forms.GroupBox();
@@ -52,14 +54,18 @@
             this.labelRetentionTime = new System.Windows.Forms.Label();
             this.labelRetentionTimeWindow = new System.Windows.Forms.Label();
             this.labelCollisionEnergy = new System.Windows.Forms.Label();
-            this.textCharge = new System.Windows.Forms.TextBox();
             this.labelCharge = new System.Windows.Forms.Label();
-            this.textName = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.labelIsotopeLabelType = new System.Windows.Forms.Label();
             this.comboIsotopeLabelType = new System.Windows.Forms.ComboBox();
             this.groupBoxOptionalValues.SuspendLayout();
             this.SuspendLayout();
+            // 
+            // toolTip1
+            // 
+            this.toolTip1.AutoPopDelay = 32767;
+            this.toolTip1.InitialDelay = 500;
+            this.toolTip1.ReshowDelay = 100;
             // 
             // textDriftTimeMsec
             // 
@@ -126,6 +132,19 @@
             resources.ApplyResources(this.textCompensationVoltage, "textCompensationVoltage");
             this.textCompensationVoltage.Name = "textCompensationVoltage";
             this.toolTip1.SetToolTip(this.textCompensationVoltage, resources.GetString("textCompensationVoltage.ToolTip"));
+            // 
+            // textCharge
+            // 
+            resources.ApplyResources(this.textCharge, "textCharge");
+            this.textCharge.Name = "textCharge";
+            this.toolTip1.SetToolTip(this.textCharge, resources.GetString("textCharge.ToolTip"));
+            this.textCharge.TextChanged += new System.EventHandler(this.textCharge_TextChanged);
+            // 
+            // textName
+            // 
+            resources.ApplyResources(this.textName, "textName");
+            this.textName.Name = "textName";
+            this.toolTip1.SetToolTip(this.textName, resources.GetString("textName.ToolTip"));
             // 
             // btnOK
             // 
@@ -200,21 +219,10 @@
             resources.ApplyResources(this.labelCollisionEnergy, "labelCollisionEnergy");
             this.labelCollisionEnergy.Name = "labelCollisionEnergy";
             // 
-            // textCharge
-            // 
-            resources.ApplyResources(this.textCharge, "textCharge");
-            this.textCharge.Name = "textCharge";
-            this.textCharge.TextChanged += new System.EventHandler(this.textCharge_TextChanged);
-            // 
             // labelCharge
             // 
             resources.ApplyResources(this.labelCharge, "labelCharge");
             this.labelCharge.Name = "labelCharge";
-            // 
-            // textName
-            // 
-            resources.ApplyResources(this.textName, "textName");
-            this.textName.Name = "textName";
             // 
             // label1
             // 

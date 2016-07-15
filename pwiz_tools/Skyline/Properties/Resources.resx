@@ -9123,4 +9123,63 @@ Here are the last 3 errors:
   <data name="MassErrorHistogram2DGraphPane_Graph_Retention_Time" xml:space="preserve">
     <value>Retention Time</value>
   </data>
+  <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Adduct__0__charge__1__does_not_agree_with_declared_charge__2_" xml:space="preserve">
+    <value>Adduct {0} charge {1} does not agree with declared charge {2}</value>
+  </data>
+  <data name="BioMassCalc_ApplyAdductToFormula_Adduct_description___0___calls_for_more_labeled__1__than_are_found_in_the_molecule" xml:space="preserve">
+    <value>Adduct description "{0}" calls for more labeled {1} than are found in the molecule</value>
+  </data>
+  <data name="BioMassCalc_ApplyAdductToFormula_Unknown_symbol___0___in_adduct_description___1__" xml:space="preserve">
+    <value>Unknown symbol "{0}" in adduct description "{1}"</value>
+  </data>
+  <data name="BioMassCalc_ApplyAdductToFormula_Failed_parsing_adduct_description___0__" xml:space="preserve">
+    <value>Failed parsing adduct description "{0}"</value>
+  </data>
+  <data name="BioMassCalc_ApplyAdductToFormula_Failed_parsing_adduct_description___0____declared_charge__1__does_not_agree_with_calculated_charge__2_" xml:space="preserve">
+    <value>Failed parsing adduct description "{0}": declared charge {1} does not agree with calculated charge {2}</value>
+  </data>
+  <data name="SrmDocument_GetSmallMoleculeGroupId_molecules" xml:space="preserve">
+    <value>molecules</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Precursor_Adduct" xml:space="preserve">
+    <value>Precursor Adduct</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Product_Adduct" xml:space="preserve">
+    <value>Product Adduct</value>
+  </data>
+  <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Formula_already_contains_an_adduct_description__and_it_does_not_match_" xml:space="preserve">
+    <value>Formula already contains an adduct description, and it does not match.</value>
+  </data>
+  <data name="IonInfo_AdductTips_" xml:space="preserve">
+    <value>Adducts:
+    
+Ion formulas may contain an adduct description using the defacto standard notation as seen at http://fiehnlab.ucdavis.edu/staff/kind/Metabolomics/MS-Adduct-Calculator (e.g. "C47H51NO14[M+IsoProp+H]").
+
+Multipliers (e.g. the "2" in "[2M+K]") and isotope labels (e.g. the "2Cl37" in "[M2Cl37+H]") are supported.
+
+Recognized adduct components include normal chemical symbols and:{0}
+
+Charge states are inferred from the presence of these adduct components:{1}</value>
+  </data>
+  <data name="FormulaBox_helpToolStripMenuItem_Click_Formula_Help" xml:space="preserve">
+    <value>Formula Help</value>
+  </data>
+  <data name="FormulaBox_FormulaHelpText_Formulas_are_written_in_standard_chemical_notation__e_g___C2H6O____Heavy_isotopes_are_indicated_by_a_prime__e_g__C__for_C13__or_double_prime_for_less_abundant_stable_iostopes__e_g__O__for_O17__O__for_O18__" xml:space="preserve">
+    <value>Formulas are written in standard chemical notation, e.g. "C2H6O".  Heavy isotopes are indicated by a prime (e.g. C' for C13) or double prime for less abundant stable iostopes (e.g. O" for O17, O' for O18).</value>
+  </data>
+  <data name="PasteDlg_btnTransitionListHelp_Click_Transition_List_Help" xml:space="preserve">
+    <value>Transition List Help</value>
+  </data>
+  <data name="PasteDlg_btnTransitionListHelp_Click_" xml:space="preserve">
+    <value>The easiest way to use this window is to copy from Excel (or any text editor if the data is CSV formatted) and paste into the grid.
+    
+Note that you can adjust column order in Skyline by dragging the column headers left or right.  For small molecules, you can also select which columns to enable with the "Columns..." button.
+
+Most peptide transition lists can be imported with the "File|Import|Transition List..." menu item or even pasted directly into the Targets window. You can also do this with small molecule transition lists if they use these names for column headers: </value>
+  </data>
+  <data name="PasteDlg_btnTransitionListHelp_Click_2_" xml:space="preserve">
+    <value>Notes on small molecule ion formulas:
+
+If your transition list format combines formulas and adducts in a single column (e.g. "C8H10N4O2[M+Na]") then use the "Ion Formula" columns, and disregard the "Adduct" columns.  If your transition list puts the neutral formula and adduct in seperate columns, then use the "Ion Formula" columns for neutral formulas, and the "Adduct" columns for adducts.</value>
+  </data>
 </root>

@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using pwiz.Common.DataBinding.Attributes;
@@ -102,8 +103,26 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        [Obsolete("use MoleculeName instead")]  // It's a molecule, not an ion
+        public string IonName 
+        {
+            get
+            {
+                return MoleculeName;
+            }
+        }
+
+        [Obsolete("use MoleculeFormula instead")]  // It's a molecule, not an ion
+        public string IonFormula
+        {
+            get
+            {
+                return MoleculeFormula;
+            }
+        }
+
         [Format(NullValue = TextUtil.EXCEL_NA)]
-        public string IonName
+        public string MoleculeName
         {
             get
             {
@@ -119,8 +138,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
-        [Format(NullValue = TextUtil.EXCEL_NA)]
-        public string IonFormula
+        public string MoleculeFormula
         {
             get
             {

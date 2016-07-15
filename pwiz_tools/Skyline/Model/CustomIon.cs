@@ -28,12 +28,10 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
 {
-    public class CustomIon : Immutable, IValidating
+    public class CustomIon : IonInfo, IValidating
     {
         public const double MAX_MASS = 100000;
         public const double MIN_MASS = MeasuredIon.MIN_REPORTER_MASS;
-        private string _formula;
-        private string _unlabledFormula;
         
         /// <summary>
         /// A simple object used to represent any molecule
@@ -42,11 +40,10 @@ namespace pwiz.Skyline.Model
         /// <param name="monoisotopicMass">The monoisotopic mass of the molecule(can be calculated from formula)</param>
         /// <param name="averageMass">The average mass of the molecule (can be calculated by the formula)</param>
         /// <param name="name">The arbitrary name given to this molecule</param>
-        protected CustomIon(string formula, double? monoisotopicMass, double? averageMass, string name)
+        protected CustomIon(string formula, double? monoisotopicMass, double? averageMass, string name) : base(formula)
         {
             MonoisotopicMass = monoisotopicMass ?? averageMass ?? 0;
             AverageMass = averageMass ?? monoisotopicMass ?? 0;
-            Formula = formula;
             Name = name;
 
             Validate();
@@ -58,19 +55,6 @@ namespace pwiz.Skyline.Model
         protected CustomIon()
         {
         }
-
-        public string Formula
-        { 
-            get {return _formula;} 
-            private set
-            {
-                _formula = string.IsNullOrEmpty(value) ? null : value;
-                _unlabledFormula = BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula(_formula);
-                Helpers.AssignIfEquals(ref _unlabledFormula, _formula); // Save some string space if actually unlableled
-            }
-        }
-
-        public string UnlabeledFormula { get { return _unlabledFormula; } }
 
         /// <summary>
         /// For matching heavy/light pairs in small molecule documents
@@ -121,8 +105,8 @@ namespace pwiz.Skyline.Model
             {
                 try
                 {
-                    MonoisotopicMass = SequenceMassCalc.ParseModMass(BioMassCalc.MONOISOTOPIC, Formula);
-                    AverageMass = SequenceMassCalc.ParseModMass(BioMassCalc.AVERAGE, Formula);
+                    MonoisotopicMass = SequenceMassCalc.ParseModMass(BioMassCalc.MONOISOTOPIC, FormulaWithAdductApplied);
+                    AverageMass = SequenceMassCalc.ParseModMass(BioMassCalc.AVERAGE, FormulaWithAdductApplied);
                 }
                 catch (ArgumentException x)
                 {
@@ -206,10 +190,10 @@ namespace pwiz.Skyline.Model
 
         protected virtual void ReadAttributes(XmlReader reader)
         {
-            Formula = reader.GetAttribute(ATTR.formula);
-            if (!string.IsNullOrEmpty(Formula))
+            var formula = reader.GetAttribute(ATTR.formula);
+            if (!string.IsNullOrEmpty(formula))
             {
-                Formula = BioMassCalc.AddH(Formula);  // Update this old style formula to current by adding the hydrogen we formerly left out due to assuming protonation
+                Formula = BioMassCalc.AddH(formula);  // Update this old style formula to current by adding the hydrogen we formerly left out due to assuming protonation
             }
             else
             {

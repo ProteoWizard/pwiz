@@ -2800,8 +2800,14 @@ namespace pwiz.Skyline
                     {
                         ModifyDocument(string.Format(Resources.SkylineWindow_AddSmallMolecule_Add_small_molecule__0_, dlg.ResultCustomIon.DisplayName), doc =>
                         {
-                            var peptide = new Peptide(dlg.ResultCustomIon);
-                            var tranGroup = new TransitionGroup(peptide, dlg.Charge, dlg.IsotopeLabelType, true, null);
+                            // If ion was described as having an adduct, leave that off for the parent "peptide" molecular formula
+                            var peptideMolecule = dlg.ResultCustomIon;
+                            if (!string.IsNullOrEmpty(peptideMolecule.Adduct))
+                            {
+                                peptideMolecule = new DocNodeCustomIon(peptideMolecule.NeutralFormula, peptideMolecule.Name);
+                            }
+                            var peptide = new Peptide(peptideMolecule);
+                            var tranGroup = new TransitionGroup(peptide, dlg.ResultCustomIon, dlg.Charge, dlg.IsotopeLabelType, true, null);
                             var tranGroupDocNode = new TransitionGroupDocNode(tranGroup, Annotations.EMPTY,
                                 doc.Settings, null, null, dlg.ResultExplicitTransitionGroupValues, null,
                                 GetDefaultPrecursorTransitions(doc, tranGroup), true);

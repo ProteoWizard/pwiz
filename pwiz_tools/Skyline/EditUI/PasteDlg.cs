@@ -750,6 +750,14 @@ namespace pwiz.Skyline.EditUI
                     });
                     return null;
                 }
+                catch (InvalidOperationException x)
+                {
+                    ShowTransitionError(new PasteError
+                    {
+                        Message = x.Message
+                    });
+                    return null;
+                }
 
                 // Insert the resulting nodes into the document tree, merging when possible
                 bool after = false;
@@ -842,6 +850,18 @@ namespace pwiz.Skyline.EditUI
             popup.Show(btnCustomMoleculeColumns.PointToScreen(new Point(0, -checkedListBox.Height)));
         }
 
+        private void btnTransitionListHelp_Click(object sender, EventArgs e)
+        {
+            var helpText = Resources.PasteDlg_btnTransitionListHelp_Click_ +
+                SmallMoleculeTransitionListColumnHeaders.KnownHeaders().Aggregate((s1, s2) => s1 + ", " + s2) + // Not L10N
+                "\r\n\r\n" + // Not L10N
+                Resources.PasteDlg_btnTransitionListHelp_Click_2_ +
+                "\r\n\r\n" + // Not L10N
+                Resources.FormulaBox_FormulaHelpText_Formulas_are_written_in_standard_chemical_notation__e_g___C2H6O____Heavy_isotopes_are_indicated_by_a_prime__e_g__C__for_C13__or_double_prime_for_less_abundant_stable_iostopes__e_g__O__for_O17__O__for_O18__ +
+                "\r\n\r\n" + // Not L10N
+                IonInfo.AdductTips;
+            MessageBox.Show(this, helpText, Resources.PasteDlg_btnTransitionListHelp_Click_Transition_List_Help);
+        }
 
         private void btnCancel_Click(object sender, EventArgs e)
         {
@@ -863,6 +883,7 @@ namespace pwiz.Skyline.EditUI
             set
             {
                 var tab = GetTabPage(value);
+                btnTransitionListHelp.Visible = 
                 btnCustomMoleculeColumns.Visible = radioMolecule.Visible = radioPeptide.Visible = (value == PasteFormat.transition_list);
                 if (value == PasteFormat.transition_list)
                 {
@@ -1587,6 +1608,8 @@ namespace pwiz.Skyline.EditUI
             public const string declusteringPotential = "DeclusteringPotential"; // Not L10N
             public const string note = "Note"; // Not L10N
             public const string labelType = "LabelType"; // Not L10N
+            public const string adductPrecursor = "PrecursorAdduct"; // Not L10N
+            public const string adductProduct = "ProductAdduct"; // Not L10N
 
             public static List<string> KnownHeaders()
             {
@@ -1601,6 +1624,8 @@ namespace pwiz.Skyline.EditUI
                     mzProduct,
                     chargePrecursor,
                     chargeProduct,
+                    adductPrecursor,
+                    adductProduct,
                     rtPrecursor,
                     rtWindowPrecursor,
                     cePrecursor,
@@ -1671,12 +1696,14 @@ namespace pwiz.Skyline.EditUI
             {
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.moleculeGroup, Resources.PasteDlg_UpdateMoleculeType_Molecule_List_Name);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.namePrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Name);
-                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.nameProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Name);
-                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.formulaPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Ion_Formula); 
-                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.formulaProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Ion_Formula);
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.formulaPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Ion_Formula);
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.adductPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.mzPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_m_z);
-                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.mzProduct, Resources.PasteDlg_UpdateMoleculeType_Product_m_z);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.chargePrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Charge);
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.nameProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Name);
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.formulaProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Ion_Formula);
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.adductProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Adduct);
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.mzProduct, Resources.PasteDlg_UpdateMoleculeType_Product_m_z);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.chargeProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.labelType, Resources.PasteDlg_UpdateMoleculeType_Label_Type);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.rtPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time);

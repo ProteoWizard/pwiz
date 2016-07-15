@@ -68,6 +68,7 @@ namespace pwiz.Skyline.EditUI
             this.panelError = new System.Windows.Forms.Panel();
             this.tbxError = new System.Windows.Forms.TextBox();
             this.panelButtons = new System.Windows.Forms.Panel();
+            this.btnTransitionListHelp = new System.Windows.Forms.Button();
             this.btnCustomMoleculeColumns = new System.Windows.Forms.Button();
             this.radioMolecule = new System.Windows.Forms.RadioButton();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
@@ -342,6 +343,7 @@ namespace pwiz.Skyline.EditUI
             // 
             // panelButtons
             // 
+            this.panelButtons.Controls.Add(this.btnTransitionListHelp);
             this.panelButtons.Controls.Add(this.btnCustomMoleculeColumns);
             this.panelButtons.Controls.Add(this.radioMolecule);
             this.panelButtons.Controls.Add(this.btnValidate);
@@ -350,6 +352,13 @@ namespace pwiz.Skyline.EditUI
             this.panelButtons.Controls.Add(this.btnCancel);
             resources.ApplyResources(this.panelButtons, "panelButtons");
             this.panelButtons.Name = "panelButtons";
+            // 
+            // btnTransitionListHelp
+            // 
+            resources.ApplyResources(this.btnTransitionListHelp, "btnTransitionListHelp");
+            this.btnTransitionListHelp.Name = "btnTransitionListHelp";
+            this.btnTransitionListHelp.UseVisualStyleBackColor = true;
+            this.btnTransitionListHelp.Click += new System.EventHandler(this.btnTransitionListHelp_Click);
             // 
             // btnCustomMoleculeColumns
             // 
@@ -435,5 +444,6 @@ namespace pwiz.Skyline.EditUI
         private System.Windows.Forms.Button btnCustomMoleculeColumns;
         private System.Windows.Forms.RadioButton radioMolecule;
         private System.Windows.Forms.ToolTip toolTip1;
+        private System.Windows.Forms.Button btnTransitionListHelp;
     }
 }

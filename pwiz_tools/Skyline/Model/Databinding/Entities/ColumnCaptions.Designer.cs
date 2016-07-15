@@ -1096,6 +1096,24 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Molecule Formula.
+        /// </summary>
+        public static string MoleculeFormula {
+            get {
+                return ResourceManager.GetString("MoleculeFormula", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Molecule Name.
+        /// </summary>
+        public static string MoleculeName {
+            get {
+                return ResourceManager.GetString("MoleculeName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to MS Level.
         /// </summary>
         public static string MsLevel {
@@ -1294,6 +1312,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Precursor Adduct.
+        /// </summary>
+        public static string PrecursorAdduct {
+            get {
+                return ResourceManager.GetString("PrecursorAdduct", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Precursor Charge.
         /// </summary>
         public static string PrecursorCharge {
@@ -1326,6 +1353,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string PrecursorMz {
             get {
                 return ResourceManager.GetString("PrecursorMz", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Precursor Neutral Formula.
+        /// </summary>
+        public static string PrecursorNeutralFormula {
+            get {
+                return ResourceManager.GetString("PrecursorNeutralFormula", resourceCulture);
             }
         }
         
@@ -1429,6 +1465,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Product Adduct.
+        /// </summary>
+        public static string ProductAdduct {
+            get {
+                return ResourceManager.GetString("ProductAdduct", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Product Charge.
         /// </summary>
         public static string ProductCharge {
@@ -1461,6 +1506,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string ProductMz {
             get {
                 return ResourceManager.GetString("ProductMz", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Product Neutral Formula.
+        /// </summary>
+        public static string ProductNeutralFormula {
+            get {
+                return ResourceManager.GetString("ProductNeutralFormula", resourceCulture);
             }
         }
         

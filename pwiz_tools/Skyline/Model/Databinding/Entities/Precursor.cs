@@ -134,7 +134,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [InvariantDisplayName("PrecursorIonFormula")]
-        [Format(NullValue = TextUtil.EXCEL_NA)]
         public string IonFormula
         {
             get
@@ -148,6 +147,42 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                     PeptideDocNode parent = DataSchema.Document.FindNode(IdentityPath.Parent) as PeptideDocNode;
                     var molecule = RefinementSettings.ConvertToSmallMolecule(RefinementSettings.ConvertToSmallMoleculesMode.formulas, SrmDocument, parent, DocNode.TransitionGroup.PrecursorCharge, DocNode.TransitionGroup.LabelType);
                     return molecule.Formula ?? string.Empty;
+                }
+            }
+        }
+
+        [InvariantDisplayName("PrecursorNeutralFormula")]
+        public string NeutralFormula
+        {
+            get
+            {
+                if (IsSmallMolecule())
+                {
+                    return DocNode.CustomIon.NeutralFormula ?? string.Empty;
+                }
+                else
+                {
+                    var parent = DataSchema.Document.FindNode(IdentityPath.Parent) as PeptideDocNode;
+                    var molecule = RefinementSettings.ConvertToSmallMolecule(RefinementSettings.ConvertToSmallMoleculesMode.formulas, SrmDocument, parent, DocNode.TransitionGroup.PrecursorCharge, DocNode.TransitionGroup.LabelType);
+                    return molecule.NeutralFormula ?? string.Empty;
+                }
+            }
+        }
+
+        [InvariantDisplayName("PrecursorAdduct")]
+        public string Adduct
+        {
+            get
+            {
+                if (IsSmallMolecule())
+                {
+                    return DocNode.CustomIon.Adduct ?? string.Empty;
+                }
+                else
+                {
+                    var parent = DataSchema.Document.FindNode(IdentityPath.Parent) as PeptideDocNode;
+                    var molecule = RefinementSettings.ConvertToSmallMolecule(RefinementSettings.ConvertToSmallMoleculesMode.formulas, SrmDocument, parent, DocNode.TransitionGroup.PrecursorCharge, DocNode.TransitionGroup.LabelType);
+                    return molecule.Adduct ?? string.Empty;
                 }
             }
         }

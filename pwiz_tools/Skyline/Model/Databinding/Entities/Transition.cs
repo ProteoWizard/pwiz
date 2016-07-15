@@ -106,14 +106,31 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 return fragmentIon;
             }
         }
-        [Format(NullValue = TextUtil.EXCEL_NA)]
         public string ProductIonFormula
         {
             get
             {
                 return IsCustomTransition()
                 ? (DocNode.Transition.CustomIon.Formula ?? string.Empty)
-                : null;
+                : string.Empty;
+            }
+        }
+        public string ProductNeutralFormula
+        {
+            get
+            {
+                return IsCustomTransition()
+                ? DocNode.Transition.CustomIon.NeutralFormula ?? string.Empty
+                : string.Empty;
+            }
+        }
+        public string ProductAdduct
+        {
+            get
+            {
+                return IsCustomTransition()
+                ? DocNode.Transition.CustomIon.Adduct ?? string.Empty
+                : string.Empty;
             }
         }
         public IonType FragmentIonType

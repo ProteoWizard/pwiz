@@ -573,19 +573,29 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public string GetPeptideGroupId(bool peptideList)
+        private string GetMoleculeGroupId(string baseId)
         {
             HashSet<string> ids = new HashSet<string>();
             foreach (PeptideGroupDocNode nodeGroup in Children)
                 ids.Add(nodeGroup.Name);
 
-            string baseId = peptideList
-                ? Resources.SrmDocument_GetPeptideGroupId_peptides 
-                : Resources.SrmDocument_GetPeptideGroupId_sequence; 
             int i = 1;
             while (ids.Contains(baseId + i))
                 i++;
             return baseId + i;
+        }
+
+        public string GetSmallMoleculeGroupId()
+        {
+            return GetMoleculeGroupId(Resources.SrmDocument_GetSmallMoleculeGroupId_molecules);
+        }
+
+        public string GetPeptideGroupId(bool peptideList)
+        {
+            string baseId = peptideList
+                ? Resources.SrmDocument_GetPeptideGroupId_peptides 
+                : Resources.SrmDocument_GetPeptideGroupId_sequence;
+            return GetMoleculeGroupId(baseId);
         }
 
         public bool CanTrigger(int? replicateIndex)

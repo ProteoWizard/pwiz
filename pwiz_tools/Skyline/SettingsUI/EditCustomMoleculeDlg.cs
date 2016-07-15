@@ -123,6 +123,13 @@ namespace pwiz.Skyline.SettingsUI
                     Formula = defaultFormula,
                     Location = new Point(textName.Left, textName.Bottom + 12)
                 };
+            _formulaBox.ChargeChange += (sender, args) =>
+            {
+                if (_formulaBox.Charge.HasValue)
+                {
+                    Charge = _formulaBox.Charge.Value;
+                }
+            };
             Controls.Add(_formulaBox);
             _formulaBox.TabIndex = 2;
             _formulaBox.Enabled = enableFormulaEditing;
@@ -175,6 +182,12 @@ namespace pwiz.Skyline.SettingsUI
                 labelIsotopeLabelType.Visible = false;
             }
             Height -= heightDelta;
+        }
+
+        private int SetCharge(int charge)
+        {
+            Charge = charge;
+            return Charge;
         }
 
         public DocNodeCustomIon ResultCustomIon
@@ -390,7 +403,12 @@ namespace pwiz.Skyline.SettingsUI
             {
                 try
                 {
-                    ResultCustomIon = new DocNodeCustomIon(formula, textName.Text);
+                    var name = textName.Text;
+                    if (string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(formula))
+                    {
+                        name = formula.Split('[')[0]; // Clip off any adduct description
+                    }
+                    ResultCustomIon = new DocNodeCustomIon(formula, name);
                 }
                 catch (InvalidDataException x)
                 {

@@ -372,6 +372,7 @@
                 <xs:attribute name="no_cut" type="xs:string"/>
                 <xs:attribute name="sense" type="terminus_type"/>
                 <xs:attribute name="min_length" type="xs:nonNegativeInteger"/>
+                <!-- Must be a chemical formula, and may contain an adduct description eg "C12H34[M+K]" -->
                 <xs:attribute name="ion_formula" type="xs:string"/>
                 <xs:attribute name="mass_monoisotopic" type="xs:double"/>
                 <xs:attribute name="mass_average" type="xs:double"/>
@@ -708,6 +709,7 @@
               maxOccurs="unbounded"/>
         </xs:sequence>
         <!-- "formula" was the obsolete form from when we assumed we had to add a hydrogen for ionizaion.  The modern form requires the molecular formula of the actual ion. -->
+        <!-- Must be a chemical formula, and may contain an adduct description eg "C12H34[M+K]" -->
         <xs:attribute name="ion_formula" type="xs:string" use="optional"/>
         <xs:attribute name="mass_monoisotopic" type="xs:double" use="required"/>
         <xs:attribute name="mass_average" type="xs:double" use="required"/>
@@ -981,6 +983,7 @@
               maxOccurs="unbounded"/>
         </xs:sequence>
         <!-- for custom molecules, changes in charge or label mean a change in ion formula -->
+        <!-- Must be a chemical formula, and may contain an adduct description eg "C12H34[M+K]" -->
         <xs:attribute name="ion_formula" type="xs:string" use="optional"/>
         <xs:attribute name="custom_ion_name" type="xs:string" use="optional"/>
         <xs:attribute name="mass_monoisotopic" type="xs:double" use="required"/>
@@ -1083,6 +1086,7 @@
           </xs:element>
         </xs:sequence>
         <!-- "formula" was the obsolete form from when we assumed we had to add a hydrogen for ionizaion.  The modern form assumes ionization by electron loss -->
+        <!-- Must be a chemical formula, and may contain an adduct description eg "C12H34[M+K]" -->
         <xs:attribute name="ion_formula" type="xs:string"/>
         <xs:attribute name="custom_ion_name" type="xs:string"/>
         <xs:attribute name="mass_monoisotopic" type="xs:double" use="required"/>
@@ -1190,12 +1194,12 @@
   </xs:simpleType>
   <xs:simpleType name="atomic_symbol_type">
     <xs:restriction base="xs:string">
-      <xs:pattern value="H|H'|C|C'|N|N'|O|O&quot;|O'|P|S|Se|Li|F|Na|Cl|K|Ca|Fe|Ni|Cu|Zn|Br|Mo|Ag|I|Au|Hg|B|As|Cd|Cr|Co|Mn|Mg"/>
+      <xs:pattern value="H|H'|C|C'|N|N'|O|O&quot;|O'|P|S|Se|Li|F|Na|Cl|Cl'|K|Ca|Fe|Ni|Cu|Zn|Br|Br'|Mo|Ag|I|Au|Hg|B|As|Cd|Cr|Co|Mn|Mg"/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name="heavy_isotope_symbol_type">
     <xs:restriction base="xs:string">
-      <xs:pattern value="H'|C'|N'|O&quot;|O'"/>
+      <xs:pattern value="H'|C'|N'|O&quot;|O'|Cl'|Br'"/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name="full_scan_mass_analyzer_type">

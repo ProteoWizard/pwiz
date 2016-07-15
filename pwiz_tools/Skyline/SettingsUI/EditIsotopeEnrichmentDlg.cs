@@ -41,6 +41,8 @@ namespace pwiz.Skyline.SettingsUI
                     new KeyValuePair<string, string>("15N", BioMassCalc.N15), // Not L10N
                     new KeyValuePair<string, string>("17O", BioMassCalc.O17), // Not L10N
                     new KeyValuePair<string, string>("18O", BioMassCalc.O18), // Not L10N
+                    new KeyValuePair<string, string>("37Cl", BioMassCalc.Cl37), // Not L10N
+                    new KeyValuePair<string, string>("81Br", BioMassCalc.Br81), // Not L10N
                 };
 
         private IsotopeEnrichments _enrichments;

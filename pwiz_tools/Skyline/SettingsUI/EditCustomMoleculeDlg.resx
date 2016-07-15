@@ -750,6 +750,9 @@
   <data name="textCharge.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
   </data>
+  <data name="textCharge.ToolTip" xml:space="preserve">
+    <value>Charge may also be specified using an adduct description (e.g. "[M+2K-H]") in the formula</value>
+  </data>
   <data name="&gt;&gt;textCharge.Name" xml:space="preserve">
     <value>textCharge</value>
   </data>
@@ -800,6 +803,9 @@
   </data>
   <data name="textName.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
+  </data>
+  <data name="textName.ToolTip" xml:space="preserve">
+    <value>Default name is taken as ion formula, less any adduct description</value>
   </data>
   <data name="&gt;&gt;textName.Name" xml:space="preserve">
     <value>textName</value>

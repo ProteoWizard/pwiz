@@ -47,6 +47,10 @@
             this.o18ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.pToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.sToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.cl37ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.br81ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.contextFormula.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -117,6 +121,12 @@
             this.btnFormula.UseVisualStyleBackColor = true;
             this.btnFormula.Click += new System.EventHandler(this.btnFormula_Click);
             // 
+            // toolTip1
+            // 
+            this.toolTip1.AutoPopDelay = 32767;
+            this.toolTip1.InitialDelay = 500;
+            this.toolTip1.ReshowDelay = 100;
+            // 
             // contextFormula
             // 
             this.contextFormula.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -129,9 +139,12 @@
             this.oToolStripMenuItem,
             this.o18ToolStripMenuItem,
             this.pToolStripMenuItem,
-            this.sToolStripMenuItem});
+            this.sToolStripMenuItem,
+            this.cl37ToolStripMenuItem,
+            this.br81ToolStripMenuItem,
+            this.helpToolStripMenuItem});
             this.contextFormula.Name = "contextFormula";
-            this.contextFormula.Size = new System.Drawing.Size(106, 244);
+            this.contextFormula.Size = new System.Drawing.Size(106, 268);
             // 
             // hToolStripMenuItem
             // 
@@ -203,6 +216,27 @@
             this.sToolStripMenuItem.Text = "S";
             this.sToolStripMenuItem.Click += new System.EventHandler(this.sToolStripMenuItem_Click);
             // 
+            // cl37ToolStripMenuItem
+            // 
+            this.cl37ToolStripMenuItem.Name = "cl37ToolStripMenuItem";
+            this.cl37ToolStripMenuItem.Size = new System.Drawing.Size(105, 24);
+            this.cl37ToolStripMenuItem.Text = "37Cl";
+            this.cl37ToolStripMenuItem.Click += new System.EventHandler(this.cl37ToolStripMenuItem_Click);
+            // 
+            // br81ToolStripMenuItem
+            // 
+            this.br81ToolStripMenuItem.Name = "br81ToolStripMenuItem";
+            this.br81ToolStripMenuItem.Size = new System.Drawing.Size(105, 24);
+            this.br81ToolStripMenuItem.Text = "81Br";
+            this.br81ToolStripMenuItem.Click += new System.EventHandler(this.br81ToolStripMenuItem_Click);
+            // 
+            // helpToolStripMenuItem
+            // 
+            this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
+            this.helpToolStripMenuItem.Size = new System.Drawing.Size(105, 24);
+            this.helpToolStripMenuItem.Text = "Help";
+            this.helpToolStripMenuItem.Click += new System.EventHandler(this.helpToolStripMenuItem_Click);
+            // 
             // FormulaBox
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
@@ -243,5 +277,9 @@
         private System.Windows.Forms.ToolStripMenuItem o18ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem pToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem sToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem cl37ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem br81ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem helpToolStripMenuItem;
+        private System.Windows.Forms.ToolTip toolTip1;
     }
 }

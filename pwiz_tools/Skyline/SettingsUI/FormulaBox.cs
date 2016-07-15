@@ -21,6 +21,7 @@ using System;
 using System.Drawing;
 using System.Globalization;
 using System.Windows.Forms;
+using pwiz.Common.Chemistry;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
@@ -45,6 +46,9 @@ namespace pwiz.Skyline.SettingsUI
         {
             InitializeComponent();
             _charge = charge;
+
+            toolTip1.SetToolTip(textFormula, FormulaHelpText);  // Explain how formulas work, and ion formula adducts if charge.HasValue
+
             labelFormula.Text = labelFormulaText;
             labelAverage.Text = labelAverageText;
             labelMono.Text = labelMonoText;
@@ -53,6 +57,8 @@ namespace pwiz.Skyline.SettingsUI
             bm.MakeTransparent(Color.Fuchsia);
             btnFormula.Image = bm;
         }
+
+        public event EventHandler ChargeChange;
 
         public string Formula
         {
@@ -72,6 +78,7 @@ namespace pwiz.Skyline.SettingsUI
             }
             set
             {
+                var previous = _charge;
                 _charge = value;
                 if (_charge.HasValue)
                 {
@@ -86,6 +93,10 @@ namespace pwiz.Skyline.SettingsUI
                         // If we have a formula, display m/z values are defined by formula and charge
                         UpdateMonoTextForMass();
                         UpdateAverageTextForMass();
+                    }
+                    if (previous != _charge && ChargeChange != null)
+                    {
+                        ChargeChange(this, EventArgs.Empty);
                     }
                 }
             }
@@ -275,6 +286,35 @@ namespace pwiz.Skyline.SettingsUI
             AddFormulaSymbol(BioMassCalc.N15);
         }
 
+        private void cl37ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            AddFormulaSymbol(BioMassCalc.Cl37);
+        }
+
+        private void br81ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            AddFormulaSymbol(BioMassCalc.Br81);
+        }
+
+        private void helpToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var helpText = FormulaHelpText;
+            MessageBox.Show(this,helpText,Resources.FormulaBox_helpToolStripMenuItem_Click_Formula_Help);
+        }
+
+        private string FormulaHelpText
+        {
+            get
+            {
+                var helpText = Resources.FormulaBox_FormulaHelpText_Formulas_are_written_in_standard_chemical_notation__e_g___C2H6O____Heavy_isotopes_are_indicated_by_a_prime__e_g__C__for_C13__or_double_prime_for_less_abundant_stable_iostopes__e_g__O__for_O17__O__for_O18__;
+                if (_charge.HasValue)
+                {
+                    helpText += "\r\n\r\n" + IonInfo.AdductTips; // Charge implies ion formula, so help with adduct descriptions as well // Not L10N
+                }
+                return helpText;
+            }
+        }
+
         private void oToolStripMenuItem_Click(object sender, EventArgs e)
         {
             AddFormulaSymbol(BioMassCalc.O);
@@ -354,17 +394,34 @@ namespace pwiz.Skyline.SettingsUI
             {
                 // Formula drives mass, no direct edit allowed
                 textMono.Enabled = textAverage.Enabled = false;
+                bool valid;
                 try
                 {
+                    int z;
+                    Molecule mol;
+                    string neutralFormula;
+                    if (IonInfo.IsFormulaWithAdduct(formula, out mol, out z, out neutralFormula))
+                    {
+                        Charge = z;
+                    }
                     var monoMass = SequenceMassCalc.ParseModMass(BioMassCalc.MONOISOTOPIC, formula);
                     var averageMass = SequenceMassCalc.ParseModMass(BioMassCalc.AVERAGE, formula);
-                    GetTextFromMass(monoMass);     // Just to see if it throws or not
-                    GetTextFromMass(averageMass);  // Just to see if it throws or not
+                    GetTextFromMass(monoMass); // Just to see if it throws or not
+                    GetTextFromMass(averageMass); // Just to see if it throws or not
                     MonoMass = monoMass;
                     AverageMass = averageMass;
                     textFormula.ForeColor = Color.Black;
+                    valid = true;
+                }
+                catch (InvalidOperationException)
+                {
+                    valid = false;
                 }
                 catch (ArgumentException)
+                {
+                    valid = false;
+                }
+                if (!valid)
                 {
                     textFormula.ForeColor = Color.Red;
                     textMono.Text = textAverage.Text = string.Empty;

@@ -795,4 +795,23 @@
   <data name="ExplicitCompensationVoltage">
     <value>Explicit Compensation Voltage</value>
   </data>
+  <data name="PrecursorAdduct">
+    <value>Precursor Adduct</value>
+  </data>
+  <data name="PrecursorNeutralFormula">
+    <value>Precursor Neutral Formula</value>
+  </data>
+  <data name="ProductAdduct">
+    <value>Product Adduct</value>
+  </data>
+  <data name="ProductNeutralFormula">
+    <value>Product Neutral Formula</value>
+  </data>
+  <data name="MoleculeName">
+    <value>Molecule Name</value>
+  </data>
+  <data name="MoleculeFormula">
+    <value>Molecule Formula</value>
+  </data>
+
 </root>

@@ -330,6 +330,14 @@ namespace pwiz.Skyline.Model
 
             public static MoleculeUnsorted Parse(string formula)
             {
+                // If formula contains an adduct declaration, expand that
+                Molecule mol;
+                int charge;
+                string neutralFormula;
+                if (IonInfo.IsFormulaWithAdduct(formula, out mol, out charge, out neutralFormula))
+                {
+                    return new MoleculeUnsorted(mol.ToDictionary(x => x.Key, x => x.Value));
+                }
                 return new MoleculeUnsorted(Molecule.ParseExpressionToDictionary(formula)); // Deal with formulae that may have ionization info like "C3H4-H"
             }
 
@@ -712,7 +720,7 @@ namespace pwiz.Skyline.Model
         }
 
         /// <summary>
-        /// Convert a charged peptide to a small molecule ion formula
+        /// Convert a charged peptide to a small molecule ion formula (e.g. PEPTIDER++ => "C40H65N11O16[M+2H]")
         /// </summary>
         public string GetIonFormula(string seq, int charge, ExplicitSequenceMods mods)
         {
@@ -720,10 +728,10 @@ namespace pwiz.Skyline.Model
             var molecule = GetFormula(seq, mods, out unexplainedMass);
             if (unexplainedMass != 0.0)
                 throw new ArgumentException("Unexplained mass when deriving ion formula from sequence "+seq); // Not L10N
-            int chargeStep = (charge > 0) ? 1 : -1;  // Negative charge on a peptide is not a real world concern, but useful for test purposes
-            for (int z = 0; z < Math.Abs(charge); z++)
-                molecule = molecule.SetElementCount("H", molecule.GetElementCount("H") + chargeStep); // Not L10N
-            return molecule.ToString();
+            var chargeSign = (charge > 0) ? "+" : "-";  // Negative charge on a peptide is not a real world concern, but useful for test purposes // Not L10N
+            var chargeCount = Math.Abs(charge) > 1 ? Math.Abs(charge).ToString() : string.Empty;
+            var adduct = "[M" + chargeSign + chargeCount + "H]"; // Not L10N
+            return molecule + (charge == 0 ? string.Empty : adduct);
         }
 
 // ReSharper disable once ParameterTypeCanBeEnumerable.Local

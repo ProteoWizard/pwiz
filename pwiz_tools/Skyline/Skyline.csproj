@@ -2148,6 +2148,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\ImportPeptideSearchDlg.ja.resx">
       <DependentUpon>ImportPeptideSearchDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\ImportPeptideSearchDlg.zh-CHS.resx">
       <DependentUpon>ImportPeptideSearchDlg.cs</DependentUpon>
@@ -3034,6 +3035,7 @@
     <Compile Include="Util\Extensions\Text.cs" />
     <Compile Include="Util\Extensions\UtilProcess.cs" />
     <Compile Include="Util\FormAnimator.cs" />
+    <Compile Include="Util\IonInfo.cs" />
     <Compile Include="Util\Log.cs" />
     <Compile Include="Util\MemoryInfo.cs" />
     <Compile Include="Util\PanoramaUtil.cs" />

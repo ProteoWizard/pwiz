@@ -441,8 +441,8 @@ namespace pwiz.Skyline.Model.Databinding
                     }
                     if (!docHasCustomIons)
                     {
-                        columnsToRemove.Add(PropertyPath.Root.Property("IonName"));
-                        columnsToRemove.Add(PropertyPath.Root.Property("IonFormula"));
+                        columnsToRemove.Add(PropertyPath.Root.Property("MoleculeName"));
+                        columnsToRemove.Add(PropertyPath.Root.Property("MoleculeFormula"));
                         columnsToRemove.Add(PropertyPath.Root.Property("ExplicitRetentionTime"));
                         columnsToRemove.Add(PropertyPath.Root.Property("ExplicitRetentionTimeWindow"));
                     }
@@ -460,6 +460,8 @@ namespace pwiz.Skyline.Model.Databinding
                         columnsToRemove.Add(PropertyPath.Root.Property("ExplicitCollisionEnergy"));
                         columnsToRemove.Add(PropertyPath.Root.Property("IonName"));
                         columnsToRemove.Add(PropertyPath.Root.Property("IonFormula"));
+                        columnsToRemove.Add(PropertyPath.Root.Property("NeutralFormula"));
+                        columnsToRemove.Add(PropertyPath.Root.Property("Adduct"));
                     }
                     columnsToRemove.Add(PropertyPath.Root.Property("TransitionCount"));
                     columnsToRemove.Add(PropertyPath.Root.Property("DeclusteringPotential"));
@@ -495,6 +497,8 @@ namespace pwiz.Skyline.Model.Databinding
                     {
                         // Stuff that only applies to small molecules
                         columnsToRemove.Add(PropertyPath.Root.Property("ProductIonFormula"));
+                        columnsToRemove.Add(PropertyPath.Root.Property("ProductNeutralFormula"));
+                        columnsToRemove.Add(PropertyPath.Root.Property("ProductAdduct"));
                     }
                     addRoot = true;
                 }

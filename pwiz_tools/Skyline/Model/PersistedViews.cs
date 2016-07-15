@@ -294,8 +294,11 @@ namespace pwiz.Skyline.Model
   <view name='Mixed Transition List' rowsource='pwiz.Skyline.Model.Databinding.Entities.Transition' sublist='Results!*'>
     <column name='Precursor.Peptide.Protein.Name' />
     <column name='Precursor.Peptide.ModifiedSequence' />
-    <column name='Precursor.Peptide.IonName' />
-    <column name='Precursor.Peptide.IonFormula' />
+    <column name='Precursor.Peptide.MoleculeName' />
+    <column name='Precursor.Peptide.MoleculeFormula' />
+    <column name='Precursor.IonFormula' />
+    <column name='Precursor.NeutralFormula' />
+    <column name='Precursor.Adduct' />
     <column name='Precursor.Mz' />
     <column name='Precursor.Charge' />
     <column name='Precursor.CollisionEnergy' />
@@ -306,6 +309,8 @@ namespace pwiz.Skyline.Model
     <column name='ProductCharge' />
     <column name='FragmentIon' />
     <column name='ProductIonFormula' />
+    <column name='ProductNeutralFormula' />
+    <column name='ProductAdduct' />
     <column name='FragmentIonType' />
     <column name='FragmentIonOrdinal' />
     <column name='CleavageAa' />
@@ -322,8 +327,11 @@ namespace pwiz.Skyline.Model
   </view>
   <view name='Small Molecule Transition List' rowsource='pwiz.Skyline.Model.Databinding.Entities.Transition' sublist='Results!*'>
     <column name='Precursor.Peptide.Protein.Name' />
-    <column name='Precursor.Peptide.IonName' />
-    <column name='Precursor.Peptide.IonFormula' />
+    <column name='Precursor.Peptide.MoleculeName' />
+    <column name='Precursor.Peptide.MoleculeFormula' />
+    <column name='Precursor.IonFormula' />
+    <column name='Precursor.NeutralFormula' />
+    <column name='Precursor.Adduct' />
     <column name='Precursor.Mz' />
     <column name='Precursor.Charge' />
     <column name='Precursor.CollisionEnergy' />
@@ -333,6 +341,8 @@ namespace pwiz.Skyline.Model
     <column name='ProductMz' />
     <column name='ProductCharge' />
     <column name='ProductIonFormula' />
+    <column name='ProductNeutralFormula' />
+    <column name='ProductAdduct' />
   </view>
 </views>";
         private const string REPORTS_V5 = @"<views>
