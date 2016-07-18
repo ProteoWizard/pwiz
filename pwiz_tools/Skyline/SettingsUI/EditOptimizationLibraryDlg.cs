@@ -865,8 +865,9 @@ namespace pwiz.Skyline.SettingsUI
                 for (int i = 0; i < Optimizations.Count; i++)
                 {
                     // Sometimes the last item can be empty with no sequence.
-                    if (Optimizations[i].Key != null)
-                        dictLibraryIndices.Add(Optimizations[i].Key, i);
+                    var key = Optimizations[i].Key;
+                    if (key != null && !dictLibraryIndices.ContainsKey(key))
+                        dictLibraryIndices.Add(key, i);
                 }
 
                 var listOptimizationsNew = libraryOptimizationsNew.ToList();
