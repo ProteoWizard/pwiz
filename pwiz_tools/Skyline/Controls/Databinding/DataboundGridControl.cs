@@ -87,20 +87,34 @@ namespace pwiz.Skyline.Controls.Databinding
         protected override void OnEnter(EventArgs e)
         {
             base.OnEnter(e);
-            var skylineWindow = FindParentSkylineWindow();
-            if (skylineWindow != null)
-            {
-                skylineWindow.ClipboardControlGotFocus(this);
-            }
+            ClipboardControlGotLostFocus(true);
         }
 
         protected override void OnLeave(EventArgs e)
         {
             base.OnLeave(e);
+            ClipboardControlGotLostFocus(false);
+        }
+
+        protected override void OnHandleDestroyed(EventArgs e)
+        {
+            base.OnHandleDestroyed(e);
+            ClipboardControlGotLostFocus(false);
+        }
+
+        protected void ClipboardControlGotLostFocus(bool gettingFocus)
+        {
             var skylineWindow = FindParentSkylineWindow();
             if (skylineWindow != null)
             {
-                skylineWindow.ClipboardControlLostFocus(this);
+                if (gettingFocus)
+                {
+                    skylineWindow.ClipboardControlGotFocus(this);
+                }
+                else
+                {
+                    skylineWindow.ClipboardControlLostFocus(this);
+                }
             }
         }
 

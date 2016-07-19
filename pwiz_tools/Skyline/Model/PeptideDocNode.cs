@@ -794,7 +794,8 @@ namespace pwiz.Skyline.Model
                     IList<DocNode> childrenNew = new List<DocNode>();
                     foreach (TransitionGroupDocNode nodeGroup in nodeResult.Children)
                     {
-                        if (settingsNew.HasPrecursorCalc(nodeGroup.TransitionGroup.LabelType, explicitMods))
+                        if (settingsNew.HasPrecursorCalc(nodeGroup.TransitionGroup.LabelType, explicitMods)
+                            || nodeGroup.IsCustomIon)
                             childrenNew.Add(nodeGroup);
                     }
 

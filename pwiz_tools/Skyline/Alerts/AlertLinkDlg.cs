@@ -83,7 +83,7 @@ namespace pwiz.Skyline.Alerts
 
         private void btnCopyLink_Click(object sender, EventArgs e)
         {
-            ClipboardEx.SetText(LinkUrl);
+            ClipboardHelper.SetClipboardText(this, LinkUrl);
         }
     }
 }

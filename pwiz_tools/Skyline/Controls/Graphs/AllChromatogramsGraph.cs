@@ -675,7 +675,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void btnCopyText_Click(object sender, EventArgs e)
         {
-            ClipboardEx.SetText(SelectedControl.GetErrorLog(cbMoreInfo.Checked));
+            ClipboardHelper.SetClipboardText(this, SelectedControl.GetErrorLog(cbMoreInfo.Checked));
         }
 
         #region Testing Support
