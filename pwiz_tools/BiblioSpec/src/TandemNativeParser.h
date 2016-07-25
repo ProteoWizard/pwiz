@@ -68,7 +68,8 @@ class TandemNativeParser : public BuildParser, public SpecFileReader
               DOMAIN_STATE, NESTED_GROUP_STATE, // within psm_group 
               PEAKS_STATE, // fragment ion mass spectrum nested group
               PEAKS_MZ_STATE, // Xdata of peaks_state
-              PEAKS_INTENSITY_STATE // Ydata of peaks_state
+              PEAKS_INTENSITY_STATE, // Ydata of peaks_state
+              RESIDUE_MASS_PARAMETERS_STATE
   };
 
   void parseGroup(const XML_Char** attr);
@@ -88,6 +89,7 @@ class TandemNativeParser : public BuildParser, public SpecFileReader
   STATE getLastState();
   void clearCurPeaks();
   void saveSpectrum();
+  void applyResidueMassParameters(PSM* psm);
 
   // for SpecFileReader interface
   virtual void openFile(const char*, bool mzSort = false);
@@ -118,6 +120,10 @@ class TandemNativeParser : public BuildParser, public SpecFileReader
   string mzStr_;       // collect char representation of peaks here for parsing
   string intensityStr_;
   map<int,SpecData*> spectra_;  // key = specKey
+
+  // residue mass parameters
+  double aaMasses_[128];
+  map<char, double> aaMods_;
 };
 
 } // namespace

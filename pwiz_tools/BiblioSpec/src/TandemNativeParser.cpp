@@ -34,6 +34,7 @@ Information for getting spec filenames from .xtan files
 
 #include "TandemNativeParser.h"
 #include "BlibMaker.h"
+#include "AminoAcidMasses.h"
 
 using namespace std;
 
@@ -58,6 +59,8 @@ TandemNativeParser::TandemNativeParser(BlibBuilder& maker,
    // point to self as spec reader
    delete specReader_;
    specReader_ = this;
+
+   AminoAcidMasses::initializeMass(aaMasses_, 1);
 }
 
 TandemNativeParser::~TandemNativeParser() {
@@ -156,7 +159,12 @@ void TandemNativeParser::parseGroup(const XML_Char** attr){
         } else {
             newState(NESTED_GROUP_STATE);
         }
-    } // type == something else, (e.g. parameter)
+    } else if( strcmp(type, "parameters") == 0){
+        if (strcmp(label, "residue mass parameters") == 0) {
+            newState(RESIDUE_MASS_PARAMETERS_STATE);
+        }
+    }
+    // type == something else, (e.g. parameter)
 }
 
 /**
@@ -193,6 +201,7 @@ void TandemNativeParser::parseDomain(const XML_Char** attr){
                             "without an accompanying model group.");
     } else if( curPSM_->unmodSeq.empty() ){
         curPSM_->unmodSeq = getRequiredAttrValue("seq", attr);
+        applyResidueMassParameters(curPSM_);
         seqStart_ = getIntRequiredAttrValue("start", attr);
     } else {
         // can we assume that the sequences at other domains are the same?
@@ -210,13 +219,22 @@ void TandemNativeParser::parseDomain(const XML_Char** attr){
  * the first domain element encountered.
  */
 void TandemNativeParser::parseMod(const XML_Char** attr){
+    const char* aa = getRequiredAttrValue("type", attr);
+
+    if (curState_ == RESIDUE_MASS_PARAMETERS_STATE) {
+        double mass = getDoubleRequiredAttrValue("mass", attr);
+        double diff = mass - aaMasses_[*aa];
+        if (abs(diff) > 0.1) {
+            aaMods_[*aa] = diff;
+        }
+        return;
+    }
 
     if( curPSM_ == NULL ){
         throw BlibException(false, "TandemNativeParser encountered a mod"
                             "ification without an accompanying model group.");
     }
 
-    const char* aa = getRequiredAttrValue("type", attr);
     int protPosition = getIntRequiredAttrValue("at", attr);
     double deltaMass = getDoubleRequiredAttrValue("modified", attr);
 
@@ -388,6 +406,14 @@ void TandemNativeParser::endGroup(){
         clearCurPeaks();
         
         curFilename_.clear();
+    } else if( curState_ == RESIDUE_MASS_PARAMETERS_STATE ){
+        curState_ = getLastState();
+
+        for (map<string, vector<PSM*> >::iterator i = fileMap_.begin(); i != fileMap_.end(); i++) {
+            for (vector<PSM*>::iterator j = i->second.begin(); j != i->second.end(); j++) {
+                applyResidueMassParameters(*j);
+            }
+        }
     }
 }
 
@@ -526,6 +552,19 @@ void TandemNativeParser::saveSpectrum(){
     // check to see if it is already there?
     spectra_[curPSM_->specKey] = curSpec;    
 
+}
+
+void TandemNativeParser::applyResidueMassParameters(PSM* psm) {
+    if (aaMods_.empty()) {
+        return;
+    }
+    const string& seq = psm->unmodSeq;
+    for (size_t i = 0; i < seq.length(); i++) {
+        map<char, double>::const_iterator aaMod = aaMods_.find(seq[i]);
+        if (aaMod != aaMods_.end()) {
+            psm->mods.push_back(SeqMod(i + 1, aaMod->second));
+        }
+    }
 }
 
 // SpecFileReader methods
