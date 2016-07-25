@@ -744,6 +744,8 @@ namespace pwiz.Skyline
             _out.WriteLine();
 
             DocContainer.WaitForComplete();
+            // Remember if an error occurred, in case LastProgress is not an instance of MultiProgressStatus
+            var isError = DocContainer.LastProgress != null && DocContainer.LastProgress.IsError;
             var multiStatus = DocContainer.LastProgress as MultiProgressStatus;
             _doc = DocContainer.Document;
             DocContainer.ResetProgress();
@@ -753,6 +755,9 @@ namespace pwiz.Skyline
                 if (multiStatus == null)
                 {
                     // Can happen with import when joining is required
+                    if (isError)
+                        return false;
+
                     _importedResults = true;
                 }
                 else
