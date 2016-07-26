@@ -37,12 +37,16 @@ namespace SkylineTester
         public Func<string, bool> FilterFunc { get; set; }
         public Action<string> ColorLine { get; set; }
         public Action FinishedOneCommand { get; set; }
+        public int RestartCount { get; set; }
         public int NextCommand { get; set; }
+        public DateTime RunStartTime { get; set; }
         public readonly object LogLock = new object();
+
 
         private string _workingDirectory;
         private readonly List<string> _commands = new List<string>();
         private Action<bool> _doneAction;
+        private Action _restartAction;
         private readonly StringBuilder _logBuffer = new StringBuilder();
         private bool _logEmpty;
         private Process _process;
@@ -84,9 +88,10 @@ namespace SkylineTester
         /// (through successful completion, abort due to error, or abort due to
         /// user interrupt request).
         /// </summary>
-        public void Run(Action<bool> doneAction)
+        public void Run(Action<bool> doneAction, Action restartAction)
         {
             _doneAction = doneAction;
+            _restartAction = restartAction;
             NextCommand = 0;
 
             _outputTimer = new Timer { Interval = 1000 };
@@ -216,12 +221,33 @@ namespace SkylineTester
         /// </summary>
         private void CommandsDone(bool success)
         {
+            bool restart = false;
+            
             if (!success)
-                Log("# Stopped " + DateTime.Now.ToString("f") + Environment.NewLine + Environment.NewLine);
+            {
+                // restart a maximum of 10 times
+                if (RestartCount < 10 && DateTime.Now.Subtract(RunStartTime) < new TimeSpan(0, 0, 30, 0, 0)) 
+                {
+                    restart = true;
+                    RestartCount++;
+                    Log("# Restarting (take "+RestartCount+") " + DateTime.Now.ToString("f") + Environment.NewLine + Environment.NewLine);
+                }
+                else
+                {
+                    Log("# Stopped " + DateTime.Now.ToString("f") + Environment.NewLine + Environment.NewLine);
+                }
+            }
             UpdateLog();
-            _commands.Clear();
-            _doneAction(success);
-        }
+            if (restart)
+            {
+                _restartAction();
+            }
+            else
+            {
+                _commands.Clear();
+                _doneAction(success);
+            }
+        } 
 
         // Run on UI thread.
         public void Done(bool success)

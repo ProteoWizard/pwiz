@@ -59,6 +59,7 @@ namespace SkylineTester
 
             // Update elapsed time display.
             _runStartTime = DateTime.Now;
+            commandShell.RunStartTime = _runStartTime;
             if (_runTimer != null)
             {
                 _runTimer.Stop();
@@ -224,7 +225,7 @@ namespace SkylineTester
         {
             RunningTestName = null;
             commandShell.FinishedOneCommand = () => { RunningTestName = null; };
-            commandShell.Run(CommandsDone);
+            commandShell.Run(CommandsDone, Restart);
         }
 
         public int TestRunnerProcessId
@@ -239,8 +240,14 @@ namespace SkylineTester
 
         private List<int> _testRunnerIndex;
 
+        public void Restart()
+        {
+            commandShell.NextCommand = 0;
+            RunCommands();
+        }
         public void CommandsDone(bool success)
         {
+            commandShell.RestartCount = 0;
             commandShell.UpdateLog();
 
             if (commandShell.NextCommand > _testRunnerIndex.Last())
