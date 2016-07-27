@@ -313,9 +313,14 @@ namespace pwiz.Skyline.Model.Results
             get { return Array.AsReadOnly(_chromatogramEntries); }
         }
 
-        private ChromatogramCache ChangeCachePath(string prop)
+        private ChromatogramCache ChangeCachePath(string prop, IStreamManager manager)
         {
-            return ChangeProp(ImClone(this), im => im.CachePath = prop);
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.CachePath = prop;
+                im.ReadStream.CloseStream();
+                im.ReadStream = manager.CreatePooledStream(prop,false);
+            });
         }        
 
         public void Dispose()
@@ -1272,7 +1277,7 @@ namespace pwiz.Skyline.Model.Results
                     File.Copy(CachePath, fs.SafeName, true);
                     fs.Commit(ReadStream);                    
                 }
-                return ChangeCachePath(cachePathOpt);
+                return ChangeCachePath(cachePathOpt,streamManager);
             }
 
             Assume.IsTrue(cachedFilePaths.Count > 0);
