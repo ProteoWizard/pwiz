@@ -424,6 +424,26 @@ void TandemNativeParser::endNote(){
     if( curState_ == DESCRIPTION_STATE ){
         curState_ = getLastState();
 
+        // File: "F:\QE\07-14-16\QE02179.raw"; SpectrumID: "287"; ...
+        size_t fileStart = descriptionStr_.find("File:");
+        if (fileStart != string::npos) {
+            fileStart += 5;
+            while (descriptionStr_[fileStart] != '"') {
+                if (fileStart++ >= descriptionStr_.length()) {
+                    curFilename_.clear();
+                    return;
+                }
+            }
+            fileStart++;
+            size_t fileEnd = descriptionStr_.find('"', fileStart + 1);
+            if (fileEnd == string::npos) {
+                curFilename_.clear();
+                return;
+            }
+            curFilename_ = descriptionStr_.substr(fileStart, fileEnd - fileStart);
+            return;
+        }
+
         // parse the filename out of the description
         size_t end = descriptionStr_.find(" ");
         curFilename_ = descriptionStr_.substr(0, end);
