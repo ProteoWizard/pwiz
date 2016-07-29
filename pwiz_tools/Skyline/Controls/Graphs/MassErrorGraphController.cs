@@ -27,7 +27,7 @@ namespace pwiz.Skyline.Controls.Graphs
 {
     public enum GraphTypeMassError { peptide, replicate, histogram, histogram2D }
 
-    public enum PointsTypeMassError { targets, decoys }
+    public enum PointsTypeMassError { targets, targets_1FDR, decoys }
 
     public enum TransitionMassError { all, best }
 

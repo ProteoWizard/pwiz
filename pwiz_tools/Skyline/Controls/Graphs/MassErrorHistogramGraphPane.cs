@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
@@ -105,6 +106,7 @@ namespace pwiz.Skyline.Controls.Graphs
             private readonly double _mean;
             private readonly double _stdDev;
             private readonly TransitionMassError _transition;
+            private readonly PointsTypeMassError _pointsType;
 
             public GraphData(SrmDocument document, int resultIndex, bool bestResult, PointsTypeMassError pointsType)
             {
@@ -113,6 +115,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var displayType = MassErrorGraphController.HistogramDisplayType;
                 _binSize = Settings.Default.MassErorrHistogramBinSize;
                 _transition = MassErrorGraphController.HistogramTransiton;
+                _pointsType = pointsType;
 
                 if (document != null)
                 {
@@ -133,40 +136,44 @@ namespace pwiz.Skyline.Controls.Graphs
                                     continue;
                                 if (replicateIndex >= 0)
                                 {
-                                    var chromInfo = nodeTran.Results[replicateIndex];
-                                    AddChromInfo(chromInfo, dictPpmBin2ToCount, vals);
+                                    AddChromInfo(nodeGroup, nodeTran, replicateIndex, dictPpmBin2ToCount, vals);
                                 }
                                 else
                                 {
-                                    foreach (var chromInfo in nodeTran.Results)
-                                        AddChromInfo(chromInfo, dictPpmBin2ToCount, vals);
+                                    for (int i = 0; i < nodeTran.Results.Count; i++)
+                                        AddChromInfo(nodeGroup, nodeTran, i, dictPpmBin2ToCount, vals);
                                 }
                             }
                         }
                     }
                 }
 
-                _bins = new PpmBinCount[dictPpmBin2ToCount.Count];
-                var i = 0;
-                foreach (var ppmBin in dictPpmBin2ToCount)
-                {
-                    _bins[i] = new PpmBinCount((float) (ppmBin.Key * _binSize), ppmBin.Value);
-                    i++;
-                }
+                _bins = dictPpmBin2ToCount.Select(ppmBin => new PpmBinCount((float)(ppmBin.Key * _binSize), ppmBin.Value)).ToArray();
 
                 var statVals = new Statistics(vals.ToArray());
                 _mean = statVals.Mean();
                 _stdDev = statVals.StdDev();
             }
 
-            private void AddChromInfo(ChromInfoList<TransitionChromInfo> chromInfos, Dictionary<int, int> dictPpmBin2ToCount, List<double> vals)
+            private void AddChromInfo(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, int replicateIndex,
+                Dictionary<int, int> dictPpmBin2ToCount, List<double> vals)
             {
-                if (chromInfos == null) return;
+                var chromGroupInfos = nodeGroup.Results[replicateIndex];
+                var chromInfos = nodeTran.Results[replicateIndex];
+                AddChromInfo(chromGroupInfos, chromInfos, dictPpmBin2ToCount, vals);
+            }
+
+            private void AddChromInfo(ChromInfoList<TransitionGroupChromInfo> chromGroupInfos, ChromInfoList<TransitionChromInfo> chromInfos,
+                Dictionary<int, int> dictPpmBin2ToCount, List<double> vals)
+            {
+                if (chromInfos == null || chromGroupInfos == null)
+                    return;
                 foreach (var chromInfo in chromInfos) 
                 {
-                    if (chromInfo.RankByLevel != 1 && _transition == TransitionMassError.best)
+                    if (_transition == TransitionMassError.best && chromInfo.RankByLevel != 1)
                         continue;
-
+                    if (_pointsType == PointsTypeMassError.targets_1FDR && chromInfo.GetMatchingQValue(chromGroupInfos) > 0.01)
+                        continue;
                     var massError = chromInfo.MassError;
                     if (massError.HasValue) 
                     {
@@ -189,8 +196,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 var ps = new PointPairList();
                 foreach (var bin in _bins)
                     ps.Add(bin.Bin + _binSize/2, bin.Count);
-
-                graphPane.CurveList.Add(new BarItem(null, ps, Color.White));
+                var bar = new BarItem(null, ps, Color.FromArgb(180,220,255));
+                bar.Bar.Fill.Type = FillType.Solid;
+                graphPane.CurveList.Add(bar);
 
                 graphPane.XAxis.Title.Text = Resources.MassErrorReplicateGraphPane_UpdateGraph_Mass_Error;
                 graphPane.YAxis.Title.Text = Resources.MassErrorHistogramGraphPane_UpdateGraph_Count;

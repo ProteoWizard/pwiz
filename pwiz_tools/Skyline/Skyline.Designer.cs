@@ -470,6 +470,7 @@ namespace pwiz.Skyline
             this.massErorrRetentionTimeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.massErrorMassToChargContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.massErrorlogScaleContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.massErrorTargets1FDRContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenuTreeNode.SuspendLayout();
             this.contextMenuSpectrum.SuspendLayout();
             this.contextMenuChromatogram.SuspendLayout();
@@ -3461,6 +3462,7 @@ namespace pwiz.Skyline
             // 
             this.massErrorPointsContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.massErrorTargetsContextMenuItem,
+            this.massErrorTargets1FDRContextMenuItem,
             this.massErrorDecoysContextMenuItem});
             this.massErrorPointsContextMenuItem.Name = "massErrorPointsContextMenuItem";
             resources.ApplyResources(this.massErrorPointsContextMenuItem, "massErrorPointsContextMenuItem");
@@ -3579,6 +3581,12 @@ namespace pwiz.Skyline
             this.massErrorlogScaleContextMenuItem.Name = "massErrorlogScaleContextMenuItem";
             resources.ApplyResources(this.massErrorlogScaleContextMenuItem, "massErrorlogScaleContextMenuItem");
             this.massErrorlogScaleContextMenuItem.Click += new System.EventHandler(this.massErrorlogScaleContextMenuItem_Click);
+            // 
+            // massErrorTargets1FDRContextMenuItem
+            // 
+            this.massErrorTargets1FDRContextMenuItem.Name = "massErrorTargets1FDRContextMenuItem";
+            resources.ApplyResources(this.massErrorTargets1FDRContextMenuItem, "massErrorTargets1FDRContextMenuItem");
+            this.massErrorTargets1FDRContextMenuItem.Click += new System.EventHandler(this.massErrorTargets1FDRContextMenuItem_Click);
             // 
             // SkylineWindow
             // 
@@ -4050,6 +4058,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem massErorrRetentionTimeContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem massErrorMassToChargContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem massErrorlogScaleContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem massErrorTargets1FDRContextMenuItem;
     }
 }
 

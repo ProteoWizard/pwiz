@@ -489,6 +489,20 @@ namespace pwiz.Skyline.Model.Results
 
         public bool IsEmpty { get { return EndRetentionTime == 0; } }
 
+        public double GetMatchingQValue(ChromInfoList<TransitionGroupChromInfo> chromGroupInfos)
+        {
+            // For now, brute-force, because these lists should be very short and not commonly more than a single entry
+            foreach (var chromGroupInfo in chromGroupInfos)
+            {
+                if (ReferenceEquals(FileId, chromGroupInfo.FileId) &&
+                    OptimizationStep == chromGroupInfo.OptimizationStep)
+                {
+                    return chromGroupInfo.QValue ?? 1;
+                }
+            }
+            return 1;
+        }
+
         public bool Equivalent(ChromFileInfoId fileId, int step, ChromPeak peak)
         {
             return ReferenceEquals(fileId, FileId) &&

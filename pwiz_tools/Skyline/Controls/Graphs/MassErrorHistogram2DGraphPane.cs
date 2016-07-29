@@ -129,6 +129,7 @@ namespace pwiz.Skyline.Controls.Graphs
             private double _maxMass = double.MinValue, _minMass = double.MaxValue, _maxX = double.MinValue, _minX = double.MaxValue;
             private readonly double _binSizePpm;
             private readonly TransitionMassError _transition;
+            private readonly PointsTypeMassError _pointsType;
             private readonly Histogram2DXAxis _xAxis;
             private readonly int xAxisBins = 100;
 
@@ -145,6 +146,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 _binSizePpm = Settings.Default.MassErorrHistogramBinSize;
                 _transition = MassErrorGraphController.HistogramTransiton;
                 _xAxis = MassErrorGraphController.Histogram2DXAxis;
+                _pointsType = pointsType;
+                if (_pointsType == PointsTypeMassError.targets_1FDR && !document.Settings.PeptideSettings.Integration.PeakScoringModel.IsTrained)
+                    _pointsType = PointsTypeMassError.targets;
 
                 bool decoys = pointsType == PointsTypeMassError.decoys;
                 bool precursors = displayType == DisplayTypeMassError.precursors;
@@ -169,13 +173,12 @@ namespace pwiz.Skyline.Controls.Graphs
                                 var mz = nodeTran.Mz.Value;
                                 if (replicateIndex >= 0)
                                 {
-                                    var chromInfo = nodeTran.Results[replicateIndex];
-                                    AddChromInfo(chromInfo, mz, counts2D);
+                                    AddChromInfo(nodeGroup, nodeTran, resultIndex, mz, counts2D);
                                 }
                                 else 
                                 {
-                                    foreach (var chromInfo in nodeTran.Results)
-                                        AddChromInfo(chromInfo, mz, counts2D);
+                                    for (int i = 0; i < nodeTran.Results.Count; i++)
+                                        AddChromInfo(nodeGroup, nodeTran, i, mz, counts2D);
                                 }
                             }
                         }
@@ -205,13 +208,24 @@ namespace pwiz.Skyline.Controls.Graphs
                 _heatMapData = new HeatMapData(points);
             }
 
-            private void AddChromInfo(ChromInfoList<TransitionChromInfo> chromInfos, double mz, int[,] counts2D)
+            private void AddChromInfo(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, int replicateIndex,
+                double mz, int[,] counts2D)
+            {
+                var chromGroupInfos = nodeGroup.Results[replicateIndex];
+                var chromInfos = nodeTran.Results[replicateIndex];
+                AddChromInfo(chromGroupInfos, chromInfos, mz, counts2D);
+            }
+
+            private void AddChromInfo(ChromInfoList<TransitionGroupChromInfo> chromGroupInfos, ChromInfoList<TransitionChromInfo> chromInfos,
+                double mz, int[,] counts2D)
             {
                 if (chromInfos == null)
                     return;
                 foreach (var chromInfo in chromInfos)
                 {
-                    if (chromInfo.RankByLevel != 1 && _transition == TransitionMassError.best)
+                    if (_transition == TransitionMassError.best && chromInfo.RankByLevel != 1)
+                        continue;
+                    if (_pointsType == PointsTypeMassError.targets_1FDR && chromInfo.GetMatchingQValue(chromGroupInfos) > 0.01)
                         continue;
                     var massError = chromInfo.MassError;
                     if (massError.HasValue)

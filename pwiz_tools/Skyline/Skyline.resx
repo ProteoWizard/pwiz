@@ -2901,6 +2901,12 @@
   <data name="massErrorTargetsContextMenuItem.Text" xml:space="preserve">
     <value>Targets</value>
   </data>
+  <data name="massErrorTargets1FDRContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>136, 22</value>
+  </data>
+  <data name="massErrorTargets1FDRContextMenuItem.Text" xml:space="preserve">
+    <value>Targets at 1% FDR</value>
+  </data>
   <data name="massErrorDecoysContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>136, 22</value>
   </data>
@@ -5572,6 +5578,12 @@
     <value>massErrorlogScaleContextMenuItem</value>
   </data>
   <data name="&gt;&gt;massErrorlogScaleContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;massErrorTargets1FDRContextMenuItem.Name" xml:space="preserve">
+    <value>massErrorTargets1FDRContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;massErrorTargets1FDRContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">

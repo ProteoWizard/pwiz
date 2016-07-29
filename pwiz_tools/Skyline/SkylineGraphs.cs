@@ -3445,7 +3445,7 @@ namespace pwiz.Skyline
             }
 
             if (iUnzoom != -1)
-                menuStrip.Items.Insert(iUnzoom, toolStripSeparator25); // TODO: Use another separator?
+                menuStrip.Items.Insert(iUnzoom, toolStripSeparator25);
 
             // Insert skyline specific menus
             var set = Settings.Default;
@@ -4061,7 +4061,9 @@ namespace pwiz.Skyline
                 massErrorGraphContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
                     {
                         massErrorReplicateComparisonContextMenuItem,
-                        massErrorPeptideComparisonContextMenuItem
+                        massErrorPeptideComparisonContextMenuItem,
+                        massErrorHistogramContextMenuItem,
+                        massErrorHistogram2DContextMenuItem
                     });
             }
 
@@ -4098,6 +4100,13 @@ namespace pwiz.Skyline
                 iInsert = AddPointsContextMenu(menuStrip, iInsert);
                 massErrorTargetsContextMenuItem.Checked = MassErrorGraphController.PointsType == PointsTypeMassError.targets;
                 massErrorDecoysContextMenuItem.Checked = MassErrorGraphController.PointsType == PointsTypeMassError.decoys;
+                bool trained = DocumentUI.Settings.PeptideSettings.Integration.PeakScoringModel.IsTrained;
+                massErrorTargets1FDRContextMenuItem.Visible = trained;
+                massErrorTargets1FDRContextMenuItem.Checked = MassErrorGraphController.PointsType == PointsTypeMassError.targets_1FDR;
+                if (!trained && massErrorTargets1FDRContextMenuItem.Checked)
+                {
+                    massErrorTargetsContextMenuItem.Checked = true;
+                }
                 iInsert = AddBinCountContextMenu(menuStrip, iInsert);
                 iInsert = AddTransitionsContextMenu(menuStrip, iInsert);
             }
@@ -4140,6 +4149,7 @@ namespace pwiz.Skyline
                     massErrorPointsContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
                     {
                         massErrorTargetsContextMenuItem,
+                        massErrorTargets1FDRContextMenuItem,
                         massErrorDecoysContextMenuItem
                     });
                 }
@@ -4296,6 +4306,11 @@ namespace pwiz.Skyline
         private void massErrorDecoysContextMenuItem_Click(object sender, EventArgs e)
         {
             ShowPointsTypeMassError(PointsTypeMassError.decoys);
+        }
+
+        private void massErrorTargets1FDRContextMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowPointsTypeMassError(PointsTypeMassError.targets_1FDR);
         }
 
         public void ShowPointsTypeMassError(PointsTypeMassError pointsTypeMassError)
