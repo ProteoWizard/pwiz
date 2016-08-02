@@ -183,9 +183,9 @@ namespace pwiz.Skyline.Model.Lib
             {
                 return base.ListRetentionTimeSources();
             }
-            return _librarySourceFiles.Select(
-                        biblioListSourceInfo => new RetentionTimeSource(biblioListSourceInfo.BaseName, Name)
-                    ).ToArray();
+            return _librarySourceFiles.Where(biblioListSourceInfo => !string.IsNullOrEmpty(biblioListSourceInfo.BaseName))
+                                      .Select(biblioListSourceInfo => new RetentionTimeSource(biblioListSourceInfo.BaseName, Name))
+                                      .ToArray();
         }
 
         public string Lsid { get; private set; }

@@ -2384,7 +2384,7 @@ namespace pwiz.Skyline.Model
             if (fullScan.AcquisitionMethod != FullScanAcquisitionMethod.DIA ||
                 fullScan.IsolationScheme == null || fullScan.IsolationScheme.FromResults)
             {
-                throw new ArgumentException(
+                throw new IOException(
                     Resources.SkylineWindow_exportIsolationListMenuItem_Click_There_is_no_isolation_list_data_to_export);
             }
 
