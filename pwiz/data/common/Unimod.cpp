@@ -60,6 +60,7 @@ struct UnimodData : public boost::singleton<UnimodData>
         brickFormulaByTitle["NeuGc"] = Formula("C11 H17 N1 O9");
         brickFormulaByTitle["Pent"] = Formula("C5 H8 O4");
         brickFormulaByTitle["Hep"] = Formula("C7 H12 O6");
+        brickFormulaByTitle["Me"] = Formula("C1 H2");
 
         brickFormulaByTitle["C"] = Formula("C1");
         brickFormulaByTitle["H"] = Formula("H1");
@@ -100,6 +101,7 @@ struct UnimodData : public boost::singleton<UnimodData>
         classificationMap["Post-translational"] = Classification::PostTranslational;
         classificationMap["Pre-translational"] = Classification::PreTranslational;
         classificationMap["AA substitution"] = Classification::Substitution;
+        classificationMap["Synth. pep. protect. gp."] = Classification::SynthPepProtectGP;
 
         vector<string> formulaTokens;
 
@@ -220,10 +222,10 @@ struct UnimodData : public boost::singleton<UnimodData>
                 indexByMonoisotopicMass.insert(make_pair(mod.deltaMonoisotopicMass(), modIndex));
                 indexByAverageMass.insert(make_pair(mod.deltaAverageMass(), modIndex));
             }
-            catch (exception&)
+            catch (exception& e)
             {
                 // TODO: log this error
-                //cerr << "[UnimodData::ctor] error parsing term \"" << term.id << "\": " << e.what() << "\n";
+                cerr << "[UnimodData::ctor] error parsing term \"" << term.id << "\": " << e.what() << "\n";
                 //throw runtime_error("[UnimodData::ctor] error parsing mod \"" + title + "\"");
             }
         }

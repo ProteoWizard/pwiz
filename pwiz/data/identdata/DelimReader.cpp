@@ -317,254 +317,254 @@ const char *DelimReader::getType() const
 CVID DelimReader::Impl::mapScore(const string& value)
 {
     if (value.empty() || value == "")
-        return MS_search_engine_specific_score_for_PSMs;
+        return MS_PSM_level_search_engine_specific_statistic;
 
-    // {MS_SEQUEST_probability, MS_search_engine_specific_score_for_PSMs},
+    // {MS_SEQUEST_probability, MS_PSM_level_search_engine_specific_statistic},
     else if (value ==  "MS:1001154" || value == "Sequest:probability")
         return MS_SEQUEST_probability;
     //{MS_SEQUEST_xcorr,
-    //MS_search_engine_specific_score_for_PSMs},
+    //MS_PSM_level_search_engine_specific_statistic},
     else if (value == "MS:1001155" || value == "Sequest:xcorr")
         return MS_SEQUEST_xcorr;
 
     //{MS_SEQUEST_deltacn,
-    //MS_search_engine_specific_score_for_PSMs},
+    //MS_PSM_level_search_engine_specific_statistic},
     else if (value == "MS:1001156" || value == "Sequest:deltacn")
         return MS_SEQUEST_deltacn;
     
-    //{MS_SEQUEST_sf, MS_search_engine_specific_score_for_PSMs},
+    //{MS_SEQUEST_sf, MS_PSM_level_search_engine_specific_statistic},
     else if (value == "MS:1001160" || value == "Sequest:sf")
         return MS_SEQUEST_sf;
     
     //{MS_SEQUEST_matched_ions,
-    //MS_search_engine_specific_score_for_PSMs},
+    //MS_PSM_level_search_engine_specific_statistic},
     else if (value == "MS:1001161" || value == "Sequest:matched ions")
         return MS_SEQUEST_matched_ions;
     
     //{MS_SEQUEST_total_ions,
-    //MS_search_engine_specific_score_for_PSMs},
+    //MS_PSM_level_search_engine_specific_statistic},
     else if (value == "MS:1001162" || value == "Sequest:total ions")
         return MS_SEQUEST_total_ions;
     
-    //{MS_Mascot_score, MS_search_engine_specific_score_for_PSMs},
+    //{MS_Mascot_score, MS_PSM_level_search_engine_specific_statistic},
     else if (value == "MS:1001171" || value == "Mascot:score")
         return MS_Mascot_score;
     
     //{MS_Mascot_expectation_value,
-    //MS_search_engine_specific_score_for_PSMs},
+    //MS_PSM_level_search_engine_specific_statistic},
     else if (value == "MS:1001172" || value == "Mascot:expectation value")
         return MS_Mascot_expectation_value;
     
     //{MS_Mascot_matched_ions,
-    //MS_search_engine_specific_score_for_PSMs},
+    //MS_PSM_level_search_engine_specific_statistic},
     else if (value == "MS:1001173" || value == "Mascot:matched ions")
         return MS_Mascot_matched_ions;
     
     //{MS_Mascot_total_ions,
-    //MS_search_engine_specific_score_for_PSMs},
+    //MS_PSM_level_search_engine_specific_statistic},
     else if (value == "MS:1001174" || value == "Mascot:total ions")
         return MS_Mascot_total_ions;
     
     //{MS_SEQUEST_PeptideSp,
-    //MS_search_engine_specific_score_for_PSMs},
+    //MS_PSM_level_search_engine_specific_statistic},
     else if (value == "MS:1001215" || value == "Sequest:PeptideSp")
         return MS_SEQUEST_PeptideSp;
     
     //{MS_SEQUEST_PeptideRankSp,
-    //MS_search_engine_specific_score_for_PSMs},
+    //MS_PSM_level_search_engine_specific_statistic},
     else if (value == "MS:1001217" || value == "Sequest:PeptideRankSp")
         return MS_SEQUEST_PeptideRankSp;
     
     //{MS_SEQUEST_PeptideNumber,
-    //MS_search_engine_specific_score_for_PSMs},
+    //MS_PSM_level_search_engine_specific_statistic},
     else if (value == "MS:1001217" || value == "Sequest:PeptideRankSp")
         return MS_SEQUEST_PeptideRankSp;
     
     //{MS_SEQUEST_PeptideIdnumber,
-    //MS_search_engine_specific_score_for_PSMs},
+    //MS_PSM_level_search_engine_specific_statistic},
     else if (value == "MS:1001219" || value == "Sequest:PeptideIdnumber")
         return MS_SEQUEST_PeptideIdnumber;
     
-    //{MS_OMSSA_evalue, MS_search_engine_specific_score_for_PSMs},
+    //{MS_OMSSA_evalue, MS_PSM_level_search_engine_specific_statistic},
     else if (value == "MS:1001328" || value == "OMSSA:evalue")
         return MS_OMSSA_evalue;
     
-    //{MS_OMSSA_pvalue, MS_search_engine_specific_score_for_PSMs},
+    //{MS_OMSSA_pvalue, MS_PSM_level_search_engine_specific_statistic},
     else if (value == "MS:1001329" || value == "OMSSA:pvalue")
         return MS_OMSSA_pvalue;
     
     //{MS_X_Tandem_expect,
-    //MS_search_engine_specific_score_for_PSMs},
+    //MS_PSM_level_search_engine_specific_statistic},
     else if (value == "MS:1001330" || value == "X!Tandem:expect")
         return MS_X_Tandem_expect;
     
     //{MS_X_Tandem_hyperscore,
-    //MS_search_engine_specific_score_for_PSMs},
+    //MS_PSM_level_search_engine_specific_statistic},
     else if (value == "MS:1001331" || value == "X!Tandem:hyperscore")
         return MS_X_Tandem_hyperscore;
     
     //{MS_Mascot_homology_threshold,
-    //MS_search_engine_specific_score_for_PSMs},
+    //MS_PSM_level_search_engine_specific_statistic},
     else if (value == "MS:1001370" || value == "Mascot:homology threshold")
         return MS_Mascot_homology_threshold;
     
     //{MS_Mascot_identity_threshold,
-    //MS_search_engine_specific_score_for_PSMs},
+    //MS_PSM_level_search_engine_specific_statistic},
     else if (value == "MS:1001371" || value == "Mascot:identity threshold")
         return MS_Mascot_identity_threshold;
     
-    //{MS_Phenyx_Auto, MS_search_engine_specific_score_for_PSMs},
+    //{MS_Phenyx_Auto, MS_PSM_level_search_engine_specific_statistic},
     else if (value == "MS:1001393" || value == "Phenyx:Auto")
         return MS_Phenyx_Auto;
     
-    //{MS_Phenyx_User, MS_search_engine_specific_score_for_PSMs},
+    //{MS_Phenyx_User, MS_PSM_level_search_engine_specific_statistic},
     else if (value == "MS:1001394" || value == "Phenyx:User")
         return MS_Phenyx_User;
     
     //{MS_Phenyx_Pepzscore,
-    //MS_search_engine_specific_score_for_PSMs},
+    //MS_PSM_level_search_engine_specific_statistic},
     else if (value == "MS:1001395" || value == "Phenyx:Pepzscore")
         return MS_Phenyx_Pepzscore;
     
     //{MS_Phenyx_PepPvalue,
-    //MS_search_engine_specific_score_for_PSMs},
+    //MS_PSM_level_search_engine_specific_statistic},
     else if (value == "MS:1001396" || value == "Phenyx:PepPvalue")
         return MS_Phenyx_PepPvalue;
     
     //{MS_Phenyx_NumberOfMC,
-    //MS_search_engine_specific_score_for_PSMs},
+    //MS_PSM_level_search_engine_specific_statistic},
     else if (value == "MS:1001397" || value == "Phenyx:NumberOfMC")
         return MS_Phenyx_NumberOfMC;
     
-    //{MS_Phenyx_Modif, MS_search_engine_specific_score_for_PSMs},
+    //{MS_Phenyx_Modif, MS_PSM_level_search_engine_specific_statistic},
     else if (value == "MS:1001398" || value == "Phenyx:Modif")
         return MS_Phenyx_Modif;
     
     //{MS_SpectraST_dot,
-    //MS_search_engine_specific_score_for_PSMs},
+    //MS_PSM_level_search_engine_specific_statistic},
     else if (value == "MS:1001417" || value == "SpectraST:dot")
         return MS_SpectraST_dot;
     
     //{MS_SpectraST_dot_bias,
-    //MS_search_engine_specific_score_for_PSMs},
+    //MS_PSM_level_search_engine_specific_statistic},
     else if (value == "MS:1001418" || value == "SpectraST:dot_bias")
         return MS_SpectraST_dot_bias;
     
     //{MS_SpectraST_discriminant_score_F,
-    //MS_search_engine_specific_score_for_PSMs},
+    //MS_PSM_level_search_engine_specific_statistic},
     else if (value == "SpectraST:dot_bias" || value == "SpectraST:discriminant score F")
         return MS_SpectraST_discriminant_score_F;
     
     //{MS_SpectraST_delta,
-    //MS_search_engine_specific_score_for_PSMs},
+    //MS_PSM_level_search_engine_specific_statistic},
     else if (value == "MS:1001420" || value == "SpectraST:delta")
         return MS_SpectraST_delta;
     
     //{MS_percolator_Q_value,
-    //MS_search_engine_specific_score_for_PSMs},
+    //MS_PSM_level_search_engine_specific_statistic},
     else if (value == "MS:1001491" || value == "percolator:Q value")
         return MS_percolator_Q_value;
     
     //{MS_percolator_score_,
-    //MS_search_engine_specific_score_for_PSMs},
+    //MS_PSM_level_search_engine_specific_statistic},
     else if (value == "MS:1001492" || value == "percolator:score ")
         return MS_percolator_score;
     
     //{MS_percolaror_PEP_,
-    //MS_search_engine_specific_score_for_PSMs},
+    //MS_PSM_level_search_engine_specific_statistic},
     else if (value == "MS:1001493" || value == "percolator:PEP ")
         return MS_percolator_PEP;
     
     //{MS_ProteinScape_SearchResultId,
-    //MS_search_engine_specific_score_for_PSMs},
+    //MS_PSM_level_search_engine_specific_statistic},
     else if (value == "MS:1001495" || value == "ProteinScape:SearchResultId")
         return MS_ProteinScape_SearchResultId;
     
     //{MS_ProteinScape_SearchEventId,
-    //MS_search_engine_specific_score_for_PSMs},
+    //MS_PSM_level_search_engine_specific_statistic},
     else if (value == "MS:1001496" || value == "ProteinScape:SearchEventId")
         return MS_ProteinScape_SearchEventId;
     
     //{MS_Profound_z_value,
-    //MS_search_engine_specific_score_for_PSMs},
+    //MS_PSM_level_search_engine_specific_statistic},
     else if (value == "MS:1001498" || value == "Profound:z value")
         return MS_Profound_z_value;
     
     //{MS_Profound_Cluster,
-    //MS_search_engine_specific_score_for_PSMs},
+    //MS_PSM_level_search_engine_specific_statistic},
     else if (value == "MS:1001499" || value == "Profound:Cluster")
         return MS_Profound_Cluster;
     
     //{MS_Profound_ClusterRank,
-    //MS_search_engine_specific_score_for_PSMs},
+    //MS_PSM_level_search_engine_specific_statistic},
     else if (value == "" || value == "")
         return MS_Profound_ClusterRank;
     
     //{MS_MSFit_Mowse_score,
-    //MS_search_engine_specific_score_for_PSMs},
+    //MS_PSM_level_search_engine_specific_statistic},
     else if (value == "Profound:Cluster" || value == "Profound:ClusterRank")
         return MS_MSFit_Mowse_score;
     
-    //{MS_Sonar_Score, MS_search_engine_specific_score_for_PSMs},
+    //{MS_Sonar_Score, MS_PSM_level_search_engine_specific_statistic},
     else if (value == "MS:1001502" || value == "Sonar:Score")
         return MS_Sonar_Score;
     
     //{MS_ProteinScape_PFFSolverExp,
-    //MS_search_engine_specific_score_for_PSMs},
+    //MS_PSM_level_search_engine_specific_statistic},
     else if (value == "MS:1001503" || value == "ProteinScape:PFFSolverExp")
         return MS_ProteinScape_PFFSolverExp;
     
     //{MS_ProteinScape_PFFSolverScore,
-    //MS_search_engine_specific_score_for_PSMs},
+    //MS_PSM_level_search_engine_specific_statistic},
     else if (value == "MS:1001504" || value == "ProteinScape:PFFSolverScore")
         return MS_ProteinScape_PFFSolverScore;
     
     //{MS_ProteinScape_IntensityCoverage,
-    //MS_search_engine_specific_score_for_PSMs},
+    //MS_PSM_level_search_engine_specific_statistic},
     else if (value == "MS:1001505" || value == "ProteinScape:IntensityCoverage")
         return MS_ProteinScape_IntensityCoverage;
     
     //{MS_ProteinScape_SequestMetaScore,
-    //MS_search_engine_specific_score_for_PSMs},
+    //MS_PSM_level_search_engine_specific_statistic},
     else if (value == "MS:1001506" || value == "ProteinScape:SequestMetaScore")
         return MS_ProteinScape_SequestMetaScore;
     
     //{MS_Scaffold_Peptide_Probability,
-    //MS_search_engine_specific_score_for_PSMs},
+    //MS_PSM_level_search_engine_specific_statistic},
     else if (value == "ProteinScape:SequestMetaScore" || value == "Scaffold: Peptide Probability")
         return MS_Scaffold_Peptide_Probability;
     
     //{MS_IdentityE_Score,
-    //MS_search_engine_specific_score_for_PSMs},
+    //MS_PSM_level_search_engine_specific_statistic},
     else if (value == "MS:1001569" || value == "IdentityE Score")
         return MS_IdentityE_Score;
     
     //{MS_ProteinLynx__Log_Likelihood,
-    //MS_search_engine_specific_score_for_PSMs},
+    //MS_PSM_level_search_engine_specific_statistic},
     else if (value == "MS:1001570" || value == "ProteinLynx: Log Likelihood")
         return MS_ProteinLynx_Log_Likelihood;
     
     //{MS_ProteinLynx_Ladder_Score,
-    //MS_search_engine_specific_score_for_PSMs},
+    //MS_PSM_level_search_engine_specific_statistic},
     else if (value == "MS:1001571" || value == "ProteinLynx: Ladder Score")
         return MS_ProteinLynx_Ladder_Score;
     
     //{MS_SpectrumMill_Score,
-    //MS_search_engine_specific_score_for_PSMs},
+    //MS_PSM_level_search_engine_specific_statistic},
     else if (value == "MS:1001572" || value == "SpectrumMill: Score")
         return MS_SpectrumMill_Score;
     
     //{MS_SpectrumMill_SPI,
-    //MS_search_engine_specific_score_for_PSMs},
+    //MS_PSM_level_search_engine_specific_statistic},
     else if (value == "MS:1001573" || value == "SpectrumMill: SPI")
         return MS_SpectrumMill_SPI;
     
     //{MS_ProteinScape_ProfoundProbability,
-    //MS_search_engine_specific_score_for_PSMs},
+    //MS_PSM_level_search_engine_specific_statistic},
     else if (value == "MS:1001597" || value == "ProteinScape:ProfoundProbability")
         return MS_ProteinScape_ProfoundProbability;
     
-    return MS_search_engine_specific_score_for_PSMs;
+    return MS_PSM_level_search_engine_specific_statistic;
 }
 
 } // namespace identdata

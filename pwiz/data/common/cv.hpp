@@ -41,17 +41,17 @@
 // [psi-ms.obo]
 #define _PSI_MS_OBO_
 //   format-version: 1.2
-//   data-version: 3.79.0
-//   date: 07:10:2015 10:15
+//   data-version: 4.0.1
+//   date: 15:07:2016 14:16
 //   saved-by: Gerhard Mayer
 //   auto-generated-by: OBO-Edit 2.3
-//   import: http://pato.googlecode.com/svn/trunk/quality.obo
-//   import: http://unit-ontology.googlecode.com/svn/trunk/unit.obo
+//   import: http://www.berkeleybop.org/ontologies/pato/pato.obo
+//   import: http://www.berkeleybop.org/ontologies/uo/uo.obo
 //   default-namespace: MS
 //   namespace-id-rule: * MS:$sequence(7,0,9999999)$
 //   remark: namespace: MS
-//   remark: version: 3.79.0
-//   remark: release date: 2015-10-07
+//   remark: version: 4.0.1
+//   remark: release date: 2016-07-15
 //   remark: coverage: Mass spectrometer output files and spectra interpretation
 //   remark: creator: Matt Chambers <matt.chambers <-at-> vanderbilt.edu>
 //   remark: creator: Andreas Bertsch <bertsch <-at-> informatik.uni-tuebingen.de>
@@ -63,7 +63,7 @@
 //   remark: publisher: HUPO Proteomics Standards Initiative Mass Spectrometry Standards Working Group and HUPO Proteomics Standards Initiative Proteomics Informatics Working Group
 //   remark: When appropriate the definition and synonyms of a term are reported exactly as in the chapter 12 of IUPAC orange book. See http://www.iupac.org/projects/2003/2003-056-2-500.html and http://mass-spec.lsu.edu/msterms/index.php/Main_Page
 //   remark: For any queries contact psidev-ms-vocab@lists.sourceforge.net
-//   remark: URL: http://psidev.cvs.sourceforge.net/viewvc/psidev/psi/psi-ms/mzML/controlledVocabulary/psi-ms.obo
+//   remark: URL: https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo
 //   remark: This work is licensed under the Creative Commons Attribution 3.0 Unported License.
 //   remark: To view a copy of this license, visit http://creativecommons.org/licenses/by/3.0/ or send a letter to Creative Commons, 444 Castro Street, Suite 900, Mountain View, California, 94041, USA.
 //   ontology: ms
@@ -71,7 +71,7 @@
 // [unimod.obo]
 #define _UNIMOD_OBO_
 //   format-version: 1.2
-//   date: 2015:05:06 10:56
+//   date: 2016:07:01 11:23
 //
 // [unit.obo]
 #define _UNIT_OBO_
@@ -852,10 +852,10 @@ enum PWIZ_API_DECL CVID
     /// BP (base peak): The peak in a mass spectrum that has the greatest intensity. This term may be applied to the spectra of pure substances or mixtures.
     MS_BP = MS_base_peak,
 
-    /// OBSOLETE charge number: OBSOLETE. The total charge on an ion divided by the electron charge e. OBSOLETED 2009-10-27 since this was viewed as a duplication of 00041 charge state.
+    /// OBSOLETE charge number: The total charge on an ion divided by the electron charge e. OBSOLETED 2009-10-27 since this was viewed as a duplication of 00041 charge state.
     MS_OBSOLETE_charge_number_OBSOLETE = 1000211,
 
-    /// z (OBSOLETE charge number): OBSOLETE. The total charge on an ion divided by the electron charge e. OBSOLETED 2009-10-27 since this was viewed as a duplication of 00041 charge state.
+    /// z (OBSOLETE charge number): The total charge on an ion divided by the electron charge e. OBSOLETED 2009-10-27 since this was viewed as a duplication of 00041 charge state.
     MS_z_OBSOLETE = MS_OBSOLETE_charge_number_OBSOLETE,
 
     /// dalton: A non-SI unit of mass (symbol Da) that is equal to the unified atomic mass unit: 1.660 538 86(28) x 10^-27 kg.
@@ -1422,7 +1422,7 @@ enum PWIZ_API_DECL CVID
     /// MS/MS in Space: A tandem mass spectrometry method in which product ion spectra are recorded in m/z analyzers separated in space. Specific m/z separation functions are designed such that in one section of the instrument ions are selected, dissociated in an intermediate region, and the product ions are then transmitted to another analyser for m/z separation and data acquisition.
     MS_MS_MS_in_Space_OBSOLETE = 1000335,
 
-    /// neutral loss: The loss of an uncharged species during a rearrangement process.
+    /// neutral loss: The loss of an uncharged species during a rearrangement process. The value slot holds the molecular formula in Hill notation of the neutral loss molecule, see PMID: 21182243. This term must be used in conjunction with a child of the term MS:1002307 (fragmentation ion type).
     MS_neutral_loss = 1000336,
 
     /// nth generation product ion: Serial product ions from dissociation of selected precursor ions where n refers to the number of stages of dissociation. The term granddaughter ion is deprecated.
@@ -3066,7 +3066,7 @@ enum PWIZ_API_DECL CVID
     /// laser attribute: Laser properties that are associated with a value.
     MS_laser_attribute = 1000841,
 
-    /// laser type: Type of laser used used for desorption purpose.
+    /// laser type: Type of laser used for desorption purpose.
     MS_laser_type = 1000842,
 
     /// wavelength: The distance between two peaks of the emitted laser beam.
@@ -3558,8 +3558,8 @@ enum PWIZ_API_DECL CVID
     /// database nr: Non-redundant GenBank sequence database.
     MS_database_nr = 1001084,
 
-    /// protein result details: Protein level information.
-    MS_protein_result_details = 1001085,
+    /// protein-level identification attribute: Protein level information.
+    MS_protein_level_identification_attribute = 1001085,
 
     /// SEQUEST:sort by XCorr: Sort order of SEQUEST search results by the correlation score.
     MS_SEQUEST_sort_by_XCorr = 1001086,
@@ -3579,8 +3579,8 @@ enum PWIZ_API_DECL CVID
     /// NoEnzyme: 
     MS_NoEnzyme_OBSOLETE = 1001091,
 
-    /// peptide identification confidence metric: Identification confidence metric for a peptide.
-    MS_peptide_identification_confidence_metric = 1001092,
+    /// peptide sequence-level identification statistic: Identification confidence metric for a peptide.
+    MS_peptide_sequence_level_identification_statistic = 1001092,
 
     /// sequence coverage: The percent coverage for the protein based upon the matched peptide sequences (can be calculated).
     MS_sequence_coverage = 1001093,
@@ -3618,8 +3618,8 @@ enum PWIZ_API_DECL CVID
     /// database UniProtKB/Swiss-Prot: The name of the UniProtKB/Swiss-Prot knowledgebase.
     MS_database_UniProtKB_Swiss_Prot = 1001104,
 
-    /// peptide result details: Peptide level information.
-    MS_peptide_result_details = 1001105,
+    /// peptide sequence-level identification attribute: Peptide level information.
+    MS_peptide_sequence_level_identification_attribute = 1001105,
 
     /// SEQUEST:TopNumber: Specify \"number\" as value of the CVParam.
     MS_SEQUEST_TopNumber = 1001106,
@@ -3651,8 +3651,8 @@ enum PWIZ_API_DECL CVID
     /// scan number(s): OBSOLETE: use spectrumID attribute of SpectrumIdentificationResult. Take from mzData.
     MS_scan_number_s__OBSOLETE = 1001115,
 
-    /// single protein result details: Results specific for one protein as part of a protein ambiguity group (a result not valid for all the other proteins in the protein ambiguity group).
-    MS_single_protein_result_details = 1001116,
+    /// single protein identification statistic: Results specific for one protein as part of a protein ambiguity group (a result not valid for all the other proteins in the protein ambiguity group).
+    MS_single_protein_identification_statistic = 1001116,
 
     /// theoretical mass: The theoretical mass of the molecule (e.g. the peptide sequence and its modifications).
     MS_theoretical_mass = 1001117,
@@ -3732,8 +3732,8 @@ enum PWIZ_API_DECL CVID
     /// database IPI_human: International Protein Index database for Homo sapiens sequences.
     MS_database_IPI_human = 1001142,
 
-    /// search engine specific score for PSMs: Search engine specific peptide spectrum match scores.
-    MS_search_engine_specific_score_for_PSMs = 1001143,
+    /// PSM-level search engine specific statistic: Search engine specific peptide spectrum match scores.
+    MS_PSM_level_search_engine_specific_statistic = 1001143,
 
     /// SEQUEST:SelectDefault: 
     MS_SEQUEST_SelectDefault = 1001144,
@@ -3933,8 +3933,8 @@ enum PWIZ_API_DECL CVID
     /// frag: y ion: Fragmentation information, type of product: y ion.
     MS_frag__y_ion = 1001220,
 
-    /// fragmentation information: Fragmentation information like ion types.
-    MS_fragmentation_information = 1001221,
+    /// product ion attribute: Fragmentation information like ion types.
+    MS_product_ion_attribute = 1001221,
 
     /// frag: b ion - H2O: Fragmentation information, type of product: b ion without water.
     MS_frag__b_ion___H2O = 1001222,
@@ -4338,8 +4338,8 @@ enum PWIZ_API_DECL CVID
     /// peptide unique to one protein: A peptide matching only one.
     MS_peptide_unique_to_one_protein = 1001363,
 
-    /// distinct peptide-level global FDR: Estimation of the global false discovery rate for distinct peptides once redundant identifications of the same peptide have been removed (id est multiple PSMs have been collapsed to one entry).
-    MS_distinct_peptide_level_global_FDR = 1001364,
+    /// peptide sequence-level global FDR: Estimation of the global false discovery rate for distinct peptides once redundant identifications of the same peptide have been removed (id est multiple PSMs have been collapsed to one entry).
+    MS_peptide_sequence_level_global_FDR = 1001364,
 
     /// frag: internal yb ion: Fragmentation information, type of product: internal yb ion.
     MS_frag__internal_yb_ion = 1001365,
@@ -5862,14 +5862,14 @@ enum PWIZ_API_DECL CVID
     /// protein-level q-value: Estimation of the q-value for proteins.
     MS_protein_level_q_value = 1001869,
 
-    /// distinct peptide-level p-value: Estimation of the p-value for distinct peptides once redundant identifications of the same peptide have been removed (id est multiple PSMs have been collapsed to one entry).
-    MS_distinct_peptide_level_p_value = 1001870,
+    /// peptide sequence-level p-value: Estimation of the p-value for distinct peptides once redundant identifications of the same peptide have been removed (id est multiple PSMs have been collapsed to one entry).
+    MS_peptide_sequence_level_p_value = 1001870,
 
     /// protein-level p-value: Estimation of the p-value for proteins.
     MS_protein_level_p_value = 1001871,
 
-    /// distinct peptide-level e-value: Estimation of the e-value for distinct peptides once redundant identifications of the same peptide have been removed (id est multiple PSMs have been collapsed to one entry).
-    MS_distinct_peptide_level_e_value = 1001872,
+    /// peptide sequence-level e-value: Estimation of the e-value for distinct peptides once redundant identifications of the same peptide have been removed (id est multiple PSMs have been collapsed to one entry).
+    MS_peptide_sequence_level_e_value = 1001872,
 
     /// protein-level e-value: Estimation of the e-value for proteins.
     MS_protein_level_e_value = 1001873,
@@ -6165,8 +6165,8 @@ enum PWIZ_API_DECL CVID
     /// product ion drift time: The ion drift time of an MS2 product ion.
     MS_product_ion_drift_time_OBSOLETE = 1001967,
 
-    /// PSM-level PTM localization score: A score that assign confidence to the localization of an amino acid modification on a peptide sequence at the PSM-level.
-    MS_PSM_level_PTM_localization_score = 1001968,
+    /// PTM localization PSM-level statistic: Statistic to convey the confidence of the localization of an amino acid modification on a peptide sequence at the PSM-level.
+    MS_PTM_localization_PSM_level_statistic = 1001968,
 
     /// phosphoRS score: phosphoRS score for PTM site location at the PSM-level.
     MS_phosphoRS_score = 1001969,
@@ -6219,11 +6219,11 @@ enum PWIZ_API_DECL CVID
     /// MaxQuant:PTM Delta Score: The PTM Delta Score value from MaxQuant software (Difference between highest scoring site and second highest).
     MS_MaxQuant_PTM_Delta_Score = 1001983,
 
-    /// Ascore: Ascore software.
-    MS_Ascore_1001984 = 1001984,
+    /// Ascore software: Ascore software.
+    MS_Ascore_software = 1001984,
 
     /// Ascore: A-score for PTM site location at the PSM-level.
-    MS_Ascore_1001985 = 1001985,
+    MS_Ascore = 1001985,
 
     /// H-Score: H-Score for peptide phosphorylation site location.
     MS_H_Score = 1001986,
@@ -6495,8 +6495,8 @@ enum PWIZ_API_DECL CVID
     /// metabolic labelling: heavy N (mainly 15N): Metabolic labelling: heavy N (mainly 15N).
     MS_metabolic_labelling__heavy_N__mainly_15N_ = 1002068,
 
-    /// metabolic labelling: labelling purity: Metabolic labelling: Description of labelling purity. Usually the purity of feeding material (e.g. 95%), or the inclusion rate derived from isotopic peak pattern shape.
-    MS_metabolic_labelling__labelling_purity = 1002069,
+    /// metabolic labelling purity: Metabolic labelling: Description of labelling purity. Usually the purity of feeding material (e.g. 95%), or the inclusion rate derived from isotopic peak pattern shape.
+    MS_metabolic_labelling_purity = 1002069,
 
     /// t-test: Perform a t-test (two groups). Specify in string value, whether paired / unpaired, variance equal / different, one- / two-sided version is performed.
     MS_t_test = 1002070,
@@ -6654,7 +6654,7 @@ enum PWIZ_API_DECL CVID
     /// counts reporting: FeatureList of spectral counts.
     MS_counts_reporting = 1002122,
 
-    /// x-Tracker: x-Tracker generic tool for quantitative proteomics.
+    /// x-Tracker: X-Tracker generic tool for quantitative proteomics.
     MS_x_Tracker = 1002123,
 
     /// ProteoSuite: ProteoSuite software for the analysis of quantitative proteomics data.
@@ -7083,7 +7083,7 @@ enum PWIZ_API_DECL CVID
     /// Byonic:PEP: Byonic posterior error probability.
     MS_Byonic_PEP = 1002265,
 
-    /// Byonic:Peptide LogProb: The log p-value of the PSM. This is the log of the probability that the PSM with such a score and delta would arise by chance in a search of this size (size of the protein database, as expanded by the modification rules). A log p-value of -3.0 should happen by chance on only one of a thousand spectra. Caveat: it is very hard to compute a p-value that works for all searches and all spectra, so read Byonic p-values with a certain amount of skepticism.
+    /// Byonic:Peptide LogProb: The log p-value of the PSM. This is the log of the probability that the PSM with such a score and delta would arise by chance in a search of this size (the size of the protein database, as expanded by the modification rules). A log p-value of -3.0 should happen by chance on only one of a thousand spectra. Caveat: it is very hard to compute a p-value that works for all searches and all spectra, so read Byonic p-values with a certain amount of skepticism.
     MS_Byonic_Peptide_LogProb = 1002266,
 
     /// Byonic:Protein LogProb: The log p-value of the protein.
@@ -7323,17 +7323,17 @@ enum PWIZ_API_DECL CVID
     /// Maltcms: Modular Application Toolkit for Chromatography Mass-Spectrometry is an application framework mainly for developers.
     MS_Maltcms = 1002344,
 
-    /// PSM-level result details: Peptide spectrum match level information.
-    MS_PSM_level_result_details = 1002345,
+    /// PSM-level attribute: Attribute of a single peptide-spectrum match.
+    MS_PSM_level_attribute = 1002345,
 
-    /// protein group-level result details: Protein group level information.
-    MS_protein_group_level_result_details = 1002346,
+    /// protein group-level identification attribute: Protein group level information.
+    MS_protein_group_level_identification_attribute = 1002346,
 
-    /// PSM-level identification confidence metric: Identification confidence metric for a peptide spectrum match.
-    MS_PSM_level_identification_confidence_metric = 1002347,
+    /// PSM-level identification statistic: Identification confidence metric for a peptide spectrum match.
+    MS_PSM_level_identification_statistic = 1002347,
 
-    /// protein group-level identification confidence metric: Identification confidence metric for a protein group.
-    MS_protein_group_level_identification_confidence_metric = 1002348,
+    /// protein group-level identification statistic: Identification confidence metric for a protein group.
+    MS_protein_group_level_identification_statistic = 1002348,
 
     /// value greater than zero but less than or equal to one: Positive value range less than or equal to 1.
     MS_value_greater_than_zero_but_less_than_or_equal_to_one = 1002349,
@@ -7353,29 +7353,29 @@ enum PWIZ_API_DECL CVID
     /// PSM-level q-value: Estimation of the q-value for peptide spectrum matches.
     MS_PSM_level_q_value = 1002354,
 
-    /// PSM-level FDRScore: FDRScore for peptide spectrum matches.
+    /// PSM-level FDRScore: mzidLibrary FDRScore for peptide spectrum matches.
     MS_PSM_level_FDRScore = 1002355,
 
-    /// PSM-level combined FDRScore: Combined FDRScore for peptide spectrum matches specifically obtained for distinct combinations of single, pairs or triplets of search engines making a given PSM, used for integrating results from these distinct pools.
+    /// PSM-level combined FDRScore: mzidLibrary Combined FDRScore for peptide spectrum matches specifically obtained for distinct combinations of single, pairs or triplets of search engines making a given PSM, used for integrating results from these distinct pools.
     MS_PSM_level_combined_FDRScore = 1002356,
 
     /// PSM-level probability: Probability that the reported peptide ion is truly responsible for some or all of the components of the specified mass spectrum.
     MS_PSM_level_probability = 1002357,
 
-    /// search engine specific score for distinct peptides: Search engine specific distinct peptide score.
-    MS_search_engine_specific_score_for_distinct_peptides = 1002358,
+    /// search engine specific peptide sequence-level identification statistic: Search engine specific distinct peptide score.
+    MS_search_engine_specific_peptide_sequence_level_identification_statistic = 1002358,
 
-    /// distinct peptide-level local FDR: Estimation of the local false discovery rate for distinct peptides once redundant identifications of the same peptide have been removed (id est multiple PSMs have been collapsed to one entry).
-    MS_distinct_peptide_level_local_FDR = 1002359,
+    /// peptide sequence-level local FDR: Estimation of the local false discovery rate for distinct peptides once redundant identifications of the same peptide have been removed (id est multiple PSMs have been collapsed to one entry).
+    MS_peptide_sequence_level_local_FDR = 1002359,
 
-    /// distinct peptide-level FDRScore: FDRScore for distinct peptides once redundant identifications of the same peptide have been removed (id est multiple PSMs have been collapsed to one entry).
+    /// distinct peptide-level FDRScore: mzidLibrary FDRScore for distinct peptides once redundant identifications of the same peptide have been removed (id est multiple PSMs have been collapsed to one entry).
     MS_distinct_peptide_level_FDRScore = 1002360,
 
     /// distinct peptide-level combined FDRScore: Combined FDRScore for peptides once redundant identifications of the same peptide have been removed (id est multiple PSMs have been collapsed to one entry) specifically obtained for distinct combinations of single, pairs or triplets of search engines making a given peptide, used for integrating results from these distinct pools.
     MS_distinct_peptide_level_combined_FDRScore = 1002361,
 
-    /// distinct peptide-level probability: Probability that the reported distinct peptide sequence (irrespective of mass modifications) has been correctly identified via the referenced PSMs.
-    MS_distinct_peptide_level_probability = 1002362,
+    /// peptide sequence-level probability: Probability that the reported distinct peptide sequence (irrespective of mass modifications) has been correctly identified via the referenced PSMs.
+    MS_peptide_sequence_level_probability = 1002362,
 
     /// search engine specific score for proteins: Search engine specific protein scores.
     MS_search_engine_specific_score_for_proteins = 1002363,
@@ -7383,10 +7383,10 @@ enum PWIZ_API_DECL CVID
     /// protein-level local FDR: Estimation of the local false discovery rate of proteins.
     MS_protein_level_local_FDR = 1002364,
 
-    /// FDRScore for proteins: FDRScore for proteins specifically obtained for distinct combinations of single, pairs or triplets of search engines making a given PSM, used for integrating results from these distinct pools.
+    /// FDRScore for proteins: mzidLibrary FDRScore for proteins specifically obtained for distinct combinations of single, pairs or triplets of search engines making a given PSM, used for integrating results from these distinct pools.
     MS_FDRScore_for_proteins = 1002365,
 
-    /// combined FDRScore for proteins: Combined FDRScore for proteins.
+    /// combined FDRScore for proteins: mzidLibrary Combined FDRScore for proteins.
     MS_combined_FDRScore_for_proteins = 1002366,
 
     /// probability for proteins: Probability that a specific protein sequence has been correctly identified from the PSM and distinct peptide evidence, and based on the available protein sequences presented to the analysis software.
@@ -7410,10 +7410,10 @@ enum PWIZ_API_DECL CVID
     /// protein group-level q-value: Estimation of the q-value for protein groups.
     MS_protein_group_level_q_value = 1002373,
 
-    /// protein group-level FDRScore: FDRScore for protein groups.
+    /// protein group-level FDRScore: mzidLibrary FDRScore for protein groups.
     MS_protein_group_level_FDRScore = 1002374,
 
-    /// protein group-level combined FDRScore: Combined FDRScore for proteins specifically obtained for distinct combinations of single, pairs or triplets of search engines making a given PSM, used for integrating results from these distinct pools.
+    /// protein group-level combined FDRScore: mzidLibrary Combined FDRScore for proteins specifically obtained for distinct combinations of single, pairs or triplets of search engines making a given PSM, used for integrating results from these distinct pools.
     MS_protein_group_level_combined_FDRScore = 1002375,
 
     /// protein group-level probability: Probability that at least one of the members of a group of protein sequences has been correctly identified from the PSM and distinct peptide evidence, and based on the available protein sequences presented to the analysis software.
@@ -7503,8 +7503,8 @@ enum PWIZ_API_DECL CVID
     /// count of identified proteins: The number of proteins that have been identified, which must match the number of groups that pass the threshold in the file.
     MS_count_of_identified_proteins = 1002404,
 
-    /// protein cluster details: Details describing a protein cluster.
-    MS_protein_cluster_details = 1002405,
+    /// protein group-level result list attribute: Details describing a protein cluster.
+    MS_protein_group_level_result_list_attribute = 1002405,
 
     /// count of identified clusters: The number of protein clusters that have been identified, which must match the number of clusters that pass the threshold in the file.
     MS_count_of_identified_clusters = 1002406,
@@ -7654,13 +7654,13 @@ enum PWIZ_API_DECL CVID
     MS_No_variable_modifications_searched = 1002454,
 
     /// H2O neutral loss: Neutral loss of water.
-    MS_H2O_neutral_loss = 1002455,
+    MS_H2O_neutral_loss_OBSOLETE = 1002455,
 
     /// NH3 neutral loss: Neutral loss of ammonia.
-    MS_NH3_neutral_loss = 1002456,
+    MS_NH3_neutral_loss_OBSOLETE = 1002456,
 
     /// H3PO4 neutral loss: Neutral loss of phosphoric acid.
-    MS_H3PO4_neutral_loss = 1002457,
+    MS_H3PO4_neutral_loss_OBSOLETE = 1002457,
 
     /// PeptideShaker: PeptideShaker is a software for the interpretation of proteomics identification results.
     MS_PeptideShaker = 1002458,
@@ -7674,11 +7674,11 @@ enum PWIZ_API_DECL CVID
     /// protein group-level confidence: Estimation of the global confidence of protein groups.
     MS_protein_group_level_confidence = 1002461,
 
-    /// distinct peptide-level global FNR: Estimation of the global false negative rate for distinct peptides once redundant identifications of the same peptide have been removed (id est multiple PSMs have been collapsed to one entry).
-    MS_distinct_peptide_level_global_FNR = 1002462,
+    /// peptide sequence-level global FNR: Estimation of the global false negative rate for distinct peptides once redundant identifications of the same peptide have been removed (id est multiple PSMs have been collapsed to one entry).
+    MS_peptide_sequence_level_global_FNR = 1002462,
 
-    /// distinct peptide-level global confidence: Estimation of the global confidence for distinct peptides once redundant identifications of the same peptide have been removed (id est multiple PSMs have been collapsed to one entry).
-    MS_distinct_peptide_level_global_confidence = 1002463,
+    /// peptide sequence-level global confidence: Estimation of the global confidence for distinct peptides once redundant identifications of the same peptide have been removed (id est multiple PSMs have been collapsed to one entry).
+    MS_peptide_sequence_level_global_confidence = 1002463,
 
     /// PSM-level global FNR: Estimation of the global false negative rate of peptide spectrum matches.
     MS_PSM_level_global_FNR = 1002464,
@@ -7728,7 +7728,7 @@ enum PWIZ_API_DECL CVID
     /// regular expression: Regular expression.
     MS_regular_expression = 1002479,
 
-    /// regular expression for a digital object identifier (DOI): (10[.][0-9]\{4,\}(?:[.][0-9]+)*/(?:(?![\"&\'<>])[^ \t\\r\n\\v\\f])+).
+    /// regular expression for a digital object identifier (DOI): (10[.][0-9]\{4,\}(?:[.][0-9]+)*/(?:(?![\"&\'<>])[^ \t\\r\n\\v\\f])+)
     MS_regular_expression_for_a_digital_object_identifier__DOI_ = 1002480,
 
     /// higher energy beam-type collision-induced dissociation: A collision-induced dissociation process wherein the projectile ion has the translational energy higher than approximately 1000 eV.
@@ -7786,7 +7786,7 @@ enum PWIZ_API_DECL CVID
     MS_group_PSMs_by_sequence_with_modifications_and_charge = 1002498,
 
     /// peptide level score: Peptide level score.
-    MS_peptide_level_score = 1002499,
+    MS_peptide_level_score_OBSOLETE = 1002499,
 
     /// peptide passes threshold: A Boolean attribute to determine whether the peptide has passed the threshold indicated in the file.
     MS_peptide_passes_threshold = 1002500,
@@ -7803,7 +7803,7 @@ enum PWIZ_API_DECL CVID
     /// modification index: The order of modifications to be referenced elsewhere in the document.
     MS_modification_index = 1002504,
 
-    /// regular expression for modification localization scoring: ([:digit:]+:[0|1]\{1\}.[:digit:]+:[:digit:]+[|]\{1\}[:digit:]+:(true|false)\{1\})
+    /// regular expression for modification localization scoring: ([:digit:]+:[0|1]\{1\}.[:digit:]+[Ee]{0,1}[+-]{0,1}[:digit:]*:[:digit:]+[|]\{1\}[:digit:]+:(true|false)\{1\})
     MS_regular_expression_for_modification_localization_scoring = 1002505,
 
     /// modification position score: Modification position score.
@@ -7818,8 +7818,8 @@ enum PWIZ_API_DECL CVID
     /// cross-link donor: The Cross-linking donor, assigned according to the following rules: the export software SHOULD use the following rules to choose the cross-link donor as the: longer peptide, then higher peptide neutral mass, then alphabetical order.
     MS_cross_link_donor = 1002509,
 
-    /// cross-link receiver: Cross-linking receiver, assigned according to the following rules: the export software SHOULD use the following rules to choose the cross-link donor as the: longer peptide, then higher peptide neutral mass, then alphabetical order.
-    MS_cross_link_receiver = 1002510,
+    /// cross-link acceptor: Cross-linking acceptor, assigned according to the following rules: the export software SHOULD use the following rules to choose the cross-link donor as the: longer peptide, then higher peptide neutral mass, then alphabetical order.
+    MS_cross_link_acceptor = 1002510,
 
     /// cross-link spectrum identification item: Cross-linked spectrum identification item.
     MS_cross_link_spectrum_identification_item = 1002511,
@@ -7938,8 +7938,8 @@ enum PWIZ_API_DECL CVID
     /// distributed normalized spectral abundance factor: A distributed normalized spectral abundance factor (dNSAF.
     MS_distributed_normalized_spectral_abundance_factor = 1002548,
 
-    /// peptide-level PTM localization score: A score that assign confidence to the localization of an amino acid modification on a peptide sequence at the peptide-level.
-    MS_peptide_level_PTM_localization_score = 1002549,
+    /// PTM localization distinct peptide-level statistic: Statistic to convey the confidence of the localization of an amino acid modification on a peptide sequence.
+    MS_PTM_localization_distinct_peptide_level_statistic = 1002549,
 
     /// peptide:phosphoRS score: phosphoRS score for PTM site location at the peptide-level.
     MS_peptide_phosphoRS_score = 1002550,
@@ -7970,6 +7970,9 @@ enum PWIZ_API_DECL CVID
 
     /// H-Score threshold: Threshold for H-score PTM site location score.
     MS_H_Score_threshold = 1002559,
+
+    /// DeBunker:score threshold: Threshold for DeBunker PTM site location score.
+    MS_DeBunker_score_threshold = 1002560,
 
     /// Mascot:PTM site assignment confidence threshold: Threshold for Mascot PTM site assignment confidence.
     MS_Mascot_PTM_site_assignment_confidence_threshold = 1002561,
@@ -8076,8 +8079,341 @@ enum PWIZ_API_DECL CVID
     /// Triple Quad 6500+: SCIEX Triple Quad 6500+.
     MS_Triple_Quad_6500_ = 1002595,
 
-    /// DeBunker:score threshold: Threshold for DeBunker PTM site location score.
-    MS_DeBunker_score_threshold = 10025560,
+    /// ProLuCID: The SEQUEST-like sequence search engine ProLuCID, developed in the Yates Lab at the Scripps Research Institute.
+    MS_ProLuCID = 1002596,
+
+    /// MS1 format: MS1 file format for MS1 spectral data.
+    MS_MS1_format = 1002597,
+
+    /// DTASelect: Analysis software designed to reassemble the SEQUEST peptide identifications and to highlight the most significant matches.
+    MS_DTASelect = 1002598,
+
+    /// splash key: The Splash, is an unique identifier for Spectra, as the InChI Key is an unique identifier for chemical compounds.
+    MS_splash_key = 1002599,
+
+    /// PRIDE XML: Internal data and submission format of the PRIDE database.
+    MS_PRIDE_XML = 1002600,
+
+    /// mzTab: Tabular result format for proteomics and metabolomics experiments.
+    MS_mzTab = 1002601,
+
+    /// quantification reagent: Reagent used in labeled quantification methods.
+    MS_quantification_reagent = 1002602,
+
+    /// ICAT reagent: Isotope coded affinity tag reagent.
+    MS_ICAT_reagent = 1002603,
+
+    /// ICAT heavy reagent: The name of the sample labelled with the heavy ICAT label.
+    MS_ICAT_heavy_reagent = 1002604,
+
+    /// ICAT light reagent: The name of the sample labelled with the light ICAT label.
+    MS_ICAT_light_reagent = 1002605,
+
+    /// ICPL reagent: Isotope coded protein labeling reagent.
+    MS_ICPL_reagent = 1002606,
+
+    /// ICPL reagent 0: The name of the sample labelled with the ICPL reagent 0.
+    MS_ICPL_reagent_0 = 1002607,
+
+    /// ICPL reagent 4: The name of the sample labelled with the ICPL reagent 4.
+    MS_ICPL_reagent_4 = 1002608,
+
+    /// ICPL reagent 6: The name of the sample labelled with the ICPL reagent 6.
+    MS_ICPL_reagent_6 = 1002609,
+
+    /// ICPL reagent 10: The name of the sample labelled with the ICPL reagent 10.
+    MS_ICPL_reagent_10 = 1002610,
+
+    /// SILAC reagent: Stable isotope labeling with amino acids in cell culture reagent.
+    MS_SILAC_reagent = 1002611,
+
+    /// SILAC heavy reagent: The name of the sample labelled with the heavy SILAC label.
+    MS_SILAC_heavy_reagent = 1002612,
+
+    /// SILAC medium reagent: The name of the sample labelled with the medium SILAC label.
+    MS_SILAC_medium_reagent = 1002613,
+
+    /// SILAC light reagent: The name of the sample labelled with the light SILAC label.
+    MS_SILAC_light_reagent = 1002614,
+
+    /// TMT reagent: Tandem mass tag reagent.
+    MS_TMT_reagent = 1002615,
+
+    /// TMT reagent 126: The name of the sample labelled with the TMT reagent 126.
+    MS_TMT_reagent_126 = 1002616,
+
+    /// TMT reagent 127: The name of the sample labelled with the TMT reagent 127.
+    MS_TMT_reagent_127 = 1002617,
+
+    /// TMT reagent 128: The name of the sample labelled with the TMT reagent 128.
+    MS_TMT_reagent_128 = 1002618,
+
+    /// TMT reagent 129: The name of the sample labelled with the TMT reagent 129.
+    MS_TMT_reagent_129 = 1002619,
+
+    /// TMT reagent 130: The name of the sample labelled with the TMT reagent 130.
+    MS_TMT_reagent_130 = 1002620,
+
+    /// TMT reagent 131: The name of the sample labelled with the TMT reagent 131.
+    MS_TMT_reagent_131 = 1002621,
+
+    /// iTRAQ reagent: Isobaric tag for relative and absolute quantitation reagent.
+    MS_iTRAQ_reagent = 1002622,
+
+    /// iTRAQ reagent 113: The name of the sample labelled with the iTRAQ reagent 113.
+    MS_iTRAQ_reagent_113 = 1002623,
+
+    /// iTRAQ reagent 114: The name of the sample labelled with the iTRAQ reagent 114.
+    MS_iTRAQ_reagent_114 = 1002624,
+
+    /// iTRAQ reagent 115: The name of the sample labelled with the iTRAQ reagent 115.
+    MS_iTRAQ_reagent_115 = 1002625,
+
+    /// iTRAQ reagent 116: The name of the sample labelled with the iTRAQ reagent 116.
+    MS_iTRAQ_reagent_116 = 1002626,
+
+    /// iTRAQ reagent 117: The name of the sample labelled with the iTRAQ reagent 117.
+    MS_iTRAQ_reagent_117 = 1002627,
+
+    /// iTRAQ reagent 118: The name of the sample labelled with the iTRAQ reagent 118.
+    MS_iTRAQ_reagent_118 = 1002628,
+
+    /// iTRAQ reagent 119: The name of the sample labelled with the iTRAQ reagent 119.
+    MS_iTRAQ_reagent_119 = 1002629,
+
+    /// iTRAQ reagent 121: The name of the sample labelled with the iTRAQ reagent 121.
+    MS_iTRAQ_reagent_121 = 1002630,
+
+    /// Electron-Transfer/Higher-Energy Collision Dissociation (EThcD): A dissociation process combining electron-transfer and higher-energy collision dissociation (EThcD). It combines ETD (reaction time) followed by HCD (activation energy).
+    MS_Electron_Transfer_Higher_Energy_Collision_Dissociation__EThcD_ = 1002631,
+
+    /// EThcD (Electron-Transfer/Higher-Energy Collision Dissociation (EThcD)): A dissociation process combining electron-transfer and higher-energy collision dissociation (EThcD). It combines ETD (reaction time) followed by HCD (activation energy).
+    MS_EThcD = MS_Electron_Transfer_Higher_Energy_Collision_Dissociation__EThcD_,
+
+    /// jPOST dataset identifier: Dataset identifier issued by the jPOST repository. A dataset can refer to either a single sample as part of a study, or all samples that are part of the study corresponding to a publication.
+    MS_jPOST_dataset_identifier = 1002632,
+
+    /// jPOST dataset URI: URI that allows the access to one dataset in the jPOST repository. A dataset can refer to either a single sample as part of a study, or all samples that are part of the study corresponding to a publication.
+    MS_jPOST_dataset_URI = 1002633,
+
+    /// Q Exactive Plus: Thermo Scientific Q Exactive Plus.
+    MS_Q_Exactive_Plus = 1002634,
+
+    /// proteogenomics search: Proteogenomics search performed.
+    MS_proteogenomics_search = 1002635,
+
+    /// proteogenomics attribute: Proteogenomics attribute.
+    MS_proteogenomics_attribute = 1002636,
+
+    /// chromosome name: The name or number of the chromosome to which a given peptide has been mapped.
+    MS_chromosome_name = 1002637,
+
+    /// chromosome strand: The strand (+ or -) to which the peptide has been mapped.
+    MS_chromosome_strand = 1002638,
+
+    /// peptide start on chromosome: The overall start position on the chromosome to which a peptide has been mapped i.e. the position of the first base of the first codon, using a zero-based counting system.
+    MS_peptide_start_on_chromosome_OBSOLETE = 1002639,
+
+    /// peptide end on chromosome: The overall end position on the chromosome to which a peptide has been mapped i.e. the position of the third base of the last codon, using a zero-based counting system.
+    MS_peptide_end_on_chromosome = 1002640,
+
+    /// peptide exon count: The number of exons to which the peptide has been mapped.
+    MS_peptide_exon_count = 1002641,
+
+    /// peptide exon nucleotide sizes: A comma separated list of the number of DNA bases within each exon to which a peptide has been mapped. Assuming standard operation of a search engine, the peptide exon sizes should sum to exactly three times the peptide length.
+    MS_peptide_exon_nucleotide_sizes = 1002642,
+
+    /// peptide start positions on chromosome: A comma separated list of start positions within exons to which the peptide has been mapped, relative to peptide-chromosome start, assuming a zero-based counting system. The first value MUST match the value in peptide start on chromosome.
+    MS_peptide_start_positions_on_chromosome = 1002643,
+
+    /// genome reference version: The reference genome and versioning string as used for mapping. All coordinates are within this frame of reference.
+    MS_genome_reference_version = 1002644,
+
+    /// MSDK: Mass Spectrometry Development Kit (MSDK) is a Java library of algorithms for processing of mass spectrometry data.
+    MS_MSDK = 1002645,
+
+    /// native spectrum identifier format, combined spectra: Describes how the native spectrum identifiers that have been combined prior to searching or interpretation are formated.
+    MS_native_spectrum_identifier_format__combined_spectra = 1002646,
+
+    /// nativeID format, combined spectra (native spectrum identifier format, combined spectra): Describes how the native spectrum identifiers that have been combined prior to searching or interpretation are formated.
+    MS_nativeID_format__combined_spectra = MS_native_spectrum_identifier_format__combined_spectra,
+
+    /// Thermo nativeID format, combined spectra: Thermo comma separated list of spectra that have been combined prior to searching or interpretation.
+    MS_Thermo_nativeID_format__combined_spectra = 1002647,
+
+    /// Waters nativeID format, combined spectra: Waters comma separated list of spectra that have been combined prior to searching or interpretation.
+    MS_Waters_nativeID_format__combined_spectra = 1002648,
+
+    /// WIFF nativeID format, combined spectra: WIFF comma separated list of spectra that have been combined prior to searching or interpretation.
+    MS_WIFF_nativeID_format__combined_spectra = 1002649,
+
+    /// Bruker/Agilent YEP nativeID format, combined spectra: Bruker/Agilent comma separated list of spectra that have been combined prior to searching or interpretation.
+    MS_Bruker_Agilent_YEP_nativeID_format__combined_spectra = 1002650,
+
+    /// Bruker BAF nativeID format, combined spectra: Bruker BAF comma separated list of spectra that have been combined prior to searching or interpretation.
+    MS_Bruker_BAF_nativeID_format__combined_spectra = 1002651,
+
+    /// Bruker FID nativeID format, combined spectra: Bruker FID comma separated list of spectra that have been combined prior to searching or interpretation.
+    MS_Bruker_FID_nativeID_format__combined_spectra = 1002652,
+
+    /// multiple peak list nativeID format, combined spectra: Comma separated list of spectra that have been combined prior to searching or interpretation.
+    MS_multiple_peak_list_nativeID_format__combined_spectra = 1002653,
+
+    /// single peak list nativeID format, combined spectra: Comma separated list of spectra that have been combined prior to searching or interpretation.
+    MS_single_peak_list_nativeID_format__combined_spectra = 1002654,
+
+    /// scan number only nativeID format, combined spectra: Comma separated list of spectra that have been combined prior to searching or interpretation.
+    MS_scan_number_only_nativeID_format__combined_spectra = 1002655,
+
+    /// spectrum identifier nativeID format, combined spectra: Comma separated list of spectra that have been combined prior to searching or interpretation.
+    MS_spectrum_identifier_nativeID_format__combined_spectra = 1002656,
+
+    /// mzML unique identifier, combined spectra: Comma separated list of spectra that have been combined prior to searching or interpretation.
+    MS_mzML_unique_identifier__combined_spectra = 1002657,
+
+    /// identification parameter: Identification parameter for the search engine run.
+    MS_identification_parameter = 1002658,
+
+    /// UniProtKB text sequence format: Text-based format used by UniProtKB for sequence entries.
+    MS_UniProtKB_text_sequence_format = 1002659,
+
+    /// UniProtKB XML sequence format: XML-based format used by UniProtKB for sequence entries.
+    MS_UniProtKB_XML_sequence_format = 1002660,
+
+    /// Morpheus: Morpheus search engine.
+    MS_Morpheus = 1002661,
+
+    /// Morpheus:Morpheus score: Morpheus score for PSMs.
+    MS_Morpheus_Morpheus_score = 1002662,
+
+    /// Morpheus:summed Morpheus score: Summed Morpheus score for protein groups.
+    MS_Morpheus_summed_Morpheus_score = 1002663,
+
+    /// interaction score derived from cross-linking: Parent term for interaction scores derived from cross-linking.
+    MS_interaction_score_derived_from_cross_linking = 1002664,
+
+    /// regular expression for interaction scores derived from cross-linking: ([:digit:]+[.][a|b]:([:digit:]+|null):[:digit:]+[.][:digit:]+([Ee][+-][0-9]+)*:(true|false]\{1\}))
+    MS_regular_expression_for_interaction_scores_derived_from_cross_linking = 1002665,
+
+    /// impact II: Bruker Daltonics' impact II.
+    MS_impact_II = 1002666,
+
+    /// impact HD: Bruker Daltonics' impact HD.
+    MS_impact_HD = 1002667,
+
+    /// frag: iTRAQ 4plex reporter ion: Standard reporter ion for iTRAQ 4Plex. The value slot holds the integer mass of the iTRAQ 4Plex reporter ion, e.g. 114.
+    MS_frag__iTRAQ_4plex_reporter_ion = 1002668,
+
+    /// frag: iTRAQ 8plex reporter ion: Standard reporter ion for iTRAQ 8Plex. The value slot holds the integer mass of the iTRAQ 8Plex reporter ion, e.g. 113.
+    MS_frag__iTRAQ_8plex_reporter_ion = 1002669,
+
+    /// frag: TMT reporter ion: Standard reporter ion for TMT. The value slot holds the integer mass of the TMT reporter ion and can be suffixed with either N or C, indicating whether the mass difference is encoded at a Nitrogen or Carbon atom, e.g. 127N.
+    MS_frag__TMT_reporter_ion = 1002670,
+
+    /// frag: TMT ETD reporter ion: Standard reporter ion for TMT with ETD fragmentation. The value slot holds the integer mass of the TMT ETD reporter ion and can be suffixed with either N or C, indicating whether the mass difference is encoded at a Nitrogen or Carbon atom, e.g. 127C.
+    MS_frag__TMT_ETD_reporter_ion = 1002671,
+
+    /// no modification threshold: No statistical threshold for accepting or rejecting that a modification position.
+    MS_no_modification_threshold = 1002672,
+
+    /// OpenXQuest: Cross-Linking MS search engine.
+    MS_OpenXQuest = 1002673,
+
+    /// X500R QTOF: SCIEX X500R QTOF, a quadrupole - quadrupole - time-of-flight mass spectrometer.
+    MS_X500R_QTOF = 1002674,
+
+    /// cross-linking result details: This subsection describes terms which can describe details of cross-linking results.
+    MS_cross_linking_result_details = 1002675,
+
+    /// protein-pair-level global FDR: Estimation of the global false discovery rate of proteins-pairs in cross-linking experiments.
+    MS_protein_pair_level_global_FDR = 1002676,
+
+    /// residue-pair-level global FDR: Estimation of the global false discovery rate of residue-pairs in cross-linking experiments.
+    MS_residue_pair_level_global_FDR = 1002677,
+
+    /// supplemental higher energy beam-type collision-induced dissociation: A supplemental collision-induced dissociation process wherein the projectile ion has the translational energy higher than approximately 1000 eV.
+    MS_supplemental_higher_energy_beam_type_collision_induced_dissociation = 1002678,
+
+    /// supplemental collision-induced dissociation: The dissociation of an ion after supplemental collisional excitation.
+    MS_supplemental_collision_induced_dissociation = 1002679,
+
+    /// supplemental collision energy: Energy for an ion experiencing supplemental collision with a stationary gas particle resulting in dissociation of the ion.
+    MS_supplemental_collision_energy = 1002680,
+
+    /// OpenXQuest:combined score: OpenXQuest's combined score for a cross-link spectrum match.
+    MS_OpenXQuest_combined_score = 1002681,
+
+    /// OpenXQuest:xcorr xlink: OpenXQuest's cross-correlation of cross-linked ions subscore.
+    MS_OpenXQuest_xcorr_xlink = 1002682,
+
+    /// OpenXQuest:xcorr common: OpenXQuest's cross-correlation of unlinked ions subscore.
+    MS_OpenXQuest_xcorr_common = 1002683,
+
+    /// OpenXQuest:match-odds: OpenXQuest's match-odds subscore.
+    MS_OpenXQuest_match_odds = 1002684,
+
+    /// OpenXQuest:intsum: OpenXQuest's sum of matched peak intensity subscore.
+    MS_OpenXQuest_intsum = 1002685,
+
+    /// OpenXQuest:wTIC: OpenXQuest's weighted percent of total ion current subscore.
+    MS_OpenXQuest_wTIC = 1002686,
+
+    /// analysis attribute: Attribute of an item in the result of mass spectrometry proteomics data analysis.
+    MS_analysis_attribute = 1002687,
+
+    /// PTM localization attribute: Statistic derived from a post-translational modification localization analysis.
+    MS_PTM_localization_attribute = 1002688,
+
+    /// PTM localization single result statistic: Statistic for a single item derived from a post-translational modification localization analysis.
+    MS_PTM_localization_single_result_statistic = 1002689,
+
+    /// PTM localization result list statistic: Statistic for all items derived from a post-translational modification localization analysis.
+    MS_PTM_localization_result_list_statistic = 1002690,
+
+    /// global FLR: Global false localization rate for all localizations in a dataset.
+    MS_global_FLR = 1002691,
+
+    /// local FLR at threshold: Local false localization rate for the bottom item in list of localizations sorted from most to least confident.
+    MS_local_FLR_at_threshold = 1002692,
+
+    /// identification attribute: Attribute of an identification item in the result of mass spectrometry proteomics data analysis.
+    MS_identification_attribute = 1002693,
+
+    /// single identification result attribute: Attribute of a single identification item (as opposed to a list) in the result of mass spectrometry proteomics data analysis.
+    MS_single_identification_result_attribute = 1002694,
+
+    /// frag: isobaric label ion: Fragment ion corresponding to an isobaric label artifact.
+    MS_frag__isobaric_label_ion = 1002695,
+
+    /// secondary isotope peak: Fragment ion is an isotopic peak other than that monoisotopic peak. This is used in conjuction with another ion type, such as frag: y ion.
+    MS_secondary_isotope_peak = 1002697,
+
+    /// protein cluster identification attribute: An attribute of the protein cluster concept as used in mzIdentML.
+    MS_protein_cluster_identification_attribute = 1002698,
+
+    /// result list attribute: General property of an entire result list.
+    MS_result_list_attribute = 1002699,
+
+    /// PSM-level result list attribute: General property of the list of all PSMs.
+    MS_PSM_level_result_list_attribute = 1002700,
+
+    /// PSM-level result list statistic: Statistic pertaining to the full list of all PSMs.
+    MS_PSM_level_result_list_statistic = 1002701,
+
+    /// peptide sequence-level result list attribute: General property of all peptide sequences in the list.
+    MS_peptide_sequence_level_result_list_attribute = 1002702,
+
+    /// peptide sequence-level result list statistic: Statistic pertaining to all peptide sequences in the list.
+    MS_peptide_sequence_level_result_list_statistic = 1002703,
+
+    /// protein-level result list attribute: Attribute of an entire protein list.
+    MS_protein_level_result_list_attribute = 1002704,
+
+    /// protein-level result list statistic: A statistical metric of an entire protein list.
+    MS_protein_level_result_list_statistic = 1002705,
+
+    /// protein group-level result list statistic: Attrbiute of an entire list of protein groups.
+    MS_protein_group_level_result_list_statistic = 1002706,
 
     /// unimod root node: The root node of the unimod modifications ontology.
     UNIMOD_unimod_root_node = 100000000,
@@ -9819,7 +10155,7 @@ enum PWIZ_API_DECL CVID
     /// Lys->MetOx: Lys->Met substitution and sulfoxidation.
     UNIMOD_Lys__MetOx = 100000906,
 
-    /// Galactosyl: Galactosyl hydroxylysine.
+    /// Galactosyl: Gluconoylation.
     UNIMOD_Galactosyl = 100000907,
 
     /// SMCC-maleimide: Modified SMCC maleimide with 3-(dimethylamino)-1-propylamine.
@@ -9999,9 +10335,6 @@ enum PWIZ_API_DECL CVID
     /// sulfo+amino: Aminotyrosine with sulfation.
     UNIMOD_sulfo_amino = 100000997,
 
-    /// BHAc: N-biotinyl-6-aminohexanoyl.
-    UNIMOD_BHAc = 100000998,
-
     /// AHA-Alkyne: Azidohomoalanine (AHA) bound to propargylglycine-NH2 (alkyne).
     UNIMOD_AHA_Alkyne = 100001000,
 
@@ -10026,8 +10359,8 @@ enum PWIZ_API_DECL CVID
     /// Label:13C(6)15N(4)+Dimethyl:2H(6)13C(2): 2H(6) 13C(2) Dimethylated Arg13C(6) 15N(4).
     UNIMOD_Label_13C_6_15N_4__Dimethyl_2H_6_13C_2_ = 100001007,
 
-    /// SecCarbamidomethyl: Sec Iodoacetamide derivative.
-    UNIMOD_SecCarbamidomethyl = 100001008,
+    /// Cys->CamSec: Sec Iodoacetamide derivative.
+    UNIMOD_Cys__CamSec = 100001008,
 
     /// Thiazolidine: Addition of Carbon to cysteine.
     UNIMOD_Thiazolidine = 100001009,
@@ -10053,7 +10386,7 @@ enum PWIZ_API_DECL CVID
     /// ICDID:2H(6): Isotope-Coded Dimedone heavy form.
     UNIMOD_ICDID_2H_6_ = 100001019,
 
-    /// Xlink:DSS: Monolink of DSS/BS3 crosslinker to Lys or N-terminus.
+    /// Xlink:DSS: Water-quenched monolink of DSS/BS3 crosslinker to Lys or N-terminus.
     UNIMOD_Xlink_DSS = 100001020,
 
     /// Xlink:EGS: Monolink of EGS crosslinker to Lys or N-terminus.
@@ -10080,11 +10413,11 @@ enum PWIZ_API_DECL CVID
     /// 2-nitrobenzyl: Tyrosine caged with 2-nitrobenzyl (ONB).
     UNIMOD_2_nitrobenzyl = 100001032,
 
-    /// SecNEM: N-ethylmaleimide on selenocysteines.
-    UNIMOD_SecNEM = 100001033,
+    /// Cys->SecNEM: N-ethylmaleimide on selenocysteines.
+    UNIMOD_Cys__SecNEM = 100001033,
 
-    /// SecNEM:2H(5): D5 N-ethylmaleimide on selenocysteines.
-    UNIMOD_SecNEM_2H_5_ = 100001034,
+    /// Cys->SecNEM:2H(5): D5 N-ethylmaleimide on selenocysteines.
+    UNIMOD_Cys__SecNEM_2H_5_ = 100001034,
 
     /// Thiadiazole: Thiadiazolydation of Cys.
     UNIMOD_Thiadiazole = 100001035,
@@ -10913,9 +11246,6 @@ enum PWIZ_API_DECL CVID
 
     /// iodoTMT6plex: Sixplex iodoacetyl Tandem Mass Tag®.
     UNIMOD_iodoTMT6plex = 100001342,
-
-    /// Gluconoylation: Gluconoylation.
-    UNIMOD_Gluconoylation = 100001343,
 
     /// Phosphogluconoylation: Phosphogluconoylation.
     UNIMOD_Phosphogluconoylation = 100001344,
@@ -12134,6 +12464,33 @@ enum PWIZ_API_DECL CVID
 
     /// Hex(1)HexNAc(1)NeuAc(1)Ac(1): Ac Hex HexNAc NeuAc.
     UNIMOD_Hex_1_HexNAc_1_NeuAc_1_Ac_1_ = 100001786,
+
+    /// Label:13C(2)15N(2): 13C(2) 15N(2).
+    UNIMOD_Label_13C_2_15N_2_ = 100001787,
+
+    /// Xlink:DSS-NH2: Ammonium-quenched monolink of DSS/BS3 crosslinker to Lys or N-terminus.
+    UNIMOD_Xlink_DSS_NH2 = 100001789,
+
+    /// NQIGG: SUMOylation by Giardia lamblia.
+    UNIMOD_NQIGG = 100001799,
+
+    /// Carboxyethylpyrrole: Carboxyethylpyrrole.
+    UNIMOD_Carboxyethylpyrrole = 100001800,
+
+    /// Fluorescein-tyramine: Fluorescein-tyramine adduct by peroxidase activity.
+    UNIMOD_Fluorescein_tyramine = 100001801,
+
+    /// GEE: Transamidation of glycine ethyl ester to glutamine.
+    UNIMOD_GEE = 100001824,
+
+    /// RNPXL: Simulate peptide-RNA conjugates.
+    UNIMOD_RNPXL = 100001825,
+
+    /// Glu->pyro-Glu+Methyl: Pyro-Glu from E + Methylation.
+    UNIMOD_Glu__pyro_Glu_Methyl = 100001826,
+
+    /// Glu->pyro-Glu+Methyl:2H(2)13C(1): Pyro-Glu from E + Methylation Medium.
+    UNIMOD_Glu__pyro_Glu_Methyl_2H_2_13C_1_ = 100001827,
 
     /// unit: A unit of measurement is a standardized quantity of a physical quality.
     UO_unit = 200000000,

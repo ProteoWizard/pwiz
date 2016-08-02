@@ -742,7 +742,7 @@ void write_search_hit(XMLWriter& xmlWriter,
         {
             if (cvParam.cvid != MS_number_of_matched_peaks &&
                 cvParam.cvid != MS_number_of_unmatched_peaks &&
-                (cvIsA(cvParam.cvid, MS_search_engine_specific_score_for_PSMs) ||
+                (cvIsA(cvParam.cvid, MS_PSM_level_search_engine_specific_statistic) ||
                  regex_match(cvParam.value, what, numericRegex)))
             {
                 const string& preferredScoreName = ScoreTranslator::instance->translate(analysisSoftwareCVID, cvParam.cvid);
@@ -1075,8 +1075,8 @@ struct HandlerSearchSummary : public SAXParser::Handler
             else if (bal::starts_with(ionSeries, "v"))      _sip->additionalSearchParams.cvParams.push_back(MS_param__v_ion);
             else if (bal::starts_with(ionSeries, "w"))      _sip->additionalSearchParams.cvParams.push_back(MS_param__w_ion);
 
-            if (bal::contains(ionSeries, "NH3"))            _sip->additionalSearchParams.cvParams.push_back(MS_NH3_neutral_loss);
-            if (bal::contains(ionSeries, "H2O"))            _sip->additionalSearchParams.cvParams.push_back(MS_H2O_neutral_loss);
+            if (bal::contains(ionSeries, "NH3"))            _sip->additionalSearchParams.cvParams.push_back(MS_NH3_neutral_loss_OBSOLETE);
+            if (bal::contains(ionSeries, "H2O"))            _sip->additionalSearchParams.cvParams.push_back(MS_H2O_neutral_loss_OBSOLETE);
         }
     }
 

@@ -230,7 +230,7 @@ struct Handler_protXML : public SAXParser::Handler
             pdh = ProteinDetectionHypothesisPtr(new ProteinDetectionHypothesis(protein_name));
             GET_TYPED_ATTR(string, probability);
             GET_TYPED_ATTR(string, percent_coverage);
-            pdh->set(pwiz::cv::MS_search_engine_specific_score_for_PSMs, probability); // as in OpenMS
+            pdh->set(pwiz::cv::MS_PSM_level_search_engine_specific_statistic, probability); // as in OpenMS
             pdh->set(pwiz::cv::MS_sequence_coverage, percent_coverage);
 
             pagPtr->proteinDetectionHypothesis.push_back(pdh);
@@ -445,7 +445,7 @@ struct Handler_protXML : public SAXParser::Handler
                 pe->dbSequencePtr =  dbSequence;
                 // TODO GET_TYPED_ATTR(double, initial_probability);
                 GET_TYPED_ATTR(double, nsp_adjusted_probability);
-                pe->set(MS_search_engine_specific_score_for_PSMs, nsp_adjusted_probability);
+                pe->set(MS_PSM_level_search_engine_specific_statistic, nsp_adjusted_probability);
                 mzid.sequenceCollection.peptideEvidence.push_back(pe);
             }
             bool pefound = false;

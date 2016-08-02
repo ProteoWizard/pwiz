@@ -226,7 +226,11 @@ void parse_xref(const string& line, Term& term)
 
     bxp::smatch what;
     if (!bxp::regex_match(line, what, e))
-        throw runtime_error("Error matching term xref on line: \"" + line + "\"");
+    {
+        static const bxp::sregex e2 = bxp::sregex::compile("xref:\\s*(\\S+?)\\s*");
+        if (!bxp::regex_match(line, what, e2))
+            throw runtime_error("Error matching term xref on line: \"" + line + "\"");
+    }
 
     term.propertyValues.insert(make_pair(unescape_copy(what[1]), unescape_copy(what[2])));
 }
