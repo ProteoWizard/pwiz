@@ -32,13 +32,15 @@
             this.btnOK = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.panelMain = new System.Windows.Forms.Panel();
+            this.lblSummaryMethod = new System.Windows.Forms.Label();
+            this.comboSummaryMethod = new System.Windows.Forms.ComboBox();
             this.lblControlAnnotation = new System.Windows.Forms.Label();
             this.comboControlAnnotation = new System.Windows.Forms.ComboBox();
             this.groupBoxScope = new System.Windows.Forms.GroupBox();
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
             this.radioScopePeptide = new System.Windows.Forms.RadioButton();
             this.radioScopeProtein = new System.Windows.Forms.RadioButton();
-            this.cbxUseZeroForUnconfidentPeaks = new System.Windows.Forms.CheckBox();
+            this.cbxUseZeroForMissingPeaks = new System.Windows.Forms.CheckBox();
             this.lblPercent = new System.Windows.Forms.Label();
             this.comboControlValue = new System.Windows.Forms.ComboBox();
             this.tbxConfidenceLevel = new System.Windows.Forms.TextBox();
@@ -79,10 +81,12 @@
             // 
             // panelMain
             // 
+            this.panelMain.Controls.Add(this.lblSummaryMethod);
+            this.panelMain.Controls.Add(this.comboSummaryMethod);
             this.panelMain.Controls.Add(this.lblControlAnnotation);
             this.panelMain.Controls.Add(this.comboControlAnnotation);
             this.panelMain.Controls.Add(this.groupBoxScope);
-            this.panelMain.Controls.Add(this.cbxUseZeroForUnconfidentPeaks);
+            this.panelMain.Controls.Add(this.cbxUseZeroForMissingPeaks);
             this.panelMain.Controls.Add(this.lblPercent);
             this.panelMain.Controls.Add(this.comboControlValue);
             this.panelMain.Controls.Add(this.tbxConfidenceLevel);
@@ -97,6 +101,19 @@
             this.panelMain.Controls.Add(this.lblNormalizationMethod);
             resources.ApplyResources(this.panelMain, "panelMain");
             this.panelMain.Name = "panelMain";
+            // 
+            // lblSummaryMethod
+            // 
+            resources.ApplyResources(this.lblSummaryMethod, "lblSummaryMethod");
+            this.lblSummaryMethod.Name = "lblSummaryMethod";
+            // 
+            // comboSummaryMethod
+            // 
+            this.comboSummaryMethod.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboSummaryMethod.FormattingEnabled = true;
+            resources.ApplyResources(this.comboSummaryMethod, "comboSummaryMethod");
+            this.comboSummaryMethod.Name = "comboSummaryMethod";
+            this.comboSummaryMethod.SelectedIndexChanged += new System.EventHandler(this.comboSummaryMethod_SelectedIndexChanged);
             // 
             // lblControlAnnotation
             // 
@@ -141,12 +158,12 @@
             this.radioScopeProtein.UseVisualStyleBackColor = true;
             this.radioScopeProtein.CheckedChanged += new System.EventHandler(this.radioScope_CheckedChanged);
             // 
-            // cbsUseZeroForUnconfidentPeaks
+            // cbxUseZeroForMissingPeaks
             // 
-            resources.ApplyResources(this.cbxUseZeroForUnconfidentPeaks, "cbxUseZeroForUnconfidentPeaks");
-            this.cbxUseZeroForUnconfidentPeaks.Name = "cbxUseZeroForUnconfidentPeaks";
-            this.cbxUseZeroForUnconfidentPeaks.UseVisualStyleBackColor = true;
-            this.cbxUseZeroForUnconfidentPeaks.CheckedChanged += new System.EventHandler(this.cbxTreatMissingAsZero_CheckedChanged);
+            resources.ApplyResources(this.cbxUseZeroForMissingPeaks, "cbxUseZeroForMissingPeaks");
+            this.cbxUseZeroForMissingPeaks.Name = "cbxUseZeroForMissingPeaks";
+            this.cbxUseZeroForMissingPeaks.UseVisualStyleBackColor = true;
+            this.cbxUseZeroForMissingPeaks.CheckedChanged += new System.EventHandler(this.cbxTreatMissingAsZero_CheckedChanged);
             // 
             // lblPercent
             // 
@@ -311,9 +328,11 @@
         private System.Windows.Forms.RadioButton radioScopePeptide;
         private System.Windows.Forms.RadioButton radioScopeProtein;
         private MsStatsLogoForm msStatsLogoForm1;
-        private System.Windows.Forms.CheckBox cbxUseZeroForUnconfidentPeaks;
+        private System.Windows.Forms.CheckBox cbxUseZeroForMissingPeaks;
         private System.Windows.Forms.Panel panelName;
         private System.Windows.Forms.Panel panelMain;
         private System.Windows.Forms.Panel panelButtons;
+        private System.Windows.Forms.ComboBox comboSummaryMethod;
+        private System.Windows.Forms.Label lblSummaryMethod;
     }
 }

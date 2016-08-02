@@ -53,6 +53,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                     }
                     if (PeptideDocNode.STANDARD_TYPE_IRT == peptide.GlobalStandardType)
                     {
+                        // Skip all iRT standards because they are excluded in MSstatsGC.R
                         continue;
                     }
                     foreach (var transitionGroup in peptide.TransitionGroups)
@@ -77,7 +78,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                                         continue;
                                     }
                                     double? area = null;
-                                    if (treatMissingValuesAsZero && PeptideQuantifier.HasFalseQValue(transitionGroup, iResult, chromInfo.FileId))
+                                    if (treatMissingValuesAsZero && chromInfo.IsEmpty)
                                     {
                                         area = 0;
                                     }
@@ -148,7 +149,20 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public double? GetMedian(ChromFileInfoId chromFileInfoId, IsotopeLabelType isotopeLabelType)
         {
-            return Percentile(chromFileInfoId, isotopeLabelType, 0.5);
+            var dataKey = new DataKey(chromFileInfoId, isotopeLabelType);
+            DataValue dataValue;
+            if (!_data.TryGetValue(dataKey, out dataValue))
+            {
+                return null;
+            }
+            return dataValue.Median;
+        }
+
+        public double? GetMedianMedian(IsotopeLabelType isotopeLabelType)
+        {
+            return _data.Where(entry => Equals(isotopeLabelType, entry.Key.IsotopeLabelType))
+                .Select(entry => entry.Value.Median)
+                .Median();
         }
 
         public double? GetMeanPercentile(IsotopeLabelType isotopeLabelType, double percentile)
@@ -203,15 +217,17 @@ namespace pwiz.Skyline.Model.GroupComparison
         private struct DataValue
         {
             internal readonly double[] _sortedIntensities;
-            public DataValue(IEnumerable<double> intensities)
+
+            public DataValue(IEnumerable<double> intensities) : this()
             {
                 _sortedIntensities = intensities.ToArray();
                 Array.Sort(_sortedIntensities);
+                Median = GetValueAtPercentile(0.5);
             }
 
             public double Median
             {
-                get { return GetValueAtPercentile(.5); }
+                get; private set;
             }
 
             public double GetValueAtPercentile(double percentile)

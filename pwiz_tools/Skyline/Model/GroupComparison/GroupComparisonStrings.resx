@@ -193,4 +193,10 @@
   <data name="GroupComparisonViewContext_Delete_Delete_items" xml:space="preserve">
     <value>Delete items</value>
   </data>
+  <data name="SummarizationMethod_AVERAGING_Sum_of_transition_areas" xml:space="preserve">
+    <value>Sum of transition areas</value>
+  </data>
+  <data name="SummarizationMethod_MEDIANPOLISH_Tukey_s_Median_Polish" xml:space="preserve">
+    <value>Tukey's Median Polish</value>
+  </data>
 </root>

@@ -28,7 +28,10 @@ namespace pwiz.Skyline.Model.GroupComparison
                 ()=>GroupComparisonStrings.SummarizationMethod_REGRESSION_Regression);
         public static readonly SummarizationMethod AVERAGING 
             = new SummarizationMethod("averaging", // Not L10N
-                ()=>GroupComparisonStrings.SummarizationMethod_AVERAGING_Averaging);
+                ()=>GroupComparisonStrings.SummarizationMethod_AVERAGING_Sum_of_transition_areas);
+        public static readonly SummarizationMethod MEDIANPOLISH 
+            = new SummarizationMethod("medianpolish", // Not L10N
+                ()=>GroupComparisonStrings.SummarizationMethod_MEDIANPOLISH_Tukey_s_Median_Polish);
 
         public static readonly SummarizationMethod DEFAULT = AVERAGING;
         private readonly Func<string> _getLabelFunc;
@@ -54,7 +57,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         {
             return new[]
             {
-                AVERAGING, REGRESSION,
+                AVERAGING, MEDIANPOLISH,
             };
         }
 
@@ -67,6 +70,10 @@ namespace pwiz.Skyline.Model.GroupComparison
             if (name == AVERAGING.Name)
             {
                 return AVERAGING;
+            }
+            if (name == MEDIANPOLISH.Name)
+            {
+                return MEDIANPOLISH;
             }
             return DEFAULT;
         }

@@ -106,11 +106,12 @@ namespace pwiz.Skyline.Controls.GroupComparison
             ReplaceComboItems(comboIdentityAnnotation, new[] { string.Empty }.Concat(ListReplicateAnnotations()),
                 groupComparisonDef.IdentityAnnotation);
             ReplaceComboItems(comboNormalizationMethod, NormalizationMethod.ListNormalizationMethods(GroupComparisonModel.Document, true), groupComparisonDef.NormalizationMethod);
+            ReplaceComboItems(comboSummaryMethod, SummarizationMethod.ListSummarizationMethods(), groupComparisonDef.SummarizationMethod);
             tbxConfidenceLevel.Text = groupComparisonDef.ConfidenceLevelTimes100.ToString(CultureInfo.CurrentCulture);
             radioScopeProtein.Checked = groupComparisonDef.PerProtein;
             radioScopePeptide.Checked = !groupComparisonDef.PerProtein;
-            cbxUseZeroForUnconfidentPeaks.Checked = groupComparisonDef.UseZeroForUnconfidentPeaks;
-            cbxUseZeroForUnconfidentPeaks.Visible = GroupComparisonModel.Document.Settings.PeptideSettings.Integration.PeakScoringModel.IsTrained;
+            cbxUseZeroForMissingPeaks.Checked = groupComparisonDef.UseZeroForMissingPeaks;
+            cbxUseZeroForMissingPeaks.Visible = GroupComparisonModel.Document.Settings.PeptideSettings.Integration.PeakScoringModel != null;
         }
 
         private void btnOK_Click(object sender, EventArgs e)
@@ -343,7 +344,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             {
                 return;
             }
-            GroupComparisonDef = GroupComparisonDef.ChangeUseZeroForUnconfidentPeaks(((CheckBox) sender).Checked);
+            GroupComparisonDef = GroupComparisonDef.ChangeUseZeroForMissingPeaks(((CheckBox) sender).Checked);
         }
 
         protected IEnumerable<string> ListReplicateAnnotations()
@@ -389,6 +390,16 @@ namespace pwiz.Skyline.Controls.GroupComparison
             comboBox.Items.Clear();
             comboBox.Items.AddRange(itemObjects);
             comboBox.SelectedIndex = newSelectedIndex;
+        }
+
+        private void comboSummaryMethod_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (_inChangeSettings)
+            {
+                return;
+            }
+            GroupComparisonDef = GroupComparisonDef.ChangeSummarizationMethod(
+                comboSummaryMethod.SelectedItem as SummarizationMethod ?? SummarizationMethod.DEFAULT);
         }
     }
 }

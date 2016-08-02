@@ -126,11 +126,11 @@ namespace pwiz.Skyline.Model.GroupComparison
             return ChangeProp(ImClone(this), im => im.PerProtein = value);
         }
 
-        public bool UseZeroForUnconfidentPeaks { get; private set; }
+        public bool UseZeroForMissingPeaks { get; private set; }
 
-        public GroupComparisonDef ChangeUseZeroForUnconfidentPeaks(bool value)
+        public GroupComparisonDef ChangeUseZeroForMissingPeaks(bool value)
         {
-            return ChangeProp(ImClone(this), im => im.UseZeroForUnconfidentPeaks = value);
+            return ChangeProp(ImClone(this), im => im.UseZeroForMissingPeaks = value);
         }
 
         public GroupIdentifier GetGroupIdentifier(SrmSettings settings, ChromatogramSet chromatogramSet)
@@ -174,7 +174,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             summarization_method,
             confidence_level,
             per_protein,
-            use_zero_for_unconfident_peaks,
+            use_zero_for_missing_peaks,
         }
         private GroupComparisonDef()
         {
@@ -194,7 +194,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             SummarizationMethod = SummarizationMethod.FromName(reader.GetAttribute(ATTR.summarization_method));
             ConfidenceLevelTimes100 = reader.GetDoubleAttribute(ATTR.confidence_level, 95);
             PerProtein = reader.GetBoolAttribute(ATTR.per_protein, false);
-            UseZeroForUnconfidentPeaks = reader.GetBoolAttribute(ATTR.use_zero_for_unconfident_peaks, false);
+            UseZeroForMissingPeaks = reader.GetBoolAttribute(ATTR.use_zero_for_missing_peaks, false);
             reader.Read();
         }
 
@@ -212,7 +212,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             writer.WriteAttribute(ATTR.summarization_method, SummarizationMethod.Name);
             writer.WriteAttribute(ATTR.confidence_level, ConfidenceLevelTimes100);
             writer.WriteAttribute(ATTR.per_protein, PerProtein, false);
-            writer.WriteAttribute(ATTR.use_zero_for_unconfident_peaks, UseZeroForUnconfidentPeaks, false);
+            writer.WriteAttribute(ATTR.use_zero_for_missing_peaks, UseZeroForMissingPeaks, false);
         }
 
         public static GroupComparisonDef Deserialize(XmlReader reader)
@@ -236,7 +236,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                    Equals(SummarizationMethod, other.SummarizationMethod) &&
                    Equals(ConfidenceLevel, other.ConfidenceLevel) && 
                    Equals(PerProtein, other.PerProtein) &&
-                   Equals(UseZeroForUnconfidentPeaks, other.UseZeroForUnconfidentPeaks);
+                   Equals(UseZeroForMissingPeaks, other.UseZeroForMissingPeaks);
         }
 
         public override bool Equals(object obj)
@@ -262,7 +262,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                 hashCode = (hashCode*397) ^ SummarizationMethod.GetHashCode();
                 hashCode = (hashCode*397) ^ ConfidenceLevel.GetHashCode();
                 hashCode = (hashCode*397) ^ PerProtein.GetHashCode();
-                hashCode = (hashCode*397) ^ UseZeroForUnconfidentPeaks.GetHashCode();
+                hashCode = (hashCode*397) ^ UseZeroForMissingPeaks.GetHashCode();
                 return hashCode;
             }
         }

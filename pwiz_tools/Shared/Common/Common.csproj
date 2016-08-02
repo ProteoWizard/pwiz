@@ -107,6 +107,7 @@
     <Compile Include="DataAnalysis\Matrices\QrFactorization.cs" />
     <Compile Include="DataAnalysis\Matrices\QrFactorizationCache.cs" />
     <Compile Include="DataAnalysis\Matrices\ReadOnlyMatrixStorage.cs" />
+    <Compile Include="DataAnalysis\MedianPolish.cs" />
     <Compile Include="DataAnalysis\PValues.cs" />
     <Compile Include="DataAnalysis\NelderMeadSimplex.cs" />
     <Compile Include="DataAnalysis\LoessInterpolator.cs" />

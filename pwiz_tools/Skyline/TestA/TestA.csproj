@@ -168,6 +168,7 @@
     <Compile Include="MProphetScoringModelTest.cs" />
     <Compile Include="MQuestScoringTest.cs" />
     <Compile Include="MSstats\Averaging\MSstatsAveragingTest.cs" />
+    <Compile Include="MSstats\MedianPolishTest.cs" />
     <Compile Include="MSstats\Normalization\MsStatsNormalizationTest.cs" />
     <Compile Include="MSstats\WithRunQuantification\GroupComparisonRunQuantificationTest.cs" />
     <Compile Include="MSstats\MsStatsTest.cs" />

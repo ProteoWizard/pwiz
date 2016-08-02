@@ -144,7 +144,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                 return null;
             }
             double? normalizedArea = null;
-            if (treatMissingAsZero && HasFalseQValue(transitionGroup, replicateIndex, chromInfo.FileId))
+            if (treatMissingAsZero && chromInfo.IsEmpty)
             {
                 normalizedArea = 0;
             }
@@ -187,12 +187,13 @@ namespace pwiz.Skyline.Model.GroupComparison
                     {
                         throw new InvalidOperationException(string.Format("Normalization method '{0}' is not supported here.", NormalizationMethod)); // Not L10N
                     }
-                    double? median = NormalizationData.GetMedian(chromInfo.FileId, transitionGroup.TransitionGroup.LabelType);
-                    if (!median.HasValue)
+                    double? medianAdjustment = NormalizationData.GetMedian(chromInfo.FileId, transitionGroup.TransitionGroup.LabelType) 
+                        - NormalizationData.GetMedianMedian(transitionGroup.TransitionGroup.LabelType);
+                    if (!medianAdjustment.HasValue)
                     {
                         return null;
                     }
-                    denominator = Math.Pow(2.0, median.Value);
+                    normalizedArea /= Math.Pow(2.0, medianAdjustment.Value);
                 }
             }
             return new Quantity(normalizedArea.Value, denominator);

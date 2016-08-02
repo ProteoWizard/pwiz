@@ -18,12 +18,15 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using pwiz.Common.Collections;
+using pwiz.Common.DataAnalysis;
 using pwiz.Common.DataAnalysis.FoldChange;
 using pwiz.Common.DataAnalysis.Matrices;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
+using pwiz.Skyline.Model.Hibernate;
 
 namespace pwiz.Skyline.Model.GroupComparison
 {
@@ -104,7 +107,8 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public IList<GroupIdentifier> ListGroupsToCompareTo()
         {
-            var groupIdentifiers = _replicateIndexes.Select(entry => entry.Value.GroupIdentifier).Distinct().ToArray();
+            var groupIdentifiers = _replicateIndexes.Select(entry => entry.Value.GroupIdentifier)
+                .Distinct().ToArray();
             Array.Sort(groupIdentifiers);
             return groupIdentifiers;
         }
@@ -136,7 +140,11 @@ namespace pwiz.Skyline.Model.GroupComparison
             {
                 return CalculateFoldChangeUsingRegression(selector, runAbundances);
             }
-            return CalculateFoldChangeByAveragingTechnicalReplicates(selector, runAbundances);
+            if (Equals(ComparisonDef.SummarizationMethod, SummarizationMethod.MEDIANPOLISH))
+            {
+                return CalculateFoldChangeWithSummarization(selector, runAbundances, SummarizeDataRowsWithMedianPolish);
+            }
+            return CalculateFoldChangeWithSummarization(selector, runAbundances, SummarizeDataRowsByAveraging);
         }
 
         private GroupComparisonResult CalculateFoldChangeUsingRegression(
@@ -198,7 +206,8 @@ namespace pwiz.Skyline.Model.GroupComparison
             return new GroupComparisonResult(selector, quantifiedRuns.Count, foldChangeResult);
         }
 
-        private GroupComparisonResult CalculateFoldChangeByAveragingTechnicalReplicates(GroupComparisonSelector selector, List<RunAbundance> runAbundances)
+        private GroupComparisonResult CalculateFoldChangeWithSummarization(GroupComparisonSelector selector,
+            List<RunAbundance> runAbundances, Func<IList<DataRowDetails>, IList<RunAbundance>> summarizationFunction)
         {
             var detailRows = new List<DataRowDetails>();
             GetDataRows(selector, detailRows);
@@ -206,7 +215,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             {
                 return null;
             }
-            var replicateRows = SummarizeDataRowsByAveraging(detailRows);
+            var replicateRows = summarizationFunction(detailRows);
             if (replicateRows.Count == 0)
             {
                 return null;
@@ -235,11 +244,11 @@ namespace pwiz.Skyline.Model.GroupComparison
             }
 
             var quantifiedDataSet = new FoldChangeDataSet(
-                summarizedRows.Select(row=>row.Log2Abundance).ToArray(),
+                summarizedRows.Select(row => row.Log2Abundance).ToArray(),
                 Enumerable.Repeat(0, summarizedRows.Count).ToArray(),
                 Enumerable.Range(0, summarizedRows.Count).ToArray(),
                 Enumerable.Range(0, summarizedRows.Count).ToArray(),
-                summarizedRows.Select(row=>row.Control).ToArray());
+                summarizedRows.Select(row => row.Control).ToArray());
 
             if (quantifiedDataSet.SubjectControls.Distinct().Count() < 2)
             {
@@ -247,13 +256,14 @@ namespace pwiz.Skyline.Model.GroupComparison
             }
             var designMatrix = DesignMatrix.GetDesignMatrix(quantifiedDataSet, false);
             var foldChangeResult = designMatrix.PerformLinearFit(_qrFactorizationCache).First();
-            // Not that because the design matrix has only two columns, this is equivalent to a simple linear
+            // Note that because the design matrix has only two columns, this is equivalent to a simple linear
             // regression
-//            var statsAbundances = new Util.Statistics(summarizedRows.Select(row => row.Log2Abundance));
-//            var statsXValues = new Util.Statistics(summarizedRows.Select(row => row.Control ? 0.0 : 1));
-//            var slope = statsAbundances.Slope(statsXValues);
-            
+            //            var statsAbundances = new Util.Statistics(summarizedRows.Select(row => row.Log2Abundance));
+            //            var statsXValues = new Util.Statistics(summarizedRows.Select(row => row.Control ? 0.0 : 1));
+            //            var slope = statsAbundances.Slope(statsXValues);
+
             return new GroupComparisonResult(selector, replicateRows.Count, foldChangeResult);
+            
         }
 
         private IList<RunAbundance> SummarizeDataRowsByAveraging(IList<DataRowDetails> dataRows)
@@ -271,6 +281,89 @@ namespace pwiz.Skyline.Model.GroupComparison
                 });
             }
             return result;
+        }
+
+        private IList<RunAbundance> SummarizeDataRowsWithMedianPolish(IList<DataRowDetails> dataRows)
+        {
+            IList<IGrouping<IdentityPath, DataRowDetails>> dataRowsByFeature = dataRows.ToLookup(row => row.IdentityPath)
+                .Where(IncludeFeatureForMedianPolish)
+                .ToArray();
+#pragma warning disable 162
+            // ReSharper disable HeuristicUnreachableCode
+            if (false)
+            {
+                // For debugging purposes, we might want to order these features in the same order as MSstats R code
+                Array.Sort((IGrouping<IdentityPath, DataRowDetails>[])dataRowsByFeature, (group1, group2) =>
+                {
+                    String s1 = GetFeatureKey(SrmDocument, group1.Key);
+                    String s2 = GetFeatureKey(SrmDocument, group2.Key);
+                    return String.Compare(s1.ToLowerInvariant(), s2.ToLowerInvariant(), StringComparison.Ordinal);
+                });
+            }
+            // ReSharper restore HeuristicUnreachableCode
+#pragma warning restore 162
+
+            var featureCount = dataRowsByFeature.Count;
+            if (featureCount == 0)
+            {
+                return ImmutableList.Empty<RunAbundance>();
+            }
+            var rows = new List<double?[]>();
+            IDictionary<int, int> replicateRowIndexes = new Dictionary<int, int>();
+            for (int iFeature = 0; iFeature < dataRowsByFeature.Count; iFeature++)
+            {
+                foreach (DataRowDetails dataRowDetails in dataRowsByFeature[iFeature])
+                {
+                    int rowIndex;
+                    if (!replicateRowIndexes.TryGetValue(dataRowDetails.ReplicateIndex, out rowIndex))
+                    {
+                        rowIndex = rows.Count;
+                        rows.Add(new double?[featureCount]);
+                        replicateRowIndexes.Add(dataRowDetails.ReplicateIndex, rowIndex);
+                    }
+                    var row = rows[rowIndex];
+                    row[iFeature] = dataRowDetails.GetLog2Abundance();
+                }
+            }
+            var matrix = new double?[rows.Count, featureCount];
+            for (int iRow = 0; iRow < rows.Count; iRow++)
+            {
+                for (int iCol = 0; iCol < featureCount; iCol++)
+                {
+                    matrix[iRow, iCol] = rows[iRow][iCol];
+                }
+            }
+            var medianPolish = MedianPolish.GetMedianPolish(matrix);
+            List<RunAbundance> runAbundances = new List<RunAbundance>();
+            foreach (var replicateIndexDetails in _replicateIndexes)
+            {
+                int rowIndex;
+                if (!replicateRowIndexes.TryGetValue(replicateIndexDetails.Key, out rowIndex))
+                {
+                    continue;
+                }
+                double value = medianPolish.OverallConstant + medianPolish.RowEffects[rowIndex];
+                runAbundances.Add(new RunAbundance()
+                {
+                    ReplicateIndex = replicateIndexDetails.Key,
+                    BioReplicate = replicateIndexDetails.Value.BioReplicate,
+                    Control = replicateIndexDetails.Value.IsControl,
+                    Log2Abundance = value
+                });
+            }
+            return runAbundances;
+        }
+
+        /// <summary>
+        /// Given the set of data rows for a given feature, should this be included in the calculations.
+        /// Requirements:
+        /// A) There are at least two values that are greater than 1.
+        /// This is almost the same as what MSstats does, but might be slightly different with median
+        /// normalization.
+        /// </summary>
+        private bool IncludeFeatureForMedianPolish(IGrouping<IdentityPath, DataRowDetails> grouping)
+        {
+            return grouping.Count(dataRow => dataRow.Intensity > 1) > 1;
         }
 
         private IEnumerable<IGrouping<int, DataRowDetails>> RemoveIncompleteReplicates(IList<DataRowDetails> dataRows)
@@ -309,7 +402,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                         peptideQuantifier.MeasuredLabelTypes = ImmutableList.Singleton(selector.LabelType);
                     }
                     foreach (var quantityEntry in peptideQuantifier.GetTransitionIntensities(SrmDocument.Settings, 
-                                replicateEntry.Key, ComparisonDef.UseZeroForUnconfidentPeaks))
+                                replicateEntry.Key, ComparisonDef.UseZeroForMissingPeaks))
                     {
                         var dataRowDetails = new DataRowDetails
                         {
@@ -332,7 +425,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             {
                 return null;
             }
-            return _normalizationData = _normalizationData ?? NormalizationData.GetNormalizationData(SrmDocument, ComparisonDef.UseZeroForUnconfidentPeaks);
+            return _normalizationData = _normalizationData ?? NormalizationData.GetNormalizationData(SrmDocument, ComparisonDef.UseZeroForMissingPeaks);
         }
 
         public struct RunAbundance
@@ -354,7 +447,7 @@ namespace pwiz.Skyline.Model.GroupComparison
 
             public double GetLog2Abundance()
             {
-                return Math.Log(Intensity/Denominator);
+                return Math.Log(Intensity/Denominator)/Math.Log(2.0);
             }
         }
 
@@ -368,5 +461,47 @@ namespace pwiz.Skyline.Model.GroupComparison
         private abstract class FoldChangeCalculator : FoldChangeCalculator<int, IdentityPath, string>
         {
         }
+
+        /// <summary>
+        /// Returns the string that MSstats code uses to identify a row of data in the MSstats Input report.
+        /// </summary>
+        private static string GetFeatureKey(SrmDocument document, IdentityPath identityPath)
+        {
+            PeptideGroupDocNode peptideGroup = (PeptideGroupDocNode) document.FindNode(identityPath.GetIdentity(0));
+            PeptideDocNode peptide = (PeptideDocNode) peptideGroup.FindNode(identityPath.GetIdentity(1));
+            TransitionGroupDocNode transitionGroup =
+                (TransitionGroupDocNode) peptide.FindNode(identityPath.GetIdentity(2));
+            TransitionDocNode transition = (TransitionDocNode) transitionGroup.FindNode(identityPath.GetIdentity(3));
+            return peptide.ModifiedSequenceDisplay + '_' + transitionGroup.PrecursorCharge + '_' + GetFragmentIon(transition) +
+                   '_' + transition.Transition.Charge;
+        }
+
+        private static string GetFragmentIon(TransitionDocNode transitionDocNode)
+        {
+            string fragmentIon = transitionDocNode.GetFragmentIonName(CultureInfo.InvariantCulture);
+            if (transitionDocNode.Transition.IonType == IonType.precursor)
+            {
+                fragmentIon += Transition.GetMassIndexText(transitionDocNode.Transition.MassIndex);
+            }
+            return fragmentIon;
+        }
+
+        public static String MatrixToString(double?[,] matrix)
+        {
+            return string.Join(Environment.NewLine, Enumerable.Range(0, matrix.GetLength(0)).Select(iRow =>
+            {
+                return string.Join(",", // Not L10N
+                    Enumerable.Range(0, matrix.GetLength(1)).Select(iCol =>
+                {
+                    var value = matrix[iRow, iCol];
+                    if (!value.HasValue)
+                    {
+                        return string.Empty;
+                    }
+                    return value.Value.ToString(Formats.RoundTrip, CultureInfo.InvariantCulture);
+                }));
+            }));
+        }
+
     }
 }
