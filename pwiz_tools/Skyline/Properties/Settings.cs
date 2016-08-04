@@ -2146,7 +2146,7 @@ namespace pwiz.Skyline.Properties
     public sealed class DriftTimePredictorList : SettingsList<DriftTimePredictor>
     {
         private static readonly DriftTimePredictor NONE =
-            new DriftTimePredictor(ELEMENT_NONE, null, null, null, 0);
+            new DriftTimePredictor(ELEMENT_NONE, null, null, null, 0, 0, 0, 0);
 
         public override string GetDisplayName(DriftTimePredictor item)
         {
@@ -2632,7 +2632,7 @@ namespace pwiz.Skyline.Properties
                 (
                     EnzymeList.GetDefault(),
                     new DigestSettings(0, false),
-                    new PeptidePrediction(null, null, true, PeptidePrediction.DEFAULT_MEASURED_RT_WINDOW, false, null),
+                    new PeptidePrediction(null, null, true, PeptidePrediction.DEFAULT_MEASURED_RT_WINDOW, false, DriftTimeWindowWidthCalculator.EMPTY),
                     new PeptideFilter
                     (
                         25,  // ExcludeNTermAAs

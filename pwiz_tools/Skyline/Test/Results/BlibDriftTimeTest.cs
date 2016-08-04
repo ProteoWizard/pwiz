@@ -21,6 +21,7 @@ using System;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
@@ -54,7 +55,7 @@ namespace pwiz.SkylineTest.Results
                                                     testFilesDir.GetTestPath("BlibDriftTimeTest.blib"));
                 doc = doc.ChangeSettings(
                     doc.Settings.ChangePeptideLibraries(lib => lib.ChangeLibrarySpecs(new[] { librarySpec })).
-                    ChangePeptidePrediction(p => p.ChangeLibraryDriftTimesResolvingPower(20)).
+                    ChangePeptidePrediction(p => p.ChangeLibraryDriftTimesWindowWidthCalculator(new DriftTimeWindowWidthCalculator(DriftTimeWindowWidthCalculator.DriftTimePeakWidthType.resolving_power, 20, 0, 0))).
                     ChangePeptidePrediction(p => p.ChangeUseLibraryDriftTimes(true))
                     );
 

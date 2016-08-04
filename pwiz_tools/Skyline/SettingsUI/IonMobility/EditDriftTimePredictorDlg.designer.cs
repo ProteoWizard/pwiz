@@ -51,6 +51,9 @@
             this.MeasuredDriftTimeHighEnergyOffsetMsec = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.cbOffsetHighEnergySpectra = new System.Windows.Forms.CheckBox();
             this.btnUseResults = new System.Windows.Forms.Button();
+            this.cbLinear = new System.Windows.Forms.CheckBox();
+            this.textWidthAtDt0 = new System.Windows.Forms.TextBox();
+            this.textWidthAtDtMax = new System.Windows.Forms.TextBox();
             this.bindingChargeRegressionLines = new System.Windows.Forms.BindingSource(this.components);
             this.btnOk = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
@@ -59,6 +62,10 @@
             this.label3 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
+            this.labelWidthDtZero = new System.Windows.Forms.Label();
+            this.labelWidthDtMax = new System.Windows.Forms.Label();
+            this.labelWidthDtZeroUnits = new System.Windows.Forms.Label();
+            this.labelWidthDtMaxUnits = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.gridRegression)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.gridMeasuredDriftTimes)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingChargeRegressionLines)).BeginInit();
@@ -217,6 +224,26 @@
             this.btnUseResults.UseVisualStyleBackColor = true;
             this.btnUseResults.Click += new System.EventHandler(this.btnGenerateFromDocument_Click);
             // 
+            // cbLinear
+            // 
+            resources.ApplyResources(this.cbLinear, "cbLinear");
+            this.cbLinear.Name = "cbLinear";
+            this.helpTip.SetToolTip(this.cbLinear, resources.GetString("cbLinear.ToolTip"));
+            this.cbLinear.UseVisualStyleBackColor = true;
+            this.cbLinear.CheckedChanged += new System.EventHandler(this.cbLinear_CheckedChanged);
+            // 
+            // textWidthAtDt0
+            // 
+            resources.ApplyResources(this.textWidthAtDt0, "textWidthAtDt0");
+            this.textWidthAtDt0.Name = "textWidthAtDt0";
+            this.helpTip.SetToolTip(this.textWidthAtDt0, resources.GetString("textWidthAtDt0.ToolTip"));
+            // 
+            // textWidthAtDtMax
+            // 
+            resources.ApplyResources(this.textWidthAtDtMax, "textWidthAtDtMax");
+            this.textWidthAtDtMax.Name = "textWidthAtDtMax";
+            this.helpTip.SetToolTip(this.textWidthAtDtMax, resources.GetString("textWidthAtDtMax.ToolTip"));
+            // 
             // btnOk
             // 
             resources.ApplyResources(this.btnOk, "btnOk");
@@ -256,12 +283,39 @@
             resources.ApplyResources(this.label2, "label2");
             this.label2.Name = "label2";
             // 
+            // labelWidthDtZero
+            // 
+            resources.ApplyResources(this.labelWidthDtZero, "labelWidthDtZero");
+            this.labelWidthDtZero.Name = "labelWidthDtZero";
+            // 
+            // labelWidthDtMax
+            // 
+            resources.ApplyResources(this.labelWidthDtMax, "labelWidthDtMax");
+            this.labelWidthDtMax.Name = "labelWidthDtMax";
+            // 
+            // labelWidthDtZeroUnits
+            // 
+            resources.ApplyResources(this.labelWidthDtZeroUnits, "labelWidthDtZeroUnits");
+            this.labelWidthDtZeroUnits.Name = "labelWidthDtZeroUnits";
+            // 
+            // labelWidthDtMaxUnits
+            // 
+            resources.ApplyResources(this.labelWidthDtMaxUnits, "labelWidthDtMaxUnits");
+            this.labelWidthDtMaxUnits.Name = "labelWidthDtMaxUnits";
+            // 
             // EditDriftTimePredictorDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.labelWidthDtMaxUnits);
+            this.Controls.Add(this.labelWidthDtZeroUnits);
+            this.Controls.Add(this.textWidthAtDtMax);
+            this.Controls.Add(this.textWidthAtDt0);
+            this.Controls.Add(this.labelWidthDtMax);
+            this.Controls.Add(this.labelWidthDtZero);
+            this.Controls.Add(this.cbLinear);
             this.Controls.Add(this.btnUseResults);
             this.Controls.Add(this.cbOffsetHighEnergySpectra);
             this.Controls.Add(this.label2);
@@ -313,5 +367,12 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn MeasuredDriftTimeMsec;
         private System.Windows.Forms.DataGridViewTextBoxColumn MeasuredDriftTimeHighEnergyOffsetMsec;
         private System.Windows.Forms.Button btnUseResults;
+        private System.Windows.Forms.CheckBox cbLinear;
+        private System.Windows.Forms.Label labelWidthDtZero;
+        private System.Windows.Forms.Label labelWidthDtMax;
+        private System.Windows.Forms.TextBox textWidthAtDt0;
+        private System.Windows.Forms.TextBox textWidthAtDtMax;
+        private System.Windows.Forms.Label labelWidthDtZeroUnits;
+        private System.Windows.Forms.Label labelWidthDtMaxUnits;
     }
 }

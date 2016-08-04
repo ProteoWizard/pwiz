@@ -124,7 +124,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 SrmDocument document = null;
                 RunUI(()=> { document = SkylineWindow.DocumentUI; });
                 Assert.IsNotNull(document);
-                SpectrumFilter spectrumFilterData = new SpectrumFilter(document, MsDataFileUri.Parse(""), null);
+                SpectrumFilter spectrumFilterData = new SpectrumFilter(document, MsDataFileUri.Parse(""), null);  // TODO(bspratt) how to get max observed drift time from Chorus?
                 var chorusRequestDocument = spectrumFilterData.ToChromatogramRequestDocument();
                 Console.Out.WriteLine("***BEGIN {0}.chorusrequest.xml***", chorusDataSet.Name);
                 using (var xmlWriter = XmlWriter.Create(Console.Out, new XmlWriterSettings {Encoding = Encoding.UTF8}))

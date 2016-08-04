@@ -463,6 +463,11 @@ namespace pwiz.ProteowizardWrapper
             }
         }
 
+        public double? GetMaxDriftTime()
+        {
+            return GetMaxDriftTimeInList(SpectrumList);
+        }
+
         public int ChromatogramCount
         {
             get { return ChromatogramList != null ? ChromatogramList.size() : 0; }
@@ -721,6 +726,37 @@ namespace pwiz.ProteowizardWrapper
             {
                 return GetDriftTimeMsec(spectrum).HasValue;
             }
+        }
+
+        private static double? GetMaxDriftTimeInList(SpectrumList spectrumList)
+        {
+            if (spectrumList == null || spectrumList.size() == 0)
+                return null;
+
+            // Assume that if any spectra have drift times, all do, and all are same range
+            double? maxDrift = null;
+            for (var i = 0; i < spectrumList.size(); i++)
+            {
+                using (var spectrum = spectrumList.spectrum(i, false))
+                {
+                    var dt = GetDriftTimeMsec(spectrum);
+                    if (!dt.HasValue)
+                        return maxDrift;
+                    if (!maxDrift.HasValue)
+                    {
+                        maxDrift = dt;
+                    }
+                    else if (dt.Value < maxDrift.Value)
+                    {
+                        break;  // We've cycled 
+                    }
+                    else
+                    {
+                        maxDrift = dt;
+                    }
+                }
+            }
+            return maxDrift;
         }
 
         public MsDataSpectrum GetSrmSpectrum(int scanIndex)

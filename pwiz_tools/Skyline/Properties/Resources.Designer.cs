@@ -7321,6 +7321,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Peak width must be non-negative..
+        /// </summary>
+        public static string DriftTimeWindowWidthCalculator_Validate_Peak_width_must_be_non_negative_ {
+            get {
+                return ResourceManager.GetString("DriftTimeWindowWidthCalculator_Validate_Peak_width_must_be_non_negative_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap DropImage {

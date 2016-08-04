@@ -78,7 +78,7 @@ namespace pwiz.SkylineTest.Results
                 revised.Add(libKey2, new DriftTimeInfo(5, 0.123));
                 document =
                     document.ChangeSettings(
-                        document.Settings.ChangePeptidePrediction(prediction => new PeptidePrediction(null, new DriftTimePredictor("test", revised, null, null, 40))));
+                        document.Settings.ChangePeptidePrediction(prediction => new PeptidePrediction(null, new DriftTimePredictor("test", revised, null, null, DriftTimeWindowWidthCalculator.DriftTimePeakWidthType.resolving_power, 40, 0, 0))));
                 newPred = document.Settings.PeptideSettings.Prediction.ChangeDriftTimePredictor(
                     document.Settings.PeptideSettings.Prediction.DriftTimePredictor.ChangeMeasuredDriftTimesFromResults(
                         document, docContainer.DocumentFilePath)).DriftTimePredictor;

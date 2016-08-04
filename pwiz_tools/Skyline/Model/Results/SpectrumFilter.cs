@@ -61,6 +61,7 @@ namespace pwiz.Skyline.Model.Results
         public IEnumerable<SpectrumFilterPair> FilterPairs { get { return _filterMzValues; } }
 
         public SpectrumFilter(SrmDocument document, MsDataFileUri msDataFileUri, IFilterInstrumentInfo instrumentInfo,
+            double? maxObservedDriftTime = null,
             IRetentionTimePredictor retentionTimePredictor = null, bool firstPass = false)
         {
             _fullScan = document.Settings.TransitionSettings.FullScan;
@@ -120,6 +121,7 @@ namespace pwiz.Skyline.Model.Results
                 var libraryIonMobilityInfo = document.Settings.PeptideSettings.Prediction.UseLibraryDriftTimes
                     ? document.Settings.GetIonMobilities(msDataFileUri)
                     : null;
+                var driftTimeMax = maxObservedDriftTime??0;
 
                 foreach (var nodePep in document.Molecules)
                 {
@@ -136,7 +138,7 @@ namespace pwiz.Skyline.Model.Results
                         double windowDT;
                         double highEnergyDriftTimeOffsetMsec = 0;
                         DriftTimeInfo centerDriftTime = document.Settings.PeptideSettings.Prediction.GetDriftTime(
-                            nodePep, nodeGroup, libraryIonMobilityInfo, out windowDT);
+                            nodePep, nodeGroup, libraryIonMobilityInfo, driftTimeMax, out windowDT);
                         if (centerDriftTime.DriftTimeMsec(false).HasValue)
                         {
                             startDriftTimeMsec = centerDriftTime.DriftTimeMsec(false) - windowDT / 2; // Get the low energy drift time

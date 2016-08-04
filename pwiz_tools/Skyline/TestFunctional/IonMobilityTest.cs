@@ -199,8 +199,9 @@ namespace pwiz.SkylineTestFunctional
 
                 // Do some DT calculations
                 double windowDT;
+                double driftTimeMax = 1000.0;
                 DriftTimeInfo centerDriftTime = doc.Settings.PeptideSettings.Prediction.GetDriftTimeHelper(
-                    new LibKey("ANELLINV", 2), null, out windowDT);
+                    new LibKey("ANELLINV", 2), null, driftTimeMax, out windowDT);
                 Assert.AreEqual((4 * (119.2825783)) + 5, centerDriftTime.DriftTimeMsec(false));
                 Assert.AreEqual(2 * ((4 * (119.2825783)) + 5)/resolvingPower, windowDT);
                 Assert.AreEqual((4 * (119.2825783)) + 5 + HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC, centerDriftTime.DriftTimeMsec(true));
@@ -332,24 +333,24 @@ namespace pwiz.SkylineTestFunctional
 
                 // Do some DT calculations with this new library
                 centerDriftTime = doc.Settings.PeptideSettings.Prediction.GetDriftTimeHelper(
-                    new LibKey("ANELLINVK", 2), null, out windowDT);
+                    new LibKey("ANELLINVK", 2), null, driftTimeMax, out windowDT);
                 double ccs = 3.8612432898618; // should have imported CCS without any transformation
                 Assert.AreEqual((4 * (ccs)) + 5, centerDriftTime.DriftTimeMsec(false) ?? ccs, .000001);
                 Assert.AreEqual(2 * ((4 * (ccs)) + 5) / resolvingPower, windowDT, .000001);
                 centerDriftTime = doc.Settings.PeptideSettings.Prediction.GetDriftTimeHelper(
-                    new LibKey("ANGTTVLVGMPAGAK", 2), null, out windowDT);
+                    new LibKey("ANGTTVLVGMPAGAK", 2), null, driftTimeMax, out windowDT);
                 ccs = (4.99820623749102 - 2)/2; // should have imported CCS as a converted drift time
                 Assert.AreEqual((4 * (ccs)) + 5, centerDriftTime.DriftTimeMsec(false) ?? ccs, .000001);
                 Assert.AreEqual(2 * ((4 * (ccs)) + 5) / resolvingPower, windowDT, .000001);
 
                 // Do some DT calculations with the measured drift time
                 centerDriftTime = doc.Settings.PeptideSettings.Prediction.GetDriftTimeHelper(
-                    new LibKey("DEADEELS", 3), null, out windowDT); // Should fail
+                    new LibKey("DEADEELS", 3), null, driftTimeMax, out windowDT); // Should fail
                 Assert.AreEqual(windowDT, 0);
                 Assert.IsFalse(centerDriftTime.DriftTimeMsec(false).HasValue);
 
                 centerDriftTime = doc.Settings.PeptideSettings.Prediction.GetDriftTimeHelper(
-                    new LibKey("DEADEELS", 5), null, out windowDT);
+                    new LibKey("DEADEELS", 5), null, driftTimeMax, out windowDT);
                 Assert.AreEqual(deadeelsDT, centerDriftTime.DriftTimeMsec(false) ?? -1, .000001);
                 Assert.AreEqual(deadeelsDT+deadeelsDTHighEnergyOffset, centerDriftTime.DriftTimeMsec(true) ?? -1, .000001);
                 Assert.AreEqual(2 * (deadeelsDT / resolvingPower), windowDT, .0001); // Directly measured, should match
@@ -371,7 +372,7 @@ namespace pwiz.SkylineTestFunctional
                 WaitForClosedForm(peptideSettingsDlg4);
                 doc = WaitForDocumentChangeLoaded(doc); 
                 centerDriftTime = doc.Settings.PeptideSettings.Prediction.GetDriftTimeHelper(
-                    new LibKey("DEADEELS", 5), null, out windowDT);
+                    new LibKey("DEADEELS", 5), null, driftTimeMax, out windowDT);
                 Assert.AreEqual(deadeelsDT, centerDriftTime.DriftTimeMsec(false) ?? -1, .000001);
                 Assert.AreEqual(deadeelsDT, centerDriftTime.DriftTimeMsec(true) ?? -1, .000001); // High energy value should now be same as low energy value
                 Assert.AreEqual(2 * (deadeelsDT / resolvingPower), windowDT, .0001); // Directly measured, should match
@@ -384,8 +385,28 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() => Assert.IsFalse(driftTimePredictorDlg5.GetOffsetHighEnergySpectraCheckbox()));
                 RunUI(driftTimePredictorDlg5.CancelDialog);
                 WaitForClosedForm(driftTimePredictorDlg5);
-                RunUI(peptideSettingsDlg5.OkDialog);
-                WaitForClosedForm(peptideSettingsDlg5);
+                OkDialog(peptideSettingsDlg5, () => peptideSettingsDlg5.OkDialog());
+
+                // Try it with linear range instead of resolving power
+                var peptideSettingsDlg6 = ShowDialog<PeptideSettingsUI>(
+                    () => SkylineWindow.ShowPeptideSettingsUI(PeptideSettingsUI.TABS.Prediction));
+                // Simulate picking "Edit Current..." from the Drift Time Predictor combo control
+                var driftTimePredictorDlg6 = ShowDialog<EditDriftTimePredictorDlg>(peptideSettingsDlg6.EditDriftTimePredictor);
+                RunUI(() => driftTimePredictorDlg6.SetLinearRangeCheckboxState(true));
+                var widthAtDtZero = 10;
+                var widthAtDtMax = 1000;
+                RunUI(() => driftTimePredictorDlg6.SetWidthAtDtZero(widthAtDtZero));
+                RunUI(() => driftTimePredictorDlg6.SetWidthAtDtMax(widthAtDtMax));
+                RunUI(() => driftTimePredictorDlg6.SetPredictorName("test6"));
+                OkDialog(driftTimePredictorDlg6, () => driftTimePredictorDlg6.OkDialog());
+                OkDialog(peptideSettingsDlg6, () => peptideSettingsDlg6.OkDialog());
+                doc = WaitForDocumentChangeLoaded(doc);
+                centerDriftTime = doc.Settings.PeptideSettings.Prediction.GetDriftTimeHelper(
+                    new LibKey("DEADEELS", 5), null, driftTimeMax, out windowDT);
+                Assert.AreEqual(deadeelsDT, centerDriftTime.DriftTimeMsec(false) ?? -1, .000001);
+                Assert.AreEqual(deadeelsDT, centerDriftTime.DriftTimeMsec(true) ?? -1, .000001); // High energy value should now be same as low energy value
+                Assert.AreEqual(widthAtDtZero + deadeelsDT * (widthAtDtMax - widthAtDtZero) / driftTimeMax, windowDT, .0001); 
+
             }
             TestMeasuredDriftTimes();
         }

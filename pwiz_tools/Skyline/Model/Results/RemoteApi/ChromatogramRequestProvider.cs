@@ -44,7 +44,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             _retentionTimePredictor = retentionTimePredictor;
             _firstPass = firstPass;
             // Create a SpectrumFilter without an IRetentionTimeProvider in order to get the list of ChromKeys that we will eventually provide.
-            SpectrumFilter spectrumFilter = new SpectrumFilter(_srmDocument, _chorusUrl, null);
+            SpectrumFilter spectrumFilter = new SpectrumFilter(_srmDocument, _chorusUrl, null, 0);
             _chromKeys = ImmutableList.ValueOf(ListChromKeys(GetChromatogramRequestDocument(spectrumFilter)));
         }
 
@@ -55,7 +55,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
 
         public ChromatogramRequestDocument GetChromatogramRequest()
         {
-            SpectrumFilter spectrumFilter = new SpectrumFilter(_srmDocument, _chorusUrl, null, _firstPass ? null : _retentionTimePredictor);
+            SpectrumFilter spectrumFilter = new SpectrumFilter(_srmDocument, _chorusUrl, null, 0, _firstPass ? null : _retentionTimePredictor);
             return GetChromatogramRequestDocument(spectrumFilter);
         }
 

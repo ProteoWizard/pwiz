@@ -96,7 +96,10 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                                 r.Intercept.ToString(LocalizationHelper.CurrentCulture));
                         }
                     }
-                    textResolvingPower.Text = string.Format("{0:F04}", _predictor.ResolvingPower); // Not L10N
+                    textResolvingPower.Text = string.Format("{0:F04}", _predictor.WindowWidthCalculator.ResolvingPower); // Not L10N
+                    textWidthAtDt0.Text = string.Format("{0:F04}", _predictor.WindowWidthCalculator.PeakWidthAtDriftTimeZero); // Not L10N
+                    textWidthAtDtMax.Text = string.Format("{0:F04}", _predictor.WindowWidthCalculator.PeakWidthAtDriftTimeMax); // Not L10N
+                    cbLinear.Checked = _predictor.WindowWidthCalculator.PeakWidthMode == DriftTimeWindowWidthCalculator.DriftTimePeakWidthType.linear_range;
                 }
                 UpdateControls();
             }
@@ -134,6 +137,26 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
         private void UpdateControls()
         {
+            // Linear peak width vs Resolving Power
+            label3.Visible = label3.Enabled = !cbLinear.Checked;
+            textResolvingPower.Visible = textResolvingPower.Enabled = !cbLinear.Checked;
+            labelWidthDtZero.Visible = labelWidthDtZero.Enabled = cbLinear.Checked;
+            labelWidthDtMax.Visible = labelWidthDtMax.Enabled = cbLinear.Checked;
+            labelWidthDtZeroUnits.Visible = labelWidthDtZeroUnits.Enabled = cbLinear.Checked;
+            labelWidthDtMaxUnits.Visible = labelWidthDtMaxUnits.Enabled = cbLinear.Checked;
+            textWidthAtDt0.Visible = textWidthAtDt0.Enabled = cbLinear.Checked;
+            textWidthAtDtMax.Visible = textWidthAtDtMax.Enabled = cbLinear.Checked;
+            if (labelWidthDtZero.Location.X > label3.Location.X)
+            {
+                var dX = labelWidthDtZero.Location.X - label3.Location.X;
+                labelWidthDtZero.Location = new Point(labelWidthDtZero.Location.X - dX, labelWidthDtZero.Location.Y);
+                labelWidthDtMax.Location = new Point(labelWidthDtMax.Location.X - dX, labelWidthDtMax.Location.Y);
+                labelWidthDtZeroUnits.Location = new Point(labelWidthDtZeroUnits.Location.X - dX, labelWidthDtZeroUnits.Location.Y);
+                labelWidthDtMaxUnits.Location = new Point(labelWidthDtMaxUnits.Location.X - dX, labelWidthDtMaxUnits.Location.Y);
+                textWidthAtDt0.Location = new Point(textWidthAtDt0.Location.X - dX, textWidthAtDt0.Location.Y);
+                textWidthAtDtMax.Location = new Point(textWidthAtDtMax.Location.X - dX, textWidthAtDtMax.Location.Y);
+            }
+
             var oldVisible = _showRegressions;
             _showRegressions = (comboLibrary.SelectedIndex > 0); // 0th entry is "None"
             labelConversionParameters.Enabled = gridRegression.Enabled =
@@ -185,15 +208,42 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             {
                 return;
             }
-            double resolvingPower;
-            if (!helper.ValidateDecimalTextBox(textResolvingPower, out resolvingPower))
-                return;
-
-            var errmsg = ValidateResolvingPower(resolvingPower);
-            if (errmsg != null)
+            double resolvingPower = 0;
+            double widthAtDt0 = 0;
+            double widthAtDtMax = 0;
+            DriftTimeWindowWidthCalculator.DriftTimePeakWidthType peakWidthType;
+            if (cbLinear.Checked)
             {
-                helper.ShowTextBoxError(textResolvingPower, errmsg);
-                return;
+                if (!helper.ValidateDecimalTextBox(textWidthAtDt0, out widthAtDt0))
+                    return;
+                if (!helper.ValidateDecimalTextBox(textWidthAtDtMax, out widthAtDtMax))
+                    return;
+                var errmsg = ValidateWidth(widthAtDt0);
+                if (errmsg != null)
+                {
+                    helper.ShowTextBoxError(textWidthAtDt0, errmsg);
+                    return;
+                }
+                errmsg = ValidateWidth(widthAtDtMax);
+                if (errmsg != null)
+                {
+                    helper.ShowTextBoxError(textWidthAtDtMax, errmsg);
+                    return;
+                }
+                peakWidthType = DriftTimeWindowWidthCalculator.DriftTimePeakWidthType.linear_range;
+            }
+            else
+            {
+                if (!helper.ValidateDecimalTextBox(textResolvingPower, out resolvingPower))
+                    return;
+
+                var errmsg = ValidateResolvingPower(resolvingPower);
+                if (errmsg != null)
+                {
+                    helper.ShowTextBoxError(textResolvingPower, errmsg);
+                    return;
+                }
+                peakWidthType = DriftTimeWindowWidthCalculator.DriftTimePeakWidthType.resolving_power;
             }
 
             if ((comboLibrary.SelectedIndex > 0) && (comboLibrary.SelectedItem.ToString().Length == 0))
@@ -207,11 +257,18 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
             DriftTimePredictor predictor =
                 new DriftTimePredictor(name, driftTable.GetTableMeasuredDriftTimes(cbOffsetHighEnergySpectra.Checked), 
-                    ionMobilityLibrary, table.GetTableChargeRegressionLines(), resolvingPower);
+                    ionMobilityLibrary, table.GetTableChargeRegressionLines(), peakWidthType, resolvingPower, widthAtDt0, widthAtDtMax);
 
             _predictor = predictor;
 
             DialogResult = DialogResult.OK;
+        }
+
+        public static string ValidateWidth(double width)
+        {
+            if (width <= 0)
+                return Resources.DriftTimeWindowWidthCalculator_Validate_Peak_width_must_be_non_negative_;
+            return null;
         }
 
         public static string ValidateResolvingPower(double resolvingPower)
@@ -257,6 +314,24 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
         public void SetResolvingPower(double power)
         {
             textResolvingPower.Text = power.ToString(LocalizationHelper.CurrentCulture);
+        }
+
+        public void SetWidthAtDtZero(double width)
+        {
+            textWidthAtDt0.Text = width.ToString(LocalizationHelper.CurrentCulture);
+            UpdateControls();
+        }
+
+        public void SetWidthAtDtMax(double width)
+        {
+            textWidthAtDtMax.Text = width.ToString(LocalizationHelper.CurrentCulture);
+            UpdateControls();
+        }
+
+        public void SetLinearRangeCheckboxState(bool checkedState)
+        {
+            cbLinear.Checked = checkedState;
+            UpdateControls();
         }
 
         public void SetPredictorName(string name)
@@ -314,7 +389,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             try
             {
                 var driftTable = new MeasuredDriftTimeTable(gridMeasuredDriftTimes);
-                var tempDriftTimePredictor = new DriftTimePredictor("tmp", driftTable.GetTableMeasuredDriftTimes(cbOffsetHighEnergySpectra.Checked), null, null, 30); // Not L10N
+                var tempDriftTimePredictor = new DriftTimePredictor("tmp", driftTable.GetTableMeasuredDriftTimes(cbOffsetHighEnergySpectra.Checked), null, null, DriftTimeWindowWidthCalculator.DriftTimePeakWidthType.resolving_power, 30, 0, 0); // Not L10N
                 using (var longWaitDlg = new LongWaitDlg
                 {
                     Text = Resources.EditDriftTimePredictorDlg_btnGenerateFromDocument_Click_Finding_drift_time_values_for_peaks,
@@ -379,6 +454,11 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
         private void btnGenerateFromDocument_Click(object sender, EventArgs e)
         {
             GetDriftTimesFromResults();
+        }
+
+        private void cbLinear_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateControls();
         }
     }
 

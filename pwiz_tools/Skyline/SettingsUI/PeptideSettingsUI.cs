@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -114,8 +115,12 @@ namespace pwiz.Skyline.SettingsUI
             string selDT = (Prediction.DriftTimePredictor == null ? null : Prediction.DriftTimePredictor.Name);
             _driverDT.LoadList(selDT);
             cbUseSpectralLibraryDriftTimes.Checked = textSpectralLibraryDriftTimesResolvingPower.Enabled = Prediction.UseLibraryDriftTimes;
-            if (Prediction.LibraryDriftTimesResolvingPower.HasValue)
-                textSpectralLibraryDriftTimesResolvingPower.Text = Prediction.LibraryDriftTimesResolvingPower.Value.ToString(LocalizationHelper.CurrentCulture);
+            if (Prediction.LibraryDriftTimesWindowWidthCalculator != null)
+            {
+                textSpectralLibraryDriftTimesResolvingPower.Text = Prediction.LibraryDriftTimesWindowWidthCalculator.ResolvingPower.ToString(LocalizationHelper.CurrentCulture);
+                textSpectralLibraryDriftTimesWidthAtDt0.Text = Prediction.LibraryDriftTimesWindowWidthCalculator.PeakWidthAtDriftTimeZero.ToString(LocalizationHelper.CurrentCulture);
+                textSpectralLibraryDriftTimesWidthAtDtMax.Text = Prediction.LibraryDriftTimesWindowWidthCalculator.PeakWidthAtDriftTimeMax.ToString(LocalizationHelper.CurrentCulture);
+            }
 
             // Initialize filter settings
             _driverExclusion = new SettingsListBoxDriver<PeptideExcludeRegex>(listboxExclusions, Settings.Default.PeptideExcludeList);
@@ -174,6 +179,8 @@ namespace pwiz.Skyline.SettingsUI
             comboRegressionFit.SelectedItem = _peptideSettings.Quantification.RegressionFit;
             comboQuantMsLevel.SelectedIndex = Math.Max(0, _quantMsLevels.IndexOf(_peptideSettings.Quantification.MsLevel));
             tbxQuantUnits.Text = _peptideSettings.Quantification.Units;
+
+            UpdateLibraryDriftPeakWidthControls();
         }
 
         public DigestSettings Digest { get { return _peptideSettings.DigestSettings; } }
@@ -271,23 +278,50 @@ namespace pwiz.Skyline.SettingsUI
                     driftTimePredictor = driftTimePredictor.ChangeLibrary(ionMobilityLibrary);
             }
             bool useLibraryDriftTime = cbUseSpectralLibraryDriftTimes.Checked;
-            double? libraryDTResolvingPower = null;
-            if (useLibraryDriftTime || !string.IsNullOrEmpty(textSpectralLibraryDriftTimesResolvingPower.Text))
+
+            var libraryDriftTimeWindowWidthCalculator = DriftTimeWindowWidthCalculator.EMPTY;
+            if (useLibraryDriftTime)
             {
-                double libraryDTWindowOut;
-                if (!helper.ValidateDecimalTextBox(tabControl1, (int)TABS.Prediction,
-                        textSpectralLibraryDriftTimesResolvingPower, null, null, out libraryDTWindowOut))
-                    return null;
-                string errmsg = EditDriftTimePredictorDlg.ValidateResolvingPower(libraryDTWindowOut);
-                if (errmsg != null)
+                double resolvingPower = 0;
+                double widthAtDt0 = 0;
+                double widthAtDtMax = 0;
+                DriftTimeWindowWidthCalculator.DriftTimePeakWidthType peakWidthType;
+                if (cbLinear.Checked)
                 {
-                    helper.ShowTextBoxError(tabControl1, (int)TABS.Prediction, textSpectralLibraryDriftTimesResolvingPower, errmsg);
-                    return null;
+                    if (!helper.ValidateDecimalTextBox(textSpectralLibraryDriftTimesWidthAtDt0, out widthAtDt0))
+                        return null;
+                    if (!helper.ValidateDecimalTextBox(textSpectralLibraryDriftTimesWidthAtDtMax, out widthAtDtMax))
+                        return null;
+                    var errmsg = EditDriftTimePredictorDlg.ValidateWidth(widthAtDt0);
+                    if (errmsg != null)
+                    {
+                        helper.ShowTextBoxError(textSpectralLibraryDriftTimesWidthAtDt0, errmsg);
+                        return null;
+                    }
+                    errmsg = EditDriftTimePredictorDlg.ValidateWidth(widthAtDtMax);
+                    if (errmsg != null)
+                    {
+                        helper.ShowTextBoxError(textSpectralLibraryDriftTimesWidthAtDtMax, errmsg);
+                        return null;
+                    }
+                    peakWidthType = DriftTimeWindowWidthCalculator.DriftTimePeakWidthType.linear_range;
                 }
-                libraryDTResolvingPower = libraryDTWindowOut;
+                else
+                {
+                    if (!helper.ValidateDecimalTextBox(textSpectralLibraryDriftTimesResolvingPower, out resolvingPower))
+                        return null;
+                    var errmsg = EditDriftTimePredictorDlg.ValidateResolvingPower(resolvingPower);
+                    if (errmsg != null)
+                    {
+                        helper.ShowTextBoxError(textSpectralLibraryDriftTimesResolvingPower, errmsg);
+                        return null;
+                    }
+                    peakWidthType = DriftTimeWindowWidthCalculator.DriftTimePeakWidthType.resolving_power;
+                }
+                libraryDriftTimeWindowWidthCalculator = new DriftTimeWindowWidthCalculator(peakWidthType, resolvingPower, widthAtDt0, widthAtDtMax);
             }
 
-            var prediction = new PeptidePrediction(retentionTime, driftTimePredictor, useMeasuredRT, measuredRTWindow, useLibraryDriftTime, libraryDTResolvingPower);
+            var prediction = new PeptidePrediction(retentionTime, driftTimePredictor, useMeasuredRT, measuredRTWindow, useLibraryDriftTime, libraryDriftTimeWindowWidthCalculator);
             Helpers.AssignIfEquals(ref prediction, Prediction);
 
             // Validate and hold filter settings
@@ -593,16 +627,25 @@ namespace pwiz.Skyline.SettingsUI
         {
             bool enable = cbUseSpectralLibraryDriftTimes.Checked;
             textSpectralLibraryDriftTimesResolvingPower.Enabled = enable;
+            textSpectralLibraryDriftTimesWidthAtDt0.Enabled = enable;
+            textSpectralLibraryDriftTimesWidthAtDtMax.Enabled = enable;
+            cbLinear.Enabled = enable;
             // If disabling the text box, and it has content, make sure it is
             // valid content.  Otherwise, clear the current content, which
             // is always valid, if the measured drift time values will not be used.
-            if (!enable && !string.IsNullOrEmpty(textSpectralLibraryDriftTimesResolvingPower.Text))
+            CleanupDriftInfoText(enable, textSpectralLibraryDriftTimesResolvingPower);
+            CleanupDriftInfoText(enable, textSpectralLibraryDriftTimesWidthAtDt0);
+            CleanupDriftInfoText(enable, textSpectralLibraryDriftTimesWidthAtDtMax);
+        }
+
+        private void CleanupDriftInfoText(bool enable, TextBox textBox)
+        {
+            if (!enable && !string.IsNullOrEmpty(textBox.Text))
             {
-                double resolvingPower;
-                if (!double.TryParse(textSpectralLibraryDriftTimesResolvingPower.Text, out resolvingPower) ||
-                        resolvingPower <= 0)
+                double value;
+                if (!double.TryParse(textBox.Text, out value) || value <= 0)
                 {
-                    textSpectralLibraryDriftTimesResolvingPower.Text = string.Empty;
+                    textBox.Text = string.Empty;
                 }
             }
         }
@@ -1602,5 +1645,64 @@ namespace pwiz.Skyline.SettingsUI
                 }
             }
         }
+
+        private void UpdateLibraryDriftPeakWidthControls()
+        {
+            // Linear peak width vs Resolving Power
+            labelResolvingPower.Visible = !cbLinear.Checked;
+            textSpectralLibraryDriftTimesResolvingPower.Visible = !cbLinear.Checked;
+            labelWidthDtZero.Visible = cbLinear.Checked;
+            labelWidthDtMax.Visible = cbLinear.Checked;
+            labelWidthAtDt0Units.Visible = cbLinear.Checked;
+            labelWidthAtDtMaxUnits.Visible = cbLinear.Checked;
+            textSpectralLibraryDriftTimesWidthAtDt0.Visible =  cbLinear.Checked;
+            textSpectralLibraryDriftTimesWidthAtDtMax.Visible =  cbLinear.Checked;
+
+            cbLinear.Enabled = cbUseSpectralLibraryDriftTimes.Checked;
+            labelResolvingPower.Enabled = cbUseSpectralLibraryDriftTimes.Checked;
+            textSpectralLibraryDriftTimesResolvingPower.Enabled = cbUseSpectralLibraryDriftTimes.Checked;
+            labelWidthDtZero.Enabled = cbUseSpectralLibraryDriftTimes.Checked;
+            labelWidthDtMax.Enabled = cbUseSpectralLibraryDriftTimes.Checked;
+            labelWidthAtDt0Units.Enabled = cbUseSpectralLibraryDriftTimes.Checked;
+            labelWidthAtDtMaxUnits.Enabled = cbUseSpectralLibraryDriftTimes.Checked;
+            textSpectralLibraryDriftTimesWidthAtDt0.Enabled = cbUseSpectralLibraryDriftTimes.Checked;
+            textSpectralLibraryDriftTimesWidthAtDtMax.Enabled = cbUseSpectralLibraryDriftTimes.Checked;
+
+
+            if (labelWidthDtZero.Location.X > labelResolvingPower.Location.X)
+            {
+                var dX = labelWidthDtZero.Location.X - labelResolvingPower.Location.X;
+                labelWidthDtZero.Location = new Point(labelWidthDtZero.Location.X - dX, labelWidthDtZero.Location.Y);
+                labelWidthDtMax.Location = new Point(labelWidthDtMax.Location.X - dX, labelWidthDtMax.Location.Y);
+                textSpectralLibraryDriftTimesWidthAtDt0.Location = new Point(textSpectralLibraryDriftTimesWidthAtDt0.Location.X - dX, textSpectralLibraryDriftTimesWidthAtDt0.Location.Y);
+                textSpectralLibraryDriftTimesWidthAtDtMax.Location = new Point(textSpectralLibraryDriftTimesWidthAtDtMax.Location.X - dX, textSpectralLibraryDriftTimesWidthAtDtMax.Location.Y);
+                labelWidthAtDt0Units.Location = new Point(labelWidthAtDt0Units.Location.X - dX, labelWidthAtDt0Units.Location.Y);
+                labelWidthAtDtMaxUnits.Location = new Point(labelWidthAtDtMaxUnits.Location.X - dX, labelWidthAtDtMaxUnits.Location.Y);
+            }
+        }
+
+        private void cbLinear_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateLibraryDriftPeakWidthControls();
+        }
+
+        public void SetWidthAtDtZero(double width)
+        {
+            textSpectralLibraryDriftTimesWidthAtDt0.Text = width.ToString(LocalizationHelper.CurrentCulture);
+            UpdateLibraryDriftPeakWidthControls();
+        }
+
+        public void SetWidthAtDtMax(double width)
+        {
+            textSpectralLibraryDriftTimesWidthAtDtMax.Text = width.ToString(LocalizationHelper.CurrentCulture);
+            UpdateLibraryDriftPeakWidthControls();
+        }
+
+        public void SetLinearRangeCheckboxState(bool checkedState)
+        {
+            cbLinear.Checked = checkedState;
+            UpdateLibraryDriftPeakWidthControls();
+        }
+
     }
 }

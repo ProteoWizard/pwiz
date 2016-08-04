@@ -26,6 +26,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
@@ -56,31 +57,33 @@ namespace pwiz.SkylineTest.Results
         [TestMethod]
         public void WatersImsMseNoDriftTimesChromatogramTest()
         {
-            WatersImsMseChromatogramTest(DriftFilterType.none);
+            WatersImsMseChromatogramTest(DriftFilterType.none, DriftTimeWindowWidthCalculator.DriftTimePeakWidthType.resolving_power);
         }
 
         [TestMethod]
         public void WatersImsMsePredictedDriftTimesChromatogramTest()
         {
-            WatersImsMseChromatogramTest(DriftFilterType.predictor);
+            WatersImsMseChromatogramTest(DriftFilterType.predictor, DriftTimeWindowWidthCalculator.DriftTimePeakWidthType.resolving_power);
+            WatersImsMseChromatogramTest(DriftFilterType.predictor, DriftTimeWindowWidthCalculator.DriftTimePeakWidthType.linear_range);
         }
 
         [TestMethod]
         public void WatersImsMseLibraryDriftTimesChromatogramTest()
         {
-            WatersImsMseChromatogramTest(DriftFilterType.library);
+            WatersImsMseChromatogramTest(DriftFilterType.library, DriftTimeWindowWidthCalculator.DriftTimePeakWidthType.resolving_power);
+            WatersImsMseChromatogramTest(DriftFilterType.library, DriftTimeWindowWidthCalculator.DriftTimePeakWidthType.linear_range);
         }
 
         [TestMethod]
         public void WatersImsMseNoDriftTimesChromatogramTestAsSmallMolecules()
         {
-            WatersImsMseChromatogramTest(DriftFilterType.none, RefinementSettings.ConvertToSmallMoleculesMode.formulas);
+            WatersImsMseChromatogramTest(DriftFilterType.none, DriftTimeWindowWidthCalculator.DriftTimePeakWidthType.resolving_power, RefinementSettings.ConvertToSmallMoleculesMode.formulas);
         }
 
         [TestMethod]
         public void WatersImsMseNoDriftTimesChromatogramTestAsSmallMoleculeMasses()
         {
-            WatersImsMseChromatogramTest(DriftFilterType.none, RefinementSettings.ConvertToSmallMoleculesMode.masses_only);
+            WatersImsMseChromatogramTest(DriftFilterType.none, DriftTimeWindowWidthCalculator.DriftTimePeakWidthType.resolving_power, RefinementSettings.ConvertToSmallMoleculesMode.masses_only);
         }
 
         /* TODO bspratt drift time libs for small molecules
@@ -100,6 +103,7 @@ namespace pwiz.SkylineTest.Results
          */
 
         private void WatersImsMseChromatogramTest(DriftFilterType mode,
+            DriftTimeWindowWidthCalculator.DriftTimePeakWidthType driftPeakWidthCalcType,
             RefinementSettings.ConvertToSmallMoleculesMode asSmallMolecules = RefinementSettings.ConvertToSmallMoleculesMode.none)
         {
             if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.none && !RunSmallMoleculeTestVersions)
@@ -121,6 +125,10 @@ namespace pwiz.SkylineTest.Results
             {
                 var doc = docContainer.Document;
                 var docOriginal = doc;
+                double driftTimeMax = 13.799765403988133; // Known max drift time for this file - use to mimic resolving power logic for test purposes
+                double resolvingPower = 100; // Test was originally written with resolving power 100
+                double widthAtDtMax = 2 * driftTimeMax / resolvingPower;
+                var driftTimeWindowWidthCalculator = new DriftTimeWindowWidthCalculator(driftPeakWidthCalcType, resolvingPower, 0, widthAtDtMax);
 
                 string testModeStr = withDriftTimePredictor ? "with drift time predictor" : "without drift time info";
 
@@ -131,10 +139,16 @@ namespace pwiz.SkylineTest.Results
                                                         testFilesDir.GetTestPath("mse-mobility.filtered-scaled.blib"));
                     doc = doc.ChangeSettings(
                         doc.Settings.ChangePeptideLibraries(lib => lib.ChangeLibrarySpecs(new[] { librarySpec })).
-                        ChangePeptidePrediction(p => p.ChangeLibraryDriftTimesResolvingPower(100)).
+                        ChangePeptidePrediction(p => p.ChangeLibraryDriftTimesWindowWidthCalculator(driftTimeWindowWidthCalculator)).
                         ChangePeptidePrediction(p => p.ChangeUseLibraryDriftTimes(true))
                         );
                     testModeStr = "with drift times from spectral library";
+                }
+                else if (withDriftTimeFilter)
+                {
+                    doc = doc.ChangeSettings(
+                        doc.Settings.ChangePeptideSettings(ps => ps.ChangePrediction(
+                            ps.Prediction.ChangeDriftTimePredictor(ps.Prediction.DriftTimePredictor.ChangeDriftTimeWindowWidthCalculator(driftTimeWindowWidthCalculator)))));
                 }
 
                 var listChromatograms = new List<ChromatogramSet>();
@@ -205,7 +219,7 @@ namespace pwiz.SkylineTest.Results
                             {
                                 double windowDT;
                                 var centerDriftTime = document.Settings.PeptideSettings.Prediction.GetDriftTime(
-                                                           pep, nodeGroup, im, out windowDT);
+                                                           pep, nodeGroup, im, driftTimeMax, out windowDT);
                                 Assert.AreEqual(3.86124, centerDriftTime.DriftTimeMsec(false) ?? 0, .0001, testModeStr);
                                 Assert.AreEqual(0.077224865797235934, windowDT, .0001, testModeStr);
                             }

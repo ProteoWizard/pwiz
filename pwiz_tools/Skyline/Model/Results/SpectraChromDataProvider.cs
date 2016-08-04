@@ -42,6 +42,7 @@ namespace pwiz.Skyline.Model.Results
         private readonly IRetentionTimePredictor _retentionTimePredictor;
         private List<string> _scanIdList = new List<string>();
         private readonly bool _isProcessedScans;
+        private double? _maxDriftTime;
         private bool _isSingleMzMatch;
         private bool _sourceHasPositivePolarityData;
         private bool _sourceHasNegativePolarityData;
@@ -103,10 +104,12 @@ namespace pwiz.Skyline.Model.Results
             _isProcessedScans = dataFile.IsMzWiffXml;
 
             UpdatePercentComplete();
+            _maxDriftTime = dataFile.GetMaxDriftTime(); // Needed for linear range drift time window width calculations
 
             // Create the filter responsible for chromatogram extraction
             bool firstPass = (_retentionTimePredictor != null);
             _filter = new SpectrumFilter(_document, FileInfo.FilePath, new DataFileInstrumentInfo(dataFile),
+                _maxDriftTime,
                 _retentionTimePredictor, firstPass);
 
             if (!_isSrm && (_filter.EnabledMs || _filter.EnabledMsMs))
@@ -182,7 +185,7 @@ namespace pwiz.Skyline.Model.Results
             var dataFile = _spectra.Detach();
 
             // Start the second pass
-            _filter = new SpectrumFilter(_document, FileInfo.FilePath, _filter, _retentionTimePredictor);
+            _filter = new SpectrumFilter(_document, FileInfo.FilePath, _filter, _maxDriftTime, _retentionTimePredictor);
             _spectra = null;
             _isSrm = false;
 

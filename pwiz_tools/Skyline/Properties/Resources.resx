@@ -9182,4 +9182,7 @@ Most peptide transition lists can be imported with the "File|Import|Transition L
 
 If your transition list format combines formulas and adducts in a single column (e.g. "C8H10N4O2[M+Na]") then use the "Ion Formula" columns, and disregard the "Adduct" columns.  If your transition list puts the neutral formula and adduct in seperate columns, then use the "Ion Formula" columns for neutral formulas, and the "Adduct" columns for adducts.</value>
   </data>
+  <data name="DriftTimeWindowWidthCalculator_Validate_Peak_width_must_be_non_negative_" xml:space="preserve">
+    <value>Peak width must be non-negative.</value>
+  </data>
 </root>

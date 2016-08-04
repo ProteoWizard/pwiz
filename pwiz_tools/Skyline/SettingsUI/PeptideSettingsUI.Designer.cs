@@ -69,14 +69,21 @@ namespace pwiz.Skyline.SettingsUI
             this.comboDriftTimePredictor = new System.Windows.Forms.ComboBox();
             this.textSpectralLibraryDriftTimesResolvingPower = new System.Windows.Forms.TextBox();
             this.cbUseSpectralLibraryDriftTimes = new System.Windows.Forms.CheckBox();
+            this.textSpectralLibraryDriftTimesWidthAtDtMax = new System.Windows.Forms.TextBox();
+            this.textSpectralLibraryDriftTimesWidthAtDt0 = new System.Windows.Forms.TextBox();
             this.comboBoxPeptideUniquenessConstraint = new System.Windows.Forms.ComboBox();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabDigestion = new System.Windows.Forms.TabPage();
-            this.labelPeptideUniquenessConstraint = new System.Windows.Forms.Label();
+            this.labelPeptideUniquenessConstraint = new System.Windows.Forms.Label(); 
             this.label2 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.label15 = new System.Windows.Forms.Label();
             this.tabPrediction = new System.Windows.Forms.TabPage();
+            this.labelWidthAtDt0Units = new System.Windows.Forms.Label();
+            this.labelWidthAtDtMaxUnits = new System.Windows.Forms.Label();
+            this.labelWidthDtMax = new System.Windows.Forms.Label();
+            this.labelWidthDtZero = new System.Windows.Forms.Label();
+            this.cbLinear = new System.Windows.Forms.CheckBox();
             this.labelResolvingPower = new System.Windows.Forms.Label();
             this.label19 = new System.Windows.Forms.Label();
             this.label14 = new System.Windows.Forms.Label();
@@ -473,6 +480,18 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(this.labelPeptideUniquenessConstraint, "labelPeptideUniquenessConstraint");
             this.labelPeptideUniquenessConstraint.Name = "labelPeptideUniquenessConstraint";
             // 
+            // textSpectralLibraryDriftTimesWidthAtDtMax
+            // 
+            resources.ApplyResources(this.textSpectralLibraryDriftTimesWidthAtDtMax, "textSpectralLibraryDriftTimesWidthAtDtMax");
+            this.textSpectralLibraryDriftTimesWidthAtDtMax.Name = "textSpectralLibraryDriftTimesWidthAtDtMax";
+            this.helpTip.SetToolTip(this.textSpectralLibraryDriftTimesWidthAtDtMax, resources.GetString("textSpectralLibraryDriftTimesWidthAtDtMax.ToolTip"));
+            // 
+            // textSpectralLibraryDriftTimesWidthAtDt0
+            // 
+            resources.ApplyResources(this.textSpectralLibraryDriftTimesWidthAtDt0, "textSpectralLibraryDriftTimesWidthAtDt0");
+            this.textSpectralLibraryDriftTimesWidthAtDt0.Name = "textSpectralLibraryDriftTimesWidthAtDt0";
+            this.helpTip.SetToolTip(this.textSpectralLibraryDriftTimesWidthAtDt0, resources.GetString("textSpectralLibraryDriftTimesWidthAtDt0.ToolTip"));
+            // 
             // label2
             // 
             resources.ApplyResources(this.label2, "label2");
@@ -490,6 +509,13 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // tabPrediction
             // 
+            this.tabPrediction.Controls.Add(this.labelWidthAtDt0Units);
+            this.tabPrediction.Controls.Add(this.textSpectralLibraryDriftTimesWidthAtDtMax);
+            this.tabPrediction.Controls.Add(this.labelWidthAtDtMaxUnits);
+            this.tabPrediction.Controls.Add(this.textSpectralLibraryDriftTimesWidthAtDt0);
+            this.tabPrediction.Controls.Add(this.labelWidthDtMax);
+            this.tabPrediction.Controls.Add(this.labelWidthDtZero);
+            this.tabPrediction.Controls.Add(this.cbLinear);
             this.tabPrediction.Controls.Add(this.textSpectralLibraryDriftTimesResolvingPower);
             this.tabPrediction.Controls.Add(this.cbUseSpectralLibraryDriftTimes);
             this.tabPrediction.Controls.Add(this.labelResolvingPower);
@@ -506,6 +532,33 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(this.tabPrediction, "tabPrediction");
             this.tabPrediction.Name = "tabPrediction";
             this.tabPrediction.UseVisualStyleBackColor = true;
+            // 
+            // labelWidthAtDt0Units
+            // 
+            resources.ApplyResources(this.labelWidthAtDt0Units, "labelWidthAtDt0Units");
+            this.labelWidthAtDt0Units.Name = "labelWidthAtDt0Units";
+            // 
+            // labelWidthAtDtMaxUnits
+            // 
+            resources.ApplyResources(this.labelWidthAtDtMaxUnits, "labelWidthAtDtMaxUnits");
+            this.labelWidthAtDtMaxUnits.Name = "labelWidthAtDtMaxUnits";
+            // 
+            // labelWidthDtMax
+            // 
+            resources.ApplyResources(this.labelWidthDtMax, "labelWidthDtMax");
+            this.labelWidthDtMax.Name = "labelWidthDtMax";
+            // 
+            // labelWidthDtZero
+            // 
+            resources.ApplyResources(this.labelWidthDtZero, "labelWidthDtZero");
+            this.labelWidthDtZero.Name = "labelWidthDtZero";
+            // 
+            // cbLinear
+            // 
+            resources.ApplyResources(this.cbLinear, "cbLinear");
+            this.cbLinear.Name = "cbLinear";
+            this.cbLinear.UseVisualStyleBackColor = true;
+            this.cbLinear.CheckedChanged += new System.EventHandler(this.cbLinear_CheckedChanged);
             // 
             // labelResolvingPower
             // 
@@ -953,5 +1006,12 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.Label lblQuantUnits;
         private System.Windows.Forms.Label labelPeptideUniquenessConstraint;
         private System.Windows.Forms.ComboBox comboBoxPeptideUniquenessConstraint;
+        private System.Windows.Forms.CheckBox cbLinear;
+        private System.Windows.Forms.TextBox textSpectralLibraryDriftTimesWidthAtDtMax;
+        private System.Windows.Forms.TextBox textSpectralLibraryDriftTimesWidthAtDt0;
+        private System.Windows.Forms.Label labelWidthDtMax;
+        private System.Windows.Forms.Label labelWidthDtZero;
+        private System.Windows.Forms.Label labelWidthAtDt0Units;
+        private System.Windows.Forms.Label labelWidthAtDtMaxUnits;
     }
 }

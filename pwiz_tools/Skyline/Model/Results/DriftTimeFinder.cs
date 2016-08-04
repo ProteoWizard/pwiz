@@ -82,6 +82,8 @@ namespace pwiz.Skyline.Model.Results
                 foreach (var existingPair in _existing.MeasuredDriftTimePeptides)
                     measured.Add(existingPair.Key, existingPair.Value);
             }
+            if (_document.Settings.MeasuredResults == null)
+                return measured;
 
             var filepaths = _document.Settings.MeasuredResults.MSDataFilePaths.ToArray();
             _totalSteps = filepaths.Length * _document.MoleculeTransitionGroupCount;

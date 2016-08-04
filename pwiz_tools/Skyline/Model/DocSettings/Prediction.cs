@@ -2513,6 +2513,112 @@ namespace pwiz.Skyline.Model.DocSettings
         #endregion
     }
 
+    public class DriftTimeWindowWidthCalculator : IEquatable<DriftTimeWindowWidthCalculator>
+    {
+        private enum ATTR
+        {
+            resolving_power,
+            peak_width_calc_type,
+            width_at_dt_zero,
+            width_at_dt_max
+        }
+
+        public static readonly DriftTimeWindowWidthCalculator EMPTY = new DriftTimeWindowWidthCalculator(DriftTimePeakWidthType.resolving_power, 0, 0, 0);
+
+        public DriftTimeWindowWidthCalculator(DriftTimePeakWidthType peakWidthMode,
+                                    double resolvingPower,
+                                    double widthAtDriftTimeZero, 
+                                    double widthAtDriftTimeMax)
+        {
+            PeakWidthMode = peakWidthMode;
+            ResolvingPower = resolvingPower;
+            PeakWidthAtDriftTimeZero = widthAtDriftTimeZero;
+            PeakWidthAtDriftTimeMax = widthAtDriftTimeMax;
+        }
+
+        public DriftTimeWindowWidthCalculator(XmlReader reader, string prefix = "") : this( // Not L10N
+            reader.GetEnumAttribute(prefix + ATTR.peak_width_calc_type, DriftTimePeakWidthType.resolving_power),
+            reader.GetDoubleAttribute(prefix + ATTR.resolving_power, 0),
+            reader.GetDoubleAttribute(prefix + ATTR.width_at_dt_zero, 0),
+            reader.GetDoubleAttribute(prefix + ATTR.width_at_dt_max, 0))
+        {
+        }
+
+        public void WriteXML(XmlWriter writer, string prefix = "") // Not L10N
+        {
+            writer.WriteAttribute(prefix + ATTR.peak_width_calc_type, PeakWidthMode);
+            writer.WriteAttribute(prefix + ATTR.resolving_power, ResolvingPower);
+            writer.WriteAttribute(prefix + ATTR.width_at_dt_zero, PeakWidthAtDriftTimeZero);
+            writer.WriteAttribute(prefix + ATTR.width_at_dt_max, PeakWidthAtDriftTimeMax);
+        }
+
+        public enum DriftTimePeakWidthType
+        {
+            resolving_power,  // Agilent, etc
+            linear_range      // Waters SONAR etc
+        };
+
+        public DriftTimePeakWidthType PeakWidthMode { get; private set; }
+
+        // For Water-style (SONAR) linear peak width calcs
+        public double PeakWidthAtDriftTimeZero { get; private set; }
+        public double PeakWidthAtDriftTimeMax { get; private set; }
+
+        // For Agilent-style resolving power peak width calcs
+        public double ResolvingPower { get; private set; }
+
+
+        public double WidthAt(double driftTime, double driftTimeMax)
+        {
+            if (PeakWidthMode == DriftTimePeakWidthType.resolving_power)
+            {
+                return (ResolvingPower > 0 ? 2.0 / ResolvingPower : double.MaxValue) * driftTime; // 2.0*driftTime/resolvingPower
+            }
+            Assume.IsTrue(driftTimeMax > 0, "expected dtMax value > 0 for linear range drift window calculation"); // Not L10N
+            return PeakWidthAtDriftTimeZero + driftTime * (PeakWidthAtDriftTimeMax - PeakWidthAtDriftTimeZero) / driftTimeMax;
+        }
+
+        public string Validate()
+        {
+            if (PeakWidthMode == DriftTimePeakWidthType.resolving_power)
+            {
+                if (ResolvingPower <= 0)
+                    return Resources.DriftTimePredictor_Validate_Resolving_power_must_be_greater_than_0_;
+            }
+            else
+            {
+                if (PeakWidthAtDriftTimeZero < 0 || PeakWidthAtDriftTimeMax < PeakWidthAtDriftTimeZero)
+                    return Resources.DriftTimeWindowWidthCalculator_Validate_Peak_width_must_be_non_negative_;
+            }
+            return null;
+        }
+
+        public bool Equals(DriftTimeWindowWidthCalculator other)
+        {
+            return other != null &&
+                   Equals(other.PeakWidthMode, PeakWidthMode) &&
+                   Equals(other.ResolvingPower, ResolvingPower) &&
+                   Equals(other.PeakWidthAtDriftTimeZero, PeakWidthAtDriftTimeZero) &&
+                   Equals(other.PeakWidthAtDriftTimeMax, PeakWidthAtDriftTimeMax);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return Equals(obj as DriftTimeWindowWidthCalculator);
+        }
+
+        public override int GetHashCode()
+        {
+            int result = PeakWidthMode.GetHashCode();
+            result = (result * 397) ^ ResolvingPower.GetHashCode();
+            result = (result * 397) ^ PeakWidthAtDriftTimeZero.GetHashCode();
+            result = (result * 397) ^ PeakWidthAtDriftTimeMax.GetHashCode();
+            return result;
+        }
+    }
+
     /// <summary>
     /// Describes a slope and intercept for converting from a
     /// collisional cross section value to a predicted drift time in milliseconds.
@@ -2534,10 +2640,13 @@ namespace pwiz.Skyline.Model.DocSettings
                                     Dictionary<LibKey, DriftTimeInfo> measuredDriftTimePeptides,
                                     IonMobilityLibrarySpec ionMobilityLibrary,
                                     IList<ChargeRegressionLine> chargeSlopeIntercepts,
-                                    double resolvingPower)
+                                    DriftTimeWindowWidthCalculator.DriftTimePeakWidthType peakWidthMode,
+                                    double resolvingPower,
+                                    double widthAtDtZero, double widthAtDtMax)
             : base(name)
         {
-            ResolvingPower = resolvingPower;
+            WindowWidthCalculator = new DriftTimeWindowWidthCalculator(peakWidthMode,
+               resolvingPower, widthAtDtZero, widthAtDtMax);
             MeasuredDriftTimePeptides = measuredDriftTimePeptides;
             ChargeRegressionLines = (chargeSlopeIntercepts == null) ? null : chargeSlopeIntercepts.ToArray();
             IonMobilityLibrary = ionMobilityLibrary; // Actual loading, if any, happens in background
@@ -2548,9 +2657,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public IonMobilityLibrarySpec IonMobilityLibrary { get; private set; }
 
-        public double ResolvingPower { get; private set; }
-
-        public double InverseResolvingPowerTimesTwo { get; private set; } // Cached 2.0/resolving_power for faster window size calcs
+        public DriftTimeWindowWidthCalculator WindowWidthCalculator;
 
         public DriftTimeInfo GetMeasuredDriftTimeMsec(LibKey chargedPeptide)
         {
@@ -2634,6 +2741,12 @@ namespace pwiz.Skyline.Model.DocSettings
             return measured == null ? this : ChangeProp(ImClone(this), im => im.MeasuredDriftTimePeptides = measured);
         }
 
+        public DriftTimePredictor ChangeDriftTimeWindowWidthCalculator(DriftTimeWindowWidthCalculator prop)
+        {
+            return ChangeProp(ImClone(this), im => im.WindowWidthCalculator = prop);
+        }
+
+
         #endregion
 
         public ChargeRegressionLine GetRegressionLine(int charge)
@@ -2675,12 +2788,12 @@ namespace pwiz.Skyline.Model.DocSettings
         /// Get the drift time in msec for the charged peptide, and the width of the window
         /// centered on that based on the drift time predictor's claimed resolving power
         /// </summary>
-        public DriftTimeInfo GetDriftTimeInfo(LibKey peptide, out double dtWindowWidthMsec)
+        public DriftTimeInfo GetDriftTimeInfo(LibKey peptide, double driftTimeMax, out double dtWindowWidthMsec)
         {
             DriftTimeInfo driftTime = GetDriftTimeInfo(peptide);
             if (driftTime != null)
             {
-                dtWindowWidthMsec = InverseResolvingPowerTimesTwo * driftTime.DriftTimeMsec(false) ?? 0; // 2.0*driftTime/resolvingPower
+                dtWindowWidthMsec = WindowWidthCalculator.WidthAt(driftTime.DriftTimeMsec(false) ?? 0, driftTimeMax); 
             }
             else
             {
@@ -2698,11 +2811,6 @@ namespace pwiz.Skyline.Model.DocSettings
         {
         }
 
-        private enum ATTR
-        {
-            resolving_power
-        }
-
         private enum EL
         {
             regression_dt,
@@ -2711,8 +2819,6 @@ namespace pwiz.Skyline.Model.DocSettings
 
         private void Validate()
         {
-            InverseResolvingPowerTimesTwo = (ResolvingPower > 0) ? 2.0 / ResolvingPower : double.MaxValue; // Set cache value
-
             // This is active if:
             // Measured drift times are provided, or
             // Ion mobility library is provided
@@ -2721,8 +2827,9 @@ namespace pwiz.Skyline.Model.DocSettings
             if (hasLib || hasMeasured)
             {
                 var messages = new List<string>();
-                if (ResolvingPower <= 0)
-                    messages.Add(Resources.DriftTimePredictor_Validate_Resolving_power_must_be_greater_than_0_);
+                var msg = WindowWidthCalculator.Validate();
+                if (msg != null)
+                    messages.Add(msg);
                 if (hasLib && String.IsNullOrEmpty(IonMobilityLibrary.PersistencePath))
                     messages.Add(Resources.DriftTimePredictor_Validate_Drift_time_predictors_using_an_ion_mobility_library_must_provide_a_filename_for_the_library_);
                 if (hasLib && !ChargeRegressionLines.Any())
@@ -2741,7 +2848,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             // Read start tag attributes
             base.ReadXml(reader);
-            ResolvingPower = reader.GetDoubleAttribute(ATTR.resolving_power);
+            WindowWidthCalculator = new DriftTimeWindowWidthCalculator(reader);
 
             // Consume start tag
             reader.ReadStartElement();
@@ -2782,7 +2889,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             // Write attributes
             base.WriteXml(writer);
-            writer.WriteAttribute(ATTR.resolving_power, ResolvingPower);
+            WindowWidthCalculator.WriteXML(writer);
 
             // Write collisional cross sections
             if (IonMobilityLibrary != null && !IonMobilityLibrary.IsNone) 
@@ -2827,7 +2934,7 @@ namespace pwiz.Skyline.Model.DocSettings
                    Equals(obj.IonMobilityLibrary, IonMobilityLibrary) &&
                    ArrayUtil.EqualsDeep(obj.ChargeRegressionLines, ChargeRegressionLines) &&
                    ArrayUtil.EqualsDeep(obj.MeasuredDriftTimePeptides, MeasuredDriftTimePeptides) &&
-                   obj.ResolvingPower == ResolvingPower;
+                   Equals(obj.WindowWidthCalculator, WindowWidthCalculator);
         }
 
         public override bool Equals(object obj)
@@ -2845,7 +2952,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result * 397) ^ IonMobilityLibrary.GetHashCode();
                 result = (result * 397) ^ CollectionUtil.GetHashCodeDeep(ChargeRegressionLines);
                 result = (result * 397) ^ CollectionUtil.GetHashCodeDeep(MeasuredDriftTimePeptides);
-                result = (result * 397) ^ ResolvingPower.GetHashCode();
+                result = (result * 397) ^ WindowWidthCalculator.GetHashCode();
                 return result;
             }
         }

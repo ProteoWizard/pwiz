@@ -1058,7 +1058,13 @@ namespace pwiz.SkylineTest
             var pred = AssertEx.Deserialize<DriftTimePredictor>(predictor);
             Assert.AreEqual("db.imdb", pred.IonMobilityLibrary.PersistencePath);
             Assert.AreEqual("scaled", pred.IonMobilityLibrary.Name);
-            Assert.AreEqual(100, pred.ResolvingPower);
+            Assert.AreEqual(DriftTimeWindowWidthCalculator.DriftTimePeakWidthType.resolving_power, pred.WindowWidthCalculator.PeakWidthMode);
+            Assert.AreEqual(0, pred.WindowWidthCalculator.PeakWidthAtDriftTimeZero);
+            Assert.AreEqual(0, pred.WindowWidthCalculator.PeakWidthAtDriftTimeMax);
+            Assert.AreEqual(100, pred.WindowWidthCalculator.ResolvingPower);
+            var driftTimeMax = 5000;
+            var driftTime = 2000;
+            Assert.AreEqual(40, pred.WindowWidthCalculator.WidthAt(driftTime, driftTimeMax));
             Assert.AreEqual(1, pred.GetRegressionLine(1).Slope);
             Assert.AreEqual(0, pred.GetRegressionLine(1).Intercept);
             AssertEx.DeserializeError<DriftTimePredictor>(predictor.Replace("100", "0"), Resources.DriftTimePredictor_Validate_Resolving_power_must_be_greater_than_0_);
@@ -1069,7 +1075,10 @@ namespace pwiz.SkylineTest
             const string predictor1 = "<predict_drift_time name=\"test1\" resolving_power=\"100\"><measured_dt modified_sequence=\"JLMN\" charge=\"1\" drift_time=\"17.0\" /> </predict_drift_time>";
             AssertEx.DeserializeNoError<DriftTimePredictor>(predictor1);
             var pred1 = AssertEx.Deserialize<DriftTimePredictor>(predictor1);
-            Assert.AreEqual(100, pred1.ResolvingPower);
+            Assert.AreEqual(DriftTimeWindowWidthCalculator.DriftTimePeakWidthType.resolving_power, pred1.WindowWidthCalculator.PeakWidthMode);
+            Assert.AreEqual(0, pred1.WindowWidthCalculator.PeakWidthAtDriftTimeZero);
+            Assert.AreEqual(0, pred1.WindowWidthCalculator.PeakWidthAtDriftTimeMax);
+            Assert.AreEqual(100, pred1.WindowWidthCalculator.ResolvingPower);
             Assert.AreEqual(17.0, pred1.GetMeasuredDriftTimeMsec(new LibKey("JLMN", 1)).DriftTimeMsec(false) ?? 0);
             Assert.AreEqual(17.0, pred1.GetMeasuredDriftTimeMsec(new LibKey("JLMN", 1)).DriftTimeMsec(true) ?? 0); // Apply the high energy offset
             Assert.IsNull(pred1.GetMeasuredDriftTimeMsec(new LibKey("JLMN", 5)).DriftTimeMsec(false)); // Should not find a value for that charge state
@@ -1079,12 +1088,52 @@ namespace pwiz.SkylineTest
             const string predictor2 = "<predict_drift_time name=\"test2\" resolving_power=\"100\"><measured_dt modified_sequence=\"JLMN\" charge=\"1\" drift_time=\"17.0\" high_energy_drift_time_offset=\"-1.0\"/> </predict_drift_time>";
             AssertEx.DeserializeNoError<DriftTimePredictor>(predictor2);
             var pred2 = AssertEx.Deserialize<DriftTimePredictor>(predictor2);
-            Assert.AreEqual(100, pred2.ResolvingPower);
+            Assert.AreEqual(DriftTimeWindowWidthCalculator.DriftTimePeakWidthType.resolving_power, pred2.WindowWidthCalculator.PeakWidthMode);
+            Assert.AreEqual(0, pred2.WindowWidthCalculator.PeakWidthAtDriftTimeZero);
+            Assert.AreEqual(0, pred2.WindowWidthCalculator.PeakWidthAtDriftTimeMax);
+            Assert.AreEqual(100, pred2.WindowWidthCalculator.ResolvingPower);
             Assert.AreEqual(17.0, pred2.GetMeasuredDriftTimeMsec(new LibKey("JLMN", 1)).DriftTimeMsec(false) ?? 0);
             Assert.AreEqual(16.0, pred2.GetMeasuredDriftTimeMsec(new LibKey("JLMN", 1)).DriftTimeMsec(true) ?? 0); // Apply the high energy offset
             Assert.IsNull(pred2.GetMeasuredDriftTimeMsec(new LibKey("JLMN", 5)).DriftTimeMsec(false)); // Should not find a value for that charge state
             Assert.IsNull(pred2.GetMeasuredDriftTimeMsec(new LibKey("LMNJK", 5)).DriftTimeMsec(false)); // Should not find a value for that peptide
 
+            // Check using drift time predictor with only measured drift times, and a high energy scan drift time offset, and linear width
+            string predictor3 = "<predict_drift_time name=\"test\" peak_width_calc_type=\"resolving_power\" resolving_power=\"100\" width_at_dt_zero=\"20\" width_at_dt_max=\"500\"> <ion_mobility_library name=\"scaled\" database_path=\"db.imdb\"/>" +
+                                     "<regression_dt charge=\"1\" slope=\"1\" intercept=\"0\"/></predict_drift_time>";
+            string predictor3NoRegression = "<predict_drift_time name=\"test\" peak_width_calc_type=\"resolving_power\" resolving_power=\"100\"  width_at_dt_zero=\"100\" width_at_dt_max=\"500\" > <ion_mobility_library name=\"scaled\" database_path=\"db.imdb\"/></predict_drift_time>";
+            AssertEx.DeserializeNoError<DriftTimePredictor>(predictor3);
+            pred = AssertEx.Deserialize<DriftTimePredictor>(predictor3);
+            Assert.AreEqual("db.imdb", pred.IonMobilityLibrary.PersistencePath);
+            Assert.AreEqual("scaled", pred.IonMobilityLibrary.Name);
+            Assert.AreEqual(DriftTimeWindowWidthCalculator.DriftTimePeakWidthType.resolving_power, pred.WindowWidthCalculator.PeakWidthMode);
+            Assert.AreEqual(40, pred.WindowWidthCalculator.WidthAt(driftTime, driftTimeMax));
+            var widthAtDt0 = 20;
+            var widthAtDtMax = 500;
+            Assert.AreEqual(widthAtDt0, pred.WindowWidthCalculator.PeakWidthAtDriftTimeZero);
+            Assert.AreEqual(widthAtDtMax, pred.WindowWidthCalculator.PeakWidthAtDriftTimeMax);
+            Assert.AreEqual(100, pred.WindowWidthCalculator.ResolvingPower);
+            Assert.AreEqual(1, pred.GetRegressionLine(1).Slope);
+            Assert.AreEqual(0, pred.GetRegressionLine(1).Intercept);
+            AssertEx.DeserializeError<DriftTimePredictor>(predictor3.Replace("100", "0"), Resources.DriftTimePredictor_Validate_Resolving_power_must_be_greater_than_0_);
+            AssertEx.DeserializeError<DriftTimePredictor>(predictor3.Replace("db.imdb", ""), Resources.DriftTimePredictor_Validate_Drift_time_predictors_using_an_ion_mobility_library_must_provide_a_filename_for_the_library_);
+            AssertEx.DeserializeError<DriftTimePredictor>(predictor3NoRegression, Resources.DriftTimePredictor_Validate_Drift_time_predictors_using_an_ion_mobility_library_must_include_per_charge_regression_values_);
+
+            predictor3 = predictor3.Replace("\"resolving_power\"", "\"linear_range\"");
+            predictor3NoRegression = predictor3NoRegression.Replace("\"resolving_power\"", "\"linear_range\"");
+            pred = AssertEx.Deserialize<DriftTimePredictor>(predictor3);
+            Assert.AreEqual("db.imdb", pred.IonMobilityLibrary.PersistencePath);
+            Assert.AreEqual("scaled", pred.IonMobilityLibrary.Name);
+            Assert.AreEqual(DriftTimeWindowWidthCalculator.DriftTimePeakWidthType.linear_range, pred.WindowWidthCalculator.PeakWidthMode);
+            Assert.AreEqual(widthAtDt0, pred.WindowWidthCalculator.PeakWidthAtDriftTimeZero);
+            Assert.AreEqual(widthAtDtMax, pred.WindowWidthCalculator.PeakWidthAtDriftTimeMax);
+            Assert.AreEqual(100, pred.WindowWidthCalculator.ResolvingPower);
+            Assert.AreEqual(1, pred.GetRegressionLine(1).Slope);
+            Assert.AreEqual(0, pred.GetRegressionLine(1).Intercept);
+            AssertEx.DeserializeError<DriftTimePredictor>(predictor3.Replace("20", "-1"), Resources.DriftTimeWindowWidthCalculator_Validate_Peak_width_must_be_non_negative_);
+            AssertEx.DeserializeError<DriftTimePredictor>(predictor3.Replace("500", "-1"), Resources.DriftTimeWindowWidthCalculator_Validate_Peak_width_must_be_non_negative_);
+            AssertEx.DeserializeError<DriftTimePredictor>(predictor3.Replace("db.imdb", ""), Resources.DriftTimePredictor_Validate_Drift_time_predictors_using_an_ion_mobility_library_must_provide_a_filename_for_the_library_);
+            AssertEx.DeserializeError<DriftTimePredictor>(predictor3NoRegression, Resources.DriftTimePredictor_Validate_Drift_time_predictors_using_an_ion_mobility_library_must_include_per_charge_regression_values_);
+            Assert.AreEqual(widthAtDt0 + (widthAtDtMax-widthAtDt0)*driftTime/driftTimeMax, pred.WindowWidthCalculator.WidthAt(driftTime, driftTimeMax));
 
         }
 

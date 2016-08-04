@@ -35,7 +35,6 @@ using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.SettingsUI.IonMobility;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.DocSettings
@@ -282,19 +281,19 @@ namespace pwiz.Skyline.Model.DocSettings
         public const double DEFAULT_MEASURED_RT_WINDOW = 2.0;
 
         public PeptidePrediction(RetentionTimeRegression retentionTime, DriftTimePredictor driftTimePredictor = null)
-            : this(retentionTime, driftTimePredictor, true, DEFAULT_MEASURED_RT_WINDOW, false, null)
+            : this(retentionTime, driftTimePredictor, true, DEFAULT_MEASURED_RT_WINDOW, false, DriftTimeWindowWidthCalculator.EMPTY)
         {            
         }
 
         public PeptidePrediction(RetentionTimeRegression retentionTime, DriftTimePredictor driftTimePredictor, bool useMeasuredRTs, double? measuredRTWindow,
-            bool useLibraryDriftTimes, double? libraryDriftTimesResolvingPower)
+            bool useLibraryDriftTimes, DriftTimeWindowWidthCalculator libraryDriftTimeWindowWidthCalculator)
         {
             RetentionTime = retentionTime;
             DriftTimePredictor = driftTimePredictor;
             UseMeasuredRTs = useMeasuredRTs;
             MeasuredRTWindow = measuredRTWindow;
             UseLibraryDriftTimes = useLibraryDriftTimes;
-            LibraryDriftTimesResolvingPower = libraryDriftTimesResolvingPower;
+            LibraryDriftTimesWindowWidthCalculator = libraryDriftTimeWindowWidthCalculator;
 
             DoValidate();
         }
@@ -309,7 +308,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public bool UseLibraryDriftTimes { get; private set; }
 
-        public double? LibraryDriftTimesResolvingPower { get; private set; }
+        public DriftTimeWindowWidthCalculator LibraryDriftTimesWindowWidthCalculator { get; private set; }
 
         public LibraryIonMobilityInfo LibraryIonMobilityInfo { get; private set; }
 
@@ -464,7 +463,9 @@ namespace pwiz.Skyline.Model.DocSettings
         /// </summary>
         public DriftTimeInfo GetDriftTime(PeptideDocNode  nodePep,
             TransitionGroupDocNode nodeGroup,
-            LibraryIonMobilityInfo libraryIonMobilityInfo, out double windowDtMsec)
+            LibraryIonMobilityInfo libraryIonMobilityInfo, 
+            double driftTimeMax, 
+            out double windowDtMsec)
         {
             if (nodeGroup.ExplicitValues.DriftTimeMsec.HasValue)
             {
@@ -474,11 +475,11 @@ namespace pwiz.Skyline.Model.DocSettings
                 // Now get the resolving power
                 if (DriftTimePredictor != null)
                 {
-                    windowDtMsec = DriftTimePredictor.InverseResolvingPowerTimesTwo*result.DriftTimeMsec(false).Value;
+                    windowDtMsec = DriftTimePredictor.WindowWidthCalculator.WidthAt(result.DriftTimeMsec(false).Value, driftTimeMax);
                 }
-                else if (LibraryDriftTimesResolvingPower.HasValue)
+                else if (UseLibraryDriftTimes)
                 {
-                    windowDtMsec = 2.0 * result.DriftTimeMsec(false).Value / LibraryDriftTimesResolvingPower.Value;
+                    windowDtMsec = LibraryDriftTimesWindowWidthCalculator.WidthAt(result.DriftTimeMsec(false).Value, driftTimeMax);
                 }
                 else
                 {
@@ -489,7 +490,7 @@ namespace pwiz.Skyline.Model.DocSettings
             else
             {
                 return GetDriftTimeHelper(
-                    new LibKey(nodePep.RawTextId, nodeGroup.TransitionGroup.PrecursorCharge), libraryIonMobilityInfo,
+                    new LibKey(nodePep.RawTextId, nodeGroup.TransitionGroup.PrecursorCharge), libraryIonMobilityInfo, driftTimeMax,
                     out windowDtMsec);
             }
         }
@@ -499,11 +500,12 @@ namespace pwiz.Skyline.Model.DocSettings
         /// Use GetDriftTime() instead.
         /// </summary>
         public DriftTimeInfo GetDriftTimeHelper(LibKey chargedPeptide,
-            LibraryIonMobilityInfo libraryIonMobilityInfo, out  double windowDtMsec)
+            LibraryIonMobilityInfo libraryIonMobilityInfo, 
+            double driftTimeMax, out  double windowDtMsec)
         {
             if (DriftTimePredictor != null)
             {
-                var result = DriftTimePredictor.GetDriftTimeInfo(chargedPeptide, out windowDtMsec);
+                var result = DriftTimePredictor.GetDriftTimeInfo(chargedPeptide, driftTimeMax, out windowDtMsec);
                 if (result != null && result.DriftTimeMsec(false).HasValue)
                     return result;
             }
@@ -511,9 +513,9 @@ namespace pwiz.Skyline.Model.DocSettings
             if (libraryIonMobilityInfo != null)
             {
                 var dt = libraryIonMobilityInfo.GetLibraryMeasuredDriftTimeAndHighEnergyOffset(chargedPeptide);
-                if ((dt != null) && dt.DriftTimeMsec(false).HasValue && (LibraryDriftTimesResolvingPower ?? 0) > 0)
+                if ((dt != null) && dt.DriftTimeMsec(false).HasValue && UseLibraryDriftTimes)
                 {
-                    windowDtMsec = 2.0 * dt.DriftTimeMsec(false).Value / LibraryDriftTimesResolvingPower.Value;
+                    windowDtMsec = LibraryDriftTimesWindowWidthCalculator.WidthAt(dt.DriftTimeMsec(false).Value, driftTimeMax);
                     return dt;
                 }
             }
@@ -612,9 +614,9 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeProp(ImClone(this), im => im.UseLibraryDriftTimes = prop);
         }
 
-        public PeptidePrediction ChangeLibraryDriftTimesResolvingPower(double? prop)
+        public PeptidePrediction ChangeLibraryDriftTimesWindowWidthCalculator(DriftTimeWindowWidthCalculator prop)
         {
-            return ChangeProp(ImClone(this), im => im.LibraryDriftTimesResolvingPower = prop);
+            return ChangeProp(ImClone(this), im => im.LibraryDriftTimesWindowWidthCalculator = prop);
         }
 
         public PeptidePrediction ChangeDriftTimePredictor(DriftTimePredictor prop)
@@ -662,9 +664,9 @@ namespace pwiz.Skyline.Model.DocSettings
 
             if (UseLibraryDriftTimes)
             {
-                if (!LibraryDriftTimesResolvingPower.HasValue)
-                    LibraryDriftTimesResolvingPower = 0;
-                string errmsg = EditDriftTimePredictorDlg.ValidateResolvingPower(LibraryDriftTimesResolvingPower.Value);
+                if (LibraryDriftTimesWindowWidthCalculator == null)
+                    LibraryDriftTimesWindowWidthCalculator = DriftTimeWindowWidthCalculator.EMPTY;
+                string errmsg = LibraryDriftTimesWindowWidthCalculator.Validate();
                 if (errmsg != null)
                 {
                     throw new InvalidDataException(errmsg);
@@ -684,12 +686,15 @@ namespace pwiz.Skyline.Model.DocSettings
             return null;
         }
 
+        private const string PREFIX_SPECTRAL_LIBRARY_DRIFT_TIMES = "spectral_library_drift_times_"; // Not L10N
+
         public void ReadXml(XmlReader reader)
         {
             bool? useMeasuredRTs = reader.GetNullableBoolAttribute(ATTR.use_measured_rts);
             MeasuredRTWindow = reader.GetNullableDoubleAttribute(ATTR.measured_rt_window);
             bool? useLibraryDriftTimes = reader.GetNullableBoolAttribute(ATTR.use_spectral_library_drift_times);
-            LibraryDriftTimesResolvingPower = reader.GetNullableDoubleAttribute(ATTR.spectral_library_drift_times_resolving_power);
+
+            LibraryDriftTimesWindowWidthCalculator = new DriftTimeWindowWidthCalculator(reader, PREFIX_SPECTRAL_LIBRARY_DRIFT_TIMES); // Not L10N
             // Keep XML values, if written by v0.5 or later 
             if (useMeasuredRTs.HasValue)
                 UseMeasuredRTs = useMeasuredRTs.Value;
@@ -706,7 +711,6 @@ namespace pwiz.Skyline.Model.DocSettings
             else
             {
                 UseLibraryDriftTimes = false;
-                LibraryDriftTimesResolvingPower = null;
             }
 
             // Consume tag
@@ -732,7 +736,8 @@ namespace pwiz.Skyline.Model.DocSettings
             writer.WriteAttributeNullable(ATTR.measured_rt_window, MeasuredRTWindow);
 
             writer.WriteAttribute(ATTR.use_spectral_library_drift_times, UseLibraryDriftTimes, !UseLibraryDriftTimes);
-            writer.WriteAttributeNullable(ATTR.spectral_library_drift_times_resolving_power, LibraryDriftTimesResolvingPower);
+            if (LibraryDriftTimesWindowWidthCalculator != null)
+                LibraryDriftTimesWindowWidthCalculator.WriteXML(writer, PREFIX_SPECTRAL_LIBRARY_DRIFT_TIMES); // Not L10N
 
             // Write child elements
             if (RetentionTime != null)
@@ -752,7 +757,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return Equals(other.RetentionTime, RetentionTime) &&
                 Equals(other.DriftTimePredictor, DriftTimePredictor) &&
                 Equals(other.UseLibraryDriftTimes, UseLibraryDriftTimes) &&
-                Equals(other.LibraryDriftTimesResolvingPower, LibraryDriftTimesResolvingPower) &&
+                Equals(other.LibraryDriftTimesWindowWidthCalculator, LibraryDriftTimesWindowWidthCalculator) &&
                 other.UseMeasuredRTs.Equals(UseMeasuredRTs) &&
                 other.MeasuredRTWindow.Equals(MeasuredRTWindow);
         }
@@ -772,7 +777,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 int result = (RetentionTime != null ? RetentionTime.GetHashCode() : 0);
                 result = (result * 397) ^ (DriftTimePredictor != null ? DriftTimePredictor.GetHashCode() : 0);
                 result = (result * 397) ^ UseLibraryDriftTimes.GetHashCode();
-                result = (result * 397) ^ (LibraryDriftTimesResolvingPower.HasValue ? LibraryDriftTimesResolvingPower.Value.GetHashCode() : 0);
+                result = (result * 397) ^ (LibraryDriftTimesWindowWidthCalculator != null ? LibraryDriftTimesWindowWidthCalculator.GetHashCode() : 0);
                 result = (result * 397) ^ UseMeasuredRTs.GetHashCode();
                 result = (result * 397) ^ (MeasuredRTWindow.HasValue ? MeasuredRTWindow.Value.GetHashCode() : 0);
                 return result;
