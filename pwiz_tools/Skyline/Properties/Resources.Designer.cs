@@ -10772,6 +10772,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error at or around line {0}: {1}.
+        /// </summary>
+        public static string FastaImporter_Import_Error_at_or_around_line__0____1_ {
+            get {
+                return ResourceManager.GetString("FastaImporter_Import_Error_at_or_around_line__0____1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Last column does not contain a valid protein sequence.
         /// </summary>
         public static string FastaImporter_ToFasta_Last_column_does_not_contain_a_valid_protein_sequence {

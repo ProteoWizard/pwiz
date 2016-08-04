@@ -109,13 +109,19 @@ namespace pwiz.Skyline.Model
                     if (_countIons > SrmDocument.MAX_TRANSITION_COUNT ||
                             _countPeptides > SrmDocument.MAX_PEPTIDE_COUNT)
                         throw new InvalidDataException(Resources.FastaImporter_Import_Document_size_limit_exceeded);
+                    try
+                    {
+                        if (seqBuilder != null)
+                            AddPeptideGroup(peptideGroupsNew, set, seqBuilder);
 
-                    if (seqBuilder != null)
-                        AddPeptideGroup(peptideGroupsNew, set, seqBuilder);
-
-                    seqBuilder = _modMatcher == null
-                        ? new PeptideGroupBuilder(line, PeptideList, Document.Settings)
-                        : new PeptideGroupBuilder(line, _modMatcher, Document.Settings);
+                        seqBuilder = _modMatcher == null
+                            ? new PeptideGroupBuilder(line, PeptideList, Document.Settings)
+                            : new PeptideGroupBuilder(line, _modMatcher, Document.Settings);
+                    }
+                    catch (Exception x)
+                    {
+                        throw new InvalidDataException(string.Format(Resources.FastaImporter_Import_Error_at_or_around_line__0____1_, linesRead, x.Message), x);
+                    }
                     if (progressMonitor != null)
                         progressMonitor.UpdateProgress(status = status.ChangeMessage(string.Format(Resources.FastaImporter_Import_Adding_protein__0__, seqBuilder.Name)));
                 }

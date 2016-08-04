@@ -9185,4 +9185,7 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="DriftTimeWindowWidthCalculator_Validate_Peak_width_must_be_non_negative_" xml:space="preserve">
     <value>Peak width must be non-negative.</value>
   </data>
+  <data name="FastaImporter_Import_Error_at_or_around_line__0____1_" xml:space="preserve">
+    <value>Error at or around line {0}: {1}</value>
+  </data>
 </root>
