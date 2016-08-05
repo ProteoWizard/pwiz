@@ -31,7 +31,7 @@ namespace SkylineTester
     public class CommandShell : RichTextBox
     {
         public static int MAX_PROCESS_SILENCE_MINUTES = 60; // If a process is silent longer than this, assume it's hung
-
+        private enum EXIT_TYPE {error_stop, error_restart, success};
         public string DefaultDirectory { get; set; }
         public Button StopButton { get; set; }
         public Func<string, bool> FilterFunc { get; set; }
@@ -186,7 +186,7 @@ namespace SkylineTester
                         }
                         if (Directory.Exists(deleteDir))
                         {
-                            CommandsDone(false);
+                            CommandsDone(EXIT_TYPE.error_stop);
                             return;
                         }
                     }
@@ -205,27 +205,27 @@ namespace SkylineTester
                     catch (Exception e)
                     {
                         Log(Environment.NewLine + "!!!! COMMAND FAILED !!!! " + e);
-                        CommandsDone(false);    // Quit if any command fails
+                        CommandsDone(EXIT_TYPE.error_stop);    // Quit if any command fails
                     }
                     _workingDirectory = DefaultDirectory;
                     return;
                 }
             }
 
-            CommandsDone(true);
+            CommandsDone(EXIT_TYPE.success);
         }
 
         /// <summary>
         /// Handle completion of commands, either by successfully finishing,
         /// or due to error or user interrupt.  Run on UI thread.
         /// </summary>
-        private void CommandsDone(bool success)
+        private void CommandsDone(EXIT_TYPE exitType)
         {
             bool restart = false;
             
-            if (!success)
+            if (exitType == EXIT_TYPE.error_restart)
             {
-                // restart a maximum of 10 times
+                // restart a maximum of 10 times and within 30 minutes of starting
                 if (RestartCount < 10 && DateTime.Now.Subtract(RunStartTime) < new TimeSpan(0, 0, 30, 0, 0)) 
                 {
                     restart = true;
@@ -234,9 +234,12 @@ namespace SkylineTester
                 }
                 else
                 {
-                    Log("# Stopped " + DateTime.Now.ToString("f") + Environment.NewLine + Environment.NewLine);
+                    exitType = EXIT_TYPE.error_stop;
                 }
             }
+            if(exitType == EXIT_TYPE.error_stop)
+                Log("# Stopped " + DateTime.Now.ToString("f") + Environment.NewLine + Environment.NewLine);
+
             UpdateLog();
             if (restart)
             {
@@ -245,7 +248,7 @@ namespace SkylineTester
             else
             {
                 _commands.Clear();
-                _doneAction(success);
+                _doneAction(exitType == EXIT_TYPE.success);
             }
         } 
 
@@ -383,7 +386,7 @@ namespace SkylineTester
             {
                 try
                 {
-                    RunUI(() => CommandsDone(false));
+                    RunUI(() => CommandsDone(EXIT_TYPE.error_stop));
                 }
 // ReSharper disable once EmptyGeneralCatchClause
                 catch (Exception)
