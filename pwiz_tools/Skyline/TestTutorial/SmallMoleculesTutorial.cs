@@ -37,22 +37,31 @@ namespace pwiz.SkylineTestTutorial
     [TestClass]
     public class SmallMoleculesTutorialTest : AbstractFunctionalTest
     {
+        private bool _inferredLabels;
         [TestMethod]
         public void TestSmallMoleculesTutorial()
         {
             // Set true to look at tutorial screenshots.
             // IsPauseForScreenShots = true;
 
-            LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/SmallMolecule-3_5.pdf";
+            LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/SmallMolecule-3_6.pdf";
 
-            TestFilesZipPaths = new []
+            TestFilesZipPaths = new[]
             {
                 (UseRawFiles
-                   ? @"https://skyline.gs.washington.edu/tutorials/SmallMolecule_3_5.zip"
-                   : @"https://skyline.gs.washington.edu/tutorials/SmallMoleculeMzml_3_5.zip"),
+                   ? @"https://skyline.gs.washington.edu/tutorials/SmallMolecule_3_6.zip"
+                   : @"https://skyline.gs.washington.edu/tutorials/SmallMoleculeMzml_3_6.zip"),
                 @"TestTutorial\SmallMoleculeViews.zip"
             };
             RunFunctionalTest();
+        }
+
+        [TestMethod]
+        public void TestSmallMoleculesTutorialInferredLabels()
+        {
+            // Verify ability to infer labels from transition list
+            _inferredLabels = true;
+            TestSmallMoleculesTutorial();
         }
 
         private string GetTestPath(string relativePath = null)
@@ -81,30 +90,8 @@ namespace pwiz.SkylineTestTutorial
                     pasteDlg.IsMolecule = true;
                     pasteDlg.SetSmallMoleculeColumns(null);  // Default columns
                 });
-                PauseForScreenShot<PasteDlg>("Paste Dialog in small molecule mode, default columns", 3);
+                PauseForScreenShot<PasteDlg>("Paste Dialog in small molecule mode, default columns - show Columns checklist", 3);
 
-                if (IsPauseForScreenShots)
-                {
-                    var columnsRestricted = new[]
-                    {
-                        // Molecule List Name,Precursor Name,Precursor Formula,Product m/z,Precursor Charge,Product Charge,Precursor RT,Precursor CE
-                        PasteDlg.SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
-                        PasteDlg.SmallMoleculeTransitionListColumnHeaders.namePrecursor,
-                        PasteDlg.SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
-                        PasteDlg.SmallMoleculeTransitionListColumnHeaders.mzProduct,
-                        PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
-                        PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargeProduct,
-                        PasteDlg.SmallMoleculeTransitionListColumnHeaders.rtPrecursor,
-                        PasteDlg.SmallMoleculeTransitionListColumnHeaders.cePrecursor,
-                    }.ToList();
-                    RunUI(() =>
-                    {
-                        pasteDlg.SetSmallMoleculeColumns(columnsRestricted);
-                        pasteDlg.Height = 339;
-                    });
-                    WaitForConditionUI(() => pasteDlg.GetUsableColumnCount() == columnsRestricted.Count);
-                    PauseForScreenShot<PasteDlg>("Paste Dialog with selected columns - show Columns checklist", 4);
-                }
 
                 var columnsOrdered = new[]
                 {
@@ -112,6 +99,7 @@ namespace pwiz.SkylineTestTutorial
                     PasteDlg.SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
                     PasteDlg.SmallMoleculeTransitionListColumnHeaders.namePrecursor,
                     PasteDlg.SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
+                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.adductPrecursor,
                     PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
                     PasteDlg.SmallMoleculeTransitionListColumnHeaders.rtPrecursor,
                     PasteDlg.SmallMoleculeTransitionListColumnHeaders.cePrecursor,
@@ -119,11 +107,15 @@ namespace pwiz.SkylineTestTutorial
                     PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargeProduct,
                     PasteDlg.SmallMoleculeTransitionListColumnHeaders.labelType
                 }.ToList();
+                if (_inferredLabels)
+                {
+                    columnsOrdered.Remove(PasteDlg.SmallMoleculeTransitionListColumnHeaders.labelType);
+                }
                 RunUI(() => { pasteDlg.SetSmallMoleculeColumns(columnsOrdered); });
                 WaitForConditionUI(() => pasteDlg.GetUsableColumnCount() == columnsOrdered.Count);
                 PauseForScreenShot<PasteDlg>("Paste Dialog with selected and ordered columns", 4);
 
-                SetCsvFileClipboardText(GetTestPath("SMTutorial_TransitionList_HeavyLight.csv"), true);
+                SetCsvFileClipboardText(GetTestPath("SMTutorial_TransitionList.csv"), true);
                 RunUI(pasteDlg.PasteTransitions);
                 RunUI(pasteDlg.ValidateCells);
                 PauseForScreenShot<PasteDlg>("Paste Dialog with validated contents", 5);
