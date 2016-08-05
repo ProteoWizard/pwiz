@@ -687,6 +687,20 @@ namespace pwiz.Skyline.Model
                     // We have a formula
                     try
                     {
+                        // Can we infer a heavy label from the formula if none specified?
+                        if (getPrecursorColumns && isotopeLabelType == null) 
+                        {
+                            var ion = new IonInfo(formula);
+                            if (!Equals(ion.FormulaWithAdductApplied, ion.UnlabeledFormula)) // Formula+adduct contained some heavy isotopes
+                            {
+                                isotopeLabelType = IsotopeLabelType.heavy;
+                                if (INDEX_LABEL_TYPE >= 0)
+                                {
+                                    row.UpdateCell(INDEX_LABEL_TYPE, isotopeLabelType.ToString());
+                                }
+                            }
+                        }
+
                         if (mz > 0)
                         {
                             // Is the ion's formula the old style where user expected us to add a hydrogen? 
