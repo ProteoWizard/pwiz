@@ -177,5 +177,14 @@ namespace pwiz.SkylineTest
             AssertEx.ThrowsException<IOException>(() => FileEx.SafeDelete(directory));
             AssertEx.NoExceptionThrown<IOException>(() => FileEx.SafeDelete(directory, true));
         }
+
+        /// <summary>
+        /// Makes sure nobody accidentally checked in a change to <see cref="ParallelEx.SINGLE_THREADED"/>.
+        /// </summary>
+        [TestMethod]
+        public void TestParallelExNotSingleThreaded()
+        {
+            Assert.IsFalse(ParallelEx.SINGLE_THREADED);
+        }
     }
 }
