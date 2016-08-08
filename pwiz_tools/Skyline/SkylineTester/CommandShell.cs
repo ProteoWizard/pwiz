@@ -399,6 +399,9 @@ namespace SkylineTester
 
         #region Display/scroll log
 
+        // VisibleLogFile is the file selected to view, LogFile is the file being currently written to
+        public string VisibleLogFile { get; set; }
+
         private string _logFile;
 
         public string LogFile
@@ -472,7 +475,8 @@ namespace SkylineTester
                     File.AppendAllText(LogFile, logLines);
                 }
             }
-
+            if (VisibleLogFile == null || !VisibleLogFile.Equals(LogFile))
+                return;
             // Scroll if text box is already scrolled to bottom.
             int previousLength = Math.Max(0, TextLength - 1);
             var point = GetPositionFromCharIndex(previousLength);
@@ -526,9 +530,15 @@ namespace SkylineTester
             _colorMatchList.Add(new ColorMatch {LineStart = lineStart, LineContains = lineContains, LineColor = lineColor});
         }
  
-        public void Load(string file, Action loadDone = null)
+        public void Load(string file, bool isRunLogFile, Action loadDone = null)
         {
-            _logFile = file;
+            if (isRunLogFile)
+                _logFile = file;
+            else
+                VisibleLogFile = file;
+
+            if (VisibleLogFile == null)
+                VisibleLogFile = _logFile;
 
             if (!File.Exists(file))
             {

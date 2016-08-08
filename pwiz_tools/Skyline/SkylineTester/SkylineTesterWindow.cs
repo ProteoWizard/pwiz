@@ -1135,7 +1135,7 @@ namespace SkylineTester
         private void comboBoxOutput_SelectedIndexChanged(object sender, EventArgs e)
         {
             _tabOutput.ClearErrors();
-            commandShell.Load(GetSelectedLog(comboBoxOutput), () => _tabOutput.LoadDone());
+            commandShell.Load(GetSelectedLog(comboBoxOutput), comboBoxOutput.SelectedIndex == 0,() => _tabOutput.LoadDone());
         }
 
         private void buttonOpenOutput_Click(object sender, EventArgs e)
