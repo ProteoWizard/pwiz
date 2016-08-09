@@ -123,7 +123,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             }
             else
             {
-                tbxQValueCutoff.Text = "";
+                tbxQValueCutoff.Text = string.Empty;
             }
         }
 
