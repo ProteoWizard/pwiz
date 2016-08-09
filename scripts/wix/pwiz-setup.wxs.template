@@ -183,6 +183,7 @@
                     <Component Feature="MainFeature"><File Id="_DigitalRune.Windows.Docking.dll" Name="DigitalRune.Windows.Docking.dll" Source="msvc-release\DigitalRune.Windows.Docking.dll" KeyPath="yes"/></Component>
                     <Component Feature="MainFeature"><File Id="_Interop.MSFileReaderLib.dll" Name="Interop.MSFileReaderLib.dll" Source="msvc-release\Interop.MSFileReaderLib.dll" KeyPath="yes"/></Component>
                     <Component Feature="MainFeature"><File Id="_MSGraph.dll" Name="MSGraph.dll" Source="msvc-release\MSGraph.dll" KeyPath="yes"/></Component>
+                    <Component Feature="MainFeature"><File Id="_MSConvertGUI.exe.config" Name="MSConvertGUI.exe.config" Source="msvc-release\MSConvertGUI.exe.config" KeyPath="yes"/></Component>
                     <Component Feature="MainFeature"><File Id="_MSConvertGUI.exe.manifest" Name="MSConvertGUI.exe.manifest" Source="msvc-release\MSConvertGUI.exe.manifest" KeyPath="yes"/></Component>
                     <Component Feature="MainFeature"><File Id="_pwiz.CommonUtil.dll" Name="pwiz.CommonUtil.dll" Source="msvc-release\pwiz.CommonUtil.dll" KeyPath="yes"/></Component>
                     <Component Feature="MainFeature"><File Id="_pwiz_bindings_cli.dll" Name="pwiz_bindings_cli.dll" Source="msvc-release\pwiz_bindings_cli.dll" KeyPath="yes"/></Component>
@@ -252,18 +253,47 @@
 
 
 <!-- AB Sciex DLLs -->
+<Directory Id="SQLite_v1.0.98" Name="SQLite_v1.0.98">
+<Component Feature="MainFeature"><File Id="_SQLite_v1.0.98_System.Data.SQLite.dll" Name="System.Data.SQLite.dll" Source="msvc-release\SQLite_v1.0.98\System.Data.SQLite.dll" KeyPath="yes"/></Component>
+</Directory>
 <Component Feature="MainFeature"><File Id="_Interop.DataExplorer.dll" Name="Interop.DataExplorer.dll" Source="msvc-release\Interop.DataExplorer.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Clearcore2.Compression.dll" Name="Clearcore2.Compression.dll" Source="msvc-release\Clearcore2.Compression.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Clearcore2.Data.Acquisition.Client.dll" Name="Clearcore2.Data.Acquisition.Client.dll" Source="msvc-release\Clearcore2.Data.Acquisition.Client.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Clearcore2.Data.Acquisition.Contracts.dll" Name="Clearcore2.Data.Acquisition.Contracts.dll" Source="msvc-release\Clearcore2.Data.Acquisition.Contracts.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_Clearcore2.Data.AnalystDataProvider.dll" Name="Clearcore2.Data.AnalystDataProvider.dll" Source="msvc-release\Clearcore2.Data.AnalystDataProvider.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Clearcore2.Data.Client.dll" Name="Clearcore2.Data.Client.dll" Source="msvc-release\Clearcore2.Data.Client.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Clearcore2.Data.Common.dll" Name="Clearcore2.Data.Common.dll" Source="msvc-release\Clearcore2.Data.Common.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_Clearcore2.Data.CommonInterfaces.dll" Name="Clearcore2.Data.CommonInterfaces.dll" Source="msvc-release\Clearcore2.Data.CommonInterfaces.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Clearcore2.Data.Contracts.dll" Name="Clearcore2.Data.Contracts.dll" Source="msvc-release\Clearcore2.Data.Contracts.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Clearcore2.Data.Core.dll" Name="Clearcore2.Data.Core.dll" Source="msvc-release\Clearcore2.Data.Core.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_Clearcore2.Data.dll" Name="Clearcore2.Data.dll" Source="msvc-release\Clearcore2.Data.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Clearcore2.Data.Wiff2.dll" Name="Clearcore2.Data.Wiff2.dll" Source="msvc-release\Clearcore2.Data.Wiff2.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_Clearcore2.Data.WiffReader.dll" Name="Clearcore2.Data.WiffReader.dll" Source="msvc-release\Clearcore2.Data.WiffReader.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Clearcore2.DataService.dll" Name="Clearcore2.DataService.dll" Source="msvc-release\Clearcore2.DataService.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Clearcore2.Devices.Types.dll" Name="Clearcore2.Devices.Types.dll" Source="msvc-release\Clearcore2.Devices.Types.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Clearcore2.Domain.Acquisition.dll" Name="Clearcore2.Domain.Acquisition.dll" Source="msvc-release\Clearcore2.Domain.Acquisition.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Clearcore2.Domain.Acquisition.Methods.MassSpec.dll" Name="Clearcore2.Domain.Acquisition.Methods.MassSpec.dll" Source="msvc-release\Clearcore2.Domain.Acquisition.Methods.MassSpec.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Clearcore2.Infrastructure.dll" Name="Clearcore2.Infrastructure.dll" Source="msvc-release\Clearcore2.Infrastructure.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_Clearcore2.InternalRawXYProcessing.dll" Name="Clearcore2.InternalRawXYProcessing.dll" Source="msvc-release\Clearcore2.InternalRawXYProcessing.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Id="_Clearcore2.ProjectUtilities.dll" Name="Clearcore2.ProjectUtilities.dll" Source="msvc-release\Clearcore2.ProjectUtilities.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Id="_Clearcore2.StructuredStorage.dll" Name="Clearcore2.StructuredStorage.dll" Source="msvc-release\Clearcore2.StructuredStorage.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Id="_Clearcore2.Utility.dll" Name="Clearcore2.Utility.dll" Source="msvc-release\Clearcore2.Utility.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_Clearcore2.Muni.dll" Name="Clearcore2.Muni.dll" Source="msvc-release\Clearcore2.Muni.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_Clearcore2.RawXYProcessing.dll" Name="Clearcore2.RawXYProcessing.dll" Source="msvc-release\Clearcore2.RawXYProcessing.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Id="_Clearcore2.Compression.dll" Name="Clearcore2.Compression.dll" Source="msvc-release\Clearcore2.Compression.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Clearcore2.StructuredStorage.dll" Name="Clearcore2.StructuredStorage.dll" Source="msvc-release\Clearcore2.StructuredStorage.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Clearcore2.Utility.dll" Name="Clearcore2.Utility.dll" Source="msvc-release\Clearcore2.Utility.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Clearcore2.XmlHelpers.dll" Name="Clearcore2.XmlHelpers.dll" Source="msvc-release\Clearcore2.XmlHelpers.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Microsoft.Practices.Unity.Configuration.dll" Name="Microsoft.Practices.Unity.Configuration.dll" Source="msvc-release\Microsoft.Practices.Unity.Configuration.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Microsoft.Practices.Unity.dll" Name="Microsoft.Practices.Unity.dll" Source="msvc-release\Microsoft.Practices.Unity.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_OFX.Core.Contracts.dll" Name="OFX.Core.Contracts.dll" Source="msvc-release\OFX.Core.Contracts.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_OFX.Core.dll" Name="OFX.Core.dll" Source="msvc-release\OFX.Core.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_OFX.EventServices.dll" Name="OFX.EventServices.dll" Source="msvc-release\OFX.EventServices.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_OFX.Logging.dll" Name="OFX.Logging.dll" Source="msvc-release\OFX.Logging.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_OFX.Security.Core.dll" Name="OFX.Security.Core.dll" Source="msvc-release\OFX.Security.Core.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_protobuf_net.dll" Name="protobuf-net.dll" Source="msvc-release\protobuf-net.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Sciex.Clearcore.FMan.dll" Name="Sciex.Clearcore.FMan.dll" Source="msvc-release\Sciex.Clearcore.FMan.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Sciex.Data.Processing.dll" Name="Sciex.Data.Processing.dll" Source="msvc-release\Sciex.Data.Processing.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Sciex.Data.SimpleTypes.dll" Name="Sciex.Data.SimpleTypes.dll" Source="msvc-release\Sciex.Data.SimpleTypes.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Sciex.Data.XYData.dll" Name="Sciex.Data.XYData.dll" Source="msvc-release\Sciex.Data.XYData.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Sciex.FMan.dll" Name="Sciex.FMan.dll" Source="msvc-release\Sciex.FMan.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Sciex.Wiff.dll" Name="Sciex.Wiff.dll" Source="msvc-release\Sciex.Wiff.dll" KeyPath="yes"/></Component>
 
 
 <!-- Shimadzu DLLs -->

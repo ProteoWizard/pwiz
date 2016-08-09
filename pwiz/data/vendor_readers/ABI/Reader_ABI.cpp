@@ -35,7 +35,7 @@ PWIZ_API_DECL std::string pwiz::msdata::Reader_ABI::identify(const std::string& 
 {
 	std::string result;
     // TODO: check header signature?
-    if (bal::iends_with(filename, ".wiff"))
+    if (bal::iends_with(filename, ".wiff") || bal::iends_with(filename, ".wiff2"))
 		result = getType();
     return result;
 }

@@ -38,10 +38,13 @@
 
 #pragma managed
 #include "pwiz/utility/misc/cpp_cli_utilities.hpp"
+#using <System.Xml.dll>
 using namespace pwiz::util;
 using namespace System;
 using namespace Clearcore2::Data;
 using namespace Clearcore2::Data::AnalystDataProvider;
+using namespace Clearcore2::Data::Client;
+using namespace Clearcore2::Data::DataAccess;
 using namespace Clearcore2::Data::DataAccess::SampleData;
 
 #if __CLR_VER > 40000000 // .NET 4
@@ -59,9 +62,9 @@ class WiffFileImpl : public WiffFile
     WiffFileImpl(const std::string& wiffpath);
     ~WiffFileImpl();
 
-    gcroot<AnalystWiffDataProvider^> provider;
+    gcroot<DataProvider^> provider;
     gcroot<Batch^> batch;
-    mutable gcroot<Sample^> sample;
+    mutable gcroot<Clearcore2::Data::DataAccess::SampleData::Sample^> sample;
     mutable gcroot<MassSpectrometerSample^> msSample;
 
     virtual int getSampleCount() const;
@@ -224,7 +227,7 @@ WiffFileImpl::WiffFileImpl(const string& wiffpath)
         Licenser::LicenseKey = ABI_BETA_LICENSE_KEY;
 #endif
 
-        provider = gcnew AnalystWiffDataProvider();
+        provider = DataProviderFactory::CreateDataProvider("", true);
         batch = AnalystDataProviderFactory::CreateBatch(ToSystemString(wiffpath), provider);
         // This caused WIFF files where the first sample had been interrupted to
         // throw before they could be successfully constructed, which made investigators
@@ -345,7 +348,7 @@ InstrumentModel WiffFileImpl::getInstrumentModel() const
         if (modelName->Contains("300"))             return API300; // predicted
         if (modelName->Contains("350"))             return API350; // predicted
         if (modelName->Contains("365"))             return API365; // predicted
-
+        if (modelName->Contains("X500QTOF"))        return X500QTOF;
         throw gcnew Exception("unknown instrument type: " + sample->Details->InstrumentName);
     }
     CATCH_AND_FORWARD

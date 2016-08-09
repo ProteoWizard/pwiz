@@ -26,7 +26,6 @@ import path ;
 
 path-constant API_PATH : . ;
 
-
 if [ modules.peek : NT ]
 {
 
@@ -46,23 +45,44 @@ rule vendor-api-requirements ( properties * )
         {
             result += <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc ;
         }
+        result += <assembly>$(dll_location)/Clearcore2.Compression.dll ;
+        result += <assembly>$(dll_location)/Clearcore2.Data.Acquisition.Client.dll ;
+        result += <assembly>$(dll_location)/Clearcore2.Data.Acquisition.Contracts.dll ;
         result += <assembly>$(dll_location)/Clearcore2.Data.AnalystDataProvider.dll ;
+        result += <assembly>$(dll_location)/Clearcore2.Data.Client.dll ;
+        result += <assembly>$(dll_location)/Clearcore2.Data.Common.dll ;
         result += <assembly>$(dll_location)/Clearcore2.Data.CommonInterfaces.dll ;
+        result += <assembly>$(dll_location)/Clearcore2.Data.Contracts.dll ;
+        result += <assembly>$(dll_location)/Clearcore2.Data.Core.dll ;
         result += <assembly>$(dll_location)/Clearcore2.Data.dll ;
+        result += <assembly>$(dll_location)/Clearcore2.Data.Wiff2.dll ;
         result += <assembly>$(dll_location)/Clearcore2.Data.WiffReader.dll ;
+        result += <assembly>$(dll_location)/Clearcore2.DataService.dll ;
+        result += <assembly>$(dll_location)/Clearcore2.Devices.Types.dll ;
+        result += <assembly>$(dll_location)/Clearcore2.Domain.Acquisition.dll ;
+        result += <assembly>$(dll_location)/Clearcore2.Domain.Acquisition.Methods.MassSpec.dll ;
+        result += <assembly>$(dll_location)/Clearcore2.Infrastructure.dll ;
         result += <assembly>$(dll_location)/Clearcore2.InternalRawXYProcessing.dll ;
-        result += <assembly>$(dll_location)/Clearcore2.ProjectUtilities.dll ;
+        result += <assembly>$(dll_location)/Clearcore2.Muni.dll ;
+        result += <assembly>$(dll_location)/Clearcore2.RawXYProcessing.dll ;
         result += <assembly>$(dll_location)/Clearcore2.StructuredStorage.dll ;
         result += <assembly>$(dll_location)/Clearcore2.Utility.dll ;
-        if <toolset-msvc:version>10.0 in $(properties) ||
-           <toolset-msvc:version>10.0express in $(properties) ||
-           <toolset-msvc:version>11.0 in $(properties) ||
-           <toolset-msvc:version>12.0 in $(properties)
-        {
-            result += <assembly>$(dll_location)/Clearcore2.Muni.dll ;
-            result += <assembly>$(dll_location)/Clearcore2.RawXYProcessing.dll ;
-            result += <assembly>$(dll_location)/Clearcore2.Compression.dll ;
-        }
+        result += <assembly>$(dll_location)/Clearcore2.XmlHelpers.dll ;
+        result += <assembly>$(dll_location)/Microsoft.Practices.Unity.Configuration.dll ;
+        result += <assembly>$(dll_location)/Microsoft.Practices.Unity.dll ;
+        result += <assembly>$(dll_location)/OFX.Core.Contracts.dll ;
+        result += <assembly>$(dll_location)/OFX.Core.dll ;
+        result += <assembly>$(dll_location)/OFX.EventServices.dll ;
+        result += <assembly>$(dll_location)/OFX.Logging.dll ;
+        result += <assembly>$(dll_location)/OFX.Security.Core.dll ;
+        result += <assembly>$(dll_location)/protobuf-net.dll ;
+        result += <assembly>$(dll_location)/Sciex.Clearcore.FMan.dll ;
+        result += <assembly>$(dll_location)/Sciex.Data.Processing.dll ;
+        result += <assembly>$(dll_location)/Sciex.Data.SimpleTypes.dll ;
+        result += <assembly>$(dll_location)/Sciex.Data.XYData.dll ;
+        result += <assembly>$(dll_location)/Sciex.FMan.dll ;        
+        result += <assembly>$(dll_location)/Sciex.Wiff.dll ;
+
         result += <include>$(dll_location) ;
         result += <define>PWIZ_READER_ABI ;
         result += <cxxflags>/wd4564 ; # warning C4564: method 'x' defines unsupported default parameter 'y'
@@ -112,28 +132,75 @@ rule install-requirements ( properties * )
     local dll_location = [ wiff-dll-location $(API_PATH) : $(properties) ] ;
     if $(dll_location)
     {
+        result += <source>$(dll_location)/Clearcore2.Compression.dll ;
+        result += <source>$(dll_location)/Clearcore2.Data.Acquisition.Client.dll ;
+        result += <source>$(dll_location)/Clearcore2.Data.Acquisition.Contracts.dll ;
         result += <source>$(dll_location)/Clearcore2.Data.AnalystDataProvider.dll ;
+        result += <source>$(dll_location)/Clearcore2.Data.Client.dll ;
+        result += <source>$(dll_location)/Clearcore2.Data.Common.dll ;
         result += <source>$(dll_location)/Clearcore2.Data.CommonInterfaces.dll ;
+        result += <source>$(dll_location)/Clearcore2.Data.Contracts.dll ;
+        result += <source>$(dll_location)/Clearcore2.Data.Core.dll ;
         result += <source>$(dll_location)/Clearcore2.Data.dll ;
+        result += <source>$(dll_location)/Clearcore2.Data.Wiff2.dll ;
         result += <source>$(dll_location)/Clearcore2.Data.WiffReader.dll ;
+        result += <source>$(dll_location)/Clearcore2.DataService.dll ;
+        result += <source>$(dll_location)/Clearcore2.Devices.Types.dll ;
+        result += <source>$(dll_location)/Clearcore2.Domain.Acquisition.dll ;
+        result += <source>$(dll_location)/Clearcore2.Domain.Acquisition.Methods.MassSpec.dll ;
+        result += <source>$(dll_location)/Clearcore2.Infrastructure.dll ;
         result += <source>$(dll_location)/Clearcore2.InternalRawXYProcessing.dll ;
-        result += <source>$(dll_location)/Clearcore2.ProjectUtilities.dll ;
+        result += <source>$(dll_location)/Clearcore2.Muni.dll ;
+        result += <source>$(dll_location)/Clearcore2.RawXYProcessing.dll ;
         result += <source>$(dll_location)/Clearcore2.StructuredStorage.dll ;
         result += <source>$(dll_location)/Clearcore2.Utility.dll ;
-        if <toolset-msvc:version>10.0 in $(properties) ||
-           <toolset-msvc:version>10.0express in $(properties) ||
-           <toolset-msvc:version>11.0 in $(properties) ||
-           <toolset-msvc:version>12.0 in $(properties)
+        result += <source>$(dll_location)/Clearcore2.XmlHelpers.dll ;
+        result += <source>$(dll_location)/Microsoft.Practices.Unity.Configuration.dll ;
+        result += <source>$(dll_location)/Microsoft.Practices.Unity.dll ;
+        result += <source>$(dll_location)/OFX.Core.Contracts.dll ;
+        result += <source>$(dll_location)/OFX.Core.dll ;
+        result += <source>$(dll_location)/OFX.EventServices.dll ;
+        result += <source>$(dll_location)/OFX.Logging.dll ;
+        result += <source>$(dll_location)/OFX.Security.Core.dll ;
+        result += <source>$(dll_location)/protobuf-net.dll ;
+        result += <source>$(dll_location)/Sciex.Clearcore.FMan.dll ;
+        result += <source>$(dll_location)/Sciex.Data.Processing.dll ;
+        result += <source>$(dll_location)/Sciex.Data.SimpleTypes.dll ;
+        result += <source>$(dll_location)/Sciex.Data.XYData.dll ;
+        result += <source>$(dll_location)/Sciex.FMan.dll ;        
+        result += <source>$(dll_location)/Sciex.Wiff.dll ;
+    
+    }
+    return $(result) ;
+}
+
+rule install-sqlite ( properties * )
+{
+    local result ;
+    local dll_location = [ wiff-dll-location $(API_PATH) : $(properties) ] ;
+    if $(dll_location)
+    {
+        if <address-model>64 in $(properties)
         {
-            result += <source>$(dll_location)/Clearcore2.Muni.dll ;
-            result += <source>$(dll_location)/Clearcore2.RawXYProcessing.dll ;
-            result += <source>$(dll_location)/Clearcore2.Compression.dll ;
+            result += <install-source-root>$(dll_location)/x64 ;
+            result += <source>$(dll_location)/x64/SQLite_v1.0.98/System.Data.SQLite.DLL ;
+        }
+        else
+        {
+            result += <install-source-root>$(dll_location)/x86 ;
+            result += <source>$(dll_location)/x86/SQLite_v1.0.98/System.Data.SQLite.DLL ;
         }
     }
     return $(result) ;
 }
 
-install install_pwiz_vendor_api_abi
+install install_pwiz_vendor_api_abi_dlls
     : : <conditional>@install-requirements
     ;
+
+install install_pwiz_vendor_api_abi_sqlite
+    : : <conditional>@install-sqlite # separate rule because of <install-source-root>
+    ;
+
+alias install_pwiz_vendor_api_abi : install_pwiz_vendor_api_abi_dlls install_pwiz_vendor_api_abi_sqlite ;
 }

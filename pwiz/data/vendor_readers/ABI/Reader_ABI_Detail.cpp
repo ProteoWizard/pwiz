@@ -96,6 +96,7 @@ InstrumentConfigurationPtr translateAsInstrumentConfiguration(InstrumentModel in
         case API4600TripleTOF:
         case API5600TripleTOF:
         case API6600TripleTOF:
+        case X500QTOF:
         case NlxTof:
             ic.componentList.push_back(source);
             ic.componentList.push_back(Component(MS_quadrupole, 2));
@@ -150,7 +151,9 @@ PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModel instrumentModel)
         case QStarXL:           return MS_QSTAR_XL;
         case QStarElite:        return MS_QSTAR_Elite;
 
-        case NlxTof:
+        case NlxTof:            return MS_TripleTOF_5600;
+        case X500QTOF:          return MS_X500R_QTOF;
+
         case InstrumentModel_Unknown:
             return MS_Applied_Biosystems_instrument_model;
 

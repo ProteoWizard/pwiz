@@ -65,9 +65,150 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Clearcore2.Compression, Version=3.0.0.0, Culture=neutral, PublicKeyToken=f69d757af688cced, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\pwiz_aux\msrc\utility\vendor_api\ABI\Clearcore2.Compression.dll</HintPath>
+    </Reference>
+    <Reference Include="Clearcore2.Data, Version=3.0.0.0, Culture=neutral, PublicKeyToken=2a79e0d8fd2e4eca, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\pwiz_aux\msrc\utility\vendor_api\ABI\Clearcore2.Data.dll</HintPath>
+    </Reference>
+    <Reference Include="Clearcore2.Data.Acquisition.Client, Version=3.0.0.0, Culture=neutral, PublicKeyToken=23d632dd4656b004, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\pwiz_aux\msrc\utility\vendor_api\ABI\Clearcore2.Data.Acquisition.Client.dll</HintPath>
+    </Reference>
+    <Reference Include="Clearcore2.Data.Acquisition.Contracts, Version=3.0.0.0, Culture=neutral, PublicKeyToken=23d632dd4656b004, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\pwiz_aux\msrc\utility\vendor_api\ABI\Clearcore2.Data.Acquisition.Contracts.dll</HintPath>
+    </Reference>
+    <Reference Include="Clearcore2.Data.AnalystDataProvider, Version=3.0.0.0, Culture=neutral, PublicKeyToken=2a79e0d8fd2e4eca, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\pwiz_aux\msrc\utility\vendor_api\ABI\Clearcore2.Data.AnalystDataProvider.dll</HintPath>
+    </Reference>
+    <Reference Include="Clearcore2.Data.Client, Version=3.0.0.0, Culture=neutral, PublicKeyToken=23d632dd4656b004, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\pwiz_aux\msrc\utility\vendor_api\ABI\Clearcore2.Data.Client.dll</HintPath>
+    </Reference>
+    <Reference Include="Clearcore2.Data.Common, Version=3.0.0.0, Culture=neutral, PublicKeyToken=23d632dd4656b004, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\pwiz_aux\msrc\utility\vendor_api\ABI\Clearcore2.Data.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="Clearcore2.Data.CommonInterfaces, Version=3.0.0.0, Culture=neutral, PublicKeyToken=2a79e0d8fd2e4eca, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\pwiz_aux\msrc\utility\vendor_api\ABI\Clearcore2.Data.CommonInterfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="Clearcore2.Data.Contracts, Version=3.0.0.0, Culture=neutral, PublicKeyToken=23d632dd4656b004, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\pwiz_aux\msrc\utility\vendor_api\ABI\Clearcore2.Data.Contracts.dll</HintPath>
+    </Reference>
+    <Reference Include="Clearcore2.Data.Core, Version=3.0.0.0, Culture=neutral, PublicKeyToken=23d632dd4656b004, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\pwiz_aux\msrc\utility\vendor_api\ABI\Clearcore2.Data.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Clearcore2.Data.Wiff2, Version=3.0.0.0, Culture=neutral, PublicKeyToken=2a79e0d8fd2e4eca, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\pwiz_aux\msrc\utility\vendor_api\ABI\Clearcore2.Data.Wiff2.dll</HintPath>
+    </Reference>
+    <Reference Include="Clearcore2.Data.WiffReader, Version=3.0.0.0, Culture=neutral, PublicKeyToken=2a79e0d8fd2e4eca, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\pwiz_aux\msrc\utility\vendor_api\ABI\Clearcore2.Data.WiffReader.dll</HintPath>
+    </Reference>
+    <Reference Include="Clearcore2.DataService">
+      <HintPath>..\..\pwiz_aux\msrc\utility\vendor_api\ABI\Clearcore2.DataService.dll</HintPath>
+    </Reference>
+    <Reference Include="Clearcore2.Devices.Types, Version=1.0.0.0, Culture=neutral, PublicKeyToken=99a50506e791c9b8, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\pwiz_aux\msrc\utility\vendor_api\ABI\Clearcore2.Devices.Types.dll</HintPath>
+    </Reference>
+    <Reference Include="Clearcore2.Domain.Acquisition, Version=3.0.0.0, Culture=neutral, PublicKeyToken=f69d757af688cced, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\pwiz_aux\msrc\utility\vendor_api\ABI\Clearcore2.Domain.Acquisition.dll</HintPath>
+    </Reference>
+    <Reference Include="Clearcore2.Domain.Acquisition.Methods.MassSpec, Version=3.0.0.0, Culture=neutral, PublicKeyToken=f69d757af688cced, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\pwiz_aux\msrc\utility\vendor_api\ABI\Clearcore2.Domain.Acquisition.Methods.MassSpec.dll</HintPath>
+    </Reference>
+    <Reference Include="Clearcore2.Infrastructure, Version=3.0.0.0, Culture=neutral, PublicKeyToken=f69d757af688cced, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\pwiz_aux\msrc\utility\vendor_api\ABI\Clearcore2.Infrastructure.dll</HintPath>
+    </Reference>
+    <Reference Include="Clearcore2.InternalRawXYProcessing, Version=3.0.0.0, Culture=neutral, PublicKeyToken=2a79e0d8fd2e4eca, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\pwiz_aux\msrc\utility\vendor_api\ABI\Clearcore2.InternalRawXYProcessing.dll</HintPath>
+    </Reference>
+    <Reference Include="Clearcore2.Muni, Version=1.5.0.0, Culture=neutral, PublicKeyToken=a63d62b0b38d89a9, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\pwiz_aux\msrc\utility\vendor_api\ABI\Clearcore2.Muni.dll</HintPath>
+    </Reference>
+    <Reference Include="Clearcore2.RawXYProcessing, Version=3.0.0.0, Culture=neutral, PublicKeyToken=2a79e0d8fd2e4eca, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\pwiz_aux\msrc\utility\vendor_api\ABI\Clearcore2.RawXYProcessing.dll</HintPath>
+    </Reference>
+    <Reference Include="Clearcore2.StructuredStorage, Version=3.0.0.0, Culture=neutral, PublicKeyToken=2a79e0d8fd2e4eca, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\pwiz_aux\msrc\utility\vendor_api\ABI\Clearcore2.StructuredStorage.dll</HintPath>
+    </Reference>
+    <Reference Include="Clearcore2.Utility, Version=3.0.0.0, Culture=neutral, PublicKeyToken=2a79e0d8fd2e4eca, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\pwiz_aux\msrc\utility\vendor_api\ABI\Clearcore2.Utility.dll</HintPath>
+    </Reference>
+    <Reference Include="Clearcore2.XmlHelpers, Version=1.0.0.0, Culture=neutral, PublicKeyToken=99a50506e791c9b8, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\pwiz_aux\msrc\utility\vendor_api\ABI\Clearcore2.XmlHelpers.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Practices.Unity, Version=2.1.505.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\pwiz_aux\msrc\utility\vendor_api\ABI\Microsoft.Practices.Unity.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Practices.Unity.Configuration, Version=2.1.505.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\pwiz_aux\msrc\utility\vendor_api\ABI\Microsoft.Practices.Unity.Configuration.dll</HintPath>
+    </Reference>
+    <Reference Include="OFX.Core, Version=1.0.0.0, Culture=neutral, PublicKeyToken=50cfc49bfcc958d0, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\pwiz_aux\msrc\utility\vendor_api\ABI\OFX.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="OFX.Core.Contracts, Version=1.0.0.0, Culture=neutral, PublicKeyToken=50cfc49bfcc958d0, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\pwiz_aux\msrc\utility\vendor_api\ABI\OFX.Core.Contracts.dll</HintPath>
+    </Reference>
+    <Reference Include="OFX.EventServices, Version=1.0.0.0, Culture=neutral, PublicKeyToken=50cfc49bfcc958d0, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\pwiz_aux\msrc\utility\vendor_api\ABI\OFX.EventServices.dll</HintPath>
+    </Reference>
+    <Reference Include="OFX.Logging">
+      <HintPath>..\..\pwiz_aux\msrc\utility\vendor_api\ABI\OFX.Logging.dll</HintPath>
+    </Reference>
+    <Reference Include="OFX.Security.Core">
+      <HintPath>..\..\pwiz_aux\msrc\utility\vendor_api\ABI\OFX.Security.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="protobuf-net, Version=2.0.0.668, Culture=neutral, PublicKeyToken=257b51d87d2e4d67, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\pwiz_aux\msrc\utility\vendor_api\ABI\protobuf-net.dll</HintPath>
+    </Reference>
     <Reference Include="pwiz_bindings_cli, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(PwizBuildPath)\obj\$(Platform)\$(Configuration)\pwiz_bindings_cli.dll</HintPath>
+    </Reference>
+    <Reference Include="Sciex.Clearcore.FMan, Version=3.0.0.0, Culture=neutral, PublicKeyToken=2a79e0d8fd2e4eca, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\pwiz_aux\msrc\utility\vendor_api\ABI\Sciex.Clearcore.FMan.dll</HintPath>
+    </Reference>
+    <Reference Include="Sciex.Data.SimpleTypes, Version=3.0.0.0, Culture=neutral, PublicKeyToken=2a79e0d8fd2e4eca, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\pwiz_aux\msrc\utility\vendor_api\ABI\Sciex.Data.SimpleTypes.dll</HintPath>
+    </Reference>
+    <Reference Include="Sciex.Data.XYData, Version=3.0.0.0, Culture=neutral, PublicKeyToken=2a79e0d8fd2e4eca, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\pwiz_aux\msrc\utility\vendor_api\ABI\Sciex.Data.XYData.dll</HintPath>
+    </Reference>
+    <Reference Include="Sciex.FMan, Version=3.0.0.0, Culture=neutral, PublicKeyToken=2a79e0d8fd2e4eca, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\pwiz_aux\msrc\utility\vendor_api\ABI\Sciex.FMan.dll</HintPath>
+    </Reference>
+    <Reference Include="Sciex.Wiff, Version=3.0.0.0, Culture=neutral, PublicKeyToken=2a79e0d8fd2e4eca, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\pwiz_aux\msrc\utility\vendor_api\ABI\Sciex.Wiff.dll</HintPath>
     </Reference>
     <Reference Include="STL_Containers, Version=1.0.0.0, Culture=neutral, PublicKeyToken=e1b14cb78f1752cf, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>

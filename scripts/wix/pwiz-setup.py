@@ -65,9 +65,9 @@ def contextMenuRegistries() :
     <Component Feature="MainFeature">\n \
        <Condition>INSTALL_MY_APPU_MENU</Condition>\n \
        <RegistryValue Root="HKCR" Key="*\shell\__MY_APP__\command" Value="&quot;__MY_PATH__&quot; &quot;%1&quot;" Type="string"/>\n \
-       <RegistryKey Root="HKCR" Key="*\shell\__MY_APP__\command" Action="createAndRemoveOnUninstall" />\n \
+       <RegistryKey Root="HKCR" Key="*\shell\__MY_APP__\command" />\n \
        <RegistryValue Root="HKCR" Key="Directory\shell\__MY_APP__\command" Value="&quot;__MY_PATH__&quot; &quot;%1&quot;" Type="string"/>\n \
-       <RegistryKey Root="HKCR" Key="Directory\shell\__MY_APP__\command"  Action="createAndRemoveOnUninstall" />\n \
+       <RegistryKey Root="HKCR" Key="Directory\shell\__MY_APP__\command" />\n \
     </Component>\n '
     registries = ""
     for appName in appNames :
