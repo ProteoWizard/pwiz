@@ -100,7 +100,7 @@ namespace pwiz.SkylineTestA.MSstats.Normalization
             SrmDocument testDocument = OpenTestDocument();
             var chromatograms = testDocument.Settings.MeasuredResults.Chromatograms;
             var expected = ReadDataProcessedRows(new StreamReader(OpenTestFile("BrudererSubsetEqualizeMedians_dataProcessedData.csv")));
-            NormalizationData normalizationData = NormalizationData.GetNormalizationData(testDocument, false);
+            NormalizationData normalizationData = NormalizationData.GetNormalizationData(testDocument, false, null);
             var mediansByReplicateFileIndex = chromatograms.ToDictionary(chrom=>chrom.MSDataFileInfos.First().FileIndex,
                 chrom=>normalizationData.GetMedian(chrom.MSDataFileInfos.First().FileId, IsotopeLabelType.light).Value);
             double medianMedian = new Statistics(mediansByReplicateFileIndex.Values).Median();

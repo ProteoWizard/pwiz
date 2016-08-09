@@ -126,7 +126,7 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnOK.Location" type="System.Drawing.Point, System.Drawing">
-    <value>493, 6</value>
+    <value>342, 6</value>
   </data>
   <data name="btnOK.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -157,7 +157,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>574, 6</value>
+    <value>423, 6</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -179,6 +179,81 @@
   </data>
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
     <value>1</value>
+  </data>
+  <data name="groupBoxQValueCutoff.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="tbxQValueCutoff.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 58</value>
+  </data>
+  <data name="tbxQValueCutoff.Size" type="System.Drawing.Size, System.Drawing">
+    <value>100, 20</value>
+  </data>
+  <data name="tbxQValueCutoff.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;tbxQValueCutoff.Name" xml:space="preserve">
+    <value>tbxQValueCutoff</value>
+  </data>
+  <data name="&gt;&gt;tbxQValueCutoff.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tbxQValueCutoff.Parent" xml:space="preserve">
+    <value>groupBoxQValueCutoff</value>
+  </data>
+  <data name="&gt;&gt;tbxQValueCutoff.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="lblQValueCutoff.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="lblQValueCutoff.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 16</value>
+  </data>
+  <data name="lblQValueCutoff.Size" type="System.Drawing.Size, System.Drawing">
+    <value>206, 39</value>
+  </data>
+  <data name="lblQValueCutoff.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="lblQValueCutoff.Text" xml:space="preserve">
+    <value>Treat peaks with Detection Q-Value greater than cutoff as missing.</value>
+  </data>
+  <data name="&gt;&gt;lblQValueCutoff.Name" xml:space="preserve">
+    <value>lblQValueCutoff</value>
+  </data>
+  <data name="&gt;&gt;lblQValueCutoff.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblQValueCutoff.Parent" xml:space="preserve">
+    <value>groupBoxQValueCutoff</value>
+  </data>
+  <data name="&gt;&gt;lblQValueCutoff.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="groupBoxQValueCutoff.Location" type="System.Drawing.Point, System.Drawing">
+    <value>168, 247</value>
+  </data>
+  <data name="groupBoxQValueCutoff.Size" type="System.Drawing.Size, System.Drawing">
+    <value>228, 84</value>
+  </data>
+  <data name="groupBoxQValueCutoff.TabIndex" type="System.Int32, mscorlib">
+    <value>51</value>
+  </data>
+  <data name="groupBoxQValueCutoff.Text" xml:space="preserve">
+    <value>Q-value cutoff</value>
+  </data>
+  <data name="&gt;&gt;groupBoxQValueCutoff.Name" xml:space="preserve">
+    <value>groupBoxQValueCutoff</value>
+  </data>
+  <data name="&gt;&gt;groupBoxQValueCutoff.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;groupBoxQValueCutoff.Parent" xml:space="preserve">
+    <value>panelMain</value>
+  </data>
+  <data name="&gt;&gt;groupBoxQValueCutoff.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <data name="lblSummaryMethod.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -208,13 +283,16 @@
     <value>panelMain</value>
   </data>
   <data name="&gt;&gt;lblSummaryMethod.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
+  </data>
+  <data name="comboSummaryMethod.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
   </data>
   <data name="comboSummaryMethod.Location" type="System.Drawing.Point, System.Drawing">
     <value>11, 220</value>
   </data>
   <data name="comboSummaryMethod.Size" type="System.Drawing.Size, System.Drawing">
-    <value>176, 21</value>
+    <value>487, 21</value>
   </data>
   <data name="comboSummaryMethod.TabIndex" type="System.Int32, mscorlib">
     <value>47</value>
@@ -229,7 +307,37 @@
     <value>panelMain</value>
   </data>
   <data name="&gt;&gt;comboSummaryMethod.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
+  </data>
+  <data name="cbxUseZeroForMissingPeaks.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbxUseZeroForMissingPeaks.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="cbxUseZeroForMissingPeaks.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 247</value>
+  </data>
+  <data name="cbxUseZeroForMissingPeaks.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 17</value>
+  </data>
+  <data name="cbxUseZeroForMissingPeaks.TabIndex" type="System.Int32, mscorlib">
+    <value>46</value>
+  </data>
+  <data name="cbxUseZeroForMissingPeaks.Text" xml:space="preserve">
+    <value>Use zero for missing peaks</value>
+  </data>
+  <data name="&gt;&gt;cbxUseZeroForMissingPeaks.Name" xml:space="preserve">
+    <value>cbxUseZeroForMissingPeaks</value>
+  </data>
+  <data name="&gt;&gt;cbxUseZeroForMissingPeaks.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbxUseZeroForMissingPeaks.Parent" xml:space="preserve">
+    <value>panelMain</value>
+  </data>
+  <data name="&gt;&gt;cbxUseZeroForMissingPeaks.ZOrder" xml:space="preserve">
+    <value>3</value>
   </data>
   <data name="lblControlAnnotation.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -259,7 +367,7 @@
     <value>panelMain</value>
   </data>
   <data name="&gt;&gt;lblControlAnnotation.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>4</value>
   </data>
   <data name="comboControlAnnotation.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -268,7 +376,7 @@
     <value>12, 19</value>
   </data>
   <data name="comboControlAnnotation.Size" type="System.Drawing.Size, System.Drawing">
-    <value>637, 21</value>
+    <value>486, 21</value>
   </data>
   <data name="comboControlAnnotation.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -283,7 +391,7 @@
     <value>panelMain</value>
   </data>
   <data name="&gt;&gt;comboControlAnnotation.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>5</value>
   </data>
   <data name="groupBoxScope.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -355,7 +463,7 @@
     <value>3, 16</value>
   </data>
   <data name="flowLayoutPanel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>530, 28</value>
+    <value>379, 28</value>
   </data>
   <data name="flowLayoutPanel1.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -373,10 +481,10 @@
     <value>0</value>
   </data>
   <data name="groupBoxScope.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 314</value>
+    <value>11, 337</value>
   </data>
   <data name="groupBoxScope.Size" type="System.Drawing.Size, System.Drawing">
-    <value>536, 47</value>
+    <value>385, 47</value>
   </data>
   <data name="groupBoxScope.TabIndex" type="System.Int32, mscorlib">
     <value>15</value>
@@ -394,37 +502,7 @@
     <value>panelMain</value>
   </data>
   <data name="&gt;&gt;groupBoxScope.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="cbxUseZeroForMissingPeaks.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="cbxUseZeroForMissingPeaks.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="cbxUseZeroForMissingPeaks.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 247</value>
-  </data>
-  <data name="cbxUseZeroForMissingPeaks.Size" type="System.Drawing.Size, System.Drawing">
-    <value>152, 17</value>
-  </data>
-  <data name="cbxUseZeroForMissingPeaks.TabIndex" type="System.Int32, mscorlib">
-    <value>46</value>
-  </data>
-  <data name="cbxUseZeroForMissingPeaks.Text" xml:space="preserve">
-    <value>Use zero for missing peaks</value>
-  </data>
-  <data name="&gt;&gt;cbxUseZeroForMissingPeaks.Name" xml:space="preserve">
-    <value>cbxUseZeroForMissingPeaks</value>
-  </data>
-  <data name="&gt;&gt;cbxUseZeroForMissingPeaks.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;cbxUseZeroForMissingPeaks.Parent" xml:space="preserve">
-    <value>panelMain</value>
-  </data>
-  <data name="&gt;&gt;cbxUseZeroForMissingPeaks.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>6</value>
   </data>
   <data name="lblPercent.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -433,7 +511,7 @@
     <value>NoControl</value>
   </data>
   <data name="lblPercent.Location" type="System.Drawing.Point, System.Drawing">
-    <value>106, 287</value>
+    <value>107, 298</value>
   </data>
   <data name="lblPercent.Size" type="System.Drawing.Size, System.Drawing">
     <value>15, 13</value>
@@ -454,7 +532,7 @@
     <value>panelMain</value>
   </data>
   <data name="&gt;&gt;lblPercent.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>7</value>
   </data>
   <data name="comboControlValue.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -463,7 +541,7 @@
     <value>12, 59</value>
   </data>
   <data name="comboControlValue.Size" type="System.Drawing.Size, System.Drawing">
-    <value>637, 21</value>
+    <value>486, 21</value>
   </data>
   <data name="comboControlValue.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
@@ -478,10 +556,10 @@
     <value>panelMain</value>
   </data>
   <data name="&gt;&gt;comboControlValue.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>8</value>
   </data>
   <data name="tbxConfidenceLevel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>10, 284</value>
+    <value>11, 295</value>
   </data>
   <data name="tbxConfidenceLevel.Size" type="System.Drawing.Size, System.Drawing">
     <value>90, 20</value>
@@ -499,13 +577,13 @@
     <value>panelMain</value>
   </data>
   <data name="&gt;&gt;tbxConfidenceLevel.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>9</value>
   </data>
   <data name="msStatsLogoForm1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
   <data name="msStatsLogoForm1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>557, 215</value>
+    <value>402, 275</value>
   </data>
   <data name="msStatsLogoForm1.Size" type="System.Drawing.Size, System.Drawing">
     <value>106, 106</value>
@@ -523,7 +601,7 @@
     <value>panelMain</value>
   </data>
   <data name="&gt;&gt;msStatsLogoForm1.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>10</value>
   </data>
   <data name="lblConfidenceLevel.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -532,7 +610,7 @@
     <value>NoControl</value>
   </data>
   <data name="lblConfidenceLevel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 267</value>
+    <value>12, 278</value>
   </data>
   <data name="lblConfidenceLevel.Size" type="System.Drawing.Size, System.Drawing">
     <value>89, 13</value>
@@ -553,7 +631,7 @@
     <value>panelMain</value>
   </data>
   <data name="&gt;&gt;lblConfidenceLevel.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>11</value>
   </data>
   <data name="lblControlValue.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -583,7 +661,7 @@
     <value>panelMain</value>
   </data>
   <data name="&gt;&gt;lblControlValue.ZOrder" xml:space="preserve">
-    <value>11</value>
+    <value>12</value>
   </data>
   <data name="lblCompareAgainst.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -613,7 +691,7 @@
     <value>panelMain</value>
   </data>
   <data name="&gt;&gt;lblCompareAgainst.ZOrder" xml:space="preserve">
-    <value>12</value>
+    <value>13</value>
   </data>
   <data name="comboCaseValue.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -622,7 +700,7 @@
     <value>12, 99</value>
   </data>
   <data name="comboCaseValue.Size" type="System.Drawing.Size, System.Drawing">
-    <value>637, 21</value>
+    <value>486, 21</value>
   </data>
   <data name="comboCaseValue.TabIndex" type="System.Int32, mscorlib">
     <value>8</value>
@@ -637,7 +715,7 @@
     <value>panelMain</value>
   </data>
   <data name="&gt;&gt;comboCaseValue.ZOrder" xml:space="preserve">
-    <value>13</value>
+    <value>14</value>
   </data>
   <data name="comboNormalizationMethod.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -661,7 +739,7 @@
     <value>12, 179</value>
   </data>
   <data name="comboNormalizationMethod.Size" type="System.Drawing.Size, System.Drawing">
-    <value>637, 21</value>
+    <value>486, 21</value>
   </data>
   <data name="comboNormalizationMethod.TabIndex" type="System.Int32, mscorlib">
     <value>12</value>
@@ -676,7 +754,7 @@
     <value>panelMain</value>
   </data>
   <data name="&gt;&gt;comboNormalizationMethod.ZOrder" xml:space="preserve">
-    <value>14</value>
+    <value>15</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -706,7 +784,7 @@
     <value>panelMain</value>
   </data>
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
-    <value>15</value>
+    <value>16</value>
   </data>
   <data name="comboIdentityAnnotation.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -715,7 +793,7 @@
     <value>12, 139</value>
   </data>
   <data name="comboIdentityAnnotation.Size" type="System.Drawing.Size, System.Drawing">
-    <value>637, 21</value>
+    <value>486, 21</value>
   </data>
   <data name="comboIdentityAnnotation.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>
@@ -730,7 +808,7 @@
     <value>panelMain</value>
   </data>
   <data name="&gt;&gt;comboIdentityAnnotation.ZOrder" xml:space="preserve">
-    <value>16</value>
+    <value>17</value>
   </data>
   <data name="lblNormalizationMethod.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -760,7 +838,7 @@
     <value>panelMain</value>
   </data>
   <data name="&gt;&gt;lblNormalizationMethod.ZOrder" xml:space="preserve">
-    <value>17</value>
+    <value>18</value>
   </data>
   <data name="panelMain.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Top</value>
@@ -769,7 +847,7 @@
     <value>0, 59</value>
   </data>
   <data name="panelMain.Size" type="System.Drawing.Size, System.Drawing">
-    <value>666, 375</value>
+    <value>515, 402</value>
   </data>
   <data name="panelMain.TabIndex" type="System.Int32, mscorlib">
     <value>48</value>
@@ -823,7 +901,7 @@
     <value>12, 25</value>
   </data>
   <data name="tbxName.Size" type="System.Drawing.Size, System.Drawing">
-    <value>556, 20</value>
+    <value>405, 20</value>
   </data>
   <data name="tbxName.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -847,7 +925,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnPreview.Location" type="System.Drawing.Point, System.Drawing">
-    <value>574, 23</value>
+    <value>423, 23</value>
   </data>
   <data name="btnPreview.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -877,7 +955,7 @@
     <value>0, 0</value>
   </data>
   <data name="panelName.Size" type="System.Drawing.Size, System.Drawing">
-    <value>666, 59</value>
+    <value>515, 59</value>
   </data>
   <data name="panelName.TabIndex" type="System.Int32, mscorlib">
     <value>47</value>
@@ -898,10 +976,10 @@
     <value>Bottom</value>
   </data>
   <data name="panelButtons.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 440</value>
+    <value>0, 462</value>
   </data>
   <data name="panelButtons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>666, 32</value>
+    <value>515, 32</value>
   </data>
   <data name="panelButtons.TabIndex" type="System.Int32, mscorlib">
     <value>49</value>
@@ -925,7 +1003,7 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>666, 472</value>
+    <value>515, 494</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>

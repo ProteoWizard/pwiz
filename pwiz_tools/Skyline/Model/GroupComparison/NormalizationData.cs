@@ -40,7 +40,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             _data = data;
         }
 
-        public static NormalizationData GetNormalizationData(SrmDocument document, bool treatMissingValuesAsZero)
+        public static NormalizationData GetNormalizationData(SrmDocument document, bool treatMissingValuesAsZero, double? qValueCutoff)
         {
             var intensitiesByFileAndLabelType = new Dictionary<DataKey, List<double>>();
             foreach (var peptideGroup in document.MoleculeGroups)
@@ -58,6 +58,8 @@ namespace pwiz.Skyline.Model.GroupComparison
                     }
                     foreach (var transitionGroup in peptide.TransitionGroups)
                     {
+                        Dictionary<DataKey, double> ms1Areas = new Dictionary<DataKey, double>();
+
                         foreach (var transition in transitionGroup.Transitions)
                         {
                             if (!transition.HasResults)
@@ -77,32 +79,46 @@ namespace pwiz.Skyline.Model.GroupComparison
                                     {
                                         continue;
                                     }
-                                    double? area = null;
-                                    if (treatMissingValuesAsZero && chromInfo.IsEmpty)
-                                    {
-                                        area = 0;
-                                    }
+                                    double? area = PeptideQuantifier.GetArea(treatMissingValuesAsZero, qValueCutoff,
+                                        transitionGroup, transition, iResult, chromInfo);
                                     if (!area.HasValue)
                                     {
-                                        if (chromInfo.IsEmpty || chromInfo.IsTruncated.GetValueOrDefault())
-                                        {
-                                            continue;
-                                        }
-                                        area = chromInfo.Area;
+                                        continue;
                                     }
-                                    List<double> fileLabelTypeIntensities;
+
                                     var key = new DataKey(chromInfo.FileId, transitionGroup.TransitionGroup.LabelType);
-                                    if (!intensitiesByFileAndLabelType.TryGetValue(key, out fileLabelTypeIntensities))
+                                    if (transition.IsMs1)
                                     {
-                                        fileLabelTypeIntensities = new List<double>();
-                                        intensitiesByFileAndLabelType.Add(key, fileLabelTypeIntensities);
+                                        double totalArea;
+                                        ms1Areas.TryGetValue(key, out totalArea);
+                                        totalArea += area.Value;
+                                        ms1Areas[key] = totalArea;
                                     }
-                                    // The logarithm of the area is stored instead of the area itself.
-                                    // This has a tiny impact on the way the median is calculated if there are 
-                                    // an even number of values
-                                    fileLabelTypeIntensities.Add(Math.Log(Math.Max(area.Value, 1), 2.0));
+                                    else
+                                    {
+                                        List<double> fileLabelTypeIntensities;
+                                        if (!intensitiesByFileAndLabelType.TryGetValue(key, out fileLabelTypeIntensities))
+                                        {
+                                            fileLabelTypeIntensities = new List<double>();
+                                            intensitiesByFileAndLabelType.Add(key, fileLabelTypeIntensities);
+                                        }
+                                        // The logarithm of the area is stored instead of the area itself.
+                                        // This has a tiny impact on the way the median is calculated if there are 
+                                        // an even number of values
+                                        fileLabelTypeIntensities.Add(Math.Log(Math.Max(area.Value, 1), 2.0));
+                                    }
                                 }
                             }
+                        }
+                        foreach (var entry in ms1Areas)
+                        {
+                            List<double> fileLabelTypeIntensities;
+                            if (!intensitiesByFileAndLabelType.TryGetValue(entry.Key, out fileLabelTypeIntensities))
+                            {
+                                fileLabelTypeIntensities = new List<double>();
+                                intensitiesByFileAndLabelType.Add(entry.Key, fileLabelTypeIntensities);
+                            }
+                            fileLabelTypeIntensities.Add(Math.Log(Math.Max(entry.Value, 1), 2.0));
                         }
                     }
                 }

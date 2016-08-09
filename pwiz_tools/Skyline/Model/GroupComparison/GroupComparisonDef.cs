@@ -133,6 +133,13 @@ namespace pwiz.Skyline.Model.GroupComparison
             return ChangeProp(ImClone(this), im => im.UseZeroForMissingPeaks = value);
         }
 
+        public double? QValueCutoff { get; private set; }
+
+        public GroupComparisonDef ChangeQValueCutoff(double? qValueCutoff)
+        {
+            return ChangeProp(ImClone(this), im => im.QValueCutoff = qValueCutoff);
+        }
+
         public GroupIdentifier GetGroupIdentifier(SrmSettings settings, ChromatogramSet chromatogramSet)
         {
             AnnotationDef annotationDef =
@@ -175,6 +182,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             confidence_level,
             per_protein,
             use_zero_for_missing_peaks,
+            q_value_cutoff,
         }
         private GroupComparisonDef()
         {
@@ -195,6 +203,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             ConfidenceLevelTimes100 = reader.GetDoubleAttribute(ATTR.confidence_level, 95);
             PerProtein = reader.GetBoolAttribute(ATTR.per_protein, false);
             UseZeroForMissingPeaks = reader.GetBoolAttribute(ATTR.use_zero_for_missing_peaks, false);
+            QValueCutoff = reader.GetNullableDoubleAttribute(ATTR.q_value_cutoff);
             reader.Read();
         }
 
@@ -213,6 +222,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             writer.WriteAttribute(ATTR.confidence_level, ConfidenceLevelTimes100);
             writer.WriteAttribute(ATTR.per_protein, PerProtein, false);
             writer.WriteAttribute(ATTR.use_zero_for_missing_peaks, UseZeroForMissingPeaks, false);
+            writer.WriteAttributeNullable(ATTR.q_value_cutoff, QValueCutoff);
         }
 
         public static GroupComparisonDef Deserialize(XmlReader reader)
@@ -236,7 +246,8 @@ namespace pwiz.Skyline.Model.GroupComparison
                    Equals(SummarizationMethod, other.SummarizationMethod) &&
                    Equals(ConfidenceLevel, other.ConfidenceLevel) && 
                    Equals(PerProtein, other.PerProtein) &&
-                   Equals(UseZeroForMissingPeaks, other.UseZeroForMissingPeaks);
+                   Equals(UseZeroForMissingPeaks, other.UseZeroForMissingPeaks) &&
+                   Equals(QValueCutoff, other.QValueCutoff);
         }
 
         public override bool Equals(object obj)
@@ -263,6 +274,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                 hashCode = (hashCode*397) ^ ConfidenceLevel.GetHashCode();
                 hashCode = (hashCode*397) ^ PerProtein.GetHashCode();
                 hashCode = (hashCode*397) ^ UseZeroForMissingPeaks.GetHashCode();
+                hashCode = (hashCode*397) ^ QValueCutoff.GetHashCode();
                 return hashCode;
             }
         }

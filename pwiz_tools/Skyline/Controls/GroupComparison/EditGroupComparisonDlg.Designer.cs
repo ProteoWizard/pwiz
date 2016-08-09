@@ -32,15 +32,18 @@
             this.btnOK = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.panelMain = new System.Windows.Forms.Panel();
+            this.groupBoxQValueCutoff = new System.Windows.Forms.GroupBox();
+            this.tbxQValueCutoff = new System.Windows.Forms.TextBox();
+            this.lblQValueCutoff = new System.Windows.Forms.Label();
             this.lblSummaryMethod = new System.Windows.Forms.Label();
             this.comboSummaryMethod = new System.Windows.Forms.ComboBox();
+            this.cbxUseZeroForMissingPeaks = new System.Windows.Forms.CheckBox();
             this.lblControlAnnotation = new System.Windows.Forms.Label();
             this.comboControlAnnotation = new System.Windows.Forms.ComboBox();
             this.groupBoxScope = new System.Windows.Forms.GroupBox();
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
             this.radioScopePeptide = new System.Windows.Forms.RadioButton();
             this.radioScopeProtein = new System.Windows.Forms.RadioButton();
-            this.cbxUseZeroForMissingPeaks = new System.Windows.Forms.CheckBox();
             this.lblPercent = new System.Windows.Forms.Label();
             this.comboControlValue = new System.Windows.Forms.ComboBox();
             this.tbxConfidenceLevel = new System.Windows.Forms.TextBox();
@@ -59,6 +62,7 @@
             this.panelName = new System.Windows.Forms.Panel();
             this.panelButtons = new System.Windows.Forms.Panel();
             this.panelMain.SuspendLayout();
+            this.groupBoxQValueCutoff.SuspendLayout();
             this.groupBoxScope.SuspendLayout();
             this.flowLayoutPanel1.SuspendLayout();
             this.panelName.SuspendLayout();
@@ -81,12 +85,13 @@
             // 
             // panelMain
             // 
+            this.panelMain.Controls.Add(this.groupBoxQValueCutoff);
             this.panelMain.Controls.Add(this.lblSummaryMethod);
             this.panelMain.Controls.Add(this.comboSummaryMethod);
+            this.panelMain.Controls.Add(this.cbxUseZeroForMissingPeaks);
             this.panelMain.Controls.Add(this.lblControlAnnotation);
             this.panelMain.Controls.Add(this.comboControlAnnotation);
             this.panelMain.Controls.Add(this.groupBoxScope);
-            this.panelMain.Controls.Add(this.cbxUseZeroForMissingPeaks);
             this.panelMain.Controls.Add(this.lblPercent);
             this.panelMain.Controls.Add(this.comboControlValue);
             this.panelMain.Controls.Add(this.tbxConfidenceLevel);
@@ -102,6 +107,26 @@
             resources.ApplyResources(this.panelMain, "panelMain");
             this.panelMain.Name = "panelMain";
             // 
+            // groupBoxQValueCutoff
+            // 
+            resources.ApplyResources(this.groupBoxQValueCutoff, "groupBoxQValueCutoff");
+            this.groupBoxQValueCutoff.Controls.Add(this.tbxQValueCutoff);
+            this.groupBoxQValueCutoff.Controls.Add(this.lblQValueCutoff);
+            this.groupBoxQValueCutoff.Name = "groupBoxQValueCutoff";
+            this.groupBoxQValueCutoff.TabStop = false;
+            // 
+            // tbxQValueCutoff
+            // 
+            resources.ApplyResources(this.tbxQValueCutoff, "tbxQValueCutoff");
+            this.tbxQValueCutoff.Name = "tbxQValueCutoff";
+            this.tbxQValueCutoff.TextChanged += new System.EventHandler(this.tbxQValueCutoff_TextChanged);
+            // 
+            // lblQValueCutoff
+            // 
+            resources.ApplyResources(this.lblQValueCutoff, "lblQValueCutoff");
+            this.lblQValueCutoff.AutoEllipsis = true;
+            this.lblQValueCutoff.Name = "lblQValueCutoff";
+            // 
             // lblSummaryMethod
             // 
             resources.ApplyResources(this.lblSummaryMethod, "lblSummaryMethod");
@@ -109,11 +134,18 @@
             // 
             // comboSummaryMethod
             // 
+            resources.ApplyResources(this.comboSummaryMethod, "comboSummaryMethod");
             this.comboSummaryMethod.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboSummaryMethod.FormattingEnabled = true;
-            resources.ApplyResources(this.comboSummaryMethod, "comboSummaryMethod");
             this.comboSummaryMethod.Name = "comboSummaryMethod";
             this.comboSummaryMethod.SelectedIndexChanged += new System.EventHandler(this.comboSummaryMethod_SelectedIndexChanged);
+            // 
+            // cbxUseZeroForMissingPeaks
+            // 
+            resources.ApplyResources(this.cbxUseZeroForMissingPeaks, "cbxUseZeroForMissingPeaks");
+            this.cbxUseZeroForMissingPeaks.Name = "cbxUseZeroForMissingPeaks";
+            this.cbxUseZeroForMissingPeaks.UseVisualStyleBackColor = true;
+            this.cbxUseZeroForMissingPeaks.CheckedChanged += new System.EventHandler(this.cbxTreatMissingAsZero_CheckedChanged);
             // 
             // lblControlAnnotation
             // 
@@ -157,13 +189,6 @@
             this.radioScopeProtein.TabStop = true;
             this.radioScopeProtein.UseVisualStyleBackColor = true;
             this.radioScopeProtein.CheckedChanged += new System.EventHandler(this.radioScope_CheckedChanged);
-            // 
-            // cbxUseZeroForMissingPeaks
-            // 
-            resources.ApplyResources(this.cbxUseZeroForMissingPeaks, "cbxUseZeroForMissingPeaks");
-            this.cbxUseZeroForMissingPeaks.Name = "cbxUseZeroForMissingPeaks";
-            this.cbxUseZeroForMissingPeaks.UseVisualStyleBackColor = true;
-            this.cbxUseZeroForMissingPeaks.CheckedChanged += new System.EventHandler(this.cbxTreatMissingAsZero_CheckedChanged);
             // 
             // lblPercent
             // 
@@ -293,6 +318,8 @@
             this.ShowInTaskbar = false;
             this.panelMain.ResumeLayout(false);
             this.panelMain.PerformLayout();
+            this.groupBoxQValueCutoff.ResumeLayout(false);
+            this.groupBoxQValueCutoff.PerformLayout();
             this.groupBoxScope.ResumeLayout(false);
             this.flowLayoutPanel1.ResumeLayout(false);
             this.flowLayoutPanel1.PerformLayout();
@@ -334,5 +361,8 @@
         private System.Windows.Forms.Panel panelButtons;
         private System.Windows.Forms.ComboBox comboSummaryMethod;
         private System.Windows.Forms.Label lblSummaryMethod;
+        private System.Windows.Forms.TextBox tbxQValueCutoff;
+        private System.Windows.Forms.Label lblQValueCutoff;
+        private System.Windows.Forms.GroupBox groupBoxQValueCutoff;
     }
 }

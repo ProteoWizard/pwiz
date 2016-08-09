@@ -37,6 +37,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         public NormalizationMethod NormalizationMethod { get {return QuantificationSettings.NormalizationMethod;} }
         public ICollection<IsotopeLabelType> MeasuredLabelTypes { get; set; }
         public NormalizationData NormalizationData { get; set; }
+        public double? QValueCutoff { get; set; }
 
         public IsotopeLabelType RatioLabelType
         {
@@ -143,18 +144,10 @@ namespace pwiz.Skyline.Model.GroupComparison
             {
                 return null;
             }
-            double? normalizedArea = null;
-            if (treatMissingAsZero && chromInfo.IsEmpty)
-            {
-                normalizedArea = 0;
-            }
+            double? normalizedArea = GetArea(treatMissingAsZero, QValueCutoff, transitionGroup, transition, replicateIndex, chromInfo);
             if (!normalizedArea.HasValue)
             {
-                if (chromInfo.IsEmpty)
-                {
-                    return null;
-                }
-                normalizedArea = chromInfo.Area;
+                return null;
             }
 
             double denominator = 1.0;
@@ -295,30 +288,43 @@ namespace pwiz.Skyline.Model.GroupComparison
             public double Denominator { get; private set; }
         }
 
-        public static bool HasFalseQValue(TransitionGroupDocNode transitionGroupDocNode, int replicateIndex,
-            ChromFileInfoId fileId)
+        public static double? GetArea(bool treatMissingAsZero, double? qValueCutoff, TransitionGroupDocNode transitionGroup,
+            TransitionDocNode transition, int replicateIndex, TransitionChromInfo chromInfo)
         {
-            if (null == transitionGroupDocNode.Results)
+            if (treatMissingAsZero && chromInfo.IsEmpty)
             {
-                return false;
+                return 0;
             }
-            var chromInfoList = transitionGroupDocNode.Results[replicateIndex];
-            if (null == chromInfoList)
+            if (chromInfo.IsEmpty || chromInfo.IsTruncated.GetValueOrDefault())
             {
-                return false;
+                return null;
             }
-            var chromInfo = chromInfoList.FirstOrDefault(ci => null != ci && ReferenceEquals(ci.FileId, fileId));
-            if (chromInfo == null)
+            if (qValueCutoff.HasValue)
             {
-                return false;
+                TransitionGroupChromInfo transitionGroupChromInfo = FindTransitionGroupChromInfo(transitionGroup,
+                    replicateIndex, chromInfo.FileId);
+                if (transitionGroupChromInfo != null && transitionGroupChromInfo.QValue > qValueCutoff.Value)
+                {
+                    return treatMissingAsZero ? 0 : default(double?);
+                }
             }
-            return HasFalseQValue(chromInfo);
+            return chromInfo.Area;
         }
-        
-        public static bool HasFalseQValue(TransitionGroupChromInfo transitionGroupChromInfo)
+
+        private static TransitionGroupChromInfo FindTransitionGroupChromInfo(TransitionGroupDocNode transitionGroup,
+            int replicateIndex, ChromFileInfoId chromFileInfoId)
         {
-            // TODO: Make it possible to set the cut-off
-            return transitionGroupChromInfo.QValue > .01;
+            if (transitionGroup.Results == null || transitionGroup.Results.Count <= replicateIndex)
+            {
+                return null;
+            }
+            var chromInfoList = transitionGroup.Results[replicateIndex];
+            if (chromInfoList == null)
+            {
+                return null;
+            }
+            return chromInfoList.FirstOrDefault(
+                chromInfo => chromInfo != null && ReferenceEquals(chromInfo.FileId, chromFileInfoId));
         }
     }
 }

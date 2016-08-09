@@ -285,7 +285,8 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         private IList<RunAbundance> SummarizeDataRowsWithMedianPolish(IList<DataRowDetails> dataRows)
         {
-            IList<IGrouping<IdentityPath, DataRowDetails>> dataRowsByFeature = dataRows.ToLookup(row => row.IdentityPath)
+            IList<IGrouping<IdentityPath, DataRowDetails>> dataRowsByFeature = 
+                SumMs1Transitions(dataRows).ToLookup(row => row.IdentityPath)
                 .Where(IncludeFeatureForMedianPolish)
                 .ToArray();
 #pragma warning disable 162
@@ -352,6 +353,48 @@ namespace pwiz.Skyline.Model.GroupComparison
                 });
             }
             return runAbundances;
+        }
+
+        private IList<DataRowDetails> SumMs1Transitions(IList<DataRowDetails> dataRows)
+        {
+            var dataRowsByReplicateIndexAndTransitionGroup =
+                dataRows.ToLookup(row =>
+                    new Tuple<int, IdentityPath>(row.ReplicateIndex,
+                        row.IdentityPath.GetPathTo((int)SrmDocument.Level.TransitionGroups)));
+            var newDataRows = new List<DataRowDetails>();
+            foreach (var grouping in dataRowsByReplicateIndexAndTransitionGroup)
+            {
+                DataRowDetails ms1DataRow = null;
+                var transitionGroup = (TransitionGroupDocNode) SrmDocument.FindNode(grouping.Key.Item2);
+                foreach (var dataRow in grouping)
+                {
+                    var transition = (TransitionDocNode) transitionGroup.FindNode(dataRow.IdentityPath.Child);
+                    if (transition.IsMs1)
+                    {
+                        if (ms1DataRow == null)
+                        {
+                            ms1DataRow = new DataRowDetails()
+                            {
+                                IdentityPath = grouping.Key.Item2,
+                                BioReplicate = dataRow.BioReplicate,
+                                Control = dataRow.Control,
+                                ReplicateIndex = dataRow.ReplicateIndex
+                            };
+                        }
+                        ms1DataRow.Intensity += dataRow.Intensity;
+                        ms1DataRow.Denominator += dataRow.Denominator;
+                    }
+                    else
+                    {
+                        newDataRows.Add(dataRow);
+                    }
+                }
+                if (ms1DataRow != null)
+                {
+                    newDataRows.Add(ms1DataRow);
+                }
+            }
+            return newDataRows;
         }
 
         /// <summary>
@@ -425,7 +468,11 @@ namespace pwiz.Skyline.Model.GroupComparison
             {
                 return null;
             }
-            return _normalizationData = _normalizationData ?? NormalizationData.GetNormalizationData(SrmDocument, ComparisonDef.UseZeroForMissingPeaks);
+            if (_normalizationData == null)
+            {
+                _normalizationData = NormalizationData.GetNormalizationData(SrmDocument, ComparisonDef.UseZeroForMissingPeaks, ComparisonDef.QValueCutoff);
+            }
+            return _normalizationData;
         }
 
         public struct RunAbundance

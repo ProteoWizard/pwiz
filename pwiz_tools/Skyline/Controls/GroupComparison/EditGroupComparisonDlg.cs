@@ -47,6 +47,10 @@ namespace pwiz.Skyline.Controls.GroupComparison
             {
                 btnPreview.Visible = false;
             }
+            if (documentContainer != null && !HasScoringModel(documentContainer.Document))
+            {
+                groupBoxQValueCutoff.Visible = false;
+            }
             _pushChangesToDocument = false;
             tbxName.Text = groupComparisonDef.Name ?? string.Empty;
         }
@@ -112,6 +116,22 @@ namespace pwiz.Skyline.Controls.GroupComparison
             radioScopePeptide.Checked = !groupComparisonDef.PerProtein;
             cbxUseZeroForMissingPeaks.Checked = groupComparisonDef.UseZeroForMissingPeaks;
             cbxUseZeroForMissingPeaks.Visible = GroupComparisonModel.Document.Settings.PeptideSettings.Integration.PeakScoringModel != null;
+            if (GroupComparisonDef.QValueCutoff.HasValue)
+            {
+                tbxQValueCutoff.Text = groupComparisonDef.QValueCutoff.Value.ToString(CultureInfo.CurrentCulture);
+                groupBoxQValueCutoff.Visible = true;
+            }
+            else
+            {
+                tbxQValueCutoff.Text = "";
+            }
+        }
+
+        private bool HasScoringModel(SrmDocument srmDocument)
+        {
+            // There might be some way to quickly look at a document and see whether it has any q-values,
+            // but for now we show the "Q-value cutoff" checkbox for all documents.
+            return true;
         }
 
         private void btnOK_Click(object sender, EventArgs e)
@@ -337,6 +357,30 @@ namespace pwiz.Skyline.Controls.GroupComparison
             }
             GroupComparisonDef = GroupComparisonDef.ChangeConfidenceLevelTimes100(confidenceLevel);
         }
+
+
+        private void tbxQValueCutoff_TextChanged(object sender, EventArgs e)
+        {
+            if (_inChangeSettings)
+            {
+                return;
+            }
+            if (string.IsNullOrEmpty(tbxQValueCutoff.Text.Trim()))
+            {
+                GroupComparisonDef = GroupComparisonDef.ChangeQValueCutoff(null);
+            }
+            else
+            {
+                MessageBoxHelper helper = new MessageBoxHelper(this, false);
+                double qValueCutoff;
+                if (!helper.ValidateDecimalTextBox(tbxQValueCutoff, 0, 1, out qValueCutoff))
+                {
+                    return;
+                }
+                GroupComparisonDef = GroupComparisonDef.ChangeQValueCutoff(qValueCutoff);
+            }
+        }
+
 
         protected void cbxTreatMissingAsZero_CheckedChanged(object sender, EventArgs e)
         {

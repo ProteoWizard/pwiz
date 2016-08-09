@@ -57,7 +57,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         {
             return new[]
             {
-                AVERAGING, MEDIANPOLISH,
+                AVERAGING, MEDIANPOLISH
             };
         }
 
