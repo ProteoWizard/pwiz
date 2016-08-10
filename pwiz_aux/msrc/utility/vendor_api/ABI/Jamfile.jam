@@ -201,6 +201,4 @@ install install_pwiz_vendor_api_abi_dlls
 install install_pwiz_vendor_api_abi_sqlite
     : : <conditional>@install-sqlite # separate rule because of <install-source-root>
     ;
-
-alias install_pwiz_vendor_api_abi : install_pwiz_vendor_api_abi_dlls install_pwiz_vendor_api_abi_sqlite ;
 }

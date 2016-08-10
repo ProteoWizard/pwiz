@@ -61,6 +61,7 @@ namespace IDPicker.Controls
                                                                               {"Proline", 'P'},
                                                                               {"Serine", 'S'},
                                                                               {"Threonine", 'T'},
+                                                                              {"Selenocysteine", 'U'},
                                                                               {"Tryptophan", 'W'},
                                                                               {"Tyrosine", 'Y'},
                                                                               {"Valine", 'V'}
