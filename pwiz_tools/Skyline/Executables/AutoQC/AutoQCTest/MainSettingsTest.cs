@@ -28,81 +28,77 @@ namespace AutoQCTest
         [TestMethod]
         public void TestValidateSettings()
         {
-            var logger = new TestLogger();
-            var mainControl = new TestAppControl();
-            var mainSettingsTab = new MainSettingsTab(mainControl, logger);
-            Assert.IsFalse(mainSettingsTab.ValidateSettings());
-            var log = logger.GetLog();
-            Assert.IsTrue(log.Contains("Please specify path to a Skyline file."));
-            Assert.IsTrue(log.Contains("Please specify path to a folder where mass spec. files will be written."));
-            Assert.IsTrue(log.Contains("Please specify a value for the \"Accumulation time window\"."));
+            var mainSettings = new MainSettings();
+            TestValidateMainSettings(mainSettings, "Please specify path to a Skyline file.");
 
             const string skyPath = "C:\\dummy\\path\\Test.sky";
-            const string folderPath = "C:\\dummy\\path";
-            var accumWindow = "not a number";
+            mainSettings.SkylineFilePath = skyPath;
+            TestValidateMainSettings(mainSettings, string.Format("Skyline file {0} does not exist.", skyPath));
 
-            var settings = new MainSettings()
+
+//            mainSettingsTab = new MainSettingsTab(mainControl, logger);
+//            logger.Clear();
+//            Assert.IsFalse(mainSettingsTab.ValidateSettings());
+//            log = logger.GetLog();
+//            Assert.IsTrue(log.Contains(string.Format("Skyline file {0} does not exist.", skyPath)));
+//            Assert.IsTrue(log.Contains(string.Format("Folder {0} does not exist.", folderPath)));
+//            Assert.IsTrue(log.Contains(string.Format("Invalid value for \"Accumulation time window\": {0}.", accumWindow)));
+
+//            accumWindow = "-1";
+////            settings.ResultsWindowString = accumWindow;
+//            logger.Clear();
+//            mainSettingsTab = new MainSettingsTab(mainControl, logger);
+//            Assert.IsFalse(mainSettingsTab.ValidateSettings());
+//            log = logger.GetLog();
+//            Assert.IsTrue(
+//                log.Contains(string.Format("\"Accumulation time window\" cannot be less than {0} days.",
+//                    MainSettings.ACCUM_TIME_WINDOW)));
+        }
+
+        private void TestValidateMainSettings(MainSettings mainSettings, string expectedError)
+        {
+            try
             {
-                SkylineFilePath = skyPath,
-                FolderToWatch = folderPath,
-                ResultsWindowString = "not a number",
-                // ImportExistingFiles = false
-            };
-            mainControl = new TestAppControl();
-            mainControl.SetUIMainSettings(settings);
-
-            mainSettingsTab = new MainSettingsTab(mainControl, logger);
-            logger.Clear();
-            Assert.IsFalse(mainSettingsTab.ValidateSettings());
-            log = logger.GetLog();
-            Assert.IsTrue(log.Contains(string.Format("Skyline file {0} does not exist.", skyPath)));
-            Assert.IsTrue(log.Contains(string.Format("Folder {0} does not exist.", folderPath)));
-            Assert.IsTrue(log.Contains(string.Format("Invalid value for \"Accumulation time window\": {0}.", accumWindow)));
-
-            accumWindow = "-1";
-            settings.ResultsWindowString = accumWindow;
-            logger.Clear();
-            mainSettingsTab = new MainSettingsTab(mainControl, logger);
-            Assert.IsFalse(mainSettingsTab.ValidateSettings());
-            log = logger.GetLog();
-            Assert.IsTrue(
-                log.Contains(string.Format("\"Accumulation time window\" cannot be less than {0} days.",
-                    MainSettings.ACCUM_TIME_WINDOW)));
+                mainSettings.ValidateSettings();
+                Assert.Fail("Should have failed to validate main settings");
+            }
+            catch (ArgumentException e)
+            {
+                Assert.AreEqual(e.Message, expectedError);
+            }
         }
 
         [TestMethod]
         public void TestGetLastArchivalDate()
         {
             var mainSettings = new MainSettings() { SkylineFilePath = @"C:\Dummy\path\Test_file.sky" };
-            var mainSettingsTab = new MainSettingsTab(null, null) {Settings = mainSettings};
             var fsUtil = new TestFileSystemUtil();
 
-            Assert.AreEqual(new DateTime(2015, 06, 01), mainSettingsTab.GetLastArchivalDate(fsUtil));
+            Assert.AreEqual(new DateTime(2015, 06, 01), mainSettings.GetLastArchivalDate(fsUtil));
         }
      
         [TestMethod]
         public void TestAddArchiveArgs()
         {
             var mainSettings = new MainSettings() { SkylineFilePath = @"C:\Dummy\path\Test_file.sky" };
-            var mainSettingsTab = new MainSettingsTab(null, new TestLogger()) {Settings = mainSettings};
             var date = new DateTime(2015, 6, 17);
-            mainSettingsTab.LastArchivalDate = date;
+            mainSettings.LastArchivalDate = date;
             
-            var args = mainSettingsTab.GetArchiveArgs(mainSettingsTab.LastArchivalDate, date);
+            var args = mainSettings.GetArchiveArgs(mainSettings.LastArchivalDate, date);
             Assert.IsNull(args);
-            Assert.AreEqual(date, mainSettingsTab.LastArchivalDate);
+            Assert.AreEqual(date, mainSettings.LastArchivalDate);
 
             date = date.AddMonths(1); // 07/17/2015
             var archiveArg = string.Format("--share-zip={0}", "Test_file_2015_06.sky.zip");
-            args = mainSettingsTab.GetArchiveArgs(mainSettingsTab.LastArchivalDate, date);
+            args = mainSettings.GetArchiveArgs(mainSettings.LastArchivalDate, date);
             Assert.AreEqual(archiveArg, args);
-            Assert.AreEqual(date, mainSettingsTab.LastArchivalDate);
+            Assert.AreEqual(date, mainSettings.LastArchivalDate);
 
             date = date.AddYears(1); // 06/17/2016
             archiveArg = string.Format("--share-zip={0}", "Test_file_2015_07.sky.zip");
-            args = mainSettingsTab.GetArchiveArgs(mainSettingsTab.LastArchivalDate, date);
+            args = mainSettings.GetArchiveArgs(mainSettings.LastArchivalDate, date);
             Assert.AreEqual(archiveArg, args);
-            Assert.AreEqual(date, mainSettingsTab.LastArchivalDate);
+            Assert.AreEqual(date, mainSettings.LastArchivalDate);
         }
 
         [TestMethod]
@@ -111,19 +107,10 @@ namespace AutoQCTest
             const string skyFile = @"C:\Dummy\path\Test_file.sky";
             const string dataFile1 = @"C:\Dummy\path\Test1.raw";
 
-            var logger = new TestLogger();
-            var mainSettings = new MainSettings()
-            {
-                SkylineFilePath = skyFile,
-                ResultsWindowString = MainSettings.ACCUM_TIME_WINDOW.ToString()
-            };
+            var mainSettings = MainSettings.GetDefault();
+            mainSettings.SkylineFilePath = skyFile;
             
-            var mainSettingsTab = new MainSettingsTab(null, logger)
-            {
-                Settings = mainSettings
-            };
-
-            var accumulationWindow = MainSettingsTab.AccumulationWindow.Get(DateTime.Now, MainSettings.ACCUM_TIME_WINDOW);
+            var accumulationWindow = AccumulationWindow.Get(DateTime.Now, MainSettings.ACCUM_TIME_WINDOW);
             Assert.AreEqual(accumulationWindow.EndDate.Subtract(accumulationWindow.StartDate).Days + 1,
                 MainSettings.ACCUM_TIME_WINDOW);
            
@@ -135,7 +122,7 @@ namespace AutoQCTest
             var importContext = new ImportContext(dataFile1);
             Assert.IsFalse(importContext.ImportExisting);
 
-            var args = mainSettingsTab.SkylineRunnerArgs(importContext);
+            var args = mainSettings.SkylineRunnerArgs(importContext);
             Assert.AreEqual(expected, args.Trim());
         }
 
@@ -146,17 +133,8 @@ namespace AutoQCTest
             const string dataFile1 = @"C:\Dummy\path\Test1.raw";
             const string dataFile2 = @"C:\Dummy\path\Test2.raw";
 
-            var logger = new TestLogger();
-            var mainSettings = new MainSettings()
-            {
-                SkylineFilePath = skyFile,
-                ResultsWindowString = MainSettings.ACCUM_TIME_WINDOW.ToString()
-            };
-
-            var mainSettingsTab = new MainSettingsTab(null, logger)
-            {
-                Settings = mainSettings
-            };
+            var mainSettings = MainSettings.GetDefault();
+            mainSettings.SkylineFilePath = skyFile;
 
             // Create an import context.
             var importContext = new ImportContext(new List<string>() { dataFile1, dataFile2 });
@@ -166,7 +144,7 @@ namespace AutoQCTest
             var expected =
                 string.Format("--in=\"{0}\" --import-file=\"{1}\" --save", skyFile, dataFile1);
             importContext.GetNextFile();
-            var args = mainSettingsTab.SkylineRunnerArgs(importContext);
+            var args = mainSettings.SkylineRunnerArgs(importContext);
             Assert.AreEqual(expected, args.Trim());
 
             // Arguments for the second file
@@ -175,14 +153,13 @@ namespace AutoQCTest
             expected =
                 string.Format("--in=\"{0}\" --import-file=\"{1}\" --save", skyFile, dataFile2);
 
-            args = mainSettingsTab.SkylineRunnerArgs(importContext);
+            args = mainSettings.SkylineRunnerArgs(importContext);
             Assert.AreEqual(expected, args.Trim());
 
             Assert.IsNull(importContext.GetNextFile());
         }
 
-
-        private class TestFileSystemUtil : MainSettingsTab.IFileSystemUtil
+        private class TestFileSystemUtil : IFileSystemUtil
         {
             private readonly Dictionary<string, TestFileInfo> fileMap;
 

@@ -22,16 +22,11 @@ using AutoQC;
 
 namespace AutoQCTest
 {
-    class TestLogger: IAutoQCLogger
+    class TestLogger: IAutoQcLogger
     {
         private readonly StringBuilder log = new StringBuilder();
 
         public void Log(string message, object[] args)
-        {
-            AddToLog(message, args);
-        }
-
-        public void Log(string message, int blankLinesBefore, int blankLinesAfter, params object[] args)
         {
             AddToLog(message, args);
         }
@@ -41,39 +36,24 @@ namespace AutoQCTest
             AddToLog(message, args);
         }
 
-        public void LogError(string message, int blankLinesBefore, int blankLinesAfter, params object[] args)
-        {
-            AddToLog(message, args);
-        }
-
         public void LogException(Exception exception)
         {
             AddToLog(exception.Message);
         }
 
-        public void LogOutput(string message, object[] args)
+        public string GetFile()
         {
-            AddToLog(message, args);
+            throw new NotImplementedException();
         }
 
-        public void LogOutput(string message, int blankLinesBefore, int blankLinesAfter, params object[] args)
+        public void DisableUiLogging()
         {
-            LogOutput(message, args);
+            throw new NotImplementedException();
         }
 
-        public void LogErrorOutput(string error, object[] args)
+        public void LogToUi(IMainUiControl mainUi)
         {
-            AddToLog(error, args);
-        }
-
-        public void LogErrorOutput(string error, int blankLinesBefore, int blankLinesAfter, params object[] args)
-        {
-            LogError(error, args);
-        }
-
-        public void LogErrorToFile(string error, params object[] args)
-        {
-            LogError(error, args);
+            throw new NotImplementedException();
         }
 
         private void AddToLog(string message, params object[] args)
@@ -93,13 +73,15 @@ namespace AutoQCTest
         }
     }
 
-    class TestAppControl : IAppControl
+    class TestAppControl : IMainUiControl
     {
         private MainSettings _mainSettings = new MainSettings();
         private PanoramaSettings _panoramaSettings = new PanoramaSettings();
 
         public bool Waiting { get; set; }
         public bool Stopped { get; set; }
+
+        private ConfigRunner.Status _status;
 
         public void SetWaiting()
         {
@@ -136,20 +118,39 @@ namespace AutoQCTest
             throw new NotImplementedException();
         }
 
-        public void SetUISprocopSettings(SprocopSettings sprocopSettings)
+        #region Implementation of IMainUiControl
+
+        public void ChangeConfigUiStatus(ConfigRunner configRunner)
+        {
+            _status = configRunner.GetStatus();
+        }
+
+        public void AddConfiguration(AutoQcConfig config)
         {
             throw new NotImplementedException();
         }
 
-        public SprocopSettings GetUISprocopSettings()
+        public void UpdateConfiguration(AutoQcConfig oldConfig, AutoQcConfig newConfig)
         {
             throw new NotImplementedException();
         }
 
-        public void DisableSprocopSettings()
+        public AutoQcConfig GetConfig(string name)
         {
             throw new NotImplementedException();
         }
+
+        public void LogToUi(string text)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void LogErrorToUi(string text)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
     }
 
     class TestImportContext : ImportContext

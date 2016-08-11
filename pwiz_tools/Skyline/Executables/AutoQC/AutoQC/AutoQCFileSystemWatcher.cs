@@ -20,6 +20,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Threading;
 
 namespace AutoQC
@@ -28,7 +29,7 @@ namespace AutoQC
     // ReSharper disable once InconsistentNaming
     public class AutoQCFileSystemWatcher
     {
-        private readonly IAutoQCLogger _logger;
+        private readonly IAutoQcLogger _logger;
 
         private IResultFileStatus _fileStatusChecker;
 
@@ -45,6 +46,7 @@ namespace AutoQC
         private bool _folderAvailable = true;
 
         private int _acquisitionTimeSetting;
+        private Regex _qcFileRegex;
 
         private const int WAIT_60SEC = 60000;
 
@@ -54,7 +56,7 @@ namespace AutoQC
         private const string WATERS_EXT = ".raw";
         private const string AGILENT_EXT = ".d";
 
-        public AutoQCFileSystemWatcher(IAutoQCLogger logger)
+        public AutoQCFileSystemWatcher(IAutoQcLogger logger)
         {
             _fileWatcher = InitFileSystemWatcher();
 
@@ -83,6 +85,8 @@ namespace AutoQC
             _fileWatcher.Filter = GetFileFilter(mainSettings.InstrumentType, out _dataInDirectories);
 
             _fileWatcher.Path = mainSettings.FolderToWatch;
+
+            _qcFileRegex = mainSettings.QcFileRegex;
 
             _acquisitionTimeSetting = mainSettings.AcquisitionTime;
         }
@@ -188,6 +192,12 @@ namespace AutoQC
         void FileAdded(FileSystemEventArgs e)
         {
             var path = e.FullPath;
+
+            if (!MatchesQcFileRegex(path))
+            {
+                return;
+            }
+
             if ((_dataInDirectories && Directory.Exists(path))
                 || (!_dataInDirectories && File.Exists(path)))
             {
@@ -275,7 +285,19 @@ namespace AutoQC
             rawData.AddRange(_dataInDirectories
                 ? Directory.GetDirectories(_fileWatcher.Path, _fileWatcher.Filter)
                 : Directory.GetFiles(_fileWatcher.Path, _fileWatcher.Filter));
+            rawData.RemoveAll(data => !MatchesQcFileRegex(data));
             return rawData;
+        }
+
+        private bool MatchesQcFileRegex(string dataPath)
+        {
+            if (_qcFileRegex == null)
+            {
+                return true;
+            }
+
+            dataPath = dataPath.TrimEnd(Path.DirectorySeparatorChar);
+            return _qcFileRegex.IsMatch(Path.GetFileName(dataPath));
         }
 
         public string GetDirectory()

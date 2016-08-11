@@ -15,26 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
 
 namespace AutoQC
 {
-    public abstract class SettingsTab
+    public interface IConfigSettings
     {
-        public IAppControl _appControl;
-        public readonly IAutoQCLogger Logger;
-
-        public abstract void InitializeFromDefaultSettings();
-        public abstract bool IsSelected();
-        public abstract bool ValidateSettings();
-        public abstract void SaveSettings();
-        public abstract void PrintSettings();
-
-        protected SettingsTab(IAppControl appControl, IAutoQCLogger logger)
-        {
-            _appControl = appControl;
-            Logger = logger;
-        }
+        bool IsSelected();
+        void ValidateSettings();
 
         /// <summary>
         /// Returns the command-line arguments to be passed to SkylineRunner.
@@ -42,42 +29,25 @@ namespace AutoQC
         /// <param name="importContext">Contains information about the results file we are importing</param>
         /// <param name="toPrint">True if the arguments will be logged</param>
         /// <returns></returns>
-        public abstract string SkylineRunnerArgs(ImportContext importContext, bool toPrint = false);
+        string SkylineRunnerArgs(ImportContext importContext, bool toPrint = false);
 
         /// <summary>
         /// Returns information about a process that should be run before running SkylineRunner.
         /// </summary>
         /// <param name="importContext"></param>
         /// <returns></returns>
-        public abstract ProcessInfo RunBefore(ImportContext importContext);
+        ProcessInfo RunBefore(ImportContext importContext);
 
         /// <summary>
         /// Returns information about a process that should be run after running SkylineRunner.
         /// </summary>
         /// <param name="importContext"></param>
         /// <returns></returns>
-        public abstract ProcessInfo RunAfter(ImportContext importContext);
+        ProcessInfo RunAfter(ImportContext importContext);
 
-        // Log to the Output tab only
-        public void LogOutput(string message, params Object[] args)
-        {
-            Logger.LogOutput(message, args);
-        }
-
-        // Log error to the Output tab only
-        public void LogErrorOutput(string error, params Object[] args)
-        {
-            Logger.LogErrorOutput(error, args);
-        }
-
-        public void Log(string message, params Object[] args)
-        {
-            Logger.Log(message, args);
-        }
-
-        public void LogError(string message, params Object[] args)
-        {
-            Logger.LogError(message, args);
-        }
+//        void LogOutput(string message, params object[] args);
+//        void LogErrorOutput(string error, params object[] args);
+//        void Log(string message, params object[] args);
+//        void LogError(string message, params object[] args);
     }
 }

@@ -28,15 +28,12 @@ namespace AutoQC
         public string ArgsToPrint { get; private set; }
         public string WorkingDirectory { get; set; }
 
-        private int _triesRemaining;
-
         public ProcessInfo(string exe, string args)
         {
             Executable = exe;
             ExeName = Executable;
             Args = args;
             ArgsToPrint = args;
-            _triesRemaining = 1;
         }
 
         public ProcessInfo(string exe, string exeName, string args, string argsToPrint) : this (exe, args)
@@ -44,33 +41,16 @@ namespace AutoQC
             ExeName = exeName;
             ArgsToPrint = argsToPrint;
         }
-
-        public void SetMaxTryCount(int tryCount)
-        {
-            _triesRemaining = tryCount;
-        }
-
-        public void incrementTryCount()
-        {
-            _triesRemaining--;
-        }
-
-        public bool CanRetry()
-        {
-            return _triesRemaining > 0;
-        }
     }
 
     public class ProcessRunner
     {
         private ProcessInfo _procInfo;
-        private readonly IAutoQCLogger _logger;
+        private readonly IAutoQcLogger _logger;
 
         private Process _process;
 
-        private volatile bool _tryAgain;
-
-        public ProcessRunner(IAutoQCLogger logger)
+        public ProcessRunner(IAutoQcLogger logger)
         {
             _logger = logger;
         }
@@ -104,10 +84,6 @@ namespace AutoQC
 
             while (true)
             {
-                _tryAgain = false;
-
-                _procInfo.incrementTryCount();
-
                 int exitCode;
                 try
                 {
@@ -122,18 +98,6 @@ namespace AutoQC
                 if (exitCode != 0)
                 {
                     LogError("{0} exited with error code {1}.", _procInfo.ExeName, exitCode);
-                    _tryAgain = true;
-                }
-
-                if (_tryAgain)
-                {
-                    if (_procInfo.CanRetry())
-                    {
-                        LogError("{0} returned an error. Trying again...", _procInfo.ExeName);
-                        continue;
-                    }
-
-                    LogError("{0} returned an error. Exceeded maximum try count.  Giving up...", _procInfo.ExeName);
                     return false;
                 }
 
@@ -174,32 +138,32 @@ namespace AutoQC
             }  
         }
 
-        private Boolean DetectError(string message)
+        private static bool DetectError(string message)
         {
             if (message == null || !message.StartsWith("Error")) return false;
             if (message.Contains("Failed importing"))
             {
-                _tryAgain = true;
+                return false;
             }
             return true;
         }
 
-        private void Log(string message, params Object[] args)
+        private void Log(string message, params object[] args)
         {
             _logger.Log(message, args);
         }
 
-        private void LogWithSpace(string message, params Object[] args)
+        private void LogWithSpace(string message, params object[] args)
         {
-            _logger.Log(message, 1, 1, args);
+            _logger.Log(message, args);
         }
 
-        private void LogError(string message, params Object[] args)
+        private void LogError(string message, params object[] args)
         {
-            _logger.LogError(message, 1, 1, args);
+            _logger.LogError(message, args);
         }
 
-        private void LogException(Exception e, string message, params Object[] args)
+        private void LogException(Exception e, string message, params object[] args)
         {
             _logger.LogError(message, args);
             _logger.LogException(e);
@@ -216,7 +180,6 @@ namespace AutoQC
             {
                 try
                 {
-                    _procInfo.SetMaxTryCount(0);
                     _process.Kill();
                 }
                 catch (Exception e)

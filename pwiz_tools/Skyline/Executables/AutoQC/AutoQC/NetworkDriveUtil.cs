@@ -8,11 +8,11 @@ namespace AutoQC
     class NetworkDriveUtil
     {
         private readonly AutoQCFileSystemWatcher _fileSystemWatcher;
-        private readonly IAutoQCLogger _logger;
+        private readonly IAutoQcLogger _logger;
         private string _networkDriveLetter;
         private string _networkDrivePath ;
 
-        public NetworkDriveUtil(AutoQCFileSystemWatcher fileSystemWatcher, IAutoQCLogger logger)
+        public NetworkDriveUtil(AutoQCFileSystemWatcher fileSystemWatcher, IAutoQcLogger logger)
         {
             _fileSystemWatcher = fileSystemWatcher;
             _logger = logger;
@@ -26,7 +26,7 @@ namespace AutoQC
                 return;
             }
 
-            var timeDisconnected = DateTime.Now.AddMilliseconds(-(AutoQCBackgroundWorker.WAIT_FOR_NEW_FILE));
+            var timeDisconnected = DateTime.Now.AddMilliseconds(-(ConfigRunner.WAIT_FOR_NEW_FILE));
 
             _fileSystemWatcher.Pause();
             if (!string.IsNullOrWhiteSpace(_networkDrivePath))

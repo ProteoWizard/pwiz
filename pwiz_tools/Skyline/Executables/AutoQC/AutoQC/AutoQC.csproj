@@ -76,10 +76,17 @@
   <PropertyGroup />
   <PropertyGroup />
   <ItemGroup>
+    <None Include="SkylineDailyRunner.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="SkylineRunner.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="App.config">
       <SubType>Designer</SubType>
     </None>
     <None Include="AutoQC_TemporaryKey.pfx" />
+    <EmbeddedResource Include="AutoQC-daily.ico" />
     <Content Include="FileAcquisitionTime.skyr">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -90,19 +97,23 @@
     <None Include="QCplotsRgui2.R">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="SProCoP_report.skyr">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <SubType>Designer</SubType>
-    </None>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AutoQcForm.cs">
+    <Compile Include="AutoQcConfig.cs" />
+    <Compile Include="AutoQcLogger.cs" />
+    <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="AutoQcForm.Designer.cs">
-      <DependentUpon>AutoQcForm.cs</DependentUpon>
+    <Compile Include="MainForm.Designer.cs">
+      <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="AutoQCBackgroundWorker.cs" />
+    <Compile Include="AutoQCConfigForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="AutoQCConfigForm.Designer.cs">
+      <DependentUpon>AutoQCConfigForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ConfigRunner.cs" />
     <Compile Include="AutoQCFileSystemWatcher.cs" />
     <Compile Include="ImportContext.cs" />
     <Compile Include="NetworkDriveUtil.cs" />
@@ -110,8 +121,8 @@
     <Compile Include="ProcessInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ResultFileStatus.cs" />
-    <Compile Include="SprocopSettings.cs" />
-    <Compile Include="SettingsTab.cs" />
+    <Compile Include="Properties\Settings.cs" />
+    <Compile Include="ConfigSettings.cs" />
     <Compile Include="MainSettings.cs" />
     <Compile Include="PanoramaUtil.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
@@ -125,6 +136,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
+    <Compile Include="XmlUtil.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="log4net">
@@ -136,6 +148,7 @@
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Configuration.Install" />
     <Reference Include="System.Data" />
     <Reference Include="System.Deployment" />
@@ -146,41 +159,40 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="AutoQcForm.ja.resx">
-      <DependentUpon>AutoQcForm.cs</DependentUpon>
+    <EmbeddedResource Include="AutoQC.ico" />
+    <EmbeddedResource Include="MainForm.ja.resx">
+      <DependentUpon>MainForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="AutoQcForm.resx">
-      <DependentUpon>AutoQcForm.cs</DependentUpon>
+    <EmbeddedResource Include="MainForm.resx">
+      <DependentUpon>MainForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="AutoQcForm.zh-CHS.resx">
-      <DependentUpon>AutoQcForm.cs</DependentUpon>
+    <EmbeddedResource Include="MainForm.zh-CHS.resx">
+      <DependentUpon>MainForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="AutoQCConfigForm.ja.resx">
+      <DependentUpon>AutoQCConfigForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="AutoQCConfigForm.resx">
+      <DependentUpon>AutoQCConfigForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="AutoQCConfigForm.zh-CHS.resx">
+      <DependentUpon>AutoQCConfigForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.ja.resx">
       <DependentUpon>Resources.resx</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.zh-CHS.resx">
       <DependentUpon>Resources.resx</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Resources\redstatus.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Resources\greenstatus.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="..\..\SkylineRunner\bin\Release\SkylineRunner.exe">
-      <Link>SkylineRunner.exe</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoQC.ico" />
-    <Content Include="Resources\AutoQC.ico" />
-    <Content Include="Resources\orangestatus.png" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.5">
@@ -215,6 +227,9 @@
       <Isolated>False</Isolated>
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </COMReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Resources\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

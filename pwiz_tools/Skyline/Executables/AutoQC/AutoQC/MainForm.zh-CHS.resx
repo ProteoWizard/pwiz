@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -121,19 +121,19 @@
     <value>17, 17</value>
   </metadata>
   <data name="textResultsTimeWindow.ToolTip" xml:space="preserve">
-    <value>The Skyline document will retain results acquired only within the last 'n' days, where 'n' is the size of the rolling "Results time window". Results from runs older than the rolling window will be removed from the document.</value>
+    <value>Skyline 文档将仅保留在最后“n”天内获得的结果，这里“n”是滚动“结果时间窗口”的大小。在滚动窗口以前的运行结果将从文档中删除。</value>
   </data>
   <data name="richTextBox1.Text" xml:space="preserve">
-    <value>The version of AutoQC installed must be compatible with the version of Skyline being used. For example, if you are running Skyline-daily you must install AutoQC-daily. 
+    <value>安装的 AutoQC 版本必须兼容正在使用的 Skyline 版本。例如，如果您正在运行 Skyline，则您必须安装 AutoQC-daily。
 
-Before starting AutoQC set up the appropriate settings in the "Settings" tab. AutoQC requires the path to a folder were the instrument will write QC runs, as well as the path to a Skyline document where results will get imported.  Any new runs added to the folder will automatically get imported to the given Skyline document. 
-When AutoQC is started it will import all existing runs in the folder that are newer than the last imported run in the Skyline document. If the document does not have any imported results AutoQC will import all existing runs in the folder. 
+在开始 AutoQC 前，在“设置”标签中进行合适的设置。AutoQC 需要到达仪器写 QC 运行的文件夹的路径，以及结果将被导入的 Skyline 文档的路径。 添加到文件夹的任何新运行将自动导入到已知的 Skyline 文档。
+当开始 AutoQC 后，它将导入所有现有的运行到文件夹中，这些运行比 Skyline 文档中最后导入的运行要更新。如果文档没有任何导入的结果，AutoQC 将导入所有现有运行到文件夹中。
 
-The "Results time window" setting determines how long imported results will be retained in the Skyline document.  This is a rolling window and only results acquired within the last ‘n’ days, where ‘n’ is the width of this window in days, will be retained in the document.  When a new run is imported into the document any results that no longer fall within the time window, ending on that day, will be removed from the document.  The default (and minimum) width of the window is 31 days. 
+“结果时间窗口”设置将确定导入的结果将在 Skyline 文档中保留多长时间。 这是滚动窗口，而只有在“n”天内获得的结果（其中“n”是这个窗口天数的宽度）将保留在文档中。 当新运行导入文档中后，任何不属于时间窗口中的结果，如未在那一天结束，将从文档中删除。 默认（和最小）窗口宽度是 31 天。
 
-The "Expected acquisition duration" setting tells AutoQC how long to wait before attempting to import a run. This should be set to the time (in minutes) that file acquisition is expected to be completed.  If Skyline tries to import a file that has not been fully acquired it will return an error. The default value for this setting is 75 minutes, assuming 10 min. trapping time + 60 min. gradient + 5 min. extra. 
+“预计采集持续时间”设置会告诉 AutoQC 需要等待多久才能尝试导入运行。该时间应设置为预计文件采集完成的时间（以分钟为单位）。 如果 Skyline 尝试导入未被完全采集的文件，它将返回错误消息。此设置的默认值为 75 分钟，即 10 分钟捕捉时间 + 60 分钟梯度 + 5 分钟额外时间。
 
-If you would like to upload the Skyline document to a Panorama server, check the "Publish to Panorama"  checkbox in the "Panorama Settings" tab and enter  the details of the Panorama server. AutoQC will upload the document to the Panorama server each time a new run is imported into the document. </value>
+如果您想将 Skyline 文档 上传至 Panorama 服务器，则勾选“Panorama 设置”标签的“发布至 Panorama”勾选方框，再输入 Panorama 服务器的细节。每次新运行导入到文档中，AutoQC 会将文档上传到 Panorama 服务器中。</value>
   </data>
   <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>111</value>
