@@ -992,10 +992,28 @@ rule msparser-path ( properties * )
         {
             lib-location = "$(ProgramFilesLibs)\\Matrix Science\\Mascot Parser\\vs2013" ;
         }
+        else
+        {
+            if ! $(.warn-once)
+            {
+                .warn-once = true ;
+                echo "Warning: Not using Mascot Parser due to unsupported version of MSVC." ;
+            }
+            lib-location = "" ;
+        }
     } 
     else if <toolset>gcc in $(properties)
     {
         lib-location = "/usr/local/msparser/gnu" ;
+    }
+    else
+    {
+        if ! $(.warn-once)
+        {
+            .warn-once = true ;
+            echo "Note: Not using Mascot Parser due to unsupported compiler." ;
+        }
+        lib-location = "" ;
     }
 
     if [ without-binary-msdata ] 
@@ -1003,7 +1021,7 @@ rule msparser-path ( properties * )
         if ! $(.warn-once)
         {
             .warn-once = true ;
-            echo "Not using Mascot Parser due to --without-binary-msdata ." ;
+            echo "Note: Not using Mascot Parser due to --without-binary-msdata ." ;
         }
     }
     # Check for msparser existence.
