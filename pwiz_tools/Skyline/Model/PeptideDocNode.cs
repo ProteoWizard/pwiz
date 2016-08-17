@@ -79,6 +79,10 @@ namespace pwiz.Skyline.Model
             SourceKey = sourceKey;
             GlobalStandardType = standardType;
             Rank = rank;
+            if (ExplicitRetentionTimeInfo.EMPTY.Equals(explicitRetentionTimeInfo))
+            {
+                explicitRetentionTimeInfo = null; // Users sometimes say RT=0 when they actually mean "unknown"
+            }
             ExplicitRetentionTime = explicitRetentionTimeInfo;
             Results = results;
             BestResult = CalcBestResult();

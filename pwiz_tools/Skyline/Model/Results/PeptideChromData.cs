@@ -770,6 +770,26 @@ namespace pwiz.Skyline.Model.Results
         private void AddDataSet(ChromDataSet chromDataSet)
         {
             Assume.IsTrue(DataSets.Count == 0 || DataSets[0].FirstKey.OptionalMaxTime == chromDataSet.FirstKey.OptionalMaxTime);
+
+            // Only accept if mz is as good or better fit than what's already in list - if better, chuck out any previous values.
+            // (If mz fit is the same, that will have been dealt with in FindAndMerge.)
+            for (var i = DataSets.Count-1; i >= 0; i--)
+            {
+                if (ReferenceEquals(chromDataSet.NodeGroup, DataSets[i].NodeGroup))
+                {
+                    var nodeGroupPrecursorMz = chromDataSet.NodeGroup.PrecursorMz;
+                    var mzErrNewDataSet = Math.Abs(chromDataSet.PrecursorMz - nodeGroupPrecursorMz);
+                    var mzErrDataSetI = Math.Abs(DataSets[i].PrecursorMz - nodeGroupPrecursorMz);
+                    if (mzErrNewDataSet < mzErrDataSetI)
+                    {
+                        DataSets.RemoveAt(i); // Proposed addition has better mz match than what we had before, so toss old values
+                    }
+                    else if (mzErrNewDataSet > mzErrDataSetI)
+                    {
+                        return; // Proposed addition has worse mz match that what's already in list, don't keep it
+                    }
+                }
+            }
             DataSets.Add(chromDataSet);
         }
 
@@ -777,12 +797,16 @@ namespace pwiz.Skyline.Model.Results
         {
             for (int i = 0; i < DataSets.Count; i++)
             {
-                var nodeGroup = DataSets[i].NodeGroup;
-                if (AreEquivalentGroups(nodeGroup, chromDataSet.NodeGroup))
+                var firstKey = DataSets[i].FirstKey;
+                if (Equals(chromDataSet.FirstKey.Precursor, firstKey.Precursor)) // Don't merge dissimilar precursors
                 {
-                    DataSets[i].NodeGroup = nodeGroup.Merge(chromDataSet.NodeGroup);
-                    DataSets[i].Merge(chromDataSet);
-                    return true;
+                    var nodeGroup = DataSets[i].NodeGroup;
+                    if (AreEquivalentGroups(nodeGroup, chromDataSet.NodeGroup))
+                    {
+                        DataSets[i].NodeGroup = nodeGroup.Merge(chromDataSet.NodeGroup);
+                        DataSets[i].Merge(chromDataSet);
+                        return true;
+                    }
                 }
             }
             return false;
