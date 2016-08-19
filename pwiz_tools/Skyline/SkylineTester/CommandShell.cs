@@ -421,6 +421,7 @@ namespace SkylineTester
                     {
                     }
                 }
+                VisibleLogFile = _logFile;
             }
         }
 
