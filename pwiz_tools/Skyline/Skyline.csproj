@@ -349,6 +349,7 @@
     </Compile>
     <Compile Include="Controls\Graphs\MassErrorHistogram2DGraphPane.cs" />
     <Compile Include="Controls\Graphs\MassErrorHistogramGraphPane.cs" />
+    <Compile Include="Controls\Graphs\PeptidesAndTransitionGroups.cs" />
     <Compile Include="Controls\GroupComparison\EditGroupComparisonDlg.cs">
       <SubType>Form</SubType>
     </Compile>

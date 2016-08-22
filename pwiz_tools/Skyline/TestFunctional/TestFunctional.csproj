@@ -196,6 +196,7 @@
     <Compile Include="ManageResultsTest.cs" />
     <Compile Include="MidasTest.cs" />
     <Compile Include="MiscFormsTest.cs" />
+    <Compile Include="MultiSelectRetentionTimeTest.cs" />
     <Compile Include="MultiSelectTest.cs" />
     <Compile Include="NegativeIonChromatogramsTest.cs" />
     <Compile Include="NeutralLossLibraryTest.cs" />

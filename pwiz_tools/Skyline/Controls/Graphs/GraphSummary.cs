@@ -78,9 +78,9 @@ namespace pwiz.Skyline.Controls.Graphs
             SrmDocument SelectionDocument { get; }
 
             TreeNodeMS SelectedNode { get; }
-
+            IList<TreeNodeMS> SelectedNodes { get; }
             IdentityPath SelectedPath { get; set; }
-
+            PeptideGraphInfo GetPeptideGraphInfo(DocNode docNode);
             int SelectedResultsIndex { get; set; }
 
             GraphValues.IRetentionTimeTransformOp GetRetentionTimeTransformOperation();
@@ -94,11 +94,16 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             public SrmDocument SelectionDocument { get { return null;}}
             public TreeNodeMS SelectedNode { get { return null; } }
+            public IList<TreeNodeMS> SelectedNodes { get { return null; } }
             public IdentityPath SelectedPath { get { return IdentityPath.ROOT; } set { } }
             public void BuildGraphMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip, Point mousePt, IController controller) { }
             public int SelectedResultsIndex { get; set; }
             public void ActivateSpectrum() {}
             public GraphValues.IRetentionTimeTransformOp GetRetentionTimeTransformOperation() {return null;}
+            public PeptideGraphInfo GetPeptideGraphInfo(DocNode docNode)
+            {
+                return null;
+            }
         }
 
         private readonly IDocumentUIContainer _documentContainer;

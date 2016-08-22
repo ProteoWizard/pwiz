@@ -183,7 +183,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             private readonly SrmDocument _document;
-            private readonly DocNode _docNode;
+            private readonly ImmutableList<DocNode> _selectedDocNodes;
             private readonly DisplayTypeChrom _displayType;
             private PaneKey _paneKey;
 
@@ -194,12 +194,19 @@ namespace pwiz.Skyline.Controls.Graphs
 
 
             protected GraphData(SrmDocument document, DocNode docNode, DisplayTypeChrom displayType, GraphValues.ReplicateGroupOp replicateGroupOp, PaneKey paneKey)
+                : this(document, new[] { docNode}, displayType, replicateGroupOp, paneKey)
+            {
+            }
+
+            protected GraphData(SrmDocument document, IEnumerable<DocNode> selectedDocNodes, DisplayTypeChrom displayType,
+                GraphValues.ReplicateGroupOp replicateGroupOp, PaneKey paneKey)
             {
                 _document = document;
-                _docNode = docNode;
+                _selectedDocNodes = ImmutableList.ValueOf(selectedDocNodes);
                 _displayType = displayType;
                 ReplicateGroupOp = replicateGroupOp;
                 _paneKey = paneKey;
+                
             }
 
             protected DisplayTypeChrom DisplayType { get { return _displayType; } }
@@ -219,51 +226,56 @@ namespace pwiz.Skyline.Controls.Graphs
                 List<DocNode> docNodes = new List<DocNode>();
                 List<List<PointPairList>> pointPairLists = new List<List<PointPairList>>();
                 List<String> docNodeLabels = new List<string>();
-// ReSharper disable CanBeReplacedWithTryCastAndCheckForNull
-                if (_docNode is TransitionDocNode)
+                foreach (var docNode in _selectedDocNodes)
                 {
-                    var nodeTran = (TransitionDocNode)_docNode;
-                    ReplicateGroups = GetReplicateGroups(GetReplicateIndices(nodeTran)).ToArray();
-                    docNodes.Add(nodeTran);
-                    pointPairLists.Add(GetPointPairLists(null, nodeTran, _displayType));
-                    docNodeLabels.Add(ChromGraphItem.GetTitle(nodeTran));
-                }
-                else if (_docNode is TransitionGroupDocNode)
-                {
-                    var nodeGroup = (TransitionGroupDocNode)_docNode;
-                    ReplicateGroups = GetReplicateGroups(GetReplicateIndices(nodeGroup)).ToArray();
-                    if (_displayType == DisplayTypeChrom.single || _displayType == DisplayTypeChrom.total)
+                    // ReSharper disable CanBeReplacedWithTryCastAndCheckForNull
+                    if (docNode is TransitionDocNode)
                     {
-                        docNodes.Add(nodeGroup);
-                        pointPairLists.Add(GetPointPairLists(nodeGroup, _displayType));
-                        docNodeLabels.Add(ChromGraphItem.GetTitle(nodeGroup));
+                        var nodeTran = (TransitionDocNode)docNode;
+                        ReplicateGroups = GetReplicateGroups(GetReplicateIndices(nodeTran)).ToArray();
+                        docNodes.Add(nodeTran);
+                        pointPairLists.Add(GetPointPairLists(null, nodeTran, _displayType));
+                        docNodeLabels.Add(ChromGraphItem.GetTitle(nodeTran));
                     }
-                    else
+                    else if (docNode is TransitionGroupDocNode)
                     {
-                        foreach (TransitionDocNode nodeTran in GraphChromatogram.GetDisplayTransitions(nodeGroup, _displayType))
+                        var nodeGroup = (TransitionGroupDocNode)docNode;
+                        ReplicateGroups = GetReplicateGroups(GetReplicateIndices(nodeGroup)).ToArray();
+                        if (_displayType == DisplayTypeChrom.single || _displayType == DisplayTypeChrom.total)
                         {
-                            docNodes.Add(nodeTran);
-                            pointPairLists.Add(GetPointPairLists(nodeGroup, nodeTran, _displayType));
-                            docNodeLabels.Add(ChromGraphItem.GetTitle(nodeTran));
+                            docNodes.Add(nodeGroup);
+                            pointPairLists.Add(GetPointPairLists(nodeGroup, _displayType));
+                            docNodeLabels.Add(ChromGraphItem.GetTitle(nodeGroup));
+                        }
+                        else
+                        {
+                            foreach (TransitionDocNode nodeTran in GraphChromatogram.GetDisplayTransitions(nodeGroup, _displayType))
+                            {
+                                docNodes.Add(nodeTran);
+                                pointPairLists.Add(GetPointPairLists(nodeGroup, nodeTran, _displayType));
+                                docNodeLabels.Add(ChromGraphItem.GetTitle(nodeTran));
+                            }
+                        }
+                    }
+                    else if (docNode is PeptideDocNode)
+                    {
+                        var nodePep = (PeptideDocNode)docNode;
+                        // TODO(yuval): If more than one peptide is selected, then we want the union of all replicate indices.
+                        ReplicateGroups = GetReplicateGroups(GetReplicateIndices(nodePep)).ToArray();
+
+                        foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
+                        {
+                            if (!_paneKey.IncludesTransitionGroup(nodeGroup))
+                            {
+                                continue;
+                            }
+                            docNodes.Add(nodeGroup);
+                            pointPairLists.Add(GetPointPairLists(nodeGroup, DisplayTypeChrom.total));
+                            docNodeLabels.Add(ChromGraphItem.GetTitle(nodeGroup));
                         }
                     }
                 }
-                else if (_docNode is PeptideDocNode)
-                {
-                    var nodePep = (PeptideDocNode) _docNode;
-                    ReplicateGroups = GetReplicateGroups(GetReplicateIndices(nodePep)).ToArray();
-                    foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
-                    {
-                        if (!_paneKey.IncludesTransitionGroup(nodeGroup))
-                        {
-                            continue;
-                        }
-                        docNodes.Add(nodeGroup);
-                        pointPairLists.Add(GetPointPairLists(nodeGroup, DisplayTypeChrom.total));
-                        docNodeLabels.Add(ChromGraphItem.GetTitle(nodeGroup));
-                    }
-                }
-// ReSharper restore CanBeReplacedWithTryCastAndCheckForNull
+                // ReSharper restore CanBeReplacedWithTryCastAndCheckForNull
                 PointPairLists = pointPairLists;
                 DocNodes = docNodes;
                 DocNodeLabels = docNodeLabels;
