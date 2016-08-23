@@ -138,6 +138,7 @@
     <Compile Include="PerfDecoysMatchTest.cs" />
     <Compile Include="PerfGenerateChorusRequests.cs" />
     <Compile Include="PerfImportResultsAgilentIMSTest.cs" />
+    <Compile Include="PerfImportResultsAgilentSpectrumMillIMSTest.cs" />
     <Compile Include="PerfImportResultsHugeTest.cs" />
     <Compile Include="PerfImportResultsWatersIMSTest.cs" />
     <Compile Include="PerfLockmassCmdlineTest.cs" />

@@ -67,18 +67,23 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
-        /// Add an intensity value to the given chromatogram.
+        /// Add intensity and mass error (if needed) to the given chromatogram.
         /// </summary>
-        public void AddIntensity(int chromatogramIndex, float intensity, BlockWriter writer)
+        public void AddPoint(int chromatogramIndex, float intensity, float? massError, BlockWriter writer)
         {
+            if (MassErrors != null)
+                // ReSharper disable once PossibleInvalidOperationException
+                MassErrors.Add(chromatogramIndex, massError.Value, writer); // If massError is required, this won't be null (and if it is, we want to hear about it)
             Intensities.Add(chromatogramIndex, intensity, writer);
         }
 
         /// <summary>
-        /// Fill a number of intensity values for the given chromatogram with zeroes.
+        /// Fill a number of intensity and mass error values for the given chromatogram with zeroes.
         /// </summary>
-        public void FillIntensities(int chromatogramIndex, int count, BlockWriter writer)
+        public void FillZeroes(int chromatogramIndex, int count, BlockWriter writer)
         {
+            if (MassErrors != null)
+                MassErrors.FillZeroes(chromatogramIndex, count, writer);
             Intensities.FillZeroes(chromatogramIndex, count, writer);
         }
 
@@ -90,15 +95,9 @@ namespace pwiz.Skyline.Model.Results
             Times.Add(chromatogramIndex, time, writer);
         }
 
-        /// <summary>
-        /// Add a mass error to the given chromatogram.
-        /// </summary>
-        public void AddMassError(int chromatogramIndex, float massError, BlockWriter writer)
-        {
-            MassErrors.Add(chromatogramIndex, massError, writer);
-        }
-
         public int Count { get { return Intensities.Count; } }
+
+        public int? MassErrorsCount { get { return MassErrors == null ? (int?)null : MassErrors.Count; } }
 
         /// <summary>
         /// Get a chromatogram with properly sorted time values.
@@ -113,13 +112,6 @@ namespace pwiz.Skyline.Model.Results
             scanIds = Scans != null
                 ? Scans.ToArray(bytesFromDisk)
                 : null;
-            
-            // Release memory.
-            Times = null;
-            Intensities = null;
-            MassErrors = null;
-            Scans = null;
-
             // Make sure times and intensities match in length.
             if (times.Length != intensities.Length)
             {
@@ -127,6 +119,18 @@ namespace pwiz.Skyline.Model.Results
                     string.Format(Resources.ChromCollected_ChromCollected_Times__0__and_intensities__1__disagree_in_point_count,
                     times.Length, intensities.Length));
             }
+            if (massErrors != null && massErrors.Length != intensities.Length)
+            {
+                throw new InvalidDataException(
+                    string.Format(Resources.ChromCollector_ReleaseChromatogram_Intensities___0___and_mass_errors___1___disagree_in_point_count_,
+                    intensities.Length, massErrors.Length));
+            }
+
+            // Release memory.
+            Times = null;
+            Intensities = null;
+            MassErrors = null;
+            Scans = null;
         }
     }
 
@@ -246,9 +250,16 @@ namespace pwiz.Skyline.Model.Results
 
             if (writer != null)
             {
-                // Clear out re-used block.
-                for (int i = 0; i < _blockSize; i++)
-                    _block._data[i] = default(TData);
+                if (_block == null)
+                {
+                    NewBlock();
+                }
+                else
+                {
+                    // Clear out re-used block.
+                    for (int i = 0; i < _blockSize; i++)
+                        _block._data[i] = default(TData);
+                }
 
                 // Write zeroed blocks to disk.
                 while (count >= _blockSize)

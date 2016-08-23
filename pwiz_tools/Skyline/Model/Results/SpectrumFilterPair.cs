@@ -24,7 +24,6 @@ using System.Drawing;
 using System.Linq;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.Results.RemoteApi.GeneratedCode;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -53,6 +52,7 @@ namespace pwiz.Skyline.Model.Results
             if (Q1 == 0)
             {
                 Ms1ProductFilters = new[] {new SpectrumProductFilter(SignedMz.ZERO, 0)};
+                SimProductFilters = Ms1ProductFilters;  // We want TIC and BPC for all scans, even if they have narrow machine settings and look like SIM
             }
         }
 
@@ -203,7 +203,6 @@ namespace pwiz.Skyline.Model.Results
                     continue;
 
                 // Filter on drift time, if any
-                Assume.IsTrue(!useDriftTimeHighEnergyOffset || spectrum.Id.StartsWith("2")); // Not L10N
                 if (!ContainsDriftTime(spectrum.DriftTimeMsec, useDriftTimeHighEnergyOffset))
                     continue;
 

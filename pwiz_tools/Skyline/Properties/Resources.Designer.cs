@@ -3223,6 +3223,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Intensities ({0}) and mass errors ({1}) disagree in point count..
+        /// </summary>
+        public static string ChromCollector_ReleaseChromatogram_Intensities___0___and_mass_errors___1___disagree_in_point_count_ {
+            get {
+                return ResourceManager.GetString("ChromCollector_ReleaseChromatogram_Intensities___0___and_mass_errors___1___disagr" +
+                        "ee_in_point_count_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The time interval {0} to {1} is not valid..
         /// </summary>
         public static string ChromDataSet_GetExtents_The_time_interval__0__to__1__is_not_valid {

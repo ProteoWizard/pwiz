@@ -1394,7 +1394,9 @@ namespace pwiz.Skyline.Model.Results
                     // If more than a single ion scan, add any zeros necessary
                     // to make this new chromatogram have an entry for each time.
                     if (ionScanCount > 1 && lenTimes > 1)
-                        chromCollector.FillIntensities(chromIndex, lenTimes - 1, _blockWriter);
+                    {
+                        chromCollector.FillZeroes(chromIndex, lenTimes - 1, _blockWriter);
+                    }
                     collector.ProductIntensityMap.Add(productFilter, chromCollector);
 
                     if (addCollector != null)
@@ -1402,9 +1404,10 @@ namespace pwiz.Skyline.Model.Results
                 }
                 if (IsSingleTime)
                     chromCollector.AddTime(chromIndex, time, _blockWriter);
-                if (spectrum.MassErrors != null)
-                    chromCollector.AddMassError(chromIndex, spectrum.MassErrors[j], _blockWriter);
-                chromCollector.AddIntensity(chromIndex, spectrum.Intensities[j], _blockWriter);
+                chromCollector.AddPoint(chromIndex, 
+                    spectrum.Intensities[j],
+                    spectrum.MassErrors != null ? spectrum.MassErrors[j] : (float?)null, 
+                    _blockWriter);
             }
 
             // Add data for chromatogram graph.
@@ -1423,7 +1426,9 @@ namespace pwiz.Skyline.Model.Results
                     var chromCollector = item.Value;
                     var chromIndex = chromatograms.ProductFilterIdToId(productFilter.FilterId);
                     if (chromCollector.Count < lenTimes)
-                        chromCollector.AddIntensity(chromIndex, 0, _blockWriter);
+                    {
+                        chromCollector.AddPoint(chromIndex, 0, 0, _blockWriter);
+                    }
                 }
             }
         }
