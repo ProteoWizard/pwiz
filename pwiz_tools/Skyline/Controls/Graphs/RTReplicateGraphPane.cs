@@ -196,9 +196,12 @@ namespace pwiz.Skyline.Controls.Graphs
                     BarItem curveItem;
                     if(isMultiSelect)
                     {
-                        // TODO opacity for overlay?
-                        color = Color.FromArgb(200, color);
-                        curveItem = new HiLowBarItem(label, pointPairList, color);
+                        foreach(PointPair pp in pointPairList)
+                        {
+                            var middle = pp.Y - (pp.Y - pp.LowValue) / 2;
+                            pp.Tag = new MiddleErrorTag(middle, 0);
+                        }
+                        curveItem = new HiLowMiddleErrorBarItem(label, pointPairList, color, color);
                         BarSettings.Type = BarType.Overlay;
                     }
                     else if (HiLowMiddleErrorBarItem.IsHiLoMiddleErrorList(pointPairList))
