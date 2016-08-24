@@ -29,7 +29,7 @@ using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    class MassErrorHistogramGraphPane : SummaryGraphPane
+    public class MassErrorHistogramGraphPane : SummaryGraphPane
     {
         public static ReplicateDisplay ShowReplicate
         {
