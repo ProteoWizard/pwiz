@@ -29,7 +29,7 @@ using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public class MassErrorReplicateGraphPane : SummaryReplicateGraphPane
+    class MassErrorReplicateGraphPane : SummaryReplicateGraphPane
     {
         public bool CanShowMassErrorLegend { get; private set; }
 
@@ -65,10 +65,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 displayType = GraphChromatogram.GetDisplayType(document, selectedTreeNode);
             }
             Title.Text = null;
-            var aggregateOp = GraphValues.AggregateOp.FromCurrentSettings();
-            YAxis.Title.Text = aggregateOp.Cv
-                ? aggregateOp.AnnotateTitle(Resources.MassErrorReplicateGraphPane_UpdateGraph_Mass_Error_No_Ppm)
-                : Resources.MassErrorReplicateGraphPane_UpdateGraph_Mass_Error;
+            YAxis.Title.Text = Resources.MassErrorReplicateGraphPane_UpdateGraph_Mass_Error;
             DocNode selectedNode = selectedTreeNode.Model;
             DocNode parentNode = selectedNode;
             IdentityPath identityPath = selectedTreeNode.Path;
@@ -99,7 +96,6 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 Title.Text = Resources.MassErrorReplicateGraphPane_UpdateGraph_Select_a_peptide_to_see_the_mass_error_graph;
                 EmptyGraph(document);
-                CanShowMassErrorLegend = false;
                 return;
             }
             // If a precursor is going to be displayed with display type single
@@ -115,7 +111,6 @@ namespace pwiz.Skyline.Controls.Graphs
                                             displayType,
                                             replicateGroupOp,
                                             PaneKey);
-           CanShowMassErrorLegend = graphData.DocNodes.Count != 0;
            InitFromData(graphData);
 
            int selectedReplicateIndex = SelectedIndex;
@@ -198,7 +193,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 YAxis.Scale.Min = Settings.Default.MinMassError;
             if (Settings.Default.MaxMassError != 0)
                 YAxis.Scale.Max = Settings.Default.MaxMassError;
-            Legend.IsVisible = Settings.Default.ShowMassErrorLegend;
             AxisChange();
         }
 

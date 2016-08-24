@@ -1501,7 +1501,6 @@ namespace pwiz.Skyline
             }
             ModifyDocument(string.Format(Resources.SkylineWindow_EditDelete_Delete__0__, undoText), doc =>
                                                   {
-                                                      var dictRemove = new Dictionary<int, RemoveParams>();
                                                       foreach (TreeNodeMS nodeTree in SequenceTree.SelectedNodes)
                                                       {
                                                           var node = nodeTree as SrmTreeNode;
@@ -1509,36 +1508,11 @@ namespace pwiz.Skyline
                                                               continue;
 
                                                           IdentityPath path = node.Path;
-                                                          IdentityPath parentPath = path.Parent;
-                                                          int indexParent = parentPath.GetIdentity(parentPath.Length - 1).GlobalIndex;
-                                                          RemoveParams removeParams;
-                                                          if (!dictRemove.TryGetValue(indexParent, out removeParams))
-                                                          {
-                                                              removeParams = new RemoveParams(parentPath);
-                                                              dictRemove.Add(indexParent, removeParams);
-                                                          }
-                                                          removeParams.RemoveIds.Add(path.GetIdentity(path.Length - 1).GlobalIndex);
-                                                      }
-                                                      foreach (var removeParams in dictRemove.Values)
-                                                      {
-
-                                                          if (doc.FindNode(removeParams.ParentPath) != null)
-                                                              doc = (SrmDocument)doc.RemoveAll(removeParams.ParentPath, removeParams.RemoveIds);                                                          
+                                                          if (doc.FindNode(path) != null)
+                                                              doc = (SrmDocument)doc.RemoveChild(path.Parent, node.Model);
                                                       }
                                                       return doc;
                                                   });
-        }
-
-        private class RemoveParams
-        {
-            public RemoveParams(IdentityPath parentPath)
-            {
-                ParentPath = parentPath;
-                RemoveIds = new HashSet<int>();
-            }
-
-            public IdentityPath ParentPath { get; private set; }
-            public ICollection<int> RemoveIds { get; private set; }
         }
 
         private void selectAllMenuItem_Click(object sender, EventArgs e) { SelectAll(); }

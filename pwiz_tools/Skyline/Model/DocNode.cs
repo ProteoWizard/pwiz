@@ -1077,14 +1077,14 @@ namespace pwiz.Skyline.Model
             return ChangeChildren(childrenNew, nodeCountStack).ChangeAutoManageChildren(false);
         }
 
-        public DocNodeParent RemoveAll(IdentityPath path, ICollection<int> descendentsRemove)
+        public DocNodeParent RemoveAll(IdentityPath path, ICollection<DocNode> descendentsRemove)
         {
             return RemoveAll(this, new IdentityPathTraversal(path), descendentsRemove);
         }
 
-        private static DocNodeParent RemoveAll(DocNodeParent parent, IdentityPathTraversal traversal, ICollection<int> descendentsRemove)
+        private static DocNodeParent RemoveAll(DocNodeParent parent, IdentityPathTraversal traversal, ICollection<DocNode> descendentsRemove)
         {
-            return traversal.Traverse(parent, descendentsRemove, RemoveAll, parent.RemoveAll);
+            return traversal.Traverse(parent, descendentsRemove, AddAll, parent.AddAll);
         }
 
         /// <summary>

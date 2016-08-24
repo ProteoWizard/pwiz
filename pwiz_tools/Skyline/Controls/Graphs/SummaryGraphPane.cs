@@ -16,8 +16,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-using System;
 using System.Windows.Forms;
 using ZedGraph;
 
@@ -87,48 +85,5 @@ namespace pwiz.Skyline.Controls.Graphs
         public virtual void HandleResizeEvent()
         {            
         }
-
-        #region Functional test support
-
-        public int GetTransitionCount()
-        {
-            return CurveList.Count;
-        }
-
-        public int GetTotalBars()
-        {
-            int count = 0;
-            foreach (var curve in CurveList) {
-                count += curve.Points.Count;
-            }
-            return count;
-        }
-
-        public double GetMin()
-        {
-            double min = double.MaxValue;
-            foreach (var curve in CurveList) {
-                for (int i = 0; i < curve.Points.Count; i++) {
-                    var point = curve.Points[i];
-                    min = Math.Min(point.Y, min);
-                }
-            }
-            return min;
-        }
-
-        public double GetMax()
-        {
-            double max = double.MinValue;
-            foreach (var curve in CurveList) {
-                for (int i = 0; i < curve.Points.Count; i++) {
-                    var point = curve.Points[i];
-                    if (point.Y < double.MaxValue)
-                        max = Math.Max(point.Y, max);
-                }
-            }
-            return max;
-        }
-
-        #endregion
     }
 }

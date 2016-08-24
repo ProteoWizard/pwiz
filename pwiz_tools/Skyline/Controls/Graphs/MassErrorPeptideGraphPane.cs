@@ -17,14 +17,13 @@
  * limitations under the License.
  */
 
-using System;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public class MassErrorPeptideGraphPane : SummaryPeptideGraphPane
+    class MassErrorPeptideGraphPane : SummaryPeptideGraphPane
     {
         public MassErrorPeptideGraphPane(GraphSummary graphSummary, PaneKey paneKey)
             : base(graphSummary, paneKey)
@@ -42,13 +41,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         protected override void UpdateAxes()
         {
-            var aggregateOp = GraphValues.AggregateOp.FromCurrentSettings();
-            YAxis.Title.Text = aggregateOp.Cv
-                ? Resources.MassErrorReplicateGraphPane_UpdateGraph_Mass_Error_No_Ppm
-                : Resources.MassErrorReplicateGraphPane_UpdateGraph_Mass_Error;
-
             base.UpdateAxes();
-            
+            YAxis.Title.Text = Resources.MassErrorReplicateGraphPane_UpdateGraph_Mass_Error;
             YAxis.Scale.MinAuto = true;
             if (Settings.Default.MinMassError != 0)
                 YAxis.Scale.Min = Settings.Default.MinMassError;

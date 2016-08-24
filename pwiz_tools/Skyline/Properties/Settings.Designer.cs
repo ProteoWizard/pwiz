@@ -2301,17 +2301,5 @@ namespace pwiz.Skyline.Properties {
                 this["MassErrorHistogram2DLogScale"] = value;
             }
         }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool ShowMassErrorLegend {
-            get {
-                return ((bool)(this["ShowMassErrorLegend"]));
-            }
-            set {
-                this["ShowMassErrorLegend"] = value;
-            }
-        }
     }
 }

@@ -3457,7 +3457,6 @@ namespace pwiz.Skyline
             // 
             this.showMassErrorLegendContextMenuItem.Name = "showMassErrorLegendContextMenuItem";
             resources.ApplyResources(this.showMassErrorLegendContextMenuItem, "showMassErrorLegendContextMenuItem");
-            this.showMassErrorLegendContextMenuItem.Click += new System.EventHandler(this.showMassErrorLegendContextMenuItem_Click);
             // 
             // massErrorPointsContextMenuItem
             // 

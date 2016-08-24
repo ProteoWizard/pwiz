@@ -36,7 +36,7 @@ namespace pwiz.Skyline.Controls.Graphs
 {
     public enum SummaryPeptideOrder { document, time, area, mass_error }
 
-    public abstract class SummaryPeptideGraphPane : SummaryBarGraphPaneBase
+    internal abstract class SummaryPeptideGraphPane : SummaryBarGraphPaneBase
     {
         public static SummaryPeptideOrder PeptideOrder
         {
@@ -189,11 +189,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
             var aggregateOp = GraphValues.AggregateOp.FromCurrentSettings();
-            if (aggregateOp.Cv)
-                YAxis.Title.Text = aggregateOp.AnnotateTitle(YAxis.Title.Text);
-
             if (!_graphData.MinY.HasValue && aggregateOp.Cv)
             {
+                YAxis.Title.Text = aggregateOp.AnnotateTitle(YAxis.Title.Text);
                 if (_graphData.MaxCVSetting != 0)
                 {
                     YAxis.Scale.MaxAuto = false;
@@ -230,7 +228,7 @@ namespace pwiz.Skyline.Controls.Graphs
             AxisChange();            
         }
 
-        public abstract class GraphData : Immutable
+        internal abstract class GraphData : Immutable
         {
             protected GraphData(SrmDocument document, TransitionGroupDocNode selectedGroup, PeptideGroupDocNode selectedProtein, 
                              int? iResult, DisplayTypeChrom displayType, GraphValues.IRetentionTimeTransformOp retentionTimeTransformOp, 
