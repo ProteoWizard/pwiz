@@ -716,9 +716,13 @@ namespace pwiz.Skyline.SettingsUI
                                 labelRT.Text = Resources.ViewLibraryDlg_UpdateUI_RT + COLON_SEP + rt;
                             }
                             IonMobilityInfo dt = bestSpectrum.IonMobilityInfo;
-                            if (dt != null)
+                            if (dt != null && !dt.IsEmpty)
                             {
-                                var dtText = ( dt.IsCollisionalCrossSection ? "CCS" : "DT" ) + COLON_SEP + String.Format("{0:F4}",dt.Value); // Not L10N
+                                var dtText = string.Empty;
+                                if (dt.HasCollisionalCrossSection)
+                                    dtText = "CCS" + COLON_SEP + string.Format("{0:F4} ", dt.CollisionalCrossSectionSqA.Value); // Not L10N
+                                if (dt.HasDriftTime)
+                                    dtText += "DT" + COLON_SEP + string.Format("{0:F4}", dt.DriftTimeMsec.Value); // Not L10N
                                 if (dt.HighEnergyDriftTimeOffsetMsec != 0) // Show the high energy value (as in Waters MSe) if different
                                     dtText += String.Format("({0:F4}ms)", dt.HighEnergyDriftTimeOffsetMsec); // Not L10N
                                 labelRT.Text = TextUtil.SpaceSeparate(labelRT.Text, dtText);
@@ -1864,9 +1868,14 @@ namespace pwiz.Skyline.SettingsUI
 
         private string GetLabelValue(Label label)
         {
-            return string.IsNullOrEmpty(label.Text)
-                    ? string.Empty
-                    : label.Text.Split(new[] { COLON_SEP }, StringSplitOptions.None)[1];
+            // Expecting "RT: 12.345" or "RT: 12.345 DT: 67.89" or "File: foo bar.baz"
+            if (string.IsNullOrEmpty(label.Text))
+               return string.Empty;
+            var split = label.Text.Split(new[] {COLON_SEP}, StringSplitOptions.None);
+            if (split.Length == 2)
+                return split[1];
+            // Trickier case of ""RT: 12.345 DT: 67.89"
+            return split[1].Substring(0, split[1].LastIndexOf(' ')); // Not L10N
         }
 
         public bool HasMatches

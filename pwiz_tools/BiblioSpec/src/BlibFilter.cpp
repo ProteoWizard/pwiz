@@ -287,9 +287,9 @@ void BlibFilter::init(){
            "CREATE TABLE RetentionTimes (RefSpectraID INTEGER, "
            "RedundantRefSpectraID INTEGER, "
            "SpectrumSourceID INTEGER, "
-           "ionMobilityValue REAL, "
-           "ionMobilityType INTEGER, "
-           "ionMobilityHighEnergyDriftTimeOffsetMsec REAL, "
+           "driftTimeMsec REAL, "
+           "collisionalCrossSectionSqA REAL, "
+           "driftTimeHighEnergyOffsetMsec REAL, "
            "retentionTime REAL, "
            "bestSpectrum INTEGER, " // boolean
            "FOREIGN KEY(RefSpectraID) REFERENCES RefSpectra(id) )" );
@@ -367,13 +367,16 @@ void BlibFilter::buildNonRedundantLib()
     if (tableColumnExists(redundantDbName_, "RefSpectra", "retentionTime")) {
         ++tableVersion_;
         optional_cols = ", SpecIDinFile, retentionTime";
-        if (tableColumnExists(redundantDbName_, "RefSpectra", "ionMobilityValue")) {
+        if (tableColumnExists(redundantDbName_, "RefSpectra", "collisionalCrossSectionSqA")) {
+            tableVersion_ = 4;
+            optional_cols += ", driftTimeMsec, collisionalCrossSectionSqA, driftTimeHighEnergyOffsetMsec";
+        } else if (tableColumnExists(redundantDbName_, "RefSpectra", "ionMobilityValue")) {
             ++tableVersion_;
             optional_cols += ", ionMobilityValue, ionMobilityType";
-        }
-        if (tableColumnExists(redundantDbName_, "RefSpectra", "ionMobilityHighEnergyDriftTimeOffsetMsec")) {
-            ++tableVersion_;
-            optional_cols += ", ionMobilityHighEnergyDriftTimeOffsetMsec";
+            if (tableColumnExists(redundantDbName_, "RefSpectra", "ionMobilityHighEnergyDriftTimeOffsetMsec")) {
+                ++tableVersion_;
+                optional_cols += ", ionMobilityHighEnergyDriftTimeOffsetMsec";
+            }
         }
     }
 
@@ -442,9 +445,16 @@ void BlibFilter::buildNonRedundantLib()
         tmpRef->setMz(sqlite3_column_double(pStmt,2));
         tmpRef->setCharge(charge);
         // if not selected, value == 0
-        tmpRef->setIonMobility(sqlite3_column_double(pStmt, 12));
-        tmpRef->setIonMobilityType(sqlite3_column_int(pStmt, 13));
-        tmpRef->setIonMobilityHighEnergyDriftTimeOffsetMsec(sqlite3_column_double(pStmt, 14));
+        double ionMobilityValue = sqlite3_column_double(pStmt, 12);
+        if (tableVersion_ <= 3) {
+            int ionMobilityType = sqlite3_column_int(pStmt, 13);
+            tmpRef->setDriftTime(ionMobilityType == 1 ? ionMobilityValue : 0);
+            tmpRef->setCollisionalCrossSection(ionMobilityType == 2 ? ionMobilityValue : 0);
+        } else {
+            tmpRef->setDriftTime(ionMobilityValue);
+            tmpRef->setCollisionalCrossSection(sqlite3_column_double(pStmt, 13));
+        }
+        tmpRef->setDriftTimeHighEnergyOffsetMsec(sqlite3_column_double(pStmt, 14));
         tmpRef->setRetentionTime(sqlite3_column_double(pStmt, 11));
         tmpRef->setMods(pepModSeq);
         tmpRef->setPrevAA("-");
@@ -726,15 +736,15 @@ void BlibFilter::compAndInsert(vector<RefSpectrum*>& oneIon)
         int specIdRedundant = oneIon.at(i)->getLibSpecID();
         sprintf(zSql,
                 "INSERT INTO RetentionTimes (RefSpectraID, RedundantRefSpectraID, "
-                "SpectrumSourceID, ionMobilityValue, ionMobilityType, ionMobilityHighEnergyDriftTimeOffsetMsec, "
+                "SpectrumSourceID, driftTimeMsec, collisionalCrossSectionSqA, driftTimeHighEnergyOffsetMsec, "
                 "retentionTime, bestSpectrum) "
-                "VALUES (%d, %d, %d, %f, %d, %f, %f, %d)",
+                "VALUES (%d, %d, %d, %f, %f, %f, %f, %d)",
                 specID,
                 specIdRedundant,
                 getNewFileId(redundantDbName_, specIdRedundant),  // All files should exist by now
-                oneIon.at(i)->getIonMobility(),
-                oneIon.at(i)->getIonMobilityType(),
-                oneIon.at(i)->getIonMobilityHighEnergyDriftTimeOffsetMsec(),
+                oneIon.at(i)->getDriftTime(),
+                oneIon.at(i)->getCollisionalCrossSection(),
+                oneIon.at(i)->getDriftTimeHighEnergyOffsetMsec(),
                 oneIon.at(i)->getRetentionTime(),
                 i == bestIndex ? 1 : 0);
         sql_stmt(zSql);

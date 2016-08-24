@@ -40,6 +40,15 @@ void MzXMLParser::startElement(const XML_Char *el, const XML_Char **attr) {
         } else if (isIElement("precursorMz", el)) {
             state_.push(PRECURSOR_MZ_STATE);
             charBuf_.clear();
+
+            string dt(getAttrValue("DT", attr));
+            if (!dt.empty()) {
+                currentSpectrum_->driftTime = atof(dt.c_str());
+            }
+            string ccs(getAttrValue("CCS", attr));
+            if (!ccs.empty()) {
+                currentSpectrum_->ccs = atof(ccs.c_str());
+            }
         } else if (isIElement("peaks", el)) {
             state_.push(PEAKS_STATE);
             charBuf_.clear();

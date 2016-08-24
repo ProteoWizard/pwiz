@@ -671,8 +671,8 @@ bool WatersMseReader::getSpectrum(PSM* psm,
                                   bool getPeaks){    
 
     returnData.id = ((MsePSM*)psm)->specKey;
-    returnData.ionMobility = ((MsePSM*)psm)->precursorIonMobility;
-    returnData.ionMobilityType = (returnData.ionMobility > 0) ? 1 : 0;
+    returnData.driftTime = ((MsePSM*)psm)->precursorIonMobility;
+    returnData.ccs = 0;
     returnData.retentionTime = ((MsePSM*)psm)->retentionTime;
     returnData.mz = ((MsePSM*)psm)->mz;
     returnData.numPeaks = ((MsePSM*)psm)->mzs.size();
@@ -680,16 +680,16 @@ bool WatersMseReader::getSpectrum(PSM* psm,
     if( getPeaks ){
         returnData.mzs = new double[returnData.numPeaks];
         returnData.intensities = new float[returnData.numPeaks];
-        returnData.productIonMobilities = new float[returnData.numPeaks];
+        returnData.productDriftTimes = new float[returnData.numPeaks];
         for(int i=0; i < returnData.numPeaks; i++){
             returnData.mzs[i] = ((MsePSM*)psm)->mzs[i]; 
             returnData.intensities[i] = (float)((MsePSM*)psm)->intensities[i];  
-            returnData.productIonMobilities[i] = (float)((MsePSM*)psm)->productIonMobilities[i];  
+            returnData.productDriftTimes[i] = (float)((MsePSM*)psm)->productIonMobilities[i];  
         }
     } else {
         returnData.mzs = NULL;
         returnData.intensities = NULL;
-        returnData.productIonMobilities = NULL;
+        returnData.productDriftTimes = NULL;
     }
     return true;
 }

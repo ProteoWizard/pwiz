@@ -35,9 +35,9 @@ Spectrum::Spectrum() :
     scanNumber_(0), 
     type_(SPEC_UNDEF), 
     mz_(0),
-    ionMobility_(0),
-    ionMobilityType_(0),
-    ionMobilityHighEnergyDriftTimeOffsetMsec_(0),
+    driftTime_(0),
+    collisionalCrossSection_(0),
+    driftTimeHighEnergyOffsetMsec_(0),
     retentionTime_(0),
     totalIonCurrentRaw_(-1),
     totalIonCurrentProcessed_(-1), 
@@ -50,9 +50,9 @@ Spectrum::Spectrum(const Spectrum& s)
 {
     scanNumber_ = s.scanNumber_;
     mz_ = s.mz_;
-    ionMobility_ = s.ionMobility_;
-    ionMobilityType_ = s.ionMobilityType_;
-    ionMobilityHighEnergyDriftTimeOffsetMsec_ = s.ionMobilityHighEnergyDriftTimeOffsetMsec_;
+    driftTime_ = s.driftTime_;
+    collisionalCrossSection_ = s.collisionalCrossSection_;
+    driftTimeHighEnergyOffsetMsec_ = s.driftTimeHighEnergyOffsetMsec_;
     retentionTime_ = s.retentionTime_;
     type_ = s.type_;
     totalIonCurrentRaw_ = s.totalIonCurrentRaw_;
@@ -74,9 +74,9 @@ Spectrum::~Spectrum()
 void Spectrum::clear() {
     scanNumber_ = 0;
     mz_ = 0;
-    ionMobility_ = 0;
-    ionMobilityType_ = 0;
-    ionMobilityHighEnergyDriftTimeOffsetMsec_ = 0;
+    driftTime_ = 0;
+    collisionalCrossSection_ = 0;
+    driftTimeHighEnergyOffsetMsec_ = 0;
     retentionTime_ = 0;
     type_ = SPEC_UNDEF;
     possibleCharges_.clear();
@@ -92,9 +92,9 @@ Spectrum& Spectrum::operator= (const Spectrum& right)
     scanNumber_ = right.scanNumber_;
     type_ = right.type_;
     mz_ = right.mz_;
-    ionMobility_ = right.ionMobility_;
-    ionMobilityType_ = right.ionMobilityType_;
-    ionMobilityHighEnergyDriftTimeOffsetMsec_ = right.ionMobilityHighEnergyDriftTimeOffsetMsec_;
+    driftTime_ = right.driftTime_;
+    collisionalCrossSection_ = right.collisionalCrossSection_;
+    driftTimeHighEnergyOffsetMsec_ = right.driftTimeHighEnergyOffsetMsec_;
     retentionTime_ = right.retentionTime_;
     possibleCharges_ = right.possibleCharges_;
     rawPeaks_ = right.rawPeaks_;
@@ -118,14 +118,14 @@ double Spectrum::getMz() const
     return mz_;
 }
 
-double Spectrum::getIonMobility() const
+double Spectrum::getDriftTime() const
 {
-    return ionMobility_;
+    return driftTime_;
 }
 
-int Spectrum::getIonMobilityType() const
+double Spectrum::getCollisionalCrossSection() const
 {
-    return ionMobilityType_;
+    return collisionalCrossSection_;
 }
 
 double Spectrum::getRetentionTime() const
@@ -156,18 +156,18 @@ double Spectrum::getTotalIonCurrentRaw() const
 }
 
 // In Waters Mse IMS, product ions have kinetic energy added post-drift tube and fly the last part of path to detector slightly faster
-double Spectrum::getIonMobilityHighEnergyDriftTimeOffsetMsec() const 
+double Spectrum::getDriftTimeHighEnergyOffsetMsec() const 
 {
-    if (ionMobilityHighEnergyDriftTimeOffsetMsec_ == 0)
+    if (driftTimeHighEnergyOffsetMsec_ == 0)
     {
         double sum = 0;
         for(size_t i = 0; i < rawPeaks_.size(); i++){
-            sum += rawPeaks_[i].ionMobility;
+            sum += rawPeaks_[i].driftTime;
         }
         if (sum > 0)
-            return (sum/rawPeaks_.size()) - getIonMobility();
+            return (sum/rawPeaks_.size()) - getDriftTime();
     }
-    return ionMobilityHighEnergyDriftTimeOffsetMsec_;
+    return driftTimeHighEnergyOffsetMsec_;
 }
 
 double Spectrum::getTotalIonCurrentProcessed() const
@@ -276,16 +276,16 @@ void Spectrum::setMz(double newmz){
     mz_ = newmz;
 }
 
-void Spectrum::setIonMobility(double mobility) {
-    ionMobility_ = mobility;
+void Spectrum::setDriftTime(double dt) {
+    driftTime_ = dt;
 }
 
-void Spectrum::setIonMobilityHighEnergyDriftTimeOffsetMsec(double offset) { // In Waters Mse IMS, ions are given extra kinetic energy post-drift to fragment them, and so product ions reach the detector a bit sooner
-    ionMobilityHighEnergyDriftTimeOffsetMsec_ = offset;
+void Spectrum::setDriftTimeHighEnergyOffsetMsec(double offset) { // In Waters Mse IMS, ions are given extra kinetic energy post-drift to fragment them, and so product ions reach the detector a bit sooner
+    driftTimeHighEnergyOffsetMsec_ = offset;
 }
 
-void Spectrum::setIonMobilityType(int type) {
-    ionMobilityType_ = type;
+void Spectrum::setCollisionalCrossSection(double ccs) {
+    collisionalCrossSection_ = ccs;
 }
 
 void Spectrum::setRetentionTime(double rt){

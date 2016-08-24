@@ -1120,10 +1120,10 @@ namespace pwiz.Skyline.Model.Lib
             IonMobilityInfo[] ionMobilities;
             if ((!_dictChargedPeptideIonMobilities.TryGetValue(chargedPeptide, out ionMobilities)) || (ionMobilities == null))
                 return null;
-            if (ionMobilities.All(dt => dt.IsCollisionalCrossSection))
+            if (!ionMobilities.Any(dt => dt.HasDriftTime))
                 return null;
-            double? result = Array.FindAll(ionMobilities, dt => !dt.IsCollisionalCrossSection).Select(dt => dt.Value).Average();
-            double highEnergyDriftTimeOffsetMsec = Array.FindAll(ionMobilities, dt => !dt.IsCollisionalCrossSection).Select(dt => dt.HighEnergyDriftTimeOffsetMsec).Average();
+            double? result = Array.FindAll(ionMobilities, dt => dt.HasDriftTime).Select(dt => dt.DriftTimeMsec.Value).Average();
+            double highEnergyDriftTimeOffsetMsec = Array.FindAll(ionMobilities, dt => dt.HasDriftTime).Select(dt => dt.HighEnergyDriftTimeOffsetMsec).Average();
             return new DriftTimeInfo(result, highEnergyDriftTimeOffsetMsec);
        }
 
@@ -1567,20 +1567,46 @@ namespace pwiz.Skyline.Model.Lib
     }
 
     /// <summary>
-    /// Information about ion mobility - either an actual collisional cross sectopm,
+    /// Information about ion mobility - either an actual collisional cross section,
     /// or a drift time needing translation to collisional cross section 
     /// </summary>
-    public class IonMobilityInfo
+    public class IonMobilityInfo : IComparable
     {
-        public IonMobilityInfo(double value, bool isCollisionalCrossSection, double highEnergyDriftTimeOffsetMsec)
+        public static IonMobilityInfo EMPTY = new IonMobilityInfo(null, null, 0);
+
+        public IonMobilityInfo(double? driftTimeMsec, double? collisionalCrossSectionSqA, double highEnergyDriftTimeOffsetMsec)
         {
-            Value = value;
-            IsCollisionalCrossSection = isCollisionalCrossSection;
+            DriftTimeMsec = driftTimeMsec;
+            CollisionalCrossSectionSqA = collisionalCrossSectionSqA;
             HighEnergyDriftTimeOffsetMsec = highEnergyDriftTimeOffsetMsec;
         }
-        public double Value { get; private set; }
-        public bool IsCollisionalCrossSection { get; private set; }
-        public double HighEnergyDriftTimeOffsetMsec { get; set; }
+        public double? DriftTimeMsec { get; private set; }
+        public double? CollisionalCrossSectionSqA { get; private set; }
+        public double HighEnergyDriftTimeOffsetMsec { get; private set; }
+
+        public bool HasCollisionalCrossSection { get { return (CollisionalCrossSectionSqA ?? 0) != 0; } }
+        public bool HasDriftTime { get { return (DriftTimeMsec ?? 0) != 0; } }
+        public bool IsEmpty { get { return !HasDriftTime && !HasCollisionalCrossSection; } }
+
+        public int CompareTo(object obj)
+        {
+            IonMobilityInfo other = obj as IonMobilityInfo;
+            if (other == null)
+                return 1;
+            if (HasDriftTime)
+            {
+                if (!other.HasDriftTime)
+                    return 1;
+                return DriftTimeMsec.Value.CompareTo(other.DriftTimeMsec.Value);
+            }
+            if (HasCollisionalCrossSection)
+            {
+                if (!other.HasCollisionalCrossSection)
+                    return 1;
+                return CollisionalCrossSectionSqA.Value.CompareTo(other.CollisionalCrossSectionSqA.Value);
+            }
+            return 0;
+        }
     }
 
     /// <summary>

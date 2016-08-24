@@ -28,6 +28,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ImportResultsControl));
             this.resultsSplitContainer = new System.Windows.Forms.SplitContainer();
             this.label2 = new System.Windows.Forms.Label();
@@ -37,6 +38,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.findResultsFilesButton = new System.Windows.Forms.Button();
             this.listResultsFilesMissing = new System.Windows.Forms.ListBox();
             this.cbExcludeSourceFiles = new System.Windows.Forms.CheckBox();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.resultsSplitContainer)).BeginInit();
             this.resultsSplitContainer.Panel1.SuspendLayout();
             this.resultsSplitContainer.Panel2.SuspendLayout();
@@ -100,6 +102,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // 
             resources.ApplyResources(this.cbExcludeSourceFiles, "cbExcludeSourceFiles");
             this.cbExcludeSourceFiles.Name = "cbExcludeSourceFiles";
+            this.toolTip1.SetToolTip(this.cbExcludeSourceFiles, resources.GetString("cbExcludeSourceFiles.ToolTip"));
             this.cbExcludeSourceFiles.UseVisualStyleBackColor = true;
             this.cbExcludeSourceFiles.CheckedChanged += new System.EventHandler(this.cbExcludeSourceFiles_CheckedChanged);
             // 
@@ -132,5 +135,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private System.Windows.Forms.ListBox listResultsFilesMissing;
         private System.Windows.Forms.Button browseToResultsFileButton;
         private System.Windows.Forms.CheckBox cbExcludeSourceFiles;
+        private System.Windows.Forms.ToolTip toolTip1;
     }
 }

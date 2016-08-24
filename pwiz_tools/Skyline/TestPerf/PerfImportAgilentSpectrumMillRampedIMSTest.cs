@@ -35,20 +35,20 @@ using pwiz.SkylineTestUtil;
 namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the global RunPerfTests flag is set
 {
     /// <summary>
-    /// Verify consistent import of Agilent IMS data in concert with SpectrumMill.
+    /// Verify consistent import of Agilent IMS ramped CE data in concert with SpectrumMill.
     /// </summary>
     [TestClass]
-    public class ImportAgilentSpectrumMillIMSTest : AbstractFunctionalTest
+    public class PerfImportAgilentSpectrumMillRampedIMSTest : AbstractFunctionalTest
     {
 
         [TestMethod]
         [Timeout(6000000)]  // Initial download can take a long time
-        public void AgilentSpectrumMillIMSImportTest()
+        public void AgilentSpectrumMillRampedIMSImportTest()
         {
-            // RunPerfTests = true;  // Uncomment to force this to run in UI
+            // RunPerfTests = true; // Uncomment this to force test to run in UI
             Log.AddMemoryAppender();
-            TestFilesZip = "https://skyline.gs.washington.edu/perftests/PerfImportAgilentSpectrumMillIMS.zip";
-            TestFilesPersistent = new[] { "40minG_WBP_wide_z2-3" }; // List of file basenames that we'd like to unzip alongside parent zipFile, and (re)use in place
+            TestFilesZip = "https://skyline.gs.washington.edu/perftests/PerfImportAgilentSpectrumMillRampedIMS.zip";
+            TestFilesPersistent = new[] { ".d" }; // List of file basenames that we'd like to unzip alongside parent zipFile, and (re)use in place
 
             MsDataFileImpl.PerfUtilFactory.IssueDummyPerfUtils = false; // Turn on performance measurement
 
@@ -69,15 +69,28 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         protected override void DoTest()
         {
+            bool useDriftTimes = true; // false;  // If false, don't use any drift information in chromatogram extraction
+            bool CCSonly = false; // If true, force conversion from CCS to DT
+            // ReSharper disable ConditionIsAlwaysTrueOrFalse
+            Testit(useDriftTimes, CCSonly);
+            // ReSharper restore ConditionIsAlwaysTrueOrFalse
+        }
+
+        private void Testit(
+            bool useDriftTimes, // If false, don't use any drift information in chromatogram extraction
+            bool CCSonly // If true, force conversion from CCS to DT
+            )
+        {
             string skyfile = TestFilesDir.GetTestPath("test.sky");
             RunUI(() => SkylineWindow.SaveDocument(skyfile));
+
+
 
             Stopwatch loadStopwatch = new Stopwatch();
             loadStopwatch.Start();
 
             // Enable use of drift times in spectral library
             var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-            bool useDriftTimes = true;
             RunUI(() =>
             {
                 // ReSharper disable once ConditionIsAlwaysTrueOrFalse
@@ -89,12 +102,24 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             // Launch import peptide search wizard
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
 
-            string lo = GetTestPath("40minG_WBP_wide_z2-3_low_BSA_5pmol_02.pep.xml");
-            string mid = GetTestPath("40minG_WBP_wide_z2-3_mid_BSA_5pmol_01.pep.xml");
-            string up = GetTestPath("40minG_WBP_wide_z2-3_up_BSA_5pmol_02.pep.xml");
+            string one = GetTestPath("40mingradient_IMS_AllIons_ramped_01.pep.xml");
+            string two = GetTestPath("40mingradient_IMS_AllIons_ramped_02.pep.xml");
 
-            string[] searchFiles = { lo ,mid, up }; 
+            string[] searchFiles = { one,two };
             var doc = SkylineWindow.Document;
+
+            if (CCSonly)
+            {
+                // Hide the drift time info provided by SpectrumMill, so we have to convert from CCS
+                foreach (var file in searchFiles)
+                {
+                    var mzxmlFile = file.Replace("pep.xml", "mzXML");
+                    var fileContents = File.ReadAllText(mzxmlFile);
+                    fileContents = fileContents.Replace(" DT=", " xx="); 
+                    File.WriteAllText(mzxmlFile, fileContents);                    
+                }
+            }
+
 
             RunUI(() =>
             {
@@ -122,6 +147,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             {
                 var importResultsControl = (ImportResultsControl) importPeptideSearchDlg.ImportResultsControl;
                 importResultsControl.ExcludeSpectrumSourceFiles = true;
+                importResultsControl.UpdateResultsFiles(new []{TestFilesDirs[0].PersistentFilesDir}, true); // Go look in the persistent files dir
             });
             var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
             RunUI(() =>
@@ -144,7 +170,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             WaitForDocumentChangeLoaded(doc, 15 * 60 * 1000); // 15 minutes
             var doc1 = WaitForDocumentLoaded(400000);
 
-            AssertEx.IsDocumentState(doc1, null, 1, 40, 54, 162);
+            AssertEx.IsDocumentState(doc1, null, 1, 40, 48, 144);
             loadStopwatch.Stop();
             DebugLog.Info("load time = {0}", loadStopwatch.ElapsedMilliseconds);
 
@@ -152,6 +178,11 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             double maxHeight = 0;
             var results = doc1.Settings.MeasuredResults;
 
+            var numPeaks = useDriftTimes ?
+                new[] { 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 4, 9, 10, 10, 10, 10, 9, 10, 10, 10, 10, 10, 10, 10, 4, 10, 10, 10, 10, 10, 5, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10 } :
+                new[] { 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 9, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10 };
+            int npIndex = 0;
+            var errmsg = "";
             foreach (var pair in doc1.PeptidePrecursorPairs)
             {
                 ChromatogramGroupInfo[] chromGroupInfo;
@@ -160,14 +191,17 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
                 foreach (var chromGroup in chromGroupInfo)
                 {
+                    if (numPeaks[npIndex] !=  chromGroup.NumPeaks)
+                        errmsg += String.Format("unexpected peak count {0} instead of {1} in chromatogram {2}\r\n", chromGroup.NumPeaks, numPeaks[npIndex], npIndex);
+                    npIndex++;
                     foreach (var tranInfo in chromGroup.TransitionPointSets)
                     {
                         maxHeight = Math.Max(maxHeight, tranInfo.MaxIntensity);
                     }
                 }
             }
-            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-            Assert.AreEqual(useDriftTimes ? 1389115 : 1643104 , maxHeight, 1);
+            Assert.IsTrue(errmsg.Length == 0, errmsg);
+            Assert.AreEqual(useDriftTimes ? 4138868.75 : 4816471.5, maxHeight, 1);
         }  
     }
 }

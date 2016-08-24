@@ -40,9 +40,12 @@ namespace pwiz.Skyline.Model.Lib.BlibData
         public virtual string SpecIdInFile { get; set; }
         public virtual double Score { get; set; }
         public virtual ushort ScoreType { get; set; }
-        public virtual double? IonMobilityValue { get; set; }
-        public virtual int? IonMobilityType { get; set; }
-        public virtual double? IonMobilityHighEnergyDriftTimeOffsetMsec { get; set; }
+        public virtual double? IonMobilityValue { get; set; } // Obsolete - see DriftTimeMsec, CollisionalCrossSectionSqA, HighEnergyDriftTimeOffsetMsec
+        public virtual int? IonMobilityType { get; set; }  // Obsolete - 
+        public virtual double? IonMobilityHighEnergyDriftTimeOffsetMsec { get; set; } // Obsolete - 
+        public virtual double? DriftTimeMsec { get; set; }
+        public virtual double? CollisionalCrossSectionSqA { get; set; }
+        public virtual double? HighEnergyDriftTimeOffsetMsec { get; set; }
         public virtual DbRefSpectraRedundantPeaks Peaks { get; set; }
         public virtual ICollection<DbModification> Modifications { get; set; }
     }

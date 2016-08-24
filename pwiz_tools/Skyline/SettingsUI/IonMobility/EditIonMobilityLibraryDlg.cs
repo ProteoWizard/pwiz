@@ -671,22 +671,22 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 foreach (var ionMobilityList in ionMobilityInfoProvider.GetIonMobilityDict())
                 {
                     // If there is more than one value, just average them
-                    double totalDrift = 0;
+                    double totalCCS = 0;
                     double totalHighEnergyOffset = 0;
                     int count = 0;
                     foreach (var ionMobilityInfo in ionMobilityList.Value)
                     {
                         totalHighEnergyOffset += ionMobilityInfo.HighEnergyDriftTimeOffsetMsec;
-                        if (ionMobilityInfo.IsCollisionalCrossSection)
+                        if (ionMobilityInfo.HasCollisionalCrossSection)
                         {
-                            totalDrift += ionMobilityInfo.Value;
+                            totalCCS += ionMobilityInfo.CollisionalCrossSectionSqA.Value;
                         }
                         else
                         {
                             // Convert from a measured drift time
                             RegressionLine regression;
                             if ((regressions != null) && regressions.TryGetValue(ionMobilityList.Key.Charge, out regression))
-                                totalDrift += regression.GetX(ionMobilityInfo.Value); // x = (y-intercept)/slope
+                                totalCCS += regression.GetX(ionMobilityInfo.DriftTimeMsec.Value); // x = (y-intercept)/slope
                             else
                                 throw new Exception(String.Format(Resources.CollisionalCrossSectionGridViewDriver_ProcessIonMobilityValues_Cannot_import_measured_drift_time_for_sequence__0___no_collisional_cross_section_conversion_parameters_were_provided_for_charge_state__1__,
                                     ionMobilityList.Key.Sequence,
@@ -695,7 +695,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                         count++;
                     }
                     if (count > 0)
-                        peptideIonMobilities.Add(new ValidatingIonMobilityPeptide(ionMobilityList.Key.Sequence, totalDrift / count, totalHighEnergyOffset / count));
+                        peptideIonMobilities.Add(new ValidatingIonMobilityPeptide(ionMobilityList.Key.Sequence, totalCCS / count, totalHighEnergyOffset / count));
                 }
                 if (monitor != null)
                     monitor.UpdateProgress(status = status.ChangePercentComplete(runCount * 100 / countProviders));

@@ -539,6 +539,21 @@ namespace pwiz.Skyline.Model.Lib.BlibData
 
                 // Get peaks for the redundant spectrum
                 var peaksInfo = library.LoadSpectrum(specLiteKey.Key);
+                double? driftTimeMsec;
+                double? collisionalCrossSectionSqA;
+                double? highEnergyDriftTimeOffsetMsec;
+                if (specLiteKey.Time.IonMobilityValue.HasValue  || specLiteKey.Time.IonMobilityType.HasValue) // Older formats
+                {
+                    driftTimeMsec = specLiteKey.Time.IonMobilityType > 1 ? null : specLiteKey.Time.IonMobilityValue;
+                    collisionalCrossSectionSqA = specLiteKey.Time.IonMobilityType < 2 ? null : specLiteKey.Time.IonMobilityValue;
+                    highEnergyDriftTimeOffsetMsec = specLiteKey.Time.IonMobilityHighEnergyDriftTimeOffsetMsec;
+                }
+                else
+                {
+                    driftTimeMsec = specLiteKey.Time.DriftTimeMsec;
+                    collisionalCrossSectionSqA = specLiteKey.Time.CollisionalCrossSectionSqA;
+                    highEnergyDriftTimeOffsetMsec = specLiteKey.Time.HighEnergyDriftTimeOffsetMsec;
+                }
                 var redundantSpectra = new DbRefSpectraRedundant
                                            {
                                                Id = specLiteKey.Key.RedundantId,
@@ -549,9 +564,9 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                                NumPeaks = (ushort) peaksInfo.Peaks.Count(),
                                                Copies = refSpectra.Copies,
                                                RetentionTime = specLiteKey.Time.RetentionTime,
-                                               IonMobilityValue = specLiteKey.Time.IonMobilityValue.GetValueOrDefault(),
-                                               IonMobilityType = specLiteKey.Time.IonMobilityType.GetValueOrDefault(),
-                                               IonMobilityHighEnergyDriftTimeOffsetMsec = specLiteKey.Time.IonMobilityHighEnergyDriftTimeOffsetMsec,
+                                               DriftTimeMsec = driftTimeMsec.GetValueOrDefault(),
+                                               CollisionalCrossSectionSqA = collisionalCrossSectionSqA.GetValueOrDefault(),
+                                               HighEnergyDriftTimeOffsetMsec = highEnergyDriftTimeOffsetMsec,
                                                FileId = spectrumSourceId
                                            };
 
@@ -622,22 +637,15 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                     RetentionTime = spectrum.RetentionTime,
                     SpectrumSourceId = spectrumSourceId,
                     BestSpectrum = spectrum.IsBest ? 1 : 0,
-                    IonMobilityType = 0,
-                    IonMobilityValue = 0,
+                    DriftTimeMsec = 0,
+                    CollisionalCrossSectionSqA = 0,
+                    HighEnergyDriftTimeOffsetMsec = 0,
                 };
                 if (null != spectrum.IonMobilityInfo)
                 {
-                    if (spectrum.IonMobilityInfo.IsCollisionalCrossSection)
-                    {
-                        dbRetentionTimes.IonMobilityType =
-                            (int) BiblioSpecLiteLibrary.IonMobilityType.collisionalCrossSection;
-                    }
-                    else
-                    {
-                        dbRetentionTimes.IonMobilityType = (int) BiblioSpecLiteLibrary.IonMobilityType.driftTime;
-                    }
-                    dbRetentionTimes.IonMobilityValue = spectrum.IonMobilityInfo.Value;
-                    dbRetentionTimes.IonMobilityHighEnergyDriftTimeOffsetMsec = spectrum.IonMobilityInfo.HighEnergyDriftTimeOffsetMsec;
+                    dbRetentionTimes.CollisionalCrossSectionSqA = spectrum.IonMobilityInfo.CollisionalCrossSectionSqA;
+                    dbRetentionTimes.DriftTimeMsec = spectrum.IonMobilityInfo.DriftTimeMsec;
+                    dbRetentionTimes.HighEnergyDriftTimeOffsetMsec = spectrum.IonMobilityInfo.HighEnergyDriftTimeOffsetMsec;
                 }
 
                 if (refSpectra.RetentionTimes == null)

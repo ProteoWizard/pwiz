@@ -50,8 +50,8 @@ BuildParser::BuildParser(BlibBuilder& maker,
 
     sqlite3_prepare(maker.getDb(),
       "INSERT INTO RefSpectra(peptideSeq, precursorMZ, precursorCharge, "
-      "peptideModSeq, prevAA, nextAA, copies, numPeaks, ionMobilityValue, "
-      "ionMobilityType, ionMobilityHighEnergyDriftTimeOffsetMsec, retentionTime, fileID, specIDinFile, "
+      "peptideModSeq, prevAA, nextAA, copies, numPeaks, driftTimeMsec, collisionalCrossSectionSqA, "
+      "driftTimeHighEnergyOffsetMsec, retentionTime, fileID, specIDinFile, "
       "score, scoreType) "
       "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ",
       LARGE_BUFFER_SIZE, &insertSpectrumStmt_, NULL);
@@ -422,8 +422,8 @@ void BuildParser::insertSpectrum(PSM* psm,
     
     // construct insert statement for RefSpectra
     // "INSERT INTO RefSpectra(peptideSeq, precursorMZ, precursorCharge, "
-    // "peptideModSeq, prevAA, nextAA, copies, numPeaks, ionMobilityValue, "
-    // "ionMobilityType, ionMobilityHighEnergyDriftTimeOffsetMsec, retentionTime, fileID, specIDinFile, "
+    // "peptideModSeq, prevAA, nextAA, copies, numPeaks, driftTimeMsec, collisionalCrossSectionSqA, "
+    // "driftTimeHighEnergyOffsetMsec, retentionTime, fileID, specIDinFile, "
     // "score, scoreType) "
     // "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
     sqlite3_bind_text(insertSpectrumStmt_, 1, psm->unmodSeq.c_str(), -1, SQLITE_STATIC);
@@ -434,9 +434,9 @@ void BuildParser::insertSpectrum(PSM* psm,
     sqlite3_bind_text(insertSpectrumStmt_, 6, "-", -1, SQLITE_TRANSIENT);
     sqlite3_bind_int(insertSpectrumStmt_, 7, 1);
     sqlite3_bind_int(insertSpectrumStmt_, 8, curSpectrum.numPeaks);
-    sqlite3_bind_double(insertSpectrumStmt_, 9, curSpectrum.ionMobility);
-    sqlite3_bind_int(insertSpectrumStmt_, 10, curSpectrum.ionMobilityType);
-    sqlite3_bind_double(insertSpectrumStmt_, 11, curSpectrum.getIonMobilityHighEnergyDriftTimeOffsetMsec());
+    sqlite3_bind_double(insertSpectrumStmt_, 9, curSpectrum.driftTime);
+    sqlite3_bind_double(insertSpectrumStmt_, 10, curSpectrum.ccs);
+    sqlite3_bind_double(insertSpectrumStmt_, 11, curSpectrum.getDriftTimeHighEnergyOffsetMsec());
     sqlite3_bind_double(insertSpectrumStmt_, 12, curSpectrum.retentionTime);
     sqlite3_bind_int(insertSpectrumStmt_, 13, fileId);
     sqlite3_bind_text(insertSpectrumStmt_, 14, specIdStr.c_str(), -1, SQLITE_STATIC);
