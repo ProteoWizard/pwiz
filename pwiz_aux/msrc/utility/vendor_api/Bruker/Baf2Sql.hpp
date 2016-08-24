@@ -58,7 +58,8 @@ struct PWIZ_API_DECL Baf2SqlSpectrum : public MSSpectrum
                     const optional<uint64_t>& profileMzArrayId, const optional<uint64_t>& profileIntensityArrayId,
                     const optional<uint64_t>& lineMzarrayId, const optional<uint64_t>& lineIntensityArrayId,
                     const optional<uint64_t>& parentId, const optional<double>& precursorMz,
-                    const optional<int>& isolationMode, const optional<int>& reactionMode);
+                    const optional<int>& isolationMode, const optional<int>& reactionMode,
+                    const optional<double>& isolationWidth);
 
     virtual ~Baf2SqlSpectrum() {}
 

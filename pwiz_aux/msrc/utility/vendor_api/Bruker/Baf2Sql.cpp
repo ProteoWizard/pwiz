@@ -82,6 +82,7 @@ InstrumentSource translateInstrumentSource(int instrumentSourceId)
 PerSpectrumVariables:
 Summation = 2
 IsolationMass = 7
+IsolationWidth = 8
 DeviceTemp1 = 9
 DeviceTemp2 = 10
 
@@ -117,7 +118,9 @@ Baf2SqlImpl::Baf2SqlImpl(const string& rawpath) : rawpath_(rawpath), bafFilepath
                         "MzAcqRangeLower, MzAcqRangeUpper, SumIntensity, MaxIntensity, Polarity, "
                         "ProfileMzId, ProfileIntensityId, LineMzId, LineIntensityId, "
                         "Parent, Mass, IsolationType, ReactionType, ScanMode "
+                        ", IFNULL(iw.Value, 0) AS IsolationWidth "
                         "FROM Spectra s, AcquisitionKeys ak "
+                        "LEFT JOIN PerSpectrumVariables iw ON iw.Spectrum=s.Id AND iw.Variable=8 "
                         "LEFT JOIN Steps step ON s.Id=TargetSpectrum "
                         "WHERE ak.Id=s.AcquisitionKey "
                         "ORDER BY Rt");
@@ -145,12 +148,13 @@ Baf2SqlImpl::Baf2SqlImpl(const string& rawpath) : rawpath_(rawpath), bafFilepath
         optional<int> isolationMode(row.get<optional<int> >(++idx));
         optional<int> reactionMode(row.get<optional<int> >(++idx));
         int scanMode = row.get<int>(++idx);
+        optional<double> isolationWidth(row.get<optional<double> >(++idx));
 
         spectra_.push_back(MSSpectrumPtr(new Baf2SqlSpectrum(bafStorage_, id,
                                                              msLevel, rt, segment, ak, startMz, endMz,
                                                              tic, bpi, polarity, scanMode,
                                                              profileMzId, profileIntensityId, lineMzId, lineIntensityId,
-                                                             parentId, precursorMz, isolationMode, reactionMode)));
+                                                             parentId, precursorMz, isolationMode, reactionMode, isolationWidth)));
     }
 
     sqlite::query properties(db, "SELECT Key, Value FROM Properties");
@@ -217,12 +221,14 @@ Baf2SqlSpectrum::Baf2SqlSpectrum(BinaryStoragePtr storage, int index,
                                  const optional<uint64_t>& profileMzArrayId, const optional<uint64_t>& profileIntensityArrayId,
                                  const optional<uint64_t>& lineMzarrayId, const optional<uint64_t>& lineIntensityArrayId,
                                  const optional<uint64_t>& parentId, const optional<double>& precursorMz,
-                                 const optional<int>& isolationMode, const optional<int>& reactionMode)
+                                 const optional<int>& isolationMode, const optional<int>& reactionMode,
+                                 const optional<double>& isolationWidth)
     : index_(index), msLevel_(msLevel), rt_(rt), segment_(segment), acqKey_(acqKey), parentId_(parentId), tic_(tic), bpi_(bpi),
       profileMzArrayId_(profileMzArrayId), profileIntensityArrayId_(profileIntensityArrayId),
       lineMzArrayId_(lineMzarrayId), lineIntensityArrayId_(lineIntensityArrayId),
       polarity_(polarity), scanRange_(startMz, endMz),
       isolationMode_(isolationMode), reactionMode_(reactionMode), precursorMz_(precursorMz), scanMode_(scanMode),
+      isolationWidth_(isolationWidth),
       storage_(storage)
 {
 }
