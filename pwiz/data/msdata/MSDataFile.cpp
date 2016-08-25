@@ -265,7 +265,8 @@ PWIZ_API_DECL void calculateSourceFileSHA1(SourceFile& sourceFile)
 
     try
     {
-        if (!bfs::exists(p))
+        bfs::file_status status = bfs::status(p);
+        if (!bfs::exists(status) || bfs::is_directory(status))
             // TODO: log warning about source file not available
             return;
     }
