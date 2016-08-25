@@ -4083,8 +4083,8 @@ namespace pwiz.Skyline
                     // display the "Legend" option
                     if (massErrorReplicateGraphPane.CanShowMassErrorLegend)
                     {
-                        showPeakAreaLegendContextMenuItem.Checked = set.ShowPeakAreaLegend; // TODO: Mass error legend
-                        menuStrip.Items.Insert(iInsert++, showPeakAreaLegendContextMenuItem);
+                        showMassErrorLegendContextMenuItem.Checked = set.ShowMassErrorLegend; // TODO: Mass error legend
+                        menuStrip.Items.Insert(iInsert++, showMassErrorLegendContextMenuItem);
                     }
                 }
             }
@@ -4108,7 +4108,7 @@ namespace pwiz.Skyline
                     massErrorTargetsContextMenuItem.Checked = true;
                 }
                 iInsert = AddBinCountContextMenu(menuStrip, iInsert);
-                iInsert = AddTransitionsContextMenu(menuStrip, iInsert);
+                iInsert = AddTransitionsMassErrorContextMenu(menuStrip, iInsert);
             }
             if (graphType == GraphTypeMassError.histogram2D)
             {
@@ -4171,7 +4171,7 @@ namespace pwiz.Skyline
             return iInsert;
         }
 
-        private int AddTransitionsContextMenu(ToolStrip menuStrip, int iInsert)
+        private int AddTransitionsMassErrorContextMenu(ToolStrip menuStrip, int iInsert)
         {
             menuStrip.Items.Insert(iInsert++, massErrorTransitionsContextMenuItem);
             if (massErrorTransitionsContextMenuItem.DropDownItems.Count == 0) {
@@ -4210,25 +4210,33 @@ namespace pwiz.Skyline
 
         private void massErrorAllTransitionsContextMenuItem_Click(object sender, EventArgs e)
         {
-            MassErrorGraphController.HistogramTransiton = TransitionMassError.all;
-            UpdateMassErrorGraph();
+            ChangeMassErrorTransition(TransitionMassError.all);
         }
 
         private void massErrorBestTransitionsContextMenuItem_Click(object sender, EventArgs e)
         {
-            MassErrorGraphController.HistogramTransiton = TransitionMassError.best;
+            ChangeMassErrorTransition(TransitionMassError.best);
+        }
+
+        public void ChangeMassErrorTransition(TransitionMassError transitionMassError)
+        {
+            MassErrorGraphController.HistogramTransiton = transitionMassError;
             UpdateMassErrorGraph();
         }
 
         private void MassErrorPrecursorsContextMenuItem_Click(object sender, EventArgs e)
         {
-            MassErrorGraphController.HistogramDisplayType = DisplayTypeMassError.precursors;
-            UpdateMassErrorGraph();
+            ChangeMassErrorDisplayType(DisplayTypeMassError.precursors);
         }
 
         private void MassErrorProductsContextMenuItem_Click(object sender, EventArgs e)
         {
-            MassErrorGraphController.HistogramDisplayType = DisplayTypeMassError.products;
+            ChangeMassErrorDisplayType(DisplayTypeMassError.products);
+        }
+
+        public void ChangeMassErrorDisplayType(DisplayTypeMassError displayType)
+        {
+            MassErrorGraphController.HistogramDisplayType = displayType;
             UpdateMassErrorGraph();
         }
 
@@ -4241,18 +4249,37 @@ namespace pwiz.Skyline
 
         private void massErorrRetentionTimeContextMenuItem_Click(object sender, EventArgs e)
         {
-           MassErrorGraphController.Histogram2DXAxis = Histogram2DXAxis.retention_time;
-            UpdateMassErrorGraph();
+            UpdateXAxis(Histogram2DXAxis.retention_time);
         }
 
         private void massErrorMassToChargContextMenuItem_Click(object sender, EventArgs e)
         {
-            MassErrorGraphController.Histogram2DXAxis = Histogram2DXAxis.mass_to_charge;
+            UpdateXAxis(Histogram2DXAxis.mass_to_charge);
+        }
+
+        public void UpdateXAxis(Histogram2DXAxis Xaxis)
+        {
+            MassErrorGraphController.Histogram2DXAxis = Xaxis;
             UpdateMassErrorGraph();
         }
 
+        private void showMassErrorLegendContextMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowMassErrorLegend(!Settings.Default.ShowMassErrorLegend);
+        }
+
+        public void ShowMassErrorLegend(bool show)
+        {
+            Settings.Default.ShowMassErrorLegend = show;
+            UpdateSummaryGraphs();
+        }
 
         private void massErrorlogScaleContextMenuItem_Click(object sender, EventArgs e)
+        {
+            SwitchLogScale();
+        }
+
+        public void SwitchLogScale()
         {
             Settings.Default.MassErrorHistogram2DLogScale = !Settings.Default.MassErrorHistogram2DLogScale;
             UpdateMassErrorGraph();
@@ -4274,25 +4301,25 @@ namespace pwiz.Skyline
 
         private void ppm05ContextMenuItem_Click(object sender, EventArgs e)
         {
-            updateBinSize(0.5);
+            UpdateBinSize(0.5);
         }
 
         private void ppm10ContextMenuItem_Click(object sender, EventArgs e)
         {
-            updateBinSize(1);
+            UpdateBinSize(1);
         }
 
         private void ppm15ContextMenuItem_Click(object sender, EventArgs e)
         {
-            updateBinSize(1.5);
+            UpdateBinSize(1.5);
         }
 
         private void ppm20ContextMenuItem_Click(object sender, EventArgs e)
         {
-            updateBinSize(2);
+            UpdateBinSize(2);
         }
 
-        private void updateBinSize(double bin)
+        public void UpdateBinSize(double bin)
         {
             Settings.Default.MassErorrHistogramBinSize = bin;
             UpdateMassErrorGraph();

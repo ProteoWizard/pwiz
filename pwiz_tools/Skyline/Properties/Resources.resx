@@ -9191,4 +9191,7 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="ChromCollector_ReleaseChromatogram_Intensities___0___and_mass_errors___1___disagree_in_point_count_" xml:space="preserve">
     <value>Intensities ({0}) and mass errors ({1}) disagree in point count.</value>
   </data>
+  <data name="MassErrorReplicateGraphPane_UpdateGraph_Mass_Error_No_Ppm" xml:space="preserve">
+    <value>Mass Error</value>
+  </data>
 </root>

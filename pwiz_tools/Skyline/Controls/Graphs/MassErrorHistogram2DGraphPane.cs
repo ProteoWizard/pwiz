@@ -30,7 +30,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    class MassErrorHistogram2DGraphPane : SummaryGraphPane
+    public class MassErrorHistogram2DGraphPane : SummaryGraphPane
     {
         public static ReplicateDisplay ShowReplicate
         {
@@ -124,7 +124,7 @@ namespace pwiz.Skyline.Controls.Graphs
         /// </summary>
         sealed class GraphData : Immutable
         {
-            private readonly HeatMapData _heatMapData;
+            public readonly HeatMapData _heatMapData;
             private readonly int _maxCount;
             private double _maxMass = double.MinValue, _minMass = double.MaxValue, _maxX = double.MinValue, _minX = double.MaxValue;
             private readonly double _binSizePpm;
@@ -269,6 +269,12 @@ namespace pwiz.Skyline.Controls.Graphs
                     _heatMapData, MAX_DOT_RADIUS, MIN_DOT_RADIUS, (float)_minMass, (float)_maxMass,
                     Settings.Default.MassErrorHistogram2DLogScale, 5);
             }
-        }    
+       }
+
+        public int GetPoints()
+        {
+           var points =  Data._heatMapData.GetPoints(-1000, 1000, -1000, 1000, 0.001,0.001);
+            return points.Count;
+        }
     }
 }

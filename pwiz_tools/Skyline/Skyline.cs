@@ -1500,19 +1500,55 @@ namespace pwiz.Skyline
                     undoText = node.Text;
             }
             ModifyDocument(string.Format(Resources.SkylineWindow_EditDelete_Delete__0__, undoText), doc =>
-                                                  {
-                                                      foreach (TreeNodeMS nodeTree in SequenceTree.SelectedNodes)
-                                                      {
-                                                          var node = nodeTree as SrmTreeNode;
-                                                          if (node == null)
-                                                              continue;
+            {
+                var listRemoveParams = new List<RemoveParams>();    // Keep removals in order
+                var dictRemove = new Dictionary<int, RemoveParams>();   // Minimize removal operations
+                var setRemove = new HashSet<int>(); // Keep track of what is being removed
+                foreach (TreeNodeMS nodeTree in SequenceTree.SelectedNodes)
+                {
+                    var node = nodeTree as SrmTreeNode;
+                    if (node == null)
+                        continue;
 
-                                                          IdentityPath path = node.Path;
-                                                          if (doc.FindNode(path) != null)
-                                                              doc = (SrmDocument)doc.RemoveChild(path.Parent, node.Model);
-                                                      }
-                                                      return doc;
-                                                  });
+                    int indexRemove = node.Model.Id.GlobalIndex;
+                    setRemove.Add(indexRemove);
+
+                    IdentityPath path = node.Path;
+                    IdentityPath parentPath = path.Parent;
+                    int indexParent = parentPath.IsRoot
+                        ? -1
+                        : parentPath.GetIdentity(parentPath.Length - 1).GlobalIndex;
+                    // If parent is being removed, ignore this element
+                    if (setRemove.Contains(indexParent))
+                        continue;
+                    RemoveParams removeParams;
+                    if (!dictRemove.TryGetValue(indexParent, out removeParams))
+                    {
+                        removeParams = new RemoveParams(parentPath);
+                        listRemoveParams.Add(removeParams);
+                        dictRemove.Add(indexParent, removeParams);
+                    }
+                    removeParams.RemoveIds.Add(indexRemove);
+                }
+                foreach (var removeParams in listRemoveParams)
+                {
+                    if (doc.FindNode(removeParams.ParentPath) != null)
+                        doc = (SrmDocument) doc.RemoveAll(removeParams.ParentPath, removeParams.RemoveIds);
+                }
+                return doc;
+            });
+        }
+
+        private class RemoveParams
+        {
+            public RemoveParams(IdentityPath parentPath)
+            {
+                ParentPath = parentPath;
+                RemoveIds = new HashSet<int>();
+            }
+
+            public IdentityPath ParentPath { get; private set; }
+            public ICollection<int> RemoveIds { get; private set; }
         }
 
         private void selectAllMenuItem_Click(object sender, EventArgs e) { SelectAll(); }

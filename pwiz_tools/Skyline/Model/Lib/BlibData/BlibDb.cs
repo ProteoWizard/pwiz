@@ -326,15 +326,11 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 using (ISession session = OpenWriteSession())
                 using (ITransaction transaction = session.BeginTransaction())
                 {
-                    var settings = document.Settings;
-
                     int peptideCount = document.PeptideCount;
                     int savedCount = 0;
 
                     foreach (var nodePep in document.Peptides)
                     {
-                        var mods = nodePep.ExplicitMods;
-
                         foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
                         {
                             // Only get library info from precursors that use the desired library
@@ -342,13 +338,11 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                 continue;
 
                             TransitionGroup group = nodeGroup.TransitionGroup;
-                            string peptideSeq = group.Peptide.Sequence;
+                            string peptideSeq = nodePep.SourceUnmodifiedTextId;
+                            string peptideModSeq = nodePep.SourceTextId;
                             int precursorCharge = group.PrecursorCharge;
                             IsotopeLabelType labelType = nodeGroup.TransitionGroup.LabelType;
 
-
-                            var calcPre = settings.GetPrecursorCalc(labelType, mods);
-                            var peptideModSeq = calcPre.GetModifiedSequence(peptideSeq, false);
                             var libKey = new LibKey(peptideModSeq, precursorCharge);
 
                             if (dictLibrary.ContainsKey(libKey))
