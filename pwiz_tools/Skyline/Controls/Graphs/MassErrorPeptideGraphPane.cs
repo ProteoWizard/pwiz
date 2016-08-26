@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using System;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
