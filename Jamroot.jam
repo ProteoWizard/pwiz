@@ -471,8 +471,7 @@ echo ProteoWizard $(version-tag:J=.) $(PWIZ_SVNREVDATE:J=) $(PLATFORM) $(PROCESS
 
 # create a VERSION file which can be used by TC to parse the canonical pwiz version
 make VERSION : : @make_VERSION : <location>$(PWIZ_BUILD_PATH) ;
-actions make_VERSION { @($(STDOUT):E=$(version-tag:J=.)) > "$(<)" }
-
+actions make_VERSION { @($(STDOUT):E=$(version-tag:]=.)) > "$(<)" ; @($(STDOUT):E=<version>$(version-tag:J=.)</version>) > "$(PWIZ_BUILD_PATH)/VERSION.xml" }
 
 import tar ;
 using tar ;
