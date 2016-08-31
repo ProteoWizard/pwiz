@@ -56,6 +56,9 @@ namespace AutoQC
         private const string WATERS_EXT = ".raw";
         private const string AGILENT_EXT = ".d";
 
+        private bool _includeSubfolders = false;
+        private string _instrument;
+
         public AutoQCFileSystemWatcher(IAutoQcLogger logger)
         {
             _fileWatcher = InitFileSystemWatcher();
@@ -82,13 +85,30 @@ namespace AutoQC
 
             _fileWatcher.EnableRaisingEvents = false;
 
-            _fileWatcher.Filter = GetFileFilter(mainSettings.InstrumentType, out _dataInDirectories);
+            if (mainSettings.IncludeSubfolders)
+            {
+                _fileWatcher.IncludeSubdirectories = true;
+                _includeSubfolders = true;
+            }
+
+            _fileWatcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.CreationTime;
+
+            _instrument = mainSettings.InstrumentType;
+            _dataInDirectories = IsDataInDirectories(_instrument);
+
+            _fileWatcher.Filter = GetFileFilter(mainSettings.InstrumentType);
 
             _fileWatcher.Path = mainSettings.FolderToWatch;
 
             _qcFileRegex = mainSettings.QcFileRegex;
 
             _acquisitionTimeSetting = mainSettings.AcquisitionTime;
+        }
+
+        public static bool IsDataInDirectories(string instrument)
+        {
+            return (instrument.Equals(MainSettings.WATERS) // Waters: .raw directory
+                    || instrument.Equals(MainSettings.AGILENT)); // Agilent: .d directory
         }
 
         public void StartWatching()
@@ -107,37 +127,26 @@ namespace AutoQC
             return new AcquisitionTimeFileStatus(mainSettings.AcquisitionTime);
         }
 
-        private static string GetFileFilter(string instrument, out bool dataInDirectories)
+        private static string GetFileFilter(string instrument)
         {
-            var ext = ".*";
-            if (instrument.Equals(MainSettings.THERMO))
+            return "*" + GetDataFileExt(instrument);
+        }
+
+        public static string GetDataFileExt(string instrument)
+        {
+            switch (instrument)
             {
-                ext = THERMO_EXT;
-                dataInDirectories = false;
+                case MainSettings.THERMO:
+                    return THERMO_EXT;
+                case MainSettings.SCIEX:
+                    return SCIEX_EXT;
+                case MainSettings.WATERS:
+                    return WATERS_EXT; // Waters: .raw directory
+                case MainSettings.AGILENT:
+                    return AGILENT_EXT; // Agilent: .d directory
+                default:
+                    return ".*"; // TODO: We need to support other instrument vendors
             }
-            else if (instrument.Equals(MainSettings.SCIEX))
-            {
-                ext = SCIEX_EXT;
-                dataInDirectories = false;
-            }
-            else if (instrument.Equals(MainSettings.WATERS))
-            {
-                // Waters: .raw directory
-                ext = WATERS_EXT;
-                dataInDirectories = true;
-            }
-            else if (instrument.Equals(MainSettings.AGILENT))
-            {
-                // Agilent: .d directory
-                ext = AGILENT_EXT;
-                dataInDirectories = true;
-            }
-            else
-            {
-                dataInDirectories = false;
-            }
-            // TODO: We need to support other instrument vendors
-            return "*" + ext;
         }
 
         public void Pause()
@@ -281,12 +290,52 @@ namespace AutoQC
 
         public List<string> GetExistingFiles()
         {
-            var rawData = new List<string>();
-            rawData.AddRange(_dataInDirectories
-                ? Directory.GetDirectories(_fileWatcher.Path, _fileWatcher.Filter)
-                : Directory.GetFiles(_fileWatcher.Path, _fileWatcher.Filter));
+            var rawData = _dataInDirectories ? GetDirectories(_fileWatcher.Path, GetDataFileExt(_instrument)) 
+                                             : GetFiles(_fileWatcher.Path);
             rawData.RemoveAll(data => !MatchesQcFileRegex(data));
             return rawData;
+        }
+
+        private List<string> GetDirectories(string directory, string dataDirExt)
+        {
+            var dataDirs = new List<string>();
+            
+            if (_includeSubfolders)
+            {
+                var subdirs = Directory.GetDirectories(directory);
+                foreach (var subdir in subdirs)
+                {
+                    if (subdir.EndsWith(dataDirExt))
+                    {
+                        dataDirs.Add(subdir);
+                    }
+                    else
+                    {
+                        dataDirs.AddRange(GetDirectories(subdir, dataDirExt));
+                    }
+                }      
+            }
+            else
+            {
+                dataDirs.AddRange(Directory.GetDirectories(directory, _fileWatcher.Filter));  
+            }
+
+            return dataDirs;
+        }
+
+        private List<string> GetFiles(string directory)
+        {
+            var files = new List<string>();
+            files.AddRange(Directory.GetFiles(directory, _fileWatcher.Filter));
+
+            if (!_includeSubfolders) return files;
+
+            var subdirs = Directory.GetDirectories(directory);
+            foreach (var subdir in subdirs)
+            {
+                files.AddRange(GetFiles(subdir));   
+            }
+            return files;
         }
 
         private bool MatchesQcFileRegex(string dataPath)

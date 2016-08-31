@@ -69,6 +69,8 @@
             this.lblConfigRunning = new System.Windows.Forms.Label();
             this.btnCancelConfig = new System.Windows.Forms.Button();
             this.btnSaveConfig = new System.Windows.Forms.Button();
+            this.includeSubfoldersCb = new System.Windows.Forms.CheckBox();
+            this.regularExpCb = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -83,7 +85,7 @@
             // 
             // textSkylinePath
             // 
-            this.textSkylinePath.Location = new System.Drawing.Point(21, 50);
+            this.textSkylinePath.Location = new System.Drawing.Point(21, 39);
             this.textSkylinePath.Name = "textSkylinePath";
             this.textSkylinePath.Size = new System.Drawing.Size(430, 20);
             this.textSkylinePath.TabIndex = 0;
@@ -91,7 +93,7 @@
             // 
             // textFolderToWatchPath
             // 
-            this.textFolderToWatchPath.Location = new System.Drawing.Point(21, 109);
+            this.textFolderToWatchPath.Location = new System.Drawing.Point(21, 91);
             this.textFolderToWatchPath.Name = "textFolderToWatchPath";
             this.textFolderToWatchPath.Size = new System.Drawing.Size(430, 20);
             this.textFolderToWatchPath.TabIndex = 2;
@@ -99,7 +101,7 @@
             // 
             // textResultsTimeWindow
             // 
-            this.textResultsTimeWindow.Location = new System.Drawing.Point(21, 251);
+            this.textResultsTimeWindow.Location = new System.Drawing.Point(21, 259);
             this.textResultsTimeWindow.Name = "textResultsTimeWindow";
             this.textResultsTimeWindow.Size = new System.Drawing.Size(100, 20);
             this.textResultsTimeWindow.TabIndex = 5;
@@ -117,7 +119,7 @@
             // 
             // textQCFilePattern
             // 
-            this.textQCFilePattern.Location = new System.Drawing.Point(21, 168);
+            this.textQCFilePattern.Location = new System.Drawing.Point(21, 170);
             this.textQCFilePattern.Name = "textQCFilePattern";
             this.textQCFilePattern.Size = new System.Drawing.Size(361, 20);
             this.textQCFilePattern.TabIndex = 4;
@@ -188,6 +190,8 @@
             // 
             // groupBoxMain
             // 
+            this.groupBoxMain.Controls.Add(this.regularExpCb);
+            this.groupBoxMain.Controls.Add(this.includeSubfoldersCb);
             this.groupBoxMain.Controls.Add(this.label4);
             this.groupBoxMain.Controls.Add(this.textQCFilePattern);
             this.groupBoxMain.Controls.Add(this.label1);
@@ -214,20 +218,20 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(389, 173);
+            this.label4.Location = new System.Drawing.Point(389, 175);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(78, 13);
+            this.label4.Size = new System.Drawing.Size(64, 13);
             this.label4.TabIndex = 62;
-            this.label4.Text = "(e.g.  .*_QC_.*)";
+            this.label4.Text = "(e.g.  _QC_)";
             // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(20, 151);
+            this.label1.Location = new System.Drawing.Point(20, 153);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(267, 13);
+            this.label1.Size = new System.Drawing.Size(240, 13);
             this.label1.TabIndex = 60;
-            this.label1.Text = "Regular expression for matching QC data files (optional)";
+            this.label1.Text = "Pattern for matching QC data file names (optional)";
             // 
             // labelMinutes
             // 
@@ -250,7 +254,7 @@
             // labelDays
             // 
             this.labelDays.AutoSize = true;
-            this.labelDays.Location = new System.Drawing.Point(128, 254);
+            this.labelDays.Location = new System.Drawing.Point(128, 262);
             this.labelDays.Name = "labelDays";
             this.labelDays.Size = new System.Drawing.Size(29, 13);
             this.labelDays.TabIndex = 56;
@@ -259,7 +263,7 @@
             // labelAccumulationTimeWindow
             // 
             this.labelAccumulationTimeWindow.AutoSize = true;
-            this.labelAccumulationTimeWindow.Location = new System.Drawing.Point(20, 235);
+            this.labelAccumulationTimeWindow.Location = new System.Drawing.Point(20, 243);
             this.labelAccumulationTimeWindow.Name = "labelAccumulationTimeWindow";
             this.labelAccumulationTimeWindow.Size = new System.Drawing.Size(106, 13);
             this.labelAccumulationTimeWindow.TabIndex = 54;
@@ -290,7 +294,7 @@
             // 
             // btnFolderToWatch
             // 
-            this.btnFolderToWatch.Location = new System.Drawing.Point(470, 105);
+            this.btnFolderToWatch.Location = new System.Drawing.Point(470, 87);
             this.btnFolderToWatch.Name = "btnFolderToWatch";
             this.btnFolderToWatch.Size = new System.Drawing.Size(29, 23);
             this.btnFolderToWatch.TabIndex = 3;
@@ -302,7 +306,7 @@
             // 
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label2.Location = new System.Drawing.Point(20, 31);
+            this.label2.Location = new System.Drawing.Point(20, 20);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(92, 15);
             this.label2.TabIndex = 28;
@@ -312,7 +316,7 @@
             // 
             this.label3.AutoSize = true;
             this.label3.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label3.Location = new System.Drawing.Point(20, 90);
+            this.label3.Location = new System.Drawing.Point(20, 72);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(90, 15);
             this.label3.TabIndex = 29;
@@ -320,7 +324,7 @@
             // 
             // btnSkylineFilePath
             // 
-            this.btnSkylineFilePath.Location = new System.Drawing.Point(470, 49);
+            this.btnSkylineFilePath.Location = new System.Drawing.Point(470, 38);
             this.btnSkylineFilePath.Name = "btnSkylineFilePath";
             this.btnSkylineFilePath.Size = new System.Drawing.Size(29, 23);
             this.btnSkylineFilePath.TabIndex = 1;
@@ -483,6 +487,26 @@
             this.btnSaveConfig.UseVisualStyleBackColor = true;
             this.btnSaveConfig.Click += new System.EventHandler(this.btnSaveConfig_Click);
             // 
+            // includeSubfoldersCb
+            // 
+            this.includeSubfoldersCb.AutoSize = true;
+            this.includeSubfoldersCb.Location = new System.Drawing.Point(23, 117);
+            this.includeSubfoldersCb.Name = "includeSubfoldersCb";
+            this.includeSubfoldersCb.Size = new System.Drawing.Size(112, 17);
+            this.includeSubfoldersCb.TabIndex = 63;
+            this.includeSubfoldersCb.Text = "Include subfolders";
+            this.includeSubfoldersCb.UseVisualStyleBackColor = true;
+            // 
+            // regularExpCb
+            // 
+            this.regularExpCb.AutoSize = true;
+            this.regularExpCb.Location = new System.Drawing.Point(21, 195);
+            this.regularExpCb.Name = "regularExpCb";
+            this.regularExpCb.Size = new System.Drawing.Size(116, 17);
+            this.regularExpCb.TabIndex = 64;
+            this.regularExpCb.Text = "Regular expression";
+            this.regularExpCb.UseVisualStyleBackColor = true;
+            // 
             // AutoQcConfigForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -556,5 +580,7 @@
         private System.Windows.Forms.Label labelConfigName;
         private System.Windows.Forms.Button btnCancelConfig;
         private System.Windows.Forms.Label lblConfigRunning;
+        private System.Windows.Forms.CheckBox includeSubfoldersCb;
+        private System.Windows.Forms.CheckBox regularExpCb;
     }
 }

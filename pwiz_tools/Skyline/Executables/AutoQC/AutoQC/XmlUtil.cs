@@ -5,7 +5,6 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Serialization;
-using AutoQC.Properties;
 
 namespace AutoQC
 {
@@ -439,75 +438,12 @@ namespace AutoQC
             return Convert.ToDouble(reader.ReadElementContentAsString(), CultureInfo.InvariantCulture);
         }
 
-//        public static void ReadElementList<TItem>(this XmlReader reader, Enum name, List<TItem> list)
-//        {
-//            reader.ReadElementList(name, list, new XmlElementHelper<TItem>());
-//        }
-
-//        public static void ReadElementList<TItem>(this XmlReader reader, Enum name, List<TItem> list,
-//            params IXmlElementHelper<TItem>[] helpers)
-//        {
-//            if (reader.IsStartElement(name))
-//            {
-//                if (reader.IsEmptyElement)
-//                    reader.ReadStartElement(name);
-//                else
-//                {
-//
-//                    reader.ReadStartElement(name);
-//                    reader.ReadElements(list, helpers);
-//                    reader.ReadEndElement();
-//                }
-//            }
-//        }
-//
-//        public static void ReadElements<TItem>(this XmlReader reader, List<TItem> list)
-//        {
-//            reader.ReadElements(list, new XmlElementHelper<TItem>());
-//        }
-
-//        public static void ReadElements<TItem>(this XmlReader reader, List<TItem> list,
-//            params IXmlElementHelper<TItem>[] helpers)
-//        {
-//            IXmlElementHelper<TItem> helper;
-//            while ((helper = reader.FindHelper(helpers)) != null)
-//                list.Add(helper.Deserialize(reader));
-//        }
-
-//        public static IXmlElementHelper<TItem> FindHelper<TItem>(this XmlReader reader,
-//            IEnumerable<IXmlElementHelper<TItem>> helpers)
-//        {
-//            foreach (IXmlElementHelper<TItem> helper in helpers)
-//            {
-//                if (reader.IsStartElement(helper.ElementNames))
-//                    return helper;
-//            }
-//            return null;
-//        }
-
         public static TObj Deserialize<TObj>(this XmlReader reader, TObj objNew)
             where TObj : IXmlSerializable
         {
             objNew.ReadXml(reader);
             return objNew;
         }
-
-//        public static TObj DeserializeElement<TObj>(this XmlReader reader)
-//            where TObj : class
-//        {
-//            return DeserializeElement<TObj>(reader, null);
-//        }
-
-//        public static TObj DeserializeElement<TObj>(this XmlReader reader, Enum name)
-//            where TObj : class
-//        {
-//            // ReSharper disable SpecifyACultureInStringConversionExplicitly
-//            var helper = new XmlElementHelper<TObj>(name == null ? null : name.ToString());
-//            // ReSharper restore SpecifyACultureInStringConversionExplicitly
-//            if (reader.IsStartElement(helper.ElementNames))
-//                return helper.Deserialize(reader);
-//            return null;
-//        }
 
         public static readonly Regex REGEX_XML_ERROR = new Regex(@"\((\d+), ?(\d+)\)"); // Not L10N
 

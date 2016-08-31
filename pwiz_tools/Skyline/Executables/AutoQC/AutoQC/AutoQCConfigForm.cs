@@ -131,8 +131,7 @@ namespace AutoQC
 
         private static void ShowErrorDialog(string message)
         {
-            MessageBox.Show(message, "Configuration Validation Error",
-                MessageBoxButtons.OK);
+            MainForm.ShowErrorDialog(message);
         }
 
         private AutoQcConfig GetConfigFromUi()
@@ -151,7 +150,9 @@ namespace AutoQC
             {
                 textSkylinePath.Text = mainSettings.SkylineFilePath;
                 textFolderToWatchPath.Text = mainSettings.FolderToWatch;
+                includeSubfoldersCb.Checked = mainSettings.IncludeSubfolders;
                 textQCFilePattern.Text = mainSettings.QcFilePattern;
+                regularExpCb.Checked = mainSettings.IsQcFilePatternRegex;
                 textResultsTimeWindow.Text = mainSettings.ResultsWindow.ToString();
                 textAquisitionTime.Text = mainSettings.AcquisitionTime.ToString();
                 comboBoxInstrumentType.SelectedItem = mainSettings.InstrumentType;
@@ -164,7 +165,9 @@ namespace AutoQC
             var mainSettings = new MainSettings();
             mainSettings.SkylineFilePath = textSkylinePath.Text;
             mainSettings.FolderToWatch = textFolderToWatchPath.Text;
+            mainSettings.IncludeSubfolders = includeSubfoldersCb.Checked;
             mainSettings.QcFilePattern = textQCFilePattern.Text;
+            mainSettings.IsQcFilePatternRegex = regularExpCb.Checked;
             mainSettings.ResultsWindow = ValidateIntTextField(textResultsTimeWindow.Text, "Results Window");
             mainSettings.InstrumentType = comboBoxInstrumentType.SelectedItem.ToString();
             mainSettings.AcquisitionTime = ValidateIntTextField(textAquisitionTime.Text, "Acquisition Time");

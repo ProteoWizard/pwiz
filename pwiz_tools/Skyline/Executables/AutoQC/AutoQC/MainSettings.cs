@@ -49,7 +49,11 @@ namespace AutoQC
 
         public string FolderToWatch { get; set; }
 
+        public bool IncludeSubfolders { get; set; }
+
         public string QcFilePattern { get; set; }
+
+        public bool IsQcFilePatternRegex { get; set; }
 
         public Regex QcFileRegex { get; set; }
 
@@ -81,7 +85,9 @@ namespace AutoQC
             {
                 SkylineFilePath = SkylineFilePath,
                 FolderToWatch = FolderToWatch,
+                IncludeSubfolders = IncludeSubfolders,
                 QcFilePattern = QcFilePattern,
+                IsQcFilePatternRegex = IsQcFilePatternRegex,
                 ResultsWindow = ResultsWindow,
                 AcquisitionTime = AcquisitionTime,
                 InstrumentType = InstrumentType
@@ -98,7 +104,9 @@ namespace AutoQC
             var sb = new StringBuilder();
             sb.Append("Skyline file: ").AppendLine(SkylineFilePath);
             sb.Append("Folder to watch: ").AppendLine(FolderToWatch);
+            sb.Append("Include subfolders: ").AppendLine(IncludeSubfolders.ToString());
             sb.Append("QC file pattern: ").AppendLine(QcFilePattern);
+            sb.Append("QC file pattern is a regex: ").AppendLine(IsQcFilePatternRegex.ToString());
             sb.Append("Instrument: ").AppendLine(InstrumentType);
             sb.Append("Results window: ").Append(ResultsWindow.ToString()).AppendLine(" days");
             sb.Append("Acquisition time: ").Append(AcquisitionTime.ToString()).AppendLine(" minutes");
@@ -130,15 +138,25 @@ namespace AutoQC
             // Regular expression for QC file names (optional)
             if (!string.IsNullOrWhiteSpace(QcFilePattern))
             {
+                var pattern = QcFilePattern;
+                if (!IsQcFilePatternRegex)
+                {
+                    pattern = Regex.Escape(QcFilePattern);
+                    pattern = ".*" + pattern + ".*";
+                }
+
                 // Validate the regular expression
                 try
                 {
-                    // TODO: Should we ignore case?
-                    QcFileRegex = new Regex(QcFilePattern, RegexOptions.IgnoreCase);
+                    QcFileRegex = new Regex(pattern
+                                            // , RegexOptions.IgnoreCase
+                                            );
                 }
                 catch (ArgumentException e)
                 {
-                    throw new ArgumentException("Invalid regular expression for QC results file names", e);
+                    var err = string.Format("Invalid {0} for QC results file names",
+                        IsQcFilePatternRegex ? "regular expression" : "pattern");
+                    throw new ArgumentException(err, e);
                 }
             }
 
@@ -310,7 +328,9 @@ namespace AutoQC
         {
             skyline_file_path,
             folder_to_watch,
+            include_subfolders,
             qc_file_pattern,
+            is_file_pattern_regex,
             results_window,
             instrument_type,
             acquisition_time
@@ -325,7 +345,9 @@ namespace AutoQC
         {
             SkylineFilePath = reader.GetAttribute(ATTR.skyline_file_path);
             FolderToWatch = reader.GetAttribute(ATTR.folder_to_watch);
+            IncludeSubfolders = reader.GetBoolAttribute(ATTR.include_subfolders);
             QcFilePattern = reader.GetAttribute(ATTR.qc_file_pattern);
+            IsQcFilePatternRegex = reader.GetBoolAttribute(ATTR.is_file_pattern_regex);
             ResultsWindow = reader.GetIntAttribute(ATTR.results_window);
             InstrumentType = reader.GetAttribute(ATTR.instrument_type);
             AcquisitionTime = reader.GetIntAttribute(ATTR.acquisition_time);
@@ -336,7 +358,9 @@ namespace AutoQC
             writer.WriteStartElement("main_settings");
             writer.WriteAttributeIfString(ATTR.skyline_file_path, SkylineFilePath);
             writer.WriteAttributeIfString(ATTR.folder_to_watch, FolderToWatch);
+            writer.WriteAttribute(ATTR.include_subfolders, IncludeSubfolders);
             writer.WriteAttributeIfString(ATTR.qc_file_pattern, QcFilePattern);
+            writer.WriteAttribute(ATTR.is_file_pattern_regex, IsQcFilePatternRegex);
             writer.WriteAttributeNullable(ATTR.results_window, ResultsWindow);
             writer.WriteAttributeIfString(ATTR.instrument_type, InstrumentType);
             writer.WriteAttributeNullable(ATTR.acquisition_time, AcquisitionTime);
@@ -350,7 +374,9 @@ namespace AutoQC
         {
             return string.Equals(SkylineFilePath, other.SkylineFilePath) 
                 && string.Equals(FolderToWatch, other.FolderToWatch) 
-                && string.Equals(QcFilePattern, other.QcFilePattern) 
+                && IncludeSubfolders == other.IncludeSubfolders 
+                && string.Equals(QcFilePattern, other.QcFilePattern)
+                && IsQcFilePatternRegex == other.IsQcFilePatternRegex
                 && ResultsWindow == other.ResultsWindow 
                 && string.Equals(InstrumentType, other.InstrumentType) 
                 && AcquisitionTime == other.AcquisitionTime 
@@ -371,7 +397,9 @@ namespace AutoQC
             {
                 var hashCode = (SkylineFilePath != null ? SkylineFilePath.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ (FolderToWatch != null ? FolderToWatch.GetHashCode() : 0);
+                hashCode = (hashCode*397) ^ IncludeSubfolders.GetHashCode();
                 hashCode = (hashCode*397) ^ (QcFilePattern != null ? QcFilePattern.GetHashCode() : 0);
+                hashCode = (hashCode*397) ^ IsQcFilePatternRegex.GetHashCode();
                 hashCode = (hashCode*397) ^ ResultsWindow;
                 hashCode = (hashCode*397) ^ (InstrumentType != null ? InstrumentType.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ AcquisitionTime;

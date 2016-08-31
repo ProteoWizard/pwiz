@@ -56,6 +56,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestUtils.cs" />
     <Compile Include="AutoQCBackgroundWorkerTest.cs" />
+    <Compile Include="AutoQcFileSystemWatcherTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AutoQC\AutoQC.csproj">

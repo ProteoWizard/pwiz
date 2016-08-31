@@ -114,7 +114,19 @@ namespace AutoQC
                 if (!configRunner.IsConfigEnabled())
                     continue;
                 _logger.Info(string.Format("Starting configuration {0}", configRunner.GetConfigName()));
+                StartConfigRunner(configRunner); 
+            }
+        }
+
+        private static void StartConfigRunner(ConfigRunner configRunner)
+        {
+            try
+            {
                 configRunner.Start();
+            }
+            catch (ArgumentException e)
+            {
+                ShowErrorDialog(e.Message);
             }
         }
 
@@ -129,7 +141,7 @@ namespace AutoQC
             if (config.IsEnabled)
             {
                 _logger.Info(string.Format("Starting configuration \"{0}\"", config.Name));
-                configRunner.Start();
+                StartConfigRunner(configRunner);
             }
             else
             {
@@ -137,6 +149,13 @@ namespace AutoQC
                 configRunner.Stop();
             }
         }
+
+        public static void ShowErrorDialog(string message)
+        {
+            MessageBox.Show(message, "Configuration Validation Error",
+                MessageBoxButtons.OK);
+        }
+
 
         #region event handlers
 

@@ -119,6 +119,17 @@ namespace AutoQC
 
         public void Start()
         {
+            try
+            {
+                Config.MainSettings.ValidateSettings();
+            }
+            catch (ArgumentException ex)
+            {
+                ChangeStatus(Status.Error);
+                _logger.LogException(ex);
+                throw ex;
+            }
+
             RunBackgroundWorker(RunConfiguration, ProcessFilesCompleted);
         }
 
@@ -240,7 +251,7 @@ namespace AutoQC
                 if (filePath != null)
                 {
                     var importContext = new ImportContext(filePath) { TotalImportCount = _totalImportCount };
-                    bool success = ImportFile(e, importContext);
+                    var success = ImportFile(e, importContext);
 
                     
                     if (!_fileWatcher.IsFolderAvailable())
@@ -534,8 +545,8 @@ namespace AutoQC
                 logger.LogException(e);
                 return false;
             }
-            logger.LogError("\"Integrate all\" is not checked for the Skyline document. This setting is under the \"Settings\" menu, and should be checked for " +
-                            "Skyline documents with QC results.");
+            logger.LogError("\"Integrate all\" is not checked for the Skyline document. This setting is under the \"Settings\" menu in Skyline, and should be checked for " +
+                            " documents with QC results.");
             return false;
         }
 

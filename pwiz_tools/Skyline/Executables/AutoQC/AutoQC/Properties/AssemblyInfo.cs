@@ -4,8 +4,8 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Panorama AutoQC")]
-[assembly: AssemblyDescription("Panorama AutoQC")]
+[assembly: AssemblyTitle("AutoQC Loader")]
+[assembly: AssemblyDescription("AutoQC Loader")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("University of Washington")]
 [assembly: AssemblyProduct("Panorama AutoQC")]
