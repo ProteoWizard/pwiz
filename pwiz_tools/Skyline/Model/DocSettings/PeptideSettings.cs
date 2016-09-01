@@ -60,6 +60,12 @@ namespace pwiz.Skyline.Model.DocSettings
             Modifications = modifications;
             Integration = integration;
             BackgroundProteome = backgroundProteome;
+            if ((BackgroundProteome == null || BackgroundProteome.IsNone) &&
+                Filter.PeptideUniqueness != PeptideFilter.PeptideUniquenessConstraint.none)
+            {
+                // No peptide uniqueness filtering without a background proteome
+                Filter = Filter.ChangePeptideUniqueness(PeptideFilter.PeptideUniquenessConstraint.none);
+            }
             Quantification = QuantificationSettings.DEFAULT;
         }
 
@@ -968,7 +974,7 @@ namespace pwiz.Skyline.Model.DocSettings
             var result = new Dictionary<string, bool>();
             foreach (var s in sequences)
             {
-                if (!result.ContainsKey(s))
+                if (!string.IsNullOrEmpty(s) && !result.ContainsKey(s)) // Watch out for non-peptide molecules
                 {
                     result.Add(s, true);
                 }

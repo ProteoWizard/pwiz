@@ -183,7 +183,9 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 peptideSettingsUI.SelectedTab = PeptideSettingsUI.TABS.Digest;
-                expectChange = peptideSettingsUI.ComboPeptideUniquenessConstraintSelected != testType;
+                expectChange = peptideSettingsUI.ComboPeptideUniquenessConstraintSelected != testType &&
+                    !(peptideSettingsUI.ComboPeptideUniquenessConstraintSelected == PeptideFilter.PeptideUniquenessConstraint.none &&
+                     Equals(peptideSettingsUI.SelectedBackgroundProteome, peptideSettingsUI.ListBackgroundProteomes.FirstOrDefault())); // Won't switch away from "none" if there's no background proteome
                 peptideSettingsUI.ComboPeptideUniquenessConstraintSelected = testType;
             });
             OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);

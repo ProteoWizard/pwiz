@@ -249,6 +249,10 @@ namespace pwiz.Skyline.Model.Proteome
         public Dictionary<string, DigestionPeptideStatsDetailed> GetPeptidesAppearances(
             Dictionary<string, bool> peptidesOfInterest, Enzyme enzyme, PeptideSettings settings, SrmSettingsChangeMonitor progressMonitor)
         {
+            if (string.IsNullOrEmpty(DatabasePath))
+            {
+                return null;
+            }
             var results = peptidesOfInterest.ToDictionary(pep => pep.Key, pep =>  new DigestionPeptideStatsDetailed());
             if (results.Count == 0)
             {
@@ -302,7 +306,8 @@ namespace pwiz.Skyline.Model.Proteome
         {
             var peptideUniquenessConstraint = peptideSettings.Filter.PeptideUniqueness;
             Assume.IsTrue(sequences.All(s => s.Value));  // Caller should seed this with all true
-            if (peptideUniquenessConstraint == PeptideFilter.PeptideUniquenessConstraint.none)
+            if (peptideUniquenessConstraint == PeptideFilter.PeptideUniquenessConstraint.none ||
+                peptideSettings.BackgroundProteome == null || peptideSettings.BackgroundProteome.IsNone)
             {
                 return sequences;  // No filtering
             }
