@@ -1695,7 +1695,7 @@ namespace pwiz.Skyline
             BulkUpdateTreeNodes<PeptideTreeNode>(() =>
             {
                 foreach (PeptideGroupTreeNode node in SequenceTree.GetSequenceNodes())
-                    foreach (PeptideTreeNode child in node.Nodes)
+                    foreach (PeptideTreeNode child in node.Nodes.OfType<PeptideTreeNode>())
                         child.CollapseAndClear();
             });
             Settings.Default.SequenceTreeExpandPeptides =
