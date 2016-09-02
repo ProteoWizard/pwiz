@@ -414,7 +414,7 @@ namespace pwiz.Skyline.Model.Results
         {
             return isoWin.IsolationMz.HasValue && isoWin.IsolationWidth.HasValue &&
                 // TODO: Introduce a variable cut-off in the document settings
-                isoWin.IsolationWidth.Value < 200;
+                isoWin.IsolationWidth.Value <= 200;
         }
 
         public bool IsMsMsSpectrum(MsDataSpectrum dataSpectrum)
