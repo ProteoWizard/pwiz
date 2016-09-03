@@ -1132,6 +1132,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Normalization Method.
+        /// </summary>
+        public static string NormalizationMethod {
+            get {
+                return ResourceManager.GetString("NormalizationMethod", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Normalized Area.
         /// </summary>
         public static string NormalizedArea {

@@ -48,6 +48,7 @@ namespace pwiz.Skyline
             this.setStandardTypeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.noStandardContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.normStandardContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.surrogateStandardContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.qcStandardContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.irtStandardContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.modifyPeptideContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -319,6 +320,7 @@ namespace pwiz.Skyline
             this.setStandardTypeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.noStandardMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.normStandardMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.surrogateStandardMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.qcStandardMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.irtStandardMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.modifyPeptideMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -454,6 +456,7 @@ namespace pwiz.Skyline
             this.showMassErrorLegendContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.massErrorPointsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.massErrorTargetsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.massErrorTargets1FDRContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.massErrorDecoysContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.binCountContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.ppm05ContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -470,7 +473,6 @@ namespace pwiz.Skyline
             this.massErorrRetentionTimeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.massErrorMassToChargContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.massErrorlogScaleContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.massErrorTargets1FDRContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenuTreeNode.SuspendLayout();
             this.contextMenuSpectrum.SuspendLayout();
             this.contextMenuChromatogram.SuspendLayout();
@@ -575,6 +577,7 @@ namespace pwiz.Skyline
             this.setStandardTypeContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.noStandardContextMenuItem,
             this.normStandardContextMenuItem,
+            this.surrogateStandardContextMenuItem,
             this.qcStandardContextMenuItem,
             this.irtStandardContextMenuItem});
             this.setStandardTypeContextMenuItem.Name = "setStandardTypeContextMenuItem";
@@ -592,6 +595,12 @@ namespace pwiz.Skyline
             this.normStandardContextMenuItem.Name = "normStandardContextMenuItem";
             resources.ApplyResources(this.normStandardContextMenuItem, "normStandardContextMenuItem");
             this.normStandardContextMenuItem.Click += new System.EventHandler(this.normStandardMenuItem_Click);
+            // 
+            // surrogateStandardContextMenuItem
+            // 
+            this.surrogateStandardContextMenuItem.Name = "surrogateStandardContextMenuItem";
+            resources.ApplyResources(this.surrogateStandardContextMenuItem, "surrogateStandardContextMenuItem");
+            this.surrogateStandardContextMenuItem.Click += new System.EventHandler(this.surrogateStandardMenuItem_Click);
             // 
             // qcStandardContextMenuItem
             // 
@@ -1728,6 +1737,7 @@ namespace pwiz.Skyline
             // 
             // statusStrip
             // 
+            resources.ApplyResources(this.statusStrip, "statusStrip");
             this.statusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.statusGeneral,
             this.statusProgress,
@@ -1736,7 +1746,6 @@ namespace pwiz.Skyline
             this.statusPeptides,
             this.statusPrecursors,
             this.statusIons});
-            resources.ApplyResources(this.statusStrip, "statusStrip");
             this.statusStrip.Name = "statusStrip";
             // 
             // statusGeneral
@@ -2497,6 +2506,7 @@ namespace pwiz.Skyline
             this.setStandardTypeMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.noStandardMenuItem,
             this.normStandardMenuItem,
+            this.surrogateStandardMenuItem,
             this.qcStandardMenuItem,
             this.irtStandardMenuItem});
             this.setStandardTypeMenuItem.Name = "setStandardTypeMenuItem";
@@ -2514,6 +2524,12 @@ namespace pwiz.Skyline
             this.normStandardMenuItem.Name = "normStandardMenuItem";
             resources.ApplyResources(this.normStandardMenuItem, "normStandardMenuItem");
             this.normStandardMenuItem.Click += new System.EventHandler(this.normStandardMenuItem_Click);
+            // 
+            // surrogateStandardMenuItem
+            // 
+            this.surrogateStandardMenuItem.Name = "surrogateStandardMenuItem";
+            resources.ApplyResources(this.surrogateStandardMenuItem, "surrogateStandardMenuItem");
+            this.surrogateStandardMenuItem.Click += new System.EventHandler(this.surrogateStandardMenuItem_Click);
             // 
             // qcStandardMenuItem
             // 
@@ -3474,6 +3490,12 @@ namespace pwiz.Skyline
             resources.ApplyResources(this.massErrorTargetsContextMenuItem, "massErrorTargetsContextMenuItem");
             this.massErrorTargetsContextMenuItem.Click += new System.EventHandler(this.massErrorTargetsContextMenuItem_Click);
             // 
+            // massErrorTargets1FDRContextMenuItem
+            // 
+            this.massErrorTargets1FDRContextMenuItem.Name = "massErrorTargets1FDRContextMenuItem";
+            resources.ApplyResources(this.massErrorTargets1FDRContextMenuItem, "massErrorTargets1FDRContextMenuItem");
+            this.massErrorTargets1FDRContextMenuItem.Click += new System.EventHandler(this.massErrorTargets1FDRContextMenuItem_Click);
+            // 
             // massErrorDecoysContextMenuItem
             // 
             this.massErrorDecoysContextMenuItem.Name = "massErrorDecoysContextMenuItem";
@@ -3582,12 +3604,6 @@ namespace pwiz.Skyline
             this.massErrorlogScaleContextMenuItem.Name = "massErrorlogScaleContextMenuItem";
             resources.ApplyResources(this.massErrorlogScaleContextMenuItem, "massErrorlogScaleContextMenuItem");
             this.massErrorlogScaleContextMenuItem.Click += new System.EventHandler(this.massErrorlogScaleContextMenuItem_Click);
-            // 
-            // massErrorTargets1FDRContextMenuItem
-            // 
-            this.massErrorTargets1FDRContextMenuItem.Name = "massErrorTargets1FDRContextMenuItem";
-            resources.ApplyResources(this.massErrorTargets1FDRContextMenuItem, "massErrorTargets1FDRContextMenuItem");
-            this.massErrorTargets1FDRContextMenuItem.Click += new System.EventHandler(this.massErrorTargets1FDRContextMenuItem_Click);
             // 
             // SkylineWindow
             // 
@@ -4060,6 +4076,8 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem massErrorMassToChargContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem massErrorlogScaleContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem massErrorTargets1FDRContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem surrogateStandardMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem surrogateStandardContextMenuItem;
     }
 }
 

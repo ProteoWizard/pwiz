@@ -92,8 +92,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             {
                 foreach (var precursor in peptide.TransitionGroups)
                 {
-                    if (Equals(ComparisonDef.NormalizationMethod.IsotopeLabelTypeName,
-                        precursor.TransitionGroup.LabelType.Name))
+                    if (NormalizationMethod.RatioToLabel.Matches(ComparisonDef.NormalizationMethod, precursor.TransitionGroup.LabelType))
                     {
                         continue;
                     }
@@ -412,7 +411,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         private IEnumerable<IGrouping<int, DataRowDetails>> RemoveIncompleteReplicates(IList<DataRowDetails> dataRows)
         {
             var rowsByReplicateIndex = dataRows.ToLookup(row => row.ReplicateIndex);
-            if (null != ComparisonDef.NormalizationMethod.IsotopeLabelTypeName)
+            if (ComparisonDef.NormalizationMethod is NormalizationMethod.RatioToLabel)
             {
                 return rowsByReplicateIndex;
             }

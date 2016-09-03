@@ -431,6 +431,7 @@ namespace pwiz.Skyline.Model.Databinding
                     columnsToRemove.Add(PropertyPath.Root.Property("ConcentrationMultiplier"));
                     columnsToRemove.Add(PropertyPath.Root.Property("InternalStandardConcentration"));
                     columnsToRemove.Add(PropertyPath.Root.Property("CalibrationCurve"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("NormalizationMethod"));
                     if (docHasOnlyCustomIons)
                     {
                         // Peptide-oriented fields that make no sense in a small molecule context

@@ -112,7 +112,7 @@ namespace pwiz.Skyline.Model
         }
 
         public int RevisionIndex { get; private set; }
-        public int RevisionIndexCurrent { get { return 6; } }
+        public int RevisionIndexCurrent { get { return 7; } }
         public override void ReadXml(XmlReader reader)
         {
             RevisionIndex = reader.GetIntAttribute(Attr.revision);
@@ -152,6 +152,10 @@ namespace pwiz.Skyline.Model
             if (revisionIndex >= 6)
             {
                 reportStrings.Add(REPORTS_V6);
+            }
+            if (revisionIndex >= 7)
+            {
+                reportStrings.Add(REPORTS_V7);
             }
             var list = new List<KeyValuePair<ViewGroupId, ViewSpec>>();
             var xmlSerializer = new XmlSerializer(typeof(ViewSpecList));
@@ -377,6 +381,20 @@ namespace pwiz.Skyline.Model
     <column name='StandardType' />
     <column name='InternalStandardConcentration' />
     <column name='ConcentrationMultiplier' />
+    <column name='CalibrationCurve' />
+    <column name='Note' />
+  </view>
+</views>
+";
+        private const string REPORTS_V7 = @"<views>
+  <view name='Peptide Quantification' rowsource='pwiz.Skyline.Model.Databinding.Entities.Peptide' sublist='Results!*'>
+    <column name='' />
+    <column name='Protein' />
+    <column name='ModifiedSequence' />
+    <column name='StandardType' />
+    <column name='InternalStandardConcentration' />
+    <column name='ConcentrationMultiplier' />
+    <column name='NormalizationMethod' />
     <column name='CalibrationCurve' />
     <column name='Note' />
   </view>

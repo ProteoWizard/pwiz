@@ -154,8 +154,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             CalibrationCurveFitter curveFitter = new CalibrationCurveFitter(peptideQuantifier, document.Settings);
             if (peptideQuantifier.QuantificationSettings.RegressionFit == RegressionFit.NONE)
             {
-                if (string.IsNullOrEmpty(
-                    peptideQuantifier.QuantificationSettings.NormalizationMethod.IsotopeLabelTypeName))
+                if (!(peptideQuantifier.NormalizationMethod is NormalizationMethod.RatioToLabel))
                 {
                     zedGraphControl.GraphPane.Title.Text =
                         QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_Use_the_Quantification_tab_on_the_Peptide_Settings_dialog_to_control_the_conversion_of_peak_areas_to_concentrations_;

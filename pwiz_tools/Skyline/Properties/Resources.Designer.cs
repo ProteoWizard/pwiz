@@ -15114,6 +15114,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap MoleculeStandard {
+            get {
+                object obj = ResourceManager.GetObject("MoleculeStandard", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Export mProphet Features.
         /// </summary>
         public static string MProphetFeaturesDlg_OkDialog_Export_mProphet_Features {
@@ -17468,6 +17478,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to iRT standards can only be changed by modifying the iRT calculator.
+        /// </summary>
+        public static string Peptide_StandardType_iRT_standards_can_only_be_changed_by_modifying_the_iRT_calculator {
+            get {
+                return ResourceManager.GetString("Peptide_StandardType_iRT_standards_can_only_be_changed_by_modifying_the_iRT_calcu" +
+                        "lator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Direct editing of this value is only supported for small molecules..
         /// </summary>
         public static string Peptide_ThrowIfNotSmallMolecule_Direct_editing_of_this_value_is_only_supported_for_small_molecules_ {
@@ -17582,7 +17602,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Normalization.
+        ///   Looks up a localized string similar to Global Standard.
         /// </summary>
         public static string PeptideDocNode_GetStandardTypeDisplayName_Normalization {
             get {
@@ -19061,6 +19081,24 @@ namespace pwiz.Skyline.Properties {
         public static string RatioPropertyAccessor_TransitionRatioProperty_Area_Ratio_To_Global_Standards {
             get {
                 return ResourceManager.GetString("RatioPropertyAccessor_TransitionRatioProperty_Area_Ratio_To_Global_Standards", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ratio to surrogate {0}.
+        /// </summary>
+        public static string RatioToSurrogate_ToString_Ratio_to_surrogate__0_ {
+            get {
+                return ResourceManager.GetString("RatioToSurrogate_ToString_Ratio_to_surrogate__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ratio to surrogate {0} ({1}).
+        /// </summary>
+        public static string RatioToSurrogate_ToString_Ratio_to_surrogate__0____1__ {
+            get {
+                return ResourceManager.GetString("RatioToSurrogate_ToString_Ratio_to_surrogate__0____1__", resourceCulture);
             }
         }
         
@@ -24280,6 +24318,15 @@ namespace pwiz.Skyline.Properties {
         public static string SrmTreeNodeParent_ShowPickList_An_error_occurred_creating_options_ {
             get {
                 return ResourceManager.GetString("SrmTreeNodeParent_ShowPickList_An_error_occurred_creating_options_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Surrogate Standard.
+        /// </summary>
+        public static string StandardType_SURROGATE_STANDARD_Surrogate_Standard {
+            get {
+                return ResourceManager.GetString("StandardType_SURROGATE_STANDARD_Surrogate_Standard", resourceCulture);
             }
         }
         

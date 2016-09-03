@@ -699,6 +699,9 @@
         <xs:attribute name="standard_type" type="xs:string"/>
         <xs:attribute name="explicit_retention_time" type="xs:double"/>  <!-- optional RT override value from transition list import -->
         <xs:attribute name="explicit_retention_time_window" type="xs:double"/>  <!-- optional RT override value from transition list import -->
+        <xs:attribute name="concentration_multiplier" type="xs:double" />
+        <xs:attribute name="internal_standard_concentration" type="xs:double" />
+        <xs:attribute name="normalization_method" type="xs:string" />
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
@@ -892,9 +895,6 @@
             </xs:documentation>
           </xs:annotation>
         </xs:attribute>
-        <xs:attribute name="stock_concentration" type="xs:double" />
-        <xs:attribute name="internal_standard_concentration" type="xs:double" />
-        <xs:attribute name="concentration_units" type="xs:string" />
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>

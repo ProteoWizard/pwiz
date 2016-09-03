@@ -214,7 +214,7 @@ namespace pwiz.Skyline
             }
             catch (ZipException zipException)
             {
-                MessageDlg.ShowWithException(this, string.Format(Resources.SkylineWindow_OpenSharedFile_The_zip_file__0__cannot_be_read,
+                MessageDlg.ShowWithException(parentWindow ?? this, string.Format(Resources.SkylineWindow_OpenSharedFile_The_zip_file__0__cannot_be_read,
                                                     zipPath), zipException);
                 return false;
             }

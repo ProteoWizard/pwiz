@@ -154,11 +154,25 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
-        public string StandardType
+        [DataGridViewColumnType(typeof(StandardTypeDataGridViewColumn))]
+        public StandardType StandardType
         {
             get
             {
                 return DocNode.GlobalStandardType;
+            }
+            set
+            {
+                if (StandardType == value)
+                {
+                    return;
+                }
+                if (StandardType == StandardType.IRT || value == StandardType.IRT)
+                {
+                    throw new InvalidOperationException(Resources.Peptide_StandardType_iRT_standards_can_only_be_changed_by_modifying_the_iRT_calculator);
+                }
+                ModifyDocument(EditDescription.SetColumn("StandardType", value), // Not L10N
+                    doc => doc.ChangeStandardType(value, new[]{IdentityPath}));
             }
         }
 
@@ -261,6 +275,17 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                     ChangeDocNode(EditDescription.SetColumn("ExplicitRetentionTimeWindow", value), // Not L10N
                         DocNode.ChangeExplicitRetentionTime(new ExplicitRetentionTimeInfo(DocNode.ExplicitRetentionTime.RetentionTime, value)));
                 }
+            }
+        }
+
+        [DataGridViewColumnType(typeof(NormalizationMethodDataGridViewColumn))]
+        public NormalizationMethod NormalizationMethod
+        {
+            get { return DocNode.NormalizationMethod; }
+            set
+            {
+                ChangeDocNode(EditDescription.SetColumn("NormalizationMethod", value), // Not L10N
+                    DocNode.ChangeNormalizationMethod(value));
             }
         }
 

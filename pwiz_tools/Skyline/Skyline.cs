@@ -2070,32 +2070,6 @@ namespace pwiz.Skyline
             }
         }
 
-        private void setStandardTypeContextMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            // Only show iRT menu item when there is an iRT calculator
-            var rtRegression = Document.Settings.PeptideSettings.Prediction.RetentionTime;
-            irtStandardContextMenuItem.Visible = (rtRegression != null && rtRegression.Calculator is RCalcIrt);
-        }
-
-        private void setStandardTypeMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            bool isIrtPeptideSelected = IsIrtPeptideSelected();
-            noStandardMenuItem.Enabled =
-                qcStandardMenuItem.Enabled =
-                normStandardMenuItem.Enabled = !isIrtPeptideSelected;
-            irtStandardMenuItem.Visible = isIrtPeptideSelected;
-        }
-
-        private bool IsIrtPeptideSelected()
-        {
-            IList<IdentityPath> selPaths = SequenceTree.SelectedPaths;
-            return (from nodePath in selPaths
-                    where !Equals(nodePath.Child, SequenceTree.NODE_INSERT_ID)
-                    select DocumentUI.FindNode(nodePath))
-                        .OfType<PeptideDocNode>()
-                        .Any(nodePep => Equals(nodePep.GlobalStandardType, PeptideDocNode.STANDARD_TYPE_IRT));
-        }
-
         private void noStandardMenuItem_Click(object sender, EventArgs e)
         {
             SetStandardType(null);
@@ -2108,7 +2082,12 @@ namespace pwiz.Skyline
 
         private void normStandardMenuItem_Click(object sender, EventArgs e)
         {
-            SetStandardType(PeptideDocNode.STANDARD_TYPE_NORMALIZAITON);
+            SetStandardType(StandardType.GLOBAL_STANDARD);
+        }
+
+        private void surrogateStandardMenuItem_Click(object sender, EventArgs e)
+        {
+            SetStandardType(StandardType.SURROGATE_STANDARD);
         }
 
         private void irtStandardContextMenuItem_Click(object sender, EventArgs e)
@@ -2117,29 +2096,70 @@ namespace pwiz.Skyline
                 Resources.SkylineWindow_irtStandardContextMenuItem_Click_In_the_Peptide_Settings___Prediction_tab__click_the_calculator_button_to_edit_the_current_iRT_calculator_));
         }
 
-        public void SetStandardType(string standardType)
-        {
-            IList<IdentityPath> selPaths = SequenceTree.SelectedPaths;
-            string message = standardType == null
-                ? Resources.SkylineWindow_SetStandardType_Clear_standard_type
-                : string.Format(Resources.SkylineWindow_SetStandardType_Set_standard_type_to__0_, PeptideDocNode.GetStandardTypeDisplayName(standardType));
 
-            ModifyDocument(message, doc => (SrmDocument) doc.ReplaceChildren(GetStandardTypeReplacements(doc, standardType, selPaths)));
+        private void setStandardTypeContextMenuItem_DropDownOpening(object sender, EventArgs e)
+        {
+            UpdateStandardTypeMenu();
         }
 
-        private IEnumerable<NodeReplacement> GetStandardTypeReplacements(SrmDocument doc,
-                                                                         string standardType,
-                                                                         IEnumerable<IdentityPath> selPaths)
+        private void setStandardTypeMenuItem_DropDownOpening(object sender, EventArgs e)
         {
-            foreach (IdentityPath nodePath in selPaths)
+            UpdateStandardTypeMenu();
+        }
+
+        private void UpdateStandardTypeMenu()
+        {
+            var selectedPeptides = SequenceTree.SelectedDocNodes
+                .OfType<PeptideDocNode>().ToArray();
+            var selectedStandardTypes = selectedPeptides.Select(peptide => peptide.GlobalStandardType)
+                .Distinct().ToArray();
+            foreach (var menuItemStandardType in GetStandardTypeMenuItems())
             {
-                if (Equals(nodePath.Child, SequenceTree.NODE_INSERT_ID))
-                    continue;
-                var nodePep = doc.FindNode(nodePath) as PeptideDocNode;
-                if (nodePep == null || nodePep.IsDecoy || Equals(standardType, nodePep.GlobalStandardType))
-                    continue;
-                yield return new NodeReplacement(nodePath.Parent, nodePep.ChangeStandardType(standardType));
+                var toolStripMenuItem = menuItemStandardType.Key;
+                var standardType = menuItemStandardType.Value;
+                if (standardType == StandardType.IRT)
+                {
+                    // Only show iRT menu item when there is an iRT calculator
+                    var rtRegression = Document.Settings.PeptideSettings.Prediction.RetentionTime;
+                    toolStripMenuItem.Visible = rtRegression == null || !(rtRegression.Calculator is RCalcIrt);
+                    toolStripMenuItem.Enabled = selectedStandardTypes.Contains(StandardType.IRT);
+                }
+                else
+                {
+                    toolStripMenuItem.Enabled = selectedPeptides.Length >= 1 &&
+                                                !selectedStandardTypes.Contains(StandardType.IRT);
+                }
+                toolStripMenuItem.Checked = selectedStandardTypes.Length == 1 &&
+                                            selectedStandardTypes[0] == standardType;
             }
+        }
+
+        public void SetStandardType(StandardType standardType)
+        {
+            IEnumerable<IdentityPath> selPaths = SequenceTree.SelectedPaths
+                .Where(idPath => !ReferenceEquals(idPath.Child, SequenceTree.NODE_INSERT_ID));
+            string message = standardType == null
+                ? Resources.SkylineWindow_SetStandardType_Clear_standard_type
+                : string.Format(Resources.SkylineWindow_SetStandardType_Set_standard_type_to__0_, standardType);
+
+            ModifyDocument(message, doc => doc.ChangeStandardType(standardType, selPaths));
+        }
+
+        public IDictionary<ToolStripMenuItem, StandardType> GetStandardTypeMenuItems()
+        {
+            return new Dictionary<ToolStripMenuItem, StandardType>
+            {
+                {noStandardMenuItem, null},
+                {noStandardContextMenuItem, null},
+                {normStandardMenuItem, StandardType.GLOBAL_STANDARD},
+                {normStandardContextMenuItem, StandardType.GLOBAL_STANDARD},
+                {surrogateStandardMenuItem, StandardType.SURROGATE_STANDARD},
+                {surrogateStandardContextMenuItem, StandardType.SURROGATE_STANDARD},
+                {qcStandardMenuItem, StandardType.QC},
+                {qcStandardContextMenuItem, StandardType.QC},
+                {irtStandardMenuItem, StandardType.IRT},
+                {irtStandardContextMenuItem, StandardType.IRT},
+            };
         }
 
         private bool HasSelectedTargetPeptides()
@@ -3993,7 +4013,7 @@ namespace pwiz.Skyline
         }
 
         public ContextMenuStrip ContextMenuTreeNode { get { return contextMenuTreeNode; } }
-        public ToolStripMenuItem SetStandardTypeConextMenuItem { get { return setStandardTypeContextMenuItem; } }
+        public ToolStripMenuItem SetStandardTypeContextMenuItem { get { return setStandardTypeContextMenuItem; } }
         public ToolStripMenuItem IrtStandardContextMenuItem { get { return irtStandardContextMenuItem; } }
 
         public void ShowTreeNodeContextMenu(Point pt)

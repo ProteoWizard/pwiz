@@ -429,6 +429,9 @@
   <data name="NextAa">
     <value>Next Aa</value>
   </data>
+  <data name="NormalizationMethod">
+    <value>Normalization Method</value>
+  </data>
   <data name="NormalizedArea">
     <value>Normalized Area</value>
   </data>

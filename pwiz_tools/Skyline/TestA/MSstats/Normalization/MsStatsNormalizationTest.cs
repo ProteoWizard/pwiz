@@ -148,7 +148,7 @@ namespace pwiz.SkylineTestA.MSstats.Normalization
             {
                 foreach (var peptide in protein.Molecules)
                 {
-                    if (!string.IsNullOrEmpty(peptide.GlobalStandardType))
+                    if (peptide.GlobalStandardType != null)
                     {
                         continue;
                     }
@@ -211,7 +211,7 @@ namespace pwiz.SkylineTestA.MSstats.Normalization
                 else if (!SrmDocument.IsSpecialNonProteomicTestDocNode(protein)) // Avoid the special small molecule test nodes
                 {
                     Assert.IsNull(groupComparisonResult);
-                    var standardPeptides = protein.Molecules.Where(mol => !string.IsNullOrEmpty(mol.GlobalStandardType)).ToArray();
+                    var standardPeptides = protein.Molecules.Where(mol => null != mol.GlobalStandardType).ToArray();
                     Assert.AreNotEqual(0, standardPeptides.Length);
                 }
             }

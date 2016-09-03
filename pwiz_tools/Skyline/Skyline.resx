@@ -191,25 +191,31 @@
     <value>Remove Peak</value>
   </data>
   <data name="noStandardContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>149, 22</value>
+    <value>175, 22</value>
   </data>
   <data name="noStandardContextMenuItem.Text" xml:space="preserve">
     <value>None</value>
   </data>
   <data name="normStandardContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>149, 22</value>
+    <value>175, 22</value>
   </data>
   <data name="normStandardContextMenuItem.Text" xml:space="preserve">
-    <value>Normalization</value>
+    <value>Global Standard</value>
+  </data>
+  <data name="surrogateStandardContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>175, 22</value>
+  </data>
+  <data name="surrogateStandardContextMenuItem.Text" xml:space="preserve">
+    <value>Surrogate Standard</value>
   </data>
   <data name="qcStandardContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>149, 22</value>
+    <value>175, 22</value>
   </data>
   <data name="qcStandardContextMenuItem.Text" xml:space="preserve">
     <value>QC</value>
   </data>
   <data name="irtStandardContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>149, 22</value>
+    <value>175, 22</value>
   </data>
   <data name="irtStandardContextMenuItem.Text" xml:space="preserve">
     <value>iRT</value>
@@ -258,13 +264,13 @@
     <value>Ratios To</value>
   </data>
   <data name="singleReplicateTreeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>106, 22</value>
+    <value>152, 22</value>
   </data>
   <data name="singleReplicateTreeContextMenuItem.Text" xml:space="preserve">
     <value>Single</value>
   </data>
   <data name="bestReplicateTreeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>106, 22</value>
+    <value>152, 22</value>
   </data>
   <data name="bestReplicateTreeContextMenuItem.Text" xml:space="preserve">
     <value>Best</value>
@@ -762,19 +768,19 @@
     <value>Plot</value>
   </data>
   <data name="timeTargetsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>152, 22</value>
+    <value>126, 22</value>
   </data>
   <data name="timeTargetsContextMenuItem.Text" xml:space="preserve">
     <value>Targets</value>
   </data>
   <data name="timeStandardsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>152, 22</value>
+    <value>126, 22</value>
   </data>
   <data name="timeStandardsContextMenuItem.Text" xml:space="preserve">
     <value>Standards</value>
   </data>
   <data name="timeDecoysContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>152, 22</value>
+    <value>126, 22</value>
   </data>
   <data name="timeDecoysContextMenuItem.Text" xml:space="preserve">
     <value>Decoys</value>
@@ -1177,7 +1183,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panel1.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>6</value>
   </data>
   <metadata name="statusStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>334, 17</value>
@@ -1264,7 +1270,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;statusStrip.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>7</value>
   </data>
   <metadata name="mainToolStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>373, 95</value>
@@ -1387,7 +1393,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;mainToolStrip.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>8</value>
   </data>
   <metadata name="menuMain.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>224, 17</value>
@@ -1738,25 +1744,25 @@
     <value>204, 6</value>
   </data>
   <data name="insertFASTAMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>157, 22</value>
+    <value>156, 22</value>
   </data>
   <data name="insertFASTAMenuItem.Text" xml:space="preserve">
     <value>&amp;FASTA...</value>
   </data>
   <data name="insertProteinsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>157, 22</value>
+    <value>156, 22</value>
   </data>
   <data name="insertProteinsMenuItem.Text" xml:space="preserve">
     <value>Pr&amp;oteins...</value>
   </data>
   <data name="insertPeptidesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>157, 22</value>
+    <value>156, 22</value>
   </data>
   <data name="insertPeptidesMenuItem.Text" xml:space="preserve">
     <value>&amp;Peptides...</value>
   </data>
   <data name="insertTransitionListMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>157, 22</value>
+    <value>156, 22</value>
   </data>
   <data name="insertTransitionListMenuItem.Text" xml:space="preserve">
     <value>&amp;Transition List...</value>
@@ -1966,19 +1972,25 @@
     <value>204, 6</value>
   </data>
   <data name="noStandardMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>149, 22</value>
+    <value>175, 22</value>
   </data>
   <data name="noStandardMenuItem.Text" xml:space="preserve">
     <value>&amp;None</value>
   </data>
   <data name="normStandardMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>149, 22</value>
+    <value>175, 22</value>
   </data>
   <data name="normStandardMenuItem.Text" xml:space="preserve">
-    <value>N&amp;ormalization</value>
+    <value>&amp;Global Standard</value>
+  </data>
+  <data name="surrogateStandardMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>175, 22</value>
+  </data>
+  <data name="surrogateStandardMenuItem.Text" xml:space="preserve">
+    <value>Surrogate Standard</value>
   </data>
   <data name="qcStandardMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>149, 22</value>
+    <value>175, 22</value>
   </data>
   <data name="qcStandardMenuItem.Text" xml:space="preserve">
     <value>Q&amp;C</value>
@@ -1987,7 +1999,7 @@
     <value>False</value>
   </data>
   <data name="irtStandardMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>149, 22</value>
+    <value>175, 22</value>
   </data>
   <data name="irtStandardMenuItem.Text" xml:space="preserve">
     <value>i&amp;RT</value>
@@ -2101,7 +2113,7 @@
     <value>Ctrl+T</value>
   </data>
   <data name="arrangeTiledMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>187, 22</value>
+    <value>186, 22</value>
   </data>
   <data name="arrangeTiledMenuItem.Text" xml:space="preserve">
     <value>&amp;Tiled</value>
@@ -2110,7 +2122,7 @@
     <value>False</value>
   </data>
   <data name="arrangeColumnMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>187, 22</value>
+    <value>186, 22</value>
   </data>
   <data name="arrangeColumnMenuItem.Text" xml:space="preserve">
     <value>&amp;Column</value>
@@ -2119,7 +2131,7 @@
     <value>False</value>
   </data>
   <data name="arrangeRowMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>187, 22</value>
+    <value>186, 22</value>
   </data>
   <data name="arrangeRowMenuItem.Text" xml:space="preserve">
     <value>&amp;Row</value>
@@ -2128,13 +2140,13 @@
     <value>Ctrl+Shift+T</value>
   </data>
   <data name="arrangedTabbedMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>187, 22</value>
+    <value>186, 22</value>
   </data>
   <data name="arrangedTabbedMenuItem.Text" xml:space="preserve">
     <value>T&amp;abbed</value>
   </data>
   <data name="groupedMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>187, 22</value>
+    <value>186, 22</value>
   </data>
   <data name="groupedMenuItem.Text" xml:space="preserve">
     <value>&amp;Grouped...</value>
@@ -2578,7 +2590,7 @@
     <value>&amp;Histogram</value>
   </data>
   <data name="massErrorHistogram2DMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>471, 42</value>
+    <value>228, 22</value>
   </data>
   <data name="massErrorHistogram2DMenuItem.Text" xml:space="preserve">
     <value>2D Histogram</value>
@@ -2776,7 +2788,7 @@
     <value>&amp;Options...</value>
   </data>
   <data name="toolsMenu.Size" type="System.Drawing.Size, System.Drawing">
-    <value>48, 20</value>
+    <value>47, 20</value>
   </data>
   <data name="toolsMenu.Text" xml:space="preserve">
     <value>&amp;Tools</value>
@@ -2848,7 +2860,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;menuMain.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>9</value>
   </data>
   <metadata name="contextMenuMassErrors.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>446, 56</value>
@@ -2872,7 +2884,7 @@
     <value>Histogram</value>
   </data>
   <data name="massErrorHistogram2DContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>384, 42</value>
+    <value>190, 22</value>
   </data>
   <data name="massErrorHistogram2DContextMenuItem.Text" xml:space="preserve">
     <value>2D Histogram</value>
@@ -2896,118 +2908,118 @@
     <value>Legend</value>
   </data>
   <data name="massErrorTargetsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>136, 22</value>
+    <value>168, 22</value>
   </data>
   <data name="massErrorTargetsContextMenuItem.Text" xml:space="preserve">
     <value>Targets</value>
   </data>
   <data name="massErrorTargets1FDRContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>136, 22</value>
+    <value>168, 22</value>
   </data>
   <data name="massErrorTargets1FDRContextMenuItem.Text" xml:space="preserve">
     <value>Targets at 1% FDR</value>
   </data>
   <data name="massErrorDecoysContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>136, 22</value>
+    <value>168, 22</value>
   </data>
   <data name="massErrorDecoysContextMenuItem.Text" xml:space="preserve">
     <value>Decoys</value>
   </data>
   <data name="massErrorPointsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>137, 22</value>
+    <value>136, 22</value>
   </data>
   <data name="massErrorPointsContextMenuItem.Text" xml:space="preserve">
     <value>Points</value>
   </data>
   <data name="ppm05ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>223, 42</value>
+    <value>117, 22</value>
   </data>
   <data name="ppm05ContextMenuItem.Text" xml:space="preserve">
     <value>0.5 ppm</value>
   </data>
   <data name="ppm10ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>223, 42</value>
+    <value>117, 22</value>
   </data>
   <data name="ppm10ContextMenuItem.Text" xml:space="preserve">
     <value>1.0 ppm</value>
   </data>
   <data name="ppm15ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>223, 42</value>
+    <value>117, 22</value>
   </data>
   <data name="ppm15ContextMenuItem.Text" xml:space="preserve">
     <value>1.5 ppm</value>
   </data>
   <data name="ppm20ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>223, 42</value>
+    <value>117, 22</value>
   </data>
   <data name="ppm20ContextMenuItem.Text" xml:space="preserve">
     <value>2.0 ppm</value>
   </data>
   <data name="binCountContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>263, 42</value>
+    <value>136, 22</value>
   </data>
   <data name="binCountContextMenuItem.Text" xml:space="preserve">
     <value>Bin Width</value>
   </data>
   <data name="massErrorAllTransitionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>246, 42</value>
+    <value>129, 22</value>
   </data>
   <data name="massErrorAllTransitionsContextMenuItem.Text" xml:space="preserve">
     <value>All</value>
   </data>
   <data name="massErrorBestTransitionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>246, 42</value>
+    <value>129, 22</value>
   </data>
   <data name="massErrorBestTransitionsContextMenuItem.Text" xml:space="preserve">
     <value>Best</value>
   </data>
   <data name="toolStripSeparator55.Size" type="System.Drawing.Size, System.Drawing">
-    <value>243, 6</value>
+    <value>126, 6</value>
   </data>
   <data name="MassErrorPrecursorsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>246, 42</value>
+    <value>129, 22</value>
   </data>
   <data name="MassErrorPrecursorsContextMenuItem.Text" xml:space="preserve">
     <value>Precursors</value>
   </data>
   <data name="MassErrorProductsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>246, 42</value>
+    <value>129, 22</value>
   </data>
   <data name="MassErrorProductsContextMenuItem.Text" xml:space="preserve">
     <value>Products</value>
   </data>
   <data name="massErrorTransitionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>263, 42</value>
+    <value>136, 22</value>
   </data>
   <data name="massErrorTransitionsContextMenuItem.Text" xml:space="preserve">
     <value>Transitions</value>
   </data>
   <data name="massErorrRetentionTimeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>309, 42</value>
+    <value>156, 22</value>
   </data>
   <data name="massErorrRetentionTimeContextMenuItem.Text" xml:space="preserve">
     <value>Retention Time</value>
   </data>
   <data name="massErrorMassToChargContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>309, 42</value>
+    <value>156, 22</value>
   </data>
   <data name="massErrorMassToChargContextMenuItem.Text" xml:space="preserve">
     <value>Mass to Charge</value>
   </data>
   <data name="massErrorXAxisContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>263, 42</value>
+    <value>136, 22</value>
   </data>
   <data name="massErrorXAxisContextMenuItem.Text" xml:space="preserve">
     <value>X-Axis</value>
   </data>
   <data name="massErrorlogScaleContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>263, 42</value>
+    <value>136, 22</value>
   </data>
   <data name="massErrorlogScaleContextMenuItem.Text" xml:space="preserve">
     <value>LogScale</value>
   </data>
   <data name="contextMenuMassErrors.Size" type="System.Drawing.Size, System.Drawing">
-    <value>137, 70</value>
+    <value>137, 180</value>
   </data>
   <data name="&gt;&gt;contextMenuMassErrors.Name" xml:space="preserve">
     <value>contextMenuMassErrors</value>
@@ -3019,7 +3031,7 @@
     <value>True</value>
   </metadata>
   <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>104</value>
+    <value>210</value>
   </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
@@ -3106,6 +3118,12 @@
     <value>normStandardContextMenuItem</value>
   </data>
   <data name="&gt;&gt;normStandardContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;surrogateStandardContextMenuItem.Name" xml:space="preserve">
+    <value>surrogateStandardContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;surrogateStandardContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;qcStandardContextMenuItem.Name" xml:space="preserve">
@@ -4680,6 +4698,12 @@
   <data name="&gt;&gt;normStandardMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;surrogateStandardMenuItem.Name" xml:space="preserve">
+    <value>surrogateStandardMenuItem</value>
+  </data>
+  <data name="&gt;&gt;surrogateStandardMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;qcStandardMenuItem.Name" xml:space="preserve">
     <value>qcStandardMenuItem</value>
   </data>
@@ -5484,6 +5508,12 @@
   <data name="&gt;&gt;massErrorTargetsContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;massErrorTargets1FDRContextMenuItem.Name" xml:space="preserve">
+    <value>massErrorTargets1FDRContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;massErrorTargets1FDRContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;massErrorDecoysContextMenuItem.Name" xml:space="preserve">
     <value>massErrorDecoysContextMenuItem</value>
   </data>
@@ -5580,16 +5610,10 @@
   <data name="&gt;&gt;massErrorlogScaleContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;massErrorTargets1FDRContextMenuItem.Name" xml:space="preserve">
-    <value>massErrorTargets1FDRContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;massErrorTargets1FDRContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>SkylineWindow</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

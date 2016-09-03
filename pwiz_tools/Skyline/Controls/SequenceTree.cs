@@ -109,6 +109,7 @@ namespace pwiz.Skyline.Controls
             tran_group_lib_decoy,
             fragment_lib_decoy,
             molecule,
+            molecule_standard,
             molecule_list,
             peptide_list,
             empty_list,
@@ -162,6 +163,7 @@ namespace pwiz.Skyline.Controls
             ImageList.Images.Add(Resources.TransitionGroupLibDecoy);
             ImageList.Images.Add(Resources.FragmentLibDecoy);
             ImageList.Images.Add(Resources.Molecule);
+            ImageList.Images.Add(Resources.MoleculeStandard);
             ImageList.Images.Add(Resources.MoleculeList);
             ImageList.Images.Add(Resources.PeptideList);
             ImageList.Images.Add(Resources.EmptyList);

@@ -227,7 +227,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             {
                 return QuantificationStrings.CalibrationCurveFitter_GetYAxisTitle_Peak_Area;
             }
-            if (null != PeptideQuantifier.NormalizationMethod.IsotopeLabelTypeName)
+            if (null != PeptideQuantifier.RatioLabelType)
             {
                 return PeakAreaRatioText(PeptideQuantifier.MeasuredLabelTypes, PeptideQuantifier.RatioLabelType);
             }
@@ -279,13 +279,13 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         public bool HasInternalStandardConcentration()
         {
-            return null != PeptideQuantifier.NormalizationMethod.IsotopeLabelTypeName
+            return PeptideQuantifier.NormalizationMethod is NormalizationMethod.RatioToLabel
                    && PeptideQuantifier.PeptideDocNode.InternalStandardConcentration.HasValue;
         }
 
         public bool IsAllowMissingTransitions()
         {
-            return null != PeptideQuantifier.NormalizationMethod.IsotopeLabelTypeName;
+            return PeptideQuantifier.NormalizationMethod is NormalizationMethod.RatioToLabel;
         }
 
         public QuantificationResult GetQuantificationResult(int replicateIndex)

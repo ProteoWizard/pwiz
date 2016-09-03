@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
@@ -33,23 +34,9 @@ namespace pwiz.Skyline.Model
 {
     public class PeptideDocNode : DocNodeParent
     {
-        public const string STANDARD_TYPE_IRT = "iRT";  // Not L10N
-        public const string STANDARD_TYPE_QC = "QC";    // Not L10N
-        public const string STANDARD_TYPE_NORMALIZAITON = "Normalization";  // Not L10N
-
-        public static string GetStandardTypeDisplayName(string standardType)
-        {
-            switch (standardType)
-            {
-                case STANDARD_TYPE_IRT:
-                    return Resources.PeptideDocNode_GetStandardTypeDisplayName_iRT;
-                case STANDARD_TYPE_QC:
-                    return Resources.PeptideDocNode_GetStandardTypeDisplayName_QC;
-                case STANDARD_TYPE_NORMALIZAITON:
-                    return Resources.PeptideDocNode_GetStandardTypeDisplayName_Normalization;
-            }
-            return String.Empty;
-        }
+        public static readonly StandardType STANDARD_TYPE_IRT = StandardType.IRT;  // Not L10N
+        public static readonly StandardType STANDARD_TYPE_QC = StandardType.QC;    // Not L10N
+        public static readonly StandardType STANDARD_TYPE_GLOBAL = StandardType.GLOBAL_STANDARD;  // Not L10N
 
         public PeptideDocNode(Peptide id, ExplicitMods mods = null, ExplicitRetentionTimeInfo explicitRetentionTime = null)
             : this(id, null, mods, null, null, null, explicitRetentionTime, Annotations.EMPTY, null, new TransitionGroupDocNode[0], true)
@@ -66,7 +53,7 @@ namespace pwiz.Skyline.Model
                               SrmSettings settings,
                               ExplicitMods mods,
                               ModifiedSequenceMods sourceKey,
-                              string standardType,
+                              StandardType standardType,
                               int? rank,
                               ExplicitRetentionTimeInfo explicitRetentionTimeInfo,
                               Annotations annotations,
@@ -124,7 +111,7 @@ namespace pwiz.Skyline.Model
 
         public ExplicitRetentionTimeInfo ExplicitRetentionTime { get; private set; } // For transition lists with explicit values for RT
 
-        public string GlobalStandardType { get; private set; }
+        public StandardType GlobalStandardType { get; private set; }
 
         public string ModifiedSequence { get; private set; }
 
@@ -448,6 +435,8 @@ namespace pwiz.Skyline.Model
         public double? InternalStandardConcentration { get; private set; }
         public double? ConcentrationMultiplier { get; private set; }
 
+        public NormalizationMethod NormalizationMethod { get; private set; }
+
         #region Property change methods
 
         private PeptideDocNode UpdateModifiedSequence(SrmSettings settingsNew)
@@ -480,7 +469,7 @@ namespace pwiz.Skyline.Model
             return ChangeProp(ImClone(this), im => im.SourceKey = prop);
         }
 
-        public PeptideDocNode ChangeStandardType(string prop)
+        public PeptideDocNode ChangeStandardType(StandardType prop)
         {
             return ChangeProp(ImClone(this), im => im.GlobalStandardType = prop);
         }
@@ -546,6 +535,11 @@ namespace pwiz.Skyline.Model
         public PeptideDocNode ChangeConcentrationMultiplier(double? concentrationMultiplier)
         {
             return ChangeProp(ImClone(this), im => im.ConcentrationMultiplier = concentrationMultiplier);
+        }
+
+        public PeptideDocNode ChangeNormalizationMethod(NormalizationMethod normalizationMethod)
+        {
+            return ChangeProp(ImClone(this), im => im.NormalizationMethod = normalizationMethod);
         }
 
         #endregion
@@ -1027,7 +1021,7 @@ namespace pwiz.Skyline.Model
             }
 
             // Update the results summary
-            var resultsCalc = new PeptideResultsCalculator(settingsNew);
+            var resultsCalc = new PeptideResultsCalculator(settingsNew, NormalizationMethod);
             foreach (TransitionGroupDocNode nodeGroup in Children)
                 resultsCalc.AddGroupChromInfo(nodeGroup);
 
@@ -1067,12 +1061,13 @@ namespace pwiz.Skyline.Model
             private readonly List<PeptideChromInfoListCalculator> _listResultCalcs =
                 new List<PeptideChromInfoListCalculator>();
 
-            public PeptideResultsCalculator(SrmSettings settings)
+            public PeptideResultsCalculator(SrmSettings settings, NormalizationMethod normalizationMethod)
             {
                 Settings = settings;
             }
 
             private SrmSettings Settings { get; set; }
+            private string InternalStandardName { get; set; }
             private int TransitionGroupCount { get; set; }
 
             public void AddGroupChromInfo(TransitionGroupDocNode nodeGroup)
@@ -1150,7 +1145,7 @@ namespace pwiz.Skyline.Model
                 Settings = settings;
                 Calculators = new Dictionary<int, PeptideChromInfoCalculator>();
             }
-
+            public String InternalStandardName { get; private set; }
             public int ResultsIndex { get; private set; }
 
             private SrmSettings Settings { get; set; }
@@ -1579,7 +1574,8 @@ namespace pwiz.Skyline.Model
                 Equals(other.ExplicitRetentionTime, ExplicitRetentionTime) &&
                 other.BestResult == BestResult &&
                 Equals(other.InternalStandardConcentration, InternalStandardConcentration) &&
-                Equals(other.ConcentrationMultiplier, ConcentrationMultiplier);
+                Equals(other.ConcentrationMultiplier, ConcentrationMultiplier) &&
+                Equals(other.NormalizationMethod, NormalizationMethod);
             return equal; // For debugging convenience
         }
 
@@ -1603,6 +1599,7 @@ namespace pwiz.Skyline.Model
                 result = (result*397) ^ BestResult;
                 result = (result*397) ^ InternalStandardConcentration.GetHashCode();
                 result = (result*397) ^ ConcentrationMultiplier.GetHashCode();
+                result = (result*397) ^ (NormalizationMethod == null ? 0 : NormalizationMethod.GetHashCode());
                 return result;
             }
         }

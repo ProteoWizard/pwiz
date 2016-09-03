@@ -61,6 +61,7 @@ using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Find;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Optimization;
@@ -650,8 +651,8 @@ namespace pwiz.Skyline.Model
             // Store indexes to previous results in a dictionary for lookup
             var dictPeptideIdPeptide = new Dictionary<int, PeptideDocNode>();
             // Unless the normalization standards have changed, which require recalculating of all ratios
-            if (ReferenceEquals(Settings.GetPeptideStandards(PeptideDocNode.STANDARD_TYPE_NORMALIZAITON),
-                docClone.Settings.GetPeptideStandards(PeptideDocNode.STANDARD_TYPE_NORMALIZAITON)))
+            if (ReferenceEquals(Settings.GetPeptideStandards(StandardType.GLOBAL_STANDARD),
+                docClone.Settings.GetPeptideStandards(StandardType.GLOBAL_STANDARD)))
             {
                 foreach (var nodePeptide in Molecules)
                     dictPeptideIdPeptide.Add(nodePeptide.Peptide.GlobalIndex, nodePeptide);
@@ -1737,6 +1738,27 @@ namespace pwiz.Skyline.Model
             return findPredicate.FindNext(bookmarkEnumerator);
         }
 
+        public SrmDocument ChangeStandardType(StandardType standardType, IEnumerable<IdentityPath> selPaths)
+        {
+            SrmDocument doc = this;
+            var replacements = new List<NodeReplacement>();
+            foreach (IdentityPath nodePath in selPaths)
+            {
+                var nodePep = doc.FindNode(nodePath) as PeptideDocNode;
+                if (nodePep == null || nodePep.IsDecoy || Equals(standardType, nodePep.GlobalStandardType))
+                    continue;
+                replacements.Add(new NodeReplacement(nodePath.Parent, nodePep.ChangeStandardType(standardType)));
+            }
+            doc = (SrmDocument) doc.ReplaceChildren(replacements);
+            return doc;
+        }
+
+        public IEnumerable<PeptideDocNode> GetSurrogateStandards()
+        {
+            return Molecules.Where(mol => Equals(mol.GlobalStandardType, StandardType.SURROGATE_STANDARD));
+        }
+
+
         #region Implementation of IXmlSerializable
 
         // ReSharper disable InconsistentNaming
@@ -1863,6 +1885,7 @@ namespace pwiz.Skyline.Model
             public const string measured_ion_name = "measured_ion_name";
             public const string concentration_multiplier = "concentration_multiplier";
             public const string internal_standard_concentration = "internal_standard_concentration";
+            public const string normalization_method = "normalization_method";
 
             // Results
             public const string replicate = "replicate";
@@ -2267,9 +2290,10 @@ namespace pwiz.Skyline.Model
             double? concentrationMultiplier = reader.GetNullableDoubleAttribute(ATTR.concentration_multiplier);
             double? internalStandardConcentration =
                 reader.GetNullableDoubleAttribute(ATTR.internal_standard_concentration);
+            string normalizationMethod = reader.GetAttribute(ATTR.normalization_method);
             bool autoManageChildren = reader.GetBoolAttribute(ATTR.auto_manage_children, true);
             bool isDecoy = reader.GetBoolAttribute(ATTR.decoy);
-            string standardType = reader.GetAttribute(ATTR.standard_type);
+            var standardType = StandardType.FromName(reader.GetAttribute(ATTR.standard_type));
             double? importedRetentionTimeValue = reader.GetNullableDoubleAttribute(ATTR.explicit_retention_time);
             double? importedRetentionTimeWindow = reader.GetNullableDoubleAttribute(ATTR.explicit_retention_time_window);
             var importedRetentionTime = importedRetentionTimeValue.HasValue
@@ -2327,7 +2351,8 @@ namespace pwiz.Skyline.Model
                 importedRetentionTime, annotations, results, children ?? new TransitionGroupDocNode[0], autoManageChildren);
             peptideDocNode = peptideDocNode
                 .ChangeConcentrationMultiplier(concentrationMultiplier)
-                .ChangeInternalStandardConcentration(internalStandardConcentration);
+                .ChangeInternalStandardConcentration(internalStandardConcentration)
+                .ChangeNormalizationMethod(NormalizationMethod.FromName(normalizationMethod));
             return peptideDocNode;
         }
 
@@ -3264,11 +3289,15 @@ namespace pwiz.Skyline.Model
 
             writer.WriteAttribute(ATTR.auto_manage_children, node.AutoManageChildren, true);
             if (node.GlobalStandardType != null)
-                writer.WriteAttribute(ATTR.standard_type, node.GlobalStandardType);
+                writer.WriteAttribute(ATTR.standard_type, node.GlobalStandardType.Name);
 
             writer.WriteAttributeNullable(ATTR.rank, node.Rank);
             writer.WriteAttributeNullable(ATTR.concentration_multiplier, node.ConcentrationMultiplier);
             writer.WriteAttributeNullable(ATTR.internal_standard_concentration, node.InternalStandardConcentration);
+            if (null != node.NormalizationMethod)
+            {
+                writer.WriteAttribute(ATTR.normalization_method, node.NormalizationMethod.Name);
+            }
 
             if (isCustomIon)
             {

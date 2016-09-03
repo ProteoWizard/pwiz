@@ -2181,6 +2181,9 @@
   <data name="Molecule" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Molecule.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="MoleculeStandard" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\MoleculeStandard.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="OK" xml:space="preserve">
     <value>OK</value>
   </data>
@@ -6803,7 +6806,7 @@ If you prefer you can choose to report anonymously.</value>
     <value>Precursor m/z</value>
   </data>
   <data name="PeptideDocNode_GetStandardTypeDisplayName_Normalization" xml:space="preserve">
-    <value>Normalization</value>
+    <value>Global Standard</value>
   </data>
   <data name="XmlUtil_GetInvalidDataMessage_It_may_have_been_truncated_during_file_transfer" xml:space="preserve">
     <value>It may have been truncated during file transfer.</value>
@@ -9114,6 +9117,9 @@ Here are the last 3 errors:
   <data name="PeptideSettingsUI_ShowBuildLibraryDlg_Finishing_up_building_library" xml:space="preserve">
     <value>Finishing up building library</value>
   </data>
+  <data name="StandardType_SURROGATE_STANDARD_Surrogate_Standard" xml:space="preserve">
+    <value>Surrogate Standard</value>
+  </data>
   <data name="GenerateDecoysDlg_OkDialog_The_number_of_peptides__0__must_be_less_than_the_number_of_peptide_precursor_models_for_decoys__1___or_use_the___2___decoy_generation_method_" xml:space="preserve">
     <value>The number of peptides {0} must be less than the number of peptide precursor models for decoys {1}, or use the '{2}' decoy generation method.</value>
   </data>
@@ -9187,6 +9193,15 @@ If your transition list format combines formulas and adducts in a single column 
   </data>
   <data name="FastaImporter_Import_Error_at_or_around_line__0____1_" xml:space="preserve">
     <value>Error at or around line {0}: {1}</value>
+  </data>
+  <data name="Peptide_StandardType_iRT_standards_can_only_be_changed_by_modifying_the_iRT_calculator" xml:space="preserve">
+    <value>iRT standards can only be changed by modifying the iRT calculator</value>
+  </data>
+  <data name="RatioToSurrogate_ToString_Ratio_to_surrogate__0_" xml:space="preserve">
+    <value>Ratio to surrogate {0}</value>
+  </data>
+  <data name="RatioToSurrogate_ToString_Ratio_to_surrogate__0____1__" xml:space="preserve">
+    <value>Ratio to surrogate {0} ({1})</value>
   </data>
   <data name="ChromCollector_ReleaseChromatogram_Intensities___0___and_mass_errors___1___disagree_in_point_count_" xml:space="preserve">
     <value>Intensities ({0}) and mass errors ({1}) disagree in point count.</value>

@@ -34,7 +34,14 @@ namespace pwiz.Skyline.Model.GroupComparison
         public PeptideGroupDocNode PeptideGroupDocNode { get; private set; }
         public PeptideDocNode PeptideDocNode {get; private set; }
         public QuantificationSettings QuantificationSettings { get; private set; }
-        public NormalizationMethod NormalizationMethod { get {return QuantificationSettings.NormalizationMethod;} }
+
+        public NormalizationMethod NormalizationMethod
+        {
+            get
+            {
+                return PeptideDocNode.NormalizationMethod ?? QuantificationSettings.NormalizationMethod;
+            }
+        }
         public ICollection<IsotopeLabelType> MeasuredLabelTypes { get; set; }
         public NormalizationData NormalizationData { get; set; }
         public double? QValueCutoff { get; set; }
@@ -43,11 +50,12 @@ namespace pwiz.Skyline.Model.GroupComparison
         {
             get
             {
-                if (string.IsNullOrEmpty(NormalizationMethod.IsotopeLabelTypeName))
+                NormalizationMethod.RatioToLabel ratioToLabel = NormalizationMethod as NormalizationMethod.RatioToLabel;
+                if (ratioToLabel == null)
                 {
                     return null;
                 }
-                return new IsotopeLabelType(NormalizationMethod.IsotopeLabelTypeName, 0);
+                return new IsotopeLabelType(ratioToLabel.IsotopeLabelTypeName, 0);
             }
         }
 
@@ -66,9 +74,9 @@ namespace pwiz.Skyline.Model.GroupComparison
                     return true;
                 }
             }
-            if (!string.IsNullOrEmpty(NormalizationMethod.IsotopeLabelTypeName))
+            if (NormalizationMethod is NormalizationMethod.RatioToLabel)
             {
-                if (Equals(NormalizationMethod.IsotopeLabelTypeName,
+                if (Equals(((NormalizationMethod.RatioToLabel) NormalizationMethod).IsotopeLabelTypeName,
                     transitionGroupDocNode.TransitionGroup.LabelType.Name))
                 {
                     return true;
@@ -174,6 +182,11 @@ namespace pwiz.Skyline.Model.GroupComparison
                 {
                     denominator = srmSettings.CalcGlobalStandardArea(replicateIndex, chromInfo.FileId);
                 }
+                else if (NormalizationMethod is NormalizationMethod.RatioToSurrogate)
+                {
+                    denominator =  ((NormalizationMethod.RatioToSurrogate) NormalizationMethod)
+                        .GetStandardArea(srmSettings, replicateIndex, chromInfo.FileId);
+                }
                 else if (Equals(NormalizationMethod, NormalizationMethod.EQUALIZE_MEDIANS))
                 {
                     if (null == NormalizationData)
@@ -218,14 +231,15 @@ namespace pwiz.Skyline.Model.GroupComparison
         private Dictionary<PeptideDocNode.TransitionKey, TransitionChromInfo> GetTransitionsToNormalizeAgainst(
             PeptideDocNode peptideDocNode, int replicateIndex)
         {
-            if (string.IsNullOrEmpty(NormalizationMethod.IsotopeLabelTypeName))
+            NormalizationMethod.RatioToLabel ratioToLabel = NormalizationMethod as NormalizationMethod.RatioToLabel;
+            if (ratioToLabel == null)
             {
                 return null;
             }
             var result = new Dictionary<PeptideDocNode.TransitionKey, TransitionChromInfo>();
             foreach (var transitionGroup in peptideDocNode.TransitionGroups)
             {
-                if (!Equals(NormalizationMethod.IsotopeLabelTypeName, transitionGroup.TransitionGroup.LabelType.Name))
+                if (!Equals(ratioToLabel.IsotopeLabelTypeName, transitionGroup.TransitionGroup.LabelType.Name))
                 {
                     continue;
                 }
@@ -270,7 +284,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             {
                 return null;
             }
-            if (!string.IsNullOrEmpty(normalizationMethod.IsotopeLabelTypeName))
+            if (normalizationMethod is NormalizationMethod.RatioToLabel)
             {
                 return numerator/denominator;
             }

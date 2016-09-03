@@ -43,7 +43,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         {
             if (null == Peptide)
             {
-                return Protein.Molecules.Where(molecule=>string.IsNullOrEmpty(molecule.GlobalStandardType));
+                return Protein.Molecules.Where(molecule=>null == molecule.GlobalStandardType);
             }
             return new[] {Peptide};
         }

@@ -122,21 +122,27 @@ namespace pwiz.Skyline.Controls.SeqNode
             }
             if (!nodePep.IsProteomic)
             {
+                if (nodePep.GlobalStandardType == StandardType.GLOBAL_STANDARD ||
+                    nodePep.GlobalStandardType == StandardType.SURROGATE_STANDARD)
+                {
+                    return (int) SequenceTree.ImageId.molecule_standard;
+                }
                 return (int)SequenceTree.ImageId.molecule;
             }
-            if (string.Equals(nodePep.GlobalStandardType, PeptideDocNode.STANDARD_TYPE_IRT))
+            if (nodePep.GlobalStandardType == StandardType.IRT)
             {
                 return (int) (nodePep.HasLibInfo
                                   ? SequenceTree.ImageId.peptide_irt_lib
                                   : SequenceTree.ImageId.peptide_irt);
             }
-            if (string.Equals(nodePep.GlobalStandardType, PeptideDocNode.STANDARD_TYPE_QC))
+            if (nodePep.GlobalStandardType == StandardType.QC)
             {
                 return (int)(nodePep.HasLibInfo
                                   ? SequenceTree.ImageId.peptide_qc_lib
                                   : SequenceTree.ImageId.peptide_qc);
             }
-            if (string.Equals(nodePep.GlobalStandardType, PeptideDocNode.STANDARD_TYPE_NORMALIZAITON))
+            if (nodePep.GlobalStandardType == StandardType.GLOBAL_STANDARD 
+                || nodePep.GlobalStandardType == StandardType.SURROGATE_STANDARD)
             {
                 return (int)(nodePep.HasLibInfo
                                   ? SequenceTree.ImageId.peptide_standard_lib
