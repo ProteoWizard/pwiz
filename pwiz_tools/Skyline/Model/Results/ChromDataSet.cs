@@ -603,7 +603,7 @@ namespace pwiz.Skyline.Model.Results
                 foreach (var peak in peakSet)
                 {
                     if (peak.Peak != null)
-                        primaryPeakKeys.Add(peak.Data.Key);
+                        primaryPeakKeys.Add(peak.Data.PrimaryKey);
                 }
 
                 foreach (var peak in peakSet)

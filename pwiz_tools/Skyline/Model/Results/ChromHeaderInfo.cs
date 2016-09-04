@@ -2495,13 +2495,9 @@ namespace pwiz.Skyline.Model.Results
                 {
                     // If there is optimization data, return only the middle value, which
                     // was the regression value.
-                    int iBegin = i;
-                    while (i < endTran - 1 &&
-                        ChromatogramInfo.IsOptimizationSpacing(GetProduct(i), GetProduct(i+1)))
-                    {
-                        i++;
-                    }
-                    int iMiddle = iBegin + (i - iBegin)/2;
+                    int startOptTran, endOptTran;
+                    GetOptimizationBounds(productMz, i, startTran, endTran, out startOptTran, out endOptTran);
+                    int iMiddle = (startOptTran + endOptTran) / 2;
 
                     double deltaMz = Math.Abs(productMz - GetProduct(iMiddle));
                     if (deltaMz < deltaNearestMz)
@@ -2532,19 +2528,36 @@ namespace pwiz.Skyline.Model.Results
             {
                 if (ChromKey.CompareTolerant(productMz, GetProduct(i), tolerance) == 0)
                 {
-                    // If there is optimization data, add it to the list
-                    while (i < endTran - 1 &&
-                        ChromatogramInfo.IsOptimizationSpacing(GetProduct(i), GetProduct(i+1)))
-                    {
+                    int startOptTran, endOptTran;
+                    GetOptimizationBounds(productMz, i, startTran, endTran, out startOptTran, out endOptTran);
+                    for (i = startOptTran; i <= endOptTran; i++)
                         listInfo.Add(GetTransitionInfo(i - startTran));
-                        i++;
-                    }
-                    // Add the last value, which may be the only value
-                    listInfo.Add(GetTransitionInfo(i - startTran));
                 }
             }
 
             return listInfo.ToArray();
+        }
+
+        private void GetOptimizationBounds(SignedMz productMz, int i, int startTran, int endTran, out int startOptTran, out int endOptTran)
+        {
+            // CONSIDER: Tried to make this a little more fault tolerant, but that just caused
+            //           more problems. So, decided to leave this close to the original implementation.
+            var productMzCurrent = GetProduct(i);
+
+            // First back up to find the beginning
+            while (i > startTran &&
+                   ChromatogramInfo.IsOptimizationSpacing(GetProduct(i - 1), productMzCurrent))
+            {
+                productMzCurrent = GetProduct(--i);
+            }
+            startOptTran = i;
+            // Walk forward until the end
+            while (i < endTran - 1 &&
+                ChromatogramInfo.IsOptimizationSpacing(productMzCurrent, GetProduct(i + 1)))
+            {
+                productMzCurrent = GetProduct(++i);
+            }
+            endOptTran = i;
         }
 
         public int IndexOfNearestTime(float time)
@@ -2706,7 +2719,7 @@ namespace pwiz.Skyline.Model.Results
                 return false;
 
             double delta = Math.Abs(Math.Abs(mz2 - mz1) - OPTIMIZE_SHIFT_SIZE);
-            return delta < OPTIMIZE_SHIFT_THRESHOLD;
+            return delta <= OPTIMIZE_SHIFT_THRESHOLD;
         }
 
         protected readonly int _transitionIndex;

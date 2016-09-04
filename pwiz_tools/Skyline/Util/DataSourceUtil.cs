@@ -73,14 +73,16 @@ namespace pwiz.Skyline.Util
             // ReSharper disable NonLocalizedString
             try
             {
-                if (dirInfo.Name.EndsWith(".raw") &&
+                if (dirInfo.HasExtension(".raw") &&
                         dirInfo.GetFiles("_FUNC*.DAT").Length > 0)
                     return TYPE_WATERS_RAW;
-                if (dirInfo.Name.EndsWith(".d") &&
-                        dirInfo.GetDirectories("AcqData").Length > 0)
-                    return TYPE_AGILENT;
-                if (dirInfo.GetFiles("analysis.baf").Length > 0)
-                    return TYPE_BRUKER;
+                if (dirInfo.HasExtension(".d"))
+                {
+                    if (dirInfo.GetDirectories("AcqData").Length > 0)
+                        return TYPE_AGILENT;
+                    if (dirInfo.GetFiles("analysis.baf").Length > 0)
+                        return TYPE_BRUKER;
+                }
                 return FOLDER_TYPE;
             }
             // ReSharper restore NonLocalizedString
@@ -89,6 +91,11 @@ namespace pwiz.Skyline.Util
                 // TODO: Folder without access type
                 return FOLDER_TYPE;
             }
+        }
+
+        private static bool HasExtension(this DirectoryInfo dirInfo, string ext)
+        {
+            return dirInfo.Name.Substring(dirInfo.Name.Length - ext.Length).ToLowerInvariant().Equals(ext);
         }
 
         public static bool IsDataSource(FileInfo fileInfo)
