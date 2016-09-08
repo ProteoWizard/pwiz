@@ -134,8 +134,8 @@ namespace pwiz.SkylineTestFunctional
 
             // Initially, peptide with index 0 should be selected
             WaitForConditionUI(() => pepList.SelectedIndex != -1);
-            var modDlg = WaitForOpenForm<MultiButtonMsgDlg>();
-            RunUI(modDlg.Btn1Click);
+            var modDlg = WaitForOpenForm<AddModificationsDlg>();
+            RunUI(modDlg.OkDialogAll);
 
             ViewLibraryPepInfo previousPeptide = new ViewLibraryPepInfo();
             int peptideIndex = -1;
@@ -244,7 +244,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Test selecting a different library
             previousPeptide = selPeptide;
-            RunDlg<MultiButtonMsgDlg>(() => libComboBox.SelectedIndex = 1, dlg => dlg.Btn1Click());
+            RunDlg<AddModificationsDlg>(() => libComboBox.SelectedIndex = 1, dlg => dlg.OkDialogAll());
             RunUI(() =>
             {
                 libComboBox.SelectedIndex = 1;
@@ -401,7 +401,7 @@ namespace pwiz.SkylineTestFunctional
                       });
             
             // Switch to ANL_Combined library
-            RunDlg<MultiButtonMsgDlg>(() => { libComboBox.SelectedIndex = 2; }, msgDlg => msgDlg.BtnCancelClick());
+            RunUI(() => libComboBox.SelectedIndex = 2);
 
             // User prompted to add library since not in current settings.
             RunDlg<MultiButtonMsgDlg>(() => _viewLibUI.CheckLibraryInSettings(), msgDlg => msgDlg.Btn0Click());
@@ -420,7 +420,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(3, SkylineWindow.Document.PeptideCount);
 
             // Switch to the Phospho Loss Library
-            RunDlg<MultiButtonMsgDlg>(() => libComboBox.SelectedIndex = 3, msgDlg => msgDlg.Btn1Click());
+            RunDlg<AddModificationsDlg>(() => libComboBox.SelectedIndex = 3, msgDlg => msgDlg.OkDialogAll());
 
             // Add modifications to the document matching the settings of the library. 
             var phosphoLossMod = new StaticMod("Phospho Loss", "S, T", null, true, "HPO3",
@@ -643,7 +643,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Test implicit mods only created if safe to do so
             RunUI(() => SkylineWindow.Undo());
-            RunDlg<MultiButtonMsgDlg>(() => _libComboBox.SelectedIndex = 4, msgDlg => msgDlg.Btn1Click());
+            RunDlg<AddModificationsDlg>(() => _libComboBox.SelectedIndex = 4, msgDlg => msgDlg.OkDialogAll());
             WaitForConditionUI(() => _pepList.SelectedIndex != -1);
             WaitForConditionUI(() => _viewLibUI.HasMatches);
             RunDlg<MultiButtonMsgDlg>(() => _viewLibUI.CheckLibraryInSettings(),
@@ -705,7 +705,7 @@ namespace pwiz.SkylineTestFunctional
             Settings.Default.StaticModList.Clear();
             RelaunchLibExplorer(true, ANL_COMBINED);
             RunUI(() => _viewLibUI.AddPeptide());
-            Assert.AreEqual(0, Settings.Default.StaticModList.Count);
+            Assert.AreEqual(0, Settings.Default.StaticModList.Count); // TODO
 
             // Variable mods not added if conflict with existing peptides.
             RunUI(() =>
@@ -714,7 +714,7 @@ namespace pwiz.SkylineTestFunctional
                 _viewLibUI.AddPeptide();
             });
             Assert.IsFalse(SkylineWindow.Document.Peptides.Contains(nodePep => 
-                nodePep.HasExplicitMods && nodePep.ExplicitMods.IsVariableStaticMods));
+                nodePep.HasExplicitMods && nodePep.ExplicitMods.IsVariableStaticMods)); // TODO
 
             // Test removing mod from globals affects matches
             var pepModsNoMods4 = SkylineWindow.Document.Settings.ChangePeptideModifications(mods =>
@@ -742,8 +742,8 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => _viewLibUI.CancelDialog());
             WaitForClosedForm(_viewLibUI);
             _viewLibUI = ShowDialog<ViewLibraryDlg>(() => SkylineWindow.OpenLibraryExplorer(YEAST));
-            var matchedPepModsDlg = WaitForOpenForm<MultiButtonMsgDlg>();
-            RunUI(matchedPepModsDlg.BtnCancelClick);
+            var matchedPepModsDlg = WaitForOpenForm<AddModificationsDlg>();
+            RunUI(matchedPepModsDlg.CancelDialog);
             WaitForConditionUI(() => _pepList.Items.Count == 96);
             WaitForConditionUI(() => _pepList.SelectedIndex != -1);
             Assert.IsTrue(_viewLibUI.HasUnmatchedPeptides);
@@ -775,9 +775,9 @@ namespace pwiz.SkylineTestFunctional
             _viewLibUI = ShowDialog<ViewLibraryDlg>(() => SkylineWindow.OpenLibraryExplorer(libName));
             if (showModsDlg)
             {
-                var modDlg = WaitForOpenForm<MultiButtonMsgDlg>();
+                var modDlg = WaitForOpenForm<AddModificationsDlg>();
                 if (modDlg != null)
-                    RunUI(modDlg.Btn1Click);
+                    RunUI(() => modDlg.OkDialogAll());
                 WaitForClosedForm(modDlg);
             }
             RunUI(() =>

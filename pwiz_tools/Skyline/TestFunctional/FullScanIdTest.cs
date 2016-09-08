@@ -112,9 +112,9 @@ namespace pwiz.SkylineTestFunctional
 
             // Add all but 2 of the peptides in the library to the document
             var libraryExplorer = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
-            var matchedPepsDlg = WaitForOpenForm<MultiButtonMsgDlg>();
-            RunUI(matchedPepsDlg.BtnCancelClick);
-            WaitForClosedForm<MultiButtonMsgDlg>(); // Wait for cancellation to take effect
+            var matchedPepsDlg = WaitForOpenForm<AddModificationsDlg>();
+            RunUI(matchedPepsDlg.CancelDialog);
+            WaitForClosedForm<AddModificationsDlg>(); // Wait for cancellation to take effect
             var filterMatchedPeptidesDlg = ShowDialog<FilterMatchedPeptidesDlg>(libraryExplorer.AddAllPeptides);
             RunDlg<MultiButtonMsgDlg>(filterMatchedPeptidesDlg.OkDialog, addLibraryPepsDlg =>
             {

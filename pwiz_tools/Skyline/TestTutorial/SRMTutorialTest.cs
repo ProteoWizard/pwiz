@@ -271,8 +271,8 @@ namespace pwiz.SkylineTestTutorial
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 10, 30, 96, expectedTransAfter);
 
             var libraryExpl = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
-            var messageWarning = WaitForOpenForm<MultiButtonMsgDlg>();
-            OkDialog(messageWarning, messageWarning.Btn1Click);
+            var messageWarning = WaitForOpenForm<AddModificationsDlg>();
+            RunUI(() => messageWarning.OkDialogAll());
             PauseForScreenShot("Spectral Library Explorer Window", 3);
             OkDialog(libraryExpl, libraryExpl.Close);
 

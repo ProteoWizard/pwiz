@@ -1192,6 +1192,12 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="SettingsUI\AddModificationsDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\AddModificationsDlg.Designer.cs">
+      <DependentUpon>AddModificationsDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="SettingsUI\AddPathsDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -2320,6 +2326,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ChooseSchedulingReplicatesDlg.resx">
       <DependentUpon>ChooseSchedulingReplicatesDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\AddModificationsDlg.resx">
+      <DependentUpon>AddModificationsDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\AddPathsDlg.ja.resx">
       <DependentUpon>AddPathsDlg.cs</DependentUpon>

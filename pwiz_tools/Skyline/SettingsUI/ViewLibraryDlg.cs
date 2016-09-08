@@ -448,34 +448,36 @@ namespace pwiz.Skyline.SettingsUI
             if (_selectedLibrary == null)
                 return false;
 
-            LibKeyModificationMatcher matcher = new LibKeyModificationMatcher();
-            matcher.CreateMatches(Document.Settings, _selectedLibrary.Keys, 
-                Settings.Default.StaticModList, Settings.Default.HeavyModList);
-            if(!string.IsNullOrEmpty(matcher.FoundMatches) || matcher.UnmatchedSequences.Any())
+            var matcher = new LibKeyModificationMatcher();
+            matcher.CreateMatches(Document.Settings, _selectedLibrary.Keys, Settings.Default.StaticModList, Settings.Default.HeavyModList);
+            if (string.IsNullOrEmpty(matcher.FoundMatches) && !matcher.UnmatchedSequences.Any())
             {
-                if (string.IsNullOrEmpty(matcher.FoundMatches))
-                {
-                    MessageDlg.Show(this, matcher.UninterpretedMods);
-                    return false;
-                }
-                var message = TextUtil.LineSeparate(Resources.ViewLibraryDlg_MatchModifications_This_library_appears_to_contain_the_following_modifications, 
-                                                    string.Empty, matcher.FoundMatches, 
-                                                    string.Format(
-                                                        Resources.ViewLibraryDlg_MatchModifications__0__Would_you_like_to_use_the_Unimod_definitions_for__1__modifications_The_document_will_not_change_until_peptides_with_these_modifications_are_added,
-                                                        matcher.UnmatchedSequences.Any() ? (TextUtil.LineSeparate(matcher.UninterpretedMods, string.Empty, string.Empty)) : string.Empty, 
-                                                        matcher.UnmatchedSequences.Any() ? Resources.ViewLibraryDlg_MatchModifications_the_matching : Resources.ViewLibraryDlg_MatchModifications_these));
-                if (DialogResult.Yes != MultiButtonMsgDlg.Show(
-                    this,
-                    message,
-                    Resources.ViewLibraryDlg_MatchModifications_Yes,
-                    Resources.ViewLibraryDlg_MatchModifications_No, false))
+                _matcher = matcher;
+                return true;
+            }
+
+            using (var addModificationsDlg = new AddModificationsDlg(Document.Settings, _selectedLibrary))
+            {
+                if ((addModificationsDlg.NumMatched == 0 && addModificationsDlg.NumUnmatched == 0) || addModificationsDlg.ShowDialog(this) != DialogResult.OK)
                 {
                     _matcher.ClearMatches();
                     return false;
                 }
+                _matcher = addModificationsDlg.Matcher;
+                if (addModificationsDlg.NewDocumentModsStatic.Any() || addModificationsDlg.NewDocumentModsHeavy.Any())
+                {
+                    Program.MainWindow.ModifyDocument(Resources.ViewLibraryDlg_MatchModifications_Add_modifications, doc =>
+                    {
+                        var mods = doc.Settings.PeptideSettings.Modifications;
+                        mods = mods.ChangeStaticModifications(mods.StaticModifications.Concat(addModificationsDlg.NewDocumentModsStatic).ToList())
+                                   .ChangeHeavyModifications(mods.HeavyModifications.Concat(addModificationsDlg.NewDocumentModsHeavy).ToList());
+                        doc = doc.ChangeSettings(doc.Settings.ChangePeptideSettings(doc.Settings.PeptideSettings.ChangeModifications(mods)));
+                        doc.Settings.UpdateDefaultModifications(false);
+                        return doc;
+                    });
+                }
+                return true;
             }
-            _matcher = matcher;
-            return true;
         }
 
         /// <summary>

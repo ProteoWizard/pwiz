@@ -9209,4 +9209,7 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="MassErrorReplicateGraphPane_UpdateGraph_Mass_Error_No_Ppm" xml:space="preserve">
     <value>Mass Error</value>
   </data>
+  <data name="ViewLibraryDlg_MatchModifications_Add_modifications" xml:space="preserve">
+    <value>Add modifications</value>
+  </data>
 </root>

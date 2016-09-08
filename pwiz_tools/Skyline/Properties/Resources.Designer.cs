@@ -27640,6 +27640,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add modifications.
+        /// </summary>
+        public static string ViewLibraryDlg_MatchModifications_Add_modifications {
+            get {
+                return ResourceManager.GetString("ViewLibraryDlg_MatchModifications_Add_modifications", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No.
         /// </summary>
         public static string ViewLibraryDlg_MatchModifications_No {

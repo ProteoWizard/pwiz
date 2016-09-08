@@ -223,13 +223,13 @@ namespace pwiz.SkylineTestTutorial
             WaitForDocumentChangeLoaded(doc, 8 * 60 * 1000); // 10 minutes
 
             var libraryExplorer = ShowDialog<ViewLibraryDlg>(() => SkylineWindow.OpenLibraryExplorer(documentBaseName));
-            var matchedPepModsDlg = WaitForOpenForm<MultiButtonMsgDlg>();
+            var matchedPepModsDlg = WaitForOpenForm<AddModificationsDlg>();
             PauseForScreenShot<MultiButtonMsgDlg>("Add mods alert", 12);
             RunUI(() =>
                 {
-                    Assert.IsTrue(matchedPepModsDlg.Message.StartsWith(Resources.ViewLibraryDlg_MatchModifications_This_library_appears_to_contain_the_following_modifications));
-                    Assert.IsTrue(matchedPepModsDlg.Message.Split('\n').Length > 16);
-                    matchedPepModsDlg.BtnCancelClick();
+                    Assert.AreEqual(13, matchedPepModsDlg.NumMatched);
+                    Assert.AreEqual(0, matchedPepModsDlg.NumUnmatched);
+                    matchedPepModsDlg.CancelDialog();
                 });
             RunUI(() =>
                 {
