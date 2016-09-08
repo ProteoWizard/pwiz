@@ -20,7 +20,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-using System.Text.RegularExpressions;
 using System.Threading;
 
 namespace AutoQC
@@ -46,7 +45,7 @@ namespace AutoQC
         private bool _folderAvailable = true;
 
         private int _acquisitionTimeSetting;
-        private Regex _qcFileRegex;
+        private FileFilter _fileFilter;
 
         private const int WAIT_60SEC = 60000;
 
@@ -100,7 +99,7 @@ namespace AutoQC
 
             _fileWatcher.Path = mainSettings.FolderToWatch;
 
-            _qcFileRegex = mainSettings.QcFileRegex;
+            _fileFilter = mainSettings.QcFileFilter;
 
             _acquisitionTimeSetting = mainSettings.AcquisitionTime;
         }
@@ -202,7 +201,7 @@ namespace AutoQC
         {
             var path = e.FullPath;
 
-            if (!MatchesQcFileRegex(path))
+            if (!PassesFileFilter(path))
             {
                 return;
             }
@@ -292,7 +291,7 @@ namespace AutoQC
         {
             var rawData = _dataInDirectories ? GetDirectories(_fileWatcher.Path, GetDataFileExt(_instrument)) 
                                              : GetFiles(_fileWatcher.Path);
-            rawData.RemoveAll(data => !MatchesQcFileRegex(data));
+            rawData.RemoveAll(data => !PassesFileFilter(data));
             return rawData;
         }
 
@@ -338,15 +337,14 @@ namespace AutoQC
             return files;
         }
 
-        private bool MatchesQcFileRegex(string dataPath)
+        private bool PassesFileFilter(string dataPath)
         {
-            if (_qcFileRegex == null)
+            if (_fileFilter == null)
             {
                 return true;
             }
 
-            dataPath = dataPath.TrimEnd(Path.DirectorySeparatorChar);
-            return _qcFileRegex.IsMatch(Path.GetFileName(dataPath));
+            return _fileFilter.Matches(dataPath);
         }
 
         public string GetDirectory()

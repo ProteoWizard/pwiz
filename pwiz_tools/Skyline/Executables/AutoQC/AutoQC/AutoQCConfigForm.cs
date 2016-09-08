@@ -35,6 +35,18 @@ namespace AutoQC
             _mainControl = mainControl;
             _config = config;
             InitializeComponent();
+
+            // Initialize file filter combobox
+            var filterOptions = new object[]
+            {
+                AllFileFilter.NAME, 
+                StartsWithFilter.NAME, 
+                EndsWithFilter.NAME, 
+                ContainsFilter.NAME,
+                RegexFilter.NAME
+            };
+            comboBoxFileFilter.Items.AddRange(filterOptions);
+
             textConfigName.Text = _config.Name;
             SetUIMainSettings(_config.MainSettings);
             SetUIPanoramaSettings(_config.PanoramaSettings);
@@ -42,12 +54,17 @@ namespace AutoQC
             if (configRunner != null && configRunner.IsBusy())
             {
                 lblConfigRunning.Show();
-                btnSaveConfig.Enabled = false;
+                btnSaveConfig.Hide();
+                btnCancelConfig.Hide();
+                btnOkConfig.Show();
             }
             else
             {
                 lblConfigRunning.Hide();
-            }
+                btnSaveConfig.Show();
+                btnCancelConfig.Show();
+                btnOkConfig.Hide();
+            } 
         }
 
         private void Save()
@@ -151,8 +168,8 @@ namespace AutoQC
                 textSkylinePath.Text = mainSettings.SkylineFilePath;
                 textFolderToWatchPath.Text = mainSettings.FolderToWatch;
                 includeSubfoldersCb.Checked = mainSettings.IncludeSubfolders;
-                textQCFilePattern.Text = mainSettings.QcFilePattern;
-                regularExpCb.Checked = mainSettings.IsQcFilePatternRegex;
+                textQCFilePattern.Text = mainSettings.QcFileFilter.Pattern;
+                comboBoxFileFilter.SelectedItem = mainSettings.QcFileFilter.Name();
                 textResultsTimeWindow.Text = mainSettings.ResultsWindow.ToString();
                 textAquisitionTime.Text = mainSettings.AcquisitionTime.ToString();
                 comboBoxInstrumentType.SelectedItem = mainSettings.InstrumentType;
@@ -166,8 +183,8 @@ namespace AutoQC
             mainSettings.SkylineFilePath = textSkylinePath.Text;
             mainSettings.FolderToWatch = textFolderToWatchPath.Text;
             mainSettings.IncludeSubfolders = includeSubfoldersCb.Checked;
-            mainSettings.QcFilePattern = textQCFilePattern.Text;
-            mainSettings.IsQcFilePatternRegex = regularExpCb.Checked;
+            mainSettings.QcFileFilter = FileFilter.GetFileFilter(comboBoxFileFilter.SelectedItem.ToString(),
+                textQCFilePattern.Text);
             mainSettings.ResultsWindow = ValidateIntTextField(textResultsTimeWindow.Text, "Results Window");
             mainSettings.InstrumentType = comboBoxInstrumentType.SelectedItem.ToString();
             mainSettings.AcquisitionTime = ValidateIntTextField(textAquisitionTime.Text, "Acquisition Time");
@@ -268,7 +285,26 @@ namespace AutoQC
             Save();
         }
 
-        #endregion
-        
+        private void btnOkConfig_Click(object sender, EventArgs e)
+        {
+            this.Close();
+        }
+
+        private void comboBoxFileFilter_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            var selectedItem = comboBoxFileFilter.SelectedItem;
+            if (selectedItem.Equals(AllFileFilter.NAME))
+            {
+                textQCFilePattern.Hide();
+                labelQcFilePattern.Hide();
+            }
+            else
+            {
+                textQCFilePattern.Show();
+                labelQcFilePattern.Show();
+            }
+        }
+
+        #endregion       
     }
 }

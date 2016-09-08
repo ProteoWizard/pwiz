@@ -42,8 +42,9 @@
             this.textConfigName = new System.Windows.Forms.TextBox();
             this.labelConfigName = new System.Windows.Forms.Label();
             this.groupBoxMain = new System.Windows.Forms.GroupBox();
-            this.label4 = new System.Windows.Forms.Label();
-            this.label1 = new System.Windows.Forms.Label();
+            this.comboBoxFileFilter = new System.Windows.Forms.ComboBox();
+            this.label5 = new System.Windows.Forms.Label();
+            this.includeSubfoldersCb = new System.Windows.Forms.CheckBox();
             this.labelMinutes = new System.Windows.Forms.Label();
             this.labelAquisitionTime = new System.Windows.Forms.Label();
             this.labelDays = new System.Windows.Forms.Label();
@@ -69,8 +70,8 @@
             this.lblConfigRunning = new System.Windows.Forms.Label();
             this.btnCancelConfig = new System.Windows.Forms.Button();
             this.btnSaveConfig = new System.Windows.Forms.Button();
-            this.includeSubfoldersCb = new System.Windows.Forms.CheckBox();
-            this.regularExpCb = new System.Windows.Forms.CheckBox();
+            this.labelQcFilePattern = new System.Windows.Forms.Label();
+            this.btnOkConfig = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -93,7 +94,7 @@
             // 
             // textFolderToWatchPath
             // 
-            this.textFolderToWatchPath.Location = new System.Drawing.Point(21, 91);
+            this.textFolderToWatchPath.Location = new System.Drawing.Point(21, 89);
             this.textFolderToWatchPath.Name = "textFolderToWatchPath";
             this.textFolderToWatchPath.Size = new System.Drawing.Size(430, 20);
             this.textFolderToWatchPath.TabIndex = 2;
@@ -119,9 +120,9 @@
             // 
             // textQCFilePattern
             // 
-            this.textQCFilePattern.Location = new System.Drawing.Point(21, 170);
+            this.textQCFilePattern.Location = new System.Drawing.Point(211, 172);
             this.textQCFilePattern.Name = "textQCFilePattern";
-            this.textQCFilePattern.Size = new System.Drawing.Size(361, 20);
+            this.textQCFilePattern.Size = new System.Drawing.Size(240, 20);
             this.textQCFilePattern.TabIndex = 4;
             this.toolTip1.SetToolTip(this.textQCFilePattern, "Results files matching the regular expression will be imported to the given Skyli" +
         "ne document.  If blank, all results files added to the folder will be imported t" +
@@ -173,28 +174,28 @@
             // 
             // textConfigName
             // 
-            this.textConfigName.Location = new System.Drawing.Point(172, 32);
+            this.textConfigName.Location = new System.Drawing.Point(30, 31);
             this.textConfigName.Name = "textConfigName";
-            this.textConfigName.Size = new System.Drawing.Size(310, 20);
+            this.textConfigName.Size = new System.Drawing.Size(430, 20);
             this.textConfigName.TabIndex = 0;
             // 
             // labelConfigName
             // 
             this.labelConfigName.AutoSize = true;
             this.labelConfigName.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.labelConfigName.Location = new System.Drawing.Point(46, 35);
+            this.labelConfigName.Location = new System.Drawing.Point(29, 15);
             this.labelConfigName.Name = "labelConfigName";
-            this.labelConfigName.Size = new System.Drawing.Size(120, 13);
+            this.labelConfigName.Size = new System.Drawing.Size(116, 13);
             this.labelConfigName.TabIndex = 54;
-            this.labelConfigName.Text = "Configuration name:";
+            this.labelConfigName.Text = "Configuration name";
             // 
             // groupBoxMain
             // 
-            this.groupBoxMain.Controls.Add(this.regularExpCb);
+            this.groupBoxMain.Controls.Add(this.labelQcFilePattern);
+            this.groupBoxMain.Controls.Add(this.comboBoxFileFilter);
+            this.groupBoxMain.Controls.Add(this.label5);
             this.groupBoxMain.Controls.Add(this.includeSubfoldersCb);
-            this.groupBoxMain.Controls.Add(this.label4);
             this.groupBoxMain.Controls.Add(this.textQCFilePattern);
-            this.groupBoxMain.Controls.Add(this.label1);
             this.groupBoxMain.Controls.Add(this.labelMinutes);
             this.groupBoxMain.Controls.Add(this.labelAquisitionTime);
             this.groupBoxMain.Controls.Add(this.textAquisitionTime);
@@ -209,29 +210,40 @@
             this.groupBoxMain.Controls.Add(this.textFolderToWatchPath);
             this.groupBoxMain.Controls.Add(this.btnSkylineFilePath);
             this.groupBoxMain.Controls.Add(this.textSkylinePath);
-            this.groupBoxMain.Location = new System.Drawing.Point(9, 70);
+            this.groupBoxMain.Location = new System.Drawing.Point(9, 57);
             this.groupBoxMain.Name = "groupBoxMain";
-            this.groupBoxMain.Size = new System.Drawing.Size(519, 348);
+            this.groupBoxMain.Size = new System.Drawing.Size(519, 369);
             this.groupBoxMain.TabIndex = 53;
             this.groupBoxMain.TabStop = false;
             // 
-            // label4
+            // comboBoxFileFilter
             // 
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(389, 175);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(64, 13);
-            this.label4.TabIndex = 62;
-            this.label4.Text = "(e.g.  _QC_)";
+            this.comboBoxFileFilter.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxFileFilter.FormattingEnabled = true;
+            this.comboBoxFileFilter.Location = new System.Drawing.Point(23, 172);
+            this.comboBoxFileFilter.Name = "comboBoxFileFilter";
+            this.comboBoxFileFilter.Size = new System.Drawing.Size(161, 21);
+            this.comboBoxFileFilter.TabIndex = 66;
+            this.comboBoxFileFilter.SelectedIndexChanged += new System.EventHandler(this.comboBoxFileFilter_SelectedIndexChanged);
             // 
-            // label1
+            // label5
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(20, 153);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(240, 13);
-            this.label1.TabIndex = 60;
-            this.label1.Text = "Pattern for matching QC data file names (optional)";
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(20, 153);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(48, 13);
+            this.label5.TabIndex = 65;
+            this.label5.Text = "File filter:";
+            // 
+            // includeSubfoldersCb
+            // 
+            this.includeSubfoldersCb.AutoSize = true;
+            this.includeSubfoldersCb.Location = new System.Drawing.Point(23, 115);
+            this.includeSubfoldersCb.Name = "includeSubfoldersCb";
+            this.includeSubfoldersCb.Size = new System.Drawing.Size(112, 17);
+            this.includeSubfoldersCb.TabIndex = 63;
+            this.includeSubfoldersCb.Text = "Include subfolders";
+            this.includeSubfoldersCb.UseVisualStyleBackColor = true;
             // 
             // labelMinutes
             // 
@@ -294,7 +306,7 @@
             // 
             // btnFolderToWatch
             // 
-            this.btnFolderToWatch.Location = new System.Drawing.Point(470, 87);
+            this.btnFolderToWatch.Location = new System.Drawing.Point(470, 85);
             this.btnFolderToWatch.Name = "btnFolderToWatch";
             this.btnFolderToWatch.Size = new System.Drawing.Size(29, 23);
             this.btnFolderToWatch.TabIndex = 3;
@@ -308,19 +320,19 @@
             this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label2.Location = new System.Drawing.Point(20, 20);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(92, 15);
+            this.label2.Size = new System.Drawing.Size(95, 15);
             this.label2.TabIndex = 28;
-            this.label2.Text = "Skyline file path";
+            this.label2.Text = "Skyline file path:";
             // 
             // label3
             // 
             this.label3.AutoSize = true;
             this.label3.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label3.Location = new System.Drawing.Point(20, 72);
+            this.label3.Location = new System.Drawing.Point(20, 70);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(90, 15);
+            this.label3.Size = new System.Drawing.Size(93, 15);
             this.label3.TabIndex = 29;
-            this.label3.Text = "Folder to watch";
+            this.label3.Text = "Folder to watch:";
             // 
             // btnSkylineFilePath
             // 
@@ -378,9 +390,9 @@
             this.labelPanoramaFolder.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.labelPanoramaFolder.Location = new System.Drawing.Point(14, 195);
             this.labelPanoramaFolder.Name = "labelPanoramaFolder";
-            this.labelPanoramaFolder.Size = new System.Drawing.Size(201, 13);
+            this.labelPanoramaFolder.Size = new System.Drawing.Size(204, 13);
             this.labelPanoramaFolder.TabIndex = 13;
-            this.labelPanoramaFolder.Text = "Folder on Panorama (e.g. /MacCoss/QC)";
+            this.labelPanoramaFolder.Text = "Folder on Panorama (e.g. /MacCoss/QC):";
             // 
             // textPanoramaFolder
             // 
@@ -447,6 +459,7 @@
             // groupBox1
             // 
             this.groupBox1.BackColor = System.Drawing.SystemColors.ControlLight;
+            this.groupBox1.Controls.Add(this.btnOkConfig);
             this.groupBox1.Controls.Add(this.lblConfigRunning);
             this.groupBox1.Controls.Add(this.btnCancelConfig);
             this.groupBox1.Controls.Add(this.btnSaveConfig);
@@ -487,25 +500,24 @@
             this.btnSaveConfig.UseVisualStyleBackColor = true;
             this.btnSaveConfig.Click += new System.EventHandler(this.btnSaveConfig_Click);
             // 
-            // includeSubfoldersCb
+            // labelQcFilePattern
             // 
-            this.includeSubfoldersCb.AutoSize = true;
-            this.includeSubfoldersCb.Location = new System.Drawing.Point(23, 117);
-            this.includeSubfoldersCb.Name = "includeSubfoldersCb";
-            this.includeSubfoldersCb.Size = new System.Drawing.Size(112, 17);
-            this.includeSubfoldersCb.TabIndex = 63;
-            this.includeSubfoldersCb.Text = "Include subfolders";
-            this.includeSubfoldersCb.UseVisualStyleBackColor = true;
+            this.labelQcFilePattern.AutoSize = true;
+            this.labelQcFilePattern.Location = new System.Drawing.Point(211, 153);
+            this.labelQcFilePattern.Name = "labelQcFilePattern";
+            this.labelQcFilePattern.Size = new System.Drawing.Size(44, 13);
+            this.labelQcFilePattern.TabIndex = 67;
+            this.labelQcFilePattern.Text = "Pattern:";
             // 
-            // regularExpCb
+            // btnOkConfig
             // 
-            this.regularExpCb.AutoSize = true;
-            this.regularExpCb.Location = new System.Drawing.Point(21, 195);
-            this.regularExpCb.Name = "regularExpCb";
-            this.regularExpCb.Size = new System.Drawing.Size(116, 17);
-            this.regularExpCb.TabIndex = 64;
-            this.regularExpCb.Text = "Regular expression";
-            this.regularExpCb.UseVisualStyleBackColor = true;
+            this.btnOkConfig.Location = new System.Drawing.Point(223, 28);
+            this.btnOkConfig.Name = "btnOkConfig";
+            this.btnOkConfig.Size = new System.Drawing.Size(75, 23);
+            this.btnOkConfig.TabIndex = 59;
+            this.btnOkConfig.Text = "OK";
+            this.btnOkConfig.UseVisualStyleBackColor = true;
+            this.btnOkConfig.Click += new System.EventHandler(this.btnOkConfig_Click);
             // 
             // AutoQcConfigForm
             // 
@@ -548,9 +560,7 @@
         private System.Windows.Forms.TabControl tabControl;
         private System.Windows.Forms.TabPage tabSettings;
         private System.Windows.Forms.GroupBox groupBoxMain;
-        private System.Windows.Forms.Label label4;
         private System.Windows.Forms.TextBox textQCFilePattern;
-        private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label labelMinutes;
         private System.Windows.Forms.Label labelAquisitionTime;
         private System.Windows.Forms.TextBox textAquisitionTime;
@@ -581,6 +591,9 @@
         private System.Windows.Forms.Button btnCancelConfig;
         private System.Windows.Forms.Label lblConfigRunning;
         private System.Windows.Forms.CheckBox includeSubfoldersCb;
-        private System.Windows.Forms.CheckBox regularExpCb;
+        private System.Windows.Forms.ComboBox comboBoxFileFilter;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.Label labelQcFilePattern;
+        private System.Windows.Forms.Button btnOkConfig;
     }
 }

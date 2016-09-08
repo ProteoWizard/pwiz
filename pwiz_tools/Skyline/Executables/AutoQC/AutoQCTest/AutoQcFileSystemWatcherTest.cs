@@ -37,6 +37,7 @@ namespace AutoQCTest
 
             var watcher = new AutoQCFileSystemWatcher(new TestLogger());
             var mainSettings = MainSettings.GetDefault();
+            Assert.AreEqual(mainSettings.QcFileFilter, FileFilter.GetFileFilter(AllFileFilter.NAME, string.Empty));
             mainSettings.SkylineFilePath = skyFile;
             mainSettings.IncludeSubfolders = false;
             mainSettings.InstrumentType = instrument;
@@ -60,23 +61,50 @@ namespace AutoQCTest
             Assert.IsTrue(files.Contains(dataFiles[3]));
             Assert.IsTrue(files.Contains(dataFiles[4]));
 
-            mainSettings.QcFilePattern = "_QC_";
-            mainSettings.IsQcFilePatternRegex = false;
-            mainSettings.ValidateSettings();
+            /* Files:
+              "root_QC_"
+              "QC_one"
+              "one_1_a_QC_"
+              "one_1_b_QC"
+              "two_qc_"
+             */
+            mainSettings.QcFileFilter = FileFilter.GetFileFilter(ContainsFilter.NAME, "QC");
+            watcher.Init(mainSettings);
+            files = watcher.GetExistingFiles();
+            Assert.AreEqual(4, files.Count);
+            Assert.IsTrue(files.Contains(dataFiles[0]));
+            Assert.IsTrue(files.Contains(dataFiles[1]));
+            Assert.IsTrue(files.Contains(dataFiles[2]));
+            Assert.IsTrue(files.Contains(dataFiles[3]));
 
+            mainSettings.QcFileFilter = FileFilter.GetFileFilter(StartsWithFilter.NAME, "QC_");
+            watcher.Init(mainSettings);
+            files = watcher.GetExistingFiles();
+            Assert.AreEqual(1, files.Count);
+            Assert.IsTrue(files.Contains(dataFiles[1]));
+
+            mainSettings.QcFileFilter = FileFilter.GetFileFilter(EndsWithFilter.NAME, "_QC_");
             watcher.Init(mainSettings);
             files = watcher.GetExistingFiles();
             Assert.AreEqual(2, files.Count);
             Assert.IsTrue(files.Contains(dataFiles[0]));
             Assert.IsTrue(files.Contains(dataFiles[2]));
+
+            mainSettings.QcFileFilter = FileFilter.GetFileFilter(RegexFilter.NAME, "[ab]_QC");
+            watcher.Init(mainSettings);
+            files = watcher.GetExistingFiles();
+            Assert.AreEqual(2, files.Count);
+            Assert.IsTrue(files.Contains(dataFiles[2]));
+            Assert.IsTrue(files.Contains(dataFiles[3]));
+
         }
 
         private static void SetupTestFolder(string folderToWatch, string instrument, out List<string> dataFiles)
         {
             // Add subfolders
-            var sf1 = CreateDirectory(folderToWatch, "One");
-            var sf1_1 = CreateDirectory(sf1, "One_1");
-            var sf2 = CreateDirectory(folderToWatch, "Two");
+            var sf1 = CreateDirectory(folderToWatch, "One_QC");
+            var sf1_1 = CreateDirectory(sf1, "QC_a");
+            var sf2 = CreateDirectory(folderToWatch, "Two_QC_");
 
             var ext = AutoQCFileSystemWatcher.GetDataFileExt(instrument);
 
@@ -201,8 +229,7 @@ namespace AutoQCTest
             mainSettings.InstrumentType = instrument;
             mainSettings.FolderToWatch = folderToWatch;
             mainSettings.IncludeSubfolders = true; // watch sub-folders
-            mainSettings.QcFilePattern = "_QC_"; // file name pattern
-            mainSettings.IsQcFilePatternRegex = false;
+            mainSettings.QcFileFilter = FileFilter.GetFileFilter(ContainsFilter.NAME, "_QC_"); // file name pattern
             mainSettings.ValidateSettings();
             watcher.Init(mainSettings);
 

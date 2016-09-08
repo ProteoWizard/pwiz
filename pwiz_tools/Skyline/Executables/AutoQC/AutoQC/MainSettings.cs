@@ -37,7 +37,7 @@ namespace AutoQC
         public const string WATERS = "Waters";
         public const string SCIEX = "SCIEX";
         public const string AGILENT = "Agilent";
-        //public const string BRUKER = "Bruker";R
+        //public const string BRUKER = "Bruker";
         //public const string SCHIMADZU = "Schimadzu";
 
         public string SkylineFilePath { get; set; }
@@ -51,11 +51,7 @@ namespace AutoQC
 
         public bool IncludeSubfolders { get; set; }
 
-        public string QcFilePattern { get; set; }
-
-        public bool IsQcFilePatternRegex { get; set; }
-
-        public Regex QcFileRegex { get; set; }
+        public FileFilter QcFileFilter { get; set; }
 
         public int ResultsWindow { get; set; }
 
@@ -74,7 +70,8 @@ namespace AutoQC
             {
                 InstrumentType = THERMO,
                 ResultsWindow = ACCUM_TIME_WINDOW,
-                AcquisitionTime = ACQUISITION_TIME
+                AcquisitionTime = ACQUISITION_TIME,
+                QcFileFilter = FileFilter.GetFileFilter(AllFileFilter.NAME, string.Empty)
             };
             return settings;
         }
@@ -86,8 +83,7 @@ namespace AutoQC
                 SkylineFilePath = SkylineFilePath,
                 FolderToWatch = FolderToWatch,
                 IncludeSubfolders = IncludeSubfolders,
-                QcFilePattern = QcFilePattern,
-                IsQcFilePatternRegex = IsQcFilePatternRegex,
+                QcFileFilter = QcFileFilter,
                 ResultsWindow = ResultsWindow,
                 AcquisitionTime = AcquisitionTime,
                 InstrumentType = InstrumentType
@@ -105,8 +101,7 @@ namespace AutoQC
             sb.Append("Skyline file: ").AppendLine(SkylineFilePath);
             sb.Append("Folder to watch: ").AppendLine(FolderToWatch);
             sb.Append("Include subfolders: ").AppendLine(IncludeSubfolders.ToString());
-            sb.Append("QC file pattern: ").AppendLine(QcFilePattern);
-            sb.Append("QC file pattern is a regex: ").AppendLine(IsQcFilePatternRegex.ToString());
+            sb.AppendLine(QcFileFilter.ToString());
             sb.Append("Instrument: ").AppendLine(InstrumentType);
             sb.Append("Results window: ").Append(ResultsWindow.ToString()).AppendLine(" days");
             sb.Append("Acquisition time: ").Append(AcquisitionTime.ToString()).AppendLine(" minutes");
@@ -135,28 +130,16 @@ namespace AutoQC
                 throw new ArgumentException(string.Format("Folder to watch: {0} does not exist.", FolderToWatch));
             }
 
-            // Regular expression for QC file names (optional)
-            if (!string.IsNullOrWhiteSpace(QcFilePattern))
+            // File filter
+            if (!(QcFileFilter is AllFileFilter))
             {
-                var pattern = QcFilePattern;
-                if (!IsQcFilePatternRegex)
+                bool isRegex = QcFileFilter is RegexFilter;
+                var pattern = QcFileFilter.Pattern;
+                if (string.IsNullOrEmpty(pattern))
                 {
-                    pattern = Regex.Escape(QcFilePattern);
-                    pattern = ".*" + pattern + ".*";
-                }
-
-                // Validate the regular expression
-                try
-                {
-                    QcFileRegex = new Regex(pattern
-                                            // , RegexOptions.IgnoreCase
-                                            );
-                }
-                catch (ArgumentException e)
-                {
-                    var err = string.Format("Invalid {0} for QC results file names",
-                        IsQcFilePatternRegex ? "regular expression" : "pattern");
-                    throw new ArgumentException(err, e);
+                    var err = string.Format("Empty {0} for QC file names",
+                          isRegex ? "regular expression" : "pattern");
+                    throw new ArgumentException(err);  
                 }
             }
 
@@ -329,8 +312,8 @@ namespace AutoQC
             skyline_file_path,
             folder_to_watch,
             include_subfolders,
+            file_filter_type,
             qc_file_pattern,
-            is_file_pattern_regex,
             results_window,
             instrument_type,
             acquisition_time
@@ -346,8 +329,14 @@ namespace AutoQC
             SkylineFilePath = reader.GetAttribute(ATTR.skyline_file_path);
             FolderToWatch = reader.GetAttribute(ATTR.folder_to_watch);
             IncludeSubfolders = reader.GetBoolAttribute(ATTR.include_subfolders);
-            QcFilePattern = reader.GetAttribute(ATTR.qc_file_pattern);
-            IsQcFilePatternRegex = reader.GetBoolAttribute(ATTR.is_file_pattern_regex);
+            var pattern = reader.GetAttribute(ATTR.qc_file_pattern);
+            var filterType = reader.GetAttribute(ATTR.file_filter_type);
+            if (string.IsNullOrEmpty(filterType) && !string.IsNullOrEmpty(pattern))
+            {
+                // Support for older version where filter type was not written to XML; only regex filters were allowed
+                filterType = RegexFilter.NAME;
+            }
+            QcFileFilter = FileFilter.GetFileFilter(filterType, pattern);
             ResultsWindow = reader.GetIntAttribute(ATTR.results_window);
             InstrumentType = reader.GetAttribute(ATTR.instrument_type);
             AcquisitionTime = reader.GetIntAttribute(ATTR.acquisition_time);
@@ -359,8 +348,8 @@ namespace AutoQC
             writer.WriteAttributeIfString(ATTR.skyline_file_path, SkylineFilePath);
             writer.WriteAttributeIfString(ATTR.folder_to_watch, FolderToWatch);
             writer.WriteAttribute(ATTR.include_subfolders, IncludeSubfolders);
-            writer.WriteAttributeIfString(ATTR.qc_file_pattern, QcFilePattern);
-            writer.WriteAttribute(ATTR.is_file_pattern_regex, IsQcFilePatternRegex);
+            writer.WriteAttributeIfString(ATTR.qc_file_pattern, QcFileFilter.Pattern);
+            writer.WriteAttributeString(ATTR.file_filter_type, QcFileFilter.Name());   
             writer.WriteAttributeNullable(ATTR.results_window, ResultsWindow);
             writer.WriteAttributeIfString(ATTR.instrument_type, InstrumentType);
             writer.WriteAttributeNullable(ATTR.acquisition_time, AcquisitionTime);
@@ -372,15 +361,14 @@ namespace AutoQC
 
         protected bool Equals(MainSettings other)
         {
-            return string.Equals(SkylineFilePath, other.SkylineFilePath) 
-                && string.Equals(FolderToWatch, other.FolderToWatch) 
-                && IncludeSubfolders == other.IncludeSubfolders 
-                && string.Equals(QcFilePattern, other.QcFilePattern)
-                && IsQcFilePatternRegex == other.IsQcFilePatternRegex
-                && ResultsWindow == other.ResultsWindow 
-                && string.Equals(InstrumentType, other.InstrumentType) 
-                && AcquisitionTime == other.AcquisitionTime 
-                && LastAcquiredFileDate.Equals(other.LastAcquiredFileDate);
+            return string.Equals(SkylineFilePath, other.SkylineFilePath)
+                   && string.Equals(FolderToWatch, other.FolderToWatch)
+                   && IncludeSubfolders == other.IncludeSubfolders
+                   && Equals(QcFileFilter, other.QcFileFilter)
+                   && ResultsWindow == other.ResultsWindow
+                   && string.Equals(InstrumentType, other.InstrumentType)
+                   && AcquisitionTime == other.AcquisitionTime
+                   && LastAcquiredFileDate.Equals(other.LastAcquiredFileDate);
         }
 
         public override bool Equals(object obj)
@@ -398,8 +386,7 @@ namespace AutoQC
                 var hashCode = (SkylineFilePath != null ? SkylineFilePath.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ (FolderToWatch != null ? FolderToWatch.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ IncludeSubfolders.GetHashCode();
-                hashCode = (hashCode*397) ^ (QcFilePattern != null ? QcFilePattern.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ IsQcFilePatternRegex.GetHashCode();
+                hashCode = (hashCode*397) ^ (QcFileFilter != null ? QcFileFilter.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ ResultsWindow;
                 hashCode = (hashCode*397) ^ (InstrumentType != null ? InstrumentType.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ AcquisitionTime;
@@ -440,6 +427,206 @@ namespace AutoQC
             };
             return window;
         }
+    }
+
+    public abstract class FileFilter
+    {
+        public abstract bool Matches(string path);
+        public abstract string Name();
+        public string Pattern { get; private set; }
+
+        protected FileFilter(string pattern)
+        {
+            Pattern = pattern ?? string.Empty;
+        }
+
+        public static FileFilter GetFileFilter(string filterType, string pattern)
+        {
+            switch (filterType)
+            {
+                case StartsWithFilter.NAME:
+                    return new StartsWithFilter(pattern);
+                case EndsWithFilter.NAME:
+                    return new EndsWithFilter(pattern);
+                case ContainsFilter.NAME:
+                    return new ContainsFilter(pattern);
+                case RegexFilter.NAME:
+                    return new RegexFilter(pattern);
+                default:
+                    return new AllFileFilter(string.Empty);
+            }
+        }
+
+        protected static string GetLastPathPartWithoutExtension(string path)
+        {
+            if (string.IsNullOrEmpty(path))
+            {
+                return string.Empty;
+            }
+            // We need the last part of the path; it could be a directory or a file
+            path = path.TrimEnd(Path.DirectorySeparatorChar);
+            return Path.GetFileNameWithoutExtension(path); 
+        }
+
+        #region Overrides of Object
+
+        public override string ToString()
+        {
+            var toStr = string.Format("Filter Type: {0}{1}", Name(),
+                (!(string.IsNullOrEmpty(Pattern))) ? string.Format("; Pattern: {0}", Pattern) : string.Empty);
+            return toStr;
+        }
+
+        #endregion
+
+        #region Equality members
+
+        protected bool Equals(FileFilter other)
+        {
+            return string.Equals(Pattern, other.Pattern);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((FileFilter) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return (Pattern != null ? Pattern.GetHashCode() : 0);
+        }
+
+        #endregion
+    }
+
+    public class AllFileFilter : FileFilter
+    {
+        public static readonly string NAME = "All";
+
+        public AllFileFilter(string pattern)
+            : base(pattern)
+        {
+        }
+
+        #region Overrides of FileFilter
+        public override bool Matches(string path)
+        {
+            return !string.IsNullOrEmpty(path);
+        }
+
+        public override string Name()
+        {
+            return NAME;
+        }
+
+        #endregion
+    }
+
+    public class StartsWithFilter: FileFilter
+    {
+        public const string NAME = "Starts with";
+
+        public StartsWithFilter(string pattern)
+            : base(pattern)
+        {
+        }
+
+        #region Overrides of FileFilter
+
+        public override bool Matches(string path)
+        {
+            return GetLastPathPartWithoutExtension(path).StartsWith(Pattern);
+        }
+
+        public override string Name()
+        {
+            return NAME;
+        }
+
+        #endregion
+    }
+
+    public class EndsWithFilter : FileFilter
+    {
+        public const string NAME = "Ends with";
+
+        public EndsWithFilter(string pattern)
+            : base(pattern)
+        {
+        }
+
+        #region Overrides of FileFilter
+
+        public override bool Matches(string path)
+        {
+            return GetLastPathPartWithoutExtension(path).EndsWith(Pattern);
+        }
+
+        public override string Name()
+        {
+            return NAME;
+        }
+        #endregion
+    }
+
+    public class ContainsFilter : FileFilter
+    {
+        public const string NAME = "Contains";
+
+        public ContainsFilter(string pattern)
+            : base(pattern)
+        {
+        }
+
+        #region Overrides of FileFilter
+
+        public override bool Matches(string path)
+        {
+            return GetLastPathPartWithoutExtension(path).Contains(Pattern);
+        }
+
+        public override string Name()
+        {
+            return NAME;
+        }
+        #endregion
+    }
+
+    public class RegexFilter : FileFilter
+    {
+        public const string NAME = "Regular expression";
+
+        public readonly Regex _regex;
+
+        public RegexFilter(string pattern)
+            : base(pattern)
+        {
+            // Validate the regular expression
+            try
+            {
+                _regex = new Regex(pattern);
+            }
+            catch (ArgumentException e)
+            {
+                throw new ArgumentException("Invalid regular expression for QC file names", e);
+            }  
+        }
+
+        #region Overrides of FileFilter
+
+        public override bool Matches(string path)
+        {
+            return _regex.IsMatch(GetLastPathPartWithoutExtension(path));
+        }
+
+        public override string Name()
+        {
+            return NAME;
+        }
+        #endregion
     }
 
     public interface IFileSystemUtil
