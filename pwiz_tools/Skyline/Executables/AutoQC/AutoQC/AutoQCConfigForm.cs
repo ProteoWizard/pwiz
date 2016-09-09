@@ -148,7 +148,7 @@ namespace AutoQC
 
         private static void ShowErrorDialog(string message)
         {
-            MainForm.ShowErrorDialog(message);
+            MainForm.ShowErrorDialog("Configuration Validation Error", message);
         }
 
         private AutoQcConfig GetConfigFromUi()

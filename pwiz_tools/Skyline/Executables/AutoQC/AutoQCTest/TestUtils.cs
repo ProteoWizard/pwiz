@@ -56,6 +56,11 @@ namespace AutoQCTest
             throw new NotImplementedException();
         }
 
+        public void DisplayLog()
+        {
+            throw new NotImplementedException();
+        }
+
         private void AddToLog(string message, params object[] args)
         {
             log.Append(string.Format(message, args)).AppendLine();
@@ -140,12 +145,12 @@ namespace AutoQCTest
             throw new NotImplementedException();
         }
 
-        public void LogToUi(string text)
+        public void LogToUi(string text, bool scrollToEnd = true, bool trim = false)
         {
             throw new NotImplementedException();
         }
 
-        public void LogErrorToUi(string text)
+        public void LogErrorToUi(string text, bool scrollToEnd = true, bool trim = false)
         {
             throw new NotImplementedException();
         }

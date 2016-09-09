@@ -23,6 +23,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using AutoQC.Properties;
 using log4net;
@@ -49,6 +50,8 @@ namespace AutoQC
             SKYLINE_RUNNER);
 
         private readonly ILog _logger;
+
+        private IAutoQcLogger _currentAutoQcLogger;
 
         public MainForm(ILog logger)
         {
@@ -126,7 +129,7 @@ namespace AutoQC
             }
             catch (ArgumentException e)
             {
-                ShowErrorDialog(e.Message);
+                ShowErrorDialog("Configuration Validation Error", e.Message);
             }
         }
 
@@ -150,12 +153,10 @@ namespace AutoQC
             }
         }
 
-        public static void ShowErrorDialog(string message)
+        public static void ShowErrorDialog(string title, string message)
         {
-            MessageBox.Show(message, "Configuration Validation Error",
-                MessageBoxButtons.OK);
+            MessageBox.Show(message, title, MessageBoxButtons.OK);     
         }
-
 
         #region event handlers
 
@@ -372,7 +373,7 @@ namespace AutoQC
             ViewLog(selectedConfig.ToString());
         }
 
-        private void ViewLog(string configName)
+        private async void ViewLog(string configName)
         {
             ConfigRunner runner;
             _configRunners.TryGetValue(configName, out runner);
@@ -387,6 +388,13 @@ namespace AutoQC
                 return;
             }
 
+            if (logger == _currentAutoQcLogger)
+            {
+                return;
+            }
+
+            _currentAutoQcLogger = logger;
+
             var logFile = logger.GetFile();
             if (!File.Exists(logFile))
             {
@@ -399,30 +407,23 @@ namespace AutoQC
             {
                 configRunner.DisableUiLogging();
             }
-            
 
-            // Read all the contents and display in the log tab.
-            textBoxLog.Text = File.ReadAllText(logFile);
-            using (var reader = new StreamReader(logFile))
+            runner.EnableUiLogging();
+            textBoxLog.Clear(); // clear any existing log
+            try
             {
-                string line;
-                while ((line = reader.ReadLine()) != null)
+                await Task.Run(() =>
                 {
-                    var error = line.ToLower().Contains("error");
-                    if (error)
-                    {
-                       LogErrorToUi(line, false);
-                    }
-                    else
-                    {
-                        LogToUi(line, false);
-                    }
-                }
+                    // Read the log contents and display in the log tab.
+                    logger.DisplayLog();
+                });
+            }
+            catch (Exception ex)
+            {
+                ShowErrorDialog("Error reading log", ex.Message);
             }
 
             ScrollToLogEnd();
-
-            runner.EnableUiLogging();
         }
 
         private void ScrollToLogEnd()
@@ -457,6 +458,7 @@ namespace AutoQC
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
             Settings.Default.Save();
+            // TODO
 //            foreach (var configRunner in _configRunners.Values)
 //            {
 //                configRunner.Stop();
@@ -622,10 +624,14 @@ namespace AutoQC
             return configRunner == null ? null : configRunner.Config;
         }
 
-        private void LogToUi(string text, bool scrollToEnd)
+        public void LogToUi(string text, bool scrollToEnd, bool trim)
         {
             RunUI(() =>
             {
+                if (trim)
+                {
+                    TrimDisplayedLog();
+                }
                 textBoxLog.AppendText(text);
                 textBoxLog.AppendText(Environment.NewLine);
 
@@ -635,30 +641,46 @@ namespace AutoQC
             });
             
         }
-        public void LogToUi(string text)
+
+        private void TrimDisplayedLog()
         {
-            LogToUi(text, true);
+            var numLines = textBoxLog.Lines.Length;
+            const int buffer = AutoQcLogger.MaxLogLines / 10;
+            if (numLines > AutoQcLogger.MaxLogLines + buffer)
+            {
+                textBoxLog.SelectionStart = 0;
+                textBoxLog.SelectionLength = textBoxLog.GetFirstCharIndexFromLine(numLines - AutoQcLogger.MaxLogLines);
+                textBoxLog.SelectedText = string.Empty;
+
+                var message = (_currentAutoQcLogger != null) ? 
+                    string.Format(AutoQcLogger.LogTruncatedMessage, _currentAutoQcLogger.GetFile()) 
+                    : "... Log truncated ...";
+                textBoxLog.Text = textBoxLog.Text.Insert(0, message + Environment.NewLine);
+                textBoxLog.SelectionStart = 0;
+                textBoxLog.SelectionLength = textBoxLog.GetFirstCharIndexFromLine(1); // 0-based index
+                textBoxLog.SelectionColor = Color.Red;
+               
+                textBoxLog.SelectionStart = textBoxLog.TextLength;
+                textBoxLog.SelectionColor = textBoxLog.ForeColor;
+            }
         }
 
-        private void LogErrorToUi(string text, bool scrollToEnd)
+        public void LogErrorToUi(string text, bool scrollToEnd, bool trim)
         {
             RunUI(() =>
             {
+                if (trim )
+                {
+                    TrimDisplayedLog();
+                }
+
                 textBoxLog.SelectionStart = textBoxLog.TextLength;
                 textBoxLog.SelectionLength = 0;
                 textBoxLog.SelectionColor = Color.Red;
-                LogToUi(text);
+                LogToUi(text, scrollToEnd, 
+                    false); // Already trimmed
                 textBoxLog.SelectionColor = textBoxLog.ForeColor;
-
-                if (!scrollToEnd) return;
-
-                ScrollToLogEnd();
             });      
-        }
-
-        public void LogErrorToUi(string text)
-        {
-            LogErrorToUi(text, true);
         }
 
         #endregion
@@ -811,7 +833,7 @@ namespace AutoQC
         void AddConfiguration(AutoQcConfig config);
         void UpdateConfiguration(AutoQcConfig oldConfig, AutoQcConfig newConfig);
         AutoQcConfig GetConfig(string name);
-        void LogToUi(string text);
-        void LogErrorToUi(string text);
+        void LogToUi(string text, bool scrollToEnd = true, bool trim = true);
+        void LogErrorToUi(string text, bool scrollToEnd = true, bool trim = true);
     }
 }
