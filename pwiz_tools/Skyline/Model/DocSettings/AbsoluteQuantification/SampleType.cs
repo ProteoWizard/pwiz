@@ -80,6 +80,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         public Color Color { get; private set; }
         public SymbolType SymbolType { get; private set; }
+        public bool AllowExclude { get { return Equals(STANDARD); } }
 
         private bool Equals(SampleType other)
         {

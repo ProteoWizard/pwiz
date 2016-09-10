@@ -125,24 +125,10 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                     QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_No_results_available;
                 return;
             }
-            PeptideDocNode peptide = null;
-            PeptideGroupDocNode peptideGroup = null;
-            SequenceTree sequenceTree = _skylineWindow.SequenceTree;
-            if (null != sequenceTree)
-            {
-                PeptideTreeNode peptideTreeNode = sequenceTree.GetNodeOfType<PeptideTreeNode>();
-                if (null != peptideTreeNode)
-                {
-                    peptide = peptideTreeNode.DocNode;
-                }
-                PeptideGroupTreeNode peptideGroupTreeNode = sequenceTree.GetNodeOfType<PeptideGroupTreeNode>();
-                if (null != peptideGroupTreeNode)
-                {
-                    peptideGroup = peptideGroupTreeNode.DocNode;
-                }
-            }
+            PeptideDocNode peptide;
+            PeptideGroupDocNode peptideGroup;
 
-            if (null == peptide)
+            if (!TryGetSelectedPeptide(out peptideGroup,out peptide))
             {
                 zedGraphControl.GraphPane.Title.Text =
                     QuantificationStrings
@@ -196,6 +182,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                     continue;
                 }
                 PointPairList pointPairList = new PointPairList();
+                PointPairList pointPairListExcluded = new PointPairList();
                 for (int iReplicate = 0;
                     iReplicate < document.Settings.MeasuredResults.Chromatograms.Count;
                     iReplicate++)
@@ -208,10 +195,18 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                     double? y = curveFitter.GetYValue(iReplicate);
                     double? x = curveFitter.GetSpecifiedXValue(iReplicate)
                                 ?? curveFitter.GetCalculatedXValue(CalibrationCurve, iReplicate);
+
                     if (y.HasValue && x.HasValue)
                     {
                         PointPair point = new PointPair(x.Value, y.Value) {Tag = iReplicate};
-                        pointPairList.Add(point);
+                        if (sampleType.AllowExclude && peptide.IsExcludeFromCalibration(iReplicate))
+                        {
+                            pointPairListExcluded.Add(point);
+                        }
+                        else
+                        {
+                            pointPairList.Add(point);
+                        }
                         if (!Options.LogPlot || x.Value > 0)
                         {
                             minX = Math.Min(minX, x.Value);
@@ -225,6 +220,14 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                         sampleType.Color, sampleType.SymbolType);
                     lineItem.Line.IsVisible = false;
                     lineItem.Symbol.Fill = new Fill(sampleType.Color);
+                    _scatterPlots.Add(lineItem);
+                }
+                if (pointPairListExcluded.Any())
+                {
+                    string curveLabel = pointPairList.Any() ? null : sampleType.ToString();
+                    var lineItem = zedGraphControl.GraphPane.AddCurve(curveLabel, pointPairListExcluded,
+                        sampleType.Color, sampleType.SymbolType);
+                    lineItem.Line.IsVisible = false;
                     _scatterPlots.Add(lineItem);
                 }
             }
@@ -302,6 +305,27 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             }
         }
 
+        private bool TryGetSelectedPeptide(out PeptideGroupDocNode peptideGroup, out PeptideDocNode peptide)
+        {
+            peptide = null;
+            peptideGroup = null;
+            SequenceTree sequenceTree = _skylineWindow.SequenceTree;
+            if (null != sequenceTree)
+            {
+                PeptideTreeNode peptideTreeNode = sequenceTree.GetNodeOfType<PeptideTreeNode>();
+                if (null != peptideTreeNode)
+                {
+                    peptide = peptideTreeNode.DocNode;
+                }
+                PeptideGroupTreeNode peptideGroupTreeNode = sequenceTree.GetNodeOfType<PeptideGroupTreeNode>();
+                if (null != peptideGroupTreeNode)
+                {
+                    peptideGroup = peptideGroupTreeNode.DocNode;
+                }
+            }
+            return peptide != null;
+        }
+
         protected override void OnClosed(EventArgs e)
         {
             base.OnClosed(e);
@@ -358,15 +382,16 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
 
         private void zedGraphControl_ContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
         {
-            ZedGraphHelper.BuildContextMenu(sender, menuStrip, true);
-            if (!menuStrip.Items.Contains(logPlotContextMenuItem))
+            int? replicateIndexFromPoint = ReplicateIndexFromPoint(mousePt);
+            if (replicateIndexFromPoint.HasValue)
             {
-                int index = 0;
-                menuStrip.Items.Insert(index++, logPlotContextMenuItem);
-                menuStrip.Items.Insert(index++, showSampleTypesContextMenuItem);
-                menuStrip.Items.Insert(index++, showLegendContextMenuItem);
-                menuStrip.Items.Insert(index++, showSelectionContextMenuItem);
-                menuStrip.Items.Insert(index++, new ToolStripSeparator());
+                ToolStripMenuItem excludeStandardMenuItem = MakeExcludeStandardMenuItem(replicateIndexFromPoint.Value);
+                if (excludeStandardMenuItem != null)
+                {
+                    menuStrip.Items.Clear();
+                    menuStrip.Items.Add(excludeStandardMenuItem);
+                    return;
+                }
             }
             
             showSampleTypesContextMenuItem.DropDownItems.Clear();
@@ -377,6 +402,55 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             logPlotContextMenuItem.Checked = Options.LogPlot;
             showLegendContextMenuItem.Checked = Options.ShowLegend;
             showSelectionContextMenuItem.Checked = Options.ShowSelection;
+            ZedGraphHelper.BuildContextMenu(sender, menuStrip, true);
+            if (!menuStrip.Items.Contains(logPlotContextMenuItem))
+            {
+                int index = 0;
+                menuStrip.Items.Insert(index++, logPlotContextMenuItem);
+                menuStrip.Items.Insert(index++, showSampleTypesContextMenuItem);
+                menuStrip.Items.Insert(index++, showLegendContextMenuItem);
+                menuStrip.Items.Insert(index++, showSelectionContextMenuItem);
+                menuStrip.Items.Insert(index++, new ToolStripSeparator());
+            }
+        }
+
+        private ToolStripMenuItem MakeExcludeStandardMenuItem(int replicateIndex)
+        {
+            var document = DocumentUiContainer.DocumentUI;
+            if (!document.Settings.HasResults)
+            {
+                return null;
+            }
+            ChromatogramSet chromatogramSet = null;
+            if (replicateIndex >= 0 &&
+                replicateIndex < document.Settings.MeasuredResults.Chromatograms.Count)
+            {
+                chromatogramSet = document.Settings.MeasuredResults.Chromatograms[replicateIndex];
+            }
+            if (chromatogramSet == null)
+            {
+                return null;
+            }
+            if (!chromatogramSet.SampleType.AllowExclude)
+            {
+                return null;
+            }
+            PeptideDocNode peptideDocNode;
+            PeptideGroupDocNode peptideGroupDocNode;
+            if (!TryGetSelectedPeptide(out peptideGroupDocNode, out peptideDocNode))
+            {
+                return null;
+            }
+            bool isExcluded = peptideDocNode.IsExcludeFromCalibration(replicateIndex);
+            var menuItemText = isExcluded ? QuantificationStrings.CalibrationForm_MakeExcludeStandardMenuItem_Include_Standard 
+                : QuantificationStrings.CalibrationForm_MakeExcludeStandardMenuItem_Exclude_Standard;
+            var peptideIdPath = new IdentityPath(peptideGroupDocNode.Id, peptideDocNode.Id);
+            var menuItem = new ToolStripMenuItem(menuItemText, null, (sender, args) =>
+            {
+                _skylineWindow.ModifyDocument(menuItemText,
+                    doc => SetExcludeStandard(doc, peptideIdPath, replicateIndex, !isExcluded));
+            });
+            return menuItem;
         }
 
         private ToolStripMenuItem MakeShowSampleTypeMenuItem(SampleType sampleType)
@@ -456,5 +530,25 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
         #region Test Methods
         public ZedGraphControl ZedGraphControl { get { return zedGraphControl; } }
         #endregion
+
+        private SrmDocument SetExcludeStandard(SrmDocument document, IdentityPath peptideIdPath, int resultsIndex, bool exclude)
+        {
+            if (!document.Settings.HasResults)
+            {
+                return document;
+            }
+            var peptideDocNode = (PeptideDocNode) document.FindNode(peptideIdPath);
+            if (peptideDocNode == null)
+            {
+                return document;
+            }
+            if (resultsIndex < 0 || resultsIndex >= document.Settings.MeasuredResults.Chromatograms.Count)
+            {
+                return document;
+            }
+            bool wasExcluded = peptideDocNode.IsExcludeFromCalibration(resultsIndex);
+            return (SrmDocument) document.ReplaceChild(peptideIdPath.Parent,
+                peptideDocNode.ChangeExcludeFromCalibration(resultsIndex, !wasExcluded));
+        }
     }
 }

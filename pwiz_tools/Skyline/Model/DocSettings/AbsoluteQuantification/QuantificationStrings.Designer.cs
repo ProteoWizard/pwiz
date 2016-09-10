@@ -322,6 +322,24 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Exclude Standard.
+        /// </summary>
+        public static string CalibrationForm_MakeExcludeStandardMenuItem_Exclude_Standard {
+            get {
+                return ResourceManager.GetString("CalibrationForm_MakeExcludeStandardMenuItem_Exclude_Standard", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Include Standard.
+        /// </summary>
+        public static string CalibrationForm_MakeExcludeStandardMenuItem_Include_Standard {
+            get {
+                return ResourceManager.GetString("CalibrationForm_MakeExcludeStandardMenuItem_Include_Standard", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Concentration Ratio.
         /// </summary>
         public static string Concentration_Ratio {

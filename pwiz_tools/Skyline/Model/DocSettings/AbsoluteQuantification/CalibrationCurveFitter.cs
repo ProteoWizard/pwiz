@@ -87,6 +87,10 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                     {
                         continue;
                     }
+                    if (PeptideQuantifier.PeptideDocNode.IsExcludeFromCalibration(replicateIndex))
+                    {
+                        continue;
+                    }
                     double? concentration = GetPeptideConcentration(chromatogramSet);
                     if (concentration.HasValue)
                     {
@@ -270,6 +274,27 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 return xValue*PeptideQuantifier.PeptideDocNode.InternalStandardConcentration;
             }
             return xValue;
+        }
+
+        public bool IsExcluded(int replicateIndex)
+        {
+            ChromatogramSet chromatogramSet = SrmSettings.MeasuredResults.Chromatograms[replicateIndex];
+            if (!chromatogramSet.SampleType.AllowExclude)
+            {
+                return false;
+            }
+            var peptideResults = PeptideQuantifier.PeptideDocNode.Results;
+            if (null == peptideResults)
+            {
+                return false;
+            }
+            if (replicateIndex >= peptideResults.Count)
+            {
+                return false;
+            }
+            var peptideChromInfos = peptideResults[replicateIndex];
+            return peptideChromInfos.Any(
+                peptideChromInfo => null != peptideChromInfo && peptideChromInfo.ExcludeFromCalibration);
         }
 
         public bool HasExternalStandards()

@@ -1908,6 +1908,7 @@ namespace pwiz.Skyline.Model
             public const string isotope_dotp = "isotope_dotp";
             public const string qvalue = "qvalue";
             public const string zscore = "zscore";
+            public const string exclude_from_calibration = "exclude_from_calibration";
             // ReSharper restore NonLocalizedString
         }
         // ReSharper restore InconsistentNaming
@@ -2484,7 +2485,9 @@ namespace pwiz.Skyline.Model
         {
             float peakCountRatio = reader.GetFloatAttribute(ATTR.peak_count_ratio);
             float? retentionTime = reader.GetNullableFloatAttribute(ATTR.retention_time);
-            return new PeptideChromInfo(fileId, peakCountRatio, retentionTime, ImmutableList<PeptideLabelRatio>.EMPTY);
+            bool excludeFromCalibration = reader.GetBoolAttribute(ATTR.exclude_from_calibration);
+            return new PeptideChromInfo(fileId, peakCountRatio, retentionTime, ImmutableList<PeptideLabelRatio>.EMPTY)
+                .ChangeExcludeFromCalibration(excludeFromCalibration);
         }
 
         /// <summary>
@@ -3484,6 +3487,7 @@ namespace pwiz.Skyline.Model
         {
             writer.WriteAttribute(ATTR.peak_count_ratio, chromInfo.PeakCountRatio);
             writer.WriteAttributeNullable(ATTR.retention_time, chromInfo.RetentionTime);
+            writer.WriteAttribute(ATTR.exclude_from_calibration, chromInfo.ExcludeFromCalibration);
             if (scoreCalc.HasValue)
             {
                 double? rt = Settings.PeptideSettings.Prediction.RetentionTime.GetRetentionTime(scoreCalc.Value,

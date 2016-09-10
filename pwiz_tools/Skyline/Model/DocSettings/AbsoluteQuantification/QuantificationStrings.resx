@@ -233,4 +233,10 @@
   <data name="QuantificationResult_ToString_Normalized_Area___0_" xml:space="preserve">
     <value>Normalized Area: {0}</value>
   </data>
+  <data name="CalibrationForm_MakeExcludeStandardMenuItem_Include_Standard" xml:space="preserve">
+    <value>Include Standard</value>
+  </data>
+  <data name="CalibrationForm_MakeExcludeStandardMenuItem_Exclude_Standard" xml:space="preserve">
+    <value>Exclude Standard</value>
+  </data>
 </root>

@@ -1056,6 +1056,31 @@ namespace pwiz.Skyline.Model
             return PeptideTreeNode.DisplayText(this, settings);
         }
 
+        public bool IsExcludeFromCalibration(int replicateIndex)
+        {
+            if (Results == null || replicateIndex < 0 || replicateIndex >= Results.Count)
+            {
+                return false;
+            }
+            var chromInfos = Results[replicateIndex];
+            if (chromInfos == null)
+            {
+                return false;
+            }
+            return chromInfos.Any(peptideChromInfo => peptideChromInfo != null && peptideChromInfo.ExcludeFromCalibration);
+        }
+
+        public PeptideDocNode ChangeExcludeFromCalibration(int replicateIndex, bool excluded)
+        {
+            ChromInfoList<PeptideChromInfo>[] newResults = Results.ToArray();
+            var chromInfoList = newResults[replicateIndex];
+            var newChromInfos = chromInfoList.Select(
+                peptideChromInfo => null == peptideChromInfo ? null 
+                    : peptideChromInfo.ChangeExcludeFromCalibration(excluded)).ToArray();
+            newResults[replicateIndex] = new ChromInfoList<PeptideChromInfo>(newChromInfos);
+            return ChangeResults(new Results<PeptideChromInfo>(newResults));
+        }
+
         private sealed class PeptideResultsCalculator
         {
             private readonly List<PeptideChromInfoListCalculator> _listResultCalcs =
@@ -1096,6 +1121,7 @@ namespace pwiz.Skyline.Model
             {
                 var listChromInfoList = _listResultCalcs.ConvertAll(calc =>
                                                                     calc.CalcChromInfoList(TransitionGroupCount));
+                listChromInfoList = CopyChromInfoAttributes(nodePeptide, listChromInfoList);
                 var results = Results<PeptideChromInfo>.Merge(nodePeptide.Results, listChromInfoList);
                 if (!ReferenceEquals(results, nodePeptide.Results))
                     nodePeptide = nodePeptide.ChangeResults(results);
@@ -1134,6 +1160,65 @@ namespace pwiz.Skyline.Model
                     listGroupsNew.Add(nodeGroupNew.ChangeChildrenChecked(listTransNew));
                 }
                 return (PeptideDocNode) nodePeptide.ChangeChildrenChecked(listGroupsNew);
+            }
+
+            
+            private List<IList<PeptideChromInfo>> CopyChromInfoAttributes(PeptideDocNode peptideDocNode,
+                List<IList<PeptideChromInfo>> results)
+            {
+                if (peptideDocNode == null || peptideDocNode.Results == null)
+                {
+                    return results;
+                }
+                var excludeFromCalibrations = new Dictionary<int, bool>();
+                foreach (var chromInfos in peptideDocNode.Results)
+                {
+                    if (chromInfos == null)
+                    {
+                        continue;
+                    }
+                    foreach (var chromInfo in chromInfos)
+                    {
+                        if (chromInfo != null && chromInfo.ExcludeFromCalibration)
+                        {
+                            excludeFromCalibrations.Add(chromInfo.FileId.GlobalIndex,
+                                chromInfo.ExcludeFromCalibration);
+                        }
+                    }
+                }
+                if (!excludeFromCalibrations.Any())
+                {
+                    return results;
+                }
+                List<IList<PeptideChromInfo>> newResults = new List<IList<PeptideChromInfo>>();
+                for (int replicateIndex = 0; replicateIndex < results.Count; replicateIndex++)
+                {
+                    var chromInfoList = results[replicateIndex];
+                    if (chromInfoList == null)
+                    {
+                        newResults.Add(null);
+                    }
+                    else
+                    {
+                        IList<PeptideChromInfo> newChromInfoList = new List<PeptideChromInfo>();
+                        foreach (var chromInfo in chromInfoList)
+                        {
+                            bool excludeFromCalibration;
+                            if (chromInfo != null &&
+                                excludeFromCalibrations.TryGetValue(chromInfo.FileId.GlobalIndex,
+                                    out excludeFromCalibration))
+                            {
+                                newChromInfoList.Add(chromInfo.ChangeExcludeFromCalibration(excludeFromCalibration));
+                            }
+                            else
+                            {
+                                newChromInfoList.Add(chromInfo);
+                            }
+                        }
+                        newResults.Add(newChromInfoList);
+                    }
+                }
+                return newResults;
             }
         }
 
