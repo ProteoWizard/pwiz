@@ -188,7 +188,7 @@ namespace AutoQCTest
                 return Enumerable.Empty<ProcessInfo>();
             }
             
-            public bool RunProcess(ProcessInfo processInfo)
+            public ProcStatus RunProcess(ProcessInfo processInfo)
             {
                _processRunner = new MockProcessRunner(_logger);
                 var run = _processRunner.RunProcess(processInfo);

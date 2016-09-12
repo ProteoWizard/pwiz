@@ -541,7 +541,7 @@ namespace AutoQC
             lvi.UseItemStyleForSubItems = false; // So that we can change the color for sub-items.
             lvi.SubItems.Add(config.User);
             lvi.SubItems.Add(config.Created.ToShortDateString());
-            lvi.SubItems.Add(ConfigRunner.Status.Stopped.ToString());
+            lvi.SubItems.Add(ConfigRunner.RunnerStatus.Stopped.ToString());
             if (index == -1)
             {
                 listViewConfigs.Items.Add(lvi);
@@ -648,6 +648,7 @@ namespace AutoQC
             const int buffer = AutoQcLogger.MaxLogLines / 10;
             if (numLines > AutoQcLogger.MaxLogLines + buffer)
             {
+                textBoxLog.ReadOnly = false; // Make text box editable. This is required for the following to work
                 textBoxLog.SelectionStart = 0;
                 textBoxLog.SelectionLength = textBoxLog.GetFirstCharIndexFromLine(numLines - AutoQcLogger.MaxLogLines);
                 textBoxLog.SelectedText = string.Empty;
@@ -662,6 +663,7 @@ namespace AutoQC
                
                 textBoxLog.SelectionStart = textBoxLog.TextLength;
                 textBoxLog.SelectionColor = textBoxLog.ForeColor;
+                textBoxLog.ReadOnly = true; // Make text box read-only
             }
         }
 

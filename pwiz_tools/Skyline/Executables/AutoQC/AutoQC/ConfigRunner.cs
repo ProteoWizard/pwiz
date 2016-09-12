@@ -20,7 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
@@ -52,9 +51,11 @@ namespace AutoQC
         private const string COMPLETED = "Completed";
 
         private readonly object _lock = new object();
-        private Status _status;
+        private RunnerStatus _runnerStatus;
+        // This flag is set if a document failed to upload to Panorama for any reason.
+        private bool _panoramaUploadError;
 
-        public enum Status
+        public enum RunnerStatus
         {
             Starting,
             Running,
@@ -65,7 +66,7 @@ namespace AutoQC
 
         public ConfigRunner(AutoQcConfig config, IMainUiControl uiControl)
         {
-            _status = Status.Stopped;
+            _runnerStatus = RunnerStatus.Stopped;
 
             Config = config;
 
@@ -74,11 +75,11 @@ namespace AutoQC
             CreateLogger();
         }
 
-        public Status GetStatus()
+        public RunnerStatus GetStatus()
         {
             lock (_lock)
             {
-                return _status;
+                return _runnerStatus;
             }
         }
 
@@ -119,13 +120,15 @@ namespace AutoQC
 
         public void Start()
         {
+            _panoramaUploadError = false;
+
             try
             {
                 Config.MainSettings.ValidateSettings();
             }
             catch (ArgumentException ex)
             {
-                ChangeStatus(Status.Error);
+                ChangeStatus(RunnerStatus.Error);
                 _logger.LogException(ex);
                 throw ex;
             }
@@ -133,11 +136,11 @@ namespace AutoQC
             RunBackgroundWorker(RunConfiguration, ProcessFilesCompleted);
         }
 
-        private void ChangeStatus(Status status)
+        private void ChangeStatus(RunnerStatus runnerStatus)
         {
             lock (_lock)
             {
-                _status = status;
+                _runnerStatus = runnerStatus;
             }
             _uiControl.ChangeConfigUiStatus(this);
         }
@@ -185,7 +188,7 @@ namespace AutoQC
         {
             try
             {
-                ChangeStatus(Status.Starting);
+                ChangeStatus(RunnerStatus.Starting);
 
                 // Thread.Sleep(2000);
 
@@ -196,7 +199,7 @@ namespace AutoQC
                 // Make sure "Integrate all" is checked in the Skyline settings
                 if (!IsIntegrateAllChecked(_logger, Config.MainSettings))
                 {
-                    ChangeStatus(Status.Error);
+                    ChangeStatus(RunnerStatus.Error);
                     return;
                 }
 
@@ -204,7 +207,7 @@ namespace AutoQC
                 // imported into the document.
                 if (!ReadLastAcquiredFileDate(_logger, this))
                 {
-                    ChangeStatus(Status.Error);
+                    ChangeStatus(RunnerStatus.Error);
                     return;
                 }
 
@@ -218,7 +221,7 @@ namespace AutoQC
                 _fileWatcher.Init(Config.MainSettings);
 
                 Log("Starting configuration...");
-                ChangeStatus(Status.Running);
+                ChangeStatus(RunnerStatus.Running);
 
                 if (ProcessExistingFiles(e))
                 {
@@ -230,7 +233,7 @@ namespace AutoQC
             catch (Exception x)
             {
                 LogException(x);
-                ChangeStatus(Status.Error);
+                ChangeStatus(RunnerStatus.Error);
             }
         }
 
@@ -252,8 +255,13 @@ namespace AutoQC
                 {
                     var importContext = new ImportContext(filePath) { TotalImportCount = _totalImportCount };
                     var success = ImportFile(e, importContext);
-
                     
+                    if (_panoramaUploadError)
+                    {
+                        // If there was an error uploading to Panorama, we will stop here
+                        break;
+                    }
+
                     if (!_fileWatcher.IsFolderAvailable())
                     {
                         // We may have lost connection to a mapped network drive.
@@ -352,10 +360,15 @@ namespace AutoQC
             {
                 Log("Cancelled importing files.");
             }
+            else if (_panoramaUploadError)
+            {
+                LogError("There was an error uploading the document to Panorama. Stopping...");    
+            }
             else
             {
                 Log("Finished importing files.");
             }
+
             Stop();
         }
 
@@ -409,7 +422,7 @@ namespace AutoQC
             }
 
             Log("Finished importing existing files...");
-            return true;
+            return !_panoramaUploadError;
         }
 
         private bool ImportFile(DoWorkEventArgs e, ImportContext importContext, bool addToReimportQueueOnFailure = true)
@@ -443,16 +456,17 @@ namespace AutoQC
                 return false;
             }
 
-            if (!ProcessOneFile(importContext))
+            _panoramaUploadError = false;
+            var docImported = ProcessOneFile(importContext);
+            if (!docImported)
             {
                 if (addToReimportQueueOnFailure)
                 {
                     AddToReimportQueue(filePath);
                 }
-                return false;
             }
-
-            return true;
+           
+            return docImported;
         }
 
         private void AddToReimportQueue(string filePath)
@@ -464,17 +478,27 @@ namespace AutoQC
         private bool ProcessOneFile(ImportContext importContext)
         {
             var processInfos = GetProcessInfos(importContext);
-            if (processInfos.Any(procInfo => !RunProcess(procInfo)))
+            bool docImportFailed = false;
+            foreach (var processInfo in processInfos)
             {
-                return false;
+                var status = RunProcess(processInfo);
+                if (status == ProcStatus.PanoramaUploadError)
+                {
+                    _panoramaUploadError = true;
+                }
+                if (status == ProcStatus.DocImportError || status == ProcStatus.Error)
+                {
+                    docImportFailed = true;
+                }   
             }
-            _totalImportCount++;
-            return true;
+            
+            if(!docImportFailed) _totalImportCount++;
+            return !docImportFailed;
         }
 
         public void Stop()
         {
-            if (_status == Status.Stopped)
+            if (_runnerStatus == RunnerStatus.Stopped)
                 return;
 
             Task.Run(() =>
@@ -484,13 +508,19 @@ namespace AutoQC
 
                 if (_worker != null && _worker.IsBusy)
                 {
-                    _status = Status.Stopping;
+                    _runnerStatus = RunnerStatus.Stopping;
                     CancelAsync();
                 }
-                else if(_status != Status.Error)
+                else if(_runnerStatus != RunnerStatus.Error)
                 {
-                    _status = Status.Stopped;
+                    _runnerStatus = RunnerStatus.Stopped;
                 }
+
+                if (_runnerStatus == RunnerStatus.Stopped && _panoramaUploadError)
+                {
+                    _runnerStatus = RunnerStatus.Error;
+                }
+
                 _uiControl.ChangeConfigUiStatus(this);
 
                 if (_panoramaPinger != null)
@@ -570,7 +600,7 @@ namespace AutoQC
                     Config.MainSettings.SkylineFilePath, skyrFile, "AcquisitionTimes", reportFile);
 
             var procInfo = new ProcessInfo(MainForm.SkylineRunnerPath, MainForm.SKYLINE_RUNNER, args, args);
-            if (!processControl.RunProcess(procInfo))
+            if (processControl.RunProcess(procInfo) == ProcStatus.Error)
             {
                 logger.LogError("Error getting the last acquired file date from the Skyline document.");
                 return false;
@@ -673,28 +703,28 @@ namespace AutoQC
 
         public bool IsStopping()
         {
-            return _status == Status.Stopping;
+            return _runnerStatus == RunnerStatus.Stopping;
         }
 
         public bool IsStopped()
         {
-            return _status == Status.Stopped || _status == Status.Error;
+            return _runnerStatus == RunnerStatus.Stopped || _runnerStatus == RunnerStatus.Error;
         }
 
         public bool IsStarting()
         {
-            return _status == Status.Starting;
+            return _runnerStatus == RunnerStatus.Starting;
         }
 
         public bool IsRunning()
         {
-            return _status == Status.Running;
+            return _runnerStatus == RunnerStatus.Running;
             // return _worker.IsBusy;
         }
 
         public bool IsError()
         {
-            return _status == Status.Error;
+            return _runnerStatus == RunnerStatus.Error;
         }
 
         #region [Implementation of IProcessControl interface]
@@ -736,7 +766,7 @@ namespace AutoQC
             return args.ToString();
         }
 
-        public bool RunProcess(ProcessInfo processInfo)
+        public ProcStatus RunProcess(ProcessInfo processInfo)
         {
             _processRunner = new ProcessRunner(_logger);
             return _processRunner.RunProcess(processInfo);
@@ -753,7 +783,15 @@ namespace AutoQC
     public interface IProcessControl
     {
         IEnumerable<ProcessInfo> GetProcessInfos(ImportContext importContext);
-        bool RunProcess(ProcessInfo processInfo);
+        ProcStatus RunProcess(ProcessInfo processInfo);
         void StopProcess();
+    }
+
+    public enum ProcStatus
+    {
+        Success,
+        Error,
+        DocImportError,
+        PanoramaUploadError
     }
 }

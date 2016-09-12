@@ -86,7 +86,7 @@ namespace AutoQCTest
         public bool Waiting { get; set; }
         public bool Stopped { get; set; }
 
-        private ConfigRunner.Status _status;
+        private ConfigRunner.RunnerStatus _runnerStatus;
 
         public void SetWaiting()
         {
@@ -127,7 +127,7 @@ namespace AutoQCTest
 
         public void ChangeConfigUiStatus(ConfigRunner configRunner)
         {
-            _status = configRunner.GetStatus();
+            _runnerStatus = configRunner.GetStatus();
         }
 
         public void AddConfiguration(AutoQcConfig config)

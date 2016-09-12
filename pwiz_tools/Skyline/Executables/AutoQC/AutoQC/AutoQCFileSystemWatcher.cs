@@ -243,12 +243,12 @@ namespace AutoQC
                 }
 
                 var fileStatus= _fileStatusChecker.CheckStatus(filePath);
-                if (fileStatus.Equals(Status.Ready))
+                if (fileStatus.Equals(FileStatus.Ready))
                 {
                     break;
                 }
 
-                if (fileStatus.Equals(Status.ExceedMaximumAcquiTime))
+                if (fileStatus.Equals(FileStatus.ExceedMaximumAcquiTime))
                 {
                     throw new FileStatusException("Data acquistion has exceeded the expected acquistion time." +
                                         "The instument probably encountered an error.");

@@ -27,7 +27,7 @@ namespace AutoQC
         public string Args { get; private set; }
         public string ArgsToPrint { get; private set; }
         public string WorkingDirectory { get; set; }
-
+        
         public ProcessInfo(string exe, string args)
         {
             Executable = exe;
@@ -49,6 +49,9 @@ namespace AutoQC
         private readonly IAutoQcLogger _logger;
 
         private Process _process;
+
+        public bool _documentImportFailed;
+        public bool _panoramaUploadFailed;
 
         public ProcessRunner(IAutoQcLogger logger)
         {
@@ -75,7 +78,7 @@ namespace AutoQC
             return process;
         }
 
-        public bool RunProcess(ProcessInfo processInfo)
+        public ProcStatus RunProcess(ProcessInfo processInfo)
         {
             _procInfo = processInfo;
 
@@ -92,17 +95,28 @@ namespace AutoQC
                 catch (Exception e)
                 {
                     LogException(e, "There was an exception running the process {0}", _procInfo.ExeName);
-                    return false;
+                    return ProcStatus.Error;
                 }
 
                 if (exitCode != 0)
                 {
                     LogError("{0} exited with error code {1}.", _procInfo.ExeName, exitCode);
-                    return false;
+                    return ProcStatus.Error;
                 }
 
-                LogWithSpace("{0} exited successfully.", _procInfo.ExeName);
-                return true;
+                if (_documentImportFailed)
+                {
+                    LogError("{0} exited with code {1}. Skyline document import failed.", _procInfo.ExeName, exitCode);
+                    return ProcStatus.DocImportError;
+                }
+                if (_panoramaUploadFailed)
+                {
+                    LogError("{0} exited with code {1}. Panorama upload failed.", _procInfo.ExeName, exitCode);
+                    return ProcStatus.PanoramaUploadError;
+                }
+
+                Log("{0} exited successfully.", _procInfo.ExeName);
+                return ProcStatus.Success;
             }
         }
 
@@ -138,22 +152,21 @@ namespace AutoQC
             }  
         }
 
-        private static bool DetectError(string message)
+        private bool DetectError(string message)
         {
             if (message == null || !message.StartsWith("Error")) return false;
             if (message.Contains("Failed importing"))
             {
-                return false;
+                _documentImportFailed = true;
+            }
+            if (message.Contains("PanoramaImportErrorException"))
+            {
+                _panoramaUploadFailed = true;
             }
             return true;
         }
 
         private void Log(string message, params object[] args)
-        {
-            _logger.Log(message, args);
-        }
-
-        private void LogWithSpace(string message, params object[] args)
         {
             _logger.Log(message, args);
         }
