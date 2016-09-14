@@ -179,8 +179,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             var results = doc1.Settings.MeasuredResults;
 
             var numPeaks = useDriftTimes ?
-                new[] { 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 4, 9, 10, 10, 10, 10, 9, 10, 10, 10, 10, 10, 10, 10, 4, 10, 10, 10, 10, 10, 5, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10 } :
-                new[] { 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 9, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10 };
+                new[] { 8, 8, 10, 10, 10, 10, 10, 10, 10, 10, 9, 10, 10, 4, 7, 10, 10, 10, 10, 10, 10, 4, 10, 10, 10, 10, 9, 6, 10, 10, 10, 10, 10, 5, 10, 10, 10, 10, 10, 4, 10, 10, 10, 10, 8, 10, 10, 10 } :
+                new[] { 10, 10, 10, 10, 9, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 9, 10 };
             int npIndex = 0;
             var errmsg = "";
             foreach (var pair in doc1.PeptidePrecursorPairs)
@@ -201,7 +201,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 }
             }
             Assert.IsTrue(errmsg.Length == 0, errmsg);
-            Assert.AreEqual(useDriftTimes ? 4138868.75 : 4816471.5, maxHeight, 1);
+            Assert.AreEqual(useDriftTimes ? 4209178 : 4912494, maxHeight, 1);
         }  
     }
 }

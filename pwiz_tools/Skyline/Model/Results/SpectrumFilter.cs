@@ -402,12 +402,32 @@ namespace pwiz.Skyline.Model.Results
             return dataSpectrum.Level == 1;
         }
 
-        public bool IsSimSpectrum(MsDataSpectrum dataSpectrum)
+        public bool IsSimSpectrum(MsDataSpectrum dataSpectrum, MsDataSpectrum[] spectra)
         {
             if (!EnabledMs || _mseLevel > 0)
                 return false;
-            return dataSpectrum.Level == 1 &&
+            bool isSimSpectrum = dataSpectrum.Level == 1 &&
                 IsSimIsolation(GetIsolationWindows(dataSpectrum.Precursors).FirstOrDefault());
+            if (isSimSpectrum && spectra.Length > 1)
+            {
+                // If this is actually a run of IMS bins, look at the aggregate isolation window
+                var rt = spectra[0].RetentionTime;
+                var win = GetIsolationWindows(spectra[0].Precursors).FirstOrDefault();
+                double mzLow = win.IsolationMz - (win.IsolationWidth??0) / 2;
+                double mzHigh = win.IsolationMz + (win.IsolationWidth??0) / 2;
+                for (var i = 1; i < spectra.Length; i++)
+                {
+                    var spec = spectra[i];
+                    if (!Equals(spec.RetentionTime, rt) || (spec.DriftTimeMsec ?? 0) <= (spectra[i - 1].DriftTimeMsec ?? 0))
+                        return true;  // Not a run of IMS bins, must have been actual SIM scan
+                    win = GetIsolationWindows(spec.Precursors).FirstOrDefault();
+                    mzLow = Math.Min(mzLow, win.IsolationMz - (win.IsolationWidth ?? 0) / 2);
+                    mzHigh = Math.Max(mzHigh, win.IsolationMz + (win.IsolationWidth ?? 0) / 2);
+                }
+                var width = mzHigh - mzLow;
+                isSimSpectrum = IsSimIsolation(new IsolationWindowFilter(new SignedMz(mzLow + width/2), width));
+            }
+            return isSimSpectrum;
         }
 
         private static bool IsSimIsolation(IsolationWindowFilter isoWin)
@@ -488,8 +508,8 @@ namespace pwiz.Skyline.Model.Results
                 yield break;
 
             // All filter pairs have a shot at filtering the MS1 scans
-            bool isSimSpectra = spectra.Any(IsSimSpectrum);
-            foreach (var filterPair in FindMs1FilterPairs(precursors))
+            bool isSimSpectra = IsSimSpectrum(spectra.First(), spectra);
+            foreach (var filterPair in isSimSpectra ? FindMs1FilterPairs(precursors) : _filterMzValues)
             {
                 if (!filterPair.ContainsRetentionTime(retentionTime.Value))
                     continue;
