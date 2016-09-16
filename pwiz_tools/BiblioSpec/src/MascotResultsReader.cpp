@@ -293,11 +293,11 @@ void MascotResultsReader::parseMods(PSM* psm, string modstr,
     }
 
     // for static mods look up each residue in the staticMods collection
-    addStaticMods(psm, N_TERM_POS, 1, false);
-    addStaticMods(psm, C_TERM_POS, psm->unmodSeq.length(), false);
     for (size_t i = 0; i < psm->unmodSeq.length(); i++) {
         addStaticMods(psm, psm->unmodSeq[i], i + 1, true);
     }
+    addStaticMods(psm, N_TERM_POS, 1, false);
+    addStaticMods(psm, C_TERM_POS, psm->unmodSeq.length(), false);
 }
 
 /**
