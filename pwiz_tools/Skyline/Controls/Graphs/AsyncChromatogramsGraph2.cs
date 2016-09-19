@@ -219,10 +219,14 @@ namespace pwiz.Skyline.Controls.Graphs
             var p1 = info.GraphPane.GeneralTransform(minX, 0, CoordType.AxisXYScale);
             var p2 = info.GraphPane.GeneralTransform(maxX, 0, CoordType.AxisXYScale);
             int x = (int)p1.X - 1;
-            int y = 0;
             int width = (int)(p2.X + PROGRESS_LINE_WIDTH) - x + 2;
-            int height = (int)p1.Y + 2;
-            StartRender(new Rectangle(x, y, width, height));
+            StartRender(new Rectangle(x, 0, width, Height));
+            // TODO(bspratt): there's still an issue with the clip rect in X - I don't
+            // always see the grey "incomplete" bar on my system (the SVN 9985 version of
+            // AgilentSpectrumMillIMSImportTest() is a reliable repro.  It has to do with
+            // adding that verticle bar after the clip region has been established.  It would
+            // be better to do the work of copying the display list here instead of later in
+            // CopyState() so the end time stays synched.
         }
 
         /// <summary>
