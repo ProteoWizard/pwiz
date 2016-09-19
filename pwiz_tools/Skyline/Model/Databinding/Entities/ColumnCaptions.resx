@@ -780,6 +780,9 @@
   <data name="ExplicitDriftTimeMsec">
     <value>Explicit Drift Time Msec</value>
   </data>
+  <data name="ExplicitGlobalStandardArea">
+    <value>Explicit Global Standard Area</value>
+  </data>
   <data name="ExplicitRetentionTime">
     <value>Explicit Retention Time</value>
   </data>

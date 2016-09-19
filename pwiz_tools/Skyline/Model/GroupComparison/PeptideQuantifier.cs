@@ -180,7 +180,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                 }
                 if (Equals(NormalizationMethod, NormalizationMethod.GLOBAL_STANDARDS))
                 {
-                    denominator = srmSettings.CalcGlobalStandardArea(replicateIndex, chromInfo.FileId);
+                    denominator = srmSettings.CalcGlobalStandardArea(replicateIndex, srmSettings.MeasuredResults.Chromatograms[replicateIndex].GetFileInfo(chromInfo.FileId));
                 }
                 else if (NormalizationMethod is NormalizationMethod.RatioToSurrogate)
                 {

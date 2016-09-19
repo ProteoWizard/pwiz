@@ -624,6 +624,7 @@ namespace pwiz.Skyline.Model.Results
             analyte_concentration,
             sample_type,
             has_midas_spectra,
+            explicit_global_standard_area,
         }
 
         private static readonly IXmlElementHelper<OptimizableRegression>[] OPTIMIZATION_HELPERS =
@@ -661,6 +662,8 @@ namespace pwiz.Skyline.Model.Results
                 // Note that the file path is actually be a URI that encodes things like lockmass correction as well as filename
                 ChromFileInfo chromFileInfo = new ChromFileInfo(MsDataFileUri.Parse(reader.GetAttribute(ATTR.file_path)));
                 chromFileInfo = chromFileInfo.ChangeHasMidasSpectra(reader.GetBoolAttribute(ATTR.has_midas_spectra, false));
+                chromFileInfo = chromFileInfo.ChangeExplicitGlobalStandardArea(
+                    reader.GetNullableDoubleAttribute(ATTR.explicit_global_standard_area));
                 chromFileInfos.Add(chromFileInfo);
                 
                 string id = reader.GetAttribute(ATTR.id) ?? GetOrdinalSaveId(fileLoadIds.Count);
@@ -718,6 +721,7 @@ namespace pwiz.Skyline.Model.Results
                     writer.WriteAttribute(ATTR.modified_time, XmlConvert.ToString((DateTime)fileInfo.FileWriteTime, "yyyy-MM-ddTHH:mm:ss")); // Not L10N
                 }
                 writer.WriteAttribute(ATTR.has_midas_spectra, fileInfo.HasMidasSpectra, false);
+                writer.WriteAttributeNullable(ATTR.explicit_global_standard_area, fileInfo.ExplicitGlobalStandardArea);
 
                 // instrument information
                 WriteInstrumentConfigList(writer, fileInfo.InstrumentInfoList);
@@ -856,6 +860,7 @@ namespace pwiz.Skyline.Model.Results
         public double MaxRetentionTime { get; private set; }
         public double MaxIntensity { get; private set; }
         public bool HasMidasSpectra { get; private set; }
+        public double? ExplicitGlobalStandardArea { get; private set; }
 
         public IList<MsInstrumentConfigInfo> InstrumentInfoList
         {
@@ -905,6 +910,11 @@ namespace pwiz.Skyline.Model.Results
                                   });
         }
 
+        public ChromFileInfo ChangeExplicitGlobalStandardArea(double? globalStandardArea)
+        {
+            return ChangeProp(ImClone(this), im => im.ExplicitGlobalStandardArea = globalStandardArea);
+        }
+
         #endregion
 
         #region object overrides
@@ -926,6 +936,8 @@ namespace pwiz.Skyline.Model.Results
             if (!other.MaxRetentionTime.Equals(MaxRetentionTime))
                 return false;
             if (HasMidasSpectra != other.HasMidasSpectra)
+                return false;
+            if (!Equals(ExplicitGlobalStandardArea, other.ExplicitGlobalStandardArea))
                 return false;
             if (!ArrayUtil.EqualsDeep(other.InstrumentInfoList, InstrumentInfoList))
                 return false;
@@ -957,6 +969,7 @@ namespace pwiz.Skyline.Model.Results
                 result = (result * 397) ^ MaxIntensity.GetHashCode();
                 result = (result * 397) ^ MaxRetentionTime.GetHashCode();
                 result = (result*397) ^ HasMidasSpectra.GetHashCode();
+                result = (result*397) ^ ExplicitGlobalStandardArea.GetHashCode();
                 return result;
             }
         }

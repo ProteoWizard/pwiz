@@ -484,6 +484,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Explicit Global Standard Area.
+        /// </summary>
+        public static string ExplicitGlobalStandardArea {
+            get {
+                return ResourceManager.GetString("ExplicitGlobalStandardArea", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Explicit Retention Time.
         /// </summary>
         public static string ExplicitRetentionTime {

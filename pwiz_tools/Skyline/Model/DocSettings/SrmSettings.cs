@@ -648,14 +648,25 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             get
             {
+                if (HasResults)
+                {
+                    if (MeasuredResults.MSDataFileInfos.Any(chromFileInfo => chromFileInfo.ExplicitGlobalStandardArea.HasValue))
+                    {
+                        return true;
+                    }
+                }
                 return _cachedPeptideStandards != null &&
                        _cachedPeptideStandards.ContainsKey(PeptideDocNode.STANDARD_TYPE_GLOBAL);
 
             }
         }
 
-        public double CalcGlobalStandardArea(int resultsIndex, ChromFileInfoId fileId)
+        public double CalcGlobalStandardArea(int resultsIndex, ChromFileInfo fileInfo)
         {
+            if (fileInfo.ExplicitGlobalStandardArea.HasValue)
+            {
+                return fileInfo.ExplicitGlobalStandardArea.Value;
+            }
             double globalStandardArea = 0;
             var peptideStandards = GetPeptideStandards(StandardType.GLOBAL_STANDARD);
             if (peptideStandards != null)
@@ -667,7 +678,7 @@ namespace pwiz.Skyline.Model.DocSettings
                         continue;
                     foreach (var groupChromInfo in chromInfos)
                     {
-                        if (ReferenceEquals(fileId, groupChromInfo.FileId) &&
+                        if (ReferenceEquals(fileInfo.FileId, groupChromInfo.FileId) &&
                                 groupChromInfo.OptimizationStep == 0 &&
                                 groupChromInfo.Area.HasValue)
                             globalStandardArea += groupChromInfo.Area.Value;

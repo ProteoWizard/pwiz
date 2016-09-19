@@ -59,6 +59,30 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public DateTime? ModifiedTime { get { return ChromFileInfo.FileWriteTime; } }
         public DateTime? AcquiredTime { get { return ChromFileInfo.RunStartTime; } }
 
+        public double? ExplicitGlobalStandardArea
+        {
+            get { return ChromFileInfo.ExplicitGlobalStandardArea; }
+            set
+            {
+                if (Equals(ExplicitGlobalStandardArea, value))
+                {
+                    return;
+                }
+                var newFileInfos = Replicate.ChromatogramSet.MSDataFileInfos.ToArray();
+                for (int iFile = 0; iFile < newFileInfos.Length; iFile++)
+                {
+                    if (ReferenceEquals(newFileInfos[iFile].FileId, ChromFileInfoId))
+                    {
+                        newFileInfos[iFile] = newFileInfos[iFile].ChangeExplicitGlobalStandardArea(value);
+                    }
+                }
+
+                Replicate.ChangeChromatogramSet(EditDescription.SetColumn("ExplicitGlobalStandardArea", // Not L10N
+                    value), 
+                Replicate.ChromatogramSet.ChangeMSDataFileInfos(newFileInfos));
+            }
+        }
+
         public TChromInfo FindChromInfo<TChromInfo>(Results<TChromInfo> chromInfos) where TChromInfo : ChromInfo
         {
             if (null == chromInfos || chromInfos.Count <= Replicate.ReplicateIndex)

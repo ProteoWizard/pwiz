@@ -535,6 +535,7 @@
                 <xs:attribute name="sample_name" type="xs:string" use="required"/>
                 <xs:attribute name="acquired_time" type="xs:dateTime"/>
                 <xs:attribute name="modified_time" type="xs:dateTime"/>
+                <xs:attribute name="explicit_global_standard_area" type="xs:double"/>
               </xs:complexType>
             </xs:element>
             <xs:element name="annotation" type="annotation_type" minOccurs="0" maxOccurs="unbounded"/>

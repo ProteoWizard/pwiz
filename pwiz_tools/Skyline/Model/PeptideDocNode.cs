@@ -1394,7 +1394,7 @@ namespace pwiz.Skyline.Model
 
             private Dictionary<TransitionKey, float> TranAreas { get; set; }
 
-            public bool HasGlobalArea { get { return GlobalStandardArea > 0; }}
+            public bool HasGlobalArea { get { return Settings.HasGlobalStandardArea; }}
             public bool IsSetMatching { get; private set; }
 
 // ReSharper disable UnusedParameter.Local
@@ -1412,7 +1412,7 @@ namespace pwiz.Skyline.Model
 
                 // First time through calculate the global standard area for this file
                 if (fileIdPrevious == null)
-                    GlobalStandardArea = Settings.CalcGlobalStandardArea(ResultsIndex, FileId);
+                    GlobalStandardArea = Settings.CalcGlobalStandardArea(ResultsIndex, Settings.MeasuredResults.Chromatograms[ResultsIndex].MSDataFileInfos[FileOrder]);
 
                 ResultsCount++;
                 PeakCountRatioTotal += info.PeakCountRatio;
