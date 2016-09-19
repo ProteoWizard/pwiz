@@ -63,7 +63,7 @@ namespace pwiz.Skyline.Controls
         private NodeTip _nodeTip;
         private bool _focus;
         private bool _sawDoubleClick;
-        private bool _triggerLabelEdit;
+        private TreeNode _triggerLabelEdit;
         private string _editedLabel;
         private int _resultsIndex;
         private int _ratioIndex;
@@ -984,7 +984,7 @@ namespace pwiz.Skyline.Controls
             }
             else
             {
-                _triggerLabelEdit = false;
+                _triggerLabelEdit = null;
 
                 base.OnMouseClick(e);
             }
@@ -1005,7 +1005,7 @@ namespace pwiz.Skyline.Controls
                     if (_sawDoubleClick)
                         _sawDoubleClick = false;
                     else if (IsEditableNode(node))
-                        _triggerLabelEdit = true;
+                        _triggerLabelEdit = node;
                 }
             }
             base.OnMouseUp(e);
@@ -1116,12 +1116,17 @@ namespace pwiz.Skyline.Controls
             // No erasebackground to reduce flicker
             //if (m.Msg == (int)WinMsg.WM_ERASEBKGND)
             //    return;
-
-            if (_triggerLabelEdit)
+            if (!ReferenceEquals(_triggerLabelEdit, SelectedNode))
+            {
+                // If the selected node has changed since the mouse edit, then cancel
+                // the label edit trigger.
+                _triggerLabelEdit = null;
+            }
+            if (_triggerLabelEdit != null)
             {
                 if (m.Msg == (int) WinMsg.WM_TIMER)
                 {
-                    _triggerLabelEdit = false;
+                    _triggerLabelEdit = null;
                     StartLabelEdit(true);
                 }
             }
