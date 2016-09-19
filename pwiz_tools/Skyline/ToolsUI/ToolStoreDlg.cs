@@ -507,6 +507,10 @@ namespace pwiz.Skyline.ToolsUI
         {
             try
             {
+                if (downloadDataCompletedEventArgs.Error != null || downloadDataCompletedEventArgs.Cancelled)
+                {
+                    return;
+                }
                 using (MemoryStream ms = new MemoryStream(downloadDataCompletedEventArgs.Result))
                 {
                     ToolImage = Image.FromStream(ms);

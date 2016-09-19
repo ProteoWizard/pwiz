@@ -247,6 +247,10 @@ namespace pwiz.Skyline.Model
 
         public static int? GetChargeFromIndicator(string text, int min, int max)
         {
+            if (!MayHaveChargeIndicator(text))
+            {
+                return null;
+            }
             for (int i = max; i >= min; i--)
             {
                 // Handle negative charges
