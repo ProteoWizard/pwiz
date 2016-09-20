@@ -399,6 +399,15 @@ namespace pwiz.SkylineTestTutorial
                                                                           Path.GetFileName(TestFilesDirs[1].FullPath) ??
                                                                           string.Empty)).ToArray();
             });
+            // This test fails regularly on certain test machines - is it a filesystem problem?
+            WaitForConditionUI(() => importResultsDlg0.NamedPathSets != null,
+                    "Failure in DataSourceUtil.GetDataSourcesInSubdirs - no filesets found");
+            WaitForConditionUI(() => importResultsDlg0.NamedPathSets.Length == 2,
+                    "Failure in DataSourceUtil.GetDataSourcesInSubdirs - expected 2 filesets");
+            WaitForConditionUI(() => importResultsDlg0.NamedPathSets[0].Value.Length == 2,
+                    "Failure in DataSourceUtil.GetDataSourcesInSubdirs - expected 2 files in fileset 0");
+            WaitForConditionUI(() => importResultsDlg0.NamedPathSets[1].Value.Length == 2,
+                    "Failure in DataSourceUtil.GetDataSourcesInSubdirs - expected 2 files in fileset 1");
             var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(importResultsDlg0.OkDialog);
             RunUI(importResultsNameDlg.NoDialog);
             WaitForCondition(15*60*1000, () => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded); // 15 minutes
