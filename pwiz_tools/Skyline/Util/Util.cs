@@ -26,6 +26,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Collections.ObjectModel;
+using System.Net;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -1833,4 +1834,14 @@ namespace pwiz.Skyline.Util
             action();
         }
     }
+
+    public class SecurityProtocolInitializer
+    {
+        // Make sure we can negotiate with HTTPS servers that demand TLS 1.2 (default in dotNet 4.6, but has to be turned on in 4.5)
+        public static void Initialize()
+        {
+            ServicePointManager.SecurityProtocol |= (SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12);
+        }
+    }
+
 }

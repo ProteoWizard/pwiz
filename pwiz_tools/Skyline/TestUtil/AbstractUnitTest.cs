@@ -200,6 +200,8 @@ namespace pwiz.SkylineTestUtil
             // Stop profiler if we are profiling.  The unit test will start profiling explicitly when it wants to.
             DotTraceProfile.Stop(true);
 
+            SecurityProtocolInitializer.Initialize(); // Enable maximum available HTTPS security level, esp. for Chorus
+
 //            var log = new Log<AbstractUnitTest>();
 //            log.Info(TestContext.TestName + " started");
 
