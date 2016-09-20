@@ -188,8 +188,8 @@ namespace pwiz.SkylineTestFunctional
                     peptideSettingsDlg.UseMeasuredRT(false);
                 });
                 OkDialog(peptideSettingsDlg, peptideSettingsDlg.OkDialog);
-                Assert.IsFalse(SkylineWindow.Document.Settings.PeptideSettings.Prediction.UseMeasuredRTs);
                 docBeforeImport = WaitForDocumentChange(docBeforeSettingsChange);
+                Assert.IsFalse(SkylineWindow.Document.Settings.PeptideSettings.Prediction.UseMeasuredRTs);
                 var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
                 var openDataSourceDialog = ShowDialog<OpenDataSourceDialog>(importResultsDlg.OkDialog);
                 RunUI(() => openDataSourceDialog.SelectFile("8fmol" + extension));
