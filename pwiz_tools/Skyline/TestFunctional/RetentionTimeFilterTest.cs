@@ -131,6 +131,7 @@ namespace pwiz.SkylineTestFunctional
                 OkDialog(openDataSourceDialog, openDataSourceDialog.Open);
             }
             {
+                WaitForCondition(() => SkylineWindow.Document.Settings.MeasuredResults.Chromatograms.Any(cs => cs.Name == "40fmol")); 
                 var document = WaitForDocumentChangeLoaded(docForScheduling);
                 var chromatogramSet = document.Settings.MeasuredResults.Chromatograms.First(cs => cs.Name == "40fmol");
                 int countNull = 0;
@@ -158,6 +159,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Test using iRT with auto-calculated regression
             {
+                var docBeforeSettingsChange = SkylineWindow.Document;
                 const string calcName = "TestCalculator";
                 const string regressionName = "TestCalculatorAutoCalcRegression";
                 var peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
@@ -187,7 +189,7 @@ namespace pwiz.SkylineTestFunctional
                 });
                 OkDialog(peptideSettingsDlg, peptideSettingsDlg.OkDialog);
                 Assert.IsFalse(SkylineWindow.Document.Settings.PeptideSettings.Prediction.UseMeasuredRTs);
-                docBeforeImport = SkylineWindow.Document;
+                docBeforeImport = WaitForDocumentChange(docBeforeSettingsChange);
                 var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
                 var openDataSourceDialog = ShowDialog<OpenDataSourceDialog>(importResultsDlg.OkDialog);
                 RunUI(() => openDataSourceDialog.SelectFile("8fmol" + extension));
