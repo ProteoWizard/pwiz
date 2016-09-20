@@ -307,6 +307,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                                 }
                             }
                         }
+
+                        Settings.Default.ImportResultsSimultaneousFiles = ImportResultsControl.SimultaneousFiles;
+                        Settings.Default.ImportResultsDoAutoRetry = ImportResultsControl.DoAutoRetry;
                     }
                     break;
 

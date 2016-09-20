@@ -41,10 +41,25 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             DocumentDirectory = Path.GetDirectoryName(documentPath);
 
             InitializeComponent();
+
+            SimultaneousFiles = Settings.Default.ImportResultsSimultaneousFiles;
+            DoAutoRetry = Settings.Default.ImportResultsDoAutoRetry;
         }
 
         public event EventHandler<ResultsFilesEventArgs> ResultsFilesChanged;
         private Form WizardForm { get { return FormEx.GetParentForm(this); } }
+
+        public int SimultaneousFiles
+        {
+            get { return comboSimultaneousFiles.SelectedIndex; }
+            set { comboSimultaneousFiles.SelectedIndex = value; }
+        }
+
+        public bool DoAutoRetry
+        {
+            get { return cbAutoRetry.Checked; }
+            set { cbAutoRetry.Checked = value; }
+        }
 
         public static List<ImportPeptideSearch.FoundResultsFile> EnsureUniqueNames(List<ImportPeptideSearch.FoundResultsFile> files)
         {

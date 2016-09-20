@@ -41,10 +41,24 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             _foundResultsFiles = new BindingList<ImportPeptideSearch.FoundResultsFile>();
             listResultsFiles.DataSource = _foundResultsFiles;
             listResultsFiles.DisplayMember = "Name"; // Not L10N
+            SimultaneousFiles = Settings.Default.ImportResultsSimultaneousFiles;
+            DoAutoRetry = Settings.Default.ImportResultsDoAutoRetry;
         }
 
         private BindingList<ImportPeptideSearch.FoundResultsFile> _foundResultsFiles;
         private SkylineWindow SkylineWindow { get; set; }
+
+        public int SimultaneousFiles
+        {
+            get { return comboSimultaneousFiles.SelectedIndex; }
+            set { comboSimultaneousFiles.SelectedIndex = value; }
+        }
+
+        public bool DoAutoRetry
+        {
+            get { return cbAutoRetry.Checked; }
+            set { cbAutoRetry.Checked = value; }
+        }
 
         public List<ImportPeptideSearch.FoundResultsFile> FoundResultsFiles
         {
