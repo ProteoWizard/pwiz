@@ -198,7 +198,12 @@ namespace pwiz.SkylineTestTutorial
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
                 importPeptideSearchDlg.FullScanSettingsControl.PrecursorCharges = new[] { 2, 3, 4 };
+                importPeptideSearchDlg.FullScanSettingsControl.PrecursorMassAnalyzer = FullScanMassAnalyzerType.tof;
+                importPeptideSearchDlg.FullScanSettingsControl.PrecursorRes = 10*1000;
+
                 Assert.AreEqual(importPeptideSearchDlg.FullScanSettingsControl.PrecursorIsotopesCurrent, FullScanPrecursorIsotopes.Count);
+                Assert.AreEqual(FullScanMassAnalyzerType.tof, importPeptideSearchDlg.FullScanSettingsControl.PrecursorMassAnalyzer);
+                Assert.AreEqual(10*1000, importPeptideSearchDlg.FullScanSettingsControl.PrecursorRes);
                 Assert.AreEqual(3, importPeptideSearchDlg.FullScanSettingsControl.Peaks);
                 Assert.AreEqual(RetentionTimeFilterType.ms2_ids, importPeptideSearchDlg.FullScanSettingsControl.RetentionTimeFilterType);
                 Assert.AreEqual(5, importPeptideSearchDlg.FullScanSettingsControl.TimeAroundMs2Ids);

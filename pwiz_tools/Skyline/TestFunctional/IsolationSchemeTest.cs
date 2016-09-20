@@ -65,9 +65,7 @@ namespace pwiz.SkylineTestFunctional
                     {
                         Assert.AreEqual(string.Empty, editDlg.IsolationSchemeName);
                         Assert.IsTrue(editDlg.UseResults);
-                        Assert.IsFalse(editDlg.AsymmetricFilter);
-                        Assert.AreEqual(2, editDlg.PrecursorFilter);
-                        Assert.AreEqual(null, editDlg.PrecursorRightFilter);
+                        Assert.AreEqual(EditIsolationSchemeDlg.IsolationWidthType.RESULTS, editDlg.IsolationWidthTypeName);
                         editDlg.IsolationSchemeName = "test1"; // Not L10N
                         editDlg.OkDialog();
                     });
@@ -85,9 +83,7 @@ namespace pwiz.SkylineTestFunctional
                     {
                         Assert.AreEqual(string.Empty, editDlg.IsolationSchemeName);
                         Assert.IsTrue(editDlg.UseResults);
-                        Assert.IsFalse(editDlg.AsymmetricFilter);
-                        Assert.AreEqual(2, editDlg.PrecursorFilter);
-                        Assert.AreEqual(null, editDlg.PrecursorRightFilter);
+                        Assert.AreEqual(EditIsolationSchemeDlg.IsolationWidthType.RESULTS, editDlg.IsolationWidthTypeName);
                         editDlg.IsolationSchemeName = "test1"; // Not L10N
                     });
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
@@ -108,10 +104,9 @@ namespace pwiz.SkylineTestFunctional
                     {
                         Assert.AreEqual("test1", editDlg.IsolationSchemeName); // Not L10N
                         Assert.IsTrue(editDlg.UseResults);
-                        Assert.IsFalse(editDlg.AsymmetricFilter);
-                        Assert.AreEqual(2, editDlg.PrecursorFilter);
-                        Assert.AreEqual(null, editDlg.PrecursorRightFilter);
+                        Assert.AreEqual(EditIsolationSchemeDlg.IsolationWidthType.RESULTS, editDlg.IsolationWidthTypeName);
                         editDlg.IsolationSchemeName = "test2"; // Not L10N
+                        editDlg.IsolationWidthTypeName = EditIsolationSchemeDlg.IsolationWidthType.FIXED;
                         editDlg.PrecursorFilter = 50;
                         editDlg.OkDialog();
                     });
@@ -122,18 +117,15 @@ namespace pwiz.SkylineTestFunctional
             {
                 var editDlg = ShowDialog<EditIsolationSchemeDlg>(editList.EditItem);
 
-                // Test asymmetric isolation width (automatic split).
+                // Test results width and margins.
                 RunUI(() =>
                     {
-                        editDlg.CurrentWindowType = EditIsolationSchemeDlg.WindowType.EXTRACTION;
                         Assert.AreEqual("test2", editDlg.IsolationSchemeName); // Not L10N
                         Assert.IsTrue(editDlg.UseResults);
-                        Assert.IsFalse(editDlg.AsymmetricFilter);
+                        Assert.AreEqual(EditIsolationSchemeDlg.IsolationWidthType.FIXED, editDlg.IsolationWidthTypeName);
                         Assert.AreEqual(50, editDlg.PrecursorFilter);
-                        Assert.AreEqual(null, editDlg.PrecursorRightFilter);
-                        editDlg.AsymmetricFilter = true;
-                        Assert.AreEqual(25, editDlg.PrecursorFilter);
-                        Assert.AreEqual(25, editDlg.PrecursorRightFilter);
+                        editDlg.IsolationWidthTypeName = EditIsolationSchemeDlg.IsolationWidthType.RESULTS_WITH_MARGIN;
+                        editDlg.PrecursorFilter = 0.5;
                         editDlg.OkDialog();
                     });
                 WaitForClosedForm(editDlg);
@@ -143,64 +135,16 @@ namespace pwiz.SkylineTestFunctional
             {
                 var editDlg = ShowDialog<EditIsolationSchemeDlg>(editList.EditItem);
 
-                // Test asymmetric isolation width (manually set).
+                // Test results width and margins.
                 RunUI(() =>
-                    {
-                        editDlg.CurrentWindowType = EditIsolationSchemeDlg.WindowType.EXTRACTION;
-                        Assert.AreEqual("test2", editDlg.IsolationSchemeName); // Not L10N
-                        Assert.IsTrue(editDlg.UseResults);
-                        Assert.IsTrue(editDlg.AsymmetricFilter);
-                        Assert.AreEqual(25, editDlg.PrecursorFilter);
-                        Assert.AreEqual(25, editDlg.PrecursorRightFilter);
-                        editDlg.PrecursorFilter = 1;
-                        editDlg.PrecursorRightFilter = 2;
-                        editDlg.OkDialog();
-                    });
-                WaitForClosedForm(editDlg);
-            }
-
-            RunUI(() => editList.SelectItem("test2")); // Not L10N
-            {
-                var editDlg = ShowDialog<EditIsolationSchemeDlg>(editList.EditItem);
-
-                // Test return to symmetric isolation width.
-                RunUI(() =>
-                    {
-                        editDlg.CurrentWindowType = EditIsolationSchemeDlg.WindowType.EXTRACTION;
-                        Assert.AreEqual("test2", editDlg.IsolationSchemeName); // Not L10N
-                        Assert.IsTrue(editDlg.UseResults);
-                        Assert.IsTrue(editDlg.AsymmetricFilter);
-                        Assert.AreEqual(1, editDlg.PrecursorFilter);
-                        Assert.AreEqual(2, editDlg.PrecursorRightFilter);
-                        editDlg.AsymmetricFilter = false;
-                        Assert.AreEqual(3, editDlg.PrecursorFilter);
-                        Assert.AreEqual(null, editDlg.PrecursorRightFilter);
-                        editDlg.OkDialog();
-                    });
-                WaitForClosedForm(editDlg);
-            }
-
-            RunUI(() => editList.SelectItem("test2")); // Not L10N
-            {
-                var editDlg = ShowDialog<EditIsolationSchemeDlg>(editList.EditItem);
-
-                // Test return to symmetric isolation width with only left width specified.
-                RunUI(() =>
-                    {
-                        editDlg.CurrentWindowType = EditIsolationSchemeDlg.WindowType.EXTRACTION;
-                        Assert.AreEqual("test2", editDlg.IsolationSchemeName); // Not L10N
-                        Assert.IsTrue(editDlg.UseResults);
-                        Assert.IsFalse(editDlg.AsymmetricFilter);
-                        Assert.AreEqual(3, editDlg.PrecursorFilter);
-                        Assert.AreEqual(null, editDlg.PrecursorRightFilter);
-                        editDlg.AsymmetricFilter = true;
-                        Assert.AreEqual(1.5, editDlg.PrecursorFilter);
-                        Assert.AreEqual(1.5, editDlg.PrecursorRightFilter);
-                        editDlg.PrecursorRightFilter = null;
-                        editDlg.AsymmetricFilter = false;
-                        Assert.AreEqual(3, editDlg.PrecursorFilter);
-                        editDlg.OkDialog();
-                    });
+                {
+                    Assert.AreEqual("test2", editDlg.IsolationSchemeName); // Not L10N
+                    Assert.IsTrue(editDlg.UseResults);
+                    Assert.AreEqual(EditIsolationSchemeDlg.IsolationWidthType.RESULTS_WITH_MARGIN, editDlg.IsolationWidthTypeName);
+                    Assert.AreEqual(0.5, editDlg.PrecursorFilter);
+                    editDlg.IsolationWidthTypeName = EditIsolationSchemeDlg.IsolationWidthType.RESULTS;
+                    editDlg.OkDialog();
+                });
                 WaitForClosedForm(editDlg);
             }
 
@@ -211,12 +155,10 @@ namespace pwiz.SkylineTestFunctional
                 // Test non-numeric isolation width.
                 RunUI(() =>
                     {
-                        editDlg.CurrentWindowType = EditIsolationSchemeDlg.WindowType.EXTRACTION;
                         Assert.AreEqual("test2", editDlg.IsolationSchemeName); // Not L10N
                         Assert.IsTrue(editDlg.UseResults);
-                        Assert.IsFalse(editDlg.AsymmetricFilter);
-                        Assert.AreEqual(3, editDlg.PrecursorFilter);
-                        Assert.AreEqual(null, editDlg.PrecursorRightFilter);
+                        Assert.AreEqual(EditIsolationSchemeDlg.IsolationWidthType.RESULTS, editDlg.IsolationWidthTypeName);
+                        editDlg.IsolationWidthTypeName = EditIsolationSchemeDlg.IsolationWidthType.FIXED;
                         editDlg.PrecursorFilter = null;
                     });
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
@@ -226,7 +168,7 @@ namespace pwiz.SkylineTestFunctional
                     });
 
                 // Test minimum isolation width.
-                RunUI(() => editDlg.PrecursorFilter = 0);
+                RunUI(() => editDlg.PrecursorFilter = TransitionFullScan.MIN_PRECURSOR_MULTI_FILTER - 1);
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                     {
                         AssertEx.AreComparableStrings(Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_greater_than_or_equal_to__1__, messageDlg.Message, 2);
@@ -234,7 +176,7 @@ namespace pwiz.SkylineTestFunctional
                     });
 
                 // Test maximum isolation width.
-                RunUI(() => editDlg.PrecursorFilter = 10001);
+                RunUI(() => editDlg.PrecursorFilter = TransitionFullScan.MAX_PRECURSOR_MULTI_FILTER + 1);
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                     {
                         AssertEx.AreComparableStrings(Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_less_than_or_equal_to__1__, messageDlg.Message, 2);
@@ -242,8 +184,8 @@ namespace pwiz.SkylineTestFunctional
                     });
 
                 // Test maximum right isolation width.
-                RunUI(() => editDlg.AsymmetricFilter = true);
-                RunUI(() => editDlg.PrecursorFilter = 1);
+                RunUI(() => editDlg.IsolationWidthTypeName = EditIsolationSchemeDlg.IsolationWidthType.RESULTS_WITH_MARGIN);
+                RunUI(() => editDlg.PrecursorFilter = TransitionFullScan.MAX_PRECURSOR_MULTI_FILTER_MARGIN + 1);
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                     {
                         AssertEx.AreComparableStrings(Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_less_than_or_equal_to__1__, messageDlg.Message, 2);
@@ -251,7 +193,7 @@ namespace pwiz.SkylineTestFunctional
                     });
 
                 // Test minimum right isolation width.
-                RunUI(() => editDlg.PrecursorRightFilter = 0);
+                RunUI(() => editDlg.PrecursorFilter = -1);
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                     {
                         AssertEx.AreComparableStrings(Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_greater_than_or_equal_to__1__, messageDlg.Message, 2);
@@ -259,7 +201,7 @@ namespace pwiz.SkylineTestFunctional
                     });
 
                 // Test non-numeric right isolation width.
-                RunUI(() => editDlg.PrecursorRightFilter = null);
+                RunUI(() => editDlg.PrecursorFilter = null);
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                     {
                         AssertEx.AreComparableStrings(Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_contain_a_decimal_value, messageDlg.Message, 1);
@@ -1159,8 +1101,8 @@ namespace pwiz.SkylineTestFunctional
                 editDlg.IsolationSchemeName = name;
 
                 editDlg.UseResults = true;
+                editDlg.IsolationWidthTypeName = EditIsolationSchemeDlg.IsolationWidthType.FIXED;
                 editDlg.PrecursorFilter = 1;
-                editDlg.PrecursorRightFilter = 2;
             });
             OkDialog(editDlg, editDlg.OkDialog);
         }
@@ -1173,9 +1115,7 @@ namespace pwiz.SkylineTestFunctional
         {
             Assert.AreEqual(string.Empty, editDlg.IsolationSchemeName);
             Assert.IsTrue(editDlg.UseResults);
-            Assert.IsFalse(editDlg.AsymmetricFilter);
-            Assert.AreEqual(2, editDlg.PrecursorFilter);
-            Assert.AreEqual(null, editDlg.PrecursorRightFilter);
+            Assert.AreEqual(EditIsolationSchemeDlg.IsolationWidthType.RESULTS, editDlg.IsolationWidthTypeName);
         }
     }
 }

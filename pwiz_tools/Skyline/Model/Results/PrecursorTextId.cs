@@ -61,6 +61,11 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        public override string ToString()
+        {
+            return string.Format("{0} - {1} ({2})", TextId, PrecursorMz, Extractor);    // Not L10N - debugging
+        }
+
         private sealed class PrecursorMzTextIdComparer : IComparer<PrecursorTextId>
         {
             public int Compare(PrecursorTextId x, PrecursorTextId y)

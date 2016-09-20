@@ -631,7 +631,7 @@ namespace pwiz.Skyline.Model.Results
 
                 // use the Skyline document isolation scheme to determine the boundaries of the isolation window
                 var isolationCenter = precursor.IsolationMz;
-                double? isolationWidth = null;
+                double? isolationWidth = precursor.IsolationWidth;
                 filter.CalcDiaIsolationValues(ref isolationCenter, ref isolationWidth);
                 if (!isolationWidth.HasValue)
                 {

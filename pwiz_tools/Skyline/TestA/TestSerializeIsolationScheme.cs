@@ -90,9 +90,9 @@ namespace pwiz.SkylineTestA
             // Filter and windows per scan
             AssertEx.DeserializeError<IsolationScheme>(
                 @"<isolation_scheme name=""Invalid (3)"" precursor_filter=""1"" windows_per_scan=""3""/>");
-            // Special handling but no windows
-            AssertEx.DeserializeError<IsolationScheme>(
-                @"<isolation_scheme name=""Invalid (4)"" special_handling=""Multiplexed""/>");
+            // Special handling but no windows (now uses results windows)
+//            AssertEx.DeserializeError<IsolationScheme>(
+//                @"<isolation_scheme name=""Invalid (4)"" special_handling=""Multiplexed""/>");
             // Right filter only
             AssertEx.DeserializeError<IsolationScheme>(
                 @"<isolation_scheme name=""Invalid (5)"" precursor_right_filter=""1""/>");

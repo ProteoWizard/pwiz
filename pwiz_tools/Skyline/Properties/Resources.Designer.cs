@@ -5426,6 +5426,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Changing full scan precursor mass accuracy to {0} ppm..
+        /// </summary>
+        public static string CommandLine_SetFullScanSettings_Changing_full_scan_precursor_mass_accuracy_to__0__ppm_ {
+            get {
+                return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_precursor_mass_accuracy_to__0_" +
+                        "_ppm_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Changing full-scan precursor resolution to {0}..
         /// </summary>
         public static string CommandLine_SetFullScanSettings_Changing_full_scan_precursor_resolution_to__0__ {
@@ -5451,6 +5461,16 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_precursor_resolving_power_to__" +
                         "0__at__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Changing full scan product mass accuracy to {0} ppm..
+        /// </summary>
+        public static string CommandLine_SetFullScanSettings_Changing_full_scan_product_mass_accuracy_to__0__ppm_ {
+            get {
+                return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_product_mass_accuracy_to__0__p" +
+                        "pm_", resourceCulture);
             }
         }
         
@@ -13179,16 +13199,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Isolation scheme must have a filter or a prespecifed isolation window.
-        /// </summary>
-        public static string IsolationScheme_DoValidate_Isolation_scheme_must_have_a_filter_or_a_prespecifed_isolation_window {
-            get {
-                return ResourceManager.GetString("IsolationScheme_DoValidate_Isolation_scheme_must_have_a_filter_or_a_prespecifed_i" +
-                        "solation_window", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Multiplexed windows require at least one window per scan.
         /// </summary>
         public static string IsolationScheme_DoValidate_Multiplexed_windows_require_at_least_one_window_per_scan {
@@ -13247,6 +13257,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Results (0.5 margin).
+        /// </summary>
+        public static string IsolationSchemeList_GetDefaults_Results__0_5_margin_ {
+            get {
+                return ResourceManager.GetString("IsolationSchemeList_GetDefaults_Results__0_5_margin_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Results only.
+        /// </summary>
+        public static string IsolationSchemeList_GetDefaults_Results_only {
+            get {
+                return ResourceManager.GetString("IsolationSchemeList_GetDefaults_Results_only", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to SWATH (15 m/z).
         /// </summary>
         public static string IsolationSchemeList_GetDefaults_SWATH__15_m_z_ {
@@ -13297,6 +13325,33 @@ namespace pwiz.Skyline.Properties {
         public static string IsolationSchemeList_Title_Edit_Isolation_Scheme {
             get {
                 return ResourceManager.GetString("IsolationSchemeList_Title_Edit_Isolation_Scheme", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fixed.
+        /// </summary>
+        public static string IsolationWidthType_FIXED_Fixed {
+            get {
+                return ResourceManager.GetString("IsolationWidthType_FIXED_Fixed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Results.
+        /// </summary>
+        public static string IsolationWidthType_RESULTS_Results {
+            get {
+                return ResourceManager.GetString("IsolationWidthType_RESULTS_Results", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Results with margin.
+        /// </summary>
+        public static string IsolationWidthType_RESULTS_WITH_MARGIN_Results_with_margin {
+            get {
+                return ResourceManager.GetString("IsolationWidthType_RESULTS_WITH_MARGIN_Results_with_margin", resourceCulture);
             }
         }
         
@@ -23754,12 +23809,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Isolation scheme does not contain any isolation windows.
+        ///   Looks up a localized string similar to Unable to determine isolation width for the scan targeted at {0}.
         /// </summary>
-        public static string SpectrumFilter_FindFilterPairs_Isolation_scheme_does_not_contain_any_isolation_windows {
+        public static string SpectrumFilter_CalcDiaIsolationValues_Unable_to_determine_isolation_width_for_the_scan_targeted_at__0_ {
             get {
-                return ResourceManager.GetString("SpectrumFilter_FindFilterPairs_Isolation_scheme_does_not_contain_any_isolation_wi" +
-                        "ndows", resourceCulture);
+                return ResourceManager.GetString("SpectrumFilter_CalcDiaIsolationValues_Unable_to_determine_isolation_width_for_the" +
+                        "_scan_targeted_at__0_", resourceCulture);
             }
         }
         

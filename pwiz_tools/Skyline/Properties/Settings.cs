@@ -2303,7 +2303,7 @@ namespace pwiz.Skyline.Properties
 
     public sealed class IsolationSchemeList : SettingsList<IsolationScheme>
     {
-        public override int RevisionIndexCurrent { get { return 1; } }
+        public override int RevisionIndexCurrent { get { return 2; } }
 
         public override IEnumerable<IsolationScheme> GetDefaults(int revisionIndex)
         {
@@ -2314,6 +2314,12 @@ namespace pwiz.Skyline.Properties
             
             if (revisionIndex == 0)
                 return isolationSchemeList;
+
+            if (revisionIndex > 1)
+            {
+                isolationSchemeList.Add(new IsolationScheme(Resources.IsolationSchemeList_GetDefaults_Results_only));
+                isolationSchemeList.Add(new IsolationScheme(Resources.IsolationSchemeList_GetDefaults_Results__0_5_margin_, 0.5, null, true));
+            }
 
             AddScheme(isolationSchemeList, Resources.IsolationSchemeList_GetDefaults_SWATH__15_m_z_, 0.5,
                 396, 410, 5,

@@ -264,7 +264,7 @@ namespace pwiz.Skyline.Model.Results
                     // Process the one SRM spectrum
                     var peptideNode = peptideFinder != null ? peptideFinder.FindPeptide(precursorMz) : null;
                     ProcessSrmSpectrum(
-                        dataSpectrum.RetentionTime.Value,
+                        (float) dataSpectrum.RetentionTime.Value,
                         peptideNode != null ? peptideNode.ModifiedSequence : string.Empty,
                         peptideNode != null ? peptideNode.Color : PeptideDocNode.UNKNOWN_COLOR,
                         precursorMz,
@@ -347,7 +347,7 @@ namespace pwiz.Skyline.Model.Results
             _collectors.AddCollector(productFilterId, collector);
         }
 
-        private void CompleteChromatograms(ChromDataCollectorSet[] chromMaps, double retentionTime = -1)
+        private void CompleteChromatograms(ChromDataCollectorSet[] chromMaps, float retentionTime = -1)
         {
             var finishedFilterPairs = _filter.RemoveFinishedFilterPairs(retentionTime);
             foreach (var filterPair in finishedFilterPairs)
@@ -356,7 +356,7 @@ namespace pwiz.Skyline.Model.Results
             // Update time for which chromatograms are available.
             var collectors = _collectors;
             if (collectors != null)
-                collectors.AddComplete(retentionTime >= 0 ? (float)retentionTime : float.MaxValue);
+                collectors.AddComplete(retentionTime >= 0 ? retentionTime : float.MaxValue);
         }
 
         private void AddChromatogramsForFilterPair(ChromDataCollectorSet[] chromMaps, SpectrumFilterPair filterPair)
@@ -387,6 +387,9 @@ namespace pwiz.Skyline.Model.Results
                         chromCollector.SetScans(scanIdCollector);
                         chromCollector.SetTimes(timesCollector);
                     }
+
+                    // Otherwise NRE will occur later
+                    Assume.IsTrue(chromCollector.IsSetTimes);
 
                     _collectors.AddCollector(pairProduct.Key.FilterId, chromCollector);
                 }
@@ -458,7 +461,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         private void ProcessSpectrumList(MsDataSpectrum[] spectra,
                                      ChromDataCollectorSet chromMap,
-                                     double rt,
+                                     float rt,
                                      SpectrumFilter filter,
                                      string scanId)
         {
@@ -472,12 +475,12 @@ namespace pwiz.Skyline.Model.Results
                         throw new LoadCanceledException(Status);
                     }
 
-                    chromMap.ProcessExtractedSpectrum((float) rt, _collectors, GetScanIdIndex(scanId), spectrum, AddChromCollector);
+                    chromMap.ProcessExtractedSpectrum(rt, _collectors, GetScanIdIndex(scanId), spectrum, AddChromCollector);
                 }
             }
         }
 
-        private void ProcessSrmSpectrum(double time,
+        private void ProcessSrmSpectrum(float time,
                                                string modifiedSequence,
                                                Color peptideColor,
                                                SignedMz precursorMz,
@@ -494,7 +497,7 @@ namespace pwiz.Skyline.Model.Results
             var productFilters = mzs.Select(mz => new SpectrumProductFilter(new SignedMz(mz, precursorMz.IsNegative), 0)).ToArray();
             var spectrum = new ExtractedSpectrum(modifiedSequence, peptideColor, precursorMz, ionMobilityValue, ionMobilityExtractionWidth,
                 ChromExtractor.summed, filterIndex, productFilters, intensityFloats, null);
-            chromMap.ProcessExtractedSpectrum((float)time, _collectors, -1, spectrum, null);
+            chromMap.ProcessExtractedSpectrum(time, _collectors, -1, spectrum, null);
         }
 
         public override IEnumerable<ChromKeyProviderIdPair> ChromIds

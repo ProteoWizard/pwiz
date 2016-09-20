@@ -512,19 +512,53 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     case COLUMN_SEQUENCE:
                         {
-                            e.Value = Transition.StripChargeIndicators(value, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE);
-                            Items[e.RowIndex].Charge = Transition.GetChargeFromIndicator(value, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE).GetValueOrDefault(1);
+                            var seqCharge = new SequenceAndCharge(value);
+                            e.Value = seqCharge.ModifiedSequence;
+                            Items[e.RowIndex].Charge = seqCharge.Charge;
                             e.ParsingApplied = true;
                         }
                         break;
                     case COLUMN_PRODUCT_ION:
                         {
-                            e.Value = NormalizeProductIon(Transition.StripChargeIndicators(value, Transition.MIN_PRODUCT_CHARGE, Transition.MAX_PRODUCT_CHARGE));
-                            Items[e.RowIndex].ProductCharge = Transition.GetChargeFromIndicator(value, Transition.MIN_PRODUCT_CHARGE, Transition.MAX_PRODUCT_CHARGE).GetValueOrDefault(1);
+                            var fragCharge = new FragmentAndCharge(value);
+                            e.Value = fragCharge.FragmentIon;
+                            Items[e.RowIndex].ProductCharge = fragCharge.Charge;
                             e.ParsingApplied = true;
                         }
                         break;
                 }
+            }
+
+            private class SequenceAndCharge
+            {
+                public SequenceAndCharge(string sequenceAndCharge)
+                {
+                    const int min = TransitionGroup.MIN_PRECURSOR_CHARGE;
+                    const int max = TransitionGroup.MAX_PRECURSOR_CHARGE;
+
+                    string seq = Transition.StripChargeIndicators(sequenceAndCharge, min, max);
+                    ModifiedSequence = SequenceMassCalc.NormalizeModifiedSequence(seq);
+                    Charge = Transition.GetChargeFromIndicator(sequenceAndCharge, min, max) ?? 1;
+                }
+
+                public string ModifiedSequence { get; private set; }
+                public int Charge { get; private set; }
+            }
+
+            private class FragmentAndCharge
+            {
+                public FragmentAndCharge(string fragmentAndCharge)
+                {
+                    const int min = Transition.MIN_PRODUCT_CHARGE;
+                    const int max = Transition.MAX_PRODUCT_CHARGE;
+
+                    string frag = Transition.StripChargeIndicators(fragmentAndCharge, min, max);
+                    FragmentIon = NormalizeProductIon(frag);
+                    Charge = Transition.GetChargeFromIndicator(fragmentAndCharge, min, max) ?? 1;
+                }
+
+                public string FragmentIon { get; private set; }
+                public int Charge { get; private set; }
             }
 
             public DbOptimization GetOptimization(OptimizationType type, string sequence, int charge, string fragmentIon, int productCharge)
@@ -543,20 +577,29 @@ namespace pwiz.Skyline.SettingsUI
                 if (Equals(ViewType, ExportOptimize.CE))
                 {
                     add = GridView.DoPaste(MessageParent, ValidateOptimizationRow,
-                        values => libraryOptimizationsNew.Add(new DbOptimization(ViewDbType,
-                            Transition.StripChargeIndicators(values[0], TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE),
-                            Transition.GetChargeFromIndicator(values[0], TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE).GetValueOrDefault(1),
-                            NormalizeProductIon(Transition.StripChargeIndicators(values[1], Transition.MIN_PRODUCT_CHARGE, Transition.MAX_PRODUCT_CHARGE)),
-                            Transition.GetChargeFromIndicator(values[1], Transition.MIN_PRODUCT_CHARGE, Transition.MAX_PRODUCT_CHARGE).GetValueOrDefault(1),
-                            double.Parse(values[2]))));
+                        values =>
+                        {
+                            var seqCharge = new SequenceAndCharge(values[0]);
+                            var fragCharge = new FragmentAndCharge(values[1]);
+                            libraryOptimizationsNew.Add(new DbOptimization(ViewDbType,
+                                seqCharge.ModifiedSequence,
+                                seqCharge.Charge,
+                                fragCharge.FragmentIon,
+                                fragCharge.Charge,
+                                double.Parse(values[2])));
+                        });
                 }
                 else if (Equals(ViewType, ExportOptimize.COV))
                 {
                     add = GridView.DoPaste(MessageParent, ValidateOptimizationRow,
-                        values => libraryOptimizationsNew.Add(new DbOptimization(ViewDbType,
-                            Transition.StripChargeIndicators(values[0], TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE),
-                            Transition.GetChargeFromIndicator(values[0], TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE).GetValueOrDefault(1),
-                            null, 0, double.Parse(values[1]))));
+                        values =>
+                        {
+                            var seqCharge = new SequenceAndCharge(values[0]);
+                            libraryOptimizationsNew.Add(new DbOptimization(ViewDbType,
+                                seqCharge.ModifiedSequence,
+                                seqCharge.Charge,
+                                null, 0, double.Parse(values[1])));
+                        });
                 }
 
                 if (add)
@@ -655,13 +698,19 @@ namespace pwiz.Skyline.SettingsUI
                     switch (columnIndex)
                     {
                         case COLUMN_SEQUENCE:
-                            curKey.PeptideModSeq = Transition.StripChargeIndicators(value, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE);
-                            curKey.Charge = Transition.GetChargeFromIndicator(value, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE).GetValueOrDefault(1);
+                        {
+                            var seqCharge = new SequenceAndCharge(value);
+                            curKey.PeptideModSeq = seqCharge.ModifiedSequence;
+                            curKey.Charge = seqCharge.Charge;
                             break;
+                        }
                         case COLUMN_PRODUCT_ION:
-                            curKey.FragmentIon = Transition.StripChargeIndicators(value, Transition.MIN_PRODUCT_CHARGE, Transition.MAX_PRODUCT_CHARGE);
-                            curKey.ProductCharge = Transition.GetChargeFromIndicator(value, Transition.MIN_PRODUCT_CHARGE, Transition.MAX_PRODUCT_CHARGE).GetValueOrDefault(1);
+                        {
+                            var fragCharge = new FragmentAndCharge(value);
+                            curKey.FragmentIon = fragCharge.FragmentIon;
+                            curKey.ProductCharge = fragCharge.Charge;
                             break;
+                        }
                     }
                     int iExist = Optimizations.ToArray().IndexOf(item => Equals(item.Key, curKey));
                     if (iExist != -1 && iExist != rowIndex)

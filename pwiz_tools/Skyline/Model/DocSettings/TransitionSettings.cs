@@ -192,7 +192,7 @@ namespace pwiz.Skyline.Model.DocSettings
                                                       FullScanMassAnalyzerType.qit,
                                                       Instrument.ProductFilter/TransitionFullScan.RES_PER_FILTER, null,
                                                       FullScanPrecursorIsotopes.None, null,
-                                                      FullScanMassAnalyzerType.none, null, null,
+                                                      FullScanMassAnalyzerType.none, null, null, false,
                                                       null, RetentionTimeFilterType.none, 0);
                     Instrument = Instrument.ClearFullScanSettings();
                 }
@@ -1890,7 +1890,7 @@ namespace pwiz.Skyline.Model.DocSettings
         #endregion
     }
 
-    public enum FullScanMassAnalyzerType { none = -1, qit, tof, orbitrap, ft_icr, centroided } // Not L10N
+    public enum FullScanMassAnalyzerType { none = -1, centroided, qit, tof, orbitrap, ft_icr } // Not L10N
     public enum RetentionTimeFilterType {none, scheduling_windows, ms2_ids} // Not L10N
 
     [XmlRoot("transition_full_scan")]
@@ -1905,7 +1905,9 @@ namespace pwiz.Skyline.Model.DocSettings
         // Calculate precursor single filter window values by doubling match tolerance values
         public const double MIN_PRECURSOR_MULTI_FILTER = TransitionInstrument.MIN_MZ_MATCH_TOLERANCE*2;
         public const double MAX_PRECURSOR_MULTI_FILTER = 10*1000;
+        public const double MAX_PRECURSOR_MULTI_FILTER_MARGIN = 5;
         public const double DEFAULT_PRECURSOR_MULTI_FILTER = 2.0;
+        public const double DEFAULT_PRECURSOR_MULTI_FILTER_MARGIN = 0.5;
         // Calculate product low accuracy filter window values by doubling ion match tolerance values
         public const double MIN_LO_RES = 0.1;
         public const double MAX_LO_RES = 2.0;
@@ -1917,6 +1919,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public const double MIN_RES_MZ = 50;
         public const double MAX_RES_MZ = 2000;
         public const double RES_PER_FILTER = 2;
+        public const double RES_PER_FILTER_SELECTIVE = 1;
         public const double MIN_ISOTOPE_PERCENT = 0;
         public const double MAX_ISOTOPE_PERCENT = 100;
         public const double DEFAULT_ISOTOPE_PERCENT = 20;
@@ -1925,7 +1928,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public const int DEFAULT_ISOTOPE_COUNT = 3;
         public const double ISOTOPE_PEAK_CENTERING_RES = 0.1;
         public const double MIN_ISOTOPE_PEAK_ABUNDANCE = 0.01;
-        public const double DEFAULT_CENTROIDED_PPM = 20;
+        public const double DEFAULT_CENTROIDED_PPM = 10;
 
         public const string QIT = "QIT"; // Not L10N
         public const string ORBITRAP = "Orbitrap"; // Not L10N
@@ -1933,9 +1936,9 @@ namespace pwiz.Skyline.Model.DocSettings
         public const string FT_ICR = "FT-ICR"; // Not L10N
         public const string CENTROIDED = "Centroided"; // Not L10N
 
-        public static readonly string[] MASS_ANALYZERS = {QIT, TOF, ORBITRAP, FT_ICR, CENTROIDED};
-        public static readonly double[] DEFAULT_RES_VALUES = { 0.7, 10 * 1000, 60 * 1000, 100 * 1000, DEFAULT_CENTROIDED_PPM };
-        public static readonly double DEFAULT_RES_QIT = DEFAULT_RES_VALUES[0];
+        public static readonly string[] MASS_ANALYZERS = { CENTROIDED, QIT, TOF, ORBITRAP, FT_ICR };
+        public static readonly double[] DEFAULT_RES_VALUES = { DEFAULT_CENTROIDED_PPM, 0.7, 30 * 1000, 60 * 1000, 100 * 1000 };
+        public static readonly double DEFAULT_RES_QIT = DEFAULT_RES_VALUES[1];
         public const double DEFAULT_TIME_AROUND_MS2_IDS = 5.0;
 
         private double _cachedPrecursorRes;
@@ -1958,6 +1961,7 @@ namespace pwiz.Skyline.Model.DocSettings
                                     FullScanMassAnalyzerType precursorMassAnalyzer,
                                     double? precursorRes,
                                     double? precursorResMz,
+                                    bool selectiveExtraction,
                                     IsotopeEnrichments isotopeEnrichments,
                                     RetentionTimeFilterType retentionTimeFilterType,
                                     double retentionTimeFilterMinutes)
@@ -1973,6 +1977,8 @@ namespace pwiz.Skyline.Model.DocSettings
             PrecursorRes = precursorRes;
             PrecursorResMz = precursorResMz;
 
+            UseSelectiveExtraction = selectiveExtraction;
+
             IsotopeEnrichments = isotopeEnrichments;
 
             RetentionTimeFilterType = retentionTimeFilterType;
@@ -1980,6 +1986,11 @@ namespace pwiz.Skyline.Model.DocSettings
 
             DoValidate();
         }
+
+        // Applies to both MS1 and MS/MS because it is related to sample complexity
+        public bool UseSelectiveExtraction { get; private set; }
+
+        public double ResPerFilter { get { return UseSelectiveExtraction ? RES_PER_FILTER_SELECTIVE : RES_PER_FILTER; } }
 
         // MS/MS filtering
 
@@ -1997,6 +2008,9 @@ namespace pwiz.Skyline.Model.DocSettings
             get { return IsolationScheme == null ? null : IsolationScheme.PrecursorRightFilter; }
         }
 
+        /// <summary>
+        /// Backward compatibility
+        /// </summary>
         public static IsolationScheme CreateIsolationSchemeForFilter(FullScanAcquisitionMethod acquisitionMethod, double? precursorFilter, double? precursorRightFilter)
         {
             switch (acquisitionMethod)
@@ -2119,20 +2133,20 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
-        private static double GetDenominator(FullScanMassAnalyzerType analyzerType, double res, double resMz)
+        private double GetDenominator(FullScanMassAnalyzerType analyzerType, double res, double resMz)
         {
             switch (analyzerType)
             {
                 case FullScanMassAnalyzerType.tof:
-                    return res / RES_PER_FILTER;
+                    return res / ResPerFilter;
                 case FullScanMassAnalyzerType.orbitrap:
-                    return Math.Sqrt(resMz) * res / RES_PER_FILTER;
+                    return Math.Sqrt(resMz) * res / ResPerFilter;
                 case FullScanMassAnalyzerType.ft_icr:
-                    return resMz * res / RES_PER_FILTER;
+                    return resMz * res / ResPerFilter;
                 case FullScanMassAnalyzerType.centroided:
                     return res*2 / 1E+6; // 1/PPM
                 default:
-                    return res * RES_PER_FILTER;
+                    return res * ResPerFilter;
             }
         }
 
@@ -2281,6 +2295,11 @@ namespace pwiz.Skyline.Model.DocSettings
             });
         }
 
+        public TransitionFullScan ChangeUseSelectiveExtraction(bool prop)
+        {
+            return ChangeProp(ImClone(this), im => im.UseSelectiveExtraction = prop);
+        }
+
         public TransitionFullScan ChangeRetentionTimeFilter(RetentionTimeFilterType retentionTimeFilterType,
             double retentionTimeFilterLength)
         {
@@ -2310,6 +2329,7 @@ namespace pwiz.Skyline.Model.DocSettings
             precursor_mass_analyzer,
             precursor_res,
             precursor_res_mz,
+            selective_extraction,
             scheduled_filter, // deprecated
             retention_time_filter_type,
             retention_time_filter_length,
@@ -2382,7 +2402,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 throw new InvalidDataException(string.Format(messageFormat, min, max));
         }
 
-        private static double ValidateRes(FullScanMassAnalyzerType analyzerType, double? res, double? resMz)
+        private double ValidateRes(FullScanMassAnalyzerType analyzerType, double? res, double? resMz)
         {
             bool expectMz = false;
             if (analyzerType == FullScanMassAnalyzerType.qit)
@@ -2485,6 +2505,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
             }
 
+            UseSelectiveExtraction = reader.GetBoolAttribute(ATTR.selective_extraction);
             RetentionTimeFilterType = RetentionTimeFilterType.none;
             RetentionTimeFilterLength = 0;
             if (reader.GetBoolAttribute(ATTR.scheduled_filter))
@@ -2571,6 +2592,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 writer.WriteAttributeNullable(ATTR.precursor_res, PrecursorRes);
                 writer.WriteAttributeNullable(ATTR.precursor_res_mz, PrecursorResMz);
             }
+            if (UseSelectiveExtraction)
+                writer.WriteAttribute(ATTR.selective_extraction, true);
             if (RetentionTimeFilterType != RetentionTimeFilterType.none)
             {
                 writer.WriteAttribute(ATTR.retention_time_filter_type, RetentionTimeFilterType);
@@ -2603,6 +2626,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 Equals(other.IsotopeEnrichments, IsotopeEnrichments) &&
                 Equals(other.PrecursorMassAnalyzer, PrecursorMassAnalyzer) &&
                 other.PrecursorRes.Equals(PrecursorRes) &&
+                other.UseSelectiveExtraction == UseSelectiveExtraction &&
                 other.PrecursorResMz.Equals(PrecursorResMz) &&
                 other.RetentionTimeFilterType == RetentionTimeFilterType &&
                 other.RetentionTimeFilterLength == RetentionTimeFilterLength;
@@ -2631,6 +2655,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result*397) ^ PrecursorMassAnalyzer.GetHashCode();
                 result = (result*397) ^ (PrecursorRes.HasValue ? PrecursorRes.Value.GetHashCode() : 0);
                 result = (result*397) ^ (PrecursorResMz.HasValue ? PrecursorResMz.Value.GetHashCode() : 0);
+                result = (result*397) ^ UseSelectiveExtraction.GetHashCode();
                 result = (result*397) ^ RetentionTimeFilterType.GetHashCode();
                 result = (result*397) ^ RetentionTimeFilterLength.GetHashCode();
                 return result;

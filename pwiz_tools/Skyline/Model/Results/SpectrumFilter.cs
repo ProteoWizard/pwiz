@@ -720,7 +720,7 @@ namespace pwiz.Skyline.Model.Results
             }
 
                 // Calculate window for a simple isolation scheme.
-            else if (isolationScheme.PrecursorFilter.HasValue)
+            else if (isolationScheme.PrecursorFilter.HasValue && !isolationScheme.UseMargin)
             {
                 // Use the user specified isolation width, unless it is larger than
                 // the acquisition isolation width.  In this case the chromatograms
@@ -752,16 +752,16 @@ namespace pwiz.Skyline.Model.Results
                 isolationTargetMz = isolationTargetMz.ChangeMz(isolationWindow.Start + isolationWidthValue / 2);
             }
 
-                // MSe just uses the instrument isolation window
-            else if (isolationWidth.HasValue && isolationScheme.IsAllIons)
+                // Use the instrument isolation window
+            else if (isolationWidth.HasValue)
             {
-                isolationWidthValue = isolationWidth.Value;
+                isolationWidthValue = isolationWidth.Value - (isolationScheme.PrecursorFilter ?? 0)*2;
             }
 
                 // No defined isolation scheme?
             else
             {
-                throw new InvalidDataException(Resources.SpectrumFilter_FindFilterPairs_Isolation_scheme_does_not_contain_any_isolation_windows);
+                throw new InvalidDataException(string.Format(Resources.SpectrumFilter_CalcDiaIsolationValues_Unable_to_determine_isolation_width_for_the_scan_targeted_at__0_, isolationTargetMz));
             }
             isolationWidth = isolationWidthValue;
         }
@@ -783,7 +783,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
 
-        public SpectrumFilterPair[] RemoveFinishedFilterPairs(double retentionTime)
+        public SpectrumFilterPair[] RemoveFinishedFilterPairs(float retentionTime)
         {
             int startIndex = _retentionTimeIndex;
             if (retentionTime < 0)
@@ -800,7 +800,7 @@ namespace pwiz.Skyline.Model.Results
                 while (_retentionTimeIndex < _filterRTValues.Length)
                 {
                     var maxTime = _filterRTValues[_retentionTimeIndex].MaxTime;
-                    if (!maxTime.HasValue || maxTime > retentionTime)
+                    if (!maxTime.HasValue || maxTime >= retentionTime)  // Subsequent spectra are allowed to have the same time
                         break;
                     _retentionTimeIndex++;
                 }

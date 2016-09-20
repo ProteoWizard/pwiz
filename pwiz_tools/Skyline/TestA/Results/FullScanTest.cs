@@ -247,6 +247,20 @@ namespace pwiz.SkylineTestA.Results
                 var filterWidth = docNoCentroid.Settings.TransitionSettings.FullScan.GetPrecursorFilterWindow(mzTest);
                 Assert.AreEqual(mzTest * 2.0 * ppm * 1E-6, filterWidth);
 
+                // Verify relationship between normal and high-selectivity extraction
+                var docTofNormal = docNoCentroid.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fs =>
+                    fs.ChangePrecursorResolution(FullScanMassAnalyzerType.tof, 50*1000, null)));
+                AssertEx.Serializable(docTofNormal, AssertEx.DocumentCloned);
+                var docTofSelective = docTofNormal.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fs =>
+                    fs.ChangePrecursorResolution(FullScanMassAnalyzerType.tof, 25*1000, null)
+                    .ChangeUseSelectiveExtraction(true)));
+                AssertEx.Serializable(docTofSelective, AssertEx.DocumentCloned);
+                var filterWidthTof = docTofNormal.Settings.TransitionSettings.FullScan.GetPrecursorFilterWindow(mzTest);
+                var filterWidthSelective = docTofSelective.Settings.TransitionSettings.FullScan.GetPrecursorFilterWindow(mzTest);
+                Assert.AreEqual(filterWidth, filterWidthTof);
+                Assert.AreEqual(filterWidth, filterWidthSelective);
+
+
                 // Verify handling of bad request for vendor centroided data - ask for centroiding in mzML
                 const string fileName = "S_2_LVN.mzML";
                 var filePath = testFilesDir.GetTestPath(fileName);

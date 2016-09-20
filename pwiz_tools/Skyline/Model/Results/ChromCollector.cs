@@ -50,6 +50,8 @@ namespace pwiz.Skyline.Model.Results
                 MassErrors = new BlockedList<float>();
         }
 
+        public bool IsSetTimes { get { return Times != null; } }
+
         /// <summary>
         /// Set a shared reference to a list of Times that is allocated independently.
         /// </summary>

@@ -1231,10 +1231,7 @@
   <data name="IsolationScheme_DoValidate_Isolation_scheme_cannot_have_a_right_filter_without_a_left_filter" xml:space="preserve">
     <value>単離スキームでは、左フィルタなしでは右フィルタを持つことはできません</value>
   </data>
-  <data name="IsolationScheme_DoValidate_Isolation_scheme_must_have_a_filter_or_a_prespecifed_isolation_window" xml:space="preserve">
-    <value>単離スキームにはフィルタか事前指定の単離ウィンドウが必要です</value>
-  </data>
-  <data name="IsolationScheme_DoValidate_Multiplexed_windows_require_at_least_one_window_per_scan" xml:space="preserve">
+    <data name="IsolationScheme_DoValidate_Multiplexed_windows_require_at_least_one_window_per_scan" xml:space="preserve">
     <value>多重化ウィンドウでは、各スキャンにつき最低1つのウィンドウが必要です</value>
   </data>
   <data name="IsolationScheme_DoValidate_The_number_of_prespecified_isolation_windows_must_be_a_multiple_of_the_windows_per_scan_in_multiplexed_sampling" xml:space="preserve">
@@ -1903,10 +1900,7 @@
   <data name="SpectrumFilter_FindFilterPairs_Two_isolation_windows_contain_targets_which_match_the_isolation_target__0__" xml:space="preserve">
     <value>2つの単離ウィンドウには、単離ターゲット{0}に一致するターゲットが含まれます。</value>
   </data>
-  <data name="SpectrumFilter_FindFilterPairs_Isolation_scheme_does_not_contain_any_isolation_windows" xml:space="preserve">
-    <value>単離スキームには単離ウィンドウは含まれません</value>
-  </data>
-  <data name="ChromDataSet_GetExtents_The_time_interval__0__to__1__is_not_valid" xml:space="preserve">
+    <data name="ChromDataSet_GetExtents_The_time_interval__0__to__1__is_not_valid" xml:space="preserve">
     <value>時間間隔{0}から{1}は無効です。</value>
   </data>
   <data name="ChromDataSet_MergePeaks_Unexpected_null_peak" xml:space="preserve">

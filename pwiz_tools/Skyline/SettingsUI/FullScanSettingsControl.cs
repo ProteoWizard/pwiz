@@ -60,6 +60,8 @@ namespace pwiz.Skyline.SettingsUI
             PrecursorIsotopesCurrent = FullScan.PrecursorIsotopes;
             PrecursorMassAnalyzer = FullScan.PrecursorMassAnalyzer;
 
+            cbHighSelectivity.Checked = FullScan.UseSelectiveExtraction;
+
             _prevval_comboIsolationScheme = IsolationScheme; // initialize previous value to initial value
         }
 
@@ -175,6 +177,12 @@ namespace pwiz.Skyline.SettingsUI
             set { textProductAt.Text = value.ToString(); }
         }
 
+        public bool UseSelectiveExtraction
+        {
+            get { return cbHighSelectivity.Checked; }
+            set { cbHighSelectivity.Checked = value; }
+        }
+
         public RetentionTimeFilterType RetentionTimeFilterType
         {
             get
@@ -270,6 +278,8 @@ namespace pwiz.Skyline.SettingsUI
                 comboEnrichments.SelectedIndex = 0;
                 comboEnrichments.Enabled = true;
             }
+
+            UpdateSelectivityOption();
         }
 
         private void comboPrecursorIsotopes_SelectedIndexChanged(object sender, EventArgs e)
@@ -312,9 +322,13 @@ namespace pwiz.Skyline.SettingsUI
                                                            : TransitionFullScan.DEFAULT_ISOTOPE_COUNT).ToString(LocalizationHelper.CurrentCulture);
 
                     var precursorMassAnalyzer = PrecursorMassAnalyzer;
-                    if (!comboPrecursorAnalyzerType.Enabled || (percentType && precursorMassAnalyzer == FullScanMassAnalyzerType.qit))
+                    bool qitInvalid = percentType && precursorMassAnalyzer == FullScanMassAnalyzerType.qit;
+                    if (!comboPrecursorAnalyzerType.Enabled || qitInvalid)
                     {
-                        comboPrecursorAnalyzerType.SelectedItem = TransitionFullScan.MassAnalyzerToString(FullScanMassAnalyzerType.tof);
+                        comboPrecursorAnalyzerType.SelectedItem = comboProductAnalyzerType.SelectedItem == null ||
+                                                                  (qitInvalid && ProductMassAnalyzer == FullScanMassAnalyzerType.qit)
+                            ? TransitionFullScan.MassAnalyzerToString(FullScanMassAnalyzerType.centroided)
+                            : comboProductAnalyzerType.SelectedItem.ToString();
                         comboEnrichments.SelectedItem = IsotopeEnrichmentsList.GetDefault().Name;
                     }
                 }
@@ -375,6 +389,7 @@ namespace pwiz.Skyline.SettingsUI
                                                   PrecursorMassAnalyzer,
                                                   precursorRes,
                                                   precursorResMz,
+                                                  UseSelectiveExtraction,
                                                   Enrichments,
                                                   retentionTimeFilterType,
                                                   retentionTimeFilterLength);
@@ -580,12 +595,10 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     if (!comboProductAnalyzerType.Enabled)
                     {
-                        string tofAnalyzer = TransitionFullScan.MassAnalyzerToString(FullScanMassAnalyzerType.tof);
                         comboProductAnalyzerType.SelectedItem =
-                            comboPrecursorAnalyzerType.SelectedItem != null &&
-                                Equals(comboPrecursorAnalyzerType.SelectedItem.ToString(), tofAnalyzer)
-                            ? tofAnalyzer
-                            : TransitionFullScan.MassAnalyzerToString(FullScanMassAnalyzerType.qit);
+                            comboPrecursorAnalyzerType.SelectedItem != null 
+                                ? comboPrecursorAnalyzerType.SelectedItem.ToString()
+                                : TransitionFullScan.MassAnalyzerToString(FullScanMassAnalyzerType.centroided);
                     }
                 }
                 comboProductAnalyzerType.Enabled = true;
@@ -619,6 +632,7 @@ namespace pwiz.Skyline.SettingsUI
                             textProductAt,
                             labelProductTh,
                             labelProductPPM);
+            UpdateSelectivityOption();
         }
 
         private void comboIsolationScheme_SelectedIndexChanged(object sender, EventArgs e)
@@ -893,13 +907,33 @@ namespace pwiz.Skyline.SettingsUI
             label.Text = labelText;
         }
 
+        private void UpdateSelectivityOption()
+        {
+            cbHighSelectivity.Enabled = IsProfileMode(comboPrecursorAnalyzerType) ||
+                                        IsProfileMode(comboProductAnalyzerType);
+            if (!cbHighSelectivity.Enabled)
+                cbHighSelectivity.Checked = false;
+        }
+
+        private bool IsProfileMode(ComboBox comboAnalyzerType)
+        {
+            if (comboAnalyzerType.Visible && comboAnalyzerType.Enabled)
+            {
+                var analyzerType = TransitionFullScan.ParseMassAnalyzer((string) comboAnalyzerType.SelectedItem);
+                return analyzerType != FullScanMassAnalyzerType.centroided && analyzerType != FullScanMassAnalyzerType.none;
+            }
+            return false;
+        }
+
         public void ModifyOptionsForImportPeptideSearchWizard(ImportPeptideSearchDlg.Workflow workflow)
         {
             // Reduce MS1 filtering groupbox
-            int precursorChargesShift = groupBoxMS2.Top - groupBoxMS1.Bottom;
+            int sepMS1FromMS2 = groupBoxMS2.Top - groupBoxMS1.Bottom;
+            int sepMS2FromRT = groupBoxRetentionTimeToKeep.Top - groupBoxMS2.Bottom;
+            int sepMS2FromSel = cbHighSelectivity.Top - groupBoxMS2.Bottom;
             labelEnrichments.Hide();
             comboEnrichments.Hide();
-            groupBoxMS1.Height = textPrecursorIsotopeFilter.Bottom + groupBoxMS1.Height - comboEnrichments.Bottom;
+            groupBoxMS1.Height -= comboEnrichments.Bottom - textPrecursorIsotopeFilter.Bottom;
 
             if (workflow == ImportPeptideSearchDlg.Workflow.dda)
             {
@@ -912,7 +946,7 @@ namespace pwiz.Skyline.SettingsUI
                 lblPrecursorCharges.Show();
 
                 // Reposition MS1 filtering groupbox
-                groupBoxMS1.Top = textPrecursorCharges.Bottom + precursorChargesShift;
+                groupBoxMS1.Top = textPrecursorCharges.Bottom + sepMS1FromMS2;
             }
 
             int newRadioTimeAroundTop = radioUseSchedulingWindow.Top;
@@ -926,11 +960,11 @@ namespace pwiz.Skyline.SettingsUI
             PrecursorIsotopesCurrent = FullScanPrecursorIsotopes.Count;
             radioTimeAroundMs2Ids.Checked = true;
 
-            int nextGroupBoxTop = groupBoxMS1.Bottom + precursorChargesShift;
             if (workflow != ImportPeptideSearchDlg.Workflow.dda)
             {
-                groupBoxMS2.Top = nextGroupBoxTop;
-                groupBoxRetentionTimeToKeep.Top = groupBoxMS2.Bottom + precursorChargesShift;
+                groupBoxMS2.Top = groupBoxMS1.Bottom + sepMS1FromMS2;
+                cbHighSelectivity.Top = groupBoxMS2.Bottom + sepMS2FromSel;
+                groupBoxRetentionTimeToKeep.Top = groupBoxMS2.Bottom + sepMS2FromRT;
 
                 AcquisitionMethod = (workflow == ImportPeptideSearchDlg.Workflow.dia)
                     ? FullScanAcquisitionMethod.DIA
@@ -948,8 +982,9 @@ namespace pwiz.Skyline.SettingsUI
                 // Hide MS/MS filtering groupbox entirely.
                 groupBoxMS2.Hide();
 
-                // Reduce and reposition Retention time filtering groupbox.
-                groupBoxRetentionTimeToKeep.Top = nextGroupBoxTop;
+                // Reposition selectivity checkbox and retention time filtering groupbox.
+                cbHighSelectivity.Top = groupBoxMS1.Bottom + sepMS2FromSel;
+                groupBoxRetentionTimeToKeep.Top = groupBoxMS1.Bottom + sepMS2FromRT;
             }
         }
 

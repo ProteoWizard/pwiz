@@ -410,6 +410,8 @@ namespace pwiz.Skyline
                     double? resMz = commandArgs.FullScanPrecursorResMz;
                     if (!_doc.Settings.TransitionSettings.FullScan.IsHighResPrecursor)
                         _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_resolution_to__0__, res);
+                    else if (_doc.Settings.TransitionSettings.FullScan.IsCentroidedMs)
+                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_mass_accuracy_to__0__ppm_, res);
                     else if (resMz.HasValue)
                         _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_resolving_power_to__0__at__1__, res, resMz);
                     else
@@ -423,6 +425,8 @@ namespace pwiz.Skyline
                     double? resMz = commandArgs.FullScanProductResMz;
                     if (!_doc.Settings.TransitionSettings.FullScan.IsHighResProduct)
                         _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_product_resolution_to__0__, res);
+                    else if (_doc.Settings.TransitionSettings.FullScan.IsCentroidedMsMs)
+                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_product_mass_accuracy_to__0__ppm_, res);
                     else if (resMz.HasValue)
                         _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_product_resolving_power_to__0__at__1__, res, resMz);
                     else

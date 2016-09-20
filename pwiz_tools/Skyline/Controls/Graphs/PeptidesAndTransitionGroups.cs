@@ -55,14 +55,17 @@ namespace pwiz.Skyline.Controls.Graphs
             var nodePeps = new List<PeptideDocNode>();
             var nodeGroups = new List<TransitionGroupDocNode>();
             var groupPaths = new List<IdentityPath>();
-            for (int i = 0; i < NodeGroups.Count; i++)
+            if (minHeight > 0)
             {
-                var nodeGroup = NodeGroups[i];
-                if (GetHeight(nodeGroup.Results[chromIndex]) < minHeight)
-                    continue;
-                nodePeps.Add(NodePeps[i]);
-                nodeGroups.Add(nodeGroup);
-                groupPaths.Add(GroupPaths[i]);
+                for (int i = 0; i < NodeGroups.Count; i++)
+                {
+                    var nodeGroup = NodeGroups[i];
+                    if (GetHeight(nodeGroup.Results[chromIndex]) < minHeight)
+                        continue;
+                    nodePeps.Add(NodePeps[i]);
+                    nodeGroups.Add(nodeGroup);
+                    groupPaths.Add(GroupPaths[i]);
+                }
             }
 
             NodePeps.Clear();

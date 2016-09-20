@@ -4977,10 +4977,7 @@ If you prefer you can choose to report anonymously.</value>
   <data name="NewDocument" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\newdocument.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="SpectrumFilter_FindFilterPairs_Isolation_scheme_does_not_contain_any_isolation_windows" xml:space="preserve">
-    <value>Isolation scheme does not contain any isolation windows</value>
-  </data>
-  <data name="SequenceTreeForm_UpdateTitle_Targets_by_Accession" xml:space="preserve">
+    <data name="SequenceTreeForm_UpdateTitle_Targets_by_Accession" xml:space="preserve">
     <value>Targets by Accession</value>
   </data>
   <data name="SkylineWindow_ViewSpectralLibraries_No_libraries_to_show_Would_you_like_to_add_a_library" xml:space="preserve">
@@ -7757,10 +7754,7 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="TransitionTreeNode_Titles" xml:space="preserve">
     <value>Transitions</value>
   </data>
-  <data name="IsolationScheme_DoValidate_Isolation_scheme_must_have_a_filter_or_a_prespecifed_isolation_window" xml:space="preserve">
-    <value>Isolation scheme must have a filter or a prespecifed isolation window</value>
-  </data>
-  <data name="SkylineStartup_SkylineStartup_Import_Transition_List" xml:space="preserve">
+    <data name="SkylineStartup_SkylineStartup_Import_Transition_List" xml:space="preserve">
     <value>Import Transition List</value>
   </data>
   <data name="FastaSequence_ValidateSequence_A_protein_sequence_may_not_be_empty" xml:space="preserve">
@@ -9214,5 +9208,29 @@ If your transition list format combines formulas and adducts in a single column 
   </data>
   <data name="PeptideChromInfoCalculator_AddChromInfo_Conflict_with_transition__0__in__1__for_peak_area_calculation__Did_you_mean_to_use_a_different_precursor_charge_state_or_label_" xml:space="preserve">
     <value>Conflict with transition {0} in {1} for peak area calculation. Did you mean to use a different precursor charge state or label?</value>
+  </data>
+    <data name="IsolationSchemeList_GetDefaults_Results_only" xml:space="preserve">
+    <value>Results only</value>
+  </data>
+    <data name="IsolationSchemeList_GetDefaults_Results__0_5_margin_" xml:space="preserve">
+    <value>Results (0.5 margin)</value>
+  </data>
+    <data name="IsolationWidthType_RESULTS_Results" xml:space="preserve">
+    <value>Results</value>
+  </data>
+    <data name="IsolationWidthType_RESULTS_WITH_MARGIN_Results_with_margin" xml:space="preserve">
+    <value>Results with margin</value>
+  </data>
+    <data name="IsolationWidthType_FIXED_Fixed" xml:space="preserve">
+    <value>Fixed</value>
+  </data>
+    <data name="SpectrumFilter_CalcDiaIsolationValues_Unable_to_determine_isolation_width_for_the_scan_targeted_at__0_" xml:space="preserve">
+    <value>Unable to determine isolation width for the scan targeted at {0}</value>
+  </data>
+    <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_mass_accuracy_to__0__ppm_" xml:space="preserve">
+    <value>Changing full scan precursor mass accuracy to {0} ppm.</value>
+  </data>
+    <data name="CommandLine_SetFullScanSettings_Changing_full_scan_product_mass_accuracy_to__0__ppm_" xml:space="preserve">
+    <value>Changing full scan product mass accuracy to {0} ppm.</value>
   </data>
 </root>

@@ -46,12 +46,6 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public override void UpdateGraph(bool checkData)
         {
-            var peptidePaths = GetSelectedPeptides().GetUniquePeptidePaths().ToList();
-            // if PeptideGroupTreeNode is selected but has only one child isMultiSelect should still be true
-            var isMultiSelect = peptidePaths.Count > 1 || 
-                (peptidePaths.Count == 1 && 
-                GraphSummary.StateProvider.SelectedNodes.FirstOrDefault() is PeptideGroupTreeNode);
-
             SrmDocument document = GraphSummary.DocumentUIContainer.DocumentUI;
             var results = document.Settings.MeasuredResults;
             bool resultsAvailable = results != null;
@@ -126,6 +120,13 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             var retentionTimeValue = new GraphValues.RetentionTimeTransform(rtValue, rtTransformOp, replicateGroupOp.AggregateOp);
             YAxis.Title.Text = retentionTimeValue.GetAxisTitle();
+
+            var peptidePaths = GetSelectedPeptides().GetUniquePeptidePaths().ToList();
+            // if PeptideGroupTreeNode is selected but has only one child isMultiSelect should still be true
+            var isMultiSelect = peptidePaths.Count > 1 ||
+                (peptidePaths.Count == 1 &&
+                GraphSummary.StateProvider.SelectedNodes.FirstOrDefault() is PeptideGroupTreeNode);
+
             GraphData graphData = new RTGraphData(document, 
                 isMultiSelect 
                 ? peptidePaths.Select(path=> document.FindNode(path))
