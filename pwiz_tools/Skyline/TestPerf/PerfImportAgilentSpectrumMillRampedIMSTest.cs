@@ -26,6 +26,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.SettingsUI;
@@ -157,6 +158,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             WaitForClosedForm(importResultsNameDlg);
             // Modifications are already set up, so that page should get skipped.
             RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.PrecursorCharges = new []{2,3,4,5});
+            RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.PrecursorMassAnalyzer = FullScanMassAnalyzerType.tof);
             RunUI(() => importPeptideSearchDlg.ClickNextButton()); // Accept the full scan settings
 
             // We're on the "Import FASTA" page of the wizard.
@@ -179,7 +181,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             var results = doc1.Settings.MeasuredResults;
 
             var numPeaks = useDriftTimes ?
-                new[] { 8, 8, 10, 10, 10, 10, 10, 10, 10, 10, 9, 10, 10, 4, 7, 10, 10, 10, 10, 10, 10, 4, 10, 10, 10, 10, 9, 6, 10, 10, 10, 10, 10, 5, 10, 10, 10, 10, 10, 4, 10, 10, 10, 10, 8, 10, 10, 10 } :
+                new[] { 10, 10, 10, 10, 8, 6, 6, 10, 10, 10, 10, 6, 10, 3, 10, 4, 10, 7, 6, 10, 8, 10, 10, 10, 9, 9, 7, 10, 10, 10, 10, 9, 10, 6, 10, 10, 10, 10, 10, 6, 10, 6, 10, 10, 10, 10, 5, 10 } :
                 new[] { 10, 10, 10, 10, 9, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 9, 10 };
             int npIndex = 0;
             var errmsg = "";
