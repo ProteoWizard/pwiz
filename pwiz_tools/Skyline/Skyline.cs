@@ -2811,6 +2811,7 @@ namespace pwiz.Skyline
                 // Get a list of existing precursors - likely basis for adding a heavy version
                 var existingIons = notFirst ? nodePep.TransitionGroups.Select(child => child.CustomIon).Where(x => x != null).ToArray() : null;
                 var existingPrecursors = nodePep.TransitionGroups.Select(child => child.TransitionGroup).Where(c => c.IsCustomIon).ToArray();
+                var heavyLabels = Document.Settings.PeptideSettings.Modifications.GetHeavyModificationTypes().ToArray();
                 using (var dlg = new EditCustomMoleculeDlg(this, Resources.SkylineWindow_AddSmallMolecule_Add_Precursor,
                     null, existingPrecursors,
                     TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE, Document.Settings,
@@ -2819,7 +2820,7 @@ namespace pwiz.Skyline
                     notFirst ? nodePep.TransitionGroups.First().TransitionGroup.PrecursorCharge : 1,
                     notFirst ? nodePep.TransitionGroups.First().ExplicitValues : ExplicitTransitionGroupValues.EMPTY,
                     null,
-                    IsotopeLabelType.heavy))
+                    heavyLabels.FirstOrDefault()??IsotopeLabelType.light))
                 {
                     if (dlg.ShowDialog(this) == DialogResult.OK)
                     {
