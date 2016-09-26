@@ -133,7 +133,7 @@
     <value>True</value>
   </data>
   <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 10</value>
+    <value>16, 7</value>
   </data>
   <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
     <value>96, 13</value>
@@ -163,10 +163,10 @@
     <value>19, 26</value>
   </data>
   <data name="listResultsFilesFound.Size" type="System.Drawing.Size, System.Drawing">
-    <value>340, 160</value>
+    <value>340, 121</value>
   </data>
   <data name="listResultsFilesFound.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="&gt;&gt;listResultsFilesFound.Name" xml:space="preserve">
     <value>listResultsFilesFound</value>
@@ -179,6 +179,45 @@
   </data>
   <data name="&gt;&gt;listResultsFilesFound.ZOrder" xml:space="preserve">
     <value>1</value>
+  </data>
+  <data name="cbExcludeSourceFiles.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="cbExcludeSourceFiles.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbExcludeSourceFiles.Location" type="System.Drawing.Point, System.Drawing">
+    <value>193, 6</value>
+  </data>
+  <data name="cbExcludeSourceFiles.Size" type="System.Drawing.Size, System.Drawing">
+    <value>166, 17</value>
+  </data>
+  <data name="cbExcludeSourceFiles.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="cbExcludeSourceFiles.Text" xml:space="preserve">
+    <value>&amp;Exclude spectrum source files</value>
+  </data>
+  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
+  <data name="cbExcludeSourceFiles.ToolTip" xml:space="preserve">
+    <value>Check this to exclude processed spectra files (i.e. mzXML, mzML etc.) in favor of original raw data when available</value>
+  </data>
+  <data name="cbExcludeSourceFiles.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="&gt;&gt;cbExcludeSourceFiles.Name" xml:space="preserve">
+    <value>cbExcludeSourceFiles</value>
+  </data>
+  <data name="&gt;&gt;cbExcludeSourceFiles.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbExcludeSourceFiles.Parent" xml:space="preserve">
+    <value>resultsSplitContainer.Panel1</value>
+  </data>
+  <data name="&gt;&gt;cbExcludeSourceFiles.ZOrder" xml:space="preserve">
+    <value>2</value>
   </data>
   <data name="&gt;&gt;resultsSplitContainer.Panel1.Name" xml:space="preserve">
     <value>resultsSplitContainer.Panel1</value>
@@ -196,7 +235,7 @@
     <value>Bottom, Left</value>
   </data>
   <data name="browseToResultsFileButton.Location" type="System.Drawing.Point, System.Drawing">
-    <value>19, 148</value>
+    <value>19, 153</value>
   </data>
   <data name="browseToResultsFileButton.Size" type="System.Drawing.Size, System.Drawing">
     <value>88, 23</value>
@@ -250,7 +289,7 @@
     <value>Bottom, Left</value>
   </data>
   <data name="findResultsFilesButton.Location" type="System.Drawing.Point, System.Drawing">
-    <value>113, 148</value>
+    <value>113, 153</value>
   </data>
   <data name="findResultsFilesButton.Size" type="System.Drawing.Size, System.Drawing">
     <value>88, 23</value>
@@ -310,10 +349,10 @@
     <value>1</value>
   </data>
   <data name="resultsSplitContainer.Size" type="System.Drawing.Size, System.Drawing">
-    <value>381, 384</value>
+    <value>381, 339</value>
   </data>
   <data name="resultsSplitContainer.SplitterDistance" type="System.Int32, mscorlib">
-    <value>203</value>
+    <value>153</value>
   </data>
   <data name="resultsSplitContainer.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -328,45 +367,102 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;resultsSplitContainer.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>3</value>
   </data>
-  <data name="cbExcludeSourceFiles.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+  <data name="label1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
   </data>
-  <data name="cbExcludeSourceFiles.AutoSize" type="System.Boolean, mscorlib">
+  <data name="label1.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="cbExcludeSourceFiles.Location" type="System.Drawing.Point, System.Drawing">
-    <value>21, 397</value>
+  <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>16, 352</value>
   </data>
-  <data name="cbExcludeSourceFiles.Size" type="System.Drawing.Size, System.Drawing">
-    <value>166, 17</value>
+  <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>145, 13</value>
   </data>
-  <data name="cbExcludeSourceFiles.TabIndex" type="System.Int32, mscorlib">
+  <data name="label1.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name="cbExcludeSourceFiles.Text" xml:space="preserve">
-    <value>&amp;Exclude spectrum source files</value>
+  <data name="label1.Text" xml:space="preserve">
+    <value>Files to &amp;import simultaneously:</value>
   </data>
-  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
-  <data name="cbExcludeSourceFiles.ToolTip" xml:space="preserve">
-    <value>Check this to exclude processed spectra files (i.e. mzXML, mzML etc.) in favor of original raw data when available</value>
+  <data name="&gt;&gt;label1.Name" xml:space="preserve">
+    <value>label1</value>
   </data>
-  <data name="cbExcludeSourceFiles.Visible" type="System.Boolean, mscorlib">
-    <value>False</value>
+  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;cbExcludeSourceFiles.Name" xml:space="preserve">
-    <value>cbExcludeSourceFiles</value>
-  </data>
-  <data name="&gt;&gt;cbExcludeSourceFiles.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;cbExcludeSourceFiles.Parent" xml:space="preserve">
+  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;cbExcludeSourceFiles.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="comboSimultaneousFiles.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="comboSimultaneousFiles.Items" xml:space="preserve">
+    <value>One at a time</value>
+  </data>
+  <data name="comboSimultaneousFiles.Items1" xml:space="preserve">
+    <value>Several</value>
+  </data>
+  <data name="comboSimultaneousFiles.Items2" xml:space="preserve">
+    <value>Many </value>
+  </data>
+  <data name="comboSimultaneousFiles.Location" type="System.Drawing.Point, System.Drawing">
+    <value>19, 368</value>
+  </data>
+  <data name="comboSimultaneousFiles.Size" type="System.Drawing.Size, System.Drawing">
+    <value>131, 21</value>
+  </data>
+  <data name="comboSimultaneousFiles.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;comboSimultaneousFiles.Name" xml:space="preserve">
+    <value>comboSimultaneousFiles</value>
+  </data>
+  <data name="&gt;&gt;comboSimultaneousFiles.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboSimultaneousFiles.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;comboSimultaneousFiles.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="cbAutoRetry.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="cbAutoRetry.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbAutoRetry.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="cbAutoRetry.Location" type="System.Drawing.Point, System.Drawing">
+    <value>19, 395</value>
+  </data>
+  <data name="cbAutoRetry.Size" type="System.Drawing.Size, System.Drawing">
+    <value>137, 17</value>
+  </data>
+  <data name="cbAutoRetry.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="cbAutoRetry.Text" xml:space="preserve">
+    <value>&amp;Retry after import failure</value>
+  </data>
+  <data name="&gt;&gt;cbAutoRetry.Name" xml:space="preserve">
+    <value>cbAutoRetry</value>
+  </data>
+  <data name="&gt;&gt;cbAutoRetry.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbAutoRetry.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;cbAutoRetry.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">

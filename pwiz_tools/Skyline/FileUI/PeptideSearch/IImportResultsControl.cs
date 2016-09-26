@@ -27,6 +27,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
     {
         List<ImportPeptideSearch.FoundResultsFile> FoundResultsFiles { get; set; } // Name --> Path
         bool ResultsFilesMissing { get; }
+        int SimultaneousFiles { get; }
+        bool DoAutoRetry { get; }
 
         event EventHandler<ImportResultsControl.ResultsFilesEventArgs> ResultsFilesChanged;
     }
