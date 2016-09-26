@@ -82,7 +82,8 @@ rule waters-define ( properties * )
     local result ;
     if <toolset>msvc in $(properties) &&
        ( <toolset-msvc:version>12.0 in $(properties) ||
-         <toolset-msvc:version>12.0express in $(properties) ) &&
+         <toolset-msvc:version>12.0express in $(properties) || 
+         <toolset-msvc:version>14.0 in $(properties) ) &&
        <runtime-debugging>off in $(properties) &&
        [ project-exists $(WATERS_API_PATH) ] &&
        [ masslynxraw-dll-location $(WATERS_API_PATH) : $(properties) ]  &&
@@ -99,7 +100,8 @@ rule waters-api-usage-requirements ( properties * )
     local result ;
     if <toolset>msvc in $(properties) &&
        ( <toolset-msvc:version>12.0 in $(properties) ||
-         <toolset-msvc:version>12.0express in $(properties) ) &&
+         <toolset-msvc:version>12.0express in $(properties) || 
+         <toolset-msvc:version>14.0 in $(properties) ) &&
        <runtime-debugging>off in $(properties) &&
        [ project-exists $(WATERS_API_PATH) ] &&
        [ masslynxraw-dll-location $(WATERS_API_PATH) : $(properties) ]  &&

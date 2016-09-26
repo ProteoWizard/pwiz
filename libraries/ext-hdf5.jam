@@ -61,9 +61,9 @@ rule init ( version ? : location : options * )
         using ext-zlib : 1.2.3 : $(ZLIB_SOURCE) ;
 
         local boost-src-location = [ feature.get-values <boost-src-location> : $(options) ] ;
-        boost-src-location ?= $(location)/../boost_1_56_0 ;
+        boost-src-location ?= $(location)/../boost_1_61_0 ;
         path-constant BOOST_SOURCE : $(boost-src-location[1]) ;
-        using ext-boost : 1.56.0 : $(BOOST_SOURCE) ;
+        using ext-boost : 1.61.0 : $(BOOST_SOURCE) ;
 
         alias H5pubconf.h : $(location)/src/posix/H5pubconf.h : <location>$(location) <conditional>@H5pubconf-requirements : : <conditional>@H5pubconf-requirements ;
         alias H5pubconf.h : $(location)/src/windows/H5pubconf.h : <location>$(location) <conditional>@H5pubconf-requirements <toolset>msvc : : <conditional>@H5pubconf-requirements ;
