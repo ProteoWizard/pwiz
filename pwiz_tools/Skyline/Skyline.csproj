@@ -1152,9 +1152,7 @@
     <Compile Include="EditUI\SpectrumChartPropertyDlg.Designer.cs">
       <DependentUpon>SpectrumChartPropertyDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="FileUI\ShareListDlg.cs">
-      <SubType>Form</SubType>
-    </Compile>
+    <Compile Include="FileUI\ShareListDlg.cs" />
     <Compile Include="EditUI\UniquePeptidesDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -1646,9 +1644,7 @@
     <Compile Include="SettingsUI\EditEnzymeDlg.Designer.cs">
       <DependentUpon>EditEnzymeDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="SettingsUI\EditListDlg.cs">
-      <SubType>Form</SubType>
-    </Compile>
+    <Compile Include="SettingsUI\EditListDlg.cs" />
     <Compile Include="SettingsUI\EditListDlg.Designer.cs">
       <DependentUpon>EditListDlg.cs</DependentUpon>
     </Compile>
@@ -3489,9 +3485,7 @@
     <Compile Include="Util\Util.cs" />
     <Compile Include="Model\Export.cs" />
     <Compile Include="Util\UtilIO.cs" />
-    <Compile Include="Util\UtilUI.cs">
-      <SubType>Component</SubType>
-    </Compile>
+    <Compile Include="Util\UtilUI.cs" />
     <Compile Include="Util\Xml.cs" />
     <Compile Include="Model\DocSettings\XmlNamedElement.cs" />
     <Compile Include="Util\ClipboardEx.cs" />

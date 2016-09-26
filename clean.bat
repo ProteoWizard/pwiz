@@ -21,12 +21,14 @@ IF EXIST libraries\boost-build\src\engine\bootstrap rmdir /s /q libraries\boost-
 IF EXIST libraries\boost_1_43_0 rmdir /s /q libraries\boost_1_43_0
 IF EXIST libraries\boost_1_54_0 rmdir /s /q libraries\boost_1_54_0
 IF EXIST libraries\boost_1_56_0 rmdir /s /q libraries\boost_1_56_0
+IF EXIST libraries\boost_1_61_0 rmdir /s /q libraries\boost_1_61_0
 IF EXIST libraries\gd-2.0.33 rmdir /s /q libraries\gd-2.0.33
 IF EXIST libraries\zlib-1.2.3 rmdir /s /q libraries\zlib-1.2.3
 IF EXIST libraries\libgd-2.1.0alpha rmdir /s /q libraries\libgd-2.1.0alpha
 IF EXIST libraries\libpng-1.5.6 rmdir /s /q libraries\libpng-1.5.6
 IF EXIST libraries\freetype-2.4.7 rmdir /s /q libraries\freetype-2.4.7
 IF EXIST libraries\hdf5-1.8.7 rmdir /s /q libraries\hdf5-1.8.7
+IF EXIST libraries\hdf5-1.8.17 rmdir /s /q libraries\hdf5-1.8.17
 IF EXIST libraries\fftw-3.1.2 rmdir /s /q libraries\fftw-3.1.2
 IF EXIST libraries\expat-2.0.1 rmdir /s /q libraries\expat-2.0.1
 

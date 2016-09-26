@@ -103,7 +103,7 @@ local default_libraries_path = "./libraries" ;
 local libraries_path = [ MATCH --libraries-path=(.*) : [ modules.peek : ARGV ] ] ;
 libraries_path ?= $(default_libraries_path) ; # set default path in absence of command-line path
 
-local default_boost_src = "$(libraries_path)/boost_1_56_0" ;
+local default_boost_src = "$(libraries_path)/boost_1_61_0" ;
 local boost_src = [ MATCH --boost-src=(.*) : [ modules.peek : ARGV ] ] ;
 boost_src ?= $(default_boost_src) ; # set default path in absence of command-line path
 
@@ -299,6 +299,7 @@ project pwiz
         <toolset>msvc:<cxxflags>/wd4714                 # warning: marked as __forceinline not inlined (boost::spirit::karma::sequence)
         <toolset>msvc,<debug-symbols>off:<linkflags>/OPT:REF,ICF
         <toolset>msvc,<toolset-msvc:version>12.0:<define>_HAS_TR1
+        <toolset>msvc,<toolset-msvc:version>14.0:<define>_HAS_TR1
         
         <conditional>@secure-scl-throws
 
@@ -665,7 +666,7 @@ rule pwiz-bindings-dependency ( properties * )
 
 rule dotNET-dependencies ( properties * )
 {
-    if <toolset-msvc:version>12.0 in $(properties)
+    if <toolset-msvc:version>12.0 in $(properties) || <toolset-msvc:version>14.0 in $(properties)
     {
         local location = [ install-location $(properties) ] ;
         return <dependency>$(PWIZ_ROOT_PATH)/pwiz_tools/MSConvertGUI//MSConvertGUI.exe/$(location)
@@ -780,7 +781,8 @@ rule secure-scl-throws ( properties * )
 {
     if <toolset>msvc in $(properties) &&
        ! ( <toolset-msvc:version>11.0 in $(properties) ) &&
-       ! ( <toolset-msvc:version>12.0 in $(properties) )
+       ! ( <toolset-msvc:version>12.0 in $(properties) ) &&
+       ! ( <toolset-msvc:version>14.0 in $(properties) ) 
     {
         return <define>_SILENCE_DEPRECATION_OF_SECURE_SCL_THROWS
                <define>_SECURE_SCL_THROWS=1 ;
@@ -809,7 +811,7 @@ rule msvc-requirement ( properties * )
 rule msvc-dotnet-requirement ( properties * )
 {
     # require VS 2013 because of .NET Framework version
-    if ! ( <toolset-msvc:version>12.0 in $(properties) )
+    if ! ( <toolset-msvc:version>12.0 in $(properties) ) &&  ! ( <toolset-msvc:version>14.0 in $(properties) )
     { return <build>no ; }
 }
 
@@ -817,7 +819,9 @@ rule msvc-dotnet-requirement ( properties * )
 rule no-express-requirement ( properties * )
 {
     # only the latest, non-express version of MSVC
-    if ! <toolset-msvc:version>12.0 in $(properties) { return <build>no ; }
+    if ! <toolset-msvc:version>12.0 in $(properties) 
+        && ! <toolset-msvc:version>14.0 in $(properties) 
+        { return <build>no ; }
     if 12.0express in $(properties:G=) { return <build>no ; }
 }
 
@@ -970,7 +974,8 @@ rule masslynxraw-dll-location ( api-path : properties * )
     if <toolset>msvc in $(properties) 
     {
         if <toolset-msvc:version>12.0 in $(properties) ||
-           <toolset-msvc:version>12.0express in $(properties)
+           <toolset-msvc:version>12.0express in $(properties) ||
+           <toolset-msvc:version>14.0 in $(properties)
         {
 
             if ( [ MATCH (x64) : $(PLATFORM) ] )
@@ -1018,7 +1023,7 @@ rule msparser-path ( properties * )
         {
             lib-location = "$(ProgramFilesLibs)\\Matrix Science\\Mascot Parser\\vs2012" ;
         }
-        else if [ feature.get-values <toolset-msvc:version> : $(properties) ] in "12.0" "12.0express"
+        else if [ feature.get-values <toolset-msvc:version> : $(properties) ] in "12.0" "12.0express" "14.0"
         {
             lib-location = "$(ProgramFilesLibs)\\Matrix Science\\Mascot Parser\\vs2013" ;
         }
