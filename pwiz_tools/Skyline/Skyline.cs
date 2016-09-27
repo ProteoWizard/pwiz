@@ -2815,8 +2815,10 @@ namespace pwiz.Skyline
                 using (var dlg = new EditCustomMoleculeDlg(this, Resources.SkylineWindow_AddSmallMolecule_Add_Precursor,
                     null, existingPrecursors,
                     TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE, Document.Settings,
+                    // ReSharper disable PossibleMultipleEnumeration  (inspection on TC gives false warning here)
                     (existingIons == null) ? nodePep.Peptide.CustomIon.Name : existingIons.First().Name,
                     (existingIons == null) ? nodePep.Peptide.CustomIon.Formula : existingIons.First().Formula,
+                    // ReSharper restore PossibleMultipleEnumeration
                     notFirst ? nodePep.TransitionGroups.First().TransitionGroup.PrecursorCharge : 1,
                     notFirst ? nodePep.TransitionGroups.First().ExplicitValues : ExplicitTransitionGroupValues.EMPTY,
                     null,
