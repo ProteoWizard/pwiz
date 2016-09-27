@@ -649,6 +649,15 @@ namespace pwiz.Skyline.Model
             if (!Settings.HasResults)
                 return docClone.Children;
 
+            // If iRT standards have changed, reset auto-calculated conversion to make sure they are
+            // updated on a background thread
+            if (!ReferenceEquals(Settings.GetPeptideStandards(StandardType.IRT),
+                docClone.Settings.GetPeptideStandards(StandardType.IRT)) &&
+                docClone.Settings.PeptideSettings.Prediction.RetentionTime != null)
+            {
+                docClone.Settings = docClone.Settings.ChangePeptidePrediction(p =>
+                    p.ChangeRetentionTime(p.RetentionTime.ClearEquations()));
+            }
             // Store indexes to previous results in a dictionary for lookup
             var dictPeptideIdPeptide = new Dictionary<int, PeptideDocNode>();
             // Unless the normalization standards have changed, which require recalculating of all ratios

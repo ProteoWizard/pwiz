@@ -714,7 +714,7 @@ namespace pwiz.Skyline
             DateTime? importBefore, DateTime? importOnOrAfter,
             OptimizableRegression optimize, bool disableJoining)
         {
-            var listNamedPaths = GetDataSources(sourceDir, namingPattern);
+            var listNamedPaths = GetDataSources(sourceDir, namingPattern, lockMassParameters);
             if (listNamedPaths == null)
             {
                 return false;
@@ -843,7 +843,7 @@ namespace pwiz.Skyline
             public MsDataFileUri FilePath { get; private set; }
         }
 
-        private IList<KeyValuePair<string, MsDataFileUri[]>> GetDataSources(string sourceDir, Regex namingPattern)
+        private IList<KeyValuePair<string, MsDataFileUri[]>> GetDataSources(string sourceDir, Regex namingPattern, LockMassParameters lockMassParameters)
         {   
             // get all the valid data sources (files and sub directories) in this directory.
             IList<KeyValuePair<string, MsDataFileUri[]>> listNamedPaths;
@@ -875,7 +875,7 @@ namespace pwiz.Skyline
             }
 
             // Make sure the existing replicate does not have any "unexpected" files.
-            if(!CheckReplicateFiles(listNamedPaths))
+            if(!CheckReplicateFiles(listNamedPaths, lockMassParameters))
             {
                 return null;
             }
@@ -927,7 +927,7 @@ namespace pwiz.Skyline
             return true;
         }
 
-        private bool CheckReplicateFiles(IEnumerable<KeyValuePair<string, MsDataFileUri[]>> listNamedPaths)
+        private bool CheckReplicateFiles(IEnumerable<KeyValuePair<string, MsDataFileUri[]>> listNamedPaths, LockMassParameters lockMassParameters)
         {
             if (!_doc.Settings.HasResults)
             {
@@ -949,9 +949,11 @@ namespace pwiz.Skyline
                 {
                     // and whether the files it contains match what is expected
                     // compare case-insensitive on Windows
-                    var filePaths = new HashSet<MsDataFileUri>(namedPaths.Value.Select(path => path.ToLower()));
+                    var filePaths = new HashSet<MsDataFileUri>(namedPaths.Value.Select(path =>
+                        path.ChangeParameters(_doc, lockMassParameters).ToLower()));
                     foreach (var dataFilePath in chromatogram.MSDataFilePaths)
                     {
+
                         if (!filePaths.Contains(dataFilePath.ToLower()))
                         {
                             _out.WriteLine(
@@ -1401,6 +1403,18 @@ namespace pwiz.Skyline
                     decoyTransitionGroups, initialParams, secondBest, true, progressMonitor);
 
                 Settings.Default.PeakScoringModelList.SetValue(scoringModel);
+
+                if (scoringModel.IsTrained)
+                {
+                    for (int i = 0; i < scoringModel.PeakFeatureCalculators.Count; i++)
+                    {
+                        var param = scoringModel.Parameters.Weights[i];
+                        if (double.IsNaN(param))
+                            continue;
+                        // TODO: Add percent contribution
+                        _out.WriteLine("{0}: {1:F04}", scoringModel.PeakFeatureCalculators[i].Name, param);    // Not L10N
+                    }
+                }
 
                 return new ModelAndFeatures(scoringModel, targetDecoyGenerator.PeakGroupFeatures);
             }
