@@ -29,6 +29,10 @@
 #define BOOST_DATE_TIME_NO_LIB // prevent MSVC auto-link
 #endif
 
+#ifdef __cplusplus_cli
+// "boost/filesystem/path.hpp" uses "generic" as an identifier which is a reserved word in C++/CLI
+#define generic __identifier(generic)
+#endif
 
 #include "pwiz/utility/misc/Export.hpp"
 #include <string>
