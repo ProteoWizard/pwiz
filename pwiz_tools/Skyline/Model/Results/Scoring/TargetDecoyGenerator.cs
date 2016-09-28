@@ -19,8 +19,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results.Scoring
 {
@@ -152,9 +155,100 @@ namespace pwiz.Skyline.Model.Results.Scoring
                         continue;
                     double secondBestScore = nextFeatures == null ? Double.NaN : GetScore(calculatorParams, nextFeatures);
                     secondBestScores.Add(secondBestScore);
-
                 }
             }
+        }
+
+        public PeakCalculatorWeight[] GetPeakCalculatorWeights(IPeakScoringModel peakScoringModel, IProgressMonitor progressMonitor)
+        {
+            IProgressStatus status = new ProgressStatus(Resources.EditPeakScoringModelDlg_TrainModel_Calculating_score_contributions);
+            var peakCalculatorWeights = new PeakCalculatorWeight[peakScoringModel.PeakFeatureCalculators.Count];
+            int seenContributingScores = 0;
+            int totalContributingScores = peakScoringModel.IsTrained
+                ? peakScoringModel.Parameters.Weights.Count(w => !double.IsNaN(w))
+                : 1;    // Should never get used, but just in case, avoid divide by zero
+            ParallelEx.For(0, peakCalculatorWeights.Length, i =>
+            {
+                bool isNanWeight = !peakScoringModel.IsTrained ||
+                                   double.IsNaN(peakScoringModel.Parameters.Weights[i]);
+
+                var name = peakScoringModel.PeakFeatureCalculators[i].Name;
+                double? weight = null, normalWeight = null;
+                if (!isNanWeight)
+                {
+                    progressMonitor.UpdateProgress(status = status.ChangePercentComplete(seenContributingScores*100/totalContributingScores));
+                    weight = peakScoringModel.Parameters.Weights[i];
+                    normalWeight = GetPercentContribution(peakScoringModel, i);
+                    Interlocked.Increment(ref seenContributingScores);
+                    progressMonitor.UpdateProgress(status = status.ChangePercentComplete(seenContributingScores * 100 / totalContributingScores));
+                }
+                // If the score is not eligible (e.g. has unknown values), definitely don't enable it
+                // If it is eligible, enable if untrained or if trained and not nan
+                bool enabled = EligibleScores[i] &&
+                               (!peakScoringModel.IsTrained || !double.IsNaN(peakScoringModel.Parameters.Weights[i]));
+                peakCalculatorWeights[i] = new PeakCalculatorWeight(name, weight, normalWeight, enabled);
+            });
+            return peakCalculatorWeights;
+        }
+
+        public double? GetPercentContribution(IPeakScoringModel peakScoringModel, int index)
+        {
+            if (double.IsNaN(peakScoringModel.Parameters.Weights[index]))
+                return null;
+            List<double> targetScores;
+            List<double> activeDecoyScores;
+            List<double> targetScoresAll;
+            List<double> activeDecoyScoresAll;
+            var scoringParameters = peakScoringModel.Parameters;
+            var calculatorParameters = CreateParametersSelect(peakScoringModel, index);
+            GetActiveScoredValues(peakScoringModel, scoringParameters, calculatorParameters, out targetScores, out activeDecoyScores);
+            GetActiveScoredValues(peakScoringModel, scoringParameters, scoringParameters, out targetScoresAll, out activeDecoyScoresAll);
+            if (targetScores.Count == 0 ||
+                activeDecoyScores.Count == 0 ||
+                targetScoresAll.Count == 0 ||
+                activeDecoyScoresAll.Count == 0)
+            {
+                return null;
+            }
+            double meanDiffAll = targetScoresAll.Average() - activeDecoyScoresAll.Average();
+            double meanDiff = targetScores.Average() - activeDecoyScores.Average();
+            double meanWeightedDiff = meanDiff * peakScoringModel.Parameters.Weights[index];
+            if (meanDiffAll == 0 || double.IsNaN(meanDiffAll) || double.IsNaN(meanDiff))
+                return null;
+            return meanWeightedDiff / meanDiffAll;
+        }
+
+        private void GetActiveScoredValues(IPeakScoringModel peakScoringModel,
+                                                    LinearModelParams scoringParams,
+                                                    LinearModelParams calculatorParams,
+                                                    out List<double> targetScores,
+                                                    out List<double> activeDecoyScores)
+        {
+            List<double> decoyScores;
+            List<double> secondBestScores;
+            activeDecoyScores = new List<double>();
+            GetScores(scoringParams,
+                                calculatorParams,
+                                out targetScores,
+                                out decoyScores,
+                                out secondBestScores);
+            if (peakScoringModel.UsesDecoys)
+                activeDecoyScores.AddRange(decoyScores);
+            if (peakScoringModel.UsesSecondBest)
+                activeDecoyScores.AddRange(secondBestScores);
+        }
+
+        /// <summary>
+        /// Create parameter object in which the given index will have a value of 1, all the others
+        /// will have a value of NaN, and the bias is zero.
+        /// </summary>
+        public static LinearModelParams CreateParametersSelect(IPeakScoringModel _peakScoringModel, int index)
+        {
+            var weights = new double[_peakScoringModel.PeakFeatureCalculators.Count];
+            for (int i = 0; i < weights.Length; i++)
+                weights[i] = double.NaN;
+            weights[index] = 1;
+            return new LinearModelParams(weights);
         }
 
         /// <summary>
@@ -191,6 +285,25 @@ namespace pwiz.Skyline.Model.Results.Scoring
         private static double GetScore(LinearModelParams parameters, PeakGroupFeatures peakGroupFeatures)
         {
             return GetScore(parameters.Weights, peakGroupFeatures, parameters.Bias);
+        }
+    }
+
+    /// <summary>
+    /// Associate a weight value with a calculator for display in the grid.
+    /// </summary>
+    public class PeakCalculatorWeight
+    {
+        public string Name { get; private set; }
+        public double? Weight { get; set; }
+        public double? PercentContribution { get; set; }
+        public bool IsEnabled { get; set; }
+
+        public PeakCalculatorWeight(string name, double? weight, double? percentContribution, bool enabled)
+        {
+            Name = name;
+            Weight = weight;
+            PercentContribution = percentContribution;
+            IsEnabled = enabled;
         }
     }
 }

@@ -1406,13 +1406,12 @@ namespace pwiz.Skyline
 
                 if (scoringModel.IsTrained)
                 {
-                    for (int i = 0; i < scoringModel.PeakFeatureCalculators.Count; i++)
+                    var weights = targetDecoyGenerator.GetPeakCalculatorWeights(scoringModel, progressMonitor);
+                    for (int i = 0; i < weights.Length; i++)
                     {
-                        var param = scoringModel.Parameters.Weights[i];
-                        if (double.IsNaN(param))
-                            continue;
-                        // TODO: Add percent contribution
-                        _out.WriteLine("{0}: {1:F04}", scoringModel.PeakFeatureCalculators[i].Name, param);    // Not L10N
+                        var w = weights[i];
+                        if (w.IsEnabled)
+                            _out.WriteLine("{0}: {1:F04} ({2:P1})", w.Name, w.Weight, w.PercentContribution);    // Not L10N
                     }
                 }
 

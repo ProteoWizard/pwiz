@@ -291,7 +291,8 @@ namespace pwiz.Skyline.SettingsUI
                                 progressMonitor.ProgressValue = (seenContributingScores*100)/totalContributingScores;
 
                                 item.Weight = weight;
-                                item.PercentContribution = GetPercentContribution(i);
+                                item.PercentContribution = _targetDecoyGenerator.GetPercentContribution(
+                                    _peakScoringModel, i);
 
                                 Interlocked.Increment(ref seenContributingScores);
                                 progressMonitor.ProgressValue = (seenContributingScores*100)/totalContributingScores;
@@ -387,19 +388,6 @@ namespace pwiz.Skyline.SettingsUI
             if (double.IsNaN(weight))
                 return false;
             return _peakScoringModel.PeakFeatureCalculators[index].IsReversedScore ^ (weight < 0);
-        }
-
-        /// <summary>
-        /// Create parameter object in which the given index will have a value of 1, all the others
-        /// will have a value of NaN, and the bias is zero.
-        /// </summary>
-        private LinearModelParams CreateParametersSelect(int index)
-        {
-            var weights = new double[_peakScoringModel.PeakFeatureCalculators.Count];
-            for (int i = 0; i < weights.Length; i++)
-                weights[i] = double.NaN;
-            weights[index] = 1;
-            return new LinearModelParams(weights);
         }
 
         private static void ProcessScores(double score, ref double min, ref double max, ref int countUnknownScores)
@@ -747,7 +735,9 @@ namespace pwiz.Skyline.SettingsUI
             out PointPairList piZeroLine)
         {
             var modelParameters = _peakScoringModel.IsTrained ? _peakScoringModel.Parameters : new LinearModelParams(_peakScoringModel.PeakFeatureCalculators.Count);
-            LinearModelParams calculatorParameters = selectedCalculator == -1 ? modelParameters : CreateParametersSelect(selectedCalculator);
+            LinearModelParams calculatorParameters = selectedCalculator == -1
+                ? modelParameters
+                : TargetDecoyGenerator.CreateParametersSelect(_peakScoringModel, selectedCalculator);
 
             List<double> targetScores;
             List<double> decoyScores;
@@ -964,7 +954,7 @@ namespace pwiz.Skyline.SettingsUI
         private void InitializeCalculatorGrid(Control owner)
         {
             // Create list of calculators and their corresponding weights.
-            var peakCalculatorWeights = new PeakCalculatorWeight[_peakScoringModel.PeakFeatureCalculators.Count];
+            PeakCalculatorWeight[] peakCalculatorWeights = null;
             using (var longWaitDlg = new LongWaitDlg
             {
                 Text = Resources.EditPeakScoringModelDlg_TrainModel_Calculating,
@@ -972,34 +962,11 @@ namespace pwiz.Skyline.SettingsUI
                 ProgressValue = 0
             })
             {
-                int seenContributingScores = 0;
-                int totalContributingScores = _peakScoringModel.IsTrained
-                    ? _peakScoringModel.Parameters.Weights.Count(w => !double.IsNaN(w))
-                    : 1;    // Should never get used, but just in case, avoid divide by zero
-                longWaitDlg.PerformWork(owner, 800, progressMonitor =>
-                    ParallelEx.For(0, peakCalculatorWeights.Length, i =>
-                    {
-                        bool isNanWeight = !_peakScoringModel.IsTrained ||
-                                           double.IsNaN(_peakScoringModel.Parameters.Weights[i]);
-
-                        var name = _peakScoringModel.PeakFeatureCalculators[i].Name;
-                        double? weight = null, normalWeight = null;
-                        if (!isNanWeight)
-                        {
-                            progressMonitor.ProgressValue = (seenContributingScores*100)/totalContributingScores;
-                            weight = _peakScoringModel.Parameters.Weights[i];
-                            normalWeight = GetPercentContribution(i);
-                            Interlocked.Increment(ref seenContributingScores);
-                            progressMonitor.ProgressValue = (seenContributingScores*100)/totalContributingScores;
-                        }
-                        // If the score is not eligible (e.g. has unknown values), definitely don't enable it
-                        // If it is eligible, enable if untrained or if trained and not nan
-                        bool enabled = _targetDecoyGenerator.EligibleScores[i] &&
-                                       (!_peakScoringModel.IsTrained ||
-                                        !double.IsNaN(_peakScoringModel.Parameters.Weights[i]));
-                        peakCalculatorWeights[i] = new PeakCalculatorWeight(name, weight, normalWeight, enabled);
-                    }));
+                longWaitDlg.PerformWork(owner, 800, progressMonitor => peakCalculatorWeights =
+                    _targetDecoyGenerator.GetPeakCalculatorWeights(_peakScoringModel, progressMonitor));
             }
+            if (peakCalculatorWeights == null)
+                return;
 
             // Put the new weights into the grid on the UI thread
             _gridViewDriver.Items.RaiseListChangedEvents = false;
@@ -1014,52 +981,6 @@ namespace pwiz.Skyline.SettingsUI
                 _gridViewDriver.Items.RaiseListChangedEvents = true;
             }
             _gridViewDriver.Items.ResetBindings();
-        }
-
-        private double? GetPercentContribution(int index)
-        {
-            if (double.IsNaN(_peakScoringModel.Parameters.Weights[index]))
-                return null;
-            List<double> targetScores;
-            List<double> activeDecoyScores;
-            List<double> targetScoresAll;
-            List<double> activeDecoyScoresAll;
-            var scoringParameters = _peakScoringModel.Parameters;
-            var calculatorParameters = CreateParametersSelect(index);
-            GetActiveScoredValues(scoringParameters, calculatorParameters, out targetScores, out activeDecoyScores);
-            GetActiveScoredValues(scoringParameters, scoringParameters, out targetScoresAll, out activeDecoyScoresAll);
-            if (targetScores.Count == 0 ||
-                activeDecoyScores.Count == 0 ||
-                targetScoresAll.Count == 0 ||
-                activeDecoyScoresAll.Count == 0)
-            {
-                return null;
-            }
-            double meanDiffAll = targetScoresAll.Average() - activeDecoyScoresAll.Average();
-            double meanDiff = targetScores.Average() - activeDecoyScores.Average();
-            double meanWeightedDiff = meanDiff * _peakScoringModel.Parameters.Weights[index];
-            if (meanDiffAll == 0 || double.IsNaN(meanDiffAll) || double.IsNaN(meanDiff))
-                return null;
-            return meanWeightedDiff / meanDiffAll;
-        }
-
-        private void GetActiveScoredValues(LinearModelParams scoringParams, 
-                                                    LinearModelParams calculatorParams,
-                                                    out List<double> targetScores,
-                                                    out List<double> activeDecoyScores)
-        {
-            List<double> decoyScores;
-            List<double> secondBestScores;
-            activeDecoyScores = new List<double>();
-            _targetDecoyGenerator.GetScores(scoringParams,
-                                calculatorParams,
-                                out targetScores,
-                                out decoyScores,
-                                out secondBestScores);
-            if (_peakScoringModel.UsesDecoys)
-                activeDecoyScores.AddRange(decoyScores);
-            if (_peakScoringModel.UsesSecondBest)
-                activeDecoyScores.AddRange(secondBestScores);
         }
 
         private void gridPeakCalculators_SelectionChanged(object sender, EventArgs e)
@@ -1276,25 +1197,6 @@ namespace pwiz.Skyline.SettingsUI
         private void zedGraph_ContextMenuBuilder(ZedGraphControl graphControl, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
         {
             ZedGraphHelper.BuildContextMenu(graphControl, menuStrip);
-        }
-    }
-
-    /// <summary>
-    /// Associate a weight value with a calculator for display in the grid.
-    /// </summary>
-    public class PeakCalculatorWeight
-    {
-        public string Name { get; private set; }
-        public double? Weight { get; set; }
-        public double? PercentContribution { get; set; }
-        public bool IsEnabled { get; set; }
-
-        public PeakCalculatorWeight(string name, double? weight, double? percentContribution, bool enabled)
-        {
-            Name = name;
-            Weight = weight;
-            PercentContribution = percentContribution;
-            IsEnabled = enabled;
         }
     }
 }
