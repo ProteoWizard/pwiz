@@ -157,9 +157,13 @@ namespace seems
             param = s.cvParam( CVID.MS_total_ion_current );
             row.TotalIonCurrent = !param.empty() ? (double) param.value : 0;
 
-            StringBuilder precursorInfo = new StringBuilder();
+            var precursorInfo = new StringBuilder();
+            var isolationWindows = new StringBuilder();
             if( row.MsLevel == 1 || s.precursors.Count == 0 )
+            {
                 precursorInfo.Append( "n/a" );
+                isolationWindows.Append( "n/a" );
+            }
             else
             {
                 foreach( Precursor p in s.precursors )
@@ -168,7 +172,24 @@ namespace seems
                     {
                         if( precursorInfo.Length > 0 )
                             precursorInfo.Append( "," );
-                        precursorInfo.Append( (double) si.cvParam( CVID.MS_selected_ion_m_z ).value );
+                        precursorInfo.AppendFormat("{0:G8}", (double) si.cvParam( CVID.MS_selected_ion_m_z ).value );
+                    }
+
+                    var iw = p.isolationWindow;
+                    CVParam isolationTarget = iw.cvParam(CVID.MS_isolation_window_target_m_z);
+                    if (!isolationTarget.empty())
+                    {
+                        double iwMz = (double) isolationTarget.value;
+
+                        if (isolationWindows.Length > 0)
+                            isolationWindows.Append(",");
+
+                        CVParam lowerOffset = iw.cvParam(CVID.MS_isolation_window_lower_offset);
+                        CVParam upperOffset = iw.cvParam(CVID.MS_isolation_window_upper_offset);
+                        if (lowerOffset.empty() || upperOffset.empty())
+                            isolationWindows.AppendFormat("{0:G8}", iwMz);
+                        else
+                            isolationWindows.AppendFormat("[{0:G8}-{1:G8}]", iwMz - (double)lowerOffset.value, iwMz + (double)upperOffset.value);
                     }
                 }
             }
@@ -176,6 +197,10 @@ namespace seems
             if( precursorInfo.Length == 0 )
                 precursorInfo.Append( "unknown" );
             row.PrecursorInfo = precursorInfo.ToString();
+
+            if (isolationWindows.Length == 0)
+                isolationWindows.Append("unknown");
+            row.IsolationWindows = isolationWindows.ToString();
 
             StringBuilder scanInfo = new StringBuilder();
             foreach( Scan scan2 in s.scanList.scans )
@@ -186,7 +211,7 @@ namespace seems
                     {
                         if( scanInfo.Length > 0 )
                             scanInfo.Append( "," );
-                        scanInfo.AppendFormat( "[{0}-{1}]",
+                        scanInfo.AppendFormat( "[{0:G8}-{1:G8}]",
                                               (double) sw.cvParam( CVID.MS_scan_window_lower_limit ).value,
                                               (double) sw.cvParam( CVID.MS_scan_window_upper_limit ).value );
                     }

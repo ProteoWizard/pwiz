@@ -63,6 +63,7 @@ namespace seems
             this.IcId = new DataGridViewAutoFilter.DataGridViewAutoFilterTextBoxColumn();
             this.DpId = new DataGridViewAutoFilter.DataGridViewAutoFilterTextBoxColumn();
             this.PrecursorInfo = new DataGridViewAutoFilter.DataGridViewAutoFilterTextBoxColumn();
+            this.IsolationWindows = new DataGridViewAutoFilter.DataGridViewAutoFilterTextBoxColumn();
             this.ScanInfo = new DataGridViewAutoFilter.DataGridViewAutoFilterTextBoxColumn();
             this.spectraSource = new System.Windows.Forms.BindingSource( this.components );
             this.spectrumDataSet = new seems.Misc.SpectrumDataSet();
@@ -98,6 +99,7 @@ namespace seems
             this.IcId,
             this.DpId,
             this.PrecursorInfo,
+            this.IsolationWindows,
             this.ScanInfo} );
             this.gridView.Cursor = System.Windows.Forms.Cursors.Hand;
             this.gridView.DataSource = this.spectraSource;
@@ -208,6 +210,14 @@ namespace seems
             this.PrecursorInfo.ReadOnly = true;
             this.PrecursorInfo.Resizable = System.Windows.Forms.DataGridViewTriState.True;
             // 
+            // IsolationWindows
+            // 
+            this.IsolationWindows.DataPropertyName = "IsolationWindows";
+            this.IsolationWindows.HeaderText = "Isolation Windows";
+            this.IsolationWindows.Name = "IsolationWindows";
+            this.IsolationWindows.ReadOnly = true;
+            this.IsolationWindows.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            // 
             // ScanInfo
             // 
             this.ScanInfo.DataPropertyName = "ScanInfo";
@@ -279,6 +289,7 @@ namespace seems
         private DataGridViewAutoFilter.DataGridViewAutoFilterTextBoxColumn IcId;
         private DataGridViewAutoFilter.DataGridViewAutoFilterTextBoxColumn DpId;
         private DataGridViewAutoFilter.DataGridViewAutoFilterTextBoxColumn PrecursorInfo;
+        private DataGridViewAutoFilter.DataGridViewAutoFilterTextBoxColumn IsolationWindows;
         private DataGridViewAutoFilter.DataGridViewAutoFilterTextBoxColumn ScanInfo;
 	}
 }
