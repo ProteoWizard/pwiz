@@ -28,14 +28,24 @@ namespace KeepResx
             @"skyline\testutil\*"
         };
 
-        private const string ExtResx = ".ja.resx";
+        private const string ExtResx = ".resx";
         private static readonly string[] ExtNotResx = new string[0]; // "zh-CHS.resx" or ".ja.resx" ;
         private const string ExtNew = ".resx";
+
+        private static readonly string[][] findReplace =
+        {
+            new[] {"<?xml version='1.0' encoding='UTF-8'?>", "<?xml version=\"1.0\" encoding=\"utf-8\"?>" },
+            new[] {"<xsd:schema xmlns=\"\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:msdata=\"urn:schemas-microsoft-com:xml-msdata\" id=\"root\">",
+                "<xsd:schema id=\"root\" xmlns=\"\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:msdata=\"urn:schemas-microsoft-com:xml-msdata\">"},
+            new[] {"\"/>", "\" />"},
+            new[] {"<data name=\">>", "<data name=\"&gt;&gt;"},
+            new[] {"<value/>", "<value />"}
+        };
 
         /// <summary>
         /// For removing all source code files except .resx files
         /// </summary>
-        private static bool RemoveNonResx { get { return false; } }
+        private static bool RemoveNonResx { get { return true; } }
         /// <summary>
         /// For moving resx files from ExtResx to ExtNew (e.g. .cn.resx from translators to .zh-CHS.resx)
         /// </summary>
@@ -48,7 +58,12 @@ namespace KeepResx
         /// <summary>
         /// In case files from localizers have UTF8 prefix, which needs to be removed
         /// </summary>
-        private static bool FixResxUtf8 { get { return true; } }
+        private static bool FixResxUtf8 { get { return false; } }
+
+        /// <summary>
+        /// Replace strings in findeReplace list if true
+        /// </summary>
+        private static bool DoFindReplace { get { return false; } }
 
         static void Main(string[] args)
         {
@@ -92,6 +107,10 @@ namespace KeepResx
                     else if (FixResxUtf8)
                     {
                         FixUtf8Prefix(fileName);
+                    }
+                    if (DoFindReplace)
+                    {
+                        FindReplaceText(fileName);
                     }
                     containsResX = true;
                     continue;
@@ -180,6 +199,22 @@ namespace KeepResx
                 var listBytes = bytes.ToList();
                 listBytes.RemoveRange(0, 3);
                 File.WriteAllBytes(fileName, listBytes.ToArray());
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Failure writing {0}", fileName);
+            }
+        }
+        private static void FindReplaceText(string fileName)
+        {
+            try
+            {
+                string fileText = File.ReadAllText(fileName);
+                foreach (var rep in findReplace)
+                {
+                    fileText = fileText.Replace(rep[0], rep[1]);
+                }
+                File.WriteAllText(fileName, fileText);
             }
             catch (Exception)
             {
