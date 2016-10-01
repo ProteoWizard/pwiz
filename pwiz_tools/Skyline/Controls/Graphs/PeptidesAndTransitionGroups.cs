@@ -49,7 +49,11 @@ namespace pwiz.Skyline.Controls.Graphs
             if (NodeGroups.Count <= maxPeaks)
                 return;
 
-            var statHeights = new Statistics(NodeGroups.Select(nodeGroup => GetHeight(nodeGroup.Results[chromIndex])));
+            var statHeights = new Statistics(NodeGroups.Where(nodeGroup => nodeGroup.HasResults)
+                .Select(nodeGroup => GetHeight(nodeGroup.Results[chromIndex])));
+            if (statHeights.Length <= maxPeaks)
+                return;
+
             double minHeight = statHeights.QNthItem(statHeights.Length - maxPeaks);
 
             var nodePeps = new List<PeptideDocNode>();
