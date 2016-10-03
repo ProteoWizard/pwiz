@@ -149,7 +149,12 @@ namespace pwiz.Skyline.Model.DocSettings
                 if (dictStandardPeptides != null && _dictStandardPeptides != null)
                 {
                     if (dictStandardPeptides.Count == dictStandardPeptides.Intersect(_dictStandardPeptides).Count())
-                        return this;
+                    {
+                        // If being cleared because of insufficient correlation for all runs, only
+                        // return this, if it is already also insufficient
+                        if (InsufficientCorrelation)
+                            return this;
+                    }
                 }
             }
 
@@ -159,6 +164,7 @@ namespace pwiz.Skyline.Model.DocSettings
                         im._listFileIdToConversion = null;
                         im._isMissingStandardPeptides = (dictStandardPeptides == null);
                         im._dictStandardPeptides = (dictStandardPeptides != null ? MakeReadOnly(dictStandardPeptides) : null);
+                        im.InsufficientCorrelation = !im._isMissingStandardPeptides;    // missing peptides supersedes correlation issues
                     });
         }
 

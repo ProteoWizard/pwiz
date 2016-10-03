@@ -350,7 +350,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     _unfinishedLineColor,
                     currentTime.Value,
                     graphPane.YAxis.Scale.Max,
-                    currentTime.Value,
+                    0, //currentTime.Value,
                     graphPane.YAxis.Scale.Min)
                 {
                     Location = {CoordinateFrame = CoordType.AxisXYScale},

@@ -219,7 +219,13 @@ namespace pwiz.Skyline.SettingsUI
 
             MatcherPepMods = MatcherPepMods.ChangeStaticModifications(MatcherPepMods.StaticModifications.Where(mod => !removeStructuralMods.Contains(mod)).ToList());
             if (MatcherPepMods.HasHeavyModifications)
-                MatcherPepMods = MatcherPepMods.ChangeHeavyModifications(MatcherPepMods.HeavyModifications.Where(mod => !removeHeavyMods.Contains(mod)).ToList());
+            {
+                var heavyLabel = MatcherPepMods.GetHeavyModificationTypes().FirstOrDefault();
+                if (heavyLabel != null)
+                {
+                    MatcherPepMods = MatcherPepMods.ChangeModifications(heavyLabel, MatcherPepMods.HeavyModifications.Where(mod => !removeHeavyMods.Contains(mod)).ToList());
+                }
+            }
             DialogResult = DialogResult.OK;
         }
 

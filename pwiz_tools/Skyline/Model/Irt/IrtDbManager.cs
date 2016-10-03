@@ -190,7 +190,7 @@ namespace pwiz.Skyline.Model.Irt
             // Must have standard peptides, all with results
             if (dictSeqToPeptide.Count == 0)
                 return rtRegression.ClearEquations();
-            else if (dictSeqToPeptide.Values.Any(nodePep => !nodePep.HasResults))
+            else if (dictSeqToPeptide.Values.Count(nodePep => nodePep.HasResults) < minCount)
                 return rtRegression.ClearEquations(dictStandardPeptides);
 
             var calculator = rtRegression.Calculator;
@@ -222,7 +222,7 @@ namespace pwiz.Skyline.Model.Irt
             }
 
             // If not all standard peptides have at least some retention time value, fail prediction
-            if (listPepCorr.Count != dictSeqToPeptide.Count)
+            if (listPepCorr.Count < minCount)
                 return rtRegression.ClearEquations(dictStandardPeptides);
 
             // Only calculate regressions for files with retention times for all of the standards
