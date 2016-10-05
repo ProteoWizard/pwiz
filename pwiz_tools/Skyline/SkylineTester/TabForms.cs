@@ -153,7 +153,10 @@ namespace SkylineTester
             var skylineDailyPath = Path.Combine(MainWindow.ExeDir, "Skyline-daily.exe");
             skylinePath = File.Exists(skylinePath) ? skylinePath : skylineDailyPath;
             var assembly = Assembly.LoadFrom(skylinePath);
-            var types = assembly.GetTypes();
+            var types = assembly.GetTypes().ToList();
+            var commonPath = Path.Combine(MainWindow.ExeDir, "pwiz.Common.dll");
+            var dll = Assembly.LoadFrom(commonPath);
+            types.AddRange(dll.GetTypes());
             var formLookup = new FormLookup();
 
             foreach (var type in types)

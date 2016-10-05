@@ -21,12 +21,13 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Controls;
 using pwiz.Common.DataBinding.Internal;
 using pwiz.Common.Properties;
 
 namespace pwiz.Common.DataBinding.Controls
 {
-    public partial class QuickFilterForm : Form
+    public partial class QuickFilterForm : CommonFormEx
     {
         public QuickFilterForm()
         {
