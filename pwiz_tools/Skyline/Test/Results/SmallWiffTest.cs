@@ -184,7 +184,7 @@ namespace pwiz.SkylineTest.Results
                     new StaticMod("Heavy R", "R", ModTerminus.C, null, labelAtoms, null, null),
                 };
             SrmSettings settings = SrmSettingsList.GetDefault();
-            settings = settings.ChangePeptideModifications(mods => mods.ChangeHeavyModifications(heavyMods));
+            settings = settings.ChangePeptideModifications(mods => mods.ChangeModifications(IsotopeLabelType.heavy, heavyMods));
             SrmDocument doc = new SrmDocument(settings);
 
             IdentityPath selectPath;

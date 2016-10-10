@@ -95,7 +95,7 @@ namespace pwiz.SkylineTestA
             Assert.IsTrue(pepMods.StaticModifications != null);
             Assert.IsTrue(pepMods.HasHeavyModifications);
             Assert.IsFalse(pepMods.StaticModifications.Contains(mod => !mod.IsExplicit));
-            Assert.IsFalse(pepMods.HeavyModifications.Contains(mod => !mod.IsExplicit));
+            Assert.IsFalse(pepMods.AllHeavyModifications.Contains(mod => !mod.IsExplicit));
             
             // Test explicit mods are dropped if the target document has matching implicit modifications.
             study7PasteDoc = CopyPaste(_yeastDoc, null, study7EmptyDoc, pathRoot);

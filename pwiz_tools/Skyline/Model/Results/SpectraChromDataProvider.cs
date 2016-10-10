@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -349,6 +350,7 @@ namespace pwiz.Skyline.Model.Results
 
         private void CompleteChromatograms(ChromDataCollectorSet[] chromMaps, float retentionTime = -1)
         {
+            Trace.TraceError("CompleteChromatograms {0}", retentionTime);
             var finishedFilterPairs = _filter.RemoveFinishedFilterPairs(retentionTime);
             foreach (var filterPair in finishedFilterPairs)
                 AddChromatogramsForFilterPair(chromMaps, filterPair);

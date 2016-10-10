@@ -162,10 +162,10 @@ namespace pwiz.SkylineTestFunctional
             var expectedStaticMods = new List<string> { "Carbamidomethyl (C)", "Acetyl (T)", "Carbamyl (K)" };
             var expectedHeavyMods = new List<string> { "Double Carbamidomethylation", "GIST-Quat:2H(9) (N-term)" };
             AssertEx.AreEqualDeep(expectedStaticMods, ModNames(docModified.Settings.PeptideSettings.Modifications.StaticModifications));
-            AssertEx.AreEqualDeep(expectedHeavyMods, ModNames(docModified.Settings.PeptideSettings.Modifications.HeavyModifications));
+            AssertEx.AreEqualDeep(expectedHeavyMods, ModNames(docModified.Settings.PeptideSettings.Modifications.AllHeavyModifications));
 
             // Make sure that the proper modifications are variable.
-            foreach (var mod in docModified.Settings.PeptideSettings.Modifications.StaticModifications.Union(docModified.Settings.PeptideSettings.Modifications.HeavyModifications))
+            foreach (var mod in docModified.Settings.PeptideSettings.Modifications.StaticModifications.Union(docModified.Settings.PeptideSettings.Modifications.AllHeavyModifications))
             {
                 switch (mod.Name)
                 {

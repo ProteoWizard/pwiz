@@ -49,8 +49,8 @@ namespace pwiz.SkylineTestA
             SrmDocument docStudy7 = CreateStudy7Doc();
             var modifications = docStudy7.Settings.PeptideSettings.Modifications;
             Assert.AreEqual(0, modifications.StaticModifications.Count(mod => mod.IsExplicit));
-            Assert.AreEqual(2, modifications.HeavyModifications.Count(mod => mod.IsExplicit));
-            Assert.AreEqual(4, modifications.HeavyModifications.Count(mod => mod.Formula != null));
+            Assert.AreEqual(2, modifications.AllHeavyModifications.Count(mod => mod.IsExplicit));
+            Assert.AreEqual(4, modifications.AllHeavyModifications.Count(mod => mod.Formula != null));
             Assert.AreEqual(3, docStudy7.Peptides.Count(peptide => peptide.HasExplicitMods));
             Assert.AreEqual(2, docStudy7.Peptides.Count(peptide => peptide.HasExplicitMods &&
                 peptide.ExplicitMods.StaticModifications.Count > 0 &&
@@ -71,7 +71,7 @@ namespace pwiz.SkylineTestA
 
             var modifications = docStudy7.Settings.PeptideSettings.Modifications;
             var listStaticMods = modifications.StaticModifications;
-            var listHeavyMods = modifications.HeavyModifications;
+            var listHeavyMods = modifications.AllHeavyModifications.ToList();
 
             docStudy7 = docStudy7.ChangeSettings(docStudy7.Settings.ChangeTransitionFilter(filter => filter.ChangeAutoSelect(false)));
 
@@ -94,8 +94,8 @@ namespace pwiz.SkylineTestA
             // Removes heavy from peptide with c-terminal P
             AssertEx.IsDocumentState(docStudy7, 6, 7, 11, 21, 63);
             modifications = docStudy7.Settings.PeptideSettings.Modifications;
-            Assert.AreEqual(2, modifications.HeavyModifications.Count);
-            Assert.AreEqual(0, modifications.HeavyModifications.Count(mod => mod.IsExplicit));
+            Assert.AreEqual(2, modifications.AllHeavyModifications.Count());
+            Assert.AreEqual(0, modifications.AllHeavyModifications.Count(mod => mod.IsExplicit));
             Assert.AreEqual(0, docStudy7.Peptides.Count(peptide => peptide.HasExplicitMods));
 
             listHeavyMods = ATOMIC_HEAVY_MODS;
@@ -132,8 +132,8 @@ namespace pwiz.SkylineTestA
             AssertEx.IsDocumentState(docStudy7, 12, 7, 11, 22, 66);
 
             modifications = docStudy7.Settings.PeptideSettings.Modifications;
-            Assert.AreEqual(2, modifications.HeavyModifications.Count(mod => mod.IsExplicit && mod.Label13C));
-            Assert.AreEqual(2, modifications.HeavyModifications.Count(mod => mod.Formula != null));
+            Assert.AreEqual(2, modifications.AllHeavyModifications.Count(mod => mod.IsExplicit && mod.Label13C));
+            Assert.AreEqual(2, modifications.AllHeavyModifications.Count(mod => mod.Formula != null));
             Assert.AreEqual(3, docStudy7.Peptides.Count(peptide => peptide.HasExplicitMods));
             Assert.AreEqual(2, docStudy7.Peptides.Count(peptide => peptide.HasExplicitMods &&
                 peptide.ExplicitMods.StaticModifications.Count > 0 &&
@@ -156,7 +156,7 @@ namespace pwiz.SkylineTestA
             Assert.AreEqual(TestSmallMolecules ? 71: 69, transitionList.Split('\n').Length); // Did special test mode add a docnode to the end?
 
             var settings = docStudy7.Settings.ChangeTransitionFilter(filter => filter.ChangeAutoSelect(false));
-            settings = settings.ChangePeptideModifications(mods => mods.ChangeHeavyModifications(ATOMIC_HEAVY_MODS));
+            settings = settings.ChangePeptideModifications(mods => mods.ChangeModifications(IsotopeLabelType.heavy, ATOMIC_HEAVY_MODS));
             docStudy7 = docStudy7.ChangeSettings(settings);
             AssertEx.IsDocumentState(docStudy7, 1, 7, 11, 22, 66);
 
@@ -176,7 +176,7 @@ namespace pwiz.SkylineTestA
             // Correct Heavy K
             var listHeavyMods = new List<StaticMod>(ATOMIC_HEAVY_MODS);
             listHeavyMods[0] = new StaticMod("Heavy K", "K", ModTerminus.C, null, LabelAtoms.C13|LabelAtoms.N15, null, null);
-            settings = settings.ChangePeptideModifications(mods => mods.ChangeHeavyModifications(listHeavyMods));
+            settings = settings.ChangePeptideModifications(mods => mods.ChangeModifications(IsotopeLabelType.heavy, listHeavyMods));
             var docHeavyK = docStudy7.ChangeSettings(settings);
             var peptidesOld = docStudy7.Peptides.ToArray();
             var peptidesNew = docHeavyK.Peptides.ToArray();
@@ -198,7 +198,7 @@ namespace pwiz.SkylineTestA
             // Change valine explicit only modification
             listHeavyMods[2] = new StaticMod("13C V", "V", null, null, LabelAtoms.C13 | LabelAtoms.N15, null, null);
             listHeavyMods[2] = listHeavyMods[2].ChangeExplicit(true);
-            settings = settings.ChangePeptideModifications(mods => mods.ChangeHeavyModifications(listHeavyMods));
+            settings = settings.ChangePeptideModifications(mods => mods.ChangeModifications(IsotopeLabelType.heavy, listHeavyMods));
             var docHeavyV = docHeavyK.ChangeSettings(settings);
             peptidesOld = docHeavyK.Peptides.ToArray();
             peptidesNew = docHeavyV.Peptides.ToArray();
@@ -244,7 +244,7 @@ namespace pwiz.SkylineTestA
             SrmDocument docStudy7 = CreateStudy7Doc();
             var settings = docStudy7.Settings.ChangeTransitionFilter(filter => filter.ChangeAutoSelect(false));
             var listStaticMods = settings.PeptideSettings.Modifications.StaticModifications;
-            var listHeavyMods = new List<StaticMod>(settings.PeptideSettings.Modifications.HeavyModifications);
+            var listHeavyMods = new List<StaticMod>(settings.PeptideSettings.Modifications.AllHeavyModifications);
 
             // Change an explicit heavy modification to something new
             var modV = new StaticMod("Heavy V", "V", null, LabelAtoms.C13|LabelAtoms.N15);
@@ -257,9 +257,9 @@ namespace pwiz.SkylineTestA
             var docHeavyV = docStudy7.ChangePeptideMods(path, explicitMods, listStaticMods, listHeavyMods);
 
             var modSettings = docHeavyV.Settings.PeptideSettings.Modifications;
-            Assert.AreEqual(5, modSettings.HeavyModifications.Count);
-            Assert.AreEqual(4, modSettings.HeavyModifications.Count(mod => mod.Formula != null));
-            Assert.AreEqual(1, modSettings.HeavyModifications.Count(mod => mod.Label13C && mod.Label15N));
+            Assert.AreEqual(5, modSettings.AllHeavyModifications.Count());
+            Assert.AreEqual(4, modSettings.AllHeavyModifications.Count(mod => mod.Formula != null));
+            Assert.AreEqual(1, modSettings.AllHeavyModifications.Count(mod => mod.Label13C && mod.Label15N));
             Assert.AreEqual(3, docHeavyV.Peptides.Count(peptide => peptide.HasExplicitMods));
             Assert.AreEqual(1, docHeavyV.Peptides.Count(peptide => peptide.HasExplicitMods &&
                 peptide.ExplicitMods.HeavyModifications[0].Modification.AAs[0] == 'V' &&
@@ -270,7 +270,7 @@ namespace pwiz.SkylineTestA
                 peptide.ExplicitMods.HeavyModifications[0].Modification.Label15N));
 
             // Change an explicit heavy modification to something new
-            listHeavyMods = new List<StaticMod>(settings.PeptideSettings.Modifications.HeavyModifications);
+            listHeavyMods = new List<StaticMod>(settings.PeptideSettings.Modifications.AllHeavyModifications);
             modV = listHeavyMods[2] = ATOMIC_HEAVY_MODS[2];
 
             explicitMods = peptideMod.ExplicitMods;
@@ -278,9 +278,9 @@ namespace pwiz.SkylineTestA
             var doc13V = docStudy7.ChangePeptideMods(path, explicitMods, listStaticMods, listHeavyMods);
 
             modSettings = doc13V.Settings.PeptideSettings.Modifications;
-            Assert.AreEqual(4, modSettings.HeavyModifications.Count);
-            Assert.AreEqual(3, modSettings.HeavyModifications.Count(mod => mod.Formula != null));
-            Assert.AreEqual(1, modSettings.HeavyModifications.Count(mod => mod.Label13C));
+            Assert.AreEqual(4, modSettings.AllHeavyModifications.Count());
+            Assert.AreEqual(3, modSettings.AllHeavyModifications.Count(mod => mod.Formula != null));
+            Assert.AreEqual(1, modSettings.AllHeavyModifications.Count(mod => mod.Label13C));
             Assert.AreEqual(3, doc13V.Peptides.Count(peptide => peptide.HasExplicitMods));
             Assert.AreEqual(2, doc13V.Peptides.Count(peptide => peptide.HasExplicitMods &&
                 peptide.ExplicitMods.HeavyModifications[0].Modification.AAs[0] == 'V' &&
@@ -292,9 +292,9 @@ namespace pwiz.SkylineTestA
             doc13V = docStudy7.ChangePeptideMods(path, peptideMod.ExplicitMods, listStaticMods, listHeavyMods);
 
             modSettings = doc13V.Settings.PeptideSettings.Modifications;
-            Assert.AreEqual(4, modSettings.HeavyModifications.Count);
-            Assert.AreEqual(3, modSettings.HeavyModifications.Count(mod => mod.Formula != null));
-            Assert.AreEqual(1, modSettings.HeavyModifications.Count(mod => mod.Label13C));
+            Assert.AreEqual(4, modSettings.AllHeavyModifications.Count());
+            Assert.AreEqual(3, modSettings.AllHeavyModifications.Count(mod => mod.Formula != null));
+            Assert.AreEqual(1, modSettings.AllHeavyModifications.Count(mod => mod.Label13C));
             Assert.AreEqual(3, doc13V.Peptides.Count(peptide => peptide.HasExplicitMods));
             Assert.AreEqual(2, doc13V.Peptides.Count(peptide => peptide.HasExplicitMods &&
                 peptide.ExplicitMods.HeavyModifications[0].Modification.AAs[0] == 'V' &&
@@ -309,11 +309,11 @@ namespace pwiz.SkylineTestA
             listHeavyMods.RemoveRange(2, 2);
             // Mimic the way PeptideSettingsUI would change the settings
             var docRemoveExplicit = docStudy7.ChangeSettings(docStudy7.Settings.ChangePeptideModifications(
-                mods => mods.ChangeHeavyModifications(listHeavyMods)
+                mods => mods.ChangeModifications(IsotopeLabelType.heavy, listHeavyMods)
                     .DeclareExplicitMods(docStudy7, listStaticMods, listHeavyMods)));
             // Test expected changes
             modSettings = docRemoveExplicit.Settings.PeptideSettings.Modifications;
-            Assert.AreEqual(2, modSettings.HeavyModifications.Count);
+            Assert.AreEqual(2, modSettings.AllHeavyModifications.Count());
             Assert.AreEqual(3, docRemoveExplicit.Peptides.Count(peptide => peptide.HasExplicitMods));
             // Should leave no heavy modifications on the explicitly modified peptides
             Assert.AreEqual(0, docRemoveExplicit.Peptides.Count(peptide => peptide.HasExplicitMods &&

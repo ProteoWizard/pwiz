@@ -185,15 +185,20 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             ImportPeptideSearch.UserDefinedTypedMods.Add(mod);
 
-            PeptideSettings newPeptideSettings = SkylineWindow.Document.Settings.PeptideSettings;
-            var newMods = new List<StaticMod>(
-                    (type == ModType.structural ? newPeptideSettings.Modifications.StaticModifications : newPeptideSettings.Modifications.HeavyModifications)
-                ) { mod };
-            newPeptideSettings = (type == ModType.structural)
-                                     ? newPeptideSettings.ChangeModifications(newPeptideSettings.Modifications.ChangeStaticModifications(newMods))
-                                     : newPeptideSettings.ChangeModifications(newPeptideSettings.Modifications.ChangeHeavyModifications(newMods));
+            PeptideModifications peptideModifications = SkylineWindow.Document.Settings.PeptideSettings.Modifications;
+            if (type == ModType.structural)
+            {
+                peptideModifications = peptideModifications.ChangeStaticModifications(
+                    peptideModifications.StaticModifications.Concat(new[] {mod}).ToArray());
+            }
+            else
+            {
+                peptideModifications = peptideModifications.AddHeavyModifications(new[] {mod});
+            }
 
-            SkylineWindow.ChangeSettings(SkylineWindow.Document.Settings.ChangePeptideSettings(newPeptideSettings), true,
+            SkylineWindow.ChangeSettings(SkylineWindow.Document.Settings.ChangePeptideSettings(
+                SkylineWindow.Document.Settings.PeptideSettings.ChangeModifications(peptideModifications)), 
+                true,
                 string.Format(Resources.MatchModificationsControl_AddModification_Add__0__modification__1_, type, mod.Name));
             SkylineWindow.Document.Settings.UpdateDefaultModifications(false);
 

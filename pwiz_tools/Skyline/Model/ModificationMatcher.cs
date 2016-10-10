@@ -436,16 +436,15 @@ namespace pwiz.Skyline.Model
                 else
                 {
                     var info1 = info;
-                    StaticMod modMatch = null;
-                    int index;
-                    if (structural &&
-                        ((index = modifications.StaticModifications.IndexOf(mod => Equals(mod.Name, info1.Name)))
-                        != -1))
-                        modMatch = modifications.StaticModifications[index];
-                    if (!structural &&
-                        ((index = modifications.HeavyModifications.IndexOf(mod => Equals(mod.Name, info1.Name)))
-                        != -1))
-                        modMatch = modifications.HeavyModifications[index];
+                    StaticMod modMatch;
+                    if (structural)
+                    {
+                        modMatch = modifications.StaticModifications.FirstOrDefault(mod => Equals(mod.Name, info1.Name));
+                    }
+                    else
+                    {
+                        modMatch = modifications.AllHeavyModifications.FirstOrDefault(mod => Equals(mod.Name, info1.Name));
+                    }
 
                     if (modMatch == null)
                         return false;

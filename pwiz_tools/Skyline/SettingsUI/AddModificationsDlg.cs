@@ -123,7 +123,8 @@ namespace pwiz.Skyline.SettingsUI
             _settings = AddModifications(_settings, heavyMods, ModType.heavy);
 
             UpdateModificationMatches();
-            NewDocumentModsStatic = NewDocumentModsStatic.Concat(structuralMods.Concat(heavyMods)).ToArray();
+            NewDocumentModsStatic = NewDocumentModsStatic.Concat(structuralMods).ToArray();
+            NewDocumentModsHeavy = NewDocumentModsHeavy.Concat(heavyMods).ToArray();
         }
 
         private void addStructuralModificationToolStripMenuItem_Click(object sender, EventArgs e)
@@ -173,15 +174,17 @@ namespace pwiz.Skyline.SettingsUI
         {
             _userDefinedTypedMods.UnionWith(mods);
 
-            var newPeptideSettings = settings.PeptideSettings;
-            var newMods = new List<StaticMod>(type == ModType.structural
-                ? newPeptideSettings.Modifications.StaticModifications : newPeptideSettings.Modifications.HeavyModifications);
-            newMods.AddRange(mods);
-            newPeptideSettings = type == ModType.structural
-                ? newPeptideSettings.ChangeModifications(newPeptideSettings.Modifications.ChangeStaticModifications(newMods))
-                : newPeptideSettings.ChangeModifications(newPeptideSettings.Modifications.ChangeHeavyModifications(newMods));
-
-            return settings.ChangePeptideSettings(newPeptideSettings);
+            PeptideModifications peptideModifications = settings.PeptideSettings.Modifications;
+            if (type == ModType.structural)
+            {
+                peptideModifications = peptideModifications.ChangeStaticModifications(
+                    peptideModifications.StaticModifications.Concat(mods).ToArray());
+            }
+            else
+            {
+                peptideModifications = peptideModifications.AddHeavyModifications(mods);
+            }
+            return settings.ChangePeptideSettings(settings.PeptideSettings.ChangeModifications(peptideModifications));
         }
 
         private void cbSelectAll_CheckedChanged(object sender, EventArgs e)
@@ -218,14 +221,7 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             MatcherPepMods = MatcherPepMods.ChangeStaticModifications(MatcherPepMods.StaticModifications.Where(mod => !removeStructuralMods.Contains(mod)).ToList());
-            if (MatcherPepMods.HasHeavyModifications)
-            {
-                var heavyLabel = MatcherPepMods.GetHeavyModificationTypes().FirstOrDefault();
-                if (heavyLabel != null)
-                {
-                    MatcherPepMods = MatcherPepMods.ChangeModifications(heavyLabel, MatcherPepMods.HeavyModifications.Where(mod => !removeHeavyMods.Contains(mod)).ToList());
-                }
-            }
+            MatcherPepMods = MatcherPepMods.RemoveHeavyModifications(removeHeavyMods);
             DialogResult = DialogResult.OK;
         }
 

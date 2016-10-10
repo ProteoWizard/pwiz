@@ -71,7 +71,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Clean-up before running the test
             var settings = SrmSettingsList.GetDefault().ChangePeptideModifications(mod =>
-                mod.ChangeHeavyModifications(aquaMods));
+                mod.ChangeModifications(IsotopeLabelType.heavy, aquaMods));
             RunUI(() => SkylineWindow.ModifyDocument("Set test settings",
                                                      doc => doc.ChangeSettings(settings)));
 

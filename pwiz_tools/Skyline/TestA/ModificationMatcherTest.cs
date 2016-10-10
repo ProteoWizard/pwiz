@@ -101,7 +101,7 @@ namespace pwiz.SkylineTestA
             var lightGlobalMods = new MappedList<string, StaticMod>();
             lightGlobalMods.AddRange(settingsNew2.PeptideSettings.Modifications.StaticModifications);
             var heavyGlobalMods = new MappedList<string, StaticMod>();
-            heavyGlobalMods.AddRange(settingsNew2.PeptideSettings.Modifications.HeavyModifications);
+            heavyGlobalMods.AddRange(settingsNew2.PeptideSettings.Modifications.AllHeavyModifications);
             // Match again. Test FoundMatches string should now be empty.
             MATCHER.CreateMatches(docNew.Settings.ChangePeptideModifications(mods => pepSetNew1), 
                 new List<string> { STR_MOD_BY_NAME }, lightGlobalMods, heavyGlobalMods);
@@ -314,7 +314,7 @@ namespace pwiz.SkylineTestA
                 .ChangePeptideModifications(mods =>
                     mods.ChangeStaticModifications(docStatMods));
             settings = settings.ChangePeptideModifications(mods =>
-                mods.ChangeHeavyModifications(docHeavyMods));
+                mods.ChangeModifications(IsotopeLabelType.heavy, docHeavyMods));
             MATCHER.CreateMatches(settings, seqs, mapGlobalStatMods, mapGlobalHeavyMods);
         }
 
