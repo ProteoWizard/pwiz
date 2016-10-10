@@ -17,24 +17,24 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
-using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.Controls.Graphs.Calibration;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
-using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 
@@ -47,7 +47,7 @@ namespace pwiz.SkylineTestTutorial
         public void TestAbsoluteQuantificationTutorial()
         {
             // Set true to look at tutorial screenshots.
-            //IsPauseForScreenShots = true;
+            // IsPauseForScreenShots = true;
 
             ForceMzml = true;   // Mzml is ~8x faster for this test.
 
@@ -239,76 +239,59 @@ namespace pwiz.SkylineTestTutorial
                 CheckGstGraphs(transitionGroupCount, transitionGroupCount - 1);
             });
             PauseForScreenShot("Main window with totals graphs for light and heavy and FOXN1-GST", 11);
-            const int columnsToAddCount = 4;
-            var columnSeparator = TextUtil.CsvSeparator;
-            // Generating a Calibration Curve p. 11
-            var exportLiveReportDlg = ShowDialog<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog);
-            var editReportListDlg = ShowDialog<ManageViewsForm>(exportLiveReportDlg.EditList);
-            const string reportName = "Peptide Ratio Results Test";
-            var columnsToAdd = new[]
-                                {
-                                    PropertyPath.Parse("Proteins!*.Peptides!*.Sequence"),
-                                    PropertyPath.Parse("Proteins!*.Name"),
-                                    PropertyPath.Parse("Replicates!*.Name"),
-                                    PropertyPath.Parse("Proteins!*.Peptides!*.Results!*.Value.RatioToStandard"),
-                                };
-            Assert.AreEqual(columnsToAddCount, columnsToAdd.Length);
-            {
-                var viewEditor = ShowDialog<ViewEditor>(editReportListDlg.AddView);
-                RunUI(() =>
-                {
-                    viewEditor.ViewName = reportName;
-                    foreach (var id in columnsToAdd)
-                    {
-                        Assert.IsTrue(viewEditor.ChooseColumnsTab.TrySelect(id), "Unable to select {0}", id);
-                        viewEditor.ChooseColumnsTab.AddSelectedColumn();
-                    }
-                    Assert.AreEqual(columnsToAdd.Length, viewEditor.ChooseColumnsTab.ColumnCount);
-                });
-                // TODO: MultiViewProvider not yet supported in Common
-                PauseForScreenShot<ViewEditor>("Edit Report form", 12);
-
-                OkDialog(viewEditor, viewEditor.OkDialog);
-            }
-
-            RunUI(editReportListDlg.OkDialog);
-            WaitForClosedForm(editReportListDlg);
+            
+            // Peptide Quantitification Settings p. 11
+            var peptideSettingsUi = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            const string quantUnits = "fmol/ul";
             RunUI(() =>
             {
-                exportLiveReportDlg.ReportName = reportName;
-                exportLiveReportDlg.OkDialog(TestFilesDir.GetTestPath("Calibration.csv"), columnSeparator);
+                peptideSettingsUi.SelectedTab = PeptideSettingsUI.TABS.Quantification;
+                peptideSettingsUi.QuantRegressionFit = RegressionFit.LINEAR;
+                peptideSettingsUi.QuantNormalizationMethod = new NormalizationMethod.RatioToLabel(IsotopeLabelType.heavy);
+                peptideSettingsUi.QuantUnits = quantUnits;
             });
+            PauseForScreenShot("Peptide Settings Quantification Tab", 12);
+            OkDialog(peptideSettingsUi, peptideSettingsUi.OkDialog);
 
-            // Check if export file is correct. 
-            string filePath = TestFilesDir.GetTestPath("Calibration.csv");
-            Assert.IsTrue(File.Exists(filePath));
-            string[] lines = File.ReadAllLines(filePath);
-            string[] line0 = lines[0].Split(columnSeparator);
-            int count = line0.Length;
-            Assert.IsTrue(lines.Count() == SkylineWindow.Document.Settings.MeasuredResults.Chromatograms.Count + 1);
-            Assert.AreEqual(columnsToAddCount, count);
+            // Specify analyte concentrations of external standards
+            RunUI(()=>SkylineWindow.ShowDocumentGrid(true));
+            var documentGridForm = FindOpenForm<DocumentGridForm>();
+            RunUI(() =>
+            {
+                documentGridForm.ChooseView(Resources.SkylineViewContext_GetDocumentGridRowSources_Replicates);
+            });
+            WaitForConditionUI(() => documentGridForm.IsComplete);
+            var concentrations = new[] {40, 12.5, 5, 2.5, 1, .5, .25, .1};
+            for (int iRow = 0; iRow < concentrations.Length; iRow++)
+            {
+                // ReSharper disable AccessToModifiedClosure
+                RunUI(() =>
+                {
+                    var colSampleType = documentGridForm.FindColumn(PropertyPath.Root.Property("SampleType"));
+                    documentGridForm.DataGridView.Rows[iRow].Cells[colSampleType.Index].Value = SampleType.STANDARD;
+                });
+                WaitForConditionUI(() => documentGridForm.IsComplete);
+                RunUI(() =>
+                {
+                    var colAnalyteConcentration =
+                        documentGridForm.FindColumn(PropertyPath.Root.Property("AnalyteConcentration"));
+                    var cell = documentGridForm.DataGridView.Rows[iRow].Cells[colAnalyteConcentration.Index];
+                    documentGridForm.DataGridView.CurrentCell = cell;
+                    cell.Value = concentrations[iRow];
+                });
+                // ReSharper restore AccessToModifiedClosure
+                WaitForConditionUI(() => documentGridForm.IsComplete);
+            }
+            PauseForScreenShot("Document grid with concentrations filled in", 13);
 
-            // Check export file data
-            double ratio1 = Double.Parse(lines[1].Split(new[] { columnSeparator }, 4)[3]);
-            double ratio2 = Double.Parse(lines[2].Split(new[] { columnSeparator }, 4)[3]);
-            double ratio3 = Double.Parse(lines[3].Split(new[] { columnSeparator }, 4)[3]);
-            double ratio4 = Double.Parse(lines[4].Split(new[] { columnSeparator }, 4)[3]);
-            double ratio5 = Double.Parse(lines[5].Split(new[] { columnSeparator }, 4)[3]);
-            double ratio6 = Double.Parse(lines[6].Split(new[] { columnSeparator }, 4)[3]);
-            double ratio7 = Double.Parse(lines[7].Split(new[] { columnSeparator }, 4)[3]);
-            double ratio8 = Double.Parse(lines[8].Split(new[] { columnSeparator }, 4)[3]);
-            double ratio9 = Double.Parse(lines[9].Split(new[] { columnSeparator }, 4)[3]);
+            // View the calibration curve p. 13
+            RunUI(()=>SkylineWindow.ShowCalibrationForm());
+            var calibrationForm = FindOpenForm<CalibrationForm>();
+            PauseForScreenShot("View calibration curve", 14);
 
-            Assert.AreEqual(21.4513, ratio1, 0.1);
-            Assert.AreEqual(6.2568, ratio2, 0.1);
-            Assert.AreEqual(2.0417, ratio3, 0.1);
-            Assert.AreEqual(0.8244, ratio4, 0.1);
-            Assert.AreEqual(0.2809, ratio5, 0.1);
-            Assert.AreEqual(0.1156, ratio6, 0.1);
-            Assert.AreEqual(0.0819, ratio7, 0.1);
-            Assert.AreEqual(0.0248, ratio8, 0.1);
-            Assert.AreEqual(0.7079, ratio9, 0.1);
-            CheckReportCompatibility.CheckAll(SkylineWindow.Document);
+            Assert.AreEqual(CalibrationCurveFitter.AppendUnits(QuantificationStrings.Analyte_Concentration, quantUnits), calibrationForm.ZedGraphControl.GraphPane.XAxis.Title.Text);
+            Assert.AreEqual(string.Format(QuantificationStrings.CalibrationCurveFitter_PeakAreaRatioText__0___1__Peak_Area_Ratio, IsotopeLabelType.light.Title, IsotopeLabelType.heavy.Title),
+                calibrationForm.ZedGraphControl.GraphPane.YAxis.Title.Text);
         }
 
         private static void CheckGstGraphs(int rtCurveCount, int areaCurveCount)
