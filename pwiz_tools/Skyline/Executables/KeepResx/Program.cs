@@ -16,6 +16,7 @@ namespace KeepResx
             @"topograph\*",
             @"shared\zedgraph\*",
             @"shared\proteomedb\forms\proteomedbform.resx",
+            @"skyline\executables\autoqc\*",
             @"skyline\executables\localizationhelper\*",
             @"skyline\executables\multiload\*",
             @"skyline\executables\skylinepeptidecolorgenerator\*",

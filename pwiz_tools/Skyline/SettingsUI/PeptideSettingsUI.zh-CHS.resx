@@ -355,7 +355,7 @@
     <value>1</value>
   </data>
   <data name="comboMissedCleavages.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 95</value>
+    <value>28, 87</value>
   </data>
   <data name="comboMissedCleavages.Size" type="System.Drawing.Size, System.Drawing">
     <value>44, 21</value>
@@ -377,7 +377,7 @@
     <value>tabDigestion</value>
   </data>
   <data name="&gt;&gt;comboMissedCleavages.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>3</value>
   </data>
   <data name="comboEnzyme.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 36</value>
@@ -403,10 +403,10 @@
     <value>tabDigestion</value>
   </data>
   <data name="&gt;&gt;comboEnzyme.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>5</value>
   </data>
   <data name="comboBackgroundProteome.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 158</value>
+    <value>28, 188</value>
   </data>
   <data name="comboBackgroundProteome.Size" type="System.Drawing.Size, System.Drawing">
     <value>169, 21</value>
@@ -429,7 +429,7 @@
     <value>tabDigestion</value>
   </data>
   <data name="&gt;&gt;comboBackgroundProteome.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>7</value>
   </data>
   <data name="textMeasureRTWindow.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 133</value>
@@ -960,7 +960,7 @@ MS/MS谱图库。</value>
     <value>6</value>
   </data>
   <data name="comboPeakScoringModel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>22, 36</value>
+    <value>28, 36</value>
   </data>
   <data name="comboPeakScoringModel.Size" type="System.Drawing.Size, System.Drawing">
     <value>169, 21</value>
@@ -1035,6 +1035,213 @@ MS/MS谱图库。</value>
   <data name="&gt;&gt;comboDriftTimePredictor.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
+  <data name="labelWidthAtDt0Units.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelWidthAtDt0Units.Location" type="System.Drawing.Point, System.Drawing">
+    <value>243, 315</value>
+  </data>
+  <data name="labelWidthAtDt0Units.Size" type="System.Drawing.Size, System.Drawing">
+    <value>32, 13</value>
+  </data>
+  <data name="labelWidthAtDt0Units.TabIndex" type="System.Int32, mscorlib">
+    <value>18</value>
+  </data>
+  <data name="labelWidthAtDt0Units.Text" xml:space="preserve">
+    <value>msec</value>
+  </data>
+  <data name="&gt;&gt;labelWidthAtDt0Units.Name" xml:space="preserve">
+    <value>labelWidthAtDt0Units</value>
+  </data>
+  <data name="&gt;&gt;labelWidthAtDt0Units.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelWidthAtDt0Units.Parent" xml:space="preserve">
+    <value>tabPrediction</value>
+  </data>
+  <data name="&gt;&gt;labelWidthAtDt0Units.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="textSpectralLibraryDriftTimesWidthAtDtMax.Location" type="System.Drawing.Point, System.Drawing">
+    <value>279, 310</value>
+  </data>
+  <data name="textSpectralLibraryDriftTimesWidthAtDtMax.Size" type="System.Drawing.Size, System.Drawing">
+    <value>100, 20</value>
+  </data>
+  <data name="textSpectralLibraryDriftTimesWidthAtDtMax.TabIndex" type="System.Int32, mscorlib">
+    <value>17</value>
+  </data>
+  <data name="textSpectralLibraryDriftTimesWidthAtDtMax.ToolTip" xml:space="preserve">
+    <value>确定漂移时间匹配容忍度（漂移时间以毫秒为单位测量），其中： 
+dtMax = 测量的最大漂移时间
+W0 = 在 0 漂移时间时的宽度
+Wmax = 在 dtMax 时的宽度
+匹配中心在任何漂移时间“T”窗口的漂移时间的宽度“W”
+W = (W0 + T*(Wmax-W0)/dtMax)
+</value>
+  </data>
+  <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDtMax.Name" xml:space="preserve">
+    <value>textSpectralLibraryDriftTimesWidthAtDtMax</value>
+  </data>
+  <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDtMax.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDtMax.Parent" xml:space="preserve">
+    <value>tabPrediction</value>
+  </data>
+  <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDtMax.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="labelWidthAtDtMaxUnits.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelWidthAtDtMaxUnits.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelWidthAtDtMaxUnits.Location" type="System.Drawing.Point, System.Drawing">
+    <value>385, 315</value>
+  </data>
+  <data name="labelWidthAtDtMaxUnits.Size" type="System.Drawing.Size, System.Drawing">
+    <value>32, 13</value>
+  </data>
+  <data name="labelWidthAtDtMaxUnits.TabIndex" type="System.Int32, mscorlib">
+    <value>19</value>
+  </data>
+  <data name="labelWidthAtDtMaxUnits.Text" xml:space="preserve">
+    <value>msec</value>
+  </data>
+  <data name="&gt;&gt;labelWidthAtDtMaxUnits.Name" xml:space="preserve">
+    <value>labelWidthAtDtMaxUnits</value>
+  </data>
+  <data name="&gt;&gt;labelWidthAtDtMaxUnits.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelWidthAtDtMaxUnits.Parent" xml:space="preserve">
+    <value>tabPrediction</value>
+  </data>
+  <data name="&gt;&gt;labelWidthAtDtMaxUnits.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="textSpectralLibraryDriftTimesWidthAtDt0.Location" type="System.Drawing.Point, System.Drawing">
+    <value>137, 310</value>
+  </data>
+  <data name="textSpectralLibraryDriftTimesWidthAtDt0.Size" type="System.Drawing.Size, System.Drawing">
+    <value>100, 20</value>
+  </data>
+  <data name="textSpectralLibraryDriftTimesWidthAtDt0.TabIndex" type="System.Int32, mscorlib">
+    <value>15</value>
+  </data>
+  <data name="textSpectralLibraryDriftTimesWidthAtDt0.ToolTip" xml:space="preserve">
+    <value>确定漂移时间匹配容忍度（漂移时间以毫秒为单位测量），其中： 
+dtMax = 测量的最大漂移时间
+W0 = 在 0 漂移时间时的宽度
+Wmax = 在 dtMax 时的宽度
+匹配中心在任何漂移时间“T”窗口的漂移时间的宽度“W”
+W = (W0 + T*(Wmax-W0)/dtMax)
+</value>
+  </data>
+  <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDt0.Name" xml:space="preserve">
+    <value>textSpectralLibraryDriftTimesWidthAtDt0</value>
+  </data>
+  <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDt0.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDt0.Parent" xml:space="preserve">
+    <value>tabPrediction</value>
+  </data>
+  <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDt0.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="labelWidthDtMax.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelWidthDtMax.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelWidthDtMax.Location" type="System.Drawing.Point, System.Drawing">
+    <value>276, 294</value>
+  </data>
+  <data name="labelWidthDtMax.Size" type="System.Drawing.Size, System.Drawing">
+    <value>84, 13</value>
+  </data>
+  <data name="labelWidthDtMax.TabIndex" type="System.Int32, mscorlib">
+    <value>16</value>
+  </data>
+  <data name="labelWidthDtMax.Text" xml:space="preserve">
+    <value>DtMax 时的宽度(&amp;X)：</value>
+  </data>
+  <data name="&gt;&gt;labelWidthDtMax.Name" xml:space="preserve">
+    <value>labelWidthDtMax</value>
+  </data>
+  <data name="&gt;&gt;labelWidthDtMax.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelWidthDtMax.Parent" xml:space="preserve">
+    <value>tabPrediction</value>
+  </data>
+  <data name="&gt;&gt;labelWidthDtMax.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="labelWidthDtZero.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelWidthDtZero.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelWidthDtZero.Location" type="System.Drawing.Point, System.Drawing">
+    <value>134, 294</value>
+  </data>
+  <data name="labelWidthDtZero.Size" type="System.Drawing.Size, System.Drawing">
+    <value>70, 13</value>
+  </data>
+  <data name="labelWidthDtZero.TabIndex" type="System.Int32, mscorlib">
+    <value>14</value>
+  </data>
+  <data name="labelWidthDtZero.Text" xml:space="preserve">
+    <value>Dt0 时的宽度(&amp;0)：</value>
+  </data>
+  <data name="&gt;&gt;labelWidthDtZero.Name" xml:space="preserve">
+    <value>labelWidthDtZero</value>
+  </data>
+  <data name="&gt;&gt;labelWidthDtZero.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelWidthDtZero.Parent" xml:space="preserve">
+    <value>tabPrediction</value>
+  </data>
+  <data name="&gt;&gt;labelWidthDtZero.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="cbLinear.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbLinear.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="cbLinear.Location" type="System.Drawing.Point, System.Drawing">
+    <value>28, 337</value>
+  </data>
+  <data name="cbLinear.Size" type="System.Drawing.Size, System.Drawing">
+    <value>110, 17</value>
+  </data>
+  <data name="cbLinear.TabIndex" type="System.Int32, mscorlib">
+    <value>13</value>
+  </data>
+  <data name="cbLinear.Text" xml:space="preserve">
+    <value>线性峰宽度(&amp;L)</value>
+  </data>
+  <data name="&gt;&gt;cbLinear.Name" xml:space="preserve">
+    <value>cbLinear</value>
+  </data>
+  <data name="&gt;&gt;cbLinear.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbLinear.Parent" xml:space="preserve">
+    <value>tabPrediction</value>
+  </data>
+  <data name="&gt;&gt;cbLinear.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
   <data name="textSpectralLibraryDriftTimesResolvingPower.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 310</value>
   </data>
@@ -1094,14 +1301,112 @@ MS/MS谱图库。</value>
   <data name="&gt;&gt;cbUseSpectralLibraryDriftTimes.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
+  <data name="labelResolvingPower.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelResolvingPower.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelResolvingPower.Location" type="System.Drawing.Point, System.Drawing">
+    <value>28, 292</value>
+  </data>
+  <data name="labelResolvingPower.Size" type="System.Drawing.Size, System.Drawing">
+    <value>89, 13</value>
+  </data>
+  <data name="labelResolvingPower.TabIndex" type="System.Int32, mscorlib">
+    <value>11</value>
+  </data>
+  <data name="labelResolvingPower.Text" xml:space="preserve">
+    <value>分辨力(&amp;P)：</value>
+  </data>
+  <data name="&gt;&gt;labelResolvingPower.Name" xml:space="preserve">
+    <value>labelResolvingPower</value>
+  </data>
+  <data name="&gt;&gt;labelResolvingPower.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelResolvingPower.Parent" xml:space="preserve">
+    <value>tabPrediction</value>
+  </data>
+  <data name="&gt;&gt;labelResolvingPower.ZOrder" xml:space="preserve">
+    <value>9</value>
+  </data>
+  <data name="comboBoxPeptideUniquenessConstraint.Items" xml:space="preserve">
+    <value>无</value>
+  </data>
+  <data name="comboBoxPeptideUniquenessConstraint.Items1" xml:space="preserve">
+    <value>蛋白质</value>
+  </data>
+  <data name="comboBoxPeptideUniquenessConstraint.Items2" xml:space="preserve">
+    <value>基因</value>
+  </data>
+  <data name="comboBoxPeptideUniquenessConstraint.Items3" xml:space="preserve">
+    <value>物种</value>
+  </data>
+  <data name="comboBoxPeptideUniquenessConstraint.Location" type="System.Drawing.Point, System.Drawing">
+    <value>28, 238</value>
+  </data>
+  <data name="comboBoxPeptideUniquenessConstraint.Size" type="System.Drawing.Size, System.Drawing">
+    <value>87, 21</value>
+  </data>
+  <data name="comboBoxPeptideUniquenessConstraint.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="comboBoxPeptideUniquenessConstraint.ToolTip" xml:space="preserve">
+    <value>“蛋白质”排除在背景蛋白质组中一种以上蛋白质出现的任何肽段。 
+“基因”排除在背景蛋白质组中一种以上基因蛋白质出现的任何肽段。 
+“物种”排除在背景蛋白质组中一种以上物种蛋白质出现的任何肽段。</value>
+  </data>
+  <data name="&gt;&gt;comboBoxPeptideUniquenessConstraint.Name" xml:space="preserve">
+    <value>comboBoxPeptideUniquenessConstraint</value>
+  </data>
+  <data name="&gt;&gt;comboBoxPeptideUniquenessConstraint.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboBoxPeptideUniquenessConstraint.Parent" xml:space="preserve">
+    <value>tabDigestion</value>
+  </data>
+  <data name="&gt;&gt;comboBoxPeptideUniquenessConstraint.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
   <data name="tabControl1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
+  <data name="labelPeptideUniquenessConstraint.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelPeptideUniquenessConstraint.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelPeptideUniquenessConstraint.Location" type="System.Drawing.Point, System.Drawing">
+    <value>25, 222</value>
+  </data>
+  <data name="labelPeptideUniquenessConstraint.Size" type="System.Drawing.Size, System.Drawing">
+    <value>156, 13</value>
+  </data>
+  <data name="labelPeptideUniquenessConstraint.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="labelPeptideUniquenessConstraint.Text" xml:space="preserve">
+    <value>按以下方式强制肽段独特性(&amp;U)：</value>
+  </data>
+  <data name="&gt;&gt;labelPeptideUniquenessConstraint.Name" xml:space="preserve">
+    <value>labelPeptideUniquenessConstraint</value>
+  </data>
+  <data name="&gt;&gt;labelPeptideUniquenessConstraint.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelPeptideUniquenessConstraint.Parent" xml:space="preserve">
+    <value>tabDigestion</value>
+  </data>
+  <data name="&gt;&gt;labelPeptideUniquenessConstraint.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>  
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 79</value>
+    <value>25, 71</value>
   </data>
   <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
     <value>117, 13</value>
@@ -1122,7 +1427,7 @@ MS/MS谱图库。</value>
     <value>tabDigestion</value>
   </data>
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>2</value>
   </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1149,13 +1454,13 @@ MS/MS谱图库。</value>
     <value>tabDigestion</value>
   </data>
   <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>4</value>
   </data>
   <data name="label15.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="label15.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 142</value>
+    <value>25, 172</value>
   </data>
   <data name="label15.Size" type="System.Drawing.Size, System.Drawing">
     <value>115, 13</value>
@@ -1176,7 +1481,7 @@ MS/MS谱图库。</value>
     <value>tabDigestion</value>
   </data>
   <data name="&gt;&gt;label15.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>6</value>
   </data>
   <data name="tabDigestion.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
@@ -1455,7 +1760,7 @@ MS/MS谱图库。</value>
     <value>True</value>
   </data>
   <data name="label4.Location" type="System.Drawing.Point, System.Drawing">
-    <value>26, 20</value>
+    <value>25, 20</value>
   </data>
   <data name="label4.Size" type="System.Drawing.Size, System.Drawing">
     <value>59, 13</value>
@@ -1899,7 +2204,7 @@ MS/MS谱图库。</value>
     <value>NoControl</value>
   </data>
   <data name="label36.Location" type="System.Drawing.Point, System.Drawing">
-    <value>19, 20</value>
+    <value>25, 20</value>
   </data>
   <data name="label36.Size" type="System.Drawing.Size, System.Drawing">
     <value>103, 13</value>

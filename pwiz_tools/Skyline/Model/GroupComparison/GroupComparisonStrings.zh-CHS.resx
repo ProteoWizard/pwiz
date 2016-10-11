@@ -193,4 +193,10 @@
   <data name="GroupComparisonViewContext_Delete_Delete_items" xml:space="preserve">
     <value>删除项</value>
   </data>
+  <data name="SummarizationMethod_AVERAGING_Sum_of_transition_areas" xml:space="preserve">
+    <value>离子对面积总和</value>
+  </data>
+  <data name="SummarizationMethod_MEDIANPOLISH_Tukey_s_Median_Polish" xml:space="preserve">
+    <value>图基中位数平滑</value>
+  </data>
 </root>

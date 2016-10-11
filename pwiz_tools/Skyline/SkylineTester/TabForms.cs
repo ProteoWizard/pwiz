@@ -161,13 +161,16 @@ namespace SkylineTester
 
             foreach (var type in types)
             {
-                if (IsForm(type) && !HasSubclasses(types, type))
+                if (IsForm(type))
                 {
                     var typeName = SkylineTesterWindow.Implements(type, "IFormView") && type.DeclaringType != null
                         ? type.DeclaringType.Name + "." + type.Name
                         : type.Name;
                     var test = formLookup.GetTest(typeName);
                     if (test == "*")
+                        continue;
+                    // Skip subclassed forms unless there is an explicit test for them
+                    if (HasSubclasses(types, type) && string.IsNullOrEmpty(test))
                         continue;
                     MainWindow.FormsGrid.Rows.Add(typeName, test, 0);
                 }
