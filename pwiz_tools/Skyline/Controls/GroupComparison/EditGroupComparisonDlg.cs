@@ -47,10 +47,6 @@ namespace pwiz.Skyline.Controls.GroupComparison
             {
                 btnPreview.Visible = false;
             }
-            if (documentContainer != null && !HasScoringModel(documentContainer.Document))
-            {
-                groupBoxQValueCutoff.Visible = false;
-            }
             _pushChangesToDocument = false;
             tbxName.Text = groupComparisonDef.Name ?? string.Empty;
         }
@@ -73,6 +69,8 @@ namespace pwiz.Skyline.Controls.GroupComparison
             Icon = Resources.Skyline;
             GroupComparisonModel = groupComparisonModel;
             GroupComparisonModel.AddModelChanged(this, OnModelChanged);
+            Height -= panelAdvanced.Height;
+            panelAdvanced.Visible = false;
         }
 
         private void btnPreview_Click(object sender, EventArgs e)
@@ -125,13 +123,17 @@ namespace pwiz.Skyline.Controls.GroupComparison
             {
                 tbxQValueCutoff.Text = string.Empty;
             }
+            if (RequiresAdvanced(groupComparisonDef))
+            {
+                ShowAdvanced(true);
+            }
         }
 
-        private bool HasScoringModel(SrmDocument srmDocument)
+        private bool RequiresAdvanced(GroupComparisonDef groupComparisonDef)
         {
-            // There might be some way to quickly look at a document and see whether it has any q-values,
-            // but for now we show the "Q-value cutoff" checkbox for all documents.
-            return true;
+            return groupComparisonDef.QValueCutoff.HasValue ||
+                   groupComparisonDef.SummarizationMethod != SummarizationMethod.AVERAGING ||
+                   groupComparisonDef.UseZeroForMissingPeaks;
         }
 
         private void btnOK_Click(object sender, EventArgs e)
@@ -444,6 +446,31 @@ namespace pwiz.Skyline.Controls.GroupComparison
             }
             GroupComparisonDef = GroupComparisonDef.ChangeSummarizationMethod(
                 comboSummaryMethod.SelectedItem as SummarizationMethod ?? SummarizationMethod.DEFAULT);
+        }
+
+        public void ShowAdvanced(bool show)
+        {
+            if (panelAdvanced.Visible == show)
+            {
+                return;
+            }
+            if (show)
+            {
+                Height += panelAdvanced.Height;
+                panelAdvanced.Visible = true;
+                btnAdvanced.Visible = false;
+            }
+            else
+            {
+                Height -= panelAdvanced.Height;
+                panelAdvanced.Visible = false;
+                panelAdvanced.Visible = true;
+            }
+        }
+
+        private void btnAdvanced_Click(object sender, EventArgs e)
+        {
+            ShowAdvanced(true);
         }
     }
 }

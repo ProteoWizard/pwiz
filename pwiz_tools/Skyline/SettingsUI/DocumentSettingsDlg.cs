@@ -89,7 +89,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             using (var editDlg = new EditGroupComparisonDlg(
                 DocumentContainer,
-                GroupComparisonDef.EMPTY.ChangeSumTransitions(true),
+                GroupComparisonDef.EMPTY,
                 Settings.Default.GroupComparisonDefList))
             {
                 if (editDlg.ShowDialog(this) == DialogResult.OK)
