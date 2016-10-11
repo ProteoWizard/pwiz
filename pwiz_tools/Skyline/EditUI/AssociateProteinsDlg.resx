@@ -130,10 +130,10 @@
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnBackgroundProteome.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+    <value>3</value>
   </data>
   <data name="btnBackgroundProteome.Text" xml:space="preserve">
-    <value>Use &amp;background-proteome</value>
+    <value>Use &amp;Background Proteome</value>
   </data>
   <data name="&gt;&gt;btnBackgroundProteome.Name" xml:space="preserve">
     <value>btnBackgroundProteome</value>
@@ -157,7 +157,7 @@
     <value>88, 23</value>
   </data>
   <data name="btnUseFasta.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="btnUseFasta.Text" xml:space="preserve">
     <value>Use &amp;FASTA...</value>
@@ -184,7 +184,7 @@
     <value>355, 154</value>
   </data>
   <data name="checkBoxListMatches.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
+    <value>1</value>
   </data>
   <data name="&gt;&gt;checkBoxListMatches.Name" xml:space="preserve">
     <value>checkBoxListMatches</value>
@@ -211,7 +211,7 @@
     <value>75, 23</value>
   </data>
   <data name="btnApplyChanges.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="btnApplyChanges.Text" xml:space="preserve">
     <value>OK</value>
@@ -238,7 +238,7 @@
     <value>75, 23</value>
   </data>
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
     <value>Cancel</value>
@@ -265,7 +265,7 @@
     <value>358, 39</value>
   </data>
   <data name="lblDescription.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>0</value>
   </data>
   <data name="lblDescription.Text" xml:space="preserve">
     <value>Use either a FASTA file or the current background proteome to associate peptides with proteins.  You will have the ability to confirm matches before applying the changes.</value>

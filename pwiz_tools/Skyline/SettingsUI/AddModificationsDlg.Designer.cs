@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(AddModificationsDlg));
             this.btnOk = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
@@ -51,59 +52,36 @@
             // 
             // btnOk
             // 
-            this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOk.Location = new System.Drawing.Point(241, 351);
+            resources.ApplyResources(this.btnOk, "btnOk");
             this.btnOk.Name = "btnOk";
-            this.btnOk.Size = new System.Drawing.Size(75, 23);
-            this.btnOk.TabIndex = 2;
-            this.btnOk.Text = "&OK";
             this.btnOk.UseVisualStyleBackColor = true;
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
             // 
             // btnCancel
             // 
-            this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.btnCancel, "btnCancel");
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(322, 351);
             this.btnCancel.Name = "btnCancel";
-            this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 3;
-            this.btnCancel.Text = "&Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
             // label1
             // 
-            this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.label1.Location = new System.Drawing.Point(0, 0);
+            resources.ApplyResources(this.label1, "label1");
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(385, 27);
-            this.label1.TabIndex = 0;
-            this.label1.Text = "This library appears to contain the modifications listed below. Please select the" +
-    " ones you wish to use with the library:";
             // 
             // listMatched
             // 
-            this.listMatched.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.listMatched, "listMatched");
             this.listMatched.CheckOnClick = true;
             this.listMatched.FormattingEnabled = true;
-            this.listMatched.Location = new System.Drawing.Point(0, 30);
             this.listMatched.Name = "listMatched";
-            this.listMatched.Size = new System.Drawing.Size(385, 109);
             this.listMatched.Sorted = true;
-            this.listMatched.TabIndex = 1;
             this.listMatched.ThreeDCheckBoxes = true;
             // 
             // btnAdd
             // 
-            this.btnAdd.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.btnAdd.Location = new System.Drawing.Point(12, 351);
+            resources.ApplyResources(this.btnAdd, "btnAdd");
             this.btnAdd.Name = "btnAdd";
-            this.btnAdd.Size = new System.Drawing.Size(125, 23);
-            this.btnAdd.TabIndex = 1;
-            this.btnAdd.Text = "Add to &Document...";
             this.btnAdd.UseVisualStyleBackColor = true;
             this.btnAdd.Click += new System.EventHandler(this.btnAdd_Click);
             // 
@@ -114,37 +92,30 @@
             this.addStructuralModificationToolStripMenuItem,
             this.addHeavyModificationToolStripMenuItem});
             this.menuAdd.Name = "menuAdd";
-            this.menuAdd.Size = new System.Drawing.Size(230, 70);
+            resources.ApplyResources(this.menuAdd, "menuAdd");
             // 
             // addSelectedModificationsToolStripMenuItem
             // 
             this.addSelectedModificationsToolStripMenuItem.Name = "addSelectedModificationsToolStripMenuItem";
-            this.addSelectedModificationsToolStripMenuItem.Size = new System.Drawing.Size(229, 22);
-            this.addSelectedModificationsToolStripMenuItem.Text = "Add selected modifications";
+            resources.ApplyResources(this.addSelectedModificationsToolStripMenuItem, "addSelectedModificationsToolStripMenuItem");
             this.addSelectedModificationsToolStripMenuItem.Click += new System.EventHandler(this.addSelectedModificationsToolStripMenuItem_Click);
             // 
             // addStructuralModificationToolStripMenuItem
             // 
             this.addStructuralModificationToolStripMenuItem.Name = "addStructuralModificationToolStripMenuItem";
-            this.addStructuralModificationToolStripMenuItem.Size = new System.Drawing.Size(229, 22);
-            this.addStructuralModificationToolStripMenuItem.Text = "Add &structural modification...";
+            resources.ApplyResources(this.addStructuralModificationToolStripMenuItem, "addStructuralModificationToolStripMenuItem");
             this.addStructuralModificationToolStripMenuItem.Click += new System.EventHandler(this.addStructuralModificationToolStripMenuItem_Click);
             // 
             // addHeavyModificationToolStripMenuItem
             // 
             this.addHeavyModificationToolStripMenuItem.Name = "addHeavyModificationToolStripMenuItem";
-            this.addHeavyModificationToolStripMenuItem.Size = new System.Drawing.Size(229, 22);
-            this.addHeavyModificationToolStripMenuItem.Text = "Add &heavy modification...";
+            resources.ApplyResources(this.addHeavyModificationToolStripMenuItem, "addHeavyModificationToolStripMenuItem");
             this.addHeavyModificationToolStripMenuItem.Click += new System.EventHandler(this.addHeavyModificationToolStripMenuItem_Click);
             // 
             // splitContainer
             // 
-            this.splitContainer.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.splitContainer.Location = new System.Drawing.Point(12, 12);
+            resources.ApplyResources(this.splitContainer, "splitContainer");
             this.splitContainer.Name = "splitContainer";
-            this.splitContainer.Orientation = System.Windows.Forms.Orientation.Horizontal;
             // 
             // splitContainer.Panel1
             // 
@@ -156,62 +127,40 @@
             // 
             this.splitContainer.Panel2.Controls.Add(this.listUnmatched);
             this.splitContainer.Panel2.Controls.Add(this.label2);
-            this.splitContainer.Size = new System.Drawing.Size(385, 333);
-            this.splitContainer.SplitterDistance = 166;
-            this.splitContainer.TabIndex = 0;
             // 
             // cbSelectAll
             // 
-            this.cbSelectAll.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.cbSelectAll.AutoSize = true;
-            this.cbSelectAll.Location = new System.Drawing.Point(0, 145);
+            resources.ApplyResources(this.cbSelectAll, "cbSelectAll");
             this.cbSelectAll.Name = "cbSelectAll";
-            this.cbSelectAll.Size = new System.Drawing.Size(120, 17);
-            this.cbSelectAll.TabIndex = 2;
-            this.cbSelectAll.Text = "Select / deselect &all";
             this.cbSelectAll.UseVisualStyleBackColor = true;
             this.cbSelectAll.CheckedChanged += new System.EventHandler(this.cbSelectAll_CheckedChanged);
             // 
             // listUnmatched
             // 
-            this.listUnmatched.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.listUnmatched, "listUnmatched");
             this.listUnmatched.FormattingEnabled = true;
-            this.listUnmatched.Location = new System.Drawing.Point(0, 33);
             this.listUnmatched.Name = "listUnmatched";
-            this.listUnmatched.Size = new System.Drawing.Size(385, 108);
-            this.listUnmatched.TabIndex = 1;
             // 
             // label2
             // 
-            this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.label2.Location = new System.Drawing.Point(0, 0);
+            resources.ApplyResources(this.label2, "label2");
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(385, 30);
-            this.label2.TabIndex = 0;
-            this.label2.Text = "The following modifications could not be interpreted:";
             // 
             // AddModificationsDlg
             // 
             this.AcceptButton = this.btnOk;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(409, 386);
             this.Controls.Add(this.splitContainer);
             this.Controls.Add(this.btnAdd);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOk);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.MinimumSize = new System.Drawing.Size(325, 225);
             this.Name = "AddModificationsDlg";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "Add Modifications";
             this.menuAdd.ResumeLayout(false);
             this.splitContainer.Panel1.ResumeLayout(false);
             this.splitContainer.Panel1.PerformLayout();
