@@ -254,10 +254,7 @@ class WatersMseReader : public BuildParser, public SpecFileReader {
         void parseModString(LineEntry& entry, MsePSM* psm);
         void insertCurPSM();
 
-        static const char* modNames_[];
-        static double modMasses_[];
-        static int numModNames_;
-        
+        std::map<std::string, double> mods_;
   };
 
 } // namespace
