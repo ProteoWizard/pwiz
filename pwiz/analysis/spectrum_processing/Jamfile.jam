@@ -159,7 +159,7 @@ run-if-exists SpectrumList_IonMobility_Test.cpp pwiz_analysis_spectrum_processin
 run-if-exists SpectrumList_LockmassRefinerTest.cpp pwiz_analysis_spectrum_processing_basic $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers//pwiz_data_vendor_readers
     : [ path.native $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Waters/Reader_Waters_Test.data/091204_NFDM_008.raw ] # args
     : # input-files
-    : <vendor-api-support>off:<build>no <runtime-debugging>on:<build>no # requirements
+    : <vendor-api-support>off:<build>no <toolset>msvc-12.0 <runtime-debugging>on:<build>no # requirements
     : SpectrumList_LockmassRefinerTest # target name
     : # default-build
     ;

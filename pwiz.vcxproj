@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -19,11 +19,11 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <OutDir>$(SolutionDir)build-nt-x86\msvc-release</OutDir>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -49,7 +49,7 @@
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
     <NMakePreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR</NMakePreprocessorDefinitions>
-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir);$(SolutionDir)\libraries\boost_aux;$(SolutionDir)\libraries\boost_1_54_0;$(IncludePath)</IncludePath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir);$(SolutionDir)\libraries\boost_aux;$(SolutionDir)\libraries\boost_1_56_0;$(IncludePath)</IncludePath>
     <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir);$(SolutionDir)libraries\boost_aux;$(SolutionDir)libraries\boost_1_54_0;$(SolutionDir)libraries\SQLite;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -158,6 +158,9 @@
     <ClCompile Include="pwiz\analysis\proteome_processing\ProteinList_FilterTest.cpp" />
     <ClCompile Include="pwiz\analysis\proteome_processing\Weller_Peptide_pI_Calculator.cpp" />
     <ClCompile Include="pwiz\analysis\proteome_processing\Weller_Peptide_pI_CalculatorTest.cpp" />
+    <ClCompile Include="pwiz\analysis\spectrum_processing\MS2Deisotoper.cpp" />
+    <ClCompile Include="pwiz\analysis\spectrum_processing\MS2DeisotoperTest.cpp" />
+    <ClCompile Include="pwiz\analysis\spectrum_processing\MS2NoiseFilter.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\PrecursorMassFilter.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\PrecursorRecalculatorDefault.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\PrecursorRecalculatorDefaultTest.cpp" />
@@ -165,10 +168,18 @@
     <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumListFactoryTest.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_3D.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_3D_Test.cpp" />
+    <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_ChargeFromIsotope.cpp" />
+    <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_ChargeFromIsotopeTest.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_ChargeStateCalculator.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_ChargeStateCalculatorTest.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_Filter.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_FilterTest.cpp" />
+    <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_IonMobility.cpp" />
+    <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_IonMobility_Test.cpp" />
+    <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_LockmassRefiner.cpp" />
+    <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_LockmassRefinerTest.cpp" />
+    <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_MZRefiner.cpp" />
+    <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_MZRefinerTest.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_MZWindow.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_MZWindowTest.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_MetadataFixer.cpp" />
@@ -181,6 +192,8 @@
     <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_PrecursorRecalculatorTest.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_PrecursorRefine.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_PrecursorRefineTest.cpp" />
+    <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_ScanSummer.cpp" />
+    <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_ScanSummerTest.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_Smoother.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_Sorter.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_SorterTest.cpp" />
@@ -731,7 +744,14 @@
     <ClInclude Include="libraries\boost_aux\boost\nowide\windows.hpp" />
     <ClInclude Include="pwiz\analysis\proteome_processing\ProteinListFactory.hpp" />
     <ClInclude Include="pwiz\analysis\proteome_processing\ProteinList_Filter.hpp" />
+    <ClInclude Include="pwiz\analysis\spectrum_processing\MS2Deisotoper.hpp" />
+    <ClInclude Include="pwiz\analysis\spectrum_processing\MS2NoiseFilter.hpp" />
     <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_3D.hpp" />
+    <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_ChargeFromIsotope.hpp" />
+    <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_IonMobility.hpp" />
+    <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_LockmassRefiner.hpp" />
+    <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_MZRefiner.hpp" />
+    <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_ScanSummer.hpp" />
     <ClInclude Include="pwiz\data\identdata\Serializer_protXML.hpp" />
     <ClInclude Include="pwiz\data\vendor_readers\ABI\ChromatogramList_ABI.hpp" />
     <ClInclude Include="pwiz\data\vendor_readers\ABI\Reader_ABI.hpp" />

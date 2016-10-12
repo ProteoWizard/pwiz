@@ -68,7 +68,9 @@ rule secure-scl-throws ( properties * )
 {
     if <toolset>msvc in $(properties) &&
        ! ( <toolset-msvc:version>11.0 in $(properties) ) &&
-       ! ( <toolset-msvc:version>12.0 in $(properties) )
+       ! ( <toolset-msvc:version>12.0 in $(properties) ) &&
+       ! ( <toolset-msvc:version>13.0 in $(properties) ) &&
+       ! ( <toolset-msvc:version>14.0 in $(properties) )
     {
         return <define>_SILENCE_DEPRECATION_OF_SECURE_SCL_THROWS
                <define>_SECURE_SCL_THROWS=1 ;
@@ -169,7 +171,6 @@ rule init ( version : location : options * )
                     $(boost-basename)/boost*.?pp
                     $(boost-basename)/boost*.h
                     $(boost-basename)/libs*.?pp
-                    $(boost-basename)/libs/*timeconv.inl
                 : # requirements
                     <location>.
                 : # usage-requirements
@@ -198,6 +199,7 @@ rule init ( version : location : options * )
             <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE
             <toolset>msvc,<toolset-msvc:version>11.0:<define>_HAS_TR1
             <toolset>msvc,<toolset-msvc:version>12.0:<define>_HAS_TR1
+            <toolset>msvc,<toolset-msvc:version>14.0:<define>_HAS_TR1
             <link>shared:<define>BOOST_ALL_DYN_LINK=1
             <link>static:<define>BOOST_ALL_STATIC_LINK=1
             <warnings>off
@@ -394,10 +396,6 @@ rule init ( version : location : options * )
             if $(version-tokens[2]) < 44
             {
                 alternate_thread_sources += <source>$(THIS_PATH)/boost_aux/libs/thread/src/win32/tss_pe-before_1_44.cpp ;
-            }
-            else
-            {
-                alternate_thread_sources += <source>$(THIS_PATH)/boost_aux/libs/thread/src/win32/tss_pe.cpp ;
             }
         }
         

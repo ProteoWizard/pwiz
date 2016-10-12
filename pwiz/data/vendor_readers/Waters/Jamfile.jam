@@ -30,7 +30,7 @@
 #           * PWIZ_READER_WATERS is defined for all other dependents
 #   * else: PWIZ_READER_WATERS is never defined
 
-import path ;
+import path feature ;
 
 project
     : requirements 
@@ -50,8 +50,6 @@ rule vendor-api-requirements ( properties * )
 {
     local result ;
     if <toolset>msvc in $(properties) &&
-       ( <toolset-msvc:version>12.0 in $(properties) ||
-         <toolset-msvc:version>12.0express in $(properties) ) &&
        <runtime-debugging>off in $(properties) &&
        [ project-exists $(API_PATH) ] &&
        [ masslynxraw-dll-location $(API_PATH) : $(properties) ] &&
@@ -67,8 +65,6 @@ rule vendor-api-usage-requirements ( properties * )
 {
     local result ;
     if <toolset>msvc in $(properties) &&
-       ( <toolset-msvc:version>12.0 in $(properties) ||
-         <toolset-msvc:version>12.0express in $(properties) ) &&
        <runtime-debugging>off in $(properties) &&
        [ project-exists $(API_PATH) ] &&
        [ masslynxraw-dll-location $(API_PATH) : $(properties) ]  &&
@@ -88,6 +84,10 @@ rule vendor-api-usage-requirements ( properties * )
         else if ! <toolset>msvc in $(properties)
         {
             echo "[$(READER_PATH)] Non-MSVC build: $(READER_NAME) can only identify files, not read them." ;
+        }
+        else if ! [ feature.get-values <toolset-msvc:version> : $(properties) ] in "12.0" "12.0express"
+        {
+            echo "[$(READER_PATH)] Unsupported MSVC version: $(READER_NAME) can only identify files, not read them." ;
         }
         else if <runtime-debugging>on in $(properties)
         {
@@ -155,6 +155,10 @@ rule test-requirements ( properties * )
     else if ! <toolset>msvc in $(properties)
     {
         warn-once "[$(READER_PATH)] Non-MSVC build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
+    }
+    else if ! [ feature.get-values <toolset-msvc:version> : $(properties) ] in "12.0" "12.0express"
+    {
+        warn-once "[$(READER_PATH)] Unsupported MSVC version: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
     }
     else if <runtime-debugging>on in $(properties)
     {
