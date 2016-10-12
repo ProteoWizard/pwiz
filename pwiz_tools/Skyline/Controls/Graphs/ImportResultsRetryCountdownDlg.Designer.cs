@@ -32,7 +32,6 @@
             this.btnRetryNow = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.lblSeconds = new System.Windows.Forms.Label();
-            this.label1 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // btnRetryNow
@@ -54,11 +53,6 @@
             resources.ApplyResources(this.lblSeconds, "lblSeconds");
             this.lblSeconds.Name = "lblSeconds";
             // 
-            // label1
-            // 
-            resources.ApplyResources(this.label1, "label1");
-            this.label1.Name = "label1";
-            // 
             // ImportResultsRetryCountdownDlg
             // 
             resources.ApplyResources(this, "$this");
@@ -67,7 +61,6 @@
             this.Controls.Add(this.btnRetryNow);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.lblSeconds);
-            this.Controls.Add(this.label1);
             this.Name = "ImportResultsRetryCountdownDlg";
             this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;
             this.ResumeLayout(false);
@@ -77,7 +70,6 @@
 
         #endregion
 
-        private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label lblSeconds;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnRetryNow;
