@@ -49,8 +49,10 @@
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
     <NMakePreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR</NMakePreprocessorDefinitions>
-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir);$(SolutionDir)\libraries\boost_aux;$(SolutionDir)\libraries\boost_1_56_0;$(IncludePath)</IncludePath>
-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir);$(SolutionDir)libraries\boost_aux;$(SolutionDir)libraries\boost_1_56_0;$(SolutionDir)libraries\SQLite;$(IncludePath)</IncludePath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir);$(SolutionDir)\libraries\boost_aux;$(SolutionDir)\libraries\boost_1_62_0;$(IncludePath)</IncludePath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir);$(SolutionDir)libraries\boost_aux;$(SolutionDir)libraries\boost_1_62_0;$(SolutionDir)libraries\SQLite;$(IncludePath)</IncludePath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir);$(SolutionDir)\libraries\boost_aux;$(SolutionDir)\libraries\boost_1_62_0;$(IncludePath)</IncludePath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir);$(SolutionDir)libraries\boost_aux;$(SolutionDir)libraries\boost_1_62_0;$(SolutionDir)libraries\SQLite;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -159,6 +161,9 @@
     <ClCompile Include="pwiz\analysis\proteome_processing\ProteinList_FilterTest.cpp" />
     <ClCompile Include="pwiz\analysis\proteome_processing\Weller_Peptide_pI_Calculator.cpp" />
     <ClCompile Include="pwiz\analysis\proteome_processing\Weller_Peptide_pI_CalculatorTest.cpp" />
+    <ClCompile Include="pwiz\analysis\spectrum_processing\MS2Deisotoper.cpp" />
+    <ClCompile Include="pwiz\analysis\spectrum_processing\MS2DeisotoperTest.cpp" />
+    <ClCompile Include="pwiz\analysis\spectrum_processing\MS2NoiseFilter.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\PrecursorMassFilter.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\PrecursorRecalculatorDefault.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\PrecursorRecalculatorDefaultTest.cpp" />
@@ -172,6 +177,8 @@
     <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_ChargeStateCalculatorTest.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_Filter.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_FilterTest.cpp" />
+    <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_IonMobility.cpp" />
+    <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_IonMobility_Test.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_LockmassRefiner.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_LockmassRefinerTest.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_MZRefiner.cpp" />
@@ -741,7 +748,9 @@
     <ClInclude Include="libraries\boost_aux\boost\nowide\windows.hpp" />
     <ClInclude Include="pwiz\analysis\proteome_processing\ProteinListFactory.hpp" />
     <ClInclude Include="pwiz\analysis\proteome_processing\ProteinList_Filter.hpp" />
+    <ClInclude Include="pwiz\analysis\spectrum_processing\MS2Deisotoper.hpp" />
     <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_3D.hpp" />
+    <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_IonMobility.hpp" />
     <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_ChargeFromIsotope.hpp" />
     <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_LockmassRefiner.hpp" />
     <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_MZRefiner.hpp" />

@@ -132,7 +132,7 @@ rule test-requirements ( properties * )
     {
         warn-once "[$(READER_PATH)] without-binary-msdata build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
     }
-    else if ! [ feature.get-values <toolset-msvc:version> : $(properties) ] in "10.0" "10.0express" "11.0" "11.0express" "12.0" "12.0express"
+    else if ! [ feature.get-values <toolset-msvc:version> : $(properties) ] in "10.0" "10.0express" "11.0" "11.0express" "12.0" "12.0express" "13.0" "14.0"
     {
         warn-once "[$(READER_PATH)] MSVC version is not .NET 4 compatible: $(READER_NAME) is using the .NET 3.5 DLLs which get slightly different test results, so the test will be skipped." ;
         result += <build>no ;

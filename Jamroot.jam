@@ -103,7 +103,7 @@ local default_libraries_path = "./libraries" ;
 local libraries_path = [ MATCH --libraries-path=(.*) : [ modules.peek : ARGV ] ] ;
 libraries_path ?= $(default_libraries_path) ; # set default path in absence of command-line path
 
-local default_boost_src = "$(libraries_path)/boost_1_61_0" ;
+local default_boost_src = "$(libraries_path)/boost_1_62_0" ;
 local boost_src = [ MATCH --boost-src=(.*) : [ modules.peek : ARGV ] ] ;
 boost_src ?= $(default_boost_src) ; # set default path in absence of command-line path
 
@@ -297,6 +297,9 @@ project pwiz
         <toolset>msvc:<cxxflags>/wd4275                 # warning: non dll-interface class 'base' used as base for dll-interface class 'derived'
         <toolset>msvc:<cxxflags>/wd4702                 # warning: unreachable code (boost::lexical_cast)
         <toolset>msvc:<cxxflags>/wd4714                 # warning: marked as __forceinline not inlined (boost::spirit::karma::sequence)
+        <toolset>msvc:<cxxflags>/wd4456                 # warning: declaration of 'type' hides previous local declaration
+        <toolset>msvc:<cxxflags>/wd4459                 # warning: declaration of 'type' hides global declaration
+        <toolset>msvc:<cxxflags>/wd4458                 # warning: declaration of 'type' hides class member
         <toolset>msvc,<debug-symbols>off:<linkflags>/OPT:REF,ICF
         <toolset>msvc,<toolset-msvc:version>12.0:<define>_HAS_TR1
         <toolset>msvc,<toolset-msvc:version>14.0:<define>_HAS_TR1
@@ -517,9 +520,9 @@ if [ modules.peek : NT ]
     # HACK: bug in boost::interprocess (up to at least 1.55) requires a patch to support opening memory-mapped files with UTF-8 filenames
     # Boost bug ticket: https://svn.boost.org/trac/boost/ticket/4335
     #SHELL "@IF NOT EXIST $(BOOST_SOURCE)\\boost\\interprocess\\detail\\os_file_functions.hpp.bak rename $(BOOST_SOURCE)\\boost\\interprocess\\detail\\os_file_functions.hpp os_file_functions.hpp.bak" ;
-    SHELL "@IF NOT EXIST $(BOOST_SOURCE)\\boost\\interprocess\\detail\\win32_api.hpp.bak rename $(BOOST_SOURCE)\\boost\\interprocess\\detail\\win32_api.hpp win32_api.hpp.bak" ;
+    #SHELL "@IF NOT EXIST $(BOOST_SOURCE)\\boost\\interprocess\\detail\\win32_api.hpp.bak rename $(BOOST_SOURCE)\\boost\\interprocess\\detail\\win32_api.hpp win32_api.hpp.bak" ;
     #SHELL "@copy /Y $(PWIZ_LIBRARIES_PATH)\\boost_aux\\boost\\interprocess\\detail\\os_file_functions.hpp $(BOOST_SOURCE)\\boost\\interprocess\\detail" ;
-    SHELL "@copy /Y $(PWIZ_LIBRARIES_PATH)\\boost_aux\\boost\\interprocess\\detail\\win32_api.hpp $(BOOST_SOURCE)\\boost\\interprocess\\detail" ;
+    #SHELL "@copy /Y $(PWIZ_LIBRARIES_PATH)\\boost_aux\\boost\\interprocess\\detail\\win32_api.hpp $(BOOST_SOURCE)\\boost\\interprocess\\detail" ;
 }
 
 
@@ -811,7 +814,8 @@ rule msvc-requirement ( properties * )
 rule msvc-dotnet-requirement ( properties * )
 {
     # require VS 2013 because of .NET Framework version
-    if ! ( <toolset-msvc:version>12.0 in $(properties) ) &&  ! ( <toolset-msvc:version>14.0 in $(properties) )
+    if ! ( <toolset-msvc:version>12.0 in $(properties) ||
+           <toolset-msvc:version>14.0 in $(properties) )
     { return <build>no ; }
 }
 
@@ -819,9 +823,9 @@ rule msvc-dotnet-requirement ( properties * )
 rule no-express-requirement ( properties * )
 {
     # only the latest, non-express version of MSVC
-    if ! <toolset-msvc:version>12.0 in $(properties) 
-        && ! <toolset-msvc:version>14.0 in $(properties) 
-        { return <build>no ; }
+    if ! ( <toolset-msvc:version>12.0 in $(properties) || 
+           <toolset-msvc:version>14.0 in $(properties) )
+    { return <build>no ; }
     if 12.0express in $(properties:G=) { return <build>no ; }
 }
 
@@ -962,6 +966,7 @@ rule uimf-dll-location ( api-path : properties * )
         }
     }
     if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ] &&
+        $(result) &&
        [ path.exists $(result)\\UIMFLibrary.dll ]            
     {
         return $(result) ;
@@ -974,8 +979,7 @@ rule masslynxraw-dll-location ( api-path : properties * )
     if <toolset>msvc in $(properties) 
     {
         if <toolset-msvc:version>12.0 in $(properties) ||
-           <toolset-msvc:version>12.0express in $(properties) ||
-           <toolset-msvc:version>14.0 in $(properties)
+           <toolset-msvc:version>12.0express in $(properties)
         {
 
             if ( [ MATCH (x64) : $(PLATFORM) ] )
@@ -1023,7 +1027,7 @@ rule msparser-path ( properties * )
         {
             lib-location = "$(ProgramFilesLibs)\\Matrix Science\\Mascot Parser\\vs2012" ;
         }
-        else if [ feature.get-values <toolset-msvc:version> : $(properties) ] in "12.0" "12.0express" "14.0"
+        else if [ feature.get-values <toolset-msvc:version> : $(properties) ] in "12.0" "12.0express"
         {
             lib-location = "$(ProgramFilesLibs)\\Matrix Science\\Mascot Parser\\vs2013" ;
         }
