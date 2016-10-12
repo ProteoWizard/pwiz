@@ -95,6 +95,7 @@ WatersMseReader::WatersMseReader(BlibBuilder& maker,
     mods_["O-Glycosylation"] = GLYCOL_MASS;
     mods_["Dimethyl"] = 28.0313;
     mods_["Trimethyl"] = 42.04695;
+    mods_["Sulfo"] = 79.9568;
 
     if (maker.getPusherInterval() > 0)
     {
