@@ -118,127 +118,46 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
-  <data name="btnBackgroundProteome.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
-  </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
-  <data name="btnBackgroundProteome.Location" type="System.Drawing.Point, System.Drawing">
-    <value>110, 243</value>
-  </data>
-  <data name="btnBackgroundProteome.Size" type="System.Drawing.Size, System.Drawing">
-    <value>146, 23</value>
-  </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
-  <data name="btnBackgroundProteome.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="btnBackgroundProteome.Text" xml:space="preserve">
-    <value>使用背景蛋白质组(&amp;B)</value>
-  </data>
-  <data name=">>btnBackgroundProteome.Name" xml:space="preserve">
-    <value>btnBackgroundProteome</value>
-  </data>
-  <data name=">>btnBackgroundProteome.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name=">>btnBackgroundProteome.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name=">>btnBackgroundProteome.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
-  <data name="btnUseFasta.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
-  </data>
-  <data name="btnUseFasta.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 243</value>
-  </data>
-  <data name="btnUseFasta.Size" type="System.Drawing.Size, System.Drawing">
-    <value>88, 23</value>
-  </data>
-  <data name="btnUseFasta.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="btnUseFasta.Text" xml:space="preserve">
-    <value>使用 FASTA(&amp;F)…</value>
-  </data>
-  <data name=">>btnUseFasta.Name" xml:space="preserve">
-    <value>btnUseFasta</value>
-  </data>
-  <data name=">>btnUseFasta.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name=">>btnUseFasta.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name=">>btnUseFasta.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="checkBoxListMatches.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
-  </data>
-  <data name="checkBoxListMatches.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 79</value>
-  </data>
-  <data name="checkBoxListMatches.Size" type="System.Drawing.Size, System.Drawing">
-    <value>355, 154</value>
-  </data>
-  <data name="checkBoxListMatches.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name=">>checkBoxListMatches.Name" xml:space="preserve">
-    <value>checkBoxListMatches</value>
-  </data>
-  <data name=">>checkBoxListMatches.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckedListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name=">>checkBoxListMatches.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name=">>checkBoxListMatches.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="btnApplyChanges.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+  <data name="btnRetryNow.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
-  <data name="btnApplyChanges.Enabled" type="System.Boolean, mscorlib">
-    <value>False</value>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
+  <data name="btnRetryNow.Location" type="System.Drawing.Point, System.Drawing">
+    <value>144, 50</value>
   </data>
-  <data name="btnApplyChanges.Location" type="System.Drawing.Point, System.Drawing">
-    <value>215, 282</value>
-  </data>
-  <data name="btnApplyChanges.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="btnRetryNow.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
-  <data name="btnApplyChanges.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+  <data name="btnRetryNow.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
   </data>
-  <data name="btnApplyChanges.Text" xml:space="preserve">
-    <value>确定</value>
+  <data name="btnRetryNow.Text" xml:space="preserve">
+    <value>现在重试</value>
   </data>
-  <data name=">>btnApplyChanges.Name" xml:space="preserve">
-    <value>btnApplyChanges</value>
+  <data name=">>btnRetryNow.Name" xml:space="preserve">
+    <value>btnRetryNow</value>
   </data>
-  <data name=">>btnApplyChanges.Type" xml:space="preserve">
+  <data name=">>btnRetryNow.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>btnApplyChanges.Parent" xml:space="preserve">
+  <data name=">>btnRetryNow.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>btnApplyChanges.ZOrder" xml:space="preserve">
-    <value>2</value>
+  <data name=">>btnRetryNow.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>296, 282</value>
+    <value>225, 50</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>2</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
     <value>取消</value>
@@ -255,32 +174,32 @@
   <data name=">>btnCancel.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name="lblDescription.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Left, Right</value>
+  <data name="lblSeconds.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
   </data>
-  <data name="lblDescription.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 13</value>
+  <data name="lblSeconds.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 9</value>
   </data>
-  <data name="lblDescription.Size" type="System.Drawing.Size, System.Drawing">
-    <value>358, 39</value>
+  <data name="lblSeconds.Size" type="System.Drawing.Size, System.Drawing">
+    <value>254, 13</value>
   </data>
-  <data name="lblDescription.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+  <data name="lblSeconds.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
   </data>
-  <data name="lblDescription.Text" xml:space="preserve">
-    <value>要么使用 FASTA 文件，要么使用当前背景蛋白质组将肽与蛋白质关联。 您将能够在应用这些更改之前确认匹配项。</value>
+  <data name="lblSeconds.Text" xml:space="preserve">
+    <value>导入失败！ {0} 秒后将会自动重试。</value>
   </data>
-  <data name=">>lblDescription.Name" xml:space="preserve">
-    <value>lblDescription</value>
+  <data name=">>lblSeconds.Name" xml:space="preserve">
+    <value>lblSeconds</value>
   </data>
-  <data name=">>lblDescription.Type" xml:space="preserve">
+  <data name=">>lblSeconds.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>lblDescription.Parent" xml:space="preserve">
+  <data name=">>lblSeconds.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>lblDescription.ZOrder" xml:space="preserve">
-    <value>0</value>
+  <data name=">>lblSeconds.ZOrder" xml:space="preserve">
+    <value>2</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -289,16 +208,16 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>383, 314</value>
+    <value>312, 85</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>关联蛋白质</value>
+    <value>重试导入结果</value>
   </data>
   <data name=">>$this.Name" xml:space="preserve">
-    <value>AssociateProteinsDlg</value>
+    <value>ImportResultsRetryCountdownDlg</value>
   </data>
   <data name=">>$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>

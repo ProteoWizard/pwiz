@@ -46,8 +46,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>9283</ApplicationRevision>
-    <ApplicationVersion>3.5.1.9283</ApplicationVersion>
+    <ApplicationRevision>10061</ApplicationRevision>
+    <ApplicationVersion>3.5.9.10061</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -1661,6 +1661,9 @@
     <EmbeddedResource Include="Controls\Graphs\ImportResultsRetryCountdownDlg.resx">
       <DependentUpon>ImportResultsRetryCountdownDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\ImportResultsRetryCountdownDlg.zh-CHS.resx">
+      <DependentUpon>ImportResultsRetryCountdownDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\EditGroupComparisonDlg.ja.resx">
       <DependentUpon>EditGroupComparisonDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -2346,6 +2349,9 @@
       <DependentUpon>ChooseSchedulingReplicatesDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\AddModificationsDlg.resx">
+      <DependentUpon>AddModificationsDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\AddModificationsDlg.zh-CHS.resx">
       <DependentUpon>AddModificationsDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\AddPathsDlg.ja.resx">
