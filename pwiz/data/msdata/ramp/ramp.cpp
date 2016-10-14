@@ -59,12 +59,12 @@ and gzipped versions of all of these if you have pwiz
 #include <inttypes.h>
 #else
 // local copies of stuff in TPP's sysdepend.h, and empty macro versions of some stuff as well
-#if _MSC_VER < 1400
-typedef unsigned long uint32_t; 
-typedef unsigned __int64 uint64_t;
-#endif
 
 #ifdef _MSC_VER
+#if _MSC_VER < 1400
+typedef unsigned long uint32_t;
+typedef unsigned __int64 uint64_t;
+#endif
 #define S_ISREG(mode) ((mode)&_S_IFREG)
 #define S_ISDIR(mode) ((mode)&_S_IFDIR) 
 #pragma warning(disable:4305) // don't bark about double to float conversion
