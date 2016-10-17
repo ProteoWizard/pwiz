@@ -67,9 +67,9 @@ public class GroupComparisonDataSet {
                 ResultFileData resultFileData = combinedReplicate.ensureResultFileData();
                 resultFileData.setTransitionAreas(label,
                         TransitionAreas.fromMap(Collections.singletonMap("", Math.pow(2.0, log2Abundance))));
-                if (null != getNormalizationMethod().getIsotopeLabelTypeName()) {
+                if (getNormalizationMethod() instanceof NormalizationMethod.RatioToLabel) {
                     TransitionAreas denominator = TransitionAreas.fromMap(Collections.singletonMap("", 1.0));
-                    resultFileData.setTransitionAreas(getNormalizationMethod().getIsotopeLabelTypeName(), denominator);
+                    resultFileData.setTransitionAreas(((NormalizationMethod.RatioToLabel) getNormalizationMethod()).getIsotopeLabelTypeName(), denominator);
                 }
                 summarizedRows.add(combinedReplicate);
             }
@@ -92,7 +92,7 @@ public class GroupComparisonDataSet {
 
     List<Replicate> removeIncompleteReplicates(String label, List<Replicate> replicates) {
         TransitionKeys requiredTransitions = null;
-        if (!getNormalizationMethod().isAllowMissingTransitions()) {
+        if (!(getNormalizationMethod() instanceof NormalizationMethod.RatioToLabel)) {
             requiredTransitions = TransitionKeys.EMPTY;
             for (Replicate replicate : replicates) {
                 TransitionAreas transitionAreas = replicate.getTransitionAreas(label);

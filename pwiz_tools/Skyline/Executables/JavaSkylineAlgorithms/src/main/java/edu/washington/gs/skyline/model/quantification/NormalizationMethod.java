@@ -18,21 +18,33 @@
  */
 package edu.washington.gs.skyline.model.quantification;
 
-public class NormalizationMethod {
-    public static final NormalizationMethod NONE = new NormalizationMethod("none", "None");
-    public static final NormalizationMethod EQUALIZE_MEDIANS = new NormalizationMethod("equalize_medians", "Equalize Medians");
-    public static final NormalizationMethod QUANTILE = new NormalizationMethod("quantile", "Quantile");
-    public static final NormalizationMethod GLOBAL_STANDARDS = new NormalizationMethod("global_standards", "Ratio to Global Standards");
+import edu.washington.gs.skyline.model.NameValueCollection;
+import java.util.Collections;
+import java.util.Locale;
+
+public abstract class NormalizationMethod {
+    public static final NormalizationMethod NONE = new SingletonNormalizationMethod("none", "None");
+    public static final NormalizationMethod EQUALIZE_MEDIANS = new SingletonNormalizationMethod("equalize_medians", "Equalize Medians");
+    public static final NormalizationMethod QUANTILE = new SingletonNormalizationMethod("quantile", "Quantile");
+    public static final NormalizationMethod GLOBAL_STANDARDS = new SingletonNormalizationMethod("global_standards", "Ratio to Global Standards");
 
     private static final String ratio_prefix = "ratio_to_";
+    private static final String surrogate_prefix = "surrogate_";
+
 
     public static NormalizationMethod fromName(String name) {
         if (name == null || name.length() == 0) {
-            return NONE;
+            return null;
         }
         if (name.startsWith(ratio_prefix)) {
-            return forIsotopeLabelType(name.substring(ratio_prefix.length()));
+            return new RatioToLabel(name.substring(ratio_prefix.length()));
         }
+        RatioToSurrogate ratioToSurrogate = RatioToSurrogate.parseRatioToSurrogate(name);
+        if (ratioToSurrogate != null)
+        {
+            return ratioToSurrogate;
+        }
+
         for (NormalizationMethod normalizationMethod : new NormalizationMethod[]{EQUALIZE_MEDIANS, QUANTILE, GLOBAL_STANDARDS}) {
             if (name.equals(normalizationMethod.getName())) {
                 return normalizationMethod;
@@ -41,42 +53,123 @@ public class NormalizationMethod {
         return NONE;
     }
 
-    public static NormalizationMethod forIsotopeLabelType(String isotopeLabelTypeName) {
-        String title = isotopeLabelTypeName;
-        if (isotopeLabelTypeName.length() > 0 && !Character.isUpperCase(isotopeLabelTypeName.charAt(0))) {
-            title = Character.toUpperCase(isotopeLabelTypeName.charAt(0)) + isotopeLabelTypeName.substring(1);
-        }
-        NormalizationMethod normalizationMethod = new NormalizationMethod(ratio_prefix + isotopeLabelTypeName, "Ratio to " + title);
-        normalizationMethod.isotopeLabelTypeName = isotopeLabelTypeName;
-        return normalizationMethod;
-    }
+    private final String name;
 
-    private String name;
-    private String title;
-    private String isotopeLabelTypeName;
-
-    private NormalizationMethod(String name, String title) {
+    private NormalizationMethod(String name) {
         this.name = name;
-        this.title = title;
     }
 
     public String getName() {
         return name;
     }
 
-    public String getTitle() {
-        return title;
+    public abstract String getTitle();
+
+    @Override
+    public String toString() {
+        return getTitle();
     }
 
-    public String getIsotopeLabelTypeName() {
-        return isotopeLabelTypeName;
+    public boolean isAllowTruncatedTransitions() {
+        return false;
     }
 
-    public boolean isAllowTruncated() {
-        return null != getIsotopeLabelTypeName();
+    public static class RatioToLabel extends NormalizationMethod {
+        private final String isotopeLabelName;
+        public RatioToLabel(String isotopeLabelName) {
+            super(ratio_prefix + isotopeLabelName);
+            this.isotopeLabelName = isotopeLabelName;
+        }
+
+        @Override
+        public String getTitle() {
+            return "Ratio to " + getIsotopeLabelTitle();
+        }
+
+        public String getIsotopeLabelTypeName() {
+            return isotopeLabelName;
+        }
+
+        public String getIsotopeLabelTitle() {
+            if (isotopeLabelName == null || isotopeLabelName.length() == 0) {
+                return isotopeLabelName;
+            }
+            return isotopeLabelName.substring(0, 1).toUpperCase(Locale.US) + isotopeLabelName.substring(1);
+        }
+
+        @Override
+        public boolean isAllowTruncatedTransitions() {
+            return true;
+        }
     }
 
-    public boolean isAllowMissingTransitions() {
-        return null != getIsotopeLabelTypeName();
+    public static class RatioToSurrogate extends NormalizationMethod {
+        private final String isotopeLabelName;
+        private final String surrogateName;
+        private static final String LABEL_ARG = "label";
+
+        public RatioToSurrogate(String surrogateName, String isotopeLabelTypeName) {
+            super(surrogate_prefix + NameValueCollection.encode(surrogateName) + '?'
+                            + new NameValueCollection(Collections.singletonMap(LABEL_ARG, isotopeLabelTypeName).entrySet()));
+            this.surrogateName = surrogateName;
+            this.isotopeLabelName = isotopeLabelTypeName;
+        }
+
+        public RatioToSurrogate(String surrogateName) {
+            super(surrogate_prefix + NameValueCollection.encode(surrogateName));
+            this.surrogateName = surrogateName;
+            isotopeLabelName = null;
+        }
+
+        @Override
+        public String getTitle() {
+            if (null != isotopeLabelName) {
+                return "Ratio to surrogate " + surrogateName + " (" + isotopeLabelName + ")";
+            }
+            return "Ratio to surrogate " + surrogateName;
+        }
+
+        public String getSurrogateName() {
+            return surrogateName;
+        }
+
+        public String getIsotopeLabelName() {
+            return isotopeLabelName;
+        }
+
+        public static RatioToSurrogate parseRatioToSurrogate(String name) {
+            if (!name.startsWith(surrogate_prefix)) {
+                return null;
+            }
+            name = name.substring(surrogate_prefix.length());
+            NameValueCollection arguments = NameValueCollection.EMPTY;
+            String surrogateName;
+            int ichQuestion = name.indexOf('?');
+            if (ichQuestion >= 0) {
+                surrogateName = NameValueCollection.decode(name.substring(0, ichQuestion));
+                arguments = NameValueCollection.parseQueryString(name.substring(ichQuestion + 1));
+            } else {
+                surrogateName = NameValueCollection.decode(name);
+            }
+
+            String labelName = arguments.getFirstValue(LABEL_ARG);
+            if (labelName == null) {
+                return new RatioToSurrogate(surrogateName);
+            }
+            return new RatioToSurrogate(surrogateName, labelName);
+        }
+    }
+
+    private static class SingletonNormalizationMethod extends NormalizationMethod {
+        private final String label;
+        public SingletonNormalizationMethod(String name, String label) {
+            super(name);
+            this.label = label;
+        }
+
+        @Override
+        public String getTitle() {
+            return label;
+        }
     }
 }

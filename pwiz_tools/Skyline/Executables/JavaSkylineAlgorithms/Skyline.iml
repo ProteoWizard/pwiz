@@ -16,6 +16,5 @@
     <orderEntry type="library" name="org.apache.commons:commons-csv:1.2" level="project" />
     <orderEntry type="library" name="org.apache.commons:commons-lang3:3.4" level="project" />
     <orderEntry type="library" scope="TEST" name="junit:junit:4.12" level="project" />
-    <orderEntry type="library" name="com.google.guava:guava:19.0-rc2" level="project" />
   </component>
 </module>

@@ -51,13 +51,15 @@ public class ReplicateData
     public Double getNormalizedArea(NormalizationMethod normalizationMethod, String label, TransitionKeys transitionKeys) {
         TransitionAreas numerator = TransitionAreas.EMPTY;
         TransitionAreas denominator = null;
-        if (null != normalizationMethod.getIsotopeLabelTypeName()) {
+        String isotopeLabelName = null;
+        if (normalizationMethod instanceof NormalizationMethod.RatioToLabel) {
             denominator = TransitionAreas.EMPTY;
+            isotopeLabelName = ((NormalizationMethod.RatioToLabel) normalizationMethod).getIsotopeLabelTypeName();
         }
         for (ResultFileData resultFileData : resultFileDatas.values()) {
             numerator = numerator.merge(resultFileData.getTransitionAreas(label));
             if (denominator != null) {
-                denominator = denominator.merge(resultFileData.getTransitionAreas(normalizationMethod.getIsotopeLabelTypeName()));
+                denominator = denominator.merge(resultFileData.getTransitionAreas(isotopeLabelName));
             }
         }
         if (transitionKeys != null) {

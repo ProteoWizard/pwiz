@@ -20,6 +20,7 @@ package edu.washington.gs.skyline.model.quantification;
 
 import org.apache.commons.math3.fitting.WeightedObservedPoint;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
+import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 
 import java.util.Arrays;
 import java.util.List;
@@ -132,8 +133,8 @@ public abstract class RegressionFit {
     protected abstract CalibrationCurve performFit(List<WeightedObservedPoint> points);
 
     public Double computeRSquared(CalibrationCurve curve, List<WeightedObservedPoint> points) {
-        DescriptiveStatistics yValues = new DescriptiveStatistics();
-        DescriptiveStatistics residuals = new DescriptiveStatistics();
+        SummaryStatistics yValues = new SummaryStatistics();
+        SummaryStatistics residuals = new SummaryStatistics();
         for (WeightedObservedPoint point : points) {
             Double yFitted = curve.getY(point.getX());
             if (yFitted == null) {
@@ -145,7 +146,10 @@ public abstract class RegressionFit {
         if (0 == residuals.getN()) {
             return null;
         }
-        double totalSumOfSquares = yValues.getVariance();
+        double yMean = yValues.getMean();
+        double totalSumOfSquares = points.stream()
+                .mapToDouble(p->(p.getY() - yMean) * (p.getY() - yMean))
+                .sum();
         double sumOfSquaresOfResiduals = residuals.getSumsq();
         double rSquared = 1 - sumOfSquaresOfResiduals / totalSumOfSquares;
         return rSquared;

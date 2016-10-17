@@ -148,6 +148,7 @@
     <Compile Include="AddLibraryTest.cs" />
     <Compile Include="AssociateProteinsDlgTest.cs" />
     <Compile Include="BackgroundEventThreadsTest.cs" />
+    <Compile Include="CalibrationScenariosTest.cs" />
     <Compile Include="CalibrationTest.cs" />
     <Compile Include="ChorusFunctionalTest.cs" />
     <Compile Include="DocumentGridClipboardOperationsTest.cs" />
@@ -302,6 +303,7 @@
     <None Include="AnnotationTest.zip" />
     <None Include="AssayLibraryImportTest.zip" />
     <None Include="BackgroundProteomeTest.zip" />
+    <None Include="CalibrationScenariosTest.zip" />
     <None Include="CalibrationTest.zip" />
     <None Include="ChorusFunctionalTest.zip" />
     <None Include="ConfigureToolsDlgTest.zip" />

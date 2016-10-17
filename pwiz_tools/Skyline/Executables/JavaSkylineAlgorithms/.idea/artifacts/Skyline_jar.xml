@@ -7,6 +7,9 @@
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/apache/commons/commons-math3/3.6/commons-math3-3.6.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/com/google/guava/guava/19.0-rc2/guava-19.0-rc2.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/apache/commons/commons-lang3/3.4/commons-lang3-3.4.jar" path-in-jar="/" />
+      <element id="directory" name="src">
+        <element id="dir-copy" path="$PROJECT_DIR$/src/main/java" />
+      </element>
     </root>
   </artifact>
 </component>
