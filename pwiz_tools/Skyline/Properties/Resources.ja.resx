@@ -500,7 +500,7 @@
     <value>作成(&amp;C)...</value>
   </data>
   <data name="PasteDlg_ReadPrecursorOrProductColumns_Error_on_line__0___Precursor_m_z__1__does_not_agree_with_value__2__as_calculated_from_ion_formula_and_charge_state__delta____3___Transition_Settings___Instrument___Method_match_tolerance_m_z____4_____Correct_the_m_z_value_in_the_table__or_leave_it_blank_and_Skyline_will_calculate_it_for_you_" xml:space="preserve">
-    <value>行{0}のエラー：プリカーサーm/z {1}は、イオン公式から計算された値{2}および電荷状態（差分 = {3}、トランジション設定 | 装置 | メソッド一致耐性誤差m/z = {4}）に一致しません。  表でm/z値を訂正してください。空欄にしておくと、Skylineが計算します。</value>
+    <value>行{0}のエラー：プリカーサーm/z {1}は、イオン公式および電荷状態（差分 = {3}、トランジション設定 | 装置 | メソッド一致耐性誤差m/z = {4}）から計算された値{2}に一致しません。  表でm/z値を訂正してください。空欄にしておくと、Skylineが計算します。</value>
   </data>
   <data name="Pivoter_QualifyColumnInfo_AreaRatio" xml:space="preserve">
     <value>AreaRatio</value>
@@ -1399,7 +1399,7 @@
     <value>ファイル{0}が開けませんでした。{1}</value>
   </data>
   <data name="PasteDlg_ReadPrecursorOrProductColumns_Error_on_line__0___Product_m_z__1__does_not_agree_with_value__2__as_calculated_from_ion_formula_and_charge_state__delta____3___Transition_Settings___Instrument___Method_match_tolerance_m_z____4_____Correct_the_m_z_value_in_the_table__or_leave_it_blank_and_Skyline_will_calculate_it_for_you_" xml:space="preserve">
-    <value>行{0}のエラー：プロダクトm/z {1}は、イオン公式から計算された値{2}および電荷状態（差分 = {3}、トランジション設定 | 装置 | メソッド一致耐性誤差m/z = {4}）に一致しません。  表でm/z値を訂正してください。空欄にしておくと、Skylineが計算します。</value>
+    <value>行{0}のエラー：プロダクトm/z {1}は、イオン公式および電荷状態（差分 = {3}、トランジション設定 | 装置 | メソッド一致耐性誤差m/z = {4}）から計算された値{2}に一致しません。  表でm/z値を訂正してください。空欄にしておくと、Skylineが計算します。</value>
   </data>
   <data name="EditIrtCalcDlg_OkDialog_Please_use_a_full_path_to_a_database_file_for_the_iRT_calculator" xml:space="preserve">
     <value>iRTカルキュレータのデータベースファイルにはフルパスを使用してください。</value>
@@ -4247,7 +4247,7 @@
   </data>
   <data name="SkippedReportErrorDlg_btnOK_Click_No_Email" xml:space="preserve">
     <value>エラーについてさらに質問がある場合、連絡を差し上げる電子メールアドレスを入力してください。
- ご希望により、匿名ででもレポートできます。</value>
+ ご希望により、匿名でもレポートできます。</value>
   </data>
   <data name="ExportMethodDlg_ValidateSettings_Cannot_export_medium_tune_transition_list__The_following_precursors_are_missing_rough_tune_results_" xml:space="preserve">
     <value>標準調整トランジションリストはエクスポートできません。以下のプリカーサーの粗調整結果がありません：</value>
@@ -4310,7 +4310,7 @@
     <value>勾配</value>
   </data>
   <data name="CommandLine_ImportTransitionList_Adding__0__spectra_to_the_library__1_" xml:space="preserve">
-    <value>{0}スペクトルをライブラリ{1}に追加中</value>
+    <value>{0}個のスペクトルをライブラリ{1}に追加中</value>
   </data>
   <data name="CollisionalCrossSectionGridViewDriverBase_ValidateRow_The_collisional_cross_section__0__must_be_greater_than_zero_on_line__1__" xml:space="preserve">
     <value>{1}行目の衝突断面積{0}は0より大きくなければなりません。</value>
@@ -7307,7 +7307,7 @@
     <value>標準には2つの固定点が必要です。</value>
   </data>
   <data name="SkylineWindow_ChangeDocPanoramaUri_Store_Panorama_publish_location" xml:space="preserve">
-    <value>Panorama公開場所を保存</value>
+    <value>Panorama公開場所を保管</value>
   </data>
   <data name="ConfigureToolsDlg_UnpackZipTool_Error_deleting_the_directory_of_the_existing_tool__Please_close_anything_using_that_directory_and_try_the_overwriting_import_again_later" xml:space="preserve">
     <value>既存ツールのディレクトリの削除エラー。このディレクトリを使用しているプログラムをすべて閉じ、後でもう一度上書きインポートしてください</value>
@@ -8268,7 +8268,7 @@
     <value>不変量</value>
   </data>
   <data name="CommandLine_CreateIrtDatabase_Error__Importing_an_assay_library_to_a_document_without_an_iRT_calculator_cannot_create__0___because_it_exists_" xml:space="preserve">
-    <value>エラー： iRTカルキュレータなしでドキュメントをアッセイライブラリにインポートすると、{0}が、存在するために作成できません。</value>
+    <value>エラー： iRTカルキュレータなしでドキュメントをアッセイライブラリにインポートすると、{0}が存在するためにこれを作成できません。</value>
   </data>
   <data name="MassListImporter_Import_Importing__0__" xml:space="preserve">
     <value>{0}のインポート中</value>
@@ -8389,7 +8389,7 @@
     <value>繰り返し測定名</value>
   </data>
   <data name="CommandLine_ImportTransitionList_Error__Imported_assay_library__0__lacks_ion_abundance_values_" xml:space="preserve">
-    <value>エラー：インポート済みのアッセイライブラリ{0}にはイオン付加物の値がありません。</value>
+    <value>エラー：インポート済みのアッセイライブラリ{0}にはイオン存在量の値がありません。</value>
   </data>
   <data name="SkylineWindow_OpenFile_Loading___" xml:space="preserve">
     <value>読み込み中...</value>
@@ -8991,7 +8991,7 @@
 </value>
   </data>
   <data name="FileProgressControl_SetStatus_" xml:space="preserve">
-    <value>{0}で：
+    <value>{0}に：
  {1}
 </value>
     <comment>used for user-facing error messages when importing results</comment>
@@ -9027,7 +9027,7 @@
     <value>MIDASライブラリからのライブラリ実行の削除に失敗しました。</value>
   </data>
   <data name="MidasLibrary_AddSpectra_Error_loading_MIDAS_library_for_adding_spectra_" xml:space="preserve">
-    <value>スペクトラ追加のためMIDASライブラリを読み込む際にエラーが発生しました。</value>
+    <value>スペクトル追加のためMIDASライブラリを読み込む際にエラーが発生しました。</value>
   </data>
   <data name="MidasLibrary_AddSpectra_Adding_spectra_to_MIDAS_library" xml:space="preserve">
     <value>MIDASライブラリにスペクトルを追加中</value>
@@ -9165,7 +9165,7 @@
     <value>式のヘルプ</value>
   </data>
   <data name="FormulaBox_FormulaHelpText_Formulas_are_written_in_standard_chemical_notation__e_g___C2H6O____Heavy_isotopes_are_indicated_by_a_prime__e_g__C__for_C13__or_double_prime_for_less_abundant_stable_iostopes__e_g__O__for_O17__O__for_O18__" xml:space="preserve">
-    <value>式は標準の化学表記法（例：「C2H6O」）で書かれています。  重同位体は、プライム（例：C13のC'）か、存在量が少ない安定同位体の場合ダブルプライム（例：O17のO"、O18のO'）で表されます。</value>
+    <value>式は標準の化学表記法（例：「C2H6O」）で書かれています。  重同位体は、プライム（例：C13のC'）か、存在量が低い安定同位体の場合ダブルプライム（例：O17のO"、O18のO'）で表されます。</value>
   </data>
   <data name="PasteDlg_btnTransitionListHelp_Click_Transition_List_Help" xml:space="preserve">
     <value>トランジションリストのヘルプ</value>
