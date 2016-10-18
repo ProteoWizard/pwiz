@@ -58,6 +58,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public class SpectraPage : IFormView { }
         public class ChromatogramsPage : IFormView { }
+        public class ChromatogramsDiaPage : IFormView { }
         public class MatchModsPage : IFormView { }
         public class TransitionSettingsPage : IFormView { }
         public class Ms1FullScanPage : IFormView { }
@@ -574,6 +575,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 Invoke(new Action(() => selectedIndex = wizardPagesImportPeptideSearch.SelectedIndex));
                 if (selectedIndex == (int) Pages.full_scan_settings_page && WorkflowType != Workflow.dda)
                     return new Ms2FullScanPage();
+                if (selectedIndex == (int) Pages.chromatograms_page && WorkflowType == Workflow.dia)
+                    return new ChromatogramsDiaPage();
                 return TAB_PAGES[selectedIndex];
             }
         }

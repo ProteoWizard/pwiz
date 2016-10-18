@@ -144,7 +144,7 @@
     <value>panelProperties</value>
   </data>
   <data name="&gt;&gt;textName.ZOrder" xml:space="preserve">
-    <value>13</value>
+    <value>14</value>
   </data>
   <data name="label4.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -171,7 +171,7 @@
     <value>panelProperties</value>
   </data>
   <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
-    <value>14</value>
+    <value>15</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -253,7 +253,7 @@
     <value>panelProperties</value>
   </data>
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
-    <value>11</value>
+    <value>12</value>
   </data>
   <data name="textPath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -281,7 +281,7 @@
     <value>panelProperties</value>
   </data>
   <data name="&gt;&gt;textPath.ZOrder" xml:space="preserve">
-    <value>12</value>
+    <value>13</value>
   </data>
   <data name="comboAction.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -316,7 +316,7 @@
     <value>panelProperties</value>
   </data>
   <data name="&gt;&gt;comboAction.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>11</value>
   </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -343,7 +343,7 @@
     <value>panelProperties</value>
   </data>
   <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>10</value>
   </data>
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -355,7 +355,7 @@
     <value>238, 13</value>
   </data>
   <data name="label3.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
+    <value>12</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
     <value>研究室管轄者（proteome.gs.washington.eduなど）(&amp;U)：</value>
@@ -370,7 +370,7 @@
     <value>panelProperties</value>
   </data>
   <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>9</value>
   </data>
   <data name="textAuthority.Location" type="System.Drawing.Point, System.Drawing">
     <value>15, 272</value>
@@ -379,7 +379,7 @@
     <value>267, 20</value>
   </data>
   <data name="textAuthority.TabIndex" type="System.Int32, mscorlib">
-    <value>12</value>
+    <value>13</value>
   </data>
   <data name="textAuthority.ToolTip" xml:space="preserve">
     <value>入力値は、このライブラリを一意に識別するLSIDに
@@ -400,7 +400,7 @@ tabb.vanderbilt.edu などのようなものにします。</value>
     <value>panelProperties</value>
   </data>
   <data name="&gt;&gt;textAuthority.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>8</value>
   </data>
   <data name="textID.Location" type="System.Drawing.Point, System.Drawing">
     <value>15, 334</value>
@@ -409,7 +409,7 @@ tabb.vanderbilt.edu などのようなものにします。</value>
     <value>100, 20</value>
   </data>
   <data name="textID.TabIndex" type="System.Int32, mscorlib">
-    <value>13</value>
+    <value>15</value>
   </data>
   <data name="textID.ToolTip" xml:space="preserve">
     <value>入力値は、このライブラリを一意に識別するLSIDに
@@ -431,7 +431,7 @@ Yeast_20090902</value>
     <value>panelProperties</value>
   </data>
   <data name="&gt;&gt;textID.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>7</value>
   </data>
   <data name="label5.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -443,7 +443,7 @@ Yeast_20090902</value>
     <value>55, 13</value>
   </data>
   <data name="label5.TabIndex" type="System.Int32, mscorlib">
-    <value>20</value>
+    <value>14</value>
   </data>
   <data name="label5.Text" xml:space="preserve">
     <value>ライブラリID(&amp;I)：</value>
@@ -458,7 +458,7 @@ Yeast_20090902</value>
     <value>panelProperties</value>
   </data>
   <data name="&gt;&gt;label5.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>6</value>
   </data>
   <data name="cbKeepRedundant.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -489,7 +489,7 @@ Yeast_20090902</value>
     <value>panelProperties</value>
   </data>
   <data name="&gt;&gt;cbKeepRedundant.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="textCutoff.Location" type="System.Drawing.Point, System.Drawing">
     <value>15, 210</value>
@@ -519,7 +519,7 @@ SEQUEST SQTの場合、これは1 - 最大FDRです。</value>
     <value>panelProperties</value>
   </data>
   <data name="&gt;&gt;textCutoff.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="label6.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -546,10 +546,40 @@ SEQUEST SQTの場合、これは1 - 最大FDRです。</value>
     <value>panelProperties</value>
   </data>
   <data name="&gt;&gt;label6.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="panelProperties.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="cbIncludeAmbiguousMatches.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbIncludeAmbiguousMatches.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="cbIncludeAmbiguousMatches.Location" type="System.Drawing.Point, System.Drawing">
+    <value>155, 212</value>
+  </data>
+  <data name="cbIncludeAmbiguousMatches.Size" type="System.Drawing.Size, System.Drawing">
+    <value>158, 17</value>
+  </data>
+  <data name="cbIncludeAmbiguousMatches.TabIndex" type="System.Int32, mscorlib">
+    <value>11</value>
+  </data>
+  <data name="cbIncludeAmbiguousMatches.Text" xml:space="preserve">
+    <value>あいまい一致を含める(&amp;M)</value>
+  </data>
+  <data name="&gt;&gt;cbIncludeAmbiguousMatches.Name" xml:space="preserve">
+    <value>cbIncludeAmbiguousMatches</value>
+  </data>
+  <data name="&gt;&gt;cbIncludeAmbiguousMatches.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbIncludeAmbiguousMatches.Parent" xml:space="preserve">
+    <value>panelProperties</value>
+  </data>
+  <data name="&gt;&gt;cbIncludeAmbiguousMatches.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <data name="cbFilter.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -576,7 +606,7 @@ SEQUEST SQTの場合、これは1 - 最大FDRです。</value>
     <value>panelProperties</value>
   </data>
   <data name="&gt;&gt;cbFilter.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="btnBrowse.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -603,7 +633,7 @@ SEQUEST SQTの場合、これは1 - 最大FDRです。</value>
     <value>panelProperties</value>
   </data>
   <data name="&gt;&gt;btnBrowse.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="panelProperties.Location" type="System.Drawing.Point, System.Drawing">
     <value>2, 2</value>

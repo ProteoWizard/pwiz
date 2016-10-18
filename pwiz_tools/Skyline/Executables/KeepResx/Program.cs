@@ -29,7 +29,7 @@ namespace KeepResx
             @"skyline\testutil\*"
         };
 
-        private const string ExtResx = ".resx";
+        private const string ExtResx = ".ja.resx";
         private static readonly string[] ExtNotResx = new string[0]; // "zh-CHS.resx" or ".ja.resx" ;
         private const string ExtNew = ".resx";
 
@@ -46,7 +46,7 @@ namespace KeepResx
         /// <summary>
         /// For removing all source code files except .resx files
         /// </summary>
-        private static bool RemoveNonResx { get { return true; } }
+        private static bool RemoveNonResx { get { return false; } }
         /// <summary>
         /// For moving resx files from ExtResx to ExtNew (e.g. .cn.resx from translators to .zh-CHS.resx)
         /// </summary>
@@ -59,7 +59,7 @@ namespace KeepResx
         /// <summary>
         /// In case files from localizers have UTF8 prefix, which needs to be removed
         /// </summary>
-        private static bool FixResxUtf8 { get { return false; } }
+        private static bool FixResxUtf8 { get { return true; } }
 
         /// <summary>
         /// Replace strings in findeReplace list if true

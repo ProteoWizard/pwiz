@@ -151,7 +151,7 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="gridRegression.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 515</value>
+    <value>16, 542</value>
   </data>
   <data name="gridRegression.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>4, 4, 4, 4</value>
@@ -160,7 +160,7 @@
     <value>534, 117</value>
   </data>
   <data name="gridRegression.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
+    <value>18</value>
   </data>
   <data name="gridRegression.ToolTip" xml:space="preserve">
     <value>形式の方程式を用い、イオン移動度におけるプリカーサー衝突断面積「C」からミリ秒「D」における予測ドリフト時間を計算するために勾配と切片値が使用されました：
@@ -179,7 +179,7 @@ D = 勾配* C +切片
     <value>$this</value>
   </data>
   <data name="&gt;&gt;gridRegression.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>12</value>
   </data>
   <data name="comboLibrary.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
@@ -188,7 +188,7 @@ D = 勾配* C +切片
     <value>16</value>
   </data>
   <data name="comboLibrary.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 450</value>
+    <value>16, 477</value>
   </data>
   <data name="comboLibrary.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>4, 4, 4, 4</value>
@@ -197,7 +197,7 @@ D = 勾配* C +切片
     <value>325, 24</value>
   </data>
   <data name="comboLibrary.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
+    <value>16</value>
   </data>
   <data name="comboLibrary.ToolTip" xml:space="preserve">
     <value>衝突断面積値または特定のペプチドや電荷状態に対する測定ドリフト時間の保存された表を選択（または作成）します。</value>
@@ -212,7 +212,7 @@ D = 勾配* C +切片
     <value>$this</value>
   </data>
   <data name="&gt;&gt;comboLibrary.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>13</value>
   </data>
   <data name="textResolvingPower.Location" type="System.Drawing.Point, System.Drawing">
     <value>16, 101</value>
@@ -243,7 +243,7 @@ W = 2T/R
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textResolvingPower.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>15</value>
   </data>
   <data name="textName.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -273,7 +273,7 @@ W = 2T/R
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textName.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>17</value>
   </data>
   <data name="gridMeasuredDriftTimes.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
@@ -312,7 +312,7 @@ W = 2T/R
     <value>90</value>
   </data>
   <data name="gridMeasuredDriftTimes.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 165</value>
+    <value>16, 192</value>
   </data>
   <data name="gridMeasuredDriftTimes.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>4, 4, 4, 4</value>
@@ -321,7 +321,7 @@ W = 2T/R
     <value>534, 211</value>
   </data>
   <data name="gridMeasuredDriftTimes.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>12</value>
   </data>
   <data name="gridMeasuredDriftTimes.ToolTip" xml:space="preserve">
     <value>観測されたドリフト時間が優先的に使用されます。 欠落した値は、提供されたイオン移動度ライブラリがある場合、そこから取得されます。</value>
@@ -336,7 +336,7 @@ W = 2T/R
     <value>$this</value>
   </data>
   <data name="&gt;&gt;gridMeasuredDriftTimes.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>10</value>
   </data>
   <data name="cbOffsetHighEnergySpectra.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
@@ -345,13 +345,13 @@ W = 2T/R
     <value>True</value>
   </data>
   <data name="cbOffsetHighEnergySpectra.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 383</value>
+    <value>16, 410</value>
   </data>
   <data name="cbOffsetHighEnergySpectra.Size" type="System.Drawing.Size, System.Drawing">
     <value>284, 21</value>
   </data>
   <data name="cbOffsetHighEnergySpectra.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
+    <value>13</value>
   </data>
   <data name="cbOffsetHighEnergySpectra.Text" xml:space="preserve">
     <value>高エネルギースペクトルオフセットドリフト時間</value>
@@ -369,19 +369,19 @@ W = 2T/R
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbOffsetHighEnergySpectra.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>8</value>
   </data>
   <data name="btnUseResults.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
   <data name="btnUseResults.Location" type="System.Drawing.Point, System.Drawing">
-    <value>433, 383</value>
+    <value>433, 410</value>
   </data>
   <data name="btnUseResults.Size" type="System.Drawing.Size, System.Drawing">
     <value>117, 28</value>
   </data>
   <data name="btnUseResults.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
+    <value>14</value>
   </data>
   <data name="btnUseResults.Text" xml:space="preserve">
     <value>結果を使用(&amp;U)</value>
@@ -399,7 +399,106 @@ W = 2T/R
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnUseResults.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>7</value>
+  </data>
+  <data name="cbLinear.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbLinear.Location" type="System.Drawing.Point, System.Drawing">
+    <value>15, 127</value>
+  </data>
+  <data name="cbLinear.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="cbLinear.Size" type="System.Drawing.Size, System.Drawing">
+    <value>141, 21</value>
+  </data>
+  <data name="cbLinear.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
+  <data name="cbLinear.Text" xml:space="preserve">
+    <value>線形ピーク幅(&amp;L)</value>
+  </data>
+  <data name="cbLinear.ToolTip" xml:space="preserve">
+    <value>Waters SONARデータの場合、ドリフト面積ピークの線形補間を有効にするためこのチェックボックスをオンにします。</value>
+  </data>
+  <data name="&gt;&gt;cbLinear.Name" xml:space="preserve">
+    <value>cbLinear</value>
+  </data>
+  <data name="&gt;&gt;cbLinear.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbLinear.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;cbLinear.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="textWidthAtDt0.Location" type="System.Drawing.Point, System.Drawing">
+    <value>157, 101</value>
+  </data>
+  <data name="textWidthAtDt0.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="textWidthAtDt0.Size" type="System.Drawing.Size, System.Drawing">
+    <value>132, 22</value>
+  </data>
+  <data name="textWidthAtDt0.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="textWidthAtDt0.ToolTip" xml:space="preserve">
+    <value>ドリフト時間の一致耐性を決定（ドリフト時間がミリ秒で測定される）。ここで：
+ dtMax = 最大測定ドリフト時間
+ W0 = ドリフト時間ゼロでの幅
+ Wmax = dtMaxでの幅
+ドリフト時間「T」に中心のあるドリフト時間の一致ウィンドウの幅
+ W = (W0 + T*(Wmax-W0)/dtMax)
+</value>
+  </data>
+  <data name="&gt;&gt;textWidthAtDt0.Name" xml:space="preserve">
+    <value>textWidthAtDt0</value>
+  </data>
+  <data name="&gt;&gt;textWidthAtDt0.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textWidthAtDt0.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;textWidthAtDt0.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="textWidthAtDtMax.Location" type="System.Drawing.Point, System.Drawing">
+    <value>349, 101</value>
+  </data>
+  <data name="textWidthAtDtMax.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="textWidthAtDtMax.Size" type="System.Drawing.Size, System.Drawing">
+    <value>132, 22</value>
+  </data>
+  <data name="textWidthAtDtMax.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="textWidthAtDtMax.ToolTip" xml:space="preserve">
+    <value>ドリフト時間の一致耐性を決定（ドリフト時間がミリ秒で測定される）。ここで：
+ dtMax = 最大測定ドリフト時間
+ W0 = ドリフト時間ゼロでの幅
+ Wmax = dtMaxでの幅
+ドリフト時間「T」に中心のあるドリフト時間の一致ウィンドウの幅
+ W = (W0 + T*(Wmax-W0)/dtMax)
+</value>
+  </data>
+  <data name="&gt;&gt;textWidthAtDtMax.Name" xml:space="preserve">
+    <value>textWidthAtDtMax</value>
+  </data>
+  <data name="&gt;&gt;textWidthAtDtMax.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textWidthAtDtMax.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;textWidthAtDtMax.ZOrder" xml:space="preserve">
+    <value>2</value>
   </data>
   <metadata name="bindingChargeRegressionLines.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
@@ -420,7 +519,7 @@ W = 2T/R
     <value>100, 28</value>
   </data>
   <data name="btnOk.TabIndex" type="System.Int32, mscorlib">
-    <value>12</value>
+    <value>19</value>
   </data>
   <data name="btnOk.Text" xml:space="preserve">
     <value>OK</value>
@@ -435,7 +534,7 @@ W = 2T/R
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
-    <value>13</value>
+    <value>20</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -453,7 +552,7 @@ W = 2T/R
     <value>100, 28</value>
   </data>
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
-    <value>13</value>
+    <value>20</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
     <value>キャンセル</value>
@@ -468,7 +567,7 @@ W = 2T/R
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>12</value>
+    <value>19</value>
   </data>
   <data name="labelConversionParameters.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
@@ -480,7 +579,7 @@ W = 2T/R
     <value>NoControl</value>
   </data>
   <data name="labelConversionParameters.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 496</value>
+    <value>12, 523</value>
   </data>
   <data name="labelConversionParameters.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>4, 0, 4, 0</value>
@@ -489,7 +588,7 @@ W = 2T/R
     <value>159, 17</value>
   </data>
   <data name="labelConversionParameters.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
+    <value>17</value>
   </data>
   <data name="labelConversionParameters.Text" xml:space="preserve">
     <value>変換パラメータ(&amp;C)：</value>
@@ -504,7 +603,7 @@ W = 2T/R
     <value>$this</value>
   </data>
   <data name="&gt;&gt;labelConversionParameters.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>11</value>
   </data>
   <data name="labelIonMobilityLibrary.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
@@ -516,7 +615,7 @@ W = 2T/R
     <value>NoControl</value>
   </data>
   <data name="labelIonMobilityLibrary.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 430</value>
+    <value>12, 457</value>
   </data>
   <data name="labelIonMobilityLibrary.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>4, 0, 4, 0</value>
@@ -525,7 +624,7 @@ W = 2T/R
     <value>130, 17</value>
   </data>
   <data name="labelIonMobilityLibrary.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
+    <value>15</value>
   </data>
   <data name="labelIonMobilityLibrary.Text" xml:space="preserve">
     <value>イオン移動度ライブラリ(&amp;I)：</value>
@@ -540,7 +639,7 @@ W = 2T/R
     <value>$this</value>
   </data>
   <data name="&gt;&gt;labelIonMobilityLibrary.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>14</value>
   </data>
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -573,7 +672,7 @@ W = 2T/R
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>16</value>
   </data>
   <data name="label4.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -591,7 +690,7 @@ W = 2T/R
     <value>49, 17</value>
   </data>
   <data name="label4.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="label4.Text" xml:space="preserve">
     <value>名前(&amp;N)：</value>
@@ -606,7 +705,7 @@ W = 2T/R
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
-    <value>11</value>
+    <value>18</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -615,7 +714,7 @@ W = 2T/R
     <value>NoControl</value>
   </data>
   <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 144</value>
+    <value>13, 171</value>
   </data>
   <data name="label2.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>4, 0, 4, 0</value>
@@ -624,7 +723,7 @@ W = 2T/R
     <value>140, 17</value>
   </data>
   <data name="label2.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+    <value>11</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
     <value>測定ドリフト時間(&amp;M)：</value>
@@ -639,7 +738,136 @@ W = 2T/R
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>9</value>
+  </data>
+  <data name="labelWidthDtZero.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelWidthDtZero.Location" type="System.Drawing.Point, System.Drawing">
+    <value>155, 81</value>
+  </data>
+  <data name="labelWidthDtZero.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 0, 2, 0</value>
+  </data>
+  <data name="labelWidthDtZero.Size" type="System.Drawing.Size, System.Drawing">
+    <value>90, 17</value>
+  </data>
+  <data name="labelWidthDtZero.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="labelWidthDtZero.Text" xml:space="preserve">
+    <value>Dt0での幅(&amp;0)：</value>
+  </data>
+  <data name="&gt;&gt;labelWidthDtZero.Name" xml:space="preserve">
+    <value>labelWidthDtZero</value>
+  </data>
+  <data name="&gt;&gt;labelWidthDtZero.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelWidthDtZero.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;labelWidthDtZero.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="labelWidthDtMax.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelWidthDtMax.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelWidthDtMax.Location" type="System.Drawing.Point, System.Drawing">
+    <value>348, 81</value>
+  </data>
+  <data name="labelWidthDtMax.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 0, 2, 0</value>
+  </data>
+  <data name="labelWidthDtMax.Size" type="System.Drawing.Size, System.Drawing">
+    <value>107, 17</value>
+  </data>
+  <data name="labelWidthDtMax.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="labelWidthDtMax.Text" xml:space="preserve">
+    <value>DtMaxでの幅(&amp;X)：</value>
+  </data>
+  <data name="&gt;&gt;labelWidthDtMax.Name" xml:space="preserve">
+    <value>labelWidthDtMax</value>
+  </data>
+  <data name="&gt;&gt;labelWidthDtMax.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelWidthDtMax.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;labelWidthDtMax.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="labelWidthDtZeroUnits.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelWidthDtZeroUnits.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelWidthDtZeroUnits.Location" type="System.Drawing.Point, System.Drawing">
+    <value>293, 106</value>
+  </data>
+  <data name="labelWidthDtZeroUnits.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 0, 2, 0</value>
+  </data>
+  <data name="labelWidthDtZeroUnits.Size" type="System.Drawing.Size, System.Drawing">
+    <value>41, 17</value>
+  </data>
+  <data name="labelWidthDtZeroUnits.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="labelWidthDtZeroUnits.Text" xml:space="preserve">
+    <value>ミリ秒</value>
+  </data>
+  <data name="&gt;&gt;labelWidthDtZeroUnits.Name" xml:space="preserve">
+    <value>labelWidthDtZeroUnits</value>
+  </data>
+  <data name="&gt;&gt;labelWidthDtZeroUnits.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelWidthDtZeroUnits.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;labelWidthDtZeroUnits.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="labelWidthDtMaxUnits.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelWidthDtMaxUnits.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelWidthDtMaxUnits.Location" type="System.Drawing.Point, System.Drawing">
+    <value>484, 106</value>
+  </data>
+  <data name="labelWidthDtMaxUnits.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 0, 2, 0</value>
+  </data>
+  <data name="labelWidthDtMaxUnits.Size" type="System.Drawing.Size, System.Drawing">
+    <value>41, 17</value>
+  </data>
+  <data name="labelWidthDtMaxUnits.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="labelWidthDtMaxUnits.Text" xml:space="preserve">
+    <value>ミリ秒</value>
+  </data>
+  <data name="&gt;&gt;labelWidthDtMaxUnits.Name" xml:space="preserve">
+    <value>labelWidthDtMaxUnits</value>
+  </data>
+  <data name="&gt;&gt;labelWidthDtMaxUnits.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelWidthDtMaxUnits.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;labelWidthDtMaxUnits.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -648,7 +876,7 @@ W = 2T/R
     <value>8, 16</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>566, 654</value>
+    <value>566, 681</value>
   </data>
   <data name="$this.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>4, 4, 4, 4</value>
