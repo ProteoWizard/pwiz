@@ -1007,8 +1007,9 @@ void ScanInfoImpl::parseFilterString()
     analyzerScanOffset_ = filterParser.analyzer_scan_offset_;
 
     // overwrite the filter line's isolation m/z with the value from GetPrecursorMassFromScanNum()
-    if (!precursorMZs_.empty() /*&& isDependent_ && !hasMultiplePrecursors_*/)
-        precursorMZs_[0] = rawfile_->getPrecursorMass(scanNumber_, MSOrder_Any);
+    if (precursorMZs_.size() > msLevel_-2 && isDependent_ && !hasMultiplePrecursors_)
+        for (int i = msLevel_-2; i >= 0; --i)
+            precursorMZs_[i] = rawfile_->getPrecursorMass(scanNumber_, MSOrder(i+2));
 
     for (size_t i=0; i < filterParser.scanRangeMin_.size(); ++i)
         scanRanges_.push_back(make_pair(filterParser.scanRangeMin_[i], filterParser.scanRangeMax_[i]));
