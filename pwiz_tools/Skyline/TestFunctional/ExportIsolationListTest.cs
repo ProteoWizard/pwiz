@@ -457,6 +457,47 @@ namespace pwiz.SkylineTestFunctional
             }
             return sb.ToString();
         }
+    }
 
+    [TestClass]
+    public class ExportIsolationListTestMultiple : AbstractFunctionalTestEx
+    {
+        [TestMethod]
+        public void TestExportIsolationListMultiple()
+        {
+            TestFilesZip = @"TestFunctional\ExportIsolationListTest.zip";
+            RunFunctionalTest();
+        }
+
+        protected override void DoTest()
+        {
+            // Test that exporting multiple methods produces the same as a single method
+            var file = TestFilesDir.GetTestPath("example.sky");
+            RunUI(() => { SkylineWindow.OpenFile(file); });
+            WaitForDocumentLoaded();
+            
+            var exportMethodDlgSingle = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.IsolationList));
+            RunUI(() =>
+            {
+                exportMethodDlgSingle.InstrumentType = ExportInstrumentType.THERMO_Q_EXACTIVE;
+                exportMethodDlgSingle.ExportStrategy = ExportStrategy.Single;
+                exportMethodDlgSingle.MethodType = ExportMethodType.Scheduled;
+            });
+            var outSingle = TestFilesDir.GetTestPath("outSingle.csv");
+            OkDialog(exportMethodDlgSingle, () => exportMethodDlgSingle.OkDialog(outSingle));
+            
+            var exportMethodDlgMultiple = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.IsolationList));
+            RunUI(() =>
+            {
+                exportMethodDlgMultiple.InstrumentType = ExportInstrumentType.THERMO_Q_EXACTIVE;
+                exportMethodDlgMultiple.ExportStrategy = ExportStrategy.Buckets;
+                exportMethodDlgMultiple.MaxTransitions = 100;
+                exportMethodDlgMultiple.MethodType = ExportMethodType.Scheduled;
+            });
+            var outMultiple = TestFilesDir.GetTestPath("outMultiple");
+            OkDialog(exportMethodDlgMultiple, () => exportMethodDlgMultiple.OkDialog(outMultiple + ".csv"));
+
+            Assert.AreEqual(File.ReadAllText(outSingle), File.ReadAllText(outMultiple + "_0001.csv"));
+        }
     }
 }
