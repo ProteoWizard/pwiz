@@ -123,7 +123,7 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
   <data name="btnBackgroundProteome.Location" type="System.Drawing.Point, System.Drawing">
-    <value>110, 243</value>
+    <value>130, 243</value>
   </data>
   <data name="btnBackgroundProteome.Size" type="System.Drawing.Size, System.Drawing">
     <value>146, 23</value>
@@ -154,7 +154,7 @@
     <value>16, 243</value>
   </data>
   <data name="btnUseFasta.Size" type="System.Drawing.Size, System.Drawing">
-    <value>88, 23</value>
+    <value>108, 23</value>
   </data>
   <data name="btnUseFasta.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
