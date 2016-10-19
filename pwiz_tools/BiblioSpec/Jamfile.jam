@@ -29,7 +29,7 @@ build-project-if-exists src ;
 build-project-if-exists tests ;
 
 
-.common-location = $(PWIZ_BUILD_PATH) ;
+.common-location = $(PWIZ_BUILD_PATH)/BiblioSpec ;
 
 import tar ;
 import common ;
@@ -43,7 +43,7 @@ import path ;
 version-tag = $(PWIZ_MAJOR) $(PWIZ_MINOR) $(PWIZ_SVNREV) ;
 
 # create a VERSION file which can be used by TC to parse the canonical pwiz version
-make VERSION : : @make_VERSION : <location>$(PWIZ_BUILD_PATH) ;
+make VERSION : : @make_VERSION : <location>$(.common-location) ;
 actions make_VERSION { @($(STDOUT):E=$(version-tag:J=.)) > "$(<)" }
 
 
