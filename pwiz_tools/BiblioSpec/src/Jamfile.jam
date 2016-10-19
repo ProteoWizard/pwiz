@@ -282,6 +282,15 @@ make quantitation_2.xsd : ./quantitation_2.xsd : @common.copy ;
 # required file for running BlibBuild with MaxQuant support
 make modifications.xml : ./modifications.xml : @common.copy ;
 
+install install
+    : BlibBuild BlibFilter BlibSearch BlibToMs2
+    : <conditional>@install-type
+      <conditional>@install-location
+      <conditional>@install-vendor-api-dependencies
+      <conditional>@install-identdata-dependencies
+      <conditional>@gcc-install-dll-path
+    ;
+
 rule install-msparser-requirements ( properties * )
 {
     local msparser_path = [ msparser-path $(properties) ] ;

@@ -1212,7 +1212,7 @@ bcp.copy-boost-dependencies copy_boost_subset
     # scan all source files for boost dependencies
     [ path.glob-tree $(PWIZ_ROOT_PATH)/pwiz : *.cpp *.hpp ]
     [ path.glob-tree $(PWIZ_ROOT_PATH)/pwiz_aux : *.cpp *.hpp ]
-    [ path.glob-tree $(PWIZ_ROOT_PATH)/pwiz_tools : *.cpp *.hpp ]
+    [ path.glob-tree $(PWIZ_ROOT_PATH)/pwiz_tools : *.cpp *.hpp *.h ]
     [ path.glob-tree $(PWIZ_LIBRARIES_PATH)/boost_aux : *.cpp *.hpp ]
     [ path.glob-tree $(PWIZ_LIBRARIES_PATH)/SQLite : *.cpp *.h ]
 
@@ -1267,6 +1267,13 @@ tar.create boost_$(BOOST_VERSION:J=_).tar.bz2
     exclude:pwiz_tools/Shared/Lib/mysql.*
     exclude:pwiz_tools/Shared/Lib/zlib.*
     exclude:pwiz_tools/Shared/Lib/Microsoft.VC*
+    exclude:pwiz_aux/msrc/utility/vendor_api/ABI/*.dll
+    exclude:pwiz_aux/msrc/utility/vendor_api/Agilent/x*
+    exclude:pwiz_aux/msrc/utility/vendor_api/Bruker/x*
+    exclude:pwiz_aux/msrc/utility/vendor_api/Shimadzu/x*
+    exclude:pwiz_aux/msrc/utility/vendor_api/thermo/x64
+    exclude:pwiz_aux/msrc/utility/vendor_api/thermo/x86
+    exclude:pwiz_aux/msrc/utility/vendor_api/Waters/*_x*
 ;
 
 # the SUBSET file acts as flag so that building a subset tarball doesn't build a source tarball
