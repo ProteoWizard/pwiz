@@ -711,6 +711,15 @@ install msconvert
     ;
 explicit msconvert ;
 
+install msbenchmark
+    : pwiz_tools/examples//msbenchmark
+    : <conditional>@install-type
+      <conditional>@install-location
+      <conditional>@install-vendor-api-dependencies
+      <conditional>@gcc-install-dll-path
+    ;
+explicit msbenchmark ;
+
 install idconvert
     : pwiz_tools/commandline//idconvert
     : <conditional>@install-type

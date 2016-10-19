@@ -91,9 +91,9 @@ int main(int argc, char* argv[])
 
         BOOST_FOREACH(const string& filepath, rawpaths)
         {
-            if (bal::ends_with(filepath, "091204_NFDM_008.raw"))
+            if (bal::ends_with(filepath, "ATEHLSTLSEK_profile.raw"))
             {
-                test(filepath, 615.38, 0.1);
+                test(filepath, 684.3469, 0.1);
                 test(filepath, 0, 0.1);
             }
         }

@@ -39,6 +39,7 @@
 #include "MassLynxRawChromatogramReader.h"
 #include "MassLynxRawInfo.h"
 #include "MassLynxRawScanStatsReader.h"
+#include "MassLynxRawLockMass.h"
 #include "cdtdefs.h"
 #include "compresseddatacluster.h"
 
@@ -66,6 +67,11 @@ struct PWIZ_API_DECL RawData
 
     typedef map<string, vector<boost::any> > ExtendedScanStatsByName;
 
+    struct CachedCompressedDataCluster : public MassLynxRawScanReader
+    {
+        CachedCompressedDataCluster(MassLynxRawReader& massLynxRawReader) : MassLynxRawScanReader(massLynxRawReader) {}
+    };
+
     const string& RawFilepath() const {return rawpath_;}
     const vector<int>& FunctionIndexList() const {return functionIndexList;}
     const vector<bool>& IonMobilityByFunctionIndex() const {return ionMobilityByFunctionIndex;}
@@ -77,6 +83,7 @@ struct PWIZ_API_DECL RawData
           Info(Reader),
           ScanReader(Reader),
           ChromatogramReader(Reader),
+          LockMass(Reader),
           rawpath_(rawpath),
           scanStatsInitialized(init_once_flag_proxy)
     {
@@ -96,31 +103,33 @@ struct PWIZ_API_DECL RawData
         }
 
         ionMobilityByFunctionIndex.resize(functionIndexList.size(), false);
+        CompressedDataCluster tmpCDC;
         for (size_t i=0; i < functionIndexList.size(); ++i)
         {
-            shared_ptr<CachedCompressedDataCluster>& cdc = cdcByFunction[i];
-            cdc.reset(new CachedCompressedDataCluster());
-            cdc->Initialise(rawpath.c_str(), functionIndexList[i]+1); // 1-based
-            ionMobilityByFunctionIndex[i] = cdc->isInitialised();
-            if (!cdc->isInitialised())
-                cdc.reset();
+            tmpCDC.Initialise(rawpath.c_str(), functionIndexList[i] + 1); // 1-based
+            ionMobilityByFunctionIndex[i] = tmpCDC.isInitialised();
+            if (tmpCDC.isInitialised())
+            {
+                shared_ptr<CachedCompressedDataCluster>& cdc = cdcByFunction[i];
+                cdc.reset(new CachedCompressedDataCluster(Reader));
+            }
         }
 
         initHeaderProps(rawpath);
 	}
 
-    const CompressedDataCluster& GetCompressedDataClusterForBlock(int functionIndex, int blockIndex) const
+    CachedCompressedDataCluster& GetCompressedDataClusterForBlock(int functionIndex, int blockIndex) const
     {
         shared_ptr<CachedCompressedDataCluster>& cdc = cdcByFunction[functionIndex];
 
         if (!cdc)
             throw std::runtime_error("[MassLynxRaw::GetCompressedDataClusterForBlock] function " + lexical_cast<string>(functionIndex + 1) + " does not have ion mobility data");
 
-        if (cdc->currentBlock != blockIndex)
-        {
-            cdc->loadDataBlock(blockIndex);
-            cdc->currentBlock = blockIndex;
-        }
+        //if (cdc->currentBlock != blockIndex)
+        //{
+        //    cdc->loadDataBlock(blockIndex);
+        //    cdc->currentBlock = blockIndex;
+        //}
 
         return *cdc;
     }
@@ -165,13 +174,42 @@ struct PWIZ_API_DECL RawData
         return findItr->second;
     }
 
+    bool ApplyLockMass(double mz, double tolerance)
+    {
+        const float MZ_EPSILON = 1e-5f;
+        const float TOLERANCE_EPSILON = 1e-5f;
+        float newMz = (float) mz;
+        float newTolerance = (float) tolerance;
+
+        //bool canApply;
+        //LockMass.CanApplyLockMassCorrection(canApply);
+        //if (!canApply)
+        //    return false; // lockmass correction not available
+
+        bool isApplied;
+        LockMass.GetLockMassCorrectionApplied(isApplied);
+        if (isApplied)
+        {
+            float appliedMz, appliedTolerance;
+            LockMass.GetLockMassValues(appliedMz, appliedTolerance);
+            if (fabs(newMz - appliedMz) < MZ_EPSILON &&
+                fabs(newTolerance - appliedTolerance) < TOLERANCE_EPSILON)
+                return true; // existing lockmass is still applied
+        }
+
+        // apply new values
+        LockMass.UpdateLockMassCorrection(newMz, newTolerance);
+        return true;
+    }
+
     private:
+    MassLynxRawLockMass LockMass;
+
     string rawpath_, empty_;
     vector<int> functionIndexList;
     vector<bool> ionMobilityByFunctionIndex;
     map<string, string> headerProps;
 
-    struct CachedCompressedDataCluster : public CompressedDataCluster { int currentBlock; };
     mutable map<int, shared_ptr<CachedCompressedDataCluster> > cdcByFunction;
 
 	mutable once_flag_proxy scanStatsInitialized;

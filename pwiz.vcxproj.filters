@@ -494,6 +494,14 @@
     <ClCompile Include="pwiz\data\vendor_readers\UIMF\Reader_UIMF_Test.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\UIMF\SpectrumList_UIMF.cpp" />
     <ClCompile Include="pwiz_tools\prototype\peptide2formula.cpp" />
+    <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_ChargeFromIsotope.cpp" />
+    <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_ChargeFromIsotopeTest.cpp" />
+    <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_MZRefiner.cpp" />
+    <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_MZRefinerTest.cpp" />
+    <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_ScanSummer.cpp" />
+    <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_ScanSummerTest.cpp" />
+    <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_LockmassRefiner.cpp" />
+    <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_LockmassRefinerTest.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="libraries\boost_aux\boost\nowide\args.hpp" />
@@ -881,5 +889,9 @@
     <ClInclude Include="pwiz\data\vendor_readers\UIMF\Reader_UIMF.hpp" />
     <ClInclude Include="pwiz\data\vendor_readers\UIMF\SpectrumList_UIMF.hpp" />
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Waters\MassLynxRawScanStatsReader.h" />
+    <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_ChargeFromIsotope.hpp" />
+    <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_MZRefiner.hpp" />
+    <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_ScanSummer.hpp" />
+    <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_LockmassRefiner.hpp" />
   </ItemGroup>
 </Project>

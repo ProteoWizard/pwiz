@@ -153,6 +153,7 @@ namespace MSConvertGUI
             ChargeStatePredictorPanel.Visible = false;
             ActivationPanel.Visible = false;
             SubsetPanel.Visible = false;
+            LockmassRefinerPanel.Visible = false;
 
             switch (FilterBox.Text)
             {
@@ -179,6 +180,9 @@ namespace MSConvertGUI
                     break;
                 case "Subset":
                     SubsetPanel.Visible = true;
+                    break;
+                case "Lockmass Refiner":
+                    LockmassRefinerPanel.Visible = true;
                     break;
             }
         }
@@ -408,6 +412,9 @@ namespace MSConvertGUI
                     string thresholdType = thresholdTypes[thresholdTypeIndex].Value; // Count after ties -> count-after-ties
                     string thresholdOrientation = thresholdOrientationComboBox.SelectedItem.ToString().ToLower().Replace(' ', '-'); // Most intense -> most-intense
                     FilterDGV.Rows.Add(new[] { "threshold", String.Format("{0} {1} {2}", thresholdType, thresholdValueTextBox.Text, thresholdOrientation) });
+                    break;
+                case "Lockmass Refiner":
+                    FilterDGV.Rows.Add(new[] {"lockmassRefiner", String.Format("mz={0} tol={1}", LockmassMz.Text, LockmassTolerance.Text)});
                     break;
             }
         }
@@ -749,6 +756,9 @@ namespace MSConvertGUI
             setToolTip(this.TextFileRadio, "Click this if your input file actually contains a list of files to be converted.");
             setToolTip(this.AddFilterButton, "Add the filter specifed above to the list below.","Filters");
             setToolTip(this.RemoveFilterButton, "Select a filter in the list below then click here to remove it.", "Filters");
+            setToolTip(this.LockmassRefinerPanel, "Corrects mass accuracy in Waters data.", "Lockmass Refiner");
+            setToolTip(this.LockmassMz, "True m/z of the reference analyte.", "Lockmass Refiner");
+            setToolTip(this.LockmassTolerance, "The refinement will look for an observed m/z within this tolerance of the true m/z.", "Lockmass Refiner");
             setToolTip(this.ZeroSamplesMSLevelLow, "Lowest MS level for scans to be treated with this filter.","Zero Samples");
             setToolTip(this.ZeroSamplesMSLevelHigh, "Highest MS level for scans to be treated with this filter (may be left blank).", "Zero Samples");
             setToolTip(this.ZeroSamplesMSLevelLabel, "Perform this filter only on scans with these MS Levels.", "Zero Samples");

@@ -156,19 +156,25 @@ namespace MSConvertGUI
             this.ScanEventHigh = new System.Windows.Forms.TextBox();
             this.ScanEventLow = new System.Windows.Forms.TextBox();
             this.ScanEventLabel = new System.Windows.Forms.Label();
+            this.LockmassRefinerPanel = new System.Windows.Forms.Panel();
+            this.LockmassTolerance = new System.Windows.Forms.TextBox();
+            this.lockmassToleranceLabel = new System.Windows.Forms.Label();
+            this.lockmassMzLabel = new System.Windows.Forms.Label();
+            this.LockmassMz = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.FilterDGV)).BeginInit();
             this.FilterGB.SuspendLayout();
-            this.PeakPickingPanel.SuspendLayout();
-            this.ZeroSamplesPanel.SuspendLayout();
-            this.ETDFilterPanel.SuspendLayout();
-            this.ThresholdFilterPanel.SuspendLayout();
             this.ChargeStatePredictorPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.ChaSingleBox)).BeginInit();
             this.ActivationPanel.SuspendLayout();
             this.SubsetPanel.SuspendLayout();
             this.MSLevelPanel.SuspendLayout();
+            this.PeakPickingPanel.SuspendLayout();
+            this.ZeroSamplesPanel.SuspendLayout();
+            this.ETDFilterPanel.SuspendLayout();
+            this.ThresholdFilterPanel.SuspendLayout();
             this.OptionsGB.SuspendLayout();
             this.SlidingPanel.SuspendLayout();
+            this.LockmassRefinerPanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // FileBox
@@ -216,13 +222,13 @@ namespace MSConvertGUI
             this.OptionTab,
             this.ValueTab});
             this.FilterDGV.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
-            this.FilterDGV.Location = new System.Drawing.Point(312, 314);
+            this.FilterDGV.Location = new System.Drawing.Point(322, 261);
             this.FilterDGV.MultiSelect = false;
             this.FilterDGV.Name = "FilterDGV";
             this.FilterDGV.RowHeadersVisible = false;
             this.FilterDGV.RowTemplate.Height = 24;
             this.FilterDGV.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.FilterDGV.Size = new System.Drawing.Size(337, 198);
+            this.FilterDGV.Size = new System.Drawing.Size(327, 250);
             this.FilterDGV.TabIndex = 12;
             // 
             // OptionTab
@@ -265,7 +271,7 @@ namespace MSConvertGUI
             // StartButton
             // 
             this.StartButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.StartButton.Location = new System.Drawing.Point(574, 521);
+            this.StartButton.Location = new System.Drawing.Point(574, 520);
             this.StartButton.Name = "StartButton";
             this.StartButton.Size = new System.Drawing.Size(75, 23);
             this.StartButton.TabIndex = 13;
@@ -277,8 +283,8 @@ namespace MSConvertGUI
             // 
             this.FilterGB.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.FilterGB.Controls.Add(this.LockmassRefinerPanel);
             this.FilterGB.Controls.Add(this.FilterBox);
-            this.FilterGB.Controls.Add(this.SubsetPanel);
             this.FilterGB.Controls.Add(this.MSLevelPanel);
             this.FilterGB.Controls.Add(this.PeakPickingPanel);
             this.FilterGB.Controls.Add(this.ZeroSamplesPanel);
@@ -286,9 +292,10 @@ namespace MSConvertGUI
             this.FilterGB.Controls.Add(this.ThresholdFilterPanel);
             this.FilterGB.Controls.Add(this.ChargeStatePredictorPanel);
             this.FilterGB.Controls.Add(this.ActivationPanel);
-            this.FilterGB.Location = new System.Drawing.Point(306, 83);
+            this.FilterGB.Controls.Add(this.SubsetPanel);
+            this.FilterGB.Location = new System.Drawing.Point(322, 83);
             this.FilterGB.Name = "FilterGB";
-            this.FilterGB.Size = new System.Drawing.Size(343, 193);
+            this.FilterGB.Size = new System.Drawing.Size(327, 143);
             this.FilterGB.TabIndex = 9;
             this.FilterGB.TabStop = false;
             this.FilterGB.Text = "Filters";
@@ -300,6 +307,7 @@ namespace MSConvertGUI
             this.FilterBox.Items.AddRange(new object[] {
             "MS Level",
             "Peak Picking",
+            "Lockmass Refiner",
             "Zero Samples",
             "ETD Peak Filter",
             "Threshold Peak Filter",
@@ -794,7 +802,7 @@ namespace MSConvertGUI
             this.SubsetPanel.Controls.Add(this.ScanNumberLabel2);
             this.SubsetPanel.Location = new System.Drawing.Point(22, 46);
             this.SubsetPanel.Name = "SubsetPanel";
-            this.SubsetPanel.Size = new System.Drawing.Size(283, 141);
+            this.SubsetPanel.Size = new System.Drawing.Size(283, 91);
             this.SubsetPanel.TabIndex = 6;
             this.SubsetPanel.Visible = false;
             // 
@@ -802,7 +810,7 @@ namespace MSConvertGUI
             // 
             this.mzWinLabel2.AutoSize = true;
             this.mzWinLabel2.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.mzWinLabel2.Location = new System.Drawing.Point(174, 86);
+            this.mzWinLabel2.Location = new System.Drawing.Point(174, 60);
             this.mzWinLabel2.Name = "mzWinLabel2";
             this.mzWinLabel2.Size = new System.Drawing.Size(15, 20);
             this.mzWinLabel2.TabIndex = 16;
@@ -824,7 +832,7 @@ namespace MSConvertGUI
             // 
             // mzWinHigh
             // 
-            this.mzWinHigh.Location = new System.Drawing.Point(191, 88);
+            this.mzWinHigh.Location = new System.Drawing.Point(191, 62);
             this.mzWinHigh.Name = "mzWinHigh";
             this.mzWinHigh.Size = new System.Drawing.Size(37, 20);
             this.mzWinHigh.TabIndex = 15;
@@ -848,7 +856,7 @@ namespace MSConvertGUI
             // 
             // mzWinLow
             // 
-            this.mzWinLow.Location = new System.Drawing.Point(135, 88);
+            this.mzWinLow.Location = new System.Drawing.Point(135, 62);
             this.mzWinLow.Name = "mzWinLow";
             this.mzWinLow.Size = new System.Drawing.Size(37, 20);
             this.mzWinLow.TabIndex = 14;
@@ -865,11 +873,11 @@ namespace MSConvertGUI
             // mzWinLabel
             // 
             this.mzWinLabel.AutoSize = true;
-            this.mzWinLabel.Location = new System.Drawing.Point(64, 93);
+            this.mzWinLabel.Location = new System.Drawing.Point(64, 67);
             this.mzWinLabel.Name = "mzWinLabel";
-            this.mzWinLabel.Size = new System.Drawing.Size(70, 13);
+            this.mzWinLabel.Size = new System.Drawing.Size(65, 13);
             this.mzWinLabel.TabIndex = 6;
-            this.mzWinLabel.Text = "m/z Window:";
+            this.mzWinLabel.Text = "mz Window:";
             // 
             // ScanNumberLabel
             // 
@@ -948,7 +956,7 @@ namespace MSConvertGUI
             // RemoveFilterButton
             // 
             this.RemoveFilterButton.Anchor = System.Windows.Forms.AnchorStyles.Top;
-            this.RemoveFilterButton.Location = new System.Drawing.Point(463, 278);
+            this.RemoveFilterButton.Location = new System.Drawing.Point(477, 232);
             this.RemoveFilterButton.Name = "RemoveFilterButton";
             this.RemoveFilterButton.Size = new System.Drawing.Size(58, 23);
             this.RemoveFilterButton.TabIndex = 11;
@@ -959,7 +967,7 @@ namespace MSConvertGUI
             // AddFilterButton
             // 
             this.AddFilterButton.Anchor = System.Windows.Forms.AnchorStyles.Top;
-            this.AddFilterButton.Location = new System.Drawing.Point(415, 278);
+            this.AddFilterButton.Location = new System.Drawing.Point(429, 232);
             this.AddFilterButton.Name = "AddFilterButton";
             this.AddFilterButton.Size = new System.Drawing.Size(42, 23);
             this.AddFilterButton.TabIndex = 10;
@@ -1219,7 +1227,7 @@ namespace MSConvertGUI
             this.SlidingPanel.Controls.Add(this.OutputLabel);
             this.SlidingPanel.Controls.Add(this.OutputBox);
             this.SlidingPanel.Controls.Add(this.OptionsGB);
-            this.SlidingPanel.Location = new System.Drawing.Point(15, 283);
+            this.SlidingPanel.Location = new System.Drawing.Point(15, 282);
             this.SlidingPanel.Name = "SlidingPanel";
             this.SlidingPanel.Size = new System.Drawing.Size(275, 229);
             this.SlidingPanel.TabIndex = 8;
@@ -1227,11 +1235,11 @@ namespace MSConvertGUI
             // SetDefaultsButton
             // 
             this.SetDefaultsButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.SetDefaultsButton.Location = new System.Drawing.Point(15, 521);
+            this.SetDefaultsButton.Location = new System.Drawing.Point(15, 520);
             this.SetDefaultsButton.Name = "SetDefaultsButton";
-            this.SetDefaultsButton.Size = new System.Drawing.Size(271, 23);
+            this.SetDefaultsButton.Size = new System.Drawing.Size(305, 23);
             this.SetDefaultsButton.TabIndex = 32;
-            this.SetDefaultsButton.Text = "Use these settings next time I start MSConvertGUI";
+            this.SetDefaultsButton.Text = "Use these settings next time I start MSConvert";
             this.SetDefaultsButton.UseVisualStyleBackColor = true;
             this.SetDefaultsButton.Click += new System.EventHandler(this.SetDefaultsButton_Click);
             // 
@@ -1241,7 +1249,7 @@ namespace MSConvertGUI
             this.AboutButton.Name = "AboutButton";
             this.AboutButton.Size = new System.Drawing.Size(131, 23);
             this.AboutButton.TabIndex = 33;
-            this.AboutButton.Text = "About MSConvertGUI";
+            this.AboutButton.Text = "About MSConvert";
             this.AboutButton.UseVisualStyleBackColor = true;
             this.AboutButton.Click += new System.EventHandler(this.AboutButtonClick);
             // 
@@ -1291,11 +1299,56 @@ namespace MSConvertGUI
             this.ScanEventLabel.TabIndex = 17;
             this.ScanEventLabel.Text = "Scan Event:";
             // 
+            // LockmassRefinerPanel
+            // 
+            this.LockmassRefinerPanel.Controls.Add(this.LockmassTolerance);
+            this.LockmassRefinerPanel.Controls.Add(this.lockmassToleranceLabel);
+            this.LockmassRefinerPanel.Controls.Add(this.lockmassMzLabel);
+            this.LockmassRefinerPanel.Controls.Add(this.LockmassMz);
+            this.LockmassRefinerPanel.Location = new System.Drawing.Point(22, 46);
+            this.LockmassRefinerPanel.Name = "LockmassRefinerPanel";
+            this.LockmassRefinerPanel.Size = new System.Drawing.Size(283, 91);
+            this.LockmassRefinerPanel.TabIndex = 17;
+            this.LockmassRefinerPanel.Visible = false;
+            // 
+            // LockmassTolerance
+            // 
+            this.LockmassTolerance.Location = new System.Drawing.Point(135, 36);
+            this.LockmassTolerance.Name = "LockmassTolerance";
+            this.LockmassTolerance.Size = new System.Drawing.Size(62, 20);
+            this.LockmassTolerance.TabIndex = 1;
+            this.LockmassTolerance.Text = "0.1";
+            // 
+            // lockmassToleranceLabel
+            // 
+            this.lockmassToleranceLabel.AutoSize = true;
+            this.lockmassToleranceLabel.Location = new System.Drawing.Point(48, 39);
+            this.lockmassToleranceLabel.Name = "lockmassToleranceLabel";
+            this.lockmassToleranceLabel.Size = new System.Drawing.Size(79, 13);
+            this.lockmassToleranceLabel.TabIndex = 3;
+            this.lockmassToleranceLabel.Text = "m/z Tolerance:";
+            // 
+            // lockmassMzLabel
+            // 
+            this.lockmassMzLabel.AutoSize = true;
+            this.lockmassMzLabel.Location = new System.Drawing.Point(47, 12);
+            this.lockmassMzLabel.Name = "lockmassMzLabel";
+            this.lockmassMzLabel.Size = new System.Drawing.Size(81, 13);
+            this.lockmassMzLabel.TabIndex = 13;
+            this.lockmassMzLabel.Text = "Reference m/z:";
+            // 
+            // LockmassMz
+            // 
+            this.LockmassMz.Location = new System.Drawing.Point(135, 10);
+            this.LockmassMz.Name = "LockmassMz";
+            this.LockmassMz.Size = new System.Drawing.Size(62, 20);
+            this.LockmassMz.TabIndex = 0;
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(661, 552);
+            this.ClientSize = new System.Drawing.Size(661, 551);
             this.Controls.Add(this.AboutButton);
             this.Controls.Add(this.BrowseFileButton);
             this.Controls.Add(this.FileListRadio);
@@ -1313,18 +1366,10 @@ namespace MSConvertGUI
             this.Controls.Add(this.FileBox);
             this.Controls.Add(this.SlidingPanel);
             this.Name = "MainForm";
-            this.Text = "MSConvertGUI";
+            this.Text = "MSConvert";
             this.Load += new System.EventHandler(this.MainForm_Load);
             ((System.ComponentModel.ISupportInitialize)(this.FilterDGV)).EndInit();
             this.FilterGB.ResumeLayout(false);
-            this.PeakPickingPanel.ResumeLayout(false);
-            this.PeakPickingPanel.PerformLayout();
-            this.ZeroSamplesPanel.ResumeLayout(false);
-            this.ZeroSamplesPanel.PerformLayout();
-            this.ETDFilterPanel.ResumeLayout(false);
-            this.ETDFilterPanel.PerformLayout();
-            this.ThresholdFilterPanel.ResumeLayout(false);
-            this.ThresholdFilterPanel.PerformLayout();
             this.ChargeStatePredictorPanel.ResumeLayout(false);
             this.ChargeStatePredictorPanel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.ChaSingleBox)).EndInit();
@@ -1334,10 +1379,20 @@ namespace MSConvertGUI
             this.SubsetPanel.PerformLayout();
             this.MSLevelPanel.ResumeLayout(false);
             this.MSLevelPanel.PerformLayout();
+            this.PeakPickingPanel.ResumeLayout(false);
+            this.PeakPickingPanel.PerformLayout();
+            this.ZeroSamplesPanel.ResumeLayout(false);
+            this.ZeroSamplesPanel.PerformLayout();
+            this.ETDFilterPanel.ResumeLayout(false);
+            this.ETDFilterPanel.PerformLayout();
+            this.ThresholdFilterPanel.ResumeLayout(false);
+            this.ThresholdFilterPanel.PerformLayout();
             this.OptionsGB.ResumeLayout(false);
             this.OptionsGB.PerformLayout();
             this.SlidingPanel.ResumeLayout(false);
             this.SlidingPanel.PerformLayout();
+            this.LockmassRefinerPanel.ResumeLayout(false);
+            this.LockmassRefinerPanel.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -1386,6 +1441,7 @@ namespace MSConvertGUI
         private System.Windows.Forms.Label MSLabelSeperator;
         private System.Windows.Forms.TextBox MSLevelHigh;
         private System.Windows.Forms.TextBox MSLevelLow;
+        private System.Windows.Forms.CheckBox PeakPreferVendorBox;
         private System.Windows.Forms.Label PeakMSLevelLabel;
         private System.Windows.Forms.Label PeakMSLevelSeperator;
         private System.Windows.Forms.TextBox PeakMSLevelHigh;
@@ -1450,6 +1506,11 @@ namespace MSConvertGUI
         private System.Windows.Forms.TextBox ScanEventHigh;
         private System.Windows.Forms.TextBox ScanEventLow;
         private System.Windows.Forms.Label ScanEventLabel;
+        private System.Windows.Forms.Panel LockmassRefinerPanel;
+        private System.Windows.Forms.TextBox LockmassTolerance;
+        private System.Windows.Forms.Label lockmassToleranceLabel;
+        private System.Windows.Forms.Label lockmassMzLabel;
+        private System.Windows.Forms.TextBox LockmassMz;
     }
 }
 
