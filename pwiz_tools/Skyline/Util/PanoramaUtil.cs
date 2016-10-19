@@ -943,7 +943,7 @@ namespace pwiz.Skyline.Util
     {
         public UTF8WebClient()
         {
-            this.Encoding = Encoding.UTF8;
+            Encoding = Encoding.UTF8;
         }
     }
 }
