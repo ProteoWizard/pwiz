@@ -112,15 +112,14 @@ namespace pwiz.Skyline.Controls.Graphs
             // Therefore, only change the currently selected IdentityPath if the currently 
             // selected Replicate is the last replicate in the ReplicateGroup that they
             // have clicked on.
+            // Updated 10/3/2016 now can drill down to peptide level because multi peptide RT graph is supported.
             var resultIndicesArray = IndexOfReplicate(selectedIndex).ToArray();
             int iSelection = Array.IndexOf(resultIndicesArray, GraphSummary.ResultsIndex);
             if (iSelection == resultIndicesArray.Length - 1 && !GraphChromatogram.IsSingleTransitionDisplay)
             {
-                if (!Equals(GraphSummary.StateProvider.SelectedPath, identityPath))
-                {
-                    GraphSummary.StateProvider.SelectedPath = identityPath;
+                    GraphSummary.StateProvider.SelectPath(identityPath);
+                    UpdateGraph(true);
                     return;
-                }
             }
             // If there is more than one replicate in the group that they
             // have clicked on, then select the next replicate in that group.
@@ -183,26 +182,27 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             private readonly SrmDocument _document;
-            private readonly ImmutableList<DocNode> _selectedDocNodes;
+            private readonly ImmutableList<IdentityPath> _selectedDocNodePaths;
             private readonly DisplayTypeChrom _displayType;
             private PaneKey _paneKey;
 
             private ImmutableList<DocNode> _docNodes;
+            private ImmutableList<IdentityPath> _docNodePaths;
             private ImmutableList<String> _docNodeLabels;
             private ImmutableList<List<PointPairList>> _pointPairLists;
             private ImmutableList<ReplicateGroup> _replicateGroups;
 
 
-            protected GraphData(SrmDocument document, DocNode docNode, DisplayTypeChrom displayType, GraphValues.ReplicateGroupOp replicateGroupOp, PaneKey paneKey)
-                : this(document, new[] { docNode}, displayType, replicateGroupOp, paneKey)
+            protected GraphData(SrmDocument document, IdentityPath identityPath, DisplayTypeChrom displayType, GraphValues.ReplicateGroupOp replicateGroupOp, PaneKey paneKey)
+                : this(document, new[] { identityPath }, displayType, replicateGroupOp, paneKey)
             {
             }
 
-            protected GraphData(SrmDocument document, IEnumerable<DocNode> selectedDocNodes, DisplayTypeChrom displayType,
+            protected GraphData(SrmDocument document, IEnumerable<IdentityPath> selectedDocNodePaths, DisplayTypeChrom displayType,
                 GraphValues.ReplicateGroupOp replicateGroupOp, PaneKey paneKey)
             {
                 _document = document;
-                _selectedDocNodes = ImmutableList.ValueOf(selectedDocNodes);
+                _selectedDocNodePaths = ImmutableList.ValueOf(selectedDocNodePaths);
                 _displayType = displayType;
                 ReplicateGroupOp = replicateGroupOp;
                 _paneKey = paneKey;
@@ -224,16 +224,19 @@ namespace pwiz.Skyline.Controls.Graphs
             protected virtual void InitData()
             {
                 List<DocNode> docNodes = new List<DocNode>();
+                List<IdentityPath> docNodePaths = new List<IdentityPath>();
                 List<List<PointPairList>> pointPairLists = new List<List<PointPairList>>();
                 List<String> docNodeLabels = new List<string>();
-                foreach (var docNode in _selectedDocNodes)
+                foreach (var docNodePath in _selectedDocNodePaths)
                 {
+                    var docNode = _document.FindNode(docNodePath);
                     // ReSharper disable CanBeReplacedWithTryCastAndCheckForNull
                     if (docNode is TransitionDocNode)
                     {
                         var nodeTran = (TransitionDocNode)docNode;
                         ReplicateGroups = GetReplicateGroups(GetReplicateIndices(nodeTran)).ToArray();
                         docNodes.Add(nodeTran);
+                        docNodePaths.Add(docNodePath);
                         pointPairLists.Add(GetPointPairLists(null, nodeTran, _displayType));
                         docNodeLabels.Add(ChromGraphItem.GetTitle(nodeTran));
                     }
@@ -244,6 +247,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         if (_displayType == DisplayTypeChrom.single || _displayType == DisplayTypeChrom.total)
                         {
                             docNodes.Add(nodeGroup);
+                            docNodePaths.Add(docNodePath);
                             pointPairLists.Add(GetPointPairLists(nodeGroup, _displayType));
                             docNodeLabels.Add(ChromGraphItem.GetTitle(nodeGroup));
                         }
@@ -252,6 +256,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             foreach (TransitionDocNode nodeTran in GraphChromatogram.GetDisplayTransitions(nodeGroup, _displayType))
                             {
                                 docNodes.Add(nodeTran);
+                                docNodePaths.Add(new IdentityPath(docNodePath, nodeTran.Id));
                                 pointPairLists.Add(GetPointPairLists(nodeGroup, nodeTran, _displayType));
                                 docNodeLabels.Add(ChromGraphItem.GetTitle(nodeTran));
                             }
@@ -260,7 +265,6 @@ namespace pwiz.Skyline.Controls.Graphs
                     else if (docNode is PeptideDocNode)
                     {
                         var nodePep = (PeptideDocNode)docNode;
-                        // TODO(yuval): If more than one peptide is selected, then we want the union of all replicate indices.
                         ReplicateGroups = GetReplicateGroups(GetReplicateIndices(nodePep)).ToArray();
 
                         foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
@@ -270,6 +274,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                 continue;
                             }
                             docNodes.Add(nodeGroup);
+                            docNodePaths.Add(docNodePath);
                             pointPairLists.Add(GetPointPairLists(nodeGroup, DisplayTypeChrom.total));
                             docNodeLabels.Add(ChromGraphItem.GetTitle(nodeGroup));
                         }
@@ -278,6 +283,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 // ReSharper restore CanBeReplacedWithTryCastAndCheckForNull
                 PointPairLists = pointPairLists;
                 DocNodes = docNodes;
+                _docNodePaths = ImmutableList.ValueOf(docNodePaths);
                 DocNodeLabels = docNodeLabels;
             }
 
@@ -316,6 +322,15 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     _docNodes = MakeReadOnly(value);
                 }
+            }
+
+            public ImmutableList<IdentityPath> DocNodePaths {
+                get
+                {
+                    EnsureData();
+                    return _docNodePaths;
+                }
+                set { _docNodePaths = value; }
             }
 
             public IList<String> DocNodeLabels

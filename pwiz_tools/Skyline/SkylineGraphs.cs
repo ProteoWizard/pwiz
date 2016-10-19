@@ -2667,6 +2667,7 @@ namespace pwiz.Skyline
         public void SelectPath(IdentityPath focusPath)
         {
             SequenceTree.SelectPath(focusPath);
+            UpdateGraphPanes();
         }
 
         public SpectrumDisplayInfo SelectedSpectrum

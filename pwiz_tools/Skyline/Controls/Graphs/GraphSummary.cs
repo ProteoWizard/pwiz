@@ -80,6 +80,7 @@ namespace pwiz.Skyline.Controls.Graphs
             TreeNodeMS SelectedNode { get; }
             IList<TreeNodeMS> SelectedNodes { get; }
             IdentityPath SelectedPath { get; set; }
+            void SelectPath(IdentityPath path);
             PeptideGraphInfo GetPeptideGraphInfo(DocNode docNode);
             int SelectedResultsIndex { get; set; }
 
@@ -100,6 +101,7 @@ namespace pwiz.Skyline.Controls.Graphs
             public int SelectedResultsIndex { get; set; }
             public void ActivateSpectrum() {}
             public GraphValues.IRetentionTimeTransformOp GetRetentionTimeTransformOperation() {return null;}
+            public void SelectPath(IdentityPath path){}
             public PeptideGraphInfo GetPeptideGraphInfo(DocNode docNode)
             {
                 return null;

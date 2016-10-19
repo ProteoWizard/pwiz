@@ -48,7 +48,7 @@ namespace pwiz.SkylineTestFunctional
             });
             WaitForGraphs();
             Assert.AreEqual(BarType.Overlay, SkylineWindow.GraphRetentionTime.GraphControl.GraphPane.BarSettings.Type);
-            Assert.AreEqual(18, SkylineWindow.GraphRetentionTime.CurveCount);
+            Assert.AreEqual(17, SkylineWindow.GraphRetentionTime.CurveCount);
 
             // Test selecting each node down to the peptide/precursor level
             foreach (var node in SkylineWindow.SequenceTree.Nodes)
@@ -61,7 +61,7 @@ namespace pwiz.SkylineTestFunctional
                 switch (peptideGroupTreeNode.Text)
                 {
                     case "sp|P02647|APOA1_HUMAN":
-                        curveCount = 8;
+                        curveCount = 7;
                         break;
                     case "GST_SCHJA_Fusion_Peptide":
                         curveCount = 2;
