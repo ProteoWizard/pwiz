@@ -854,6 +854,10 @@ namespace pwiz.Skyline.Model
         private TransitionGroupDocNode GetMoleculeTransitionGroup(SrmDocument document, Row row, Peptide pep, bool requireProductInfo)
         {
             var moleculeInfo = ReadPrecursorOrProductColumns(document, row, true); // Re-read the precursor columns
+            if (moleculeInfo == null)
+            {
+                return null; // Some parsing error, user has already been notified
+            }
             if (!document.Settings.TransitionSettings.IsMeasurablePrecursor(moleculeInfo.Mz))
             {
                 ShowTransitionError(new PasteError

@@ -375,7 +375,7 @@ namespace pwiz.SkylineTestA
             Assert.IsNotNull(modC);
             Assert.IsNotNull(modStaticExpl);
 
-            var docHeavyMods = docCurrent.Settings.PeptideSettings.Modifications.HeavyModifications;
+            var docHeavyMods = docCurrent.Settings.PeptideSettings.Modifications.AllHeavyModifications;
             var modR1 = docHeavyMods.FirstOrDefault(mod => mod.Name.Equals("Label:13C(6) (C-term R)"));
             var modHeavyExpl = docHeavyMods.FirstOrDefault(mod => mod.Name.Equals("heavy_explicit_mod1"));
 

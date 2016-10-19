@@ -19,9 +19,11 @@
 
 using System;
 using System.IO;
+using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
@@ -76,6 +78,19 @@ namespace pwiz.SkylineTestFunctional
                 RunDlg<UpgradeDlg>(
                     () => dlg.ShowDialog(),
                     d => d.Close());
+            }
+
+            // Show import retry dialog (requires some extra work to avoid blocking the counting)
+            var dlgCount = ShowDialog<ImportResultsRetryCountdownDlg>(ShowImportResultsRetryCountdownDlg);
+//            Thread.Sleep(20*1000);
+            OkDialog(dlgCount, dlgCount.Cancel);
+        }
+
+        private void ShowImportResultsRetryCountdownDlg()
+        {
+            using (var dlg = new ImportResultsRetryCountdownDlg(20, () => { }, () => { }))
+            {
+                dlg.ShowDialog();
             }
         }
     }

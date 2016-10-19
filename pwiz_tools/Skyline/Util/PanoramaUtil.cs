@@ -405,7 +405,7 @@ namespace pwiz.Skyline.Util
             try
             {
                 Uri uri = new Uri(ServerUri, "/labkey/project/home/getContainers.view"); // Not L10N
-                using (var webClient = new WebClient())
+                using (var webClient = new UTF8WebClient())
                 {
                     string response = webClient.UploadString(uri, PanoramaUtil.FORM_POST, string.Empty); // Not L10N
                     JObject jsonResponse = JObject.Parse(response);
@@ -477,7 +477,7 @@ namespace pwiz.Skyline.Util
             {
                 var uri = PanoramaUtil.GetContainersUri(ServerUri, folderPath, false);
 
-                using (var webClient = new WebClient())
+                using (var webClient = new UTF8WebClient())
                 {
                     webClient.Headers.Add(HttpRequestHeader.Authorization, Server.GetBasicAuthHeader(username, password));
                     var folderInfo = webClient.UploadString(uri, PanoramaUtil.FORM_POST, string.Empty); // Not L10N
@@ -636,7 +636,7 @@ namespace pwiz.Skyline.Util
             // Retrieve folders from server.
             Uri uri = PanoramaUtil.GetContainersUri(server.URI, folder, true); // Not L10N
 
-            using (WebClient webClient = new WebClient())
+            using (WebClient webClient = new UTF8WebClient())
             {
                 webClient.Headers.Add(HttpRequestHeader.Authorization, server.AuthHeader);
                 string folderInfo = webClient.UploadString(uri, PanoramaUtil.FORM_POST, string.Empty);
@@ -765,7 +765,7 @@ namespace pwiz.Skyline.Util
 
             string supportedVersionsJson;
 
-            using (var webClient = new WebClient())
+            using (var webClient = new UTF8WebClient())
             {
                 webClient.Headers.Add(HttpRequestHeader.Authorization, server.AuthHeader);
 
@@ -791,7 +791,7 @@ namespace pwiz.Skyline.Util
             }
         }
 
-        private class NonStreamBufferingWebClient : WebClient
+        private class NonStreamBufferingWebClient : UTF8WebClient
         {
             protected override WebRequest GetWebRequest(Uri address)
             {
@@ -806,7 +806,6 @@ namespace pwiz.Skyline.Util
                 return request;
             }
         }
-
 
         private void RenameTempZipFile(Uri sourceUri, Uri destUri, string authHeader)
         {
@@ -937,6 +936,14 @@ namespace pwiz.Skyline.Util
         public bool HasWritePermission
         {
             get { return _hasWritePermission; }
+        }
+    }
+
+    class UTF8WebClient : WebClient
+    {
+        public UTF8WebClient()
+        {
+            this.Encoding = Encoding.UTF8;
         }
     }
 }

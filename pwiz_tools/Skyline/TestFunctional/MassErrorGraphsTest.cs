@@ -19,6 +19,7 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
@@ -43,6 +44,9 @@ namespace pwiz.SkylineTestFunctional
             SelectNode(SrmDocument.Level.Molecules, 0);
             RunUI(SkylineWindow.ShowMassErrorReplicateComparison);
             WaitForGraphs();
+
+            RunDlg<MassErrorChartPropertyDlg>(SkylineWindow.ShowMassErrorPropertyDlg, dlg => dlg.OkDialog());
+
             RunUI(() =>
             {           
                 var pane = GetReplicateGraphPane();

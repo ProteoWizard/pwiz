@@ -1566,8 +1566,9 @@ namespace pwiz.Skyline.Util
                     action();
                     return;
                 }
-                catch (TEx)
+                catch (TEx x)
                 {
+                    Trace.WriteLine(x.Message);
                     Thread.Sleep(milliseconds);
                 }
             }

@@ -429,6 +429,9 @@
   <data name="NextAa">
     <value>次のAa</value>
   </data>
+  <data name="NormalizationMethod">
+    <value>正規化メソッド</value>
+  </data>
   <data name="NormalizedArea">
     <value>正規化面積</value>
   </data>
@@ -446,6 +449,9 @@
   </data>
   <data name="PeakRank">
     <value>ピークのランク</value>
+  </data>
+  <data name="PeakRankByLevel">
+    <value>レベル別のピークのランク</value>
   </data>
   <data name="Peptide">
     <value>ペプチド</value>
@@ -497,6 +503,12 @@
   </data>
   <data name="PrecursorNote">
     <value>プリカーサーメモ</value>
+  </data>
+  <data name="DetectionQValue">
+    <value>検知Q値</value>
+  </data>
+  <data name="DetectionZScore">
+    <value>検知Zスコア</value>
   </data>
   <data name="PrecursorPeakFoundRatio">
     <value>プリカーサーピーク検出率</value>
@@ -768,16 +780,43 @@
   <data name="ExplicitDriftTimeMsec">
     <value>明示的ドリフト時間ミリ秒</value>
   </data>
+  <data name="ExplicitGlobalStandardArea">
+    <value>明示的グローバル標準領域</value>
+  </data>
   <data name="ExplicitRetentionTime">
     <value>明示的保持時間</value>
   </data>
   <data name="ExplicitRetentionTimeWindow">
     <value>明示的保持時間ウィンドウ</value>
   </data>
+  <data name="ExplicitSLens">
+    <value>明示的S-レンズ</value>
+  </data>
+  <data name="ExplicitConeVoltage">
+    <value>明示的コーン電圧</value>
+  </data>
   <data name="ExplicitDeclusteringPotential">
     <value>明示的デクラスタリングポテンシャル</value>
   </data>
   <data name="ExplicitCompensationVoltage">
     <value>明示的補償電圧</value>
+  </data>
+  <data name="PrecursorAdduct">
+    <value>プリカーサー付加物</value>
+  </data>
+  <data name="PrecursorNeutralFormula">
+    <value>プリカーサーのニュートラル公式</value>
+  </data>
+  <data name="ProductAdduct">
+    <value>プロダクトの付加物</value>
+  </data>
+  <data name="ProductNeutralFormula">
+    <value>プロダクトのニュートラル公式</value>
+  </data>
+  <data name="MoleculeName">
+    <value>分子名</value>
+  </data>
+  <data name="MoleculeFormula">
+    <value>分子式</value>
   </data>
 </root>

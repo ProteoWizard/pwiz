@@ -750,6 +750,9 @@
   <data name="textCharge.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
   </data>
+  <data name="textCharge.ToolTip" xml:space="preserve">
+    <value>还可在公式中使用加合描述（例如 "[M+2K-H]"）指定电荷</value>
+  </data>
   <data name="&gt;&gt;textCharge.Name" xml:space="preserve">
     <value>textCharge</value>
   </data>
@@ -800,6 +803,9 @@
   </data>
   <data name="textName.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
+  </data>
+  <data name="textName.ToolTip" xml:space="preserve">
+    <value>默认名称为离子公式，比任何加合描述都少</value>
   </data>
   <data name="&gt;&gt;textName.Name" xml:space="preserve">
     <value>textName</value>

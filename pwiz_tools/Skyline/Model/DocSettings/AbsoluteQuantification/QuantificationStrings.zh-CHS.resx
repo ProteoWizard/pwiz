@@ -233,4 +233,10 @@
   <data name="QuantificationResult_ToString_Normalized_Area___0_" xml:space="preserve">
     <value>校准后面积：{0}</value>
   </data>
+  <data name="CalibrationForm_MakeExcludeStandardMenuItem_Include_Standard" xml:space="preserve">
+    <value>包含标准</value>
+  </data>
+  <data name="CalibrationForm_MakeExcludeStandardMenuItem_Exclude_Standard" xml:space="preserve">
+    <value>排除标准</value>
+  </data>
 </root>

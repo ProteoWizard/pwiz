@@ -1355,7 +1355,7 @@ namespace pwiz.Skyline.Model
         {
             foreach (var nodeGroup in GetMatchingGroups(nodePep))
             {
-                var results = nodeGroup.Results[chromIndex];
+                var results = nodeGroup.GetSafeChromInfo(chromIndex);
                 chromGroupInfoMatch = FindGroupChromInfo(results, fileId, step);
                 if (chromGroupInfoMatch != null &&
                     chromGroupInfoMatch.StartRetentionTime.HasValue &&

@@ -376,6 +376,8 @@ namespace pwiz.SkylineTestTutorial
 
             // Modifications are already set up, so that page should get skipped.
 
+            PauseForScreenShot<ImportPeptideSearchDlg.TransitionSettingsPage>("Import Peptide Search Transition Settings page", 17);
+
             // We're on the "Configure Transition Settings" page of the wizard.
             // We've already set up these settings, so just click next.
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
@@ -384,6 +386,8 @@ namespace pwiz.SkylineTestTutorial
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.transition_settings_page);
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
+
+            PauseForScreenShot<ImportPeptideSearchDlg.Ms2FullScanPage>("Import Peptide Search Full-Scan Settings page", 17);
 
             // We're on the "Configure Full-Scan Settings" page of the wizard.
             // We've already set up these settings, so just click next.

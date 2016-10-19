@@ -173,7 +173,7 @@ namespace pwiz.SkylineTestTutorial
                 importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(new[] {GetTestPath("interact-20130311_DDA_Pit01.pep.xml")}); // Not L10N
                 importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.dia;
             });
-            PauseForScreenShot<BuildLibraryDlg>("Build Library form - input files", 10);
+            PauseForScreenShot<BuildLibraryDlg>("Build Library form - input files", 24);
 
             const string prefixKeep = "DIA_Pit0";
             if (IsFullImportMode)
@@ -181,6 +181,8 @@ namespace pwiz.SkylineTestTutorial
                 SrmDocument doc = SkylineWindow.Document;
                 RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
                 doc = WaitForDocumentChange(doc);
+
+                PauseForScreenShot<ImportPeptideSearchDlg.ChromatogramsDiaPage>("Import Results page", 25);
 
                 // "Extract Chromatograms" page
                 RunUI(() =>

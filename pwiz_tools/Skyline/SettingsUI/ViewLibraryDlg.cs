@@ -470,7 +470,7 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         var mods = doc.Settings.PeptideSettings.Modifications;
                         mods = mods.ChangeStaticModifications(mods.StaticModifications.Concat(addModificationsDlg.NewDocumentModsStatic).ToList())
-                                   .ChangeHeavyModifications(mods.HeavyModifications.Concat(addModificationsDlg.NewDocumentModsHeavy).ToList());
+                                   .AddHeavyModifications(addModificationsDlg.NewDocumentModsHeavy);
                         doc = doc.ChangeSettings(doc.Settings.ChangePeptideSettings(doc.Settings.PeptideSettings.ChangeModifications(mods)));
                         doc.Settings.UpdateDefaultModifications(false);
                         return doc;

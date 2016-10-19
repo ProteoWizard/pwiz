@@ -2611,7 +2611,7 @@ namespace pwiz.Skyline
 
         public void AddGroupComparison()
         {
-            using (var editDlg = new EditGroupComparisonDlg(this, GroupComparisonDef.EMPTY.ChangeSumTransitions(true),
+            using (var editDlg = new EditGroupComparisonDlg(this, GroupComparisonDef.EMPTY,
                 Settings.Default.GroupComparisonDefList))
             {
                 if (editDlg.ShowDialog(this) == DialogResult.OK)

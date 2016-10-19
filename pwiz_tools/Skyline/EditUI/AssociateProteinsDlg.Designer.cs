@@ -89,6 +89,8 @@
             this.Controls.Add(this.checkBoxListMatches);
             this.Controls.Add(this.btnUseFasta);
             this.Controls.Add(this.btnBackgroundProteome);
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
             this.Name = "AssociateProteinsDlg";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;

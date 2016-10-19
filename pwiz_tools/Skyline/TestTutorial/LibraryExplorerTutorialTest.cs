@@ -163,7 +163,7 @@ namespace pwiz.SkylineTestTutorial
 
             Assert.IsTrue(WaitForCondition(() =>
                 SkylineWindow.Document.Settings.PeptideSettings.Modifications.StaticModifications.Count > 0 &&
-                SkylineWindow.Document.Settings.PeptideSettings.Modifications.HeavyModifications.Count > 0));
+                SkylineWindow.Document.Settings.PeptideSettings.Modifications.AllHeavyModifications.Any()));
             PauseForScreenShot("Peptide list clipped from Library Explorer", 11);
 
             // Adding Library Peptides to the Document p. 11
@@ -278,7 +278,7 @@ namespace pwiz.SkylineTestTutorial
 
             Assert.IsTrue(WaitForCondition(() =>
                 SkylineWindow.Document.Settings.PeptideSettings.Modifications.StaticModifications.Count == 1 &&
-                SkylineWindow.Document.Settings.PeptideSettings.Modifications.HeavyModifications.Count == 0 &&
+                !SkylineWindow.Document.Settings.PeptideSettings.Modifications.AllHeavyModifications.Any() &&
                 SkylineWindow.Document.Settings.PeptideSettings.Libraries.IsLoaded &&
                 SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries.Count > 0));
 

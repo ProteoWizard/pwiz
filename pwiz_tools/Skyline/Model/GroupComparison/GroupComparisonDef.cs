@@ -77,13 +77,6 @@ namespace pwiz.Skyline.Model.GroupComparison
             return ChangeProp(ImClone(this), im => im.AverageTechnicalReplicates = value);
         }
 
-        public bool SumTransitions { get; private set; }
-
-        public GroupComparisonDef ChangeSumTransitions(bool value)
-        {
-            return ChangeProp(ImClone(this), im => im.SumTransitions = value);
-        }
-
         public NormalizationMethod NormalizationMethod { get; private set; }
 
         public GroupComparisonDef ChangeNormalizationMethod(NormalizationMethod value)
@@ -174,7 +167,6 @@ namespace pwiz.Skyline.Model.GroupComparison
             control_value,
             case_value,
             avg_tech_replicates,
-            sum_transitions,
             identity_annotation,
             normalization_method,
             include_interaction_transitions,
@@ -196,7 +188,6 @@ namespace pwiz.Skyline.Model.GroupComparison
             CaseValue = reader.GetAttribute(ATTR.case_value);
             IdentityAnnotation = reader.GetAttribute(ATTR.identity_annotation);
             AverageTechnicalReplicates = reader.GetBoolAttribute(ATTR.avg_tech_replicates, true);
-            SumTransitions = reader.GetBoolAttribute(ATTR.sum_transitions, true);
             NormalizationMethod = NormalizationMethod.FromName(reader.GetAttribute(ATTR.normalization_method));
             IncludeInteractionTransitions = reader.GetBoolAttribute(ATTR.include_interaction_transitions, false);
             SummarizationMethod = SummarizationMethod.FromName(reader.GetAttribute(ATTR.summarization_method));
@@ -215,7 +206,6 @@ namespace pwiz.Skyline.Model.GroupComparison
             writer.WriteAttributeIfString(ATTR.case_value, CaseValue);
             writer.WriteAttributeIfString(ATTR.identity_annotation, IdentityAnnotation);
             writer.WriteAttribute(ATTR.avg_tech_replicates, AverageTechnicalReplicates, true);
-            writer.WriteAttribute(ATTR.sum_transitions, SumTransitions, true);
             writer.WriteAttributeIfString(ATTR.normalization_method, NormalizationMethod.Name);
             writer.WriteAttribute(ATTR.include_interaction_transitions, IncludeInteractionTransitions, false);
             writer.WriteAttribute(ATTR.summarization_method, SummarizationMethod.Name);
@@ -240,7 +230,6 @@ namespace pwiz.Skyline.Model.GroupComparison
                    string.Equals(CaseValue, other.CaseValue) &&
                    string.Equals(IdentityAnnotation, other.IdentityAnnotation) &&
                    AverageTechnicalReplicates.Equals(other.AverageTechnicalReplicates) &&
-                   SumTransitions.Equals(other.SumTransitions) &&
                    Equals(NormalizationMethod, other.NormalizationMethod) &&
                    IncludeInteractionTransitions.Equals(other.IncludeInteractionTransitions) &&
                    Equals(SummarizationMethod, other.SummarizationMethod) &&
@@ -267,7 +256,6 @@ namespace pwiz.Skyline.Model.GroupComparison
                 hashCode = (hashCode*397) ^ (CaseValue != null ? CaseValue.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ (IdentityAnnotation != null ? IdentityAnnotation.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ AverageTechnicalReplicates.GetHashCode();
-                hashCode = (hashCode*397) ^ SumTransitions.GetHashCode();
                 hashCode = (hashCode*397) ^ NormalizationMethod.GetHashCode();
                 hashCode = (hashCode*397) ^ IncludeInteractionTransitions.GetHashCode();
                 hashCode = (hashCode*397) ^ SummarizationMethod.GetHashCode();

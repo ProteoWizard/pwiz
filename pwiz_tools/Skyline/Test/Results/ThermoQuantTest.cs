@@ -411,8 +411,8 @@ namespace pwiz.SkylineTest.Results
             FileEx.SafeDelete(Path.ChangeExtension(docPath, ChromatogramCache.EXT));
 
             SrmSettings settings = doc.Settings.ChangePeptideModifications(mods =>
-                mods.ChangeHeavyModifications(
-                    mods.HeavyModifications.Select(m => m.ChangeRelativeRT(relativeRT)).ToArray()));
+                mods.ChangeModifications(IsotopeLabelType.heavy, 
+                    mods.AllHeavyModifications.Select(m => m.ChangeRelativeRT(relativeRT)).ToArray()));
             var docMods = doc.ChangeSettings(settings);
             var docResults = docMods.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
             using (var docContainer = new ResultsTestDocumentContainer(docMods, docPath))

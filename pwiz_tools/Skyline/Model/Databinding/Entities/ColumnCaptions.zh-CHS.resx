@@ -429,6 +429,9 @@
   <data name="NextAa">
     <value>下一个 Aa</value>
   </data>
+  <data name="NormalizationMethod">
+    <value>校准方法</value>
+  </data>
   <data name="NormalizedArea">
     <value>校准后面积</value>
   </data>
@@ -446,6 +449,9 @@
   </data>
   <data name="PeakRank">
     <value>峰排名</value>
+  </data>
+  <data name="PeakRankByLevel">
+    <value>按级别的峰排名</value>
   </data>
   <data name="Peptide">
     <value>肽段</value>
@@ -497,6 +503,12 @@
   </data>
   <data name="PrecursorNote">
     <value>母离子注释</value>
+  </data>
+  <data name="DetectionQValue">
+    <value>检测 Q 值</value>
+  </data>
+  <data name="DetectionZScore">
+    <value>检测 Z 得分</value>
   </data>
   <data name="PrecursorPeakFoundRatio">
     <value>母离子峰值检出比</value>
@@ -768,11 +780,20 @@
   <data name="ExplicitDriftTimeMsec">
     <value>明确的漂移时间毫秒</value>
   </data>
+  <data name="ExplicitGlobalStandardArea">
+    <value>明确的全局标准面积</value>
+  </data>
   <data name="ExplicitRetentionTime">
     <value>明确保留时间</value>
   </data>
   <data name="ExplicitRetentionTimeWindow">
     <value>明确保留时间窗口</value>
+  </data>
+  <data name="ExplicitSLens">
+    <value>明确的 S-Lens</value>
+  </data>
+  <data name="ExplicitConeVoltage">
+    <value>明确的锥孔电压</value>
   </data>
   <data name="ExplicitDeclusteringPotential">
     <value>明确的去簇电压</value>
@@ -780,4 +801,23 @@
   <data name="ExplicitCompensationVoltage">
     <value>明确的补偿电压</value>
   </data>
+  <data name="PrecursorAdduct">
+    <value>母离子加合物</value>
+  </data>
+  <data name="PrecursorNeutralFormula">
+    <value>母离子中性公式</value>
+  </data>
+  <data name="ProductAdduct">
+    <value>子离子加合物</value>
+  </data>
+  <data name="ProductNeutralFormula">
+    <value>产品中性公式</value>
+  </data>
+  <data name="MoleculeName">
+    <value>分子名称</value>
+  </data>
+  <data name="MoleculeFormula">
+    <value>分子公式</value>
+  </data>
+
 </root>

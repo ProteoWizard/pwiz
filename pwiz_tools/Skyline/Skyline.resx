@@ -3016,7 +3016,7 @@
     <value>136, 22</value>
   </data>
   <data name="massErrorlogScaleContextMenuItem.Text" xml:space="preserve">
-    <value>LogScale</value>
+    <value>Log Scale</value>
   </data>
   <data name="contextMenuMassErrors.Size" type="System.Drawing.Size, System.Drawing">
     <value>137, 180</value>

@@ -750,6 +750,9 @@
   <data name="textCharge.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
   </data>
+  <data name="textCharge.ToolTip" xml:space="preserve">
+    <value>電荷は、付加物の説明（例：「[M+2K-H]」）を式で用いるよう指定することもできます</value>
+  </data>
   <data name="&gt;&gt;textCharge.Name" xml:space="preserve">
     <value>textCharge</value>
   </data>
@@ -800,6 +803,9 @@
   </data>
   <data name="textName.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
+  </data>
+  <data name="textName.ToolTip" xml:space="preserve">
+    <value>デフォルト名は、イオン公式から付加物の説明を除いたものです</value>
   </data>
   <data name="&gt;&gt;textName.Name" xml:space="preserve">
     <value>textName</value>

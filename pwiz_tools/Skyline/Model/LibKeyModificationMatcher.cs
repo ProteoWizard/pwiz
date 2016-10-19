@@ -377,7 +377,7 @@ namespace pwiz.Skyline.Model
             var docModifications = document.Settings.PeptideSettings.Modifications;
             var docPeptides = document.Molecules.ToArray();
             List<StaticMod> lightMods = new List<StaticMod>(docModifications.StaticModifications);
-            List<StaticMod> heavyMods = new List<StaticMod>(docModifications.HeavyModifications);
+            List<StaticMod> heavyMods = new List<StaticMod>(docModifications.AllHeavyModifications);
             // Merge light mods.
             foreach (var mod in newMods.StaticModifications)
             {
@@ -557,11 +557,18 @@ namespace pwiz.Skyline.Model
         /// </summary>
         public void ConvertAllHeavyModsExplicit()
         {
-            MatcherPepMods = MatcherPepMods.ChangeHeavyModifications(MatcherPepMods.HeavyModifications.Select(
-                mod => 
-                UserDefinedTypedMods.Keys.Contains(userMod => userMod.Equivalent(mod)) 
-                    ? mod
-                    : mod.ChangeExplicit(true)).ToArray());
+            foreach (var typedModifications in MatcherPepMods.GetHeavyModifications())
+            {
+                MatcherPepMods = MatcherPepMods.ChangeModifications(typedModifications.LabelType,
+                    typedModifications.Modifications.Select(mod =>
+                    {
+                        if (UserDefinedTypedMods.Keys.Any(userMod => userMod.Equivalent(mod)))
+                        {
+                            return mod;
+                        }
+                        return mod.ChangeExplicit(true);
+                    }).ToArray());
+            }
 
             foreach (var key in Matches.Keys.ToArray())
             {

@@ -52,7 +52,7 @@ namespace TestRunnerLib
                         break;
                     var parts = line.Split(',').ToList();
                     if (parts.Count == 2)
-                        _formLookup[parts[0]] = parts[1];
+                        _formLookup[parts[0].Trim()] = parts[1].Trim();
                 }
             }
         }

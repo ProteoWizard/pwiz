@@ -164,7 +164,7 @@ namespace pwiz.SkylineTestFunctional
 
             var mods = SkylineWindow.Document.Settings.PeptideSettings.Modifications;
             Assert.AreEqual(numStaticMods, mods.StaticModifications.Count);
-            Assert.AreEqual(numHeavyMods, mods.HeavyModifications.Count);
+            Assert.AreEqual(numHeavyMods, mods.AllHeavyModifications.Count());
         }
     }
 }

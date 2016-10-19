@@ -191,25 +191,31 @@
     <value>删除峰值</value>
   </data>
   <data name="noStandardContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>149, 22</value>
+    <value>175, 22</value>
   </data>
   <data name="noStandardContextMenuItem.Text" xml:space="preserve">
     <value>无</value>
   </data>
   <data name="normStandardContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>149, 22</value>
+    <value>175, 22</value>
   </data>
   <data name="normStandardContextMenuItem.Text" xml:space="preserve">
-    <value>标准化</value>
+    <value>全球标准</value>
+  </data>
+  <data name="surrogateStandardContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>175, 22</value>
+  </data>
+  <data name="surrogateStandardContextMenuItem.Text" xml:space="preserve">
+    <value>替代标准</value>
   </data>
   <data name="qcStandardContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>149, 22</value>
+    <value>175, 22</value>
   </data>
   <data name="qcStandardContextMenuItem.Text" xml:space="preserve">
     <value>质量控制 (QC)</value>
   </data>
   <data name="irtStandardContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>149, 22</value>
+    <value>175, 22</value>
   </data>
   <data name="irtStandardContextMenuItem.Text" xml:space="preserve">
     <value>iRT</value>
@@ -258,13 +264,13 @@
     <value>比率</value>
   </data>
   <data name="singleReplicateTreeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>106, 22</value>
+    <value>152, 22</value>
   </data>
   <data name="singleReplicateTreeContextMenuItem.Text" xml:space="preserve">
     <value>单一</value>
   </data>
   <data name="bestReplicateTreeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>106, 22</value>
+    <value>152, 22</value>
   </data>
   <data name="bestReplicateTreeContextMenuItem.Text" xml:space="preserve">
     <value>最佳</value>
@@ -761,6 +767,30 @@
   <data name="timePlotContextMenuItem.Text" xml:space="preserve">
     <value>绘图</value>
   </data>
+  <data name="timeTargetsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>126, 22</value>
+  </data>
+  <data name="timeTargetsContextMenuItem.Text" xml:space="preserve">
+    <value>目标</value>
+  </data>
+  <data name="timeStandardsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>126, 22</value>
+  </data>
+  <data name="timeStandardsContextMenuItem.Text" xml:space="preserve">
+    <value>标准</value>
+  </data>
+  <data name="timeDecoysContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>126, 22</value>
+  </data>
+  <data name="timeDecoysContextMenuItem.Text" xml:space="preserve">
+    <value>诱饵</value>
+  </data>
+  <data name="timePointsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>177, 22</value>
+  </data>
+  <data name="timePointsContextMenuItem.Text" xml:space="preserve">
+    <value>点</value>
+  </data>
   <data name="allRTValueContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>155, 22</value>
   </data>
@@ -918,7 +948,7 @@
     <value>174, 6</value>
   </data>
   <data name="contextMenuRetentionTimes.Size" type="System.Drawing.Size, System.Drawing">
-    <value>178, 364</value>
+    <value>178, 386</value>
   </data>
   <data name="&gt;&gt;contextMenuRetentionTimes.Name" xml:space="preserve">
     <value>contextMenuRetentionTimes</value>
@@ -964,6 +994,12 @@
   </data>
   <data name="peptideOrderAreaContextMenuItem.Text" xml:space="preserve">
     <value>峰面积</value>
+  </data>
+  <data name="peptideOrderMassErrorContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>155, 22</value>
+  </data>
+  <data name="peptideOrderMassErrorContextMenuItem.Text" xml:space="preserve">
+    <value>质量误差</value>
   </data>
   <data name="peptideOrderContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>170, 22</value>
@@ -1147,7 +1183,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panel1.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>6</value>
   </data>
   <metadata name="statusStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>334, 17</value>
@@ -1234,7 +1270,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;statusStrip.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>7</value>
   </data>
   <metadata name="mainToolStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>373, 95</value>
@@ -1357,7 +1393,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;mainToolStrip.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>8</value>
   </data>
   <metadata name="menuMain.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>224, 17</value>
@@ -1776,6 +1812,12 @@
   <data name="acceptProteinsMenuItem.Text" xml:space="preserve">
     <value>接受蛋白质(&amp;I)...</value>
   </data>
+  <data name="associateFASTAMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>218, 22</value>
+  </data>
+  <data name="associateFASTAMenuItem.Text" xml:space="preserve">
+    <value>关联蛋白质(&amp;T)…</value>
+  </data>
   <data name="renameProteinsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>218, 22</value>
   </data>
@@ -1930,19 +1972,25 @@
     <value>204, 6</value>
   </data>
   <data name="noStandardMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>149, 22</value>
+    <value>175, 22</value>
   </data>
   <data name="noStandardMenuItem.Text" xml:space="preserve">
     <value>无(&amp;N)</value>
   </data>
   <data name="normStandardMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>149, 22</value>
+    <value>175, 22</value>
   </data>
   <data name="normStandardMenuItem.Text" xml:space="preserve">
-    <value>标准化(&amp;O)</value>
+    <value>全球标准 (&amp;G)</value>
+  </data>
+  <data name="surrogateStandardMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>175, 22</value>
+  </data>
+  <data name="surrogateStandardMenuItem.Text" xml:space="preserve">
+    <value>替代标准</value>
   </data>
   <data name="qcStandardMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>149, 22</value>
+    <value>175, 22</value>
   </data>
   <data name="qcStandardMenuItem.Text" xml:space="preserve">
     <value>质量控制 (&amp;C)</value>
@@ -1951,7 +1999,7 @@
     <value>False</value>
   </data>
   <data name="irtStandardMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>149, 22</value>
+    <value>175, 22</value>
   </data>
   <data name="irtStandardMenuItem.Text" xml:space="preserve">
     <value>iRT(&amp;R)</value>
@@ -2029,25 +2077,25 @@
     <value>131, 22</value>
   </data>
   <data name="defaultTextToolStripMenuItem.Text" xml:space="preserve">
-    <value>默认</value>
+    <value>默认(&amp;D)</value>
   </data>
   <data name="largeToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>131, 22</value>
   </data>
   <data name="largeToolStripMenuItem.Text" xml:space="preserve">
-    <value>大</value>
+    <value>大(&amp;L)</value>
   </data>
   <data name="extraLargeToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>131, 22</value>
   </data>
   <data name="extraLargeToolStripMenuItem.Text" xml:space="preserve">
-    <value>特大</value>
+    <value>特大(&amp;X)</value>
   </data>
   <data name="textZoomToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>183, 22</value>
   </data>
   <data name="textZoomToolStripMenuItem.Text" xml:space="preserve">
-    <value>文本缩放(&amp;Z)</value>
+    <value>文本缩放(&amp;X)</value>
   </data>
   <data name="toolStripSeparator41.Size" type="System.Drawing.Size, System.Drawing">
     <value>180, 6</value>
@@ -2517,29 +2565,68 @@
   <data name="peakAreasMenuItem.Text" xml:space="preserve">
     <value>峰面积(&amp;K)</value>
   </data>
+  <data name="massErrorReplicateComparisonMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
+    <value>F6</value>
+  </data>
+  <data name="massErrorReplicateComparisonMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>228, 22</value>
+  </data>
+  <data name="massErrorReplicateComparisonMenuItem.Text" xml:space="preserve">
+    <value>重复测定比较(&amp;R)</value>
+  </data>
+  <data name="massErrorPeptideComparisonMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
+    <value>Ctrl+F6</value>
+  </data>
+  <data name="massErrorPeptideComparisonMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>228, 22</value>
+  </data>
+  <data name="massErrorPeptideComparisonMenuItem.Text" xml:space="preserve">
+    <value>肽段比较(&amp;P)</value>
+  </data>
+  <data name="massErrorHistogramMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>228, 22</value>
+  </data>
+  <data name="massErrorHistogramMenuItem.Text" xml:space="preserve">
+    <value>直方图(&amp;H)</value>
+  </data>
+  <data name="massErrorHistogram2DMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>228, 22</value>
+  </data>
+  <data name="massErrorHistogram2DMenuItem.Text" xml:space="preserve">
+    <value>2D 直方图</value>
+  </data>
+  <data name="massErrorsMenuItem.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="massErrorsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>183, 22</value>
+  </data>
+  <data name="massErrorsMenuItem.Text" xml:space="preserve">
+    <value>质量误差</value>
+  </data>
   <data name="calibrationCurveMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>183, 22</value>
   </data>
   <data name="calibrationCurveMenuItem.Text" xml:space="preserve">
-    <value>校准曲线</value>
+    <value>校准曲线(&amp;B)</value>
   </data>
   <data name="addGroupComparisonMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>124, 22</value>
   </data>
   <data name="addGroupComparisonMenuItem.Text" xml:space="preserve">
-    <value>添加…</value>
+    <value>添加(&amp;A)…</value>
   </data>
   <data name="editGroupComparisonListMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>124, 22</value>
   </data>
   <data name="editGroupComparisonListMenuItem.Text" xml:space="preserve">
-    <value>编辑列表…</value>
+    <value>编辑列表(&amp;E)…</value>
   </data>
   <data name="groupComparisonsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>183, 22</value>
   </data>
   <data name="groupComparisonsMenuItem.Text" xml:space="preserve">
-    <value>群组比较</value>
+    <value>群组比较(&amp;U)</value>
   </data>
   <data name="resultsGridMenuItem.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -2773,10 +2860,178 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;menuMain.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>9</value>
+  </data>
+  <metadata name="contextMenuMassErrors.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>446, 56</value>
+  </metadata>
+  <data name="massErrorReplicateComparisonContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="massErrorReplicateComparisonContextMenuItem.Text" xml:space="preserve">
+    <value>重复测定比较</value>
+  </data>
+  <data name="massErrorPeptideComparisonContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="massErrorPeptideComparisonContextMenuItem.Text" xml:space="preserve">
+    <value>肽段比较</value>
+  </data>
+  <data name="massErrorHistogramContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="massErrorHistogramContextMenuItem.Text" xml:space="preserve">
+    <value>直方图</value>
+  </data>
+  <data name="massErrorHistogram2DContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="massErrorHistogram2DContextMenuItem.Text" xml:space="preserve">
+    <value>2D 直方图</value>
+  </data>
+  <data name="massErrorGraphContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>136, 22</value>
+  </data>
+  <data name="massErrorGraphContextMenuItem.Text" xml:space="preserve">
+    <value>图</value>
+  </data>
+  <data name="massErrorPropsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>136, 22</value>
+  </data>
+  <data name="massErrorPropsContextMenuItem.Text" xml:space="preserve">
+    <value>属性…</value>
+  </data>
+  <data name="showMassErrorLegendContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>136, 22</value>
+  </data>
+  <data name="showMassErrorLegendContextMenuItem.Text" xml:space="preserve">
+    <value>图例</value>
+  </data>
+  <data name="massErrorTargetsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>168, 22</value>
+  </data>
+  <data name="massErrorTargetsContextMenuItem.Text" xml:space="preserve">
+    <value>目标</value>
+  </data>
+  <data name="massErrorTargets1FDRContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>168, 22</value>
+  </data>
+  <data name="massErrorTargets1FDRContextMenuItem.Text" xml:space="preserve">
+    <value>1% FDR 时的目标</value>
+  </data>
+  <data name="massErrorDecoysContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>168, 22</value>
+  </data>
+  <data name="massErrorDecoysContextMenuItem.Text" xml:space="preserve">
+    <value>诱饵</value>
+  </data>
+  <data name="massErrorPointsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>136, 22</value>
+  </data>
+  <data name="massErrorPointsContextMenuItem.Text" xml:space="preserve">
+    <value>点</value>
+  </data>
+  <data name="ppm05ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>117, 22</value>
+  </data>
+  <data name="ppm05ContextMenuItem.Text" xml:space="preserve">
+    <value>0.5 ppm</value>
+  </data>
+  <data name="ppm10ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>117, 22</value>
+  </data>
+  <data name="ppm10ContextMenuItem.Text" xml:space="preserve">
+    <value>1.0 ppm</value>
+  </data>
+  <data name="ppm15ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>117, 22</value>
+  </data>
+  <data name="ppm15ContextMenuItem.Text" xml:space="preserve">
+    <value>1.5 ppm</value>
+  </data>
+  <data name="ppm20ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>117, 22</value>
+  </data>
+  <data name="ppm20ContextMenuItem.Text" xml:space="preserve">
+    <value>2.0 ppm</value>
+  </data>
+  <data name="binCountContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>136, 22</value>
+  </data>
+  <data name="binCountContextMenuItem.Text" xml:space="preserve">
+    <value>Bin 宽度</value>
+  </data>
+  <data name="massErrorAllTransitionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>129, 22</value>
+  </data>
+  <data name="massErrorAllTransitionsContextMenuItem.Text" xml:space="preserve">
+    <value>全部</value>
+  </data>
+  <data name="massErrorBestTransitionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>129, 22</value>
+  </data>
+  <data name="massErrorBestTransitionsContextMenuItem.Text" xml:space="preserve">
+    <value>最佳</value>
+  </data>
+  <data name="toolStripSeparator55.Size" type="System.Drawing.Size, System.Drawing">
+    <value>126, 6</value>
+  </data>
+  <data name="MassErrorPrecursorsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>129, 22</value>
+  </data>
+  <data name="MassErrorPrecursorsContextMenuItem.Text" xml:space="preserve">
+    <value>母离子</value>
+  </data>
+  <data name="MassErrorProductsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>129, 22</value>
+  </data>
+  <data name="MassErrorProductsContextMenuItem.Text" xml:space="preserve">
+    <value>产物</value>
+  </data>
+  <data name="massErrorTransitionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>136, 22</value>
+  </data>
+  <data name="massErrorTransitionsContextMenuItem.Text" xml:space="preserve">
+    <value>离子对</value>
+  </data>
+  <data name="massErorrRetentionTimeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>156, 22</value>
+  </data>
+  <data name="massErorrRetentionTimeContextMenuItem.Text" xml:space="preserve">
+    <value>保留时间</value>
+  </data>
+  <data name="massErrorMassToChargContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>156, 22</value>
+  </data>
+  <data name="massErrorMassToChargContextMenuItem.Text" xml:space="preserve">
+    <value>电荷质量</value>
+  </data>
+  <data name="massErrorXAxisContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>136, 22</value>
+  </data>
+  <data name="massErrorXAxisContextMenuItem.Text" xml:space="preserve">
+    <value>X 轴</value>
+  </data>
+  <data name="massErrorlogScaleContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>136, 22</value>
+  </data>
+  <data name="massErrorlogScaleContextMenuItem.Text" xml:space="preserve">
+    <value>对数尺度</value>
+  </data>
+  <data name="contextMenuMassErrors.Size" type="System.Drawing.Size, System.Drawing">
+    <value>137, 180</value>
+  </data>
+  <data name="&gt;&gt;contextMenuMassErrors.Name" xml:space="preserve">
+    <value>contextMenuMassErrors</value>
+  </data>
+  <data name="&gt;&gt;contextMenuMassErrors.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
+  </metadata>
+  <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>210</value>
   </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
@@ -2863,6 +3118,12 @@
     <value>normStandardContextMenuItem</value>
   </data>
   <data name="&gt;&gt;normStandardContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;surrogateStandardContextMenuItem.Name" xml:space="preserve">
+    <value>surrogateStandardContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;surrogateStandardContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;qcStandardContextMenuItem.Name" xml:space="preserve">
@@ -3423,6 +3684,30 @@
   <data name="&gt;&gt;timeResidualsContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;timePointsContextMenuItem.Name" xml:space="preserve">
+    <value>timePointsContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;timePointsContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;timeTargetsContextMenuItem.Name" xml:space="preserve">
+    <value>timeTargetsContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;timeTargetsContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;timeStandardsContextMenuItem.Name" xml:space="preserve">
+    <value>timeStandardsContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;timeStandardsContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;timeDecoysContextMenuItem.Name" xml:space="preserve">
+    <value>timeDecoysContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;timeDecoysContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;rtValueMenuItem.Name" xml:space="preserve">
     <value>rtValueMenuItem</value>
   </data>
@@ -3637,6 +3922,12 @@
     <value>peptideOrderAreaContextMenuItem</value>
   </data>
   <data name="&gt;&gt;peptideOrderAreaContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;peptideOrderMassErrorContextMenuItem.Name" xml:space="preserve">
+    <value>peptideOrderMassErrorContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;peptideOrderMassErrorContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;replicateOrderContextMenuItem.Name" xml:space="preserve">
@@ -4245,6 +4536,12 @@
   <data name="&gt;&gt;acceptProteinsMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;associateFASTAMenuItem.Name" xml:space="preserve">
+    <value>associateFASTAMenuItem</value>
+  </data>
+  <data name="&gt;&gt;associateFASTAMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;renameProteinsMenuItem.Name" xml:space="preserve">
     <value>renameProteinsMenuItem</value>
   </data>
@@ -4399,6 +4696,12 @@
     <value>normStandardMenuItem</value>
   </data>
   <data name="&gt;&gt;normStandardMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;surrogateStandardMenuItem.Name" xml:space="preserve">
+    <value>surrogateStandardMenuItem</value>
+  </data>
+  <data name="&gt;&gt;surrogateStandardMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;qcStandardMenuItem.Name" xml:space="preserve">
@@ -4881,6 +5184,36 @@
   <data name="&gt;&gt;areaPeptideComparisonMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;massErrorsMenuItem.Name" xml:space="preserve">
+    <value>massErrorsMenuItem</value>
+  </data>
+  <data name="&gt;&gt;massErrorsMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;massErrorReplicateComparisonMenuItem.Name" xml:space="preserve">
+    <value>massErrorReplicateComparisonMenuItem</value>
+  </data>
+  <data name="&gt;&gt;massErrorReplicateComparisonMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;massErrorPeptideComparisonMenuItem.Name" xml:space="preserve">
+    <value>massErrorPeptideComparisonMenuItem</value>
+  </data>
+  <data name="&gt;&gt;massErrorPeptideComparisonMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;massErrorHistogramMenuItem.Name" xml:space="preserve">
+    <value>massErrorHistogramMenuItem</value>
+  </data>
+  <data name="&gt;&gt;massErrorHistogramMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;massErrorHistogram2DMenuItem.Name" xml:space="preserve">
+    <value>massErrorHistogram2DMenuItem</value>
+  </data>
+  <data name="&gt;&gt;massErrorHistogram2DMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;calibrationCurveMenuItem.Name" xml:space="preserve">
     <value>calibrationCurveMenuItem</value>
   </data>
@@ -5119,6 +5452,162 @@
     <value>aboutMenuItem</value>
   </data>
   <data name="&gt;&gt;aboutMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;massErrorGraphContextMenuItem.Name" xml:space="preserve">
+    <value>massErrorGraphContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;massErrorGraphContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;massErrorReplicateComparisonContextMenuItem.Name" xml:space="preserve">
+    <value>massErrorReplicateComparisonContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;massErrorReplicateComparisonContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;massErrorPeptideComparisonContextMenuItem.Name" xml:space="preserve">
+    <value>massErrorPeptideComparisonContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;massErrorPeptideComparisonContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;massErrorHistogramContextMenuItem.Name" xml:space="preserve">
+    <value>massErrorHistogramContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;massErrorHistogramContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;massErrorHistogram2DContextMenuItem.Name" xml:space="preserve">
+    <value>massErrorHistogram2DContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;massErrorHistogram2DContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;massErrorPropsContextMenuItem.Name" xml:space="preserve">
+    <value>massErrorPropsContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;massErrorPropsContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;showMassErrorLegendContextMenuItem.Name" xml:space="preserve">
+    <value>showMassErrorLegendContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;showMassErrorLegendContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;massErrorPointsContextMenuItem.Name" xml:space="preserve">
+    <value>massErrorPointsContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;massErrorPointsContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;massErrorTargetsContextMenuItem.Name" xml:space="preserve">
+    <value>massErrorTargetsContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;massErrorTargetsContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;massErrorTargets1FDRContextMenuItem.Name" xml:space="preserve">
+    <value>massErrorTargets1FDRContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;massErrorTargets1FDRContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;massErrorDecoysContextMenuItem.Name" xml:space="preserve">
+    <value>massErrorDecoysContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;massErrorDecoysContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;binCountContextMenuItem.Name" xml:space="preserve">
+    <value>binCountContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;binCountContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;ppm05ContextMenuItem.Name" xml:space="preserve">
+    <value>ppm05ContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;ppm05ContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;ppm10ContextMenuItem.Name" xml:space="preserve">
+    <value>ppm10ContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;ppm10ContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;ppm15ContextMenuItem.Name" xml:space="preserve">
+    <value>ppm15ContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;ppm15ContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;ppm20ContextMenuItem.Name" xml:space="preserve">
+    <value>ppm20ContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;ppm20ContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;massErrorTransitionsContextMenuItem.Name" xml:space="preserve">
+    <value>massErrorTransitionsContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;massErrorTransitionsContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;massErrorAllTransitionsContextMenuItem.Name" xml:space="preserve">
+    <value>massErrorAllTransitionsContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;massErrorAllTransitionsContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;massErrorBestTransitionsContextMenuItem.Name" xml:space="preserve">
+    <value>massErrorBestTransitionsContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;massErrorBestTransitionsContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator55.Name" xml:space="preserve">
+    <value>toolStripSeparator55</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator55.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;MassErrorPrecursorsContextMenuItem.Name" xml:space="preserve">
+    <value>MassErrorPrecursorsContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;MassErrorPrecursorsContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;MassErrorProductsContextMenuItem.Name" xml:space="preserve">
+    <value>MassErrorProductsContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;MassErrorProductsContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;massErrorXAxisContextMenuItem.Name" xml:space="preserve">
+    <value>massErrorXAxisContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;massErrorXAxisContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;massErorrRetentionTimeContextMenuItem.Name" xml:space="preserve">
+    <value>massErorrRetentionTimeContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;massErorrRetentionTimeContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;massErrorMassToChargContextMenuItem.Name" xml:space="preserve">
+    <value>massErrorMassToChargContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;massErrorMassToChargContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;massErrorlogScaleContextMenuItem.Name" xml:space="preserve">
+    <value>massErrorlogScaleContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;massErrorlogScaleContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
