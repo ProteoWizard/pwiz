@@ -731,7 +731,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (nodePepTree != null)
                 {
                     nodePeps = new[] {nodePepTree.DocNode};
-                    lookupSequence = nodePepTree.DocNode.SourceUnmodifiedTextId;
+                    lookupSequence = nodePepTree.DocNode.IsProteomic ? nodePepTree.DocNode.SourceUnmodifiedTextId : null;
                     lookupMods = nodePepTree.DocNode.SourceExplicitMods;
                 }
                 nodeGroups = new[] {nodeGroupTree.DocNode};
@@ -754,7 +754,8 @@ namespace pwiz.Skyline.Controls.Graphs
                         nodeGroups[i] = nodeGroup;
                         groupPaths[i] = new IdentityPath(pathParent, nodeGroup.Id);
                     }
-                    lookupSequence = nodePepTree.DocNode.SourceUnmodifiedTextId;
+                    // TODO(nicksh): handle looking up non proteomic molecules for retention times.
+                    lookupSequence = nodePepTree.DocNode.IsProteomic ? nodePepTree.DocNode.SourceUnmodifiedTextId : null;
                     lookupMods = nodePepTree.DocNode.SourceExplicitMods;
                 }
             }
