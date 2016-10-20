@@ -988,7 +988,7 @@ namespace pwiz.Skyline.Util
 
                 if (progressMonitor != null && status != null)
                 {
-                    int currentPercent = (int) (startPercent + 100 - (itemCount*100.0)/_itemCount);
+                    int currentPercent = (int)(100 - ((100.0 - startPercent) * itemCount) / _itemCount);
                     if (currentPercent != status.PercentComplete)
                         progressMonitor.UpdateProgress(status = status.ChangePercentComplete(currentPercent));
                 }
