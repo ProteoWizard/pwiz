@@ -68,7 +68,7 @@ namespace pwiz.Skyline.Model.Results
             RawIntensities = Intensities = intensities;
             RawMassErrors = massErrors;
             RawScanIds = ScanIndexes = scanIds;
-            if (result)
+            if (result && RawTimes.Any())
             {
                 Key = Key.ChangeOptionalTimes(RawTimes.First(), RawTimes.Last(), RawCenterOfGravityTime);
             }
