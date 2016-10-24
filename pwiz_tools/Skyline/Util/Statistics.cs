@@ -1360,8 +1360,8 @@ namespace pwiz.Skyline.Util
         /// <returns>Dot-Product of square roots of values in vectors</returns>
         public double AngleSqrt(Statistics s)
         {
-            var stat1 = new Statistics(_list.Select(Math.Sqrt));
-            var stat2 = new Statistics(s._list.Select(Math.Sqrt));
+            var stat1 = SqrtAll();
+            var stat2 = s.SqrtAll();
 
             return stat1.Angle(stat2);
         }
@@ -1374,10 +1374,18 @@ namespace pwiz.Skyline.Util
         /// <returns>Normalized contrast angle dot-product of square roots of values in vectors</returns>
         public double NormalizedContrastAngleSqrt(Statistics s)
         {
-            var stat1 = new Statistics(_list.Select(Math.Sqrt));
-            var stat2 = new Statistics(s._list.Select(Math.Sqrt));
+            var stat1 = SqrtAll();
+            var stat2 = s.SqrtAll();
 
             return stat1.NormalizedContrastAngle(stat2);
+        }
+
+        private Statistics SqrtAll()
+        {
+            var newList = new double[_list.Length];
+            for (int i = 0; i < _list.Length; i++)
+                newList[i] = Math.Sqrt(_list[i]);
+            return new Statistics(newList);
         }
 
         /// <summary>

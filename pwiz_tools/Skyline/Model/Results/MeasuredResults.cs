@@ -37,6 +37,10 @@ namespace pwiz.Skyline.Model.Results
         public static readonly MeasuredResults EMPTY = new MeasuredResults(new ChromatogramSet[0]);
 
         private ImmutableList<ChromatogramSet> _chromatograms;
+        private ImmutableDictionary<string, int> _dictNameToIndex;
+        private ImmutableDictionary<int, int> _dictIdToIndex;
+        private HashSet<MsDataFileUri> _setFiles;
+
         private int _countUnloaded;
 
         private ChromatogramCache _cacheFinal;
@@ -60,7 +64,22 @@ namespace pwiz.Skyline.Model.Results
             private set
             {
                 _chromatograms = MakeReadOnly(value.ToArray());
+                var dictNameToIndex = new Dictionary<string, int>();
+                var dictIdToIndex = new Dictionary<int, int>();
+                _setFiles = new HashSet<MsDataFileUri>();
+                for (int i = 0; i < _chromatograms.Count; i++)
+                {
+                    var set = _chromatograms[i];
+                    dictNameToIndex.Add(set.Name, i);
+                    dictIdToIndex.Add(set.Id.GlobalIndex, i);
+                    foreach (var path in set.MSDataFilePaths)
+                        _setFiles.Add(path);
+                }
+                _dictNameToIndex = new ImmutableDictionary<string, int>(dictNameToIndex);
+                _dictIdToIndex = new ImmutableDictionary<int, int>(dictIdToIndex);
                 _countUnloaded = _chromatograms.Count(c => !c.IsLoaded);
+                HasGlobalStandardArea = MSDataFileInfos.Any(chromFileInfo =>
+                    chromFileInfo.ExplicitGlobalStandardArea.HasValue);
             }
         }
 
@@ -103,6 +122,8 @@ namespace pwiz.Skyline.Model.Results
 
         public bool IsJoiningDisabled { get; private set; }
         public bool IsResultsUpdateRequired { get; private set; }
+        public bool IsDeserialized { get; private set; }
+        public bool HasGlobalStandardArea { get; private set; }
 
         public bool IsChromatogramSetLoaded(int index)
         {
@@ -382,6 +403,7 @@ namespace pwiz.Skyline.Model.Results
             results._listPartialCaches = resultsCache._listPartialCaches;
             results._cacheFinal = resultsCache._cacheFinal;
             results.IsResultsUpdateRequired = resultsCache.IsResultsUpdateRequired;
+            results.IsDeserialized = false;
 
             // Preserve partial caches in this, if none to add and not final
             if (results._listPartialCaches == null)
@@ -464,13 +486,15 @@ namespace pwiz.Skyline.Model.Results
 
         public bool TryGetChromatogramSet(string name, out ChromatogramSet chromatogramSet, out int index)
         {
-            index = _chromatograms.IndexOf(chrom => Equals(name, chrom.Name));
+            if (!_dictNameToIndex.TryGetValue(name, out index))
+                index = -1;
             return ChromatogramSetForIndex(index, out chromatogramSet);
         }
 
         public bool TryGetChromatogramSet(int setId, out ChromatogramSet chromatogramSet, out int index)
         {
-            index = _chromatograms.IndexOf(chrom => Equals(setId, chrom.Id.GlobalIndex));
+            if (!_dictIdToIndex.TryGetValue(setId, out index))
+                index = -1;
             return ChromatogramSetForIndex(index, out chromatogramSet);
         }
 
@@ -513,13 +537,11 @@ namespace pwiz.Skyline.Model.Results
             foreach (var cache in CachesEx)
             {
                 ChromatogramGroupInfo[] info;
-                if (!cache.TryLoadAllIonsChromatogramInfo(extractor, out info))
+                if (!cache.TryLoadAllIonsChromatogramInfo(extractor, chromatogram, out info))
                     continue;
 
                 foreach (var chromInfo in info)
                 {
-                    if (!ContainsInfo(chromatogram, chromInfo) || chromInfo.Header.Extractor != extractor)
-                        continue;
                     if (loadPoints)
                         chromInfo.ReadChromatogram(cache);
                     listChrom.Add(chromInfo);
@@ -539,6 +561,8 @@ namespace pwiz.Skyline.Model.Results
             return TryLoadChromatogram(_chromatograms[index], nodePep, nodeGroup,
                                        tolerance, loadPoints, out infoSet);
         }
+
+        private static readonly ChromatogramGroupInfo[] EMPTY_GROUP_INFOS = new ChromatogramGroupInfo[0];
 
         public bool TryLoadChromatogram(ChromatogramSet chromatogram,
                                         PeptideDocNode nodePep,
@@ -560,17 +584,23 @@ namespace pwiz.Skyline.Model.Results
             int maxTranMatch = 1;
             var minErrRT = double.MaxValue;
 
-            var listChrom = new List<ChromatogramGroupInfo>();
+            IList<ChromatogramGroupInfo> listChrom = EMPTY_GROUP_INFOS;
             foreach (var cache in CachesEx)
             {
                 ChromatogramGroupInfo[] info;
-                if (!cache.TryLoadChromatogramInfo(nodePep, nodeGroup, tolerance, out info))
+                if (!cache.TryLoadChromatogramInfo(nodePep, nodeGroup, tolerance, chromatogram, out info))
                     continue;
 
                 foreach (var chromInfo in info)
                 {
-                    if (!ContainsInfo(chromatogram, chromInfo))
-                        continue;
+                    // Short-circuit further processing for common case in label free data
+                    if (_cacheFinal != null && info.Length == 1 && minErrRT == double.MaxValue)
+                    {
+                        if (loadPoints)
+                            info[0].ReadChromatogram(cache);
+                        infoSet = info;
+                        return true;
+                    }
 
                     // If the chromatogram set has an optimization function, then the number
                     // of matching chromatograms per transition is a reflection of better
@@ -586,6 +616,8 @@ namespace pwiz.Skyline.Model.Results
                     //           transitions.
                     if (tranMatch >= maxTranMatch  || errRT < minErrRT)
                     {
+                        if (ReferenceEquals(listChrom, EMPTY_GROUP_INFOS))
+                            listChrom = new List<ChromatogramGroupInfo>();
                         if (errRT < minErrRT)
                         {
                             // This is the closest peak we've found to the explicit RT
@@ -633,18 +665,13 @@ namespace pwiz.Skyline.Model.Results
                 }
                 listChrom = listChromFinal;
             }
-            infoSet = listChrom.ToArray();
+            infoSet = ReferenceEquals(listChrom, EMPTY_GROUP_INFOS) ? EMPTY_GROUP_INFOS : listChrom.ToArray();
             return infoSet.Length > 0;
-        }
-
-        private static bool ContainsInfo(ChromatogramSet chromatogram, ChromatogramGroupInfo chromInfo)
-        {
-            return chromatogram.MSDataFilePaths.Contains(chromInfo.FilePath);
         }
 
         public bool ContainsChromatogram(string name)
         {
-            return _chromatograms.Contains(set => Equals(name, set.Name));
+            return _dictNameToIndex.ContainsKey(name);
         }
 
         public void Load(SrmDocument document, string documentPath, MultiFileLoadMonitor loadMonitor, MultiFileLoader multiFileLoader,
@@ -664,6 +691,11 @@ namespace pwiz.Skyline.Model.Results
         }
 
         #region Property change methods
+
+        public MeasuredResults ClearDeserialized()
+        {
+            return ChangeProp(ImClone(this), im => im.IsDeserialized = false);
+        }
 
         public MeasuredResults ChangeIsJoiningDisabled(bool prop)
         {
@@ -1009,6 +1041,8 @@ namespace pwiz.Skyline.Model.Results
 
             // Read end tag
             reader.ReadEndElement();
+
+            IsDeserialized = Chromatograms.Count > 0;
         }
 
         public void WriteXml(XmlWriter writer)
@@ -1065,6 +1099,9 @@ namespace pwiz.Skyline.Model.Results
 
             public void Load()
             {
+                // Turn of deserialized flag
+                _resultsClone.IsDeserialized = false;
+
                 // If there is a final cache, move it to partial and let it prove itself usable.
                 if (_resultsClone._cacheFinal != null)
                     _resultsClone._listPartialCaches = MakeReadOnly(new[] {_resultsClone._cacheFinal});

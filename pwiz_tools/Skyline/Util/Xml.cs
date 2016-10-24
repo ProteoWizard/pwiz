@@ -725,9 +725,18 @@ namespace pwiz.Skyline.Util
 
         public static TAttr GetEnumAttribute<TAttr>(this XmlReader reader, string name, TAttr defaultValue, EnumCase enumCase)
         {
+            return reader.GetEnumAttribute(name, null, defaultValue, enumCase);
+        }
+
+        public static TAttr GetEnumAttribute<TAttr>(this XmlReader reader, string name, IDictionary<string, TAttr> lookup, TAttr defaultValue, EnumCase enumCase)
+        {
             string value = reader.GetAttribute(name);
             if (!string.IsNullOrEmpty(value))
             {
+                TAttr cached;
+                if (lookup != null && lookup.TryGetValue(value, out cached))
+                    return cached;
+
                 try
                 {
                     return (TAttr)Enum.Parse(typeof(TAttr), GetEnumString(value, enumCase));
@@ -751,6 +760,17 @@ namespace pwiz.Skyline.Util
                 default:
                     return value;
             }
+        }
+
+        public static Dictionary<string, TAttr> GetEnumLookupDictionary<TAttr>(params TAttr[] attrs)
+        {
+            var dict = new Dictionary<string, TAttr>();
+            foreach (var attr in attrs)
+            {
+                dict.Add(GetEnumString(attr.ToString(), EnumCase.lower), attr);
+                dict.Add(GetEnumString(attr.ToString(), EnumCase.upper), attr);
+            }
+            return dict;
         }
 
         public static Type GetTypeAttribute(this XmlReader reader, Enum name)

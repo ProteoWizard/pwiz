@@ -1118,7 +1118,8 @@ namespace pwiz.Skyline.Model
                     if (keepUserSet && iResultOld != -1)
                     {
                         // Or we have reintegrated peaks that are not matching the current integrate all setting
-                        missmatchedEmptyReintegrated = nodePrevious.IsMismatchedEmptyReintegrated(iResultOld, integrateAll);
+                        if (integrateAll && (settingsOld == null || !settingsOld.TransitionSettings.Integration.IsIntegrateAll))
+                            missmatchedEmptyReintegrated = nodePrevious.IsMismatchedEmptyReintegrated(iResultOld);
                         if (setTranPrevious != null || missmatchedEmptyReintegrated)
                             dictUserSetInfoBest = nodePrevious.FindBestUserSetInfo(iResultOld);
                     }
@@ -1387,10 +1388,9 @@ namespace pwiz.Skyline.Model
         }
 
         /// <summary>
-        /// Returns true if settings are moving to integrate all and there are empty
-        /// reintegrated peaks.
+        /// Returns true if there are empty reintegrated peaks.
         /// </summary>
-        private bool IsMismatchedEmptyReintegrated(int indexResult, bool integrateAll)
+        private bool IsMismatchedEmptyReintegrated(int indexResult)
         {
             foreach (TransitionDocNode nodeTran in Children)
             {
@@ -1405,7 +1405,7 @@ namespace pwiz.Skyline.Model
                 {
                     if (chromInfo == null || chromInfo.UserSet != UserSet.REINTEGRATED || chromInfo.OptimizationStep != 0)
                         continue;
-                    if (integrateAll && chromInfo.IsEmpty)
+                    if (chromInfo.IsEmpty)
                         return true;
                 }
             }
@@ -1451,26 +1451,32 @@ namespace pwiz.Skyline.Model
             return dictInfo;
         }
 
-        private static TransitionGroupChromInfo FindGroupChromInfo(IEnumerable<TransitionGroupChromInfo> results,
+        private static TransitionGroupChromInfo FindGroupChromInfo(IList<TransitionGroupChromInfo> results,
                                                          ChromFileInfoId fileId, int step)
         {
             if (results != null)
             {
-                return results.FirstOrDefault(chromInfo =>
-                    ReferenceEquals(fileId, chromInfo.FileId) &&
-                    step == chromInfo.OptimizationStep);
+                for (int i = 0; i < results.Count; i++)
+                {
+                    var chromInfo = results[i];
+                    if (ReferenceEquals(fileId, chromInfo.FileId) && step == chromInfo.OptimizationStep)
+                        return chromInfo;
+                }
             }
             return null;
         }
 
-        private static TransitionChromInfo FindChromInfo(IEnumerable<TransitionChromInfo> results,
+        private static TransitionChromInfo FindChromInfo(IList<TransitionChromInfo> results,
                                                          ChromFileInfoId fileId, int step)
         {
             if (results != null)
             {
-                return results.FirstOrDefault(chromInfo =>
-                    ReferenceEquals(fileId, chromInfo.FileId) &&
-                    step == chromInfo.OptimizationStep);
+                for (int i = 0; i < results.Count; i++)
+                {
+                    var chromInfo = results[i];
+                    if (ReferenceEquals(fileId, chromInfo.FileId) && step == chromInfo.OptimizationStep)
+                        return chromInfo;
+                }
             }
             return null;
         }
@@ -1626,8 +1632,7 @@ namespace pwiz.Skyline.Model
                 double[] peakAreas = null, libIntensities = null;
                 if (nodeGroup.HasLibInfo)
                 {
-                    var nodeTransMsMs = nodeGroup.GetMsMsTransitions(isFullScanMs).ToArray();
-                    int countTransMsMs = nodeTransMsMs.Length;
+                    int countTransMsMs = nodeGroup.GetMsMsTransitions(isFullScanMs).Count();
                     if (countTransMsMs >= MIN_DOT_PRODUCT_TRANSITIONS)
                     {
                         peakAreas = new double[countTransMsMs];
@@ -1637,8 +1642,7 @@ namespace pwiz.Skyline.Model
                 double[] peakAreasMs = null, isoProportionsMs = null;
                 if (nodeGroup.HasIsotopeDist)
                 {
-                    var nodeTransMs = nodeGroup.GetMsTransitions(isFullScanMs).ToArray();
-                    int countTransMs = nodeTransMs.Length;
+                    int countTransMs = nodeGroup.GetMsTransitions(isFullScanMs).Count();
                     if (countTransMs >= MIN_DOT_PRODUCT_MS1_TRANSITIONS)
                     {
                         peakAreasMs = new double[countTransMs];
@@ -1647,7 +1651,7 @@ namespace pwiz.Skyline.Model
                 }
                 for (int iChrom = 0; iChrom < _listResultCalcs.Count; iChrom++)
                 {
-                    var arrayFileSteps = GetTransitionFileSteps(iChrom).ToArray();
+                    var arrayFileSteps = GetTransitionFileSteps(iChrom);
                     foreach (var fileStep in arrayFileSteps)
                     {
                         int countInfo = 0, countLibTrans = 0, countIsoTrans = 0;
@@ -1694,31 +1698,20 @@ namespace pwiz.Skyline.Model
                         // Sort by area descending
                         Array.Sort(arrayRanked, IndexedTypedInfo.CompareAreaDesc);
                         // Change any TransitionChromInfo items that do not have the right rank.
+                        short iRankMs = 0, iRankMsMs = 0;
                         for (int iRank = 0; iRank < countTransitions; iRank++)
                         {
                             var pair = arrayRanked[iRank];
                             if (pair.Info == null)
                                 continue;
-                            short rank = (short) (pair.Info.Area > 0 ? iRank + 1 : 0);
-                            if (pair.Info.Rank != rank)
-                                pair.Result = pair.Info.ChangeRank(rank);
-                        }
-                        // Sort by typed area descending
-                        Array.Sort(arrayRanked, IndexedTypedInfo.CompareMs1AreaDesc);
-                        int? offsetMsMs = null;
-                        for (int iRank = 0; iRank < countTransitions; iRank++)
-                        {
-                            var pair = arrayRanked[iRank];
-                            if (pair.Info == null)
-                                continue;
-                            
-                            if (!offsetMsMs.HasValue && !pair.IsMs1)
-                                offsetMsMs = iRank;
-
-                            int offset = offsetMsMs ?? 0;
-                            short rank = (short) (pair.Info.Area > 0 ? iRank - offset + 1 : 0);
-                            if (pair.Info.RankByLevel != rank)
-                                pair.Result = (pair.Result ?? pair.Info).ChangeRankByLevel(rank);
+                            short rank = 0, rankByLevel = 0;
+                            if (pair.Info.Area > 0)
+                            {
+                                rank = (short) (iRank + 1);
+                                rankByLevel = pair.IsMs1 ? ++iRankMs : ++iRankMsMs;
+                            }
+                            if (pair.Info.Rank != rank || pair.Info.RankByLevel != rankByLevel)
+                                pair.Result = pair.Info.ChangeRank(rank, rankByLevel);
                         }
 
                         foreach (var pair in arrayRanked)
@@ -1770,20 +1763,60 @@ namespace pwiz.Skyline.Model
 
             private IEnumerable<FileStep> GetTransitionFileSteps(int iChrom)
             {
-                return _arrayTransitionChromInfoSets
-                    .Where(s => s.ChromInfoLists[iChrom] != null)
-                    .SelectMany(s => s.ChromInfoLists[iChrom])
-                    .Select(info => new FileStep(info.FileId, info.OptimizationStep))
-                    .Distinct();
+                // By far the most common case is that there is only 1:
+                // importing single-file replicates without optimization
+                ChromFileInfoId id = null;
+                int optimizationStep = 0;
+                foreach (var set in _arrayTransitionChromInfoSets)
+                {
+                    if (set.ChromInfoLists[iChrom] == null)
+                        continue;
+                    foreach (var info in set.ChromInfoLists[iChrom])
+                    {
+                        if (id == null)
+                        {
+                            id = info.FileId;
+                            optimizationStep = info.OptimizationStep;
+                        }
+                        else if (!ReferenceEquals(id, info.FileId) || optimizationStep != info.OptimizationStep)
+                        {
+                            id = null;
+                            break;
+                        }
+                    }
+                }
+
+                if (id != null)
+                    yield return new FileStep(id, optimizationStep);
+                else
+                {
+                    // Use the longer query in more complex cases, with ToArray allocation
+                    // since the set could change during retrieval
+                    foreach (var step in _arrayTransitionChromInfoSets
+                        .Where(s => s.ChromInfoLists[iChrom] != null)
+                        .SelectMany(s => s.ChromInfoLists[iChrom])
+                        .Select(info => new FileStep(info.FileId, info.OptimizationStep))
+                        .Distinct()
+                        .ToArray())
+                    {
+                        yield return step;
+                    }
+                }
             }
 
             private TransitionChromInfo GetTransitionChromInfo(int iTran, int iChrom, ChromFileInfoId fileId, int optStep)
             {
                 var chromInfoList = _arrayTransitionChromInfoSets[iTran].ChromInfoLists[iChrom];
-                if (chromInfoList == null)
-                    return null;
-                return chromInfoList.FirstOrDefault(chromInfo =>
-                    ReferenceEquals(fileId, chromInfo.FileId) && optStep == chromInfo.OptimizationStep);
+                if (chromInfoList != null)
+                {
+                    for (int i = 0; i < chromInfoList.Count; i++)
+                    {
+                        var chromInfo = chromInfoList[i];
+                        if (ReferenceEquals(fileId, chromInfo.FileId) && optStep == chromInfo.OptimizationStep)
+                            return chromInfo;
+                    }
+                }
+                return null;
             }
 
             private void SetTransitionChromInfo(int iTran, int iChrom, ChromFileInfoId fileId, int optStep,
@@ -1924,13 +1957,14 @@ namespace pwiz.Skyline.Model
                 }
             }
 
-            public void AddChromInfoList(TransitionDocNode nodeTran, IEnumerable<TransitionChromInfo> listInfo)
+            public void AddChromInfoList(TransitionDocNode nodeTran, IList<TransitionChromInfo> listInfo)
             {
                 if (listInfo == null)
                     return;
 
-                foreach (var chromInfo in listInfo)
+                for (int iInfo = 0; iInfo < listInfo.Count; iInfo++)
                 {
+                    var chromInfo = listInfo[iInfo];
                     if (chromInfo == null)
                         continue;
 

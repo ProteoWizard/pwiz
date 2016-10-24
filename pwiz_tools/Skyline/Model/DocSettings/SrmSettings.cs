@@ -648,12 +648,9 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             get
             {
-                if (HasResults)
+                if (HasResults && MeasuredResults.HasGlobalStandardArea)
                 {
-                    if (MeasuredResults.MSDataFileInfos.Any(chromFileInfo => chromFileInfo.ExplicitGlobalStandardArea.HasValue))
-                    {
-                        return true;
-                    }
+                    return true;
                 }
                 return _cachedPeptideStandards != null &&
                        _cachedPeptideStandards.ContainsKey(PeptideDocNode.STANDARD_TYPE_GLOBAL);

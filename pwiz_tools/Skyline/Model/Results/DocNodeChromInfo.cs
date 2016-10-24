@@ -409,7 +409,7 @@ namespace pwiz.Skyline.Model.Results
             IList<float?> ratios, Annotations annotations, UserSet userSet)
             : this(fileId, optimizationStep, peak.MassError, peak.RetentionTime, peak.StartTime, peak.EndTime,
                    peak.Area, peak.BackgroundArea, peak.Height, peak.Fwhm,
-                   peak.IsFwhmDegenerate, peak.IsTruncated, peak.Identified,
+                   peak.IsFwhmDegenerate, peak.IsTruncated, peak.Identified, 0, 0,
                    ratios, annotations, userSet)
         {            
         }
@@ -418,8 +418,8 @@ namespace pwiz.Skyline.Model.Results
                                    float retentionTime, float startRetentionTime, float endRetentionTime,
                                    float area, float backgroundArea, float height,
                                    float fwhm, bool fwhmDegenerate, bool? truncated,
-                                   PeakIdentification identified, IList<float?> ratios,
-                                   Annotations annotations, UserSet userSet)
+                                   PeakIdentification identified, short rank, short rankByLevel,
+                                   IList<float?> ratios, Annotations annotations, UserSet userSet)
             : base(fileId)
         {
             OptimizationStep = optimizationStep;
@@ -437,6 +437,8 @@ namespace pwiz.Skyline.Model.Results
             IsFwhmDegenerate = fwhmDegenerate;
             IsTruncated = truncated;
             Identified = identified;
+            Rank = rank;
+            RankByLevel = rankByLevel;
             Ratios = ratios;
             Annotations = annotations;
             UserSet = userSet;
@@ -580,14 +582,13 @@ namespace pwiz.Skyline.Model.Results
             return ChangeProp(ImClone(this), im => im.Ratios = prop);
         }
 
-        public TransitionChromInfo ChangeRank(short prop)
+        public TransitionChromInfo ChangeRank(short prop, short propByLevel)
         {
-            return ChangeProp(ImClone(this), im => im.Rank = prop);
-        }
-
-        public TransitionChromInfo ChangeRankByLevel(short prop)
-        {
-            return ChangeProp(ImClone(this), im => im.RankByLevel = prop);
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.Rank = prop;
+                im.RankByLevel = propByLevel;
+            });
         }
 
         public TransitionChromInfo ChangeAnnotations(Annotations annotations)
@@ -700,7 +701,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 for (int i = 0, len = Math.Min(resultsOld.Count, chromInfoSet.Count); i < len; i++)
                 {
-                    if (EqualsDeep(resultsOld[i], chromInfoSet[i]))
+                    if (ArrayUtil.ReferencesEqual(resultsOld[i], chromInfoSet[i]) || EqualsDeep(resultsOld[i], chromInfoSet[i]))
                         chromInfoSet[i] = resultsOld[i];
                 }
             }
@@ -916,6 +917,12 @@ namespace pwiz.Skyline.Model.Results
         IMPORTED,   // Import peak boundaries
         REINTEGRATED,   // Edit > Refine > Reintagrate
         MATCHED // Forced by peak matching when adding missing label type precursors
+    }
+
+    public static class UserSetFastLookup
+    {
+        public static readonly Dictionary<string, UserSet> Dict = XmlUtil.GetEnumLookupDictionary(
+            UserSet.TRUE, UserSet.FALSE, UserSet.IMPORTED, UserSet.REINTEGRATED, UserSet.MATCHED);
     }
 
     public static class UserSetExtension

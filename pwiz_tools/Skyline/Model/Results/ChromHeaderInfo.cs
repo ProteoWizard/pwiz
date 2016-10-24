@@ -1722,6 +1722,19 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        public static byte[] GetBytes(ChromPeak p)
+        {
+            int size = Marshal.SizeOf(p);
+            byte[] arr = new byte[size];
+            IntPtr ptr = Marshal.AllocHGlobal(size);
+
+            Marshal.StructureToPtr(p, ptr, true);
+            Marshal.Copy(ptr, arr, 0, size);
+            Marshal.FreeHGlobal(ptr);
+
+            return arr;            
+        }
+
         #endregion
     }
 
@@ -2431,6 +2444,8 @@ namespace pwiz.Skyline.Model.Results
         public int MaxPeakIndex { get { return _groupHeaderInfo.MaxPeakIndex; } }
         public int BestPeakIndex { get { return MaxPeakIndex; } }
 
+        private byte[] DeferedCompressedBytes { get; set; }
+
         public float[] Times { get; set; }
         public float[][] IntensityArray { get; set; }
         public short[][] MassError10XArray { get; set; }
@@ -2627,11 +2642,30 @@ namespace pwiz.Skyline.Model.Results
             return match;
         }
 
-        public void ReadChromatogram(ChromatogramCache cache)
+        public void ReadChromatogram(ChromatogramCache cache, bool deferDecompression = false)
+        {
+            var compressedBytes = DeferedCompressedBytes ?? ReadCompressedBytes(cache);
+
+            if (deferDecompression)
+                DeferedCompressedBytes = compressedBytes;
+            else
+            {
+                CompressedBytesToTimeIntensities(compressedBytes);
+                DeferedCompressedBytes = null;
+            }
+        }
+
+        public void EnsureDecompressed()
+        {
+            if (DeferedCompressedBytes != null)
+                CompressedBytesToTimeIntensities(DeferedCompressedBytes);
+        }
+
+        public byte[] ReadCompressedBytes(ChromatogramCache cache)
         {
             Stream stream = cache.ReadStream.Stream;
             byte[] pointsCompressed = new byte[_groupHeaderInfo.CompressedSize];
-            lock(stream)
+            lock (stream)
             {
                 try
                 {
@@ -2650,7 +2684,11 @@ namespace pwiz.Skyline.Model.Results
                     throw;
                 }
             }
+            return pointsCompressed;
+        }
 
+        public void CompressedBytesToTimeIntensities(byte[] pointsCompressed)
+        {
             int numPoints = _groupHeaderInfo.NumPoints;
             int numTrans = _groupHeaderInfo.NumTransitions;
             bool hasErrors = _groupHeaderInfo.HasMassErrors;

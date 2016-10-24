@@ -258,25 +258,35 @@ namespace pwiz.Skyline.Model.Results
                         _manager.EndProcessing(_document);
                         return;
                     }
-
-                    try
+                    // Full precision XML serialization started on r9730 (see Xml.cs) and 3.53 was added at r9743
+                    else if (docCurrent.FormatVersion >= SrmDocument.FORMAT_VERSION_3_53 && resultsLoad.CacheVersion.HasValue &&
+                            resultsPrevious != null && resultsPrevious.IsDeserialized)
                     {
-                        using (var settingsChangeMonitor = new SrmSettingsChangeMonitor(new LoadMonitor(_manager, _container, null),
-                                                                                        Resources.Loader_FinishLoad_Updating_peak_statistics,
-                                                                                        _container, docCurrent))
-                        {
-                            // First remove any chromatogram sets that were removed during processing
-                            results = results.ApplyChromatogramSetRemovals(resultsLoad, resultsPrevious);
-                            // Then update caches
-                            if (results != null)
-                                results = results.UpdateCaches(documentPath, resultsLoad);
-                            docNew = docCurrent.ChangeMeasuredResults(results, settingsChangeMonitor);
-                        }
+                        // Skip settings change for deserialized document when it first becomes connected with its cache
+                        results = results.UpdateCaches(documentPath, resultsLoad);
+                        docNew = docCurrent.ChangeSettingsNoDiff(docCurrent.Settings.ChangeMeasuredResults(results));
                     }
-                    catch (OperationCanceledException)
+                    else
                     {
-                        // Restart the processing form the top
-                        docNew = null;
+                        try
+                        {
+                            using (var settingsChangeMonitor = new SrmSettingsChangeMonitor(new LoadMonitor(_manager, _container, null),
+                                                                                            Resources.Loader_FinishLoad_Updating_peak_statistics,
+                                                                                            _container, docCurrent))
+                            {
+                                // First remove any chromatogram sets that were removed during processing
+                                results = results.ApplyChromatogramSetRemovals(resultsLoad, resultsPrevious);
+                                // Then update caches
+                                if (results != null)
+                                    results = results.UpdateCaches(documentPath, resultsLoad);
+                                docNew = docCurrent.ChangeMeasuredResults(results, settingsChangeMonitor);
+                            }
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            // Restart the processing form the top
+                            docNew = null;
+                        }
                     }
                 }
                 while (docNew == null || !_manager.CompleteProcessing(_container, docNew, docCurrent));
@@ -339,6 +349,16 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        public bool ContainsFile(MsDataFileUri filePath)
+        {
+            for (int i = 0; i < _msDataFileInfo.Count; i++)
+            {
+                if (Equals(_msDataFileInfo[i].FilePath, filePath))
+                    return true;
+            }
+            return false;
+        }
+
         public int FileCount { get { return _msDataFileInfo.Count; } }
 
         public IEnumerable<MsDataFileUri> MSDataFilePaths { get { return MSDataFileInfos.Select(info => info.FilePath); } }
@@ -373,6 +393,10 @@ namespace pwiz.Skyline.Model.Results
 
         public int IndexOfId(ChromFileInfoId fileId)
         {
+            // Faster than IndexOf and shows up in a profiler for large document loading
+            if (MSDataFileInfos.Count == 1)
+                return ReferenceEquals(MSDataFileInfos[0].Id, fileId) ? 0 : -1;
+
             return MSDataFileInfos.IndexOf(info => ReferenceEquals(info.Id, fileId));
         }
 
