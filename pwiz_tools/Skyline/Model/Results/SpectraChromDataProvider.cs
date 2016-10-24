@@ -952,7 +952,11 @@ namespace pwiz.Skyline.Model.Results
 
                         var nextSpectra = _lookaheadContext.Lookahead(nextSpectrum, out rt);
                         if (!_filter.ContainsTime(rt.Value))
+                        {
+                            if (_allChromData != null)
+                                _allChromData.CurrentTime = (float)rt.Value;
                             continue;
+                        }
 
                         return new SpectrumInfo(i, nextSpectrum, nextSpectra, rt.Value);
                     }
