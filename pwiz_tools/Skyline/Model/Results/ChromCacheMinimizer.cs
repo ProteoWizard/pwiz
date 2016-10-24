@@ -135,13 +135,18 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
 
+                if (minimizer.Exception != null)
+                    break;
+
                 minimizer.Add(new MinimizeParams(writer, settings, chromGroupInfo, transitionGroupDocNodes, progressCallback, statisticsCollector));
 
                 // Null out the ChromGroup in our array so it can be garbage collected.
                 chromGroups[iHeader] = null;
             }
 
-            minimizer.Wait();
+            minimizer.DoneAdding(true);
+            if (minimizer.Exception != null)
+                throw minimizer.Exception;
 
             statisticsCollector.ReportProgress(progressCallback, true);
 

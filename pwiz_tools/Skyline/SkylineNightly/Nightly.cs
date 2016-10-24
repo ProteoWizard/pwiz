@@ -54,8 +54,8 @@ namespace SkylineNightly
         private const string LABKEY_RELEASE_PERF_URL = "https://skyline.gs.washington.edu/labkey/testresults/home/development/Release%20Branch/post.view?";
         private const string LABKEY_INTEGRATION_URL = "https://skyline.gs.washington.edu/labkey/testresults/home/development/Integration/post.view";
 
-        // Current integration branch is MultiFileUltimate
-        private const string SVN_INTEGRATION_BRANCH_URL = "https://svn.code.sf.net/p/proteowizard/code/branches/work/20160427_MultiFileUtimate";
+        // Current integration branch is large_doc_perf
+        private const string SVN_INTEGRATION_BRANCH_URL = "https://svn.code.sf.net/p/proteowizard/code/branches/work/20161008_large_doc_perf";
 
         private DateTime _startTime;
         public string LogFileName { get; private set; }
@@ -713,7 +713,10 @@ namespace SkylineNightly
                 try
                 {
                     if (File.Exists(fileOrDir))
+                    {
+                        File.SetAttributes(fileOrDir, FileAttributes.Normal);   // Protect against failing on read-only files
                         File.Delete(fileOrDir);
+                    }
                     else if (Directory.Exists(fileOrDir))
                         Directory.Delete(fileOrDir, true);
                 }

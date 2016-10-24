@@ -28,6 +28,7 @@ using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.SkylineTestUtil
@@ -241,8 +242,14 @@ namespace pwiz.SkylineTestUtil
             var listChromatograms = new List<ChromatogramSet>();
             foreach (var path in new[] { path1, path2 })
             {
-                listChromatograms.Add(FindChromatogramSet(doc, path) ??
-                    new ChromatogramSet((path.GetFileName() ?? "").Replace('.', '_'), new[] { path }));
+                var setAdd = FindChromatogramSet(doc, path);
+                if (setAdd == null)
+                {
+                    string addName = (path.GetFileName() ?? "").Replace('.', '_');
+                    addName = Helpers.GetUniqueName(addName, n => listChromatograms.All(set => n != set.Name));
+                    setAdd = new ChromatogramSet(addName, new[] {path});
+                }
+                listChromatograms.Add(setAdd);
             }
             var docResults = doc.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
             Assert.IsTrue(docContainer.SetDocument(docResults, doc, true));
