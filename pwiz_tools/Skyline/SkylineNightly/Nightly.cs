@@ -214,19 +214,28 @@ namespace SkylineNightly
             Log("Delete SkylineTester");
             var skylineTesterDirBasis = _skylineTesterDir; // Default name
             const int maxRetry = 1000;  // Something would have to be very wrong to get here, but better not to risk a hang
+            string nextDir = _skylineTesterDir;
             for (var retry = 1; retry < maxRetry; retry++)
             {
                 try
                 {
-                    Delete(_skylineTesterDir);
-                    break;
+                    if (!Directory.Exists(nextDir))
+                        break;
+
+                    string deleteDir = nextDir;
+                    // Keep going until a directory is found that does not exist
+                    nextDir = skylineTesterDirBasis + "_" + retry;
+
+                    Delete(deleteDir);
                 }
                 catch (Exception e)
                 {
-                    // Work around undeletable file that sometimes appears under Windows 10
-                    var newDir = skylineTesterDirBasis + "_" +  retry;
-                    Log("Unable to delete " + _skylineTesterDir + "(" + e + "),  using " + newDir + " instead.");
-                    _skylineTesterDir = newDir;
+                    if (Directory.Exists(_skylineTesterDir))
+                    {
+                        // Work around undeletable file that sometimes appears under Windows 10
+                        Log("Unable to delete " + _skylineTesterDir + "(" + e + "),  using " + nextDir + " instead.");
+                        _skylineTesterDir = nextDir;
+                    }
                 }
             }
             Log("buildRoot is " + PwizDir);
@@ -712,13 +721,8 @@ namespace SkylineNightly
             {
                 try
                 {
-                    if (File.Exists(fileOrDir))
-                    {
-                        File.SetAttributes(fileOrDir, FileAttributes.Normal);   // Protect against failing on read-only files
-                        File.Delete(fileOrDir);
-                    }
-                    else if (Directory.Exists(fileOrDir))
-                        Directory.Delete(fileOrDir, true);
+                    DeleteRecursive(fileOrDir);
+                    break;
                 }
                 catch (Exception ex)
                 {
@@ -728,6 +732,23 @@ namespace SkylineNightly
                     var random = new Random();
                     Thread.Sleep(1000 + random.Next(0, 5000)); // A little stutter-step to avoid unlucky sync with TortoiseSVN icon update
                 }
+            }
+        }
+
+        private void DeleteRecursive(string fileOrDir)
+        {
+            if (File.Exists(fileOrDir))
+            {
+                File.SetAttributes(fileOrDir, FileAttributes.Normal);   // Protect against failing on read-only files
+                File.Delete(fileOrDir);
+            }
+            else if (Directory.Exists(fileOrDir))
+            {
+                foreach (var entry in Directory.EnumerateFileSystemEntries(fileOrDir))
+                {
+                    DeleteRecursive(entry);
+                }
+                Directory.Delete(fileOrDir, true);
             }
         }
 
