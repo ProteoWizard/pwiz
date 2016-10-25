@@ -384,7 +384,6 @@ namespace pwiz.ProteowizardWrapper
                         _msDataFile.run.spectrumList != null &&
                         !_msDataFile.run.spectrumList.empty() &&
                         !HasChromatogramData && 
-                        !HasDriftTimeSpectra && // CDT reader doesn't handle lockmass correction as of Nov 2015
                         !HasSrmSpectra;
                 }
                 catch (Exception)
