@@ -145,6 +145,10 @@ class RawFileImpl : public RawFile
     virtual const vector<MassAnalyzerType>& getMassAnalyzers();
     virtual const vector<DetectorType>& getDetectors();
 
+    virtual std::string getTrailerExtraValue(long scanNumber, const std::string& name) const;
+    virtual double getTrailerExtraValueDouble(long scanNumber, const std::string& name) const;
+    virtual long getTrailerExtraValueLong(long scanNumber, const std::string& name) const;
+
     virtual ChromatogramDataPtr
     getChromatogramData(ChromatogramType type1,
                         ChromatogramOperatorType op,
@@ -173,6 +177,7 @@ class RawFileImpl : public RawFile
 
     map<int, map<int, double> > defaultIsolationWidthBySegmentAndMsLevel;
     map<int, map<int, double> > isolationWidthBySegmentAndScanEvent;
+    map<string, double> isolationMzOffsetByScanDescription;
 
     once_flag_proxy instrumentMethodParsed_;
     void parseInstrumentMethod();
@@ -259,6 +264,8 @@ RawFileImpl::RawFileImpl(const string& filename)
 
         if (raw_->Open(bfs::path(filename_).native().c_str()))
             throw RawEgg("[RawFile::ctor] Unable to open file " + filename);
+
+        parseInstrumentMethod();
     }
     catch (_com_error& e)
     {
@@ -490,6 +497,73 @@ const vector<DetectorType>& RawFileImpl::getDetectors()
     return detectors_;
 }
 
+
+std::string RawFileImpl::getTrailerExtraValue(long scanNumber, const string& name) const
+{
+    _variant_t v;
+
+    checkResult(raw_->GetTrailerExtraValueForScanNum(scanNumber,
+                name.c_str(),
+                &v),
+                "[RawFileImpl::getTrailerExtraValueDouble()] ");
+    switch (v.vt)
+    {
+        case VT_I1: return lexical_cast<string>(v.cVal);
+        case VT_UI1: return lexical_cast<string>(v.bVal);
+        case VT_I2: return lexical_cast<string>(v.iVal);
+        case VT_UI2: return lexical_cast<string>(v.uiVal);
+        case VT_I4: return lexical_cast<string>(v.lVal);
+        case VT_UI4: return lexical_cast<string>(v.ulVal);
+        case VT_INT: return lexical_cast<string>(v.intVal);
+        case VT_UINT: return lexical_cast<string>(v.uintVal);
+        case VT_R4: return lexical_cast<string>(v.fltVal);
+        case VT_R8: return lexical_cast<string>(v.dblVal);
+        case VT_BSTR: return lexical_cast<string>((const char*) _bstr_t(v.bstrVal));
+        default:
+            throw RawEgg("[RawFileImpl::getTrailerExtraValue()] Unknown type.");
+    }
+}
+
+double RawFileImpl::getTrailerExtraValueDouble(long scanNumber, const string& name) const
+{
+    _variant_t v;
+
+    checkResult(raw_->GetTrailerExtraValueForScanNum(scanNumber,
+                name.c_str(),
+                &v),
+                "[RawFileImpl::getTrailerExtraValueDouble()] ");
+    switch (v.vt)
+    {
+        case VT_R4: return v.fltVal;
+        case VT_R8: return v.dblVal;
+        default:
+            throw RawEgg("[RawFileImpl::getTrailerExtraValueDouble()] Unknown type.");
+    }
+}
+
+
+long RawFileImpl::getTrailerExtraValueLong(long scanNumber, const string& name) const
+{
+    _variant_t v;
+
+    checkResult(raw_->GetTrailerExtraValueForScanNum(scanNumber,
+                name.c_str(),
+                &v),
+                "[RawFileImpl::getTrailerExtraValueLong()] ");
+    switch (v.vt)
+    {
+        case VT_I1: return v.cVal;
+        case VT_UI1: return v.bVal;
+        case VT_I2: return v.iVal;
+        case VT_UI2: return v.uiVal;
+        case VT_I4: return v.lVal;
+        case VT_UI4: return v.ulVal;
+        case VT_INT: return v.intVal;
+        case VT_UINT: return v.uintVal;
+        default:
+            throw RawEgg("[RawFileImpl::getTrailerExtraValueLong()] Unknown type.");
+    }
+}
 
 namespace{
 class MassListImpl : public MassList
@@ -1138,6 +1212,20 @@ double RawFileImpl::getPrecursorMass(long scanNumber, MSOrder msOrder)
 
     double result;
     checkResult(raw4->GetPrecursorMassForScanNum(scanNumber, msOrder, &result), "[RawFileImpl::GetPrecursorMassForScanNum()] ");
+
+    if (!isolationMzOffsetByScanDescription.empty())
+    {
+        try
+        {
+            string scanDescription = getTrailerExtraValue(scanNumber, "Scan Description:");
+            double offset = isolationMzOffsetByScanDescription[scanDescription];
+            result += offset;
+        }
+        catch (RawEgg& e)
+        {
+        }
+    }
+
     return result;
 }
 
@@ -1197,6 +1285,8 @@ void RawFileImpl::parseInstrumentMethod()
     int scanSegment = 1, scanEvent;
     bool scanEventDetails = false;
     bool dataDependentSettings = false;
+    double lastIsolationMzOffset = 0;
+
 
     sregex scanSegmentRegex = sregex::compile("\\s*Segment (\\d+) Information\\s*");
     sregex scanEventRegex = sregex::compile("\\s*(\\d+):.*");
@@ -1204,6 +1294,8 @@ void RawFileImpl::parseInstrumentMethod()
 	sregex scanEventIsoWRegex = sregex::compile("\\s*MS.*:.*\\s+IsoW\\s+(\\S+)\\s*");
     sregex repeatedEventRegex = sregex::compile("\\s*Scan Event (\\d+) repeated for top (\\d+)\\s*");
     sregex defaultIsolationWidthRegex = sregex::compile("\\s*MS(\\d+) Isolation Width:\\s*(\\S+)\\s*");
+    sregex isolationMzOffsetRegex = sregex::compile("\\s*Isolation m/z Offset =\\s*(\\S+)\\s*");
+    sregex scanDescriptionRegex = sregex::compile("\\s*Scan Description =\\s*(\\S+)\\s*");
 
     smatch what;
     string line;
@@ -1280,6 +1372,23 @@ void RawFileImpl::parseInstrumentMethod()
             if (bal::all(line, bal::is_space()))
                 dataDependentSettings = false;
         }
+
+        if (regex_match(line, what, isolationMzOffsetRegex))
+        {
+            lastIsolationMzOffset = lexical_cast<double>(what[1]);
+            continue;
+        }
+
+        if (regex_match(line, what, scanDescriptionRegex) && lastIsolationMzOffset != 0)
+        {
+            string scanDescription = what[1];
+            isolationMzOffsetByScanDescription[scanDescription] = lastIsolationMzOffset;
+            lastIsolationMzOffset = 0;
+            continue;
+        }
+
+        if (bal::all(line, bal::is_space()))
+            lastIsolationMzOffset = 0;
     }
 }
 
