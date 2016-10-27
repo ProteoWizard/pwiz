@@ -1116,15 +1116,15 @@ namespace pwiz.Skyline.Controls
             // No erasebackground to reduce flicker
             //if (m.Msg == (int)WinMsg.WM_ERASEBKGND)
             //    return;
-            if (!ReferenceEquals(_triggerLabelEdit, SelectedNode))
+            if (m.Msg == (int) WinMsg.WM_TIMER)
             {
-                // If the selected node has changed since the mouse edit, then cancel
-                // the label edit trigger.
-                _triggerLabelEdit = null;
-            }
-            if (_triggerLabelEdit != null)
-            {
-                if (m.Msg == (int) WinMsg.WM_TIMER)
+                if (_triggerLabelEdit != null && !ReferenceEquals(_triggerLabelEdit, SelectedNode))
+                {
+                    // If the selected node has changed since the mouse edit, then cancel
+                    // the label edit trigger.
+                    _triggerLabelEdit = null;
+                }
+                if (_triggerLabelEdit != null)
                 {
                     _triggerLabelEdit = null;
                     StartLabelEdit(true);

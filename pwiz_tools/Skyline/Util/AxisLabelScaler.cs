@@ -139,7 +139,7 @@ namespace pwiz.Skyline.Util
             maxString = null;
             if (labels != null)
             {
-                foreach (var label in labels)
+                foreach (var label in labels.Where(l => l!=null))
                 {
                     // Not strictly guaranteed, but assume that the label with the maximum width
                     // will be within 2 characters of the maximum string length, since actually
