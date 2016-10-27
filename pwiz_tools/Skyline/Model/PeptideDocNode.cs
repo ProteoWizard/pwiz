@@ -777,7 +777,10 @@ namespace pwiz.Skyline.Model
                             var nodeNew = (TransitionGroupDocNode) childrenNew[i];
                             DocNode existing;
                             if (mapIdToChild.TryGetValue(nodeNew.TransitionGroup, out existing))
-                                childrenNew[i] = existing;
+                            {
+                                childrenNew[i] = ((TransitionGroupDocNode) existing)
+                                    .ChangeSettings(settingsNew, nodeResult, explicitMods, diff);
+                            }
                         }
                     }
                 }
