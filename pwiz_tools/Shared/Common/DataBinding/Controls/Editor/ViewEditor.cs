@@ -24,6 +24,7 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.Controls;
+using pwiz.Common.DataBinding.Documentation;
 using pwiz.Common.Properties;
 
 namespace pwiz.Common.DataBinding.Controls.Editor
@@ -456,6 +457,19 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                     ShowFindDialog();
                 }
             }
+        }
+
+        private void helpToolStripButton_Click(object sender, EventArgs e)
+        {
+            ShowColumnDocumentation();
+        }
+
+        public void ShowColumnDocumentation()
+        {
+            var documentationGenerator = new DocumentationGenerator(ChooseColumnsTab.ViewInfo.ParentColumn);
+            DocumentationViewer documentationViewer = new DocumentationViewer();
+            documentationViewer.DocumentationHtml = documentationGenerator.GetDocumentationHtmlPage();
+            documentationViewer.Show();
         }
     }
 }

@@ -765,6 +765,11 @@
     <Compile Include="Model\Databinding\Collections\SkylineObjectList.cs" />
     <Compile Include="Model\Databinding\Collections\Transitions.cs" />
     <Compile Include="Model\Databinding\DocumentGridViewContext.cs" />
+    <Compile Include="Model\Databinding\Entities\ColumnToolTips.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ColumnToolTips.resx</DependentUpon>
+    </Compile>
     <Compile Include="Model\Databinding\EditDescription.cs" />
     <Compile Include="Model\Databinding\Entities\MultiResult.cs" />
     <Compile Include="Model\Databinding\Entities\Peptide.cs" />
@@ -2262,6 +2267,10 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ShareListDlg.zh-CHS.resx">
       <DependentUpon>ShareListDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\Databinding\Entities\ColumnToolTips.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>ColumnToolTips.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\Databinding\Entities\ColumnCaptions.zh-CHS.resx">
       <DependentUpon>ColumnCaptions.resx</DependentUpon>

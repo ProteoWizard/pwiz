@@ -50,6 +50,7 @@ namespace pwiz.Common.DataBinding
         public String Name { get { return PropertyPath.Name;} }
         public virtual ICollectionInfo CollectionInfo { get { return null; } }
         public virtual PropertyDescriptor ReflectedPropertyDescriptor { get { return null; } }
+        public String Description { get { return DataSchema.GetColumnDescription(this); } }
         public abstract Type PropertyType { get;  }
         public Type WrappedPropertyType
         {

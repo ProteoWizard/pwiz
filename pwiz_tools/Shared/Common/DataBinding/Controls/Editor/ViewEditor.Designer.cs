@@ -43,6 +43,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.toolButtonFind = new System.Windows.Forms.ToolStripButton();
             this.toolButtonShowAdvanced = new System.Windows.Forms.ToolStripButton();
+            this.helpToolStripButton = new System.Windows.Forms.ToolStripButton();
             this.panel1 = new System.Windows.Forms.Panel();
             this.btnPreview = new System.Windows.Forms.Button();
             this.panelViewEditor = new System.Windows.Forms.Panel();
@@ -113,7 +114,8 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             this.toolButtonRedo,
             this.toolStripSeparator1,
             this.toolButtonFind,
-            this.toolButtonShowAdvanced});
+            this.toolButtonShowAdvanced,
+            this.helpToolStripButton});
             resources.ApplyResources(this.toolStrip, "toolStrip");
             this.toolStrip.Name = "toolStrip";
             // 
@@ -149,6 +151,13 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             resources.ApplyResources(this.toolButtonShowAdvanced, "toolButtonShowAdvanced");
             this.toolButtonShowAdvanced.Name = "toolButtonShowAdvanced";
             this.toolButtonShowAdvanced.Click += new System.EventHandler(this.toolButtonShowAdvanced_Click);
+            // 
+            // helpToolStripButton
+            // 
+            this.helpToolStripButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            resources.ApplyResources(this.helpToolStripButton, "helpToolStripButton");
+            this.helpToolStripButton.Name = "helpToolStripButton";
+            this.helpToolStripButton.Click += new System.EventHandler(this.helpToolStripButton_Click);
             // 
             // panel1
             // 
@@ -228,5 +237,6 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         private System.Windows.Forms.Button btnPreview;
         private System.Windows.Forms.Timer timer1;
         private System.Windows.Forms.ToolStripButton toolButtonFind;
+        private System.Windows.Forms.ToolStripButton helpToolStripButton;
     }
 }

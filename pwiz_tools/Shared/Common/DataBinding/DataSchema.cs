@@ -345,5 +345,15 @@ namespace pwiz.Common.DataBinding
             return DataSchemaLocalizer.LookupColumnCaption(columnCaption);
         }
         public DataSchemaLocalizer DataSchemaLocalizer { get; protected set; }
+
+        public virtual String GetColumnDescription(ColumnDescriptor columnDescriptor)
+        {
+            PropertyDescriptor reflectedPropertyDescriptor = columnDescriptor.ReflectedPropertyDescriptor;
+            if (reflectedPropertyDescriptor != null)
+            {
+                return reflectedPropertyDescriptor.Description;
+            }
+            return null;
+        }
     }
 }

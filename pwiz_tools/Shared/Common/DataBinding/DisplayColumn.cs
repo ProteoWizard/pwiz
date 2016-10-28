@@ -60,6 +60,11 @@ namespace pwiz.Common.DataBinding
             return QualifyColumnCaption(pivotKey, columnCaption);
         }
 
+        public string GetColumnDescription(PivotKey pivotKey)
+        {
+            return DataSchema.GetColumnDescription(ColumnDescriptor);
+        }
+
         public static string QualifyColumnCaption(PivotKey pivotKey, string columnCaption)
         {
             if (null == pivotKey)

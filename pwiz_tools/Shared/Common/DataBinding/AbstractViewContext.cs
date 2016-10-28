@@ -530,6 +530,10 @@ namespace pwiz.Common.DataBinding
             {
                 column.DefaultCellStyle.BackColor = Color.FromArgb(245, 245, 245); // Lighter than Color.LightGray, which is still pretty dark actually
             }
+            if (!string.IsNullOrEmpty(propertyDescriptor.Description))
+            {
+                column.ToolTipText = propertyDescriptor.Description;
+            }
             return column;
         }
 

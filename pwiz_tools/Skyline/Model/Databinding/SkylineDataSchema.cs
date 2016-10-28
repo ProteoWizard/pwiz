@@ -64,21 +64,20 @@ namespace pwiz.Skyline.Model.Databinding
         public override IEnumerable<PropertyDescriptor> GetPropertyDescriptors(Type type)
         {
             return base.GetPropertyDescriptors(type).Concat(GetAnnotations(type)).Concat(GetRatioProperties(type));
-
         }
 
-        public IEnumerable<PropertyDescriptor> GetAnnotations(Type type)
+        public IEnumerable<AnnotationPropertyDescriptor> GetAnnotations(Type type)
         {
             if (null == type)
             {
-                return new PropertyDescriptor[0];
+                return new AnnotationPropertyDescriptor[0];
             }
             var annotationTargets = GetAnnotationTargets(type);
             if (annotationTargets.IsEmpty)
             {
-                return new PropertyDescriptor[0];
+                return new AnnotationPropertyDescriptor[0];
             }
-            var properties = new List<PropertyDescriptor>();
+            var properties = new List<AnnotationPropertyDescriptor>();
             foreach (var annotationDef in Document.Settings.DataSettings.AnnotationDefs)
             {
                 if (annotationDef.AnnotationTargets.Intersect(annotationTargets).IsEmpty)
@@ -98,7 +97,7 @@ namespace pwiz.Skyline.Model.Databinding
                     .Select(attr => attr.AnnotationTarget));
         }
 
-        public IEnumerable<PropertyDescriptor> GetRatioProperties(Type type)
+        public IEnumerable<RatioPropertyDescriptor> GetRatioProperties(Type type)
         {
             return RatioPropertyDescriptor.ListProperties(Document, type);
         }
@@ -225,9 +224,26 @@ namespace pwiz.Skyline.Model.Databinding
             return null;
         }
 
+        public override string GetColumnDescription(ColumnDescriptor columnDescriptor)
+        {
+            String description = base.GetColumnDescription(columnDescriptor);
+            if (!string.IsNullOrEmpty(description))
+            {
+                return description;
+            }
+            ColumnCaption columnCaption = GetColumnCaption(columnDescriptor);
+            if (columnCaption.IsLocalizable)
+            {
+                return ColumnToolTips.ResourceManager.GetString(columnCaption.InvariantCaption);
+            }
+            return null;
+        }
+
         public static DataSchemaLocalizer GetLocalizedSchemaLocalizer()
         {
             return new DataSchemaLocalizer(CultureInfo.CurrentCulture, ColumnCaptions.ResourceManager);
         }
+
+
     }
 }
