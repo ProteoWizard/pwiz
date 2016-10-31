@@ -203,7 +203,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 }
             }
             Assert.IsTrue(errmsg.Length == 0, errmsg);
-            Assert.AreEqual(useDriftTimes ? 4209178 : 4912494, maxHeight, 1);
+            Assert.AreEqual(useDriftTimes ? 2194736 : 4912494, maxHeight, 1);
         }  
     }
 }

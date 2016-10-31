@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -168,7 +169,14 @@ namespace pwiz.SkylineTestUtil
                             WebClient webClient = new WebClient();
                             using (var fs = new FileSaver(zipFilePath))
                             {
-                                webClient.DownloadFile(zipPath, fs.SafeName);
+                                try
+                                {
+                                    webClient.DownloadFile(zipPath.Split('\\')[0], fs.SafeName); // We encode a Chorus anonymous download string as two parts: url\localName
+                                }
+                                catch (Exception x)
+                                {
+                                   Assert.Fail("Could not download {0}: {1}", zipPath, x.Message);
+                                }
                                 fs.Commit();
                             }
                         }
