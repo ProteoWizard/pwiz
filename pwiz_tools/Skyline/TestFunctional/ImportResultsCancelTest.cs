@@ -170,7 +170,6 @@ namespace pwiz.SkylineTestFunctional
                     SkylineWindow.ImportingResultsWindow != null &&
                     SkylineWindow.ImportingResultsWindow.ProgressTotalPercent >= 1)) // Get at least partway in
                 {
-                    PauseTest();
                     Assert.Fail("AllChromagotramsGraph missing in action");
                 }
 
