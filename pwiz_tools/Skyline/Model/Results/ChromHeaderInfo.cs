@@ -2122,7 +2122,10 @@ namespace pwiz.Skyline.Model.Results
             if (key.IsEmpty)
                 return -1;
 
-            if (!key.OptionalCenterOfGravityTime.HasValue) // SRM data needs to group Q1>Q3 pairs for disambiguation
+            // OptionalCenterOfGravityTime is only set for SRM. Here we are ording
+            // everything by maximum retention time to know when chromatograms can be
+            // released during extraction.
+            if (!key.OptionalCenterOfGravityTime.HasValue)
             {
                 // Order by maximum retention time.
                 if (OptionalMaxTime.HasValue != key.OptionalMaxTime.HasValue)
@@ -2140,8 +2143,9 @@ namespace pwiz.Skyline.Model.Results
             if (c != 0)
                 return c;
 
-            // For SRM data, order by time to handle discontiguous chromatograms
-            if (OptionalMidTime.HasValue && key.OptionalMidTime.HasValue)
+            // For SRM data, order by time for chromatograms that are not highly overlapping
+            // since these are likely for different targets
+            if (OptionalMidTime.HasValue && key.OptionalMidTime.HasValue && !HighlyOverlapping(key))
             {
                 c = OptionalMinTime.Value.CompareTo(key.OptionalMinTime.Value);
                 if (c==0)
@@ -2165,6 +2169,17 @@ namespace pwiz.Skyline.Model.Results
             if (c != 0)
                 return c;
             return ExtractionWidth.CompareTo(key.ExtractionWidth);
+        }
+
+        private bool HighlyOverlapping(ChromKey key)
+        {
+            const double highOverlap = 0.95;    // 95% or more
+
+            if (!(OptionalMinTime.HasValue && OptionalMaxTime.HasValue && key.OptionalMinTime.HasValue && key.OptionalMaxTime.HasValue))
+                return false;
+            double overlap = Math.Abs(Math.Min(OptionalMaxTime.Value, key.OptionalMaxTime.Value) -
+                                      Math.Max(OptionalMinTime.Value, key.OptionalMinTime.Value));
+            return overlap/(OptionalMaxTime - OptionalMinTime) >= highOverlap;
         }
 
         public int ComparePrecursors(ChromKey key)
@@ -2375,6 +2390,11 @@ namespace pwiz.Skyline.Model.Results
                 result = ProviderId.CompareTo(other.ProviderId);
             return result;
         }
+
+        public override string ToString()
+        {
+            return Key + string.Format(" ({0})", ProviderId);    // Not L10N
+        }
     }
 
     /// <summary>
@@ -2530,8 +2550,9 @@ namespace pwiz.Skyline.Model.Results
                 {
                     int startOptTran, endOptTran;
                     GetOptimizationBounds(productMz, i, startTran, endTran, out startOptTran, out endOptTran);
-                    for (i = startOptTran; i <= endOptTran; i++)
-                        listInfo.Add(GetTransitionInfo(i - startTran));
+                    for (int j = startOptTran; j <= endOptTran; j++)
+                        listInfo.Add(GetTransitionInfo(j - startTran));
+                    i = Math.Max(i, endOptTran);
                 }
             }
 

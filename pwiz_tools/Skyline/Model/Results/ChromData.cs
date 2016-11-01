@@ -437,6 +437,10 @@ namespace pwiz.Skyline.Model.Results
             return result;
         }
 
+        public override string ToString()
+        {
+            return Key + string.Format(" ({0})", ProviderId);   // Not L10N
+        }
     }
 
     internal sealed class ChromDataPeak : ITransitionPeakData<IDetailedPeakData>, IDetailedPeakData
