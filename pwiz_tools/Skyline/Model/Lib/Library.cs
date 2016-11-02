@@ -148,7 +148,7 @@ namespace pwiz.Skyline.Model.Lib
                             ReloadLibraries(container, midasLibSpec);
                         midasLibrary = (MidasLibrary) LoadLibrary(midasLibSpec, () => new LoadMonitor(this, container, !newMidasLibSpec ? midasLibSpec : null));
 
-                        if (!dictLibraries.ContainsKey(midasLibSpec.Name))
+                        if (midasLibrary != null && !dictLibraries.ContainsKey(midasLibSpec.Name))
                             dictLibraries.Add(midasLibSpec.Name, midasLibrary);
                     }
                     else
