@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<srm_settings format_version="3.52" software_version="Skyline-daily 3.5.1.9489">
+<srm_settings format_version="3.6">
   <settings_summary name="Default">
     <peptide_settings>
       <peptide_modifications max_variable_mods="1" max_neutral_losses="1">

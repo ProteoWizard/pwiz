@@ -460,7 +460,7 @@
     <value>msStatsLogoForm1</value>
   </data>
   <data name="&gt;&gt;msStatsLogoForm1.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.GroupComparison.MsStatsLogoForm, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.GroupComparison.MsStatsLogoForm, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;msStatsLogoForm1.Parent" xml:space="preserve">
     <value>panelMain</value>
