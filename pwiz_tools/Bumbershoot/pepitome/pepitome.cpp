@@ -153,10 +153,13 @@ namespace pepitome
 
         for( size_t i=1; i < args.size(); ++i )
         {
-            if( args[i] == "-dump" )
+            if (args[i] == "-dump" || args[i] == "-help" || args[i] == "--help")
             {
                 g_rtConfig->dump();
-                args.erase( args.begin() + i );
+                if (args[i] == "-help" || args[i] == "--help")
+                    throw pwiz::util::usage_exception(usage);
+
+                args.erase(args.begin() + i);
                 --i;
             }
         }
@@ -1207,7 +1210,11 @@ int main( int argc, char* argv[] )
     try
     {
         result = pepitome::ProcessHandler( argc, argv );
-    } catch( std::exception& e )
+    } catch (pwiz::util::usage_exception& e)
+    {
+        cerr << e.what() << endl;
+        result = 0;
+    } catch (std::exception& e)
     {
         cerr << e.what() << endl;
         result = 1;
