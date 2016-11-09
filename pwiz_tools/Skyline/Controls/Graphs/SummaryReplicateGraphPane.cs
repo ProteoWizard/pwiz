@@ -479,6 +479,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
             private IEnumerable<ReplicateGroup> GetReplicateGroups(IEnumerable<int> replicateIndexes)
             {
+                if (_document.Settings.MeasuredResults == null)
+                {
+                    return new ReplicateGroup[0]; // Likely user removed all results while Mass Errors window was open
+                }
                 var chromatograms = _document.Settings.MeasuredResults.Chromatograms;
                 if (ReplicateGroupOp.GroupByAnnotation == null)
                 {
