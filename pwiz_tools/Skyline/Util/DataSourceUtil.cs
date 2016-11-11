@@ -95,7 +95,8 @@ namespace pwiz.Skyline.Util
 
         private static bool HasExtension(this DirectoryInfo dirInfo, string ext)
         {
-            return dirInfo.Name.Substring(dirInfo.Name.Length - ext.Length).ToLowerInvariant().Equals(ext);
+            var startIndex = dirInfo.Name.Length - ext.Length;
+            return startIndex >= 0 && dirInfo.Name.Substring(startIndex).ToLowerInvariant().Equals(ext);
         }
 
         public static bool IsDataSource(FileInfo fileInfo)

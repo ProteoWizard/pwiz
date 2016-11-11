@@ -36,7 +36,7 @@ namespace pwiz.Skyline.Model.Results
             ChromatogramCache.RawData rawData;
             MsDataFilePath msDataFilePath = (MsDataFilePath) chromFileInfo.FilePath;
             IPooledStream stream = loader.StreamManager.CreatePooledStream(msDataFilePath.FilePath, false);
-            ChromatogramCache.LoadStructs(stream.Stream, out rawData);
+            ChromatogramCache.LoadStructs(stream.Stream, out rawData, false);
             var chromCacheFile = rawData.ChromCacheFiles[0];
             rawData.ChromCacheFiles = new[]
             {

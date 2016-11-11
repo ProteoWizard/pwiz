@@ -334,6 +334,11 @@ namespace pwiz.Skyline.Model.Results
             get { return (Flags & FlagValues.polarity_negative) != 0; }
         }
 
+        public void SetNegativeCharge()
+        {
+            FlagBits |= (ushort) FlagValues.polarity_negative; // For dealing with pre-V11 caches where we didn't record chromatogram polarity
+        }
+
         public SignedMz Precursor
         {
             get { return new SignedMz(_precursor, NegativeCharge); }
@@ -798,7 +803,7 @@ namespace pwiz.Skyline.Model.Results
 
         #region Fast file I/O
 
-        public static ChromGroupHeaderInfo[] ReadArray(Stream stream, int count, int formatVersion)
+        public static ChromGroupHeaderInfo[] ReadArray(Stream stream, int count, int formatVersion, bool assumeNegativeChargeInPreV11Caches)
         {
             // Current Version
             if (formatVersion >= ChromatogramCache.FORMAT_VERSION_CACHE_11)
@@ -811,6 +816,10 @@ namespace pwiz.Skyline.Model.Results
                 var chromHeaderEntriesFrom5 = new ChromGroupHeaderInfo[chrom5HeaderEntries.Length];
                 for (int i = 0; i < chrom5HeaderEntries.Length; i++)
                 {
+                    if (assumeNegativeChargeInPreV11Caches)
+                    {
+                        chrom5HeaderEntries[i].SetNegativeCharge(); // We didn't record polarity before FORMAT_VERSION_CACHE_11
+                    }
                     chromHeaderEntriesFrom5[i] = new ChromGroupHeaderInfo(chrom5HeaderEntries[i]);
                 }
                 return chromHeaderEntriesFrom5;

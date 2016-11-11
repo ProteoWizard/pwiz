@@ -74,6 +74,11 @@ namespace pwiz.SkylineTestConnected.Results.RemoteApi
             var unknownInstrumentModels = new List<string>();
             foreach (var instrumentModel in instrumentModels)
             {
+                // We are only interested in mass spec, and 3 Microarray entries have appeared
+                // which were causing this test to fail.
+                if (instrumentModel.Contains("Microarray"))
+                    continue;
+
                 if (null == ChorusSession.GetFileTypeFromInstrumentModel(instrumentModel))
                 {
                     unknownInstrumentModels.Add(instrumentModel);

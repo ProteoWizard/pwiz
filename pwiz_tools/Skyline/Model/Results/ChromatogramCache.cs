@@ -561,7 +561,7 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public static ChromatogramCache Load(string cachePath, IProgressStatus status, ILoadMonitor loader)
+        public static ChromatogramCache Load(string cachePath, IProgressStatus status, ILoadMonitor loader, bool assumeNegativeChargeInPreV11Caches)
         {
             status = status.ChangeMessage(string.Format(Resources.ChromatogramCache_Load_Loading__0__cache, Path.GetFileName(cachePath)));
             loader.UpdateProgress(status);
@@ -573,7 +573,7 @@ namespace pwiz.Skyline.Model.Results
                 // DebugLog.Info("{0}. {1} - loaded", readStream.GlobalIndex, cachePath);
 
                 RawData raw;
-                LoadStructs(readStream.Stream, status, loader, out raw);
+                LoadStructs(readStream.Stream, status, loader, out raw, assumeNegativeChargeInPreV11Caches);
 
                 var result = new ChromatogramCache(cachePath, raw, readStream);
                 loader.UpdateProgress(status.Complete());
@@ -594,12 +594,13 @@ namespace pwiz.Skyline.Model.Results
 
         public static void Join(string cachePath, IPooledStream streamDest,
             IList<string> listCachePaths, ILoadMonitor loader,
-            Action<ChromatogramCache, IProgressStatus> complete)
+            Action<ChromatogramCache, IProgressStatus> complete,
+            bool assumeNegativeChargeInPreV11Caches)
         {
             var status = new ProgressStatus(string.Empty);
             try
             {
-                var joiner = new ChromCacheJoiner(cachePath, streamDest, listCachePaths, loader, status, complete);
+                var joiner = new ChromCacheJoiner(cachePath, streamDest, listCachePaths, loader, status, complete, assumeNegativeChargeInPreV11Caches);
                 joiner.JoinParts();
             }
             catch (Exception x)
@@ -624,12 +625,12 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public static long LoadStructs(Stream stream, out RawData raw)
+        public static long LoadStructs(Stream stream, out RawData raw, bool assumeNegativeChargesInPreV11Caches)
         {
-            return LoadStructs(stream, null, null, out raw);
+            return LoadStructs(stream, null, null, out raw, assumeNegativeChargesInPreV11Caches);
         }
 
-        public static long LoadStructs(Stream stream, IProgressStatus status, IProgressMonitor progressMonitor, out RawData raw)
+        public static long LoadStructs(Stream stream, IProgressStatus status, IProgressMonitor progressMonitor, out RawData raw, bool assumeNegativeChargeInPreV11Caches)
         {
             // Read library header from the end of the cache
             const int countHeader = (int)Header.count * 4;
@@ -749,7 +750,7 @@ namespace pwiz.Skyline.Model.Results
 
             // Read list of chromatogram group headers
             stream.Seek(locationHeaders, SeekOrigin.Begin);
-            raw.ChromatogramEntries = ChromGroupHeaderInfo.ReadArray(stream, numChrom, formatVersion);
+            raw.ChromatogramEntries = ChromGroupHeaderInfo.ReadArray(stream, numChrom, formatVersion, assumeNegativeChargeInPreV11Caches);
 
             if (formatVersion > FORMAT_VERSION_CACHE_4)
             {
