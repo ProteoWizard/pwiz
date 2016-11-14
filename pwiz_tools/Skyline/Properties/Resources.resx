@@ -9233,4 +9233,19 @@ If your transition list format combines formulas and adducts in a single column 
     <data name="CommandLine_SetFullScanSettings_Changing_full_scan_product_mass_accuracy_to__0__ppm_" xml:space="preserve">
     <value>Changing full scan product mass accuracy to {0} ppm.</value>
   </data>
+  <data name="SkylineWindow_ShowExportSpectralLibraryDialog_Export_Spectral_Library" xml:space="preserve">
+    <value>Export Spectral Library</value>
+  </data>
+  <data name="SkylineWindow_ShowExportSpectralLibraryDialog_Failed_exporting_spectral_library_to__0__" xml:space="preserve">
+    <value>Failed exporting spectral library to {0}.</value>
+  </data>
+  <data name="SkylineWindow_ShowExportSpectralLibraryDialog_Exporting_spectral_library__0____" xml:space="preserve">
+    <value>Exporting spectral library {0}...</value>
+  </data>
+  <data name="SkylineWindow_ShowExportSpectralLibraryDialog_The_document_must_contain_results_to_export_a_spectral_library_" xml:space="preserve">
+    <value>The document must contain results to export a spectral library.</value>
+  </data>
+  <data name="SkylineWindow_ShowExportSpectralLibraryDialog_The_document_must_contain_at_least_one_peptide_precursor_to_export_a_spectral_library_" xml:space="preserve">
+    <value>The document must contain at least one peptide precursor to export a spectral library.</value>
+  </data>
 </root>

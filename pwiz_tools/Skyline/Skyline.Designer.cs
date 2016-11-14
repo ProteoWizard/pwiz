@@ -258,6 +258,7 @@ namespace pwiz.Skyline
             this.toolStripSeparator49 = new System.Windows.Forms.ToolStripSeparator();
             this.exportReportMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator50 = new System.Windows.Forms.ToolStripSeparator();
+            this.exportSpectralLibraryMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.eSPFeaturesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mProphetFeaturesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.chromatogramsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -2057,8 +2058,9 @@ namespace pwiz.Skyline
             this.exportReportMenuItem,
             this.toolStripSeparator50,
             this.eSPFeaturesMenuItem,
-            this.mProphetFeaturesMenuItem,
+            this.exportSpectralLibraryMenuItem,
             this.chromatogramsToolStripMenuItem,
+            this.mProphetFeaturesMenuItem,
             this.chorusRequestToolStripMenuItem});
             this.exportToolStripMenuItem.Name = "exportToolStripMenuItem";
             resources.ApplyResources(this.exportToolStripMenuItem, "exportToolStripMenuItem");
@@ -2096,6 +2098,12 @@ namespace pwiz.Skyline
             // 
             this.toolStripSeparator50.Name = "toolStripSeparator50";
             resources.ApplyResources(this.toolStripSeparator50, "toolStripSeparator50");
+            // 
+            // exportSpectralLibraryMenuItem
+            // 
+            this.exportSpectralLibraryMenuItem.Name = "exportSpectralLibraryMenuItem";
+            resources.ApplyResources(this.exportSpectralLibraryMenuItem, "exportSpectralLibraryMenuItem");
+            this.exportSpectralLibraryMenuItem.Click += new System.EventHandler(this.exportSpectralLibraryMenuItem_Click);
             // 
             // eSPFeaturesMenuItem
             // 
@@ -4078,6 +4086,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem massErrorTargets1FDRContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem surrogateStandardMenuItem;
         private System.Windows.Forms.ToolStripMenuItem surrogateStandardContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem exportSpectralLibraryMenuItem;
     }
 }
 

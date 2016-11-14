@@ -17,8 +17,10 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Lib.BlibData;
 
@@ -42,7 +44,7 @@ namespace pwiz.Skyline.Model.Lib.Midas
 
         public bool BuildLibrary(IProgressMonitor progress)
         {
-            var bestSpectra = new Dictionary<string, IList<SpectrumMzInfo>>();
+            var bestSpectra = new List<SpectrumMzInfo>();
             foreach (var nodePep in _doc.Peptides)
             {
                 foreach (var nodeTranGroup in nodePep.TransitionGroups)
@@ -71,18 +73,11 @@ namespace pwiz.Skyline.Model.Lib.Midas
 
                     if (bestSpectrum != null)
                     {
-                        var sourceFile = bestSpectrum.ResultsFile.FilePath;
-                        IList<SpectrumMzInfo> bestSpectraForFile;
-                        if (!bestSpectra.TryGetValue(sourceFile, out bestSpectraForFile))
-                        {
-                            bestSpectraForFile = new List<SpectrumMzInfo>();
-                            bestSpectra[sourceFile] = bestSpectraForFile;
-                        }
-                        bestSpectraForFile.Add(new SpectrumMzInfo {
+                        bestSpectra.Add(new SpectrumMzInfo {
                             PrecursorMz = bestSpectrum.PrecursorMz,
                             SpectrumPeaks = _library.LoadSpectrum(bestSpectrum),
                             Key = new LibKey(nodePep.ModifiedSequence, nodeTranGroup.PrecursorCharge),
-                            RetentionTime = bestSpectrum.RetentionTime
+                            RetentionTimes = new[]{Tuple.Create(bestSpectrum.ResultsFile.FilePath, bestSpectrum.RetentionTime, true)}.ToList()
                         });
                     }
                 }

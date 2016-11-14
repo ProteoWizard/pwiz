@@ -1478,7 +1478,7 @@ namespace pwiz.Skyline.Model.Lib
         public double PrecursorMz { get; set; }
         public IsotopeLabelType Label { get; set; }
         public SpectrumPeaksInfo SpectrumPeaks { get; set; }
-        public double? RetentionTime { get; set; }
+        public List<Tuple<string, double, bool>> RetentionTimes { get; set; } // (File, RT, IsBest)
 
         public const double PRECURSOR_MZ_TOL = 0.001;
 

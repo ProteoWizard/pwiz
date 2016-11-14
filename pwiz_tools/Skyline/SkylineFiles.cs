@@ -1178,6 +1178,130 @@ namespace pwiz.Skyline
             }
         }
 
+        private void exportSpectralLibraryMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowExportSpectralLibraryDialog();
+        }
+
+        public void ShowExportSpectralLibraryDialog()
+        {
+            if (Document.PeptideTransitionGroupCount == 0)
+            {
+                MessageDlg.Show(this, Resources.SkylineWindow_ShowExportSpectralLibraryDialog_The_document_must_contain_at_least_one_peptide_precursor_to_export_a_spectral_library_);
+                return;
+            }
+            else if (!Document.Settings.HasResults)
+            {
+                MessageDlg.Show(this, Resources.SkylineWindow_ShowExportSpectralLibraryDialog_The_document_must_contain_results_to_export_a_spectral_library_);
+                return;
+            }
+
+            using (var dlg = new SaveFileDialog
+            {
+                Title = Resources.SkylineWindow_ShowExportSpectralLibraryDialog_Export_Spectral_Library,
+                OverwritePrompt = true,
+                DefaultExt = BiblioSpecLiteSpec.EXT,
+                Filter = TextUtil.FileDialogFiltersAll(BiblioSpecLiteSpec.FILTER_BLIB)
+            })
+            {
+                if (!string.IsNullOrEmpty(DocumentFilePath))
+                    dlg.InitialDirectory = Path.GetDirectoryName(DocumentFilePath);
+
+                if (dlg.ShowDialog(this) == DialogResult.Cancel)
+                    return;
+
+                try
+                {
+                    using (var longWaitDlg = new LongWaitDlg
+                    {
+                        Text = Resources.SkylineWindow_ShowExportSpectralLibraryDialog_Export_Spectral_Library,
+                        Message = string.Format(Resources.SkylineWindow_ShowExportSpectralLibraryDialog_Exporting_spectral_library__0____, Path.GetFileName(dlg.FileName))
+                    })
+                    {
+                        longWaitDlg.PerformWork(this, 800, monitor => ExportSpectralLibrary(Document, dlg.FileName, monitor));
+                    }
+                }
+                catch (Exception x)
+                {
+                    MessageDlg.ShowWithException(this, TextUtil.LineSeparate(string.Format(Resources.SkylineWindow_ShowExportSpectralLibraryDialog_Failed_exporting_spectral_library_to__0__, dlg.FileName), x.Message), x);
+                }
+            }
+        }
+
+        public static void ExportSpectralLibrary(SrmDocument document, string path, IProgressMonitor progressMonitor)
+        {
+            const string name = "exported"; // Not L10N
+            var spectra = new Dictionary<LibKey, SpectrumMzInfo>();
+            foreach (var nodePepGroup in document.MoleculeGroups)
+            {
+                foreach (var nodePep in nodePepGroup.Peptides)
+                {
+                    foreach (var nodeTranGroup in nodePep.TransitionGroups)
+                    {
+                        for (var i = 0; i < document.Settings.MeasuredResults.Chromatograms.Count; i++)
+                        {
+                            processTransitionGroup(spectra, document, nodePep, nodeTranGroup, i);
+                        }
+                    }
+                }
+            }
+
+            using (var blibDb = BlibDb.CreateBlibDb(path))
+            {
+                blibDb.CreateLibraryFromSpectra(new BiblioSpecLiteSpec(name, path), spectra.Values.ToList(), name, progressMonitor);
+            }
+        }
+
+        private static void processTransitionGroup(IDictionary<LibKey, SpectrumMzInfo> spectra,
+            SrmDocument document, PeptideDocNode nodePep, TransitionGroupDocNode nodeTranGroup, int replicateIndex)
+        {
+            var sequence = document.Settings.GetPrecursorCalc(nodeTranGroup.TransitionGroup.LabelType, nodePep.ExplicitMods).GetModifiedSequence(nodePep.Peptide.Sequence, false);
+            var key = new LibKey(sequence, nodeTranGroup.PrecursorCharge);
+
+            var mi = new List<SpectrumPeaksInfo.MI>();
+            var rt = 0.0;
+            var maxApex = float.MinValue;
+            string chromFileName = null;
+            foreach (var nodeTran in nodeTranGroup.Transitions)
+            {
+                if (nodeTran.IsMs1)
+                    continue;
+                var chromInfos = nodeTran.GetSafeChromInfo(replicateIndex);
+                if (chromInfos == null)
+                    continue;
+                var chromInfo = chromInfos.First(info => info.OptimizationStep == 0);
+                if (chromInfo.Area == 0)
+                    continue;
+                if (chromFileName == null)
+                {
+                    var chromFileInfo = document.Settings.MeasuredResults.Chromatograms[replicateIndex].MSDataFileInfos.FirstOrDefault(file => ReferenceEquals(file.Id, chromInfo.FileId));
+                    if (chromFileInfo != null)
+                        chromFileName = chromFileInfo.FilePath.GetFileName();
+                }
+                mi.Add(new SpectrumPeaksInfo.MI { Mz = nodeTran.Mz, Intensity = chromInfo.Area });
+                if (chromInfo.Height > maxApex)
+                {
+                    maxApex = chromInfo.Height;
+                    rt = chromInfo.RetentionTime;
+                }
+            }
+            if (chromFileName == null)
+                return;
+            SpectrumMzInfo spectrumMzInfo;
+            if (!spectra.TryGetValue(key, out spectrumMzInfo))
+            {
+                spectrumMzInfo = new SpectrumMzInfo
+                {
+                    Key = key,
+                    PrecursorMz = nodeTranGroup.PrecursorMz,
+                    SpectrumPeaks = new SpectrumPeaksInfo(mi.ToArray()),
+                    RetentionTimes = new List<Tuple<string, double, bool>>()
+                };
+                spectra[key] = spectrumMzInfo;
+            }
+            spectrumMzInfo.RetentionTimes.Add(Tuple.Create(chromFileName, rt, replicateIndex == nodePep.BestResult));
+        }
+
         private void exportReportMenuItem_Click(object sender, EventArgs e)
         {
             ShowExportReportDialog();

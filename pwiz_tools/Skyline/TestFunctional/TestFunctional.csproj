@@ -167,6 +167,7 @@
     <Compile Include="ExportChromatogramTest.cs" />
     <Compile Include="ExportIsolationListTest.cs" />
     <Compile Include="ExportDiaListTest.cs" />
+    <Compile Include="ExportSpectralLibraryTest.cs" />
     <Compile Include="FilterMzTest.cs" />
     <Compile Include="FindColumnTest.cs" />
     <Compile Include="FullScanGraphTest.cs" />
@@ -315,6 +316,7 @@
     <None Include="ExportChromatogramTest.zip" />
     <None Include="ExportIsolationListTest.zip" />
     <None Include="ExportMethodDialogTest.zip" />
+    <None Include="ExportSpectralLibraryTest.zip" />
     <None Include="FilterMzTest.zip" />
     <None Include="FullScanIdTest.zip" />
     <None Include="GroupComparisonTest.zip" />
