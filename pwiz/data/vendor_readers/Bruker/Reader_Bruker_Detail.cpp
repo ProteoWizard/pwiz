@@ -186,6 +186,8 @@ std::vector<InstrumentConfiguration> createInstrumentConfigurations(CompassDataP
                 case InstrumentFamily_OTOF:
                 case InstrumentFamily_OTOFQ:
                 case InstrumentFamily_maXis:
+                case InstrumentFamily_compact:
+                case InstrumentFamily_impact:
                     configurations.push_back(InstrumentConfiguration());
                     configurations.back().componentList.push_back(Component(MS_ESI, 1));
                     configurations.back().componentList.back().set(MS_electrospray_inlet);
@@ -240,6 +242,8 @@ std::vector<InstrumentConfiguration> createInstrumentConfigurations(CompassDataP
         case InstrumentFamily_OTOFQ:
         case InstrumentFamily_BioTOFQ:
         case InstrumentFamily_maXis:
+        case InstrumentFamily_impact:
+        case InstrumentFamily_compact:
             configurations.back().componentList.push_back(Component(MS_quadrupole, 2));
             configurations.back().componentList.push_back(Component(MS_quadrupole, 3));
             configurations.back().componentList.push_back(Component(MS_time_of_flight, 4));
@@ -271,8 +275,13 @@ PWIZ_API_DECL cv::CVID translateAsInstrumentSeries(CompassDataPtr rawfile)
         case InstrumentFamily_BioTOF: return MS_Bruker_Daltonics_BioTOF_series;
         case InstrumentFamily_BioTOFQ: return MS_Bruker_Daltonics_BioTOF_series;
         case InstrumentFamily_MaldiTOF: return MS_Bruker_Daltonics_flex_series;
-        case InstrumentFamily_FTMS: return MS_Bruker_Daltonics_apex_series; // or solarix
-        case InstrumentFamily_maXis: return MS_Bruker_Daltonics_maXis_series;
+        case InstrumentFamily_FTMS: return MS_Bruker_Daltonics_apex_series;
+        case InstrumentFamily_solariX: return MS_Bruker_Daltonics_solarix_series;
+
+        case InstrumentFamily_maXis:
+        case InstrumentFamily_compact:
+        case InstrumentFamily_impact:
+            return MS_Bruker_Daltonics_maXis_series;
 
         default:
         case InstrumentFamily_Unknown:
@@ -293,8 +302,15 @@ PWIZ_API_DECL cv::CVID translateAsAcquisitionSoftware(CompassDataPtr rawfile)
             case InstrumentFamily_BioTOF: return MS_Compass;
             case InstrumentFamily_BioTOFQ: return MS_Compass;
             case InstrumentFamily_MaldiTOF: return MS_FlexControl;
-            case InstrumentFamily_FTMS: return MS_apexControl;
-            case InstrumentFamily_maXis: return MS_Compass;
+
+            case InstrumentFamily_FTMS:
+            case InstrumentFamily_solariX:
+                return MS_apexControl;
+
+            case InstrumentFamily_maXis:
+            case InstrumentFamily_compact:
+            case InstrumentFamily_impact:
+                return MS_Compass;
 
             default:
             case InstrumentFamily_Unknown:
