@@ -596,7 +596,9 @@ PWIZ_API_DECL void SpectrumList_Agilent::createIndex() const
 		// if any of these types are present, we enumerate each spectrum
 		if (scanTypes & MSScanType_Scan ||
 			scanTypes & MSScanType_ProductIon ||
-			scanTypes & MSScanType_PrecursorIon)
+			scanTypes & MSScanType_PrecursorIon ||
+            scanTypes & MSScanType_SelectedIon ||
+            scanTypes & MSScanType_MultipleReaction)
 		{
 			int size = rawfile_->getTotalScansPresent();
 			index_.reserve(size);
@@ -607,9 +609,9 @@ PWIZ_API_DECL void SpectrumList_Agilent::createIndex() const
 				MSScanType scanType = scanRecordPtr->getMSScanType();
 
 				// these spectra are chromatogram-centric
-				if (scanType == MSScanType_SelectedIon ||
-					scanType == MSScanType_TotalIon ||
-					scanType == MSScanType_MultipleReaction)
+				if ((!config_.simAsSpectra && scanType == MSScanType_SelectedIon) ||
+					(!config_.srmAsSpectra && scanType == MSScanType_MultipleReaction) ||
+                    scanType == MSScanType_TotalIon)
 					continue;
 
 				index_.push_back(IndexEntry());
