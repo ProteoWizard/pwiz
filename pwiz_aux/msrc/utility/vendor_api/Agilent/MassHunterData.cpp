@@ -314,6 +314,18 @@ MassHunterDataImpl::MassHunterDataImpl(const std::string& path)
             t.type = Transition::MRM;
             t.Q1 = chromatogram->MZOfInterest[0]->Start;
             t.Q3 = chromatogram->MeasuredMassRange[0]->Start;
+            switch (chromatogram->IonPolarity)
+            {
+            case MHDAC::IonPolarity::Positive:
+                t.ionPolarity = IonPolarity::IonPolarity_Positive;
+                break;
+            case MHDAC::IonPolarity::Negative:
+                t.ionPolarity = IonPolarity::IonPolarity_Negative;
+                break;
+            default:
+                t.ionPolarity = IonPolarity::IonPolarity_Unassigned;
+                break;
+            }
 
             if (chromatogram->AcquiredTimeRange->Length > 0)
             {
