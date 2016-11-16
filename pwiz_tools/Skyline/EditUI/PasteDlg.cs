@@ -1849,11 +1849,12 @@ namespace pwiz.Skyline.EditUI
 
     public class ImportFastaHelper
     {
-        public ImportFastaHelper(TextBox tbxFasta, TextBox tbxError, Panel panelError)
+        public ImportFastaHelper(TextBox tbxFasta, TextBox tbxError, Panel panelError, ToolTip helpTip = null)
         {
             _tbxFasta = tbxFasta;
             _tbxError = tbxError;
             _panelError = panelError;
+            _helpTip = helpTip;
         }
 
         public IdentityPath SelectedPath { get; set; }
@@ -1866,6 +1867,9 @@ namespace pwiz.Skyline.EditUI
 
         private readonly Panel _panelError;
         private Panel PanelError { get { return _panelError; } }
+
+        private readonly ToolTip _helpTip;
+        private ToolTip HelpTip { get { return _helpTip; } }
 
         public SrmDocument AddFasta(SrmDocument document, ref IdentityPath selectedPath, out int emptyPeptideGroups)
         {
@@ -1968,8 +1972,11 @@ namespace pwiz.Skyline.EditUI
                 return;
             }
             TbxError.BackColor = Color.Red;
+            TbxError.ForeColor = Color.White;
             TbxError.Text = pasteError.Message;
             TbxError.Visible = true;
+            // In case message is long, make it possible to see in a tip
+            HelpTip.SetToolTip(TbxError, pasteError.Message);
 
             TbxFasta.SelectionStart = Math.Max(0, TbxFasta.GetFirstCharIndexFromLine(pasteError.Line) + pasteError.Column);
             TbxFasta.SelectionLength = Math.Min(pasteError.Length, TbxFasta.Text.Length - TbxFasta.SelectionStart);

@@ -106,9 +106,16 @@ namespace pwiz.Skyline.Model
 
                 if (line.StartsWith(">")) // Not L10N
                 {
-                    if (_countIons > SrmDocument.MAX_TRANSITION_COUNT ||
-                            _countPeptides > SrmDocument.MAX_PEPTIDE_COUNT)
-                        throw new InvalidDataException(Resources.FastaImporter_Import_Document_size_limit_exceeded);
+                    if (_countIons > SrmDocument.MAX_TRANSITION_COUNT)
+                    {
+                        throw new InvalidDataException(TextUtil.LineSeparate(string.Format("This import causes the document to contain more than {0:n0} transitions in {1:n0} peptides at line {2:n0}.",
+                            SrmDocument.MAX_TRANSITION_COUNT, _countPeptides, linesRead), Resources.FastaImporter_Import_Check_your_settings_to_make_sure_you_are_using_a_library_and_restrictive_enough_transition_selection_));
+                    }
+                    else if (_countPeptides > SrmDocument.MAX_PEPTIDE_COUNT)
+                    {
+                        throw new InvalidDataException(TextUtil.LineSeparate(string.Format("This import causes the document to contain more than {0:n0} peptides at line {1:n0}.",
+                            SrmDocument.MAX_PEPTIDE_COUNT, linesRead), Resources.FastaImporter_Import_Check_your_settings_to_make_sure_you_are_using_a_library_));
+                    }
                     try
                     {
                         if (seqBuilder != null)

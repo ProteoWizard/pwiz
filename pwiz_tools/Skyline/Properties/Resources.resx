@@ -8144,10 +8144,7 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="BuildLibraryDlg_btnAddDirectory_Click_Add_Input_Directory" xml:space="preserve">
     <value>Add Input Directory</value>
   </data>
-  <data name="FastaImporter_Import_Document_size_limit_exceeded" xml:space="preserve">
-    <value>Document size limit exceeded.</value>
-  </data>
-  <data name="TransitionBinner_BinData_" xml:space="preserve">
+    <data name="TransitionBinner_BinData_" xml:space="preserve">
     <value>Imported spectrum appears to be missing m/z or intensity values ({0} != {1})</value>
   </data>
   <data name="PanoramaPublishHelper_PublishDocToPanorama_Publishing_document_to_Panorama" xml:space="preserve">
@@ -9232,5 +9229,11 @@ If your transition list format combines formulas and adducts in a single column 
   </data>
     <data name="CommandLine_SetFullScanSettings_Changing_full_scan_product_mass_accuracy_to__0__ppm_" xml:space="preserve">
     <value>Changing full scan product mass accuracy to {0} ppm.</value>
+  </data>
+    <data name="FastaImporter_Import_Check_your_settings_to_make_sure_you_are_using_a_library_and_restrictive_enough_transition_selection_" xml:space="preserve">
+    <value>Check your settings to make sure you are using a library and restrictive enough transition selection.</value>
+  </data>
+    <data name="FastaImporter_Import_Check_your_settings_to_make_sure_you_are_using_a_library_" xml:space="preserve">
+    <value>Check your settings to make sure you are using a library.</value>
   </data>
 </root>
