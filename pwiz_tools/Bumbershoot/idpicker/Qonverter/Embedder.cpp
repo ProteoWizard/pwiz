@@ -975,6 +975,9 @@ void embedGeneMetadata(const string& idpDbFilepath, pwiz::util::IterationListene
     if (!bfs::exists("gene2protein.db3"))
         throw runtime_error("[loadGeneMetadata] gene2protein.db3 not found: download it from http://fenchurch.mc.vanderbilt.edu/bin/g2p/gene2protein.db3 and put it in the IDPicker directory.");
 
+    using namespace boost::xpressive;
+    sregex refseqRegex = sregex::compile("^(?:gi\\|\\d+\\|ref\\|)?(\\S+?)(?:\\.\\d+)(?:\\|)?$");
+
     typedef boost::tuple<string, string, string, int, boost::optional<string>, boost::optional<string> > GeneTuple;
     typedef map<string, GeneTuple> ProteinToGeneMap;
     ProteinToGeneMap proteinToGeneMap;
@@ -986,9 +989,10 @@ void embedGeneMetadata(const string& idpDbFilepath, pwiz::util::IterationListene
         BOOST_FOREACH(sqlite::query::rows row, proteinToGeneQuery)
         {
             row.getter(1) >> geneId >> geneName >> chromosome >> taxonId >> geneFamily >> geneDescription;
-            proteinToGeneMap[row.get<string>(0)] = boost::make_tuple(geneId, geneName, chromosome, taxonId,
-                                                                     boost::make_optional(!geneFamily.empty(), geneFamily),
-                                                                     boost::make_optional(!geneDescription.empty(), geneDescription));
+            string accession = regex_replace(row.get<string>(0), refseqRegex, "$1");
+            proteinToGeneMap[accession] = boost::make_tuple(geneId, geneName, chromosome, taxonId,
+                                                            boost::make_optional(!geneFamily.empty(), geneFamily),
+                                                            boost::make_optional(!geneDescription.empty(), geneDescription));
         }
     }
 
@@ -1009,13 +1013,10 @@ void embedGeneMetadata(const string& idpDbFilepath, pwiz::util::IterationListene
     // reset GeneId column
     idpDb.execute("UPDATE Protein SET GeneId=NULL");
 
-    using namespace boost::xpressive;
-
     sqlite::transaction transaction(idpDb);
     sqlite::query proteinIdAccessions(idpDb, "SELECT Id, Accession FROM Protein WHERE IsDecoy=0");
     sqlite::command proteinQuery(idpDb, "UPDATE Protein SET GeneId=? WHERE Id=?");
     sqlite::command proteinMetadataQuery(idpDb, "UPDATE ProteinMetadata SET GeneName=?, Chromosome=?, TaxonomyId=?, GeneFamily=?, GeneDescription=? WHERE Id=?");
-    sregex refseqRegex = sregex::compile("^(?:gi\\|\\d+\\|ref\\|)?(\\S+?)(?:\\|)?$");
     BOOST_FOREACH(sqlite::query::rows row, proteinIdAccessions)
     {
         sqlite3_int64 id = row.get<sqlite3_int64>(0);

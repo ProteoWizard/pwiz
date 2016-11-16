@@ -76,6 +76,16 @@ boost::format createFilteredSpectrumTableSql(
     "INSERT INTO FilteredSpectrum " + filteredSpectrumSelectSql +
     "CREATE UNIQUE INDEX FilteredSpectrum_SourceNativeID ON FilteredSpectrum (Source, NativeID);"
 );
+boost::format createDebugFilteredSpectrumTableSql(
+    "DROP TABLE IF EXISTS DebugFilteredSpectrum; CREATE TABLE DebugFilteredSpectrum (Id INTEGER PRIMARY KEY);\n"
+    "INSERT INTO DebugFilteredSpectrum SELECT s.Id\n"
+    "FROM PeptideSpectrumMatch psm\n"
+    "JOIN Spectrum s ON psm.Spectrum = s.Id\n"
+    "JOIN SpectrumSource ss ON s.Source = ss.Id\n"
+    "-- filter out ungrouped spectrum sources\n"
+    "WHERE NOT ss.Group_ OR %1% < psm.QValue OR psm.Rank > 1\n"
+    "GROUP BY s.Id;\n"
+);
 
 /// MinDistinctPeptides, MinSpectra (used to compose a WHERE/GROUP BY/HAVING predicate which depends on whether grouping happens at the protein or gene level)
 const string filteredProteinSelectSql =
@@ -91,6 +101,17 @@ boost::format createFilteredProteinTableSql(
     "CREATE TABLE FilteredProtein (Id INTEGER PRIMARY KEY, Accession TEXT, IsDecoy INT, Cluster INT, ProteinGroup INT, Length INT, GeneId TEXT, GeneGroup INT);\n"
     "INSERT INTO FilteredProtein " + filteredProteinSelectSql +
     "CREATE UNIQUE INDEX FiltProtein_Accession ON FilteredProtein (Accession);"
+);
+boost::format createDebugFilteredProteinTableSql(
+    "DROP TABLE IF EXISTS DebugFilteredProtein; CREATE TABLE DebugFilteredProtein (Id INTEGER PRIMARY KEY);\n"
+    "INSERT INTO DebugFilteredProtein SELECT pro.Id\n"
+    "FROM FilteredPeptideSpectrumMatch psm\n"
+    "JOIN FilteredSpectrum s ON psm.Spectrum = s.Id\n"
+    "JOIN PeptideInstance pi ON psm.Peptide = pi.Peptide\n"
+    "JOIN Protein pro ON pi.Protein = pro.Id\n"
+    "GROUP BY pi.Protein\n"
+    "HAVING %1% > COUNT(DISTINCT psm.Peptide) AND\n"
+    "       %2% > COUNT(DISTINCT psm.Spectrum);\n"
 );
 
 const string filteredProteinTableByGeneSelectSql =
@@ -125,6 +146,16 @@ boost::format createFilteredPSMTableSql(
     "INSERT INTO FilteredPeptideSpectrumMatch " + filteredPSMSelectSql +
     "CREATE INDEX FilteredPeptideSpectrumMatch_PeptideSpectrumAnalysis ON FilteredPeptideSpectrumMatch (Peptide, Spectrum, Analysis);\n"
     "CREATE INDEX FilteredPeptideSpectrumMatch_SpectrumPeptideAnalysis ON FilteredPeptideSpectrumMatch (Spectrum, Peptide, Analysis);"
+);
+boost::format createDebugFilteredPSMTableSql(
+    "DROP TABLE IF EXISTS DebugFilteredPeptideSpectrumMatch; CREATE TABLE DebugFilteredPeptideSpectrumMatch (Id INTEGER PRIMARY KEY);\n"
+    "INSERT INTO DebugFilteredPeptideSpectrumMatch SELECT psm.Id\n"
+    "FROM Protein pro\n"
+    "JOIN PeptideInstance pi ON pro.Id = pi.Protein\n"
+    "JOIN PeptideSpectrumMatch psm ON pi.Peptide = psm.Peptide\n"
+    "JOIN FilteredSpectrum s ON psm.Spectrum = s.Id\n"
+    "WHERE %1% < psm.QValue OR psm.Rank > 1\n"
+    "GROUP BY psm.Id;\n"
 );
 
 /// DistinctMatchFormatSqlExpression (with FilteredPSM instead of psm), DistinctMatchFormatSqlExpression, MinSpectraPerDistinctMatch
@@ -305,6 +336,24 @@ boost::format applyMaxProteinGroupsSql(
     "DELETE FROM PeptideSpectrumMatch WHERE Peptide NOT IN (SELECT Id FROM Peptide);\n"
     "DELETE FROM Spectrum WHERE Id NOT IN (SELECT Spectrum FROM PeptideSpectrumMatch);"
 );
+boost::format applyDebugMaxProteinGroupsSql(
+    "DROP TABLE IF EXISTS DebugMaxProteinGroupsFilterProteinGroups; CREATE TABLE DebugMaxProteinGroupsFilterProteinGroups AS SELECT pi.Peptide, COUNT(DISTINCT ProteinGroup) AS ProteinGroupCount, GROUP_CONCAT(DISTINCT ProteinGroup) AS ProteinGroups\n"
+    "    FROM Protein pro\n"
+    "    JOIN PeptideInstance pi on pro.Id = pi.Protein\n"
+    "    GROUP BY pi.Peptide;\n"
+    "DROP TABLE IF EXISTS DebugMaxProteinGroupsFilterPeptide; CREATE TABLE DebugMaxProteinGroupsFilterPeptide AS SELECT Id FROM Peptide WHERE Id IN\n"
+    "(\n"
+    "    SELECT pi.Peptide\n"
+    "    FROM Protein pro\n"
+    "    JOIN PeptideInstance pi on pro.Id = pi.Protein\n"
+    "    GROUP BY pi.Peptide\n"
+    "    HAVING COUNT(DISTINCT ProteinGroup) > %1%\n"
+    ");\n"
+    "DROP TABLE IF EXISTS DebugMaxProteinGroupsFilterPeptideInstance; CREATE TABLE DebugMaxProteinGroupsFilterPeptideInstance AS SELECT Id FROM PeptideInstance WHERE Peptide NOT IN (SELECT Id FROM Peptide);\n"
+    "DROP TABLE IF EXISTS DebugMaxProteinGroupsFilterProtein; CREATE TABLE DebugMaxProteinGroupsFilterProtein AS SELECT Id FROM Protein WHERE Id NOT IN (SELECT Protein FROM PeptideInstance);\n"
+    "DROP TABLE IF EXISTS DebugMaxProteinGroupsFilterPeptideSpectrumMatch; CREATE TABLE DebugMaxProteinGroupsFilterPeptideSpectrumMatch AS SELECT Id FROM PeptideSpectrumMatch WHERE Peptide NOT IN (SELECT Id FROM Peptide);\n"
+    "DROP TABLE IF EXISTS DebugMaxProteinGroupsFilterSpectrum; CREATE TABLE DebugMaxProteinGroupsFilterSpectrum AS SELECT Id FROM Spectrum WHERE Id NOT IN (SELECT Spectrum FROM PeptideSpectrumMatch);"
+);
 
 boost::format deleteProteinsUnderAdditionalPeptideCountSql(
     "DELETE FROM Protein\n"
@@ -316,6 +365,17 @@ boost::format deleteProteinsUnderAdditionalPeptideCountSql(
     "DELETE FROM Peptide WHERE Id NOT IN (SELECT Peptide FROM PeptideInstance);\n"
     "DELETE FROM PeptideSpectrumMatch WHERE Peptide NOT IN (SELECT Id FROM Peptide);\n"
     "DELETE FROM Spectrum WHERE Id NOT IN (SELECT Spectrum FROM PeptideSpectrumMatch);"
+);
+boost::format deleteDebugProteinsUnderAdditionalPeptideCountSql(
+    "CREATE TABLE DebugAdditionalPeptidesFilterProtein AS SELECT Id FROM Protein\n"
+    "    WHERE Id IN(SELECT pro.Id\n"
+    "    FROM Protein pro\n"
+    "    JOIN AdditionalMatches am ON pro.Id = am.ProteinId\n"
+    "    WHERE am.AdditionalMatches < %1%);\n"
+    "CREATE TABLE DebugAdditionalPeptidesFilterPeptideInstance AS SELECT Id FROM PeptideInstance WHERE Protein NOT IN (SELECT Id FROM Protein);\n"
+    "CREATE TABLE DebugAdditionalPeptidesFilterPeptide AS SELECT Id FROM Peptide WHERE Id NOT IN (SELECT Peptide FROM PeptideInstance);\n"
+    "CREATE TABLE DebugAdditionalPeptidesFilterPeptideSpectrumMatch AS SELECT Id FROM PeptideSpectrumMatch WHERE Peptide NOT IN (SELECT Id FROM Peptide);\n"
+    "CREATE TABLE DebugAdditionalPeptidesFilterSpectrum AS SELECT Id FROM Spectrum WHERE Id NOT IN (SELECT Spectrum FROM PeptideSpectrumMatch);"
 );
 
 string trimFilteredTables(
@@ -390,6 +450,13 @@ struct Filter::Impl
     boost::format createFilteredPSMTableSql;
     boost::format deleteFilteredPSMsUnderMatchCountSql;
     boost::format createFilteredPeptideTableSql;
+    boost::format applyMaxProteinGroupsSql;
+
+    boost::format createDebugFilteredSpectrumTableSql;
+    boost::format createDebugFilteredProteinTableSql;
+    boost::format createDebugFilteredProteinTableByGeneSql;
+    boost::format createDebugFilteredPSMTableSql;
+    boost::format applyDebugMaxProteinGroupsSql;
 
     void initializeSqlFormats()
     {
@@ -399,6 +466,12 @@ struct Filter::Impl
         createFilteredPSMTableSql = ::createFilteredPSMTableSql;
         deleteFilteredPSMsUnderMatchCountSql = ::deleteFilteredPSMsUnderMatchCountSql;
         createFilteredPeptideTableSql = ::createFilteredPeptideTableSql;
+        applyMaxProteinGroupsSql = ::applyMaxProteinGroupsSql;
+
+        createDebugFilteredSpectrumTableSql = ::createDebugFilteredSpectrumTableSql;
+        createDebugFilteredProteinTableSql = ::createDebugFilteredProteinTableSql;
+        createDebugFilteredPSMTableSql = ::createDebugFilteredPSMTableSql;
+        applyDebugMaxProteinGroupsSql = ::applyDebugMaxProteinGroupsSql;
     }
 
     void clearSqlFormats()
@@ -409,6 +482,13 @@ struct Filter::Impl
         createFilteredPSMTableSql.clear_binds();
         deleteFilteredPSMsUnderMatchCountSql.clear_binds();
         createFilteredPeptideTableSql.clear_binds();
+        applyMaxProteinGroupsSql.clear_binds();
+
+        createDebugFilteredSpectrumTableSql.clear_binds();
+        createDebugFilteredProteinTableSql.clear_binds();
+        createDebugFilteredProteinTableByGeneSql.clear_binds();
+        createDebugFilteredPSMTableSql.clear_binds();
+        applyDebugMaxProteinGroupsSql.clear_binds();
     }
 
     static void precacheFile(const string& filepath)
@@ -549,6 +629,7 @@ struct Filter::Impl
     {
         ITERATION_UPDATE(ilr, FilterStep_FilterSpectra, FilterStep_Count, "filtering spectra")
         BOOST_LOG_SEV(logSource::get(), MessageSeverity::DebugInfo) << explainQueryPlan(db, (boost::format(filteredSpectrumSelectSql) % config.maxFDRScore).str());
+        //db.execute((createDebugFilteredSpectrumTableSql % config.maxFDRScore).str());
         db.execute((createFilteredSpectrumTableSql % config.maxFDRScore).str());
         return sqlite3pp::query(db, "SELECT COUNT(*) From FilteredSpectrum").begin()->get<int>(0);
     }
@@ -559,6 +640,7 @@ struct Filter::Impl
 
         ITERATION_UPDATE(ilr, FilterStep_FilterProteins, FilterStep_Count, "filtering proteins")
         BOOST_LOG_SEV(logSource::get(), MessageSeverity::DebugInfo) << explainQueryPlan(db, (boost::format(config.geneLevelFiltering ? filteredProteinTableByGeneSelectSql : filteredProteinSelectSql) % config.minDistinctPeptides % config.minSpectra).str());
+        //db.execute((createDebugFilteredProteinTableSql % config.minDistinctPeptides % config.minSpectra).str());
         db.execute((format % config.minDistinctPeptides % config.minSpectra).str());
         return sqlite3pp::query(db, "SELECT COUNT(*) From FilteredProtein").begin()->get<int>(0);
     }
@@ -567,6 +649,7 @@ struct Filter::Impl
     {
         ITERATION_UPDATE(ilr, FilterStep_FilterPSMs, FilterStep_Count, "filtering peptide spectrum matches")
         BOOST_LOG_SEV(logSource::get(), MessageSeverity::DebugInfo) << explainQueryPlan(db, (boost::format(filteredPSMSelectSql) % config.maxFDRScore).str());
+        //db.execute((createDebugFilteredPSMTableSql % config.maxFDRScore).str());
         db.execute((createFilteredPSMTableSql % config.maxFDRScore).str());
         return sqlite3pp::query(db, "SELECT COUNT(*) From FilteredPeptideSpectrumMatch").begin()->get<int>(0);
     }
@@ -647,6 +730,7 @@ struct Filter::Impl
 
         ITERATION_UPDATE(ilr, FilterStep_FilterMaxProteinGroupsPerPeptide, FilterStep_Count, "filtering out peptides that map to too many protein groups")
 
+        //db.execute((applyDebugMaxProteinGroupsSql % config.maxProteinGroupsPerPeptide).str());
         db.execute((applyMaxProteinGroupsSql % config.maxProteinGroupsPerPeptide).str());
 
         // reapply protein-level filters after filtering out ambiguous PSMs
