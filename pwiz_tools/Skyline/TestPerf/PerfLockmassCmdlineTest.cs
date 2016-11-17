@@ -104,7 +104,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             {
                 var correctedPeak = correctedPeaks[i];
                 var uncorrectedPeak = uncorrectedPeaks[i];
-                Assert.AreEqual(uncorrectedPeak.RetentionTime, correctedPeak.RetentionTime, 0.01,
+                Assert.AreEqual(uncorrectedPeak.RetentionTime, correctedPeak.RetentionTime, 0.02,
                     "peak retention times should be similar"); // Expect similar RT
                 if (Math.Abs(uncorrectedPeak.MassError ?? 0) < Math.Abs(correctedPeak.MassError ?? 0))
                     nWorse++;
