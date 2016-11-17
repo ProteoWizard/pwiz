@@ -143,8 +143,12 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
         result->set(translate(polarityType));
     double lockmassMz = (polarityType == PolarityType_Negative) ? lockmassMzNegScans : lockmassMzPosScans;
     if (lockmassMz != 0.0)
+    {
         if (!rawdata_->ApplyLockMass(lockmassMz, lockmassTolerance)) // TODO: if false (cannot apply lockmass), log a warning
             warn_once("[SpectrumList_Waters] failed to apply lockmass correction");
+    }
+    else
+        rawdata_->RemoveLockMass();
 
     if (scanStats.isContinuumScan)
         result->set(MS_profile_spectrum);

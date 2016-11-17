@@ -202,6 +202,8 @@ struct PWIZ_API_DECL RawData
         return true;
     }
 
+    void RemoveLockMass() { LockMass.RemoveLockMassCorrection(); }
+
     private:
     MassLynxRawLockMass LockMass;
 
