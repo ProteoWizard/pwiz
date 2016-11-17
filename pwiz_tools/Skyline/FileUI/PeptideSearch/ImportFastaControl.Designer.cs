@@ -67,10 +67,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // 
             // tbxError
             // 
-            this.tbxError.BackColor = System.Drawing.SystemColors.Window;
             resources.ApplyResources(this.tbxError, "tbxError");
+            this.tbxError.BackColor = System.Drawing.SystemColors.Window;
             this.tbxError.Name = "tbxError";
             this.tbxError.ReadOnly = true;
+            // 
+            // helpTipFasta
+            // 
+            this.helpTipFasta.AutoPopDelay = 32767;
+            this.helpTipFasta.InitialDelay = 500;
+            this.helpTipFasta.ReshowDelay = 100;
             // 
             // clearBtn
             // 

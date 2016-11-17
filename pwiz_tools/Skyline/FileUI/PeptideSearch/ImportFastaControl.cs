@@ -44,7 +44,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             InitializeComponent();
 
-            ImportFastaHelper = new ImportFastaHelper(tbxFasta, tbxError, panelError);
+            ImportFastaHelper = new ImportFastaHelper(tbxFasta, tbxError, panelError, helpTipFasta);
 
             tbxFastaHeightDifference = Height - tbxFasta.Height;
 

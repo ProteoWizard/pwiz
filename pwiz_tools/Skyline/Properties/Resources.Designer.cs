@@ -10793,11 +10793,21 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Document size limit exceeded..
+        ///   Looks up a localized string similar to Check your settings to make sure you are using a library..
         /// </summary>
-        public static string FastaImporter_Import_Document_size_limit_exceeded {
+        public static string FastaImporter_Import_Check_your_settings_to_make_sure_you_are_using_a_library_ {
             get {
-                return ResourceManager.GetString("FastaImporter_Import_Document_size_limit_exceeded", resourceCulture);
+                return ResourceManager.GetString("FastaImporter_Import_Check_your_settings_to_make_sure_you_are_using_a_library_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Check your settings to make sure you are using a library and restrictive enough transition selection..
+        /// </summary>
+        public static string FastaImporter_Import_Check_your_settings_to_make_sure_you_are_using_a_library_and_restrictive_enough_transition_selection_ {
+            get {
+                return ResourceManager.GetString("FastaImporter_Import_Check_your_settings_to_make_sure_you_are_using_a_library_and" +
+                        "_restrictive_enough_transition_selection_", resourceCulture);
             }
         }
         
@@ -10807,6 +10817,26 @@ namespace pwiz.Skyline.Properties {
         public static string FastaImporter_Import_Error_at_or_around_line__0____1_ {
             get {
                 return ResourceManager.GetString("FastaImporter_Import_Error_at_or_around_line__0____1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This import causes the document to contain more than {0:n0} peptides at line {1:n0}..
+        /// </summary>
+        public static string FastaImporter_Import_This_import_causes_the_document_to_contain_more_than__0_n0__peptides_at_line__1_n0__ {
+            get {
+                return ResourceManager.GetString("FastaImporter_Import_This_import_causes_the_document_to_contain_more_than__0_n0__" +
+                        "peptides_at_line__1_n0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This import causes the document to contain more than {0:n0} transitions in {1:n0} peptides at line {2:n0}..
+        /// </summary>
+        public static string FastaImporter_Import_This_import_causes_the_document_to_contain_more_than__0_n0__transitions_in__1_n0__peptides_at_line__2_n0__ {
+            get {
+                return ResourceManager.GetString("FastaImporter_Import_This_import_causes_the_document_to_contain_more_than__0_n0__" +
+                        "transitions_in__1_n0__peptides_at_line__2_n0__", resourceCulture);
             }
         }
         

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -8144,10 +8144,7 @@
   <data name="BuildLibraryDlg_btnAddDirectory_Click_Add_Input_Directory" xml:space="preserve">
     <value>入力ディレクトリを追加</value>
   </data>
-  <data name="FastaImporter_Import_Document_size_limit_exceeded" xml:space="preserve">
-    <value>ドキュメントサイズ制限を超えました。</value>
-  </data>
-  <data name="TransitionBinner_BinData_" xml:space="preserve">
+    <data name="TransitionBinner_BinData_" xml:space="preserve">
     <value>インポートされたスペクトルには、m/zまたは強度値 ({0} != {1}) がないようです。</value>
   </data>
   <data name="PanoramaPublishHelper_PublishDocToPanorama_Publishing_document_to_Panorama" xml:space="preserve">

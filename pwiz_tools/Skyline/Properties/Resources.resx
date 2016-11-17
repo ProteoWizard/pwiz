@@ -8144,10 +8144,7 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="BuildLibraryDlg_btnAddDirectory_Click_Add_Input_Directory" xml:space="preserve">
     <value>Add Input Directory</value>
   </data>
-  <data name="FastaImporter_Import_Document_size_limit_exceeded" xml:space="preserve">
-    <value>Document size limit exceeded.</value>
-  </data>
-  <data name="TransitionBinner_BinData_" xml:space="preserve">
+    <data name="TransitionBinner_BinData_" xml:space="preserve">
     <value>Imported spectrum appears to be missing m/z or intensity values ({0} != {1})</value>
   </data>
   <data name="PanoramaPublishHelper_PublishDocToPanorama_Publishing_document_to_Panorama" xml:space="preserve">
@@ -9247,5 +9244,17 @@ If your transition list format combines formulas and adducts in a single column 
   </data>
   <data name="SkylineWindow_ShowExportSpectralLibraryDialog_The_document_must_contain_at_least_one_peptide_precursor_to_export_a_spectral_library_" xml:space="preserve">
     <value>The document must contain at least one peptide precursor to export a spectral library.</value>
+  </data>
+  <data name="FastaImporter_Import_Check_your_settings_to_make_sure_you_are_using_a_library_and_restrictive_enough_transition_selection_" xml:space="preserve">
+    <value>Check your settings to make sure you are using a library and restrictive enough transition selection.</value>
+  </data>
+    <data name="FastaImporter_Import_Check_your_settings_to_make_sure_you_are_using_a_library_" xml:space="preserve">
+    <value>Check your settings to make sure you are using a library.</value>
+  </data>
+  <data name="FastaImporter_Import_This_import_causes_the_document_to_contain_more_than__0_n0__transitions_in__1_n0__peptides_at_line__2_n0__" xml:space="preserve">
+    <value>This import causes the document to contain more than {0:n0} transitions in {1:n0} peptides at line {2:n0}.</value>
+  </data>
+  <data name="FastaImporter_Import_This_import_causes_the_document_to_contain_more_than__0_n0__peptides_at_line__1_n0__" xml:space="preserve">
+    <value>This import causes the document to contain more than {0:n0} peptides at line {1:n0}.</value>
   </data>
 </root>

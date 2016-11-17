@@ -192,11 +192,17 @@
   <data name="panelError.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left, Right</value>
   </data>
+  <data name="tbxError.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
   <data name="tbxError.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
   </data>
   <data name="tbxError.Multiline" type="System.Boolean, mscorlib">
     <value>True</value>
+  </data>
+  <data name="tbxError.ScrollBars" type="System.Windows.Forms.ScrollBars, System.Windows.Forms">
+    <value>Vertical</value>
   </data>
   <data name="tbxError.Size" type="System.Drawing.Size, System.Drawing">
     <value>282, 35</value>
