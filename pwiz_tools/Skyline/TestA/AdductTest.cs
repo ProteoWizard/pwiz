@@ -80,6 +80,9 @@ namespace pwiz.SkylineTestA
             TestPentaneAdduct("[M+2H]++", "C5H14", 2);
             TestPentaneAdduct("[M+DMSO+2H]++", "C7H20OS", 2);
             TestPentaneAdduct("[M+DMSO+2H]2+", "C7H20OS", 2);
+            TestPentaneAdduct("[M+NOS]5+", "C5H12NOS", 5); // Not a real adduct, but be ready for adducts we just don't know about
+            TestPentaneAdduct("[M+NOS]5", "C5H12NOS", 5); // Not a real adduct, but be ready for adducts we just don't know about
+            TestPentaneAdduct("[M+NOS]5-", "C5H12NOS", -5); // Not a real adduct, but be ready for adducts we just don't know about
             
             // See http://fiehnlab.ucdavis.edu/staff/kind/Metabolomics/MS-Adduct-Calculator/
             // There you will find an excel spreadsheet from which I pulled these numbers, which as it turns out has several errors in it.
