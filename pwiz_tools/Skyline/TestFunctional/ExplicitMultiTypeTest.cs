@@ -59,7 +59,7 @@ namespace pwiz.SkylineTestFunctional
             // Add two peptides
             const string pepSequence1 = "QFVLSCVILR";
             const string pepSequence2 = "DIEVYCDGAITTK";
-            RunUI(() => SkylineWindow.Paste(string.Join("\n", new[] {pepSequence1, pepSequence2})));
+            RunUI(() => SkylineWindow.Paste(string.Join("\n", pepSequence1, pepSequence2)));
 
             // Check and save original document information
             var docOrig = WaitForProteinMetadataBackgroundLoaderCompletedUI();
@@ -72,8 +72,7 @@ namespace pwiz.SkylineTestFunctional
             var peptideSettingsUI = ShowPeptideSettings();
             var modStatic = new StaticMod("Another Cysteine", "C", null, "CO8N2");
             AddStaticMod(modStatic, peptideSettingsUI);
-            RunUI(peptideSettingsUI.OkDialog);
-            WaitForClosedForm(peptideSettingsUI);
+            OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
 
             // Select the peptide of interest
             RunUI(() => SkylineWindow.SequenceTree.SelectedPath = pathPeptide);
@@ -86,8 +85,8 @@ namespace pwiz.SkylineTestFunctional
                       {
                           modifyPeptideDlg.SelectModification(IsotopeLabelType.light,
                               pepSequence2.IndexOf('C'), modStatic.Name);
-                          modifyPeptideDlg.OkDialog();
                       });
+            OkDialog(modifyPeptideDlg, modifyPeptideDlg.OkDialog);
             
             // Check for correct response to modification
             var docExplicit = WaitForDocumentChange(docOrig);
@@ -137,8 +136,8 @@ namespace pwiz.SkylineTestFunctional
                           peptideSettingsUI.PickedHeavyMods = new[] { mod15N.Name };
                           peptideSettingsUI.SelectedLabelTypeName = heavyLabelNames[0];
                           peptideSettingsUI.PickedHeavyMods = new[] { modK13C.Name, modR13C.Name };
-                          peptideSettingsUI.OkDialog();
                       });
+            OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
 
             // Make sure the document was updated as expected.  Explicit modification
             // should not keep new types from adding precursors to both peptides.
@@ -169,8 +168,8 @@ namespace pwiz.SkylineTestFunctional
                 for (int i = 0; i < pepSequence2.Length - 1; i++)
                     modifyPeptideMultiDlg.SelectModification(labelTypeAll, i, "");
                 modifyPeptideMultiDlg.SelectModification(labelTypeAll, pepSequence2.Length - 1, modK13C.Name);
-                modifyPeptideMultiDlg.OkDialog();
             });
+            OkDialog(modifyPeptideMultiDlg, modifyPeptideMultiDlg.OkDialog);
 
             // Make sure both heavy types have precursor m/z value that match the original
             var docModMatch = WaitForDocumentChange(docMultiType);
@@ -183,8 +182,8 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 modifyPeptideEmptyDlg.SelectModification(labelTypeAa, pepSequence2.Length - 1, "");
-                modifyPeptideEmptyDlg.OkDialog();
             });
+            OkDialog(modifyPeptideEmptyDlg, modifyPeptideEmptyDlg.OkDialog);
             var docModRemoved = WaitForDocumentChange(docModMatch);
             var peptideRemoved = (PeptideDocNode)docModRemoved.FindNode(pathPeptide);
             Assert.AreEqual(2, peptideRemoved.Children.Count);
@@ -194,8 +193,8 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 modifyPeptideResetDlg.ResetMods();
-                modifyPeptideResetDlg.OkDialog();
             });            
+            OkDialog(modifyPeptideResetDlg, modifyPeptideResetDlg.OkDialog);
 
             // Make sure this removes the explicit modification and adds back the removed precursor
             var docModReset = WaitForDocumentChange(docModRemoved);
@@ -210,8 +209,8 @@ namespace pwiz.SkylineTestFunctional
                 for (int i = 0; i < pepSequence2.Length - 1; i++)
                     modifyPeptideMatchDlg.SelectModification(labelTypeAll, i, "");
                 modifyPeptideMatchDlg.SelectModification(labelTypeAll, pepSequence2.Length - 1, modK13C.Name);
-                modifyPeptideMatchDlg.OkDialog();
             });
+            OkDialog(modifyPeptideMatchDlg, modifyPeptideMatchDlg.OkDialog);
             var docModAA = WaitForDocumentChange(docModReset);
 
             // Change implicit static modification and heavy AA
@@ -220,8 +219,8 @@ namespace pwiz.SkylineTestFunctional
             {
                 peptideSettingsUIChange.PickedStaticMods = new[] {modStatic.Name};
                 peptideSettingsUIChange.PickedHeavyMods = new[] {modV13C.Name};
-                peptideSettingsUIChange.OkDialog();
             });
+            OkDialog(peptideSettingsUIChange, peptideSettingsUIChange.OkDialog);
             var docModImplicitStatic = WaitForDocumentChange(docModAA);
             var peptideMatch2 = (PeptideDocNode)docModImplicitStatic.FindNode(pathPeptide);
             Assert.IsNotNull(peptideMatch2.ExplicitMods);
@@ -234,7 +233,7 @@ namespace pwiz.SkylineTestFunctional
             // Remove the heavy All type, which should remove the only explicit modification
             var peptideSettingsUIRemove = ShowPeptideSettings();
             SetHeavyLabelNames(peptideSettingsUIRemove, new[] {heavyLabelNames[0]});
-            RunUI(peptideSettingsUIRemove.OkDialog);
+            OkDialog(peptideSettingsUIRemove, peptideSettingsUIRemove.OkDialog);
 
             var docModRemoveType = WaitForDocumentChange(docModImplicitStatic);
             foreach (var nodePep in docModRemoveType.Peptides)
@@ -252,8 +251,8 @@ namespace pwiz.SkylineTestFunctional
             {
                 modifyPeptideAADlg.SelectModification(labelTypeAa, pepSequence2.IndexOf('V'), "");
                 modifyPeptideAADlg.SelectModification(labelTypeAa, pepSequence2.Length - 1, modK13C.Name);
-                modifyPeptideAADlg.OkDialog();
             });
+            OkDialog(modifyPeptideAADlg, modifyPeptideAADlg.OkDialog);
             var docModExplicitStatic = WaitForDocumentChange(docModImplicitStatic);
 
             // Remove the heavy All label type again
@@ -301,9 +300,8 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 editLabelTypeListDlg.LabelTypeText = string.Join("\n", heavyLabelNames);
-                editLabelTypeListDlg.OkDialog();
             });
-            WaitForClosedForm(editLabelTypeListDlg);
+            OkDialog(editLabelTypeListDlg, editLabelTypeListDlg.OkDialog);
         }
     }
 }
