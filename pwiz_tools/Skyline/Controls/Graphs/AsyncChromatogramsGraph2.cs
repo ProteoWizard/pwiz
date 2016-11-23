@@ -30,6 +30,9 @@ namespace pwiz.Skyline.Controls.Graphs
         private const int ANIMATE_UPDATERATE = 100;             // animate 10 frames/sec.
         private const int STEPS_FOR_INTENSITY_ANIMATION = 6;    // half a second for growing peaks and adjusting intensity axis
         private const int STEPS_FOR_TIME_AXIS_ANIMATION = 10;   // one second for adjusting time axis
+        private const int MIN_INCREMENTAL_RENDER = 1000;        // one second for non-aminating advances
+        private const int MAX_INCREMENTAL_RENDER = 5000;        // five seconds to render a single shift before smaller increment is allowed
+        private const int INCREMENTS_PER_PASS = 100;            // one hundred incremental shifts across the x-axis
 
         private const float PROGRESS_LINE_WIDTH = 2.0f;         // width of line to show current progress for progressive graphs
         private const double X_AXIS_START = 1.0;                // initial value for time axis
@@ -63,6 +66,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private double _renderMin;
         private double _renderMax;
         private double _lastTime;
+        private DateTime _lastRender;
         private bool _backgroundInitialized;
 
         public AsyncChromatogramsGraph2()
@@ -78,6 +82,8 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             base.OnLoad(e);
             if (DesignMode) return;
+
+            _lastRender = DateTime.Now;
 
             timer.Interval = ANIMATE_UPDATERATE;
             timer.Tick += timer_Tick;
@@ -193,6 +199,8 @@ namespace pwiz.Skyline.Controls.Graphs
             _yAxisAnimation.SetTarget(info.GraphPane.YAxis.Scale.Max, maxY * 1.1, STEPS_FOR_INTENSITY_ANIMATION);
 
             // Tell Zedgraph if axes are being changed.
+            double nextTime = info.CurrentTime ?? 0;
+            double millisElapsed = (DateTime.Now - _lastRender).TotalMilliseconds;
             if (_xAxisAnimation.IsActive || _yAxisAnimation.IsActive)
             {
                 info.GraphPane.XAxis.Scale.Max = _xAxisAnimation.Step();
@@ -200,15 +208,24 @@ namespace pwiz.Skyline.Controls.Graphs
                 info.GraphPane.AxisChange();
                 StartRender();
             }
-            else 
+            else if (millisElapsed < MIN_INCREMENTAL_RENDER)
             {
-                if (_renderMax > _renderMin)
-                    IncrementalRender(info, _renderMin, _renderMax);
-                if (_lastTime < (info.CurrentTime ?? 0))
-                    IncrementalRender(info, _lastTime, info.CurrentTime.Value);
+                return;
+            }
+            else
+            {
+                double minTime = Math.Min(_renderMin, _lastTime);
+                double maxTime = Math.Max(_renderMax, nextTime);
+                
+                // Limit the number of steps for advancing progress
+                if (millisElapsed < MAX_INCREMENTAL_RENDER && maxTime - minTime <= info.GraphPane.XAxis.Scale.Max/INCREMENTS_PER_PASS)
+                    return;
+
+                IncrementalRender(info, minTime, maxTime);
+                _lastRender = DateTime.Now;
             }
 
-            _lastTime = info.CurrentTime ?? 0;
+            _lastTime = nextTime;
             _renderMin = double.MaxValue;
             _renderMax = double.MinValue;
         }
