@@ -670,12 +670,17 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void cbShowErrorDetails_CheckedChanged(object sender, EventArgs e)
         {
-            textBoxError.Text = SelectedControl.GetErrorLog(cbMoreInfo.Checked);
+            textBoxError.Text = GetSelectedControlErrorLog();
+        }
+
+        private string GetSelectedControlErrorLog()
+        {
+            return SelectedControl == null ? string.Empty : SelectedControl.GetErrorLog(cbMoreInfo.Checked);
         }
 
         private void btnCopyText_Click(object sender, EventArgs e)
         {
-            ClipboardHelper.SetClipboardText(this, SelectedControl.GetErrorLog(cbMoreInfo.Checked));
+            ClipboardHelper.SetClipboardText(this, GetSelectedControlErrorLog());
         }
 
         #region Testing Support
