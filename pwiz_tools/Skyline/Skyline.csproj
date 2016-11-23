@@ -14,7 +14,7 @@
     <FileAlignment>512</FileAlignment>
     <ApplicationIcon>Skyline.ico</ApplicationIcon>
     <IsWebBootstrapper>true</IsWebBootstrapper>
-    <ManifestCertificateThumbprint>5B66EC1291281681132D9C769FED5A1F42BD4A76</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>51D74A6FC5F02022403411ECD1D7BB317C30D946</ManifestCertificateThumbprint>
     <ManifestKeyFile>
     </ManifestKeyFile>
     <GenerateManifests>true</GenerateManifests>
@@ -28,7 +28,7 @@
     <UpgradeBackupLocation />
     <TargetFrameworkProfile />
     <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
-    <PublishUrl>S:\webapps\ROOT\software\Skyline-release-64_3_5</PublishUrl>
+    <PublishUrl>T:\labkey\static\software\Skyline-release-64_2_6\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Web</InstallFrom>
     <UpdateEnabled>false</UpdateEnabled>
@@ -38,15 +38,15 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>false</MapFileExtensions>
-    <InstallUrl>https://skyline.gs.washington.edu/software/Skyline-release-64_3_5/</InstallUrl>
-    <UpdateUrl>https://skyline.gs.washington.edu/software/Skyline-release-64_3_5/</UpdateUrl>
+    <InstallUrl>https://skyline.gs.washington.edu/software/Skyline-release-64_2_6/</InstallUrl>
+    <UpdateUrl>https://skyline.gs.washington.edu/software/Skyline-release-64_2_6/</UpdateUrl>
     <SupportUrl>https://skyline.gs.washington.edu/labkey/project/home/support/begin.view%3f</SupportUrl>
     <ProductName>Skyline</ProductName>
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>9176</ApplicationRevision>
-    <ApplicationVersion>3.4.9.9176</ApplicationVersion>
+    <ApplicationRevision>9320</ApplicationRevision>
+    <ApplicationVersion>3.5.0.9320</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -1531,14 +1531,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\SpectrumLibraryInfoDlg.zh-CHS.resx">
       <DependentUpon>SpectrumLibraryInfoDlg.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Alerts\UpgradeDlg.ja.resx">
-      <DependentUpon>UpgradeDlg.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Alerts\UpgradeDlg.zh-CHS.resx">
-      <DependentUpon>UpgradeDlg.cs</DependentUpon>
-      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\ColumnChooser.ja.resx">
       <DependentUpon>ColumnChooser.cs</DependentUpon>
