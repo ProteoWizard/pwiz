@@ -766,7 +766,7 @@
     <value>0</value>
   </data>
   <data name="lblQValueCutoff.Text" xml:space="preserve">
-    <value>将检测 Q 值大于截止值的峰视为丢失。</value>
+    <value>将检测 Q 值大于界限值的峰视为丢失。</value>
   </data>
   <data name="&gt;&gt;lblQValueCutoff.Name" xml:space="preserve">
     <value>lblQValueCutoff</value>
@@ -790,7 +790,7 @@
     <value>3</value>
   </data>
   <data name="groupBoxQValueCutoff.Text" xml:space="preserve">
-    <value>Q 值截止</value>
+    <value>Q值界限</value>
   </data>
   <data name="&gt;&gt;groupBoxQValueCutoff.Name" xml:space="preserve">
     <value>groupBoxQValueCutoff</value>
@@ -874,7 +874,7 @@
     <value>2</value>
   </data>
   <data name="cbxUseZeroForMissingPeaks.Text" xml:space="preserve">
-    <value>用零作为丢失峰值</value>
+    <value>用零作为缺失峰值</value>
   </data>
   <data name="&gt;&gt;cbxUseZeroForMissingPeaks.Name" xml:space="preserve">
     <value>cbxUseZeroForMissingPeaks</value>

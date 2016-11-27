@@ -567,7 +567,7 @@ Yeast_20090902</value>
     <value>11</value>
   </data>
   <data name="cbIncludeAmbiguousMatches.Text" xml:space="preserve">
-    <value>包含不确定匹配项(&amp;M)</value>
+    <value>包含不明确匹配项(&amp;M)</value>
   </data>
   <data name="&gt;&gt;cbIncludeAmbiguousMatches.Name" xml:space="preserve">
     <value>cbIncludeAmbiguousMatches</value>

@@ -451,7 +451,7 @@
     <value>峰排名</value>
   </data>
   <data name="PeakRankByLevel">
-    <value>按级别的峰排名</value>
+    <value>按级别进行峰排名</value>
   </data>
   <data name="Peptide">
     <value>肽段</value>
@@ -805,19 +805,19 @@
     <value>母离子加合物</value>
   </data>
   <data name="PrecursorNeutralFormula">
-    <value>母离子中性公式</value>
+    <value>母离子中性分子式</value>
   </data>
   <data name="ProductAdduct">
     <value>子离子加合物</value>
   </data>
   <data name="ProductNeutralFormula">
-    <value>产品中性公式</value>
+    <value>子离子中性分子式</value>
   </data>
   <data name="MoleculeName">
     <value>分子名称</value>
   </data>
   <data name="MoleculeFormula">
-    <value>分子公式</value>
+    <value>分子式</value>
   </data>
 
 </root>

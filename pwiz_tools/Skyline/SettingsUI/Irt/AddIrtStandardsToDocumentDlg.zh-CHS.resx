@@ -164,7 +164,7 @@
     <value>2</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>每个肽之最大离子对：</value>
+    <value>每个肽段的最大离子对数目：</value>
   </data>
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
