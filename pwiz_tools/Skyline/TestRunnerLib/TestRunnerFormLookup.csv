@@ -176,7 +176,8 @@ TransitionSettingsUI.LibraryTab,TestMethodEditTutorial
 TransitionSettingsUI.PredictionTab,TestMethodEditTutorial
 UndoRedoList,*
 UniquePeptidesDlg,TestMethodEditTutorial
-UpgradeDlg,TestMiscForms
+UpgradeDlg,UpgradeBasicFunctionalTest
+UpgradeLicenseDlg,TestMiscForms
 ViewEditor.ChooseColumnsView,TestLiveReportsFilter
 ViewEditor.FilterView,TestLiveReportsFilter
 ViewLibraryDlg,TestFullScanId

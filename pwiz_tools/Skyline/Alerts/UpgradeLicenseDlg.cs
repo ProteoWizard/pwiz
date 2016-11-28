@@ -2,7 +2,7 @@
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
- * Copyright 2009 University of Washington - Seattle, WA
+ * Copyright 2010 University of Washington - Seattle, WA
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,39 +16,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 using System.Windows.Forms;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Alerts
 {
-    public partial class AboutDlg : FormEx
+    public partial class UpgradeLicenseDlg : FormEx
     {
-        public AboutDlg()
+        public UpgradeLicenseDlg(int licenseVersion)
         {
             InitializeComponent();
 
-            labelSoftwareVersion.Text = Install.ProgramNameAndVersion;
-
-            // Designer has problems getting images from resources
-            pictureSkylineIcon.Image = Resources.SkylineImg;
-            pictureProteoWizardIcon.Image = Resources.ProteoWizard;
-        }
-
-        private void linkProteome_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
-        {
-            WebHelpers.OpenLink(this, "http://skyline.ms"); // Not L10N
-        }
-
-        private void linkProteoWizard_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
-        {
-            WebHelpers.OpenLink(this, "http://proteowizard.sourceforge.net/"); // Not L10N
+            // Designer has problems with getting images from resources
+            pictureSkyline.Image = Resources.SkylineImg;
         }
 
         private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            WebHelpers.OpenLink(this, "http://proteome.gs.washington.edu/software/Skyline/funding.html"); // Not L10N
+            WebHelpers.OpenSkylineLink(this, "/wiki/home/software/Skyline/page.view?name=LicenseAgreement"); // Not L10N
         }
     }
 }

@@ -264,13 +264,13 @@
     <value>Ratios To</value>
   </data>
   <data name="singleReplicateTreeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>152, 22</value>
+    <value>106, 22</value>
   </data>
   <data name="singleReplicateTreeContextMenuItem.Text" xml:space="preserve">
     <value>Single</value>
   </data>
   <data name="bestReplicateTreeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>152, 22</value>
+    <value>106, 22</value>
   </data>
   <data name="bestReplicateTreeContextMenuItem.Text" xml:space="preserve">
     <value>Best</value>
@@ -1750,25 +1750,25 @@
     <value>204, 6</value>
   </data>
   <data name="insertFASTAMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>156, 22</value>
+    <value>157, 22</value>
   </data>
   <data name="insertFASTAMenuItem.Text" xml:space="preserve">
     <value>&amp;FASTA...</value>
   </data>
   <data name="insertProteinsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>156, 22</value>
+    <value>157, 22</value>
   </data>
   <data name="insertProteinsMenuItem.Text" xml:space="preserve">
     <value>Pr&amp;oteins...</value>
   </data>
   <data name="insertPeptidesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>156, 22</value>
+    <value>157, 22</value>
   </data>
   <data name="insertPeptidesMenuItem.Text" xml:space="preserve">
     <value>&amp;Peptides...</value>
   </data>
   <data name="insertTransitionListMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>156, 22</value>
+    <value>157, 22</value>
   </data>
   <data name="insertTransitionListMenuItem.Text" xml:space="preserve">
     <value>&amp;Transition List...</value>
@@ -2119,7 +2119,7 @@
     <value>Ctrl+T</value>
   </data>
   <data name="arrangeTiledMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>186, 22</value>
+    <value>187, 22</value>
   </data>
   <data name="arrangeTiledMenuItem.Text" xml:space="preserve">
     <value>&amp;Tiled</value>
@@ -2128,7 +2128,7 @@
     <value>False</value>
   </data>
   <data name="arrangeColumnMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>186, 22</value>
+    <value>187, 22</value>
   </data>
   <data name="arrangeColumnMenuItem.Text" xml:space="preserve">
     <value>&amp;Column</value>
@@ -2137,7 +2137,7 @@
     <value>False</value>
   </data>
   <data name="arrangeRowMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>186, 22</value>
+    <value>187, 22</value>
   </data>
   <data name="arrangeRowMenuItem.Text" xml:space="preserve">
     <value>&amp;Row</value>
@@ -2146,13 +2146,13 @@
     <value>Ctrl+Shift+T</value>
   </data>
   <data name="arrangedTabbedMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>186, 22</value>
+    <value>187, 22</value>
   </data>
   <data name="arrangedTabbedMenuItem.Text" xml:space="preserve">
     <value>T&amp;abbed</value>
   </data>
   <data name="groupedMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>186, 22</value>
+    <value>187, 22</value>
   </data>
   <data name="groupedMenuItem.Text" xml:space="preserve">
     <value>&amp;Grouped...</value>
@@ -2794,46 +2794,55 @@
     <value>&amp;Options...</value>
   </data>
   <data name="toolsMenu.Size" type="System.Drawing.Size, System.Drawing">
-    <value>47, 20</value>
+    <value>48, 20</value>
   </data>
   <data name="toolsMenu.Text" xml:space="preserve">
     <value>&amp;Tools</value>
   </data>
   <data name="homeMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>120, 22</value>
+    <value>171, 22</value>
   </data>
   <data name="homeMenuItem.Text" xml:space="preserve">
     <value>&amp;Home</value>
   </data>
   <data name="videosMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>120, 22</value>
+    <value>171, 22</value>
   </data>
   <data name="videosMenuItem.Text" xml:space="preserve">
     <value>&amp;Videos</value>
   </data>
   <data name="tutorialsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>120, 22</value>
+    <value>171, 22</value>
   </data>
   <data name="tutorialsMenuItem.Text" xml:space="preserve">
     <value>&amp;Tutorials</value>
   </data>
   <data name="supportMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>120, 22</value>
+    <value>171, 22</value>
   </data>
   <data name="supportMenuItem.Text" xml:space="preserve">
     <value>&amp;Support</value>
   </data>
   <data name="issuesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>120, 22</value>
+    <value>171, 22</value>
   </data>
   <data name="issuesMenuItem.Text" xml:space="preserve">
     <value>&amp;Issues</value>
   </data>
+  <data name="checkForUpdatesSeparator.Size" type="System.Drawing.Size, System.Drawing">
+    <value>168, 6</value>
+  </data>
+  <data name="checkForUpdatesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>171, 22</value>
+  </data>
+  <data name="checkForUpdatesMenuItem.Text" xml:space="preserve">
+    <value>&amp;Check for Updates</value>
+  </data>
   <data name="toolStripSeparator29.Size" type="System.Drawing.Size, System.Drawing">
-    <value>117, 6</value>
+    <value>168, 6</value>
   </data>
   <data name="aboutMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>120, 22</value>
+    <value>171, 22</value>
   </data>
   <data name="aboutMenuItem.Text" xml:space="preserve">
     <value>&amp;About</value>
@@ -2914,19 +2923,19 @@
     <value>Legend</value>
   </data>
   <data name="massErrorTargetsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>168, 22</value>
+    <value>169, 22</value>
   </data>
   <data name="massErrorTargetsContextMenuItem.Text" xml:space="preserve">
     <value>Targets</value>
   </data>
   <data name="massErrorTargets1FDRContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>168, 22</value>
+    <value>169, 22</value>
   </data>
   <data name="massErrorTargets1FDRContextMenuItem.Text" xml:space="preserve">
     <value>Targets at 1% FDR</value>
   </data>
   <data name="massErrorDecoysContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>168, 22</value>
+    <value>169, 22</value>
   </data>
   <data name="massErrorDecoysContextMenuItem.Text" xml:space="preserve">
     <value>Decoys</value>
@@ -5454,6 +5463,18 @@
   <data name="&gt;&gt;issuesMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;checkForUpdatesSeparator.Name" xml:space="preserve">
+    <value>checkForUpdatesSeparator</value>
+  </data>
+  <data name="&gt;&gt;checkForUpdatesSeparator.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;checkForUpdatesMenuItem.Name" xml:space="preserve">
+    <value>checkForUpdatesMenuItem</value>
+  </data>
+  <data name="&gt;&gt;checkForUpdatesMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;toolStripSeparator29.Name" xml:space="preserve">
     <value>toolStripSeparator29</value>
   </data>
@@ -5626,6 +5647,6 @@
     <value>SkylineWindow</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

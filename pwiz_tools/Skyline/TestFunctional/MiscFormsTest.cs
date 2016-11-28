@@ -72,11 +72,9 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsFalse(ReportShutdownDlg.HadUnexpectedShutdown(true));
 
             // Show upgrade dialog
-            using (var dlg = new UpgradeDlg(Program.LICENSE_VERSION_CURRENT - 1))
+            using (var dlg = new UpgradeLicenseDlg(Program.LICENSE_VERSION_CURRENT - 1))
             {
-                RunDlg<UpgradeDlg>(
-                    () => dlg.ShowDialog(),
-                    d => d.Close());
+                RunDlg<UpgradeLicenseDlg>(() => dlg.ShowDialog(), d => d.Close());
             }
 
             // Show import retry dialog (requires some extra work to avoid blocking the counting)

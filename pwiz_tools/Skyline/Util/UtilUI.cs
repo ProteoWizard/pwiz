@@ -267,6 +267,28 @@ namespace pwiz.Skyline.Util
             }
         }
 
+        private const string SKYLINE_SITE_ROOT = "https://skyline.ms";
+
+        public static string GetSkylineLink(string linkRelative)
+        {
+            return SKYLINE_SITE_ROOT + linkRelative;
+        }
+
+        public static void OpenSkylineLink(IWin32Window parent, string linkRelative)
+        {
+            OpenLink(parent, GetSkylineLink(linkRelative));
+        }
+
+        public static string GetSkylineShortLink(string shortName)
+        {
+            return GetSkylineLink("/" + shortName + ".url");  // Not L10N
+        }
+
+        public static void OpenSkylineShortLink(IWin32Window parent, string shortName)
+        {
+            OpenLink(parent, GetSkylineShortLink(shortName));
+        }
+
         /// <summary>
         /// Shows a form with a link in it that allows a user to continue attempting failed link navigation
         /// </summary>

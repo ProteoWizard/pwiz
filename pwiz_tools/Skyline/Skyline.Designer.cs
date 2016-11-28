@@ -445,6 +445,8 @@ namespace pwiz.Skyline
             this.tutorialsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.supportMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.issuesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.checkForUpdatesSeparator = new System.Windows.Forms.ToolStripSeparator();
+            this.checkForUpdatesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator29 = new System.Windows.Forms.ToolStripSeparator();
             this.aboutMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenuMassErrors = new System.Windows.Forms.ContextMenuStrip(this.components);
@@ -3375,6 +3377,8 @@ namespace pwiz.Skyline
             this.tutorialsMenuItem,
             this.supportMenuItem,
             this.issuesMenuItem,
+            this.checkForUpdatesSeparator,
+            this.checkForUpdatesMenuItem,
             this.toolStripSeparator29,
             this.aboutMenuItem});
             this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
@@ -3409,6 +3413,17 @@ namespace pwiz.Skyline
             this.issuesMenuItem.Name = "issuesMenuItem";
             resources.ApplyResources(this.issuesMenuItem, "issuesMenuItem");
             this.issuesMenuItem.Click += new System.EventHandler(this.issuesMenuItem_Click);
+            // 
+            // checkForUpdatesSeparator
+            // 
+            this.checkForUpdatesSeparator.Name = "checkForUpdatesSeparator";
+            resources.ApplyResources(this.checkForUpdatesSeparator, "checkForUpdatesSeparator");
+            // 
+            // checkForUpdatesMenuItem
+            // 
+            this.checkForUpdatesMenuItem.Name = "checkForUpdatesMenuItem";
+            resources.ApplyResources(this.checkForUpdatesMenuItem, "checkForUpdatesMenuItem");
+            this.checkForUpdatesMenuItem.Click += new System.EventHandler(this.checkForUpdatesMenuItem_Click);
             // 
             // toolStripSeparator29
             // 
@@ -4086,6 +4101,8 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem massErrorTargets1FDRContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem surrogateStandardMenuItem;
         private System.Windows.Forms.ToolStripMenuItem surrogateStandardContextMenuItem;
+        private System.Windows.Forms.ToolStripSeparator checkForUpdatesSeparator;
+        private System.Windows.Forms.ToolStripMenuItem checkForUpdatesMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exportSpectralLibraryMenuItem;
     }
 }

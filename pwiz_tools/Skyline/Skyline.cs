@@ -165,6 +165,8 @@ namespace pwiz.Skyline
             _proteinMetadataManager.ProgressUpdateEvent += UpdateProgress;
             _proteinMetadataManager.Register(this);
 
+            checkForUpdatesMenuItem.Visible =
+                checkForUpdatesSeparator.Visible = ApplicationDeployment.IsNetworkDeployed;
 
             // Begin ToolStore check for updates to currently installed tools
             ActionUtil.RunAsync(() => ToolStoreUtil.CheckForUpdates(Settings.Default.ToolList.ToArray()), "Check for tool updates");    // Not L10N
@@ -287,26 +289,7 @@ namespace pwiz.Skyline
 
         protected override void OnHandleCreated(EventArgs e)
         {
-            if (ApplicationDeployment.IsNetworkDeployed)
-            {
-                try
-                {
-                    var appDeployment = ApplicationDeployment.CurrentDeployment;
-                    if (appDeployment != null)
-                    {
-                        appDeployment.CheckForUpdateAsync();
-                    }
-                }
-                catch (DeploymentDownloadException)
-                {
-                }
-                catch (InvalidDeploymentException)
-                {
-                }
-                catch (InvalidOperationException)
-                {
-                }
-            }
+            UpgradeManager.CheckForUpdateAsync(this);
 
             base.OnHandleCreated(e);
         }
@@ -3685,6 +3668,21 @@ namespace pwiz.Skyline
         private void issuesMenuItem_Click(object sender, EventArgs e)
         {
             WebHelpers.OpenLink(this, "http://proteome.gs.washington.edu/software/Skyline/issues.html"); // Not L10N
+        }
+
+        private void checkForUpdatesMenuItem_Click(object sender, EventArgs e)
+        {
+            CheckForUpdate();
+        }
+
+        public void CheckForUpdate()
+        {
+            // Make sure the document is saved before doing this since it could
+            // restart the application
+            if (Dirty)
+                SaveDocument();
+
+            UpgradeManager.CheckForUpdateAsync(this, false);
         }
 
         private void aboutMenuItem_Click(object sender, EventArgs e)

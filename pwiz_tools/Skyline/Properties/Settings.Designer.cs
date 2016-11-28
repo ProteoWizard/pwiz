@@ -2313,5 +2313,17 @@ namespace pwiz.Skyline.Properties {
                 this["ShowMassErrorLegend"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool UpdateCheckAtStartup {
+            get {
+                return ((bool)(this["UpdateCheckAtStartup"]));
+            }
+            set {
+                this["UpdateCheckAtStartup"] = value;
+            }
+        }
     }
 }

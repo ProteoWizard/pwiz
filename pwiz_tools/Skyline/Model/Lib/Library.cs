@@ -1768,8 +1768,10 @@ namespace pwiz.Skyline.Model.Lib
         private readonly byte[] _key;
 
         public LibKey(string sequence, int charge)
-            : this(Encoding.UTF8.GetBytes(sequence), 0, sequence.Length, charge)
         {
+            _key = new byte[sequence.Length + 1];
+            _key[0] = (byte)charge;
+            Encoding.ASCII.GetBytes(sequence, 0, sequence.Length, _key, 1);
         }
 
         public LibKey(byte[] sequence, int start, int len, int charge)

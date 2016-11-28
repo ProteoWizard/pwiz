@@ -46,8 +46,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>10061</ApplicationRevision>
-    <ApplicationVersion>3.5.9.10061</ApplicationVersion>
+    <ApplicationRevision>10165</ApplicationRevision>
+    <ApplicationVersion>3.6.1.10165</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -262,8 +262,14 @@
     <Compile Include="Alerts\UpgradeDlg.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Alerts\UpgradeDlg.designer.cs">
+    <Compile Include="Alerts\UpgradeDlg.Designer.cs">
       <DependentUpon>UpgradeDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Alerts\UpgradeLicenseDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Alerts\UpgradeLicenseDlg.designer.cs">
+      <DependentUpon>UpgradeLicenseDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="AlgLib\alglibinternal.cs" />
     <Compile Include="AlgLib\alglibmisc.cs" />
@@ -1608,12 +1614,15 @@
     <EmbeddedResource Include="Alerts\SpectrumLibraryInfoDlg.zh-CHS.resx">
       <DependentUpon>SpectrumLibraryInfoDlg.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Alerts\UpgradeDlg.ja.resx">
+    <EmbeddedResource Include="Alerts\UpgradeDlg.resx">
       <DependentUpon>UpgradeDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\UpgradeLicenseDlg.ja.resx">
+      <DependentUpon>UpgradeLicenseDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Alerts\UpgradeDlg.zh-CHS.resx">
-      <DependentUpon>UpgradeDlg.cs</DependentUpon>
+    <EmbeddedResource Include="Alerts\UpgradeLicenseDlg.zh-CHS.resx">
+      <DependentUpon>UpgradeLicenseDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\ColumnChooser.ja.resx">
@@ -3099,6 +3108,7 @@
     <Compile Include="ToolsUI\ToolUpdatesDlg.Designer.cs">
       <DependentUpon>ToolUpdatesDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="UpgradeManager.cs" />
     <Compile Include="Util\AxisLabelScaler.cs" />
     <Compile Include="Util\BackgroundEventThreads.cs" />
     <Compile Include="Util\BioMassCalc.cs" />
@@ -3506,8 +3516,8 @@
     <EmbeddedResource Include="Alerts\SpectrumLibraryInfoDlg.resx">
       <DependentUpon>SpectrumLibraryInfoDlg.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Alerts\UpgradeDlg.resx">
-      <DependentUpon>UpgradeDlg.cs</DependentUpon>
+    <EmbeddedResource Include="Alerts\UpgradeLicenseDlg.resx">
+      <DependentUpon>UpgradeLicenseDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\ColumnChooser.resx">

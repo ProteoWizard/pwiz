@@ -102,6 +102,13 @@ namespace pwiz.Skyline.Controls.Startup
             PopulateTutorialPanel();
         }
 
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            UpgradeManager.CheckForUpdateAsync(this);
+
+            base.OnHandleCreated(e);
+        }
+
         public StartupAction Action { get; private set; }
        
         private void PopulateLeftPanel()

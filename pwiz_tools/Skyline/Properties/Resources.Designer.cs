@@ -27315,6 +27315,60 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Maybe &amp;Later.
+        /// </summary>
+        public static string UpgradeDlg_cbAtStartup_CheckedChanged_Maybe__Later {
+            get {
+                return ResourceManager.GetString("UpgradeDlg_cbAtStartup_CheckedChanged_Maybe__Later", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No update was found..
+        /// </summary>
+        public static string UpgradeDlg_UpgradeDlg_No_update_was_found_ {
+            get {
+                return ResourceManager.GetString("UpgradeDlg_UpgradeDlg_No_update_was_found_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Upgrading to {0} (downloading {1} of {2}).
+        /// </summary>
+        public static string UpgradeManager_GetProgressMessage_Upgrading_to__0___downloading__1__of__2__ {
+            get {
+                return ResourceManager.GetString("UpgradeManager_GetProgressMessage_Upgrading_to__0___downloading__1__of__2__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed attempting to check for an upgrade..
+        /// </summary>
+        public static string UpgradeManager_updateCheck_Complete_Failed_attempting_to_check_for_an_upgrade_ {
+            get {
+                return ResourceManager.GetString("UpgradeManager_updateCheck_Complete_Failed_attempting_to_check_for_an_upgrade_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed attempting to upgrade..
+        /// </summary>
+        public static string UpgradeManager_updateCheck_Complete_Failed_attempting_to_upgrade_ {
+            get {
+                return ResourceManager.GetString("UpgradeManager_updateCheck_Complete_Failed_attempting_to_upgrade_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Upgrading {0}.
+        /// </summary>
+        public static string UpgradeManager_updateCheck_Complete_Upgrading__0_ {
+            get {
+                return ResourceManager.GetString("UpgradeManager_updateCheck_Complete_Upgrading__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failure uncompressing data..
         /// </summary>
         public static string UtilDB_Uncompress_Failure_uncompressing_data {
