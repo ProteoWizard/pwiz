@@ -267,7 +267,7 @@ namespace pwiz.Skyline.Util
             }
         }
 
-        private const string SKYLINE_SITE_ROOT = "https://skyline.ms";
+        private const string SKYLINE_SITE_ROOT = "https://skyline.ms"; // Not L10N
 
         public static string GetSkylineLink(string linkRelative)
         {
