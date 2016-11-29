@@ -241,14 +241,14 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ABI::spectrum(size_t index, DetailLevel d
             BinaryDataArrayPtr mzArray = result->getMZArray();
             BinaryDataArrayPtr intensityArray = result->getIntensityArray();
 
-            spectrum->getData(doCentroid, mzArray->data, intensityArray->data);
+            spectrum->getData(doCentroid, mzArray->data, intensityArray->data, config_.ignoreZeroIntensityPoints);
             if (doCentroid)
                 result->set(MS_profile_spectrum); // let SpectrumList_PeakPicker know this was a profile spectrum
         }
 
         // This forces the WIFF reader to get the data, making full metadata
         // nearly equivalent in performance to getting binary.
-        result->defaultArrayLength = spectrum->getDataSize(doCentroid);
+        result->defaultArrayLength = spectrum->getDataSize(doCentroid, config_.ignoreZeroIntensityPoints);
     }
 
     return result;

@@ -41,12 +41,14 @@ several different ways, recording the time taken to iterate each way.
 */
 
 
-void enumerateSpectra(const string& filename, bool getBinaryData, const vector<string>& filters)
+void enumerateSpectra(const string& filename, bool getBinaryData, const vector<string>& filters, const Reader::Config& config)
 {
     bpt::ptime start = bpt::microsec_clock::local_time();
 
     FullReaderList readers; // for vendor Reader support
-    MSDataFile msd(filename, &readers);
+    vector<MSDataPtr> results;
+    readers.read(filename, results, config);
+    MSData& msd = *results[0];
 
     if (!msd.run.spectrumListPtr.get() && !msd.run.chromatogramListPtr.get())
         throw runtime_error("[msbenchmark] No spectra or chromatograms found.");
@@ -61,9 +63,9 @@ void enumerateSpectra(const string& filename, bool getBinaryData, const vector<s
     bpt::ptime stop = bpt::microsec_clock::local_time();
     cout << "Time to open file: " << bpt::to_simple_string(stop - start) << endl;
 
-    SpectrumWorkerThreads multithreadedSpectrumList(sl);
-
     start = bpt::microsec_clock::local_time();
+
+    SpectrumWorkerThreads multithreadedSpectrumList(sl);
 
     size_t totalArrayLength = 0;
     for (size_t i=0, size=sl.size(); i != size; ++i)
@@ -241,13 +243,13 @@ enum BenchmarkMode
 };
 
 
-void benchmark(const char* filename, BenchmarkMode benchmarkMode, bool getBinaryData, const vector<string>& filters)
+void benchmark(const char* filename, BenchmarkMode benchmarkMode, bool getBinaryData, const vector<string>& filters, const Reader::Config& config)
 {
     switch (benchmarkMode)
     {
         default:
         case BenchmarkMode_Spectra:
-            enumerateSpectra(filename, getBinaryData, filters);
+            enumerateSpectra(filename, getBinaryData, filters, config);
             break;
         case BenchmarkMode_Chromatograms:
             enumerateChromatograms(filename, getBinaryData);
@@ -301,6 +303,8 @@ int main(int argc, char* argv[])
         else
             throw runtime_error("[msbenchmark] Second argument must be \"binary\" or \"no-binary\"");
 
+        Reader::Config readerConfig;
+
         vector<string> filters;
         for (int i = 4; i < argc; i += 2)
             if (argv[i] == string("--filter"))
@@ -309,10 +313,20 @@ int main(int argc, char* argv[])
                     throw runtime_error("[msbenchmark] no options passed to --filter parameter");
                 filters.push_back(argv[i + 1]);
             }
+            else if (argv[i] == string("--ignoreZeroIntensityPoints"))
+            {
+                readerConfig.ignoreZeroIntensityPoints = true;
+                --i;
+            }
+            else if (argv[i] == string("--acceptZeroLengthSpectra"))
+            {
+                readerConfig.acceptZeroLengthSpectra = true;
+                --i;
+            }
             else
                 throw runtime_error("[msbenchmark] unknown option \"" + string(argv[i]) + "\"");
 
-        benchmark(filename, benchmarkMode, getBinaryData, filters);
+        benchmark(filename, benchmarkMode, getBinaryData, filters, readerConfig);
 
         return 0;
     }

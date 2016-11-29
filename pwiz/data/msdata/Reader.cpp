@@ -40,6 +40,7 @@ Reader::Config::Config()
     : simAsSpectra(false)
     , srmAsSpectra(false)
     , acceptZeroLengthSpectra(false)
+    , ignoreZeroIntensityPoints(false)
     , combineIonMobilitySpectra(false)
     , unknownInstrumentIsError(false)
     , adjustUnknownTimeZonesToHostTimeZone(true)
@@ -52,6 +53,7 @@ Reader::Config::Config(const Config& rhs)
     simAsSpectra = rhs.simAsSpectra;
     srmAsSpectra = rhs.srmAsSpectra;
 	acceptZeroLengthSpectra = rhs.acceptZeroLengthSpectra;
+    ignoreZeroIntensityPoints = rhs.ignoreZeroIntensityPoints;
     combineIonMobilitySpectra = rhs.combineIonMobilitySpectra;
     unknownInstrumentIsError = rhs.unknownInstrumentIsError;
     adjustUnknownTimeZonesToHostTimeZone = rhs.adjustUnknownTimeZonesToHostTimeZone;

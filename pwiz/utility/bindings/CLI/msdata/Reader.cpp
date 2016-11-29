@@ -75,7 +75,10 @@ static void copyReaderConfig(pwiz::msdata::Reader::Config& config, ReaderConfig^
     config.simAsSpectra = readerConfig->simAsSpectra;
     config.srmAsSpectra = readerConfig->srmAsSpectra;
     config.acceptZeroLengthSpectra = readerConfig->acceptZeroLengthSpectra;
+    config.ignoreZeroIntensityPoints = readerConfig->ignoreZeroIntensityPoints;
     config.combineIonMobilitySpectra = readerConfig->combineIonMobilitySpectra;
+    config.unknownInstrumentIsError = readerConfig->unknownInstrumentIsError;
+    config.adjustUnknownTimeZonesToHostTimeZone = readerConfig->adjustUnknownTimeZonesToHostTimeZone;
 }
 
 void Reader::read(System::String^ filename, System::String^ head, MSData^ result, int sampleIndex, ReaderConfig^ readerConfig)

@@ -139,8 +139,8 @@ struct PWIZ_API_DECL Spectrum
     virtual double getStartTime() const = 0;
 
     virtual bool getDataIsContinuous() const = 0;
-    virtual size_t getDataSize(bool doCentroid) const = 0;
-    virtual void getData(bool doCentroid, std::vector<double>& mz, std::vector<double>& intensities) const = 0;
+    virtual size_t getDataSize(bool doCentroid, bool ignoreZeroIntensityPoints = false) const = 0;
+    virtual void getData(bool doCentroid, std::vector<double>& mz, std::vector<double>& intensities, bool ignoreZeroIntensityPoints = false) const = 0;
 
     virtual double getSumY() const = 0;
     virtual double getBasePeakX() const = 0;

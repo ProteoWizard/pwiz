@@ -42,12 +42,17 @@ class PWIZ_API_DECL Reader
     /// Reader configuration
     struct PWIZ_API_DECL Config
     {
-        /// when true, sets certain vendor readers to produce SIM/SRM transitions as spectra instead of chromatograms
+        /// when true, sets certain vendor readers to produce SIM transitions as spectra instead of chromatograms
         bool simAsSpectra;
+
+        /// when true, sets certain vendor readers to produce SRM transitions as spectra instead of chromatograms
         bool srmAsSpectra;
 
-		/// when true, allows for skipping 0 length checks (and thus skip re-reading data for ABI)
+		/// when true, allows for skipping 0 length checks (and thus skip re-reading data for Sciex)
 		bool acceptZeroLengthSpectra;
+
+        /// when true, allows certain vendor readers to produce profile data without zero intensity samples flanking each peak profile
+        bool ignoreZeroIntensityPoints;
 
         /// when true, all drift bins/scans in a frame/block are written in combined form instead of as individual spectra
         bool combineIonMobilitySpectra;
