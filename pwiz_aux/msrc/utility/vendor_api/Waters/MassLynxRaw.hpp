@@ -174,8 +174,17 @@ struct PWIZ_API_DECL RawData
         return findItr->second;
     }
 
+    bool LockMassCanBeApplied() const
+    {
+        bool canBeApplied;
+        LockMass.CanApplyLockMassCorrection(canBeApplied);
+        return canBeApplied;
+    }
+
     bool LockMassIsApplied() const
     {
+        if (!LockMassCanBeApplied())
+            return false;
         bool isApplied;
         LockMass.GetLockMassCorrectionApplied(isApplied);
         return isApplied;
