@@ -174,6 +174,13 @@ struct PWIZ_API_DECL RawData
         return findItr->second;
     }
 
+    bool LockMassIsApplied() const
+    {
+        bool isApplied;
+        LockMass.GetLockMassCorrectionApplied(isApplied);
+        return isApplied;
+    }
+
     bool ApplyLockMass(double mz, double tolerance)
     {
         const float MZ_EPSILON = 1e-5f;
@@ -186,9 +193,7 @@ struct PWIZ_API_DECL RawData
         //if (!canApply)
         //    return false; // lockmass correction not available
 
-        bool isApplied;
-        LockMass.GetLockMassCorrectionApplied(isApplied);
-        if (isApplied)
+        if (LockMassIsApplied())
         {
             float appliedMz, appliedTolerance;
             LockMass.GetLockMassValues(appliedMz, appliedTolerance);
@@ -202,7 +207,13 @@ struct PWIZ_API_DECL RawData
         return true;
     }
 
-    void RemoveLockMass() { LockMass.RemoveLockMassCorrection(); }
+    void RemoveLockMass()
+    {
+        if (LockMassIsApplied())
+        {
+            LockMass.RemoveLockMassCorrection();  // This is quite expensive in time and memory if no lockmass has actually been applied
+        }
+    }
 
     private:
     MassLynxRawLockMass LockMass;
