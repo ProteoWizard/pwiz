@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -257,7 +257,7 @@
     <value>尝试过滤冗余库{0}至{1}失败</value>
   </data>
   <data name="Transition_Validate_Precursor_and_product_ion_polarity_do_not_agree_" xml:space="preserve">
-    <value>母离子和子离子不匹配。</value>
+    <value>母离子和子离子极性不匹配。</value>
   </data>
   <data name="CommandLine_SetFullScanSettings_Changing_full_scan_product_resolving_power_to__0__at__1__" xml:space="preserve">
     <value>将全扫描子离子分辨力更改为在 {1} 的 {0}。</value>
@@ -500,7 +500,7 @@
     <value>创建(&amp;C)…</value>
   </data>
   <data name="PasteDlg_ReadPrecursorOrProductColumns_Error_on_line__0___Precursor_m_z__1__does_not_agree_with_value__2__as_calculated_from_ion_formula_and_charge_state__delta____3___Transition_Settings___Instrument___Method_match_tolerance_m_z____4_____Correct_the_m_z_value_in_the_table__or_leave_it_blank_and_Skyline_will_calculate_it_for_you_" xml:space="preserve">
-    <value>第 {0} 行上的错误： 母离子质荷比 {1} 与从离子公式和电荷状态（delta = {3}，离子对设置 | 仪器 | 方法匹配耐受性质荷比 = {4}）计算的值 {2} 不匹配。 更正表格中的 m/z 值，或者将其留为空白，Skyline 将会为您进行计算。</value>
+    <value>第 {0} 行上的错误： 母离子质荷比 {1} 与从离子公式和电荷状态（delta = {3}，离子对设置 | 仪器 | 方法匹配耐受性质荷比 = {4}）计算的值 {2} 不匹配。 更正表格中的质荷比值，或者将其留为空白，Skyline将会为您进行计算。</value>
   </data>
   <data name="Pivoter_QualifyColumnInfo_AreaRatio" xml:space="preserve">
     <value>面积比率</value>
@@ -1399,7 +1399,7 @@
     <value>文件{0}无法被打开。{1}</value>
   </data>
   <data name="PasteDlg_ReadPrecursorOrProductColumns_Error_on_line__0___Product_m_z__1__does_not_agree_with_value__2__as_calculated_from_ion_formula_and_charge_state__delta____3___Transition_Settings___Instrument___Method_match_tolerance_m_z____4_____Correct_the_m_z_value_in_the_table__or_leave_it_blank_and_Skyline_will_calculate_it_for_you_" xml:space="preserve">
-    <value>第 {0} 行上的错误： 子离子质荷比 {1} 与从离子公式和电荷状态（delta = {3}，离子对设置 | 仪器 | 方法匹配耐受性质荷比 = {4}）计算的值 {2} 不一致。 更正表格中的 m/z 值，或者将其留为空白，Skyline 将会为您进行计算。</value>
+    <value>第 {0} 行上的错误： 子离子质荷比 {1} 与从离子公式和电荷状态（delta = {3}，离子对设置 | 仪器 | 方法匹配耐受性质荷比 = {4}）计算的值 {2} 不一致。 更正表格中的质荷比值，或者将其留为空白，Skyline将会为您进行计算。</value>
   </data>
   <data name="EditIrtCalcDlg_OkDialog_Please_use_a_full_path_to_a_database_file_for_the_iRT_calculator" xml:space="preserve">
     <value>请针对 iRT 计算器使用通向数据库文件的完整路径。</value>
@@ -3828,7 +3828,7 @@
     <value>文件可能已损坏或丢失，或者正确的库可能未安装。</value>
   </data>
   <data name="BlibDb_CreateLibraryFromSpectra_Creating_spectral_library_for_imported_transition_list" xml:space="preserve">
-    <value>针对导入的离子对列表创建谱图库</value>
+    <value>正在针对导入的离子对列表创建谱图库</value>
   </data>
   <data name="ImportResultsControl_FindResultsFiles_Searching_for_Results_Files" xml:space="preserve">
     <value>搜索结果文件</value>
@@ -4246,7 +4246,7 @@
     <value>最大中性丢失数 {0} 必须在 {1} 和 {2} 之间</value>
   </data>
   <data name="SkippedReportErrorDlg_btnOK_Click_No_Email" xml:space="preserve">
-    <value>请提供电子邮件地址以便如果我们就该错误有任何其他问题时联系您。 
+    <value>请提供电子邮件地址以便我们对该错误有任何其他问题时联系您。 
 如果您愿意，您可以选择匿名报告。</value>
   </data>
   <data name="ExportMethodDlg_ValidateSettings_Cannot_export_medium_tune_transition_list__The_following_precursors_are_missing_rough_tune_results_" xml:space="preserve">
@@ -4310,7 +4310,7 @@
     <value>斜率</value>
   </data>
   <data name="CommandLine_ImportTransitionList_Adding__0__spectra_to_the_library__1_" xml:space="preserve">
-    <value>正在添加 {0} 光谱到库 {1}</value>
+    <value>正在添加 {0} 谱图到库 {1}</value>
   </data>
   <data name="CollisionalCrossSectionGridViewDriverBase_ValidateRow_The_collisional_cross_section__0__must_be_greater_than_zero_on_line__1__" xml:space="preserve">
     <value>第 {1} 行上的碰撞横截面 {0} 必须大于零。</value>
@@ -5920,7 +5920,7 @@
     <value>回归的时间</value>
   </data>
   <data name="BiblioSpecLiteBuilder_AmbiguousMatches_The_library_built_successfully__Spectra_matching_the_following_peptides_had_multiple_ambiguous_peptide_matches_and_were_excluded_" xml:space="preserve">
-    <value>成功建立库。与以下肽段匹配的光谱曾经有多个模糊肽段匹配，已经被排除：</value>
+    <value>成功建立库。与以下肽段匹配的谱图曾经有多个模糊肽段匹配，已经被排除：</value>
   </data>
   <data name="TransitionGroupChromInfoCalculator_AddChromInfo_Grouping_transitions_from_file__0__with_file__1__" xml:space="preserve">
     <value>借助文件{1}从文件{0}分组离子对</value>
@@ -8931,7 +8931,7 @@
     <value>背景</value>
   </data>
   <data name="CommandLine_ImportTransitionList_Error__Imported_assay_library__0__lacks_iRT_values_" xml:space="preserve">
-    <value>错误： 导入的分析库{0}缺少离子丰度 iRT 值。</value>
+    <value>错误： 导入的分析库{0}缺少 iRT 值。</value>
   </data>
   <data name="SkylineWindow_FindIrtDatabase_The_database_file_specified_could_not_be_opened" xml:space="preserve">
     <value>指定的数据库文件无法打开：</value>
@@ -9006,7 +9006,7 @@
     <value>没有找到使用导入的 fasta 文件的匹配。</value>
   </data>
   <data name="AssociateProteinsDlg_UseBackgroundProteome_No_matches_were_found_using_the_background_proteome_" xml:space="preserve">
-    <value>没有找到使用背景蛋白质组的匹配。</value>
+    <value>没有从背景蛋白质组中找到匹配。</value>
   </data>
   <data name="AssociateProteinsDlg_UseFastaFile_There_was_an_error_reading_from_the_file_" xml:space="preserve">
     <value>从文件读取时发生错误。</value>
@@ -9085,7 +9085,7 @@
     <value>未找到针对诱饵的肽段母离子模型。</value>
   </data>
   <data name="CommandLine_AddDecoys_Error__Attempting_to_add_decoys_to_document_with_decoys_" xml:space="preserve">
-    <value>错误： 尝试对有诱饵的文档添加诱饵。</value>
+    <value>错误： 正在尝试对有诱饵的文档添加诱饵。</value>
   </data>
   <data name="CommandLine_AddDecoys_Error_The_number_of_peptides" xml:space="preserve">
     <value>错误： 肽段数目 {0} 必须小于针对诱饵 {1} 的肽段母离子模型数目，或使用 {2}={3} 诱饵生成方法。</value>
@@ -9106,7 +9106,7 @@
     <value>本文档有 MIDAS 库。您想要从它建立谱图库吗？</value>
   </data>
   <data name="PeptideSettingsUI_ShowBuildLibraryDlg_Finishing_up_building_library" xml:space="preserve">
-    <value>完成建立库。</value>
+    <value>正在完成建立库。</value>
   </data>
   <data name="StandardType_SURROGATE_STANDARD_Surrogate_Standard" xml:space="preserve">
     <value>替代标准</value>
@@ -9162,7 +9162,7 @@
     <value>公式帮助</value>
   </data>
   <data name="FormulaBox_FormulaHelpText_Formulas_are_written_in_standard_chemical_notation__e_g___C2H6O____Heavy_isotopes_are_indicated_by_a_prime__e_g__C__for_C13__or_double_prime_for_less_abundant_stable_iostopes__e_g__O__for_O17__O__for_O18__" xml:space="preserve">
-    <value>以标准化学表示法写入公式，例如“C2H6O”。 重同位素以素数表示（例如，C' 表示 C13），双素数表示丰富度较低的稳定同位素（例如，O" 表示 O17，O' 表示 O18）。</value>
+    <value>公式以标准化学表示法写入，例如“C2H6O”。 重同位素以素数表示（例如，C' 表示 C13），双素数表示丰富度较低的稳定同位素（例如，O" 表示 O17，O' 表示 O18）。</value>
   </data>
   <data name="PasteDlg_btnTransitionListHelp_Click_Transition_List_Help" xml:space="preserve">
     <value>离子对列表帮助</value>
@@ -9170,14 +9170,14 @@
   <data name="PasteDlg_btnTransitionListHelp_Click_" xml:space="preserve">
     <value>使用此窗口最简易的方法是从 Excel（或如果数据是 CSV 格式，则使用任何文本编辑器）复制并将其粘贴到网格。
     
-请注意，您可以在 Skyline 中通过向左或右拖动列标题调整列顺序。 对于小的分子，您还可以选择以“列...”按钮启用哪些列。
+请注意，您可以在 Skyline 中通过向左或右拖动列标题调整列顺序。 对于小分子，您还可以选择以“列...”按钮启用哪些列。
 
 大多数肽离子对列表可以用“文件|导入|离子对列表...”菜单项目导入或甚至直接粘贴到“目标”窗口。如果小分子离子对列表使用以下名称作为列标题，您也可以对其进行此操作： </value>
   </data>
   <data name="PasteDlg_btnTransitionListHelp_Click_2_" xml:space="preserve">
     <value>在小分子离子公式上注释：
 
-如果您的离子对列表格式将公式和加合物汇总在单一列（例如“C8H10N4O2[M+Na]”）中，那么使用“离子公式”列，而丢弃“加合物”列。 如果您的离子对列表将中和公式和加合物放置在不同的列中，那么对中和公式使用“离子公式”，而对加合物使用“加合物”列。</value>
+如果您的离子对列表格式将公式和加合物汇总在单一列（例如“C8H10N4O2[M+Na]”）中，那么使用“离子公式”列，而丢弃“加合物”列。 如果您的离子对列表将中性公式和加合物放置在不同的列中，那么对中性公式使用“离子公式”，而对加合物使用“加合物”列。</value>
   </data>
   <data name="DriftTimeWindowWidthCalculator_Validate_Peak_width_must_be_non_negative_" xml:space="preserve">
     <value>峰宽度不得为负数。</value>
@@ -9189,13 +9189,13 @@
     <value>只能通过修改 iRT 计算器更改 iRT 标准</value>
   </data>
   <data name="RatioToSurrogate_ToString_Ratio_to_surrogate__0_" xml:space="preserve">
-    <value>替代比例 {0}</value>
+    <value>与替代的比例 {0}</value>
   </data>
   <data name="RatioToSurrogate_ToString_Ratio_to_surrogate__0____1__" xml:space="preserve">
-    <value>替代比例 {0} ({1})</value>
+    <value>与替代的比例 {0} ({1})</value>
   </data>
   <data name="ChromCollector_ReleaseChromatogram_Intensities___0___and_mass_errors___1___disagree_in_point_count_" xml:space="preserve">
-    <value>密度（{0}）和质量误差（{1}）在计数点上有差异。</value>
+    <value>强度（{0}）和质量误差（{1}）在计数点上有差异。</value>
   </data>
   <data name="MassErrorReplicateGraphPane_UpdateGraph_Mass_Error_No_Ppm" xml:space="preserve">
     <value>质量误差</value>
@@ -9207,7 +9207,7 @@
     <value>与峰面积计算 {1} 中的离子对 {0} 相冲突。您是否是指使用不同的母离子电荷状态或标记？</value>
   </data>
     <data name="IsolationSchemeList_GetDefaults_Results_only" xml:space="preserve">
-    <value>仅结果</value>
+    <value>仅有结果</value>
   </data>
     <data name="IsolationSchemeList_GetDefaults_Results__0_5_margin_" xml:space="preserve">
     <value>结果（0.5 差异）</value>
@@ -9222,7 +9222,7 @@
     <value>已修复</value>
   </data>
     <data name="SpectrumFilter_CalcDiaIsolationValues_Unable_to_determine_isolation_width_for_the_scan_targeted_at__0_" xml:space="preserve">
-    <value>无法确定 {0} 定向扫描的隔离宽度</value>
+    <value>无法确定定向扫描为{0}的隔离宽度</value>
   </data>
     <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_mass_accuracy_to__0__ppm_" xml:space="preserve">
     <value>将全扫描母离子质量精确度更改为 {0} ppm。</value>

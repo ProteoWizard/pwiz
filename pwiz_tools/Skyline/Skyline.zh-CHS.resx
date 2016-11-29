@@ -2089,7 +2089,7 @@
     <value>131, 22</value>
   </data>
   <data name="extraLargeToolStripMenuItem.Text" xml:space="preserve">
-    <value>特大(&amp;X)</value>
+    <value>加大(&amp;X)</value>
   </data>
   <data name="textZoomToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>183, 22</value>
@@ -3004,7 +3004,7 @@
     <value>156, 22</value>
   </data>
   <data name="massErrorMassToChargContextMenuItem.Text" xml:space="preserve">
-    <value>电荷质量</value>
+    <value>质荷比</value>
   </data>
   <data name="massErrorXAxisContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>136, 22</value>

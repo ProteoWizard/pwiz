@@ -197,6 +197,6 @@
     <value>离子对面积总和</value>
   </data>
   <data name="SummarizationMethod_MEDIANPOLISH_Tukey_s_Median_Polish" xml:space="preserve">
-    <value>图基中位数平滑</value>
+    <value>Tukey 中位数平滑</value>
   </data>
 </root>

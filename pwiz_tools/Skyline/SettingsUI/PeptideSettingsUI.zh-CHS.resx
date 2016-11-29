@@ -1354,8 +1354,8 @@ W = (W0 + T*(Wmax-W0)/dtMax)
   </data>
   <data name="comboBoxPeptideUniquenessConstraint.ToolTip" xml:space="preserve">
     <value>“蛋白质”排除在背景蛋白质组中一种以上蛋白质出现的任何肽段。 
-“基因”排除在背景蛋白质组中一种以上基因蛋白质出现的任何肽段。 
-“物种”排除在背景蛋白质组中一种以上物种蛋白质出现的任何肽段。</value>
+“基因”排除在背景蛋白质组中由一种以上基因表达的蛋白质出现的任何肽段。 
+物种”排除在背景蛋白质组中一种以上物种的蛋白质出现的任何肽段。</value>
   </data>
   <data name="&gt;&gt;comboBoxPeptideUniquenessConstraint.Name" xml:space="preserve">
     <value>comboBoxPeptideUniquenessConstraint</value>
@@ -1388,7 +1388,7 @@ W = (W0 + T*(Wmax-W0)/dtMax)
     <value>6</value>
   </data>
   <data name="labelPeptideUniquenessConstraint.Text" xml:space="preserve">
-    <value>按以下方式强制肽段独特性(&amp;U)：</value>
+    <value>按以下方式强制肽段唯一性(&amp;U)：</value>
   </data>
   <data name="&gt;&gt;labelPeptideUniquenessConstraint.Name" xml:space="preserve">
     <value>labelPeptideUniquenessConstraint</value>

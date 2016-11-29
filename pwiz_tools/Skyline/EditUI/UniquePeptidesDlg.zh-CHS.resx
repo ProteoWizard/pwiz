@@ -181,7 +181,7 @@
     <value>蛋白质</value>
   </data>
   <data name="uniqueProteinsToolStripMenuItem.ToolTipText" xml:space="preserve">
-    <value>在背景蛋白质组中一种以上蛋白质中发现的任何肽除外</value>
+    <value>排除在背景蛋白质组中一种以上蛋白质中出现的肽段</value>
   </data>
   <data name="uniqueGenesToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>152, 22</value>
@@ -190,7 +190,7 @@
     <value>基因</value>
   </data>
   <data name="uniqueGenesToolStripMenuItem.ToolTipText" xml:space="preserve">
-    <value>在背景蛋白质组中的一种以上基因的蛋白质中发现的肽除外</value>
+    <value>排除在背景蛋白质组中由一种以上基因表达的蛋白质中出现的肽段</value>
   </data>
   <data name="uniqueSpeciesToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>152, 22</value>
@@ -199,7 +199,7 @@
     <value>物种</value>
   </data>
   <data name="uniqueSpeciesToolStripMenuItem.ToolTipText" xml:space="preserve">
-    <value>在背景蛋白质组中一种以上物种的蛋白质中发现的肽除外</value>
+    <value>排除在背景蛋白质组中一种以上物种的蛋白质中出现的肽段</value>
   </data>
   <data name="uniqueOnlyToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>236, 22</value>
