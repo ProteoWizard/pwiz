@@ -110,7 +110,10 @@ namespace pwiz.ProteowizardWrapper
             return id.StartsWith(PREFIX_SINGLE) || id.StartsWith(PREFIX_PRECURSOR);
         }
 
-        public MsDataFileImpl(string path, int sampleIndex = 0, LockMassParameters lockmassParameters = null, bool simAsSpectra = false, bool srmAsSpectra = false, bool acceptZeroLengthSpectra = true, bool requireVendorCentroidedMS1 = false, bool requireVendorCentroidedMS2 = false)
+        public MsDataFileImpl(string path, int sampleIndex = 0, LockMassParameters lockmassParameters = null,
+            bool simAsSpectra = false, bool srmAsSpectra = false, bool acceptZeroLengthSpectra = true,
+            bool requireVendorCentroidedMS1 = false, bool requireVendorCentroidedMS2 = false,
+            bool ignoreZeroIntensityPoints = false)
         {
             // see note above on enabling performance measurement
             _perf = PerfUtilFactory.CreatePerfUtil("MsDataFileImpl " + // Not L10N 
@@ -120,7 +123,13 @@ namespace pwiz.ProteowizardWrapper
             {
                 FilePath = path;
                 _msDataFile = new MSData();
-                _config = new ReaderConfig {simAsSpectra = simAsSpectra, srmAsSpectra = srmAsSpectra, acceptZeroLengthSpectra = acceptZeroLengthSpectra};
+                _config = new ReaderConfig
+                {
+                    simAsSpectra = simAsSpectra,
+                    srmAsSpectra = srmAsSpectra,
+                    acceptZeroLengthSpectra = acceptZeroLengthSpectra,
+                    ignoreZeroIntensityPoints = ignoreZeroIntensityPoints
+                };
                 _lockmassParameters = lockmassParameters;
                 FULL_READER_LIST.read(path, _msDataFile, sampleIndex, _config);
                 _requireVendorCentroidedMS1 = requireVendorCentroidedMS1;
