@@ -80,6 +80,7 @@ namespace pwiz.SkylineTestA
             TestPentaneAdduct("[M+2H]++", "C5H14", 2);
             TestPentaneAdduct("[M+DMSO+2H]++", "C7H20OS", 2);
             TestPentaneAdduct("[M+DMSO+2H]2+", "C7H20OS", 2);
+            TestPentaneAdduct("[M+HCOO]", "C6H13O2", -1);
             TestPentaneAdduct("[M+NOS]5+", "C5H12NOS", 5); // Not a real adduct, but be ready for adducts we just don't know about
             TestPentaneAdduct("[M+NOS]5", "C5H12NOS", 5); // Not a real adduct, but be ready for adducts we just don't know about
             TestPentaneAdduct("[M+NOS]5-", "C5H12NOS", -5); // Not a real adduct, but be ready for adducts we just don't know about

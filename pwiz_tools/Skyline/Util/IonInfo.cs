@@ -68,7 +68,8 @@ namespace pwiz.Skyline.Util
                {BioMassCalc.Br,-1},
                {BioMassCalc.Cl,-1},
                {BioMassCalc.F, -1},
-               {"CH3COO", -1}, // Not L10N
+               {"CH3COO", -1}, // Deprotonated Hac // Not L10N
+               {"HCOO", -1}, // Formate (deprotonated FA)   // Not L10N
                {"NH4",1} // Not L10N
             };
 
