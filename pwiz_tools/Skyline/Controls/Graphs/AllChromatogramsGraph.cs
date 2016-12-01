@@ -541,13 +541,20 @@ namespace pwiz.Skyline.Controls.Graphs
                 ProgressValue = 0
             })
             {
-                longWaitDlg.PerformWork(this, 800, progressMonitor =>
+                try
                 {
-                    using (var settingsChangeMonitor = new SrmSettingsChangeMonitor(progressMonitor, message, Program.MainWindow))
+                    longWaitDlg.PerformWork(this, 800, progressMonitor =>
                     {
-                        modifyAction(settingsChangeMonitor);
-                    }
-                });
+                        using (var settingsChangeMonitor = new SrmSettingsChangeMonitor(progressMonitor, message, Program.MainWindow))
+                        {
+                            modifyAction(settingsChangeMonitor);
+                        }
+                    });
+                }
+                catch (OperationCanceledException)
+                {
+                    // SrmSettingsChangeMonitor can throw OperationCancelledException without LongWaitDlg knowing about it.
+                }
             }
         }
 
