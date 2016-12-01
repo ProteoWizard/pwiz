@@ -71,109 +71,222 @@ BOOST_ENUM(GroupBy,
 typedef pair<string, int> SqlColumn;
 
 #define SHARED_QUANTATITIVE_COLUMNS \
-    (DistinctPeptides)(make_pair("COUNT(DISTINCT pi.Peptide)", SQLITE_INTEGER)) \
-    (DistinctMatches)(make_pair("COUNT(DISTINCT dm.DistinctMatchId)", SQLITE_INTEGER)) \
-    (FilteredSpectra)(make_pair("COUNT(DISTINCT psm.Spectrum)", SQLITE_INTEGER)) \
-    (PrecursorIntensity)(make_pair("IFNULL(SUM(DISTINCT xic.PeakIntensity), 0)", SQLITE_FLOAT)) \
-    (PrecursorArea)(make_pair("IFNULL(SUM(DISTINCT xic.PeakArea), 0)", SQLITE_FLOAT)) \
-    (PrecursorBestSNR)(make_pair("IFNULL(MAX(xic.PeakSNR), 0)", SQLITE_FLOAT)) \
-    (PrecursorMeanSNR)(make_pair("IFNULL(AVG(DISTINCT xic.PeakSNR), 0)", SQLITE_FLOAT)) \
-    (iTRAQ4plex)(make_pair("IFNULL(DISTINCT_DOUBLE_ARRAY_SUM(sq.iTRAQ_ReporterIonIntensities), 0)", SQLITE_BLOB)) \
-    (iTRAQ8plex)(make_pair("IFNULL(DISTINCT_DOUBLE_ARRAY_SUM(sq.iTRAQ_ReporterIonIntensities), 0)", SQLITE_BLOB)) \
-    (TMT2plex)(make_pair("IFNULL(DISTINCT_DOUBLE_ARRAY_SUM(sq.TMT_ReporterIonIntensities), 0)", SQLITE_BLOB)) \
-    (TMT6plex)(make_pair("IFNULL(DISTINCT_DOUBLE_ARRAY_SUM(sq.TMT_ReporterIonIntensities), 0)", SQLITE_BLOB)) \
-    (TMT10plex)(make_pair("IFNULL(DISTINCT_DOUBLE_ARRAY_SUM(sq.TMT_ReporterIonIntensities), 0)", SQLITE_BLOB)) \
-    (PivotMatchesByGroup)(make_pair("0", SQLITE_INTEGER)) \
-    (PivotMatchesBySource)(make_pair("0", SQLITE_INTEGER)) \
-    (PivotPeptidesByGroup)(make_pair("0", SQLITE_INTEGER)) \
-    (PivotPeptidesBySource)(make_pair("0", SQLITE_INTEGER)) \
-    (PivotSpectraByGroup)(make_pair("0", SQLITE_INTEGER)) \
-    (PivotSpectraBySource)(make_pair("0", SQLITE_INTEGER)) \
-    (PivotPrecursorIntensityByGroup)(make_pair("0", SQLITE_FLOAT)) \
-    (PivotPrecursorIntensityBySource)(make_pair("0", SQLITE_FLOAT)) \
-    (PivotPrecursorAreaByGroup)(make_pair("0", SQLITE_FLOAT)) \
-    (PivotPrecursorAreaBySource)(make_pair("0", SQLITE_FLOAT)) \
-    (PivotPrecursorBestSNRByGroup)(make_pair("0", SQLITE_FLOAT)) \
-    (PivotPrecursorBestSNRBySource)(make_pair("0", SQLITE_FLOAT)) \
-    (PivotPrecursorMeanSNRByGroup)(make_pair("0", SQLITE_FLOAT)) \
-    (PivotPrecursorMeanSNRBySource)(make_pair("0", SQLITE_FLOAT)) \
-    (PivotITRAQByGroup)(make_pair("0", SQLITE_BLOB)) \
-    (PivotITRAQBySource)(make_pair("0", SQLITE_BLOB)) \
-    (PivotTMTByGroup)(make_pair("0", SQLITE_BLOB)) \
-    (PivotTMTBySource)(make_pair("0", SQLITE_BLOB))
+    (DistinctPeptides) \
+    (DistinctMatches) \
+    (FilteredSpectra) \
+    (PrecursorIntensity) \
+    (PrecursorArea) \
+    (PrecursorBestSNR) \
+    (PrecursorMeanSNR) \
+    (iTRAQ4plex) \
+    (iTRAQ8plex) \
+    (TMT2plex) \
+    (TMT6plex) \
+    (TMT10plex) \
+    (PivotMatchesByGroup) \
+    (PivotMatchesBySource) \
+    (PivotPeptidesByGroup) \
+    (PivotPeptidesBySource) \
+    (PivotSpectraByGroup) \
+    (PivotSpectraBySource) \
+    (PivotPrecursorIntensityByGroup) \
+    (PivotPrecursorIntensityBySource) \
+    (PivotPrecursorAreaByGroup) \
+    (PivotPrecursorAreaBySource) \
+    (PivotPrecursorBestSNRByGroup) \
+    (PivotPrecursorBestSNRBySource) \
+    (PivotPrecursorMeanSNRByGroup) \
+    (PivotPrecursorMeanSNRBySource) \
+    (PivotITRAQByGroup) \
+    (PivotITRAQBySource) \
+    (PivotTMTByGroup) \
+    (PivotTMTBySource)
 
-BOOST_ENUM_VALUES(ProteinColumn, SqlColumn,
-    (Invalid)(make_pair("", 0))
-    (Accession)(make_pair("GROUP_CONCAT(DISTINCT pro.Accession)", SQLITE_TEXT))
-    (GeneId)(make_pair("GROUP_CONCAT(DISTINCT pro.GeneId)", SQLITE_TEXT))
-    (GeneGroup)(make_pair("pro.GeneGroup", SQLITE_INTEGER))
-    (IsDecoy)(make_pair("pro.IsDecoy", SQLITE_INTEGER))
-    (Cluster)(make_pair("pro.Cluster", SQLITE_INTEGER))
-    (ProteinGroup)(make_pair("pro.ProteinGroup", SQLITE_INTEGER))
-    (Length)(make_pair("pro.Length", SQLITE_INTEGER))
-    (PercentCoverage)(make_pair("ROUND(pc.Coverage, 2)", SQLITE_FLOAT))
-    (Sequence)(make_pair("pd.Sequence", SQLITE_TEXT))
-    (Description)(make_pair("pmd.Description", SQLITE_TEXT))
-    (TaxonomyId)(make_pair("pmd.TaxonomyId", SQLITE_INTEGER))
-    (GeneName)(make_pair("pmd.GeneName", SQLITE_TEXT))
-    (GeneFamily)(make_pair("pmd.GeneFamily", SQLITE_TEXT))
-    (Chromosome)(make_pair("pmd.Chromosome", SQLITE_TEXT))
-    (GeneDescription)(make_pair("pmd.GeneDescription", SQLITE_TEXT))
-    (PeptideGroups)(make_pair("GROUP_CONCAT(DISTINCT pep.PeptideGroup)", SQLITE_TEXT))
-    (PeptideSequences)(make_pair("GROUP_CONCAT(DISTINCT (SELECT IFNULL(SUBSTR(pd.Sequence, pi.Offset+1, pi.Length), pep.DecoySequence) FROM PeptideInstance pi LEFT JOIN ProteinData pd ON pi.Protein=pd.Id WHERE pep.Id=pi.Peptide))", SQLITE_TEXT))
+#define SHARED_QUANTITATIVE_SQLCOLUMNS(ns) \
+    case ns::DistinctPeptides: return make_pair("COUNT(DISTINCT pi.Peptide)", SQLITE_INTEGER); \
+    case ns::DistinctMatches: return make_pair("COUNT(DISTINCT dm.DistinctMatchId)", SQLITE_INTEGER); \
+    case ns::FilteredSpectra: return make_pair("COUNT(DISTINCT psm.Spectrum)", SQLITE_INTEGER); \
+    case ns::PrecursorIntensity: return make_pair("IFNULL(SUM(DISTINCT xic.PeakIntensity), 0)", SQLITE_FLOAT); \
+    case ns::PrecursorArea: return make_pair("IFNULL(SUM(DISTINCT xic.PeakArea), 0)", SQLITE_FLOAT); \
+    case ns::PrecursorBestSNR: return make_pair("IFNULL(MAX(xic.PeakSNR), 0)", SQLITE_FLOAT); \
+    case ns::PrecursorMeanSNR: return make_pair("IFNULL(AVG(DISTINCT xic.PeakSNR), 0)", SQLITE_FLOAT); \
+    case ns::iTRAQ4plex: return make_pair("IFNULL(DISTINCT_DOUBLE_ARRAY_SUM(sq.iTRAQ_ReporterIonIntensities), 0)", SQLITE_BLOB); \
+    case ns::iTRAQ8plex: return make_pair("IFNULL(DISTINCT_DOUBLE_ARRAY_SUM(sq.iTRAQ_ReporterIonIntensities), 0)", SQLITE_BLOB); \
+    case ns::TMT2plex: return make_pair("IFNULL(DISTINCT_DOUBLE_ARRAY_SUM(sq.TMT_ReporterIonIntensities), 0)", SQLITE_BLOB); \
+    case ns::TMT6plex: return make_pair("IFNULL(DISTINCT_DOUBLE_ARRAY_SUM(sq.TMT_ReporterIonIntensities), 0)", SQLITE_BLOB); \
+    case ns::TMT10plex: return make_pair("IFNULL(DISTINCT_DOUBLE_ARRAY_SUM(sq.TMT_ReporterIonIntensities), 0)", SQLITE_BLOB); \
+    case ns::PivotMatchesByGroup: return make_pair("0", SQLITE_INTEGER); \
+    case ns::PivotMatchesBySource: return make_pair("0", SQLITE_INTEGER); \
+    case ns::PivotPeptidesByGroup: return make_pair("0", SQLITE_INTEGER); \
+    case ns::PivotPeptidesBySource: return make_pair("0", SQLITE_INTEGER); \
+    case ns::PivotSpectraByGroup: return make_pair("0", SQLITE_INTEGER); \
+    case ns::PivotSpectraBySource: return make_pair("0", SQLITE_INTEGER); \
+    case ns::PivotPrecursorIntensityByGroup: return make_pair("0", SQLITE_FLOAT); \
+    case ns::PivotPrecursorIntensityBySource: return make_pair("0", SQLITE_FLOAT); \
+    case ns::PivotPrecursorAreaByGroup: return make_pair("0", SQLITE_FLOAT); \
+    case ns::PivotPrecursorAreaBySource: return make_pair("0", SQLITE_FLOAT); \
+    case ns::PivotPrecursorBestSNRByGroup: return make_pair("0", SQLITE_FLOAT); \
+    case ns::PivotPrecursorBestSNRBySource: return make_pair("0", SQLITE_FLOAT); \
+    case ns::PivotPrecursorMeanSNRByGroup: return make_pair("0", SQLITE_FLOAT); \
+    case ns::PivotPrecursorMeanSNRBySource: return make_pair("0", SQLITE_FLOAT); \
+    case ns::PivotITRAQByGroup: return make_pair("0", SQLITE_BLOB); \
+    case ns::PivotITRAQBySource: return make_pair("0", SQLITE_BLOB); \
+    case ns::PivotTMTByGroup: return make_pair("0", SQLITE_BLOB); \
+    case ns::PivotTMTBySource: return make_pair("0", SQLITE_BLOB);
+
+
+BOOST_ENUM(ProteinColumn,
+    (Invalid)
+    (Accession)
+    (GeneId)
+    (GeneGroup)
+    (IsDecoy)
+    (Cluster)
+    (ProteinGroup)
+    (Length)
+    (PercentCoverage)
+    (Sequence)
+    (Description)
+    (TaxonomyId)
+    (GeneName)
+    (GeneFamily)
+    (Chromosome)
+    (GeneDescription)
+    (PeptideGroups)
+    (PeptideSequences)
     SHARED_QUANTATITIVE_COLUMNS
 );
 
-BOOST_ENUM_VALUES(PeptideColumn, SqlColumn,
-    (Invalid)(make_pair("", 0))
-    (MonoisotopicMass)(make_pair("pep.MonoisotopicMass", SQLITE_FLOAT))
-    (MolecularWeight)(make_pair("pep.MolecularWeight", SQLITE_FLOAT))
-    (ProteinCount)(make_pair("COUNT(DISTINCT pro.Id)", SQLITE_INTEGER))
-    (ProteinGroupCount)(make_pair("COUNT(DISTINCT pro.ProteinGroup)", SQLITE_INTEGER))
-    (ProteinAccessions)(make_pair("GROUP_CONCAT(DISTINCT pro.Accession)", SQLITE_TEXT))
-    (GeneIds)(make_pair("GROUP_CONCAT(DISTINCT pro.GeneId)", SQLITE_TEXT))
-    (GeneGroups)(make_pair("GROUP_CONCAT(DISTINCT pro.GeneGroup)", SQLITE_TEXT))
-    (IsDecoy)(make_pair("pro.IsDecoy", SQLITE_INTEGER))
-    (Cluster)(make_pair("pro.Cluster", SQLITE_INTEGER))
-    (ProteinGroups)(make_pair("GROUP_CONCAT(DISTINCT pro.ProteinGroup)", SQLITE_TEXT))
-    (Length)(make_pair("pi.Length", SQLITE_INTEGER))
-    (ProteinDescriptions)(make_pair("GROUP_CONCAT(DISTINCT pmd.Description)", SQLITE_TEXT))
-    (TaxonomyIds)(make_pair("GROUP_CONCAT(DISTINCT pmd.TaxonomyId)", SQLITE_TEXT))
-    (GeneNames)(make_pair("GROUP_CONCAT(DISTINCT pmd.GeneName)", SQLITE_TEXT))
-    (GeneFamilies)(make_pair("GROUP_CONCAT(DISTINCT pmd.GeneFamily)", SQLITE_TEXT))
-    (Chromosomes)(make_pair("GROUP_CONCAT(DISTINCT pmd.Chromosome)", SQLITE_TEXT))
-    (GeneDescriptions)(make_pair("GROUP_CONCAT(DISTINCT pmd.GeneDescription)", SQLITE_TEXT))
-    (PeptideGroup)(make_pair("pep.PeptideGroup", SQLITE_INTEGER))
-    (Sequence)(make_pair("(SELECT IFNULL(SUBSTR(pd.Sequence, pi.Offset+1, pi.Length), pep.DecoySequence) FROM PeptideInstance pi LEFT JOIN ProteinData pd ON pi.Protein=pd.Id WHERE pep.Id=pi.Peptide)", SQLITE_TEXT))
-    (Instances)(make_pair("(SELECT GROUP_CONCAT(DISTINCT pro.Accession || '@' || (pi.Offset+1)) "
-                          "FROM PeptideInstance pi_ "
-                          "LEFT JOIN ProteinData pro ON pi.Protein = pro.Id "
-                          "WHERE psm.Peptide = pi_.Peptide)", SQLITE_TEXT))
-    (Modifications)(make_pair("IFNULL((SELECT GROUP_CONCAT(DISTINCT (ROUND(mod_.MonoMassDelta/{ModificationMassRoundToNearest})*{ModificationMassRoundToNearest}) || '@' || pm_.Site || (pm_.Offset+1)) "
-                              "        FROM PeptideSpectrumMatch psm_, Peptide pep_, DistinctMatch dm_ "
-                              "        LEFT JOIN PeptideModification pm_ ON psm_.Id = pm_.PeptideSpectrumMatch "
-                              "        LEFT JOIN Modification mod_ ON pm_.Modification = mod_.Id "
-                              "        WHERE {GroupBy} = {SubGroupBy} AND psm_.Peptide=pep_.Id AND psm_.Id=dm_.PsmId "
-                              "        GROUP BY {SubGroupBy}), '')", SQLITE_TEXT))
-    (Charges)(make_pair("GROUP_CONCAT(DISTINCT psm.Charge)", SQLITE_TEXT))
+SqlColumn getSqlColumn(ProteinColumn column)
+{
+    switch (column.index())
+    {
+        default: throw runtime_error(string("[getSqlColumn] BUG: no case for ProteinColumn::") + column.str());
+
+        case ProteinColumn::Invalid: return make_pair("", 0);
+        case ProteinColumn::Accession: return make_pair("GROUP_CONCAT(DISTINCT pro.Accession)", SQLITE_TEXT);
+        case ProteinColumn::GeneId: return make_pair("GROUP_CONCAT(DISTINCT pro.GeneId)", SQLITE_TEXT);
+        case ProteinColumn::GeneGroup: return make_pair("pro.GeneGroup", SQLITE_INTEGER);
+        case ProteinColumn::IsDecoy: return make_pair("pro.IsDecoy", SQLITE_INTEGER);
+        case ProteinColumn::Cluster: return make_pair("pro.Cluster", SQLITE_INTEGER);
+        case ProteinColumn::ProteinGroup: return make_pair("pro.ProteinGroup", SQLITE_INTEGER);
+        case ProteinColumn::Length: return make_pair("pro.Length", SQLITE_INTEGER);
+        case ProteinColumn::PercentCoverage: return make_pair("ROUND(pc.Coverage, 2)", SQLITE_FLOAT);
+        case ProteinColumn::Sequence: return make_pair("pd.Sequence", SQLITE_TEXT);
+        case ProteinColumn::Description: return make_pair("pmd.Description", SQLITE_TEXT);
+        case ProteinColumn::TaxonomyId: return make_pair("pmd.TaxonomyId", SQLITE_INTEGER);
+        case ProteinColumn::GeneName: return make_pair("pmd.GeneName", SQLITE_TEXT);
+        case ProteinColumn::GeneFamily: return make_pair("pmd.GeneFamily", SQLITE_TEXT);
+        case ProteinColumn::Chromosome: return make_pair("pmd.Chromosome", SQLITE_TEXT);
+        case ProteinColumn::GeneDescription: return make_pair("pmd.GeneDescription", SQLITE_TEXT);
+        case ProteinColumn::PeptideGroups: return make_pair("GROUP_CONCAT(DISTINCT pep.PeptideGroup)", SQLITE_TEXT);
+        case ProteinColumn::PeptideSequences: return make_pair("GROUP_CONCAT(DISTINCT (SELECT IFNULL(SUBSTR(pd.Sequence, pi.Offset+1, pi.Length), pep.DecoySequence) FROM PeptideInstance pi LEFT JOIN ProteinData pd ON pi.Protein=pd.Id WHERE pep.Id=pi.Peptide))", SQLITE_TEXT);
+        SHARED_QUANTITATIVE_SQLCOLUMNS(ProteinColumn)
+    }
+}
+
+
+BOOST_ENUM(PeptideColumn,
+    (Invalid)
+    (MonoisotopicMass)
+    (MolecularWeight)
+    (ProteinCount)
+    (ProteinGroupCount)
+    (ProteinAccessions)
+    (GeneIds)
+    (GeneGroups)
+    (IsDecoy)
+    (Cluster)
+    (ProteinGroups)
+    (Length)
+    (ProteinDescriptions)
+    (TaxonomyIds)
+    (GeneNames)
+    (GeneFamilies)
+    (Chromosomes)
+    (GeneDescriptions)
+    (PeptideGroup)
+    (Sequence)
+    (Instances)
+    (Modifications)
+    (Charges)
     SHARED_QUANTATITIVE_COLUMNS
 );
 
-BOOST_ENUM_VALUES(ModificationColumn, SqlColumn,
-    (Invalid)(make_pair("", 0))
-    (MonoDeltaMass)(make_pair("GROUP_CONCAT(DISTINCT ROUND(mod.MonoMassDelta/{ModificationMassRoundToNearest})*{ModificationMassRoundToNearest})", SQLITE_FLOAT))
-    (AvgDeltaMass)(make_pair("GROUP_CONCAT(DISTINCT ROUND(mod.AvgMassDelta/{ModificationMassRoundToNearest})*{ModificationMassRoundToNearest})", SQLITE_FLOAT))
-    (ProteinOffsets)(make_pair("(SELECT GROUP_CONCAT(DISTINCT (pro.Accession || '@' || (pi.Offset+(CASE WHEN pm.Offset<0 THEN 0 WHEN pm.Offset>=pi.Length THEN (pi.Length-1) ELSE pm.Offset END)+1))) "
-                               "FROM PeptideInstance pi_ "
-                               "LEFT JOIN ProteinData pro ON pi.Protein = pro.Id "
-                               "JOIN PeptideModification pm_ ON psm.Id = pm_.PeptideSpectrumMatch "
-                               "JOIN Modification mod_ ON pm_.Modification = mod_.Id "
-                               "WHERE psm.Peptide = pi_.Peptide)", SQLITE_TEXT))
-    (ModifiedSite)(make_pair("GROUP_CONCAT(DISTINCT pm.Site)", SQLITE_TEXT))
-    (ProteinSite)(make_pair("(pro.Accession || '@' || (pi.Offset+(CASE WHEN pm.Offset<0 THEN 0 WHEN pm.Offset>=pi.Length THEN (pi.Length-1) ELSE pm.Offset END)+1))", SQLITE_TEXT))
-    (PeptideSequences)(make_pair("GROUP_CONCAT(DISTINCT (SELECT IFNULL(SUBSTR(pd.Sequence, pi.Offset+1, pi.Length), pep.DecoySequence) FROM PeptideInstance pi LEFT JOIN ProteinData pd ON pi.Protein=pd.Id WHERE pep.Id=pi.Peptide))", SQLITE_TEXT))
+SqlColumn getSqlColumn(PeptideColumn column)
+{
+    switch (column.index())
+    {
+        default: throw runtime_error(string("[getSqlColumn] BUG: no case for PeptideColumn::") + column.str());
+
+        case PeptideColumn::Invalid: return make_pair("", 0);
+        case PeptideColumn::MonoisotopicMass: return make_pair("pep.MonoisotopicMass", SQLITE_FLOAT);
+        case PeptideColumn::MolecularWeight: return make_pair("pep.MolecularWeight", SQLITE_FLOAT);
+        case PeptideColumn::ProteinCount: return make_pair("COUNT(DISTINCT pro.Id)", SQLITE_INTEGER);
+        case PeptideColumn::ProteinGroupCount: return make_pair("COUNT(DISTINCT pro.ProteinGroup)", SQLITE_INTEGER);
+        case PeptideColumn::ProteinAccessions: return make_pair("GROUP_CONCAT(DISTINCT pro.Accession)", SQLITE_TEXT);
+        case PeptideColumn::GeneIds: return make_pair("GROUP_CONCAT(DISTINCT pro.GeneId)", SQLITE_TEXT);
+        case PeptideColumn::GeneGroups: return make_pair("GROUP_CONCAT(DISTINCT pro.GeneGroup)", SQLITE_TEXT);
+        case PeptideColumn::IsDecoy: return make_pair("pro.IsDecoy", SQLITE_INTEGER);
+        case PeptideColumn::Cluster: return make_pair("pro.Cluster", SQLITE_INTEGER);
+        case PeptideColumn::ProteinGroups: return make_pair("GROUP_CONCAT(DISTINCT pro.ProteinGroup)", SQLITE_TEXT);
+        case PeptideColumn::Length: return make_pair("pi.Length", SQLITE_INTEGER);
+        case PeptideColumn::ProteinDescriptions: return make_pair("GROUP_CONCAT(DISTINCT pmd.Description)", SQLITE_TEXT);
+        case PeptideColumn::TaxonomyIds: return make_pair("GROUP_CONCAT(DISTINCT pmd.TaxonomyId)", SQLITE_TEXT);
+        case PeptideColumn::GeneNames: return make_pair("GROUP_CONCAT(DISTINCT pmd.GeneName)", SQLITE_TEXT);
+        case PeptideColumn::GeneFamilies: return make_pair("GROUP_CONCAT(DISTINCT pmd.GeneFamily)", SQLITE_TEXT);
+        case PeptideColumn::Chromosomes: return make_pair("GROUP_CONCAT(DISTINCT pmd.Chromosome)", SQLITE_TEXT);
+        case PeptideColumn::GeneDescriptions: return make_pair("GROUP_CONCAT(DISTINCT pmd.GeneDescription)", SQLITE_TEXT);
+        case PeptideColumn::PeptideGroup: return make_pair("pep.PeptideGroup", SQLITE_INTEGER);
+        case PeptideColumn::Sequence: return make_pair("(SELECT IFNULL(SUBSTR(pd.Sequence, pi.Offset+1, pi.Length), pep.DecoySequence) FROM PeptideInstance pi LEFT JOIN ProteinData pd ON pi.Protein=pd.Id WHERE pep.Id=pi.Peptide)", SQLITE_TEXT);
+        case PeptideColumn::Instances: return make_pair("(SELECT GROUP_CONCAT(DISTINCT pro.Accession || '@' || (pi.Offset+1)) "
+                                                        "FROM PeptideInstance pi_ "
+                                                        "LEFT JOIN ProteinData pro ON pi.Protein = pro.Id "
+                                                        "WHERE psm.Peptide = pi_.Peptide)", SQLITE_TEXT);
+        case PeptideColumn::Modifications: return make_pair("IFNULL((SELECT GROUP_CONCAT(DISTINCT (ROUND(mod_.MonoMassDelta/{ModificationMassRoundToNearest})*{ModificationMassRoundToNearest}) || '@' || pm_.Site || (pm_.Offset+1)) "
+                                                            "        FROM PeptideSpectrumMatch psm_, Peptide pep_, DistinctMatch dm_ "
+                                                            "        LEFT JOIN PeptideModification pm_ ON psm_.Id = pm_.PeptideSpectrumMatch "
+                                                            "        LEFT JOIN Modification mod_ ON pm_.Modification = mod_.Id "
+                                                            "        WHERE {GroupBy} = {SubGroupBy} AND psm_.Peptide=pep_.Id AND psm_.Id=dm_.PsmId "
+                                                            "        GROUP BY {SubGroupBy}), '')", SQLITE_TEXT);
+        case PeptideColumn::Charges: return make_pair("GROUP_CONCAT(DISTINCT psm.Charge)", SQLITE_TEXT);
+        SHARED_QUANTITATIVE_SQLCOLUMNS(PeptideColumn)
+    }
+}
+
+
+BOOST_ENUM(ModificationColumn,
+    (Invalid)
+    (MonoDeltaMass)
+    (AvgDeltaMass)
+    (ProteinOffsets)
+    (ModifiedSite)
+    (ProteinSite)
+    (PeptideSequences)
     SHARED_QUANTATITIVE_COLUMNS
 );
+
+SqlColumn getSqlColumn(ModificationColumn column)
+{
+    switch (column.index())
+    {
+        default: throw runtime_error(string("[getSqlColumn] BUG: no case for ModificationColumn::") + column.str());
+
+        case ModificationColumn::Invalid: return make_pair("", 0);
+        case ModificationColumn::MonoDeltaMass: return make_pair("GROUP_CONCAT(DISTINCT ROUND(mod.MonoMassDelta/{ModificationMassRoundToNearest})*{ModificationMassRoundToNearest})", SQLITE_FLOAT);
+        case ModificationColumn::AvgDeltaMass: return make_pair("GROUP_CONCAT(DISTINCT ROUND(mod.AvgMassDelta/{ModificationMassRoundToNearest})*{ModificationMassRoundToNearest})", SQLITE_FLOAT);
+        case ModificationColumn::ProteinOffsets: return make_pair("(SELECT GROUP_CONCAT(DISTINCT (pro.Accession || '@' || (pi.Offset+(CASE WHEN pm.Offset<0 THEN 0 WHEN pm.Offset>=pi.Length THEN (pi.Length-1) ELSE pm.Offset END)+1))) "
+                                                                  "FROM PeptideInstance pi_ "
+                                                                  "LEFT JOIN ProteinData pro ON pi.Protein = pro.Id "
+                                                                  "JOIN PeptideModification pm_ ON psm.Id = pm_.PeptideSpectrumMatch "
+                                                                  "JOIN Modification mod_ ON pm_.Modification = mod_.Id "
+                                                                  "WHERE psm.Peptide = pi_.Peptide)", SQLITE_TEXT);
+        case ModificationColumn::ModifiedSite: return make_pair("GROUP_CONCAT(DISTINCT pm.Site)", SQLITE_TEXT);
+        case ModificationColumn::ProteinSite: return make_pair("(pro.Accession || '@' || (pi.Offset+(CASE WHEN pm.Offset<0 THEN 0 WHEN pm.Offset>=pi.Length THEN (pi.Length-1) ELSE pm.Offset END)+1))", SQLITE_TEXT);
+        case ModificationColumn::PeptideSequences: return make_pair("GROUP_CONCAT(DISTINCT (SELECT IFNULL(SUBSTR(pd.Sequence, pi.Offset+1, pi.Length), pep.DecoySequence) FROM PeptideInstance pi LEFT JOIN ProteinData pd ON pi.Protein=pd.Id WHERE pep.Id=pi.Peptide))", SQLITE_TEXT);
+        SHARED_QUANTITATIVE_SQLCOLUMNS(ModificationColumn)
+    }
+}
 
 /*PeptideSpectrumMatch, Spectrum, SpectrumSourceAndGroup
 Key
@@ -425,7 +538,7 @@ int parseColumns(const vector<string>& tokens, vector<ColumnType>& enumColumns, 
         else
         {
             enumColumns.push_back(newColumn);
-            sqlColumns.push_back(newColumn.value());
+            sqlColumns.push_back(getSqlColumn(newColumn));
         }
     }
 
@@ -435,7 +548,7 @@ int parseColumns(const vector<string>& tokens, vector<ColumnType>& enumColumns, 
         for (size_t i = 0; i < invalidTokens.size(); ++i)
             cerr << " \"" << invalidTokens[i] << "\"";
         cerr << "\nValid options are:" << endl;
-        for (ColumnType::const_iterator itr = ColumnType::begin() + 1; itr < ColumnType::end(); ++itr)
+        for (typename ColumnType::const_iterator itr = ColumnType::begin() + 1; itr < ColumnType::end(); ++itr)
             cerr << "  " << itr->str() << "\n";
         return 1;
     }
