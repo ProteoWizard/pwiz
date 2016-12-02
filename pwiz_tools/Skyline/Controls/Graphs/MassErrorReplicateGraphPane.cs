@@ -51,6 +51,12 @@ namespace pwiz.Skyline.Controls.Graphs
                 EmptyGraph(document);
                 return;
             }
+            if (!document.Settings.HasResults)
+            {
+                Title.Text = Resources.AreaReplicateGraphPane_UpdateGraph_No_results_available;
+                EmptyGraph(document);
+                return;
+            }
             DisplayTypeChrom displayType;
             if (Equals(PaneKey, PaneKey.PRECURSORS))
             {

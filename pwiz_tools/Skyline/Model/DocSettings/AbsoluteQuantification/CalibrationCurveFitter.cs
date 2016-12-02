@@ -304,7 +304,8 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         public bool HasInternalStandardConcentration()
         {
-            return PeptideQuantifier.NormalizationMethod is NormalizationMethod.RatioToLabel
+            return (PeptideQuantifier.NormalizationMethod is NormalizationMethod.RatioToLabel 
+                || PeptideQuantifier.NormalizationMethod is NormalizationMethod.RatioToSurrogate)
                    && PeptideQuantifier.PeptideDocNode.InternalStandardConcentration.HasValue;
         }
 
