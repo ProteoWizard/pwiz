@@ -119,7 +119,7 @@ namespace pwiz.Topograph.MsData
             {
                 var bytes = new byte[20000000];
             }
-            catch (OutOfMemoryException outOfMemoryException)
+            catch (OutOfMemoryException)
             {
                 return true;
             }

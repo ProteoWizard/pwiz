@@ -31,6 +31,7 @@ namespace pwiz.Topograph.Model
     {
 // ReSharper disable UnassignedField.Local
         // TODO(nicksh): Set valid search result count
+#pragma warning disable 649
         private int _searchResultCount;
 // ReSharper restore UnassignedField.Local
         public static String TrimSequence(String sequence)

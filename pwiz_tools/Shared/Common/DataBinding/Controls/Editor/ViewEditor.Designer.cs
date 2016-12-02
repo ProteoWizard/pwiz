@@ -235,7 +235,6 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         private System.Windows.Forms.Panel panelViewEditor;
         private System.Windows.Forms.Panel panelButtons;
         private System.Windows.Forms.Button btnPreview;
-        private System.Windows.Forms.Timer timer1;
         private System.Windows.Forms.ToolStripButton toolButtonFind;
         private System.Windows.Forms.ToolStripButton helpToolStripButton;
     }
