@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
@@ -89,6 +90,7 @@ namespace pwiz.Skyline.Controls.Graphs
         /// Returns the peptides that are explicitly or implictly selected in the tree view.
         /// Peptides are implicitly selected when the protein containing them is selected.
         /// </summary>
+        [MethodImpl(MethodImplOptions.NoOptimization)] // disable optimizations in hopes of tracking down NullReferenceException
         public static PeptidesAndTransitionGroups Get(IList<TreeNodeMS> selectedNodes, int resultsIndex, int maxDisplayPeptides)
         {
             var peptidesAndTransitionGroups = new PeptidesAndTransitionGroups();
