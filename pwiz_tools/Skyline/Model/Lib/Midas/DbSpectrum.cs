@@ -38,6 +38,8 @@ namespace pwiz.Skyline.Model.Lib.Midas
         public virtual DbResultsFile ResultsFile { get; set; }
         public virtual double PrecursorMz { get; set; }
         public virtual double? MatchedPrecursorMz { get; set; }
+        public virtual string DocumentPeptide { get; set; }
+        public virtual int? DocumentPrecursorCharge { get; set; }
         public virtual double RetentionTime { get; set; }
         public virtual byte[] MzBytes { get; set; }
         public virtual byte[] IntensityBytes { get; set; }
@@ -54,23 +56,25 @@ namespace pwiz.Skyline.Model.Lib.Midas
         }
 
         public DbSpectrum(DbSpectrum other)
-            : this(other.ResultsFile, other.PrecursorMz, other.MatchedPrecursorMz, other.RetentionTime, other.MzBytes, other.IntensityBytes)
+            : this(other.ResultsFile, other.PrecursorMz, other.MatchedPrecursorMz, other.DocumentPeptide, other.DocumentPrecursorCharge, other.RetentionTime, other.MzBytes, other.IntensityBytes)
         {
             Id = other.Id;
         }
 
-        private DbSpectrum(DbResultsFile resultsFile, double precursorMz, double? matchedPrecursorMz, double retentionTime, byte[] mzBytes, byte[] intensityBytes)
+        private DbSpectrum(DbResultsFile resultsFile, double precursorMz, double? matchedPrecursorMz, string documentPeptide, int? documentPrecursorCharge, double retentionTime, byte[] mzBytes, byte[] intensityBytes)
         {
             PrecursorMz = precursorMz;
             MatchedPrecursorMz = matchedPrecursorMz;
+            DocumentPeptide = documentPeptide;
+            DocumentPrecursorCharge = documentPrecursorCharge;
             ResultsFile = resultsFile;
             RetentionTime = retentionTime;
             MzBytes = mzBytes;
             IntensityBytes = intensityBytes;
         }
 
-        public DbSpectrum(DbResultsFile resultsFile, double precursorMz, double? matchedPrecursorMz, double retentionTime, double[] mzs, double[] intensities)
-            : this(resultsFile, precursorMz, matchedPrecursorMz, retentionTime, CompressBytes(mzs), CompressBytes(intensities))
+        public DbSpectrum(DbResultsFile resultsFile, double precursorMz, double? matchedPrecursorMz, string documentPeptide, int? documentPrecursorCharge, double retentionTime, double[] mzs, double[] intensities)
+            : this(resultsFile, precursorMz, matchedPrecursorMz, documentPeptide, documentPrecursorCharge, retentionTime, CompressBytes(mzs), CompressBytes(intensities))
         {
         }
 
@@ -84,6 +88,8 @@ namespace pwiz.Skyline.Model.Lib.Midas
                    Equals(ResultsFile, other.ResultsFile) &&
                    Equals(PrecursorMz, other.PrecursorMz) &&
                    Equals(MatchedPrecursorMz, other.MatchedPrecursorMz) &&
+                   Equals(DocumentPeptide, other.DocumentPeptide) &&
+                   Equals(DocumentPrecursorCharge, other.DocumentPrecursorCharge) &&
                    Equals(RetentionTime, other.RetentionTime) &&
                    ArrayUtil.EqualsDeep(MzBytes, other.MzBytes) &&
                    ArrayUtil.EqualsDeep(IntensityBytes, other.IntensityBytes);
@@ -102,6 +108,8 @@ namespace pwiz.Skyline.Model.Lib.Midas
                 result = (result*397) ^ ResultsFile.GetHashCode();
                 result = (result*397) ^ PrecursorMz.GetHashCode();
                 result = (result*397) ^ MatchedPrecursorMz.GetHashCode();
+                result = (result*397) ^ (DocumentPeptide == null ? 0 : DocumentPeptide.GetHashCode());
+                result = (result*397) ^ DocumentPrecursorCharge.GetHashCode();
                 result = (result*397) ^ RetentionTime.GetHashCode();
                 result = (result*397) ^ MzBytes.GetHashCode();
                 result = (result*397) ^ IntensityBytes.GetHashCode();

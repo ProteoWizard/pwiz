@@ -687,86 +687,21 @@ namespace pwiz.Skyline.SettingsUI
 
         public void ShowBuildLibraryDlg()
         {
-            ShowBuildLibraryDlg(null);
-        }
-
-        public void ShowBuildLibraryDlg(string midasBlibPath)
-        {
             CheckDisposed();
 
-            ILibraryBuilder builder = null;
-
-            var libraries = _parent.DocumentUI.Settings.PeptideSettings.Libraries;
-            if (libraries.HasMidasLibrary && !LibraryDriver.List.Any(libSpec => Equals(libSpec.Name, MidasBlibBuilder.BLIB_NAME_SKYLINE)))
-            {
-                if (!string.IsNullOrEmpty(midasBlibPath))
-                {
-                    builder = GetMidasBlibBuilder(_parent.DocumentUI, midasBlibPath);
-                    if (builder == null)
-                        return;
-                }
-                else
-                {
-                    var result = MultiButtonMsgDlg.Show(this, Resources.PeptideSettingsUI_ShowBuildLibraryDlg_This_document_has_a_MIDAS_library__Would_you_like_to_build_a_spectral_library_from_it_,
-                        MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, true);
-                    if (result == DialogResult.Yes)
-                    {
-                        builder = GetMidasBlibBuilder(_parent.DocumentUI);
-                        if (builder == null)
-                            return;
-                    }
-                    else if (result == DialogResult.Cancel)
-                    {
-                        return;
-                    }
-                }
-            }
-
-            if (builder == null)
-            {
-                // Libraries built for full-scan filtering can have important retention time information,
-                // and the redundant libraries are more likely to be desirable for showing spectra.
-                bool isFullScanEnabled = _parent.DocumentUI.Settings.TransitionSettings.FullScan.IsEnabled;
-                using (var dlg = new BuildLibraryDlg(_parent) { LibraryKeepRedundant = isFullScanEnabled })
-                {
-                    if (dlg.ShowDialog(this) == DialogResult.OK)
-                    {
-                        builder = dlg.Builder;
-                    }
-                }
-            }
-
-            if (builder != null)
-            {
-                _libraryManager.BuildLibrary(_parent, builder, _parent.LibraryBuildCompleteCallback);
-
-                Settings.Default.SpectralLibraryList.Add(builder.LibrarySpec);
-                _driverLibrary.LoadList();
-            }
-        }
-
-        private ILibraryBuilder GetMidasBlibBuilder(SrmDocument doc)
-        {
-            using (var dlg = new SaveFileDialog {
-                Title = Resources.PeptideSettingsUI_ShowBuildLibraryDlg_Create_MIDAS_Spectral_Library,
-                InitialDirectory = _parent.DocumentFilePath != null ? Path.GetDirectoryName(_parent.DocumentFilePath) : string.Empty,
-                OverwritePrompt = true,
-                DefaultExt = BiblioSpecLiteSpec.EXT,
-                Filter = TextUtil.FileDialogFiltersAll(BiblioSpecLiteSpec.FILTER_BLIB)
-            })
+            // Libraries built for full-scan filtering can have important retention time information,
+            // and the redundant libraries are more likely to be desirable for showing spectra.
+            using (var dlg = new BuildLibraryDlg(_parent) { LibraryKeepRedundant = _parent.DocumentUI.Settings.TransitionSettings.FullScan.IsEnabled })
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
-                    return GetMidasBlibBuilder(doc, dlg.FileName);
+                    var builder = dlg.Builder;
+                    _libraryManager.BuildLibrary(_parent, builder, _parent.LibraryBuildCompleteCallback);
+
+                    Settings.Default.SpectralLibraryList.Add(builder.LibrarySpec);
+                    _driverLibrary.LoadList();
                 }
             }
-            return null;
-        }
-
-        private static ILibraryBuilder GetMidasBlibBuilder(SrmDocument doc, string fileName)
-        {
-            var midasLib = doc.Settings.PeptideSettings.Libraries.MidasLibraries.FirstOrDefault();
-            return midasLib != null ? new MidasBlibBuilder(doc, midasLib, fileName) : null;
         }
 
         private void listLibraries_ItemCheck(object sender, ItemCheckEventArgs e)

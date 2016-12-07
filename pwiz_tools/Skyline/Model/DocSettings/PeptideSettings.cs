@@ -2020,7 +2020,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
             foreach (Library lib in _libraries)
             {
-                if (lib != null && lib.TryGetRetentionTimes(key, filePath, out retentionTimes))
+                if (lib != null && !(lib is MidasLibrary) && lib.TryGetRetentionTimes(key, filePath, out retentionTimes))
                     return true;
             }
             retentionTimes = null;

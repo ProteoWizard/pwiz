@@ -18384,16 +18384,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to This document has a MIDAS library. Would you like to build a spectral library from it?.
-        /// </summary>
-        public static string PeptideSettingsUI_ShowBuildLibraryDlg_This_document_has_a_MIDAS_library__Would_you_like_to_build_a_spectral_library_from_it_ {
-            get {
-                return ResourceManager.GetString("PeptideSettingsUI_ShowBuildLibraryDlg_This_document_has_a_MIDAS_library__Would_yo" +
-                        "u_like_to_build_a_spectral_library_from_it_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Peptide settings have been changed. Save changes?.
         /// </summary>
         public static string PeptideSettingsUI_ShowViewLibraryDlg_Peptide_settings_have_been_changed_Save_changes {
@@ -23428,6 +23418,16 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("SkylineWindow_ShowExportSpectralLibraryDialog_The_document_must_contain_results_t" +
                         "o_export_a_spectral_library_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This document has a MIDAS library. Would you like to build a spectral library from it?.
+        /// </summary>
+        public static string SkylineWindow_ShowExportSpectralLibraryDialog_This_document_has_a_MIDAS_library__Would_you_like_to_build_a_spectral_library_from_it_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowExportSpectralLibraryDialog_This_document_has_a_MIDAS_library__" +
+                        "Would_you_like_to_build_a_spectral_library_from_it_", resourceCulture);
             }
         }
         

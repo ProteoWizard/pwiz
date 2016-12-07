@@ -648,8 +648,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 var spectraRedundant = new List<SpectrumDisplayInfo>();
                 var dictReplicateNameFiles = new Dictionary<string, HashSet<string>>();
-                foreach (var spectrumInfo in settings.GetRedundantSpectra(lookupSequence, charge, nodeGroup.TransitionGroup.LabelType, lookupMods).Concat(
-                                             settings.GetMidasSpectra(nodeGroup.PrecursorMz)))
+                foreach (var spectrumInfo in settings.GetRedundantSpectra(lookupSequence, charge, nodeGroup.TransitionGroup.LabelType, lookupMods))
                 {
                     var matchingFile = settings.MeasuredResults.FindMatchingMSDataFile(MsDataFileUri.Parse(spectrumInfo.FilePath));
                     if (matchingFile == null)

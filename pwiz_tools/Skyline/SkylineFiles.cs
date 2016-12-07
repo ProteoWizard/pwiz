@@ -1196,6 +1196,22 @@ namespace pwiz.Skyline
                 return;
             }
 
+            var midasLib = Document.Settings.PeptideSettings.Libraries.MidasLibraries.FirstOrDefault();
+            var buildMidas = false;
+            if (midasLib != null)
+            {
+                var result = MultiButtonMsgDlg.Show(this, Resources.SkylineWindow_ShowExportSpectralLibraryDialog_This_document_has_a_MIDAS_library__Would_you_like_to_build_a_spectral_library_from_it_,
+                    MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, true);
+                if (result == DialogResult.Yes)
+                {
+                    buildMidas = true;
+                }
+                else if (result == DialogResult.Cancel)
+                {
+                    return;
+                }
+            }
+
             using (var dlg = new SaveFileDialog
             {
                 Title = Resources.SkylineWindow_ShowExportSpectralLibraryDialog_Export_Spectral_Library,
@@ -1218,7 +1234,13 @@ namespace pwiz.Skyline
                         Message = string.Format(Resources.SkylineWindow_ShowExportSpectralLibraryDialog_Exporting_spectral_library__0____, Path.GetFileName(dlg.FileName))
                     })
                     {
-                        longWaitDlg.PerformWork(this, 800, monitor => ExportSpectralLibrary(Document, dlg.FileName, monitor));
+                        longWaitDlg.PerformWork(this, 800, monitor =>
+                        {
+                            if (buildMidas)
+                                new MidasBlibBuilder(Document, midasLib, dlg.FileName).BuildLibrary(monitor);
+                            else
+                                ExportSpectralLibrary(Document, dlg.FileName, monitor);
+                        });
                     }
                 }
                 catch (Exception x)

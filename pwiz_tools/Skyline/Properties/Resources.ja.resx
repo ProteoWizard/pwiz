@@ -9102,7 +9102,7 @@
   <data name="PeptideSettingsUI_ShowBuildLibraryDlg_Create_MIDAS_Spectral_Library" xml:space="preserve">
     <value>MIDASスペクトルライブラリの作成</value>
   </data>
-  <data name="PeptideSettingsUI_ShowBuildLibraryDlg_This_document_has_a_MIDAS_library__Would_you_like_to_build_a_spectral_library_from_it_" xml:space="preserve">
+  <data name="SkylineWindow_ShowExportSpectralLibraryDialog_This_document_has_a_MIDAS_library__Would_you_like_to_build_a_spectral_library_from_it_" xml:space="preserve">
     <value>このドキュメントにはMIDASライブラリがあります。 これからスペクトルライブラリを構築しますか？</value>
   </data>
   <data name="PeptideSettingsUI_ShowBuildLibraryDlg_Finishing_up_building_library" xml:space="preserve">

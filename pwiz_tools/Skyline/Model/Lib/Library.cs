@@ -141,7 +141,7 @@ namespace pwiz.Skyline.Model.Lib
                         var midasLibPath = MidasLibSpec.GetLibraryFileName(container.DocumentFilePath);
                         midasLibSpec = (MidasLibSpec)LibrarySpec.CreateFromPath(MidasLibSpec.DEFAULT_NAME, midasLibPath);
                     }
-                    MidasLibrary.AddSpectra(midasLibSpec.FilePath, missingMidasFiles.Select(f => new MsDataFilePath(f)).ToArray(), new LoadMonitor(this, container, null), out failedMidasFiles);
+                    MidasLibrary.AddSpectra(midasLibSpec.FilePath, missingMidasFiles.Select(f => new MsDataFilePath(f)).ToArray(), docCurrent, new LoadMonitor(this, container, null), out failedMidasFiles);
                     if (failedMidasFiles.Count < missingMidasFiles.Length)
                     {
                         if (!newMidasLibSpec)
@@ -1906,7 +1906,7 @@ namespace pwiz.Skyline.Model.Lib
             var precursor = PrecursorMz.GetValueOrDefault().ToString("0.000", CultureInfo.CurrentCulture); // Not L10N
             if (!HasRetentionTime)
                 return precursor;
-            var rt = RetentionTime.GetValueOrDefault().ToString("0.000", CultureInfo.CurrentCulture); // Not L10N
+            var rt = RetentionTime.GetValueOrDefault().ToString("0.00", CultureInfo.CurrentCulture); // Not L10N
             return string.Format("{0} ({1})", precursor, rt); // Not L10N
         }
 
