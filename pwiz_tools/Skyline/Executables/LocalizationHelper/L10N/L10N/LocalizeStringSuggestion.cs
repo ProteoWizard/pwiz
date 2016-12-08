@@ -34,7 +34,7 @@ using YuvalBoss.L10N;
 namespace YuvalBoss.L10N
 {
     [ConfigurableSeverityHighlightingAttribute(SeverityId, CSharpLanguage.Name, OverlapResolve = OverlapResolveKind.WARNING)]
-    public class LocalizeStringSuggestion : CSharpHighlightingBase, IHighlighting
+    public class LocalizeStringSuggestion : HighlightingBase, IHighlighting
     {
         public ICSharpLiteralExpression Declaration { get; private set; }
         //SeverityId is the name of the warning thrown both in the code inspector and in block comments.

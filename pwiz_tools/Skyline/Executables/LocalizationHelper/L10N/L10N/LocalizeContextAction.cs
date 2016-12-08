@@ -27,6 +27,7 @@ using JetBrains.Util;
 using JetBrains.DocumentModel;
 using JetBrains.ReSharper.Feature.Services.ContextActions;
 using JetBrains.ReSharper.Feature.Services.QuickFixes;
+// The namespace of the zone definition is irrelevant
 
 namespace YuvalBoss.L10N
 {
@@ -34,6 +35,7 @@ namespace YuvalBoss.L10N
     /// This context action marks unlocalized strings as // Not L10N
     /// availability and execution of this action.
     /// </summary>
+    /// 
     [QuickFix]
     public class LocalizeContextAction : ContextActionBase, IQuickFix
     {

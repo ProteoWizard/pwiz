@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using JetBrains.Application.BuildScript.Application.Zones;
 using JetBrains.ReSharper.Psi;
 // ReSharper disable PossibleNullReferenceException
 using JetBrains.ReSharper.Daemon.Stages.Dispatcher;
@@ -27,7 +28,7 @@ using JetBrains.ReSharper.Feature.Services.Daemon;
 // ReSharper disable NonLocalizedString
 namespace YuvalBoss.L10N
 {
-    [ElementProblemAnalyzer(new[] { typeof(ICSharpLiteralExpression) }, HighlightingTypes = new[] { typeof(LocalizeStringSuggestion) })]
+    [ElementProblemAnalyzer(typeof(ICSharpLiteralExpression), HighlightingTypes = new[] { typeof(LocalizeStringSuggestion) })]
     public class LocalizeStringDaemonStageProcess : ElementProblemAnalyzer<ICSharpLiteralExpression>
     {
         // Implements ElementProblemAnalyzer instead of the Daemon because of issues with multi line commenting.
