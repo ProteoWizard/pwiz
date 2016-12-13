@@ -28,22 +28,22 @@ if "%ALL_ARGS:address-model 64=%" neq "%ALL_ARGS%" set ADDRESS_MODEL=64
 
 :SKIP_ADDRESS_CHECK
 REM # Build local copy of bjam
-IF EXIST %PWIZ_BJAM% GOTO SKIP_BJAM
+IF EXIST "%PWIZ_BJAM%" GOTO SKIP_BJAM
 echo Building bjam for %ADDRESS_MODEL%-bit build...
-pushd %BOOST_BUILD_PATH%\engine
+pushd "%BOOST_BUILD_PATH%\engine"
 call build.bat --UPDATE -sLOCATE_TARGET=bin.nt
 @echo off
 setlocal
 @echo off
 set PWIZ_BJAM=%BOOST_BUILD_PATH%\engine\bin.nt\bjam.exe
-IF NOT EXIST %PWIZ_BJAM% echo Error building bjam. & exit /b 1
+IF NOT EXIST "%PWIZ_BJAM%" echo Error building bjam. & exit /b 1
 popd
 :SKIP_BJAM
 
 REM # Do full build of ProteoWizard, passing quickbuild's arguments to bjam
 echo Building pwiz (%ADDRESS_MODEL%-bit)...
-pushd %PWIZ_ROOT%
-%PWIZ_BJAM% %*
+pushd "%PWIZ_ROOT%"
+"%PWIZ_BJAM%" %*
 popd
 
 

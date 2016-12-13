@@ -9,7 +9,7 @@ if /I "%1"=="-q" set VERBOSE=0
 REM # Get the location of quickbuild.bat and drop trailing slash
 set PWIZ_ROOT=%~dp0
 set PWIZ_ROOT=%PWIZ_ROOT:~0,-1%
-pushd %PWIZ_ROOT%
+pushd "%PWIZ_ROOT%"
 
 if %VERBOSE%==1 echo   Cleaning build directories...
 IF EXIST build-nt-x86 rmdir /s /q build-nt-x86
