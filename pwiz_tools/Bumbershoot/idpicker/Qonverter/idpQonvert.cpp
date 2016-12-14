@@ -33,6 +33,7 @@
 #include "boost/make_shared.hpp"
 #include "boost/core/null_deleter.hpp"
 #include "boost/range/algorithm_ext/insert.hpp"
+#include "boost/assign.hpp"
 
 #include "SchemaUpdater.hpp"
 #include "Parser.hpp"
@@ -232,7 +233,7 @@ int InitProcess( argList_t& args )
     if (g_rtConfig->LogFilepath.empty())
     {
         sink->locked_backend()->add_stream(boost::shared_ptr<std::ostream>(&cout, boost::null_deleter())); // if no logfile is set, send messages to console
-        sink->set_filter(severity < MessageSeverity::Error); // but don't send errors to the console twice
+        sink->set_filter(severity < MessageSeverity::Error && severity >= g_rtConfig->LogLevel.index()); // but don't send errors to the console twice
     }
     else
     {
@@ -645,6 +646,23 @@ vector<QonversionSummary> summarizeQonversion(const string& filepath)
     return results;
 }
 
+// return the first existing filepath with one of the given extensions in the search path
+string findNameInPath(const string& filenameWithoutExtension,
+                      const vector<string>& extensions,
+                      const vector<string>& searchPath)
+{
+    BOOST_FOREACH(const string& extension, extensions)
+    BOOST_FOREACH(const string& path, searchPath)
+    {
+        bfs::path filepath(path);
+        filepath /= filenameWithoutExtension + extension;
+
+        // if the path exists, check whether MSData can handle it
+        if (bfs::exists(filepath))
+            return filepath.string();
+    }
+    return "";
+}
 
 bool outputFilepathExists(const string& filepath) {return bfs::exists(Parser::outputFilepath(filepath));}
 
@@ -804,6 +822,17 @@ int run( int argc, char* argv[] )
 
         // switch to exe directory to allow embedGeneMetadata to find the gene mappings
         bfs::path exePath(args[0]);
+        if (!exePath.has_parent_path())
+        {
+            using namespace boost::assign;
+            vector<string> tokens;
+            const char* pathSeparator = bfs::path::preferred_separator == '/' ? ":" : ";";
+            string pathValue = pwiz::util::env::get("PATH");
+            vector<string> exeExtensions; exeExtensions += "", ".exe", ".com", ".bat", ".cmd";
+            bal::split(tokens, pathValue, bal::is_any_of(pathSeparator));
+            exePath = findNameInPath(bfs::change_extension(exePath, "").string(), exeExtensions, tokens);
+        }
+
         bfs::current_path(exePath.parent_path());
 
         if (g_rtConfig->EmbedGeneMetadata)

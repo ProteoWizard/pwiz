@@ -321,8 +321,8 @@ void findDistinctAnalyses(const vector<string>& inputFilepaths,
                     break;
                 }
 
-                BOOST_FOREACH_FIELD((string& key)(string& value), a_b) differingParametersByAnalysisName[otherAnalysis->name].insert(key);
-                BOOST_FOREACH_FIELD((string& key)(string& value), b_a) differingParametersByAnalysisName[otherAnalysis->name].insert(key);
+                BOOST_FOREACH_FIELD((const string& key)(const string& value), a_b) differingParametersByAnalysisName[otherAnalysis->name].insert(key);
+                BOOST_FOREACH_FIELD((const string& key)(const string& value), b_a) differingParametersByAnalysisName[otherAnalysis->name].insert(key);
             }
 
             if (!sameAnalysis.get())
@@ -478,7 +478,7 @@ struct ParserImpl
         if (mzid.analysisProtocolCollection.spectrumIdentificationProtocol.size() > 1)
             throw runtime_error("more than one spectrum identification protocol not supported");
 
-        SpectrumIdentificationProtocol& sip = *mzid.analysisProtocolCollection.spectrumIdentificationProtocol[0];
+        //SpectrumIdentificationProtocol& sip = *mzid.analysisProtocolCollection.spectrumIdentificationProtocol[0];
 
         // insert the root group
         sqlite::command(idpDb, "INSERT INTO SpectrumSourceGroup (Id, Name) VALUES (1,'/')").execute();
@@ -585,220 +585,242 @@ struct ParserImpl
 
         bool hasScoreNames = false;
         int iterationIndex = 0;
-        BOOST_FOREACH(SpectrumIdentificationResultPtr& sir, sil.spectrumIdentificationResult)
+        try
         {
-            ITERATION_UPDATE(ilr, iterationIndex++, sil.spectrumIdentificationResult.size(), "writing spectrum results");
-
-            // without an SII, precursor m/z is unknown, so empty results are skipped
-            if (sir->spectrumIdentificationItem.empty())
-                continue;
-
-            // insert distinct spectrum
-            nextSpectrumId = distinctSpectra.size() + 1;
-            bool spectrumInserted = distinctSpectra.insert(make_pair(sir->spectrumID, nextSpectrumId)).second;
-            if (!spectrumInserted)
-                throw runtime_error("non-unique spectrumIDs not supported (" + sir->spectrumID + ")");
-
-            double firstPrecursorMZ = sir->spectrumIdentificationItem[0]->experimentalMassToCharge;
-            double scanTimeInSeconds = sir->cvParam(MS_scan_start_time).timeInSeconds();
-            insertSpectrum.binder() << nextSpectrumId << nextSpectrumId << sir->spectrumID << firstPrecursorMZ << scanTimeInSeconds;
-            insertSpectrum.execute();
-            insertSpectrum.reset();
-
-            BOOST_FOREACH(SpectrumIdentificationItemPtr& sii, sir->spectrumIdentificationItem)
+            BOOST_FOREACH(SpectrumIdentificationResultPtr& sir, sil.spectrumIdentificationResult)
             {
-                if (!sii->peptidePtr.get() || sii->peptidePtr->empty())
-                    throw runtime_error("SII with a missing or empty peptide reference (" + sii->id + ")");
+                ITERATION_UPDATE(ilr, iterationIndex++, sil.spectrumIdentificationResult.size(), "writing spectrum results");
 
-                // skip low ranking results according to import settings
-                if (analysis.importSettings.maxResultRank > 0 &&
-                    analysis.importSettings.maxResultRank < sii->rank)
+                if (!sir) throw runtime_error("[Parser::insertSpectrumResults] null spectrumIdentificationResult");
+
+                // without an SII, precursor m/z is unknown, so empty results are skipped
+                if (sir->spectrumIdentificationItem.empty())
                     continue;
 
-                // insert distinct peptide
-                const string& sequence = sii->peptidePtr->peptideSequence;
+                if (!sir->spectrumIdentificationItem[0]) throw runtime_error("[Parser::insertSpectrumResults] null spectrumIdentificationItem");
 
-                // skip short peptides
-                if (analysis.importSettings.minPeptideLength > sequence.length())
-                    continue;
+                // insert distinct spectrum
+                nextSpectrumId = distinctSpectra.size() + 1;
+                bool spectrumInserted = distinctSpectra.insert(make_pair(sir->spectrumID, nextSpectrumId)).second;
+                if (!spectrumInserted)
+                    throw runtime_error("non-unique spectrumIDs not supported (" + sir->spectrumID + ")");
 
-                proteome::Peptide pwizPeptide(sequence);
-                shared_string sharedSequence(new string(sequence));
+                double firstPrecursorMZ = sir->spectrumIdentificationItem[0]->experimentalMassToCharge;
+                double scanTimeInSeconds = sir->cvParam(MS_scan_start_time).timeInSeconds();
+                insertSpectrum.binder() << nextSpectrumId << nextSpectrumId << sir->spectrumID << firstPrecursorMZ << scanTimeInSeconds;
+                insertSpectrum.execute();
+                insertSpectrum.reset();
 
-                nextPeptideId = distinctPeptideIdBySequence.size() + 1;
-                bool peptideInserted = distinctPeptideIdBySequence.insert(make_pair(sharedSequence, nextPeptideId)).second;
-                if (peptideInserted)
+                BOOST_FOREACH(SpectrumIdentificationItemPtr& sii, sir->spectrumIdentificationItem)
                 {
-                    bool hasDecoy = false;
-                    bool hasTarget = false;
-                    vector<PeptideEvidencePtr> decoyPeptideEvidence;
-                    BOOST_FOREACH(const PeptideEvidencePtr& pe, sii->peptideEvidencePtr)
+                    if (!sii) throw runtime_error("[Parser::insertSpectrumResults] null spectrumIdentificationItem");
+
+                    if (!sii->peptidePtr || sii->peptidePtr->empty())
+                        throw runtime_error("SII with a missing or empty peptide reference (" + sii->id + ")");
+
+                    // skip low ranking results according to import settings
+                    if (analysis.importSettings.maxResultRank > 0 &&
+                        analysis.importSettings.maxResultRank < sii->rank)
+                        continue;
+
+                    // insert distinct peptide
+                    const string& sequence = sii->peptidePtr->peptideSequence;
+
+                    // skip short peptides
+                    if (analysis.importSettings.minPeptideLength > sequence.length())
+                        continue;
+
+                    proteome::Peptide pwizPeptide(sequence);
+                    shared_string sharedSequence(new string(sequence));
+
+                    nextPeptideId = distinctPeptideIdBySequence.size() + 1;
+                    bool peptideInserted = distinctPeptideIdBySequence.insert(make_pair(sharedSequence, nextPeptideId)).second;
+                    if (peptideInserted)
                     {
-                        bool isDecoy = bal::starts_with(pe->dbSequencePtr->accession, decoyPrefix);
-                        hasDecoy |= isDecoy;
-                        hasTarget |= !isDecoy;
-                        if (isDecoy)
-                            decoyPeptideEvidence.push_back(pe);
-                    }
-
-                    insertPeptide.binder() << nextPeptideId << pwizPeptide.monoisotopicMass() << pwizPeptide.molecularWeight();
-
-                    if (hasTarget)
-                        targetPeptides.insert(sharedSequence);
-
-                    // if the peptide comes from only target proteins, leave the DecoySequence null
-                    if (!hasDecoy)
-                        insertPeptide.binder(4) << sqlite::ignore;
-                    else
-                        insertPeptide.binder(4) << *sharedSequence;
-
-                    insertPeptide.execute();
-                    insertPeptide.reset();
-
-                    // some bogus files may repeat the same decoy peptide
-                    set<shared_string> decoyPeptides;
-
-                    // decoy proteins and peptide instances are inserted immediately
-                    BOOST_FOREACH(const PeptideEvidencePtr& pe, decoyPeptideEvidence)
-                    {
-                        // skip PeptideEvidence with invalid pre/post
-                        if (!bal::is_any_of("-ABCDEFGHIKLMNPQRSTUVWYZ")(pe->pre) ||
-                            !bal::is_any_of("-ABCDEFGHIKLMNPQRSTUVWYZ")(pe->post))
-                            continue;
-
-                        const DBSequence& dbs = *pe->dbSequencePtr;
-                        map<string, sqlite3_int64>::iterator itr; bool wasInserted;
-                        boost::tie(itr, wasInserted) = proteinIdByAccession.insert(make_pair(dbs.accession, 0));
-
-                        if (wasInserted)
+                        bool hasDecoy = false;
+                        bool hasTarget = false;
+                        vector<PeptideEvidencePtr> decoyPeptideEvidence;
+                        BOOST_FOREACH(const PeptideEvidencePtr& pe, sii->peptideEvidencePtr)
                         {
-                            itr->second = ++nextProteinId;
+                            if (!pe) throw runtime_error("[Parser::insertSpectrumResults] null peptideEvidencePtr");
+                            if (!pe->dbSequencePtr) throw runtime_error("[Parser::insertSpectrumResults] null dbSequencePtr");
 
-                            insertProtein.binder() << nextProteinId << dbs.accession;
-                            insertProtein.execute();
-                            insertProtein.reset();
+                            bool isDecoy = bal::starts_with(pe->dbSequencePtr->accession, decoyPrefix);
+                            hasDecoy |= isDecoy;
+                            hasTarget |= !isDecoy;
+                            if (isDecoy)
+                                decoyPeptideEvidence.push_back(pe);
                         }
 
-                        set<shared_string>::iterator itr2; bool wasInserted2;
-                        boost::tie(itr2, wasInserted2) = decoyPeptides.insert(sharedSequence);
+                        insertPeptide.binder() << nextPeptideId << pwizPeptide.monoisotopicMass() << pwizPeptide.molecularWeight();
 
-                        if (wasInserted2)
+                        if (hasTarget)
+                            targetPeptides.insert(sharedSequence);
+
+                        // if the peptide comes from only target proteins, leave the DecoySequence null
+                        if (!hasDecoy)
+                            insertPeptide.binder(4) << sqlite::ignore;
+                        else
+                            insertPeptide.binder(4) << *sharedSequence;
+
+                        insertPeptide.execute();
+                        insertPeptide.reset();
+
+                        // some bogus files may repeat the same decoy peptide
+                        set<shared_string> decoyPeptides;
+
+                        // decoy proteins and peptide instances are inserted immediately
+                        BOOST_FOREACH(const PeptideEvidencePtr& pe, decoyPeptideEvidence)
                         {
-                            sqlite3_int64 curProteinId = itr->second;
-                            proteome::DigestedPeptide peptide = digestedPeptide(sip, *pe);
+                            // skip PeptideEvidence with invalid pre/post
+                            if (!bal::is_any_of("-ABCDEFGHIKLMNPQRSTUVWYZ")(pe->pre) ||
+                                !bal::is_any_of("-ABCDEFGHIKLMNPQRSTUVWYZ")(pe->post))
+                                continue;
 
-                            insertPeptideInstance.binder() << ++nextPeptideInstanceId
-                                                           << curProteinId
-                                                           << nextPeptideId
-                                                           << (int) peptide.sequence().length()
-                                                           << peptide.NTerminusIsSpecific()
-                                                           << peptide.CTerminusIsSpecific()
-                                                           << (int) peptide.missedCleavages();
-                            insertPeptideInstance.execute();
-                            insertPeptideInstance.reset();
+                            const DBSequence& dbs = *pe->dbSequencePtr;
+                            map<string, sqlite3_int64>::iterator itr; bool wasInserted;
+                            boost::tie(itr, wasInserted) = proteinIdByAccession.insert(make_pair(dbs.accession, 0));
+
+                            if (wasInserted)
+                            {
+                                itr->second = ++nextProteinId;
+
+                                insertProtein.binder() << nextProteinId << dbs.accession;
+                                insertProtein.execute();
+                                insertProtein.reset();
+                            }
+
+                            set<shared_string>::iterator itr2; bool wasInserted2;
+                            boost::tie(itr2, wasInserted2) = decoyPeptides.insert(sharedSequence);
+
+                            if (wasInserted2)
+                            {
+                                sqlite3_int64 curProteinId = itr->second;
+                                proteome::DigestedPeptide peptide = digestedPeptide(sip, *pe);
+
+                                insertPeptideInstance.binder() << ++nextPeptideInstanceId
+                                                               << curProteinId
+                                                               << nextPeptideId
+                                                               << (int) peptide.sequence().length()
+                                                               << peptide.NTerminusIsSpecific()
+                                                               << peptide.CTerminusIsSpecific()
+                                                               << (int) peptide.missedCleavages();
+                                insertPeptideInstance.execute();
+                                insertPeptideInstance.reset();
+                            }
                         }
                     }
-                }
-                else
-                    nextPeptideId = distinctPeptideIdBySequence[sharedSequence];
+                    else
+                        nextPeptideId = distinctPeptideIdBySequence[sharedSequence];
 
-                ++nextPSMId;
+                    ++nextPSMId;
 
-                // build map of mod offset to total mod mass (in order to merge mods at the same offset)
-                typedef pair<double, double> MassPair;
-                map<int, MassPair> modMassByOffset;
-                BOOST_FOREACH(ModificationPtr& mod, sii->peptidePtr->modification)
-                {
-                    int offset = mod->location - 1;
-                    if (offset < 0)
-                        offset = INT_MIN;
-                    else if (offset >= (int) sequence.length())
-                        offset = INT_MAX;
-
-                    MassPair& massPair = modMassByOffset[offset];
-                    massPair.first += mod->monoisotopicMassDelta;
-                    massPair.second += mod->avgMassDelta;
-                }
-
-                // insert modifications
-                BOOST_FOREACH_FIELD((const int& offset)(const MassPair& massPair), modMassByOffset)
-                {
-                    ++nextPMId;
-
-                    double modMass = massPair.first > 0 ? massPair.first : massPair.second;
-
-                    pair<map<double, sqlite3_int64>::iterator, bool> insertResult =
-                        modIdByDeltaMass.insert(make_pair(modMass, 0));
-                    if (insertResult.second)
+                    // build map of mod offset to total mod mass (in order to merge mods at the same offset)
+                    typedef pair<double, double> MassPair;
+                    map<int, MassPair> modMassByOffset;
+                    BOOST_FOREACH(ModificationPtr& mod, sii->peptidePtr->modification)
                     {
-                        insertResult.first->second = ++nextModId;
-                        insertModification.binder() << nextModId
-                                                    << massPair.first
-                                                    << massPair.second;
-                        insertModification.execute();
-                        insertModification.reset();
+                        if (!mod) throw runtime_error("[Parser::insertSpectrumResults] null modification");
+
+                        int offset = mod->location - 1;
+                        if (offset < 0)
+                            offset = INT_MIN;
+                        else if (offset >= (int) sequence.length())
+                            offset = INT_MAX;
+
+                        MassPair& massPair = modMassByOffset[offset];
+                        massPair.first += mod->monoisotopicMassDelta;
+                        massPair.second += mod->avgMassDelta;
                     }
 
-                    char site;
-                    if (offset == INT_MIN)
-                        site = '(';
-                    else if (offset == INT_MAX)
-                        site = ')';
-                    else
-                        site = sequence[offset];
+                    // insert modifications
+                    BOOST_FOREACH_FIELD((const int& offset)(const MassPair& massPair), modMassByOffset)
+                    {
+                        ++nextPMId;
 
-                    insertPeptideModification.binder() << nextPMId
-                                                       << nextPSMId
-                                                       << insertResult.first->second // mod id
-                                                       << offset
-                                                       << site;
-                    insertPeptideModification.execute();
-                    insertPeptideModification.reset();
+                        double modMass = massPair.first > 0 ? massPair.first : massPair.second;
 
-                    pwizPeptide.modifications()[offset].push_back(proteome::Modification(massPair.first, massPair.second));
-                }
+                        pair<map<double, sqlite3_int64>::iterator, bool> insertResult =
+                            modIdByDeltaMass.insert(make_pair(modMass, 0));
+                        if (insertResult.second)
+                        {
+                            insertResult.first->second = ++nextModId;
+                            insertModification.binder() << nextModId
+                                                        << massPair.first
+                                                        << massPair.second;
+                            insertModification.execute();
+                            insertModification.reset();
+                        }
 
-                double precursorMass = Ion::neutralMass(sii->experimentalMassToCharge, sii->chargeState);
+                        char site;
+                        if (offset == INT_MIN)
+                            site = '(';
+                        else if (offset == INT_MAX)
+                            site = ')';
+                        else
+                            site = sequence[offset];
 
-                // insert peptide spectrum match
-                insertPSM.binder() << nextPSMId
-                                   << nextSpectrumId
-                                   << 1 // analysis
-                                   << nextPeptideId
-                                   << 2 // q value
-                                   << precursorMass
-                                   << (precursorMass - pwizPeptide.monoisotopicMass())
-                                   << (precursorMass - pwizPeptide.molecularWeight())
-                                   << sii->rank
-                                   << sii->chargeState;
-                insertPSM.execute();
-                insertPSM.reset();
+                        insertPeptideModification.binder() << nextPMId
+                                                           << nextPSMId
+                                                           << insertResult.first->second // mod id
+                                                           << offset
+                                                           << site;
+                        insertPeptideModification.execute();
+                        insertPeptideModification.reset();
 
-                if (!hasScoreNames)
-                {
-                    hasScoreNames = true;
-                    insertScoreNames(sii);
-                }
+                        pwizPeptide.modifications()[offset].push_back(proteome::Modification(massPair.first, massPair.second));
+                    }
 
-                if (sii->cvParams.empty() && sii->userParams.empty())
-                    throw runtime_error("no scores found for SII");
+                    double precursorMass = Ion::neutralMass(sii->experimentalMassToCharge, sii->chargeState);
 
-                sqlite3_int64 nextScoreId = 0;
+                    // insert peptide spectrum match
+                    insertPSM.binder() << nextPSMId
+                                       << nextSpectrumId
+                                       << 1 // analysis
+                                       << nextPeptideId
+                                       << 2 // q value
+                                       << precursorMass
+                                       << (precursorMass - pwizPeptide.monoisotopicMass())
+                                       << (precursorMass - pwizPeptide.molecularWeight())
+                                       << sii->rank
+                                       << sii->chargeState;
+                    insertPSM.execute();
+                    insertPSM.reset();
 
-                BOOST_FOREACH(const CVParam& cvParam, sii->cvParams)
-                {
-                    insertScore.binder() << nextPSMId << cvParam.value << ++nextScoreId;
-                    insertScore.execute();
-                    insertScore.reset();
-                }
+                    if (!hasScoreNames)
+                    {
+                        hasScoreNames = true;
+                        insertScoreNames(sii);
+                    }
 
-                BOOST_FOREACH(const UserParam& userParam, sii->userParams)
-                {
-                    insertScore.binder() << nextPSMId << userParam.value << ++nextScoreId;
-                    insertScore.execute();
-                    insertScore.reset();
+                    if (sii->cvParams.empty() && sii->userParams.empty())
+                        throw runtime_error("no scores found for SII");
+
+                    sqlite3_int64 nextScoreId = 0;
+
+                    BOOST_FOREACH(const CVParam& cvParam, sii->cvParams)
+                    {
+                        insertScore.binder() << nextPSMId << cvParam.value << ++nextScoreId;
+                        insertScore.execute();
+                        insertScore.reset();
+                    }
+
+                    BOOST_FOREACH(const UserParam& userParam, sii->userParams)
+                    {
+                        insertScore.binder() << nextPSMId << userParam.value << ++nextScoreId;
+                        insertScore.execute();
+                        insertScore.reset();
+                    }
                 }
             }
+        }
+        catch (exception& e)
+        {
+            throw runtime_error("error parsing spectrum result " + lexical_cast<string>(iterationIndex) + " (" + sil.spectrumIdentificationResult[iterationIndex]->id + "): " + e.what());
+        }
+        catch (...)
+        {
+            throw runtime_error("unknown error parsing spectrum result " + lexical_cast<string>(iterationIndex) + " (" + sil.spectrumIdentificationResult[iterationIndex]->id + ")");
         }
 
         if (targetPeptides.size() == distinctPeptideIdBySequence.size())
@@ -867,7 +889,7 @@ struct ParserImpl
             "DELETE FROM ProteinMetadata WHERE Id NOT IN (SELECT Protein FROM PeptideInstance);";
 
         sql = (boost::format(sql) % analysis.importSettings.maxQValue % maxResultRank).str();
-        BOOST_LOG_SEV(logSource::get(), MessageSeverity::VerboseInfo) << sql;
+        BOOST_LOG_SEV(logSource::get(), MessageSeverity::DebugInfo) << sql;
         idpDb.execute(sql.c_str());
 
         transaction.commit();
@@ -1014,7 +1036,18 @@ void executeParserTask(ParserTaskPtr parserTask, ThreadStatus& status)
             //boost::mutex::scoped_lock ioLock(ioMutex);
             parserTask->mzid.reset(new IdentDataFile(inputFilepath, 0, ilr));
         }
+    }
+    catch (exception& e)
+    {
+        status = boost::copy_exception(runtime_error("[executeParserTask] error reading \"" + inputFilepath + "\": " + e.what()));
+    }
+    catch (...)
+    {
+        status = boost::copy_exception(runtime_error("[executeParserTask] unknown error reading \"" + inputFilepath + "\""));
+    }
 
+    try
+    {
         // create parser instance
         parserTask->parser.reset(new ParserImpl(inputFilepath,
                                                 *parserTask->analysis,
@@ -1024,6 +1057,18 @@ void executeParserTask(ParserTaskPtr parserTask, ThreadStatus& status)
 
         parserTask->parser->insertAnalysisMetadata();
 
+    }
+    catch (exception& e)
+    {
+        status = boost::copy_exception(runtime_error("[executeParserTask] error creating parser for \"" + inputFilepath + "\": " + e.what()));
+    }
+    catch (...)
+    {
+        status = boost::copy_exception(runtime_error("[executeParserTask] unknown error creating parser for \"" + inputFilepath + "\""));
+    }
+
+    try
+    {
         IterationListener::Status tmpStatus = IterationListener::Status_Ok;
         parserTask->parser->insertSpectrumResults(tmpStatus);
         if (tmpStatus == IterationListener::Status_Cancel)
@@ -1037,11 +1082,11 @@ void executeParserTask(ParserTaskPtr parserTask, ThreadStatus& status)
     }
     catch (exception& e)
     {
-        status = boost::copy_exception(runtime_error("[executeParserTask] error parsing \"" + inputFilepath + "\": " + e.what()));
+        status = boost::copy_exception(runtime_error("[executeParserTask] error parsing spectrum results \"" + inputFilepath + "\": " + e.what()));
     }
     catch (...)
     {
-        status = boost::copy_exception(runtime_error("[executeParserTask] unknown error parsing \"" + inputFilepath + "\""));
+        status = boost::copy_exception(runtime_error("[executeParserTask] unknown error parsing spectrum results \"" + inputFilepath + "\""));
     }
 
     parserTask->mzid.reset();
@@ -1198,7 +1243,12 @@ void executePeptideFinderTask(PeptideFinderTaskPtr peptideFinderTask, ThreadStat
         vector<string> cleavageAgentRegexes = pwiz::identdata::cleavageAgentRegexes(parser.analysis.enzymes);
 
         if (cleavageAgentRegexes.empty())
-            throw runtime_error("unknown cleavage agent");
+        {
+            if (!parser.analysis.enzymes.enzymes.empty() && parser.analysis.enzymes.enzymes[0]->terminalSpecificity == pwiz::proteome::Digestion::NonSpecific)
+                cleavageAgentRegexes.push_back("(?=.)");
+            else
+                throw runtime_error("unknown cleavage agent");
+        }
 
         boost::mutex::scoped_lock lock(proteinReaderTask.queueMutex, boost::defer_lock);
 
