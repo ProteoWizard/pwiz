@@ -79,7 +79,14 @@ namespace pwiz.Skyline
 
         private void dockPanel_ActiveDocumentChanged(object sender, EventArgs e)
         {
-            ActiveDocumentChanged();
+            try
+            {
+                ActiveDocumentChanged();
+            }
+            catch (Exception x)
+            {
+                Program.ReportException(x);
+            }
         }
 
         private void ActiveDocumentChanged()

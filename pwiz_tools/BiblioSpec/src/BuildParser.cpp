@@ -54,7 +54,7 @@ BuildParser::BuildParser(BlibBuilder& maker,
       "driftTimeHighEnergyOffsetMsec, retentionTime, fileID, specIDinFile, "
       "score, scoreType) "
       "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ",
-      LARGE_BUFFER_SIZE, &insertSpectrumStmt_, NULL);
+      -1, &insertSpectrumStmt_, NULL);
 }
 
 BuildParser::~BuildParser() {

@@ -149,7 +149,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLev
     {
         //result->set(MS_base_peak_intensity, scanRecordPtr->getBasePeakIntensity(), MS_number_of_detector_counts);
         //result->set(MS_total_ion_current, scanRecordPtr->getTic(), MS_number_of_detector_counts);
-        scan.set(MS_scan_start_time, scanRecordPtr->getRetentionTime() / 60, UO_minute);
+        scan.set(MS_scan_start_time, scanRecordPtr->getRetentionTime(), UO_minute);
     }
     else
     {
