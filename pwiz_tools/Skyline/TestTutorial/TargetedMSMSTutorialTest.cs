@@ -568,7 +568,17 @@ namespace pwiz.SkylineTestTutorial
             WaitForDocumentChangeLoaded(docCalibrate1);
             WaitForConditionUI(() => importProgress.Finished);
             string expectedErrorFormat = Resources.NoFullScanFilteringException_NoFullScanFilteringException_To_extract_chromatograms_from__0__full_scan_settings_must_be_enabled_;
-            WaitForConditionUI(() => !string.IsNullOrEmpty(importProgress.Error), "Missing expected error text: " + expectedErrorFormat);
+            if (!TryWaitForConditionUI(() => !string.IsNullOrEmpty(importProgress.Error)))
+            {
+                RunUI(() =>
+                {
+                    string message = string.IsNullOrEmpty(importProgress.SelectedControl.Error)
+                        ? "Missing expected error text: " + expectedErrorFormat
+                        : "Selected control error: " + importProgress.SelectedControl.Error + " not in text control";
+
+                    Assert.Fail(TextUtil.LineSeparate(message, "(" + importProgress.DetailedMessage + ")"));
+                });
+            }
             RunUI(() => AssertEx.AreComparableStrings(expectedErrorFormat, importProgress.Error, 1));
             RunUI(() =>
             {
