@@ -223,7 +223,7 @@ namespace pwiz.Skyline.EditUI
 
         private SrmDocument GetNewDocument(SrmDocument document, bool validating, ref IdentityPath selectedPath, out int emptyPeptideGroups)
         {
-            var fastaHelper = new ImportFastaHelper(tbxFasta, tbxError, panelError);
+            var fastaHelper = new ImportFastaHelper(tbxFasta, tbxError, panelError, toolTip1);
             if ((document = fastaHelper.AddFasta(document, ref selectedPath, out emptyPeptideGroups)) == null)
             {
                 tabControl1.SelectedTab = tabPageFasta;  // To show fasta errors
@@ -1849,7 +1849,7 @@ namespace pwiz.Skyline.EditUI
 
     public class ImportFastaHelper
     {
-        public ImportFastaHelper(TextBox tbxFasta, TextBox tbxError, Panel panelError, ToolTip helpTip = null)
+        public ImportFastaHelper(TextBox tbxFasta, TextBox tbxError, Panel panelError, ToolTip helpTip)
         {
             _tbxFasta = tbxFasta;
             _tbxError = tbxError;
@@ -1975,8 +1975,11 @@ namespace pwiz.Skyline.EditUI
             TbxError.ForeColor = Color.White;
             TbxError.Text = pasteError.Message;
             TbxError.Visible = true;
-            // In case message is long, make it possible to see in a tip
-            HelpTip.SetToolTip(TbxError, pasteError.Message);
+            if (HelpTip != null)
+            {
+                // In case message is long, make it possible to see in a tip
+                HelpTip.SetToolTip(TbxError, pasteError.Message);
+            }
 
             TbxFasta.SelectionStart = Math.Max(0, TbxFasta.GetFirstCharIndexFromLine(pasteError.Line) + pasteError.Column);
             TbxFasta.SelectionLength = Math.Min(pasteError.Length, TbxFasta.Text.Length - TbxFasta.SelectionStart);
