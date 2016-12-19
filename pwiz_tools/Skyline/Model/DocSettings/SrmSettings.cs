@@ -1771,7 +1771,7 @@ namespace pwiz.Skyline.Model.DocSettings
         double GetAAModMass(char aa, int seqIndex, int seqLength);
         MassDistribution GetMzDistribution(string seq, int charge, IsotopeAbundances abundances);
         MassDistribution GetMZDistributionFromFormula(string formula, int charge, IsotopeAbundances abundances);
-        MassDistribution GetMZDistributionSinglePoint(double mz, int charge);
+        MassDistribution GetMZDistributionSinglePoint(double mz);
         string GetIonFormula(string peptideSequence, int charge);
     }
 

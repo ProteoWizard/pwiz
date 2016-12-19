@@ -76,8 +76,13 @@ namespace pwiz.Skyline.Model.Results
                 monoMassIndex++;
             }
 
-            if (!q1FilterValues.Any())  // As is small molecule docs with mz values only, no formulas
+            if (!q1FilterValues.Any())
+            {
+                // This should never happen, but just in case it does happen, we safely exit the constructor
+                ExpectedPeaks = ImmutableList.Singleton(new MzRankProportion(monoMz, 0, 1.0f));
+                MonoMassIndex = BaseMassIndex = 0;
                 return;
+            }
 
             var signedQ1FilterValues = q1FilterValues.Select(q => new SignedMz(q, charge < 0)).ToList();
 
@@ -122,9 +127,6 @@ namespace pwiz.Skyline.Model.Results
                 expectedProportionRanks[listProportionIndices[i].Value] =
                     new KeyValuePair<float, int>(listProportionIndices[i].Key, i + 1);
             }
-
-            // TODO: Can this be discarded?
-            // MassDistribution = massDistribution;
 
             MonoMassIndex = monoMassIndex - startIndex;
 
