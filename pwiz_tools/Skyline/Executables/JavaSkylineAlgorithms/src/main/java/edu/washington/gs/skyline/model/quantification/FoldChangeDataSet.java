@@ -19,9 +19,12 @@
 package edu.washington.gs.skyline.model.quantification;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.stream.IntStream;
 
 /**
@@ -123,5 +126,14 @@ class FoldChangeDataSet {
 
     public boolean isRowInControlGroup(int rowIndex) {
         return isSubjectInControlGroup(subjects[rowIndex]);
+    }
+
+    public String toString() {
+        List<String> lines = new ArrayList<>();
+        lines.add("Subject,Run,Feature,Abundance,Control");
+        for (int i = 0; i < getRowCount(); i++) {
+            lines.add(StringUtils.join(new Object[]{getSubject(i), getRun(i), getFeature(i), getAbundance(i),isRowInControlGroup(i)}, ','));
+        }
+        return String.join("\n", lines);
     }
 }

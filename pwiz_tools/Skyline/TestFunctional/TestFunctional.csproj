@@ -172,6 +172,7 @@
     <Compile Include="FindColumnTest.cs" />
     <Compile Include="FullScanGraphTest.cs" />
     <Compile Include="FullScanIdTest.cs" />
+    <Compile Include="GroupComparisonScenariosTest.cs" />
     <Compile Include="GroupComparisonTest.cs" />
     <Compile Include="ImmediateWindowTest.cs" />
     <Compile Include="ImportDocTest.cs" />

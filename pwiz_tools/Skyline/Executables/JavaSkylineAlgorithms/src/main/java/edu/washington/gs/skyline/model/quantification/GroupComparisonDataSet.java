@@ -42,7 +42,9 @@ public class GroupComparisonDataSet {
     }
 
     public void setNormalizationMethod(NormalizationMethod normalizationMethod) {
-        this.normalizationMethod = normalizationMethod;
+        if (normalizationMethod != null) {
+            this.normalizationMethod = normalizationMethod;
+        }
     }
 
     public LinearFitResult calculateFoldChange(String label) {
@@ -63,7 +65,7 @@ public class GroupComparisonDataSet {
                 if (log2Abundance == null) {
                     continue;
                 }
-                Replicate combinedReplicate = new Replicate(entry.getKey().getLeft(), null);
+                Replicate combinedReplicate = new Replicate(entry.getKey().getLeft(), entry.getKey().getValue());
                 ResultFileData resultFileData = combinedReplicate.ensureResultFileData();
                 resultFileData.setTransitionAreas(label,
                         TransitionAreas.fromMap(Collections.singletonMap("", Math.pow(2.0, log2Abundance))));
@@ -158,9 +160,26 @@ public class GroupComparisonDataSet {
             }
             return log2(normalizedIntensity);
         }
+
+        @Override
+        public String toString() {
+            return "Replicate{" +
+                    "control=" + control +
+                    ", bioReplicate=" + bioReplicate +
+                    ", super=" + super.toString() +
+                    '}';
+        }
     }
 
     protected double log2(double value) {
         return Math.log(value) / Math.log(2.0);
+    }
+
+    @Override
+    public String toString() {
+        return "GroupComparisonDataSet{" +
+                "normalizationMethod=" + normalizationMethod +
+                ", replicates=" + replicates +
+                '}';
     }
 }

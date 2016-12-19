@@ -19,6 +19,7 @@
 package edu.washington.gs.skyline.model.quantification;
 
 import edu.washington.gs.skyline.model.NameValueCollection;
+
 import java.util.Collections;
 import java.util.Locale;
 

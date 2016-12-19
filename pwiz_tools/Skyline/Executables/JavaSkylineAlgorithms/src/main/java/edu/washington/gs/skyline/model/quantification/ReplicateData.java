@@ -84,4 +84,11 @@ public class ReplicateData
         }
         return areas;
     }
+
+    @Override
+    public String toString() {
+        return "ReplicateData{" +
+                "resultFileDatas=" + resultFileDatas +
+                '}';
+    }
 }
