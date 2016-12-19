@@ -63,7 +63,23 @@ namespace pwiz.SkylineTestConnected.Results.RemoteApi
             var instrumentModels = new HashSet<string>();
             foreach (var account in accounts)
             {
-                ChorusContents chorusContents = chorusSession.FetchContents(account, new Uri(account.ServerUrl + "/skyline/api/contents/my/files"));
+                ChorusContents chorusContents;
+                for (int retry = 4;; retry--)
+                {
+                    try
+                    {
+                        chorusContents = chorusSession.FetchContents(account,
+                            new Uri(account.ServerUrl + "/skyline/api/contents/my/files"));
+                        break;
+                    }
+                    catch (WebException webException)
+                    {
+                        if (retry == 0 || webException.Status != WebExceptionStatus.Timeout)
+                        {
+                            throw;
+                        }
+                    }
+                }
                 Assert.IsNotNull(chorusContents);
                 foreach (var file in ListAllFiles(chorusContents))
                 {
