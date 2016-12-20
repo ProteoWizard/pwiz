@@ -572,9 +572,11 @@ namespace pwiz.SkylineTestTutorial
             {
                 RunUI(() =>
                 {
-                    string message = string.IsNullOrEmpty(importProgress.SelectedControl.Error)
-                        ? "Missing expected error text: " + expectedErrorFormat
-                        : "Selected control error: " + importProgress.SelectedControl.Error + " not in text control";
+                    string message = "Missing expected error text: " + expectedErrorFormat;
+                    if (importProgress.SelectedControl == null)
+                        message = string.Format("No selected control. Selected index = {0}", importProgress.Selected);
+                    else if (!string.IsNullOrEmpty(importProgress.SelectedControl.Error))
+                        message = "Selected control error: " + importProgress.SelectedControl.Error + " not in text control";
 
                     Assert.Fail(TextUtil.LineSeparate(message, "(" + importProgress.DetailedMessage + ")"));
                 });
