@@ -247,45 +247,46 @@ void MzXMLParser::openFile(const char* filename, bool mzSort) {
 }
 
 bool MzXMLParser::getSpectrum(int identifier, SpecData& returnData, SPEC_ID_TYPE findBy, bool getPeaks) {
-    switch (findBy) {
-    case SCAN_NUM_ID:
-        while (!spectra_.empty()) {
-            int current = spectra_.front()->id;
-            if (identifier < current) {
+    do {
+        switch (findBy) {
+        case SCAN_NUM_ID:
+            while (!spectra_.empty()) {
+                int current = spectra_.front()->id;
+                if (identifier < current) {
+                    // Already been discarded
+                    return false;
+                } else if (identifier == current) {
+                    popSpectrum(&returnData);
+                    return true;
+                } else {
+                    popSpectrum();
+                }
+            }
+            break;
+        case INDEX_ID:
+            if (identifier < discardCount_) {
                 // Already been discarded
                 return false;
-            } else if (identifier == current) {
+            } else if (discardCount_ <= identifier && identifier <= discardCount_ + (int)spectra_.size() - 1) {
+                // In current range
+                while (discardCount_ < identifier) {
+                    popSpectrum();
+                }
                 popSpectrum(&returnData);
                 return true;
-            } else {
-                popSpectrum();
             }
+            while (popSpectrum());
+            break;
+        case NAME_ID:
+            return getSpectrum("", returnData, getPeaks);
         }
-        break;
-    case INDEX_ID:
-        if (identifier < discardCount_) {
-            // Already been discarded
+        if (!file_) {
+            // End of file reached and spectrum not found
             return false;
-        } else if (discardCount_ <= identifier && identifier <= discardCount_ + (int)spectra_.size() - 1) {
-            // In current range
-            while (discardCount_ < identifier) {
-                popSpectrum();
-            }
-            popSpectrum(&returnData);
-            return true;
         }
-        while (popSpectrum());
-        break;
-    case NAME_ID:
-        return getSpectrum("", returnData, getPeaks);
-    }
-    if (!file_) {
-        // End of file reached and spectrum not found
-        return false;
-    }
-    // Parse more of the file and try again
-    parseChunk();
-    return getSpectrum(identifier, returnData, findBy, getPeaks);
+        // Parse more of the file and try again
+        parseChunk();
+    } while (true);
 }
 
 bool MzXMLParser::getSpectrum(string identifier, SpecData& returnData, bool getPeaks) {
