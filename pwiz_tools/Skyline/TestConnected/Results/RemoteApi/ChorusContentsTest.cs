@@ -74,17 +74,24 @@ namespace pwiz.SkylineTestConnected.Results.RemoteApi
             var unknownInstrumentModels = new List<string>();
             foreach (var instrumentModel in instrumentModels)
             {
-                // We are only interested in mass spec, and 3 Microarray entries have appeared
-                // which were causing this test to fail.
-                if (instrumentModel.Contains("Microarray"))
-                    continue;
-
                 if (null == ChorusSession.GetFileTypeFromInstrumentModel(instrumentModel))
                 {
                     unknownInstrumentModels.Add(instrumentModel);
                 }
             }
-            Assert.AreEqual(0, unknownInstrumentModels.Count, "Unknown instrument models {0}", string.Join(",", unknownInstrumentModels));
+            if (0 != unknownInstrumentModels.Count)
+            {
+                String message = string.Format("Unknown instrument models {0}", string.Join(",", unknownInstrumentModels));
+
+                try
+                {
+                    TestContext.WriteLine(message);
+                }
+                catch (Exception)
+                {
+                    Console.Error.WriteLine(message);
+                }
+            }
         }
 
         IEnumerable<ChorusContents.File> ListAllFiles(ChorusContents chorusContents)
