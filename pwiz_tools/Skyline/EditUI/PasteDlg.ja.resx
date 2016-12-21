@@ -328,7 +328,7 @@
     <value>True</value>
   </metadata>
   <data name="colProteinSpecies.HeaderText" xml:space="preserve">
-    <value>種</value>
+    <value>生物種</value>
   </data>
   <data name="gridViewProteins.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
