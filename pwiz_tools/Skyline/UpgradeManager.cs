@@ -53,7 +53,7 @@ namespace pwiz.Skyline
             set { Settings.Default.UpdateCheckAtStartup = value; }
         }
 
-        private readonly Control _parentWindow;
+        private Control _parentWindow;
         private readonly bool _startup;
         private readonly AutoResetEvent _endUpdateEvent;
         private UpdateCheckDetails _updateInfo;
@@ -175,7 +175,29 @@ namespace pwiz.Skyline
 
             using (var dlgUpgrade = new UpgradeDlg(versionText, automatic, updateFound) {Text = Program.Name})
             {
-                return dlgUpgrade.ShowDialog(_parentWindow) == DialogResult.OK;
+                try
+                {
+                    return dlgUpgrade.ShowDialog(_parentWindow) == DialogResult.OK;
+                }
+                catch (ObjectDisposedException)
+                {
+                    try
+                    {
+                        if (Program.MainWindow != null && !ReferenceEquals(_parentWindow, Program.MainWindow))
+                        {
+                            _parentWindow = Program.MainWindow;
+                            return dlgUpgrade.ShowDialog(_parentWindow) == DialogResult.OK;
+                        }
+                        else
+                        {
+                            return dlgUpgrade.ShowDialog() == DialogResult.OK;
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        return false;
+                    }
+                }
             }
         }
 
