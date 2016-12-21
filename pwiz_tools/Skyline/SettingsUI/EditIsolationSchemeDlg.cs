@@ -391,7 +391,15 @@ namespace pwiz.Skyline.SettingsUI
                         return;
                     precursorFilter = precFilt;
                 }
-                _isolationScheme = new IsolationScheme(name, SpecialHandling, precursorFilter, null, filterMargin);
+                try
+                {
+                    _isolationScheme = new IsolationScheme(name, SpecialHandling, precursorFilter, null, filterMargin);
+                }
+                catch (InvalidDataException exception)
+                {
+                    MessageDlg.ShowException(this, exception);
+                    return;
+                }
             }
             else
             {

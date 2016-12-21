@@ -702,7 +702,7 @@ namespace pwiz.Skyline.Model
                 }
                 else
                 {
-                    massDist = calc.GetMZDistributionSinglePoint(mz, charge);
+                    massDist = calc.GetMZDistributionSinglePoint(mz);
                 }
                 isotopeDist = new IsotopeDistInfo(massDist, mass, !TransitionGroup.Peptide.IsCustomIon, charge,
                     settings.TransitionSettings.FullScan.GetPrecursorFilterWindow,
