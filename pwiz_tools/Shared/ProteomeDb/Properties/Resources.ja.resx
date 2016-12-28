@@ -100,7 +100,7 @@
   <data name="ProteomeDb_AddFastaFile_Added__0__proteins" xml:space="preserve">
     <value xml:space="preserve">{0}タンパク質を追加済み</value>
   </data>
-    <data name="ProteomeDb_AddFastaFile_Finished_importing__0__proteins" xml:space="preserve">
+  <data name="ProteomeDb_AddFastaFile_Finished_importing__0__proteins" xml:space="preserve">
     <value xml:space="preserve">{0}タンパク質のインポートが完了</value>
   </data>
   <data name="ProteomeDb_Digest_Listing_existing_peptides" xml:space="preserve">
@@ -121,7 +121,7 @@
   <data name="SessionWithLock_EnsureWriteLock_Must_have_write_lock" xml:space="preserve">
     <value xml:space="preserve">書き込みロックが必要</value>
   </data>
-    <data name="ProteomeDb_AddFastaFile_Saving_changes" xml:space="preserve">
+  <data name="ProteomeDb_AddFastaFile_Saving_changes" xml:space="preserve">
     <value>変更を保存中</value>
   </data>
   <data name="SessionFactoryFactory_EnsureVersion_Background_proteome_file__0__has_a_format_which_is_newer_than_the_current_software___Please_update_to_the_latest_software_version_and_try_again_" xml:space="preserve">
@@ -146,7 +146,7 @@
     <value>遺伝子：{0} </value>
   </data>
   <data name="ProteinMetadata_DisplayText_Species___0__" xml:space="preserve">
-    <value>種：{0} </value>
+    <value>生物種：{0} </value>
   </data>
   <data name="ProteinMetadata_DisplayText_Searched__" xml:space="preserve">
     <value>検索済み： </value>

@@ -1341,7 +1341,7 @@ W = 2T/R</value>
     <value>遺伝子</value>
   </data>
   <data name="comboBoxPeptideUniquenessConstraint.Items3" xml:space="preserve">
-    <value>種</value>
+    <value>生物種</value>
   </data>
   <data name="comboBoxPeptideUniquenessConstraint.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 238</value>
@@ -1354,8 +1354,8 @@ W = 2T/R</value>
   </data>
   <data name="comboBoxPeptideUniquenessConstraint.ToolTip" xml:space="preserve">
     <value>[タンパク質]は、バックグラウンドプロテオームにある1つ以上のタンパク質に出現するペプチドを除外します。
- [遺伝子]は、バックグラウンドプロテオームにある1つ以上の遺伝子のタンパク質に出現するペプチドを除外します。
- [種]は、バックグラウンドプロテオームにある1つ以上の種のタンパク質に出現するペプチドを除外します。</value>
+ [タンパク質]は、バックグラウンドプロテオームにおいて2つ以上の遺伝子にコードされるタンパク質に存在するペプチドを除外します。
+ [生物種]は、バックグラウンドプロテオームにおいて2つ以上の生物種のタンパク質に存在するペプチドを除外します。</value>
   </data>
   <data name="&gt;&gt;comboBoxPeptideUniquenessConstraint.Name" xml:space="preserve">
     <value>comboBoxPeptideUniquenessConstraint</value>

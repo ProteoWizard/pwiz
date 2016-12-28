@@ -196,10 +196,10 @@
     <value>152, 22</value>
   </data>
   <data name="uniqueSpeciesToolStripMenuItem.Text" xml:space="preserve">
-    <value>種</value>
+    <value>生物種</value>
   </data>
   <data name="uniqueSpeciesToolStripMenuItem.ToolTipText" xml:space="preserve">
-    <value>バックグラウンドプロテオームにおける1つ以上の種からのタンパク質で見つかったペプチドを除外します</value>
+    <value>バックグラウンドプロテオームにおいて2つ以上の生物種のタンパク質中に存在するペプチドをすべて除外します</value>
   </data>
   <data name="uniqueOnlyToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>236, 22</value>
