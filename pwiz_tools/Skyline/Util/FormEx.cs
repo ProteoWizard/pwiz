@@ -216,9 +216,12 @@ namespace pwiz.Skyline.Util
             if (modeComp != null)
             {
                  Dictionary<IComponent, SkylineWindow.UIMode > modes = modeComp.GetControls();
-                foreach (var component in modes.Keys)
+                foreach (IComponent component in modes.Keys)
                 {
-                    
+                    if (!modes[component].HasFlag(_uimode))
+                    {
+                        component.
+                    }
                 }
             }
 
