@@ -23,6 +23,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using NHibernate.Util;
 using pwiz.Common.Collections;
 using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
@@ -180,6 +181,8 @@ namespace pwiz.Skyline.SettingsUI
             tbxQuantUnits.Text = _peptideSettings.Quantification.Units;
 
             UpdateLibraryDriftPeakWidthControls();
+            ShowMode(Settings.Default);
+
         }
 
         public DigestSettings Digest { get { return _peptideSettings.DigestSettings; } }
@@ -1638,5 +1641,43 @@ namespace pwiz.Skyline.SettingsUI
             UpdateLibraryDriftPeakWidthControls();
         }
 
+        public override void ShowSmallMoleculeView()
+        {
+            Text = "Molecule Settings";
+//            Controls.RemoveByKey("label8");
+//            Controls.RemoveByKey("listStaticMods");
+//            Controls.RemoveByKey("btnEditStaticMods");
+//            Controls.RemoveByKey("label17");
+//            Controls.RemoveByKey("textMaxVariableMods");
+//            Controls.RemoveByKey("textMaxNeutralLosses");
+            label8.Hide();
+            listStaticMods.Hide();
+            btnEditStaticMods.Hide();
+            label17.Hide();
+            textMaxVariableMods.Hide();
+            textMaxNeutralLosses.Hide();
+            tabControl1.TabPages[4].Text = "Labels"; // Change Modifications Tab to Labels
+            // move visible controls to top
+            var distanceFromTop = label16.Top - 10; // 10px margin from top
+            foreach (Control c in tabControl1.TabPages[4].Controls)
+                c.Top -= distanceFromTop;
+
+            tabControl1.TabPages.RemoveAt(2); // Remove Filter Tab
+            tabControl1.TabPages.RemoveAt(0); // Remove Digestion Tab
+        }
+
+        public override void ShowProteomicsView() 
+        {
+            Text = "Peptide Settings";
+            label8.Show();
+            listStaticMods.Show();
+            btnEditStaticMods.Show();
+            label17.Show();
+            textMaxVariableMods.Show();
+            label18.Show();
+            textMaxNeutralLosses.Show();
+            tabControl1.TabPages[4].Text = "Modifications";  // Change Labels Tab to Modifications
+
+        }
     }
 }

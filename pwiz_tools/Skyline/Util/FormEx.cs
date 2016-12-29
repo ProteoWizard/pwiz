@@ -19,10 +19,15 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
+using System.Linq;
+using System.Reflection;
 using System.Windows.Forms;
 using pwiz.Common.Controls;
+using pwiz.Skyline.Model;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Util
@@ -194,6 +199,49 @@ namespace pwiz.Skyline.Util
         {
             CancelButton.PerformClick();
         }
+
+        public void ShowMode(Settings settings)
+        {
+            SkylineWindow.UIMode _uimode;
+            Enum.TryParse(settings.UIMode, out _uimode);
+
+            ModeComponent modeComp = null;
+            foreach (Control ctr in Controls)
+            {
+                if (ctr is ModeComponent)
+                {
+                    modeComp = (ModeComponent) ctr;
+                }
+            }
+            if (modeComp != null)
+            {
+                 Dictionary<IComponent, SkylineWindow.UIMode > modes = modeComp.GetControls();
+                foreach (var component in modes.Keys)
+                {
+                    
+                }
+            }
+
+            
+            switch (_uimode)
+            {
+                case SkylineWindow.UIMode.mixed:
+                    ShowAllView();
+                    break;
+                case SkylineWindow.UIMode.molecule:
+                    ShowSmallMoleculeView();
+                    break;
+                case SkylineWindow.UIMode.protein:
+                    ShowProteomicsView();
+                    break;
+                default:
+                    ShowAllView();
+                    break;
+            }
+        }
+        public virtual void ShowAllView() { }
+        public virtual void ShowSmallMoleculeView() { }
+        public virtual void ShowProteomicsView() { }
     }
 
     public abstract class FormExDetailed : FormEx

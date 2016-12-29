@@ -258,10 +258,10 @@ namespace pwiz.Skyline
             this.toolStripSeparator49 = new System.Windows.Forms.ToolStripSeparator();
             this.exportReportMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator50 = new System.Windows.Forms.ToolStripSeparator();
-            this.exportSpectralLibraryMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.eSPFeaturesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.mProphetFeaturesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.exportSpectralLibraryMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.chromatogramsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.mProphetFeaturesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.chorusRequestToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mruBeforeToolStripSeparator = new System.Windows.Forms.ToolStripSeparator();
             this.mruAfterToolStripSeparator = new System.Windows.Forms.ToolStripSeparator();
@@ -476,6 +476,8 @@ namespace pwiz.Skyline
             this.massErorrRetentionTimeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.massErrorMassToChargContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.massErrorlogScaleContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.comboBoxMode = new System.Windows.Forms.ComboBox();
+            this.modeComponent = new pwiz.Skyline.Model.ModeComponent();
             this.contextMenuTreeNode.SuspendLayout();
             this.contextMenuSpectrum.SuspendLayout();
             this.contextMenuChromatogram.SuspendLayout();
@@ -2101,29 +2103,29 @@ namespace pwiz.Skyline
             this.toolStripSeparator50.Name = "toolStripSeparator50";
             resources.ApplyResources(this.toolStripSeparator50, "toolStripSeparator50");
             // 
-            // exportSpectralLibraryMenuItem
-            // 
-            this.exportSpectralLibraryMenuItem.Name = "exportSpectralLibraryMenuItem";
-            resources.ApplyResources(this.exportSpectralLibraryMenuItem, "exportSpectralLibraryMenuItem");
-            this.exportSpectralLibraryMenuItem.Click += new System.EventHandler(this.exportSpectralLibraryMenuItem_Click);
-            // 
             // eSPFeaturesMenuItem
             // 
             this.eSPFeaturesMenuItem.Name = "eSPFeaturesMenuItem";
             resources.ApplyResources(this.eSPFeaturesMenuItem, "eSPFeaturesMenuItem");
             this.eSPFeaturesMenuItem.Click += new System.EventHandler(this.espFeaturesMenuItem_Click);
             // 
-            // mProphetFeaturesMenuItem
+            // exportSpectralLibraryMenuItem
             // 
-            this.mProphetFeaturesMenuItem.Name = "mProphetFeaturesMenuItem";
-            resources.ApplyResources(this.mProphetFeaturesMenuItem, "mProphetFeaturesMenuItem");
-            this.mProphetFeaturesMenuItem.Click += new System.EventHandler(this.mProphetFeaturesMenuItem_Click);
+            this.exportSpectralLibraryMenuItem.Name = "exportSpectralLibraryMenuItem";
+            resources.ApplyResources(this.exportSpectralLibraryMenuItem, "exportSpectralLibraryMenuItem");
+            this.exportSpectralLibraryMenuItem.Click += new System.EventHandler(this.exportSpectralLibraryMenuItem_Click);
             // 
             // chromatogramsToolStripMenuItem
             // 
             this.chromatogramsToolStripMenuItem.Name = "chromatogramsToolStripMenuItem";
             resources.ApplyResources(this.chromatogramsToolStripMenuItem, "chromatogramsToolStripMenuItem");
             this.chromatogramsToolStripMenuItem.Click += new System.EventHandler(this.chromatogramsToolStripMenuItem_Click);
+            // 
+            // mProphetFeaturesMenuItem
+            // 
+            this.mProphetFeaturesMenuItem.Name = "mProphetFeaturesMenuItem";
+            resources.ApplyResources(this.mProphetFeaturesMenuItem, "mProphetFeaturesMenuItem");
+            this.mProphetFeaturesMenuItem.Click += new System.EventHandler(this.mProphetFeaturesMenuItem_Click);
             // 
             // chorusRequestToolStripMenuItem
             // 
@@ -3315,6 +3317,7 @@ namespace pwiz.Skyline
             this.immediateWindowToolStripMenuItem,
             this.toolStripSeparator47,
             this.optionsToolStripMenuItem});
+            this.modeComponent.SetMode(this.toolsMenu, ((pwiz.Skyline.SkylineWindow.UIMode)((pwiz.Skyline.SkylineWindow.UIMode.molecule | pwiz.Skyline.SkylineWindow.UIMode.mixed))));
             this.toolsMenu.Name = "toolsMenu";
             resources.ApplyResources(this.toolsMenu, "toolsMenu");
             this.toolsMenu.DropDownOpening += new System.EventHandler(this.toolsMenu_DropDownOpening);
@@ -3628,10 +3631,24 @@ namespace pwiz.Skyline
             resources.ApplyResources(this.massErrorlogScaleContextMenuItem, "massErrorlogScaleContextMenuItem");
             this.massErrorlogScaleContextMenuItem.Click += new System.EventHandler(this.massErrorlogScaleContextMenuItem_Click);
             // 
+            // comboBoxMode
+            // 
+            resources.ApplyResources(this.comboBoxMode, "comboBoxMode");
+            this.comboBoxMode.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxMode.ForeColor = System.Drawing.SystemColors.MenuText;
+            this.comboBoxMode.FormattingEnabled = true;
+            this.comboBoxMode.Items.AddRange(new object[] {
+            resources.GetString("comboBoxMode.Items"),
+            resources.GetString("comboBoxMode.Items1"),
+            resources.GetString("comboBoxMode.Items2")});
+            this.comboBoxMode.Name = "comboBoxMode";
+            this.comboBoxMode.SelectedValueChanged += new System.EventHandler(this.comboBoxMode_SelectedValueChanged);
+            // 
             // SkylineWindow
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.comboBoxMode);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.statusStrip);
             this.Controls.Add(this.mainToolStrip);
@@ -4104,6 +4121,8 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripSeparator checkForUpdatesSeparator;
         private System.Windows.Forms.ToolStripMenuItem checkForUpdatesMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exportSpectralLibraryMenuItem;
+        private System.Windows.Forms.ComboBox comboBoxMode;
+        private Model.ModeComponent modeComponent;
     }
 }
 

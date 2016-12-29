@@ -94,6 +94,7 @@ namespace pwiz.Skyline
         private SrmDocument _documentUI;
         private int _savedVersion;
         private bool _closing;
+        private UIMode _uimode;
         private readonly UndoManager _undoManager;
         private readonly BackgroundProteomeManager _backgroundProteomeManager;
         private readonly ProteinMetadataManager _proteinMetadataManager;
@@ -105,9 +106,16 @@ namespace pwiz.Skyline
         private readonly LibraryBuildNotificationHandler _libraryBuildNotificationHandler;
         private readonly ChromatogramManager _chromatogramManager;
 
+//        private readonly ToolStripMenuItem[] _excludeInSmallMoleculeMode;
+        [Flags]
+        public enum UIMode { 
+            protein = 1, 
+            molecule = 2, 
+            mixed = 4
+        }
+
         public event EventHandler<DocumentChangedEventArgs> DocumentChangedEvent;
         public event EventHandler<DocumentChangedEventArgs> DocumentUIChangedEvent;
-
         private readonly List<IProgressStatus> _listProgress;
         private readonly TaskbarProgress _taskbarProgress = new TaskbarProgress();
         private readonly Timer _timerProgress;
@@ -167,6 +175,13 @@ namespace pwiz.Skyline
 
             checkForUpdatesMenuItem.Visible =
                 checkForUpdatesSeparator.Visible = ApplicationDeployment.IsNetworkDeployed;
+
+            try {
+                Enum.TryParse(Settings.Default.UIMode, out _uimode);
+            } catch {
+                _uimode = UIMode.mixed;
+            }
+            comboBoxMode.SelectedIndex = (int)_uimode;
 
             // Begin ToolStore check for updates to currently installed tools
             ActionUtil.RunAsync(() => ToolStoreUtil.CheckForUpdates(Settings.Default.ToolList.ToArray()), "Check for tool updates");    // Not L10N
@@ -4337,6 +4352,8 @@ namespace pwiz.Skyline
 
         private void UpdateNodeCountStatus()
         {
+            if (DocumentUI == null)
+                return;
             var selectedPath = SelectedPath;
             int[] positions;
             if (selectedPath != null &&
@@ -4352,9 +4369,14 @@ namespace pwiz.Skyline
                 for (int i = 0; i < positions.Length; i++)
                     positions[i] = -1;
             }
+          
+            UIMode mode;
+            Enum.TryParse(Settings.Default.UIMode, out mode);
+            var moleculeGroupTxt = mode == UIMode.molecule ? "groups" : "prot";
+            var moleculeTxt = mode == UIMode.molecule ? "molecules" : "pep";
 
-            UpdateStatusCounter(statusSequences, positions, SrmDocument.Level.MoleculeGroups, "prot"); // Not L10N
-            UpdateStatusCounter(statusPeptides, positions, SrmDocument.Level.Molecules, "pep"); // Not L10N
+            UpdateStatusCounter(statusSequences, positions, SrmDocument.Level.MoleculeGroups, moleculeGroupTxt); // Not L10N
+            UpdateStatusCounter(statusPeptides, positions, SrmDocument.Level.Molecules, moleculeTxt); // Not L10N
             UpdateStatusCounter(statusPrecursors, positions, SrmDocument.Level.TransitionGroups, "prec"); // Not L10N
             UpdateStatusCounter(statusIons, positions, SrmDocument.Level.Transitions, "tran"); // Not L10N
         }
@@ -4379,7 +4401,7 @@ namespace pwiz.Skyline
                 tag = string.Format("{0:#,0}", pos) + "/" + string.Format("{0:#,0}", count); // Not L10N
             }
 
-            if (!Equals(label.Tag, tag))
+            if (!Equals(label.Tag, tag) || !label.Text.Contains(text))
             {
                 label.Text = TextUtil.SpaceSeparate(tag, text);
                 label.Tag = tag;
@@ -4869,6 +4891,94 @@ namespace pwiz.Skyline
             {
                 associateFasta.ShowDialog(this);
             }
+        }
+
+       
+        private void comboBoxMode_SelectedValueChanged(object sender, EventArgs e)
+        {
+            FocusDocument();
+            switch (comboBoxMode.SelectedIndex)
+            {
+                case 0:
+                    _uimode = UIMode.protein;
+                    break;
+                case 1:
+                    _uimode = UIMode.molecule;
+                    break;
+                case 2:
+                    _uimode = UIMode.mixed;
+                    break;
+            }
+            Settings.Default.UIMode = _uimode.ToString();
+            ShowMode(Settings.Default);
+        }
+      
+        public override void ShowAllView()
+        {
+//            foreach (ToolStripMenuItem item in _excludeInSmallMoleculeMode)
+//                item.Visible = true;
+            // File >
+            //TODO peptide search & Document?
+            // Edit >
+            // insert
+            // refine
+            sortProteinsMenuItem.Text = "Sort Proteins";
+            removeEmptyProteinsMenuItem.Text = "Remove Empty Proteins";
+            removeEmptyPeptidesMenuItem.Text = "Remove Empty Peptides";
+            removeDuplicatePeptidesMenuItem.Text = "Remove Duplicate Proteins";
+            removeRepeatedPeptidesMenuItem.Text = "Remove Repeated Peptides";
+            // expand all
+            expandProteinsMenuItem.Text = "Proteins";
+            expandPeptidesMenuItem.Text = "Peptides";
+            // collapse all
+            collapseProteinsMenuItem.Text = "Proteins";
+            collapsePeptidesMenuItem.Text = "Peptides";
+            calibrationCurveMenuItem.m
+
+            // View >
+            timePeptideComparisonMenuItem.Text = "Peptide Comparison";
+            areaPeptideComparisonMenuItem.Text = "Peptide Comparison";
+
+            //Settings
+            peptideSettingsMenuItem.Text = "Peptide Settings";
+            UpdateNodeCountStatus();
+        }
+
+        public override void ShowProteomicsView()
+        {
+            ShowAllView();
+        }
+
+        public override void ShowSmallMoleculeView()
+        {
+//            foreach (ToolStripMenuItem item in _excludeInSmallMoleculeMode)
+//                item.Visible = false;
+           
+            // File >
+                //import
+                //TODO peptide search & Document?
+            // Edit >
+                // refine
+                sortProteinsMenuItem.Text = "Sort Groups";
+                removeEmptyProteinsMenuItem.Text = "Remove Empty Groups";
+                removeEmptyPeptidesMenuItem.Text = "Remove Empty Molecules";
+                removeDuplicatePeptidesMenuItem.Text = "Remove Duplicate Groups";
+                removeRepeatedPeptidesMenuItem.Text = "Remove Repeated Molecules";
+                // expand all
+                expandProteinsMenuItem.Text = "Groups";
+                expandPeptidesMenuItem.Text = "Molecules";
+                // collapse all
+                collapseProteinsMenuItem.Text = "Groups";
+                collapsePeptidesMenuItem.Text = "Molecules";
+
+
+            // View >
+            timePeptideComparisonMenuItem.Text = "Molecule Comparison";
+            areaPeptideComparisonMenuItem.Text = "Molecule Comparison";
+
+            //Settings
+            peptideSettingsMenuItem.Text = "Molecule Settings";
+            UpdateNodeCountStatus();
         }
     }
 }

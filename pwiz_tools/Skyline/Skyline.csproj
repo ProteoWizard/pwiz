@@ -841,6 +841,9 @@
     <Compile Include="Model\Find\MissingAnyResultsFinder.cs" />
     <Compile Include="Model\Find\MissingLibraryDataFinder.cs" />
     <Compile Include="Model\Find\MissingAllResultsFinder.cs" />
+    <Compile Include="Model\FlagEnumEditor.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Model\GroupComparison\FoldChangeResult.cs" />
     <Compile Include="Model\GroupComparison\GroupComparer.cs" />
     <Compile Include="Model\GroupComparison\GroupComparisonDef.cs" />
@@ -892,6 +895,12 @@
     <Compile Include="Model\Lib\Midas\MidasBlibBuilder.cs" />
     <Compile Include="Model\Lib\Midas\MidasLibrary.cs" />
     <Compile Include="Model\Lib\Midas\MidasLibSpec.cs" />
+    <Compile Include="Model\ModeComponent.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Model\ModeComponent.Designer.cs">
+      <DependentUpon>ModeComponent.cs</DependentUpon>
+    </Compile>
     <Compile Include="Model\MProphetResultsHandler.cs" />
     <Compile Include="Model\MultiFileLoader.cs" />
     <Compile Include="Model\MultiProgressStatus.cs" />
@@ -2299,6 +2308,9 @@
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\GroupComparison\GroupComparisonStrings.zh-CHS.resx" />
+    <EmbeddedResource Include="Model\ModeComponent.resx">
+      <DependentUpon>ModeComponent.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources\PeptideLib.bmp" />
     <EmbeddedResource Include="Resources\PeptideIrtLib.bmp" />
     <EmbeddedResource Include="Resources\PeptideIrt.bmp" />
@@ -2364,6 +2376,9 @@
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\CiRT.sky" />
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\Sciex.sky" />
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\RePLiCal.sky" />
+    <EmbeddedResource Include="Util\FormEx.resx">
+      <DependentUpon>FormEx.cs</DependentUpon>
+    </EmbeddedResource>
     <None Include="Resources\StartPage\GroupedStudies_thumb.jpg" />
     <None Include="Resources\StartPage\DIA_thumb.jpg" />
     <None Include="Resources\StartPage\SmallMolecule_thumb.jpg" />
