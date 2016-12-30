@@ -760,7 +760,7 @@ namespace pwiz.Skyline.Util
             return GetTempFileName(basePath, prefix, 0);
         }
 
-        [DllImport("kernel32.dll", SetLastError = true)]
+        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
         static extern uint GetTempFileName(string lpPathName, string lpPrefixString,
             uint uUnique, [Out] StringBuilder lpTempFileName);
 
