@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -23,9 +24,12 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -115,7 +119,7 @@ namespace pwiz.Skyline.SettingsUI
 
             foreach (DataGridViewColumn col in gridIsolationWindows.Columns)
             {
-                col.ValueType = typeof (decimal);
+                col.ValueType = typeof(decimal);
             }
             gridIsolationWindows.AutoGenerateColumns = false;
             _gridViewDriver = new GridViewDriver(this, editIsolationWindowBindingSource,
@@ -154,7 +158,7 @@ namespace pwiz.Skyline.SettingsUI
 
             // Initialize results isolation width combo
             comboIsolationWidth.Items.AddRange(
-                new []
+                new[]
                 {
                     IsolationWidthType.RESULTS,
                     IsolationWidthType.RESULTS_WITH_MARGIN,
@@ -218,7 +222,7 @@ namespace pwiz.Skyline.SettingsUI
                     UpdateDeconvCombo(comboDeconv);
                 }
 
-                    // Handle predetermined isolation scheme.
+                // Handle predetermined isolation scheme.
                 else
                 {
                     rbPrespecified.Checked = true;
@@ -230,7 +234,7 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         double start = isolationWindow.Start;
                         double end = isolationWindow.End;
-                        if (Equals(comboIsolation.SelectedItem,WindowType.MEASUREMENT))
+                        if (Equals(comboIsolation.SelectedItem, WindowType.MEASUREMENT))
                         {
                             start -= (isolationWindow.StartMargin ?? 0);
                             end += (isolationWindow.EndMargin ?? (isolationWindow.StartMargin ?? 0));
@@ -323,6 +327,7 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             btnCalculate.Enabled = !fromResults;
+            btnImport.Enabled = !fromResults;
             btnGraph.Enabled = !fromResults;
             gridIsolationWindows.Enabled = !fromResults;
             cbSpecifyMargin.Enabled = !fromResults;
@@ -345,7 +350,8 @@ namespace pwiz.Skyline.SettingsUI
 
         private void UpdateIsolationWidths()
         {
-            if (comboIsolationWidth.SelectedItem == null || Equals(comboIsolationWidth.SelectedItem, IsolationWidthType.RESULTS))
+            if (comboIsolationWidth.SelectedItem == null ||
+                Equals(comboIsolationWidth.SelectedItem, IsolationWidthType.RESULTS))
             {
                 textPrecursorFilterMz.Text = string.Empty;
                 textPrecursorFilterMz.Visible = false;
@@ -384,7 +390,9 @@ namespace pwiz.Skyline.SettingsUI
                 if (!Equals(comboIsolationWidth.SelectedItem, IsolationWidthType.RESULTS))
                 {
                     double minFilt = filterMargin ? 0 : TransitionFullScan.MIN_PRECURSOR_MULTI_FILTER;
-                    double maxFilt = filterMargin ? TransitionFullScan.MAX_PRECURSOR_MULTI_FILTER_MARGIN : TransitionFullScan.MAX_PRECURSOR_MULTI_FILTER;
+                    double maxFilt = filterMargin
+                        ? TransitionFullScan.MAX_PRECURSOR_MULTI_FILTER_MARGIN
+                        : TransitionFullScan.MAX_PRECURSOR_MULTI_FILTER;
                     double precFilt;
                     if (!helper.ValidateDecimalTextBox(textPrecursorFilterMz,
                         minFilt, maxFilt, out precFilt))
@@ -405,9 +413,9 @@ namespace pwiz.Skyline.SettingsUI
             {
                 // Validate prespecified windows.
                 List<IsolationWindow> windowList;
-                if((windowList = GetIsolationWindows()) == null)
+                if ((windowList = GetIsolationWindows()) == null)
                     return;
-                
+
 
                 // Must be at least one window.
                 if (windowList.Count == 0)
@@ -442,14 +450,17 @@ namespace pwiz.Skyline.SettingsUI
                 const double tolerance = 0.0001;
                 for (int i = 0; i < sortedWindowList.Count - subtraction; i += increment)
                 {
-                    for (int j = 0; j < increment; j ++)
+                    for (int j = 0; j < increment; j++)
                     {
                         IsolationWindow current = sortedWindowList.ElementAt(i + j);
                         IsolationWindow next = sortedWindowList.ElementAt(i + j + increment);
                         if (!gapsOk && next.Start - current.End > tolerance)
                         {
-                            if (MultiButtonMsgDlg.Show(this, Resources.EditIsolationSchemeDlg_OkDialog_There_are_gaps_in_a_single_cycle_of_your_extraction_windows__Do_you_want_to_continue_,
-                                                       MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false) != DialogResult.Yes)
+                            if (MultiButtonMsgDlg.Show(this,
+                                    Resources
+                                        .EditIsolationSchemeDlg_OkDialog_There_are_gaps_in_a_single_cycle_of_your_extraction_windows__Do_you_want_to_continue_,
+                                    MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false) !=
+                                DialogResult.Yes)
                             {
                                 return;
                             }
@@ -457,9 +468,10 @@ namespace pwiz.Skyline.SettingsUI
                         }
                         else if (!overlapsOk && current.End - next.Start > tolerance)
                         {
-                            if (MultiButtonMsgDlg.Show(this, Resources.EditIsolationSchemeDlgOkDialogThereAreOverlapsContinue,
-                                MultiButtonMsgDlg.BUTTON_YES,
-                                MultiButtonMsgDlg.BUTTON_NO,false) != DialogResult.Yes)
+                            if (MultiButtonMsgDlg.Show(this,
+                                    Resources.EditIsolationSchemeDlgOkDialogThereAreOverlapsContinue,
+                                    MultiButtonMsgDlg.BUTTON_YES,
+                                    MultiButtonMsgDlg.BUTTON_NO, false) != DialogResult.Yes)
                             {
                                 return;
                             }
@@ -486,7 +498,8 @@ namespace pwiz.Skyline.SettingsUI
             //Overlap requires an even number of windows
             if (Overlap && _gridViewDriver.Items.Count%2 == 1)
             {
-                MessageDlg.Show(this, Resources.EditIsolationSchemeDlg_GetIsolationWindows_Overlap_requires_an_even_number_of_windows_);
+                MessageDlg.Show(this,
+                    Resources.EditIsolationSchemeDlg_GetIsolationWindows_Overlap_requires_an_even_number_of_windows_);
                 return null;
             }
 
@@ -562,8 +575,8 @@ namespace pwiz.Skyline.SettingsUI
             bool fromResults = rbUseResultsData.Checked;
             labelWindowsPerScan.Enabled =
                 textWindowsPerScan.Enabled =
-                    (!fromResults && (Equals(comboDeconvPre.SelectedItem, DeconvolutionMethod.MSX)||
-                                      Equals(comboDeconvPre.SelectedItem,DeconvolutionMethod.MSX_OVERLAP)));
+                (!fromResults && (Equals(comboDeconvPre.SelectedItem, DeconvolutionMethod.MSX) ||
+                                  Equals(comboDeconvPre.SelectedItem, DeconvolutionMethod.MSX_OVERLAP)));
         }
 
         private void cbSpecifyMargin_CheckedChanged(object sender, EventArgs e)
@@ -575,7 +588,7 @@ namespace pwiz.Skyline.SettingsUI
                 colStartMargin.Visible = true;
             }
             else
-            {   
+            {
                 AdjustGridTop(-1);
                 comboIsolation.Visible = false;
                 colStartMargin.Visible = false;
@@ -628,9 +641,9 @@ namespace pwiz.Skyline.SettingsUI
                     cbSpecifyCERange.Checked = (isolationWindows[0].CERange.HasValue);
 
                     // Determine if calculation was on Isolation Or Extraction
-                    comboIsolation.SelectedItem = calculateDlg.IsIsolation ? 
-                        WindowType.MEASUREMENT : 
-                        WindowType.EXTRACTION;
+                    comboIsolation.SelectedItem = calculateDlg.IsIsolation
+                        ? WindowType.MEASUREMENT
+                        : WindowType.EXTRACTION;
 
                     // Load isolation windows into grid.
                     foreach (var window in isolationWindows)
@@ -640,9 +653,9 @@ namespace pwiz.Skyline.SettingsUI
 
                     // Copy multiplexed windows settings.
                     comboDeconvPre.SelectedItem = calculateDlg.Deconvolution;
-                    textWindowsPerScan.Text = calculateDlg.Multiplexed ? 
-                        calculateDlg.WindowsPerScan.ToString(LocalizationHelper.CurrentCulture) : 
-                        string.Empty;
+                    textWindowsPerScan.Text = calculateDlg.Multiplexed
+                        ? calculateDlg.WindowsPerScan.ToString(LocalizationHelper.CurrentCulture)
+                        : string.Empty;
                 }
             }
         }
@@ -903,7 +916,7 @@ namespace pwiz.Skyline.SettingsUI
             get { return comboIsolation.SelectedIndex; }
             set
             {
-                if(!Equals(value,WindowType.MEASUREMENT) && ! Equals(value,WindowType.EXTRACTION))
+                if (!Equals(value, WindowType.MEASUREMENT) && !Equals(value, WindowType.EXTRACTION))
                     throw new ArgumentOutOfRangeException();
                 comboIsolation.SelectedItem = value;
             }
@@ -937,9 +950,9 @@ namespace pwiz.Skyline.SettingsUI
         private void comboIsolation_SelectedIndexChanged(object sender, EventArgs e)
         {
             //Nothing needs to be done if comboIsolation's value is the same
-            if (Equals(comboIsolation.SelectedItem,_lastWindowType)) return;
+            if (Equals(comboIsolation.SelectedItem, _lastWindowType)) return;
             _lastWindowType = comboIsolation.SelectedItem;
-            
+
             bool isIsolation = Equals(comboIsolation.SelectedItem, WindowType.MEASUREMENT);
             int row = 0;
             foreach (EditIsolationWindow window in _gridViewDriver.Items)
@@ -958,7 +971,7 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         newStart = (double) window.Start + startMargin;
                     }
-                    _gridViewDriver.SetCellValue(COLUMN_START,row,newStart);
+                    _gridViewDriver.SetCellValue(COLUMN_START, row, newStart);
                 }
                 if (window.End != null)
                 {
@@ -967,15 +980,15 @@ namespace pwiz.Skyline.SettingsUI
                         newEnd = (double) window.End + endMargin;
                     else
                         newEnd = (double) window.End - endMargin;
-                    _gridViewDriver.SetCellValue(COLUMN_END,row,newEnd);
+                    _gridViewDriver.SetCellValue(COLUMN_END, row, newEnd);
                 }
-                row ++;
+                row++;
             }
         }
 
         private void btnGraph_Click(object sender, EventArgs e)
         {
-            OpenGraph();    
+            OpenGraph();
         }
 
         public void OpenGraph()
@@ -983,15 +996,15 @@ namespace pwiz.Skyline.SettingsUI
             if (Equals(comboDeconvPre.SelectedItem, DeconvolutionMethod.MSX) ||
                 Equals(comboDeconvPre.SelectedItem, DeconvolutionMethod.MSX_OVERLAP))
             {
-                MessageDlg.Show(this,Resources.EditIsolationSchemeDlg_OpenGraph_Graphing_multiplexing_is_not_supported_);
+                MessageDlg.Show(this, Resources.EditIsolationSchemeDlg_OpenGraph_Graphing_multiplexing_is_not_supported_);
                 return;
             }
-                   
+
             List<IsolationWindow> windows = GetIsolationWindows();
             if (windows == null)
                 return;
             int windowsPerScan;
-            if (! int.TryParse(textWindowsPerScan.Text, out windowsPerScan))
+            if (!int.TryParse(textWindowsPerScan.Text, out windowsPerScan))
                 windowsPerScan = 1;
             bool useMargins = cbSpecifyMargin.Checked;
             using (var graphDlg = new DiaIsolationWindowsGraphForm(windows, useMargins,
@@ -999,6 +1012,250 @@ namespace pwiz.Skyline.SettingsUI
             {
                 graphDlg.ShowDialog(this);
             }
+        }
+
+        private void btnImport_Click(object sender, EventArgs e)
+        {
+            ImportRanges();
+        }
+
+        public void ImportRanges()
+        {
+            string activeDir = Settings.Default.ActiveDirectory;
+            if (string.IsNullOrEmpty(activeDir))
+                activeDir = null;
+            var dataSources = ImportResultsDlg.GetDataSourcePaths(this, activeDir);
+            if (dataSources == null)
+                return;
+
+            ImportRangesFromFiles(dataSources);
+        }
+
+        public void ImportRangesFromFiles(MsDataFileUri[] dataSources)
+        {
+            try
+            {
+                var isolationRanges = new List<IsolationRange>();
+                using (var dlg = new LongWaitDlg
+                {
+                    Message = Resources.EditIsolationSchemeDlg_ImportRangesFromFiles_Reading_isolation_scheme___
+                })
+                {
+                    dlg.PerformWork(this, 500, broker => ReadIsolationRangesFromFiles(dataSources, isolationRanges, broker));
+                }
+
+                int marginCount = isolationRanges.Select((r, i) => CalculateMargin(isolationRanges, i)).Count(v => v.HasValue);
+                cbSpecifyMargin.Checked = marginCount > 1;
+                comboDeconvPre.SelectedItem = HasOverlapMultiplexing(isolationRanges)
+                    ? DeconvolutionMethod.OVERLAP
+                    : DeconvolutionMethod.NONE;
+                _gridViewDriver.Items.Clear();
+                for (int i = 0; i < isolationRanges.Count; i++)
+                {
+                    var range = isolationRanges[i];
+                    double? margin = CalculateMargin(isolationRanges, i);
+                    _gridViewDriver.Items.Add(new EditIsolationWindow
+                    {
+                        Start = range.Start,
+                        End = range.End,
+                        StartMargin = margin
+                    });
+                }
+            }
+            catch (Exception x)
+            {
+                MessageDlg.ShowWithException(this, TextUtil.LineSeparate(Resources.EditIsolationSchemeDlg_ImportRangesFromFiles_Failed_reading_isolation_scheme_, x.Message), x);
+            }
+        }
+
+        private bool HasOverlapMultiplexing(IList<IsolationRange> isolationRanges)
+        {
+            // 4 is the absolute minimum possible number of ranges for overlap demux
+            if (isolationRanges.Count < 4)
+                return false;
+
+            int halfCount = isolationRanges.Count/2;
+            int overlapCount = 0;
+            foreach (var range in isolationRanges.Skip(halfCount))
+            {
+                if (HasOverlappingRanges(range, isolationRanges.Take(halfCount)))
+                    overlapCount++;
+            }
+            // If at least 1/4 of the ranges overlap in a demultiplexible way, then
+            // guess that overlap multiplexing was attempted. Ideally 1/2 would overlap
+            // with the other half, but mistakes have been seen, and they are much harder
+            // to figure out, if graphed without overlap.
+            return overlapCount > halfCount/2;
+        }
+
+        private bool HasOverlappingRanges(IsolationRange range, IEnumerable<IsolationRange> rangesFirstHalf)
+        {
+            bool seenLesser = false, seenGreater = false, leftOverlap = false, rightOverlap = false;
+            double middleOfRange = (range.Start + range.End)/2;
+            foreach (var rangeCheck in rangesFirstHalf)
+            {
+                if (rangeCheck.Start < range.Start)
+                {
+                    seenLesser = true;
+                    if (Math.Abs(middleOfRange - rangeCheck.End) <= 0.1)
+                        leftOverlap = true;
+                }
+                if (rangeCheck.End > range.End)
+                {
+                    seenGreater = true;
+                    if (Math.Abs(middleOfRange - rangeCheck.Start) <= 0.1)
+                        rightOverlap = true;
+                }
+            }
+            return (leftOverlap && rightOverlap) ||
+                   (leftOverlap && !seenGreater) ||
+                   (rightOverlap && !seenLesser);
+        }
+
+        private double? CalculateMargin(IList<IsolationRange> isolationRanges, int i)
+        {
+            if (isolationRanges.Count < 2)
+                return null;
+            double? overlapLeft = null;
+            if (i > 0)
+                overlapLeft = isolationRanges[i - 1].End - isolationRanges[i].Start;
+            double? overlapRight = null;
+            if (i < isolationRanges.Count - 1)
+                overlapRight = isolationRanges[i].End - isolationRanges[i + 1].Start;
+            double overlap;
+            if (!overlapLeft.HasValue || !overlapRight.HasValue)
+                overlap = overlapLeft ?? overlapRight ?? 0;
+            else if (Math.Abs(overlapLeft.Value - overlapRight.Value) > 0.1)
+            {
+                return null;
+            }
+            else
+            {
+                overlap = overlapLeft.Value;
+            }
+            if (Math.Round(overlap) < 1)
+                return null;
+            return overlap/2;
+        }
+
+        private void ReadIsolationRangesFromFiles(MsDataFileUri[] dataSources, List<IsolationRange> isolationRanges, ILongWaitBroker broker)
+        {
+            var isolationRangesResult = new IsolationRange[0];
+            for (int i = 0; i < dataSources.Length; i++)
+            {
+                broker.ProgressValue = i * 100 / dataSources.Length;
+
+                isolationRangesResult = ReadIsolationRanges(dataSources[i], isolationRangesResult, broker);
+            }
+            broker.ProgressValue = 100;
+
+            isolationRanges.AddRange(isolationRangesResult);
+        }
+
+        private const int MAX_SPECTRA_PER_CYCLE = 200; // SCIEX has used 100 and Thermo MSX can use 20 * 5
+        private const int MAX_MULTI_CYCLE = MAX_SPECTRA_PER_CYCLE*3;
+
+        private IsolationRange[] ReadIsolationRanges(MsDataFileUri dataSource, IsolationRange[] isolationRanges, ILongWaitBroker broker)
+        {
+            var dictRangeCounts = isolationRanges.ToDictionary(r => r, r => 0);
+            var listRanges = new List<IsolationRange>(isolationRanges);
+            double minStart = double.MaxValue, maxStart = double.MinValue;
+
+            using (var dataFile = new MsDataFileImpl(dataSource.GetFilePath(), simAsSpectra: true))
+            {
+                int lookAheadCount = Math.Min(MAX_MULTI_CYCLE, dataFile.SpectrumCount);
+                for (int i = 0; i < lookAheadCount; i++)
+                {
+                    if (dataFile.GetMsLevel(i) != 2)
+                        continue;
+
+                    var spectrum = dataFile.GetSpectrum(i);
+                    foreach (var precursor in spectrum.Precursors)
+                    {
+                        if (!precursor.IsolationWindowLower.HasValue || !precursor.IsolationWindowUpper.HasValue)
+                            throw new IOException(string.Format(Resources.EditIsolationSchemeDlg_ReadIsolationRanges_Missing_isolation_range_for_the_isolation_target__0__m_z_in_the_file__1_, precursor.IsolationWindowTargetMz, dataSource));
+                        double start = precursor.IsolationWindowTargetMz.Value - precursor.IsolationWindowLower.Value;
+                        double end = precursor.IsolationWindowTargetMz.Value + precursor.IsolationWindowUpper.Value;
+                        var range = new IsolationRange(start, end);
+                        int count;
+                        if (!dictRangeCounts.TryGetValue(range, out count))
+                        {
+                            count = 0;
+                            dictRangeCounts.Add(range, count);
+                            listRanges.Add(range);
+                        }
+                        if (count == 2)
+                        {
+                            // Repeating for the third time
+                            i = lookAheadCount;
+                            break;
+                        }
+                        dictRangeCounts[range] = count + 1;
+                        minStart = Math.Min(minStart, range.Start);
+                        maxStart = Math.Max(maxStart, range.Start);
+                    }
+                }
+            }
+            if (dictRangeCounts.Values.Any(c => c == 1))
+            {
+                if (dictRangeCounts.Count > 2)
+                {
+                    // Sometime demux of overlapping schemes leaves wings that repeat only every other cycle
+                    RemoveRangeSingleton(minStart, dictRangeCounts, listRanges);
+                    RemoveRangeSingleton(maxStart, dictRangeCounts, listRanges);
+                }
+
+                if (dictRangeCounts.Values.Any(c => c == 1))
+                    throw new IOException(string.Format(Resources.EditIsolationSchemeDlg_ReadIsolationRanges_No_repeating_isolation_scheme_found_in__0_, dataSource));
+            }
+            return listRanges.ToArray();
+        }
+
+        private static void RemoveRangeSingleton(double rangeStart, Dictionary<IsolationRange, int> dictRangeCounts, List<IsolationRange> listRanges)
+        {
+            var rangeMin = dictRangeCounts.First(p => p.Key.Start == rangeStart).Key;
+            if (dictRangeCounts[rangeMin] == 1)
+            {
+                dictRangeCounts.Remove(rangeMin);
+                listRanges.Remove(rangeMin);
+            }
+        }
+
+        private class IsolationRange
+        {
+            public IsolationRange(double start, double end)
+            {
+                Start = start;
+                End = end;
+            }
+
+            public double Start { get; private set; }
+            public double End { get; private set; }
+
+            #region object overrides
+
+            protected bool Equals(IsolationRange other)
+            {
+                return Start.Equals(other.Start) && End.Equals(other.End);
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != GetType()) return false;
+                return Equals((IsolationRange) obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    return (Start.GetHashCode()*397) ^ End.GetHashCode();
+                }
+            }
+
+            #endregion
         }
     }
 }

@@ -8421,6 +8421,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed reading isolation scheme..
+        /// </summary>
+        public static string EditIsolationSchemeDlg_ImportRangesFromFiles_Failed_reading_isolation_scheme_ {
+            get {
+                return ResourceManager.GetString("EditIsolationSchemeDlg_ImportRangesFromFiles_Failed_reading_isolation_scheme_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reading isolation scheme....
+        /// </summary>
+        public static string EditIsolationSchemeDlg_ImportRangesFromFiles_Reading_isolation_scheme___ {
+            get {
+                return ResourceManager.GetString("EditIsolationSchemeDlg_ImportRangesFromFiles_Reading_isolation_scheme___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Specify {0} for isolation window..
         /// </summary>
         public static string EditIsolationSchemeDlg_OkDialog_Specify__0__for_isolation_window {
@@ -8473,6 +8491,26 @@ namespace pwiz.Skyline.Properties {
         public static string EditIsolationSchemeDlg_OpenGraph_Graphing_multiplexing_is_not_supported_ {
             get {
                 return ResourceManager.GetString("EditIsolationSchemeDlg_OpenGraph_Graphing_multiplexing_is_not_supported_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Missing isolation range for the isolation target {0} m/z in the file {1}.
+        /// </summary>
+        public static string EditIsolationSchemeDlg_ReadIsolationRanges_Missing_isolation_range_for_the_isolation_target__0__m_z_in_the_file__1_ {
+            get {
+                return ResourceManager.GetString("EditIsolationSchemeDlg_ReadIsolationRanges_Missing_isolation_range_for_the_isolat" +
+                        "ion_target__0__m_z_in_the_file__1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No repeating isolation scheme found in {0}.
+        /// </summary>
+        public static string EditIsolationSchemeDlg_ReadIsolationRanges_No_repeating_isolation_scheme_found_in__0_ {
+            get {
+                return ResourceManager.GetString("EditIsolationSchemeDlg_ReadIsolationRanges_No_repeating_isolation_scheme_found_in" +
+                        "__0_", resourceCulture);
             }
         }
         

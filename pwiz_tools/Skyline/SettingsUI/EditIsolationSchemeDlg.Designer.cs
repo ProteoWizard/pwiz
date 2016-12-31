@@ -68,6 +68,7 @@
             this.colEndMargin = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colCERange = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.comboIsolationWidth = new System.Windows.Forms.ComboBox();
+            this.btnImport = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.editIsolationWindowBindingSource)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.gridIsolationWindows)).BeginInit();
             this.SuspendLayout();
@@ -307,12 +308,20 @@
             this.comboIsolationWidth.Name = "comboIsolationWidth";
             this.comboIsolationWidth.SelectedIndexChanged += new System.EventHandler(this.comboIsolationWidth_SelectedIndexChanged);
             // 
+            // btnImport
+            // 
+            resources.ApplyResources(this.btnImport, "btnImport");
+            this.btnImport.Name = "btnImport";
+            this.btnImport.UseVisualStyleBackColor = true;
+            this.btnImport.Click += new System.EventHandler(this.btnImport_Click);
+            // 
             // EditIsolationSchemeDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.btnImport);
             this.Controls.Add(this.comboIsolationWidth);
             this.Controls.Add(this.cbSpecifyMargin);
             this.Controls.Add(this.comboIsolation);
@@ -378,5 +387,6 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn colEndMargin;
         private System.Windows.Forms.DataGridViewTextBoxColumn colCERange;
         private System.Windows.Forms.ComboBox comboIsolationWidth;
+        private System.Windows.Forms.Button btnImport;
     }
 }

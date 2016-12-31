@@ -9275,4 +9275,16 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="FastaImporter_Import_This_import_causes_the_document_to_contain_more_than__0_n0__peptides_at_line__1_n0__" xml:space="preserve">
     <value>This import causes the document to contain more than {0:n0} peptides at line {1:n0}.</value>
   </data>
+  <data name="EditIsolationSchemeDlg_ImportRangesFromFiles_Reading_isolation_scheme___" xml:space="preserve">
+    <value>Reading isolation scheme...</value>
+  </data>
+  <data name="EditIsolationSchemeDlg_ImportRangesFromFiles_Failed_reading_isolation_scheme_" xml:space="preserve">
+    <value>Failed reading isolation scheme.</value>
+  </data>
+  <data name="EditIsolationSchemeDlg_ReadIsolationRanges_Missing_isolation_range_for_the_isolation_target__0__m_z_in_the_file__1_" xml:space="preserve">
+    <value>Missing isolation range for the isolation target {0} m/z in the file {1}</value>
+  </data>
+  <data name="EditIsolationSchemeDlg_ReadIsolationRanges_No_repeating_isolation_scheme_found_in__0_" xml:space="preserve">
+    <value>No repeating isolation scheme found in {0}</value>
+  </data>
 </root>

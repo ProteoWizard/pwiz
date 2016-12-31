@@ -283,40 +283,53 @@ namespace pwiz.Skyline.FileUI
         public KeyValuePair<string, MsDataFileUri[]>[] GetDataSourcePathsFile(string name)
         {
             CheckDisposed();
+
+            var dataSources = GetDataSourcePaths(this, _documentSavedPath);
+            if (dataSources == null || dataSources.Length == 0)
+            {
+                MessageBox.Show(this, Resources.ImportResultsDlg_GetDataSourcePathsFile_No_results_files_chosen, Program.Name);
+                return null;
+            }
+
+            if (name != null)
+                return GetDataSourcePathsFileSingle(name, dataSources);
+
+            return GetDataSourcePathsFileReplicates(dataSources);
+        }
+
+        public static MsDataFileUri[] GetDataSourcePaths(Control parent, string documentSavedPath)
+        {
             using (var dlgOpen = new OpenDataSourceDialog(Settings.Default.ChorusAccountList)
-                {
-                    Text = Resources.ImportResultsDlg_GetDataSourcePathsFile_Import_Results_Files
-                })
+            {
+                Text = Resources.ImportResultsDlg_GetDataSourcePathsFile_Import_Results_Files
+            })
             {
                 // The dialog expects null to mean no directory was supplied, so don't assign
                 // an empty string.
-                string initialDir = Path.GetDirectoryName(_documentSavedPath);
+                string initialDir = Path.GetDirectoryName(documentSavedPath) ?? Settings.Default.SrmResultsDirectory;
+                if (string.IsNullOrEmpty(initialDir))
+                    initialDir = null;
                 dlgOpen.InitialDirectory = new MsDataFilePath(initialDir);
                 // Use saved source type, if there is one.
                 string sourceType = Settings.Default.SrmResultsSourceType;
                 if (!string.IsNullOrEmpty(sourceType))
                     dlgOpen.SourceTypeName = sourceType;
 
-                if (dlgOpen.ShowDialog(this) != DialogResult.OK)
+                if (dlgOpen.ShowDialog(parent) != DialogResult.OK)
                     return null;
 
-                Settings.Default.SrmResultsDirectory = !Equals(new MsDataFilePath(_documentSavedPath), dlgOpen.CurrentDirectory)
-                                                           ? dlgOpen.CurrentDirectory.ToString()
-                                                           : string.Empty;
+                Settings.Default.SrmResultsDirectory = dlgOpen.CurrentDirectory.ToString();
                 Settings.Default.SrmResultsSourceType = dlgOpen.SourceTypeName;
 
                 var dataSources = dlgOpen.DataSources;
 
                 if (dataSources == null || dataSources.Length == 0)
                 {
-                    MessageBox.Show(this, Resources.ImportResultsDlg_GetDataSourcePathsFile_No_results_files_chosen, Program.Name);
+                    MessageDlg.Show(parent, Resources.ImportResultsDlg_GetDataSourcePathsFile_No_results_files_chosen);
                     return null;
                 }
 
-                if (name != null)
-                    return GetDataSourcePathsFileSingle(name, dataSources);
-
-                return GetDataSourcePathsFileReplicates(dataSources);
+                return dataSources;
             }
         }
 
