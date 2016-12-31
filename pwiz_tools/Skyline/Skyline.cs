@@ -4912,7 +4912,12 @@ namespace pwiz.Skyline
             Settings.Default.UIMode = _uimode.ToString();
             ShowMode(Settings.Default);
         }
-      
+
+        public override void ModeChanged(UIMode mode)
+        {
+            modeComponent.Render(mode);
+        }
+
         public override void ShowAllView()
         {
 //            foreach (ToolStripMenuItem item in _excludeInSmallMoleculeMode)
@@ -4933,7 +4938,6 @@ namespace pwiz.Skyline
             // collapse all
             collapseProteinsMenuItem.Text = "Proteins";
             collapsePeptidesMenuItem.Text = "Peptides";
-            calibrationCurveMenuItem.m
 
             // View >
             timePeptideComparisonMenuItem.Text = "Peptide Comparison";

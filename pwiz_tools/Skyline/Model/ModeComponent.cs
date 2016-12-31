@@ -56,9 +56,28 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public Dictionary<IComponent, SkylineWindow.UIMode> GetControls()
+        public void Render(SkylineWindow.UIMode selectedMode)
         {
-            return _modes;
+                foreach (IComponent component in _modes.Keys)
+                {
+                    Control c = component as Control;
+                    if (c == null)
+                    {
+                        ToolStripMenuItem m = component as ToolStripMenuItem;
+                        if (m != null)
+                        {
+                            if (!_modes[component].HasFlag(selectedMode))
+                                m.Visible = false;
+                            else
+                                m.Visible = true;
+                        }
+                    } else {
+                        if (!_modes[component].HasFlag(selectedMode))
+                            c.Hide();
+                        else
+                            c.Show();
+                    }
+                }
         }
     }
 }

@@ -1933,6 +1933,7 @@ namespace pwiz.Skyline
             // 
             this.startPageMenuItem.Image = global::pwiz.Skyline.Properties.Resources.HomeIcon1;
             resources.ApplyResources(this.startPageMenuItem, "startPageMenuItem");
+            this.modeComponent.SetMode(this.startPageMenuItem, pwiz.Skyline.SkylineWindow.UIMode.protein);
             this.startPageMenuItem.Name = "startPageMenuItem";
             this.startPageMenuItem.Click += new System.EventHandler(this.startPageMenuItem_Click);
             // 
@@ -3317,7 +3318,6 @@ namespace pwiz.Skyline
             this.immediateWindowToolStripMenuItem,
             this.toolStripSeparator47,
             this.optionsToolStripMenuItem});
-            this.modeComponent.SetMode(this.toolsMenu, ((pwiz.Skyline.SkylineWindow.UIMode)((pwiz.Skyline.SkylineWindow.UIMode.molecule | pwiz.Skyline.SkylineWindow.UIMode.mixed))));
             this.toolsMenu.Name = "toolsMenu";
             resources.ApplyResources(this.toolsMenu, "toolsMenu");
             this.toolsMenu.DropDownOpening += new System.EventHandler(this.toolsMenu_DropDownOpening);
@@ -3643,6 +3643,11 @@ namespace pwiz.Skyline
             resources.GetString("comboBoxMode.Items2")});
             this.comboBoxMode.Name = "comboBoxMode";
             this.comboBoxMode.SelectedValueChanged += new System.EventHandler(this.comboBoxMode_SelectedValueChanged);
+            // 
+            // modeComponent
+            // 
+            resources.ApplyResources(this.modeComponent, "modeComponent");
+            this.modeComponent.Name = "modeComponent";
             // 
             // SkylineWindow
             // 

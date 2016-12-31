@@ -204,30 +204,11 @@ namespace pwiz.Skyline.Util
         {
             SkylineWindow.UIMode _uimode;
             Enum.TryParse(settings.UIMode, out _uimode);
-
-            ModeComponent modeComp = null;
-            foreach (Control ctr in Controls)
-            {
-                if (ctr is ModeComponent)
-                {
-                    modeComp = (ModeComponent) ctr;
-                }
-            }
-            if (modeComp != null)
-            {
-                 Dictionary<IComponent, SkylineWindow.UIMode > modes = modeComp.GetControls();
-                foreach (IComponent component in modes.Keys)
-                {
-                    if (!modes[component].HasFlag(_uimode))
-                    {
-                        component.
-                    }
-                }
-            }
-
+            ModeChanged(_uimode);
             
             switch (_uimode)
             {
+                
                 case SkylineWindow.UIMode.mixed:
                     ShowAllView();
                     break;
@@ -245,6 +226,7 @@ namespace pwiz.Skyline.Util
         public virtual void ShowAllView() { }
         public virtual void ShowSmallMoleculeView() { }
         public virtual void ShowProteomicsView() { }
+        public virtual void ModeChanged(SkylineWindow.UIMode mode) { }
     }
 
     public abstract class FormExDetailed : FormEx
