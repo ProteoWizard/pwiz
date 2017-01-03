@@ -117,7 +117,9 @@ namespace pwiz.SkylineTestFunctional
         {
             PerformImport(isoEditor, rawFileNames);
 //            PauseTest();
-            WaitForConditionUI(() => isoEditor.IsolationWindowGrid.RowCount == windowCount + 1); // 64 + empty row
+            if (!TryWaitForConditionUI(10*1000, () => isoEditor.IsolationWindowGrid.RowCount == windowCount + 1)) // window count + empty row
+                RunUI(() => Assert.Fail("Expecting {0} isolation ranges, found {1}", windowCount, isoEditor.IsolationWindowGrid.RowCount - 1));
+                
             double allowedDelta = overlapping ? 0.05 : 0.00001;
             RunUI(() =>
             {
