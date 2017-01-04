@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
@@ -24,6 +25,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -117,8 +119,12 @@ namespace pwiz.SkylineTestFunctional
         {
             PerformImport(isoEditor, rawFileNames);
 //            PauseTest();
-            if (!TryWaitForConditionUI(10*1000, () => isoEditor.IsolationWindowGrid.RowCount == windowCount + 1)) // window count + empty row
-                RunUI(() => Assert.Fail("Expecting {0} isolation ranges, found {1}", windowCount, isoEditor.IsolationWindowGrid.RowCount - 1));
+            if (!TryWaitForConditionUI(10*1000, () => isoEditor.IsolationWindowGrid.RowCount == windowCount + 1))
+                // window count + empty row
+            {
+                RunUI(() => Assert.Fail(TextUtil.LineSeparate(string.Format("Expecting {0} isolation ranges, found {1}", windowCount, isoEditor.IsolationWindowGrid.RowCount - 1),
+                    TextUtil.LineSeparate(isoEditor.IsolationWindowGrid.Items.Select(i => string.Format("{0}, {1}", i.Start, i.End))))));
+            }
                 
             double allowedDelta = overlapping ? 0.05 : 0.00001;
             RunUI(() =>
