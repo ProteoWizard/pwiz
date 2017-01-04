@@ -70,9 +70,8 @@ namespace pwiz.SkylineTestFunctional
             ImportIsoList(isoEditor, VARIABLE_19_THERMO, 19, 1);
             ImportIsoList(isoEditor, DEMUX_6DA_400to500, 35);
             ImportIsoList(isoEditor, OVERLAP_6DA_400to500, 36, null, true);
-            ImportIsoList(isoEditor, OVERLAP_24DA_1, 52, null, true, 1);
-            ImportIsoList(isoEditor, new[] {OVERLAP_24DA_1, OVERLAP_24DA_2}, 52, null, true, 1);
             ImportIsoList(isoEditor, new[] {DEMUX_6DA_400to500, DEMUX_6DA_500to600}, 70, null, false, 1);
+            ImportIsoList(isoEditor, OVERLAP_24DA_1, 52, null, true, 1);
             ImportIsoList(isoEditor, new[]
             {
                 OVERLAP_6DA_400to500,
@@ -82,6 +81,7 @@ namespace pwiz.SkylineTestFunctional
                 OVERLAP_6DA_800to900,
                 OVERLAP_6DA_900to1000,
             }, 216, null, true, 5);
+            ImportIsoList(isoEditor, new[] {OVERLAP_24DA_1, OVERLAP_24DA_2}, 52, null, true, 1);
             ImportErrorMessage(isoEditor, NOWIDTH_SCIEX,
                 Resources.EditIsolationSchemeDlg_ReadIsolationRanges_Missing_isolation_range_for_the_isolation_target__0__m_z_in_the_file__1_, 2);
             ImportErrorMessage(isoEditor, CORRUPT_SCIEX,
