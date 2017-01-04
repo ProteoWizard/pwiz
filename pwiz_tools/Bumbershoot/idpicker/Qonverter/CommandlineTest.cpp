@@ -98,10 +98,15 @@ int testCommand(string command)
 {
     bal::replace_all(command, "idpQonvert.exe\"", "idpQonvert.exe\" -LogFilepath test.log ");
     bal::replace_all(command, "idpAssemble.exe\"", "idpAssemble.exe\" -LogFilepath test.log ");
+
     cout << "Running command: " << command << endl;
+    { ofstream outputLog("output.log", ios::app); outputLog << command << endl; }
+
     bpt::ptime start = bpt::microsec_clock::universal_time();
     int result = system((command + " >> output.log").c_str());
     cout << endl << "Returned exit code " << result << "; time elapsed " << bpt::to_simple_string(bpt::microsec_clock::universal_time() - start) << endl;
+    { ofstream outputLog("output.log", ios::app); outputLog << endl << "Returned exit code " << result << "; time elapsed " << bpt::to_simple_string(bpt::microsec_clock::universal_time() - start) << endl; }
+
     return result;
 }
 
@@ -639,8 +644,16 @@ void testIdpQuery(const string& idpQueryPath, const bfs::path& testDataPath)
 
 
     proteinGroupColumns += "Gene", "GeneGroup";
-    IDPicker::Embedder::embedGeneMetadata(inputFilepath);
-    IDPicker::Embedder::embedGeneMetadata(quantifiedInputFilepath);
+
+    try
+    {
+        IDPicker::Embedder::embedGeneMetadata(inputFilepath);
+        IDPicker::Embedder::embedGeneMetadata(quantifiedInputFilepath);
+    }
+    catch (exception& e)
+    {
+        throw runtime_error(string("[testIdpQuery] error embedding gene metadata: ") + e.what());
+    }
 
     // run through all the group modes with all columns after embedding gene metadata
     BOOST_FOREACH(const string& groupColumn, proteinGroupColumns)
@@ -844,7 +857,7 @@ int main(int argc, char* argv[])
     }
     catch (exception& e)
     {
-        TEST_FAILED(e.what())
+        TEST_FAILED(string("[CommandlineTest] ") + e.what())
     }
     catch (...)
     {

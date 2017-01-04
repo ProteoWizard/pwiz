@@ -74,7 +74,7 @@ boost::log::formatting_ostream& operator<<
     const boost::log::to_log_manip< MessageSeverity::domain, severity_tag>& manip
 )
 {
-    if (manip.get() >= MessageSeverity::Warning)
+    if (manip.get() >= MessageSeverity::Warning || manip.get() == MessageSeverity::DebugInfo)
         strm << '\n' << MessageSeverity::get_by_value(manip.get()).get().str() << ": ";
     return strm;
 }
@@ -293,42 +293,85 @@ void assignSourceGroupHierarchy(const string& idpDbFilepath, const string& assem
 struct UserFeedbackIterationListener : public IterationListener
 {
     string currentMessage; // when the message changes, make a new line
+    size_t longestLine;
+    string logFilepath;
+    MessageSeverity logLevel;
+    bool stdOutRedirected;
+
+    UserFeedbackIterationListener(const string& logFilepath, MessageSeverity logLevel) : longestLine(0), logFilepath(logFilepath), logLevel(logLevel), stdOutRedirected(IsStdOutRedirected())
+    {
+    }
 
     virtual Status update(const UpdateMessage& updateMessage)
     {
         // when the message changes, make a new line
         if (currentMessage.empty() || currentMessage != updateMessage.message)
         {
-            if (!currentMessage.empty())
-                cout << endl;
+            if (!currentMessage.empty() && logFilepath.empty() && !stdOutRedirected)
+            {
+                if (logLevel == MessageSeverity::DebugInfo)
+                    cout << "\n";
+                else if (!updateMessage.message.empty())
+                    cout << "\r";
+            }
             currentMessage = updateMessage.message;
-        }
-
-        bool isError = bal::contains(currentMessage, "error:");
-
-        if (isError)
-        {
-            bal::replace_all(currentMessage, "error: ", "");
-            cout << endl;
+            longestLine = max(longestLine, currentMessage.size());
         }
 
         int index = updateMessage.iterationIndex;
         int count = updateMessage.iterationCount;
 
-        string message = currentMessage.empty() ? "" : string(1, std::toupper(currentMessage[0])) + currentMessage.substr(1);
+        // when logging to stdout, skip the log in order to use carriage returns to show iteration updates on a single line
+        if (logFilepath.empty() && !stdOutRedirected)
+        {
+            if (index == 0 && count <= 1 && logLevel <= MessageSeverity::BriefInfo)
+                cout << updateMessage.message;
+            else if (count > 1 && logLevel <= MessageSeverity::VerboseInfo)
+            {
+                if (index + 1 == count)
+                    cout << updateMessage.message << ": " << (index + 1) << "/" << count;
+                else
+                    cout << updateMessage.message << ": " << (index + 1) << "/" << count;
+            }
+            else if (logLevel <= MessageSeverity::BriefInfo)
+            {
+                if (index == 0 && count <= 1)
+                    cout << updateMessage.message;
+                else if (index + 1 == count)
+                    cout << updateMessage.message << ": " << (index + 1) << "/" << count;
+            }
 
-        cout << "\r";
-        if (index == 0 && count == 0)
-            cout << message;
-        else if (count > 0)
-            cout << message << ": " << (index + 1) << "/" << count;
-        else
-            cout << message << ": " << (index + 1);
-
-        if (isError)
-            cout << endl;
-        else
-            cout << flush;
+            if (logLevel <= MessageSeverity::BriefInfo)
+            {
+                for (size_t i = longestLine - updateMessage.message.length(); i > 0; --i)
+                    cout << ' ';
+                if (index + 1 == count)
+                    cout << endl;
+                else
+                    cout << flush;
+            }
+        }
+        else if (logLevel <= MessageSeverity::VerboseInfo)
+        {
+            if (index == 0 && count <= 1)
+                BOOST_LOG_SEV(logSource::get(), MessageSeverity::VerboseInfo) << updateMessage.message;
+            else if (count > 1)
+            {
+                if (index + 1 == count)
+                    BOOST_LOG_SEV(logSource::get(), MessageSeverity::VerboseInfo) << updateMessage.message << ": " << (index + 1) << "/" << count << "\n";
+                else
+                    BOOST_LOG_SEV(logSource::get(), MessageSeverity::VerboseInfo) << updateMessage.message << ": " << (index + 1) << "/" << count;
+            }
+            else
+                BOOST_LOG_SEV(logSource::get(), MessageSeverity::VerboseInfo) << updateMessage.message << ": " << (index + 1);
+        }
+        else if (logLevel == MessageSeverity::BriefInfo)
+        {
+            if (index == 0 && count <= 1)
+                BOOST_LOG_SEV(logSource::get(), MessageSeverity::BriefInfo) << updateMessage.message;
+            else if (index + 1 == count)
+                BOOST_LOG_SEV(logSource::get(), MessageSeverity::BriefInfo) << updateMessage.message << ": " << (index + 1) << "/" << count << "\n";
+        }
 
         return Status_Ok;
     }
@@ -363,8 +406,8 @@ void summarizeAssembly(const string& filepath, bool summarizeSources)
 
     sqlite::query summaryQuery(idpDb, sql.c_str());
 
-    cout << "\n\nSpectra    Matches  Peptides  Proteins  Protein Groups  Analysis/Source\n"
-            "-----------------------------------------------------------------------\n";
+    BOOST_LOG_SEV(logSource::get(), MessageSeverity::BriefInfo) << "\n\nSpectra    Matches  Peptides  Proteins  Protein Groups  Analysis/Source\n"
+                                                                << "-----------------------------------------------------------------------\n";
     if (summarizeSources)
         BOOST_FOREACH(sqlite::query::rows row, summaryQuery)
         {
@@ -383,7 +426,7 @@ void summarizeAssembly(const string& filepath, bool summarizeSources)
             else
                 sourceTitle = filepath + ":" + source;
 
-            cout << std::left << setw(11) << rowCounts.filteredSpectra
+            BOOST_LOG_SEV(logSource::get(), MessageSeverity::VerboseInfo) << std::left << setw(11) << rowCounts.filteredSpectra
                  << std::left << setw(9) << rowCounts.distinctMatches
                  << std::left << setw(10) << rowCounts.distinctPeptides
                  << std::left << setw(10) << rowCounts.proteins
@@ -393,8 +436,8 @@ void summarizeAssembly(const string& filepath, bool summarizeSources)
 
     TotalCounts totalCounts(idpDb.connected());
     if (summarizeSources)
-        cout << "-----------------------------------------------------------------------\n";
-    cout << std::left << setw(11) << totalCounts.filteredSpectra()
+        BOOST_LOG_SEV(logSource::get(), MessageSeverity::VerboseInfo) << "-----------------------------------------------------------------------\n";
+    BOOST_LOG_SEV(logSource::get(), MessageSeverity::BriefInfo) << std::left << setw(11) << totalCounts.filteredSpectra()
          << std::left << setw(9) << totalCounts.distinctMatches()
          << std::left << setw(10) << totalCounts.distinctPeptides()
          << std::left << setw(10) << totalCounts.proteins()
@@ -417,6 +460,7 @@ int main(int argc, const char* argv[])
                    "                   [-MinSpectraPerDistinctMatch <integer>]\n"
                    "                   [-MinSpectraPerDistinctPeptide <integer>]\n"
                    "                   [-MaxProteinGroupsPerPeptide <integer>]\n"
+                   "                   [-PrecursorMzTolerance <real> <mz|ppm>]\n"
                    "                   [-FilterAtGeneLevel <boolean>]\n"
                    "                   [-MergedOutputFilepath <string>]\n"
                    "                   [-AssignSourceHierarchy <assemble.tsv>]\n"
@@ -464,6 +508,19 @@ int main(int argc, const char* argv[])
     bool summarizeSources = false;
     MessageSeverity logLevel = MessageSeverity::Warning;
 
+    boost::log::formatter fmt = expr::stream << expr::attr<MessageSeverity::domain, severity_tag>("Severity") << expr::smessage;
+
+    // Initialize sinks
+    typedef sinks::synchronous_sink<sinks::text_ostream_backend> text_sink;
+    boost::shared_ptr<text_sink> sink = boost::make_shared<text_sink>();
+
+    // errors always go to console
+    sink->locked_backend()->add_stream(boost::shared_ptr<std::ostream>(&cerr, boost::null_deleter()));
+    sink->set_formatter(fmt);
+    sink->set_filter(severity >= MessageSeverity::Error);
+    boost::log::core::get()->add_sink(sink);
+    sink->locked_backend()->auto_flush(true);
+
     vector<string> args(argv + 1, argv + argc);
 
     for (size_t i = 0; i < args.size(); ++i)
@@ -494,6 +551,18 @@ int main(int argc, const char* argv[])
             filterConfig.minSpectraPerDistinctPeptide = lexical_cast<int>(args[++i]);
         else if (args[i] == "-MaxProteinGroupsPerPeptide")
             filterConfig.maxProteinGroupsPerPeptide = lexical_cast<int>(args[++i]);
+        else if (args[i] == "-PrecursorMzTolerance")
+        {
+            if (i + 2 >= args.size() || (!bal::iequals(args[i+2], "mz") && !bal::istarts_with(args[i+2], "da") && !bal::iequals(args[i+2], "ppm")))
+            {
+                BOOST_LOG_SEV(logSource::get(), MessageSeverity::Error) << "-PrecursorMzTolerance must be followed by a value and a unit (mz or ppm), e.g. \"10 ppm\"" << endl;
+                return 1;
+            }
+            istringstream mzToleranceStream(args[i + 1] + args[i + 2]);
+            filterConfig.precursorMzTolerance = pwiz::chemistry::MZTolerance();
+            mzToleranceStream >> filterConfig.precursorMzTolerance.get();
+            i += 2;
+        }
         else if (args[i] == "-FilterAtGeneLevel")
             filterConfig.geneLevelFiltering = lexical_cast<bool>(args[++i]);
         else if (args[i] == "-SummarizeSources")
@@ -518,27 +587,11 @@ int main(int argc, const char* argv[])
         }
     }
 
-    boost::log::formatter fmt = expr::stream << expr::attr<MessageSeverity::domain, severity_tag>("Severity") << expr::smessage;
-
-    // Initialize sinks
-    typedef sinks::synchronous_sink<sinks::text_ostream_backend> text_sink;
-    boost::shared_ptr<text_sink> sink = boost::make_shared<text_sink>();
-
-    // errors always go to console
-    sink->locked_backend()->add_stream(boost::shared_ptr<std::ostream>(&cerr, boost::null_deleter()));
-    sink->set_formatter(fmt);
-    sink->set_filter(severity >= MessageSeverity::Error);
-    boost::log::core::get()->add_sink(sink);
-    sink->locked_backend()->auto_flush(true);
-
-    // Add attributes
-    boost::log::add_common_attributes();
-
     sink = boost::make_shared<text_sink>();
     if (logFilepath.empty())
     {
         sink->locked_backend()->add_stream(boost::shared_ptr<std::ostream>(&cout, boost::null_deleter())); // if no logfile is set, send messages to console
-        sink->set_filter(severity < MessageSeverity::Error); // but don't send errors to the console twice
+        sink->set_filter(severity >= logLevel.index() && severity < MessageSeverity::Error); // but don't send errors to the console twice
         sink->locked_backend()->auto_flush(true);
     }
     else
@@ -549,6 +602,9 @@ int main(int argc, const char* argv[])
     fmt = expr::stream << expr::attr<MessageSeverity::domain, severity_tag>("Severity") << expr::smessage;
     sink->set_formatter(fmt);
     boost::log::core::get()->add_sink(sink);
+
+    // Add attributes
+    boost::log::add_common_attributes();
 
     if (!batchFile.empty())
     {
@@ -594,7 +650,7 @@ int main(int argc, const char* argv[])
         mergeTargetFilepath = mergeSourceFilepaths[0];
 
     IterationListenerRegistry ilr;
-    ilr.addListener(IterationListenerPtr(new UserFeedbackIterationListener), 1);
+    ilr.addListener(IterationListenerPtr(new UserFeedbackIterationListener(logFilepath, logLevel)), 1);
 
     try
     {

@@ -28,6 +28,7 @@ using System.Linq;
 using System.Text;
 using IDPicker.DataModel;
 using NHibernate.Linq;
+using MZTolerance = pwiz.CLI.chemistry.MZTolerance;
 
 namespace IDPicker.DataModel
 {
@@ -38,6 +39,7 @@ namespace IDPicker.DataModel
         public virtual int MinimumSpectra { get; set; }
         public virtual int MinimumAdditionalPeptides { get; set; }
         public virtual bool GeneLevelFiltering { get; set; }
+        public virtual MZTolerance PrecursorMzTolerance { get; set; }
         public virtual DistinctMatchFormat DistinctMatchFormat { get; set; }
         public virtual int MinimumSpectraPerDistinctMatch { get; set; }
         public virtual int MinimumSpectraPerDistinctPeptide { get; set; }
@@ -55,6 +57,7 @@ namespace IDPicker.DataModel
             MinimumSpectra = other.MinimumSpectra;
             MinimumAdditionalPeptides = other.MinimumAdditionalPeptides;
             GeneLevelFiltering = other.GeneLevelFiltering;
+            PrecursorMzTolerance = other.PrecursorMzTolerance;
             DistinctMatchFormat = other.DistinctMatchFormat;
             MinimumSpectraPerDistinctMatch = other.MinimumSpectraPerDistinctMatch;
             MinimumSpectraPerDistinctPeptide = other.MinimumSpectraPerDistinctPeptide;
@@ -74,6 +77,7 @@ namespace IDPicker.DataModel
                        MinimumSpectra == other.MinimumSpectra &&
                        MinimumAdditionalPeptides == other.MinimumAdditionalPeptides &&
                        GeneLevelFiltering == other.GeneLevelFiltering &&
+                       PrecursorMzTolerance == other.PrecursorMzTolerance &&
                        DistinctMatchFormat == other.DistinctMatchFormat &&
                        MinimumSpectraPerDistinctMatch == other.MinimumSpectraPerDistinctMatch &&
                        MinimumSpectraPerDistinctPeptide == other.MinimumSpectraPerDistinctPeptide &&
@@ -194,6 +198,7 @@ namespace IDPicker.DataModel
         public int MinimumSpectra { get { return PersistentDataFilter.MinimumSpectra; } set { PersistentDataFilter.MinimumSpectra = value; } }
         public int MinimumAdditionalPeptides { get { return PersistentDataFilter.MinimumAdditionalPeptides; } set { PersistentDataFilter.MinimumAdditionalPeptides = value; } }
         public bool GeneLevelFiltering { get { return PersistentDataFilter.GeneLevelFiltering; } set { PersistentDataFilter.GeneLevelFiltering = value; } }
+        public MZTolerance PrecursorMzTolerance { get { return PersistentDataFilter.PrecursorMzTolerance; } set { PersistentDataFilter.PrecursorMzTolerance = value; } }
         public DistinctMatchFormat DistinctMatchFormat { get { return PersistentDataFilter.DistinctMatchFormat; } set { PersistentDataFilter.DistinctMatchFormat = value; } }
         public int MinimumSpectraPerDistinctMatch { get { return PersistentDataFilter.MinimumSpectraPerDistinctMatch; } set { PersistentDataFilter.MinimumSpectraPerDistinctMatch = value; } }
         public int MinimumSpectraPerDistinctPeptide { get { return PersistentDataFilter.MinimumSpectraPerDistinctPeptide; } set { PersistentDataFilter.MinimumSpectraPerDistinctPeptide = value; } }
@@ -518,6 +523,7 @@ namespace IDPicker.DataModel
             filter.Config.MinSpectra = MinimumSpectra;
             filter.Config.MinAdditionalPeptides = MinimumAdditionalPeptides;
             filter.Config.GeneLevelFiltering = GeneLevelFiltering;
+            filter.Config.PrecursorMzTolerance = PrecursorMzTolerance;
             filter.Config.DistinctMatchFormat.IsAnalysisDistinct = DistinctMatchFormat.IsAnalysisDistinct;
             filter.Config.DistinctMatchFormat.IsChargeDistinct = DistinctMatchFormat.IsChargeDistinct;
             filter.Config.DistinctMatchFormat.AreModificationsDistinct = DistinctMatchFormat.AreModificationsDistinct;
@@ -546,6 +552,38 @@ namespace IDPicker.DataModel
             }
         }
 
+        public void CropAssembly(NHibernate.ISession session)
+        {
+            session.BeginTransaction();
+
+            if (OnFilteringProgress(new FilteringProgressEventArgs("Cropping unfiltered proteins...", 1, 5, null)))
+                return;
+            session.CreateSQLQuery("DELETE FROM UnfilteredProtein WHERE Id NOT IN (SELECT Id FROM Protein)").ExecuteUpdate();
+            session.CreateSQLQuery("DELETE FROM ProteinData WHERE Id NOT IN(SELECT Id FROM UnfilteredProtein)").ExecuteUpdate();
+            session.CreateSQLQuery("DELETE FROM ProteinMetadata WHERE Id NOT IN(SELECT Id FROM UnfilteredProtein)").ExecuteUpdate();
+
+            if (OnFilteringProgress(new FilteringProgressEventArgs("Cropping unfiltered peptide instances...", 2, 5, null)))
+                return;
+            session.CreateSQLQuery("DELETE FROM UnfilteredPeptideInstance WHERE Protein NOT IN(SELECT DISTINCT Id FROM UnfilteredProtein)").ExecuteUpdate();
+
+            if (OnFilteringProgress(new FilteringProgressEventArgs("Cropping unfiltered peptides...", 3, 5, null)))
+                return;
+            session.CreateSQLQuery("DELETE FROM UnfilteredPeptide WHERE Id NOT IN(SELECT DISTINCT Peptide FROM UnfilteredPeptideInstance)").ExecuteUpdate();
+
+            if (OnFilteringProgress(new FilteringProgressEventArgs("Cropping unfiltered PSMs...", 4, 5, null)))
+                return;
+            session.CreateSQLQuery("DELETE FROM UnfilteredPeptideSpectrumMatch WHERE Peptide NOT IN(SELECT DISTINCT Peptide FROM UnfilteredPeptideInstance)").ExecuteUpdate();
+            session.CreateSQLQuery("DELETE FROM PeptideSpectrumMatchScore WHERE PsmId NOT IN(SELECT Id FROM UnfilteredPeptideSpectrumMatch)").ExecuteUpdate();
+
+            if (OnFilteringProgress(new FilteringProgressEventArgs("Cropping unfiltered spectra...", 5, 5, null)))
+                return;
+            session.CreateSQLQuery("DELETE FROM UnfilteredSpectrum WHERE Id NOT IN(SELECT DISTINCT Spectrum FROM UnfilteredPeptideSpectrumMatch)").ExecuteUpdate();
+
+            // delete all but the current filter (which is still valid because it's what was used to crop the assembly)
+            session.CreateSQLQuery("DELETE FROM FilterHistory WHERE Id < (SELECT MAX(Id) FROM FilterHistory)").ExecuteUpdate();
+
+            session.Transaction.Commit();
+        }
 
         #region Implementation of basic filters
 

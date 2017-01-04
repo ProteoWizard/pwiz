@@ -36,6 +36,7 @@ using Iesi.Collections.Generic;
 using Color = System.Drawing.Color;
 using XmlSerializer = System.Runtime.Serialization.NetDataContractSerializer;
 using SortOrder = System.Windows.Forms.SortOrder;
+using MZTolerance = pwiz.CLI.chemistry.MZTolerance;
 
 namespace IDPicker.DataModel
 {
@@ -618,6 +619,100 @@ namespace IDPicker.DataModel
             var dmf1 = x as DistinctMatchFormat;
             var dmf2 = y as DistinctMatchFormat;
             return dmf1 == dmf2;
+        }
+
+        #endregion
+    }
+
+    public class PrecursorMzToleranceUserType : NHibernate.UserTypes.IUserType
+    {
+        #region IUserType Members
+
+        public object Assemble(object cached, object owner)
+        {
+            if (cached == null)
+                return null;
+
+            if (cached == DBNull.Value)
+                return null;
+
+            if (!(cached is string))
+                throw new ArgumentException();
+
+            var serializedString = cached as string;
+            if (serializedString.IsNullOrEmpty())
+                return null;
+
+            var result = new MZTolerance(serializedString);
+            return result;
+        }
+
+        public object DeepCopy(object value)
+        {
+            if (value == null)
+                return null;
+            return value as MZTolerance;
+        }
+
+        public object Disassemble(object value)
+        {
+            if (value == null)
+                return DBNull.Value;
+
+            if (value == DBNull.Value)
+                return DBNull.Value;
+
+            if (!(value is MZTolerance))
+                throw new ArgumentException();
+
+            var tolerance = value as MZTolerance;
+            return String.Format("{0}{1}", tolerance.value, tolerance.units.ToString().ToLowerInvariant());
+        }
+
+        public int GetHashCode(object x)
+        {
+            return x.GetHashCode();
+        }
+
+        public object NullSafeGet(IDataReader rs, string[] names, object owner)
+        {
+            return Assemble(rs.GetValue(rs.GetOrdinal(names[0])), owner);
+        }
+
+        public void NullSafeSet(IDbCommand cmd, object value, int index)
+        {
+            (cmd.Parameters[index] as IDataParameter).Value = Disassemble(value);
+        }
+
+        public object Replace(object original, object target, object owner)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Type ReturnedType
+        {
+            get { return typeof(MZTolerance); }
+        }
+
+        public NHibernate.SqlTypes.SqlType[] SqlTypes
+        {
+            get { return new NHibernate.SqlTypes.SqlType[] { NHibernate.SqlTypes.SqlTypeFactory.GetString(1) }; }
+        }
+
+        public bool IsMutable
+        {
+            get { return false; }
+        }
+
+        bool NHibernate.UserTypes.IUserType.Equals(object x, object y)
+        {
+            if (x == null && y == null)
+                return true;
+            else if (x == null || y == null)
+                return false;
+            var t1 = x as MZTolerance;
+            var t2 = y as MZTolerance;
+            return t1 == t2;
         }
 
         #endregion

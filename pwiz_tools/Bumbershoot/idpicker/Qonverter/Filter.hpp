@@ -31,6 +31,7 @@
 #include <utility>
 #include <string>
 #include <pwiz/utility/misc/IterationListener.hpp>
+#include <pwiz/utility/chemistry/MZTolerance.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/exception_ptr.hpp>
 #include <boost/optional.hpp>
@@ -81,6 +82,7 @@ struct Filter
         int minSpectra;
         int minAdditionalPeptides;
         bool geneLevelFiltering;
+        boost::optional<pwiz::chemistry::MZTolerance> precursorMzTolerance;
 
         int minSpectraPerDistinctMatch;
         int minSpectraPerDistinctPeptide;

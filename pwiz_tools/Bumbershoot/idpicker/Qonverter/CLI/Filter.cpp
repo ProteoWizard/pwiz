@@ -52,6 +52,8 @@ NativeFilter::Config makeNativeFilterConfig(Filterer::Configuration^ managedFilt
     config.minSpectra = managedFilterConfig->MinSpectra;
     config.minAdditionalPeptides = managedFilterConfig->MinAdditionalPeptides;
     config.geneLevelFiltering = managedFilterConfig->GeneLevelFiltering;
+    if (managedFilterConfig->PrecursorMzTolerance != nullptr)
+        config.precursorMzTolerance = pwiz::chemistry::MZTolerance(managedFilterConfig->PrecursorMzTolerance->value, (pwiz::chemistry::MZTolerance::Units) managedFilterConfig->PrecursorMzTolerance->units);
 
     config.minSpectraPerDistinctMatch = managedFilterConfig->MinSpectraPerDistinctMatch;
     config.minSpectraPerDistinctPeptide = managedFilterConfig->MinSpectraPerDistinctPeptide;
@@ -78,6 +80,8 @@ Filterer::Configuration::Configuration()
     MinSpectra = config.minSpectra;
     MinAdditionalPeptides = config.minAdditionalPeptides;
     GeneLevelFiltering = config.geneLevelFiltering;
+    if (config.precursorMzTolerance)
+        PrecursorMzTolerance = gcnew MZTolerance(config.precursorMzTolerance.get().value, (MZTolerance::Units) config.precursorMzTolerance.get().units);
 
     MinSpectraPerDistinctMatch = config.minSpectraPerDistinctMatch;
     MinSpectraPerDistinctPeptide = config.minSpectraPerDistinctPeptide;

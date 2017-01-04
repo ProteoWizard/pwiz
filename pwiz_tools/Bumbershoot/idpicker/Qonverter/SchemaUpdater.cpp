@@ -28,6 +28,7 @@
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
+#include "pwiz/utility/chemistry/Chemistry.hpp"
 #include "boost/crc.hpp"
 
 
@@ -37,7 +38,7 @@ namespace sqlite = sqlite3pp;
 
 BEGIN_IDPICKER_NAMESPACE
 
-const int CURRENT_SCHEMA_REVISION = 15;
+const int CURRENT_SCHEMA_REVISION = 16;
 
 namespace SchemaUpdater {
 
@@ -109,12 +110,102 @@ struct DistinctDoubleArraySum
     }
 };
 
+
+/// Automatically choose monoisotopic or average mass error based on the following logic:
+/// if the absolute value of monoisotopic error is less than absolute value of average error
+/// or if the monoisotopic error is nearly a multiple of a neutron mass,
+/// then return the monoisotopic error.
+void GetSmallerMassError(sqlite3_context* context, int numValues, sqlite3_value** values)
+{
+    if (numValues != 2 || values[0] == NULL || values[1] == NULL)
+    {
+        sqlite3_result_error(context, "[GET_SMALLER_MASS_ERROR] requires 2 numeric arguments", -1);
+        return;
+    }
+
+    double mono = sqlite3_value_double(values[0]);
+    double avg = sqlite3_value_double(values[1]);
+
+    bool monoisotopic = fabs(mono) < fabs(avg) || fmod(fabs(mono), pwiz::chemistry::Neutron) < fabs(avg);
+    sqlite3_result_double(context, monoisotopic ? mono : avg);
+}
+
+/// Same as GetSmallerMassError(), but when monoisotopic error is used because it is nearly a multiple of a neutron mass,
+/// the returned error is adjusted to factor out the neutron contribution; the result is the true monoisotopic error.
+void GetSmallerMassErrorAdjusted(sqlite3_context* context, int numValues, sqlite3_value** values)
+{
+    if (numValues != 2 || values[0] == NULL || values[1] == NULL)
+    {
+        sqlite3_result_error(context, "[GET_SMALLER_MASS_ERROR_ADJUSTED] requires 2 numeric arguments", -1);
+        return;
+    }
+
+    double mono = sqlite3_value_double(values[0]);
+    double avg = sqlite3_value_double(values[1]);
+
+    if (fabs(mono) < fabs(avg))
+        sqlite3_result_double(context, mono);
+    else
+    {
+        double monoModNeutron = fmod(mono, pwiz::chemistry::Neutron);
+        bool monoisotopic = fabs(monoModNeutron) < fabs(avg);
+        sqlite3_result_double(context, monoisotopic ? monoModNeutron : avg);
+    }
+}
+
+// WITHIN_MASS_TOLERANCE_MZ(observed, expected, tolerance)
+void WithinMassToleranceMZ(sqlite3_context* context, int numValues, sqlite3_value** values)
+{
+    if (numValues != 3 || values[0] == NULL || values[1] == NULL || values[2] == NULL)
+    {
+        sqlite3_result_error(context, "[WITHIN_MASS_TOLERANCE_MZ] requires 3 numeric arguments", -1);
+        return;
+    }
+
+    double observed = sqlite3_value_double(values[0]);
+    double expected = sqlite3_value_double(values[1]);
+    double tolerance = sqlite3_value_double(values[2]);
+    double lower_bound = expected - tolerance;
+    double upper_bound = expected + tolerance;
+
+    sqlite3_result_int(context, (observed > lower_bound && observed < upper_bound) ? 1 : 0);
+}
+
+// WITHIN_MASS_TOLERANCE_PPM(observed, expected, tolerance)
+void WithinMassTolerancePPM(sqlite3_context* context, int numValues, sqlite3_value** values)
+{
+    if (numValues != 3 || values[0] == NULL || values[1] == NULL || values[2] == NULL)
+    {
+        sqlite3_result_error(context, "[WITHIN_MASS_TOLERANCE_PPM] requires 3 numeric arguments", -1);
+        return;
+    }
+
+    double observed = sqlite3_value_double(values[0]);
+    double expected = sqlite3_value_double(values[1]);
+    double tolerance = sqlite3_value_double(values[2]);
+    double ppmDelta = fabs(expected) * tolerance * 1e-6;
+    double lower_bound = expected - ppmDelta;
+    double upper_bound = expected + ppmDelta;
+
+    sqlite3_result_int(context, (observed > lower_bound && observed < upper_bound) ? 1 : 0);
+}
+
+
+void update_15_to_16(sqlite::database& db, const IterationListenerRegistry* ilr, bool& vacuumNeeded)
+{
+    ITERATION_UPDATE(ilr, 15, CURRENT_SCHEMA_REVISION, "updating schema version")
+
+    db.execute("ALTER TABLE FilterHistory ADD COLUMN PrecursorMzTolerance TEXT");
+
+    //update_16_to_17(db, ilr, vacuumNeeded);
+}
+
 void update_14_to_15(sqlite::database& db, const IterationListenerRegistry* ilr, bool& vacuumNeeded)
 {
     ITERATION_UPDATE(ilr, 14, CURRENT_SCHEMA_REVISION, "updating schema version")
     db.execute("CREATE TABLE IF NOT EXISTS IsobaricSampleMapping (GroupId INTEGER PRIMARY KEY, Samples TEXT)");
 
-    //update_15_to_16(db, ilr, vacuumNeeded);
+    update_15_to_16(db, ilr, vacuumNeeded);
 }
 
 void update_13_to_14(sqlite::database& db, const IterationListenerRegistry* ilr, bool& vacuumNeeded)
@@ -656,6 +747,8 @@ bool update(sqlite3* idpDbConnection, const IterationListenerRegistry* ilr)
         update_13_to_14(db, ilr, vacuumNeeded);
     else if (schemaRevision == 14)
         update_14_to_15(db, ilr, vacuumNeeded);
+    else if (schemaRevision == 15)
+        update_15_to_16(db, ilr, vacuumNeeded);
     else if (schemaRevision > CURRENT_SCHEMA_REVISION)
         throw runtime_error("[SchemaUpdater::update] unable to update schema revision " +
                             lexical_cast<string>(schemaRevision) +
@@ -717,6 +810,22 @@ void createUserSQLiteFunctions(sqlite3* idpDbConnection)
 {
     int result = sqlite3_create_function(idpDbConnection, "distinct_double_array_sum", -1, SQLITE_ANY,
                                          0, NULL, &DistinctDoubleArraySum::Step, &DistinctDoubleArraySum::Final);
+    if (result != 0)
+        throw runtime_error("unable to create user function: SQLite error " + lexical_cast<string>(result));
+
+    result = sqlite3_create_function(idpDbConnection, "get_smaller_mass_error", 2, SQLITE_ANY, 0, &GetSmallerMassError, NULL, NULL);
+    if (result != 0)
+        throw runtime_error("unable to create user function: SQLite error " + lexical_cast<string>(result));
+
+    result = sqlite3_create_function(idpDbConnection, "get_smaller_mass_error_adjusted", 2, SQLITE_ANY, 0, &GetSmallerMassErrorAdjusted, NULL, NULL);
+    if (result != 0)
+        throw runtime_error("unable to create user function: SQLite error " + lexical_cast<string>(result));
+
+    result = sqlite3_create_function(idpDbConnection, "within_mass_tolerance_mz", 3, SQLITE_ANY, 0, &WithinMassToleranceMZ, NULL, NULL);
+    if (result != 0)
+        throw runtime_error("unable to create user function: SQLite error " + lexical_cast<string>(result));
+
+    result = sqlite3_create_function(idpDbConnection, "within_mass_tolerance_ppm", 3, SQLITE_ANY, 0, &WithinMassTolerancePPM, NULL, NULL);
     if (result != 0)
         throw runtime_error("unable to create user function: SQLite error " + lexical_cast<string>(result));
 }

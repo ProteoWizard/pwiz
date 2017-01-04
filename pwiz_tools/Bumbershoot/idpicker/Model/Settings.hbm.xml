@@ -69,6 +69,7 @@
         <property name="MinimumSpectra"/>
         <property name="MinimumAdditionalPeptides"/>
         <property name="GeneLevelFiltering"/>
+        <property name="PrecursorMzTolerance" type="PrecursorMzToleranceUserType"/>
         <property name="DistinctMatchFormat" type="DistinctMatchFormatUserType"/>
         <property name="MinimumSpectraPerDistinctMatch"/>
         <property name="MinimumSpectraPerDistinctPeptide"/>

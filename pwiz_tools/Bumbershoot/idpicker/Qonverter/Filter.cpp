@@ -62,14 +62,14 @@ static bool isPathOnFixedDrive(const std::string& path)
 namespace {
 
 
-/// MaxFDRScore
+/// MaxFDRScore, PrecursorMzTolerance
 const string filteredSpectrumSelectSql =
     "SELECT s.*\n"
     "FROM PeptideSpectrumMatch psm\n"
     "JOIN Spectrum s ON psm.Spectrum = s.Id\n"
     "JOIN SpectrumSource ss ON s.Source = ss.Id\n"
     "-- filter out ungrouped spectrum sources\n"
-    "WHERE ss.Group_ AND %1% >= psm.QValue AND psm.Rank = 1\n"
+    "WHERE ss.Group_ AND %1% >= psm.QValue AND psm.Rank = 1 %2%\n"
     "GROUP BY s.Id;\n";
 boost::format createFilteredSpectrumTableSql(
     "CREATE TABLE FilteredSpectrum (Id INTEGER PRIMARY KEY, Source INTEGER, Index_ INTEGER, NativeID TEXT, PrecursorMZ NUMERIC, ScanTimeInSeconds NUMERIC);\n"
@@ -83,7 +83,7 @@ boost::format createDebugFilteredSpectrumTableSql(
     "JOIN Spectrum s ON psm.Spectrum = s.Id\n"
     "JOIN SpectrumSource ss ON s.Source = ss.Id\n"
     "-- filter out ungrouped spectrum sources\n"
-    "WHERE NOT ss.Group_ OR %1% < psm.QValue OR psm.Rank > 1\n"
+    "WHERE NOT ss.Group_ OR %1% < psm.QValue OR psm.Rank > 1 OR NOT (1 %2%)\n"
     "GROUP BY s.Id;\n"
 );
 
@@ -132,14 +132,14 @@ boost::format createFilteredProteinTableByGeneSql(
     "CREATE UNIQUE INDEX FiltProtein_Accession ON FilteredProtein (Accession);"
 );
 
-/// MaxFDRScore
+/// MaxFDRScore, PrecursorMzTolerance
 const string filteredPSMSelectSql =
     "SELECT psm.*\n"
     "FROM Protein pro\n"
     "JOIN PeptideInstance pi ON pro.Id = pi.Protein\n"
     "JOIN PeptideSpectrumMatch psm ON pi.Peptide = psm.Peptide\n"
     "JOIN FilteredSpectrum s ON psm.Spectrum = s.Id\n"
-    "WHERE %1% >= psm.QValue AND psm.Rank = 1\n"
+    "WHERE %1% >= psm.QValue AND psm.Rank = 1 %2%\n"
     "GROUP BY psm.Id;\n";
 boost::format createFilteredPSMTableSql(
     "CREATE TABLE FilteredPeptideSpectrumMatch (Id INTEGER PRIMARY KEY, Spectrum INT, Analysis INT, Peptide INT, QValue NUMERIC, ObservedNeutralMass NUMERIC, MonoisotopicMassError NUMERIC, MolecularWeightError NUMERIC, Rank INT, Charge INT);\n"
@@ -554,6 +554,7 @@ struct Filter::Impl
     static string explainQueryPlan(sqlite3pp::database& db, const string& singleStatement)
     {
         ostringstream result;
+        result << singleStatement << "\n";
         sqlite3pp::query planQuery(db, ("EXPLAIN QUERY PLAN " + singleStatement).c_str());
         BOOST_FOREACH(sqlite3pp::query::rows row, planQuery)
         {
@@ -591,7 +592,7 @@ struct Filter::Impl
             createFilteredPeptideTable(idpDb);
             int filteredPeptideInstances = createFilteredPeptideInstanceTable(idpDb);
 
-            BOOST_LOG_SEV(logSource::get(), MessageSeverity::VerboseInfo) << "First filter results: " << filteredSpectra << " spectra; " << filteredPSMs << " PSMs; " << filteredProteins << " proteins; " << filteredPeptideInstances << " peptide instances";
+            BOOST_LOG_SEV(logSource::get(), MessageSeverity::DebugInfo) << "First filter results: " << filteredSpectra << " spectra; " << filteredPSMs << " PSMs; " << filteredProteins << " proteins; " << filteredPeptideInstances << " peptide instances";
 
             renameFilteredTables(idpDb);
 
@@ -625,12 +626,25 @@ struct Filter::Impl
         }
     }
 
+    string precursorMzTolerancePredicate(const boost::optional<pwiz::chemistry::MZTolerance>& precursorMzTolerance)
+    {
+        if (!precursorMzTolerance)
+            return "";
+
+        switch (precursorMzTolerance.get().units)
+        {
+            case pwiz::chemistry::MZTolerance::MZ: return " AND WITHIN_MASS_TOLERANCE_MZ(psm.ObservedNeutralMass, psm.ObservedNeutralMass + GET_SMALLER_MASS_ERROR_ADJUSTED(psm.MonoisotopicMassError, psm.MolecularWeightError), " + lexical_cast<string>(precursorMzTolerance.get().value) + ")";
+            case pwiz::chemistry::MZTolerance::PPM: return " AND WITHIN_MASS_TOLERANCE_PPM(psm.ObservedNeutralMass, psm.ObservedNeutralMass + GET_SMALLER_MASS_ERROR_ADJUSTED(psm.MonoisotopicMassError, psm.MolecularWeightError), " + lexical_cast<string>(precursorMzTolerance.get().value) + ")";
+            default: throw runtime_error("[precursorMzTolerancePredicate] invalid tolerance units");
+        }
+    }
+
     int createFilteredSpectrumTable(sqlite3pp::database& db)
     {
         ITERATION_UPDATE(ilr, FilterStep_FilterSpectra, FilterStep_Count, "filtering spectra")
-        BOOST_LOG_SEV(logSource::get(), MessageSeverity::DebugInfo) << explainQueryPlan(db, (boost::format(filteredSpectrumSelectSql) % config.maxFDRScore).str());
-        //db.execute((createDebugFilteredSpectrumTableSql % config.maxFDRScore).str());
-        db.execute((createFilteredSpectrumTableSql % config.maxFDRScore).str());
+        BOOST_LOG_SEV(logSource::get(), MessageSeverity::DebugInfo) << explainQueryPlan(db, (boost::format(filteredSpectrumSelectSql) % config.maxFDRScore % precursorMzTolerancePredicate(config.precursorMzTolerance)).str());
+        //db.execute((createDebugFilteredSpectrumTableSql % config.maxFDRScore % precursorMzTolerancePredicate(config.precursorMzTolerance)).str());
+        db.execute((createFilteredSpectrumTableSql % config.maxFDRScore % precursorMzTolerancePredicate(config.precursorMzTolerance)).str());
         return sqlite3pp::query(db, "SELECT COUNT(*) From FilteredSpectrum").begin()->get<int>(0);
     }
 
@@ -648,9 +662,9 @@ struct Filter::Impl
     int createFilteredPSMTable(sqlite3pp::database& db)
     {
         ITERATION_UPDATE(ilr, FilterStep_FilterPSMs, FilterStep_Count, "filtering peptide spectrum matches")
-        BOOST_LOG_SEV(logSource::get(), MessageSeverity::DebugInfo) << explainQueryPlan(db, (boost::format(filteredPSMSelectSql) % config.maxFDRScore).str());
-        //db.execute((createDebugFilteredPSMTableSql % config.maxFDRScore).str());
-        db.execute((createFilteredPSMTableSql % config.maxFDRScore).str());
+        BOOST_LOG_SEV(logSource::get(), MessageSeverity::DebugInfo) << explainQueryPlan(db, (boost::format(filteredPSMSelectSql) % config.maxFDRScore % precursorMzTolerancePredicate(config.precursorMzTolerance)).str());
+        //db.execute((createDebugFilteredPSMTableSql % config.maxFDRScore % precursorMzTolerancePredicate(config.precursorMzTolerance)).str());
+        db.execute((createFilteredPSMTableSql % config.maxFDRScore % precursorMzTolerancePredicate(config.precursorMzTolerance)).str());
         return sqlite3pp::query(db, "SELECT COUNT(*) From FilteredPeptideSpectrumMatch").begin()->get<int>(0);
     }
 
@@ -1106,6 +1120,7 @@ struct Filter::Impl
                                                      "AND MinimumSpectra = ?\n"
                                                      "AND MinimumAdditionalPeptides = ?\n"
                                                      "AND GeneLevelFiltering = ?\n"
+                                                     "AND PrecursorMzTolerance = ?\n"
                                                      "AND DistinctMatchFormat = ?\n"
                                                      "AND MinimumSpectraPerDistinctMatch = ?\n"
                                                      "AND MinimumSpectraPerDistinctPeptide = ?\n"
@@ -1116,6 +1131,7 @@ struct Filter::Impl
                                             config.minSpectra <<
                                             config.minAdditionalPeptides <<
                                             config.geneLevelFiltering <<
+                                            (config.precursorMzTolerance ? lexical_cast<string>(config.precursorMzTolerance.get()) : "") <<
                                             config.distinctMatchFormat.filterHistoryExpression() <<
                                             config.minSpectraPerDistinctMatch <<
                                             config.minSpectraPerDistinctPeptide <<
@@ -1149,14 +1165,14 @@ struct Filter::Impl
 
         ITERATION_UPDATE(ilr, FilterStep_UpdateFilterHistory, FilterStep_Count, "updating filter history")
 
-        db.execute("CREATE TABLE IF NOT EXISTS FilterHistory (Id INTEGER PRIMARY KEY, MaximumQValue NUMERIC, MinimumDistinctPeptides INT, MinimumSpectra INT,  MinimumAdditionalPeptides INT, GeneLevelFiltering INT,\n"
+        db.execute("CREATE TABLE IF NOT EXISTS FilterHistory (Id INTEGER PRIMARY KEY, MaximumQValue NUMERIC, MinimumDistinctPeptides INT, MinimumSpectra INT, MinimumAdditionalPeptides INT, GeneLevelFiltering INT, PrecursorMzTolerance TEXT\n"
                    "                                          DistinctMatchFormat TEXT, MinimumSpectraPerDistinctMatch INT, MinimumSpectraPerDistinctPeptide INT, MaximumProteinGroupsPerPeptide INT,\n"
                    "                                          Clusters INT, ProteinGroups INT, Proteins INT, GeneGroups INT, Genes INT, DistinctPeptides INT, DistinctMatches INT, FilteredSpectra INT, ProteinFDR NUMERIC, PeptideFDR NUMERIC, SpectrumFDR NUMERIC);");
 
         sqlite3_int64 nextFilterId = sqlite3pp::query(db, "SELECT IFNULL(MAX(Id), 0)+1 FROM FilterHistory").begin()->get<sqlite3_int64>(0);
 
         // must explicitly specify columns since the 8 to 9 schema upgrade added columns
-        string insertFilterSql = "INSERT INTO FilterHistory (Id, MaximumQValue, MinimumDistinctPeptides, MinimumSpectra,  MinimumAdditionalPeptides, GeneLevelFiltering,\n"
+        string insertFilterSql = "INSERT INTO FilterHistory (Id, MaximumQValue, MinimumDistinctPeptides, MinimumSpectra,  MinimumAdditionalPeptides, GeneLevelFiltering, PrecursorMzTolerance,\n"
                                  "                           DistinctMatchFormat, MinimumSpectraPerDistinctMatch, MinimumSpectraPerDistinctPeptide, MaximumProteinGroupsPerPeptide,\n"
                                  "                           Clusters, ProteinGroups, Proteins, GeneGroups, Genes, DistinctPeptides, DistinctMatches, FilteredSpectra, ProteinFDR, PeptideFDR, SpectrumFDR)\n"
                                  "VALUES\n"
@@ -1167,6 +1183,7 @@ struct Filter::Impl
                                  " ?," // MinimumSpectra
                                  " ?," // MinimumAdditionalPeptides
                                  " ?," // GeneLevelFiltering
+                                 " ?," // PrecursorMzTolerance
                                  " ?," // DistinctMatchFormat
                                  " ?," // MinimumSpectraPerDistinctMatch
                                  " ?," // MinimumSpectraPerDistinctPeptide
@@ -1191,6 +1208,7 @@ struct Filter::Impl
                                                  "AND MinimumSpectra = ?\n"
                                                  "AND MinimumAdditionalPeptides = ?\n"
                                                  "AND GeneLevelFiltering = ?\n"
+                                                 "AND PrecursorMzTolerance = ?\n"
                                                  "AND DistinctMatchFormat = ?\n"
                                                  "AND MinimumSpectraPerDistinctMatch = ?\n"
                                                  "AND MinimumSpectraPerDistinctPeptide = ?\n"
@@ -1201,6 +1219,7 @@ struct Filter::Impl
                                         config.minSpectra <<
                                         config.minAdditionalPeptides <<
                                         config.geneLevelFiltering <<
+                                        (config.precursorMzTolerance ? lexical_cast<string>(config.precursorMzTolerance.get()) : "") <<
                                         config.distinctMatchFormat.filterHistoryExpression() <<
                                         config.minSpectraPerDistinctMatch <<
                                         config.minSpectraPerDistinctPeptide <<
@@ -1217,6 +1236,7 @@ struct Filter::Impl
                                  config.minSpectra <<
                                  config.minAdditionalPeptides <<
                                  config.geneLevelFiltering <<
+                                 (config.precursorMzTolerance ? lexical_cast<string>(config.precursorMzTolerance.get()) : "") <<
                                  config.distinctMatchFormat.filterHistoryExpression() <<
                                  config.minSpectraPerDistinctMatch <<
                                  config.minSpectraPerDistinctPeptide <<
@@ -1328,6 +1348,7 @@ boost::optional<Filter::Config> Filter::currentConfig(sqlite3* idpDbConnection)
                                             "     , MinimumSpectra\n"
                                             "     , MinimumAdditionalPeptides\n"
                                             "     , GeneLevelFiltering\n"
+                                            "     , PrecursorMzTolerance\n"
                                             "     , DistinctMatchFormat\n"
                                             "     , MinimumSpectraPerDistinctMatch\n"
                                             "     , MinimumSpectraPerDistinctPeptide\n"
@@ -1353,6 +1374,7 @@ boost::optional<Filter::Config> Filter::currentConfig(sqlite3* idpDbConnection)
     }
 
     Config currentConfig;
+    string precursorMzTolerance;
     string distinctMatchFormat;
 
     currentFilterItr->getter() >> currentConfig.maxFDRScore
@@ -1360,11 +1382,14 @@ boost::optional<Filter::Config> Filter::currentConfig(sqlite3* idpDbConnection)
         >> currentConfig.minSpectra
         >> currentConfig.minAdditionalPeptides
         >> reinterpret_cast<int&>(currentConfig.geneLevelFiltering)
+        >> precursorMzTolerance
         >> distinctMatchFormat
         >> currentConfig.minSpectraPerDistinctMatch
         >> currentConfig.minSpectraPerDistinctPeptide
         >> currentConfig.maxProteinGroupsPerPeptide;
 
+    if (!precursorMzTolerance.empty())
+        currentConfig.precursorMzTolerance = lexical_cast<pwiz::chemistry::MZTolerance>(precursorMzTolerance);
     currentConfig.distinctMatchFormat.parseFilterHistoryExpression(distinctMatchFormat);
 
     return currentConfig;

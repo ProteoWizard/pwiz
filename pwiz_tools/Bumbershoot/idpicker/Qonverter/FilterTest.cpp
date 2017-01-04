@@ -25,9 +25,11 @@
 #include "pwiz/utility/misc/unit.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
+#include "pwiz/utility/chemistry/Chemistry.hpp"
 #include "boost/assign.hpp"
 #include "Filter.hpp"
 #include "SchemaUpdater.hpp"
+#include "Logger.hpp"
 #include "sqlite3pp.h"
 
 
@@ -91,7 +93,7 @@ TestDatabase testCase(const TestPSM (&testPSMs)[size])
                "CREATE TABLE IF NOT EXISTS PeptideQuantitation (Id INTEGER PRIMARY KEY, iTRAQ_ReporterIonIntensities BLOB, TMT_ReporterIonIntensities BLOB, PrecursorIonIntensity NUMERIC);"
                "CREATE TABLE IF NOT EXISTS ProteinQuantitation (Id INTEGER PRIMARY KEY, iTRAQ_ReporterIonIntensities BLOB, TMT_ReporterIonIntensities BLOB, PrecursorIonIntensity NUMERIC);"
                "CREATE TABLE IF NOT EXISTS QonverterSettings (Id INTEGER PRIMARY KEY, QonverterMethod INT, DecoyPrefix TEXT, RerankMatches INT, Kernel INT, MassErrorHandling INT, MissedCleavagesHandling INT, TerminalSpecificityHandling INT, ChargeStateHandling INT, ScoreInfoByName TEXT);"
-               "CREATE TABLE IF NOT EXISTS FilterHistory (Id INTEGER PRIMARY KEY, MaximumQValue NUMERIC, MinimumDistinctPeptides INT, MinimumSpectra INT,  MinimumAdditionalPeptides INT, GeneLevelFiltering INT,\n"
+               "CREATE TABLE IF NOT EXISTS FilterHistory (Id INTEGER PRIMARY KEY, MaximumQValue NUMERIC, MinimumDistinctPeptides INT, MinimumSpectra INT,  MinimumAdditionalPeptides INT, GeneLevelFiltering INT, PrecursorMzTolerance TEXT,\n"
                "                                          DistinctMatchFormat TEXT, MinimumSpectraPerDistinctMatch INT, MinimumSpectraPerDistinctPeptide INT, MaximumProteinGroupsPerPeptide INT,\n"
                "                                          Clusters INT, ProteinGroups INT, Proteins INT, GeneGroups INT, Genes INT, DistinctPeptides INT, DistinctMatches INT, FilteredSpectra INT, ProteinFDR NUMERIC, PeptideFDR NUMERIC, SpectrumFDR NUMERIC);");
 
@@ -1374,15 +1376,86 @@ void testAdditionalPeptides()
     }
 }
 
+void testSQLiteUserFunctions()
+{
+    TestDatabase db;
+
+    const TestPSM testPSMs[] =
+    {
+        { 1, 1, 1 }
+    };
+
+    db = testCase(testPSMs);
+    sqlite::query testGetSmallerMassError(*db, "SELECT GET_SMALLER_MASS_ERROR(?, ?)");
+
+    testGetSmallerMassError.binder() << 0.01 << 0.0123;
+    unit_assert_operator_equal(0.01, testGetSmallerMassError.begin()->get<double>(0));
+    testGetSmallerMassError.reset();
+
+    testGetSmallerMassError.binder() << 1.02 << 0.0234;
+    unit_assert_operator_equal(1.02, testGetSmallerMassError.begin()->get<double>(0));
+    testGetSmallerMassError.reset();
+
+    testGetSmallerMassError.binder() << 0.03 << 0.00456;
+    unit_assert_operator_equal(0.00456, testGetSmallerMassError.begin()->get<double>(0));
+    testGetSmallerMassError.reset();
+
+    testGetSmallerMassError.binder() << -1.04 << -0.4567;
+    unit_assert_operator_equal(-1.04, testGetSmallerMassError.begin()->get<double>(0));
+    testGetSmallerMassError.reset();
+
+
+    sqlite::query testGetSmallerMassErrorAdjusted(*db, "SELECT GET_SMALLER_MASS_ERROR_ADJUSTED(?, ?)");
+
+    testGetSmallerMassErrorAdjusted.binder() << 1.02 << 0.0234;
+    unit_assert_operator_equal(1.02 - pwiz::chemistry::Neutron, testGetSmallerMassErrorAdjusted.begin()->get<double>(0));
+    testGetSmallerMassErrorAdjusted.reset();
+
+    testGetSmallerMassErrorAdjusted.binder() << 0.03 << 0.00456;
+    unit_assert_operator_equal(0.00456, testGetSmallerMassErrorAdjusted.begin()->get<double>(0));
+    testGetSmallerMassErrorAdjusted.reset();
+
+    testGetSmallerMassErrorAdjusted.binder() << -2.04 << -0.4567;
+    unit_assert_operator_equal(-(2.04 - 2*pwiz::chemistry::Neutron), testGetSmallerMassErrorAdjusted.begin()->get<double>(0));
+    testGetSmallerMassErrorAdjusted.reset();
+
+
+    sqlite::query testWithinMassToleranceMZ(*db, "SELECT WITHIN_MASS_TOLERANCE_MZ(?, ?, ?)");
+
+    testWithinMassToleranceMZ.binder() << 123.4 << 123.5 << 0.05;
+    unit_assert_operator_equal(0, testWithinMassToleranceMZ.begin()->get<int>(0));
+    testWithinMassToleranceMZ.reset();
+
+    testWithinMassToleranceMZ.binder() << 123.4 << 123.5 << 0.5;
+    unit_assert_operator_equal(1, testWithinMassToleranceMZ.begin()->get<int>(0));
+    testWithinMassToleranceMZ.reset();
+
+
+    sqlite::query testWithinMassTolerancePPM(*db, "SELECT WITHIN_MASS_TOLERANCE_PPM(?, ?, ?)");
+
+    testWithinMassTolerancePPM.binder() << 123.4 << 123.5 << 10;
+    unit_assert_operator_equal(0, testWithinMassTolerancePPM.begin()->get<int>(0));
+    testWithinMassTolerancePPM.reset();
+
+    testWithinMassTolerancePPM.binder() << 12345.6 << 12345.7 << 10;
+    unit_assert_operator_equal(1, testWithinMassTolerancePPM.begin()->get<int>(0));
+    testWithinMassTolerancePPM.reset();
+
+}
+
 
 int main(int argc, char* argv[])
 {
     TEST_PROLOG(argc, argv)
 
+    if (find(testArgs.begin(), testArgs.end(), "-v") == testArgs.end())
+        boost::log::core::get()->set_logging_enabled(false);
+
     try
     {
         testCoverage();
         testAdditionalPeptides();
+        testSQLiteUserFunctions();
     }
     catch (exception& e)
     {

@@ -91,7 +91,10 @@ generate-version.cpp $(IDPICKER_PATH)/Qonverter/idpQueryVersion.cpp : idpQuery :
 
 obj CoreVersion : CoreVersion.cpp ;
 
-exe idpQonvert : idpQonvert.cpp CoreVersion idpQonvertVersion.cpp Qonverter $(IDPICKER_PATH)/../freicore ;
+make gene2protein.db3 : ../gene2protein.db3 : @common.copy ;
+explicit gene2protein.db3 ;
+
+exe idpQonvert : idpQonvert.cpp CoreVersion idpQonvertVersion.cpp Qonverter $(IDPICKER_PATH)/../freicore : <dependency>gene2protein.db3 ;
 exe idpAssemble : idpAssemble.cpp CoreVersion idpAssembleVersion.cpp Qonverter ;
 exe idpQuery : idpQuery.cpp CoreVersion idpQueryVersion.cpp Qonverter /ext/boost//regex ;
 
@@ -101,15 +104,12 @@ unit-test EmbedderTest : EmbedderTest.cpp Qonverter $(PWIZ_ROOT_PATH)/pwiz/data/
 unit-test FilterTest : FilterTest.cpp Qonverter : $(TEAMCITY_TEST_DECORATION) ;
 unit-test LoggerTest : LoggerTest.cpp Qonverter : $(TEAMCITY_TEST_DECORATION) ;
 
-make gene2protein.db3 : ../gene2protein.db3 : @common.copy ;
-explicit gene2protein.db3 ;
-
 path-constant TEST_DATA_PATH : ../TestData ;
 run CommandlineTest.cpp
     : # args
         $(TEST_DATA_PATH)
     : # input-files
-        [ SORT idpQonvert idpAssemble idpQuery ]
+       [ SORT idpQonvert idpAssemble idpQuery ]
     : # requirements
         $(TEAMCITY_TEST_DECORATION) <dependency>gene2protein.db3/<location-prefix>CommandlineTest.test <library>Qonverter
     : # target name
