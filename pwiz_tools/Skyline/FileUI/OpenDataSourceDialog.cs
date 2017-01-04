@@ -205,6 +205,15 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        public IEnumerable<string> SelectedFiles
+        {
+            get
+            {
+                foreach (int index in listView.SelectedIndices)
+                    yield return listView.Items[index].Text;
+            }
+        }
+
         private string _sourceTypeName;
         public string SourceTypeName
         {

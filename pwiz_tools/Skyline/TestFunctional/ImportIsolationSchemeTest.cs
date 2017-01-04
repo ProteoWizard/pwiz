@@ -25,6 +25,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
@@ -104,6 +105,11 @@ namespace pwiz.SkylineTestFunctional
                 importDlg.CurrentDirectory = new MsDataFilePath(TestFilesDir.FullPath);
                 foreach (var rawFileName in rawFileNames)
                     importDlg.SelectFile(rawFileName);
+                if (!ArrayUtil.EqualsDeep(rawFileNames, importDlg.SelectedFiles.ToArray()))
+                {
+                    Assert.Fail(TextUtil.LineSeparate("Unexpected file selection:",
+                        TextUtil.LineSeparate(importDlg.SelectedFiles)));
+                }
             });
             OkDialog(importDlg, importDlg.AcceptButton.PerformClick);
         }
