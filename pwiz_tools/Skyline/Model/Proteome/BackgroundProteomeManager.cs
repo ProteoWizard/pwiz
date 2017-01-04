@@ -176,7 +176,8 @@ namespace pwiz.Skyline.Model.Proteome
                 {
                     // digest is ready, and protein metdata is resolved
                     CompleteProcessing(container, backgroundProteomeWithDigestions);
-                    return originalBackgroundProteome; // No change needed
+                    Helpers.AssignIfEquals(ref backgroundProteomeWithDigestions, originalBackgroundProteome);
+                    return backgroundProteomeWithDigestions; // No change needed
                 }
                 // are we here to do the digest, or to resolve the protein metadata?
                 var needsProteinMetadataSearch = backgroundProteomeWithDigestions.NeedsProteinMetadataSearch;
