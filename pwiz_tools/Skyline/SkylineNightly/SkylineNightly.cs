@@ -38,12 +38,13 @@ namespace SkylineNightly
             {
                 Program.SCHEDULED_ARG, // Trunk
                 Program.SCHEDULED_PERFTESTS_ARG, // Trunk with Perf Tests
-                Program.SCHEDULED_RELEASE_BRANCH_ARG, // Release Branch with Perf Tests
+                Program.SCHEDULED_RELEASE_BRANCH_ARG, // Release Branch without Perf Tests
                 Program.SCHEDULED_STRESSTESTS_ARG, // Trunk with Stress Tests
                 Program.SCHEDULED_INTEGRATION_ARG, // Integration
                 Program.SCHEDULED_INTEGRATION_TRUNK_ARG, // Integration then Trunk (Dedicated)
                 Program.SCHEDULED_PERFTEST_AND_TRUNK_ARG, // Trunk then Perf Tests (Dedicated)
                 Program.SCHEDULED_TRUNK_AND_TRUNK_ARG, // Trunk then Trunk again (Dedicated)
+                Program.SCHEDULED_RELEASE_BRANCH_PERFTESTS_ARG, // Release Branch with Perf Tests
             };
             if (!string.IsNullOrEmpty(Settings.Default.ScheduledArg))  // Older installations won't have this
             {
@@ -173,7 +174,7 @@ namespace SkylineNightly
                     break;
                 case 2:
                     arg = Program.SCHEDULED_RELEASE_BRANCH_ARG;
-                    durationHours = Nightly.PERF_DURATION_HOURS;
+                    durationHours = Nightly.DEFAULT_DURATION_HOURS;
                     break;
                 case 3:
                     arg = Program.SCHEDULED_STRESSTESTS_ARG;
@@ -194,6 +195,10 @@ namespace SkylineNightly
                 case 7:
                     arg = Program.SCHEDULED_TRUNK_AND_TRUNK_ARG;
                     durationHours = 2 * Nightly.DEFAULT_DURATION_HOURS;
+                    break;
+                case 8:
+                    arg = Program.SCHEDULED_RELEASE_BRANCH_PERFTESTS_ARG;
+                    durationHours = Nightly.PERF_DURATION_HOURS;
                     break;
             }
             return arg;

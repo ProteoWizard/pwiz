@@ -30,6 +30,7 @@ namespace SkylineNightly
         public const string SCHEDULED_PERFTESTS_ARG = SCHEDULED_ARG + "_with_perftests"; // Not L10N
         public const string SCHEDULED_STRESSTESTS_ARG = SCHEDULED_ARG + "_with_stresstests"; // Not L10N
         public const string SCHEDULED_RELEASE_BRANCH_ARG = SCHEDULED_ARG + "_release_branch"; // Not L10N
+        public const string SCHEDULED_RELEASE_BRANCH_PERFTESTS_ARG = SCHEDULED_ARG + "_release_branch_with_perftests"; // Not L10N
         public const string SCHEDULED_INTEGRATION_ARG = SCHEDULED_ARG + "_integration_branch"; // Not L10N
         public const string SCHEDULED_INTEGRATION_TRUNK_ARG = SCHEDULED_ARG + "_integration_and_trunk"; // Not L10N
         public const string SCHEDULED_PERFTEST_AND_TRUNK_ARG = SCHEDULED_ARG + "_perftests_and_trunk"; // Not L10N
@@ -49,7 +50,8 @@ namespace SkylineNightly
             SCHEDULED_PERFTESTS_ARG,
             SCHEDULED_PERFTEST_AND_TRUNK_ARG,
             SCHEDULED_TRUNK_AND_TRUNK_ARG,
-            SCHEDULED_STRESSTESTS_ARG
+            SCHEDULED_STRESSTESTS_ARG,
+            SCHEDULED_RELEASE_BRANCH_PERFTESTS_ARG,
         };
 
         private static void PerformTests(Nightly.RunMode runMode, string arg, string decorateSrcDirName = null)
@@ -129,6 +131,10 @@ namespace SkylineNightly
 
                 case SCHEDULED_RELEASE_BRANCH_ARG:
                     PerformTests(Nightly.RunMode.release, arg); // Not L10N
+                    break;
+
+                case SCHEDULED_RELEASE_BRANCH_PERFTESTS_ARG:
+                    PerformTests(Nightly.RunMode.release_perf, arg); // Not L10N
                     break;
 
                 case SCHEDULED_ARG:

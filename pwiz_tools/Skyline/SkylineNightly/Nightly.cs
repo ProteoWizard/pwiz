@@ -51,7 +51,8 @@ namespace SkylineNightly
         private const string LABKEY_URL = "https://skyline.gs.washington.edu/labkey/testresults/home/development/Nightly%20x64/post.view?";
         private const string LABKEY_PERF_URL = "https://skyline.gs.washington.edu/labkey/testresults/home/development/Performance%20Tests/post.view?";
         private const string LABKEY_STRESS_URL = "https://skyline.gs.washington.edu/labkey/testresults/home/development/NightlyStress/post.view?";
-        private const string LABKEY_RELEASE_PERF_URL = "https://skyline.gs.washington.edu/labkey/testresults/home/development/Release%20Branch/post.view?";
+        private const string LABKEY_RELEASE_URL = "https://skyline.gs.washington.edu/labkey/testresults/home/development/Release%20Branch/post.view?";
+        private const string LABKEY_RELEASE_PERF_URL = "https://skyline.gs.washington.edu/labkey/testresults/home/development/Release%20Branch%20Performance%20Tests/post.view?";
         private const string LABKEY_INTEGRATION_URL = "https://skyline.gs.washington.edu/labkey/testresults/home/development/Integration/post.view";
 
         // Current integration branch is large_doc_perf
@@ -129,7 +130,7 @@ namespace SkylineNightly
             }
         }
 
-        public enum RunMode { parse, post, trunk, perf, release, stress, integration }
+        public enum RunMode { parse, post, trunk, perf, release, stress, integration, release_perf }
 
         public string RunAndPost()
         {
@@ -155,7 +156,7 @@ namespace SkylineNightly
             var nightlyDir = GetNightlyDir();
             var skylineNightlySkytr = Path.Combine(nightlyDir, "SkylineNightly.skytr");
 
-            bool withPerfTests = _runMode != RunMode.trunk && _runMode != RunMode.integration;
+            bool withPerfTests = _runMode != RunMode.trunk && _runMode != RunMode.integration && _runMode != RunMode.release;
 
             if (_runMode == RunMode.stress)
             {
@@ -378,7 +379,7 @@ namespace SkylineNightly
             using (var client = new WebClient())
             {
                 client.Credentials = new NetworkCredential(TEAM_CITY_USER_NAME, TEAM_CITY_USER_PASSWORD);
-                var buildType = (mode == RunMode.release)
+                var buildType = ((mode == RunMode.release) || (mode == RunMode.release_perf))
                     ? TEAM_CITY_BUILD_TYPE_RELEASE_64
                     : TEAM_CITY_BUILD_TYPE;
                 var buildPageUrl = string.Format(TEAM_CITY_BUILD_URL, buildType);
@@ -483,7 +484,7 @@ namespace SkylineNightly
             }
             return isTrunk
                 ? (hasPerftests ? RunMode.perf : RunMode.trunk)
-                : (isIntegration ? RunMode.integration : RunMode.release);
+                : (isIntegration ? RunMode.integration :  (hasPerftests ? RunMode.release_perf : RunMode.release));
         }
 
         private int ParseTests(string log)
@@ -606,8 +607,10 @@ namespace SkylineNightly
             // Post to server.
             if (mode == RunMode.integration)
                 url = LABKEY_INTEGRATION_URL;
-            else if (mode == RunMode.release)
+            else if (mode == RunMode.release_perf)
                 url = LABKEY_RELEASE_PERF_URL;
+            else if (mode == RunMode.release)
+                url = LABKEY_RELEASE_URL;
             else if (mode == RunMode.perf)
                 url = LABKEY_PERF_URL;
             else if (mode == RunMode.stress)
