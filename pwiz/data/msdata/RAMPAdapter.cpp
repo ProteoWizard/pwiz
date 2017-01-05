@@ -143,7 +143,7 @@ void RAMPAdapter::Impl::getScanHeader(size_t index, ScanHeaderStruct& result, bo
         string dissociationMethodName;
         if (!(dissociationMethod.empty()))
             dissociationMethodName = dissociationMethod.name();
-        int len = min(dissociationMethodName.length(), SCANTYPE_LENGTH - 1);
+        int len = min((int)dissociationMethodName.length(), SCANTYPE_LENGTH - 1);
         dissociationMethodName.copy(result.activationMethod, len);
         result.activationMethod[len] = 0; // string.copy does not null terminate
     }
