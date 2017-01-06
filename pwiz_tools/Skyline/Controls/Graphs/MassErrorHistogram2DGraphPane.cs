@@ -163,7 +163,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         if (decoys != nodePep.IsDecoy)
                             continue;
 
-                        var replicateIndex = bestResult ? nodePep.BestResult : resultIndex;
+                        var replicateIndex = bestResult && nodePep.BestResult != -1 ? nodePep.BestResult : resultIndex;
                         foreach (var nodeGroup in nodePep.TransitionGroups)
                         {
                             foreach (var nodeTran in nodeGroup.Transitions)
@@ -173,7 +173,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                 var mz = nodeTran.Mz.Value;
                                 if (replicateIndex >= 0)
                                 {
-                                    AddChromInfo(nodeGroup, nodeTran, resultIndex, mz, counts2D);
+                                    AddChromInfo(nodeGroup, nodeTran, replicateIndex, mz, counts2D);
                                 }
                                 else 
                                 {
