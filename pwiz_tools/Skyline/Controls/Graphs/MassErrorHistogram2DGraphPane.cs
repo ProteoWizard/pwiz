@@ -173,7 +173,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                 var mz = nodeTran.Mz.Value;
                                 if (replicateIndex >= 0)
                                 {
-                                    AddChromInfo(nodeGroup, nodeTran, resultIndex, mz, counts2D);
+                                    AddChromInfo(nodeGroup, nodeTran, replicateIndex, mz, counts2D);
                                 }
                                 else 
                                 {
