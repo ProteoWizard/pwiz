@@ -133,9 +133,12 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         var groupTreeNode = (TransitionGroupTreeNode)node;
                         var pepTreeNode = (PeptideTreeNode)groupTreeNode.Parent;
-                        peptidesAndTransitionGroups.Add(pepTreeNode.Path,
-                            pepTreeNode.DocNode,
-                            groupTreeNode.DocNode);
+                        if (pepTreeNode != null)
+                        {
+                            peptidesAndTransitionGroups.Add(pepTreeNode.Path,
+                                pepTreeNode.DocNode,
+                                groupTreeNode.DocNode);
+                        }
                     }
                 }
             }
