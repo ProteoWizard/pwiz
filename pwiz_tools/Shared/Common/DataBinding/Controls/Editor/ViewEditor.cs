@@ -87,6 +87,8 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             {
                 tabControl1.TabPages.Remove(tabPageSource);
             }
+            AddTooltipHandler(_chooseColumnsTab.AvailableFieldsTree);
+            AddTooltipHandler(_filterTab.AvailableFieldsTree);
         }
 
         public ColumnDescriptor ParentColumn { get { return ViewInfo.ParentColumn; } }
@@ -470,6 +472,18 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             DocumentationViewer documentationViewer = new DocumentationViewer();
             documentationViewer.DocumentationHtml = documentationGenerator.GetDocumentationHtmlPage();
             documentationViewer.Show();
+        }
+
+        private void AddTooltipHandler(TreeView treeView)
+        {
+            treeView.ShowNodeToolTips = false;
+            treeView.NodeMouseHover += (sender, args) =>
+            {
+                if (!string.IsNullOrEmpty(args.Node.ToolTipText))
+                {
+                    toolTip1.Show(args.Node.ToolTipText, treeView);
+                }
+            };
         }
     }
 }

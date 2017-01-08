@@ -28,6 +28,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ViewEditor));
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
@@ -48,6 +49,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             this.btnPreview = new System.Windows.Forms.Button();
             this.panelViewEditor = new System.Windows.Forms.Panel();
             this.panelButtons = new System.Windows.Forms.Panel();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.tabControl1.SuspendLayout();
             this.toolStrip.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -188,6 +190,12 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             resources.ApplyResources(this.panelButtons, "panelButtons");
             this.panelButtons.Name = "panelButtons";
             // 
+            // toolTip1
+            // 
+            this.toolTip1.AutoPopDelay = 32767;
+            this.toolTip1.InitialDelay = 500;
+            this.toolTip1.ReshowDelay = 100;
+            // 
             // ViewEditor
             // 
             this.AcceptButton = this.btnOK;
@@ -237,5 +245,6 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         private System.Windows.Forms.Button btnPreview;
         private System.Windows.Forms.ToolStripButton toolButtonFind;
         private System.Windows.Forms.ToolStripButton helpToolStripButton;
+        private System.Windows.Forms.ToolTip toolTip1;
     }
 }

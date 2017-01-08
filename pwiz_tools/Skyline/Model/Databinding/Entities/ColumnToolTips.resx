@@ -99,9 +99,15 @@
 		<value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
 	</resheader>
 
+  <data name="Accuracy">
+    <value>Ratio of the Analyte Concentration (specified on the Replicate) to the Calculated Concentraion</value>
+  </data>
   <data name="AcquiredTime">
     <value>Last time and date at which the mass spectrometer began acquiring this
 replicate data. Or #N/A if the file was imported with a version older than 1.1.</value>
+  </data>
+  <data name="AnalyteConcentration">
+    <value>Known quantity of analyte that was spiked into the external or quality control standard.</value>
   </data>
   <data name="Area">
     <value>Area under the curve (AUC), minus background, for the transition peak.</value>
@@ -138,6 +144,14 @@ containing protein sequence, or #N/A if no protein sequence is available.
     <value>The RetentionTime value of the transition with the highest
 maximum intensity for the precursor.</value>
   </data>
+  <data name="CalculatedConcentration">
+    <value>The concentration of the analyte is calculated by either:
+    1. Using the calibration curve (if the Peptide Settings > Quantification has a Regression Fit specified)
+    2. Using the ratio to internal standard (or surrogate) and multiplying by the Internal Standard Concetration</value>
+  </data>
+  <data name="CalibrationCurve">
+    <value>Calibration Curve that was calculated using Replicates whose Sample Type was "Standard" and that had an "Analyte Concentration" specified.</value>
+  </data>
   <data name="CleavageAa">
     <value>Specific amino acid residue in the peptide after (C-terminal of) which the
 peptide was cleaved upon fragmentation. (e.g. P, M, S, T, etc.)</value>
@@ -145,6 +159,9 @@ peptide was cleaved upon fragmentation. (e.g. P, M, S, T, etc.)</value>
   <data name="CollisionEnergy">
     <value>Collision Energy for the precursor ion according to instrument/vendor
 specific default collision energy equation within Skyline</value>
+  </data>
+  <data name="ConcentrationMultiplier">
+    <value>Value to multiply the replicate's "analyte concentration" by in order to get the specific concentration of the specific peptide or molecule.</value>
   </data>
   <data name="CountTruncated">
     <value>The number of transitions for a precursor that integrate a peak with a
@@ -198,12 +215,55 @@ instrument/vendor specific default declustering potential equation within Skylin
     <value>Shift in m/z applied to the precursor to create
 the decoy m/z</value>
   </data>
+  <data name="DetectionQValue">
+    <value>A false discovery rate (FDR) score assigned to each chosen target peak after applying a mProphet model.</value>
+  </data>
+  <data name="DetectionZScore">
+    <value>A normalized mProphet score assigned to each chosen peak (target and decoy) after applying a mProphet model, expressed as the number of standard deviations (SD) from the mean decoy score.</value>
+  </data>
   <data name="EndPos">
     <value>The position of the last (C-terminal) amino acid of the peptide within its
 containing protein sequence, or #N/A if no protein sequence is available</value>
   </data>
   <data name="EndTime">
     <value>Retention time at the ending integration boundary for the transition peak.</value>
+  </data>
+  <data name="EstimatedValue">
+    <value>Slope of the linear regression.</value>
+  </data>
+  <data name="ErrorMessage">
+    <value>Text of the error message, if any, which occurred while trying to calculate this value.</value>
+  </data>
+  <data name="ExplicitCollisionEnergy">
+    <value>The exact desired collision energy to be used in SRM methods or transitions lists for a target, overriding all model or optimization library values.</value>
+  </data>
+  <data name="ExplicitCompensationVoltage">
+    <value>The exact desired compensation voltage (ion mobility filter) to be used in SRM methods or transitions lists for a target, overriding all model or optimization library values.</value>
+  </data>
+  <data name="ExplicitConeVoltage">
+    <value>The exact desired cone voltage (Waters instruments only) to be used in SRM methods or transitions lists for a target.</value>
+  </data>
+  <data name="ExplicitDeclusteringPotential">
+    <value>The exact desired declustering potential (SCIEX instruments only) to be used in SRM methods or transitions lists for a target, overriding all model values.</value>
+  </data>
+  <data name="ExplicitDriftTimeHighEnergyOffsetMsec">
+    <value>The exact desired drift time high energy offset (in milliseconds) to be used in extracting chromatograms from ion mobility high-energy mass spectra, overriding all model values.</value>
+  </data>
+  <data name="ExplicitDriftTimeMsec">
+    <value>The exact desired drift time (in milliseconds) to be used in extracting chromatograms from ion mobility mass spectra, overriding all model values.</value>
+  </data>
+  <data name="ExplicitGlobalStandardArea">
+    <value>Value to use when calculating "ratio to global standards". 
+    Use this when you want to normalize peak areas in a particular replicate by dividing by a value that you calculated outside of Skyline.</value>
+  </data>
+  <data name="ExplicitRetentionTime">
+    <value>The exact predicted retention time (in minutes) to be used for a target, overriding all other methods of prediction.</value>
+  </data>
+  <data name="ExplicitRetentionTimeWindow">
+    <value>The exact desired retention time window (in minutes) to be used for a target, overriding all other settings used to derive this value.</value>
+  </data>
+  <data name="ExplicitSLens">
+    <value>The exact desired SLens value (Thermo instruments only) to be used in SRM methods or transitions lists for a target.</value>
   </data>
   <data name="FileIndex">
     <value>File Index</value>
@@ -213,6 +273,9 @@ containing protein sequence, or #N/A if no protein sequence is available</value>
   </data>
   <data name="Files">
     <value>Files</value>
+  </data>
+  <data name="FoldChangeResult">
+    <value>Result of comparing values between the two groups.</value>
   </data>
   <data name="FragmentIon">
     <value>The name of the product ion peptide fragment (e.g. y8, y10, b7, etc.).</value>
@@ -237,9 +300,21 @@ which the peptide was cleaved upon fragmentation. (e.g. 8, 10, 7, etc.)</value>
     <value>The maximum intensity of the points between the transition peak integration
 boundaries.</value>
   </data>
+  <data name="Group">
+    <value>Value of the replicate annotation of the replicates that were compared to the control group.</value>
+  </data>
   <data name="Identified">
     <value>True if a MS/MS peptide identification exists for the result file at a time
 between the peak integration boundaries.</value>
+  </data>
+  <data name="Intercept">
+    <value>Y-intercept in the fitted line or curve</value>
+  </data>
+  <data name="InternalStandardConcentration">
+    <value>Quantity of internal standard in the sample.</value>
+  </data>
+  <data name="IonFormula">
+    <value>An atomic chemical formula for the fully charged (and possibly isotope labeled) ion to be measured in a mass spectrometer.</value>
   </data>
   <data name="IsDecoy">
     <value>True if this is a decoy precursor.</value>
@@ -397,12 +472,31 @@ cysteine alkylation. (example: AGLC[+57]QTFVYGGC[+57]R)</value>
     <value>Last time and date at which the original mass spectrometer file was
 modified on disk</value>
   </data>
+  <data name="MoleculeFormula">
+    <value>An atomic chemical formula for the neutral, unlabeled molecule to be measured in a mass spectrometer.</value>
+  </data>
+  <data name="MoleculeName">
+    <value>A general name that may be assigned to a small molecule in its neutral, unlabeled form.</value>
+  </data>
+  <data name="MSLevel">
+    <value>Indicates whether the result was obtained using only precursor intensities (MS Level 1) or product intensities (MS Level 2).</value>
+  </data>
   <data name="NextAa">
     <value>Next Aa</value>
+  </data>
+  <data name="NormalizationMethod">
+    <value>Override of the normalization method to use with this particular molecule for absolute quantification and group comparisons.</value>
+  </data>
+  <data name="NormalizedArea">
+    <value>Value obtained by normalizing the peptide/molecule intensity according to either the explicit "Normalization Method" for the peptide/molecule or the normalization method specified on:
+    Settings > Peptide Settings > Quantification</value>
   </data>
   <data name="OptCollisionEnergy">
     <value>The collision energy value corresponding to the OptStep if
 collision energy optimization is being performed</value>
+  </data>
+  <data name="OptCompensationVoltage">
+    <value>The compensation voltage value (for ion mobility filtering) corresponding to the OptStep if compensation voltage optimization is being performed</value>
   </data>
   <data name="OptDeclusteringPotential">
     <value>The declustering potential value corresponding to the
@@ -416,6 +510,9 @@ being performed in the replicate.</value>
   <data name="PeakRank">
     <value>The rank based on Area of this transition among all other transitions of the
 same precursor.</value>
+  </data>
+  <data name="PeakRankByLevel">
+    <value>Peak area ranking in a specific replicate by MS level (i.e. MS1 and MS/MS get ranked separately)</value>
   </data>
   <data name="Peptide">
     <value>Peptide</value>
@@ -445,6 +542,9 @@ Edit menu</value>
   </data>
   <data name="PeptideSequence">
     <value> Amino acid sequence of the peptide.</value>
+  </data>
+  <data name="PointCount">
+    <value>Number of data points that were used in the curve fit.</value>
   </data>
   <data name="Precursor">
     <value>Precursor</value>
@@ -545,6 +645,12 @@ also when you hover over the protein name in the peptide tree view.</value>
   <data name="ProteinSpecies">
     <value>Protein Species</value>
   </data>
+  <data name="QuadraticCoefficient">
+    <value>Coefficient of the x-squared term in a quadratic regression.</value>
+  </data>
+  <data name="Quantification">
+    <value>Values related to using the calibration curve or normalization method to quantify the analyte.</value>
+  </data>
   <data name="Range">
     <value>Range</value>
   </data>
@@ -566,6 +672,9 @@ measured.</value>
   </data>
   <data name="Replicate">
     <value>Replicate</value>
+  </data>
+  <data name="ReplicateCount">
+    <value>Number of replicates that had valid intensities and contributed to the result.</value>
   </data>
   <data name="ReplicateIndex">
     <value>Replicate Index</value>
@@ -593,9 +702,24 @@ measured.</value>
 retention score calculator, if one is used (e.g. SSRCalc or iRT score)
     </value>
   </data>
+  <data name="RSquared">
+    <value>Coefficient of determination</value>
+  </data>
   <data name="SampleName">
     <value>The sample name, if the data was imported from a multi-sample WIFF
 file, or the file name again for other file types.</value>
+  </data>
+  <data name="SampleType">
+    <value>Type of the sample.  One of the following: 
+      Unknown (sample being measured)
+      Standard (external standard containing a known amount of analyte to be used in calibration curve)
+      Quality Control (containing a known amount of analyte to verify calibration)
+      Solvent
+      Blank
+      Double Blank</value>
+  </data>
+  <data name="Slope">
+    <value>Coefficient of the linear term in the fitted curve or line.</value>
   </data>
   <data name="StandardType">
     <value>Standard Type</value>
@@ -672,6 +796,9 @@ particular precursor</value>
   </data>
   <data name="Transition">
     <value>Transition</value>
+  </data>
+  <data name="TransitionCount">
+    <value>Number of transitions under this precursor.</value>
   </data>
   <data name="TransitionIsDecoy">
     <value>True if this is a decoy transition</value>
