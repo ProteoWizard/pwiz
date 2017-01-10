@@ -540,13 +540,20 @@ namespace pwiz.Skyline.SettingsUI
             {
                 int start = _pageInfo.StartIndex;
                 int end = _pageInfo.EndIndex;
-                for (int i = start; i < end; i++)
+                new LongOperationRunner
                 {
-                    ViewLibraryPepInfo pepInfo = _peptides[i];
-                    int charge = pepInfo.Key.Charge;
-                    var diff = new SrmSettingsDiff(true, false, true, false, false, false);
-                    listPeptide.Items.Add(pepMatcher.AssociateMatchingPeptide(pepInfo, charge, diff));
-                }
+                    JobTitle = Resources.ViewLibraryDlg_UpdateListPeptide_Updating_list_of_peptides
+                }.Run(longWaitBroker =>
+                {
+                    for (int i = start; i < end; i++)
+                    {
+                        longWaitBroker.SetProgressCheckCancel(i - start, end - start);
+                        ViewLibraryPepInfo pepInfo = _peptides[i];
+                        int charge = pepInfo.Key.Charge;
+                        var diff = new SrmSettingsDiff(true, false, true, false, false, false);
+                        listPeptide.Items.Add(pepMatcher.AssociateMatchingPeptide(pepInfo, charge, diff));
+                    }
+                });
 
                 listPeptide.SelectedIndex = selectPeptideIndex;
             }

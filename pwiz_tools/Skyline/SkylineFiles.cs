@@ -2584,42 +2584,42 @@ namespace pwiz.Skyline
             var setReimport = new HashSet<ChromatogramSet>(chromatogramSets);
             if (setReimport.Count == 0)
                 return;
-            
-            using (new LongOp(this))
-            {
-                // Remove all replicates to be re-imported
-                var results = document.Settings.MeasuredResults;
-                var chromRemaining = results.Chromatograms.Where(chrom => !setReimport.Contains(chrom)).ToArray();
-                var resultsNew = results.ChangeChromatograms(chromRemaining);
-                if (chromRemaining.Length > 0)
-                {
-                    // Optimize the cache using this reduced set to remove their data from the cache
-                    resultsNew = resultsNew.OptimizeCache(DocumentFilePath, _chromatogramManager.StreamManager);
-                }
-                else
-                {
-                    // Or remove the cache entirely, if everything is being reimported
-                    foreach (var readStream in results.ReadStreams)
-                        readStream.CloseStream();
 
-                    string cachePath = ChromatogramCache.FinalPathForName(DocumentFilePath, null);
-                    FileEx.SafeDelete(cachePath, true);                    
-                }
-                // Restore the original set unchanged
-                resultsNew = resultsNew.ChangeChromatograms(results.Chromatograms);
-
-                // Update the document without adding an undo record, because the only information
-                // to change should be cache related.
-                SrmDocument docNew, docCurrent;
-                do
+            new LongOperationRunner {JobTitle = Resources.SkylineWindow_ReimportChromatograms_Reimporting_chromatograms}
+                .Run(longWaitBroker =>
                 {
-                    docCurrent = Document;
-                    docNew = docCurrent.ChangeMeasuredResults(resultsNew);
-                }
-                while (!SetDocument(docNew, docCurrent));
-            }
+                    // Remove all replicates to be re-imported
+                    var results = document.Settings.MeasuredResults;
+                    var chromRemaining = results.Chromatograms.Where(chrom => !setReimport.Contains(chrom)).ToArray();
+                    var resultsNew = results.ChangeChromatograms(chromRemaining);
+                    if (chromRemaining.Length > 0)
+                    {
+                        // Optimize the cache using this reduced set to remove their data from the cache
+                        resultsNew = resultsNew.OptimizeCache(DocumentFilePath, _chromatogramManager.StreamManager, longWaitBroker);
+                    }
+                    else
+                    {
+                        // Or remove the cache entirely, if everything is being reimported
+                        foreach (var readStream in results.ReadStreams)
+                            readStream.CloseStream();
+
+                        string cachePath = ChromatogramCache.FinalPathForName(DocumentFilePath, null);
+                        FileEx.SafeDelete(cachePath, true);
+                    }
+                    // Restore the original set unchanged
+                    resultsNew = resultsNew.ChangeChromatograms(results.Chromatograms);
+
+                    // Update the document without adding an undo record, because the only information
+                    // to change should be cache related.
+                    SrmDocument docNew, docCurrent;
+                    do
+                    {
+                        docCurrent = Document;
+                        docNew = docCurrent.ChangeMeasuredResults(resultsNew);
+                    } while (!SetDocument(docNew, docCurrent));
+                });
         }
-
+    
         private void importPeptideSearchMenuItem_Click(object sender, EventArgs e)
         {
             ShowImportPeptideSearchDlg();

@@ -35,7 +35,7 @@ namespace pwiz.Skyline.Controls.Graphs
     /// <summary>
     /// A window that progressively displays chromatogram data during file import.
     /// </summary>
-    public partial class AllChromatogramsGraph : FormExDetailed
+    public partial class AllChromatogramsGraph : FormEx
     {
         private readonly Stopwatch _stopwatch;
         private int _selected = -1;

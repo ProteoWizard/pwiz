@@ -514,10 +514,15 @@ namespace pwiz.SkylineTestUtil
                     .Where(control => control is TextBox)
                     .Aggregate(result, (current, control) => current + ": " + GetExceptionText(control));
             }
-            var detailDlg = form as FormExDetailed;
-            if (detailDlg != null)
+           
+            FormEx formEx = form as FormEx;
+            if (formEx != null)
             {
-                result = detailDlg.DetailedMessage;
+                String detailedMessage = formEx.DetailedMessage;
+                if (detailedMessage != null)
+                {
+                    result = detailedMessage;
+                }
             }
             return result;
         }

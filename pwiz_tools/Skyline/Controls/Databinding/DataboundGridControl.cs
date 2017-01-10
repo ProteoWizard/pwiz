@@ -30,6 +30,7 @@ using pwiz.Skyline.Alerts;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 // This code is associated with the DocumentGrid.
@@ -404,7 +405,13 @@ namespace pwiz.Skyline.Controls.Databinding
             }
             using (var undoTransaction = skylineWindow.BeginUndo(Resources.DataboundGridControl_FillDown_Fill_Down))
             {
-                if (DoFillDown(propertyDescriptors, firstRowIndex, lastRowIndex))
+                var longOpRunner = new LongOperationRunner()
+                {
+                    JobTitle = Resources.DataboundGridControl_FillDown_Fill_Down,
+                    ParentControl = FormUtil.FindTopLevelOwner(this)
+                };
+                if (longOpRunner.CallFunction(longWaitBroker=>
+                    DoFillDown(longWaitBroker, propertyDescriptors, firstRowIndex, lastRowIndex)))
                 {
                     undoTransaction.Commit();
                     return true;
@@ -412,13 +419,20 @@ namespace pwiz.Skyline.Controls.Databinding
             }
             return false;
         }
-
-        private bool DoFillDown(PropertyDescriptor[] propertyDescriptors, int firstRowIndex, int lastRowIndex)
+        
+        private bool DoFillDown(ILongWaitBroker longWaitBroker, PropertyDescriptor[] propertyDescriptors, int firstRowIndex, int lastRowIndex)
         {
             bool anyChanges = false;
             var firstRowValues = propertyDescriptors.Select(pd => pd.GetValue(BindingListSource[firstRowIndex])).ToArray();
+            int totalRows = lastRowIndex - firstRowIndex + 1;
             for (int iRow = firstRowIndex + 1; iRow <= lastRowIndex; iRow++)
             {
+                if (longWaitBroker.IsCanceled)
+                {
+                    return anyChanges;
+                }
+                longWaitBroker.ProgressValue = 100*(iRow - firstRowIndex)/totalRows;
+                longWaitBroker.Message = string.Format(Resources.DataboundGridControl_DoFillDown_Filling__0___1__rows, iRow - firstRowIndex, totalRows);
                 var row = BindingListSource[iRow];
                 for (int icol = 0; icol < propertyDescriptors.Length; icol++)
                 {

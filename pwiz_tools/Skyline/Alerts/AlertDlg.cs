@@ -31,7 +31,7 @@ namespace pwiz.Skyline.Alerts
     /// Use for a <see cref="MessageBox"/> substitute that can be
     /// detected and closed by automated functional tests.
     /// </summary>
-    public partial class AlertDlg : FormExDetailed
+    public partial class AlertDlg : FormEx
     {
         private const int MAX_HEIGHT = 500;
         private readonly int _originalFormHeight;

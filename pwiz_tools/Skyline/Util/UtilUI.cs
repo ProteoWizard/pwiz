@@ -33,29 +33,6 @@ using ZedGraph;
 
 namespace pwiz.Skyline.Util
 {
-    public sealed class LongOp : IDisposable
-    {
-        private readonly Control _control;
-        private readonly Cursor _cursor;
-
-        public LongOp(Control control)
-            : this(control, Cursors.Arrow)
-        {            
-        }
-
-        public LongOp(Control control, Cursor cursor)
-        {
-            _control = control;
-            _cursor = cursor;
-            _control.Cursor = Cursors.WaitCursor;
-        }
-
-        public void Dispose()
-        {
-            _control.Cursor = _cursor;
-        }
-    }
-
     /// <summary>
     /// For controls that do not allow completely turning off updates
     /// that cause painting during large operations.

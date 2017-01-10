@@ -26,7 +26,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls
 {
-    public partial class LongWaitDlg : FormExDetailed, ILongWaitBroker
+    public partial class LongWaitDlg : FormEx, ILongWaitBroker
     {
         private readonly string _cancelMessage = string.Format(" ({0})", Resources.LongWaitDlg_PerformWork_canceled); // Not L10N
 
@@ -302,7 +302,7 @@ namespace pwiz.Skyline.Controls
                 labelMessage.Text = _message + (_clickedCancel ? _cancelMessage : string.Empty);
         }
 
-        private void UpdateTaskbarProgress(int? percentComplete)
+        protected virtual void UpdateTaskbarProgress(int? percentComplete)
         {
             if (Program.MainWindow != null)
                 Program.MainWindow.UpdateTaskbarProgress(percentComplete);

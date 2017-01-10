@@ -6885,11 +6885,29 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Filling {0}/{1} rows.
+        /// </summary>
+        public static string DataboundGridControl_DoFillDown_Filling__0___1__rows {
+            get {
+                return ResourceManager.GetString("DataboundGridControl_DoFillDown_Filling__0___1__rows", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Fill Down.
         /// </summary>
         public static string DataboundGridControl_FillDown_Fill_Down {
             get {
                 return ResourceManager.GetString("DataboundGridControl_FillDown_Fill_Down", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cleared {0}/{1} rows.
+        /// </summary>
+        public static string DataGridViewPasteHandler_ClearCells_Cleared__0___1__rows {
+            get {
+                return ResourceManager.GetString("DataGridViewPasteHandler_ClearCells_Cleared__0___1__rows", resourceCulture);
             }
         }
         
@@ -6908,6 +6926,15 @@ namespace pwiz.Skyline.Properties {
         public static string DataGridViewPasteHandler_DataGridViewOnKeyDown_Paste {
             get {
                 return ResourceManager.GetString("DataGridViewPasteHandler_DataGridViewOnKeyDown_Paste", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pasting row {0}.
+        /// </summary>
+        public static string DataGridViewPasteHandler_Paste_Pasting_row__0_ {
+            get {
+                return ResourceManager.GetString("DataGridViewPasteHandler_Paste_Pasting_row__0_", resourceCulture);
             }
         }
         
@@ -23015,6 +23042,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Reimporting chromatograms.
+        /// </summary>
+        public static string SkylineWindow_ReimportChromatograms_Reimporting_chromatograms {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ReimportChromatograms_Reimporting_chromatograms", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Remove duplicate peptides.
         /// </summary>
         public static string SkylineWindow_removeDuplicatePeptidesMenuItem_Click_Remove_duplicate_peptides {
@@ -27927,6 +27963,15 @@ namespace pwiz.Skyline.Properties {
         public static string ViewLibraryDlg_MatchModifications_Yes {
             get {
                 return ResourceManager.GetString("ViewLibraryDlg_MatchModifications_Yes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Updating list of peptides.
+        /// </summary>
+        public static string ViewLibraryDlg_UpdateListPeptide_Updating_list_of_peptides {
+            get {
+                return ResourceManager.GetString("ViewLibraryDlg_UpdateListPeptide_Updating_list_of_peptides", resourceCulture);
             }
         }
         
