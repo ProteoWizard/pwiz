@@ -62,9 +62,9 @@ namespace pwiz.Skyline.Util
         private void RunOnThisThread(Action<ILongWaitBroker> performWork)
         {
             LongWaitDlg longWaitDlg = null;
-            ProgressWaitBroker progressWaitBroker = null;
-            object dlgCreated = new object();
-            object workFinished = new object();
+            ProgressWaitBroker progressWaitBroker;
+            AutoResetEvent dlgCreated = new AutoResetEvent(false);
+            AutoResetEvent workFinished = new AutoResetEvent(false);
             Thread monitoringThread = BackgroundEventThreads.CreateThreadForAction(() =>
             {
                 try
@@ -82,42 +82,27 @@ namespace pwiz.Skyline.Util
                         }
                         progressWaitBroker = new ProgressWaitBroker(lwb =>
                         {
-                            lock (workFinished)
-                            {
-                                Monitor.Wait(workFinished);
-                            }
+                            workFinished.WaitOne();
                         });
-                        lock (dlgCreated)
-                        {
-                            Monitor.Pulse(dlgCreated);
-                        }
+                        dlgCreated.Set();
                         longWaitDlg.PerformWork(null, DelayMillis, progressWaitBroker.PerformWork);
                     }
                 }
                 finally
                 {
-                    lock (dlgCreated)
-                    {
-                        Monitor.Pulse(dlgCreated);
-                    }
+                    dlgCreated.Set();
                 }
             });
             monitoringThread.Name = "LongOperationRunnerBackgroundThread"; // Not L10N
             monitoringThread.Start();
-            lock (dlgCreated)
-            {
-                Monitor.Wait(dlgCreated);
-            }
+            dlgCreated.WaitOne();
             try
             {
                 performWork(longWaitDlg);
             }
             finally
             {
-                lock (workFinished)
-                {
-                    Monitor.Pulse(workFinished);
-                }
+                workFinished.Set();
             }
         }
 
