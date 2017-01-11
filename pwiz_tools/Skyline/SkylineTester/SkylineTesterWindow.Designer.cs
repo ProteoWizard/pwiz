@@ -26,6 +26,37 @@ namespace SkylineTester
             base.Dispose(disposing);
         }
 
+        private void dataGridRunStats_SortCompare(object sender, DataGridViewSortCompareEventArgs e)
+        {
+            if (e.Column.Index == 0)
+            {
+                e.SortResult = System.String.Compare(e.CellValue1.ToString(), e.CellValue2.ToString());
+            }
+            else if (e.CellValue1 != null && e.CellValue2 != null)
+            {
+                string v1 = e.CellValue1.ToString().Split('/')[0];
+                string v2 = e.CellValue2.ToString().Split('/')[0];
+                double d1, d2;
+                if (double.TryParse(v1, out d1) && double.TryParse(v2, out d2))
+                {
+                    e.SortResult = d1.CompareTo(d2);
+                }
+                else
+                {
+                    e.SortResult = String.Compare(e.CellValue1.ToString(), e.CellValue2.ToString());
+                }
+            }
+
+            // If the cells are equal, sort based on the test name.
+            if (e.SortResult == 0)
+            {
+                e.SortResult = System.String.Compare(
+                    dataGridRunStats.Rows[e.RowIndex1].Cells[0].Value.ToString(),
+                    dataGridRunStats.Rows[e.RowIndex2].Cells[0].Value.ToString());
+            }
+            e.Handled = true;
+        }
+
         #region Windows Form Designer generated code
 
         /// <summary>
@@ -212,6 +243,7 @@ namespace SkylineTester
             this.label19 = new System.Windows.Forms.Label();
             this.buttonStop = new System.Windows.Forms.Button();
             this.tabRunStats = new System.Windows.Forms.TabPage();
+            this.comboBoxRunStatsCompare = new System.Windows.Forms.ComboBox();
             this.comboBoxRunStats = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
             this.dataGridRunStats = new System.Windows.Forms.DataGridView();
@@ -219,6 +251,7 @@ namespace SkylineTester
             this.Iterations = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Duration = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.AverageDuration = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.RelDuration = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -248,6 +281,7 @@ namespace SkylineTester
             this.radioButton2 = new System.Windows.Forms.RadioButton();
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
+            this.labelCompareTo = new System.Windows.Forms.Label();
             this.radioButton5 = new System.Windows.Forms.RadioButton();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.myTreeView1 = new SkylineTester.MyTreeView();
@@ -2535,6 +2569,8 @@ namespace SkylineTester
             // tabRunStats
             // 
             this.tabRunStats.BackColor = System.Drawing.Color.BurlyWood;
+            this.tabRunStats.Controls.Add(this.labelCompareTo);
+            this.tabRunStats.Controls.Add(this.comboBoxRunStatsCompare);
             this.tabRunStats.Controls.Add(this.comboBoxRunStats);
             this.tabRunStats.Controls.Add(this.label1);
             this.tabRunStats.Controls.Add(this.dataGridRunStats);
@@ -2543,6 +2579,17 @@ namespace SkylineTester
             this.tabRunStats.Size = new System.Drawing.Size(709, 689);
             this.tabRunStats.TabIndex = 8;
             this.tabRunStats.Text = "Run Stats";
+            // 
+            // comboBoxRunStatsCompare
+            // 
+            this.comboBoxRunStatsCompare.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxRunStatsCompare.FormattingEnabled = true;
+            this.comboBoxRunStatsCompare.Location = new System.Drawing.Point(326, 48);
+            this.comboBoxRunStatsCompare.Margin = new System.Windows.Forms.Padding(4);
+            this.comboBoxRunStatsCompare.Name = "comboBoxRunStatsCompare";
+            this.comboBoxRunStatsCompare.Size = new System.Drawing.Size(214, 24);
+            this.comboBoxRunStatsCompare.TabIndex = 34;
+            this.comboBoxRunStatsCompare.SelectedIndexChanged += new System.EventHandler(this.comboBoxRunStats_SelectedIndexChanged);
             // 
             // comboBoxRunStats
             // 
@@ -2581,7 +2628,8 @@ namespace SkylineTester
             this.TestName,
             this.Iterations,
             this.Duration,
-            this.AverageDuration});
+            this.AverageDuration,
+            this.RelDuration});
             this.dataGridRunStats.Location = new System.Drawing.Point(12, 76);
             this.dataGridRunStats.Name = "dataGridRunStats";
             this.dataGridRunStats.ReadOnly = true;
@@ -2589,6 +2637,7 @@ namespace SkylineTester
             this.dataGridRunStats.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.dataGridRunStats.Size = new System.Drawing.Size(685, 595);
             this.dataGridRunStats.TabIndex = 0;
+            this.dataGridRunStats.SortCompare += new System.Windows.Forms.DataGridViewSortCompareEventHandler(this.dataGridRunStats_SortCompare);
             // 
             // TestName
             // 
@@ -2613,6 +2662,12 @@ namespace SkylineTester
             this.AverageDuration.HeaderText = "Average duration";
             this.AverageDuration.Name = "AverageDuration";
             this.AverageDuration.ReadOnly = true;
+            // 
+            // RelDuration
+            // 
+            this.RelDuration.HeaderText = "Relative duration";
+            this.RelDuration.Name = "RelDuration";
+            this.RelDuration.ReadOnly = true;
             // 
             // menuStrip1
             // 
@@ -2884,6 +2939,15 @@ namespace SkylineTester
             this.myTreeView1.Size = new System.Drawing.Size(309, 350);
             this.myTreeView1.TabIndex = 15;
             // 
+            // labelCompareTo
+            // 
+            this.labelCompareTo.AutoSize = true;
+            this.labelCompareTo.Location = new System.Drawing.Point(249, 51);
+            this.labelCompareTo.Name = "labelCompareTo";
+            this.labelCompareTo.Size = new System.Drawing.Size(79, 17);
+            this.labelCompareTo.TabIndex = 35;
+            this.labelCompareTo.Text = "compare to";
+            // 
             // testsRunSmallMoleculeVersions
             // 
             this.testsRunSmallMoleculeVersions.AutoSize = true;
@@ -2997,6 +3061,7 @@ namespace SkylineTester
             ((System.ComponentModel.ISupportInitialize)(this.outputSplitContainer)).EndInit();
             this.outputSplitContainer.ResumeLayout(false);
             this.tabRunStats.ResumeLayout(false);
+            this.tabRunStats.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridRunStats)).EndInit();
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
@@ -3212,6 +3277,7 @@ namespace SkylineTester
         private DataGridViewTextBoxColumn Iterations;
         private DataGridViewTextBoxColumn Duration;
         private DataGridViewTextBoxColumn AverageDuration;
+        private DataGridViewTextBoxColumn RelDuration;
         private Label label6;
         private Label label3;
         private CheckBox randomize;
@@ -3222,5 +3288,7 @@ namespace SkylineTester
         private Label label11;
         private CheckBox testsRunSmallMoleculeVersions;
         private CheckBox qualityRunSmallMoleculeVersions;
+        private ComboBox comboBoxRunStatsCompare;
+        private Label labelCompareTo;
     }
 }

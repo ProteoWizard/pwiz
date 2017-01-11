@@ -1042,6 +1042,7 @@ namespace SkylineTester
         public Button           ButtonViewLog               { get { return buttonViewLog; } }
         public ComboBox         ComboOutput                 { get { return comboBoxOutput; } }
         public ComboBox         ComboRunStats               { get { return comboBoxRunStats; } }
+        public ComboBox         ComboRunStatsCompare        { get { return comboBoxRunStatsCompare; } }
         public CommandShell     CommandShell                { get { return commandShell; } }
         public DataGridView     DataGridRunStats            { get { return dataGridRunStats; } }
         public Button           DeleteNightlyTask           { get { return buttonDeleteNightlyTask; } }
@@ -1335,7 +1336,7 @@ namespace SkylineTester
 
         private void comboBoxRunStats_SelectedIndexChanged(object sender, EventArgs e)
         {
-            _tabRunStats.Process(GetSelectedLog(comboBoxRunStats));
+            _tabRunStats.Process(GetSelectedLog(comboBoxRunStats), GetSelectedLog(comboBoxRunStatsCompare));
         }
 
         #endregion Control events

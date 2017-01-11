@@ -354,7 +354,7 @@ namespace SkylineTester
             var text = combo.Items[index].ToString();
             return (Char.IsDigit(text[0]))
                 ? Summary.GetLogFile(Summary.Runs[combo.Items.Count - 1 - index])
-                : DefaultLogFile;
+                : (Equals(text,"none") ? null : DefaultLogFile);
         }
 
         public void OpenSelectedLog(ComboBox combo)
