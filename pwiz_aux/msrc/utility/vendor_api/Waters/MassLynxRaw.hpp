@@ -76,7 +76,8 @@ struct PWIZ_API_DECL RawData
     const vector<int>& FunctionIndexList() const {return functionIndexList;}
     const vector<bool>& IonMobilityByFunctionIndex() const {return ionMobilityByFunctionIndex;}
 
-    size_t FunctionCount() const {return functionIndexList.back() + 1;}
+    size_t FunctionCount() const {return functionIndexList.size();}
+    size_t LastFunctionIndex() const {return lastFunctionIndex_; }
 
     RawData(const string& rawpath)
         : Reader(rawpath),
@@ -88,21 +89,21 @@ struct PWIZ_API_DECL RawData
           scanStatsInitialized(init_once_flag_proxy)
     {
         // Count the number of _FUNC[0-9]{3}.DAT files, starting with _FUNC001.DAT
-		// For functions over 100, the names become _FUNC0100.DAT
+        // For functions over 100, the names become _FUNC0100.DAT
         // Keep track of the maximum function number
         string functionPathmask = rawpath + "/_FUNC*.DAT";
         vector<bfs::path> functionFilepaths;
         expand_pathmask(functionPathmask, functionFilepaths);
-        int functionCount = 0;
         for (size_t i=0; i < functionFilepaths.size(); ++i)
         {
-			string fileName = BFS_STRING(functionFilepaths[i].filename());
-            int number = lexical_cast<int>(bal::trim_left_copy_if(fileName.substr(5, fileName.length() - 9), bal::is_any_of("0")));
+            string fileName = BFS_STRING(functionFilepaths[i].filename());
+            size_t number = lexical_cast<size_t>(bal::trim_left_copy_if(fileName.substr(5, fileName.length() - 9), bal::is_any_of("0")));
             functionIndexList.push_back(number-1); // 0-based
-            functionCount = std::max(functionCount, number);
         }
+        sort(functionIndexList.begin(), functionIndexList.end()); // just in case filesystem returns them out of natural order
+        lastFunctionIndex_ = functionIndexList.back();
 
-        ionMobilityByFunctionIndex.resize(functionIndexList.size(), false);
+        ionMobilityByFunctionIndex.resize(lastFunctionIndex_+1, false);
         CompressedDataCluster tmpCDC;
         for (size_t i=0; i < functionIndexList.size(); ++i)
         {
@@ -116,7 +117,7 @@ struct PWIZ_API_DECL RawData
         }
 
         initHeaderProps(rawpath);
-	}
+    }
 
     CachedCompressedDataCluster& GetCompressedDataClusterForBlock(int functionIndex, int blockIndex) const
     {
@@ -136,7 +137,7 @@ struct PWIZ_API_DECL RawData
 
     double GetDriftTime(int functionIndex, int blockIndex, int scanIndex) const
     {
-		boost::call_once(scanStatsInitialized.flag, boost::bind(&RawData::initScanStats, this));
+        boost::call_once(scanStatsInitialized.flag, boost::bind(&RawData::initScanStats, this));
         const ExtendedScanStatsByName& extendedScanStatsByName = extendedScanStatsByFunction[functionIndex];
         ExtendedScanStatsByName::const_iterator transportRFItr = extendedScanStatsByName.find("Transport RF");
         if (transportRFItr != extendedScanStatsByName.end())
@@ -148,11 +149,11 @@ struct PWIZ_API_DECL RawData
         return 0.0;
     }
 
-	const MSScanStats& GetScanStats(int functionIndex, int scanIndex) const
-	{
-		boost::call_once(scanStatsInitialized.flag, boost::bind(&RawData::initScanStats, this));
-		return scanStatsByFunction[functionIndex][scanIndex];
-	}
+    const MSScanStats& GetScanStats(int functionIndex, int scanIndex) const
+    {
+        boost::call_once(scanStatsInitialized.flag, boost::bind(&RawData::initScanStats, this));
+        return scanStatsByFunction[functionIndex][scanIndex];
+    }
 
     const vector<MSScanStats>& GetAllScanStatsForFunction(int functionIndex) const
     {
@@ -160,11 +161,11 @@ struct PWIZ_API_DECL RawData
         return scanStatsByFunction[functionIndex];
     }
 
-	const ExtendedScanStatsByName& GetExtendedScanStats(int functionIndex) const
-	{
-		boost::call_once(scanStatsInitialized.flag, boost::bind(&RawData::initScanStats, this));
-		return extendedScanStatsByFunction[functionIndex];
-	}
+    const ExtendedScanStatsByName& GetExtendedScanStats(int functionIndex) const
+    {
+        boost::call_once(scanStatsInitialized.flag, boost::bind(&RawData::initScanStats, this));
+        return extendedScanStatsByFunction[functionIndex];
+    }
 
     const string& GetHeaderProp(const string& name) const
     {
@@ -229,12 +230,13 @@ struct PWIZ_API_DECL RawData
 
     string rawpath_, empty_;
     vector<int> functionIndexList;
+    size_t lastFunctionIndex_;
     vector<bool> ionMobilityByFunctionIndex;
     map<string, string> headerProps;
 
     mutable map<int, shared_ptr<CachedCompressedDataCluster> > cdcByFunction;
 
-	mutable once_flag_proxy scanStatsInitialized;
+    mutable once_flag_proxy scanStatsInitialized;
     mutable vector<vector<MSScanStats>> scanStatsByFunction;
     mutable vector<ExtendedScanStatsByName> extendedScanStatsByFunction;
 
@@ -260,14 +262,14 @@ struct PWIZ_API_DECL RawData
         }
     }
 
-	void initScanStats() const
-	{
+    void initScanStats() const
+    {
         try
         {
             MassLynxRawScanStatsReader statsReader(Reader);
 
-            scanStatsByFunction.resize(FunctionCount());
-            extendedScanStatsByFunction.resize(FunctionCount());
+            scanStatsByFunction.resize(lastFunctionIndex_+1);
+            extendedScanStatsByFunction.resize(lastFunctionIndex_+1);
 
             BOOST_FOREACH(int function, functionIndexList)
             {
