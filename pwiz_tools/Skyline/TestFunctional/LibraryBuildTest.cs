@@ -450,20 +450,16 @@ namespace pwiz.SkylineTestFunctional
             if (inputFiles != null)
                 inputPaths = new List<string>(inputFiles).ConvertAll(f => Path.Combine(inputDir, f));
             string autoLibPath = null;
-            string autoLibId = null;
             RunUI(() =>
             {
                 if (libraryPath != null)
                     buildLibraryDlg.LibraryPath = libraryPath;
                 buildLibraryDlg.LibraryName = _libraryName;
                 autoLibPath = buildLibraryDlg.LibraryPath;
-                autoLibId = buildLibraryDlg.LibraryId;
                 buildLibraryDlg.LibraryKeepRedundant = keepRedundant;
                 buildLibraryDlg.LibraryFilterPeptides = filterPeptides;
                 buildLibraryDlg.LibraryBuildAction = (append ?
                     LibraryBuildAction.Append : LibraryBuildAction.Create);
-                if (libraryAuth != null)
-                    buildLibraryDlg.LibraryAuthority = libraryAuth;
                 buildLibraryDlg.OkWizardPage();
                 if (inputPaths != null)
                     buildLibraryDlg.AddInputFiles(inputPaths);
@@ -473,7 +469,6 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(buildLibraryDlg, buildLibraryDlg.OkWizardPage);
             Assert.AreEqual(TestFilesDir.GetTestPath(_libraryName + BiblioSpecLiteSpec.EXT),
                 autoLibPath);
-            Assert.AreEqual(_libraryName, autoLibId);
         }
 
         private static void CheckLibraryExistence(string libPath, bool libExist)

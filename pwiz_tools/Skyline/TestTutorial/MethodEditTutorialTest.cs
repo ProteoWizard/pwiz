@@ -74,7 +74,6 @@ namespace pwiz.SkylineTestTutorial
                 buildLibraryDlg.LibraryPath = TestFilesDirs[0].GetTestPath(@"MethodEdit\Library\"); // Not L10N
                 buildLibraryDlg.LibraryName = YEAST_ATLAS;
                 buildLibraryDlg.LibraryCutoff = 0.95;
-                buildLibraryDlg.LibraryAuthority = "peptideatlas.org"; // Not L10N
                 buildLibraryDlg.OkWizardPage();
                 IList<string> inputPaths = new List<string>
                  {

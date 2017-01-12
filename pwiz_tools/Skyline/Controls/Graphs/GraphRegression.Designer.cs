@@ -40,6 +40,7 @@
             this.graphControl.EditButtons = System.Windows.Forms.MouseButtons.Left;
             this.graphControl.EditModifierKeys = System.Windows.Forms.Keys.None;
             this.graphControl.IsShowCopyMessage = false;
+            this.graphControl.IsShowPointValues = true;
             this.graphControl.Name = "graphControl";
             this.graphControl.ScrollGrace = 0D;
             this.graphControl.ScrollMaxX = 0D;

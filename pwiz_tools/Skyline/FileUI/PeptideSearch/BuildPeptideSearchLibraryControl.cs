@@ -28,9 +28,11 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -50,6 +52,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             if (SkylineWindow.Document.PeptideCount == 0)
                 cbFilterForDocumentPeptides.Hide();
+
+            foreach (var standard in IrtStandard.ALL)
+                comboStandards.Items.Add(standard);
         }
 
         public event EventHandler<InputFilesChangedEventArgs> InputFilesChanged;
@@ -65,7 +70,31 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private SkylineWindow SkylineWindow { get; set; }
         private LibraryManager LibraryManager { get; set; }
         private ImportPeptideSearch ImportPeptideSearch { get; set; }
-        private Form WizardForm { get { return FormEx.GetParentForm(this); } }
+
+        private Form WizardForm
+        {
+            get { return FormEx.GetParentForm(this); }
+        }
+
+        public IrtStandard IrtStandards
+        {
+            get { return comboStandards.SelectedItem as IrtStandard; }
+            set
+            {
+                if (value == null)
+                    comboStandards.SelectedIndex = 0;
+
+                for (var i = 0; i < comboStandards.Items.Count; i++)
+                {
+                    if (comboStandards.Items[i] == value)
+                    {
+                        comboStandards.SelectedIndex = i;
+                        return;
+                    }
+                }
+                comboStandards.SelectedIndex = 0;
+            }
+        }
 
         public ImportPeptideSearchDlg.Workflow WorkflowType
         {
@@ -205,10 +234,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
 
             using (var longWaitDlg = new LongWaitDlg
-                {
-                    Text = Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Peptide_Search_Library,
-                    Message = Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_document_library_for_peptide_search_,
-                })
+            {
+                Text = Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Peptide_Search_Library,
+                Message = Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_document_library_for_peptide_search_,
+            })
             {
                 // Disable the wizard, because the LongWaitDlg does not
                 try
@@ -225,7 +254,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 catch (Exception x)
                 {
                     MessageDlg.ShowWithException(WizardForm, TextUtil.LineSeparate(string.Format(Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Failed_to_build_the_library__0__,
-                                                                                    Path.GetFileName(BiblioSpecLiteSpec.GetLibraryFileName(SkylineWindow.DocumentFilePath))), x.Message), x);
+                        Path.GetFileName(BiblioSpecLiteSpec.GetLibraryFileName(SkylineWindow.DocumentFilePath))), x.Message), x);
                     return false;
                 }
             }
@@ -237,6 +266,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // the modifications and chromatograms page.
             if (!LoadPeptideSearchLibrary(docLibSpec))
                 return false;
+
+            var selectedIrtStandard = comboStandards.SelectedItem as IrtStandard;
+            if (selectedIrtStandard != null && selectedIrtStandard != IrtStandard.NULL)
+                AddIrtLibraryTable(docLibSpec.FilePath, selectedIrtStandard);
 
             var docNew = ImportPeptideSearch.AddDocumentSpectralLibrary(SkylineWindow.Document, docLibSpec);
             if (docNew == null)
@@ -273,20 +306,69 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 {
                     MessageDlg.ShowWithException(WizardForm,
                         TextUtil.LineSeparate(string.Format(Resources.BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_An_error_occurred_attempting_to_import_the__0__library_,
-                                                            docLibSpec.Name), x.Message), x);
+                            docLibSpec.Name), x.Message), x);
                 }
             }
             return ImportPeptideSearch.HasDocLib;
+        }
+
+        private void AddIrtLibraryTable(string path, IrtStandard standard)
+        {
+            if (!ImportPeptideSearch.HasDocLib || !ImportPeptideSearch.DocLib.IsLoaded)
+                return;
+
+            var lib = ImportPeptideSearch.DocLib;
+
+            using (var longWait = new LongWaitDlg
+            {
+                Text = Resources.BuildPeptideSearchLibraryControl_AddIrtLibraryTable_Adding_iRTs_to_Library
+            })
+            {
+                try
+                {
+                    ProcessedIrtAverages processed = null;
+                    var status = longWait.PerformWork(WizardForm, 800, monitor =>
+                    {
+                        processed = RCalcIrt.ProcessRetentionTimes(monitor, lib.RetentionTimeProviders, lib.FileCount ?? 0, standard.Peptides.ToArray(), new DbIrtPeptide[0]);
+                    });
+                    if (status.IsError)
+                    {
+                        MessageDlg.ShowException(WizardForm, status.ErrorException);
+                    }
+                    else
+                    {
+                        using (var resultsDlg = new AddIrtPeptidesDlg(processed))
+                        {
+                            if (resultsDlg.ShowDialog(this) == DialogResult.OK)
+                            {
+                                var processedDbIrtPeptides = processed.DbIrtPeptides.ToArray();
+                                if (!processedDbIrtPeptides.Any())
+                                    return;
+
+                                var irtDb = IrtDb.CreateIrtDb(path);
+                                irtDb.AddPeptides(standard.Peptides.Concat(processedDbIrtPeptides).ToList());
+                            }
+                        }
+                    }
+                }
+                catch (Exception x)
+                {
+                    MessageDlg.ShowWithException(WizardForm,
+                        TextUtil.LineSeparate(Resources.BuildPeptideSearchLibraryControl_AddIrtLibraryTable_An_error_occurred_trying_to_add_iRTs_to_the_library_, x.Message), x);
+                }
+            }
         }
 
         public void ForceWorkflow(ImportPeptideSearchDlg.Workflow workflowType)
         {
             WorkflowType = workflowType;
             grpWorkflow.Hide();
-            int offset = grpWorkflow.Height + (cbFilterForDocumentPeptides.Top - listSearchFiles.Bottom);
+            var offset = grpWorkflow.Height + (lblStandardPeptides.Top - listSearchFiles.Bottom);
             listSearchFiles.Height += offset;
-            cbFilterForDocumentPeptides.Top += offset;
+            lblStandardPeptides.Top += offset;
+            comboStandards.Top += offset;
             cbIncludeAmbiguousMatches.Top += offset;
+            cbFilterForDocumentPeptides.Top += offset;
         }
 
         public class InputFilesChangedEventArgs : EventArgs

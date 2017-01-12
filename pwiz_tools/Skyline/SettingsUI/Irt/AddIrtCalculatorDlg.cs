@@ -35,6 +35,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
     public partial class AddIrtCalculatorDlg : FormEx
     {
+        public const string DEFAULT_NAME = "Add"; // Not L10N
+
         public AddIrtCalculatorDlg(IEnumerable<RCalcIrt> calculators)
         {
             InitializeComponent();
@@ -62,7 +64,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             {
                 if (Source == IrtCalculatorSource.settings)
                     return (RCalcIrt)comboLibrary.SelectedItem;
-                return new RCalcIrt("Add", textFilePath.Text);  // Not L10N
+                return new RCalcIrt(DEFAULT_NAME, textFilePath.Text);
             }
         }
 

@@ -451,12 +451,57 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed.
+        /// </summary>
+        public static string AddIrtPeptidesDlg_AddIrtPeptidesDlg_Failed {
+            get {
+                return ResourceManager.GetString("AddIrtPeptidesDlg_AddIrtPeptidesDlg_Failed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No new peptides will be added to the iRT database..
         /// </summary>
         public static string AddIrtPeptidesDlg_AddIrtPeptidesDlg_No_new_peptides_will_be_added_to_the_iRT_database {
             get {
                 return ResourceManager.GetString("AddIrtPeptidesDlg_AddIrtPeptidesDlg_No_new_peptides_will_be_added_to_the_iRT_data" +
                         "base", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Regression Attempted.
+        /// </summary>
+        public static string AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression_Attempted {
+            get {
+                return ResourceManager.GetString("AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression_Attempted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Regression Refined.
+        /// </summary>
+        public static string AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression_Refined {
+            get {
+                return ResourceManager.GetString("AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression_Refined", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Success.
+        /// </summary>
+        public static string AddIrtPeptidesDlg_AddIrtPeptidesDlg_Success {
+            get {
+                return ResourceManager.GetString("AddIrtPeptidesDlg_AddIrtPeptidesDlg_Success", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to iRT.
+        /// </summary>
+        public static string AddIrtPeptidesDlg_dataGridView_CellContentClick_iRT {
+            get {
+                return ResourceManager.GetString("AddIrtPeptidesDlg_dataGridView_CellContentClick_iRT", resourceCulture);
             }
         }
         
@@ -532,6 +577,15 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("AddIrtSpectralLibrary_OkDialog_The_file__0__is_not_a_BiblioSpec_or_Chromatogram_l" +
                         "ibrary", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Measured.
+        /// </summary>
+        public static string AddIrtsResultsDlg_dataGridView_CellContentClick_Measured {
+            get {
+                return ResourceManager.GetString("AddIrtsResultsDlg_dataGridView_CellContentClick_Measured", resourceCulture);
             }
         }
         
@@ -2453,6 +2507,25 @@ namespace pwiz.Skyline.Properties {
         public static string BuildLibraryNotification_BuildLibraryNotification_Library__0__ {
             get {
                 return ResourceManager.GetString("BuildLibraryNotification_BuildLibraryNotification_Library__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Adding iRTs to Library.
+        /// </summary>
+        public static string BuildPeptideSearchLibraryControl_AddIrtLibraryTable_Adding_iRTs_to_Library {
+            get {
+                return ResourceManager.GetString("BuildPeptideSearchLibraryControl_AddIrtLibraryTable_Adding_iRTs_to_Library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An error occurred trying to add iRTs to the library..
+        /// </summary>
+        public static string BuildPeptideSearchLibraryControl_AddIrtLibraryTable_An_error_occurred_trying_to_add_iRTs_to_the_library_ {
+            get {
+                return ResourceManager.GetString("BuildPeptideSearchLibraryControl_AddIrtLibraryTable_An_error_occurred_trying_to_a" +
+                        "dd_iRTs_to_the_library_", resourceCulture);
             }
         }
         
@@ -13739,6 +13812,26 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Adding iRTs to library.
+        /// </summary>
+        public static string LibraryBuildNotificationHandler_LibraryBuildCompleteCallback_Adding_iRTs_to_library {
+            get {
+                return ResourceManager.GetString("LibraryBuildNotificationHandler_LibraryBuildCompleteCallback_Adding_iRTs_to_libra" +
+                        "ry", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An error occurred trying to add iRTs to the library..
+        /// </summary>
+        public static string LibraryBuildNotificationHandler_LibraryBuildCompleteCallback_An_error_occurred_trying_to_add_iRTs_to_the_library_ {
+            get {
+                return ResourceManager.GetString("LibraryBuildNotificationHandler_LibraryBuildCompleteCallback_An_error_occurred_tr" +
+                        "ying_to_add_iRTs_to_the_library_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap LibraryExplorer_thumb {
@@ -19489,11 +19582,38 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} (at {1} points minimum).
+        /// </summary>
+        public static string RegressionGraphPane_RegressionGraphPane__0___at__1__points_minimum_ {
+            get {
+                return ResourceManager.GetString("RegressionGraphPane_RegressionGraphPane__0___at__1__points_minimum_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Current.
         /// </summary>
         public static string RegressionGraphPane_RegressionGraphPane_Current {
             get {
                 return ResourceManager.GetString("RegressionGraphPane_RegressionGraphPane_Current", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Missing.
+        /// </summary>
+        public static string RegressionGraphPane_RegressionGraphPane_Missing {
+            get {
+                return ResourceManager.GetString("RegressionGraphPane_RegressionGraphPane_Missing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Outliers.
+        /// </summary>
+        public static string RegressionGraphPane_RegressionGraphPane_Outliers {
+            get {
+                return ResourceManager.GetString("RegressionGraphPane_RegressionGraphPane_Outliers", resourceCulture);
             }
         }
         

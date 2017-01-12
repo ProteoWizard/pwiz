@@ -863,7 +863,7 @@ namespace pwiz.Skyline.Model.Results
                         listIrts.Add(_calculator.ScoreSequence(sequence).Value);
                     }
                     RegressionLine line;
-                    if (!RCalcIrt.TryGetRegressionLine(listIrts, listTimes, out line))
+                    if (!RCalcIrt.TryGetRegressionLine(listIrts, listTimes, RCalcIrt.MinRegressionPoints(listIrts.Count), out line))
                         return false;
 
                     _conversion = new RegressionLineElement(line);

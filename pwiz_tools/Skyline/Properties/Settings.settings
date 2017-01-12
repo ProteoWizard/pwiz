@@ -113,9 +113,6 @@
     <Setting Name="LibraryResultsDirectory" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="LibraryAuthority" Type="System.String" Scope="User">
-      <Value Profile="(Default)" />
-    </Setting>
     <Setting Name="LibraryResultCutOff" Type="System.Double" Scope="User">
       <Value Profile="(Default)">0.95</Value>
     </Setting>

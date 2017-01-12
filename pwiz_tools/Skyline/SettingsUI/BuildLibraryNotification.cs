@@ -20,12 +20,18 @@
 using System;
 using System.ComponentModel;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls;
+using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using Timer=System.Windows.Forms.Timer;
 
 namespace pwiz.Skyline.SettingsUI
@@ -327,12 +333,68 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         NotificationContainerForm.BeginInvoke(new Action(() => MessageDlg.Show(NotificationContainerForm, buildState.ExtraMessage)));
                     }
+                    if (buildState.IrtStandard != null && buildState.IrtStandard != IrtStandard.NULL)
+                    {
+                        NotificationContainerForm.BeginInvoke(new Action(() => AddIrts(buildState)));
+                    }
                     var thread = BackgroundEventThreads.CreateThreadForAction(frm.Notify);
                     thread.Name = "BuildLibraryNotification"; // Not L10N
                     thread.IsBackground = true;
                     thread.Start();
                     Notification = frm;
                 }
+            }
+        }
+
+        private void AddIrts(LibraryManager.BuildState buildState)
+        {
+            try
+            {
+                using (var longWait = new LongWaitDlg { Text = Resources.LibraryBuildNotificationHandler_LibraryBuildCompleteCallback_Adding_iRTs_to_library })
+                {
+                    Library lib = null;
+                    var status = longWait.PerformWork(NotificationContainerForm, 800, monitor =>
+                        lib = NotificationContainer.LibraryManager.TryGetLibrary(buildState.LibrarySpec) ??
+                              NotificationContainer.LibraryManager.LoadLibrary(buildState.LibrarySpec, () => new DefaultFileLoadMonitor(monitor)));
+                    foreach (var stream in lib.ReadStreams)
+                        stream.CloseStream();
+                    if (status.IsCanceled)
+                    {
+                        return;
+                    }
+                    if (status.IsError)
+                        throw status.ErrorException;
+                    ProcessedIrtAverages processed = null;
+                    status = longWait.PerformWork(NotificationContainerForm, 800, monitor =>
+                    {
+                        processed = RCalcIrt.ProcessRetentionTimes(monitor, lib.RetentionTimeProviders,
+                            lib.FileCount ?? 0, buildState.IrtStandard.Peptides.ToArray(), new DbIrtPeptide[0]);
+                    });
+                    if (status.IsCanceled)
+                    {
+                        return;
+                    }
+                    if (status.IsError)
+                        throw status.ErrorException;
+
+                    using (var resultsDlg = new AddIrtPeptidesDlg(processed))
+                    {
+                        if (resultsDlg.ShowDialog(NotificationContainerForm) == DialogResult.OK)
+                        {
+                            var processedDbIrtPeptides = processed.DbIrtPeptides.ToArray();
+                            if (!processedDbIrtPeptides.Any())
+                                return;
+
+                            var irtDb = IrtDb.CreateIrtDb(buildState.LibrarySpec.FilePath);
+                            irtDb.AddPeptides(buildState.IrtStandard.Peptides.Concat(processedDbIrtPeptides).ToList());
+                        }
+                    }
+                }
+            }
+            catch (Exception x)
+            {
+                MessageDlg.ShowWithException(NotificationContainerForm,
+                    TextUtil.LineSeparate(Resources.LibraryBuildNotificationHandler_LibraryBuildCompleteCallback_An_error_occurred_trying_to_add_iRTs_to_the_library_, x.Message), x);
             }
         }
     }

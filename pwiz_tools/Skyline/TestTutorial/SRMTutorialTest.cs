@@ -249,7 +249,6 @@ namespace pwiz.SkylineTestTutorial
                 buildLibraryDlg.LibraryPath = GetTestPath("Skyline");
                 buildLibraryDlg.LibraryName = "Mtb_hDP_20140210";
                 buildLibraryDlg.LibraryCutoff = 0.9;
-                buildLibraryDlg.LibraryAuthority = "SRMcourse";
             });
             PauseForScreenShot("Build Library Window", 2);
             RunUI(() =>

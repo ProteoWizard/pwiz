@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model.DocSettings;
@@ -95,6 +96,8 @@ namespace pwiz.Skyline.Controls.Graphs
         public static readonly Color COLOR_REGRESSION = Color.DarkBlue;
         public static readonly Color COLOR_LINE_REGRESSION = Color.DarkBlue;
         public static readonly Color COLOR_LINE_REGRESSION_CURRENT = Color.Black;
+        private static readonly Color COLOR_MISSING = Color.Red;
+        private static readonly Color COLOR_OUTLIERS = Color.BlueViolet;
 
         private readonly RegressionGraphData _graphData;
         private readonly string _labelRegression;
@@ -125,64 +128,85 @@ namespace pwiz.Skyline.Controls.Graphs
 
 //            Legend.FontSpec.Size = 12;
 
-            var curve = AddCurve(Resources.RegressionGraphPane_RegressionGraphPane_Values, graphData.XValues, graphData.YValues,
-                                           Color.Black, SymbolType.Diamond);
+            var curve = AddCurve(Resources.RegressionGraphPane_RegressionGraphPane_Values, graphData.RegularPoints, Color.Black, SymbolType.Diamond);
             curve.Line.IsVisible = false;
             curve.Symbol.Border.IsVisible = false;
             curve.Symbol.Fill = new Fill(COLOR_REGRESSION);
 
-            // Find maximum points for drawing the regression line
-            var lineX = new[] { double.MaxValue, double.MinValue };
-            var lineY = new[] { double.MaxValue, double.MinValue };
-
-            for (int i = 0; i < graphData.XValues.Length; i++)
+            if (graphData.MissingPoints.Any())
             {
-                double xValue = graphData.XValues[i];
-                double yValue = graphData.YValues[i];
-                if (xValue < lineX[0])
-                {
-                    lineX[0] = xValue;
-                    lineY[0] = yValue;
-                }
-                if (xValue > lineX[1])
-                {
-                    lineX[1] = xValue;
-                    lineY[1] = yValue;
-                }
+                var curveMissing = AddCurve(Resources.RegressionGraphPane_RegressionGraphPane_Missing, graphData.MissingPoints, COLOR_MISSING, SymbolType.Diamond);
+                curveMissing.Line.IsVisible = false;
+                curveMissing.Symbol.Border.IsVisible = false;
+                curveMissing.Symbol.Fill = new Fill(COLOR_MISSING);
+                curveMissing.Symbol.Size = 12;
             }
 
+            if (graphData.OutlierPoints.Any())
+            {
+                var curveOutliers = AddCurve(Resources.RegressionGraphPane_RegressionGraphPane_Outliers, graphData.OutlierPoints, COLOR_OUTLIERS, SymbolType.Diamond);
+                curveOutliers.Line.IsVisible = false;
+                curveOutliers.Symbol.Border.IsVisible = false;
+                curveOutliers.Symbol.Fill = new Fill(COLOR_OUTLIERS);
+            }
+
+            // Find maximum points for drawing the regression line
+            var lineX = new[] { double.MaxValue, double.MinValue };
+            var lineXCurrent = new[] { double.MaxValue, double.MinValue };
+            var lineY = new[] {0d, 0d};
+            
+            foreach (var point in graphData.RegularPoints)
+            {
+                if (point.X < lineX[0])
+                    lineX[0] = lineXCurrent[0] = point.X;
+
+                if (point.X > lineX[1])
+                    lineX[1] = lineXCurrent[1] = point.X;
+            }
+            foreach (var point in graphData.OutlierPoints)
+            {
+                if (point.X < lineXCurrent[0])
+                    lineXCurrent[0] = point.X;
+
+                if (point.X > lineXCurrent[1])
+                    lineXCurrent[1] = point.X;
+            }
+
+            var regressionLine = graphData.RegressionLine;
             if (graphData.RegressionLine != null)
             {
                 // Recalculate the y values based on the maximum x values
                 // and the regression.
-                lineY[0] = graphData.RegressionLine.GetY(lineX[0]);
-                lineY[1] = graphData.RegressionLine.GetY(lineX[1]);
+                lineY[0] = regressionLine.GetY(lineX[0]);
+                lineY[1] = regressionLine.GetY(lineX[1]);
 
-                curve = AddCurve(Resources.RegressionGraphPane_RegressionGraphPane_Regression, lineX, lineY, COLOR_LINE_REGRESSION);
+                curve = AddCurve(!string.IsNullOrEmpty(graphData.RegressionName) ? graphData.RegressionName : Resources.RegressionGraphPane_RegressionGraphPane_Regression, lineX, lineY, COLOR_LINE_REGRESSION);
                 curve.Line.IsAntiAlias = true;
                 curve.Line.IsOptimizedDraw = true;
 
-                Statistics statsX = new Statistics(_graphData.XValues);
-                Statistics statsY = new Statistics(_graphData.YValues);
-                double slope = statsY.Slope(statsX);
-                double intercept = statsY.Intercept(statsX);
-
-                _labelRegression = string.Format("{0} = {1:F04}, {2} = {3:F04}\n" + "r = {4:F02}",  // Not L10N
+                _labelRegression = string.Format("{0} = {1:F04}, {2} = {3:F04}\n" + "r = {4:F03}",  // Not L10N
                                           Resources.Regression_slope,
-                                          slope,
+                                          regressionLine.Slope,
                                           Resources.Regression_intercept,
-                                          intercept,
-                                          statsY.R(statsX));
-
+                                          regressionLine.Intercept,
+                                          graphData.R);
+                if (graphData.R < graphData.MinR)
+                {
+                    _labelRegression += string.Format(" < {0:F03}", graphData.MinR); // Not L10N
+                    if (graphData.MinPoints.HasValue)
+                    {
+                        _labelRegression = string.Format(Resources.RegressionGraphPane_RegressionGraphPane__0___at__1__points_minimum_, _labelRegression, graphData.MinPoints.Value);
+                    }
+                }
             }
 
             var regressionLineCurrent = graphData.RegressionLineCurrent;
             if (regressionLineCurrent != null)
             {
-                lineY[0] = regressionLineCurrent.GetY(lineX[0]);
-                lineY[1] = regressionLineCurrent.GetY(lineX[1]);
+                lineY[0] = regressionLineCurrent.GetY(lineXCurrent[0]);
+                lineY[1] = regressionLineCurrent.GetY(lineXCurrent[1]);
 
-                curve = AddCurve(Resources.RegressionGraphPane_RegressionGraphPane_Current, lineX, lineY, COLOR_LINE_REGRESSION_CURRENT);
+                curve = AddCurve(Resources.RegressionGraphPane_RegressionGraphPane_Current, lineXCurrent, lineY, COLOR_LINE_REGRESSION_CURRENT);
                 curve.Line.IsAntiAlias = true;
                 curve.Line.IsOptimizedDraw = true;
                 curve.Line.Style = DashStyle.Dash;
@@ -192,8 +216,11 @@ namespace pwiz.Skyline.Controls.Graphs
                                                         regressionLineCurrent.Slope,
                                                         Resources.Regression_intercept,
                                                         regressionLineCurrent.Intercept);
+                if (graphData.ShowCurrentR)
+                {
+                    _labelRegressionCurrent += string.Format("\n" + "r = {0:F03}", graphData.CurrentR); // Not L10N
+                }
             }
-
         }
 
         public override void Draw(Graphics g)
@@ -260,7 +287,92 @@ namespace pwiz.Skyline.Controls.Graphs
         public string LabelY { get; set; }
         public double[] XValues { get; set; }
         public double[] YValues { get; set; }
+        public Dictionary<int, string> Tooltips { get; set; }
+        public HashSet<int> MissingIndices { get; set; }
+        public HashSet<int> OutlierIndices { get; set; }
         public RegressionLine RegressionLine { get; set; }
         public RegressionLine RegressionLineCurrent { get; set; }
+        public string RegressionName { get; set; }
+        public double? MinR { get; set; }
+        public int? MinPoints { get; set; }
+        public bool ShowCurrentR { get; set; }
+
+        private PointPairList _regularPoints;
+        public PointPairList RegularPoints
+        {
+            get
+            {
+                if (_regularPoints == null)
+                {
+                    _regularPoints = new PointPairList();
+                    for (var i = 0; i < XValues.Length; i++)
+                    {
+                        if ((MissingIndices == null || !MissingIndices.Contains(i)) &&
+                            (OutlierIndices == null || !OutlierIndices.Contains(i)))
+                        {
+                            var point = new PointPair(XValues[i], YValues[i]);
+                            string tooltip;
+                            if (Tooltips != null && Tooltips.TryGetValue(i, out tooltip))
+                                point.Tag = tooltip;
+                            _regularPoints.Add(point);
+                        }
+                    }
+                }
+                return _regularPoints;
+            }
+        }
+        
+        private PointPairList _missingPoints;
+        public PointPairList MissingPoints
+        {
+            get
+            {
+                if (_missingPoints == null)
+                {
+                    _missingPoints = new PointPairList();
+                    if (MissingIndices != null)
+                        foreach (var i in MissingIndices)
+                            _missingPoints.Add(0, YValues[i]);
+                }
+                return _missingPoints;
+            }
+        }
+        
+        private PointPairList _outlierPoints;
+        public PointPairList OutlierPoints
+        {
+            get
+            {
+                if (_outlierPoints == null)
+                {
+                    _outlierPoints = new PointPairList();
+                    if (OutlierIndices != null)
+                        foreach (var i in OutlierIndices)
+                            _outlierPoints.Add(XValues[i], YValues[i]);
+                }
+                return _outlierPoints;
+            }
+        }
+
+        public double R
+        {
+            get
+            {
+                var statsX = new Statistics(RegularPoints.Select(point => point.X));
+                var statsY = new Statistics(RegularPoints.Select(point => point.Y));
+                return statsY.R(statsX);
+            }
+        }
+
+        public double CurrentR
+        {
+            get
+            {
+                var nonMissingPoints = RegularPoints.Concat(OutlierPoints).ToArray();
+                var statsX = new Statistics(nonMissingPoints.Select(point => point.X));
+                var statsY = new Statistics(nonMissingPoints.Select(point => point.Y));
+                return statsY.R(statsX);
+            }
+        }
     }
 }

@@ -8144,7 +8144,7 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="BuildLibraryDlg_btnAddDirectory_Click_Add_Input_Directory" xml:space="preserve">
     <value>Add Input Directory</value>
   </data>
-    <data name="TransitionBinner_BinData_" xml:space="preserve">
+  <data name="TransitionBinner_BinData_" xml:space="preserve">
     <value>Imported spectrum appears to be missing m/z or intensity values ({0} != {1})</value>
   </data>
   <data name="PanoramaPublishHelper_PublishDocToPanorama_Publishing_document_to_Panorama" xml:space="preserve">
@@ -9185,6 +9185,12 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="FastaImporter_Import_Error_at_or_around_line__0____1_" xml:space="preserve">
     <value>Error at or around line {0}: {1}</value>
   </data>
+  <data name="BuildPeptideSearchLibraryControl_AddIrtLibraryTable_An_error_occurred_trying_to_add_iRTs_to_the_library_" xml:space="preserve">
+    <value>An error occurred trying to add iRTs to the library.</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_AddIrtLibraryTable_Adding_iRTs_to_Library" xml:space="preserve">
+    <value>Adding iRTs to Library</value>
+  </data>
   <data name="Peptide_StandardType_iRT_standards_can_only_be_changed_by_modifying_the_iRT_calculator" xml:space="preserve">
     <value>iRT standards can only be changed by modifying the iRT calculator</value>
   </data>
@@ -9301,5 +9307,38 @@ If your transition list format combines formulas and adducts in a single column 
   </data>
   <data name="EditIsolationSchemeDlg_ReadIsolationRanges_No_repeating_isolation_scheme_found_in__0_" xml:space="preserve">
     <value>No repeating isolation scheme found in {0}</value>
+  </data>
+  <data name="RegressionGraphPane_RegressionGraphPane_Missing" xml:space="preserve">
+    <value>Missing</value>
+  </data>
+  <data name="RegressionGraphPane_RegressionGraphPane_Outliers" xml:space="preserve">
+    <value>Outliers</value>
+  </data>
+  <data name="AddIrtsResultsDlg_dataGridView_CellContentClick_Measured" xml:space="preserve">
+    <value>Measured</value>
+  </data>
+  <data name="AddIrtPeptidesDlg_dataGridView_CellContentClick_iRT" xml:space="preserve">
+    <value>iRT</value>
+  </data>
+  <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_Success" xml:space="preserve">
+    <value>Success</value>
+  </data>
+  <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_Failed" xml:space="preserve">
+    <value>Failed</value>
+  </data>
+  <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression_Refined" xml:space="preserve">
+    <value>Regression Refined</value>
+  </data>
+  <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression_Attempted" xml:space="preserve">
+    <value>Regression Attempted</value>
+  </data>
+  <data name="LibraryBuildNotificationHandler_LibraryBuildCompleteCallback_Adding_iRTs_to_library" xml:space="preserve">
+    <value>Adding iRTs to library</value>
+  </data>
+  <data name="LibraryBuildNotificationHandler_LibraryBuildCompleteCallback_An_error_occurred_trying_to_add_iRTs_to_the_library_" xml:space="preserve">
+    <value>An error occurred trying to add iRTs to the library.</value>
+  </data>
+  <data name="RegressionGraphPane_RegressionGraphPane__0___at__1__points_minimum_" xml:space="preserve">
+    <value>{0} (at {1} points minimum)</value>
   </data>
 </root>

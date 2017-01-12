@@ -148,6 +148,7 @@
     <Compile Include="AddLibraryTest.cs" />
     <Compile Include="AssociateProteinsDlgTest.cs" />
     <Compile Include="BackgroundEventThreadsTest.cs" />
+    <Compile Include="BlibIrtTest.cs" />
     <Compile Include="CalibrationScenariosTest.cs" />
     <Compile Include="CalibrationTest.cs" />
     <Compile Include="ChorusFunctionalTest.cs" />

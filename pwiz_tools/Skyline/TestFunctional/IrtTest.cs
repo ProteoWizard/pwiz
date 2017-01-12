@@ -169,7 +169,7 @@ namespace pwiz.SkylineTestFunctional
                       });
 
             // Cannot add results because standard peptides are not in the document
-            RunDlg<MessageDlg>(irtDlg1.AddResults, messageDlg => messageDlg.OkDialog());
+            RunDlg<AddIrtPeptidesDlg>(irtDlg1.AddResults, messageDlg => messageDlg.OkDialog());
 
             // Paste Biognosys-provided values
             RunUI(() =>

@@ -47,6 +47,7 @@ using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using TestRunnerLib;

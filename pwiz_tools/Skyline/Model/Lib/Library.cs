@@ -30,6 +30,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib.ChromLib;
 using pwiz.Skyline.Model.Lib.Midas;
 using pwiz.Skyline.Model.Results;
@@ -336,6 +337,7 @@ namespace pwiz.Skyline.Model.Lib
             public LibrarySpec LibrarySpec { get; private set; }
             public BuildFunction BuildFunc { get; private set; }
             public string ExtraMessage { get; set; }
+            public IrtStandard IrtStandard { get; set; }
         }
 
         public void BuildLibrary(IDocumentContainer container, ILibraryBuilder builder, AsyncCallback callback)
@@ -367,9 +369,17 @@ namespace pwiz.Skyline.Model.Lib
             {
                 success = builder.BuildLibrary(monitor);
                 var biblioSpecLiteBuilder = builder as BiblioSpecLiteBuilder;
-                if (null != biblioSpecLiteBuilder && !string.IsNullOrEmpty(biblioSpecLiteBuilder.AmbiguousMatchesMessage))
+                if (null != biblioSpecLiteBuilder)
                 {
-                    buildState.ExtraMessage = biblioSpecLiteBuilder.AmbiguousMatchesMessage;
+                    if (!string.IsNullOrEmpty(biblioSpecLiteBuilder.AmbiguousMatchesMessage))
+                    {
+                        buildState.ExtraMessage = biblioSpecLiteBuilder.AmbiguousMatchesMessage;
+                    }
+                    if (biblioSpecLiteBuilder.IrtStandard != null &&
+                        biblioSpecLiteBuilder.IrtStandard != IrtStandard.NULL)
+                    {
+                        buildState.IrtStandard = biblioSpecLiteBuilder.IrtStandard;
+                    }
                 }
             }
 
@@ -712,6 +722,33 @@ namespace pwiz.Skyline.Model.Lib
         public virtual IList<RetentionTimeSource> ListRetentionTimeSources()
         {
             return new RetentionTimeSource[0];
+        }
+
+        public IEnumerable<IRetentionTimeProvider> RetentionTimeProvidersIrt
+        {
+            get
+            {
+                LibraryRetentionTimes irts;
+                if (TryGetIrts(out irts))
+                    yield return irts;
+            }
+        }
+
+        public IEnumerable<IRetentionTimeProvider> RetentionTimeProviders
+        {
+            get
+            {
+                var fileCount = FileCount;
+                if (!fileCount.HasValue)
+                    yield break;
+
+                for (var i = 0; i < fileCount.Value; i++)
+                {
+                    LibraryRetentionTimes retentionTimes;
+                    if (TryGetRetentionTimes(i, out retentionTimes))
+                        yield return retentionTimes;
+                }
+            }
         }
         
         #region File reading utility functions

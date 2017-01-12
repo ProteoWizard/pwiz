@@ -47,7 +47,6 @@ namespace pwiz.SkylineTestFunctional
             {
                 buildLibraryDlg.LibraryName = libraryName;
                 buildLibraryDlg.LibraryPath = TestFilesDir.GetTestPath("LibraryPath.blib");
-                buildLibraryDlg.LibraryAuthority = "test.example.com";
                 buildLibraryDlg.LibraryKeepRedundant = true;
                 buildLibraryDlg.OkWizardPage();
                 buildLibraryDlg.AddInputFiles(new[] { TestFilesDir.GetTestPath("modless.pride.xml") });
