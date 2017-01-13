@@ -731,6 +731,18 @@
   <data name="timePeptideComparisonContextMenuItem.Text" xml:space="preserve">
     <value>Peptide Comparison</value>
   </data>
+  <data name="scoreToRunToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>143, 22</value>
+  </data>
+  <data name="scoreToRunToolStripMenuItem.Text" xml:space="preserve">
+    <value>Score To Run</value>
+  </data>
+  <data name="runToRunToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>143, 22</value>
+  </data>
+  <data name="runToRunToolStripMenuItem.Text" xml:space="preserve">
+    <value>Run To Run</value>
+  </data>
   <data name="linearRegressionContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 22</value>
   </data>
@@ -2514,6 +2526,18 @@
   <data name="timePeptideComparisonMenuItem.Text" xml:space="preserve">
     <value>&amp;Peptide Comparison</value>
   </data>
+  <data name="scoreToRunMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>143, 22</value>
+  </data>
+  <data name="scoreToRunMenuItem.Text" xml:space="preserve">
+    <value>Score To Run</value>
+  </data>
+  <data name="runToRunMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>143, 22</value>
+  </data>
+  <data name="runToRunMenuItem.Text" xml:space="preserve">
+    <value>Run To Run</value>
+  </data>
   <data name="linearRegressionMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Shift+F8</value>
   </data>
@@ -2523,17 +2547,17 @@
   <data name="linearRegressionMenuItem.Text" xml:space="preserve">
     <value>&amp;Linear Regression</value>
   </data>
-  <data name="schedulingMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>228, 22</value>
-  </data>
-  <data name="schedulingMenuItem.Text" xml:space="preserve">
-    <value>&amp;Scheduling</value>
-  </data>
   <data name="retentionTimeAlignmentsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>228, 22</value>
   </data>
   <data name="retentionTimeAlignmentsToolStripMenuItem.Text" xml:space="preserve">
     <value>Ali&amp;gnment</value>
+  </data>
+  <data name="schedulingMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>228, 22</value>
+  </data>
+  <data name="schedulingMenuItem.Text" xml:space="preserve">
+    <value>&amp;Scheduling</value>
   </data>
   <data name="retentionTimesMenuItem.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -3673,6 +3697,18 @@
     <value>linearRegressionContextMenuItem</value>
   </data>
   <data name="&gt;&gt;linearRegressionContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;scoreToRunToolStripMenuItem.Name" xml:space="preserve">
+    <value>scoreToRunToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;scoreToRunToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;runToRunToolStripMenuItem.Name" xml:space="preserve">
+    <value>runToRunToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;runToRunToolStripMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;schedulingContextMenuItem.Name" xml:space="preserve">
@@ -5175,16 +5211,28 @@
   <data name="&gt;&gt;linearRegressionMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;schedulingMenuItem.Name" xml:space="preserve">
-    <value>schedulingMenuItem</value>
+  <data name="&gt;&gt;scoreToRunMenuItem.Name" xml:space="preserve">
+    <value>scoreToRunMenuItem</value>
   </data>
-  <data name="&gt;&gt;schedulingMenuItem.Type" xml:space="preserve">
+  <data name="&gt;&gt;scoreToRunMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;runToRunMenuItem.Name" xml:space="preserve">
+    <value>runToRunMenuItem</value>
+  </data>
+  <data name="&gt;&gt;runToRunMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;retentionTimeAlignmentsToolStripMenuItem.Name" xml:space="preserve">
     <value>retentionTimeAlignmentsToolStripMenuItem</value>
   </data>
   <data name="&gt;&gt;retentionTimeAlignmentsToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;schedulingMenuItem.Name" xml:space="preserve">
+    <value>schedulingMenuItem</value>
+  </data>
+  <data name="&gt;&gt;schedulingMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;peakAreasMenuItem.Name" xml:space="preserve">

@@ -656,7 +656,8 @@ namespace pwiz.Skyline.Model.DocSettings
                             int? precision,
                             IList<MeasuredRetentionTime> measuredPeptides,
                             IList<MeasuredRetentionTime> standardPeptides,
-                            IList<MeasuredRetentionTime> variablePeptides,
+                            IList<MeasuredRetentionTime> variableTargetPeptides,
+                            IList<MeasuredRetentionTime> variableOrigPeptides,
                             RetentionScoreCalculatorSpec calculator,
                             Func<bool> isCanceled)
         {
@@ -678,7 +679,8 @@ namespace pwiz.Skyline.Model.DocSettings
                                                    0,
                                                    measuredPeptides.Count,
                                                    standardPeptides,
-                                                   variablePeptides,
+                                                   variableTargetPeptides,
+                                                   variableOrigPeptides,
                                                    statisticsAll,
                                                    calculator,
                                                    scoreCache,
@@ -694,7 +696,8 @@ namespace pwiz.Skyline.Model.DocSettings
                             int left,
                             int right,
                             IList<MeasuredRetentionTime> standardPeptides,
-                            IList<MeasuredRetentionTime> variablePeptides,
+                            IList<MeasuredRetentionTime> variableTargetPeptides,
+                            IList<MeasuredRetentionTime> variableOrigPeptides,
                             RetentionTimeStatistics statistics,
                             RetentionScoreCalculatorSpec calculator,
                             RetentionTimeScoreCache scoreCache,
@@ -713,9 +716,9 @@ namespace pwiz.Skyline.Model.DocSettings
                     {
                         if (isCanceled())
                             throw new OperationCanceledException();
-                        RecalcRegression(bestOut, standardPeptides, variablePeptides, statisticsResult, calculator, scoreCache,
+                        RecalcRegression(bestOut, standardPeptides, variableTargetPeptides, variableOrigPeptides,statisticsResult, calculator, scoreCache,
                             out statisticsResult, ref outIndexes);
-                        if (bestOut >= variablePeptides.Count || !IsAboveThreshold(statisticsResult.R, threshold, precision))
+                        if (bestOut >= variableTargetPeptides.Count || !IsAboveThreshold(statisticsResult.R, threshold, precision))
                             break;
                         bestOut++;
                     }
@@ -727,7 +730,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 {
                     if (isCanceled())
                         throw new OperationCanceledException();
-                    var regression = RecalcRegression(worstIn, standardPeptides, variablePeptides, statisticsResult, calculator, scoreCache,
+                    var regression = RecalcRegression(worstIn, standardPeptides, variableTargetPeptides, variableOrigPeptides, statisticsResult, calculator, scoreCache,
                         out statisticsResult, ref outIndexes);
                     // If there are only 2 left, then this is the best we can do and still have
                     // a linear equation.
@@ -746,7 +749,7 @@ namespace pwiz.Skyline.Model.DocSettings
             HashSet<int> outIndexesNew = outIndexes;
             RetentionTimeStatistics statisticsNew;
             // Rerun the regression
-            var regressionNew = RecalcRegression(mid, standardPeptides, variablePeptides, statistics, calculator, scoreCache,
+            var regressionNew = RecalcRegression(mid, standardPeptides, variableTargetPeptides, variableOrigPeptides, statistics, calculator, scoreCache,
                 out statisticsNew, ref outIndexesNew);
             // If no regression could be calculated, give up to avoid infinite recursion.
             if (regressionNew == null)
@@ -758,18 +761,19 @@ namespace pwiz.Skyline.Model.DocSettings
             if (IsAboveThreshold(statisticsResult.R, threshold, precision))
             {
                 return regressionNew.FindThreshold(threshold, precision, mid + 1, right,
-                    standardPeptides, variablePeptides, statisticsResult, calculator, scoreCache, isCanceled,
+                    standardPeptides, variableTargetPeptides, variableOrigPeptides, statisticsResult, calculator, scoreCache, isCanceled,
                     ref statisticsResult, ref outIndexes);
             }
 
             return regressionNew.FindThreshold(threshold, precision, left, mid - 1,
-                standardPeptides, variablePeptides, statisticsResult, calculator, scoreCache, isCanceled,
+                standardPeptides, variableTargetPeptides, variableOrigPeptides, statisticsResult, calculator, scoreCache, isCanceled,
                 ref statisticsResult, ref outIndexes);
         }
 
         private RetentionTimeRegression RecalcRegression(int mid,
                     IEnumerable<MeasuredRetentionTime> requiredPeptides,
-                    IList<MeasuredRetentionTime> variablePeptides,
+                    IList<MeasuredRetentionTime> variableTargetPeptides,
+                    IList<MeasuredRetentionTime> variableOrigPeptides,
                     RetentionTimeStatistics statistics,
                     RetentionScoreCalculatorSpec calculator,
                     RetentionTimeScoreCache scoreCache,
@@ -783,10 +787,10 @@ namespace pwiz.Skyline.Model.DocSettings
             var listDeltas = new List<DeltaIndex>();
             int iNextStat = 0;
             double unknownScore = Calculator.UnknownScore;
-            for (int i = 0; i < variablePeptides.Count; i++)
+            for (int i = 0; i < variableTargetPeptides.Count; i++)
             {
                 double delta;
-                if (variablePeptides[i].RetentionTime == 0)
+                if (variableTargetPeptides[i].RetentionTime == 0 || (variableOrigPeptides != null && variableOrigPeptides[i].RetentionTime == 0))
                     delta = double.MaxValue;    // Make sure zero times are always outliers
                 else if (!outIndexes.Contains(i) && iNextStat < listPredictions.Count)
                 {
@@ -799,7 +803,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 {
                     // Recalculate values for the indexes that were not used to generate
                     // the current regression.
-                    var peptideTime = variablePeptides[i];
+                    var peptideTime = variableTargetPeptides[i];
                     double score = scoreCache.CalcScore(Calculator, peptideTime.PeptideSequence);
                     delta = double.MaxValue;
                     if (score != unknownScore)
@@ -817,17 +821,17 @@ namespace pwiz.Skyline.Model.DocSettings
 
             // Remove points with the highest deltas above mid
             outIndexes = new HashSet<int>();
-            int countOut = variablePeptides.Count - mid - 1;
+            int countOut = variableTargetPeptides.Count - mid - 1;
             for (int i = 0; i < countOut; i++)
             {
                 outIndexes.Add(listDeltas[i].Index);
             }
-            var peptidesTimesTry = new List<MeasuredRetentionTime>(variablePeptides.Count);
-            for (int i = 0; i < variablePeptides.Count; i++)
+            var peptidesTimesTry = new List<MeasuredRetentionTime>(variableTargetPeptides.Count);
+            for (int i = 0; i < variableTargetPeptides.Count; i++)
             {
                 if (outIndexes.Contains(i))
                     continue;
-                peptidesTimesTry.Add(variablePeptides[i]);
+                peptidesTimesTry.Add(variableTargetPeptides[i]);
             }
 
             peptidesTimesTry.AddRange(requiredPeptides);

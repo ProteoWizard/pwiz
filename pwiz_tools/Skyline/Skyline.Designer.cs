@@ -141,6 +141,8 @@ namespace pwiz.Skyline
             this.replicateComparisonContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.timePeptideComparisonContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.linearRegressionContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.scoreToRunToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.runToRunToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.schedulingContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.timePlotContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.timeCorrelationContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -397,8 +399,10 @@ namespace pwiz.Skyline
             this.replicateComparisonMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.timePeptideComparisonMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.linearRegressionMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.schedulingMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.scoreToRunMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.runToRunMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.retentionTimeAlignmentsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.schedulingMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.peakAreasMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaReplicateComparisonMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaPeptideComparisonMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -490,6 +494,7 @@ namespace pwiz.Skyline
             // 
             // contextMenuTreeNode
             // 
+            this.contextMenuTreeNode.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.contextMenuTreeNode.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.cutContextMenuItem,
             this.copyContextMenuItem,
@@ -1270,10 +1275,23 @@ namespace pwiz.Skyline
             // 
             // linearRegressionContextMenuItem
             // 
-            this.linearRegressionContextMenuItem.CheckOnClick = true;
+            this.linearRegressionContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.scoreToRunToolStripMenuItem,
+            this.runToRunToolStripMenuItem});
             this.linearRegressionContextMenuItem.Name = "linearRegressionContextMenuItem";
             resources.ApplyResources(this.linearRegressionContextMenuItem, "linearRegressionContextMenuItem");
-            this.linearRegressionContextMenuItem.Click += new System.EventHandler(this.linearRegressionMenuItem_Click);
+            // 
+            // scoreToRunToolStripMenuItem
+            // 
+            this.scoreToRunToolStripMenuItem.Name = "scoreToRunToolStripMenuItem";
+            resources.ApplyResources(this.scoreToRunToolStripMenuItem, "scoreToRunToolStripMenuItem");
+            this.scoreToRunToolStripMenuItem.Click += new System.EventHandler(this.linearRegressionMenuItem_Click);
+            // 
+            // runToRunToolStripMenuItem
+            // 
+            this.runToRunToolStripMenuItem.Name = "runToRunToolStripMenuItem";
+            resources.ApplyResources(this.runToRunToolStripMenuItem, "runToRunToolStripMenuItem");
+            this.runToRunToolStripMenuItem.Click += new System.EventHandler(this.fullReplicateComparisonToolStripMenuItem_Click);
             // 
             // schedulingContextMenuItem
             // 
@@ -2101,29 +2119,29 @@ namespace pwiz.Skyline
             this.toolStripSeparator50.Name = "toolStripSeparator50";
             resources.ApplyResources(this.toolStripSeparator50, "toolStripSeparator50");
             // 
-            // exportSpectralLibraryMenuItem
-            // 
-            this.exportSpectralLibraryMenuItem.Name = "exportSpectralLibraryMenuItem";
-            resources.ApplyResources(this.exportSpectralLibraryMenuItem, "exportSpectralLibraryMenuItem");
-            this.exportSpectralLibraryMenuItem.Click += new System.EventHandler(this.exportSpectralLibraryMenuItem_Click);
-            // 
             // eSPFeaturesMenuItem
             // 
             this.eSPFeaturesMenuItem.Name = "eSPFeaturesMenuItem";
             resources.ApplyResources(this.eSPFeaturesMenuItem, "eSPFeaturesMenuItem");
             this.eSPFeaturesMenuItem.Click += new System.EventHandler(this.espFeaturesMenuItem_Click);
             // 
-            // mProphetFeaturesMenuItem
+            // exportSpectralLibraryMenuItem
             // 
-            this.mProphetFeaturesMenuItem.Name = "mProphetFeaturesMenuItem";
-            resources.ApplyResources(this.mProphetFeaturesMenuItem, "mProphetFeaturesMenuItem");
-            this.mProphetFeaturesMenuItem.Click += new System.EventHandler(this.mProphetFeaturesMenuItem_Click);
+            this.exportSpectralLibraryMenuItem.Name = "exportSpectralLibraryMenuItem";
+            resources.ApplyResources(this.exportSpectralLibraryMenuItem, "exportSpectralLibraryMenuItem");
+            this.exportSpectralLibraryMenuItem.Click += new System.EventHandler(this.exportSpectralLibraryMenuItem_Click);
             // 
             // chromatogramsToolStripMenuItem
             // 
             this.chromatogramsToolStripMenuItem.Name = "chromatogramsToolStripMenuItem";
             resources.ApplyResources(this.chromatogramsToolStripMenuItem, "chromatogramsToolStripMenuItem");
             this.chromatogramsToolStripMenuItem.Click += new System.EventHandler(this.chromatogramsToolStripMenuItem_Click);
+            // 
+            // mProphetFeaturesMenuItem
+            // 
+            this.mProphetFeaturesMenuItem.Name = "mProphetFeaturesMenuItem";
+            resources.ApplyResources(this.mProphetFeaturesMenuItem, "mProphetFeaturesMenuItem");
+            this.mProphetFeaturesMenuItem.Click += new System.EventHandler(this.mProphetFeaturesMenuItem_Click);
             // 
             // chorusRequestToolStripMenuItem
             // 
@@ -3062,8 +3080,8 @@ namespace pwiz.Skyline
             this.replicateComparisonMenuItem,
             this.timePeptideComparisonMenuItem,
             this.linearRegressionMenuItem,
-            this.schedulingMenuItem,
-            this.retentionTimeAlignmentsToolStripMenuItem});
+            this.retentionTimeAlignmentsToolStripMenuItem,
+            this.schedulingMenuItem});
             resources.ApplyResources(this.retentionTimesMenuItem, "retentionTimesMenuItem");
             this.retentionTimesMenuItem.Name = "retentionTimesMenuItem";
             this.retentionTimesMenuItem.DropDownOpening += new System.EventHandler(this.timeGraphMenuItem_DropDownOpening);
@@ -3082,21 +3100,35 @@ namespace pwiz.Skyline
             // 
             // linearRegressionMenuItem
             // 
+            this.linearRegressionMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.scoreToRunMenuItem,
+            this.runToRunMenuItem});
             this.linearRegressionMenuItem.Name = "linearRegressionMenuItem";
             resources.ApplyResources(this.linearRegressionMenuItem, "linearRegressionMenuItem");
-            this.linearRegressionMenuItem.Click += new System.EventHandler(this.linearRegressionMenuItem_Click);
             // 
-            // schedulingMenuItem
+            // scoreToRunMenuItem
             // 
-            this.schedulingMenuItem.Name = "schedulingMenuItem";
-            resources.ApplyResources(this.schedulingMenuItem, "schedulingMenuItem");
-            this.schedulingMenuItem.Click += new System.EventHandler(this.schedulingMenuItem_Click);
+            this.scoreToRunMenuItem.Name = "scoreToRunMenuItem";
+            resources.ApplyResources(this.scoreToRunMenuItem, "scoreToRunMenuItem");
+            this.scoreToRunMenuItem.Click += new System.EventHandler(this.linearRegressionMenuItem_Click);
+            // 
+            // runToRunMenuItem
+            // 
+            this.runToRunMenuItem.Name = "runToRunMenuItem";
+            resources.ApplyResources(this.runToRunMenuItem, "runToRunMenuItem");
+            this.runToRunMenuItem.Click += new System.EventHandler(this.fullReplicateComparisonToolStripMenuItem_Click);
             // 
             // retentionTimeAlignmentsToolStripMenuItem
             // 
             this.retentionTimeAlignmentsToolStripMenuItem.Name = "retentionTimeAlignmentsToolStripMenuItem";
             resources.ApplyResources(this.retentionTimeAlignmentsToolStripMenuItem, "retentionTimeAlignmentsToolStripMenuItem");
             this.retentionTimeAlignmentsToolStripMenuItem.Click += new System.EventHandler(this.retentionTimeAlignmentToolStripMenuItem_Click);
+            // 
+            // schedulingMenuItem
+            // 
+            this.schedulingMenuItem.Name = "schedulingMenuItem";
+            resources.ApplyResources(this.schedulingMenuItem, "schedulingMenuItem");
+            this.schedulingMenuItem.Click += new System.EventHandler(this.schedulingMenuItem_Click);
             // 
             // peakAreasMenuItem
             // 
@@ -4101,6 +4133,10 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem massErrorTargets1FDRContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem surrogateStandardMenuItem;
         private System.Windows.Forms.ToolStripMenuItem surrogateStandardContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem scoreToRunToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem runToRunToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem scoreToRunMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem runToRunMenuItem;
         private System.Windows.Forms.ToolStripSeparator checkForUpdatesSeparator;
         private System.Windows.Forms.ToolStripMenuItem checkForUpdatesMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exportSpectralLibraryMenuItem;

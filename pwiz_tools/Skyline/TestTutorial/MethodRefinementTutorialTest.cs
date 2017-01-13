@@ -182,7 +182,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.AutoZoomNone();
                 SkylineWindow.AutoZoomBestPeak();
                 SkylineWindow.EditDelete();
-                SkylineWindow.ShowRTLinearRegressionGraph();
+                SkylineWindow.ShowRTLinearRegressionGraphScoreToRun();
             });
             Assert.AreEqual(SkylineWindow.SequenceTree.Nodes[0].GetNodeCount(false), startingNodeCount - 1);
             Assert.AreEqual("VLEAGGLDCDMENANSVVDALK", SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Text); // Not L10N

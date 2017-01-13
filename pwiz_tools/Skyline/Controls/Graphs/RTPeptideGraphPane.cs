@@ -32,7 +32,7 @@ namespace pwiz.Skyline.Controls.Graphs
     public enum RTPeptideValue { All, Retention, FWHM, FWB }
 // ReSharper restore InconsistentNaming
 
-    internal class RTPeptideGraphPane : SummaryPeptideGraphPane
+    internal class RTPeptideGraphPane : SummaryPeptideGraphPane, IUpdateGraphPaneController
     {
         public static RTPeptideValue RTValue
         {
@@ -45,6 +45,16 @@ namespace pwiz.Skyline.Controls.Graphs
         public RTPeptideGraphPane(GraphSummary graphSummary)
             : base(graphSummary, PaneKey.DEFAULT)
         {
+        }
+
+        public virtual bool UpdateUIOnIndexChanged()
+        {
+            return RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.single;
+        }
+
+        public virtual bool UpdateUIOnLibraryChanged()
+        {
+            return RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.single;
         }
 
         protected override GraphData CreateGraphData(SrmDocument document, PeptideGroupDocNode selectedProtein, TransitionGroupDocNode selectedGroup, DisplayTypeChrom displayType)

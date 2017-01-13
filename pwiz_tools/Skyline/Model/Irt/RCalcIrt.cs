@@ -487,7 +487,7 @@ namespace pwiz.Skyline.Model.Irt
                                                                        RetentionTimeRegression.ThresholdPrecision,
                                                                        peptidesTimes,
                                                                        new MeasuredRetentionTime[0],
-                                                                       peptidesTimes,
+                                                                       peptidesTimes,null,
                                                                        calculator,
                                                                        () => false);
 

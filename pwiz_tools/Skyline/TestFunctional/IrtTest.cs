@@ -316,7 +316,7 @@ namespace pwiz.SkylineTestFunctional
             RegressionLineElement line = null;
             RunUI(() =>
                       {
-                          SkylineWindow.ShowRTLinearRegressionGraph();
+                          SkylineWindow.ShowRTLinearRegressionGraphScoreToRun();
                           SkylineWindow.SetupCalculatorChooser();
                           SkylineWindow.ChooseCalculator(irtCalc);
 

@@ -11874,6 +11874,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Measured Time ({0}).
+        /// </summary>
+        public static string GraphData_CorrelationLabel_Measured_Time___0__ {
+            get {
+                return ResourceManager.GetString("GraphData_CorrelationLabel_Measured_Time___0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Outliers.
         /// </summary>
         public static string GraphData_Graph_Outliers {
@@ -11942,6 +11951,15 @@ namespace pwiz.Skyline.Properties {
         public static string GraphData_GraphResiduals_Time_from_Regression {
             get {
                 return ResourceManager.GetString("GraphData_GraphResiduals_Time_from_Regression", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Time from Regression ({0}).
+        /// </summary>
+        public static string GraphData_ResidualsLabel_Time_from_Regression___0__ {
+            get {
+                return ResourceManager.GetString("GraphData_ResidualsLabel_Time_from_Regression___0__", resourceCulture);
             }
         }
         

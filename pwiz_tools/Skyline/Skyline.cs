@@ -4292,11 +4292,11 @@ namespace pwiz.Skyline
 
             // Update the summary graphs if necessary.
             if (_graphRetentionTime != null && _graphRetentionTime.ResultsIndex != ComboResults.SelectedIndex)
-                _graphRetentionTime.ResultsIndex = ComboResults.SelectedIndex;
+                _graphRetentionTime.SetResultIndexes(ComboResults.SelectedIndex,_graphRetentionTime.OriginalResultsIndex);
             if (_graphPeakArea != null && _graphPeakArea.ResultsIndex != ComboResults.SelectedIndex)
-                _graphPeakArea.ResultsIndex = ComboResults.SelectedIndex;
+                _graphPeakArea.SetResultIndexes(ComboResults.SelectedIndex);
             if (_graphMassError != null && _graphMassError.ResultsIndex != ComboResults.SelectedIndex)
-                _graphMassError.ResultsIndex = ComboResults.SelectedIndex;
+                _graphMassError.SetResultIndexes(ComboResults.SelectedIndex);
             var liveResultsGrid = (LiveResultsGrid)_resultsGridForm;
             if (null != liveResultsGrid)
             {

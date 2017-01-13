@@ -254,6 +254,7 @@
     <Compile Include="SwathIsolationListsTest.cs" />
     <Compile Include="UniquePeptidesDialogTest.cs" />
     <Compile Include="UniquePeptidesSettingsTest.cs" />
+    <Compile Include="RunToRunRegressionTest.cs" />
     <Compile Include="UpgradeTest.cs" />
   </ItemGroup>
   <ItemGroup>

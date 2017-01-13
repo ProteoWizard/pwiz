@@ -9308,6 +9308,12 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="EditIsolationSchemeDlg_ReadIsolationRanges_No_repeating_isolation_scheme_found_in__0_" xml:space="preserve">
     <value>No repeating isolation scheme found in {0}</value>
   </data>
+  <data name="GraphData_CorrelationLabel_Measured_Time___0__" xml:space="preserve">
+    <value>Measured Time ({0})</value>
+  </data>
+  <data name="GraphData_ResidualsLabel_Time_from_Regression___0__" xml:space="preserve">
+    <value>Time from Regression ({0})</value>
+  </data>
   <data name="RegressionGraphPane_RegressionGraphPane_Missing" xml:space="preserve">
     <value>Missing</value>
   </data>

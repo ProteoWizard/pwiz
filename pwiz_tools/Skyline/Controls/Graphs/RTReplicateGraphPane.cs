@@ -34,12 +34,21 @@ namespace pwiz.Skyline.Controls.Graphs
     /// <summary>
     /// Graph pane which shows the comparison of retention times across the replicates.
     /// </summary>
-    internal class RTReplicateGraphPane : SummaryReplicateGraphPane
+    internal class RTReplicateGraphPane : SummaryReplicateGraphPane, IUpdateGraphPaneController
     {
         public RTReplicateGraphPane(GraphSummary graphSummary)
             : base(graphSummary)
         {
             YAxis.Title.Text = Resources.RTReplicateGraphPane_RTReplicateGraphPane_Measured_Time;
+        }
+
+        public bool UpdateUIOnLibraryChanged()
+        {
+            return true;
+        }
+        public bool UpdateUIOnIndexChanged()
+        {
+            return true;
         }
 
         public bool CanShowRTLegend { get; private set; }
