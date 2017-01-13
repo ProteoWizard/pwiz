@@ -42,7 +42,6 @@ namespace pwiz.SkylineTest
         public void AaantivirusTestExclusion() // Intentional misspelling to encourage this as first test in nightlies
         {
             CheckDirectory(".");
-            CheckDirectory(Path.Combine(PathEx.GetDownloadsPath(), "Tutorials"));
             if (RunPerfTests)
             {
                 CheckDirectory(Path.Combine(PathEx.GetDownloadsPath(),"Perftests"));
