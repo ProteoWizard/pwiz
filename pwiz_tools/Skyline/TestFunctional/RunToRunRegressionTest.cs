@@ -1,4 +1,22 @@
-﻿using System;
+﻿/*
+ * Original author: Max Horowitz-Gelb <maxhg .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2017 University of Washington - Seattle, WA
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -14,7 +32,8 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class RunToRunRegressionTest : AbstractFunctionalTest
     {
-        private const int REPLICATES = 18; 
+        private const int REPLICATES = 5; 
+
         [TestMethod]
         public void TestRunToRunRegression()
         {
@@ -73,7 +92,7 @@ namespace pwiz.SkylineTestFunctional
 
             var documentPath = TestFilesDir.GetTestPath("alpha-crystallin_data.sky");
             RunUI(() => SkylineWindow.OpenFile(documentPath));
-            var document = WaitForDocumentLoaded();
+            WaitForDocumentLoaded();
 
             var graphSummary = ShowDialog<GraphSummary>(SkylineWindow.ShowRTLinearRegressionGraphRunToRun);
 
@@ -91,14 +110,16 @@ namespace pwiz.SkylineTestFunctional
                 {
                     if (i == j)
                         continue;
+                    int targetIndex = i, originalIndex = j;
                     RunUI(() =>
                     {
-                        graphSummary.RunToRunTargetReplicate.SelectedIndex = i;
-                        graphSummary.RunToRunOriginalReplicate.SelectedIndex = j;
-                    });
+                        graphSummary.RunToRunTargetReplicate.SelectedIndex = targetIndex;
+                        graphSummary.RunToRunOriginalReplicate.SelectedIndex = originalIndex;
 
-                    Assert.AreEqual(i, graphSummary.StateProvider.SelectedResultsIndex);
-                    
+                        Assert.AreEqual(targetIndex, graphSummary.StateProvider.SelectedResultsIndex);
+                    });
+                    WaitForGraphs();
+
                     var window = testRegressionStatisitcs(regressionPane, rValues, i, j, targetPeptideCounts, originalPeptideCounts, slopes, intercepts, windows);
 
                     RunUI(() =>
@@ -120,7 +141,7 @@ namespace pwiz.SkylineTestFunctional
                     //Value taken from Prediction.CalcRegression
                     var windowFromResidualGraph = Math.Max(0.5, 4 * residualStat.StdDev());
 
-                    Assert.IsTrue(Math.Abs(window -  windowFromResidualGraph) < 0.001);
+                    Assert.AreEqual(window, windowFromResidualGraph, 0.001);
 
                     //Go back to correlation graph and make sure everything is still right
                     RunUI(() =>
@@ -135,18 +156,20 @@ namespace pwiz.SkylineTestFunctional
             //Make sure comparing a run to itself works as expected
             for (var i = 0; i < REPLICATES; i++)
             {
+                int selfIndex = i;
                 RunUI(() =>
                 {
                     SkylineWindow.ShowPlotType(PlotTypeRT.correlation);
-                    graphSummary.RunToRunTargetReplicate.SelectedIndex = i;
-                    graphSummary.RunToRunOriginalReplicate.SelectedIndex = i;
+                    graphSummary.RunToRunTargetReplicate.SelectedIndex = selfIndex;
+                    graphSummary.RunToRunOriginalReplicate.SelectedIndex = selfIndex;
                 });
+                WaitForGraphs();
                 var regression = regressionPane.RegressionRefined;
                 var statistics = regressionPane.StatisticsRefined;
-                Assert.IsTrue(Math.Abs(statistics.R -1) <10e-3);
-                Assert.IsTrue(Math.Abs(regression.Conversion.Slope- 1) < 10e-3);
-                Assert.IsTrue(Math.Abs(regression.Conversion.Intercept - 0) < 10e-3);
-                Assert.AreEqual(regression.TimeWindow, 0.5);
+                Assert.AreEqual(1, statistics.R, 10e-3);
+                Assert.AreEqual(1, regression.Conversion.Slope, 10e-3);
+                Assert.AreEqual(0, regression.Conversion.Intercept, 10e-3);
+                Assert.AreEqual(0.5, regression.TimeWindow);
 
                 RunUI(() =>
                 {
@@ -157,9 +180,8 @@ namespace pwiz.SkylineTestFunctional
                 var pointList = regressionPane.CurveList.First().Points;
                 for (var p = 0; p < pointList.Count; p++)
                 {
-                    Assert.AreEqual(pointList[p].Y,0);
+                    Assert.AreEqual(0, pointList[p].Y);
                 }
-
             }
 
             //Make sure switching to score to run works correctly
@@ -175,10 +197,10 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsFalse(graphSummary.IsRunToRun);
             var regressionScoreToRun = regressionPane.RegressionRefined;
             var statisticsScoreToRun = regressionPane.StatisticsRefined;
-            Assert.IsTrue(Math.Abs(regressionScoreToRun.Conversion.Slope - 1.01) < 10e-3);
-            Assert.IsTrue(Math.Abs(regressionScoreToRun.Conversion.Intercept - 0.32) < 10e-3);
-            Assert.IsTrue(Math.Abs(regressionScoreToRun.TimeWindow - 15.2) < 10e-2);
-            Assert.IsTrue(Math.Abs(statisticsScoreToRun.R - 0.9483) < 10e-3);
+            Assert.AreEqual(1.01, regressionScoreToRun.Conversion.Slope, 10e-3);
+            Assert.AreEqual(0.32, regressionScoreToRun.Conversion.Intercept, 10e-3);
+            Assert.AreEqual(15.2, regressionScoreToRun.TimeWindow, 10e-2);
+            Assert.AreEqual(0.9483, statisticsScoreToRun.R, 10e-3);
 
             RunUI(() =>
             {
@@ -201,7 +223,7 @@ namespace pwiz.SkylineTestFunctional
             var slope = regression.Conversion.Slope;
             var window = regression.TimeWindow;
             //RValue is the same in both directions
-            Assert.IsTrue(Math.Abs(rValue - rValues[i, j]) < 0.00001);
+            Assert.AreEqual(rValue, rValues[i, j], 0.00001);
             Assert.AreEqual(originalPeptideCount, targetPeptideCounts[j, i]);
             Assert.AreEqual(targetPeptideCount, originalPeptideCounts[j, i]);
             Assert.AreEqual(rValue, rValues[i, j]);
