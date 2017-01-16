@@ -110,7 +110,7 @@ namespace analysis {
         demuxBlockExtra = max(0.0, demuxBlockExtra);
         auto numSpectraToFind = pmc_->GetDemuxBlockSize() + size_t(round(demuxBlockExtra * pmc_->GetSpectraPerCycle()));
         if (!FindNearbySpectra(muxIndices, sl_, indexToDemux, numSpectraToFind))
-            throw runtime_error(__FUNCTION__ " Not enough spectra to demultiplex this block");
+            throw runtime_error("GetMatrixBlockIndices() Not enough spectra to demultiplex this block");
     }
 
     const std::vector<size_t>& MSXDemultiplexer::SpectrumIndices() const

@@ -27,138 +27,138 @@ using namespace pwiz::msdata;
 
 class DemuxSolverTest {
 public:
-	void Run()
-	{
-		SetUp();
-		NNLSSolverTest();
-		TearDown();
-	}
+    void Run()
+    {
+        SetUp();
+        NNLSSolverTest();
+        TearDown();
+    }
 
 protected:
 
-	virtual void SetUp()
-	{
-	}
+    virtual void SetUp()
+    {
+    }
 
-	void TearDown()
-	{
-	}
+    void TearDown()
+    {
+    }
 
-	void NNLSSolverTest()
-	{
-		// Assume an expected solution
-		vector<double> expectedSolution = {
-			0.0,
-			0.0,
-			0.0,
-			11.0,
-			13.0,
-			0.0,
-			0.0
-		};
+    void NNLSSolverTest()
+    {
+        // Assume an expected solution
+        vector<double> expectedSolution = {
+            0.0,
+            0.0,
+            0.0,
+            11.0,
+            13.0,
+            0.0,
+            0.0
+        };
 
-		// Assume that the trailing precursor window that is only half represented has no spectral contribution from the unseen portion
-		double trailingWindowIntensity = 0.0;
+        // Assume that the trailing precursor window that is only half represented has no spectral contribution from the unseen portion
+        double trailingWindowIntensity = 0.0;
 
-		TestNNLSGivenSolution(expectedSolution, trailingWindowIntensity);
+        TestNNLSGivenSolution(expectedSolution, trailingWindowIntensity);
 
-		// Try a more dense solution
-		expectedSolution = {
-			5.0,
-			3.0,
-			2.0,
-			11.0,
-			13.0,
-			9.0,
-			3.0
-		};
+        // Try a more dense solution
+        expectedSolution = {
+            5.0,
+            3.0,
+            2.0,
+            11.0,
+            13.0,
+            9.0,
+            3.0
+        };
 
-		TestNNLSGivenSolution(expectedSolution, trailingWindowIntensity);
-	}
+        TestNNLSGivenSolution(expectedSolution, trailingWindowIntensity);
+    }
 
-	void TestNNLSGivenSolution(const vector<double>& expectedSolution, double trailingWindowIntensity)
-	{
-		NNLSSolver solver;
-		MatrixPtr signal;
-		MatrixPtr masks;
-		MatrixPtr solution;
-		int numSpectra = 7;
-		int numDemuxWindows = 7;
-		int numTransitions = 1;
-		signal.reset(new MatrixType(numSpectra, numTransitions));
-		masks.reset(new MatrixType(numSpectra, numDemuxWindows));
-		solution.reset(new MatrixType(numDemuxWindows, numTransitions));
+    void TestNNLSGivenSolution(const vector<double>& expectedSolution, double trailingWindowIntensity)
+    {
+        NNLSSolver solver;
+        MatrixPtr signal;
+        MatrixPtr masks;
+        MatrixPtr solution;
+        int numSpectra = 7;
+        int numDemuxWindows = 7;
+        int numTransitions = 1;
+        signal.reset(new MatrixType(numSpectra, numTransitions));
+        masks.reset(new MatrixType(numSpectra, numDemuxWindows));
+        solution.reset(new MatrixType(numDemuxWindows, numTransitions));
 
-		/*
-		* Create mask matrix of the form
-		* 1 1 0 0 0 0 0     \ \00000
-		* 0 1 1 0 0 0 0     0\ \0000
-		* 0 0 1 1 0 0 0     00\ \000
-		* 0 0 0 1 1 0 0     000\ \00
-		* 0 0 0 0 1 1 0     0000\ \0
-		* 0 0 0 0 0 1 1     00000\ j = i + 1
-		* 0 0 0 0 0 0 1     000000j = i
-		*
-		* This mask matrix is used in overlap demultiplexing
-		*/
-		for (size_t i = 0; i < numSpectra; ++i)
-		{
-			for (size_t j = 0; j < numDemuxWindows; ++j)
-			{
-				if (j == i || j == i + 1)
-				{
-					masks->row(i)[j] = 1.0;
-				}
-				else
-				{
-					masks->row(i)[j] = 0.0;
-				}
-			}
-		}
+        /*
+        * Create mask matrix of the form
+        * 1 1 0 0 0 0 0     \ \00000
+        * 0 1 1 0 0 0 0     0\ \0000
+        * 0 0 1 1 0 0 0     00\ \000
+        * 0 0 0 1 1 0 0     000\ \00
+        * 0 0 0 0 1 1 0     0000\ \0
+        * 0 0 0 0 0 1 1     00000\ j = i + 1
+        * 0 0 0 0 0 0 1     000000j = i
+        *
+        * This mask matrix is used in overlap demultiplexing
+        */
+        for (int i = 0; i < numSpectra; ++i)
+        {
+            for (int j = 0; j < numDemuxWindows; ++j)
+            {
+                if (j == i || j == i + 1)
+                {
+                    masks->row(i)[j] = 1.0;
+                }
+                else
+                {
+                    masks->row(i)[j] = 0.0;
+                }
+            }
+        }
 
-		// Create a multiplexed signal from the expected solution
-		vector<double> signalVec;
-		for (size_t i = 0; i < numSpectra; ++i)
-		{
-			double signalSum = expectedSolution[i];
-			if (i + 1 < numSpectra)
-				signalSum += expectedSolution[i + 1];
-			else
-				signalSum += trailingWindowIntensity;
-			signalVec.push_back(signalSum);
-		}
-		for (size_t i = 0; i < signalVec.size(); ++i)
-		{
-			signal->row(i)[0] = signalVec[i];
-		}
+        // Create a multiplexed signal from the expected solution
+        vector<double> signalVec;
+        for (int i = 0; i < numSpectra; ++i)
+        {
+            double signalSum = expectedSolution[i];
+            if (i + 1 < numSpectra)
+                signalSum += expectedSolution[i + 1];
+            else
+                signalSum += trailingWindowIntensity;
+            signalVec.push_back(signalSum);
+        }
+        for (size_t i = 0; i < signalVec.size(); ++i)
+        {
+            signal->row(i)[0] = signalVec[i];
+        }
 
-		solver.Solve(masks, signal, solution);
+        solver.Solve(masks, signal, solution);
 
-		// Verify result
-		for (size_t i = 0; i < expectedSolution.size(); ++i)
-		{
-			unit_assert_equal(expectedSolution[i], solution->row(i)[0], 0.0001);
-		}
-	}
+        // Verify result
+        for (size_t i = 0; i < expectedSolution.size(); ++i)
+        {
+            unit_assert_equal(expectedSolution[i], solution->row(i)[0], 0.0001);
+        }
+    }
 };
 
 int main(int argc, char* argv[])
 {
-	TEST_PROLOG(argc, argv)
+    TEST_PROLOG(argc, argv)
 
-	try
-	{
-		auto tester = DemuxSolverTest();
-		tester.Run();
-	}
-	catch (exception& e)
-	{
-		TEST_FAILED(e.what())
-	}
-	catch (...)
-	{
-		TEST_FAILED("Caught unknown exception.")
-	}
+    try
+    {
+        DemuxSolverTest tester;
+        tester.Run();
+    }
+    catch (exception& e)
+    {
+        TEST_FAILED(e.what())
+    }
+    catch (...)
+    {
+        TEST_FAILED("Caught unknown exception.")
+    }
 
-	TEST_EPILOG
+    TEST_EPILOG
 }

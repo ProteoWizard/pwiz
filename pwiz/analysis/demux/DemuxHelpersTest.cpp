@@ -29,6 +29,7 @@ using namespace pwiz::msdata;
 
 class DemuxHelpersTest {
 public:
+
     void Run()
     {
         SetUp();
@@ -80,7 +81,7 @@ protected:
         // Pull pointers from existing spectra
         shared_ptr<SpectrumListSimple> spectrumListPtr = boost::dynamic_pointer_cast<SpectrumListSimple>(msd.run.spectrumListPtr);
         if (!spectrumListPtr)
-            throw std::runtime_error(__FUNCTION__ " spectrumList from initializeTiny was not of the expected type");
+            throw std::runtime_error("initializeLarge() spectrumList from initializeTiny was not of the expected type");
 
         auto dppwiz = spectrumListPtr->dp;
 
@@ -359,10 +360,10 @@ protected:
     }
 
     // Remember which spectra correspond to what states
-    const int MS1_INDEX_0 = 0;
-    const int MS2_INDEX_0 = 1;
-    const int MS1_INDEX_1 = 2;
-    const int MS2_INDEX_1 = 3;
+    const size_t MS1_INDEX_0 = 0;
+    const size_t MS2_INDEX_0 = 1;
+    const size_t MS1_INDEX_1 = 2;
+    const size_t MS2_INDEX_1 = 3;
 
     MSData _msd;
 
@@ -379,7 +380,7 @@ int main(int argc, char* argv[])
 
     try
     {
-        auto tester = DemuxHelpersTest();
+        DemuxHelpersTest tester;
         tester.Run();
     }
     catch (exception& e)

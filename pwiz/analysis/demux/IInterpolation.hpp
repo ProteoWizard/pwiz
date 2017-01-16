@@ -24,7 +24,7 @@
 class IInterpolation
 {
 public:
-    virtual ~IInterpolation() = 0 {}
+    virtual ~IInterpolation() {}
 
     /// Indicates whether the algorithm can provide an interpolated derivative.
     virtual bool IsDifferentiable() = 0;

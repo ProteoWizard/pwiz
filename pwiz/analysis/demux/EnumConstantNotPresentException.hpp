@@ -38,7 +38,7 @@ public:
     ~EnumConstantNotPresentException() throw() override {}
         
     /// Provides descriptive message of error
-    const char* what() const override
+    const char* what() const throw() override
     {
         return "Attempted to access enum by name that is not present";
     }

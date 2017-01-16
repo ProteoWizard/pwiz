@@ -59,7 +59,7 @@ namespace analysis {
     {
         if (!_writer.is_open())
         {
-            throw runtime_error(__FUNCTION__ " Attempted to write deconv matrices after file failed to open");
+            throw runtime_error("WriteDeconvBlock() Attempted to write deconv matrices after file failed to open");
         }
         _fileIndex.push_back(std::pair<std::uint64_t, int64_t>(spectrumIndex, _writer.tellp()));
         MatrixIO::WriteBinary(_writer, masks);
@@ -72,7 +72,7 @@ namespace analysis {
     {
         if (!_writer.is_open())
         {
-            throw runtime_error(__FUNCTION__ " Attempted to write deconv matrices header after write file failed to open");
+            throw runtime_error("WriteHeader() Attempted to write deconv matrices header after write file failed to open");
         }
 
         // placeholder for the pointer to the file index

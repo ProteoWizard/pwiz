@@ -110,7 +110,7 @@ namespace analysis{
             }
 
             if (precursorsPerSpectrum_ == 0)
-                throw runtime_error(__FUNCTION__ " No MS2 scans found for this experiment.");
+                throw runtime_error("IdentifyCycle() No MS2 scans found for this experiment.");
 
             // Continue searching and identifying precursors until all unique precursors are found
             size_t mappedAlready = 0;
@@ -119,7 +119,7 @@ namespace analysis{
                 spec = spectrumList->spectrum(index);
                 if (spec->cvParam(MS_ms_level).valueAs<int>() != 2) continue;
                 if (spec->precursors.size() != precursorsPerSpectrum_)
-                    throw runtime_error(__FUNCTION__ " Precursor sizes are varying between individual MS2 scans. Cannot infer demultiplexing scheme.");
+                    throw runtime_error("IdentifyCycle() Precursor sizes are varying between individual MS2 scans. Cannot infer demultiplexing scheme.");
                 for (const auto& p : spec->precursors)
                 {
                     string mzString = prec_to_string(p);
@@ -259,7 +259,7 @@ namespace analysis{
     {
         if (spectrumPtr->precursors.size() != precursorsPerSpectrum_)
         {
-            throw runtime_error(__FUNCTION__ " Number of precursors in this spectrum differ from the number expected for this demultiplexing scheme.");
+            throw runtime_error("SpectrumToIndices() Number of precursors in this spectrum differ from the number expected for this demultiplexing scheme.");
         }
 
         indices.clear();
@@ -291,7 +291,7 @@ namespace analysis{
         }
         assert(indices.size() > 0);
         if (indices.size() != overlapsPerSpectrum_ * precursorsPerSpectrum_)
-            throw runtime_error(__FUNCTION__ " Number of demultiplexing windows changed. Window boundary tolerance may be set too low.");
+            throw runtime_error("SpectrumToIndices() Number of demultiplexing windows changed. Window boundary tolerance may be set too low.");
     }
 
     struct IsolationWindow PrecursorMaskCodec::GetIsolationWindow(size_t i) const

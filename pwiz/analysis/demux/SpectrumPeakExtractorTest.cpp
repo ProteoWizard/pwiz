@@ -98,13 +98,13 @@ protected:
         // Check that self extraction returns the original spectrum
         Spectrum_const_ptr baseSpectrum = centroidedPtr->spectrum(MS2_INDEX_0, true);
         BinaryDataArrayPtr baseIntensities = baseSpectrum->getIntensityArray();
-        for (int i = 0; i < baseIntensities->data.size(); ++i)
+        for (size_t i = 0; i < baseIntensities->data.size(); ++i)
         {
             unit_assert_equal(signal->row(0)[i], baseIntensities->data.at(i), 0.0001);
         }
 
         // Check the second spectrum extraction
-        for (int i = 0; i < s21ExpectedIntensities.size(); ++i)
+        for (size_t i = 0; i < s21ExpectedIntensities.size(); ++i)
         {
             unit_assert_equal(signal->row(1)[i], s21ExpectedIntensities[i], 0.0001);
         }
@@ -119,7 +119,7 @@ protected:
         binExamplePeakExtractor(s20, *signal, 1);
 
         // Check the self extraction returns the original spectrum
-        for (int i = 0; i < s21->getIntensityArray()->data.size(); ++i)
+        for (size_t i = 0; i < s21->getIntensityArray()->data.size(); ++i)
         {
             unit_assert_equal(signal->row(0)[i], s21->getIntensityArray()->data.at(i), 0.0001);
         }
@@ -132,7 +132,7 @@ int main(int argc, char* argv[])
 
     try
     {
-        auto tester = SpectrumPeakExtractorTest();
+        SpectrumPeakExtractorTest tester;
         tester.Run();
     }
     catch (exception& e)

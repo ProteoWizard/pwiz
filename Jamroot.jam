@@ -298,6 +298,9 @@ project pwiz
         # warning: '__cur' might be used uninitialized in this function 
         <toolset>gcc:<cxxflags>-Wno-uninitialized
 
+        # set standard to C++11
+        <toolset>gcc:<cxxflags>-std=c++11
+
         $(PREDEF_CHECKS)
         
         # special Cygwin gcc-3.4.4 hack
@@ -693,6 +696,15 @@ install executables
       <dependency>VERSION
     ;
 
+install gui_tools
+    : VERSION
+    : <conditional>@install-type
+      <conditional>@install-location
+      <conditional>@install-identdata-dependencies
+      <conditional>@install-vendor-api-dependencies
+      <conditional>@dotNET-dependencies
+      <conditional>@gcc-install-dll-path
+    ;
 
 install package_docs
     : doc/package/readme.txt
@@ -1220,6 +1232,7 @@ bcp.copy-boost-dependencies copy_boost_subset
 
     # scan all targets and their dependencies
     $(PWIZ_ROOT_PATH)/pwiz_tools/commandline//mstools
+    $(PWIZ_ROOT_PATH)/pwiz_tools/Bumbershoot//bumbershoot-bin.tar.bz2
 
   : # requirements
     <location>$(BOOST_SUBSET_PATH)/boost_$(BOOST_VERSION:J=_)

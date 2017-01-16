@@ -30,10 +30,10 @@ namespace analysis{
     {
         auto upperOffsetParam = p.isolationWindow.cvParam(cv::MS_isolation_window_upper_offset);
         if (upperOffsetParam.value.empty())
-            throw std::runtime_error(__FUNCTION__ " No isolation window upper offset m/z specified");
+            throw std::runtime_error("precursor_upper_offset() No isolation window upper offset m/z specified");
         double upperOffset = upperOffsetParam.valueAs<double>();
         if (upperOffset <= 0.0)
-            throw std::runtime_error(__FUNCTION__ " Positive values expected for isolation window m/z offsets");
+            throw std::runtime_error("precursor_upper_offset() Positive values expected for isolation window m/z offsets");
         return upperOffset;
     }
 
@@ -41,10 +41,10 @@ namespace analysis{
     {
         auto lowerOffsetParam = p.isolationWindow.cvParam(cv::MS_isolation_window_lower_offset);
         if (lowerOffsetParam.value.empty())
-            throw std::runtime_error(__FUNCTION__ " No isolation window lower offset m/z specified");
+            throw std::runtime_error("precursor_lower_offset() No isolation window lower offset m/z specified");
         double lowerOffset = lowerOffsetParam.valueAs<double>();
         if (lowerOffset <= 0.0)
-            throw std::runtime_error(__FUNCTION__ " Positive values expected for isolation window m/z offsets");
+            throw std::runtime_error("precursor_lower_offset() Positive values expected for isolation window m/z offsets");
         return lowerOffset;
     }
 
@@ -52,7 +52,7 @@ namespace analysis{
     {
         auto targetParam = p.isolationWindow.cvParam(cv::MS_isolation_window_target_m_z);
         if (targetParam.value.empty())
-            throw std::runtime_error(__FUNCTION__ " No isolation window target m/z specified");
+            throw std::runtime_error("precursor_target() No isolation window target m/z specified");
         return targetParam.valueAs<double>();
     }
 
@@ -246,7 +246,7 @@ namespace analysis{
         /// @return The processing method performed by this PrecursorMaskCodec
         virtual msdata::ProcessingMethod GetProcessingMethod() const = 0;
 
-        virtual ~IPrecursorMaskCodec() = 0 {}
+        virtual ~IPrecursorMaskCodec() {}
     };
 
     

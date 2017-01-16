@@ -29,7 +29,7 @@ namespace analysis
 
     void MatrixIO::GetWriteStream(ofstream& out, const string& filename)
     {
-        out = ofstream(filename, ios::out | ios::binary | ios::trunc);
+        out.open(filename, ios::out | ios::binary | ios::trunc);
     }
 
     void MatrixIO::WriteBinary(ofstream& out, boost::shared_ptr<MatrixType> matrix)
@@ -67,7 +67,7 @@ namespace analysis
 
     void MatrixIO::GetReadStream(ifstream& in, const string& filename)
     {
-        in = ifstream(filename, ios::in | ios::binary);
+        in.open(filename, ios::in | ios::binary);
     }
 
     void MatrixIO::ReadBinary(ifstream& in, boost::shared_ptr<MatrixType> matrix)

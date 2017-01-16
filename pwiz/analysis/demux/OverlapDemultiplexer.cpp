@@ -56,7 +56,7 @@ namespace analysis {
         assert(sl_);
         assert(pmc_);
         if (!sl_ || !pmc_)
-            throw runtime_error(__FUNCTION__ " Null pointer to SpectrumList and/or IPrecursorMaskCodec. MSXDemultiplexer may not have been initialized.");
+            throw runtime_error("BuildDeconvBlock() Null pointer to SpectrumList and/or IPrecursorMaskCodec. MSXDemultiplexer may not have been initialized.");
 
         // get the list of peaks to demultiplex
         Spectrum_const_ptr deconvSpectrum = sl_->spectrum(index, true);
@@ -133,7 +133,7 @@ namespace analysis {
         // Get retention time for scan to be deconvolved
         double deconvStartTime;
         if (!TryGetStartTime(*deconvSpectrum, deconvStartTime))
-            throw runtime_error(__FUNCTION__ " Tried to process an MS2 scan without retention times written.");
+            throw runtime_error("BuildDeconvBlock() Tried to process an MS2 scan without retention times written.");
 
         // Cache the data that will be used for interpolation
         vector<MatrixPtr> binnedIntensitiesCache;
@@ -149,7 +149,7 @@ namespace analysis {
             auto scan = scansInDeconv[matrixRow];
             vector<size_t> interpolationSpectraIndices;
             if (!FindNearbySpectra(interpolationSpectraIndices, sl_, scan, cyclesInBlock_, specPerCycle))
-                throw runtime_error(__FUNCTION__ " Not enough spectra to interpolate for the overlap.");
+                throw runtime_error("BuildDeconvBlock() Not enough spectra to interpolate for the overlap.");
 
             // Extract retention times and peak intensities for scan
             for (size_t i = 0; i < interpolationSpectraIndices.size(); ++i)
@@ -159,7 +159,7 @@ namespace analysis {
                 
                 double startTime;
                 if (!TryGetStartTime(*currentSpectrum, startTime))
-                    throw runtime_error(__FUNCTION__ " Tried to process an MS2 scan without retention times written.");
+                    throw runtime_error("BuildDeconvBlock() Tried to process an MS2 scan without retention times written.");
 
                 // Record scan time
                 (*scanTimesCache.back())[i] = startTime;
@@ -202,7 +202,7 @@ namespace analysis {
         demuxBlockExtra = max(0.0, demuxBlockExtra);
         auto numSpectraToFind = pmc_->GetSpectraPerCycle() + size_t(round(demuxBlockExtra * pmc_->GetSpectraPerCycle()));
         if (!FindNearbySpectra(muxIndices, sl_, indexToDemux, numSpectraToFind))
-            throw runtime_error(__FUNCTION__ " Not enough spectra to demultiplex this block");
+            throw runtime_error("GetMatrixBlockIndices() Not enough spectra to demultiplex this block");
     }
 
     const std::vector<size_t>& OverlapDemultiplexer::SpectrumIndices() const
@@ -214,10 +214,10 @@ namespace analysis {
         Eigen::Ref<const Eigen::MatrixXd> intensities, Ref<const VectorXd> scanTimes)
     {
         if (interpolatedIntensities.cols() != 1 && interpolatedIntensities.rows() != 1)
-            throw runtime_error(__FUNCTION__ " Output block is not a vector type");
+            throw runtime_error("InterpolateMuxRegion() Output block is not a vector type");
 
         if (interpolatedIntensities.size() != intensities.cols())
-            throw runtime_error(__FUNCTION__ " Output block does not have the expected size");
+            throw runtime_error("InterpolateMuxRegion() Output block does not have the expected size");
 
         //TODO parallelize this
         auto numTransitions = static_cast<size_t>(intensities.cols());

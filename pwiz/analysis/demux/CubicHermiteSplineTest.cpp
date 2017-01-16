@@ -225,7 +225,7 @@ int main(int argc, char* argv[])
 
     try
     {
-        auto tester = CubicHermiteSplineTest();
+        CubicHermiteSplineTest tester;
         tester.Run();
     }
     catch (exception& e)

@@ -30,113 +30,113 @@ using namespace DemuxTypes;
 class DemuxDebugRWTest {
 
 public:
-	
-	void Run()
-		{
-			SetUp();
-			ReadWriteTest();
-			TearDown();
-		}
+
+    void Run()
+    {
+        SetUp();
+        ReadWriteTest();
+        TearDown();
+    }
 
 protected:
-	
-	void ReadWriteTest()
-	{
-		{ // Use scope to ensure deletion of debug writer to close output file
-			DemuxDebugWriter debugWriter("DemuxDebugOutput_TestOut.log");
-			unit_assert(debugWriter.IsOpen());
 
-			for (auto i = 0; i < spectrumList_.size(); i += 3)
-			{
-				debugWriter.WriteDeconvBlock(i, spectrumList_.at(i), spectrumList_.at(i + 1), spectrumList_.at(i + 2));
-			}
-		}
+    void ReadWriteTest()
+    {
+        { // Use scope to ensure deletion of debug writer to close output file
+            DemuxDebugWriter debugWriter("DemuxDebugOutput_TestOut.log");
+            unit_assert(debugWriter.IsOpen());
 
-		vector<MatrixPtr> readSpectrumList;
+            for (size_t i = 0; i < spectrumList_.size(); i += 3)
+            {
+                debugWriter.WriteDeconvBlock(i, spectrumList_.at(i), spectrumList_.at(i + 1), spectrumList_.at(i + 2));
+            }
+        }
 
-		DemuxDebugReader debugReader("DemuxDebugOutput_TestOut.log");
-		unit_assert(debugReader.IsOpen());
-		unit_assert_operator_equal(3 * debugReader.NumBlocks(), spectrumList_.size());
+        vector<MatrixPtr> readSpectrumList;
 
-		size_t spectrumIndex;
-		for (auto i = 0; i < debugReader.NumBlocks(); ++i)
-		{
-			debugReader.ReadDeconvBlock(spectrumIndex, A_, B_, C_);
-			readSpectrumList.push_back(A_);
-			readSpectrumList.push_back(B_);
-			readSpectrumList.push_back(C_);
-		}
+        DemuxDebugReader debugReader("DemuxDebugOutput_TestOut.log");
+        unit_assert(debugReader.IsOpen());
+        unit_assert_operator_equal(3 * debugReader.NumBlocks(), spectrumList_.size());
 
-		unit_assert_operator_equal(readSpectrumList.size(), spectrumList_.size());
+        size_t spectrumIndex;
+        for (size_t i = 0; i < debugReader.NumBlocks(); ++i)
+        {
+            debugReader.ReadDeconvBlock(spectrumIndex, A_, B_, C_);
+            readSpectrumList.push_back(A_);
+            readSpectrumList.push_back(B_);
+            readSpectrumList.push_back(C_);
+        }
 
-		for (auto i = 0; i < readSpectrumList.size(); ++i)
-		{
-			unit_assert(spectrumList_.at(i)->isApprox(*readSpectrumList.at(i)));
-		}
-	}
+        unit_assert_operator_equal(readSpectrumList.size(), spectrumList_.size());
 
-	void SetUp() {
-		// Generate a list of spectra
-		A_ = boost::make_shared<MatrixType>(3, 4);
-		B_ = boost::make_shared<MatrixType>(4, 3);
-		C_ = boost::make_shared<MatrixType>(3, 3);
-		*A_ << -14.834628974133, -15.729764770592, 56.292839002858, 30.766363712773,
-			79.595747995303, -8.356622426449, 20.840197237638, 83.801095382748,
-			87.889866880787, 13.75327399942, 86.730656404499, -0.46420627108677;
+        for (size_t i = 0; i < readSpectrumList.size(); ++i)
+        {
+            unit_assert(spectrumList_.at(i)->isApprox(*readSpectrumList.at(i)));
+        }
+    }
 
-		*B_ << 23.588885367543, 49.667231605868, -86.700220187964,
-			51.392601274063, -77.511392742378, 23.389497301117,
-			-78.475202879706, -62.60684915327, -42.39206607192,
-			59.595164405161, 2.1025961854091, 65.787705013259;
+    void SetUp() {
+        // Generate a list of spectra
+        A_ = boost::make_shared<MatrixType>(3, 4);
+        B_ = boost::make_shared<MatrixType>(4, 3);
+        C_ = boost::make_shared<MatrixType>(3, 3);
+        *A_ << -14.834628974133, -15.729764770592, 56.292839002858, 30.766363712773,
+            79.595747995303, -8.356622426449, 20.840197237638, 83.801095382748,
+            87.889866880787, 13.75327399942, 86.730656404499, -0.46420627108677;
 
-		*C_ = *A_ * *B_;
+        *B_ << 23.588885367543, 49.667231605868, -86.700220187964,
+            51.392601274063, -77.511392742378, 23.389497301117,
+            -78.475202879706, -62.60684915327, -42.39206607192,
+            59.595164405161, 2.1025961854091, 65.787705013259;
 
-		spectrumList_.push_back(A_);
-		spectrumList_.push_back(B_);
-		spectrumList_.push_back(C_);
+        *C_ = *A_ * *B_;
 
-		MatrixPtr D = boost::make_shared<MatrixType>(3, 4);
-		MatrixPtr E = boost::make_shared<MatrixType>(4, 3);
-		MatrixPtr F = boost::make_shared<MatrixType>(3, 3);
+        spectrumList_.push_back(A_);
+        spectrumList_.push_back(B_);
+        spectrumList_.push_back(C_);
 
-		*D = 5 * A_->eval();
-		*E = 3 * B_->eval();
-		*F = *A_ * *B_;
+        MatrixPtr D = boost::make_shared<MatrixType>(3, 4);
+        MatrixPtr E = boost::make_shared<MatrixType>(4, 3);
+        MatrixPtr F = boost::make_shared<MatrixType>(3, 3);
 
-		spectrumList_.push_back(A_);
-		spectrumList_.push_back(B_);
-		spectrumList_.push_back(C_);
-	}
+        *D = 5 * A_->eval();
+        *E = 3 * B_->eval();
+        *F = *A_ * *B_;
 
-	 void TearDown()
-	 {
-		 remove("DemuxDebugOutput_TestOut.log");
-	 }
+        spectrumList_.push_back(A_);
+        spectrumList_.push_back(B_);
+        spectrumList_.push_back(C_);
+    }
 
-	vector<MatrixPtr> spectrumList_;
-	MatrixPtr A_;
-	MatrixPtr B_;
-	MatrixPtr C_;
+    void TearDown()
+    {
+        remove("DemuxDebugOutput_TestOut.log");
+    }
+
+    vector<MatrixPtr> spectrumList_;
+    MatrixPtr A_;
+    MatrixPtr B_;
+    MatrixPtr C_;
 };
 
 
 int main(int argc, char* argv[])
 {
-	TEST_PROLOG(argc, argv)
+    TEST_PROLOG(argc, argv)
 
-	try
-	{
-		auto tester = DemuxDebugRWTest();
-		tester.Run();
-	}
-	catch (exception& e)
-	{
-		TEST_FAILED(e.what())
-	}
-	catch (...)
-	{
-		TEST_FAILED("Caught unknown exception.")
-	}
+    try
+    {
+        DemuxDebugRWTest tester;
+        tester.Run();
+    }
+    catch (exception& e)
+    {
+        TEST_FAILED(e.what())
+    }
+    catch (...)
+    {
+        TEST_FAILED("Caught unknown exception.")
+    }
 
-	TEST_EPILOG
+    TEST_EPILOG
 }

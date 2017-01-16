@@ -66,7 +66,7 @@ namespace analysis{
         /// @return Returns the demux indices for the solved spectrum
         virtual const std::vector<size_t>& SpectrumIndices() const = 0;
 
-        virtual ~IDemultiplexer() = 0 {}
+        virtual ~IDemultiplexer() {}
     };
 } // namespace analysis
 } // namespace pwiz
