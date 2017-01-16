@@ -424,7 +424,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             private readonly RetentionScoreCalculatorSpec _calculator;
 
-            public RetentionScoreCalculatorSpec Calculator { get { return _calculator; } }
+            private RetentionScoreCalculatorSpec Calculator { get { return _calculator; } }
 
             private HashSet<int> _outlierIndexes;
 
@@ -438,8 +438,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 _graphPane = graphPane;
                 _targetIndex = targetIndex;
                 _originalIndex = originalIndex;
-                if(IsRunToRun && _originalIndex <0)
-                    throw new ArgumentException("Original index cannot not be negative if we are doing run to run regression");
+                if(IsRunToRun && _originalIndex < 0)
+                    throw new ArgumentException("Original index cannot not be negative if we are doing run to run regression"); // Not L10N
                 _bestResult = bestResult && !IsRunToRun;
                 _threshold = threshold;
                 _thresholdPrecision = thresholdPrecision;
@@ -1116,7 +1116,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 return sizeLabel.Height + 3;
             }
 
-            public string XAxisName
+            private string XAxisName
             {
                 get
                 {
@@ -1132,7 +1132,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
-            public string YAxisName
+            private string YAxisName
             {
                 get
                 {
