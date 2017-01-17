@@ -332,7 +332,13 @@ namespace pwiz.Skyline.Controls.Graphs
                     _missingPoints = new PointPairList();
                     if (MissingIndices != null)
                         foreach (var i in MissingIndices)
-                            _missingPoints.Add(0, YValues[i]);
+                        {
+                            var point = new PointPair(0, YValues[i]);
+                            string tooltip;
+                            if (Tooltips != null && Tooltips.TryGetValue(i, out tooltip))
+                                point.Tag = tooltip;
+                            _missingPoints.Add(point);
+                        }
                 }
                 return _missingPoints;
             }
@@ -348,7 +354,13 @@ namespace pwiz.Skyline.Controls.Graphs
                     _outlierPoints = new PointPairList();
                     if (OutlierIndices != null)
                         foreach (var i in OutlierIndices)
-                            _outlierPoints.Add(XValues[i], YValues[i]);
+                        {
+                            var point = new PointPair(XValues[i], YValues[i]);
+                            string tooltip;
+                            if (Tooltips != null && Tooltips.TryGetValue(i, out tooltip))
+                                point.Tag = tooltip;
+                            _outlierPoints.Add(point);
+                        }
                 }
                 return _outlierPoints;
             }
