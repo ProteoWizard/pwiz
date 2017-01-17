@@ -98,7 +98,7 @@ namespace analysis {
         }
 
         // Sort by distances from spectrum of interest in m/z space
-        sort(demuxWindowDistances.begin(), demuxWindowDistances.end(), [](pair<double, size_t>& left, pair<double, size_t>& right)
+        sort(demuxWindowDistances.begin(), demuxWindowDistances.end(), [](const pair<double, size_t>& left, const pair<double, size_t>& right)
         {
             return abs(left.first) < abs(right.first) && abs(abs(left.first) - abs(right.first)) > 10e-4;
         });
@@ -108,7 +108,7 @@ namespace analysis {
         bestMaskAverages.reserve(overlapRegionsInApprox_);
         copy(demuxWindowDistances.begin(), demuxWindowDistances.begin() + overlapRegionsInApprox_, back_inserter(bestMaskAverages));
 
-        sort(bestMaskAverages.begin(), bestMaskAverages.end(), [](pair<double, size_t>& left, pair<double, size_t>& right)
+        sort(bestMaskAverages.begin(), bestMaskAverages.end(), [](const pair<double, size_t>& left, const pair<double, size_t>& right)
         {
             return left.first < right.first && abs(left.first - right.first) > 10e-4;
         });
