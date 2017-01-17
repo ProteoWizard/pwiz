@@ -92,6 +92,8 @@ namespace pwiz.SkylineTestTutorial
 
             ForceMzml = true;   // 2-3x faster than raw files for this test.
 
+            LaunchDebuggerOnWaitForConditionTimeout = true; // TODO(bspratt) remove this once we understand why this test hangs on slower PCs
+
             AsSmallMoleculesTestMode = smallMoleculesTestMode;
 
             if (smallMoleculesTestMode !=  RefinementSettings.ConvertToSmallMoleculesMode.none)
