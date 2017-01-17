@@ -1199,6 +1199,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unique identifier of the peptide within the Skyline document. This can be used when writing external tools which call back into Skyline to change the selection, etc..
+        /// </summary>
+        internal static string PeptideDocumentLocation {
+            get {
+                return ResourceManager.GetString("PeptideDocumentLocation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Amino acid sequence annotated with only structural
         ///modification delta masses (e.g. AC[+57]GR)..
         /// </summary>
@@ -1233,6 +1242,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         internal static string PeptideResult {
             get {
                 return ResourceManager.GetString("PeptideResult", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unique identifier of the Peptide Result within the document. This can be used when writing interactive external tools..
+        /// </summary>
+        internal static string PeptideResultDocumentLocation {
+            get {
+                return ResourceManager.GetString("PeptideResultDocumentLocation", resourceCulture);
             }
         }
         

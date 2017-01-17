@@ -517,6 +517,9 @@ same precursor.</value>
   <data name="Peptide">
     <value>Peptide</value>
   </data>
+  <data name="PeptideDocumentLocation">
+    <value>Unique identifier of the peptide within the Skyline document. This can be used when writing external tools which call back into Skyline to change the selection, etc.</value>
+  </data>
   <data name="PeptideModifiedSequence">
     <value>Amino acid sequence annotated with only structural
 modification delta masses (e.g. AC[+57]GR).</value>
@@ -530,6 +533,9 @@ Edit menu</value>
   </data>
   <data name="PeptideResult">
     <value>Peptide Result</value>
+  </data>
+  <data name="PeptideResultDocumentLocation">
+    <value>Unique identifier of the Peptide Result within the document. This can be used when writing interactive external tools.</value>
   </data>
   <data name="PeptideResults">
     <value>Peptide Results</value>
