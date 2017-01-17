@@ -449,6 +449,9 @@ namespace pwiz.ProteowizardWrapper
                             _lockmassParameters.LockmassPositive ?? 0,
                             _lockmassParameters.LockmassNegative ?? 0,
                             _lockmassParameters.LockmassTolerance ?? LockMassParameters.LOCKMASS_TOLERANCE_DEFAULT);
+                    }
+                    if (IsWatersFile)
+                    {
                         if (_spectrumList.size() > 0 && !hasSrmSpectra)
                         {
                             // If the first seen spectrum has MS1 data and function > 1 assume it's the lockspray function, 
@@ -736,7 +739,7 @@ namespace pwiz.ProteowizardWrapper
             }
         }
 
-        private static double? GetMaxDriftTimeInList(SpectrumList spectrumList)
+        private double? GetMaxDriftTimeInList(SpectrumList spectrumList)
         {
             if (spectrumList == null || spectrumList.size() == 0)
                 return null;
@@ -749,7 +752,12 @@ namespace pwiz.ProteowizardWrapper
                 {
                     var dt = GetDriftTimeMsec(spectrum);
                     if (!dt.HasValue)
-                        return maxDrift;
+                    {
+                        if (IsWatersLockmassSpectrum(GetSpectrum(spectrum, i)))
+                            continue;  // In SONAR data, lockmass scan without drift info doesn't mean there's no drift info
+                        if (!maxDrift.HasValue)
+                            return null; // Assume that if first regular scan is without drift info, they are all
+                    }
                     if (!maxDrift.HasValue)
                     {
                         maxDrift = dt;
