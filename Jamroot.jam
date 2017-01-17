@@ -1232,7 +1232,6 @@ bcp.copy-boost-dependencies copy_boost_subset
 
     # scan all targets and their dependencies
     $(PWIZ_ROOT_PATH)/pwiz_tools/commandline//mstools
-    $(PWIZ_ROOT_PATH)/pwiz_tools/Bumbershoot//bumbershoot-bin.tar.bz2
 
   : # requirements
     <location>$(BOOST_SUBSET_PATH)/boost_$(BOOST_VERSION:J=_)
