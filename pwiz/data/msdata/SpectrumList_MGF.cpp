@@ -242,12 +242,18 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
                                 bal::split(charges, value, bal::is_any_of(" "));
                                 if (charges.size() > 1)
                                 {
-                                    BOOST_FOREACH(const string& charge, charges)
+                                    BOOST_FOREACH(string& charge, charges)
                                         if (charge != "and")
+                                        {
+                                            bal::trim_if(charge, bal::is_any_of("+-"));
                                             selectedIon.cvParams.push_back(CVParam(MS_possible_charge_state, lexical_cast<int>(charge)));
+                                        }
                                 }
                                 else
+                                {
+                                    bal::trim_if(value, bal::is_any_of("+-"));
                                     selectedIon.set(MS_charge_state, lexical_cast<int>(value));
+                                }
 				            }
                             else if (name == "RTINSECONDS")
 				            {
