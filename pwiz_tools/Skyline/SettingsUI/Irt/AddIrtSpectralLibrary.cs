@@ -62,8 +62,11 @@ namespace pwiz.Skyline.SettingsUI.Irt
             {
                 if (Source == SpectralLibrarySource.settings)
                     return (LibrarySpec)comboLibrary.SelectedItem;
-                
-                if (Path.GetExtension(textFilePath.Text) == ChromatogramLibrarySpec.EXT)
+
+                var ext = Path.GetExtension(textFilePath.Text);
+                if (ext == SpectrastSpec.EXT)
+                    return new SpectrastSpec("__internal__", textFilePath.Text); // Not L10N
+                else if (Path.GetExtension(textFilePath.Text) == ChromatogramLibrarySpec.EXT)
                     return new ChromatogramLibrarySpec("__internal__", textFilePath.Text); // Not L10N
 
                 return new BiblioSpecLiteSpec("__internal__", textFilePath.Text); // Not L10N
@@ -89,7 +92,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     message = TextUtil.LineSeparate(string.Format(Resources.AddIrtSpectralLibrary_OkDialog_The_file__0__appears_to_be_a_redundant_library, path),
                                                     Resources.AddIrtSpectralLibrary_OkDialog_Please_choose_a_non_redundant_library);
                 }
-                else if (!path.EndsWith(BiblioSpecLiteSpec.EXT) && !path.EndsWith(ChromatogramLibrarySpec.EXT))
+                else if (!path.EndsWith(BiblioSpecLiteSpec.EXT) && !path.EndsWith(ChromatogramLibrarySpec.EXT) && !path.EndsWith(SpectrastSpec.EXT))
                 {
                     message = TextUtil.LineSeparate(string.Format(Resources.AddIrtSpectralLibrary_OkDialog_The_file__0__is_not_a_BiblioSpec_or_Chromatogram_library, path),
                                                     Resources.AddIrtSpectralLibrary_OkDialog_Only_BiblioSpec_and_Chromatogram_libraries_contain_enough_retention_time_information_to_support_this_operation);
@@ -157,7 +160,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 CheckPathExists = true,
                 DefaultExt = BiblioSpecLiteSpec.EXT,
                 Filter = TextUtil.FileDialogFiltersAll(
-                    TextUtil.FileDialogFilter(Resources.AddIrtSpectralLibrary_btnBrowseFile_Click_Spectral_Libraries, BiblioSpecLiteSpec.EXT, ChromatogramLibrarySpec.EXT)
+                    TextUtil.FileDialogFilter(Resources.AddIrtSpectralLibrary_btnBrowseFile_Click_Spectral_Libraries,
+                                              BiblioSpecLiteSpec.EXT, ChromatogramLibrarySpec.EXT, SpectrastSpec.EXT)
                 )
             })
             {
