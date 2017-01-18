@@ -641,7 +641,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var spectra = settings.GetBestSpectra(lookupSequence, charge, lookupMods).Select(s => new SpectrumDisplayInfo(s)).ToList();
             // Showing redundant spectra is only supported for full-scan filtering when
             // the document has results files imported.
-            if (!settings.TransitionSettings.FullScan.IsEnabled || !settings.HasResults)
+            if ((!settings.TransitionSettings.FullScan.IsEnabled && !settings.PeptideSettings.Libraries.HasMidasLibrary) || !settings.HasResults)
                 return spectra;
 
             try

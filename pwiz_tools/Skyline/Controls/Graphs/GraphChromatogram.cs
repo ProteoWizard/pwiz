@@ -2142,8 +2142,8 @@ namespace pwiz.Skyline.Controls.Graphs
                                                   ExplicitMods lookupMods)
         {
             // Set any MS/MS IDs on the first graph item also
-            if (settings.TransitionSettings.FullScan.IsEnabled &&
-                settings.PeptideSettings.Libraries.IsLoaded)
+            if (settings.PeptideSettings.Libraries.IsLoaded &&
+                (settings.TransitionSettings.FullScan.IsEnabled || settings.PeptideSettings.Libraries.HasMidasLibrary))
             {
                 var nodeGroupsArray = nodeGroups.ToArray();
                 var transitionGroups = nodeGroupsArray.Select(nodeGroup => nodeGroup.TransitionGroup).ToArray();

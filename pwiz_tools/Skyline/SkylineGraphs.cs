@@ -1060,8 +1060,8 @@ namespace pwiz.Skyline
         {
             // Might need to update the selected MS/MS spectrum, if full-scan
             // filtering was used.
-            if (DocumentUI.Settings.TransitionSettings.FullScan.IsEnabled &&
-                    DocumentUI.Settings.HasResults)
+            if (DocumentUI.Settings.HasResults &&
+                (DocumentUI.Settings.TransitionSettings.FullScan.IsEnabled || DocumentUI.Settings.PeptideSettings.Libraries.HasMidasLibrary))
             {
                 if (e.Spectrum != null && e.IsUserAction)
                 {
@@ -1314,7 +1314,7 @@ namespace pwiz.Skyline
             var settings = DocumentUI.Settings;
             bool retentionPredict = (settings.PeptideSettings.Prediction.RetentionTime != null);
             bool peptideIdTimes = (settings.PeptideSettings.Libraries.HasLibraries &&
-                                   settings.TransitionSettings.FullScan.IsEnabled);
+                                   (settings.TransitionSettings.FullScan.IsEnabled || settings.PeptideSettings.Libraries.HasMidasLibrary));
             if (displayType != DisplayTypeChrom.base_peak && displayType != DisplayTypeChrom.tic)
             {
                 if (selectedTreeNode is TransitionTreeNode && GraphChromatogram.IsSingleTransitionDisplay)
