@@ -19,7 +19,6 @@
 
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
@@ -42,10 +41,6 @@ namespace pwiz.SkylineTest
         public void AaantivirusTestExclusion() // Intentional misspelling to encourage this as first test in nightlies
         {
             CheckDirectory(".");
-            if (RunPerfTests)
-            {
-                CheckDirectory(Path.Combine(PathEx.GetDownloadsPath(),"Perftests"));
-            }
         }
 
         private static void CheckDirectory(string directory)
