@@ -648,6 +648,10 @@ namespace pwiz.Skyline.Controls.Graphs
                         (_refine == refine || (refine && IsRefined()));
             }
 
+            public int TargetIndex { get { return _targetIndex; } }
+
+            public int OriginalIndex { get { return _originalIndex; } }
+
             public RetentionTimeRegression RegressionRefined
             {
                 get { return _regressionRefined ?? _regressionAll; }

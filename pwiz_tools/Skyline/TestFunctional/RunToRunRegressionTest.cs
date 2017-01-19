@@ -43,52 +43,62 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            var targetPeptideCounts = new[,]
+            {
+                {0, 22, 22, 22, 22}, 
+                {22, 0, 22, 22, 22}, 
+                {22, 22, 0, 22, 22}, 
+                {22, 22, 22, 0, 22}, 
+                {22, 22, 22, 22, 0}
+            };
 
-            //Load serialized regression statistics
-            IFormatter formatter = new BinaryFormatter();
-            Stream targetStream = new FileStream(TestFilesDir.GetTestPath("targetPeptides.bin"),
-                                      FileMode.Open,
-                                      FileAccess.Read,
-                                      FileShare.Read);
 
-            var targetPeptideCounts = (int[,])formatter.Deserialize(targetStream);
+            var originalPeptideCounts = new[,]
+            {
+                {0, 22, 22, 22, 22}, 
+                {22, 0, 22, 22, 22}, 
+                {22, 22, 0, 22, 22}, 
+                {22, 22, 22, 0, 22}, 
+                {22, 22, 22, 22, 0}
+            };
 
-            Stream originalStream = new FileStream(TestFilesDir.GetTestPath("originalPeptides.bin"),
-                                      FileMode.Open,
-                                      FileAccess.Read,
-                                      FileShare.Read);
-            var originalPeptideCounts = (int[,]) formatter.Deserialize(originalStream);
 
-            Stream rStream = new FileStream(TestFilesDir.GetTestPath("rValues.bin"),
-                                      FileMode.Open,
-                                      FileAccess.Read,
-                                      FileShare.Read);
-            var rValues = (double[,]) formatter.Deserialize(rStream);
+            var rValues = new[,]
+            {
+                {0, 0.999993931908946, 0.999843506239357, 0.999839232254387, 0.999834925925893},
+                {0.999993931908947, 0, 0.999843746240661, 0.999850167871986, 0.999845222422893},
+                {0.999843506239357, 0.99984374624066, 0, 0.999994147903928, 0.999995277589245},
+                {0.999839232254387, 0.999850167871986, 0.999994147903929, 0, 0.999998880406438},
+                {0.999834925925894, 0.999845222422893, 0.999995277589245, 0.999998880406438, 0}
+            };
 
-            Stream slopeStream = new FileStream(TestFilesDir.GetTestPath("slopes.bin"),
-                                      FileMode.Open,
-                                      FileAccess.Read,
-                                      FileShare.Read);
-            var slopes = (double[,]) formatter.Deserialize(slopeStream);
+            var slopes = new[,]
+            {
+                {0, 0.999707475441337, 1.00017889353965, 1.0006184891116, 1.00154337723693},
+                {1.00028047045787, 0, 1.00046572523814, 1.00091615389789, 1.00184067681074},
+                {0.999508231403589, 0.999222153920973, 0, 1.00043793880301, 1.00136810418741},
+                {0.999060582263086, 0.998785317132195, 0.999550553868999, 0, 1.00092750683297},
+                {0.998129388922859, 0.997853742557447, 0.998624333069067, 0.999071115527851, 0}
+            };
 
-            Stream interceptStream = new FileStream(TestFilesDir.GetTestPath("intercepts.bin"),
-                                      FileMode.Open,
-                                      FileAccess.Read,
-                                      FileShare.Read);
-            var intercepts = (double[,]) formatter.Deserialize(interceptStream);
 
-            Stream windowStream = new FileStream(TestFilesDir.GetTestPath("windows.bin"),
-                                      FileMode.Open,
-                                      FileAccess.Read,
-                                      FileShare.Read);
-            var windows = (double[,]) formatter.Deserialize(windowStream);
+            var intercepts = new[,]
+            {
+                {0, 0.0133084134167909, 0.056519079598754, 0.0422773381099439, 0.034396123070028},
+                {-0.0130393823593842, 0, 0.0433540454886234, 0.0288681051767803, 0.0209988978057503},
+                {-0.0494741792022388, -0.0363139773301882, 0, -0.0142038029294511, -0.0222056158333466},
+                {-0.0350274788274447, -0.0221133023480569, 0.014459895361707, 0, -0.00794784994821995},
+                {-0.0269327618715351, -0.0140162875262924, 0.0223867551509969, 0.00799065432053325, 0}
+            };
 
-            targetStream.Close();
-            originalStream.Close();
-            rStream.Close();
-            interceptStream.Close();
-            slopeStream.Close();
-            windowStream.Close();
+
+            var windows = new[,]
+            {
+                {0, 0.5, 0.913480355580205, 0.925869324756884, 0.938186549030894},
+                {0.5, 0, 0.913041225784304, 0.894083995681225, 0.908718421411426},
+                {0.913174040667638, 0.912473597676775, 0, 0.5, 0.5}, {0.925148280694587, 0.893131787005536, 0.5, 0, 0.5},
+                {0.936586172975179, 0.906908446828345, 0.5, 0.5, 0}
+            };
 
             var documentPath = TestFilesDir.GetTestPath("alpha-crystallin_data.sky");
             RunUI(() => SkylineWindow.OpenFile(documentPath));
@@ -169,7 +179,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(1, statistics.R, 10e-3);
                 Assert.AreEqual(1, regression.Conversion.Slope, 10e-3);
                 Assert.AreEqual(0, regression.Conversion.Intercept, 10e-3);
-                Assert.AreEqual(0.5, regression.TimeWindow);
+                Assert.AreEqual(0.5, regression.TimeWindow, 0.00001);
 
                 RunUI(() =>
                 {
@@ -226,12 +236,12 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(rValue, rValues[i, j], 0.00001);
             Assert.AreEqual(originalPeptideCount, targetPeptideCounts[j, i]);
             Assert.AreEqual(targetPeptideCount, originalPeptideCounts[j, i]);
-            Assert.AreEqual(rValue, rValues[i, j]);
-            Assert.AreEqual(slope, slopes[i, j]);
-            Assert.AreEqual(intercept, intercepts[i, j]);
+            Assert.AreEqual(rValue, rValues[i, j],0.00001);
+            Assert.AreEqual(slope, slopes[i, j], 0.00001);
+            Assert.AreEqual(intercept, intercepts[i, j], 0.00001);
             Assert.AreEqual(originalPeptideCount, originalPeptideCounts[i, j]);
             Assert.AreEqual(targetPeptideCount, targetPeptideCounts[i, j]);
-            Assert.AreEqual(window, windows[i, j]);
+            Assert.AreEqual(window, windows[i, j], 0.00001);
             return window;
         }
     }
