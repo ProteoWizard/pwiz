@@ -22,6 +22,9 @@
 
 #define PWIZ_SOURCE
 
+#if !defined(_MSC_VER) || defined(_WIN64)
+#define WITH_DEMUX
+#endif
 
 #include "SpectrumListFactory.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Filter.hpp"
@@ -39,7 +42,9 @@
 #include "pwiz/analysis/spectrum_processing/SpectrumList_LockmassRefiner.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_MetadataFixer.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_TitleMaker.hpp"
+#ifdef WITH_DEMUX
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Demux.hpp"
+#endif
 #include "pwiz/analysis/spectrum_processing/PrecursorMassFilter.hpp"
 #include "pwiz/analysis/spectrum_processing/ThresholdFilter.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_ZeroSamplesFilter.hpp"
@@ -788,6 +793,7 @@ SpectrumListPtr filterCreator_lockmassRefiner(const MSData& msd, const string& c
 }
 UsageInfo usage_lockmassRefiner = { "mz=<real> mzNegIons=<real (mz)> tol=<real (1.0 Daltons)>", "For Waters data, adjusts m/z values according to the specified lockmass m/z and tolerance. Distinct m/z value for negative ions is optional and defaults to the given mz value. For other data, currently does nothing." };
 
+#ifdef WITH_DEMUX
 SpectrumListPtr filterCreator_demux(const MSData& msd, const string& carg, pwiz::util::IterationListenerRegistry* ilr)
 {
     string arg = carg;
@@ -819,6 +825,7 @@ SpectrumListPtr filterCreator_demux(const MSData& msd, const string& carg, pwiz:
 }
 UsageInfo usage_demux = { "massError=<tolerance and units, eg 0.5Da (default 10ppm)> nnlsMaxIter=<int (50)> nnlsEps=<real (1e-10)> noWeighting=<bool (false)> demuxBlockExtra=<real (0)> variableFill=<bool (false)> noSumNormalize=<bool (false)> optimization=<(none)|overlap_only>",
     "Separates overlapping or MSX multiplexed spectra into several demultiplexed spectra by inferring from adjacent multiplexed spectra. Optionally handles variable fill times (for Thermo)." };
+#endif
 
 SpectrumListPtr filterCreator_precursorRefine(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
 {
@@ -1442,7 +1449,9 @@ JumpTableEntry jumpTable_[] =
     {"MS2Denoise", usage_MS2Denoise, filterCreator_MS2Denoise},
     {"MS2Deisotope", usage_MS2Deisotope, filterCreator_MS2Deisotope},
     {"ETDFilter", usage_ETDFilter, filterCreator_ETDFilter},
+#ifdef WITH_DEMUX
     {"demultiplex", usage_demux, filterCreator_demux},
+#endif
     {"chargeStatePredictor", usage_chargeStatePredictor, filterCreator_chargeStatePredictor},
     {"turbocharger", usage_chargeFromIsotope, filterCreator_chargeFromIsotope},
     {"activation", usage_activation, filterCreator_ActivationType},

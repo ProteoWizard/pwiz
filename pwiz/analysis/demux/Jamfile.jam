@@ -43,6 +43,7 @@ lib pwiz_analysis_demux
         <include>$(PWIZ_LIBRARIES_PATH)/CSpline
         #<library>/ext/boost//thread
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
+       #<define>_USE_DEMUX_DEBUG_WRITER
     : # default-build
     : # usage-requirements
         <include>$(PWIZ_LIBRARIES_PATH)/Eigen

@@ -57,6 +57,7 @@ lib pwiz_analysis_spectrum_processing_basic
         <library>$(PWIZ_ROOT_PATH)//svm
         <toolset>msvc:<cxxflags>/wd4510   # default constructor could not be generated
         <toolset>msvc:<cxxflags>/wd4610   # JumpTableEntry can never be instantiated - user defined constructor required
+        #<define>_USE_DEMUX_DEBUG_WRITER
     : # default-build
     : # usage-requirements
         <library>../../data/msdata//pwiz_data_msdata
@@ -167,10 +168,19 @@ run-if-exists SpectrumList_LockmassRefinerTest.cpp pwiz_analysis_spectrum_proces
     : # default-build
     ;
 
+rule build-demux ( properties * )
+{
+    if <toolset>msvc in $(properties) && ! <address-model>64 in $(properties)
+    {
+        return <build>no ;
+    }
+}
+
 run-if-exists SpectrumList_DemuxTest.cpp pwiz_analysis_spectrum_processing_basic
     : [ path.native $(PWIZ_ROOT_PATH)/pwiz/analysis/spectrum_processing/SpectrumList_DemuxTest.data/MsxTest.mzML ] # args
     : # input-files
     : # requirements
+        <conditional>@build-demux
     : SpectrumList_DemuxTest # target name
     : # default-build
     ;

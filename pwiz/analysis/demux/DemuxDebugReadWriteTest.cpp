@@ -58,7 +58,7 @@ protected:
         unit_assert(debugReader.IsOpen());
         unit_assert_operator_equal(3 * debugReader.NumBlocks(), spectrumList_.size());
 
-        size_t spectrumIndex;
+        uint64_t spectrumIndex;
         for (size_t i = 0; i < debugReader.NumBlocks(); ++i)
         {
             debugReader.ReadDeconvBlock(spectrumIndex, A_, B_, C_);
