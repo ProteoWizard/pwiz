@@ -56,6 +56,7 @@ InstrumentConfigurationPtr translateAsInstrumentConfiguration(InstrumentModel in
         case API3000:
         case API3200:
         case API4000:
+        case API4500:
         case API5000:
         case API5500:
         case API6500:
@@ -132,6 +133,7 @@ PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModel instrumentModel)
         case API3000:           return MS_API_3000;
         case API3200:           return MS_API_3200;
         case API4000:           return MS_API_4000;
+        case API4500:           return MS_Triple_Quad_4500;
         case API5000:           return MS_API_5000;
         case API5500:           return MS_Triple_Quad_5500;
         case API6500:           return MS_Triple_Quad_6500;

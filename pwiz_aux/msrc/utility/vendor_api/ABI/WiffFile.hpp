@@ -70,6 +70,7 @@ PWIZ_API_DECL enum InstrumentModel
     API3500QTrap,
     API4000,
     API4000QTrap,
+    API4500,
     API4500QTrap,
     API5000,
     API5500,
