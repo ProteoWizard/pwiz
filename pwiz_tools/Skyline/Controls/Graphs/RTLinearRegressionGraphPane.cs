@@ -395,7 +395,6 @@ namespace pwiz.Skyline.Controls.Graphs
             private readonly RTLinearRegressionGraphPane _graphPane;
             private readonly int _targetIndex;
             private readonly int _originalIndex; // set to -1 if we are using IRTs
-            private readonly AlignedRetentionTimes _alignedRetentionTimes; //only used if we are doing run to run 
             private readonly bool _bestResult;
             private readonly double _threshold;
             private readonly int? _thresholdPrecision;
@@ -528,70 +527,63 @@ namespace pwiz.Skyline.Controls.Graphs
 
 
                 _calculatorName = Settings.Default.RTCalculatorName;
-                RetentionScoreCalculatorSpec calc;
 
                 if (IsRunToRun)
                 {
-                    _alignedRetentionTimes = AlignedRetentionTimes.AlignLibraryRetentionTimes(targetTimesDict,
+                    _calculator = new DictionaryRetentionScoreCalculator(XmlNamedElement.NAME_INTERNAL, origTimesDict);
+                    var alignedRetentionTimes = AlignedRetentionTimes.AlignLibraryRetentionTimes(targetTimesDict,
                         origTimesDict, threshold,
                         () => false);
-                    calc = _alignedRetentionTimes.Calculator;
+                    if (alignedRetentionTimes != null)
+                    {
+                        _regressionAll = alignedRetentionTimes.Regression;
+                        _statisticsAll = alignedRetentionTimes.RegressionStatistics;
+                    }
                 }
                 else
                 {
-                    calc =
-                        !string.IsNullOrEmpty(_calculatorName)
+                    RetentionScoreCalculatorSpec calc = !string.IsNullOrEmpty(_calculatorName)
                             ? Settings.Default.GetCalculatorByName(Settings.Default.RTCalculatorName)
                             : null;
-                }
-                
-                if (IsRunToRun)
-                {
-                    _regressionAll = _alignedRetentionTimes.Regression;
-                    _statisticsAll = _alignedRetentionTimes.RegressionStatistics;
-                    _calculator = _alignedRetentionTimes.Calculator;
-                    /*
-                     _regressionRefined = _alignedRetentionTimes.RegressionRefined;
-                     _scoresRefined = _statisticsAll.ListHydroScores.ToArray();
-                     _timesRefined = _statisticsAll.ListRetentionTimes.ToArray();*/
-                }
-                else if (calc == null)
-                {
-                    // Initialize all calculators
-                    Settings.Default.RTScoreCalculatorList.Initialize(null);
-
-                    //This call will pick the best calculator, disqualifying any iRT Calcs that do not have
-                    //connected databases
-                    _regressionAll = RetentionTimeRegression.CalcRegression(XmlNamedElement.NAME_INTERNAL,
-                                                                            Settings.Default.RTScoreCalculatorList,
-                                                                            _targetTimes,
-                                                                            _scoreCache,
-                                                                            true,
-                                                                            out _statisticsAll,
-                                                                            out _calculator);
-                }
-                else
-                {
-                    // Initialize the one calculator
-                    calc = Settings.Default.RTScoreCalculatorList.Initialize(null, calc);
-
-                    _regressionAll = RetentionTimeRegression.CalcRegression(XmlNamedElement.NAME_INTERNAL,
-                                                                            new[] {calc},
-                                                                            _targetTimes,
-                                                                            _scoreCache,
-                                                                            true,
-                                                                            out _statisticsAll,
-                                                                            out _calculator);
-
-                    //If _regressionAll is null, it is safe to assume that the calculator is an iRT Calc with
-                    //its database disconnected.
-                    if(_regressionAll == null)
+                    if (calc == null)
                     {
-                        var tryIrtCalc = calc as RCalcIrt;
-                        //Only show an error message if the user specifically chooses this calculator.
-                        if (dataPrevious != null && !ReferenceEquals(calc, dataPrevious.Calculator) && tryIrtCalc != null)
+                        // Initialize all calculators
+                        Settings.Default.RTScoreCalculatorList.Initialize(null);
+
+                        //This call will pick the best calculator, disqualifying any iRT Calcs that do not have
+                        //connected databases
+                        _regressionAll = RetentionTimeRegression.CalcRegression(XmlNamedElement.NAME_INTERNAL,
+                            Settings.Default.RTScoreCalculatorList,
+                            _targetTimes,
+                            _scoreCache,
+                            true,
+                            out _statisticsAll,
+                            out _calculator);
+                    }
+                    else
+                    {
+                        // Initialize the one calculator
+                        calc = Settings.Default.RTScoreCalculatorList.Initialize(null, calc);
+
+                        _regressionAll = RetentionTimeRegression.CalcRegression(XmlNamedElement.NAME_INTERNAL,
+                            new[] {calc},
+                            _targetTimes,
+                            _scoreCache,
+                            true,
+                            out _statisticsAll,
+                            out _calculator);
+
+                        //If _regressionAll is null, it is safe to assume that the calculator is an iRT Calc with
+                        //its database disconnected.
+                        if (_regressionAll == null)
                         {
-                            throw new DatabaseNotConnectedException(tryIrtCalc);
+                            var tryIrtCalc = calc as RCalcIrt;
+                            //Only show an error message if the user specifically chooses this calculator.
+                            if (dataPrevious != null && !ReferenceEquals(calc, dataPrevious.Calculator) &&
+                                tryIrtCalc != null)
+                            {
+                                throw new DatabaseNotConnectedException(tryIrtCalc);
+                            }
                         }
                     }
                 }
