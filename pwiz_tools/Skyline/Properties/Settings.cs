@@ -1426,9 +1426,19 @@ namespace pwiz.Skyline.Properties
 
     public sealed class CollisionEnergyList : SettingsList<CollisionEnergyRegression>
     {
-        public override int RevisionIndexCurrent { get { return 6; } }
+        public override int RevisionIndexCurrent { get { return 7; } }
 
         public static CollisionEnergyRegression GetDefault()
+        {
+            var thermoRegressions = new[]
+                                {
+                                    new ChargeRegressionLine(2, 0.0339, 2.3597),
+                                    new ChargeRegressionLine(3, 0.0295, 1.5123)
+                                };
+            return new CollisionEnergyRegression("Thermo TSQ Quantiva", thermoRegressions); // Not L10N
+        }
+
+        public static CollisionEnergyRegression GetDefault0_6()
         {
             var thermoRegressions = new[]
                                 {
@@ -1483,7 +1493,7 @@ namespace pwiz.Skyline.Properties
                 case 2:    // v0.6 - fix
                     return new[]
                         {
-                            GetDefault(), 
+                            GetDefault0_6(), 
                             new CollisionEnergyRegression("Thermo TSQ Ultra", new [] // Not L10N
                                 {
                                     new ChargeRegressionLine(2, 0.036, 0.954),
@@ -1503,7 +1513,7 @@ namespace pwiz.Skyline.Properties
                 case 3:    // v1.1
                     return new[]
                         {
-                            GetDefault(), 
+                            GetDefault0_6(), 
                             new CollisionEnergyRegression("Thermo TSQ Ultra", new [] // Not L10N
                                 {
                                     new ChargeRegressionLine(2, 0.036, 0.954),
@@ -1528,7 +1538,7 @@ namespace pwiz.Skyline.Properties
                 case 4:    // v1.2
                     return new[]
                         {
-                            GetDefault(), 
+                            GetDefault0_6(), 
                             new CollisionEnergyRegression("Thermo TSQ Ultra", new [] // Not L10N
                                 {
                                     new ChargeRegressionLine(2, 0.036, 0.954),
@@ -1558,7 +1568,7 @@ namespace pwiz.Skyline.Properties
                 case 5:    // v2.5
                     return new[]
                         {
-                            GetDefault(), 
+                            GetDefault0_6(), 
                             new CollisionEnergyRegression("Thermo TSQ Ultra", new [] // Not L10N
                                 {
                                     new ChargeRegressionLine(2, 0.036, 0.954),
@@ -1585,7 +1595,7 @@ namespace pwiz.Skyline.Properties
                                     new ChargeRegressionLine(3, 0.036, -1.328)
                                 }),
                         };
-                default:    // v2.5.1 - add Shimadzu
+                case 6:    // v2.5.1 - add Shimadzu
                     {
                         var list5 = GetDefaults(5).ToList();
                         list5.Add(new CollisionEnergyRegression("Shimadzu QQQ", new[] // Not L10N
@@ -1594,6 +1604,12 @@ namespace pwiz.Skyline.Properties
                             new ChargeRegressionLine(3, 0.037, -0.8368), 
                         }));
                         return list5.ToArray();
+                    }
+                default:    // v3.6 patch - add Thermo TSQ Quantiva
+                    {
+                        var list6 = GetDefaults(6).ToList();
+                        list6.Insert(0, GetDefault());
+                        return list6.ToArray();
                     }
             }
         }

@@ -31,6 +31,7 @@ using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -95,7 +96,7 @@ namespace pwiz.SkylineTestFunctional
             const double precursorRTWindow = 4.567;
             const string note = "noted!";
 
-            var docEmpty = SkylineWindow.Document;
+            var docEmpty = NewDocument();
 
             TestToolServiceAccess();
             TestLabelsNoFormulas();
@@ -251,11 +252,7 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.Serializable(docOrig);
 
             // Reset
-            RunUI(() =>
-            {
-                SkylineWindow.NewDocument(true);
-                docOrig = SkylineWindow.Document;
-            });
+            docOrig = NewDocument();
 
             // Now a proper user data set
             var pasteDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
@@ -356,10 +353,7 @@ namespace pwiz.SkylineTestFunctional
                 "A,27-HC,C36H51H'6N2O3,135,1,1,heavy\r\n" +
                 "A,27-HC,C36H51H'6N2O3,181,1,1,heavy\r\n" +
                 "A,27-HC,C36H51H'6N2O3,215,1,1,heavy\r\n";
-            RunUI(() =>
-            {
-                SkylineWindow.NewDocument(true);
-            });
+            NewDocument();
             TestError(pasteText, String.Empty, columnOrderC);
             var docC = SkylineWindow.Document;
             Assert.AreEqual(1, docC.MoleculeGroupCount);
@@ -383,10 +377,7 @@ namespace pwiz.SkylineTestFunctional
                 "A,27-HC,C36H57N2O3,[M+],1,130,1,light\r\n" + 
                 "A,27-HC,C36H56N2O3,M+H,,181,1,light\r\n" +
                 "A,27-HC,C36H56N2O3[M+H],,,367,1,light\r\n" ;
-            RunUI(() =>
-            {
-                SkylineWindow.NewDocument(true);
-            });
+            NewDocument();
             TestError(pasteText, String.Empty, columnOrderC);
             docC = SkylineWindow.Document;
             Assert.AreEqual(1, docC.MoleculeGroupCount);
@@ -408,10 +399,7 @@ namespace pwiz.SkylineTestFunctional
                 "C36H57N2O3,[M+],1,130,1,light\r\n" +
                 "C36H56N2O3,M+H,,181,1,light\r\n" +
                 "C36H56N2O3[M+H],,,367,1,light\r\n";
-            RunUI(() =>
-            {
-                SkylineWindow.NewDocument(true);
-            });
+            NewDocument();
             TestError(pasteText, String.Empty, columnOrderC);
             docC = SkylineWindow.Document;
             Assert.AreEqual(1, docC.MoleculeGroupCount);
@@ -423,10 +411,7 @@ namespace pwiz.SkylineTestFunctional
                 "C36H56N2O3[M+H],,,367,1,light\r\n" +
                 "C36H56N2O3,M+2H,,81,2,light\r\n" +
                 "C36H56N2O3[M+2H],,,167,2,light\r\n";
-            RunUI(() =>
-            {
-                SkylineWindow.NewDocument(true);
-            });
+            NewDocument();
             TestError(pasteText, String.Empty, columnOrderC);
             docC = SkylineWindow.Document;
             Assert.AreEqual(1, docC.MoleculeGroupCount);
@@ -435,14 +420,25 @@ namespace pwiz.SkylineTestFunctional
 
         }
 
+        private static SrmDocument NewDocument()
+        {
+            RunUI(() =>
+            {
+                SkylineWindow.NewDocument(true);
+                SkylineWindow.ModifyDocument("Set Vantage CE", docInit =>
+                    docInit.ChangeSettings(docInit.Settings.ChangeTransitionPrediction(pred =>
+                            pred.ChangeCollisionEnergy(CollisionEnergyList.GetDefault0_6()))));
+            });
+            return SkylineWindow.Document;
+        }
+
         private void TestTransitionListArrangementAndReporting()
         {
             var saveColumnOrder = Settings.Default.CustomMoleculeTransitionInsertColumnsList;
 
             // Now test that we arrange the Targets tree as expected. 
             // (tests fix for Issue 373: Small molecules: Insert Transition list doesn't construct the tree properly)
-            RunUI(() => SkylineWindow.NewDocument(true));
-            var docOrig = SkylineWindow.Document;
+            var docOrig = NewDocument();
             var pasteDlg2 = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
             // small_molecule_paste_test.csv has non-standard column order (mz and formula swapped)
             var columnOrder = new[]
@@ -595,7 +591,7 @@ namespace pwiz.SkylineTestFunctional
 
             // And clean up after ourselves
             RunUI(() => documentGrid.Close());
-            RunUI(() => SkylineWindow.NewDocument(true));
+            NewDocument();
             RunUI(() => Settings.Default.CustomMoleculeTransitionInsertColumnsList = saveColumnOrder);
         }
 
@@ -608,8 +604,7 @@ namespace pwiz.SkylineTestFunctional
 
             var saveColumnOrder = Settings.Default.CustomMoleculeTransitionInsertColumnsList;
 
-            RunUI(() => SkylineWindow.NewDocument(true));
-            var docOrig = SkylineWindow.Document;
+            var docOrig = NewDocument();
             var pasteDlg2 = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
             //non-standard column order
             var columnOrder = new[]
@@ -691,8 +686,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(trans.Annotations.Note.StartsWith("not") || trans.Annotations.Note.StartsWith("macro"));
             }
 
-            RunUI(() => SkylineWindow.NewDocument(true));
-            docOrig = SkylineWindow.Document;
+            docOrig = NewDocument();
             var pasteDlg4 = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
             RunUI(() =>
             {
@@ -715,7 +709,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(trans.Annotations.Note, "macrobrew");
             }
 
-            RunUI(() => SkylineWindow.NewDocument(true));
+            NewDocument();
             RunUI(() => Settings.Default.CustomMoleculeTransitionInsertColumnsList = saveColumnOrder);
         }
 
@@ -776,7 +770,7 @@ namespace pwiz.SkylineTestFunctional
 
             // And check for handling of localization
             var textCSV3 = textCSV.Replace(',', TextUtil.GetCsvSeparator(LocalizationHelper.CurrentCulture)).Replace(".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator);
-            RunUI(() => SkylineWindow.NewDocument(true));
+            NewDocument();
             docOrig =  WaitForDocumentChange(pastedDoc);
             SkylineWindow.Invoke(new Action(() =>
             {
@@ -802,7 +796,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(textCSV4));
 
             // Check ability to paste into the Skyline window
-            RunUI(() => SkylineWindow.NewDocument(true));
+            NewDocument();
             docOrig = WaitForDocumentChange(pastedDoc);
             RunUI(() =>
             {
@@ -820,8 +814,7 @@ namespace pwiz.SkylineTestFunctional
 
             var saveColumnOrder = Settings.Default.CustomMoleculeTransitionInsertColumnsList;
 
-            RunUI(() => SkylineWindow.NewDocument(true));
-            var docOrig = SkylineWindow.Document;
+            var docOrig = NewDocument();
             var pasteDlg2 = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
             //non-standard column order
             var columnOrder = new[]
@@ -868,7 +861,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(2, pastedDoc.MoleculeGroupCount);
             Assert.AreEqual(4, pastedDoc.MoleculeCount);
             
-            RunUI(() => SkylineWindow.NewDocument(true));
+            NewDocument();
             RunUI(() => Settings.Default.CustomMoleculeTransitionInsertColumnsList = saveColumnOrder);
         }
 
