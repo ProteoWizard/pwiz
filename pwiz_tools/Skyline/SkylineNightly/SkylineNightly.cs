@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
@@ -146,6 +147,7 @@ namespace SkylineNightly
                     dt.ExecutionTimeLimit = new TimeSpan(maxHours, 30, 0);
                     dt.Enabled = true;
                     td.Settings.WakeToRun = true;
+                    td.Settings.Priority = ProcessPriorityClass.Normal;
 
                     // Add an action that will launch SkylineTester whenever the trigger fires
                     var assembly = Assembly.GetExecutingAssembly();
