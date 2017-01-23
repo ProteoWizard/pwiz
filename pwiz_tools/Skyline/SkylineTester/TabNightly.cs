@@ -116,6 +116,7 @@ namespace SkylineTester
                 TaskDefinition td = ts.NewTask();
                 td.RegistrationInfo.Description = "SkylineTester scheduled build/test";
                 td.Principal.LogonType = TaskLogonType.InteractiveToken;
+                td.Settings.Priority = ProcessPriorityClass.Normal; // Default is BelowNormal
 
                 // Add a trigger that will fire the task every other day
                 DailyTrigger dt = (DailyTrigger)td.Triggers.Add(new DailyTrigger { DaysInterval = 1 });
@@ -364,11 +365,17 @@ namespace SkylineTester
                 if (File.Exists(logFile))
                 {
                     string[] logLines;
-                    lock (MainWindow.CommandShell.LogLock)
+                    try
                     {
-                        logLines = File.ReadAllLines(logFile);
+                        lock (MainWindow.CommandShell.LogLock)
+                        {
+                            logLines = File.ReadAllLines(logFile);
+                        }
                     }
-
+                    catch (Exception)
+                    {
+                        logLines = new string[]{};// Log file is busy
+                    }
                     foreach (var line in logLines)
                     {
                         if (line.Length > 6 && line[0] == '[' && line[3] == ':' && line[6] == ']')
