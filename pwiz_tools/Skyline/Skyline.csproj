@@ -2358,12 +2358,13 @@
     </EmbeddedResource>
     <Content Include="Resources\Replicate.bmp" />
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\APOA1.sky" />
-    <EmbeddedResource Include="Model\Irt\StandardsDocuments\Biognosys.sky" />
+    <EmbeddedResource Include="Model\Irt\StandardsDocuments\Biognosys11.sky" />
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\Pierce.sky" />
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\Sigma.sky" />
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\CiRT.sky" />
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\Sciex.sky" />
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\RePLiCal.sky" />
+    <EmbeddedResource Include="Model\Irt\StandardsDocuments\Biognosys10.sky" />
     <None Include="Resources\StartPage\GroupedStudies_thumb.jpg" />
     <None Include="Resources\StartPage\DIA_thumb.jpg" />
     <None Include="Resources\StartPage\SmallMolecule_thumb.jpg" />

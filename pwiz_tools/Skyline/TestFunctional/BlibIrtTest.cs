@@ -53,7 +53,7 @@ namespace pwiz.SkylineTestFunctional
                 buildLibrary.LibraryName = "iRT standard peptides test";
                 buildLibrary.LibraryPath = outBlib;
                 buildLibrary.LibraryCutoff = 0.95;
-                buildLibrary.IrtStandard = IrtStandard.BIOGNOSYS;
+                buildLibrary.IrtStandard = IrtStandard.BIOGNOSYS_11;
                 buildLibrary.OkWizardPage();
 
                 buildLibrary.InputFileNames = new[] {searchResults};
@@ -64,7 +64,7 @@ namespace pwiz.SkylineTestFunctional
 
             // iRT calculator
             var editIrtCalc = ShowDialog<EditIrtCalcDlg>(peptideSettings.AddCalculator);
-            RunUI(() => editIrtCalc.IrtStandards = IrtStandard.BIOGNOSYS);
+            RunUI(() => editIrtCalc.IrtStandards = IrtStandard.BIOGNOSYS_11);
 
             var addLibrary = ShowDialog<AddIrtSpectralLibrary>(editIrtCalc.AddLibrary);
             RunUI(() =>
@@ -84,7 +84,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 import.BuildPepSearchLibControl.CutOffScore = 0.95;
                 import.BuildPepSearchLibControl.AddSearchFiles(new[] { searchResults });
-                import.BuildPepSearchLibControl.IrtStandards = IrtStandard.BIOGNOSYS;
+                import.BuildPepSearchLibControl.IrtStandards = IrtStandard.BIOGNOSYS_11;
             });
             VerifyAddIrts(ShowDialog<AddIrtPeptidesDlg>(() => import.ClickNextButton()));
             OkDialog(import, import.CancelDialog);
