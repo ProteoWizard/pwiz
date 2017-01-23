@@ -41,7 +41,8 @@ namespace pwiz.SkylineTestConnected.Results.RemoteApi
             Assert.AreEqual(1, cookieContainer.Count);
         }
 
-        [TestMethod]
+        // Disabled 20170123 because Skyline Chorus API is offline
+        //[TestMethod]
         public void TestChorusContents()
         {
             ChorusSession chorusSession = new ChorusSession();
@@ -52,7 +53,8 @@ namespace pwiz.SkylineTestConnected.Results.RemoteApi
         /// <summary>
         /// Tests that all instrument models are identified as something by ChorusSession.GetFileTypeFromInstrumentModel
         /// </summary>
-        [TestMethod]
+        // Disabled 20170123 because Skyline Chorus API is offline
+        //[TestMethod]
         public void TestChorusInstrumentModels()
         {
             var accounts = new[]
