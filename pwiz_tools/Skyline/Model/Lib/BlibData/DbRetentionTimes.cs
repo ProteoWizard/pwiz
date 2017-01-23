@@ -34,8 +34,8 @@ namespace pwiz.Skyline.Model.Lib.BlibData
         public virtual double? IonMobilityHighEnergyDriftTimeOffsetMsec { get; set; }  // Obsolete, see DriftTimeMsec, CollisionalCrossSectionSqA, HighEnergyDriftTimeOffsetMsec
         public virtual double? RetentionTime { get; set; }
         public virtual int BestSpectrum { get; set; }
-        public virtual double? DriftTimeMsec { get; set; }
-        public virtual double? CollisionalCrossSectionSqA { get; set; }
-        public virtual double? HighEnergyDriftTimeOffsetMsec { get; set; }
+        public virtual double DriftTimeMsec { get; set; }
+        public virtual double CollisionalCrossSectionSqA { get; set; }
+        public virtual double HighEnergyDriftTimeOffsetMsec { get; set; }
     }
 }

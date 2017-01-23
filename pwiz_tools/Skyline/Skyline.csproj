@@ -3745,7 +3745,9 @@
     <EmbeddedResource Include="Resources\PopupBtn.bmp" />
     <EmbeddedResource Include="Resources\Save.bmp" />
     <EmbeddedResource Include="Resources\up-pro32.bmp" />
-    <EmbeddedResource Include="Model\Lib\BlibData\mapping.xml" />
+    <EmbeddedResource Include="Model\Lib\BlibData\mapping.xml">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources\Fragment.bmp" />
     <EmbeddedResource Include="Resources\FragmentLib.bmp" />
     <EmbeddedResource Include="SettingsUI\Irt\ChangeIrtPeptidesDlg.resx">

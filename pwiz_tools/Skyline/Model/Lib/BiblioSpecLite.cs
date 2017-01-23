@@ -511,10 +511,11 @@ namespace pwiz.Skyline.Model.Lib
                         {
                             var refSpectraId = reader.GetInt32(0);
                             var spectrumSourceID = reader.GetInt32(1);
+                            var retentionTime = reader.GetValue(2) as double?;
                             // One-to-many from this entry in the RetentionTimes table to entries in the RefSpectra table
                             spectraIdFileIdTimes.Add(new KeyValuePair<int, KeyValuePair<int, double>>(
                                 refSpectraId, 
-                                new KeyValuePair<int, double>(spectrumSourceID, reader.GetDouble(2))) 
+                                new KeyValuePair<int, double>(spectrumSourceID, retentionTime.GetValueOrDefault())) 
                                 );
                             if (hasIonMobilityColumns)
                             {

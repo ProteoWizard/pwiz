@@ -35,6 +35,14 @@ namespace pwiz.Skyline.Model.Lib.BlibData
         public virtual char? NextAA { get; set; }
         public virtual short Copies { get; set; }
         public virtual ushort NumPeaks { get; set; }
+        public virtual double DriftTimeMsec { get; set; }
+        public virtual double CollisionalCrossSectionSqA { get; set; }
+        public virtual double DriftTimeHighEnergyOffsetMsec { get; set; }
+        public virtual double? RetentionTime { get; set; }
+        public virtual long? FileId { get; set; }
+        public virtual string SpecIdInFile { get; set; }
+        public virtual double Score { get; set; }
+        public virtual ushort ScoreType { get; set; }
         public virtual DbRefSpectraPeaks Peaks { get; set; }
         public virtual ICollection<DbModification> Modifications { get; set; }
         public virtual ICollection<DbRetentionTimes> RetentionTimes { get; set; }
