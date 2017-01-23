@@ -147,7 +147,19 @@ namespace SkylineNightly
                     dt.ExecutionTimeLimit = new TimeSpan(maxHours, 30, 0);
                     dt.Enabled = true;
                     td.Settings.WakeToRun = true;
-                    td.Settings.Priority = ProcessPriorityClass.Normal;
+
+                    // Using ProcessPriorityClass.High seems like cheating, but it's not:
+                    // A normal user-initiated app has
+                    //   TaskPriority = 8, I/O Priority = Normal, Memory Priority = 5
+                    // Default priority for Task Scheduler launch provides
+                    //   TaskPriority = 6, I/O Priority = Low, Memory Priority = 3
+                    //ProcessPriorityClass.Normal provides the launched task with
+                    //   TaskPriority = 8, I/O Priority = Normal, Memory Priority = 4 (not quite as good as user-launched)
+                    // ProcessPriorityClass.High provides SkylineNightly with
+                    //   TaskPriority = 13, I/O Priority = Normal, Memory Priority = 5
+                    // but gives SkylineTester the standard user values of
+                    //   TaskPriority = 8, I/O Priority = Normal, Memory Priority = 5
+                    td.Settings.Priority = ProcessPriorityClass.High; 
 
                     // Add an action that will launch SkylineTester whenever the trigger fires
                     var assembly = Assembly.GetExecutingAssembly();
