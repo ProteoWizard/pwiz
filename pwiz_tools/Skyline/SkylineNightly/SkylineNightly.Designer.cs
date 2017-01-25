@@ -168,10 +168,12 @@
             "Integration then Trunk (Dedicated)",
             "Trunk then Perf Tests (Dedicated)",
             "Trunk then Trunk again (Dedicated)",
-            "Release Branch with Perf Tests"});
+            "Release Branch with Perf Tests",
+            "Trunk then Release Branch (Dedicated)",
+            "Trunk then Release Branch with Perf Tests (Dedicated)"});
             this.comboBoxOptions.Location = new System.Drawing.Point(68, 113);
             this.comboBoxOptions.Name = "comboBoxOptions";
-            this.comboBoxOptions.Size = new System.Drawing.Size(223, 21);
+            this.comboBoxOptions.Size = new System.Drawing.Size(250, 21);
             this.comboBoxOptions.TabIndex = 12;
             this.comboBoxOptions.SelectedIndexChanged += new System.EventHandler(this.comboBoxOptions_SelectedIndexChanged);
             // 

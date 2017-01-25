@@ -35,6 +35,8 @@ namespace SkylineNightly
         public const string SCHEDULED_INTEGRATION_TRUNK_ARG = SCHEDULED_ARG + "_integration_and_trunk"; // Not L10N
         public const string SCHEDULED_PERFTEST_AND_TRUNK_ARG = SCHEDULED_ARG + "_perftests_and_trunk"; // Not L10N
         public const string SCHEDULED_TRUNK_AND_TRUNK_ARG = SCHEDULED_ARG + "_trunk_and_trunk"; // Not L10N
+        public const string SCHEDULED_TRUNK_AND_RELEASE_BRANCH_ARG = SCHEDULED_ARG + "_trunk_and_release_branch"; // Not L10N
+        public const string SCHEDULED_TRUNK_AND_RELEASE_BRANCH_PERFTESTS_ARG = SCHEDULED_ARG + "_trunk_and_release_branch_with_perftests"; // Not L10N
         public const string PARSE_ARG = "parse"; // Not L10N
         public const string POST_ARG = "post"; // Not L10N
 
@@ -52,6 +54,8 @@ namespace SkylineNightly
             SCHEDULED_TRUNK_AND_TRUNK_ARG,
             SCHEDULED_STRESSTESTS_ARG,
             SCHEDULED_RELEASE_BRANCH_PERFTESTS_ARG,
+            SCHEDULED_TRUNK_AND_RELEASE_BRANCH_ARG,
+            SCHEDULED_TRUNK_AND_RELEASE_BRANCH_PERFTESTS_ARG,
         };
 
         private static void PerformTests(Nightly.RunMode runMode, string arg, string decorateSrcDirName = null)
@@ -119,6 +123,18 @@ namespace SkylineNightly
                 // Run normal mode, then run it again
                 case SCHEDULED_TRUNK_AND_TRUNK_ARG:
                     PerformTests(Nightly.RunMode.trunk, Nightly.RunMode.trunk, arg);
+                    break;
+
+                // For machines that can test all day and all night:
+                // Run normal mode, then run release branch
+                case SCHEDULED_TRUNK_AND_RELEASE_BRANCH_ARG:
+                    PerformTests(Nightly.RunMode.trunk, Nightly.RunMode.release, arg);
+                    break;
+
+                // For machines that can test all day and all night:
+                // Run normal mode, then run release branch perf tests
+                case SCHEDULED_TRUNK_AND_RELEASE_BRANCH_PERFTESTS_ARG:
+                    PerformTests(Nightly.RunMode.trunk, Nightly.RunMode.release_perf, arg);
                     break;
 
                 case SCHEDULED_PERFTESTS_ARG:
