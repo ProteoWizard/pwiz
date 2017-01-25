@@ -28,7 +28,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("msstatstest.sky")));
             var doc = WaitForDocumentLoaded();
             var exported = TestFilesDir.GetTestPath("export.blib");
-            Skyline.SkylineWindow.ExportSpectralLibrary(SkylineWindow.Document, exported, null);
+            Skyline.SkylineWindow.ExportSpectralLibrary(SkylineWindow.DocumentFilePath, SkylineWindow.Document, exported, null);
             Assert.IsTrue(File.Exists(exported));
 
             var refSpectra = new List<DbRefSpectra>();

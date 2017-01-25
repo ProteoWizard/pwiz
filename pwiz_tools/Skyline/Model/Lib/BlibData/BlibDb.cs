@@ -195,8 +195,10 @@ namespace pwiz.Skyline.Model.Lib.BlibData
 
         private DbRefSpectra RefSpectrumFromPeaks(ISession session, SpectrumMzInfo spectrum, IDictionary<string, long> sourceFiles)
         {
+            if (string.IsNullOrEmpty(spectrum.SourceFile))
+                throw new InvalidDataException("Spectrum must have a source file"); // Not L10N
+
             var peaksInfo = spectrum.SpectrumPeaks;
-            var bestSpectrum = spectrum.RetentionTimes != null ? spectrum.RetentionTimes.FirstOrDefault(s => s.Item3) : null;
             var refSpectra = new DbRefSpectra
             {
                 PeptideSeq = FastaSequence.StripModifications(spectrum.Key.Sequence),
@@ -205,8 +207,8 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 PeptideModSeq = spectrum.Key.Sequence,
                 Copies = 1,
                 NumPeaks = (ushort)peaksInfo.Peaks.Length,
-                RetentionTime = bestSpectrum != null ? (double?)bestSpectrum.Item2 : null,
-                FileId = bestSpectrum != null ? (long?)GetSpectrumSourceId(session, bestSpectrum.Item1, sourceFiles) : null,
+                RetentionTime = spectrum.RetentionTime.GetValueOrDefault(),
+                FileId = GetSpectrumSourceId(session, spectrum.SourceFile, sourceFiles),
                 SpecIdInFile = null,
                 Score = 0.0,
                 ScoreType = 0
@@ -224,11 +226,14 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             {
                 foreach (var rt in spectrum.RetentionTimes)
                 {
+                    if (string.IsNullOrEmpty(rt.Item1))
+                        throw new InvalidDataException("Spectrum must have a source file"); // Not L10N
+
                     refSpectra.RetentionTimes.Add(new DbRetentionTimes
                     {
                         BestSpectrum = rt.Item3 ? 1 : 0,
                         RetentionTime = rt.Item2,
-                        SpectrumSourceId = !string.IsNullOrEmpty(rt.Item1) ? GetSpectrumSourceId(session, rt.Item1, sourceFiles) : default(long),
+                        SpectrumSourceId = GetSpectrumSourceId(session, rt.Item1, sourceFiles),
                         RedundantRefSpectraId = -1
                     });
                 }
@@ -238,8 +243,8 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 refSpectra.RetentionTimes.Add(new DbRetentionTimes
                 {
                     BestSpectrum = 1,
-                    RetentionTime = null,
-                    SpectrumSourceId = default(long),
+                    RetentionTime = refSpectra.RetentionTime,
+                    SpectrumSourceId = refSpectra.FileId.GetValueOrDefault(),
                     RedundantRefSpectraId = -1
                 });
             }

@@ -1511,8 +1511,10 @@ namespace pwiz.Skyline.Model.Lib
     /// </summary>
     public class SpectrumMzInfo
     {
+        public string SourceFile { get; set; }
         public LibKey Key { get; set; }
         public double PrecursorMz { get; set; }
+        public double? RetentionTime { get; set; }
         public IsotopeLabelType Label { get; set; }
         public SpectrumPeaksInfo SpectrumPeaks { get; set; }
         public List<Tuple<string, double, bool>> RetentionTimes { get; set; } // (File, RT, IsBest)
@@ -1546,9 +1548,11 @@ namespace pwiz.Skyline.Model.Lib
             var newPeaks = peaks.Concat(peaksOther).ToArray();
             return new SpectrumMzInfo
             {
+                SourceFile = infoOther.SourceFile,
                 Key = infoOther.Key,
                 Label = infoOther.Label,
                 PrecursorMz = infoOther.PrecursorMz,
+                RetentionTime = infoOther.RetentionTime,
                 SpectrumPeaks = new SpectrumPeaksInfo(newPeaks)
             };
         }
@@ -1579,15 +1583,16 @@ namespace pwiz.Skyline.Model.Lib
             var spectrumMzInfos = new List<SpectrumMzInfo>();
             foreach (var key in library.Keys)
             {
-                SpectrumPeaksInfo peaks;
-                if (!library.TryLoadSpectrum(key, out peaks))
+                var info = library.GetSpectra(key, null, LibraryRedundancy.best).FirstOrDefault();
+                if (info == null)
                 {
                     throw new IOException(string.Format(Resources.SpectrumMzInfo_GetInfoFromLibrary_Library_spectrum_for_sequence__0__is_missing_, key.Sequence));
                 }
                 spectrumMzInfos.Add(new SpectrumMzInfo
                 {
+                    SourceFile = info.FileName,
                     Key = key,
-                    SpectrumPeaks = peaks
+                    SpectrumPeaks = info.SpectrumPeaksInfo
                 });
             }
             return spectrumMzInfos;

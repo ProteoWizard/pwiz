@@ -1194,7 +1194,7 @@ namespace pwiz.Skyline.Model
             }
 
             IdentityPath nextAdd;
-            peptideGroups = importer.Import(progressMonitor, out irtPeptides, out librarySpectra, out errorList).ToList();
+            peptideGroups = importer.Import(progressMonitor, inputs.InputFilename, out irtPeptides, out librarySpectra, out errorList).ToList();
             var docNew = AddPeptideGroups(peptideGroups, false, to, out firstAdded, out nextAdd);
             var pepModsNew = importer.GetModifications(docNew);
             if (!ReferenceEquals(pepModsNew, Settings.PeptideSettings.Modifications))

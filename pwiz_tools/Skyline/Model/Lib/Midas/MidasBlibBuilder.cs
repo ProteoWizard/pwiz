@@ -73,6 +73,7 @@ namespace pwiz.Skyline.Model.Lib.Midas
                     if (bestSpectrum != null)
                     {
                         bestSpectra.Add(new SpectrumMzInfo {
+                            SourceFile = bestSpectrum.ResultsFile.FilePath,
                             PrecursorMz = bestSpectrum.PrecursorMz,
                             SpectrumPeaks = _library.LoadSpectrum(bestSpectrum),
                             Key = new LibKey(nodePep.ModifiedSequence, nodeTranGroup.PrecursorCharge),

@@ -706,6 +706,7 @@ namespace pwiz.Skyline.EditUI
                     var importer = new MassListImporter(document, inputs);
                     // TODO: support long-wait broker
                     peptideGroupDocNodes = importer.Import(null,
+                        inputs.InputFilename,
                         TRANSITION_LIST_COL_INDICES,
                         dictNameSeq,
                         out irtPeptides,

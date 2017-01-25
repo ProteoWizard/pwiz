@@ -1239,7 +1239,7 @@ namespace pwiz.Skyline
                             if (buildMidas)
                                 new MidasBlibBuilder(Document, midasLib, dlg.FileName).BuildLibrary(monitor);
                             else
-                                ExportSpectralLibrary(Document, dlg.FileName, monitor);
+                                ExportSpectralLibrary(DocumentFilePath, Document, dlg.FileName, monitor);
                         });
                     }
                 }
@@ -1250,7 +1250,7 @@ namespace pwiz.Skyline
             }
         }
 
-        public static void ExportSpectralLibrary(SrmDocument document, string path, IProgressMonitor progressMonitor)
+        public static void ExportSpectralLibrary(string sourceFile, SrmDocument document, string path, IProgressMonitor progressMonitor)
         {
             const string name = "exported"; // Not L10N
             var spectra = new Dictionary<LibKey, SpectrumMzInfo>();
@@ -1262,7 +1262,7 @@ namespace pwiz.Skyline
                     {
                         for (var i = 0; i < document.Settings.MeasuredResults.Chromatograms.Count; i++)
                         {
-                            processTransitionGroup(spectra, document, nodePep, nodeTranGroup, i);
+                            processTransitionGroup(sourceFile, spectra, document, nodePep, nodeTranGroup, i);
                         }
                     }
                 }
@@ -1274,7 +1274,7 @@ namespace pwiz.Skyline
             }
         }
 
-        private static void processTransitionGroup(IDictionary<LibKey, SpectrumMzInfo> spectra,
+        private static void processTransitionGroup(string sourceFile, IDictionary<LibKey, SpectrumMzInfo> spectra,
             SrmDocument document, PeptideDocNode nodePep, TransitionGroupDocNode nodeTranGroup, int replicateIndex)
         {
             var sequence = document.Settings.GetPrecursorCalc(nodeTranGroup.TransitionGroup.LabelType, nodePep.ExplicitMods).GetModifiedSequence(nodePep.Peptide.Sequence, false);
@@ -1314,6 +1314,7 @@ namespace pwiz.Skyline
             {
                 spectrumMzInfo = new SpectrumMzInfo
                 {
+                    SourceFile = sourceFile,
                     Key = key,
                     PrecursorMz = nodeTranGroup.PrecursorMz,
                     SpectrumPeaks = new SpectrumPeaksInfo(mi.ToArray()),
