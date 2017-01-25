@@ -187,7 +187,7 @@
     <value>13</value>
   </data>
   <data name="comboStandardType.ToolTip" xml:space="preserve">
-    <value>The type to use as the internal stadard, or the denominator
+    <value>The type to use as the internal standard, or the denominator
 in peak area ratios.</value>
   </data>
   <data name="&gt;&gt;comboStandardType.Name" xml:space="preserve">
@@ -289,7 +289,7 @@ structure of the peptide.</value>
     <value>14</value>
   </data>
   <data name="listStandardTypes.ToolTip" xml:space="preserve">
-    <value>The types to use as internal stadards, or the denominators
+    <value>The types to use as internal standards, or the denominators
 in peak area ratios calculated for other types.</value>
   </data>
   <data name="&gt;&gt;listStandardTypes.Name" xml:space="preserve">

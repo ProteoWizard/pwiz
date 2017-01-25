@@ -366,7 +366,7 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
-        /// Calculates the stadard deviation (sqrt(variance)) of the set
+        /// Calculates the standard deviation (sqrt(variance)) of the set
         /// of numbers.
         /// </summary>
         /// <returns>Standard deviation</returns>
@@ -376,7 +376,7 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
-        /// Calculates the stadard deviation (sqrt(variance)) of the set
+        /// Calculates the standard deviation (sqrt(variance)) of the set
         /// of numbers as a sample of an entire population.  Variance uses n-1.
         /// </summary>
         /// <returns>Standard deviation</returns>
@@ -386,7 +386,7 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
-        /// Calculates the stadard deviation (sqrt(variance)) of the set
+        /// Calculates the standard deviation (sqrt(variance)) of the set
         /// of numbers as an entire population.  Variance uses n.
         /// </summary>
         /// <returns>Standard deviation</returns>
@@ -396,7 +396,7 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
-        /// Calculates the stadard deviation (sqrt(variance)) of the set
+        /// Calculates the standard deviation (sqrt(variance)) of the set
         /// of numbers from a weighted mean.
         /// </summary>
         /// <param name="weights">The weights</param>
@@ -418,7 +418,7 @@ namespace pwiz.Skyline.Util
         /// The standard error of the set of numbers around a weighted mean.
         /// </summary>
         /// <param name="weights">The weights</param>
-        /// <returns>Stadard error around weighted mean</returns>
+        /// <returns>standard error around weighted mean</returns>
         public double StdErr(Statistics weights)
         {
             return StdDev(weights)/Math.Sqrt(_list.Length);
