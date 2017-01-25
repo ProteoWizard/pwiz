@@ -22,6 +22,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
 using Timer = System.Windows.Forms.Timer;
@@ -42,6 +43,15 @@ namespace SkylineTester
         public DateTime RunStartTime { get; set; }
         public readonly object LogLock = new object();
 
+        /// <summary>Checks whether our child process is being debugged.</summary>
+        /// From https://www.codeproject.com/articles/670193/csharp-detect-if-debugger-is-attached
+        /// The "remote" in CheckRemoteDebuggerPresent does not imply that the debugger
+        /// necessarily resides on a different computer; instead, it indicates that the 
+        /// debugger resides in a separate and parallel process.
+        /// Use the IsDebuggerPresent function to detect whether the calling process 
+        /// is running under the debugger.
+        [DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true)]
+        static extern bool CheckRemoteDebuggerPresent(IntPtr hProcess, ref bool isDebuggerPresent);
 
         private string _workingDirectory;
         private readonly List<string> _commands = new List<string>();
@@ -351,6 +361,18 @@ namespace SkylineTester
             // ReSharper disable once EmptyGeneralCatchClause
             catch (Exception)
             {
+            }
+        }
+
+        public bool IsDebuggerAttached 
+        {
+            get
+            {
+                if (_process == null)
+                    return false;
+                var isDebuggerAttached=false;
+                CheckRemoteDebuggerPresent(_process.Handle, ref isDebuggerAttached);
+                return isDebuggerAttached;
             }
         }
 

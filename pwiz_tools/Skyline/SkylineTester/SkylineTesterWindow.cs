@@ -459,6 +459,17 @@ namespace SkylineTester
 
         protected override void OnClosing(CancelEventArgs e)
         {
+            // If child process is attached to debugger, don't shut down without asking
+            if (commandShell.IsDebuggerAttached)
+            {
+                var message = string.Format("The currently running test is attached to a debugger.  Are you sure you want to close {0}?", Text);
+                if (MessageBox.Show(message, Text, MessageBoxButtons.OKCancel) != DialogResult.OK)
+                {
+                    e.Cancel = true;
+                    return;
+                }
+            }
+
             // If there are tests running, check with user before actually shutting down.
             if (_runningTab != null)
             {
