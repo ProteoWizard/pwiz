@@ -39,4 +39,11 @@ public class ResultFileData {
     public void setTransitionAreas(String isotopeLabelType, TransitionAreas transitionAreas) {
         transitionAreasByLabel.put(isotopeLabelType, transitionAreas);
     }
+
+    @Override
+    public String toString() {
+        return "ResultFileData{" +
+                "transitionAreasByLabel=" + transitionAreasByLabel +
+                '}';
+    }
 }

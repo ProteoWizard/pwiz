@@ -41,6 +41,7 @@ namespace IDPicker {
 
 using namespace System;
 using namespace System::Collections::Generic;
+using namespace pwiz::CLI::chemistry;
 
 
 /// encapsulates IDPicker's filtering functions
@@ -63,6 +64,7 @@ public ref struct Filterer
         property int MinSpectra;
         property int MinAdditionalPeptides;
         property bool GeneLevelFiltering;
+        property MZTolerance^ PrecursorMzTolerance;
 
         property int MinSpectraPerDistinctMatch;
         property int MinSpectraPerDistinctPeptide;

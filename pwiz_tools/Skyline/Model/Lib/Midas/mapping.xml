@@ -21,6 +21,8 @@
     <many-to-one name="ResultsFile" column="ResultsFileId" index="idxSpecResultsFile" not-null="true"/>
     <property name="PrecursorMz" not-null="true"/>
     <property name="MatchedPrecursorMz" />
+    <property name="DocumentPeptide" />
+    <property name="DocumentPrecursorCharge" />
     <property name="RetentionTime" not-null="true"/>
     <property name="MzBytes"/>
     <property name="IntensityBytes"/>

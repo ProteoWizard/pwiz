@@ -22,6 +22,9 @@
 
 #define PWIZ_SOURCE
 
+#if !defined(_MSC_VER) || defined(_WIN64)
+#define WITH_DEMUX
+#endif
 
 #include "SpectrumListFactory.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Filter.hpp"
@@ -39,6 +42,9 @@
 #include "pwiz/analysis/spectrum_processing/SpectrumList_LockmassRefiner.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_MetadataFixer.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_TitleMaker.hpp"
+#ifdef WITH_DEMUX
+#include "pwiz/analysis/spectrum_processing/SpectrumList_Demux.hpp"
+#endif
 #include "pwiz/analysis/spectrum_processing/PrecursorMassFilter.hpp"
 #include "pwiz/analysis/spectrum_processing/ThresholdFilter.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_ZeroSamplesFilter.hpp"
@@ -69,6 +75,8 @@ inline const char* cppTypeToNaturalLanguage(unsigned long T) { return "a positiv
 inline const char* cppTypeToNaturalLanguage(float T) { return "a real number"; }
 inline const char* cppTypeToNaturalLanguage(double T) { return "a real number"; }
 inline const char* cppTypeToNaturalLanguage(bool T) { return "true or false"; }
+inline const char* cppTypeToNaturalLanguage(const string& T) { return "some text"; }
+inline const char* cppTypeToNaturalLanguage(const MZTolerance& T) { return "a mass tolerance (tolerance and units (ppm or Da)"; }
 
 
 /// parses a lexical-castable key=value pair from a string of arguments which may also include non-key-value strings;
@@ -777,13 +785,47 @@ SpectrumListPtr filterCreator_lockmassRefiner(const MSData& msd, const string& c
 
     if (lockmassMz <= 0 || lockmassTolerance <= 0 || lockmassMzNegIons <= 0)
     {
-        cerr << "lockmassMz and lockmassTolerance must be postive real numbers" << endl;
+        cerr << "lockmassMz and lockmassTolerance must be positive real numbers" << endl;
         return SpectrumListPtr();
     }
 
     return SpectrumListPtr(new SpectrumList_LockmassRefiner(msd.run.spectrumListPtr, lockmassMz, lockmassMzNegIons, lockmassTolerance));
 }
 UsageInfo usage_lockmassRefiner = { "mz=<real> mzNegIons=<real (mz)> tol=<real (1.0 Daltons)>", "For Waters data, adjusts m/z values according to the specified lockmass m/z and tolerance. Distinct m/z value for negative ions is optional and defaults to the given mz value. For other data, currently does nothing." };
+
+#ifdef WITH_DEMUX
+SpectrumListPtr filterCreator_demux(const MSData& msd, const string& carg, pwiz::util::IterationListenerRegistry* ilr)
+{
+    string arg = carg;
+
+    SpectrumList_Demux::Params demuxParams;
+    demuxParams.massError = parseKeyValuePair<MZTolerance>(arg, "massError=", MZTolerance(10, MZTolerance::PPM));
+    demuxParams.nnlsMaxIter = (int) parseKeyValuePair<unsigned int>(arg, "nnlsMaxIter=", 50);
+    demuxParams.nnlsEps = parseKeyValuePair<double>(arg, "nnlsEps=", 1e-10);
+    demuxParams.applyWeighting = !parseKeyValuePair<bool>(arg, "noWeighting=", false);
+    demuxParams.demuxBlockExtra = parseKeyValuePair<double>(arg, "demuxBlockExtra=", 0);
+    demuxParams.variableFill = parseKeyValuePair<bool>(arg, "variableFill=", false);
+    demuxParams.regularizeSums = !parseKeyValuePair<bool>(arg, "noSumNormalize=", false);
+    string optimization = parseKeyValuePair<string>(arg, "optimization=", "none");
+    bal::trim(arg);
+    if (!arg.empty())
+        throw runtime_error("[demultiplex] unhandled text remaining in argument string: \"" + arg + "\"");
+
+    if (demuxParams.massError.value <= 0 ||
+        demuxParams.nnlsEps <= 0 ||
+        demuxParams.demuxBlockExtra < 0)
+    {
+        cerr << "massError, nnlsEps must be positive real numbers; demuxBlockExtra must be a positive real number or 0" << endl;
+        return SpectrumListPtr();
+    }
+
+    demuxParams.optimization = SpectrumList_Demux::Params::stringToOptimization(optimization);
+
+    return SpectrumListPtr(new SpectrumList_Demux(msd.run.spectrumListPtr, demuxParams));
+}
+UsageInfo usage_demux = { "massError=<tolerance and units, eg 0.5Da (default 10ppm)> nnlsMaxIter=<int (50)> nnlsEps=<real (1e-10)> noWeighting=<bool (false)> demuxBlockExtra=<real (0)> variableFill=<bool (false)> noSumNormalize=<bool (false)> optimization=<(none)|overlap_only>",
+    "Separates overlapping or MSX multiplexed spectra into several demultiplexed spectra by inferring from adjacent multiplexed spectra. Optionally handles variable fill times (for Thermo)." };
+#endif
 
 SpectrumListPtr filterCreator_precursorRefine(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
 {
@@ -1407,6 +1449,9 @@ JumpTableEntry jumpTable_[] =
     {"MS2Denoise", usage_MS2Denoise, filterCreator_MS2Denoise},
     {"MS2Deisotope", usage_MS2Deisotope, filterCreator_MS2Deisotope},
     {"ETDFilter", usage_ETDFilter, filterCreator_ETDFilter},
+#ifdef WITH_DEMUX
+    {"demultiplex", usage_demux, filterCreator_demux},
+#endif
     {"chargeStatePredictor", usage_chargeStatePredictor, filterCreator_chargeStatePredictor},
     {"turbocharger", usage_chargeFromIsotope, filterCreator_chargeFromIsotope},
     {"activation", usage_activation, filterCreator_ActivationType},

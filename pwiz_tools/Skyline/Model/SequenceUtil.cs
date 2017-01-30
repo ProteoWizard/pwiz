@@ -709,9 +709,9 @@ namespace pwiz.Skyline.Model
             return GetMzDistribution(molecule, charge, abundances, 0, false);
         }
 
-        public MassDistribution GetMZDistributionSinglePoint(double mz, int charge)
+        public MassDistribution GetMZDistributionSinglePoint(double mz)
         {
-            return MassDistribution.NewInstance(new SortedDictionary<double, double> {{mz, charge}}, _massResolution, _minimumAbundance);
+            return MassDistribution.NewInstance(new SortedDictionary<double, double> {{mz, 1.0}}, _massResolution, _minimumAbundance);
         }
 
         public string GetIonFormula(string peptideSequence, int charge)
@@ -1285,9 +1285,9 @@ namespace pwiz.Skyline.Model
             return _massCalcBase.GetMZDistributionFromFormula(formula, charge, abundances);
         }
 
-        public MassDistribution GetMZDistributionSinglePoint(double mz, int charge)
+        public MassDistribution GetMZDistributionSinglePoint(double mz)
         {
-            return  _massCalcBase.GetMZDistributionSinglePoint(mz, charge);
+            return  _massCalcBase.GetMZDistributionSinglePoint(mz);
         }
 
         public double[,] GetFragmentIonMasses(string seq)

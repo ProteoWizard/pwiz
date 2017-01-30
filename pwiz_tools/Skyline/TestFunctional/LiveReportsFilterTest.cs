@@ -23,7 +23,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Controls.Editor;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
@@ -42,8 +41,6 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestLiveReportsFilter()
         {
-            LocalizationHelper.CurrentCulture =
-                LocalizationHelper.CurrentUICulture = CultureInfo.GetCultureInfo("fr-FR");
             TestFilesZip = @"TestFunctional\LiveReportsFilterTest.zip";
             RunFunctionalTest();
         }

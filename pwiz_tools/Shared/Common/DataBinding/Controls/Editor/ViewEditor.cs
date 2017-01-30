@@ -24,6 +24,7 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.Controls;
+using pwiz.Common.DataBinding.Documentation;
 using pwiz.Common.Properties;
 
 namespace pwiz.Common.DataBinding.Controls.Editor
@@ -86,6 +87,8 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             {
                 tabControl1.TabPages.Remove(tabPageSource);
             }
+            AddTooltipHandler(_chooseColumnsTab.AvailableFieldsTree);
+            AddTooltipHandler(_filterTab.AvailableFieldsTree);
         }
 
         public ColumnDescriptor ParentColumn { get { return ViewInfo.ParentColumn; } }
@@ -456,6 +459,31 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                     ShowFindDialog();
                 }
             }
+        }
+
+        private void helpToolStripButton_Click(object sender, EventArgs e)
+        {
+            ShowColumnDocumentation();
+        }
+
+        public void ShowColumnDocumentation()
+        {
+            var documentationGenerator = new DocumentationGenerator(ChooseColumnsTab.ViewInfo.ParentColumn);
+            DocumentationViewer documentationViewer = new DocumentationViewer();
+            documentationViewer.DocumentationHtml = documentationGenerator.GetDocumentationHtmlPage();
+            documentationViewer.Show();
+        }
+
+        private void AddTooltipHandler(TreeView treeView)
+        {
+            treeView.ShowNodeToolTips = false;
+            treeView.NodeMouseHover += (sender, args) =>
+            {
+                if (!string.IsNullOrEmpty(args.Node.ToolTipText))
+                {
+                    toolTip1.Show(args.Node.ToolTipText, treeView);
+                }
+            };
         }
     }
 }

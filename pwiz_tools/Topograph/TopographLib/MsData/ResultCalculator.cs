@@ -302,9 +302,7 @@ namespace pwiz.Topograph.MsData
                         _session.Transaction.Commit();
                     }
 // ReSharper disable RedundantCatchClause
-// ReSharper disable UnusedVariable
-                    catch (Exception e)
-// ReSharper restore UnusedVariable
+                    catch (Exception)
                     {
                         throw;
                     }

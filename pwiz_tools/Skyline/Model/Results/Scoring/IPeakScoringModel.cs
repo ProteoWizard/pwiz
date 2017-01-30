@@ -26,6 +26,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results.Scoring
 {
@@ -482,6 +483,12 @@ namespace pwiz.Skyline.Model.Results.Scoring
     // ReSharper disable InconsistentNaming
     public enum PeakIdentification { FALSE, TRUE, ALIGNED }
     // ReSharper restore InconsistentNaming
+
+    public static class PeakIdentificationFastLookup
+    {
+        public static readonly Dictionary<string, PeakIdentification> Dict = XmlUtil.GetEnumLookupDictionary(
+            PeakIdentification.FALSE, PeakIdentification.TRUE, PeakIdentification.ALIGNED);
+    }
 
     public interface ISummaryPeakData
     {

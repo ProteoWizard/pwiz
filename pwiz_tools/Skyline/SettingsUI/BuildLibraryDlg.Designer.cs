@@ -39,13 +39,11 @@
             this.comboAction = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
-            this.textAuthority = new System.Windows.Forms.TextBox();
-            this.textID = new System.Windows.Forms.TextBox();
-            this.label5 = new System.Windows.Forms.Label();
             this.cbKeepRedundant = new System.Windows.Forms.CheckBox();
             this.textCutoff = new System.Windows.Forms.TextBox();
             this.label6 = new System.Windows.Forms.Label();
             this.panelProperties = new System.Windows.Forms.Panel();
+            this.comboStandards = new System.Windows.Forms.ComboBox();
             this.cbIncludeAmbiguousMatches = new System.Windows.Forms.CheckBox();
             this.cbFilter = new System.Windows.Forms.CheckBox();
             this.btnBrowse = new System.Windows.Forms.Button();
@@ -122,23 +120,6 @@
             resources.ApplyResources(this.label3, "label3");
             this.label3.Name = "label3";
             // 
-            // textAuthority
-            // 
-            resources.ApplyResources(this.textAuthority, "textAuthority");
-            this.textAuthority.Name = "textAuthority";
-            this.helpTip.SetToolTip(this.textAuthority, resources.GetString("textAuthority.ToolTip"));
-            // 
-            // textID
-            // 
-            resources.ApplyResources(this.textID, "textID");
-            this.textID.Name = "textID";
-            this.helpTip.SetToolTip(this.textID, resources.GetString("textID.ToolTip"));
-            // 
-            // label5
-            // 
-            resources.ApplyResources(this.label5, "label5");
-            this.label5.Name = "label5";
-            // 
             // cbKeepRedundant
             // 
             resources.ApplyResources(this.cbKeepRedundant, "cbKeepRedundant");
@@ -160,15 +141,13 @@
             // panelProperties
             // 
             resources.ApplyResources(this.panelProperties, "panelProperties");
+            this.panelProperties.Controls.Add(this.comboStandards);
             this.panelProperties.Controls.Add(this.cbIncludeAmbiguousMatches);
             this.panelProperties.Controls.Add(this.cbFilter);
             this.panelProperties.Controls.Add(this.btnBrowse);
             this.panelProperties.Controls.Add(this.label6);
             this.panelProperties.Controls.Add(this.textCutoff);
             this.panelProperties.Controls.Add(this.cbKeepRedundant);
-            this.panelProperties.Controls.Add(this.label5);
-            this.panelProperties.Controls.Add(this.textID);
-            this.panelProperties.Controls.Add(this.textAuthority);
             this.panelProperties.Controls.Add(this.label3);
             this.panelProperties.Controls.Add(this.label1);
             this.panelProperties.Controls.Add(this.comboAction);
@@ -177,6 +156,13 @@
             this.panelProperties.Controls.Add(this.textName);
             this.panelProperties.Controls.Add(this.label4);
             this.panelProperties.Name = "panelProperties";
+            // 
+            // comboStandards
+            // 
+            this.comboStandards.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboStandards.FormattingEnabled = true;
+            resources.ApplyResources(this.comboStandards, "comboStandards");
+            this.comboStandards.Name = "comboStandards";
             // 
             // cbIncludeAmbiguousMatches
             // 
@@ -274,8 +260,8 @@
             this.Controls.Add(this.btnPrevious);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnNext);
-            this.Controls.Add(this.panelFiles);
             this.Controls.Add(this.panelProperties);
+            this.Controls.Add(this.panelFiles);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "BuildLibraryDlg";
@@ -299,9 +285,6 @@
         private System.Windows.Forms.ComboBox comboAction;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.TextBox textAuthority;
-        private System.Windows.Forms.TextBox textID;
-        private System.Windows.Forms.Label label5;
         private System.Windows.Forms.CheckBox cbKeepRedundant;
         private System.Windows.Forms.TextBox textCutoff;
         private System.Windows.Forms.Label label6;
@@ -318,5 +301,6 @@
         private System.Windows.Forms.CheckBox cbFilter;
         private System.Windows.Forms.Button btnAddPaths;
         private System.Windows.Forms.CheckBox cbIncludeAmbiguousMatches;
+        private System.Windows.Forms.ComboBox comboStandards;
     }
 }

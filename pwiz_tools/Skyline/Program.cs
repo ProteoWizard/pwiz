@@ -187,7 +187,7 @@ namespace pwiz.Skyline
                     if (Install.Type == Install.InstallType.release &&
                             (licenseVersion != 0 || !Settings.Default.MainWindowSize.IsEmpty))
                     {
-                        using (var dlg = new UpgradeDlg(licenseVersion))
+                        using (var dlg = new UpgradeLicenseDlg(licenseVersion))
                         {
                             if (dlg.ShowDialog() == DialogResult.Cancel)
                                 return;

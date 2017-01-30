@@ -47,7 +47,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 return; // Don't want to run this lengthy test right now
             }
 
-            TestFilesZip = "https://skyline.gs.washington.edu/perftests/PerfTestLockmass.zip";
+            TestFilesZip = "https://skyline.gs.washington.edu/perftests/PerfTestLockmass_v2.zip";
             TestFilesPersistent = new[] { "ID19638_01_UCA195_2533_082715.raw" }; // List of files that we'd like to unzip alongside parent zipFile, and (re)use in place
             TestFilesDir = new TestFilesDir(TestContext, TestFilesZip, "CmdlineTest", TestFilesPersistent);
 
@@ -55,6 +55,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
             var rawPath = GetTestPath(TestFilesPersistent[0]);
             const double lockmassNegative = 554.2615;
+            const double lockmassToler = 0.25; // Per Hans Vissers @ Waters
                 
             // Exercise the commandline
             var outPathUncorrected = TestFilesDir.GetTestPath("cmdlineTestUncorrected.sky");
@@ -67,6 +68,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             RunCommand("--in=" + skyfile,
                 "--import-file=" + rawPath,
                 "--import-lockmass-negative=" + lockmassNegative,
+                "--import-lockmass-tolerance=" + lockmassToler,
                 "--out=" + outPathCorrected);
             var cmdDocCorrected = ResultsUtil.DeserializeDocument(outPathCorrected);
             ComparePeaks(cmdDocCorrected, cmdDocUncorrected);    
@@ -84,9 +86,9 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             CommandLineRunner.RunCommand(inputArgs, consoleOutput);
         }
 
-        private static List<TransitionGroupChromInfo> Peaks(SrmDocument doc)
+        private static List<TransitionChromInfo> Peaks(SrmDocument doc)
         {
-            return (from tg in doc.MoleculeTransitionGroups
+            return (from tg in doc.MoleculeTransitions
                        from r in tg.Results
                        from p in r
                        select p).ToList();
@@ -102,7 +104,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             {
                 var correctedPeak = correctedPeaks[i];
                 var uncorrectedPeak = uncorrectedPeaks[i];
-                Assert.AreEqual(uncorrectedPeak.RetentionTime ?? -1, correctedPeak.RetentionTime ?? -1, 0.01,
+                Assert.AreEqual(uncorrectedPeak.RetentionTime, correctedPeak.RetentionTime, 0.02,
                     "peak retention times should be similar"); // Expect similar RT
                 if (Math.Abs(uncorrectedPeak.MassError ?? 0) < Math.Abs(correctedPeak.MassError ?? 0))
                     nWorse++;

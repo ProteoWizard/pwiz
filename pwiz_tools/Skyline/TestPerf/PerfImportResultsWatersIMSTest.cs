@@ -24,6 +24,7 @@ using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
+using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
@@ -110,10 +111,9 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 RunUI(() => Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page));
                 RunUI(() => importPeptideSearchDlg.ClickNextButton());
                 // Modifications are already set up, so that page should get skipped.
-                RunUI(() => importPeptideSearchDlg.ClickNextButton()); // Accept the full scan settings
-
-/* No lockmass correction for IMS data due to Waters DLL limitations as of Nov 2015
-                var lockmassDlg = ShowDialog<ImportResultsLockMassDlg>(() => importPeptideSearchDlg.ClickNextButton()); // Accept the full scan settings, lockmass correction dialog should appear
+                // Accept the full scan settings, lockmass correction dialog should appear
+                var lockmassDlg = ShowDialog<ImportResultsLockMassDlg>(() => importPeptideSearchDlg.ClickNextButton()); 
+                /* Lockmass correction for IMS data added to Waters DLL limitations Oct 2016, but this data does not need it
                 RunUI(() =>
                 {
                     var mz = 785.8426;  // Glu-Fib ESI 2+, per Will T
@@ -121,9 +121,9 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                     lockmassDlg.LockmassNegative = mz;
                     lockmassDlg.LockmassTolerance = 10.0;
                 });
+                */
                 RunUI(lockmassDlg.OkDialog);
                 WaitForClosedForm<ImportResultsLockMassDlg>();
-*/
 
                 // Add FASTA also skipped because filter for document peptides was chosen.
 

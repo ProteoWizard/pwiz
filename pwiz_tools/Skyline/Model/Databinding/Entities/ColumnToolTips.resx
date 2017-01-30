@@ -1,0 +1,846 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+	<!-- 
+		Microsoft ResX Schema
+
+		Version 1.3
+
+		The primary goals of this format is to allow a simple XML format 
+		that is mostly human readable. The generation and parsing of the 
+		various data types are done through the TypeConverter classes 
+		associated with the data types.
+
+		Example:
+
+		... ado.net/XML headers & schema ...
+		<resheader name="resmimetype">text/microsoft-resx</resheader>
+		<resheader name="version">1.3</resheader>
+		<resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+		<resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+		<data name="Name1">this is my long string</data>
+		<data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+		<data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+			[base64 mime encoded serialized .NET Framework object]
+		</data>
+		<data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+			[base64 mime encoded string representing a byte array form of the .NET Framework object]
+		</data>
+
+		There are any number of "resheader" rows that contain simple 
+		name/value pairs.
+
+		Each data row contains a name, and value. The row also contains a 
+		type or mimetype. Type corresponds to a .NET class that support 
+		text/value conversion through the TypeConverter architecture. 
+		Classes that don't support this are serialized and stored with the 
+		mimetype set.
+
+		The mimetype is used for serialized objects, and tells the 
+		ResXResourceReader how to depersist the object. This is currently not 
+		extensible. For a given mimetype the value must be set accordingly:
+
+		Note - application/x-microsoft.net.object.binary.base64 is the format 
+		that the ResXResourceWriter will generate, however the reader can 
+		read any of the formats listed below.
+
+		mimetype: application/x-microsoft.net.object.binary.base64
+		value   : The object must be serialized with 
+			: System.Serialization.Formatters.Binary.BinaryFormatter
+			: and then encoded with base64 encoding.
+
+		mimetype: application/x-microsoft.net.object.soap.base64
+		value   : The object must be serialized with 
+			: System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+			: and then encoded with base64 encoding.
+
+		mimetype: application/x-microsoft.net.object.bytearray.base64
+		value   : The object must be serialized into a byte array 
+			: using a System.ComponentModel.TypeConverter
+			: and then encoded with base64 encoding.
+	-->
+	
+	<xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+		<xsd:element name="root" msdata:IsDataSet="true">
+			<xsd:complexType>
+				<xsd:choice maxOccurs="unbounded">
+					<xsd:element name="data">
+						<xsd:complexType>
+							<xsd:sequence>
+								<xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+								<xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+							</xsd:sequence>
+							<xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+							<xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+							<xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+						</xsd:complexType>
+					</xsd:element>
+					<xsd:element name="resheader">
+						<xsd:complexType>
+							<xsd:sequence>
+								<xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+							</xsd:sequence>
+							<xsd:attribute name="name" type="xsd:string" use="required" />
+						</xsd:complexType>
+					</xsd:element>
+				</xsd:choice>
+			</xsd:complexType>
+		</xsd:element>
+	</xsd:schema>
+	<resheader name="resmimetype">
+		<value>text/microsoft-resx</value>
+	</resheader>
+	<resheader name="version">
+		<value>1.3</value>
+	</resheader>
+	<resheader name="reader">
+		<value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+	</resheader>
+	<resheader name="writer">
+		<value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+	</resheader>
+
+  <data name="Accuracy">
+    <value>Ratio of the Analyte Concentration (specified on the Replicate) to the Calculated Concentraion</value>
+  </data>
+  <data name="AcquiredTime">
+    <value>Last time and date at which the mass spectrometer began acquiring this
+replicate data. Or #N/A if the file was imported with a version older than 1.1.</value>
+  </data>
+  <data name="AnalyteConcentration">
+    <value>Known quantity of analyte that was spiked into the external or quality control standard.</value>
+  </data>
+  <data name="Area">
+    <value>Area under the curve (AUC), minus background, for the transition peak.</value>
+  </data>
+  <data name="AreaNormalized">
+    <value>The Area normalized to the sum of the Area values for all transitions
+in the document.</value>
+  </data>
+  <data name="AreaRatio">
+    <value>The ratio of the Area of this transition to its corresponding transition in the
+first internal standard label type, before version 0.7 this was always light/heavy, and
+appeared on the heavy transitions.</value>
+  </data>
+  <data name="AverageMassErrorPPM">
+    <value>Average Mass Error PPM</value>
+  </data>
+  <data name="AverageMeasuredRetentionTime">
+    <value>The average peptide retention time over all replicates</value>
+  </data>
+  <data name="Background">
+    <value>The area of the rectangle formed by the integration boundaries, and the
+baseline and a line perpendicular to minimum intersection intensity between the
+integration boundaries and the chromatogram for the transition peak.</value>
+  </data>
+  <data name="BeginPos">
+    <value>The position of the first (N-terminal) amino acid of the peptide within its
+containing protein sequence, or #N/A if no protein sequence is available.
+    </value>
+  </data>
+  <data name="BestReplicate">
+    <value>True if this replicate has the highest overall peptide peak score.</value>
+  </data>
+  <data name="BestRetentionTime">
+    <value>The RetentionTime value of the transition with the highest
+maximum intensity for the precursor.</value>
+  </data>
+  <data name="CalculatedConcentration">
+    <value>The concentration of the analyte is calculated by either:
+    1. Using the calibration curve (if the Peptide Settings > Quantification has a Regression Fit specified)
+    2. Using the ratio to internal standard (or surrogate) and multiplying by the Internal Standard Concetration</value>
+  </data>
+  <data name="CalibrationCurve">
+    <value>Calibration Curve that was calculated using Replicates whose Sample Type was "Standard" and that had an "Analyte Concentration" specified.</value>
+  </data>
+  <data name="CleavageAa">
+    <value>Specific amino acid residue in the peptide after (C-terminal of) which the
+peptide was cleaved upon fragmentation. (e.g. P, M, S, T, etc.)</value>
+  </data>
+  <data name="CollisionEnergy">
+    <value>Collision Energy for the precursor ion according to instrument/vendor
+specific default collision energy equation within Skyline</value>
+  </data>
+  <data name="ConcentrationMultiplier">
+    <value>Value to multiply the replicate's "analyte concentration" by in order to get the specific concentration of the specific peptide or molecule.</value>
+  </data>
+  <data name="CountTruncated">
+    <value>The number of transitions for a precursor that integrate a peak with a
+boundary at either end of the acquisition time range, where intensity at the end is
+greater than 1% of the entire peak height higher than the other extent.</value>
+  </data>
+  <data name="Cv">
+    <value>Cv</value>
+  </data>
+  <data name="CvArea">
+    <value>Coefficient of variation (CV) of the transition Area values.</value>
+  </data>
+  <data name="CvAreaNormalized">
+    <value>Coefficient of variation (CV) of the transition AreaNormalized
+values.</value>
+  </data>
+  <data name="CvAreaRatio">
+    <value>Coefficient of variation (CV) of the transition AreaRatio values.</value>
+  </data>
+  <data name="CvBestRetentionTime">
+    <value>Coefficient of variation (CV) of the precursor
+BestRetentionTime values.</value>
+  </data>
+  <data name="CvFwhm">
+    <value>Coefficient of variation (CV) of the transition Fwhm (peak width) values</value>
+  </data>
+  <data name="CvMaxFwhm">
+    <value>Coefficient of variation (CV) of the precursor MaxFwhm (peak width)
+values.</value>
+  </data>
+  <data name="CvMaxHeight">
+    <value>Cv Max Height</value>
+  </data>
+  <data name="CvRetentionTime">
+    <value>Coefficient of variation (CV) of the transition RetentionTime values.</value>
+  </data>
+  <data name="CvTotalArea">
+    <value>Coefficient of variation (CV) of the precursor TotalArea values</value>
+  </data>
+  <data name="CvTotalAreaNormalized">
+    <value>Coefficient of variation (CV) of the precursor TotalAreaNormalized values.</value>
+  </data>
+  <data name="CvTotalAreaRatio">
+    <value>Coefficient of variation (CV) of the precursor TotalAreaRatio values</value>
+  </data>
+  <data name="DeclusteringPotential">
+    <value>Declustering Potential for the precursor ion according to
+instrument/vendor specific default declustering potential equation within Skyline</value>
+  </data>
+  <data name="DecoyMzShift">
+    <value>Shift in m/z applied to the precursor to create
+the decoy m/z</value>
+  </data>
+  <data name="DetectionQValue">
+    <value>A false discovery rate (FDR) score assigned to each chosen target peak after applying a mProphet model.</value>
+  </data>
+  <data name="DetectionZScore">
+    <value>A normalized mProphet score assigned to each chosen peak (target and decoy) after applying a mProphet model, expressed as the number of standard deviations (SD) from the mean decoy score.</value>
+  </data>
+  <data name="EndPos">
+    <value>The position of the last (C-terminal) amino acid of the peptide within its
+containing protein sequence, or #N/A if no protein sequence is available</value>
+  </data>
+  <data name="EndTime">
+    <value>Retention time at the ending integration boundary for the transition peak.</value>
+  </data>
+  <data name="EstimatedValue">
+    <value>Slope of the linear regression.</value>
+  </data>
+  <data name="ErrorMessage">
+    <value>Text of the error message, if any, which occurred while trying to calculate this value.</value>
+  </data>
+  <data name="ExplicitCollisionEnergy">
+    <value>The exact desired collision energy to be used in SRM methods or transitions lists for a target, overriding all model or optimization library values.</value>
+  </data>
+  <data name="ExplicitCompensationVoltage">
+    <value>The exact desired compensation voltage (ion mobility filter) to be used in SRM methods or transitions lists for a target, overriding all model or optimization library values.</value>
+  </data>
+  <data name="ExplicitConeVoltage">
+    <value>The exact desired cone voltage (Waters instruments only) to be used in SRM methods or transitions lists for a target.</value>
+  </data>
+  <data name="ExplicitDeclusteringPotential">
+    <value>The exact desired declustering potential (SCIEX instruments only) to be used in SRM methods or transitions lists for a target, overriding all model values.</value>
+  </data>
+  <data name="ExplicitDriftTimeHighEnergyOffsetMsec">
+    <value>The exact desired drift time high energy offset (in milliseconds) to be used in extracting chromatograms from ion mobility high-energy mass spectra, overriding all model values.</value>
+  </data>
+  <data name="ExplicitDriftTimeMsec">
+    <value>The exact desired drift time (in milliseconds) to be used in extracting chromatograms from ion mobility mass spectra, overriding all model values.</value>
+  </data>
+  <data name="ExplicitGlobalStandardArea">
+    <value>Value to use when calculating "ratio to global standards". 
+    Use this when you want to normalize peak areas in a particular replicate by dividing by a value that you calculated outside of Skyline.</value>
+  </data>
+  <data name="ExplicitRetentionTime">
+    <value>The exact predicted retention time (in minutes) to be used for a target, overriding all other methods of prediction.</value>
+  </data>
+  <data name="ExplicitRetentionTimeWindow">
+    <value>The exact desired retention time window (in minutes) to be used for a target, overriding all other settings used to derive this value.</value>
+  </data>
+  <data name="ExplicitSLens">
+    <value>The exact desired SLens value (Thermo instruments only) to be used in SRM methods or transitions lists for a target.</value>
+  </data>
+  <data name="FileIndex">
+    <value>File Index</value>
+  </data>
+  <data name="FileName">
+    <value>The name of the file from which the data was imported</value>
+  </data>
+  <data name="Files">
+    <value>Files</value>
+  </data>
+  <data name="FoldChangeResult">
+    <value>Result of comparing values between the two groups.</value>
+  </data>
+  <data name="FragmentIon">
+    <value>The name of the product ion peptide fragment (e.g. y8, y10, b7, etc.).</value>
+  </data>
+  <data name="FragmentIonOrdinal">
+    <value>Position of the amino acid in the peptide after (C-terminal of)
+which the peptide was cleaved upon fragmentation. (e.g. 8, 10, 7, etc.)</value>
+  </data>
+  <data name="FragmentIonType">
+    <value>The type of the product ion (y, b, c, z, a, x, precursor)</value>
+  </data>
+  <data name="FullScanFilterWidth">
+    <value>Full Scan Filter Width</value>
+  </data>
+  <data name="Fwhm">
+    <value>Full width at half max (FWHM) for the transition peak.</value>
+  </data>
+  <data name="FwhmDegenerate">
+    <value>Fwhm Degenerate</value>
+  </data>
+  <data name="Height">
+    <value>The maximum intensity of the points between the transition peak integration
+boundaries.</value>
+  </data>
+  <data name="Group">
+    <value>Value of the replicate annotation of the replicates that were compared to the control group.</value>
+  </data>
+  <data name="Identified">
+    <value>True if a MS/MS peptide identification exists for the result file at a time
+between the peak integration boundaries.</value>
+  </data>
+  <data name="Intercept">
+    <value>Y-intercept in the fitted line or curve</value>
+  </data>
+  <data name="InternalStandardConcentration">
+    <value>Quantity of internal standard in the sample.</value>
+  </data>
+  <data name="IonFormula">
+    <value>An atomic chemical formula for the fully charged (and possibly isotope labeled) ion to be measured in a mass spectrometer.</value>
+  </data>
+  <data name="IsDecoy">
+    <value>True if this is a decoy precursor.</value>
+  </data>
+  <data name="IsotopeDistIndex">
+    <value>Zero for the monoisotopic peak, 1 for M+1, 2 for M+2, etc. </value>
+  </data>
+  <data name="IsotopeDistProportion">
+    <value>The proportion of the entire isotope distribution predicted for
+this isotope peak. Currently only available for precursor transitions filtered from high
+resolution MS1 scans.</value>
+  </data>
+  <data name="IsotopeDistRank">
+    <value>The rank based on the IsotopeDistProportion among all isotope
+peaks for the predicted isotope distribution, shown in the user interface as “(irank #)”.
+Currently only available for precursor transitions filtered from high resolution MS1
+scans.</value>
+  </data>
+  <data name="IsotopeDotProduct">
+    <value>The dot-product calculation described above, but between the
+individual precursor (M, M+1, M+2, etc.) peak areas of the precursor and the intensities
+of the predicted isotope distribution, or #N/A if the transition is not a precursor isotope,
+or the chromatogram was not extracted from high resolution MS1 data.</value>
+  </data>
+  <data name="IsotopeLabelType">
+    <value>A label type name associated with the precursor ion (light/heavy),
+indicating which isotope modifications are applied</value>
+  </data>
+  <data name="Key">
+    <value>Key</value>
+  </data>
+  <data name="LibraryDotProduct">
+    <value>The dot-product between the individual transition peak areas
+of the precursor and the intensities of the matching ion peaks in the matched MS/MS
+spectral library spectrum (Note: as of v1.4, this is now 1 – Arcos(dotp)/(Pi/2) where dotp
+is the value described above. a.k.a. Normalize Spectrum Contrast Angle), or #N/A if the
+precursor has not matching library spectrum or has fewer than 4 transitions. This is a 35
+useful value for method refinement. It works best when 6 or more transitions are
+present.</value>
+  </data>
+  <data name="LibraryIntensity">
+    <value>The MS/MS peak intensity corresponding to the transition product
+ion in the matching library spectrum.</value>
+  </data>
+  <data name="LibraryName">
+    <value>The name of a MS/MS spectral library, if a MS/MS spectral library
+spectrum is associated with the precursor ion.</value>
+  </data>
+  <data name="LibraryRank">
+    <value>The rank based on LibraryIntensity of this transition among all transitions
+allowed by the transition Filter settings, shown in the user interface as “(rank #)”.</value>
+  </data>
+  <data name="LibraryScore1">
+    <value>Raw peptide library score that may or may not be used to rank among
+precursors of a protein.</value>
+  </data>
+  <data name="LibraryScore2">
+    <value>Raw peptide library score that may or may not be used to rank among
+precursors of a protein.</value>
+  </data>
+  <data name="LibraryScore3">
+    <value>Raw peptide library score that may or may not be used to rank among
+precursors of a protein.</value>
+  </data>
+  <data name="LibraryType">
+    <value>The type of MS/MS spectral library (BiblioSpec, GPM, NIST), if a MS/MS
+spectral library spectrum is associated with the precursor ion.</value>
+  </data>
+  <data name="Losses">
+    <value>A comma separated list of all neutral losses from this fragment</value>
+  </data>
+  <data name="LossNeutralMass">
+    <value>The total mass of all neutral losses from this fragment.</value>
+  </data>
+  <data name="MassErrorPPM">
+    <value>Mass Error PPM</value>
+  </data>
+  <data name="Max">
+    <value>Max</value>
+  </data>
+  <data name="MaxBestRetentionTime">
+    <value>Maximum of the precursor BestRetentionTime values</value>
+  </data>
+  <data name="MaxEndTime">
+    <value>Maximum EndTime of all transitions for a precursor. Unless manually
+edited all transitions for a precursor use the same integration boundaries.</value>
+  </data>
+  <data name="MaxFwhm">
+    <value>The maximum full width at half max (FWHM) of the transitions for the
+precursor.</value>
+  </data>
+  <data name="MaxHeight">
+    <value>Max Height</value>
+  </data>
+  <data name="MaxRetentionTime">
+    <value>Maximum of the transition RetentionTime values.</value>
+  </data>
+  <data name="Mean">
+    <value>Mean</value>
+  </data>
+  <data name="MeanArea">
+    <value>Mean of the transition Area values.</value>
+  </data>
+  <data name="MeanAreaNormalized">
+    <value>Mean of the transition AreaNormalized values</value>
+  </data>
+  <data name="MeanAreaRatio">
+    <value>Mean of the transition AreaRatio values.</value>
+  </data>
+  <data name="MeanBestRetentionTime">
+    <value>Mean of the precursor BestRetentionTime values.</value>
+  </data>
+  <data name="MeanFwhm">
+    <value>Mean of the transition Fwhm (peak width) values.</value>
+  </data>
+  <data name="MeanMaxFwhm">
+    <value>Mean of the precursor MaxFwhm (peak width) values.</value>
+  </data>
+  <data name="MeanMaxHeight">
+    <value>Mean Max Height</value>
+  </data>
+  <data name="MeanRetentionTime">
+    <value>Mean of the transition RetentionTime values.</value>
+  </data>
+  <data name="MeanTotalArea">
+    <value>Mean of the precursor TotalArea values.</value>
+  </data>
+  <data name="MeanTotalAreaNormalized">
+    <value>Mean of the precursor TotalAreaNormalized values</value>
+  </data>
+  <data name="MeanTotalAreaRatio">
+    <value> Mean of the precursor TotalAreaRatio values.</value>
+  </data>
+  <data name="Min">
+    <value>Min</value>
+  </data>
+  <data name="MinBestRetentionTime">
+    <value>Minimum of the precursor BestRetentionTime values</value>
+  </data>
+  <data name="MinRetentionTime">
+    <value>Minimum of the transition RetentionTime values.</value>
+  </data>
+  <data name="MinStartTime">
+    <value>Minimum StartTime of all transitions for a precursor. Unless manually
+edited all transitions for a precursor use the same integration boundaries</value>
+  </data>
+  <data name="MissedCleavages">
+    <value>The number of missed cleavage sites in the peptide sequence</value>
+  </data>
+  <data name="ModifiedSequence">
+    <value>Peptide sequence including any amino acid modifications such as
+cysteine alkylation. (example: AGLC[+57]QTFVYGGC[+57]R)</value>
+  </data>
+  <data name="ModifiedTime">
+    <value>Last time and date at which the original mass spectrometer file was
+modified on disk</value>
+  </data>
+  <data name="MoleculeFormula">
+    <value>An atomic chemical formula for the neutral, unlabeled molecule to be measured in a mass spectrometer.</value>
+  </data>
+  <data name="MoleculeName">
+    <value>A general name that may be assigned to a small molecule in its neutral, unlabeled form.</value>
+  </data>
+  <data name="MSLevel">
+    <value>Indicates whether the result was obtained using only precursor intensities (MS Level 1) or product intensities (MS Level 2).</value>
+  </data>
+  <data name="NextAa">
+    <value>Next Aa</value>
+  </data>
+  <data name="NormalizationMethod">
+    <value>Override of the normalization method to use with this particular molecule for absolute quantification and group comparisons.</value>
+  </data>
+  <data name="NormalizedArea">
+    <value>Value obtained by normalizing the peptide/molecule intensity according to either the explicit "Normalization Method" for the peptide/molecule or the normalization method specified on:
+    Settings > Peptide Settings > Quantification</value>
+  </data>
+  <data name="OptCollisionEnergy">
+    <value>The collision energy value corresponding to the OptStep if
+collision energy optimization is being performed</value>
+  </data>
+  <data name="OptCompensationVoltage">
+    <value>The compensation voltage value (for ion mobility filtering) corresponding to the OptStep if compensation voltage optimization is being performed</value>
+  </data>
+  <data name="OptDeclusteringPotential">
+    <value>The declustering potential value corresponding to the
+OptStep if declustering potential optimization is being performed</value>
+  </data>
+  <data name="OptStep">
+    <value>Optimization step value indicating distance from the default value for the
+parameter being optimized, 0 for the default parameter value, or if no optimization is
+being performed in the replicate.</value>
+  </data>
+  <data name="PeakRank">
+    <value>The rank based on Area of this transition among all other transitions of the
+same precursor.</value>
+  </data>
+  <data name="PeakRankByLevel">
+    <value>Peak area ranking in a specific replicate by MS level (i.e. MS1 and MS/MS get ranked separately)</value>
+  </data>
+  <data name="Peptide">
+    <value>Peptide</value>
+  </data>
+  <data name="PeptideDocumentLocation">
+    <value>Unique identifier of the peptide within the Skyline document. This can be used when writing external tools which call back into Skyline to change the selection, etc.</value>
+  </data>
+  <data name="PeptideModifiedSequence">
+    <value>Amino acid sequence annotated with only structural
+modification delta masses (e.g. AC[+57]GR).</value>
+  </data>
+  <data name="PeptideNote">
+    <value>A free text note associated with the peptide by clicking Edit Note on the
+Edit menu</value>
+  </data>
+  <data name="PeptidePeakFoundRatio">
+    <value>Peptide Peak Found Ratio</value>
+  </data>
+  <data name="PeptideResult">
+    <value>Peptide Result</value>
+  </data>
+  <data name="PeptideResultDocumentLocation">
+    <value>Unique identifier of the Peptide Result within the document. This can be used when writing interactive external tools.</value>
+  </data>
+  <data name="PeptideResults">
+    <value>Peptide Results</value>
+  </data>
+  <data name="PeptideRetentionTime">
+    <value>Peptide retention time for each replicate run.</value>
+  </data>
+  <data name="Peptides">
+    <value>Peptides</value>
+  </data>
+  <data name="PeptideSequence">
+    <value> Amino acid sequence of the peptide.</value>
+  </data>
+  <data name="PointCount">
+    <value>Number of data points that were used in the curve fit.</value>
+  </data>
+  <data name="Precursor">
+    <value>Precursor</value>
+  </data>
+  <data name="PrecursorCharge">
+    <value>
+      The charge associated with the precursor ion.
+    </value>
+  </data>
+  <data name="PrecursorMz">
+    <value>The mass to charge ratio (m/z) of the precursor ion.</value>
+  </data>
+  <data name="PrecursorNeutralMass">
+    <value>Neutral mass of the precursor in Daltons</value>
+  </data>
+  <data name="PrecursorNote">
+    <value>A free text note associated with a precursor by clicking Edit Note on
+the Edit menu</value>
+  </data>
+  <data name="PrecursorPeakFoundRatio">
+    <value>The ratio of transitions for which a peak was measured to the
+total number of transitions in the peptide. Peak indicators in the peptide tree view
+correspond to green = 1.0 (all transitions integrated), orange >= 0.5, red &lt; 0.5.</value>
+  </data>
+  <data name="PrecursorReplicateNote">
+    <value>A free text note associated with a result set of the precursor
+using the Results Grid.</value>
+  </data>
+  <data name="PrecursorResult">
+    <value>Precursor Result</value>
+  </data>
+  <data name="PrecursorResults">
+    <value>Precursor Results</value>
+  </data>
+  <data name="PrecursorResultsSummary">
+    <value>Precursor Results Summary</value>
+  </data>
+  <data name="Precursors">
+    <value>Precursors</value>
+  </data>
+  <data name="PredictedResultRetentionTime">
+    <value>Peptide retention time for each replicate run.</value>
+  </data>
+  <data name="PredictedRetentionTime">
+    <value>The retention time predicted by a retention time regression
+between a set of measured results and a retention time calculator (currently only
+SSRCalc 3.0 is available), or #N/A if no retention time regression has been assigned.</value>
+  </data>
+  <data name="PreviousAa">
+    <value>Previous Aa</value>
+  </data>
+  <data name="ProductCharge">
+    <value>Charge (z) of the product ion.</value>
+  </data>
+  <data name="ProductDecoyMzShift">
+    <value>Shift in m/z applied to the product ion to create
+the decoy m/z.</value>
+  </data>
+  <data name="ProductMz">
+    <value>The mass to charge ratio (m/z) of the product ion.</value>
+  </data>
+  <data name="ProductNeutralMass">
+    <value>Neutral mass of the product ion peptide fragment in Daltons.</value>
+  </data>
+  <data name="Protein">
+    <value>Protein</value>
+  </data>
+  <data name="ProteinAccession">
+    <value>Protein Accession</value>
+  </data>
+  <data name="ProteinDescription">
+    <value>When proteins are imported into Skyline through public FASTA
+sequence files, a Protein Description is provided. You can see the Protein Description
+also when you hover over the protein name in the peptide tree view.</value>
+  </data>
+  <data name="ProteinGene">
+    <value>Protein Gene</value>
+  </data>
+  <data name="ProteinName">
+    <value>Protein Name as defined or entered into Skyline (in some cases in
+conjunction with the accession number)</value>
+  </data>
+  <data name="ProteinNote">
+    <value>A free text note associated with the protein by clicking Edit Note on the
+Edit menu</value>
+  </data>
+  <data name="ProteinPreferredName">
+    <value>Protein Preferred Name</value>
+  </data>
+  <data name="Proteins">
+    <value>Proteins</value>
+  </data>
+  <data name="ProteinSequence">
+    <value>When proteins are imported into Skyline through public FASTA
+sequence files the full protein sequence is accessible. You can see the protein sequence
+also when you hover over the protein name in the peptide tree view.</value>
+  </data>
+  <data name="ProteinSpecies">
+    <value>Protein Species</value>
+  </data>
+  <data name="QuadraticCoefficient">
+    <value>Coefficient of the x-squared term in a quadratic regression.</value>
+  </data>
+  <data name="Quantification">
+    <value>Values related to using the calibration curve or normalization method to quantify the analyte.</value>
+  </data>
+  <data name="Range">
+    <value>Range</value>
+  </data>
+  <data name="RangeBestRetentionTime">
+    <value>The difference between MaxBestRetentionTime and
+MinBestRetentionTime, which can be used to gauge the spread of retention times
+measured.</value>
+  </data>
+  <data name="RangeRetentionTime">
+    <value>The difference between MaxRetentionTime and
+MinRetentionTime, which can be used to gauge the spread of retention times
+measured.</value>
+  </data>
+  <data name="RatioDotProduct">
+    <value>Ratio Dot Product</value>
+  </data>
+  <data name="RatioToStandard">
+    <value>Peptide area ratio of light to heavy</value>
+  </data>
+  <data name="Replicate">
+    <value>Replicate</value>
+  </data>
+  <data name="ReplicateCount">
+    <value>Number of replicates that had valid intensities and contributed to the result.</value>
+  </data>
+  <data name="ReplicateIndex">
+    <value>Replicate Index</value>
+  </data>
+  <data name="ReplicateName">
+    <value>The replicate name assigned to the data during import.</value>
+  </data>
+  <data name="ReplicatePath">
+    <value>Replicate Path</value>
+  </data>
+  <data name="Replicates">
+    <value>Replicates</value>
+  </data>
+  <data name="ResultFile">
+    <value>Result File</value>
+  </data>
+  <data name="Results">
+    <value>Results</value>
+  </data>
+  <data name="RetentionTime">
+    <value>Retention time at the maximum intensity for a transition peak.</value>
+  </data>
+  <data name="RetentionTimeCalculatorScore">
+    <value>The raw score for the peptide from the current
+retention score calculator, if one is used (e.g. SSRCalc or iRT score)
+    </value>
+  </data>
+  <data name="RSquared">
+    <value>Coefficient of determination</value>
+  </data>
+  <data name="SampleName">
+    <value>The sample name, if the data was imported from a multi-sample WIFF
+file, or the file name again for other file types.</value>
+  </data>
+  <data name="SampleType">
+    <value>Type of the sample.  One of the following: 
+      Unknown (sample being measured)
+      Standard (external standard containing a known amount of analyte to be used in calibration curve)
+      Quality Control (containing a known amount of analyte to verify calibration)
+      Solvent
+      Blank
+      Double Blank</value>
+  </data>
+  <data name="Slope">
+    <value>Coefficient of the linear term in the fitted curve or line.</value>
+  </data>
+  <data name="StandardType">
+    <value>Standard Type</value>
+  </data>
+  <data name="StartTime">
+    <value>Retention time at the starting integration boundary for the transition peak</value>
+  </data>
+  <data name="Stdev">
+    <value>Stdev</value>
+  </data>
+  <data name="StdevArea">
+    <value>Standard deviation of the transition Area values</value>
+  </data>
+  <data name="StdevAreaNormalized">
+    <value>Standard deviation of the transition AreaNormalized values.</value>
+  </data>
+  <data name="StdevAreaRatio">
+    <value>Standard deviation of the transition AreaRatio values.</value>
+  </data>
+  <data name="StdevBestRetentionTime">
+    <value>Standard deviation of the precursor BestRetentionTime
+      values.</value>
+  </data>
+  <data name="StdevFwhm">
+    <value>Standard deviation of the transition Fwhm (peak width) values.</value>
+  </data>
+  <data name="StdevMaxFwhm">
+    <value>Standard deviation of the precursor MaxFwhm (peak width) values.</value>
+  </data>
+  <data name="StdevMaxHeight">
+    <value>Stdev Max Height</value>
+  </data>
+  <data name="StdevRetentionTime">
+    <value>Standard deviation of the transition RetentionTime values.</value>
+  </data>
+  <data name="StdevTotalArea">
+    <value>Standard deviation of the precursor TotalArea values</value>
+  </data>
+  <data name="StdevTotalAreaNormalized">
+    <value>Stdev Total Area Normalized</value>
+  </data>
+  <data name="StdevTotalAreaRatio">
+    <value>Standard deviation of the precursor TotalAreaNormalized
+values.</value>
+  </data>
+  <data name="TotalArea">
+    <value>The summed Area values of all individual transitions for the particular
+precursor.</value>
+  </data>
+  <data name="TotalAreaFragment">
+    <value>Total Area Fragment</value>
+  </data>
+  <data name="TotalAreaMs1">
+    <value>Total Area MS1</value>
+  </data>
+  <data name="TotalAreaNormalized">
+    <value>The TotalArea normalized to the sum of the TotalArea values
+for all peptide precursors in the document</value>
+  </data>
+  <data name="TotalAreaRatio">
+    <value>The ratio of the TotalArea of this precursor to the first internal
+standard label type, before version 0.7 this was always light/heavy, and appeared on the
+heavy precursor.</value>
+  </data>
+  <data name="TotalBackground">
+    <value>The summed Background values of all individual transitions for the
+particular precursor</value>
+  </data>
+  <data name="TotalBackgroundFragment">
+    <value>Total Background Fragment</value>
+  </data>
+  <data name="TotalBackgroundMs1">
+    <value>Total Background MS1</value>
+  </data>
+  <data name="Transition">
+    <value>Transition</value>
+  </data>
+  <data name="TransitionCount">
+    <value>Number of transitions under this precursor.</value>
+  </data>
+  <data name="TransitionIsDecoy">
+    <value>True if this is a decoy transition</value>
+  </data>
+  <data name="TransitionNote">
+    <value>A free text note associated with the transition by clicking Edit Note on
+the Edit menu</value>
+  </data>
+  <data name="TransitionReplicateNote">
+    <value>A free text note associated with a result set of the transition
+using the Results Grid.</value>
+  </data>
+  <data name="TransitionResult">
+    <value>Transition Result</value>
+  </data>
+  <data name="TransitionResults">
+    <value>Transition Results</value>
+  </data>
+  <data name="TransitionResultsSummary">
+    <value>Transition Results Summary</value>
+  </data>
+  <data name="Transitions">
+    <value>Transitions</value>
+  </data>
+  <data name="Truncated">
+    <value>True if the integrated a peak has a boundary at either end of the acquisition
+time range, where intensity at the end is greater than 1% of the entire peak height
+higher than the other extent.</value>
+  </data>
+  <data name="UserSetPeak">
+    <value>True if the default choice of peak or its boundaries was manually altered</value>
+  </data>
+  <data name="UserSetTotal">
+    <value>True if the default choice of peak or its boundaries was manually altered.</value>
+  </data>
+  <data name="Value">
+    <value>Value</value>
+  </data>
+</root>

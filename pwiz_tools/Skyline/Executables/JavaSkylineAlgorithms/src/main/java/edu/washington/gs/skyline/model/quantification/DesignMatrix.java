@@ -24,6 +24,7 @@ import org.apache.commons.math3.linear.RealMatrix;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 class DesignMatrix {
     private final FoldChangeDataSet dataSet;
@@ -111,7 +112,6 @@ class DesignMatrix {
             }
         }
         return realMatrix;
-
     }
 
     public List<LinearFitResult> performLinearFit() {
@@ -122,5 +122,22 @@ class DesignMatrix {
             abundances[i] = dataSet.getAbundance(i);
         }
         return linearModel.fit(abundances);
+    }
+
+    @Override
+    public String toString() {
+        if (columnNames.length == 0) {
+            return "";
+        }
+        List<String> lines = new ArrayList<>();
+        lines.add(String.join("\t", columnNames));
+        for (int row = 0; row < matrixColumns[0].length; row++) {
+            final int rowNumber = row;
+            lines.add(String.join("\t", Arrays.stream(matrixColumns)
+                    .map(col->Double.toString(col[rowNumber]))
+                    .collect(Collectors.toList())));
+        }
+
+        return String.join("\n", lines);
     }
 }

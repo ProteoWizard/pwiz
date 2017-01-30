@@ -117,8 +117,10 @@ namespace pwiz.SkylineTestTutorial
 
         protected override void DoTest()
         {
+            LaunchDebuggerOnWaitForConditionTimeout = true; // TODO(bspratt) remove this once we understand why this test hangs on slower PCs
             LowResTest();
             TofTest();
+            LaunchDebuggerOnWaitForConditionTimeout = false; // TODO(bspratt) remove this once we understand why this test hangs on slower PCs
         }
 
         private void LowResTest()
@@ -376,6 +378,8 @@ namespace pwiz.SkylineTestTutorial
 
             // Modifications are already set up, so that page should get skipped.
 
+            PauseForScreenShot<ImportPeptideSearchDlg.TransitionSettingsPage>("Import Peptide Search Transition Settings page", 17);
+
             // We're on the "Configure Transition Settings" page of the wizard.
             // We've already set up these settings, so just click next.
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
@@ -384,6 +388,8 @@ namespace pwiz.SkylineTestTutorial
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.transition_settings_page);
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
+
+            PauseForScreenShot<ImportPeptideSearchDlg.Ms2FullScanPage>("Import Peptide Search Full-Scan Settings page", 17);
 
             // We're on the "Configure Full-Scan Settings" page of the wizard.
             // We've already set up these settings, so just click next.
@@ -564,7 +570,19 @@ namespace pwiz.SkylineTestTutorial
             WaitForDocumentChangeLoaded(docCalibrate1);
             WaitForConditionUI(() => importProgress.Finished);
             string expectedErrorFormat = Resources.NoFullScanFilteringException_NoFullScanFilteringException_To_extract_chromatograms_from__0__full_scan_settings_must_be_enabled_;
-            WaitForConditionUI(() => !string.IsNullOrEmpty(importProgress.Error), "Missing expected error text: " + expectedErrorFormat);
+            if (!TryWaitForConditionUI(() => !string.IsNullOrEmpty(importProgress.Error)))
+            {
+                RunUI(() =>
+                {
+                    string message = "Missing expected error text: " + expectedErrorFormat;
+                    if (importProgress.SelectedControl == null)
+                        message = string.Format("No selected control. Selected index = {0}", importProgress.Selected);
+                    else if (!string.IsNullOrEmpty(importProgress.SelectedControl.Error))
+                        message = "Selected control error: " + importProgress.SelectedControl.Error + " not in text control";
+
+                    Assert.Fail(TextUtil.LineSeparate(message, "(" + importProgress.DetailedMessage + ")"));
+                });
+            }
             RunUI(() => AssertEx.AreComparableStrings(expectedErrorFormat, importProgress.Error, 1));
             RunUI(() =>
             {

@@ -39,6 +39,7 @@
 #include "MassLynxRawChromatogramReader.h"
 #include "MassLynxRawInfo.h"
 #include "MassLynxRawScanStatsReader.h"
+#include "MassLynxRawLockMass.h"
 #include "cdtdefs.h"
 #include "compresseddatacluster.h"
 
@@ -66,68 +67,77 @@ struct PWIZ_API_DECL RawData
 
     typedef map<string, vector<boost::any> > ExtendedScanStatsByName;
 
+    struct CachedCompressedDataCluster : public MassLynxRawScanReader
+    {
+        CachedCompressedDataCluster(MassLynxRawReader& massLynxRawReader) : MassLynxRawScanReader(massLynxRawReader) {}
+    };
+
     const string& RawFilepath() const {return rawpath_;}
     const vector<int>& FunctionIndexList() const {return functionIndexList;}
     const vector<bool>& IonMobilityByFunctionIndex() const {return ionMobilityByFunctionIndex;}
 
-    size_t FunctionCount() const {return functionIndexList.back() + 1;}
+    size_t FunctionCount() const {return functionIndexList.size();}
+    size_t LastFunctionIndex() const {return lastFunctionIndex_; }
 
     RawData(const string& rawpath)
         : Reader(rawpath),
           Info(Reader),
           ScanReader(Reader),
           ChromatogramReader(Reader),
+          LockMass(Reader),
           rawpath_(rawpath),
           scanStatsInitialized(init_once_flag_proxy)
     {
         // Count the number of _FUNC[0-9]{3}.DAT files, starting with _FUNC001.DAT
-		// For functions over 100, the names become _FUNC0100.DAT
+        // For functions over 100, the names become _FUNC0100.DAT
         // Keep track of the maximum function number
         string functionPathmask = rawpath + "/_FUNC*.DAT";
         vector<bfs::path> functionFilepaths;
         expand_pathmask(functionPathmask, functionFilepaths);
-        int functionCount = 0;
         for (size_t i=0; i < functionFilepaths.size(); ++i)
         {
-			string fileName = BFS_STRING(functionFilepaths[i].filename());
-            int number = lexical_cast<int>(bal::trim_left_copy_if(fileName.substr(5, fileName.length() - 9), bal::is_any_of("0")));
+            string fileName = BFS_STRING(functionFilepaths[i].filename());
+            size_t number = lexical_cast<size_t>(bal::trim_left_copy_if(fileName.substr(5, fileName.length() - 9), bal::is_any_of("0")));
             functionIndexList.push_back(number-1); // 0-based
-            functionCount = std::max(functionCount, number);
         }
+        sort(functionIndexList.begin(), functionIndexList.end()); // just in case filesystem returns them out of natural order
+        lastFunctionIndex_ = functionIndexList.back();
 
-        ionMobilityByFunctionIndex.resize(functionIndexList.size(), false);
+        ionMobilityByFunctionIndex.resize(lastFunctionIndex_+1, false);
+        CompressedDataCluster tmpCDC;
         for (size_t i=0; i < functionIndexList.size(); ++i)
         {
-            shared_ptr<CachedCompressedDataCluster>& cdc = cdcByFunction[i];
-            cdc.reset(new CachedCompressedDataCluster());
-            cdc->Initialise(rawpath.c_str(), functionIndexList[i]+1); // 1-based
-            ionMobilityByFunctionIndex[i] = cdc->isInitialised();
-            if (!cdc->isInitialised())
-                cdc.reset();
+            tmpCDC.Initialise(rawpath.c_str(), functionIndexList[i] + 1); // 1-based
+            ionMobilityByFunctionIndex[i] = tmpCDC.isInitialised();
+            if (tmpCDC.isInitialised())
+            {
+                shared_ptr<CachedCompressedDataCluster>& cdc = cdcByFunction[i];
+                cdc.reset(new CachedCompressedDataCluster(Reader));
+            }
         }
 
         initHeaderProps(rawpath);
-	}
+    }
 
-    const CompressedDataCluster& GetCompressedDataClusterForBlock(int functionIndex, int blockIndex) const
+    CachedCompressedDataCluster& GetCompressedDataClusterForBlock(int functionIndex, int blockIndex) const
     {
         shared_ptr<CachedCompressedDataCluster>& cdc = cdcByFunction[functionIndex];
 
         if (!cdc)
             throw std::runtime_error("[MassLynxRaw::GetCompressedDataClusterForBlock] function " + lexical_cast<string>(functionIndex + 1) + " does not have ion mobility data");
 
-        if (cdc->currentBlock != blockIndex)
-        {
-            cdc->loadDataBlock(blockIndex);
-            cdc->currentBlock = blockIndex;
-        }
+        //if (cdc->currentBlock != blockIndex)
+        //{
+        //    cdc->loadDataBlock(blockIndex);
+        //    cdc->currentBlock = blockIndex;
+        //}
 
         return *cdc;
     }
 
     double GetDriftTime(int functionIndex, int blockIndex, int scanIndex) const
     {
-		boost::call_once(scanStatsInitialized.flag, boost::bind(&RawData::initScanStats, this));
+        boost::call_once(scanStatsInitialized.flag, boost::bind(&RawData::initScanStats, this));
         const ExtendedScanStatsByName& extendedScanStatsByName = extendedScanStatsByFunction[functionIndex];
         ExtendedScanStatsByName::const_iterator transportRFItr = extendedScanStatsByName.find("Transport RF");
         if (transportRFItr != extendedScanStatsByName.end())
@@ -139,11 +149,11 @@ struct PWIZ_API_DECL RawData
         return 0.0;
     }
 
-	const MSScanStats& GetScanStats(int functionIndex, int scanIndex) const
-	{
-		boost::call_once(scanStatsInitialized.flag, boost::bind(&RawData::initScanStats, this));
-		return scanStatsByFunction[functionIndex][scanIndex];
-	}
+    const MSScanStats& GetScanStats(int functionIndex, int scanIndex) const
+    {
+        boost::call_once(scanStatsInitialized.flag, boost::bind(&RawData::initScanStats, this));
+        return scanStatsByFunction[functionIndex][scanIndex];
+    }
 
     const vector<MSScanStats>& GetAllScanStatsForFunction(int functionIndex) const
     {
@@ -151,11 +161,11 @@ struct PWIZ_API_DECL RawData
         return scanStatsByFunction[functionIndex];
     }
 
-	const ExtendedScanStatsByName& GetExtendedScanStats(int functionIndex) const
-	{
-		boost::call_once(scanStatsInitialized.flag, boost::bind(&RawData::initScanStats, this));
-		return extendedScanStatsByFunction[functionIndex];
-	}
+    const ExtendedScanStatsByName& GetExtendedScanStats(int functionIndex) const
+    {
+        boost::call_once(scanStatsInitialized.flag, boost::bind(&RawData::initScanStats, this));
+        return extendedScanStatsByFunction[functionIndex];
+    }
 
     const string& GetHeaderProp(const string& name) const
     {
@@ -165,16 +175,68 @@ struct PWIZ_API_DECL RawData
         return findItr->second;
     }
 
+    bool LockMassCanBeApplied() const
+    {
+        bool canBeApplied;
+        LockMass.CanApplyLockMassCorrection(canBeApplied);
+        return canBeApplied;
+    }
+
+    bool LockMassIsApplied() const
+    {
+        if (!LockMassCanBeApplied())
+            return false;
+        bool isApplied;
+        LockMass.GetLockMassCorrectionApplied(isApplied);
+        return isApplied;
+    }
+
+    bool ApplyLockMass(double mz, double tolerance)
+    {
+        const float MZ_EPSILON = 1e-5f;
+        const float TOLERANCE_EPSILON = 1e-5f;
+        float newMz = (float) mz;
+        float newTolerance = (float) tolerance;
+
+        //bool canApply;
+        //LockMass.CanApplyLockMassCorrection(canApply);
+        //if (!canApply)
+        //    return false; // lockmass correction not available
+
+        if (LockMassIsApplied())
+        {
+            float appliedMz, appliedTolerance;
+            LockMass.GetLockMassValues(appliedMz, appliedTolerance);
+            if (fabs(newMz - appliedMz) < MZ_EPSILON &&
+                fabs(newTolerance - appliedTolerance) < TOLERANCE_EPSILON)
+                return true; // existing lockmass is still applied
+        }
+
+        // apply new values
+        LockMass.UpdateLockMassCorrection(newMz, newTolerance);
+        return true;
+    }
+
+    void RemoveLockMass()
+    {
+        if (LockMassIsApplied())
+        {
+            LockMass.RemoveLockMassCorrection();  // This is quite expensive in time and memory if no lockmass has actually been applied
+        }
+    }
+
     private:
+    MassLynxRawLockMass LockMass;
+
     string rawpath_, empty_;
     vector<int> functionIndexList;
+    size_t lastFunctionIndex_;
     vector<bool> ionMobilityByFunctionIndex;
     map<string, string> headerProps;
 
-    struct CachedCompressedDataCluster : public CompressedDataCluster { int currentBlock; };
     mutable map<int, shared_ptr<CachedCompressedDataCluster> > cdcByFunction;
 
-	mutable once_flag_proxy scanStatsInitialized;
+    mutable once_flag_proxy scanStatsInitialized;
     mutable vector<vector<MSScanStats>> scanStatsByFunction;
     mutable vector<ExtendedScanStatsByName> extendedScanStatsByFunction;
 
@@ -200,14 +262,14 @@ struct PWIZ_API_DECL RawData
         }
     }
 
-	void initScanStats() const
-	{
+    void initScanStats() const
+    {
         try
         {
             MassLynxRawScanStatsReader statsReader(Reader);
 
-            scanStatsByFunction.resize(FunctionCount());
-            extendedScanStatsByFunction.resize(FunctionCount());
+            scanStatsByFunction.resize(lastFunctionIndex_+1);
+            extendedScanStatsByFunction.resize(lastFunctionIndex_+1);
 
             BOOST_FOREACH(int function, functionIndexList)
             {

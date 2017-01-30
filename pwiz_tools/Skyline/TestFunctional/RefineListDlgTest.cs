@@ -53,7 +53,8 @@ namespace pwiz.SkylineTestFunctional
             staticMods.Add(UniMod.GetModification("Phospho (ST)", true).ChangeVariable(true));
             var heavyMods = new List<StaticMod> {UniMod.GetModification("Label:13C(6)15N(4) (C-term R)", false)};
             document = document.ChangeSettings(document.Settings
-                .ChangePeptideModifications(mods => mods.ChangeStaticModifications(staticMods).ChangeHeavyModifications(heavyMods))
+                .ChangePeptideModifications(mods => mods.ChangeStaticModifications(staticMods)
+                    .ChangeModifications(IsotopeLabelType.heavy, heavyMods))
                 .ChangeTransitionFilter(filt => filt.ChangePrecursorCharges(new [] {2, 3, 4, 5})));
             Assert.IsTrue(SkylineWindow.SetDocument(document, SkylineWindow.Document));
 

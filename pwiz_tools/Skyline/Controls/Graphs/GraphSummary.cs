@@ -24,6 +24,7 @@ using System.Windows.Forms;
 using pwiz.Common.Controls;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using ZedGraph;
@@ -60,6 +61,8 @@ namespace pwiz.Skyline.Controls.Graphs
             bool HandleKeyDownEvent(object sender, KeyEventArgs e);
 
             IFormView FormView { get; }
+
+            bool IsRunToRun();
         }
 
         public interface IControllerSplit : IController
@@ -80,6 +83,7 @@ namespace pwiz.Skyline.Controls.Graphs
             TreeNodeMS SelectedNode { get; }
             IList<TreeNodeMS> SelectedNodes { get; }
             IdentityPath SelectedPath { get; set; }
+            void SelectPath(IdentityPath path);
             PeptideGraphInfo GetPeptideGraphInfo(DocNode docNode);
             int SelectedResultsIndex { get; set; }
 
@@ -100,6 +104,7 @@ namespace pwiz.Skyline.Controls.Graphs
             public int SelectedResultsIndex { get; set; }
             public void ActivateSpectrum() {}
             public GraphValues.IRetentionTimeTransformOp GetRetentionTimeTransformOperation() {return null;}
+            public void SelectPath(IdentityPath path){}
             public PeptideGraphInfo GetPeptideGraphInfo(DocNode docNode)
             {
                 return null;
@@ -111,11 +116,15 @@ namespace pwiz.Skyline.Controls.Graphs
         private readonly IController _controller;
 
         private bool _activeLibrary;
-        private int _resultsIndex;
+        private int _targetResultsIndex;
+        private int _originalResultsIndex;
+
         private int _ratioIndex;
 
-        public GraphSummary(IDocumentUIContainer documentUIContainer, IController controller)
+        public GraphSummary(IDocumentUIContainer documentUIContainer, IController controller, int targetResultsIndex, int originalIndex = -1)
         {
+            _targetResultsIndex = targetResultsIndex;
+            _originalResultsIndex = originalIndex;
             InitializeComponent();
 
             Icon = Resources.SkylineData;
@@ -129,7 +138,7 @@ namespace pwiz.Skyline.Controls.Graphs
             _documentContainer.ListenUI(OnDocumentUIChanged);
             _stateProvider = documentUIContainer as IStateProvider ??
                              new DefaultStateProvider();
-
+            ResizeToolbar();
             UpdateUI();
         }
 
@@ -149,17 +158,30 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public int ResultsIndex
         {
-            get { return _resultsIndex; }
-            set
-            {
-                if (_resultsIndex != value)
-                {
-                    _resultsIndex = value;
-
-                    _controller.OnResultsIndexChanged();
-                }
-            }
+            get { return _targetResultsIndex; } // Synonym to avoid making other code use Target
         }
+
+        public int TargetResultsIndex
+        {
+            get { return _targetResultsIndex; }
+        }
+
+        public int OriginalResultsIndex
+        {
+            get { return _originalResultsIndex; }
+
+        }
+
+        public void SetResultIndexes(int target, int original = -1)
+        {
+            bool update = target != _targetResultsIndex || original != _originalResultsIndex;
+            _targetResultsIndex = target;
+            _originalResultsIndex = original;
+            if(update)
+                _controller.OnResultsIndexChanged();
+        }
+
+        public bool IsRunToRun { get { return Controller.IsRunToRun(); } }
 
         /// <summary>
         /// Not all summary graphs care about this value, but since the
@@ -192,6 +214,21 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void OnDocumentUIChanged(object sender, DocumentChangedEventArgs e)
         {
+            // Make sure if we are doing run to run regression that we use valid result indexes. 
+            if (IsRunToRun)
+            {
+                if (_documentContainer.Document.MeasuredResults != null &&
+                    _documentContainer.Document.MeasuredResults.Chromatograms.Count > 1)
+                {
+                    _originalResultsIndex = 0;
+                    _originalResultsIndex = 1;
+                }
+                // Need at least 2 replicates to do run to run regression.
+                else
+                {
+                    RTGraphController.GraphType = GraphTypeRT.score_to_run_regression;
+                }
+            }
             UpdateUI();
         }
 
@@ -242,7 +279,55 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void UpdateUI(bool selectionChanged = true)
         {
+            UpdateToolbar(_documentContainer.DocumentUI.Settings.MeasuredResults);
             UpdateGraph(true);
+        }
+
+        private void UpdateToolbar(MeasuredResults results)
+        {
+            if (!IsRunToRun)
+            {
+                if (!splitContainer.Panel1Collapsed)
+                {
+                    splitContainer.Panel1Collapsed = true;
+                }
+            }
+            else
+            {
+                // Check to see if the list of files has changed.
+                var listNames = new List<string>();
+                foreach (var chromSet in results.Chromatograms)
+                    listNames.Add(chromSet.Name);
+
+
+                ResetResultsCombo(listNames, comboBoxTargetReplicates);
+                var origIndex = ResetResultsCombo(listNames, comboOriginalReplicates);
+                var targetIndex = StateProvider.SelectedResultsIndex;
+                if (origIndex < 0)
+                    origIndex = (targetIndex + 1) % results.Chromatograms.Count;
+                _targetResultsIndex = targetIndex;
+                _originalResultsIndex = origIndex;
+                _dontUpdateForTargetSelectedIndex = true;
+                comboBoxTargetReplicates.SelectedIndex = targetIndex;
+                _dontUpdateOriginalSelectedIndex = true;
+                comboOriginalReplicates.SelectedIndex = origIndex;
+                
+                // Show the toolbar after updating the files
+                if (splitContainer.Panel1Collapsed)
+                {
+                    splitContainer.Panel1Collapsed = false;
+                }
+            }
+        }
+
+        private int ResetResultsCombo(List<string> listNames, ComboBox combo)
+        {
+            object selected = combo.SelectedItem;
+            combo.Items.Clear();
+            foreach (string name in listNames)
+                combo.Items.Add(name);
+            ComboHelper.AutoSizeDropDown(combo);
+            return selected != null ? combo.Items.IndexOf(selected) : -1;
         }
 
         private void UpdateGraph(bool checkData)
@@ -446,6 +531,46 @@ namespace pwiz.Skyline.Controls.Graphs
             paneKeys = paneKeys ?? new[] { PaneKey.DEFAULT };
             Array.Sort(paneKeys);
             return paneKeys;
+        }
+
+
+        private bool _dontUpdateForTargetSelectedIndex;
+        private void toolStripComboBoxTargetReplicate_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (_dontUpdateForTargetSelectedIndex)
+                _dontUpdateForTargetSelectedIndex = false;
+            else if (StateProvider.SelectedResultsIndex != comboBoxTargetReplicates.SelectedIndex)
+                StateProvider.SelectedResultsIndex = comboBoxTargetReplicates.SelectedIndex;
+        }
+
+        private bool _dontUpdateOriginalSelectedIndex;
+        private void toolStripComboBoxOriginalReplicate_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (_dontUpdateOriginalSelectedIndex)
+                _dontUpdateOriginalSelectedIndex = false;
+            else
+                SetResultIndexes(_targetResultsIndex,comboOriginalReplicates.SelectedIndex);
+        }
+
+        #region Functional Test Support
+
+        public ComboBox RunToRunTargetReplicate { get { return comboBoxTargetReplicates; } }
+
+        public ComboBox RunToRunOriginalReplicate { get { return comboOriginalReplicates;} }
+
+        #endregion
+        
+        private void toolStrip_Resize(object sender, EventArgs e)
+        {
+            ResizeToolbar();
+        }
+
+        private void ResizeToolbar()
+        {
+            comboBoxTargetReplicates.Width = (splitContainer.Panel1.Bounds.Right - splitContainer.Panel1.Bounds.Left - 25 -
+                                              label1.Width) / 2;
+            comboOriginalReplicates.Width = comboBoxTargetReplicates.Width;
+            comboOriginalReplicates.Left = comboBoxTargetReplicates.Left + comboBoxTargetReplicates.Width + 4;
         }
     }
 }

@@ -149,26 +149,59 @@
       <Component Id="Clearcore2.Compression.dll">
         <File Source="$(var.Skyline.TargetDir)/Clearcore2.Compression.dll" KeyPath="yes"/>
       </Component>
+      <Component Id="Clearcore2.Data.Acquisition.Client.dll">
+        <File Source="$(var.Skyline.TargetDir)/Clearcore2.Data.Acquisition.Client.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Clearcore2.Data.Acquisition.Contracts.dll">
+        <File Source="$(var.Skyline.TargetDir)/Clearcore2.Data.Acquisition.Contracts.dll" KeyPath="yes"/>
+      </Component>
       <Component Id="Clearcore2.Data.AnalystDataProvider.dll">
         <File Source="$(var.Skyline.TargetDir)/Clearcore2.Data.AnalystDataProvider.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Clearcore2.Data.Client.dll">
+        <File Source="$(var.Skyline.TargetDir)/Clearcore2.Data.Client.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Clearcore2.Data.Common.dll">
+        <File Source="$(var.Skyline.TargetDir)/Clearcore2.Data.Common.dll" KeyPath="yes"/>
       </Component>
       <Component Id="Clearcore2.Data.CommonInterfaces.dll">
         <File Source="$(var.Skyline.TargetDir)/Clearcore2.Data.CommonInterfaces.dll" KeyPath="yes"/>
       </Component>
+      <Component Id="Clearcore2.Data.Contracts.dll">
+        <File Source="$(var.Skyline.TargetDir)/Clearcore2.Data.Contracts.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Clearcore2.Data.Core.dll">
+        <File Source="$(var.Skyline.TargetDir)/Clearcore2.Data.Core.dll" KeyPath="yes"/>
+      </Component>
       <Component Id="Clearcore2.Data.dll">
         <File Source="$(var.Skyline.TargetDir)/Clearcore2.Data.dll" KeyPath="yes"/>
       </Component>
+      <Component Id="Clearcore2.Data.Wiff2.dll">
+        <File Source="$(var.Skyline.TargetDir)/Clearcore2.Data.Wiff2.dll" KeyPath="yes"/>
+      </Component>
       <Component Id="Clearcore2.Data.WiffReader.dll">
         <File Source="$(var.Skyline.TargetDir)/Clearcore2.Data.WiffReader.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Clearcore2.DataService.dll">
+        <File Source="$(var.Skyline.TargetDir)/Clearcore2.DataService.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Clearcore2.Devices.Types.dll">
+        <File Source="$(var.Skyline.TargetDir)/Clearcore2.Devices.Types.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Clearcore2.Domain.Acquisition.dll">
+        <File Source="$(var.Skyline.TargetDir)/Clearcore2.Domain.Acquisition.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Clearcore2.Domain.Acquisition.Methods.MassSpec.dll">
+        <File Source="$(var.Skyline.TargetDir)/Clearcore2.Domain.Acquisition.Methods.MassSpec.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Clearcore2.Infrastructure.dll">
+        <File Source="$(var.Skyline.TargetDir)/Clearcore2.Infrastructure.dll" KeyPath="yes"/>
       </Component>
       <Component Id="Clearcore2.InternalRawXYProcessing.dll">
         <File Source="$(var.Skyline.TargetDir)/Clearcore2.InternalRawXYProcessing.dll" KeyPath="yes"/>
       </Component>
       <Component Id="Clearcore2.Muni.dll">
         <File Source="$(var.Skyline.TargetDir)/Clearcore2.Muni.dll" KeyPath="yes"/>
-      </Component>
-      <Component Id="Clearcore2.ProjectUtilities.dll">
-        <File Source="$(var.Skyline.TargetDir)/Clearcore2.ProjectUtilities.dll" KeyPath="yes"/>
       </Component>
       <Component Id="Clearcore2.RawXYProcessing.dll">
         <File Source="$(var.Skyline.TargetDir)/Clearcore2.RawXYProcessing.dll" KeyPath="yes"/>
@@ -179,8 +212,50 @@
       <Component Id="Clearcore2.Utility.dll">
         <File Source="$(var.Skyline.TargetDir)/Clearcore2.Utility.dll" KeyPath="yes"/>
       </Component>
-      <Component Id="Crawdad.dll">
-        <File Source="$(var.Skyline.TargetDir)/Crawdad.dll" KeyPath="yes"/>
+      <Component Id="Clearcore2.XmlHelpers.dll">
+        <File Source="$(var.Skyline.TargetDir)/Clearcore2.XmlHelpers.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Microsoft.Practices.Unity.Configuration.dll">
+        <File Source="$(var.Skyline.TargetDir)/Microsoft.Practices.Unity.Configuration.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Microsoft.Practices.Unity.dll">
+        <File Source="$(var.Skyline.TargetDir)/Microsoft.Practices.Unity.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="OFX.Core.Contracts.dll">
+        <File Source="$(var.Skyline.TargetDir)/OFX.Core.Contracts.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="OFX.Core.dll">
+        <File Source="$(var.Skyline.TargetDir)/OFX.Core.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="OFX.EventServices.dll">
+        <File Source="$(var.Skyline.TargetDir)/OFX.EventServices.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="OFX.Logging.dll">
+        <File Source="$(var.Skyline.TargetDir)/OFX.Logging.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="OFX.Security.Core.dll">
+        <File Source="$(var.Skyline.TargetDir)/OFX.Security.Core.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="protobuf_net.dll">
+        <File Source="$(var.Skyline.TargetDir)/protobuf-net.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Sciex.Clearcore.FMan.dll">
+        <File Source="$(var.Skyline.TargetDir)/Sciex.Clearcore.FMan.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Sciex.Data.Processing.dll">
+        <File Source="$(var.Skyline.TargetDir)/Sciex.Data.Processing.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Sciex.Data.SimpleTypes.dll">
+        <File Source="$(var.Skyline.TargetDir)/Sciex.Data.SimpleTypes.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Sciex.Data.XYData.dll">
+        <File Source="$(var.Skyline.TargetDir)/Sciex.Data.XYData.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Sciex.FMan.dll">
+        <File Source="$(var.Skyline.TargetDir)/Sciex.FMan.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Sciex.Wiff.dll">
+        <File Source="$(var.Skyline.TargetDir)/Sciex.Wiff.dll" KeyPath="yes"/>
       </Component>
       <Component Id="DataReader.dll">
         <File Source="$(var.Skyline.TargetDir)/DataReader.dll" KeyPath="yes"/>

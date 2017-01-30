@@ -22,6 +22,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -64,6 +65,9 @@ namespace pwiz.Skyline.Model.Results
             get; private set;
         }
 
+        private const int MAX_GROUP_READ_AHEAD = 100;
+        private readonly int MINIMIZING_THREADS = ParallelEx.SINGLE_THREADED ? 1 : 8;
+
         /// <summary>
         /// Collects statistics on how much space savings minimizing will achieve, and (if outStream
         /// is not null) writes out the minimized cache file.
@@ -75,10 +79,12 @@ namespace pwiz.Skyline.Model.Results
             var statisticsCollector = new MinStatisticsCollector(this);
             bool readChromatograms = settings.NoiseTimeRange.HasValue || writer != null;
 
-            var chromGroupHeaderToIndex =
-                ChromGroupHeaderInfos
-                    .Select((cghi, index) => new KeyValuePair<ChromGroupHeaderInfo, int>(cghi, index))
-                    .ToDictionary(kvp => kvp.Key, kvp=>kvp.Value);
+            var chromGroupHeaderToIndex = new Dictionary<long, int>(ChromGroupHeaderInfos.Count);
+            for (int i = 0; i < ChromGroupHeaderInfos.Count; i++)
+            {
+                var cghi = ChromGroupHeaderInfos[i];
+                chromGroupHeaderToIndex.Add(cghi.LocationPoints, i);
+            }
             var chromGroups = new ChromatogramGroupInfo[ChromGroupHeaderInfos.Count];
             var transitionGroups = new List<TransitionGroupDocNode>[ChromGroupHeaderInfos.Count];
             foreach (var nodePep in Document.Molecules)
@@ -86,10 +92,10 @@ namespace pwiz.Skyline.Model.Results
                 foreach (var nodeGroup in nodePep.TransitionGroups)
                 {
                     ChromatogramGroupInfo[] groupInfos;
-                    ChromatogramCache.TryLoadChromatogramInfo(nodePep, nodeGroup, _tolerance, out groupInfos);
+                    ChromatogramCache.TryLoadChromatogramInfo(nodePep, nodeGroup, _tolerance, null, out groupInfos);
                     foreach (var chromGroupInfo in groupInfos)
                     {
-                        int headerIndex = chromGroupHeaderToIndex[chromGroupInfo.Header];
+                        int headerIndex = chromGroupHeaderToIndex[chromGroupInfo.Header.LocationPoints];
                         if (chromGroups[headerIndex] == null)
                         {
                             chromGroups[headerIndex] = chromGroupInfo;
@@ -99,6 +105,9 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
             }
+
+            var minimizer = new QueueWorker<MinimizeParams>(null, MinimizeAndWrite);
+            minimizer.RunAsync(MINIMIZING_THREADS, "Minimizing/Writing", MAX_GROUP_READ_AHEAD); // Not L10N
 
             for (int iHeader = 0; iHeader < ChromGroupHeaderInfos.Count; iHeader++)
             {
@@ -113,39 +122,50 @@ namespace pwiz.Skyline.Model.Results
                 {
                     transitionGroupDocNodes = transitionGroups[iHeader];
                 }
+                
                 if (readChromatograms)
                 {
                     try
                     {
-                        chromGroupInfo.ReadChromatogram(ChromatogramCache);
+                        chromGroupInfo.ReadChromatogram(ChromatogramCache, true);
                     }
                     catch (Exception exception)
                     {
                         Trace.TraceWarning("Unable to read chromatogram {0}", exception); // Not L10N
                     }
                 }
-                MinimizedChromGroup minimizedChromGroup = MinimizeChromGroup(settings,
-                    chromGroupInfo, transitionGroupDocNodes);
-                statisticsCollector.ProcessChromGroup(minimizedChromGroup);
-                if (progressCallback != null)
-                {
-                    progressCallback.Invoke(statisticsCollector.GetStatistics());
-                }
-                if (writer != null)
-                {
-                    writer.WriteChromGroup(chromGroupInfo, minimizedChromGroup);
-                }
+
+                if (minimizer.Exception != null)
+                    break;
+
+                minimizer.Add(new MinimizeParams(writer, settings, chromGroupInfo, transitionGroupDocNodes, progressCallback, statisticsCollector));
+
                 // Null out the ChromGroup in our array so it can be garbage collected.
                 chromGroups[iHeader] = null;
             }
-            if (progressCallback != null)
-            {
-                progressCallback.Invoke(statisticsCollector.GetStatistics());
-            }
+
+            minimizer.DoneAdding(true);
+            if (minimizer.Exception != null)
+                throw minimizer.Exception;
+
+            statisticsCollector.ReportProgress(progressCallback, true);
+
             if (writer != null)
             {
                 writer.WriteEndOfFile();
             }
+        }
+
+        private void MinimizeAndWrite(MinimizeParams p, int threadIndex)
+        {
+            // Handle all decompression -> convert to values -> minimize -> convert to bytes -> compression
+            // in parallel processing, since this is where most of the time is spent
+            var minimizedChromGroup = MinimizeChromGroup(p.Settings, p.ChromGroupInfo, p.TransitionGroupDocNodes);
+            if (p.Writer != null)
+                minimizedChromGroup.CalcWriteArrays(ChromatogramCache);
+
+            // Synchronized
+            p.Write(minimizedChromGroup);
         }
 
         /// <summary>
@@ -155,6 +175,8 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         private MinimizedChromGroup MinimizeChromGroup(Settings settings, ChromatogramGroupInfo chromatogramGroupInfo, IList<TransitionGroupDocNode> transitionGroups)
         {
+            chromatogramGroupInfo.EnsureDecompressed();
+
             var fileIndexes = new List<int>();
             for (int fileIndex = 0; fileIndex < Document.Settings.MeasuredResults.Chromatograms.Count; fileIndex++)
             {
@@ -205,7 +227,7 @@ namespace pwiz.Skyline.Model.Results
                     keptTransitionIndexes.Add(i);
                 }
             }
-            var result = new MinimizedChromGroup(chromatogramGroupInfo.Header)
+            var result = new MinimizedChromGroup(chromatogramGroupInfo)
                              {
                                  RetainedTransitionIndexes = keptTransitionIndexes,
                              };
@@ -224,23 +246,79 @@ namespace pwiz.Skyline.Model.Results
             return result;
         }
 
-        internal class MinimizedChromGroup
+        private class MinimizeParams
         {
-            public MinimizedChromGroup(ChromGroupHeaderInfo chromGroupHeaderInfo)
+            public MinimizeParams(Writer writer,
+                Settings settings,
+                ChromatogramGroupInfo chromGroupInfo,
+                IList<TransitionGroupDocNode> transitionGroupDocNodes,
+                ProgressCallback progressCallback,
+                MinStatisticsCollector statisticsCollector)
             {
-                ChromGroupHeaderInfo = chromGroupHeaderInfo;
-                OptimizedFirstScan = 0;
-                OptimizedLastScan = chromGroupHeaderInfo.NumPoints - 1;
+                Writer = writer;
+                Settings = settings;
+                ChromGroupInfo = chromGroupInfo;
+                TransitionGroupDocNodes = transitionGroupDocNodes;
+                ProgressCallback = progressCallback;
+                StatisticsCollector = statisticsCollector;
             }
 
-            public ChromGroupHeaderInfo ChromGroupHeaderInfo { get; private set; }
+            public Writer Writer { get; private set; }
+            public Settings Settings { get; private set; }
+            public ChromatogramGroupInfo ChromGroupInfo { get; private set; }
+            public IList<TransitionGroupDocNode> TransitionGroupDocNodes { get; private set; }
+            private ProgressCallback ProgressCallback { get; set; }
+            private MinStatisticsCollector StatisticsCollector { get; set; }
 
-            public ICollection<int> RetainedTransitionIndexes { get; set; }
+            private void UpdateStatistics(MinimizedChromGroup minimizedChromGroup)
+            {
+                StatisticsCollector.ProcessChromGroup(minimizedChromGroup);
+                StatisticsCollector.ReportProgress(ProgressCallback, false);
+            }
+
+            public void Write(MinimizedChromGroup minimizedChromGroup)
+            {
+                // Then one thread at a time for updating statistics and writing
+                lock (StatisticsCollector)
+                {
+                    UpdateStatistics(minimizedChromGroup);
+
+                    if (Writer != null)
+                        Writer.WriteChromGroup(ChromGroupInfo, minimizedChromGroup);
+                }
+            }
+        }
+
+        internal class MinimizedChromGroup
+        {
+            private readonly ChromatogramGroupInfo _chromatogramGroupInfo;
+
+            public MinimizedChromGroup(ChromatogramGroupInfo chromGroupHeaderInfo)
+            {
+                _chromatogramGroupInfo = chromGroupHeaderInfo;
+                OptimizedFirstScan = 0;
+                OptimizedLastScan = chromGroupHeaderInfo.Header.NumPoints - 1;
+            }
+
+            public ChromGroupHeaderInfo ChromGroupHeaderInfo { get { return _chromatogramGroupInfo.Header; } }
+
+            public IList<int> RetainedTransitionIndexes { get; set; }
             public float? OptimizedStartTime { get; private set; }
             public float? OptimizedEndTime { get; private set; }
             public int OptimizedFirstScan { get; private set; }
             public int OptimizedLastScan { get; private set; }
             public int OptimizedScanCount { get { return OptimizedLastScan + 1 - OptimizedFirstScan; } }
+
+            // Output values
+            public int UncompressedLength { get; private set; }
+            public byte[] ChromatogramBytes { get; private set; }
+            public int NumPeaks { get; private set; }
+            public int TotalPeakCount { get; private set; }
+            public int MaxPeakIndex { get; private set; }
+            public byte[] PeakBytes { get; private set; }
+            public IList<ChromTransition> Transitions { get; private set; }
+            public float[] PeakScores { get; private set; }
+
             public void SetStartEndTime(float[] times, float minRetentionTime, float maxRetentionTime)
             {
                 int firstIndex = Array.BinarySearch(times, minRetentionTime);
@@ -261,14 +339,127 @@ namespace pwiz.Skyline.Model.Results
                 OptimizedEndTime = times[lastIndex];
             }
 
-            public static MinimizedChromGroup Discard(ChromGroupHeaderInfo chromGroupHeaderInfo)
+            public void CalcWriteArrays(ChromatogramCache chromatogramCache)
             {
-                return new MinimizedChromGroup(chromGroupHeaderInfo)
-                           {
-                               RetainedTransitionIndexes = new int[0]
-                           };
+                if (RetainedTransitionIndexes.Count == 0)
+                    return;
+
+                CalcPeakInfo(chromatogramCache);
+                CalcChromatogramBytes();
+            }
+
+            public void CalcPeakInfo(ChromatogramCache cache)
+            {
+                var header = _chromatogramGroupInfo.Header;
+                int numPeaks = header.NumPeaks;
+                var retainedPeakIndexes = new HashSet<int>();
+                if (!OptimizedStartTime.HasValue || !OptimizedEndTime.HasValue)
+                {
+                    retainedPeakIndexes.UnionWith(Enumerable.Range(0, numPeaks));
+                }
+                else
+                {
+                    for (int iPeak = 0; iPeak < header.NumPeaks; iPeak++)
+                    {
+                        bool outsideRange = false;
+                        for (var transitionIndex = 0; transitionIndex < header.NumTransitions; transitionIndex++)
+                        {
+                            if (!RetainedTransitionIndexes.Contains(transitionIndex))
+                                continue;
+
+                            var peak = cache.GetPeak(header.StartPeakIndex +
+                                                       transitionIndex * header.NumPeaks +
+                                                       iPeak);
+                            if (peak.StartTime < OptimizedStartTime.Value || peak.EndTime > OptimizedEndTime.Value)
+                            {
+                                outsideRange = true;
+                                break;
+                            }
+                        }
+                        if (!outsideRange)
+                        {
+                            retainedPeakIndexes.Add(iPeak);
+                        }
+                    }
+                }
+
+                NumPeaks = retainedPeakIndexes.Count;
+                if (retainedPeakIndexes.Contains(header.MaxPeakIndex))
+                    MaxPeakIndex = retainedPeakIndexes.Count(index => index < header.MaxPeakIndex);
+                else
+                    MaxPeakIndex = -1;
+
+                var peakScores = new List<float>();
+                for (int iPeak = 0; iPeak < numPeaks; iPeak++)
+                {
+                    if (!retainedPeakIndexes.Contains(iPeak))
+                        continue;
+
+                    int iScores = header.StartScoreIndex + iPeak * cache.ScoreTypesCount;
+                    peakScores.AddRange(cache.GetCachedScores(iScores));
+                }
+                PeakScores = peakScores.ToArray();
+                var peakBytes = new List<byte>();
+                Transitions = new List<ChromTransition>();
+                foreach (var originalIndex in RetainedTransitionIndexes)
+                {
+                    Transitions.Add(cache.GetTransition(originalIndex + header.StartTransitionIndex));
+                    for (int iPeak = 0; iPeak < numPeaks; iPeak++)
+                    {
+                        if (!retainedPeakIndexes.Contains(iPeak))
+                            continue;
+
+                        var originalPeak = cache.GetPeak(header.StartPeakIndex + originalIndex*numPeaks + iPeak);
+                        peakBytes.AddRange(ChromPeak.GetBytes(originalPeak));
+                        TotalPeakCount++;
+                    }
+                }
+                PeakBytes = peakBytes.ToArray();
+            }
+
+            public void CalcChromatogramBytes()
+            {
+                int numPoints = OptimizedScanCount;
+
+                float[] times = CopyMinimized(_chromatogramGroupInfo.Times, new float[numPoints]);
+                int[][] scanIndexes = null;
+                if (_chromatogramGroupInfo.ScanIndexes != null)
+                {
+                    scanIndexes = new int[_chromatogramGroupInfo.ScanIndexes.Length][];
+                    for (int i = 0; i < scanIndexes.Length; i++)
+                    {
+                        var sourceIndexes = _chromatogramGroupInfo.ScanIndexes[i];
+                        if (sourceIndexes != null)
+                            scanIndexes[i] = CopyMinimized(sourceIndexes, new int[numPoints]);
+                    }
+                }
+
+                int countTrans = RetainedTransitionIndexes.Count;
+                float[][] intensities = new float[countTrans][];
+                short[][] massError10Xs = null;
+                if (_chromatogramGroupInfo.MassError10XArray != null)
+                    massError10Xs = new short[countTrans][];
+
+                for (int i = 0; i < countTrans; i++)
+                {
+                    int originalIndex = RetainedTransitionIndexes[i];
+                    intensities[i] = CopyMinimized(_chromatogramGroupInfo.IntensityArray[originalIndex], new float[numPoints]);
+                    if (massError10Xs != null)
+                        massError10Xs[i] = CopyMinimized(_chromatogramGroupInfo.MassError10XArray[originalIndex], new short[numPoints]);
+                }
+                byte[] points = ChromatogramCache.TimeIntensitiesToBytes(times, intensities, massError10Xs, scanIndexes);
+                UncompressedLength = points.Length;
+                // Compress the data (can be huge for AB data with lots of zeros)
+                ChromatogramBytes = points.Compress(3);
+            }
+
+            private TVal[] CopyMinimized<TVal>(TVal[] sourceArray, TVal[] destArray)
+            {
+                Array.Copy(sourceArray, OptimizedFirstScan, destArray, 0, destArray.Length);
+                return destArray;
             }
         }
+
         public struct Settings
         {
             public Settings(Settings that)
@@ -346,7 +537,7 @@ namespace pwiz.Skyline.Model.Results
 
             private readonly MinStatistics.Replicate[] _replicates;
             private readonly int[] _fileIndexToReplicateIndex;
-            private int _processedGroupCount;
+            private DateTime _lastOutput = DateTime.Now;
 
             private static long GetFileSize(ChromGroupHeaderInfo chromGroupHeaderInfo)
             {
@@ -405,7 +596,6 @@ namespace pwiz.Skyline.Model.Results
 
             internal void ProcessChromGroup(MinimizedChromGroup minimizedChromGroup)
             {
-                Assume.IsTrue(Equals(minimizedChromGroup.ChromGroupHeaderInfo, ChromCacheMinimizer.ChromGroupHeaderInfos[_processedGroupCount]));
                 var headerInfo = minimizedChromGroup.ChromGroupHeaderInfo;
                 int replicateIndex = _fileIndexToReplicateIndex[headerInfo.FileIndex];
                 long originalFileSize = GetFileSize(headerInfo);
@@ -425,12 +615,20 @@ namespace pwiz.Skyline.Model.Results
                 }
                 _replicates[replicateIndex].MinimizedFileSize += minimizedFileSize;
                 _replicates[replicateIndex].ProcessedFileSize += originalFileSize;
-                _processedGroupCount++;
             }
 
-            public MinStatistics GetStatistics()
+            public void ReportProgress(ProgressCallback progressCallback, bool isFinal)
             {
-                return new MinStatistics(_replicates);
+                if (progressCallback == null)
+                    return;
+
+                var currentTime = DateTime.Now;
+                // Show progress at least every second
+                if (!isFinal && (currentTime - _lastOutput).Seconds < 1)
+                    return;
+
+                progressCallback(new MinStatistics(_replicates));
+                _lastOutput = currentTime;
             }
         }
 
@@ -473,107 +671,26 @@ namespace pwiz.Skyline.Model.Results
                 int startTransitionIndex = _transitions.Count;
                 int startPeakIndex = _peakCount;
                 int startScoreIndex = _scoreCount;
-                for (int iPeak = 0; iPeak < originalHeader.NumPeaks; iPeak++)
-                {
-                    int iScores = originalHeader.StartScoreIndex + iPeak*_scoreTypes.Count;
-                    var scores = _originalCache.GetCachedScores(iScores).ToArray();
-                    PrimitiveArrays.Write(_outputStreamScores, scores);
-                    _scoreCount += scores.Length;
-                }
-                int numPoints = minimizedChromGroup.OptimizedLastScan - minimizedChromGroup.OptimizedFirstScan + 1;
-                var retainedPeakIndexes = new HashSet<int>();
-                if (minimizedChromGroup.OptimizedStartTime.HasValue && minimizedChromGroup.OptimizedEndTime.HasValue)
-                {
-                    for (int iPeak = 0; iPeak < originalHeader.NumPeaks; iPeak++)
-                    {
-                        bool outsideRange = false;
-                        for (var transitionIndex = 0; transitionIndex < originalHeader.NumTransitions; transitionIndex++)
-                        {
-                            if (!minimizedChromGroup.RetainedTransitionIndexes.Contains(transitionIndex))
-                                continue;
 
-                            var peak = _originalCache.GetPeak(originalHeader.StartPeakIndex +
-                                                       transitionIndex*originalHeader.NumPeaks + iPeak);
-                            if (peak.StartTime < minimizedChromGroup.OptimizedStartTime.Value ||
-                                peak.EndTime > minimizedChromGroup.OptimizedEndTime.Value)
-                            {
-                                outsideRange = true;
-                                break;
-                            }
-                        }
-                        if (!outsideRange)
-                        {
-                            retainedPeakIndexes.Add(iPeak);
-                        }
-                    }
-                }
-                else
-                {
-                    retainedPeakIndexes.UnionWith(Enumerable.Range(0, originalHeader.NumPeaks));
-                }
-                int numPeaks = retainedPeakIndexes.Count;
-                int maxPeakIndex;
-                if (retainedPeakIndexes.Contains(originalHeader.MaxPeakIndex))
-                {
-                    maxPeakIndex = retainedPeakIndexes.Count(index => index < originalHeader.MaxPeakIndex);
-                }
-                else
-                {
-                    maxPeakIndex = -1;
-                }
+                _scoreCount += minimizedChromGroup.PeakScores.Length;
+                PrimitiveArrays.Write(_outputStreamScores, minimizedChromGroup.PeakScores);
+
+                _peakCount += minimizedChromGroup.TotalPeakCount;
+                _transitions.AddRange(minimizedChromGroup.Transitions);
+
+                int numPoints = minimizedChromGroup.OptimizedScanCount;
+                int numPeaks = minimizedChromGroup.NumPeaks;
+                int maxPeakIndex = minimizedChromGroup.MaxPeakIndex;
+
+                var peakBytes = minimizedChromGroup.PeakBytes;
+                _outputStreamPeaks.Write(peakBytes, 0, peakBytes.Length);
+
                 long location = _outputStream.Position;
-
-                float[] times = originalChromGroup.Times.Skip(minimizedChromGroup.OptimizedFirstScan).Take(numPoints).ToArray();
-                List<float[]> intensities = new List<float[]>();
-                List<short[]> massError10Xs = originalChromGroup.MassError10XArray != null
-                                                  ? new List<short[]>()
-                                                  : null;
-                int[][] scanIndexes = null;
-                if (originalChromGroup.ScanIndexes != null)
-                {
-                    scanIndexes = new int[originalChromGroup.ScanIndexes.Length][];
-                    for (int i = 0; i < scanIndexes.Length; i++)
-                    {
-                        if (originalChromGroup.ScanIndexes[i] != null)
-                        {
-                            scanIndexes[i] =
-                                originalChromGroup.ScanIndexes[i].Skip(minimizedChromGroup.OptimizedFirstScan)
-                                    .Take(numPoints)
-                                    .ToArray();
-                        }
-                    }
-                }
-
-                foreach (var originalIndex in minimizedChromGroup.RetainedTransitionIndexes)
-                {
-                    _transitions.Add(_originalCache.GetTransition(originalIndex + originalHeader.StartTransitionIndex));
-                    for (int originalPeakIndex = 0; originalPeakIndex < originalHeader.NumPeaks; originalPeakIndex++)
-                    {
-                        if (!retainedPeakIndexes.Contains(originalPeakIndex))
-                            continue;
-
-                        var originalPeak = _originalCache.GetPeak(originalHeader.StartPeakIndex +
-                                                                  originalIndex*originalHeader.NumPeaks +
-                                                                  originalPeakIndex);
-                        _peakCount++;
-                        ChromPeak.WriteArray(_outputStreamPeaks.SafeFileHandle, new[] {originalPeak});
-                    }
-                    intensities.Add(originalChromGroup.IntensityArray[originalIndex]
-                        .Skip(minimizedChromGroup.OptimizedFirstScan)
-                        .Take(numPoints).ToArray());
-                    if (massError10Xs != null)
-                    {
-                        massError10Xs.Add(originalChromGroup.MassError10XArray[originalIndex]
-                            .Skip(minimizedChromGroup.OptimizedFirstScan)
-                            .Take(numPoints).ToArray());
-                    }
-                }
-                var massError10XArray = massError10Xs != null ? massError10Xs.ToArray() : null;
-                byte[] points = ChromatogramCache.TimeIntensitiesToBytes(times, intensities.ToArray(), massError10XArray, scanIndexes);
-                // Compress the data (can be huge for AB data with lots of zeros)
-                byte[] pointsCompressed = points.Compress(3);
+                int lenUncompressed = minimizedChromGroup.UncompressedLength;
+                byte[] pointsCompressed = minimizedChromGroup.ChromatogramBytes;
                 int lenCompressed = pointsCompressed.Length;
                 _outputStream.Write(pointsCompressed, 0, lenCompressed);
+
                 var header = new ChromGroupHeaderInfo(originalHeader.Precursor,
                                                       originalHeader.TextIdIndex,
                                                       originalHeader.TextIdLen,
@@ -585,8 +702,8 @@ namespace pwiz.Skyline.Model.Results
                                                       startScoreIndex,
                                                       maxPeakIndex,
                                                       numPoints,
-                                                      pointsCompressed.Length,
-                                                      points.Length,
+                                                      lenCompressed,
+                                                      lenUncompressed,
                                                       location,
                                                       originalHeader.Flags,
                                                       originalHeader.StatusId,

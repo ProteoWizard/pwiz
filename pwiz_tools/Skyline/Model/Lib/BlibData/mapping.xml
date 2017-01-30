@@ -24,6 +24,14 @@
     <property name="NextAA" column="nextAA"/>
     <property name="Copies" column="copies" not-null="true"/>
     <property name="NumPeaks" column="numPeaks" not-null="true"/>
+    <property name="DriftTimeMsec" column="driftTimeMsec"/>
+    <property name="CollisionalCrossSectionSqA" column="collisionalCrossSectionSqA"/>
+    <property name="DriftTimeHighEnergyOffsetMsec" column="driftTimeHighEnergyOffsetMsec"/>
+    <property name="RetentionTime" column="retentionTime"/>
+    <property name="FileId" column="fileId"/>
+    <property name="SpecIdInFile" column="SpecIDinFile"/>
+    <property name="Score" column="score"/>
+    <property name="ScoreType" column="scoreType"/>
     <one-to-one name="Peaks" property-ref="RefSpectra" cascade="save-update"/>
     <bag name="Modifications" cascade="save-update">
       <key column="RefSpectraId"/>
@@ -63,11 +71,18 @@
     <many-to-one name="RefSpectra" column="RefSpectraId"/>
     <property name="RedundantRefSpectraId" column="RedundantRefSpectraId"/>
     <property name="SpectrumSourceId" column="SpectrumSourceId"/>
-    <property name="IonMobilityValue" column="ionMobilityValue"/>
-    <property name="IonMobilityType" column="ionMobilityType"/>
-    <property name="IonMobilityHighEnergyDriftTimeOffsetMsec" column="ionMobilityHighEnergyDriftTimeOffsetMsec"/>
+    <property name="DriftTimeMsec" column="driftTimeMsec"/>
+    <property name="CollisionalCrossSectionSqA" column="collisionalCrossSectionSqA"/>
+    <property name="HighEnergyDriftTimeOffsetMsec" column="driftTimeHighEnergyOffsetMsec"/>
     <property name="RetentionTime" column="retentionTime"/>
     <property name="BestSpectrum" column="bestSpectrum"/>
+  </class>
+  <class name="DbScoreTypes" table="ScoreTypes">
+    <id name="Id">
+      <column name="id" not-null="true"/>
+      <generator class="native" />
+    </id>
+    <property name="ScoreType" column="scoreType"/>
   </class>
   <class name="DbSpectrumSourceFiles" table="SpectrumSourceFiles">
     <id name="Id">

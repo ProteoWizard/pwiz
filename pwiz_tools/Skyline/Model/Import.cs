@@ -106,17 +106,24 @@ namespace pwiz.Skyline.Model
 
                 if (line.StartsWith(">")) // Not L10N
                 {
-                    if (_countIons > SrmDocument.MAX_TRANSITION_COUNT ||
-                            _countPeptides > SrmDocument.MAX_PEPTIDE_COUNT)
-                        throw new InvalidDataException(Resources.FastaImporter_Import_Document_size_limit_exceeded);
+                    if (_countIons > SrmDocument.MAX_TRANSITION_COUNT)
+                    {
+                        throw new InvalidDataException(TextUtil.LineSeparate(string.Format(Resources.FastaImporter_Import_This_import_causes_the_document_to_contain_more_than__0_n0__transitions_in__1_n0__peptides_at_line__2_n0__,
+                            SrmDocument.MAX_TRANSITION_COUNT, _countPeptides, linesRead), Resources.FastaImporter_Import_Check_your_settings_to_make_sure_you_are_using_a_library_and_restrictive_enough_transition_selection_));
+                    }
+                    else if (_countPeptides > SrmDocument.MAX_PEPTIDE_COUNT)
+                    {
+                        throw new InvalidDataException(TextUtil.LineSeparate(string.Format(Resources.FastaImporter_Import_This_import_causes_the_document_to_contain_more_than__0_n0__peptides_at_line__1_n0__,
+                            SrmDocument.MAX_PEPTIDE_COUNT, linesRead), Resources.FastaImporter_Import_Check_your_settings_to_make_sure_you_are_using_a_library_));
+                    }
                     try
                     {
                         if (seqBuilder != null)
                             AddPeptideGroup(peptideGroupsNew, set, seqBuilder);
 
                         seqBuilder = _modMatcher == null
-                            ? new PeptideGroupBuilder(line, PeptideList, Document.Settings)
-                            : new PeptideGroupBuilder(line, _modMatcher, Document.Settings);
+                            ? new PeptideGroupBuilder(line, PeptideList, Document.Settings, null)
+                            : new PeptideGroupBuilder(line, _modMatcher, Document.Settings, null);
                     }
                     catch (Exception x)
                     {
@@ -225,6 +232,8 @@ namespace pwiz.Skyline.Model
     public class MassListInputs
     {
         private readonly string _inputFilename;
+        public string InputFilename { get { return _inputFilename; } }
+
         private readonly string _inputText;
         private IList<string> _lines; 
 
@@ -326,6 +335,7 @@ namespace pwiz.Skyline.Model
         }
 
         public IEnumerable<PeptideGroupDocNode> Import(IProgressMonitor progressMonitor,
+                                                       string sourceFile,
                                                        out List<MeasuredRetentionTime> irtPeptides,
                                                        out List<SpectrumMzInfo> librarySpectra,
                                                        out List<TransitionImportErrorInfo> errorList)
@@ -342,7 +352,7 @@ namespace pwiz.Skyline.Model
 
             try
             {
-                return Import(progressMonitor, null, dictNameSeqAll, out irtPeptides, out librarySpectra, out errorList);
+                return Import(progressMonitor, sourceFile, null, dictNameSeqAll, out irtPeptides, out librarySpectra, out errorList);
             }
             catch (LineColNumberedIoException x)
             {
@@ -351,16 +361,18 @@ namespace pwiz.Skyline.Model
         }
 
         public IEnumerable<PeptideGroupDocNode> Import(IProgressMonitor progressMonitor,
+                                                       string sourceFile,
                                                        ColumnIndices indices,
                                                        IDictionary<string, FastaSequence> dictNameSeq)
         {
             List<MeasuredRetentionTime> irtPeptides;
             List<SpectrumMzInfo> librarySpectra;
             List<TransitionImportErrorInfo> errorList;
-            return Import(progressMonitor, indices, dictNameSeq, out irtPeptides, out librarySpectra, out errorList);
+            return Import(progressMonitor, sourceFile, indices, dictNameSeq, out irtPeptides, out librarySpectra, out errorList);
         }
 
         public IEnumerable<PeptideGroupDocNode> Import(IProgressMonitor progressMonitor,
+                                                       string sourceFile,
                                                        ColumnIndices indices,
                                                        IDictionary<string, FastaSequence> dictNameSeq,
                                                        out List<MeasuredRetentionTime> irtPeptides,
@@ -473,7 +485,7 @@ namespace pwiz.Skyline.Model
                     }
                 }
 
-                seqBuilder = AddRow(seqBuilder, _rowReader, dictNameSeq, peptideGroupsNew, lineIndex, irtPeptides, librarySpectra, errorList);
+                seqBuilder = AddRow(seqBuilder, _rowReader, dictNameSeq, peptideGroupsNew, lineIndex, sourceFile, irtPeptides, librarySpectra, errorList);
             }
 
             // Add last sequence.
@@ -532,6 +544,7 @@ namespace pwiz.Skyline.Model
                                            IDictionary<string, FastaSequence> dictNameSeq,
                                            ICollection<PeptideGroupDocNode> peptideGroupsNew,
                                            long lineNum,
+                                           string sourceFile,
                                            List<MeasuredRetentionTime> irtPeptides,
                                            List<SpectrumMzInfo> librarySpectra,
                                            List<TransitionImportErrorInfo> errorList)
@@ -571,13 +584,13 @@ namespace pwiz.Skyline.Model
                 }
                 FastaSequence fastaSeq;
                 if (name != null && dictNameSeq.TryGetValue(name, out fastaSeq) && fastaSeq != null)
-                    seqBuilder = new PeptideGroupBuilder(fastaSeq, Document.Settings);
+                    seqBuilder = new PeptideGroupBuilder(fastaSeq, Document.Settings, sourceFile);
                 else
                 {
                     string safeName = name != null ?
                         Helpers.GetUniqueName(name, dictNameSeq.Keys) :
                         Document.GetPeptideGroupId(true);
-                    seqBuilder = new PeptideGroupBuilder(">>" + safeName, true, Document.Settings) {BaseName = name}; // Not L10N
+                    seqBuilder = new PeptideGroupBuilder(">>" + safeName, true, Document.Settings, sourceFile) {BaseName = name}; // Not L10N
                 }
             }
             try
@@ -1860,6 +1873,7 @@ namespace pwiz.Skyline.Model
         private FastaSequence _activeFastaSeq;
         private Peptide _activePeptide;
         private string _activeModifiedSequence;
+        private readonly string _sourceFile;
         // Order is important to making the variable modification choice deterministic
         // when more than one potential set of variable modifications work to explain
         // the contents of the active peptide.
@@ -1877,7 +1891,7 @@ namespace pwiz.Skyline.Model
         private readonly ModificationMatcher _modMatcher;
         private bool _autoManageChildren;
 
-        public PeptideGroupBuilder(FastaSequence fastaSequence, SrmSettings settings)
+        public PeptideGroupBuilder(FastaSequence fastaSequence, SrmSettings settings, string sourceFile)
         {
             _activeFastaSeq = fastaSequence;
             _autoManageChildren = true;
@@ -1898,10 +1912,11 @@ namespace pwiz.Skyline.Model
             _activeLibraryIntensities = new List<SpectrumPeaksInfo.MI>();
             _peptideGroupErrorInfo = new List<TransitionImportErrorInfo>();
             _activeModifiedSequence = null;
+            _sourceFile = sourceFile;
         }
 
-        public PeptideGroupBuilder(string line, bool peptideList, SrmSettings settings)
-            : this(null, settings)
+        public PeptideGroupBuilder(string line, bool peptideList, SrmSettings settings, string sourceFile)
+            : this(null, settings, sourceFile)
         {
             int start = (line.Length > 0 && line[0] == '>' ? 1 : 0); // Not L10N
             // If there is a second >, then this is a custom name, and not
@@ -1941,8 +1956,8 @@ namespace pwiz.Skyline.Model
             PeptideList = peptideList;
         }
 
-        public PeptideGroupBuilder(string line, ModificationMatcher modMatcher, SrmSettings settings)
-            : this(line, true, settings)
+        public PeptideGroupBuilder(string line, ModificationMatcher modMatcher, SrmSettings settings, string sourceFile)
+            : this(line, true, settings, sourceFile)
         {
             _modMatcher = modMatcher;
         }
@@ -2173,6 +2188,7 @@ namespace pwiz.Skyline.Model
 
                 finalLibrarySpectra.Add(new SpectrumMzInfo
                 {
+                    SourceFile = _sourceFile,
                     Key = new LibKey(modifiedSequenceWithIsotopes, groupLibTriple.NodeGroup.TransitionGroup.PrecursorCharge),
                     Label = groupLibTriple.SpectrumInfo.Label,
                     PrecursorMz = groupLibTriple.SpectrumInfo.PrecursorMz,

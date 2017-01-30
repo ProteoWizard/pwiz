@@ -34,8 +34,6 @@ namespace pwiz.Skyline.Model
 {
     public class ImportPeptideSearch
     {
-        private const string LAB_AUTHORITY = "proteome.gs.washington.edu";  // Not L10N
-
         public ImportPeptideSearch()
         {
             SearchFilenames = new string[0];
@@ -48,7 +46,7 @@ namespace pwiz.Skyline.Model
 
         public string[] SearchFilenames { get; set; }
         public double CutoffScore { get; set; }
-        private Library DocLib { get; set; }
+        public Library DocLib { get; private set; }
         public Dictionary<string, FoundResultsFilePossibilities> SpectrumSourceFiles { get; set; }
 
         public bool HasDocLib { get { return DocLib != null; } }
@@ -87,7 +85,6 @@ namespace pwiz.Skyline.Model
                 Action = libraryBuildAction,
                 KeepRedundant = true,
                 CutOffScore = CutoffScore,
-                Authority = LAB_AUTHORITY,
                 Id = Helpers.MakeId(name),
                 IncludeAmbiguousMatches = includeAmbiguousMatches
             };

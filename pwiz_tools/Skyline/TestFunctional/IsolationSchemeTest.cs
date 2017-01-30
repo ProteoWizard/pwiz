@@ -1084,8 +1084,8 @@ namespace pwiz.SkylineTestFunctional
                 editDlg.IsolationWindowGrid.SetCellValue(250);
                 editDlg.IsolationWindowGrid.SelectCell(EditIsolationSchemeDlg.COLUMN_END, 1);
                 editDlg.IsolationWindowGrid.SetCellValue(500);
-                editDlg.OkDialog();
             });
+            OkDialog(editDlg, editDlg.OkDialog);
         }
 
         /// <summary>

@@ -300,7 +300,7 @@ int MidacScanRecord::getScanId() const
 
 double MidacScanRecord::getRetentionTime() const
 {
-    try {return frameInfo_->AcqTimeRange->Min;} CATCH_AND_FORWARD
+    try { return specDetails_->AcqTimeRanges[0]->Min; } CATCH_AND_FORWARD
 }
 
 int MidacScanRecord::getMSLevel() const

@@ -142,6 +142,13 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
     if (polarityType != PolarityType_Unknown)
         result->set(translate(polarityType));
     double lockmassMz = (polarityType == PolarityType_Negative) ? lockmassMzNegScans : lockmassMzPosScans;
+    if (lockmassMz != 0.0)
+    {
+        if (!rawdata_->ApplyLockMass(lockmassMz, lockmassTolerance)) // TODO: if false (cannot apply lockmass), log a warning
+            warn_once("[SpectrumList_Waters] failed to apply lockmass correction");
+    }
+    else
+        rawdata_->RemoveLockMass();
 
     if (scanStats.isContinuumScan)
         result->set(MS_profile_spectrum);
@@ -209,97 +216,21 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
 
     if (detailLevel == DetailLevel_FullData || detailLevel == DetailLevel_FullMetadata)
     {
+        vector<float> masses, intensities;
 
         if (ie.block >= 0)
         {
-            int axisLength = 0, nonZeroDataPoints = 0;
-
-            const CompressedDataCluster& cdc = rawdata_->GetCompressedDataClusterForBlock(ie.function, ie.block);
-            vector<float>& imsMasses = imsMasses_;
-            vector<int>& massIndices = massIndices_;
-            vector<float>& imsIntensities = imsIntensities_;
-
-            // CDC masses are uncalibrated, so we have to get calibration coefficients and do it ourselves
-            initializeCoefficients();
-            cdc.getMassAxisLength(axisLength);
-            if (axisLength != (int) imsMasses.size())
-            {
-                imsMasses_.resize(axisLength);
-                imsCalibratedMasses_.resize(axisLength);
-                cdc.getMassAxis(&imsMasses[0]);
-                massIndices.resize(axisLength);
-                imsIntensities.resize(axisLength);
-                std::fill(massIndices.begin(), massIndices.end(), 0.0f);
-                std::fill(imsIntensities.begin(), imsIntensities.end(), 0.0f);
-                for (int index = 0; index < imsCalibratedMasses_.size(); index++)
-                    imsCalibratedMasses_[index] = calibrate(imsMasses_[index]);
-            }
-
-            cdc.getScan(ie.block, ie.scan, &massIndices[0], &imsIntensities[0], nonZeroDataPoints);
+            MassLynxRawScanReader& scanReader = rawdata_->GetCompressedDataClusterForBlock(ie.function, ie.block);
+            scanReader.readSpectrum(ie.function, ie.block, ie.scan, masses, intensities);
+            result->defaultArrayLength = masses.size();
 
             if (detailLevel == DetailLevel_FullMetadata)
-            {
-                result->defaultArrayLength = nonZeroDataPoints;
-                if (nonZeroDataPoints > 0)
-                {
-                    result->defaultArrayLength = 2; // flanking zero samples
-                    for (int i=0, end=nonZeroDataPoints; i < end; ++i)
-                    {
-                        if (i > 0 && massIndices[i-1] != massIndices[i]-1)
-                            ++result->defaultArrayLength;
-                        ++result->defaultArrayLength;
-                        if (i+1 < end && massIndices[i+1] != massIndices[i]+1)
-                            ++result->defaultArrayLength;
-                    }
-                }
                 return result;
-            }
-
-            // get actual data arrays
-            vector<double> masses, intensities;
-
-            result->defaultArrayLength = nonZeroDataPoints;
-            if (nonZeroDataPoints > 0)
-            {
-                masses.resize(2 + (nonZeroDataPoints * 3)); // worst case size
-                intensities.resize(2 + (nonZeroDataPoints * 3)); // worst case size
-                int count = 0;
-                masses[count] = imsCalibratedMasses_[massIndices[0] - 1];
-                intensities[count++] = 0;
-                for (int i=0, end=nonZeroDataPoints; i < end; ++i)
-                {
-                    if (i > 0 && massIndices[i-1] != massIndices[i]-1)
-                    {
-                        masses[count] = imsCalibratedMasses_[massIndices[i] - 1];
-                        intensities[count++] = 0;
-                    }
-                    masses[count] = imsCalibratedMasses_[massIndices[i]];
-                    intensities[count++] = imsIntensities[i];
-                    if (i+1 < end && massIndices[i+1] != massIndices[i]+1)
-                    {
-                        masses[count] = imsCalibratedMasses_[massIndices[i] + 1];
-                        intensities[count++] = 0;
-                    }
-                }
-                masses[count] = imsCalibratedMasses_[massIndices[nonZeroDataPoints - 1] + 1];
-                intensities[count++] = 0;
-                masses.resize(count);
-                intensities.resize(count);
-            }
-
-            std::fill_n(massIndices.begin(), nonZeroDataPoints, 0.0f);
-            std::fill_n(imsIntensities.begin(), nonZeroDataPoints, 0.0f);
-            result->swapMZIntensityArrays(masses, intensities, MS_number_of_detector_counts); // Donate mass and intensity buffers to result vectors
-            return result;
         }
-
-        vector<float> masses, intensities;
-        if (detailLevel != DetailLevel_FullMetadata)
+        else // not ion mobility
         {
-            if (lockmassMz == 0.0)
+            if (detailLevel != DetailLevel_FullMetadata)
                 rawdata_->ScanReader.readSpectrum(ie.function, ie.scan, masses, intensities);
-            else
-                rawdata_->ScanReader.readSpectrum(ie.function, ie.scan, (float)lockmassMz, (float)lockmassTolerance, masses, intensities);
         }
 
 	    vector<double> mzArray(masses.begin(), masses.end());
@@ -363,29 +294,11 @@ PWIZ_API_DECL pwiz::analysis::Spectrum3DPtr SpectrumList_Waters::spectrum3d(doub
 
         int axisLength = 0, nonZeroDataPoints = 0, numScansInBlock = 0;
 
-        const CompressedDataCluster& cdc = rawdata_->GetCompressedDataClusterForBlock(function, block);
+        MassLynxRawScanReader& cdc = rawdata_->GetCompressedDataClusterForBlock(function, block);
         vector<float>& imsMasses = imsMasses_;
-        vector<int>& massIndices = massIndices_;
         vector<float>& imsIntensities = imsIntensities_;
 
-        // CDC masses are uncalibrated, so we have to get calibration coefficients and do it ourselves
-        initializeCoefficients();
-        cdc.getMassAxisLength(axisLength);
-        if (axisLength != (int) imsMasses.size())
-        {
-            imsMasses_.resize(axisLength);
-            imsCalibratedMasses_.resize(axisLength);
-            cdc.getMassAxis(&imsMasses[0]);
-            massIndices.resize(axisLength);
-            imsIntensities.resize(axisLength);
-            std::fill(massIndices.begin(), massIndices.end(), 0.0f);
-            std::fill(imsIntensities.begin(), imsIntensities.end(), 0.0f);
-            for (int index = 0; index < imsCalibratedMasses_.size(); index++)
-                imsCalibratedMasses_[index] = calibrate(imsMasses_[index]);
-        }
-
-        cdc.getScansInBlock(numScansInBlock);
-
+        numScansInBlock = rawdata_->Info.GetDriftScansInFunction(function);
 
         for (int scan = 0; scan < numScansInBlock; ++scan)
         {
@@ -394,32 +307,16 @@ PWIZ_API_DECL pwiz::analysis::Spectrum3DPtr SpectrumList_Waters::spectrum3d(doub
             if (driftTimeRanges.find(driftTime) == driftTimeRanges.end())
                 continue;
 
-            cdc.getScan(block, scan, &massIndices[0], &imsIntensities[0], nonZeroDataPoints);
-
-            if (nonZeroDataPoints == 0)
-                continue;
+            cdc.readSpectrum(function, block, scan, imsMasses, imsIntensities);
 
             boost::container::flat_map<double, float>& driftSpectrum = (*result)[driftTime];
 
-            driftSpectrum[imsCalibratedMasses_[massIndices[0] - 1]] = 0;
-            for (int i = 0, end = nonZeroDataPoints; i < end; ++i)
+            //driftSpectrum[imsCalibratedMasses_[imsMasses[0] - 1]] = 0;
+            for (int i = 0, end = imsMasses.size(); i < end; ++i)
             {
-                if (i > 0 && massIndices[i - 1] != massIndices[i] - 1)
-                {
-                    driftSpectrum[imsCalibratedMasses_[massIndices[i] - 1]] = 0;
-                }
-
-                driftSpectrum[imsCalibratedMasses_[massIndices[i]]] = imsIntensities[i];
-
-                if (i + 1 < end && massIndices[i + 1] != massIndices[i] + 1)
-                {
-                    driftSpectrum[imsCalibratedMasses_[massIndices[i] + 1]] = 0;
-                }
+                driftSpectrum[imsMasses[i]] = imsIntensities[i];
             }
-            driftSpectrum[imsCalibratedMasses_[massIndices[nonZeroDataPoints - 1] + 1]] = 0;
-
-            std::fill_n(massIndices.begin(), nonZeroDataPoints, 0.0f);
-            std::fill_n(imsIntensities.begin(), nonZeroDataPoints, 0.0f);
+            //driftSpectrum[imsCalibratedMasses_[massIndices[nonZeroDataPoints - 1] + 1]] = 0;
         }
     }
 
@@ -433,8 +330,7 @@ PWIZ_API_DECL void SpectrumList_Waters::createIndex()
 
     map<double, std::pair<int, int> > functionAndScanByRetentionTime;
 
-    int numScansInBlock = 0;   // number of scans per compressed block
-    int numBlocks = 0;         // number of blocks
+    int numScansInBlock = 0;   // number of drift scans per compressed block
 
     BOOST_FOREACH(int function, rawdata_->FunctionIndexList())
     {
@@ -462,17 +358,11 @@ PWIZ_API_DECL void SpectrumList_Waters::createIndex()
 
         if (!config_.combineIonMobilitySpectra && rawdata_->IonMobilityByFunctionIndex()[function])
         {
-            const CompressedDataCluster& cdc = rawdata_->GetCompressedDataClusterForBlock(function, 0);
+            numScansInBlock = rawdata_->Info.GetDriftScansInFunction(function);
 
-	        cdc.getNumberOfBlocks(numBlocks);
-            cdc.getScansInBlock(numScansInBlock);
+            scanTimeToFunctionAndBlockMap_.reserve(scanCount);
 
-            if (scanCount != numBlocks)
-                throw runtime_error("[SpectrumList_Waters::createIndex] numBlocks from CDC is not equal to scanCount from MassLynxRaw");
-
-            scanTimeToFunctionAndBlockMap_.reserve(numBlocks);
-
-            for (int i=0; i < numBlocks; ++i)
+            for (int i = 0; i < scanCount; ++i)
                 scanTimeToFunctionAndBlockMap_[scanStats[i].rt * 60].push_back(make_pair(function, i));
         }
         else

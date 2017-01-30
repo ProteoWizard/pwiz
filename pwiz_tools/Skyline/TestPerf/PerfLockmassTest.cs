@@ -46,7 +46,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         public void WatersLockmassPerfTest()
         {
             Log.AddMemoryAppender();
-            TestFilesZip = "https://skyline.gs.washington.edu/perftests/PerfTestLockmass.zip";
+            TestFilesZip = "https://skyline.gs.washington.edu/perftests/PerfTestLockmass_v2.zip";
             TestFilesPersistent = new[] { "ID19638_01_UCA195_2533_082715.raw" }; // List of files that we'd like to unzip alongside parent zipFile, and (re)use in place
 
             MsDataFileImpl.PerfUtilFactory.IssueDummyPerfUtils = false; // Turn on performance measurement
@@ -70,6 +70,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         {
             var skyfile = TestFilesDir.GetTestPath("2533_FattyAcids.sky");
             const double lockmassNegative = 554.2615;
+            const double lockmassToler = 0.25; // Per Hans Vissers @ Waters
 
             SrmDocument corrected = null, uncorrected2 = null, uncorrected1 = null;
 
@@ -78,13 +79,13 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 RunUI(() => SkylineWindow.OpenFile(skyfile));
 
                 var doc0 = WaitForDocumentLoaded();
-                AssertEx.IsDocumentState(doc0, null, 1, 19, 19, 38);
+                AssertEx.IsDocumentState(doc0, null, 1, 11, 11, 22);
 
                 Stopwatch loadStopwatch = new Stopwatch();
                 loadStopwatch.Start();
                 ImportResults(GetTestPath(TestFilesPersistent[0]),
                     (testloop == 0)
-                        ? new LockMassParameters(0, lockmassNegative, LockMassParameters.LOCKMASS_TOLERANCE_DEFAULT) // ESI-, per Will T
+                        ? new LockMassParameters(0, lockmassNegative, lockmassToler) // ESI- data
                         : LockMassParameters.EMPTY);
 
                 var document = WaitForDocumentLoaded(400000);
@@ -166,9 +167,9 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         }
 
-        private static List<TransitionGroupChromInfo> Peaks(SrmDocument doc)
+        private static List<TransitionChromInfo> Peaks(SrmDocument doc)
         {
-            return (from tg in doc.MoleculeTransitionGroups
+            return (from tg in doc.MoleculeTransitions
                        from r in tg.Results
                        from p in r
                        select p).ToList();
@@ -184,7 +185,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             {
                 var correctedPeak = correctedPeaks[i];
                 var uncorrectedPeak = uncorrectedPeaks[i];
-                Assert.AreEqual(uncorrectedPeak.RetentionTime ?? -1, correctedPeak.RetentionTime ?? -1, 0.01,
+                Assert.AreEqual(uncorrectedPeak.RetentionTime, correctedPeak.RetentionTime, 0.02,
                     "peak retention times should be similar"); // Expect similar RT
                 if (Math.Abs(uncorrectedPeak.MassError ?? 0) < Math.Abs(correctedPeak.MassError ?? 0))
                     nWorse++;

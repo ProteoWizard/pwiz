@@ -40,25 +40,29 @@ lib pwiz_analysis_spectrum_processing_basic
         SpectrumList_MZWindow.cpp
         SpectrumList_MetadataFixer.cpp
         SpectrumList_TitleMaker.cpp
-		SpectrumList_PrecursorRefine.cpp
+        SpectrumList_PrecursorRefine.cpp
         SpectrumList_ZeroSamplesFilter.cpp
         SpectrumList_LockmassRefiner.cpp
         SpectrumList_3D.cpp
         SpectrumList_IonMobility.cpp
-		MS2NoiseFilter.cpp
-		MS2Deisotoper.cpp
+        SpectrumList_Demux.cpp
+        MS2NoiseFilter.cpp
+        MS2Deisotoper.cpp
         ThresholdFilter.cpp
     : # requirements
         <library>../../data/msdata//pwiz_data_msdata
         <library>../common//pwiz_analysis_common
+        <library>../demux//pwiz_analysis_demux
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers//pwiz_data_vendor_readers
         <library>$(PWIZ_ROOT_PATH)//svm
         <toolset>msvc:<cxxflags>/wd4510   # default constructor could not be generated
         <toolset>msvc:<cxxflags>/wd4610   # JumpTableEntry can never be instantiated - user defined constructor required
+        #<define>_USE_DEMUX_DEBUG_WRITER
     : # default-build
     : # usage-requirements
         <library>../../data/msdata//pwiz_data_msdata
         <library>../common//pwiz_analysis_common
+        <library>../demux//pwiz_analysis_demux
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers//pwiz_data_vendor_readers
         <library>$(PWIZ_ROOT_PATH)//svm
     ;
@@ -162,5 +166,22 @@ run-if-exists SpectrumList_LockmassRefinerTest.cpp pwiz_analysis_spectrum_proces
     : # input-files
     : <vendor-api-support>off:<build>no <conditional>@msvc12-requirement <runtime-debugging>on:<build>no # requirements
     : SpectrumList_LockmassRefinerTest # target name
+    : # default-build
+    ;
+
+rule build-demux ( properties * )
+{
+    if <toolset>msvc in $(properties) && ! <address-model>64 in $(properties)
+    {
+        return <build>no ;
+    }
+}
+
+run-if-exists SpectrumList_DemuxTest.cpp pwiz_analysis_spectrum_processing_basic
+    : [ path.native $(PWIZ_ROOT_PATH)/pwiz/analysis/spectrum_processing/SpectrumList_DemuxTest.data/MsxTest.mzML ] # args
+    : # input-files
+    : # requirements
+        <conditional>@build-demux
+    : SpectrumList_DemuxTest # target name
     : # default-build
     ;

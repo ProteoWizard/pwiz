@@ -264,7 +264,7 @@ namespace pwiz.Skyline.Model
         public const double FORMAT_VERSION = FORMAT_VERSION_3_6;
 
         public const int MAX_PEPTIDE_COUNT = 100*1000;
-        public const int MAX_TRANSITION_COUNT = 6*MAX_PEPTIDE_COUNT; // Modern DIA experiments may often have 6 transitions per peptide
+        public const int MAX_TRANSITION_COUNT = 10*MAX_PEPTIDE_COUNT; // Modern DIA experiments may often have 6 transitions per peptide + 3 precursor ions
 
         // Version of this document in deserialized XML
 
@@ -649,6 +649,15 @@ namespace pwiz.Skyline.Model
             if (!Settings.HasResults)
                 return docClone.Children;
 
+            // If iRT standards have changed, reset auto-calculated conversion to make sure they are
+            // updated on a background thread
+            if (!ReferenceEquals(Settings.GetPeptideStandards(StandardType.IRT),
+                docClone.Settings.GetPeptideStandards(StandardType.IRT)) &&
+                docClone.Settings.PeptideSettings.Prediction.RetentionTime != null)
+            {
+                docClone.Settings = docClone.Settings.ChangePeptidePrediction(p =>
+                    p.ChangeRetentionTime(p.RetentionTime.ClearEquations()));
+            }
             // Store indexes to previous results in a dictionary for lookup
             var dictPeptideIdPeptide = new Dictionary<int, PeptideDocNode>();
             // Unless the normalization standards have changed, which require recalculating of all ratios
@@ -961,6 +970,8 @@ namespace pwiz.Skyline.Model
                 var docNew = this;
                 var settingsNew = docNew.Settings;
                 var settingsOld = docImport.Settings;
+                if (settingsOld.MeasuredResults != null)
+                    settingsOld = settingsOld.ChangeMeasuredResults(settingsOld.MeasuredResults.ClearDeserialized());
 
                 // Merge results from import document with current document.
                 MeasuredResults resultsBase;
@@ -1183,7 +1194,7 @@ namespace pwiz.Skyline.Model
             }
 
             IdentityPath nextAdd;
-            peptideGroups = importer.Import(progressMonitor, out irtPeptides, out librarySpectra, out errorList).ToList();
+            peptideGroups = importer.Import(progressMonitor, inputs.InputFilename, out irtPeptides, out librarySpectra, out errorList).ToList();
             var docNew = AddPeptideGroups(peptideGroups, false, to, out firstAdded, out nextAdd);
             var pepModsNew = importer.GetModifications(docNew);
             if (!ReferenceEquals(pepModsNew, Settings.PeptideSettings.Modifications))
@@ -1859,6 +1870,7 @@ namespace pwiz.Skyline.Model
             public const string precursor_charge = "precursor_charge";   // backward compatibility with v0.1
             public const string product_charge = "product_charge";
             public const string rank = "rank";
+            public const string rank_by_level = "rank_by_level";
             public const string intensity = "intensity";
             public const string auto_manage_children = "auto_manage_children";
             public const string decoy = "decoy";
@@ -2636,8 +2648,8 @@ namespace pwiz.Skyline.Model
             float? backgroundArea = reader.GetNullableFloatAttribute(ATTR.background);
             float? height = reader.GetNullableFloatAttribute(ATTR.height);
             float? massError = reader.GetNullableFloatAttribute(ATTR.mass_error_ppm);
-            int? truncated = reader.GetNullableIntAttribute(ATTR.truncated);            
-            PeakIdentification identified = reader.GetEnumAttribute(ATTR.identified,
+            int? truncated = reader.GetNullableIntAttribute(ATTR.truncated);
+            PeakIdentification identified = reader.GetEnumAttribute(ATTR.identified, PeakIdentificationFastLookup.Dict,
                 PeakIdentification.FALSE, XmlUtil.EnumCase.upper);
             float? libraryDotProduct = reader.GetNullableFloatAttribute(ATTR.library_dotp);
             float? isotopeDotProduct = reader.GetNullableFloatAttribute(ATTR.isotope_dotp);
@@ -3046,10 +3058,13 @@ namespace pwiz.Skyline.Model
                 if (float.IsNaN(fwhm))
                     fwhm = 0;
                 bool fwhmDegenerate = reader.GetBoolAttribute(ATTR.fwhm_degenerate);
+                short rank = (short) reader.GetIntAttribute(ATTR.rank);
+                short rankByLevel = (short) reader.GetIntAttribute(ATTR.rank_by_level, rank);
                 bool? truncated = reader.GetNullableBoolAttribute(ATTR.truncated);
-                var identified = reader.GetEnumAttribute(ATTR.identified,
+                var identified = reader.GetEnumAttribute(ATTR.identified, PeakIdentificationFastLookup.Dict,
                     PeakIdentification.FALSE, XmlUtil.EnumCase.upper);
-                UserSet userSet = reader.GetEnumAttribute(ATTR.user_set, UserSet.FALSE, XmlUtil.EnumCase.upper);
+                UserSet userSet = reader.GetEnumAttribute(ATTR.user_set, UserSetFastLookup.Dict,
+                    UserSet.FALSE, XmlUtil.EnumCase.upper);
                 var annotations = Annotations.EMPTY;
                 if (!reader.IsEmptyElement)
                 {
@@ -3070,6 +3085,8 @@ namespace pwiz.Skyline.Model
                                                fwhmDegenerate,
                                                truncated,
                                                identified,
+                                               rank,
+                                               rankByLevel,
                                                TransitionChromInfo.GetEmptyRatios(countRatios),
                                                annotations,
                                                userSet);
@@ -4050,6 +4067,8 @@ namespace pwiz.Skyline.Model
                 writer.WriteAttributeNullable(ATTR.truncated, chromInfo.IsTruncated);
                 writer.WriteAttribute(ATTR.identified, chromInfo.Identified.ToString().ToLowerInvariant());
                 writer.WriteAttribute(ATTR.rank, chromInfo.Rank);
+                if (chromInfo.Rank != chromInfo.RankByLevel)
+                    writer.WriteAttribute(ATTR.rank_by_level, chromInfo.RankByLevel);
             }
             writer.WriteAttribute(ATTR.user_set, chromInfo.UserSet);
             WriteAnnotations(writer, chromInfo.Annotations);

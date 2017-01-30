@@ -18,10 +18,14 @@
  */
 package edu.washington.gs.skyline.model.quantification;
 
-import com.google.common.primitives.Booleans;
-import com.google.common.primitives.Ints;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
+import java.util.stream.IntStream;
 
 /**
  * Set of data used to calculate fold changes.
@@ -60,18 +64,20 @@ class FoldChangeDataSet {
         this.features = features.stream().mapToInt(Integer::intValue).toArray();
         this.runs = runs.stream().mapToInt(Integer::intValue).toArray();
         this.subjects = subjects.stream().mapToInt(Integer::intValue).toArray();
-        this.subjectControls = Booleans.toArray(subjectControls);
+        this.subjectControls = ArrayUtils.toPrimitive(subjectControls.toArray(new Boolean[subjectControls.size()]));
         if (this.abundances.length == 0) {
             featureCount = 0;
             subjectCount = 0;
             runCount = 0;
         } else {
-            if (Ints.min(this.features) < 0 || Ints.min(this.runs) < 0 || Ints.min(this.subjects) < 0) {
+            if (Arrays.stream(this.features).min().getAsInt() < 0 ||
+                    Arrays.stream(this.runs).min().getAsInt() < 0 ||
+                    Arrays.stream(this.subjects).min().getAsInt() < 0) {
                 throw new IllegalArgumentException("Cannot be negative");
             }
-            featureCount = Ints.max(this.features) + 1;
-            subjectCount = Ints.max(this.subjects) + 1;
-            runCount = Ints.max(this.runs) + 1;
+            featureCount = Arrays.stream(this.features).max().getAsInt() + 1;
+            subjectCount = Arrays.stream(this.subjects).max().getAsInt() + 1;
+            runCount = Arrays.stream(this.runs).max().getAsInt() + 1;
         }
         if (this.subjectControls.length != subjectCount) {
             throw new IllegalArgumentException("Wrong number of subjects");
@@ -107,7 +113,7 @@ class FoldChangeDataSet {
     }
 
     public int getControlGroupCount() {
-        return Booleans.countTrue(subjectControls);
+        return (int) IntStream.range(0, subjectControls.length).filter(this::isSubjectInControlGroup).count();
     }
 
     public int getRunCount() {
@@ -120,5 +126,14 @@ class FoldChangeDataSet {
 
     public boolean isRowInControlGroup(int rowIndex) {
         return isSubjectInControlGroup(subjects[rowIndex]);
+    }
+
+    public String toString() {
+        List<String> lines = new ArrayList<>();
+        lines.add("Subject,Run,Feature,Abundance,Control");
+        for (int i = 0; i < getRowCount(); i++) {
+            lines.add(StringUtils.join(new Object[]{getSubject(i), getRun(i), getFeature(i), getAbundance(i),isRowInControlGroup(i)}, ','));
+        }
+        return String.join("\n", lines);
     }
 }

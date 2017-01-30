@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using pwiz.Common.Collections;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.GroupComparison;
@@ -776,7 +777,10 @@ namespace pwiz.Skyline.Model
                             var nodeNew = (TransitionGroupDocNode) childrenNew[i];
                             DocNode existing;
                             if (mapIdToChild.TryGetValue(nodeNew.TransitionGroup, out existing))
-                                childrenNew[i] = existing;
+                            {
+                                childrenNew[i] = ((TransitionGroupDocNode) existing)
+                                    .ChangeSettings(settingsNew, nodeResult, explicitMods, diff);
+                            }
                         }
                     }
                 }
@@ -1295,39 +1299,76 @@ namespace pwiz.Skyline.Model
                 if (Calculators.Count == 0 || listInfo == null)
                     return null;
 
-                var listInfoNew = new List<TransitionChromInfo>();
+                int countInfo = listInfo.Count;
+                // Delay allocation in the hope that nothing has changed for faster loading
+                TransitionChromInfo[] listInfoNew = null;
+                int changeStartIndex = -1;
                 var standardTypes = Settings.PeptideSettings.Modifications.RatioInternalStandardTypes;
-                foreach (var info in listInfo)
+                for (int iInfo = 0; iInfo < countInfo; iInfo++)
                 {
+                    var info = listInfo[iInfo];
+
                     PeptideChromInfoCalculator calc;
                     if (!Calculators.TryGetValue(info.FileIndex, out calc))
                         Assume.Fail();    // Should never happen
                     else
                     {
+                        var ratios = GetRatios(nodeGroup, nodeTran, standardTypes, calc);
+                        // Label free data will produce lots of reference equal empty ratios, so check that
+                        // first as a shortcut
                         var infoNew = info;
-                        var labelType = nodeGroup.TransitionGroup.LabelType;
-
-                        int count = standardTypes.Count;
-                        if (calc.HasGlobalArea)
-                            count++;
-                        var ratios = new float?[count];
-                        for (int i = 0; i < standardTypes.Count; i++)
-                            ratios[i] = calc.CalcTransitionRatio(nodeGroup, nodeTran, labelType, standardTypes[i]);
-                        if (calc.HasGlobalArea)
-                            ratios[count - 1] = calc.CalcTransitionGlobalRatio(nodeGroup, nodeTran, labelType);
-                        if (!ArrayUtil.EqualsDeep(ratios, info.Ratios))
+                        if (!ReferenceEquals(ratios, info.Ratios) && !ArrayUtil.EqualsDeep(ratios, info.Ratios))
                             infoNew = infoNew.ChangeRatios(ratios);
-
-                        if (isMatching && calc.IsSetMatching && !infoNew.IsUserSetMatched)
+                        if (isMatching && calc.IsSetMatching && !info.IsUserSetMatched)
                             infoNew = infoNew.ChangeUserSet(UserSet.MATCHED);
-
-                        listInfoNew.Add(infoNew);
+                        if (!ReferenceEquals(info, infoNew) && listInfoNew == null)
+                        {
+                            listInfoNew = new TransitionChromInfo[countInfo];
+                            changeStartIndex = iInfo;
+                        }
+                        if (listInfoNew != null)
+                            listInfoNew[iInfo] = infoNew;
                     }
                 }
-                if (ArrayUtil.ReferencesEqual(listInfo, listInfoNew))
+                
+                if (listInfoNew == null)
                     return listInfo;
+
+                for (int i = 0; i < changeStartIndex; i++)
+                    listInfoNew[i] = listInfo[i];
                 return listInfoNew;
             }
+
+            private static readonly IList<float?> RATIOS_EMPTY1 = TransitionChromInfo.GetEmptyRatios(1);
+
+            private static IList<float?> GetRatios(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, IList<IsotopeLabelType> standardTypes,
+                PeptideChromInfoCalculator calc)
+            {
+                int count = standardTypes.Count;
+                if (calc.HasGlobalArea)
+                    count++;
+                // First handle the most likely cases for label free data where this can become a bottleneck
+                if (count == 0)
+                    return ImmutableList<float?>.EMPTY;
+                var labelType = nodeGroup.TransitionGroup.LabelType;
+                if (count == 1 && standardTypes.Count == 1)
+                {
+                    float? ratioFirst = calc.CalcTransitionRatio(nodeGroup, nodeTran, labelType, standardTypes[0]);
+                    if (ratioFirst == null)
+                        return RATIOS_EMPTY1;
+                    return new[] { ratioFirst };
+                }
+
+                // Handle more complex cases
+                var ratios = new float?[count];
+                for (int i = 0; i < standardTypes.Count; i++)
+                    ratios[i] = calc.CalcTransitionRatio(nodeGroup, nodeTran, labelType, standardTypes[i]);
+                if (calc.HasGlobalArea)
+                    ratios[count - 1] = calc.CalcTransitionGlobalRatio(nodeGroup, nodeTran, labelType);
+                return ratios;
+            }
+
+            private static readonly IList<RatioValue> GROUP_RATIOS_EMPTY1 = TransitionGroupChromInfo.GetEmptyRatios(1);
 
             public IList<TransitionGroupChromInfo> UpdateTransitonGroupRatios(TransitionGroupDocNode nodeGroup,
                                                                               IList<TransitionGroupChromInfo> listInfo,
@@ -1336,10 +1377,14 @@ namespace pwiz.Skyline.Model
                 if (Calculators.Count == 0 || listInfo == null)
                     return null;
 
-                var listInfoNew = new List<TransitionGroupChromInfo>();
+                // Delay allocation in the hope that nothing has changed for faster loading
+                TransitionGroupChromInfo[] listInfoNew = null;
+                int changeStartIndex = -1;
                 var standardTypes = Settings.PeptideSettings.Modifications.RatioInternalStandardTypes;
-                foreach (var info in listInfo)
+                for (int iInfo = 0; iInfo < listInfo.Count; iInfo++)
                 {
+                    var info = listInfo[iInfo];
+
                     PeptideChromInfoCalculator calc;
                     if (!Calculators.TryGetValue(info.FileIndex, out calc))
                         Assume.Fail();    // Should never happen
@@ -1351,24 +1396,51 @@ namespace pwiz.Skyline.Model
                         int count = standardTypes.Count;
                         if (calc.HasGlobalArea)
                             count++;
-                        var ratios = new RatioValue[count];
-                        for (int i = 0; i < standardTypes.Count; i++)
+                        IList<RatioValue> newRatios = null;
+                        // Optimize for label free, no normalization cases
+                        if (count == 0)
                         {
-                            ratios[i] = calc.CalcTransitionGroupRatio(nodeGroup, labelType, standardTypes[i]);
+                            if (info.Ratios.Count != 0)
+                                newRatios = ImmutableList<RatioValue>.EMPTY;
                         }
-                        if (calc.HasGlobalArea)
-                            ratios[count - 1] = calc.CalcTransitionGroupGlobalRatio(nodeGroup, labelType);
-                        if (!ArrayUtil.EqualsDeep(ratios, info.Ratios))
-                            infoNew = infoNew.ChangeRatios(ratios);
+                        if (count == 1 && standardTypes.Count == 1 && info.Ratios.Count == 1)
+                        {
+                            var ratio = calc.CalcTransitionGroupRatio(nodeGroup, labelType, standardTypes[0]);
+                            if (!Equals(ratio, info.Ratios[0]))
+                                newRatios = ratio != null ? ImmutableList.Singleton(ratio) : GROUP_RATIOS_EMPTY1;
+                        }
+                        else
+                        {
+                            var ratios = new RatioValue[count];
+                            for (int iType = 0; iType < standardTypes.Count; iType++)
+                                ratios[iType] = calc.CalcTransitionGroupRatio(nodeGroup, labelType, standardTypes[iType]);
+                            if (calc.HasGlobalArea)
+                                ratios[count - 1] = calc.CalcTransitionGroupGlobalRatio(nodeGroup, labelType);
+
+                            if (!ArrayUtil.EqualsDeep(ratios, info.Ratios))
+                                newRatios = ratios;
+                        }
+
+                        if (newRatios != null)
+                            infoNew = infoNew.ChangeRatios(newRatios);
 
                         if (isMatching && calc.IsSetMatching && !infoNew.IsUserSetMatched)
                             infoNew = infoNew.ChangeUserSet(UserSet.MATCHED);
 
-                        listInfoNew.Add(infoNew);
+                        if (!ReferenceEquals(info, infoNew) && listInfoNew == null)
+                        {
+                            listInfoNew = new TransitionGroupChromInfo[listInfo.Count];
+                            changeStartIndex = iInfo;
+                        }
+                        if (listInfoNew != null)
+                            listInfoNew[iInfo] = infoNew;
                     }
                 }
-                if (ArrayUtil.ReferencesEqual(listInfo, listInfoNew))
+                if (listInfoNew == null)
                     return listInfo;
+
+                for (int i = 0; i < changeStartIndex; i++)
+                    listInfoNew[i] = listInfo[i];
                 return listInfoNew;
             }
         }
@@ -1379,6 +1451,7 @@ namespace pwiz.Skyline.Model
             {
                 Settings = settings;
                 ResultsIndex = resultsIndex;
+                TranTypes = new HashSet<IsotopeLabelType>();
                 TranAreas = new Dictionary<TransitionKey, float>();
             }
 
@@ -1392,6 +1465,7 @@ namespace pwiz.Skyline.Model
             private double RetentionTimeTotal { get; set; }
             private double GlobalStandardArea { get; set; }
 
+            private HashSet<IsotopeLabelType> TranTypes { get; set; }
             private Dictionary<TransitionKey, float> TranAreas { get; set; }
 
             public bool HasGlobalArea { get { return Settings.HasGlobalStandardArea; }}
@@ -1439,6 +1513,7 @@ namespace pwiz.Skyline.Model
                     else
                         throw new InvalidDataException(String.Format(Resources.PeptideChromInfoCalculator_AddChromInfo_Duplicate_transition___0___found_for_peak_areas, nodeTran.Transition));
                 }
+                TranTypes.Add(nodeGroup.TransitionGroup.LabelType);
                 TranAreas.Add(key, info.Area);
             }
 
@@ -1473,7 +1548,7 @@ namespace pwiz.Skyline.Model
             public float? CalcTransitionRatio(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, IsotopeLabelType labelTypeNum, IsotopeLabelType labelTypeDenom)
             {
                 // Avoid 1.0 ratios for self-to-self
-                if (ReferenceEquals(labelTypeNum, labelTypeDenom))
+                if (ReferenceEquals(labelTypeNum, labelTypeDenom) || !TranTypes.Contains(labelTypeDenom) || !TranTypes.Contains(labelTypeNum))
                     return null;
 
                 float areaNum, areaDenom;
@@ -1522,8 +1597,8 @@ namespace pwiz.Skyline.Model
                                                         IsotopeLabelType labelTypeNum,
                                                         IsotopeLabelType labelTypeDenom)
             {
-                // Avoid 1.0 ratios for self-to-self
-                if (ReferenceEquals(labelTypeNum, labelTypeDenom))
+                // Avoid 1.0 ratios for self-to-self and extra work for cases where the denom label type is not represented
+                if (ReferenceEquals(labelTypeNum, labelTypeDenom) || !TranTypes.Contains(labelTypeDenom))
                 {
                     return null;
                 }

@@ -28,11 +28,17 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public enum GraphTypeRT { regression, replicate, schedule, peptide }
+    public enum GraphTypeRT { score_to_run_regression, replicate, schedule, peptide, run_to_run_regression }
 
     public enum PlotTypeRT { correlation, residuals }
 
     public enum PointsTypeRT { targets, standards, decoys }
+
+    interface IUpdateGraphPaneController
+    {
+        bool UpdateUIOnIndexChanged();
+        bool UpdateUIOnLibraryChanged();
+    }
 
     public sealed class RTGraphController : GraphSummary.IController
     {
@@ -113,16 +119,17 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void OnActiveLibraryChanged()
         {
-            if (GraphSummary.GraphPanes.FirstOrDefault() is RTReplicateGraphPane ||
-                    RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.single)
+            var fod = GraphSummary.GraphPanes.FirstOrDefault() as IUpdateGraphPaneController;
+            if (fod != null && fod.UpdateUIOnLibraryChanged())
                 GraphSummary.UpdateUI();
         }
 
         public void OnResultsIndexChanged()
         {
-            if (GraphSummary.GraphPanes.FirstOrDefault() is RTReplicateGraphPane ||
-                    RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.single)
+            var fod = GraphSummary.GraphPanes.FirstOrDefault() as IUpdateGraphPaneController;
+            if (fod != null && fod.UpdateUIOnIndexChanged())
                 GraphSummary.UpdateUI();
+            
         }
 
         public void OnRatioIndexChanged()
@@ -132,23 +139,39 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void OnUpdateGraph()
         {
+            var pane = GraphSummary.GraphPanes.FirstOrDefault();
             switch (GraphType)
             {
-                case GraphTypeRT.regression:
-                    if (!(GraphSummary.GraphPanes.FirstOrDefault() is RTLinearRegressionGraphPane))
-                        GraphSummary.GraphPanes = new [] {new RTLinearRegressionGraphPane(GraphSummary)};
+                case GraphTypeRT.score_to_run_regression:
+
+                    if (!(pane is RTLinearRegressionGraphPane) || ((RTLinearRegressionGraphPane) pane).RunToRun)
+                    {
+                        GraphSummary.GraphPanes = new[] {new RTLinearRegressionGraphPane(GraphSummary, false)};
+                    }
+                    break;
+                case GraphTypeRT.run_to_run_regression:
+                    if (!(pane is RTLinearRegressionGraphPane) || !((RTLinearRegressionGraphPane) pane).RunToRun)
+                    {
+                        GraphSummary.GraphPanes = new[] {new RTLinearRegressionGraphPane(GraphSummary, true)};
+                    }
                     break;
                 case GraphTypeRT.replicate:
                     if (!(GraphSummary.GraphPanes.FirstOrDefault() is RTReplicateGraphPane))
-                        GraphSummary.GraphPanes = new []{new RTReplicateGraphPane(GraphSummary)};
+                    {
+                        GraphSummary.GraphPanes = new[] {new RTReplicateGraphPane(GraphSummary)};
+                    }
                     break;
                 case GraphTypeRT.peptide:
                     if (!(GraphSummary.GraphPanes.FirstOrDefault() is RTPeptideGraphPane))
+                    {
                         GraphSummary.GraphPanes = new[] {new RTPeptideGraphPane(GraphSummary)};
+                    }
                     break;
                 case GraphTypeRT.schedule:
                     if (!(GraphSummary.GraphPanes.FirstOrDefault() is RTScheduleGraphPane))
+                    {
                         GraphSummary.GraphPanes = new[] {new RTScheduleGraphPane(GraphSummary)};
+                    }
                     break;
             }
         }
@@ -168,7 +191,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (!e.Alt && !(e.Shift && e.Control))
                     {
                         if (e.Shift)
-                            GraphType = GraphTypeRT.regression;
+                            GraphType = GraphTypeRT.score_to_run_regression;
                         else if (e.Control)
                             GraphType = GraphTypeRT.peptide;
                         else
@@ -179,6 +202,11 @@ namespace pwiz.Skyline.Controls.Graphs
                     break;
             }
             return false;
+        }
+
+        public bool IsRunToRun()
+        {
+            return GraphType == GraphTypeRT.run_to_run_regression;
         }
     }
 }

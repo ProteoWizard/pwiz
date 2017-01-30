@@ -366,7 +366,7 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
-        /// Calculates the stadard deviation (sqrt(variance)) of the set
+        /// Calculates the standard deviation (sqrt(variance)) of the set
         /// of numbers.
         /// </summary>
         /// <returns>Standard deviation</returns>
@@ -376,7 +376,7 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
-        /// Calculates the stadard deviation (sqrt(variance)) of the set
+        /// Calculates the standard deviation (sqrt(variance)) of the set
         /// of numbers as a sample of an entire population.  Variance uses n-1.
         /// </summary>
         /// <returns>Standard deviation</returns>
@@ -386,7 +386,7 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
-        /// Calculates the stadard deviation (sqrt(variance)) of the set
+        /// Calculates the standard deviation (sqrt(variance)) of the set
         /// of numbers as an entire population.  Variance uses n.
         /// </summary>
         /// <returns>Standard deviation</returns>
@@ -396,7 +396,7 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
-        /// Calculates the stadard deviation (sqrt(variance)) of the set
+        /// Calculates the standard deviation (sqrt(variance)) of the set
         /// of numbers from a weighted mean.
         /// </summary>
         /// <param name="weights">The weights</param>
@@ -418,7 +418,7 @@ namespace pwiz.Skyline.Util
         /// The standard error of the set of numbers around a weighted mean.
         /// </summary>
         /// <param name="weights">The weights</param>
-        /// <returns>Stadard error around weighted mean</returns>
+        /// <returns>standard error around weighted mean</returns>
         public double StdErr(Statistics weights)
         {
             return StdDev(weights)/Math.Sqrt(_list.Length);
@@ -1360,8 +1360,8 @@ namespace pwiz.Skyline.Util
         /// <returns>Dot-Product of square roots of values in vectors</returns>
         public double AngleSqrt(Statistics s)
         {
-            var stat1 = new Statistics(_list.Select(Math.Sqrt));
-            var stat2 = new Statistics(s._list.Select(Math.Sqrt));
+            var stat1 = SqrtAll();
+            var stat2 = s.SqrtAll();
 
             return stat1.Angle(stat2);
         }
@@ -1374,10 +1374,18 @@ namespace pwiz.Skyline.Util
         /// <returns>Normalized contrast angle dot-product of square roots of values in vectors</returns>
         public double NormalizedContrastAngleSqrt(Statistics s)
         {
-            var stat1 = new Statistics(_list.Select(Math.Sqrt));
-            var stat2 = new Statistics(s._list.Select(Math.Sqrt));
+            var stat1 = SqrtAll();
+            var stat2 = s.SqrtAll();
 
             return stat1.NormalizedContrastAngle(stat2);
+        }
+
+        private Statistics SqrtAll()
+        {
+            var newList = new double[_list.Length];
+            for (int i = 0; i < _list.Length; i++)
+                newList[i] = Math.Sqrt(_list[i]);
+            return new Statistics(newList);
         }
 
         /// <summary>

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
@@ -49,7 +50,11 @@ namespace pwiz.Skyline.Controls.Graphs
             if (NodeGroups.Count <= maxPeaks)
                 return;
 
-            var statHeights = new Statistics(NodeGroups.Select(nodeGroup => GetHeight(nodeGroup.Results[chromIndex])));
+            var statHeights = new Statistics(NodeGroups.Where(nodeGroup => nodeGroup.HasResults)
+                .Select(nodeGroup => GetHeight(nodeGroup.Results[chromIndex])));
+            if (statHeights.Length <= maxPeaks)
+                return;
+
             double minHeight = statHeights.QNthItem(statHeights.Length - maxPeaks);
 
             var nodePeps = new List<PeptideDocNode>();
@@ -85,6 +90,7 @@ namespace pwiz.Skyline.Controls.Graphs
         /// Returns the peptides that are explicitly or implictly selected in the tree view.
         /// Peptides are implicitly selected when the protein containing them is selected.
         /// </summary>
+        [MethodImpl(MethodImplOptions.NoOptimization)] // disable optimizations in hopes of tracking down NullReferenceException
         public static PeptidesAndTransitionGroups Get(IList<TreeNodeMS> selectedNodes, int resultsIndex, int maxDisplayPeptides)
         {
             var peptidesAndTransitionGroups = new PeptidesAndTransitionGroups();
@@ -127,9 +133,12 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         var groupTreeNode = (TransitionGroupTreeNode)node;
                         var pepTreeNode = (PeptideTreeNode)groupTreeNode.Parent;
-                        peptidesAndTransitionGroups.Add(pepTreeNode.Path,
-                            pepTreeNode.DocNode,
-                            groupTreeNode.DocNode);
+                        if (pepTreeNode != null)
+                        {
+                            peptidesAndTransitionGroups.Add(pepTreeNode.Path,
+                                pepTreeNode.DocNode,
+                                groupTreeNode.DocNode);
+                        }
                     }
                 }
             }

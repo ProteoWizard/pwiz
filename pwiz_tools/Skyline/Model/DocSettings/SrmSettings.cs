@@ -648,12 +648,9 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             get
             {
-                if (HasResults)
+                if (HasResults && MeasuredResults.HasGlobalStandardArea)
                 {
-                    if (MeasuredResults.MSDataFileInfos.Any(chromFileInfo => chromFileInfo.ExplicitGlobalStandardArea.HasValue))
-                    {
-                        return true;
-                    }
+                    return true;
                 }
                 return _cachedPeptideStandards != null &&
                        _cachedPeptideStandards.ContainsKey(PeptideDocNode.STANDARD_TYPE_GLOBAL);
@@ -1771,7 +1768,7 @@ namespace pwiz.Skyline.Model.DocSettings
         double GetAAModMass(char aa, int seqIndex, int seqLength);
         MassDistribution GetMzDistribution(string seq, int charge, IsotopeAbundances abundances);
         MassDistribution GetMZDistributionFromFormula(string formula, int charge, IsotopeAbundances abundances);
-        MassDistribution GetMZDistributionSinglePoint(double mz, int charge);
+        MassDistribution GetMZDistributionSinglePoint(double mz);
         string GetIonFormula(string peptideSequence, int charge);
     }
 

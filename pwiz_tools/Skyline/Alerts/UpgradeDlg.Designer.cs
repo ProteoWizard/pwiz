@@ -29,64 +29,65 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UpgradeDlg));
-            this.btnOk = new System.Windows.Forms.Button();
+            this.btnLater = new System.Windows.Forms.Button();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.label4 = new System.Windows.Forms.Label();
-            this.label3 = new System.Windows.Forms.Label();
-            this.linkLabel1 = new System.Windows.Forms.LinkLabel();
-            this.labelABSciex = new System.Windows.Forms.Label();
-            this.label1 = new System.Windows.Forms.Label();
+            this.linkReleaseNotes = new System.Windows.Forms.LinkLabel();
+            this.labelDetailAutomatic = new System.Windows.Forms.Label();
+            this.labelDirections = new System.Windows.Forms.Label();
+            this.labelDetail = new System.Windows.Forms.Label();
+            this.labelRelease = new System.Windows.Forms.Label();
             this.pictureSkyline = new System.Windows.Forms.PictureBox();
-            this.btnCancel = new System.Windows.Forms.Button();
+            this.btnInstall = new System.Windows.Forms.Button();
+            this.cbAtStartup = new System.Windows.Forms.CheckBox();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureSkyline)).BeginInit();
             this.SuspendLayout();
             // 
-            // btnOk
+            // btnLater
             // 
-            resources.ApplyResources(this.btnOk, "btnOk");
-            this.btnOk.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.btnOk.Name = "btnOk";
-            this.btnOk.UseVisualStyleBackColor = true;
+            resources.ApplyResources(this.btnLater, "btnLater");
+            this.btnLater.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.btnLater.Name = "btnLater";
+            this.btnLater.UseVisualStyleBackColor = true;
             // 
             // panel1
             // 
             resources.ApplyResources(this.panel1, "panel1");
             this.panel1.BackColor = System.Drawing.SystemColors.Window;
-            this.panel1.Controls.Add(this.label4);
-            this.panel1.Controls.Add(this.label3);
-            this.panel1.Controls.Add(this.linkLabel1);
-            this.panel1.Controls.Add(this.labelABSciex);
-            this.panel1.Controls.Add(this.label1);
+            this.panel1.Controls.Add(this.linkReleaseNotes);
+            this.panel1.Controls.Add(this.labelDetailAutomatic);
+            this.panel1.Controls.Add(this.labelDirections);
+            this.panel1.Controls.Add(this.labelDetail);
+            this.panel1.Controls.Add(this.labelRelease);
             this.panel1.Controls.Add(this.pictureSkyline);
             this.panel1.Name = "panel1";
             // 
-            // label4
+            // linkReleaseNotes
             // 
-            resources.ApplyResources(this.label4, "label4");
-            this.label4.Name = "label4";
+            resources.ApplyResources(this.linkReleaseNotes, "linkReleaseNotes");
+            this.linkReleaseNotes.Name = "linkReleaseNotes";
+            this.linkReleaseNotes.TabStop = true;
+            this.linkReleaseNotes.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkReleaseNotes_LinkClicked);
             // 
-            // label3
+            // labelDetailAutomatic
             // 
-            resources.ApplyResources(this.label3, "label3");
-            this.label3.Name = "label3";
+            resources.ApplyResources(this.labelDetailAutomatic, "labelDetailAutomatic");
+            this.labelDetailAutomatic.Name = "labelDetailAutomatic";
             // 
-            // linkLabel1
+            // labelDirections
             // 
-            resources.ApplyResources(this.linkLabel1, "linkLabel1");
-            this.linkLabel1.Name = "linkLabel1";
-            this.linkLabel1.TabStop = true;
-            this.linkLabel1.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel1_LinkClicked);
+            resources.ApplyResources(this.labelDirections, "labelDirections");
+            this.labelDirections.Name = "labelDirections";
             // 
-            // labelABSciex
+            // labelDetail
             // 
-            resources.ApplyResources(this.labelABSciex, "labelABSciex");
-            this.labelABSciex.Name = "labelABSciex";
+            resources.ApplyResources(this.labelDetail, "labelDetail");
+            this.labelDetail.Name = "labelDetail";
             // 
-            // label1
+            // labelRelease
             // 
-            resources.ApplyResources(this.label1, "label1");
-            this.label1.Name = "label1";
+            resources.ApplyResources(this.labelRelease, "labelRelease");
+            this.labelRelease.Name = "labelRelease";
             // 
             // pictureSkyline
             // 
@@ -94,43 +95,56 @@
             this.pictureSkyline.Name = "pictureSkyline";
             this.pictureSkyline.TabStop = false;
             // 
-            // btnCancel
+            // btnInstall
             // 
-            resources.ApplyResources(this.btnCancel, "btnCancel");
-            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Name = "btnCancel";
-            this.btnCancel.UseVisualStyleBackColor = true;
+            resources.ApplyResources(this.btnInstall, "btnInstall");
+            this.btnInstall.DialogResult = System.Windows.Forms.DialogResult.OK;
+            this.btnInstall.Name = "btnInstall";
+            this.btnInstall.UseVisualStyleBackColor = true;
+            // 
+            // cbAtStartup
+            // 
+            resources.ApplyResources(this.cbAtStartup, "cbAtStartup");
+            this.cbAtStartup.Checked = true;
+            this.cbAtStartup.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cbAtStartup.Name = "cbAtStartup";
+            this.cbAtStartup.UseVisualStyleBackColor = true;
+            this.cbAtStartup.CheckedChanged += new System.EventHandler(this.cbAtStartup_CheckedChanged);
             // 
             // UpgradeDlg
             // 
-            this.AcceptButton = this.btnCancel;
+            this.AcceptButton = this.btnInstall;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.CancelButton = this.btnCancel;
-            this.Controls.Add(this.btnCancel);
+            this.CancelButton = this.btnLater;
+            this.Controls.Add(this.cbAtStartup);
+            this.Controls.Add(this.btnInstall);
             this.Controls.Add(this.panel1);
-            this.Controls.Add(this.btnOk);
+            this.Controls.Add(this.btnLater);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "UpgradeDlg";
+            this.ShowInTaskbar = false;
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureSkyline)).EndInit();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
         #endregion
 
-        private System.Windows.Forms.Button btnOk;
+        private System.Windows.Forms.Button btnLater;
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.PictureBox pictureSkyline;
-        private System.Windows.Forms.Label labelABSciex;
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.LinkLabel linkLabel1;
-        private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.Button btnCancel;
-        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Label labelDetail;
+        private System.Windows.Forms.Label labelRelease;
+        private System.Windows.Forms.Label labelDirections;
+        private System.Windows.Forms.Button btnInstall;
+        private System.Windows.Forms.CheckBox cbAtStartup;
+        private System.Windows.Forms.Label labelDetailAutomatic;
+        private System.Windows.Forms.LinkLabel linkReleaseNotes;
     }
 }

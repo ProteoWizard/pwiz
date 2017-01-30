@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
@@ -38,12 +39,15 @@ namespace SkylineNightly
             {
                 Program.SCHEDULED_ARG, // Trunk
                 Program.SCHEDULED_PERFTESTS_ARG, // Trunk with Perf Tests
-                Program.SCHEDULED_RELEASE_BRANCH_ARG, // Release Branch with Perf Tests
+                Program.SCHEDULED_RELEASE_BRANCH_ARG, // Release Branch without Perf Tests
                 Program.SCHEDULED_STRESSTESTS_ARG, // Trunk with Stress Tests
                 Program.SCHEDULED_INTEGRATION_ARG, // Integration
                 Program.SCHEDULED_INTEGRATION_TRUNK_ARG, // Integration then Trunk (Dedicated)
                 Program.SCHEDULED_PERFTEST_AND_TRUNK_ARG, // Trunk then Perf Tests (Dedicated)
                 Program.SCHEDULED_TRUNK_AND_TRUNK_ARG, // Trunk then Trunk again (Dedicated)
+                Program.SCHEDULED_RELEASE_BRANCH_PERFTESTS_ARG, // Release Branch with Perf Tests
+                Program.SCHEDULED_TRUNK_AND_RELEASE_BRANCH_ARG, // Trunk, then Release Branch (dedicated)
+                Program.SCHEDULED_TRUNK_AND_RELEASE_BRANCH_PERFTESTS_ARG, // Trunk, then Release Branch (dedicated)
             };
             if (!string.IsNullOrEmpty(Settings.Default.ScheduledArg))  // Older installations won't have this
             {
@@ -146,6 +150,19 @@ namespace SkylineNightly
                     dt.Enabled = true;
                     td.Settings.WakeToRun = true;
 
+                    // Using ProcessPriorityClass.High seems like cheating, but it's not:
+                    // A normal user-initiated app has
+                    //   TaskPriority = 8, I/O Priority = Normal, Memory Priority = 5
+                    // Default priority for Task Scheduler launch provides
+                    //   TaskPriority = 6, I/O Priority = Low, Memory Priority = 3
+                    //ProcessPriorityClass.Normal provides the launched task with
+                    //   TaskPriority = 8, I/O Priority = Normal, Memory Priority = 4 (not quite as good as user-launched)
+                    // ProcessPriorityClass.High provides SkylineNightly with
+                    //   TaskPriority = 13, I/O Priority = Normal, Memory Priority = 5
+                    // but gives SkylineTester the standard user values of
+                    //   TaskPriority = 8, I/O Priority = Normal, Memory Priority = 5
+                    td.Settings.Priority = ProcessPriorityClass.High; 
+
                     // Add an action that will launch SkylineTester whenever the trigger fires
                     var assembly = Assembly.GetExecutingAssembly();
                     td.Actions.Add(new ExecAction(assembly.Location, runType)); // Not L10N
@@ -173,7 +190,7 @@ namespace SkylineNightly
                     break;
                 case 2:
                     arg = Program.SCHEDULED_RELEASE_BRANCH_ARG;
-                    durationHours = Nightly.PERF_DURATION_HOURS;
+                    durationHours = Nightly.DEFAULT_DURATION_HOURS;
                     break;
                 case 3:
                     arg = Program.SCHEDULED_STRESSTESTS_ARG;
@@ -194,6 +211,18 @@ namespace SkylineNightly
                 case 7:
                     arg = Program.SCHEDULED_TRUNK_AND_TRUNK_ARG;
                     durationHours = 2 * Nightly.DEFAULT_DURATION_HOURS;
+                    break;
+                case 8:
+                    arg = Program.SCHEDULED_RELEASE_BRANCH_PERFTESTS_ARG;
+                    durationHours = Nightly.PERF_DURATION_HOURS;
+                    break;
+                case 9:
+                    arg = Program.SCHEDULED_TRUNK_AND_RELEASE_BRANCH_ARG;
+                    durationHours = 2 * Nightly.DEFAULT_DURATION_HOURS;
+                    break;
+                case 10:
+                    arg = Program.SCHEDULED_TRUNK_AND_RELEASE_BRANCH_PERFTESTS_ARG;
+                    durationHours = Nightly.DEFAULT_DURATION_HOURS + Nightly.PERF_DURATION_HOURS;
                     break;
             }
             return arg;

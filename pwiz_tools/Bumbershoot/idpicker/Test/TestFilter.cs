@@ -1915,5 +1915,167 @@ namespace Test
 
             session.Close();
         }
+
+        
+        [TestMethod]
+        [TestCategory("Model")]
+        public void TestCropAssembly ()
+        {
+            // each protein in the test scenarios is created from simple repeating motifs
+            var testProteinSequences = new string[]
+            {
+                createSimpleProteinSequence("A", 20), // PRO1
+
+                createSimpleProteinSequence("B", 20),
+
+                createSimpleProteinSequence("C", 20),
+
+                createSimpleProteinSequence("D", 20),
+
+                createSimpleProteinSequence("E", 20), // PRO5
+                createSimpleProteinSequence("E", 21),
+
+                createSimpleProteinSequence("F", 20),
+                createSimpleProteinSequence("F", 21),
+
+                createSimpleProteinSequence("G", 20),
+                createSimpleProteinSequence("G", 21), // PRO10
+                
+                createSimpleProteinSequence("H", 20),
+                createSimpleProteinSequence("H", 21),
+            };
+
+            string idpDbName = System.Reflection.MethodInfo.GetCurrentMethod().Name + ".idpDB";
+            File.Delete(idpDbName);
+            sessionFactory = SessionFactoryFactory.CreateSessionFactory(idpDbName, new SessionFactoryConfig { CreateSchema = true });
+            var session = sessionFactory.OpenSession();
+
+            TestModel.CreateTestProteins(session, testProteinSequences);
+
+            const int analysisCount = 1;
+            const int sourceCount = 1;
+            const int chargeCount = 1;
+
+            for (int analysis = 1; analysis <= analysisCount; ++analysis)
+            for (int source = 1; source <= sourceCount; ++source)
+            for (int charge = 1; charge <= chargeCount; ++charge)
+            {
+                int scan = 0;
+
+                List<SpectrumTuple> testPsmSummary = new List<SpectrumTuple>()
+                {
+                    // Columns:     Group  Source Spectrum Analysis Score Q List of Peptide@Charge/ScoreDivider
+                    
+                    // 1 protein (PRO1) to 1 peptide to 1 spectrum @ 1% FDR
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 0.001, String.Format("AAAAAAAAAA@{0}/1 BBBBBBBBBB@{0}/8", charge)),
+
+                    // 1 protein (PRO2) to 1 peptide to 2 spectra @ 1% FDR, 3 PSMS @ 2.4% FDR
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 0.001, String.Format("BBBBBBBBBB@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 0.001, String.Format("BBBBBBBBBB@{0}/1 CCCCCCCCCC@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 0.024, String.Format("BBBBBBBBBB@{0}/1 CCCCCCCCCC@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 0.024, String.Format("BBBBBBBBBB@{0}/1 CCCCCCCCCC@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 0.024, String.Format("BBBBBBBBBB@{0}/1 CCCCCCCCCC@{0}/8", charge)),
+
+                    // 1 protein (PRO3) to 2 peptides to 1 spectrum (each) @ 1% FDR, 1 PSM @ 4.2% FDR, 1 PSM @ 2.4% FDR
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 0.001, String.Format("CCCCCCCCCC@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 0.001, String.Format("CCCCCCCCC@{0}/1  BBBBBBBBBB@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 0.024, String.Format("CCCCCCCCC@{0}/1  BBBBBBBBBB@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 0.042, String.Format("CCCCCCCCC@{0}/1  BBBBBBBBBB@{0}/8", charge)),
+
+                    // 1 protein (PRO4) to 2 peptides to 2 spectra (each) @ 2.4% FDR, 2 PSMs @ 4.2% FDR
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 0.024, String.Format("DDDDDDDDDD@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 0.024, String.Format("DDDDDDDDDD@{0}/1 BBBBBBBBBB@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 0.042, String.Format("DDDDDDDDD@{0}/1  AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 0.042, String.Format("DDDDDDDDD@{0}/1  BBBBBBBBBB@{0}/8", charge)),
+
+                    // 2 proteins (PRO5,6) to 1 peptide to 1 spectrum @ 1% FDR (ambiguous protein group)
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 0.001, String.Format("EEEEEEEEEE@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+
+                    // 2 proteins (PRO7,8) to 1 peptide to 2 spectra @ 4.2% FDR (ambiguous protein group)
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 0.042, String.Format("FFFFFFFFFF@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 0.042, String.Format("FFFFFFFFFF@{0}/1 BBBBBBBBBB@{0}/8", charge)),
+
+                    // 2 proteins (PRO9,10) to 2 peptides to 1 spectrum (each) @ 4.2% FDR (ambiguous protein group)
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 0.042, String.Format("GGGGGGGGGG@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 0.042, String.Format("GGGGGGGGG@{0}/1  BBBBBBBBBB@{0}/8", charge)),
+
+                    // 2 proteins (PRO11,12) to 2 peptides to 2 spectra (each) @ 1% FDR (ambiguous protein group), 2 PSMs @ 4.2% FDR
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 0.001, String.Format("HHHHHHHHHH@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 0.001, String.Format("HHHHHHHHHH@{0}/1 BBBBBBBBBB@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 0.001, String.Format("HHHHHHHHH@{0}/1  AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 0.001, String.Format("HHHHHHHHH@{0}/1  BBBBBBBBBB@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 0.042, String.Format("HHHHHHHHHH@{0}/1 BBBBBBBBBB@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 0.042, String.Format("HHHHHHHHH@{0}/1  AAAAAAAAAA@{0}/8", charge)),
+                };
+
+                TestModel.CreateTestData(session, testPsmSummary);
+            }
+
+            // first filter at 5% FDR: all PSMs should be included
+            var dataFilter = new DataFilter()
+            {
+                MaximumQValue = 0.05,
+                MinimumDistinctPeptides = 1,
+                MinimumSpectra = 1,
+                MinimumAdditionalPeptides = 0
+            };
+            dataFilter.ApplyBasicFilters(session);
+
+            // clear session so objects are loaded from database
+            session.Clear();
+
+            Assert.AreEqual(25, session.Query<PeptideSpectrumMatch>().Count());
+            Assert.AreEqual(12, session.Query<Protein>().Count());
+
+
+            // filter at 3% FDR: PSMs at 4.2% should be excluded
+            dataFilter.MaximumQValue = 0.03;
+            dataFilter.ApplyBasicFilters(session);
+
+            Assert.AreEqual(16, session.Query<PeptideSpectrumMatch>().Count());
+            Assert.AreEqual(8, session.Query<Protein>().Count());
+
+
+            // filter at 1% FDR: PSMs at 2.4% and 4.2% should be excluded
+            dataFilter.MaximumQValue = 0.01;
+            dataFilter.ApplyBasicFilters(session);
+
+            Assert.AreEqual(10, session.Query<PeptideSpectrumMatch>().Count());
+            Assert.AreEqual(7, session.Query<Protein>().Count());
+
+
+            // back to 3%, then crop
+            dataFilter.MaximumQValue = 0.03;
+            dataFilter.ApplyBasicFilters(session);
+            dataFilter.CropAssembly(session);
+
+            Assert.AreEqual(16, session.Query<PeptideSpectrumMatch>().Count());
+            Assert.AreEqual(8, session.Query<Protein>().Count());
+
+
+            // back at 5%, PSMs at 2.4% and 4.2% FDR for the 8 remaining proteins should be recovered
+            dataFilter.MaximumQValue = 0.05;
+            dataFilter.ApplyBasicFilters(session);
+
+            Assert.AreEqual(21, session.Query<PeptideSpectrumMatch>().Count());
+            Assert.AreEqual(8, session.Query<Protein>().Count());
+
+
+            // back to 1%, then crop
+            dataFilter.MaximumQValue = 0.01;
+            dataFilter.ApplyBasicFilters(session);
+            dataFilter.CropAssembly(session);
+
+            Assert.AreEqual(10, session.Query<PeptideSpectrumMatch>().Count());
+            Assert.AreEqual(7, session.Query<Protein>().Count());
+
+
+            // back at 5%, PSMs at 2.4% and 4.2% FDR for the 7 remaining proteins should be recovered
+            dataFilter.MaximumQValue = 0.05;
+            dataFilter.ApplyBasicFilters(session);
+
+            Assert.AreEqual(17, session.Query<PeptideSpectrumMatch>().Count());
+            Assert.AreEqual(7, session.Query<Protein>().Count());
+        }
     }
 }

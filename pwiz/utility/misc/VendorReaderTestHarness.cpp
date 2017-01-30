@@ -580,6 +580,7 @@ int testReader(const Reader& reader, const vector<string>& args, bool testAccept
                 }
                 catch (exception& e)
                 {
+                    cerr << "Error testing on " << filepath.filename().string() << ": " << e.what() << endl;
                     ++failedTests;
                 }
 

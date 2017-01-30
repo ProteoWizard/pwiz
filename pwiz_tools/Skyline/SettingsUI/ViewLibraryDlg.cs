@@ -470,7 +470,7 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         var mods = doc.Settings.PeptideSettings.Modifications;
                         mods = mods.ChangeStaticModifications(mods.StaticModifications.Concat(addModificationsDlg.NewDocumentModsStatic).ToList())
-                                   .ChangeHeavyModifications(mods.HeavyModifications.Concat(addModificationsDlg.NewDocumentModsHeavy).ToList());
+                                   .AddHeavyModifications(addModificationsDlg.NewDocumentModsHeavy);
                         doc = doc.ChangeSettings(doc.Settings.ChangePeptideSettings(doc.Settings.PeptideSettings.ChangeModifications(mods)));
                         doc.Settings.UpdateDefaultModifications(false);
                         return doc;
@@ -540,13 +540,20 @@ namespace pwiz.Skyline.SettingsUI
             {
                 int start = _pageInfo.StartIndex;
                 int end = _pageInfo.EndIndex;
-                for (int i = start; i < end; i++)
+                new LongOperationRunner
                 {
-                    ViewLibraryPepInfo pepInfo = _peptides[i];
-                    int charge = pepInfo.Key.Charge;
-                    var diff = new SrmSettingsDiff(true, false, true, false, false, false);
-                    listPeptide.Items.Add(pepMatcher.AssociateMatchingPeptide(pepInfo, charge, diff));
-                }
+                    JobTitle = Resources.ViewLibraryDlg_UpdateListPeptide_Updating_list_of_peptides
+                }.Run(longWaitBroker =>
+                {
+                    for (int i = start; i < end; i++)
+                    {
+                        longWaitBroker.SetProgressCheckCancel(i - start, end - start);
+                        ViewLibraryPepInfo pepInfo = _peptides[i];
+                        int charge = pepInfo.Key.Charge;
+                        var diff = new SrmSettingsDiff(true, false, true, false, false, false);
+                        listPeptide.Items.Add(pepMatcher.AssociateMatchingPeptide(pepInfo, charge, diff));
+                    }
+                });
 
                 listPeptide.SelectedIndex = selectPeptideIndex;
             }

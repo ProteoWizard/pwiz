@@ -233,36 +233,7 @@ namespace pwiz.Common.DataBinding
                         return;
                     }
                     var dataFormat = dataFormats[saveFileDialog.FilterIndex - 1];
-                    SafeWriteToFile(owner, saveFileDialog.FileName, stream =>
-                    {
-                        var writer = new StreamWriter(stream, new UTF8Encoding(false));
-                        var cloneableRowSource = bindingListSource.RowSource as ICloneableList;
-                        bool finished = false;
-                        if (null == cloneableRowSource)
-                        {
-                            var progressMonitor = new SilentProgressMonitor();
-                            WriteData(progressMonitor, writer, bindingListSource, dataFormat.GetDsvWriter());
-                            finished = true;
-                        }
-                        else
-                        {
-                            var clonedList = cloneableRowSource.DeepClone();
-                            RunLongJob(owner, progressMonitor =>
-                            {
-                                using (var clonedBindingList = new BindingListSource())
-                                {
-                                    SetViewFrom(bindingListSource, clonedList, clonedBindingList);
-                                    WriteData(progressMonitor, writer, clonedBindingList, dataFormat.GetDsvWriter());
-                                    finished = !progressMonitor.IsCanceled;
-                                }
-                            });
-                        }
-                        if (finished)
-                        {
-                            writer.Flush();
-                        }
-                        return finished;
-                    });
+                    ExportToFile(owner, bindingListSource, saveFileDialog.FileName, dataFormat.GetDsvWriter());
                     SetExportDirectory(Path.GetDirectoryName(saveFileDialog.FileName));
                 }
             }
@@ -271,6 +242,41 @@ namespace pwiz.Common.DataBinding
                 ShowMessageBox(owner, Resources.AbstractViewContext_Export_There_was_an_error_writing_to_the_file__ + exception.Message,
                     MessageBoxButtons.OK);
             }
+        }
+
+        public void ExportToFile(Control owner, BindingListSource bindingListSource, String filename,
+            DsvWriter dsvWriter)
+        {
+            SafeWriteToFile(owner, filename, stream =>
+            {
+                var writer = new StreamWriter(stream, new UTF8Encoding(false));
+                var cloneableRowSource = bindingListSource.RowSource as ICloneableList;
+                bool finished = false;
+                if (null == cloneableRowSource)
+                {
+                    var progressMonitor = new SilentProgressMonitor();
+                    WriteData(progressMonitor, writer, bindingListSource, dsvWriter);
+                    finished = true;
+                }
+                else
+                {
+                    var clonedList = cloneableRowSource.DeepClone();
+                    RunLongJob(owner, progressMonitor =>
+                    {
+                        using (var clonedBindingList = new BindingListSource())
+                        {
+                            SetViewFrom(bindingListSource, clonedList, clonedBindingList);
+                            WriteData(progressMonitor, writer, clonedBindingList, dsvWriter);
+                            finished = !progressMonitor.IsCanceled;
+                        }
+                    });
+                }
+                if (finished)
+                {
+                    writer.Flush();
+                }
+                return finished;
+            });
         }
 
         /// <summary>
@@ -530,6 +536,10 @@ namespace pwiz.Common.DataBinding
             {
                 column.DefaultCellStyle.BackColor = Color.FromArgb(245, 245, 245); // Lighter than Color.LightGray, which is still pretty dark actually
             }
+            if (!string.IsNullOrEmpty(propertyDescriptor.Description))
+            {
+                column.ToolTipText = propertyDescriptor.Description;
+            }
             return column;
         }
 
@@ -664,6 +674,9 @@ namespace pwiz.Common.DataBinding
             }
         }
 
+        // Default implementation of ViewsChanged which never fires.
+        // SkylineViewContext overrides and uses this event 
+#pragma warning disable 67
         public virtual event Action ViewsChanged;
     }
 }

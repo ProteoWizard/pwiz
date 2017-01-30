@@ -93,6 +93,11 @@ namespace pwiz.Common.DataBinding
         }
         public delegate void HookPropertyChange(object component, PropertyDescriptor propertyDescriptor);
 
+        public override string Description
+        {
+            get { return DisplayColumn.GetColumnDescription(PivotKey); }
+        }
+
         #region Equality Members
         protected bool Equals(ColumnPropertyDescriptor other)
         {

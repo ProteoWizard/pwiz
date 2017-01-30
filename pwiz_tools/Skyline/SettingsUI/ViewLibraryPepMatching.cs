@@ -320,7 +320,7 @@ namespace pwiz.Skyline.SettingsUI
 
             var listDefHeavyMods = new MappedList<string, StaticMod>();
             listDefHeavyMods.AddRange(Properties.Settings.Default.HeavyModList);
-            listDefHeavyMods.AddRange(document.Settings.PeptideSettings.Modifications.HeavyModifications);
+            listDefHeavyMods.AddRange(document.Settings.PeptideSettings.Modifications.AllHeavyModifications);
 
             foreach (var key in PeptideMatches.Keys)
             {

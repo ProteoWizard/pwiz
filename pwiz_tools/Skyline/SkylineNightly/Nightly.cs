@@ -51,11 +51,12 @@ namespace SkylineNightly
         private const string LABKEY_URL = "https://skyline.gs.washington.edu/labkey/testresults/home/development/Nightly%20x64/post.view?";
         private const string LABKEY_PERF_URL = "https://skyline.gs.washington.edu/labkey/testresults/home/development/Performance%20Tests/post.view?";
         private const string LABKEY_STRESS_URL = "https://skyline.gs.washington.edu/labkey/testresults/home/development/NightlyStress/post.view?";
-        private const string LABKEY_RELEASE_PERF_URL = "https://skyline.gs.washington.edu/labkey/testresults/home/development/Release%20Branch/post.view?";
+        private const string LABKEY_RELEASE_URL = "https://skyline.gs.washington.edu/labkey/testresults/home/development/Release%20Branch/post.view?";
+        private const string LABKEY_RELEASE_PERF_URL = "https://skyline.gs.washington.edu/labkey/testresults/home/development/Release%20Branch%20Performance%20Tests/post.view?";
         private const string LABKEY_INTEGRATION_URL = "https://skyline.gs.washington.edu/labkey/testresults/home/development/Integration/post.view";
 
-        // Current integration branch is MultiFileUltimate
-        private const string SVN_INTEGRATION_BRANCH_URL = "https://svn.code.sf.net/p/proteowizard/code/branches/work/20160427_MultiFileUtimate";
+        // Current integration branch is large_doc_perf
+        private const string SVN_INTEGRATION_BRANCH_URL = "https://svn.code.sf.net/p/proteowizard/code/branches/work/20161008_large_doc_perf";
 
         private DateTime _startTime;
         public string LogFileName { get; private set; }
@@ -129,7 +130,7 @@ namespace SkylineNightly
             }
         }
 
-        public enum RunMode { parse, post, trunk, perf, release, stress, integration }
+        public enum RunMode { parse, post, trunk, perf, release, stress, integration, release_perf }
 
         public string RunAndPost()
         {
@@ -155,7 +156,7 @@ namespace SkylineNightly
             var nightlyDir = GetNightlyDir();
             var skylineNightlySkytr = Path.Combine(nightlyDir, "SkylineNightly.skytr");
 
-            bool withPerfTests = _runMode != RunMode.trunk && _runMode != RunMode.integration;
+            bool withPerfTests = _runMode != RunMode.trunk && _runMode != RunMode.integration && _runMode != RunMode.release;
 
             if (_runMode == RunMode.stress)
             {
@@ -214,19 +215,28 @@ namespace SkylineNightly
             Log("Delete SkylineTester");
             var skylineTesterDirBasis = _skylineTesterDir; // Default name
             const int maxRetry = 1000;  // Something would have to be very wrong to get here, but better not to risk a hang
+            string nextDir = _skylineTesterDir;
             for (var retry = 1; retry < maxRetry; retry++)
             {
                 try
                 {
-                    Delete(_skylineTesterDir);
-                    break;
+                    if (!Directory.Exists(nextDir))
+                        break;
+
+                    string deleteDir = nextDir;
+                    // Keep going until a directory is found that does not exist
+                    nextDir = skylineTesterDirBasis + "_" + retry;
+
+                    Delete(deleteDir);
                 }
                 catch (Exception e)
                 {
-                    // Work around undeletable file that sometimes appears under Windows 10
-                    var newDir = skylineTesterDirBasis + "_" +  retry;
-                    Log("Unable to delete " + _skylineTesterDir + "(" + e + "),  using " + newDir + " instead.");
-                    _skylineTesterDir = newDir;
+                    if (Directory.Exists(_skylineTesterDir))
+                    {
+                        // Work around undeletable file that sometimes appears under Windows 10
+                        Log("Unable to delete " + _skylineTesterDir + "(" + e + "),  using " + nextDir + " instead.");
+                        _skylineTesterDir = nextDir;
+                    }
                 }
             }
             Log("buildRoot is " + PwizDir);
@@ -369,7 +379,7 @@ namespace SkylineNightly
             using (var client = new WebClient())
             {
                 client.Credentials = new NetworkCredential(TEAM_CITY_USER_NAME, TEAM_CITY_USER_PASSWORD);
-                var buildType = (mode == RunMode.release)
+                var buildType = ((mode == RunMode.release) || (mode == RunMode.release_perf))
                     ? TEAM_CITY_BUILD_TYPE_RELEASE_64
                     : TEAM_CITY_BUILD_TYPE;
                 var buildPageUrl = string.Format(TEAM_CITY_BUILD_URL, buildType);
@@ -474,7 +484,7 @@ namespace SkylineNightly
             }
             return isTrunk
                 ? (hasPerftests ? RunMode.perf : RunMode.trunk)
-                : (isIntegration ? RunMode.integration : RunMode.release);
+                : (isIntegration ? RunMode.integration :  (hasPerftests ? RunMode.release_perf : RunMode.release));
         }
 
         private int ParseTests(string log)
@@ -597,8 +607,10 @@ namespace SkylineNightly
             // Post to server.
             if (mode == RunMode.integration)
                 url = LABKEY_INTEGRATION_URL;
-            else if (mode == RunMode.release)
+            else if (mode == RunMode.release_perf)
                 url = LABKEY_RELEASE_PERF_URL;
+            else if (mode == RunMode.release)
+                url = LABKEY_RELEASE_URL;
             else if (mode == RunMode.perf)
                 url = LABKEY_PERF_URL;
             else if (mode == RunMode.stress)
@@ -712,10 +724,8 @@ namespace SkylineNightly
             {
                 try
                 {
-                    if (File.Exists(fileOrDir))
-                        File.Delete(fileOrDir);
-                    else if (Directory.Exists(fileOrDir))
-                        Directory.Delete(fileOrDir, true);
+                    DeleteRecursive(fileOrDir);
+                    break;
                 }
                 catch (Exception ex)
                 {
@@ -725,6 +735,23 @@ namespace SkylineNightly
                     var random = new Random();
                     Thread.Sleep(1000 + random.Next(0, 5000)); // A little stutter-step to avoid unlucky sync with TortoiseSVN icon update
                 }
+            }
+        }
+
+        private void DeleteRecursive(string fileOrDir)
+        {
+            if (File.Exists(fileOrDir))
+            {
+                File.SetAttributes(fileOrDir, FileAttributes.Normal);   // Protect against failing on read-only files
+                File.Delete(fileOrDir);
+            }
+            else if (Directory.Exists(fileOrDir))
+            {
+                foreach (var entry in Directory.EnumerateFileSystemEntries(fileOrDir))
+                {
+                    DeleteRecursive(entry);
+                }
+                Directory.Delete(fileOrDir, true);
             }
         }
 

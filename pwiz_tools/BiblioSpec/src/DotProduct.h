@@ -31,6 +31,8 @@
 #ifdef _MSC_VER
 #include <float.h>
 #define isnan _isnan
+#else
+#define isnan(x) std::isnan((x))
 #endif
 
 

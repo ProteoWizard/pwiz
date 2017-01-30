@@ -1631,6 +1631,7 @@
         <xs:attribute name="truncated" type="xs:boolean"/>
         <xs:attribute name="identified" type="peak_identified_type"/>
         <xs:attribute name="rank" type="xs:integer"/>
+        <xs:attribute name="rank_by_level" type="xs:integer"/>
         <xs:attribute name="user_set" type="user_set" use="optional"/>
       </xs:extension>
     </xs:complexContent>

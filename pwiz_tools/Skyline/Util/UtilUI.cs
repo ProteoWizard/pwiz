@@ -33,29 +33,6 @@ using ZedGraph;
 
 namespace pwiz.Skyline.Util
 {
-    public sealed class LongOp : IDisposable
-    {
-        private readonly Control _control;
-        private readonly Cursor _cursor;
-
-        public LongOp(Control control)
-            : this(control, Cursors.Arrow)
-        {            
-        }
-
-        public LongOp(Control control, Cursor cursor)
-        {
-            _control = control;
-            _cursor = cursor;
-            _control.Cursor = Cursors.WaitCursor;
-        }
-
-        public void Dispose()
-        {
-            _control.Cursor = _cursor;
-        }
-    }
-
     /// <summary>
     /// For controls that do not allow completely turning off updates
     /// that cause painting during large operations.
@@ -265,6 +242,28 @@ namespace pwiz.Skyline.Util
             {
                 ShowLinkFailure(parent, link);
             }
+        }
+
+        private const string SKYLINE_SITE_ROOT = "https://skyline.ms"; // Not L10N
+
+        public static string GetSkylineLink(string linkRelative)
+        {
+            return SKYLINE_SITE_ROOT + linkRelative;
+        }
+
+        public static void OpenSkylineLink(IWin32Window parent, string linkRelative)
+        {
+            OpenLink(parent, GetSkylineLink(linkRelative));
+        }
+
+        public static string GetSkylineShortLink(string shortName)
+        {
+            return GetSkylineLink("/" + shortName + ".url");  // Not L10N
+        }
+
+        public static void OpenSkylineShortLink(IWin32Window parent, string shortName)
+        {
+            OpenLink(parent, GetSkylineShortLink(shortName));
         }
 
         /// <summary>

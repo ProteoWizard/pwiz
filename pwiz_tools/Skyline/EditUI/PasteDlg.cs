@@ -223,7 +223,7 @@ namespace pwiz.Skyline.EditUI
 
         private SrmDocument GetNewDocument(SrmDocument document, bool validating, ref IdentityPath selectedPath, out int emptyPeptideGroups)
         {
-            var fastaHelper = new ImportFastaHelper(tbxFasta, tbxError, panelError);
+            var fastaHelper = new ImportFastaHelper(tbxFasta, tbxError, panelError, toolTip1);
             if ((document = fastaHelper.AddFasta(document, ref selectedPath, out emptyPeptideGroups)) == null)
             {
                 tabControl1.SelectedTab = tabPageFasta;  // To show fasta errors
@@ -706,6 +706,7 @@ namespace pwiz.Skyline.EditUI
                     var importer = new MassListImporter(document, inputs);
                     // TODO: support long-wait broker
                     peptideGroupDocNodes = importer.Import(null,
+                        inputs.InputFilename,
                         TRANSITION_LIST_COL_INDICES,
                         dictNameSeq,
                         out irtPeptides,
@@ -1849,11 +1850,12 @@ namespace pwiz.Skyline.EditUI
 
     public class ImportFastaHelper
     {
-        public ImportFastaHelper(TextBox tbxFasta, TextBox tbxError, Panel panelError)
+        public ImportFastaHelper(TextBox tbxFasta, TextBox tbxError, Panel panelError, ToolTip helpTip)
         {
             _tbxFasta = tbxFasta;
             _tbxError = tbxError;
             _panelError = panelError;
+            _helpTip = helpTip;
         }
 
         public IdentityPath SelectedPath { get; set; }
@@ -1866,6 +1868,9 @@ namespace pwiz.Skyline.EditUI
 
         private readonly Panel _panelError;
         private Panel PanelError { get { return _panelError; } }
+
+        private readonly ToolTip _helpTip;
+        private ToolTip HelpTip { get { return _helpTip; } }
 
         public SrmDocument AddFasta(SrmDocument document, ref IdentityPath selectedPath, out int emptyPeptideGroups)
         {
@@ -1968,8 +1973,14 @@ namespace pwiz.Skyline.EditUI
                 return;
             }
             TbxError.BackColor = Color.Red;
+            TbxError.ForeColor = Color.White;
             TbxError.Text = pasteError.Message;
             TbxError.Visible = true;
+            if (HelpTip != null)
+            {
+                // In case message is long, make it possible to see in a tip
+                HelpTip.SetToolTip(TbxError, pasteError.Message);
+            }
 
             TbxFasta.SelectionStart = Math.Max(0, TbxFasta.GetFirstCharIndexFromLine(pasteError.Line) + pasteError.Column);
             TbxFasta.SelectionLength = Math.Min(pasteError.Length, TbxFasta.Text.Length - TbxFasta.SelectionStart);

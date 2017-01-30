@@ -58,6 +58,8 @@ namespace pwiz.Skyline.Model.Lib
                         Regression.Calculator.ScoreSequence(measuredRetentionTime.PeptideSequence)).Cast<double>().ToArray());
         } }
 
+        public RetentionScoreCalculatorSpec Calculator { get; private set;}
+
         /// <summary>
         /// Align retention times with a target.
         /// For the MS2 Id's that are found in both the target and the timesToAlign, the MS2 id's 
@@ -104,7 +106,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 var cache = new RetentionTimeScoreCache(new[] {calculator}, new MeasuredRetentionTime[0], null);
                 regressionRefined = regression.FindThreshold(refinementThreshhold, null, 0,
-                                                                targetTimesList.Count, new MeasuredRetentionTime[0], targetTimesList, regressionStatistics,
+                                                                targetTimesList.Count, new MeasuredRetentionTime[0], targetTimesList,null, regressionStatistics,
                                                                 calculator, cache, isCanceled, ref regressionRefinedStatistics,
                                                                 ref outIndexes);
             }
@@ -118,6 +120,7 @@ namespace pwiz.Skyline.Model.Lib
                            RegressionRefined = regressionRefined,
                            RegressionRefinedStatistics = regressionRefinedStatistics,
                            OutlierIndexes = outIndexes,
+                           Calculator = calculator
                        };
         }
 

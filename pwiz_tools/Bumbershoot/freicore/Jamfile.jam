@@ -77,11 +77,11 @@ lib freicore
 
 
 import testing ;
-unit-test SharedTests : SharedTests.cpp freicore ;
-unit-test SearchResultSetTest : SearchResultSetTest.cpp freicore ;
-unit-test AhoCorasickTrieTest : AhoCorasickTrieTest.cpp freicore ;
-unit-test BaseRunTimeConfigTest : BaseRunTimeConfigTest.cpp freicore ;
-unit-test percentile_test : percentile_test.cpp freicore ;
+unit-test-if-exists SharedTests : SharedTests.cpp freicore ;
+unit-test-if-exists SearchResultSetTest : SearchResultSetTest.cpp freicore ;
+unit-test-if-exists AhoCorasickTrieTest : AhoCorasickTrieTest.cpp freicore ;
+unit-test-if-exists BaseRunTimeConfigTest : BaseRunTimeConfigTest.cpp freicore ;
+unit-test-if-exists percentile_test : percentile_test.cpp freicore ;
 
 explicit mapPeptidesToFasta ;
 exe mapPeptidesToFasta : mapPeptidesToFasta.cpp freicore ;

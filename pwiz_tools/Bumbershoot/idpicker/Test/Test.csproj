@@ -190,7 +190,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
     <Resource Include="Test.config" />
   </ItemGroup>
   <ItemGroup>

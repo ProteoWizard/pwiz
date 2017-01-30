@@ -55,7 +55,27 @@ class SpectrumWorkerThreads::Impl
         }
 
         bool isBruker = icPtr.get() && icPtr->hasCVParamChild(MS_Bruker_Daltonics_instrument_model);
-        useThreads_ = !isBruker; // Bruker library is not thread-friendly
+
+        bool isDemultiplexed = false;
+        const boost::shared_ptr<const DataProcessing> dp = sl.dataProcessingPtr();
+        if (dp)
+        {
+            BOOST_FOREACH(const ProcessingMethod& pm, dp->processingMethods)
+            {
+                if (!pm.hasCVParam(MS_data_processing)) continue;
+                BOOST_FOREACH(const UserParam& up, pm.userParams)
+                {
+                    if (up.name.find("Demultiplexing") != std::string::npos)
+                    {
+                        isDemultiplexed = true;
+                        break;
+                    }
+                }
+                if (isDemultiplexed) break;
+            }
+        }
+
+        useThreads_ = !(isBruker || isDemultiplexed); // Bruker library is not thread-friendly
 
         if (sl.size() > 0 && useThreads_)
         {

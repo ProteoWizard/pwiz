@@ -408,7 +408,7 @@ namespace Test
                     Assert.AreEqual(12, columns.Count);
                     Assert.AreEqual("Total N-term C D E K M Q R S T Y", String.Join(" ", columns.Select(o => o.Name)));
                     Assert.AreEqual("Total 768 134 149 95 95 116 55 29 33 23 20 19", getRowString(rows[row++], "0"));
-                    Assert.AreEqual("80\n(38 Unimod matches) 51 0 0 0 0 0 0 0 0 23 20 8", getRowString(rows[row++], "0"));
+                    Assert.AreEqual("80\n(37 Unimod matches) 51 0 0 0 0 0 0 0 0 23 20 8", getRowString(rows[row++], "0"));
                     Assert.AreEqual("-20\n(57 Unimod matches) 33 0 0 0 4 0 0 29 0 0 0 0", getRowString(rows.Last(), "0"));
 
                     // enter rounding value manually

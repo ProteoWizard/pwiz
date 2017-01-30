@@ -45,6 +45,8 @@ namespace IDPicker.Controls
 
         public event EventHandler ShowQonverterSettings;
 
+        public event EventHandler CropAssembly;
+
         /// <summary>
         /// Gets a basic DataFilter from the filter controls or sets the filter controls from a DataFilter.
         /// </summary>
@@ -56,6 +58,11 @@ namespace IDPicker.Controls
                 if (!Double.TryParse(maxQValueComboBox.Text, out maxQValue))
                     maxQValue = 0;
 
+                pwiz.CLI.chemistry.MZTolerance precursorMzTolerance = null;
+                if (!precursorMzToleranceTextBox.Text.IsNullOrEmpty())
+                    precursorMzTolerance = new pwiz.CLI.chemistry.MZTolerance(Convert.ToDouble(precursorMzToleranceTextBox.Text),
+                                                                              precursorMzToleranceUnitsComboBox.SelectedIndex == 0 ? pwiz.CLI.chemistry.MZTolerance.Units.MZ : pwiz.CLI.chemistry.MZTolerance.Units.PPM);
+
                 return new DataFilter()
                 {
                     MaximumQValue = maxQValue / 100,
@@ -64,6 +71,7 @@ namespace IDPicker.Controls
                     MinimumAdditionalPeptides = minAdditionalPeptidesTextBox.Text.Length == 0 ? 0 : Convert.ToInt32(minAdditionalPeptidesTextBox.Text),
                     MinimumSpectra = minSpectraTextBox.Text.Length == 0 ? 0 : Convert.ToInt32(minSpectraTextBox.Text),
                     GeneLevelFiltering = filterByGeneCheckBox.Checked,
+                    PrecursorMzTolerance = precursorMzTolerance,
                     DistinctMatchFormat = new DistinctMatchFormat
                     {
                         IsChargeDistinct = chargeIsDistinctCheckBox.Checked,
@@ -88,6 +96,13 @@ namespace IDPicker.Controls
                 //minDistinctMatches
                 minAdditionalPeptidesTextBox.Text = value.MinimumAdditionalPeptides.ToString();
                 filterByGeneCheckBox.Checked = value.GeneLevelFiltering;
+                if (value.PrecursorMzTolerance != null)
+                {
+                    precursorMzToleranceTextBox.Text = value.PrecursorMzTolerance.value.ToString();
+                    precursorMzToleranceUnitsComboBox.SelectedIndex = value.PrecursorMzTolerance.units == pwiz.CLI.chemistry.MZTolerance.Units.MZ ? 0 : 1;
+                }
+                else
+                    precursorMzToleranceUnitsComboBox.SelectedIndex = 0;
                 chargeIsDistinctCheckBox.Checked = value.DistinctMatchFormat.IsChargeDistinct;
                 analysisIsDistinctCheckBox.Checked = value.DistinctMatchFormat.IsAnalysisDistinct;
                 modificationsAreDistinctCheckbox.Checked = value.DistinctMatchFormat.AreModificationsDistinct;
@@ -142,6 +157,18 @@ namespace IDPicker.Controls
                 BasicFilterChanged(this, EventArgs.Empty);
         }
 
+        void filterControl_TextChangedOrEmpty(object sender, EventArgs e)
+        {
+            if (!settingDataFilter && BasicFilterChanged != null)
+                BasicFilterChanged(this, EventArgs.Empty);
+        }
+
+        void filterControl_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (!settingDataFilter && BasicFilterChanged != null)
+                BasicFilterChanged(this, EventArgs.Empty);
+        }
+
         private void CloseLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             if (!settingDataFilter && ApplyFilterChanges != null)
@@ -152,6 +179,12 @@ namespace IDPicker.Controls
         {
             if (ShowQonverterSettings != null)
                 ShowQonverterSettings(null, null);
+        }
+
+        private void CropAssemblyLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            if (!settingDataFilter && CropAssembly != null)
+                CropAssembly(this, EventArgs.Empty);
         }
     }
 }

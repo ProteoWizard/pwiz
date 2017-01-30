@@ -40,8 +40,17 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void AaantivirusTestExclusion() // Intentional misspelling to encourage this as first test in nightlies
         {
+            CheckDirectory(".");
+        }
+
+        private static void CheckDirectory(string directory)
+        {
             var eicarTestString = @"X5O!P%@AP[4\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*"; // See http://www.eicar.org/86-0-Intended-use.html
-            var eicarTestFile = "eicar_fake_threat.com";
+            if (!Directory.Exists(directory))
+            {
+                return; // First run of tutorials, presumably
+            }
+            var eicarTestFile = Path.Combine(directory,"eicar_fake_threat.com");
             if (!File.Exists(eicarTestFile))
             {
                 File.WriteAllText(eicarTestFile, eicarTestString); // If we are being watched, this should get removed immediately
@@ -57,7 +66,7 @@ namespace pwiz.SkylineTest
             }
             if (!eicarTestString.Equals(test))
             {
-                Assert.Fail("Could not read contents of the (completely harmless!) antivirus test file \"eicar_fake_threat.com\", probably because it was quarantined by antivirus software.  If your antivirus flagged on \"eicar_fake_threat.com\", don't panic - that's part of the test (see http://www.eicar.org/86-0-Intended-use.html).  Now go exclude the test directory from further antivirus scrutiny, as it causes file locking problems in the tests.");
+                Assert.Fail("Could not read contents of the (completely harmless!) antivirus test file \"" + eicarTestFile + "\", probably because it was quarantined by antivirus software.  If your antivirus flagged on \"eicar_fake_threat.com\", don't panic - that's part of the test (see http://www.eicar.org/86-0-Intended-use.html).  Now go exclude that directory from further antivirus scrutiny, as it causes file locking problems in the tests.");
             }
             if (File.Exists(eicarTestFile))  // Don't leave this lying around - it can cause problems with automated backups etc
             {

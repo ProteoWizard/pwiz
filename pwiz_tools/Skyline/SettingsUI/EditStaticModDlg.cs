@@ -741,8 +741,13 @@ namespace pwiz.Skyline.SettingsUI
 
         private void comboMod_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (comboMod.SelectedIndex == 0 && !comboMod.DroppedDown)
-                comboMod.SelectedIndex = 1;
+            if (comboMod.SelectedIndex == 0)
+            {
+                if (!comboMod.DroppedDown)
+                {
+                    comboMod.SelectedIndex = 1;
+                }
+            }
             else if (comboMod.SelectedIndex == -1)
                 Modification = null;
             else

@@ -8144,9 +8144,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="BuildLibraryDlg_btnAddDirectory_Click_Add_Input_Directory" xml:space="preserve">
     <value>Add Input Directory</value>
   </data>
-  <data name="FastaImporter_Import_Document_size_limit_exceeded" xml:space="preserve">
-    <value>Document size limit exceeded.</value>
-  </data>
   <data name="TransitionBinner_BinData_" xml:space="preserve">
     <value>Imported spectrum appears to be missing m/z or intensity values ({0} != {1})</value>
   </data>
@@ -9105,7 +9102,7 @@ Here are the last 3 errors:
   <data name="PeptideSettingsUI_ShowBuildLibraryDlg_Create_MIDAS_Spectral_Library" xml:space="preserve">
     <value>Create MIDAS Spectral Library</value>
   </data>
-  <data name="PeptideSettingsUI_ShowBuildLibraryDlg_This_document_has_a_MIDAS_library__Would_you_like_to_build_a_spectral_library_from_it_" xml:space="preserve">
+  <data name="SkylineWindow_ShowExportSpectralLibraryDialog_This_document_has_a_MIDAS_library__Would_you_like_to_build_a_spectral_library_from_it_" xml:space="preserve">
     <value>This document has a MIDAS library. Would you like to build a spectral library from it?</value>
   </data>
   <data name="PeptideSettingsUI_ShowBuildLibraryDlg_Finishing_up_building_library" xml:space="preserve">
@@ -9188,6 +9185,12 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="FastaImporter_Import_Error_at_or_around_line__0____1_" xml:space="preserve">
     <value>Error at or around line {0}: {1}</value>
   </data>
+  <data name="BuildPeptideSearchLibraryControl_AddIrtLibraryTable_An_error_occurred_trying_to_add_iRTs_to_the_library_" xml:space="preserve">
+    <value>An error occurred trying to add iRTs to the library.</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_AddIrtLibraryTable_Adding_iRTs_to_Library" xml:space="preserve">
+    <value>Adding iRTs to Library</value>
+  </data>
   <data name="Peptide_StandardType_iRT_standards_can_only_be_changed_by_modifying_the_iRT_calculator" xml:space="preserve">
     <value>iRT standards can only be changed by modifying the iRT calculator</value>
   </data>
@@ -9232,5 +9235,116 @@ If your transition list format combines formulas and adducts in a single column 
   </data>
     <data name="CommandLine_SetFullScanSettings_Changing_full_scan_product_mass_accuracy_to__0__ppm_" xml:space="preserve">
     <value>Changing full scan product mass accuracy to {0} ppm.</value>
+  </data>
+    <data name="UpgradeManager_GetProgressMessage_Upgrading_to__0___downloading__1__of__2__" xml:space="preserve">
+    <value>Upgrading to {0} (downloading {1} of {2})</value>
+  </data>
+    <data name="UpgradeManager_updateCheck_Complete_Failed_attempting_to_upgrade_" xml:space="preserve">
+    <value>Failed attempting to upgrade.</value>
+  </data>
+    <data name="UpgradeManager_updateCheck_Complete_Upgrading__0_" xml:space="preserve">
+    <value>Upgrading {0}</value>
+  </data>
+    <data name="UpgradeManager_updateCheck_Complete_Failed_attempting_to_check_for_an_upgrade_" xml:space="preserve">
+    <value>Failed attempting to check for an upgrade.</value>
+  </data>
+    <data name="UpgradeDlg_UpgradeDlg_No_update_was_found_" xml:space="preserve">
+    <value>No update was found.</value>
+  </data>
+    <data name="UpgradeDlg_cbAtStartup_CheckedChanged_Maybe__Later" xml:space="preserve">
+    <value>Maybe &amp;Later</value>
+  </data>
+  <data name="SkylineWindow_ShowExportSpectralLibraryDialog_Export_Spectral_Library" xml:space="preserve">
+    <value>Export Spectral Library</value>
+  </data>
+  <data name="SkylineWindow_ShowExportSpectralLibraryDialog_Failed_exporting_spectral_library_to__0__" xml:space="preserve">
+    <value>Failed exporting spectral library to {0}.</value>
+  </data>
+  <data name="SkylineWindow_ShowExportSpectralLibraryDialog_Exporting_spectral_library__0____" xml:space="preserve">
+    <value>Exporting spectral library {0}...</value>
+  </data>
+  <data name="SkylineWindow_ShowExportSpectralLibraryDialog_The_document_must_contain_results_to_export_a_spectral_library_" xml:space="preserve">
+    <value>The document must contain results to export a spectral library.</value>
+  </data>
+  <data name="SkylineWindow_ShowExportSpectralLibraryDialog_The_document_must_contain_at_least_one_peptide_precursor_to_export_a_spectral_library_" xml:space="preserve">
+    <value>The document must contain at least one peptide precursor to export a spectral library.</value>
+  </data>
+  <data name="FastaImporter_Import_Check_your_settings_to_make_sure_you_are_using_a_library_and_restrictive_enough_transition_selection_" xml:space="preserve">
+    <value>Check your settings to make sure you are using a library and restrictive enough transition selection.</value>
+  </data>
+    <data name="FastaImporter_Import_Check_your_settings_to_make_sure_you_are_using_a_library_" xml:space="preserve">
+    <value>Check your settings to make sure you are using a library.</value>
+  </data>
+  <data name="FastaImporter_Import_This_import_causes_the_document_to_contain_more_than__0_n0__transitions_in__1_n0__peptides_at_line__2_n0__" xml:space="preserve">
+    <value>This import causes the document to contain more than {0:n0} transitions in {1:n0} peptides at line {2:n0}.</value>
+  </data>
+  <data name="FastaImporter_Import_This_import_causes_the_document_to_contain_more_than__0_n0__peptides_at_line__1_n0__" xml:space="preserve">
+    <value>This import causes the document to contain more than {0:n0} peptides at line {1:n0}.</value>
+  </data>
+  <data name="ViewLibraryDlg_UpdateListPeptide_Updating_list_of_peptides" xml:space="preserve">
+    <value>Updating list of peptides</value>
+  </data>
+  <data name="DataGridViewPasteHandler_Paste_Pasting_row__0_" xml:space="preserve">
+    <value>Pasting row {0}</value>
+  </data>
+  <data name="SkylineWindow_ReimportChromatograms_Reimporting_chromatograms" xml:space="preserve">
+    <value>Reimporting chromatograms</value>
+  </data>
+  <data name="DataGridViewPasteHandler_ClearCells_Cleared__0___1__rows" xml:space="preserve">
+    <value>Cleared {0}/{1} rows</value>
+  </data>
+  <data name="DataboundGridControl_DoFillDown_Filling__0___1__rows" xml:space="preserve">
+    <value>Filling {0}/{1} rows</value>
+  </data>
+  <data name="EditIsolationSchemeDlg_ImportRangesFromFiles_Reading_isolation_scheme___" xml:space="preserve">
+    <value>Reading isolation scheme...</value>
+  </data>
+  <data name="EditIsolationSchemeDlg_ImportRangesFromFiles_Failed_reading_isolation_scheme_" xml:space="preserve">
+    <value>Failed reading isolation scheme.</value>
+  </data>
+  <data name="EditIsolationSchemeDlg_ReadIsolationRanges_Missing_isolation_range_for_the_isolation_target__0__m_z_in_the_file__1_" xml:space="preserve">
+    <value>Missing isolation range for the isolation target {0} m/z in the file {1}</value>
+  </data>
+  <data name="EditIsolationSchemeDlg_ReadIsolationRanges_No_repeating_isolation_scheme_found_in__0_" xml:space="preserve">
+    <value>No repeating isolation scheme found in {0}</value>
+  </data>
+  <data name="GraphData_CorrelationLabel_Measured_Time___0__" xml:space="preserve">
+    <value>Measured Time ({0})</value>
+  </data>
+  <data name="GraphData_ResidualsLabel_Time_from_Regression___0__" xml:space="preserve">
+    <value>Time from Regression ({0})</value>
+  </data>
+  <data name="RegressionGraphPane_RegressionGraphPane_Missing" xml:space="preserve">
+    <value>Missing</value>
+  </data>
+  <data name="RegressionGraphPane_RegressionGraphPane_Outliers" xml:space="preserve">
+    <value>Outliers</value>
+  </data>
+  <data name="AddIrtsResultsDlg_dataGridView_CellContentClick_Measured" xml:space="preserve">
+    <value>Measured</value>
+  </data>
+  <data name="AddIrtPeptidesDlg_dataGridView_CellContentClick_iRT" xml:space="preserve">
+    <value>iRT</value>
+  </data>
+  <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_Success" xml:space="preserve">
+    <value>Success</value>
+  </data>
+  <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_Failed" xml:space="preserve">
+    <value>Failed</value>
+  </data>
+  <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression_Refined" xml:space="preserve">
+    <value>Regression Refined</value>
+  </data>
+  <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression_Attempted" xml:space="preserve">
+    <value>Regression Attempted</value>
+  </data>
+  <data name="LibraryBuildNotificationHandler_LibraryBuildCompleteCallback_Adding_iRTs_to_library" xml:space="preserve">
+    <value>Adding iRTs to library</value>
+  </data>
+  <data name="LibraryBuildNotificationHandler_LibraryBuildCompleteCallback_An_error_occurred_trying_to_add_iRTs_to_the_library_" xml:space="preserve">
+    <value>An error occurred trying to add iRTs to the library.</value>
+  </data>
+  <data name="RegressionGraphPane_RegressionGraphPane__0___at__1__points_minimum_" xml:space="preserve">
+    <value>{0} (at {1} points minimum)</value>
   </data>
 </root>

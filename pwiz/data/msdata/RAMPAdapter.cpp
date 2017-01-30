@@ -137,6 +137,21 @@ void RAMPAdapter::Impl::getScanHeader(size_t index, ScanHeaderStruct& result, bo
     result.seqNum = static_cast<int>(index + 1);
     result.acquisitionNum = getScanNumber(index);
     result.msLevel = spectrum->cvParam(MS_ms_level).valueAs<int>();
+    if (result.msLevel>1)
+    {
+        CVParam dissociationMethod = spectrum->precursors[0].activation.cvParamChild(MS_dissociation_method);
+        string dissociationMethodName;
+        if (!(dissociationMethod.empty()))
+            dissociationMethodName = dissociationMethod.name();
+        int len = min((int)dissociationMethodName.length(), SCANTYPE_LENGTH - 1);
+        dissociationMethodName.copy(result.activationMethod, len);
+        result.activationMethod[len] = 0; // string.copy does not null terminate
+    }
+    else
+    {
+        result.activationMethod[0] = 0;
+    }
+
     result.peaksCount = static_cast<int>(spectrum->defaultArrayLength);
     result.totIonCurrent = spectrum->cvParam(MS_total_ion_current).valueAs<double>();
     result.retentionTime = scan.cvParam(MS_scan_start_time).timeInSeconds();

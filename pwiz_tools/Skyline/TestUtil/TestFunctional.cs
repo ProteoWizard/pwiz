@@ -83,6 +83,8 @@ namespace pwiz.SkylineTestUtil
 
         protected bool ForceMzml { get; set; }
 
+        protected static bool LaunchDebuggerOnWaitForConditionTimeout { get; set; } // Use with caution - this will prevent scheduled tests from completing, so we can investigate a problem
+
         protected bool UseRawFiles
         {
             get
@@ -514,10 +516,15 @@ namespace pwiz.SkylineTestUtil
                     .Where(control => control is TextBox)
                     .Aggregate(result, (current, control) => current + ": " + GetExceptionText(control));
             }
-            var detailDlg = form as FormExDetailed;
-            if (detailDlg != null)
+           
+            FormEx formEx = form as FormEx;
+            if (formEx != null)
             {
-                result = detailDlg.DetailedMessage;
+                String detailedMessage = formEx.DetailedMessage;
+                if (detailedMessage != null)
+                {
+                    result = detailedMessage;
+                }
             }
             return result;
         }
@@ -660,6 +667,13 @@ namespace pwiz.SkylineTestUtil
                 if (func())
                     return true;
                 Thread.Sleep(SLEEP_INTERVAL);
+                // Assistance in chasing down intermittent timeout problems
+                if (i == waitCycles - 1 && LaunchDebuggerOnWaitForConditionTimeout)
+                {
+                    System.Diagnostics.Debugger.Launch(); // Try again, under the debugger
+                    System.Diagnostics.Debugger.Break();
+                    i = 0; // For debugging ease - stay in loop
+                }
             }
             if (failOnTimeout)
             {
@@ -704,6 +718,14 @@ namespace pwiz.SkylineTestUtil
                 if (isCondition)
                     return true;
                 Thread.Sleep(SLEEP_INTERVAL);
+
+                // Assistance in chasing down intermittent timeout problems
+                if (i==waitCycles-1 && LaunchDebuggerOnWaitForConditionTimeout)
+                {
+                    System.Diagnostics.Debugger.Launch(); // Try again, under the debugger
+                    System.Diagnostics.Debugger.Break();
+                    i = 0; // For debugging ease - stay in loop
+                }
             }
             if (failOnTimeout)
             {

@@ -1326,9 +1326,9 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
-        public IList<StaticMod> HeavyModifications
+        public IEnumerable<StaticMod> AllHeavyModifications
         {
-            get { return GetModifications(IsotopeLabelType.heavy); }
+            get { return GetHeavyModifications().SelectMany(typedMods => typedMods.Modifications); }
         }
 
         public IList<StaticMod> GetModifications(IsotopeLabelType labelType)
@@ -1457,9 +1457,42 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeModifications(IsotopeLabelType.light, prop);
         }
 
-        public PeptideModifications ChangeHeavyModifications(IList<StaticMod> prop)
+        /// <summary>
+        /// Adds isotope modifications. This method skips any modifications which are already
+        /// associated with a heavy isotope label type. If there is more than one heavy TypedModification,
+        /// the new modifications get added to the first heavy TypedModification.
+        /// If there are no heavy modification types (which should never happen), then 
+        /// IsotopeLabelType.heavy is added.
+        /// </summary>
+        public PeptideModifications AddHeavyModifications(IEnumerable<StaticMod> modificationsToAdd)
         {
-            return ChangeModifications(IsotopeLabelType.heavy, prop);
+            var newMods = modificationsToAdd.Except(AllHeavyModifications).ToArray();
+            if (!newMods.Any())
+            {
+                return this;
+            }
+            var heavyModifications = GetHeavyModifications().FirstOrDefault();
+            if (heavyModifications != null)
+            {
+                return ChangeModifications(heavyModifications.LabelType, MakeReadOnly(heavyModifications.Modifications.Concat(newMods)));
+            }
+            return ChangeProp(ImClone(this),
+                im => im._modifications = MakeReadOnly(
+                    im._modifications.Concat(new[] {new TypedModifications(IsotopeLabelType.heavy, newMods)})));
+        }
+
+        /// <summary>
+        /// Removes the specified modifications from all of the heavy TypedModifications.
+        /// </summary>
+        public PeptideModifications RemoveHeavyModifications(IEnumerable<StaticMod> modificationsToRemove)
+        {
+            return ChangeProp(ImClone(this), im =>
+            {
+                var newModifications = im._modifications.Select(typedMods =>
+                    new TypedModifications(typedMods.LabelType,
+                        MakeReadOnly(typedMods.Modifications.Except(modificationsToRemove))));
+                im._modifications = MakeReadOnly(newModifications);
+            });
         }
 
         public PeptideModifications ChangeModifications(IsotopeLabelType labelType, IList<StaticMod> prop)
@@ -1987,7 +2020,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
             foreach (Library lib in _libraries)
             {
-                if (lib != null && lib.TryGetRetentionTimes(key, filePath, out retentionTimes))
+                if (lib != null && !(lib is MidasLibrary) && lib.TryGetRetentionTimes(key, filePath, out retentionTimes))
                     return true;
             }
             retentionTimes = null;

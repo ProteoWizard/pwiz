@@ -118,5 +118,10 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             return false;
         }
+
+        public bool IsRunToRun()
+        {
+            return false;
+        }
     }
 }

@@ -302,6 +302,9 @@ project pwiz
         # warning: '__cur' might be used uninitialized in this function 
         <toolset>gcc:<cxxflags>-Wno-uninitialized
 
+        # set standard to C++11
+        <toolset>gcc:<cxxflags>-std=c++11
+
         $(PREDEF_CHECKS)
         
         # special Cygwin gcc-3.4.4 hack
@@ -697,6 +700,15 @@ install executables
       <dependency>VERSION
     ;
 
+install gui_tools
+    : VERSION
+    : <conditional>@install-type
+      <conditional>@install-location
+      <conditional>@install-identdata-dependencies
+      <conditional>@install-vendor-api-dependencies
+      <conditional>@dotNET-dependencies
+      <conditional>@gcc-install-dll-path
+    ;
 
 install package_docs
     : doc/package/readme.txt
@@ -714,6 +726,15 @@ install msconvert
       <conditional>@gcc-install-dll-path
     ;
 explicit msconvert ;
+
+install msbenchmark
+    : pwiz_tools/examples//msbenchmark
+    : <conditional>@install-type
+      <conditional>@install-location
+      <conditional>@install-vendor-api-dependencies
+      <conditional>@gcc-install-dll-path
+    ;
+explicit msbenchmark ;
 
 install idconvert
     : pwiz_tools/commandline//idconvert
@@ -1212,7 +1233,7 @@ bcp.copy-boost-dependencies copy_boost_subset
     # scan all source files for boost dependencies
     [ path.glob-tree $(PWIZ_ROOT_PATH)/pwiz : *.cpp *.hpp ]
     [ path.glob-tree $(PWIZ_ROOT_PATH)/pwiz_aux : *.cpp *.hpp ]
-    [ path.glob-tree $(PWIZ_ROOT_PATH)/pwiz_tools : *.cpp *.hpp ]
+    [ path.glob-tree $(PWIZ_ROOT_PATH)/pwiz_tools : *.cpp *.hpp *.h ]
     [ path.glob-tree $(PWIZ_LIBRARIES_PATH)/boost_aux : *.cpp *.hpp ]
     [ path.glob-tree $(PWIZ_LIBRARIES_PATH)/SQLite : *.cpp *.h ]
 
@@ -1267,6 +1288,16 @@ tar.create boost_$(BOOST_VERSION:J=_).tar.bz2
     exclude:pwiz_tools/Shared/Lib/mysql.*
     exclude:pwiz_tools/Shared/Lib/zlib.*
     exclude:pwiz_tools/Shared/Lib/Microsoft.VC*
+    exclude:pwiz_aux/msrc/utility/vendor_api/ABI/Clearcore*.dll
+    exclude:pwiz_aux/msrc/utility/vendor_api/ABI/Sciex*.dll
+    exclude:pwiz_aux/msrc/utility/vendor_api/ABI/OFX*.dll
+    exclude:pwiz_aux/msrc/utility/vendor_api/ABI/LicenseKey.h
+    exclude:pwiz_aux/msrc/utility/vendor_api/Agilent/x*
+    exclude:pwiz_aux/msrc/utility/vendor_api/Bruker/x*
+    exclude:pwiz_aux/msrc/utility/vendor_api/Shimadzu/x*
+    exclude:pwiz_aux/msrc/utility/vendor_api/thermo/x64
+    exclude:pwiz_aux/msrc/utility/vendor_api/thermo/x86
+    exclude:pwiz_aux/msrc/utility/vendor_api/Waters/*_x*
 ;
 
 # the SUBSET file acts as flag so that building a subset tarball doesn't build a source tarball
@@ -1310,6 +1341,8 @@ This source tree is a subset of the full pwiz source tree.
     $(PWIZ_LIBRARIES_PATH)/predef
     $(PWIZ_LIBRARIES_PATH)/libsvm-3.0
     $(PWIZ_LIBRARIES_PATH)/SQLite
+    $(PWIZ_LIBRARIES_PATH)/Eigen
+    $(PWIZ_LIBRARIES_PATH)/CSpline
     [ path.glob $(PWIZ_LIBRARIES_PATH) : *.bat *.sh *.jam *.dll *.lib *.exe *.cpp libgd*.tar.bz2 libpng*.tar.bz2 freetype*.tar.bz2 zlib*.tar.bz2 hdf5*.tar.bz2 ]
 
     # include the bcp'd boost tarball as if it was really located at "libraries/boost_*.tar.bz2"

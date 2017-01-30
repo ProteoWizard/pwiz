@@ -143,7 +143,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
                     return null;
                 }
                 ChromatogramCache.RawData rawData;
-                ChromatogramCache.LoadStructs(memoryStream, out rawData);
+                ChromatogramCache.LoadStructs(memoryStream, out rawData, false);
                 var chromCacheFile = rawData.ChromCacheFiles[0];
                 rawData.ChromCacheFiles = new[]
                 {

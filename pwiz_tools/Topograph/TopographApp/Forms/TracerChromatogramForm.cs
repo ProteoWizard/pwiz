@@ -658,6 +658,7 @@ namespace pwiz.Topograph.ui.Forms
                 }
                 else
                 {
+#pragma warning disable 1717
                     newPeaks = newPeaks;
                 }
             }

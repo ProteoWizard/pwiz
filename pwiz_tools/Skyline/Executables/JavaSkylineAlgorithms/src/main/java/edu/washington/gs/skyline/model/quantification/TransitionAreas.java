@@ -18,6 +18,7 @@
  */
 package edu.washington.gs.skyline.model.quantification;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.DoubleStream;
@@ -134,5 +135,10 @@ public class TransitionAreas {
         HashMap<String, Double> map = toMap();
         map.put(key, value);
         return fromMap(map);
+    }
+
+    @Override
+    public String toString() {
+        return "Sum: " + sum() + " Length: " + areas.length;
     }
 }

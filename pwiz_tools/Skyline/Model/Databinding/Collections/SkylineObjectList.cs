@@ -30,12 +30,26 @@ namespace pwiz.Skyline.Model.Databinding.Collections
     public abstract class SkylineObjectList<TKey, TItem> : BindingListSupport<TItem>, ICloneableList<TKey, TItem> where TItem : SkylineObject
     {
         private IDocumentChangeListener _documentChangeListener;
+        private bool _listInitialized;
         protected IDictionary<TKey, int> _keyIndexes 
             = new Dictionary<TKey, int>();
 
         protected SkylineObjectList(SkylineDataSchema dataSchema)
         {
             DataSchema = dataSchema;
+        }
+
+        protected override IList<TItem> Items
+        {
+            get
+            {
+                if (!_listInitialized)
+                {
+                    _listInitialized = true;
+                    OnDocumentChanged();
+                }
+                return base.Items;
+            }
         }
 
         public SrmDocument SrmDocument {get { return DataSchema.Document; }}

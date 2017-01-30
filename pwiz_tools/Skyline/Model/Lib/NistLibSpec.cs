@@ -28,6 +28,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -1100,6 +1101,35 @@ namespace pwiz.Skyline.Model.Lib
                     RetentionTime = _libraryEntries[i].RT
                 };
             }
+        }
+
+        public override bool TryGetIrts(out LibraryRetentionTimes retentionTimes)
+        {
+            var dictionary = new Dictionary<string, Tuple<TimeSource, double[]>>();
+            foreach (var entry in _libraryEntries)
+            {
+                if (!entry.iRT.HasValue)
+                    continue;
+
+                var iRT = entry.iRT.Value;
+
+                Tuple<TimeSource, double[]> tuple;
+                if (!dictionary.TryGetValue(entry.Key.Sequence, out tuple))
+                {
+                    tuple = Tuple.Create(TimeSource.peak, new[] {iRT});
+                }
+                else
+                {
+                    var newIrt = new double[tuple.Item2.Length + 1];
+                    tuple.Item2.CopyTo(newIrt, 0);
+                    newIrt[newIrt.Length - 1] = iRT;
+                    tuple = Tuple.Create(tuple.Item1, newIrt);
+                }
+                dictionary[entry.Key.Sequence] = tuple;
+            }
+            
+            retentionTimes = new LibraryRetentionTimes(null, dictionary);
+            return dictionary.Any();
         }
 
         #region Implementation of IXmlSerializable

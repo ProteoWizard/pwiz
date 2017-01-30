@@ -51,6 +51,12 @@ namespace pwiz.Skyline.Controls.Graphs
                 EmptyGraph(document);
                 return;
             }
+            if (!document.Settings.HasResults)
+            {
+                Title.Text = Resources.AreaReplicateGraphPane_UpdateGraph_No_results_available;
+                EmptyGraph(document);
+                return;
+            }
             DisplayTypeChrom displayType;
             if (Equals(PaneKey, PaneKey.PRECURSORS))
             {
@@ -111,7 +117,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             var replicateGroupOp = GraphValues.ReplicateGroupOp.FromCurrentSettings(document.Settings);
             GraphData graphData = new MassErrorGraphData(document,
-                                            parentNode,
+                                            identityPath,
                                             displayType,
                                             replicateGroupOp,
                                             PaneKey);
@@ -205,11 +211,11 @@ namespace pwiz.Skyline.Controls.Graphs
         private class MassErrorGraphData : GraphData
         {
             public MassErrorGraphData(SrmDocument document,
-                DocNode docNode,
+                IdentityPath identityPath,
                 DisplayTypeChrom displayType,
                 GraphValues.ReplicateGroupOp replicateGroupOp,
                 PaneKey paneKey)
-                : base(document, docNode, displayType, replicateGroupOp, paneKey)
+                : base(document, identityPath, displayType, replicateGroupOp, paneKey)
             {
             }
 

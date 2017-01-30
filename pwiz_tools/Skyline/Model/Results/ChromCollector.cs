@@ -583,7 +583,7 @@ namespace pwiz.Skyline.Model.Results
             var spillFile = _spillFiles[groupIndex];
 
             // Not done reading yet.
-            if (retentionTime < spillFile.MaxTime)
+            if (retentionTime < spillFile.MaxTime || (collector != null && !collector.IsSetTimes))
             {
                 times = null;
                 intensities = null;

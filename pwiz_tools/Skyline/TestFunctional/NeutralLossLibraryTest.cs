@@ -150,7 +150,7 @@ namespace pwiz.SkylineTestFunctional
                 doc.ChangeSettings(doc.Settings.ChangePeptideModifications(mod =>
                         mod.ChangeMaxNeutralLosses(2)
                             .ChangeStaticModifications(new List<StaticMod>(mod.StaticModifications) {multipleLossMod})
-                            .ChangeHeavyModifications(new[] { heavyKMod }))
+                            .ChangeModifications(IsotopeLabelType.heavy, new[] { heavyKMod }))
                     .ChangeTransitionFilter(filter =>
                         filter.ChangeFragmentRangeFirstName("m/z > precursor")
                             .ChangeFragmentRangeLastName("last ion")

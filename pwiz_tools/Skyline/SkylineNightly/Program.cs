@@ -30,10 +30,13 @@ namespace SkylineNightly
         public const string SCHEDULED_PERFTESTS_ARG = SCHEDULED_ARG + "_with_perftests"; // Not L10N
         public const string SCHEDULED_STRESSTESTS_ARG = SCHEDULED_ARG + "_with_stresstests"; // Not L10N
         public const string SCHEDULED_RELEASE_BRANCH_ARG = SCHEDULED_ARG + "_release_branch"; // Not L10N
+        public const string SCHEDULED_RELEASE_BRANCH_PERFTESTS_ARG = SCHEDULED_ARG + "_release_branch_with_perftests"; // Not L10N
         public const string SCHEDULED_INTEGRATION_ARG = SCHEDULED_ARG + "_integration_branch"; // Not L10N
         public const string SCHEDULED_INTEGRATION_TRUNK_ARG = SCHEDULED_ARG + "_integration_and_trunk"; // Not L10N
         public const string SCHEDULED_PERFTEST_AND_TRUNK_ARG = SCHEDULED_ARG + "_perftests_and_trunk"; // Not L10N
         public const string SCHEDULED_TRUNK_AND_TRUNK_ARG = SCHEDULED_ARG + "_trunk_and_trunk"; // Not L10N
+        public const string SCHEDULED_TRUNK_AND_RELEASE_BRANCH_ARG = SCHEDULED_ARG + "_trunk_and_release_branch"; // Not L10N
+        public const string SCHEDULED_TRUNK_AND_RELEASE_BRANCH_PERFTESTS_ARG = SCHEDULED_ARG + "_trunk_and_release_branch_with_perftests"; // Not L10N
         public const string PARSE_ARG = "parse"; // Not L10N
         public const string POST_ARG = "post"; // Not L10N
 
@@ -49,7 +52,10 @@ namespace SkylineNightly
             SCHEDULED_PERFTESTS_ARG,
             SCHEDULED_PERFTEST_AND_TRUNK_ARG,
             SCHEDULED_TRUNK_AND_TRUNK_ARG,
-            SCHEDULED_STRESSTESTS_ARG
+            SCHEDULED_STRESSTESTS_ARG,
+            SCHEDULED_RELEASE_BRANCH_PERFTESTS_ARG,
+            SCHEDULED_TRUNK_AND_RELEASE_BRANCH_ARG,
+            SCHEDULED_TRUNK_AND_RELEASE_BRANCH_PERFTESTS_ARG,
         };
 
         private static void PerformTests(Nightly.RunMode runMode, string arg, string decorateSrcDirName = null)
@@ -119,6 +125,18 @@ namespace SkylineNightly
                     PerformTests(Nightly.RunMode.trunk, Nightly.RunMode.trunk, arg);
                     break;
 
+                // For machines that can test all day and all night:
+                // Run normal mode, then run release branch
+                case SCHEDULED_TRUNK_AND_RELEASE_BRANCH_ARG:
+                    PerformTests(Nightly.RunMode.trunk, Nightly.RunMode.release, arg);
+                    break;
+
+                // For machines that can test all day and all night:
+                // Run normal mode, then run release branch perf tests
+                case SCHEDULED_TRUNK_AND_RELEASE_BRANCH_PERFTESTS_ARG:
+                    PerformTests(Nightly.RunMode.trunk, Nightly.RunMode.release_perf, arg);
+                    break;
+
                 case SCHEDULED_PERFTESTS_ARG:
                     PerformTests(Nightly.RunMode.perf, arg); // Not L10N
                     break;
@@ -129,6 +147,10 @@ namespace SkylineNightly
 
                 case SCHEDULED_RELEASE_BRANCH_ARG:
                     PerformTests(Nightly.RunMode.release, arg); // Not L10N
+                    break;
+
+                case SCHEDULED_RELEASE_BRANCH_PERFTESTS_ARG:
+                    PerformTests(Nightly.RunMode.release_perf, arg); // Not L10N
                     break;
 
                 case SCHEDULED_ARG:

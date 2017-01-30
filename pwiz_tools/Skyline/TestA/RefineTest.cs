@@ -189,7 +189,7 @@ namespace pwiz.SkylineTestA
 
             // Add heavy labeled precursors for everything
             var settingsNew = docRefineMaxPeaks.Settings.ChangeTransitionFilter(f => f.ChangeAutoSelect(false));
-            settingsNew = settingsNew.ChangePeptideModifications(m => m.ChangeHeavyModifications(new[]
+            settingsNew = settingsNew.ChangePeptideModifications(m => m.ChangeModifications(IsotopeLabelType.heavy, new[]
                 {
                     new StaticMod("13C K", "K", ModTerminus.C, null, LabelAtoms.C13, null, null),
                     new StaticMod("13C R", "R", ModTerminus.C, null, LabelAtoms.C13, null, null),

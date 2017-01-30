@@ -117,6 +117,19 @@ namespace SkylineTester
                 td.RegistrationInfo.Description = "SkylineTester scheduled build/test";
                 td.Principal.LogonType = TaskLogonType.InteractiveToken;
 
+                // Using ProcessPriorityClass.High seems like cheating, but it's not:
+                // A normal user-initiated app has
+                //   TaskPriority = 8, I/O Priority = Normal, Memory Priority = 5
+                // Default priority for Task Scheduler launch provides
+                //   TaskPriority = 6, I/O Priority = Low, Memory Priority = 3
+                //ProcessPriorityClass.Normal provides the launched task with
+                //   TaskPriority = 8, I/O Priority = Normal, Memory Priority = 4 (not quite as good as user-launched)
+                // ProcessPriorityClass.High provides SkylineTester with
+                //   TaskPriority = 13, I/O Priority = Normal, Memory Priority = 5
+                // but gives TestRunner the standard user values of
+                //   TaskPriority = 8, I/O Priority = Normal, Memory Priority = 5
+                td.Settings.Priority = ProcessPriorityClass.High; 
+
                 // Add a trigger that will fire the task every other day
                 DailyTrigger dt = (DailyTrigger)td.Triggers.Add(new DailyTrigger { DaysInterval = 1 });
                 dt.StartBoundary = startTime;
@@ -364,11 +377,17 @@ namespace SkylineTester
                 if (File.Exists(logFile))
                 {
                     string[] logLines;
-                    lock (MainWindow.CommandShell.LogLock)
+                    try
                     {
-                        logLines = File.ReadAllLines(logFile);
+                        lock (MainWindow.CommandShell.LogLock)
+                        {
+                            logLines = File.ReadAllLines(logFile);
+                        }
                     }
-
+                    catch (Exception)
+                    {
+                        logLines = new string[]{};// Log file is busy
+                    }
                     foreach (var line in logLines)
                     {
                         if (line.Length > 6 && line[0] == '[' && line[3] == ':' && line[6] == ']')

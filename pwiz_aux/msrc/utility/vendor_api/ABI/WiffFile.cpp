@@ -172,8 +172,8 @@ struct SpectrumImpl : public Spectrum
     virtual double getStartTime() const;
 
     virtual bool getDataIsContinuous() const {return pointsAreContinuous;}
-    size_t getDataSize(bool doCentroid) const;
-    virtual void getData(bool doCentroid, std::vector<double>& mz, std::vector<double>& intensities) const;
+    size_t getDataSize(bool doCentroid, bool ignoreZeroIntensityPoints) const;
+    virtual void getData(bool doCentroid, std::vector<double>& mz, std::vector<double>& intensities, bool ignoreZeroIntensityPoints) const;
 
     virtual double getSumY() const {return sumY;}
     virtual double getBasePeakX() const {initializeBasePeak(); return bpX;}
@@ -327,6 +327,7 @@ InstrumentModel WiffFileImpl::getInstrumentModel() const
         if (modelName->Contains("4000QTRAP"))       return API4000QTrap;
         if (modelName->Contains("4000"))            return API4000; // predicted
         if (modelName->Contains("QTRAP4500"))       return API4500QTrap;
+        if (modelName->Contains("4500"))            return API4500;
         if (modelName->Contains("5000"))            return API5000; // predicted
         if (modelName->Contains("QTRAP5500"))       return API5500QTrap; // predicted
         if (modelName->Contains("5500"))            return API5500; // predicted
@@ -669,7 +670,7 @@ double SpectrumImpl::getStartTime() const
     return spectrumInfo->StartRT;
 }
 
-size_t SpectrumImpl::getDataSize(bool doCentroid) const
+size_t SpectrumImpl::getDataSize(bool doCentroid, bool ignoreZeroIntensityPoints) const
 {
     try
     {
@@ -686,7 +687,7 @@ size_t SpectrumImpl::getDataSize(bool doCentroid) const
             {
                 spectrum = experiment->msExperiment->GetMassSpectrum(cycle-1);
 #if __CLR_VER > 40000000 // the .NET 4 version has an efficient way to add zeros
-                if (pointsAreContinuous)
+                if (!ignoreZeroIntensityPoints && pointsAreContinuous)
                 {
                     ExperimentType experimentType = experiment->getExperimentType();
                     if (experimentType != MRM && experimentType != SIM)
@@ -700,7 +701,7 @@ size_t SpectrumImpl::getDataSize(bool doCentroid) const
     CATCH_AND_FORWARD
 }
 
-void SpectrumImpl::getData(bool doCentroid, std::vector<double>& mz, std::vector<double>& intensities) const
+void SpectrumImpl::getData(bool doCentroid, std::vector<double>& mz, std::vector<double>& intensities, bool ignoreZeroIntensityPoints) const
 {
     try
     {
@@ -725,7 +726,7 @@ void SpectrumImpl::getData(bool doCentroid, std::vector<double>& mz, std::vector
             {
                 spectrum = experiment->msExperiment->GetMassSpectrum(cycle-1);
 #if __CLR_VER > 40000000 // the .NET 4 version has an efficient way to add zeros
-                if (pointsAreContinuous)
+                if (!ignoreZeroIntensityPoints && pointsAreContinuous)
                 {
                     ExperimentType experimentType = experiment->getExperimentType();
                     if (experimentType != MRM && experimentType != SIM)

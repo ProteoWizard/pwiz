@@ -181,7 +181,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             var results = doc1.Settings.MeasuredResults;
 
             var numPeaks = useDriftTimes ?
-                new[] { 10, 10, 10, 10, 8, 6, 6, 10, 10, 10, 10, 6, 10, 3, 10, 4, 10, 7, 6, 10, 8, 10, 10, 10, 9, 9, 7, 10, 10, 10, 10, 9, 10, 6, 10, 10, 10, 10, 10, 6, 10, 6, 10, 10, 10, 10, 5, 10 } :
+                new[] { 10, 10, 10, 10, 10, 6, 6, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 7, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 8, 10, 10, 10 } :
                 new[] { 10, 10, 10, 10, 9, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 9, 10 };
             int npIndex = 0;
             var errmsg = "";
@@ -203,7 +203,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 }
             }
             Assert.IsTrue(errmsg.Length == 0, errmsg);
-            Assert.AreEqual(useDriftTimes ? 4209178 : 4912494, maxHeight, 1);
+            Assert.AreEqual(useDriftTimes ? 2194736 : 4912494, maxHeight, 1);
         }  
     }
 }

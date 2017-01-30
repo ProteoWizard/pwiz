@@ -156,7 +156,7 @@ namespace pwiz.Skyline.Alerts
                 return;  
             }
 
-            const string reportUrl = "https://skyline.gs.washington.edu/labkey/announcements/home/issues/exceptions/insert.view"; // Not L10N
+            string reportUrl = WebHelpers.GetSkylineLink("/announcements/home/issues/exceptions/insert.view"); // Not L10N
             
             var nvc = new NameValueCollection
             {

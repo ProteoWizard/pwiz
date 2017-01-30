@@ -157,6 +157,11 @@ namespace pwiz.Skyline.Model.Results
             get { return _scoreTypeIndices.OrderBy(p => p.Value).Select(p => p.Key); }
         }
 
+        public int ScoreTypesCount
+        {
+            get { return _scoreTypeIndices.Count; }
+        }
+
         /// <summary>
         /// True if cache version is acceptable for current use.
         /// </summary>
@@ -243,49 +248,54 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public bool TryLoadChromatogramInfo(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup,
-                                            float tolerance, out ChromatogramGroupInfo[] infoSet)
+            float tolerance, ChromatogramSet chromatograms, out ChromatogramGroupInfo[] groupInfos)
         {
-            ChromGroupHeaderInfo[] headers;
-            if (TryLoadChromInfo(nodePep, nodeGroup, tolerance, out headers))
+            var precursorMz = nodeGroup != null ? nodeGroup.PrecursorMz : SignedMz.ZERO;
+            double? explicitRT = null;
+            if (nodePep != null && nodePep.ExplicitRetentionTime != null)
             {
-                var infoSetNew = new ChromatogramGroupInfo[headers.Length];
-                for (int i = 0; i < headers.Length; i++)
-                {
-                    infoSetNew[i] = LoadChromatogramInfo(headers[i]);
-                }
-                infoSet = infoSetNew;
-                return true;
+                explicitRT = nodePep.ExplicitRetentionTime.RetentionTime;
+            }
+            int i = FindEntry(precursorMz, tolerance);
+            if (i == -1)
+            {
+                groupInfos = new ChromatogramGroupInfo[0];
+                return false;
             }
 
-            infoSet = new ChromatogramGroupInfo[0];
-            return false;            
+            int countInfos = GetHeaderInfos(nodePep, precursorMz, explicitRT, tolerance, chromatograms, i, null);
+            groupInfos = new ChromatogramGroupInfo[countInfos];
+            if (countInfos == 0)
+                return false;
+            GetHeaderInfos(nodePep, precursorMz, explicitRT, tolerance, chromatograms, i, groupInfos);
+            return true;
         }
 
         public bool HasAllIonsChromatograms
         {
             get
             {
-                ChromGroupHeaderInfo[] headers;
-                return TryLoadChromInfo(null, null, 0, out headers);
+                ChromatogramGroupInfo[] groupInfos;
+                return TryLoadChromatogramInfo(null, null, 0, null, out groupInfos);
             }
         }
 
-        public bool TryLoadAllIonsChromatogramInfo(ChromExtractor extractor, out ChromatogramGroupInfo[] infoSet)
+        public bool TryLoadAllIonsChromatogramInfo(ChromExtractor extractor, ChromatogramSet chromatograms, out ChromatogramGroupInfo[] infoSet)
         {
-            ChromGroupHeaderInfo[] headers;
-            if (TryLoadChromInfo(null, null, 0, out headers))
+            ChromatogramGroupInfo[] groupInfos;
+            if (TryLoadChromatogramInfo(null, null, 0, chromatograms, out groupInfos))
             {
                 var infoSetNew = new List<ChromatogramGroupInfo>();
-                foreach (ChromGroupHeaderInfo chromGroupHeader in headers)
+                foreach (ChromatogramGroupInfo groupInfo in groupInfos)
                 {
-                    if (chromGroupHeader.Extractor == extractor)
-                        infoSetNew.Add(LoadChromatogramInfo(chromGroupHeader));
+                    if (groupInfo.Header.Extractor == extractor)
+                        infoSetNew.Add(groupInfo);
                 }
                 infoSet = infoSetNew.ToArray();
                 return true;
             }
             infoSet = new ChromatogramGroupInfo[0];
-            return false;            
+            return false;
         }
 
         public ChromatogramGroupInfo LoadChromatogramInfo(int index)
@@ -328,39 +338,30 @@ namespace pwiz.Skyline.Model.Results
             ReadStream.CloseStream();
         }
 
-        private bool TryLoadChromInfo(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup,
-                                      float tolerance, out ChromGroupHeaderInfo[] headerInfos)
+        private int GetHeaderInfos(PeptideDocNode nodePep, SignedMz precursorMz, double? explicitRT, float tolerance,
+            ChromatogramSet chromatograms, int i, ChromatogramGroupInfo[] groupInfos)
         {
-            var precursorMz =  nodeGroup != null ? nodeGroup.PrecursorMz : SignedMz.ZERO;
-            double? explicitRT = null;
-            if (nodePep != null && nodePep.ExplicitRetentionTime != null)
-            {
-                explicitRT = nodePep.ExplicitRetentionTime.RetentionTime;
-            }
-            int i = FindEntry(precursorMz, tolerance);
-            if (i == -1)
-            {
-                headerInfos = new ChromGroupHeaderInfo[0];
-                return false;
-            }
-
             // Add entries to a list until they no longer match
-            var listChromatograms = new List<ChromGroupHeaderInfo>();
+            int countInfos = 0;
             for (; i < _chromatogramEntries.Length && MatchMz(precursorMz, _chromatogramEntries[i].Precursor, tolerance); i++)
             {
                 if (nodePep != null && !TextIdEqual(i, nodePep))
                     continue;
+                var entry = _chromatogramEntries[i];
+                if (chromatograms != null && !chromatograms.ContainsFile(_cachedFiles[entry.FileIndex].FilePath))
+                    continue;
                 // If explict retention time info is available, use that to discard obvious mismatches
                 if (!explicitRT.HasValue || // No explicit RT
-                    !_chromatogramEntries[i].StartTime.HasValue || // No time data loaded yet
-                    (_chromatogramEntries[i].StartTime <= explicitRT && explicitRT <=  _chromatogramEntries[i].EndTime)) // No overlap
+                    !entry.StartTime.HasValue || // No time data loaded yet
+                    (entry.StartTime <= explicitRT && explicitRT <= entry.EndTime))
+                // No overlap
                 {
-                    listChromatograms.Add(_chromatogramEntries[i]);
+                    if (groupInfos != null)
+                        groupInfos[countInfos] = LoadChromatogramInfo(entry);
+                    countInfos++;
                 }
             }
-
-            headerInfos = listChromatograms.ToArray();
-            return headerInfos.Length > 0;
+            return countInfos;
         }
 
         private bool TextIdEqual(int entryIndex, PeptideDocNode nodePep)
@@ -560,7 +561,7 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public static ChromatogramCache Load(string cachePath, IProgressStatus status, ILoadMonitor loader)
+        public static ChromatogramCache Load(string cachePath, IProgressStatus status, ILoadMonitor loader, bool assumeNegativeChargeInPreV11Caches)
         {
             status = status.ChangeMessage(string.Format(Resources.ChromatogramCache_Load_Loading__0__cache, Path.GetFileName(cachePath)));
             loader.UpdateProgress(status);
@@ -572,7 +573,7 @@ namespace pwiz.Skyline.Model.Results
                 // DebugLog.Info("{0}. {1} - loaded", readStream.GlobalIndex, cachePath);
 
                 RawData raw;
-                LoadStructs(readStream.Stream, status, loader, out raw);
+                LoadStructs(readStream.Stream, status, loader, out raw, assumeNegativeChargeInPreV11Caches);
 
                 var result = new ChromatogramCache(cachePath, raw, readStream);
                 loader.UpdateProgress(status.Complete());
@@ -593,12 +594,13 @@ namespace pwiz.Skyline.Model.Results
 
         public static void Join(string cachePath, IPooledStream streamDest,
             IList<string> listCachePaths, ILoadMonitor loader,
-            Action<ChromatogramCache, IProgressStatus> complete)
+            Action<ChromatogramCache, IProgressStatus> complete,
+            bool assumeNegativeChargeInPreV11Caches)
         {
             var status = new ProgressStatus(string.Empty);
             try
             {
-                var joiner = new ChromCacheJoiner(cachePath, streamDest, listCachePaths, loader, status, complete);
+                var joiner = new ChromCacheJoiner(cachePath, streamDest, listCachePaths, loader, status, complete, assumeNegativeChargeInPreV11Caches);
                 joiner.JoinParts();
             }
             catch (Exception x)
@@ -623,12 +625,12 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public static long LoadStructs(Stream stream, out RawData raw)
+        public static long LoadStructs(Stream stream, out RawData raw, bool assumeNegativeChargesInPreV11Caches)
         {
-            return LoadStructs(stream, null, null, out raw);
+            return LoadStructs(stream, null, null, out raw, assumeNegativeChargesInPreV11Caches);
         }
 
-        public static long LoadStructs(Stream stream, IProgressStatus status, IProgressMonitor progressMonitor, out RawData raw)
+        public static long LoadStructs(Stream stream, IProgressStatus status, IProgressMonitor progressMonitor, out RawData raw, bool assumeNegativeChargeInPreV11Caches)
         {
             // Read library header from the end of the cache
             const int countHeader = (int)Header.count * 4;
@@ -748,7 +750,7 @@ namespace pwiz.Skyline.Model.Results
 
             // Read list of chromatogram group headers
             stream.Seek(locationHeaders, SeekOrigin.Begin);
-            raw.ChromatogramEntries = ChromGroupHeaderInfo.ReadArray(stream, numChrom, formatVersion);
+            raw.ChromatogramEntries = ChromGroupHeaderInfo.ReadArray(stream, numChrom, formatVersion, assumeNegativeChargeInPreV11Caches);
 
             if (formatVersion > FORMAT_VERSION_CACHE_4)
             {

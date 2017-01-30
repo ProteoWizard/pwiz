@@ -72,6 +72,7 @@ namespace IDPicker.Forms
             this.minSpectraColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.minAdditionalPeptidesColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.geneLevelFilteringColumn = new System.Windows.Forms.DataGridViewCheckBoxColumn();
+            this.precursorMzToleranceColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.distinctMatchFormatColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.minSpectraPerMatchColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.minSpectraPerPeptideColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -111,6 +112,7 @@ namespace IDPicker.Forms
             this.minSpectraColumn,
             this.minAdditionalPeptidesColumn,
             this.geneLevelFilteringColumn,
+            this.precursorMzToleranceColumn,
             this.distinctMatchFormatColumn,
             this.minSpectraPerMatchColumn,
             this.minSpectraPerPeptideColumn,
@@ -270,6 +272,12 @@ namespace IDPicker.Forms
             this.geneLevelFilteringColumn.Name = "geneLevelFilteringColumn";
             this.geneLevelFilteringColumn.ReadOnly = true;
             // 
+            // precursorMzToleranceColumn
+            // 
+            this.precursorMzToleranceColumn.HeaderText = "Precursor m/z Tolerance";
+            this.precursorMzToleranceColumn.Name = "precursorMzToleranceColumn";
+            this.precursorMzToleranceColumn.ReadOnly = true;
+            // 
             // distinctMatchFormatColumn
             // 
             this.distinctMatchFormatColumn.HeaderText = "Distinct Match Format";
@@ -410,6 +418,7 @@ namespace IDPicker.Forms
         private System.Windows.Forms.DataGridViewTextBoxColumn minSpectraColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn minAdditionalPeptidesColumn;
         private System.Windows.Forms.DataGridViewCheckBoxColumn geneLevelFilteringColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn precursorMzToleranceColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn distinctMatchFormatColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn minSpectraPerMatchColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn minSpectraPerPeptideColumn;

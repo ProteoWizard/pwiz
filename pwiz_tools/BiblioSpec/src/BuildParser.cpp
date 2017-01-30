@@ -54,7 +54,7 @@ BuildParser::BuildParser(BlibBuilder& maker,
       "driftTimeHighEnergyOffsetMsec, retentionTime, fileID, specIDinFile, "
       "score, scoreType) "
       "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ",
-      LARGE_BUFFER_SIZE, &insertSpectrumStmt_, NULL);
+      -1, &insertSpectrumStmt_, NULL);
 }
 
 BuildParser::~BuildParser() {
@@ -869,6 +869,13 @@ string BuildParser::getFilenameFromID(const string& idStr){
             filename = idStr.substr(start, end - start);
         }
     }
+
+    // <basename>-MSILE-DATAID-...
+    start = idStr.find("-MSILE-");
+    if (start != string::npos) {
+        return idStr.substr(0, start);
+    }
+
     // check for TPP/SEQUEST format <basename>.<start scan>.<end scan>.<charge>[.dta]
     vector<string> parts;
     boost::split(parts, idStr, boost::is_any_of("."));

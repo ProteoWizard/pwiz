@@ -40,7 +40,8 @@ namespace YuvalBoss.L10N
         public void Execute(IDataContext context, DelegateExecute nextExecute)
         {
             MessageBox.ShowMessageBox(
-              "Localization Helper\nYuval\n\nHelps Localize",
+              "Localization Helper\nYuval\nHelps Localize by marking strings " +
+              "that are not flagged with the comment // Not L10N or localized in a resx file.",
               "About Localization Helper",
               MbButton.MB_OK,
               MbIcon.MB_ICONASTERISK);

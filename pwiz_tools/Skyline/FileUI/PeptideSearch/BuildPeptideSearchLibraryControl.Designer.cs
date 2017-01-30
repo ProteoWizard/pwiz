@@ -32,6 +32,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.peptideSearchSplitContainer = new System.Windows.Forms.SplitContainer();
             this.label1 = new System.Windows.Forms.Label();
             this.textCutoff = new System.Windows.Forms.TextBox();
+            this.lblStandardPeptides = new System.Windows.Forms.Label();
+            this.comboStandards = new System.Windows.Forms.ComboBox();
             this.cbIncludeAmbiguousMatches = new System.Windows.Forms.CheckBox();
             this.grpWorkflow = new System.Windows.Forms.GroupBox();
             this.radioDIA = new System.Windows.Forms.RadioButton();
@@ -62,6 +64,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // 
             // peptideSearchSplitContainer.Panel2
             // 
+            this.peptideSearchSplitContainer.Panel2.Controls.Add(this.lblStandardPeptides);
+            this.peptideSearchSplitContainer.Panel2.Controls.Add(this.comboStandards);
             this.peptideSearchSplitContainer.Panel2.Controls.Add(this.cbIncludeAmbiguousMatches);
             this.peptideSearchSplitContainer.Panel2.Controls.Add(this.grpWorkflow);
             this.peptideSearchSplitContainer.Panel2.Controls.Add(this.cbFilterForDocumentPeptides);
@@ -79,6 +83,18 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // 
             resources.ApplyResources(this.textCutoff, "textCutoff");
             this.textCutoff.Name = "textCutoff";
+            // 
+            // lblStandardPeptides
+            // 
+            resources.ApplyResources(this.lblStandardPeptides, "lblStandardPeptides");
+            this.lblStandardPeptides.Name = "lblStandardPeptides";
+            // 
+            // comboStandards
+            // 
+            resources.ApplyResources(this.comboStandards, "comboStandards");
+            this.comboStandards.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboStandards.FormattingEnabled = true;
+            this.comboStandards.Name = "comboStandards";
             // 
             // cbIncludeAmbiguousMatches
             // 
@@ -180,6 +196,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private System.Windows.Forms.RadioButton radioDIA;
         private System.Windows.Forms.RadioButton radioPRM;
         private System.Windows.Forms.CheckBox cbIncludeAmbiguousMatches;
+        private System.Windows.Forms.ComboBox comboStandards;
+        private System.Windows.Forms.Label lblStandardPeptides;
 
     }
 }

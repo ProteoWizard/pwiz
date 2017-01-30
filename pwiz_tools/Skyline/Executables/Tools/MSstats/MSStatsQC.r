@@ -16,7 +16,7 @@ runQC <- function() {
 
 	## Input data
 	arguments <- commandArgs(trailingOnly=TRUE);
-	#arguments<-c("C:/Users/Ijae/AppData/Local/Temp/MSstats_QC_MSstats_Input.csv","1")
+	#arguments<-c("address", "1", "FALSE", "FALSE", "FALSE", "10", "10")
 
 	## test argument
 	#cat("arguments--> ")
@@ -29,7 +29,7 @@ runQC <- function() {
 	raw <- read.csv(arguments[1])
 
 	## remove the rows for iRT peptides
-	raw <- raw[is.na(raw$StandardType) | raw$StandardType != "iRT", ]
+	#raw <- raw[is.na(raw$StandardType) | raw$StandardType != "iRT", ]
 
 	## get standard protein name from StandardType column
 	standardpepname <- ""
@@ -38,21 +38,36 @@ runQC <- function() {
 	}
 
 	## change column name as Intensity
-	colnames(raw)[colnames(raw) == "Area"] <- "Intensity"
-	raw$Intensity <- as.character(raw$Intensity)
-	raw$Intensity <- as.numeric(raw$Intensity)
+	#colnames(raw)[colnames(raw) == "Area"] <- "Intensity"
+	#raw$Intensity <- as.character(raw$Intensity)
+	#raw$Intensity <- as.numeric(raw$Intensity)
 
 	## change column name 'FileName' as Run
-	colnames(raw)[colnames(raw) == "FileName"] <- "Run"
+	#colnames(raw)[colnames(raw) == "FileName"] <- "Run"
 
 	## check result grid missing or not
 	countna<-apply(raw, 2, function(x) sum(is.na(x) | x == ""))
 	naname<-names(countna[countna != 0])
-	naname<-naname[-which(naname %in% c("StandardType", "Intensity", "Truncated"))]
+	naname<-naname[-which(naname %in% c("Standard.Type", "Intensity", "Truncated"))]
 
 	if(length(naname) != 0){
 		stop(message(paste("Some ", paste(naname, collapse=", "), " have no value. Please check \"Result Grid\" in View. \n", sep="")))
 	}
+
+  ## -----------------------------------------------
+	## formatting
+	cat("\n\n =======================================")
+	cat("\n ** Formatting for MSstats..... \n")
+
+	## check result grid missing or not
+	info <- unique(raw[, c('Condition', 'BioReplicate')])
+
+	if(any(is.na(info))){
+		stop(message("Some of Condition and/or BioReplicate have no value. Please check \"Result Grid\" in View. \n"))
+	}
+
+	raw <- SkylinetoMSstatsFormat(raw, filter_with_Qvalue = FALSE)
+	## need to be updated for Qvalue filtering for DIA
 
 
 	## -----------------------------------------------
@@ -104,8 +119,14 @@ runQC <- function() {
 	
 	inputremoveproteins <- arguments[5]
 
+	## censoring algorithm for only label-free
+	if( is.element('heavy', unique(raw$IsotopeLabelType)) ){
+	  maxQuantile <- NULL
+	} else {
+	  maxQuantile <- 0.999
+	}
 
-	quantData <- try(dataProcess(raw, normalization=inputnormalize, nameStandards=standardpepname,  fillIncompleteRows=(inputmissingpeaks=="TRUE"), featureSubset=input_feature_selection, remove_proteins_with_interference=(inputremoveproteins=="TRUE"), summaryMethod = "TMP", censoredInt="0", skylineReport=TRUE))
+	quantData <- try(dataProcess(raw, normalization=inputnormalize, nameStandards=standardpepname,  fillIncompleteRows=(inputmissingpeaks=="TRUE"), featureSubset=input_feature_selection, remove_proteins_with_interference=(inputremoveproteins=="TRUE"), summaryMethod = "TMP", censoredInt="0", maxQuantileforCensored = maxQuantile))
 
 	if (class(quantData) != "try-error") {
 

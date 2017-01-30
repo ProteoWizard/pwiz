@@ -79,7 +79,14 @@ namespace pwiz.Skyline
 
         private void dockPanel_ActiveDocumentChanged(object sender, EventArgs e)
         {
-            ActiveDocumentChanged();
+            try
+            {
+                ActiveDocumentChanged();
+            }
+            catch (Exception x)
+            {
+                Program.ReportException(x);
+            }
         }
 
         private void ActiveDocumentChanged()
@@ -247,14 +254,24 @@ namespace pwiz.Skyline
                     replicateComparisonMenuItem.Enabled = enable;
                     timePeptideComparisonMenuItem.Enabled = enable;
                     linearRegressionMenuItem.Enabled = enable;
+                    scoreToRunMenuItem.Enabled = enable;
+                    runToRunMenuItem.Enabled = enable; 
                     schedulingMenuItem.Enabled = enableSchedule;
-
                     if (!deserialized)
                     {
                         layoutLock.EnsureLocked();
                         ShowGraphRetentionTime(enable && Settings.Default.ShowRetentionTimeGraph);
                     }
                 }
+
+                //Can only do run to run regression with at least 2 replicates
+                var enableRunToRun = settingsNew.HasResults && settingsNew.MeasuredResults.Chromatograms.Count > 1;
+                if (runToRunMenuItem.Enabled != enableRunToRun || runToRunToolStripMenuItem.Enabled != enableRunToRun)
+                {
+                    runToRunMenuItem.Enabled = enableRunToRun;
+                    runToRunToolStripMenuItem.Enabled = enableRunToRun;
+                }
+
                 if (resultsGridMenuItem.Enabled != enable)
                 {
                     resultsGridMenuItem.Enabled = enable;
@@ -1043,8 +1060,8 @@ namespace pwiz.Skyline
         {
             // Might need to update the selected MS/MS spectrum, if full-scan
             // filtering was used.
-            if (DocumentUI.Settings.TransitionSettings.FullScan.IsEnabled &&
-                    DocumentUI.Settings.HasResults)
+            if (DocumentUI.Settings.HasResults &&
+                (DocumentUI.Settings.TransitionSettings.FullScan.IsEnabled || DocumentUI.Settings.PeptideSettings.Libraries.HasMidasLibrary))
             {
                 if (e.Spectrum != null && e.IsUserAction)
                 {
@@ -1297,7 +1314,7 @@ namespace pwiz.Skyline
             var settings = DocumentUI.Settings;
             bool retentionPredict = (settings.PeptideSettings.Prediction.RetentionTime != null);
             bool peptideIdTimes = (settings.PeptideSettings.Libraries.HasLibraries &&
-                                   settings.TransitionSettings.FullScan.IsEnabled);
+                                   (settings.TransitionSettings.FullScan.IsEnabled || settings.PeptideSettings.Libraries.HasMidasLibrary));
             if (displayType != DisplayTypeChrom.base_peak && displayType != DisplayTypeChrom.tic)
             {
                 if (selectedTreeNode is TransitionTreeNode && GraphChromatogram.IsSingleTransitionDisplay)
@@ -2543,10 +2560,14 @@ namespace pwiz.Skyline
 
         private GraphSummary CreateGraphRetentionTime()
         {
-            _graphRetentionTime = new GraphSummary(this, new RTGraphController())
+            var targetIndex = SelectedResultsIndex;
+
+            var origIndex = -1;
+            if(ComboResults != null && ComboResults.Items.Count > 0)
+                origIndex = (SelectedResultsIndex + 1) % ComboResults.Items.Count;
+            _graphRetentionTime = new GraphSummary(this, new RTGraphController(), targetIndex, origIndex)
                                       {
                                           TabText = Resources.SkylineWindow_CreateGraphRetentionTime_Retention_Times,
-                                          ResultsIndex = SelectedResultsIndex
                                       };
             _graphRetentionTime.FormClosed += graphRetentionTime_FormClosed;
             _graphRetentionTime.VisibleChanged += graphRetentionTime_VisibleChanged;
@@ -2667,6 +2688,7 @@ namespace pwiz.Skyline
         public void SelectPath(IdentityPath focusPath)
         {
             SequenceTree.SelectPath(focusPath);
+            UpdateGraphPanes();
         }
 
         public SpectrumDisplayInfo SelectedSpectrum
@@ -2709,10 +2731,19 @@ namespace pwiz.Skyline
                     schedulingContextMenuItem
                 });
             }
+            if (linearRegressionContextMenuItem.DropDownItems.Count == 0)
+            {
+                linearRegressionContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
+                {
+                    scoreToRunToolStripMenuItem,
+                    runToRunToolStripMenuItem
+                });
+            }
 
             GraphTypeRT graphType = RTGraphController.GraphType;
-            if (graphType == GraphTypeRT.regression)
+            if (graphType == GraphTypeRT.score_to_run_regression || graphType == GraphTypeRT.run_to_run_regression)
             {
+                var runToRun = graphType == GraphTypeRT.run_to_run_regression;
                 menuStrip.Items.Insert(iInsert++, timePlotContextMenuItem);
                 if (timePlotContextMenuItem.DropDownItems.Count == 0)
                 {
@@ -2748,27 +2779,35 @@ namespace pwiz.Skyline
 
                 refineRTContextMenuItem.Checked = set.RTRefinePeptides;
                 menuStrip.Items.Insert(iInsert++, refineRTContextMenuItem);
-                predictionRTContextMenuItem.Checked = set.RTPredictorVisible;
-                menuStrip.Items.Insert(iInsert++, predictionRTContextMenuItem);
-                iInsert = AddReplicatesContextMenu(menuStrip, iInsert);
-                menuStrip.Items.Insert(iInsert++, setRTThresholdContextMenuItem);
-                menuStrip.Items.Insert(iInsert++, toolStripSeparator22);
-                menuStrip.Items.Insert(iInsert++, createRTRegressionContextMenuItem);
-                menuStrip.Items.Insert(iInsert++, chooseCalculatorContextMenuItem);
-                if (chooseCalculatorContextMenuItem.DropDownItems.Count == 0)
+                if (!runToRun)
                 {
-                    chooseCalculatorContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
+                    predictionRTContextMenuItem.Checked = set.RTPredictorVisible;
+                    menuStrip.Items.Insert(iInsert++, predictionRTContextMenuItem);
+                    iInsert = AddReplicatesContextMenu(menuStrip, iInsert);
+                }
+
+                menuStrip.Items.Insert(iInsert++, setRTThresholdContextMenuItem);
+                if (!runToRun)
+                {
+                    menuStrip.Items.Insert(iInsert++, toolStripSeparator22);
+                    menuStrip.Items.Insert(iInsert++, createRTRegressionContextMenuItem);
+                    menuStrip.Items.Insert(iInsert++, chooseCalculatorContextMenuItem);
+
+                    if (chooseCalculatorContextMenuItem.DropDownItems.Count == 0)
                     {
-                        placeholderToolStripMenuItem1,
-                        toolStripSeparatorCalculators,
-                        addCalculatorContextMenuItem,
-                        updateCalculatorContextMenuItem
-                    });
+                        chooseCalculatorContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
+                        {
+                            placeholderToolStripMenuItem1,
+                            toolStripSeparatorCalculators,
+                            addCalculatorContextMenuItem,
+                            updateCalculatorContextMenuItem
+                        });
+                    }
                 }
                 var regressionRT = RTGraphController.RegressionRefined;
-                createRTRegressionContextMenuItem.Enabled = (regressionRT != null);
+                createRTRegressionContextMenuItem.Enabled = (regressionRT != null) && !runToRun;
                 updateCalculatorContextMenuItem.Visible = (regressionRT != null &&
-                    Settings.Default.RTScoreCalculatorList.CanEditItem(regressionRT.Calculator));
+                    Settings.Default.RTScoreCalculatorList.CanEditItem(regressionRT.Calculator) && !runToRun);
                 bool showDelete = controller.ShowDelete(mousePt);
                 bool showDeleteOutliers = controller.ShowDeleteOutliers;
                 if (showDelete || showDeleteOutliers)
@@ -2902,7 +2941,18 @@ namespace pwiz.Skyline
         {
             GraphTypeRT graphType = RTGraphController.GraphType;
             bool visible = _graphRetentionTime != null && _graphRetentionTime.Visible;
-            linearRegressionMenuItem.Checked = linearRegressionContextMenuItem.Checked = visible && (graphType == GraphTypeRT.regression);
+
+            bool runToRunRegression = visible && (graphType == GraphTypeRT.run_to_run_regression && GraphRetentionTime.IsRunToRun);
+            bool scoreToRunRegression = visible && (graphType == GraphTypeRT.score_to_run_regression && !GraphRetentionTime.IsRunToRun);
+
+            runToRunToolStripMenuItem.Checked = runToRunRegression;
+            scoreToRunToolStripMenuItem.Checked = scoreToRunRegression;
+            runToRunMenuItem.Checked = runToRunRegression;
+            scoreToRunMenuItem.Checked = scoreToRunRegression;
+            linearRegressionMenuItem.Checked = runToRunRegression || scoreToRunRegression;
+            linearRegressionContextMenuItem.Checked = runToRunRegression || scoreToRunRegression;
+                
+            
             replicateComparisonMenuItem.Checked = replicateComparisonContextMenuItem.Checked = visible && (graphType == GraphTypeRT.replicate);
             timePeptideComparisonMenuItem.Checked = timePeptideComparisonContextMenuItem.Checked = visible && (graphType == GraphTypeRT.peptide);
             schedulingMenuItem.Checked = schedulingContextMenuItem.Checked = visible && (graphType == GraphTypeRT.schedule);
@@ -2910,12 +2960,24 @@ namespace pwiz.Skyline
 
         private void linearRegressionMenuItem_Click(object sender, EventArgs e)
         {
-            ShowRTLinearRegressionGraph();
+            ShowRTLinearRegressionGraphScoreToRun();
         }
 
-        public void ShowRTLinearRegressionGraph()
+        private void fullReplicateComparisonToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.RTGraphType = GraphTypeRT.regression.ToString();
+            ShowRTLinearRegressionGraphRunToRun();
+        }
+
+        public void ShowRTLinearRegressionGraphScoreToRun()
+        {
+            Settings.Default.RTGraphType = GraphTypeRT.score_to_run_regression.ToString();
+            ShowGraphRetentionTime(true);
+            UpdateRetentionTimeGraph();
+        }
+
+        public void ShowRTLinearRegressionGraphRunToRun()
+        {
+            Settings.Default.RTGraphType = GraphTypeRT.run_to_run_regression.ToString();
             ShowGraphRetentionTime(true);
             UpdateRetentionTimeGraph();
         }
@@ -3078,7 +3140,6 @@ namespace pwiz.Skyline
         {
             CreateRegression();               
         }
-
         public void CreateRegression()
         {
             if (_graphRetentionTime == null)
@@ -3396,10 +3457,9 @@ namespace pwiz.Skyline
 
         private GraphSummary CreateGraphPeakArea()
         {
-            _graphPeakArea = new GraphSummary(this, new AreaGraphController())
+            _graphPeakArea = new GraphSummary(this, new AreaGraphController(),SelectedResultsIndex)
                                  {
                                      TabText = Resources.SkylineWindow_CreateGraphPeakArea_Peak_Areas,
-                                     ResultsIndex = SelectedResultsIndex
                                  };
             _graphPeakArea.FormClosed += graphPeakArea_FormClosed;
             _graphPeakArea.VisibleChanged += graphPeakArea_VisibleChanged;
@@ -3933,10 +3993,9 @@ namespace pwiz.Skyline
 
         private GraphSummary CreateGraphMassError()
         {
-            _graphMassError = new GraphSummary(this, new MassErrorGraphController())
+            _graphMassError = new GraphSummary(this, new MassErrorGraphController(),SelectedResultsIndex)
             {
                 TabText = Resources.SkylineWindow_CreateGraphMassError_Mass_Errors,
-                ResultsIndex = SelectedResultsIndex
             };
             _graphMassError.FormClosed += graphMassError_FormClosed;
             _graphMassError.VisibleChanged += graphMassError_VisibleChanged;

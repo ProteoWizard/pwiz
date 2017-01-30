@@ -641,15 +641,14 @@ namespace pwiz.Skyline.Controls.Graphs
             var spectra = settings.GetBestSpectra(lookupSequence, charge, lookupMods).Select(s => new SpectrumDisplayInfo(s)).ToList();
             // Showing redundant spectra is only supported for full-scan filtering when
             // the document has results files imported.
-            if (!settings.TransitionSettings.FullScan.IsEnabled || !settings.HasResults)
+            if ((!settings.TransitionSettings.FullScan.IsEnabled && !settings.PeptideSettings.Libraries.HasMidasLibrary) || !settings.HasResults)
                 return spectra;
 
             try
             {
                 var spectraRedundant = new List<SpectrumDisplayInfo>();
                 var dictReplicateNameFiles = new Dictionary<string, HashSet<string>>();
-                foreach (var spectrumInfo in settings.GetRedundantSpectra(lookupSequence, charge, nodeGroup.TransitionGroup.LabelType, lookupMods).Concat(
-                                             settings.GetMidasSpectra(nodeGroup.PrecursorMz)))
+                foreach (var spectrumInfo in settings.GetRedundantSpectra(lookupSequence, charge, nodeGroup.TransitionGroup.LabelType, lookupMods))
                 {
                     var matchingFile = settings.MeasuredResults.FindMatchingMSDataFile(MsDataFileUri.Parse(spectrumInfo.FilePath));
                     if (matchingFile == null)

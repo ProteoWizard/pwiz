@@ -70,6 +70,7 @@ PWIZ_API_DECL enum InstrumentModel
     API3500QTrap,
     API4000,
     API4000QTrap,
+    API4500,
     API4500QTrap,
     API5000,
     API5500,
@@ -139,8 +140,8 @@ struct PWIZ_API_DECL Spectrum
     virtual double getStartTime() const = 0;
 
     virtual bool getDataIsContinuous() const = 0;
-    virtual size_t getDataSize(bool doCentroid) const = 0;
-    virtual void getData(bool doCentroid, std::vector<double>& mz, std::vector<double>& intensities) const = 0;
+    virtual size_t getDataSize(bool doCentroid, bool ignoreZeroIntensityPoints = false) const = 0;
+    virtual void getData(bool doCentroid, std::vector<double>& mz, std::vector<double>& intensities, bool ignoreZeroIntensityPoints = false) const = 0;
 
     virtual double getSumY() const = 0;
     virtual double getBasePeakX() const = 0;

@@ -127,7 +127,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         if (decoys != nodePep.IsDecoy)
                             continue;
 
-                        var replicateIndex = bestResult ? nodePep.BestResult : resultIndex;
+                        var replicateIndex = bestResult && nodePep.BestResult != -1 ? nodePep.BestResult : resultIndex;
                         foreach (var nodeGroup in nodePep.TransitionGroups)
                         {
                             foreach (var nodeTran in nodeGroup.Transitions)

@@ -273,8 +273,9 @@ namespace pwiz.Skyline.Controls.Databinding
 
         private void treeView1_BeforeSelect(object sender, TreeViewCancelEventArgs e)
         {
-            if (null == e.Node.Parent)
+            if (e.Node != null && null == e.Node.Parent)
             {
+                // Prevent the root elements of the tree from being selected
                 e.Cancel = true;
             }
         }

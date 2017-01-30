@@ -27,6 +27,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
+using pwiz.Common.DataBinding.Documentation;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
@@ -182,17 +183,7 @@ namespace pwiz.SkylineTest.Reporting
 
         private IEnumerable<ColumnDescriptor> GetChildColumns(ColumnDescriptor columnDescriptor)
         {
-            var collectionColumn = columnDescriptor.GetCollectionColumn();
-            if (null != collectionColumn)
-            {
-                if (collectionColumn.PropertyType.IsGenericType &&
-                    collectionColumn.PropertyType.GetGenericTypeDefinition() == typeof (KeyValuePair<,>))
-                {
-                    return new[] {collectionColumn.ResolveChild("Key"), collectionColumn.ResolveChild("Value")};
-                }
-                return collectionColumn.GetChildColumns();
-            }
-            return columnDescriptor.GetChildColumns();
+            return DocumentationGenerator.GetChildColumns(columnDescriptor);
         }
 
         private string InvariantToEnglishName(string name)

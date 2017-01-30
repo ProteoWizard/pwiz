@@ -181,7 +181,7 @@ namespace pwiz.SkylineTestA
             // that heavy precursors all get greater precursor m/z values than
             // their light versions
             var docVarHeavy = docVarMulti.ChangeSettings(docVarMulti.Settings.ChangePeptideModifications(
-                mods => mods.ChangeHeavyModifications(HEAVY_MODS)));
+                mods => mods.ChangeModifications(IsotopeLabelType.heavy, HEAVY_MODS)));
             foreach (var nodePep in docVarHeavy.Peptides)
             {
                 if (nodePep.Peptide.NextAA == '-')
@@ -194,7 +194,7 @@ namespace pwiz.SkylineTestA
             // Repeat with a modification specifying multiple amino acids
             // and make sure the resulting m/z values are the same
             var docVarHeavyMulti = docVarMulti.ChangeSettings(docVarMulti.Settings.ChangePeptideModifications(
-                mods => mods.ChangeHeavyModifications(HEAVY_MODS_MULTI)));
+                mods => mods.ChangeModifications(IsotopeLabelType.heavy, HEAVY_MODS_MULTI)));
 
             var varHeavyGroups = docVarHeavy.PeptideTransitionGroups.ToArray();
             var varHeavyMultiPeptides = docVarHeavyMulti.PeptideTransitionGroups.ToArray();

@@ -382,7 +382,9 @@ namespace pwiz.Skyline.Model.Results
 
         private MsDataFileImpl GetMsDataFile(string dataFilePathPart, int sampleIndex, LockMassParameters lockMassParameters, MsInstrumentConfigInfo msInstrumentConfigInfo, bool enableSimSpectrum, bool requireCentroidedMS1, bool requireCentroidedMS2)
         {
-            return new MsDataFileImpl(dataFilePathPart, sampleIndex, lockMassParameters, enableSimSpectrum, requireVendorCentroidedMS1:requireCentroidedMS1, requireVendorCentroidedMS2:requireCentroidedMS2);
+            return new MsDataFileImpl(dataFilePathPart, sampleIndex, lockMassParameters, enableSimSpectrum,
+                requireVendorCentroidedMS1:requireCentroidedMS1, requireVendorCentroidedMS2:requireCentroidedMS2,
+                ignoreZeroIntensityPoints:true);
         }
 
         private void ExitRead(Exception x)
@@ -861,7 +863,7 @@ namespace pwiz.Skyline.Model.Results
                         listIrts.Add(_calculator.ScoreSequence(sequence).Value);
                     }
                     RegressionLine line;
-                    if (!RCalcIrt.TryGetRegressionLine(listIrts, listTimes, out line))
+                    if (!RCalcIrt.TryGetRegressionLine(listIrts, listTimes, RCalcIrt.MinRegressionPoints(listIrts.Count), out line))
                         return false;
 
                     _conversion = new RegressionLineElement(line);

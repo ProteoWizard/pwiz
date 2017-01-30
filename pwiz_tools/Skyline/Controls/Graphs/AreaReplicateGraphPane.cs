@@ -291,7 +291,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var expectedValue = IsExpectedVisible ? ExpectedVisible : AreaExpectedValue.none;
             var replicateGroupOp = GraphValues.ReplicateGroupOp.FromCurrentSettings(document.Settings);
             var graphData = new AreaGraphData(document,
-                                              parentNode,
+                                              identityPath,
                                               displayType,
                                               replicateGroupOp,
                                               ratioIndex,
@@ -795,16 +795,16 @@ namespace pwiz.Skyline.Controls.Graphs
             private readonly AreaExpectedValue _expectedVisible;
 
             public AreaGraphData(SrmDocument document,
-                                 DocNode docNode,
+                                 IdentityPath identityPath,
                                  DisplayTypeChrom displayType,
                                  GraphValues.ReplicateGroupOp replicateGroupOp,
                                  int ratioIndex,
                                  AreaNormalizeToData normalize,
                                  AreaExpectedValue expectedVisible,
                                  PaneKey paneKey)
-                : base(document, docNode, displayType, replicateGroupOp, paneKey)
+                : base(document, identityPath, displayType, replicateGroupOp, paneKey)
             {
-                _docNode = docNode;
+                _docNode = document.FindNode(identityPath);
                 _ratioIndex = ratioIndex;
                 _normalize = normalize;
                 _expectedVisible = expectedVisible;

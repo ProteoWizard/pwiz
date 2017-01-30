@@ -263,7 +263,7 @@ namespace pwiz.SkylineTest
 
             // Add heavy mod
             SrmDocument docFasta2 = docFasta.ChangeSettings(settings.ChangePeptideModifications(
-                m => m.ChangeHeavyModifications( new[] { new StaticMod("N-Terminal K", "K", ModTerminus.C, "H7", LabelAtoms.None, null, null) })));
+                m => m.ChangeModifications( IsotopeLabelType.heavy, new[] { new StaticMod("N-Terminal K", "K", ModTerminus.C, "H7", LabelAtoms.None, null, null) })));
             CheckNTerminalKGroups(docFasta2);
             Assert.AreEqual(docFasta.PeptideCount, docFasta2.PeptideCount);
 

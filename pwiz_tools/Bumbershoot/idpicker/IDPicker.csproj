@@ -605,7 +605,9 @@
     <None Include="gene2protein.db3">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="packages.config" />
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Properties\app.manifest" />
     <None Include="Resources\idpicker-style.css" />
     <None Include="scantime.r">

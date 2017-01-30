@@ -141,6 +141,7 @@ namespace IDPicker
             basicFilterControl.BasicFilterChanged += basicFilterControl_BasicFilterChanged;
             basicFilterControl.ApplyFilterChanges += basicFilterControl_ApplyFilterChanges;
             basicFilterControl.ShowQonverterSettings += ShowQonverterSettings;
+            basicFilterControl.CropAssembly += CropAssembly;
             dataFilterPopup = new Popup(basicFilterControl) { FocusOnOpen = true };
             dataFilterPopup.Closed += dataFilterPopup_Closed;
 
@@ -405,6 +406,7 @@ namespace IDPicker
             basicFilterControl.BasicFilterChanged += basicFilterControl_BasicFilterChanged;
             basicFilterControl.ApplyFilterChanges += basicFilterControl_ApplyFilterChanges;
             basicFilterControl.ShowQonverterSettings += ShowQonverterSettings;
+            basicFilterControl.CropAssembly += CropAssembly;
             dataFilterPopup = new Popup(basicFilterControl) {FocusOnOpen = true};
             dataFilterPopup.Closed += dataFilterPopup_Closed;
 
@@ -514,7 +516,7 @@ namespace IDPicker
             bool showMissedFragments = false;
             bool showLabels = true;
             bool showFragmentationSummary = false;
-            MZTolerance tolerance = null;
+            pwiz.CLI.chemistry.MZTolerance tolerance = null;
 
             if (manager.CurrentGraphForm != null && annotationByGraphForm[manager.CurrentGraphForm] != null)
             {
@@ -524,9 +526,9 @@ namespace IDPicker
                 showFragmentationSummary = panel.showFragmentationSummaryCheckBox.Checked;
                 if (panel.fragmentToleranceTextBox.Text.Length > 0)
                 {
-                    tolerance = new MZTolerance();
+                    tolerance = new pwiz.CLI.chemistry.MZTolerance();
                     tolerance.value = Convert.ToDouble(panel.fragmentToleranceTextBox.Text);
-                    tolerance.units = (MZTolerance.Units) panel.fragmentToleranceUnitsComboBox.SelectedIndex;
+                    tolerance.units = (pwiz.CLI.chemistry.MZTolerance.Units) panel.fragmentToleranceUnitsComboBox.SelectedIndex;
                 }
                 else
                     tolerance = null;
@@ -709,6 +711,60 @@ namespace IDPicker
             {
                 lock (session)
                     basicFilter.ApplyBasicFilters(session);
+            }
+            catch (Exception ex)
+            {
+                e.Result = ex;
+            }
+        }
+        
+        public void CropAssembly ()
+        {
+            if (MessageBox.Show("Cropping the assembly will permanently remove all proteins that are not in the current data filter, as well as the PSMs, peptides, and spectra mapping to those proteins. " +
+                                "It will also clear the filter history, so you may wish to save a copy of that first.\r\n\r\n" +
+                                "Because this action cannot be undone, we recommend making a backup copy of the idpDB first. Are you sure?",
+                                "Crop assembly confirmation",
+                                MessageBoxButtons.YesNo) == DialogResult.No)
+                return;
+
+            toolStripStatusLabel.Text = "Cropping assembly...";
+            basicFilter.FilteringProgress += progressMonitor.UpdateProgress;
+
+            var workerThread = new BackgroundWorker()
+            {
+                WorkerReportsProgress = true,
+                WorkerSupportsCancellation = true
+            };
+
+            workerThread.DoWork += cropAssemblyAsync;
+
+            workerThread.RunWorkerCompleted += (s, e) =>
+            {
+                if (Program.IsHeadless)
+                    Close();
+
+                if (e.Result is Exception)
+                {
+                    Program.HandleException(e.Result as Exception);
+                    setControlsWhenDatabaseLocked(false);
+                    return;
+                }
+
+                basicFilter.FilteringProgress -= progressMonitor.UpdateProgress;
+                
+                setControlsWhenDatabaseLocked(false);
+            };
+                
+            setControlsWhenDatabaseLocked(true);
+            workerThread.RunWorkerAsync();
+        }
+
+        void cropAssemblyAsync (object sender, DoWorkEventArgs e)
+        {
+            try
+            {
+                lock (session)
+                    basicFilter.CropAssembly(session);
             }
             catch (Exception ex)
             {
@@ -1767,6 +1823,11 @@ namespace IDPicker
             };
 
             workerThread.RunWorkerAsync();
+        }
+
+        private void CropAssembly(object sender, EventArgs e)
+        {
+            CropAssembly();
         }
 
         private void toExcelToolStripMenuItem_Click(object sender, EventArgs e)

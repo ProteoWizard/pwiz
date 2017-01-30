@@ -498,7 +498,10 @@ namespace pwiz.Skyline.Model
                 if (groupTransitions < MinTransitions)
                     continue;
 
-                WriteTransitions(fileIterator, nodePepGroup, nodePep, nodeGroup, nodeGroupPrimary);
+                if (IsolationList)
+                    fileIterator.WriteTransition(this, nodePepGroup, nodePep, nodeGroup, null, null, 0);
+                else
+                    WriteTransitions(fileIterator, nodePepGroup, nodePep, nodeGroup, nodeGroupPrimary);
             }
             fileIterator.WriteRequiredTransitions(this, RequiredPeptides);
         }
@@ -964,6 +967,12 @@ namespace pwiz.Skyline.Model
 
                     foreach (var group in peptide.TransitionGroups)
                     {
+                        if (exporter.IsolationList)
+                        {
+                            WriteTransition(exporter, seq, peptide, group, null, null, 0);
+                            continue;
+                        }
+
                         foreach (var transition in group.Transitions)
                         {
                             WriteTransition(exporter, seq, peptide, group, null, transition, 0);

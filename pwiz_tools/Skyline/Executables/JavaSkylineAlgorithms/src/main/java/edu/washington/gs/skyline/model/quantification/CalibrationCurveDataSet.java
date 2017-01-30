@@ -88,7 +88,7 @@ public class CalibrationCurveDataSet {
     }
 
     public TransitionKeys getFeaturesToQuantifyOn(String label) {
-        if (normalizationMethod.isAllowMissingTransitions()) {
+        if (normalizationMethod instanceof NormalizationMethod.RatioToLabel) {
             return null;
         }
         TransitionKeys transitionKeys = TransitionKeys.EMPTY;

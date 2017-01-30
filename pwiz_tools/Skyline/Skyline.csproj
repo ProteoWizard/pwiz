@@ -46,8 +46,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>9283</ApplicationRevision>
-    <ApplicationVersion>3.5.1.9283</ApplicationVersion>
+    <ApplicationRevision>10165</ApplicationRevision>
+    <ApplicationVersion>3.6.1.10165</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -262,8 +262,14 @@
     <Compile Include="Alerts\UpgradeDlg.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Alerts\UpgradeDlg.designer.cs">
+    <Compile Include="Alerts\UpgradeDlg.Designer.cs">
       <DependentUpon>UpgradeDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Alerts\UpgradeLicenseDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Alerts\UpgradeLicenseDlg.designer.cs">
+      <DependentUpon>UpgradeLicenseDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="AlgLib\alglibinternal.cs" />
     <Compile Include="AlgLib\alglibmisc.cs" />
@@ -765,6 +771,11 @@
     <Compile Include="Model\Databinding\Collections\SkylineObjectList.cs" />
     <Compile Include="Model\Databinding\Collections\Transitions.cs" />
     <Compile Include="Model\Databinding\DocumentGridViewContext.cs" />
+    <Compile Include="Model\Databinding\Entities\ColumnToolTips.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ColumnToolTips.resx</DependentUpon>
+    </Compile>
     <Compile Include="Model\Databinding\EditDescription.cs" />
     <Compile Include="Model\Databinding\Entities\MultiResult.cs" />
     <Compile Include="Model\Databinding\Entities\Peptide.cs" />
@@ -1521,6 +1532,12 @@
     <EmbeddedResource Include="Alerts\AlertLinkDlg.zh-CHS.resx">
       <DependentUpon>AlertLinkDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\DetailedReportErrorDlg.ja.resx">
+      <DependentUpon>DetailedReportErrorDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\DetailedReportErrorDlg.zh-CHS.resx">
+      <DependentUpon>DetailedReportErrorDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Alerts\EmptyProteinsDlg.ja.resx">
       <DependentUpon>EmptyProteinsDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -1593,12 +1610,15 @@
     <EmbeddedResource Include="Alerts\SpectrumLibraryInfoDlg.zh-CHS.resx">
       <DependentUpon>SpectrumLibraryInfoDlg.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Alerts\UpgradeDlg.ja.resx">
+    <EmbeddedResource Include="Alerts\UpgradeDlg.resx">
       <DependentUpon>UpgradeDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\UpgradeLicenseDlg.ja.resx">
+      <DependentUpon>UpgradeLicenseDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Alerts\UpgradeDlg.zh-CHS.resx">
-      <DependentUpon>UpgradeDlg.cs</DependentUpon>
+    <EmbeddedResource Include="Alerts\UpgradeLicenseDlg.zh-CHS.resx">
+      <DependentUpon>UpgradeLicenseDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\ColumnChooser.ja.resx">
@@ -1627,7 +1647,19 @@
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Databinding\EditGroupComparisonDlg.zh-CHS.resx" />
+    <EmbeddedResource Include="Controls\Graphs\AllChromatogramsGraph.ja.resx">
+      <DependentUpon>AllChromatogramsGraph.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\AllChromatogramsGraph.zh-CHS.resx">
+      <DependentUpon>AllChromatogramsGraph.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\AsyncChromatogramsGraph2.ja.resx">
+      <DependentUpon>AsyncChromatogramsGraph2.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\AsyncChromatogramsGraph2.resx">
+      <DependentUpon>AsyncChromatogramsGraph2.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\AsyncChromatogramsGraph2.zh-CHS.resx">
       <DependentUpon>AsyncChromatogramsGraph2.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\Calibration\CalibrationForm.ja.resx">
@@ -1639,14 +1671,27 @@
     <EmbeddedResource Include="Controls\Graphs\Calibration\CalibrationForm.zh-CHS.resx">
       <DependentUpon>CalibrationForm.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\FileProgressControl.ja.resx">
+      <DependentUpon>FileProgressControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\FileProgressControl.resx">
       <DependentUpon>FileProgressControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\FileProgressControl.zh-CHS.resx">
+      <DependentUpon>FileProgressControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\ImportResultsRetryCountdownDlg.ja.resx">
+      <DependentUpon>ImportResultsRetryCountdownDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\ImportResultsRetryCountdownDlg.resx">
       <DependentUpon>ImportResultsRetryCountdownDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\ImportResultsRetryCountdownDlg.zh-CHS.resx">
+      <DependentUpon>ImportResultsRetryCountdownDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\EditGroupComparisonDlg.ja.resx">
       <DependentUpon>EditGroupComparisonDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\EditGroupComparisonDlg.resx">
       <DependentUpon>EditGroupComparisonDlg.cs</DependentUpon>
@@ -1740,9 +1785,15 @@
       <DependentUpon>AddPeakCompareDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\AssociateProteinsDlg.ja.resx">
+      <DependentUpon>AssociateProteinsDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="EditUI\AssociateProteinsDlg.resx">
       <DependentUpon>AssociateProteinsDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\AssociateProteinsDlg.zh-CHS.resx">
+      <DependentUpon>AssociateProteinsDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\ComparePeakPickingDlg.ja.resx">
       <DependentUpon>ComparePeakPickingDlg.cs</DependentUpon>
@@ -1751,7 +1802,13 @@
       <DependentUpon>ComparePeakPickingDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\MassErrorChartPropertyDlg.ja.resx">
+      <DependentUpon>MassErrorChartPropertyDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="EditUI\MassErrorChartPropertyDlg.resx">
+      <DependentUpon>MassErrorChartPropertyDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\MassErrorChartPropertyDlg.zh-CHS.resx">
       <DependentUpon>MassErrorChartPropertyDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\RefineProteinListDlg.ja.resx">
@@ -1997,6 +2054,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\FindNodeDlg.ja.resx">
       <DependentUpon>FindNodeDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\FindNodeDlg.zh-CHS.resx">
       <DependentUpon>FindNodeDlg.cs</DependentUpon>
@@ -2215,6 +2273,10 @@
     <EmbeddedResource Include="FileUI\ShareListDlg.zh-CHS.resx">
       <DependentUpon>ShareListDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Model\Databinding\Entities\ColumnToolTips.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>ColumnToolTips.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
     <EmbeddedResource Include="Model\Databinding\Entities\ColumnCaptions.zh-CHS.resx">
       <DependentUpon>ColumnCaptions.resx</DependentUpon>
       <SubType>Designer</SubType>
@@ -2292,12 +2354,13 @@
     </EmbeddedResource>
     <Content Include="Resources\Replicate.bmp" />
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\APOA1.sky" />
-    <EmbeddedResource Include="Model\Irt\StandardsDocuments\Biognosys.sky" />
+    <EmbeddedResource Include="Model\Irt\StandardsDocuments\Biognosys11.sky" />
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\Pierce.sky" />
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\Sigma.sky" />
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\CiRT.sky" />
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\Sciex.sky" />
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\RePLiCal.sky" />
+    <EmbeddedResource Include="Model\Irt\StandardsDocuments\Biognosys10.sky" />
     <None Include="Resources\StartPage\GroupedStudies_thumb.jpg" />
     <None Include="Resources\StartPage\DIA_thumb.jpg" />
     <None Include="Resources\StartPage\SmallMolecule_thumb.jpg" />
@@ -2323,7 +2386,13 @@
     <EmbeddedResource Include="FileUI\ChooseSchedulingReplicatesDlg.resx">
       <DependentUpon>ChooseSchedulingReplicatesDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\AddModificationsDlg.ja.resx">
+      <DependentUpon>AddModificationsDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\AddModificationsDlg.resx">
+      <DependentUpon>AddModificationsDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\AddModificationsDlg.zh-CHS.resx">
       <DependentUpon>AddModificationsDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\AddPathsDlg.ja.resx">
@@ -2589,7 +2658,13 @@
     <EmbeddedResource Include="SettingsUI\Irt\AddIrtStandardsDlg.zh-CHS.resx">
       <DependentUpon>AddIrtStandardsDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\Irt\AddIrtStandardsToDocumentDlg.ja.resx">
+      <DependentUpon>AddIrtStandardsToDocumentDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Irt\AddIrtStandardsToDocumentDlg.resx">
+      <DependentUpon>AddIrtStandardsToDocumentDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\Irt\AddIrtStandardsToDocumentDlg.zh-CHS.resx">
       <DependentUpon>AddIrtStandardsToDocumentDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Irt\CalibrateIrtDlg.ja.resx">
@@ -3030,9 +3105,11 @@
     <Compile Include="ToolsUI\ToolUpdatesDlg.Designer.cs">
       <DependentUpon>ToolUpdatesDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="UpgradeManager.cs" />
     <Compile Include="Util\AxisLabelScaler.cs" />
     <Compile Include="Util\BackgroundEventThreads.cs" />
     <Compile Include="Util\BioMassCalc.cs" />
+    <Compile Include="Util\LongOperationRunner.cs" />
     <Compile Include="Util\CultureUtil.cs" />
     <Compile Include="Util\DataGridViewPasteHandler.cs" />
     <Compile Include="Util\DataSourceUtil.cs" />
@@ -3049,7 +3126,9 @@
     <Compile Include="Util\IonInfo.cs" />
     <Compile Include="Util\Log.cs" />
     <Compile Include="Util\MemoryInfo.cs" />
-    <Compile Include="Util\PanoramaUtil.cs" />
+    <Compile Include="Util\PanoramaUtil.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Util\SystemMetrics.cs" />
     <Compile Include="Util\TextRendererHelper.cs" />
     <Compile Include="Util\UtilInstall.cs" />
@@ -3433,8 +3512,8 @@
     <EmbeddedResource Include="Alerts\SpectrumLibraryInfoDlg.resx">
       <DependentUpon>SpectrumLibraryInfoDlg.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Alerts\UpgradeDlg.resx">
-      <DependentUpon>UpgradeDlg.cs</DependentUpon>
+    <EmbeddedResource Include="Alerts\UpgradeLicenseDlg.resx">
+      <DependentUpon>UpgradeLicenseDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\ColumnChooser.resx">
@@ -3660,7 +3739,9 @@
     <EmbeddedResource Include="Resources\PopupBtn.bmp" />
     <EmbeddedResource Include="Resources\Save.bmp" />
     <EmbeddedResource Include="Resources\up-pro32.bmp" />
-    <EmbeddedResource Include="Model\Lib\BlibData\mapping.xml" />
+    <EmbeddedResource Include="Model\Lib\BlibData\mapping.xml">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources\Fragment.bmp" />
     <EmbeddedResource Include="Resources\FragmentLib.bmp" />
     <EmbeddedResource Include="SettingsUI\Irt\ChangeIrtPeptidesDlg.resx">

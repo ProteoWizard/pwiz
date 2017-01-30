@@ -146,7 +146,7 @@ void MonteCarloQonverter::Qonvert(PSMList& psmRows,
             }
         }
 
-        BOOST_LOG_SEV(logSource::get(), MessageSeverity::BriefInfo) << "The best Monte Carlo weights for PSMs of charge " << range.front().chargeState << " and terminal specificity " << range.front().bestSpecificity << " are (" << bestSolution << "), producing " << passingPSMs << " ids.";
+        BOOST_LOG_SEV(logSource::get(), MessageSeverity::BriefInfo) << "The best Monte Carlo weights for PSMs of charge " << range.front().chargeState << " and terminal specificity " << range.front().bestSpecificity << " are (" << *bestSolution << "), producing " << passingPSMs << " ids.";
 
         if (monteCarloWeightsByChargeAndBestSpecificity)
             BOOST_FOREACH(const PeptideSpectrumMatch& psm, range)

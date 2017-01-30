@@ -56,14 +56,27 @@ public ref class ReaderConfig
 	/// when true, allows for skipping 0 length checks (and thus skip re-reading data for ABI)
     bool acceptZeroLengthSpectra;
 
+    /// when true, allows certain vendor readers to produce profile data without zero intensity samples flanking each peak profile
+    bool ignoreZeroIntensityPoints;
+
     /// when true, all drift bins/scans in a frame/block are written in combined form instead of as individual spectra
     bool combineIonMobilitySpectra;
 
+    /// when true, if a reader cannot identify an instrument, an exception will be thrown asking users to report it
+    bool unknownInstrumentIsError;
+
+    /// when true, if a reader does not know what time zone was used to record a time, it will assume the time refers to the host's local time;
+    /// when false, the reader will treat times with unknown time zone as UTC
+    bool adjustUnknownTimeZonesToHostTimeZone;
+
     ReaderConfig()
-    :   simAsSpectra(false)
-    ,   srmAsSpectra(false)
-	,   acceptZeroLengthSpectra(false)
-    ,   combineIonMobilitySpectra(false)
+    : simAsSpectra(false)
+    , srmAsSpectra(false)
+    , acceptZeroLengthSpectra(false)
+    , ignoreZeroIntensityPoints(false)
+    , combineIonMobilitySpectra(false)
+    , unknownInstrumentIsError(false)
+    , adjustUnknownTimeZonesToHostTimeZone(true)
     {
     }
 };

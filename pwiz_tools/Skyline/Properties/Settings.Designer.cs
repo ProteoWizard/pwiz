@@ -466,18 +466,6 @@ namespace pwiz.Skyline.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string LibraryAuthority {
-            get {
-                return ((string)(this["LibraryAuthority"]));
-            }
-            set {
-                this["LibraryAuthority"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("0.95")]
         public double LibraryResultCutOff {
             get {
@@ -2311,6 +2299,18 @@ namespace pwiz.Skyline.Properties {
             }
             set {
                 this["ShowMassErrorLegend"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool UpdateCheckAtStartup {
+            get {
+                return ((bool)(this["UpdateCheckAtStartup"]));
+            }
+            set {
+                this["UpdateCheckAtStartup"] = value;
             }
         }
     }

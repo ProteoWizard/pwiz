@@ -53,6 +53,17 @@ const char* testMGF =
 "238.824036 10.019409\n"
 "239.531403 6.842983\n"
 "243.128693 89.586212\n"
+"END IONS\n"
+"BEGIN IONS\n"
+"PEPMASS=123.45\n"
+"TITLE=small.pwiz.0005.0005.2\n"
+"RTINSECONDS=234.56\n"
+"CHARGE=2- and 3-\n"
+"236.047043 11.674493\n"
+"237.237091 24.431984\n"
+"238.824036 10.019409\n"
+"239.531403 6.842983\n"
+"243.128693 89.586212\n"
 "END IONS\n";
 
 void test()
@@ -82,9 +93,10 @@ void test()
     // check easy functions
 
     unit_assert(sl.get());
-    unit_assert(sl->size() == 2);
+    unit_assert(sl->size() == 3);
     unit_assert(sl->find("index=0") == 0);
     unit_assert(sl->find("index=1") == 1);
+    unit_assert(sl->find("index=2") == 2);
 
     // find the second spectrum by TITLE field
     IndexList list = sl->findSpotID("small.pwiz.0004.0004.2");
@@ -172,6 +184,26 @@ void test()
         copy(pairs.begin(), pairs.end(), ostream_iterator<MZIntensityPair>(*os_, "\n"));
         *os_ << endl;
     }
+
+    // check scan 2
+
+    unit_assert(sl->spectrumIdentity(2).index == 2);
+    unit_assert(sl->spectrumIdentity(2).id == "index=2");
+
+    s = sl->spectrum(2, true);
+    unit_assert(s.get());
+    unit_assert(s->id == "index=2");
+    unit_assert(s->index == 2);
+    unit_assert(s->sourceFilePosition != -1);
+    unit_assert(s->cvParam(MS_spectrum_title).value == "small.pwiz.0005.0005.2");
+    unit_assert(s->cvParam(MS_ms_level).valueAs<int>() == 2);
+    unit_assert(s->hasCVParam(MS_negative_scan));
+    unit_assert(s->precursors.size() == 1);
+    Precursor& precursor2 = s->precursors[0];
+    unit_assert(precursor2.selectedIons.size() == 1);
+    unit_assert_equal(precursor2.selectedIons[0].cvParam(MS_selected_ion_m_z).valueAs<double>(), 123.45, 1e-5);
+    unit_assert_operator_equal("2", precursor2.selectedIons[0].cvParamChildren(MS_possible_charge_state)[0].value);
+    unit_assert_operator_equal("3", precursor2.selectedIons[0].cvParamChildren(MS_possible_charge_state)[1].value);
 }
 
 

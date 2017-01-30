@@ -68,7 +68,8 @@ namespace pwiz.Skyline.Util
                {BioMassCalc.Br,-1},
                {BioMassCalc.Cl,-1},
                {BioMassCalc.F, -1},
-               {"CH3COO", -1}, // Not L10N
+               {"CH3COO", -1}, // Deprotonated Hac // Not L10N
+               {"HCOO", -1}, // Formate (deprotonated FA)   // Not L10N
                {"NH4",1} // Not L10N
             };
 
@@ -250,7 +251,7 @@ namespace pwiz.Skyline.Util
             var outerRegex = new Regex(@"\[?(?<multM>\d*)M(?<labelCount>\d*)(?<label>[^\+\-]*)?(?<adduct>[\+\-][^\]]*)(\](?<declaredChargeCount>\d*)(?<declaredChargeSign>[+-]*)?)?", regexOptions); // Not L10N
             var innerRegex = new Regex(@"(?<oper>\+|\-)(?<multM>\d+)?(?<ion>[^-+]*)", regexOptions); // Not L10N
             int? declaredCharge = null;
-            int calculatedCharge = 0;
+            int? calculatedCharge = null;
             var molecule = Molecule.Parse(formula.Trim());
             adduct = (adduct??string.Empty).Trim();
             if (string.IsNullOrEmpty(adduct))
@@ -282,11 +283,11 @@ namespace pwiz.Skyline.Util
                 }
                 if (adductOperations.Equals("+")) // "[M+]" is legit // Not L10N
                 {
-                    calculatedCharge++;
+                    calculatedCharge = 1;
                 }
                 else if (adductOperations.Equals("-"))  // "[M-]" is presumably also legit // Not L10N
                 {
-                    calculatedCharge--;
+                    calculatedCharge = -1;
                 }
                 else
                 {
@@ -315,7 +316,7 @@ namespace pwiz.Skyline.Util
                         int ionCharge;
                         if (DICT_ADDUCT_ION_CHARGES.TryGetValue(ion, out ionCharge))
                         {
-                            calculatedCharge += ionCharge*multiplierM;
+                            calculatedCharge = (calculatedCharge ?? 0) + ionCharge * multiplierM;
                         }
                         string realname;
                         if (DICT_ADDUCT_NICKNAMES.TryGetValue(ion, out realname)) // Swap common nicknames like "DMSO" for "C2H6OS"
@@ -342,7 +343,7 @@ namespace pwiz.Skyline.Util
                     }
                 }
             }
-            charge = calculatedCharge;
+            charge = calculatedCharge ?? declaredCharge ?? 0;
             var resultMol = Molecule.FromDict(new ImmutableSortedList<string, int>(resultDict));
             if (!resultMol.Keys.All(k => BioMassCalc.MONOISOTOPIC.IsKnownSymbol(k)))
             {
@@ -352,7 +353,7 @@ namespace pwiz.Skyline.Util
             {
                 throw new InvalidOperationException(string.Format(Resources.BioMassCalc_ApplyAdductToFormula_Failed_parsing_adduct_description___0__, adduct));
             }
-            if (declaredCharge.HasValue && declaredCharge != calculatedCharge)
+            if (declaredCharge.HasValue && calculatedCharge.HasValue && declaredCharge != calculatedCharge)
             {
                 throw new InvalidOperationException(string.Format(Resources.BioMassCalc_ApplyAdductToFormula_Failed_parsing_adduct_description___0____declared_charge__1__does_not_agree_with_calculated_charge__2_, adduct, declaredCharge.Value, calculatedCharge));
             }

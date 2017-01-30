@@ -1023,7 +1023,12 @@ PWIZ_API_DECL proteome::DigestedPeptide digestedPeptide(const SpectrumIdentifica
         cleavageAgentRegexes = identdata::cleavageAgentRegexes(sip.enzymes);
 
         if (cleavageAgentRegexes.empty())
-            throw runtime_error("[identdata::digestedPeptide] unknown cleavage agent");
+        {
+            if (!sip.enzymes.enzymes.empty() && sip.enzymes.enzymes[0]->terminalSpecificity == Digestion::NonSpecific)
+                cleavageAgents.push_back(MS_unspecific_cleavage);
+            else
+                throw runtime_error("[identdata::digestedPeptide] unknown cleavage agent");
+        }
     }
 
     if (!hasValidFlankingSymbols(pe))
@@ -1197,7 +1202,7 @@ PWIZ_API_DECL string cleavageAgentRegex(const Enzyme& ez)
     {
         CVParam enzymeTerm = ez.enzymeName.cvParamChild(MS_cleavage_agent_name);
 
-        if (enzymeTerm.empty())
+        if (enzymeTerm.empty() && !ez.enzymeName.userParams.empty())
             enzymeTerm = CVParam(Digestion::getCleavageAgentByName(ez.enzymeName.userParams[0].name));
 
         try {return Digestion::getCleavageAgentRegex(enzymeTerm.cvid);} catch (exception&) {}

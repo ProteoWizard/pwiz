@@ -35,7 +35,7 @@ namespace pwiz.Skyline.Controls.Graphs
     /// <summary>
     /// A window that progressively displays chromatogram data during file import.
     /// </summary>
-    public partial class AllChromatogramsGraph : FormExDetailed
+    public partial class AllChromatogramsGraph : FormEx
     {
         private readonly Stopwatch _stopwatch;
         private int _selected = -1;
@@ -541,13 +541,20 @@ namespace pwiz.Skyline.Controls.Graphs
                 ProgressValue = 0
             })
             {
-                longWaitDlg.PerformWork(this, 800, progressMonitor =>
+                try
                 {
-                    using (var settingsChangeMonitor = new SrmSettingsChangeMonitor(progressMonitor, message, Program.MainWindow))
+                    longWaitDlg.PerformWork(this, 800, progressMonitor =>
                     {
-                        modifyAction(settingsChangeMonitor);
-                    }
-                });
+                        using (var settingsChangeMonitor = new SrmSettingsChangeMonitor(progressMonitor, message, Program.MainWindow))
+                        {
+                            modifyAction(settingsChangeMonitor);
+                        }
+                    });
+                }
+                catch (OperationCanceledException)
+                {
+                    // SrmSettingsChangeMonitor can throw OperationCancelledException without LongWaitDlg knowing about it.
+                }
             }
         }
 
@@ -670,12 +677,17 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void cbShowErrorDetails_CheckedChanged(object sender, EventArgs e)
         {
-            textBoxError.Text = SelectedControl.GetErrorLog(cbMoreInfo.Checked);
+            textBoxError.Text = GetSelectedControlErrorLog();
+        }
+
+        private string GetSelectedControlErrorLog()
+        {
+            return SelectedControl == null ? string.Empty : SelectedControl.GetErrorLog(cbMoreInfo.Checked);
         }
 
         private void btnCopyText_Click(object sender, EventArgs e)
         {
-            ClipboardHelper.SetClipboardText(this, SelectedControl.GetErrorLog(cbMoreInfo.Checked));
+            ClipboardHelper.SetClipboardText(this, GetSelectedControlErrorLog());
         }
 
         #region Testing Support

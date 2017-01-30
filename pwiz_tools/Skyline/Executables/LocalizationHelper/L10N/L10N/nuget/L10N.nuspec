@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>YuvalBoss.L10N</id>
-    <version>1.0.3.0</version>
+    <version>16.2</version>
     <title>L10N</title>
     <authors>Yuval Boss</authors>
     <owners>UW</owners>
@@ -14,7 +14,7 @@
     <copyright>Copyright 2015</copyright>
     <tags></tags>
 	<dependencies>
-      <dependency id="Wave" version="[3.0]" />
+      <dependency id="Wave" version="[6.0]" />
     </dependencies>
 <references>
       <group targetFramework=".NETFramework4.0">
@@ -23,7 +23,6 @@
     </references>
   </metadata>
 <files>
-    <file src="..\bin\Debug\YuvalBoss.L10N.dll"
-          target="lib\"/>
+    <file src="..\bin\Debug\YuvalBoss.L10N.dll" target="lib\"/>
   </files>
 </package>

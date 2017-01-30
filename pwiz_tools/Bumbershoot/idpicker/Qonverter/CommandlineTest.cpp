@@ -98,10 +98,15 @@ int testCommand(string command)
 {
     bal::replace_all(command, "idpQonvert.exe\"", "idpQonvert.exe\" -LogFilepath test.log ");
     bal::replace_all(command, "idpAssemble.exe\"", "idpAssemble.exe\" -LogFilepath test.log ");
+
     cout << "Running command: " << command << endl;
+    { ofstream outputLog("output.log", ios::app); outputLog << command << endl; }
+
     bpt::ptime start = bpt::microsec_clock::universal_time();
-    int result = system(command.c_str());
+    int result = system((command + " >> output.log").c_str());
     cout << endl << "Returned exit code " << result << "; time elapsed " << bpt::to_simple_string(bpt::microsec_clock::universal_time() - start) << endl;
+    { ofstream outputLog("output.log", ios::app); outputLog << endl << "Returned exit code " << result << "; time elapsed " << bpt::to_simple_string(bpt::microsec_clock::universal_time() - start) << endl; }
+
     return result;
 }
 
@@ -568,43 +573,6 @@ void testIdpAssemble(const string& idpQonvertPath, const string& idpAssemblePath
 
 void testIdpQuery(const string& idpQueryPath, const bfs::path& testDataPath)
 {
-    //    Protein, ProteinGroup, Cluster, Gene, GeneGroup
-    //    ------------------------------
-    //    Accession
-    //    GeneId
-    //    GeneGroup
-    //    DistinctPeptides
-    //    DistinctMatches
-    //    FilteredSpectra
-    //    IsDecoy
-    //    Cluster
-    //    ProteinGroup
-    //    Length
-    //    PercentCoverage
-    //    Sequence
-    //    Description
-    //    TaxonomyId
-    //    GeneName
-    //    GeneFamily
-    //    Chromosome
-    //    GeneDescription
-    //    iTRAQ4plex
-    //    iTRAQ8plex
-    //    TMT2plex
-    //    TMT6plex
-    //    PivotMatchesByGroup
-    //    PivotMatchesBySource
-    //    PivotPeptidesByGroup
-    //    PivotPeptidesBySource
-    //    PivotSpectraByGroup
-    //    PivotSpectraBySource
-    //    PivotITRAQByGroup
-    //    PivotITRAQBySource
-    //    PivotTMTByGroup
-    //    PivotTMTBySource
-    //    PeptideGroups
-    //    PeptideSequences
-
     string inputFilepath = (testDataPath / "merged.idpDB").string();
     string outputFilepath = (testDataPath / "merged.tsv").string();
     string quantifiedInputFilepath = (testDataPath / "merged-ITRAQ8plex.idpDB").string();
@@ -617,46 +585,47 @@ void testIdpQuery(const string& idpQueryPath, const bfs::path& testDataPath)
     BOOST_FOREACH(const bfs::path& intermediateFile, intermediateFiles)
         bfs::remove(intermediateFile);
 
-    vector<string> groupColumns;
-    groupColumns +=  "Protein", "ProteinGroup", "Cluster";
+    vector<string> proteinGroupColumns;
+    proteinGroupColumns +=  "Protein", "ProteinGroup", "Cluster";
 
-    string mainColumns = " Accession,GeneId,GeneGroup,DistinctPeptides,DistinctMatches,FilteredSpectra,IsDecoy,Cluster,ProteinGroup"
-                         ",Length,PercentCoverage,Sequence,Description,TaxonomyId,GeneName,GeneFamily,Chromosome,GeneDescription";
+    string mainProteinColumns = " Accession,GeneId,GeneGroup,DistinctPeptides,DistinctMatches,FilteredSpectra,IsDecoy,Cluster,ProteinGroup"
+                                ",Length,PercentCoverage,Sequence,Description,TaxonomyId,GeneName,GeneFamily,Chromosome,GeneDescription,PeptideGroups,PeptideSequences";
+    string expectedProteinHeader = bal::trim_copy(bal::replace_all_copy(mainProteinColumns, ",", "\t"));
 
     // run through all group modes with all columns when no gene metadata is embedded
-    BOOST_FOREACH(const string& groupColumn, groupColumns)
+    BOOST_FOREACH(const string& groupColumn, proteinGroupColumns)
     {
-        command = (format("%1%\"%2%\" %3% %4% \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainColumns % inputFilepath).str();
+        command = (format("%1%\"%2%\" %3% %4% \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainProteinColumns % inputFilepath).str();
         unit_assert_operator_equal(0, testCommand(command));
         unit_assert(bfs::exists(outputFilepath));
         bfs::rename(outputFilepath, testDataPath / ("merged-no-quantitation-" + groupColumn + ".tsv"));
 
-        command = (format("%1%\"%2%\" %3% %4%,iTRAQ4plex,PivotITRAQByGroup \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainColumns % inputFilepath).str();
+        command = (format("%1%\"%2%\" %3% %4%,iTRAQ4plex,PivotITRAQByGroup \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainProteinColumns % inputFilepath).str();
         unit_assert_operator_equal(0, testCommand(command));
         unit_assert(bfs::exists(outputFilepath));
         bfs::rename(outputFilepath, testDataPath / ("merged-empty-iTRAQ4plex-" + groupColumn + ".tsv"));
 
-        command = (format("%1%\"%2%\" %3% %4%,iTRAQ8plex,PivotITRAQBySource \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainColumns % inputFilepath).str();
+        command = (format("%1%\"%2%\" %3% %4%,iTRAQ8plex,PivotITRAQBySource \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainProteinColumns % inputFilepath).str();
         unit_assert_operator_equal(0, testCommand(command));
         unit_assert(bfs::exists(outputFilepath));
         bfs::rename(outputFilepath, testDataPath / ("merged-empty-iTRAQ8plex-" + groupColumn + ".tsv"));
 
-        command = (format("%1%\"%2%\" %3% %4%,TMT2plex,PivotTMTByGroup \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainColumns % inputFilepath).str();
+        command = (format("%1%\"%2%\" %3% %4%,TMT2plex,PivotTMTByGroup \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainProteinColumns % inputFilepath).str();
         unit_assert_operator_equal(0, testCommand(command));
         unit_assert(bfs::exists(outputFilepath));
         bfs::rename(outputFilepath, testDataPath / ("merged-empty-TMT2plex-" + groupColumn + ".tsv"));
 
-        command = (format("%1%\"%2%\" %3% %4%,TMT6plex,PivotTMTBySource \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainColumns % inputFilepath).str();
+        command = (format("%1%\"%2%\" %3% %4%,TMT6plex,PivotTMTBySource \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainProteinColumns % inputFilepath).str();
         unit_assert_operator_equal(0, testCommand(command));
         unit_assert(bfs::exists(outputFilepath));
         bfs::rename(outputFilepath, testDataPath / ("merged-empty-TMT6plex-" + groupColumn + ".tsv"));
 
-        command = (format("%1%\"%2%\" %3% %4%,TMT10plex,PivotTMTBySource \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainColumns % inputFilepath).str();
+        command = (format("%1%\"%2%\" %3% %4%,TMT10plex,PivotTMTBySource \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainProteinColumns % inputFilepath).str();
         unit_assert_operator_equal(0, testCommand(command));
         unit_assert(bfs::exists(outputFilepath));
         bfs::rename(outputFilepath, testDataPath / ("merged-empty-TMT10plex-" + groupColumn + ".tsv"));
 
-        command = (format("%1%\"%2%\" %3% %4%,iTRAQ8plex,PivotITRAQBySource \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainColumns % quantifiedInputFilepath).str();
+        command = (format("%1%\"%2%\" %3% %4%,iTRAQ8plex,PivotITRAQBySource \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainProteinColumns % quantifiedInputFilepath).str();
         unit_assert_operator_equal(0, testCommand(command));
         unit_assert(bfs::exists(quantifiedOutputFilepath));
         bfs::rename(quantifiedOutputFilepath, testDataPath / ("merged-quantified-iTRAQ8plex-" + groupColumn + ".tsv"));
@@ -664,29 +633,37 @@ void testIdpQuery(const string& idpQueryPath, const bfs::path& testDataPath)
 
 
     // test that Gene and GeneGroup modes issue an error when gene metadata is not embedded
-    command = (format("%1%\"%2%\" %3% %4% \"%5%\"%1%") % commandQuote % idpQueryPath % "Gene" % mainColumns % inputFilepath).str();
+    command = (format("%1%\"%2%\" %3% %4% \"%5%\"%1%") % commandQuote % idpQueryPath % "Gene" % mainProteinColumns % inputFilepath).str();
     unit_assert(0 < testCommand(command));
     unit_assert(!bfs::exists(outputFilepath));
 
-    command = (format("%1%\"%2%\" %3% %4% \"%5%\"%1%") % commandQuote % idpQueryPath % "GeneGroup" % mainColumns % inputFilepath).str();
+    command = (format("%1%\"%2%\" %3% %4% \"%5%\"%1%") % commandQuote % idpQueryPath % "GeneGroup" % mainProteinColumns % inputFilepath).str();
     cout << endl << command << endl;
     unit_assert(0 < testCommand(command));
     unit_assert(!bfs::exists(outputFilepath));
 
 
-    groupColumns += "Gene", "GeneGroup";
-    IDPicker::Embedder::embedGeneMetadata(inputFilepath);
-    IDPicker::Embedder::embedGeneMetadata(quantifiedInputFilepath);
+    proteinGroupColumns += "Gene", "GeneGroup";
+
+    try
+    {
+        IDPicker::Embedder::embedGeneMetadata(inputFilepath);
+        IDPicker::Embedder::embedGeneMetadata(quantifiedInputFilepath);
+    }
+    catch (exception& e)
+    {
+        throw runtime_error(string("[testIdpQuery] error embedding gene metadata: ") + e.what());
+    }
 
     // run through all the group modes with all columns after embedding gene metadata
-    BOOST_FOREACH(const string& groupColumn, groupColumns)
+    BOOST_FOREACH(const string& groupColumn, proteinGroupColumns)
     {
-        command = (format("%1%\"%2%\" %3% %4% \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainColumns % inputFilepath).str();
+        command = (format("%1%\"%2%\" %3% %4% \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainProteinColumns % inputFilepath).str();
         unit_assert_operator_equal(0, testCommand(command));
         unit_assert(bfs::exists(outputFilepath));
         bfs::rename(outputFilepath, testDataPath / ("merged-no-quantitation-" + groupColumn + ".tsv"));
 
-        command = (format("%1%\"%2%\" %3% %4%,iTRAQ4plex,PivotITRAQByGroup \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainColumns % inputFilepath).str();
+        command = (format("%1%\"%2%\" %3% %4%,iTRAQ4plex,PivotITRAQByGroup \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainProteinColumns % inputFilepath).str();
         unit_assert_operator_equal(0, testCommand(command));
         unit_assert(bfs::exists(outputFilepath));
         bfs::rename(outputFilepath, testDataPath / ("merged-empty-iTRAQ4plex-" + groupColumn + ".tsv"));
@@ -694,31 +671,102 @@ void testIdpQuery(const string& idpQueryPath, const bfs::path& testDataPath)
             ifstream outputFile((testDataPath / ("merged-empty-iTRAQ4plex-" + groupColumn + ".tsv")).string().c_str());
             string line;
             getline(outputFile, line);
-            unit_assert_operator_equal("Accession\tGeneId\tGeneGroup\tDistinctPeptides\tDistinctMatches\tFilteredSpectra\tIsDecoy\tCluster\tProteinGroup\tLength\tPercentCoverage\tSequence\tDescription\tTaxonomyId\tGeneName\tGeneFamily\tChromosome\tGeneDescription\t", line);
+            unit_assert_operator_equal(expectedProteinHeader, line);
             // TODO: figure out how to test the output of the second line
+            getline(outputFile, line);
+            unit_assert_operator_equal(std::count(expectedProteinHeader.begin(), expectedProteinHeader.end(), '\t'), std::count(line.begin(), line.end(), '\t'));
         }
 
-        command = (format("%1%\"%2%\" %3% %4%,iTRAQ8plex,PivotITRAQBySource \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainColumns % inputFilepath).str();
+        command = (format("%1%\"%2%\" %3% %4%,iTRAQ8plex,PivotITRAQBySource \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainProteinColumns % inputFilepath).str();
         unit_assert_operator_equal(0, testCommand(command));
         unit_assert(bfs::exists(outputFilepath));
         bfs::rename(outputFilepath, testDataPath / ("merged-empty-iTRAQ8plex-" + groupColumn + ".tsv"));
 
-        command = (format("%1%\"%2%\" %3% %4%,TMT2plex,PivotTMTByGroup \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainColumns % inputFilepath).str();
+        command = (format("%1%\"%2%\" %3% %4%,TMT2plex,PivotTMTByGroup \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainProteinColumns % inputFilepath).str();
         unit_assert_operator_equal(0, testCommand(command));
         unit_assert(bfs::exists(outputFilepath));
         bfs::rename(outputFilepath, testDataPath / ("merged-empty-TMT2plex-" + groupColumn + ".tsv"));
 
-        command = (format("%1%\"%2%\" %3% %4%,TMT6plex,PivotTMTBySource \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainColumns % inputFilepath).str();
+        command = (format("%1%\"%2%\" %3% %4%,TMT6plex,PivotTMTBySource \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainProteinColumns % inputFilepath).str();
         unit_assert_operator_equal(0, testCommand(command));
         unit_assert(bfs::exists(outputFilepath));
         bfs::rename(outputFilepath, testDataPath / ("merged-empty-TMT6plex-" + groupColumn + ".tsv"));
 
-        command = (format("%1%\"%2%\" %3% %4%,TMT10plex,PivotTMTBySource \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainColumns % inputFilepath).str();
+        command = (format("%1%\"%2%\" %3% %4%,TMT10plex,PivotTMTBySource \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainProteinColumns % inputFilepath).str();
         unit_assert_operator_equal(0, testCommand(command));
         unit_assert(bfs::exists(outputFilepath));
         bfs::rename(outputFilepath, testDataPath / ("merged-empty-TMT10plex-" + groupColumn + ".tsv"));
 
-        command = (format("%1%\"%2%\" %3% %4%,iTRAQ8plex,PivotITRAQBySource \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainColumns % quantifiedInputFilepath).str();
+        command = (format("%1%\"%2%\" %3% %4%,iTRAQ8plex,PivotITRAQBySource \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainProteinColumns % quantifiedInputFilepath).str();
+        unit_assert_operator_equal(0, testCommand(command));
+        unit_assert(bfs::exists(quantifiedOutputFilepath));
+        bfs::rename(quantifiedOutputFilepath, testDataPath / ("merged-quantified-iTRAQ8plex-" + groupColumn + ".tsv"));
+    }
+
+    vector<string> peptideGroupColumns;
+    peptideGroupColumns += "Peptide", "PeptideGroup", "DistinctMatch";
+
+    string mainPeptideColumns = " Sequence,MonoisotopicMass,MolecularWeight,ProteinAccessions,GeneIds,GeneGroups,DistinctPeptides,DistinctMatches,FilteredSpectra,IsDecoy,Cluster,ProteinGroups"
+                                ",Length,ProteinDescriptions,TaxonomyIds,GeneNames,GeneFamilies,Chromosomes,GeneDescriptions,PeptideGroup,Instances,Modifications,Charges,ProteinCount,ProteinGroupCount,DistinctMatches,FilteredSpectra";
+    string expectedPeptideHeader = bal::trim_copy(bal::replace_all_copy(mainPeptideColumns, ",", "\t"));
+
+    // run through all the peptide group modes with all columns after embedding gene metadata
+    BOOST_FOREACH(const string& groupColumn, peptideGroupColumns)
+    {
+        command = (format("%1%\"%2%\" %3% %4% \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainPeptideColumns % inputFilepath).str();
+        unit_assert_operator_equal(0, testCommand(command));
+        unit_assert(bfs::exists(outputFilepath));
+        bfs::rename(outputFilepath, testDataPath / ("merged-no-quantitation-" + groupColumn + ".tsv"));
+
+        command = (format("%1%\"%2%\" %3% %4%,iTRAQ8plex,PivotITRAQBySource \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainPeptideColumns % inputFilepath).str();
+        unit_assert_operator_equal(0, testCommand(command));
+        unit_assert(bfs::exists(outputFilepath));
+        bfs::rename(outputFilepath, testDataPath / ("merged-empty-iTRAQ8plex-" + groupColumn + ".tsv"));
+        {
+            ifstream outputFile((testDataPath / ("merged-empty-iTRAQ8plex-" + groupColumn + ".tsv")).string().c_str());
+            string line;
+            getline(outputFile, line);
+            unit_assert_operator_equal(expectedPeptideHeader, line);
+            // TODO: figure out how to test the output of the second line
+            getline(outputFile, line);
+            unit_assert_operator_equal(std::count(expectedPeptideHeader.begin(), expectedPeptideHeader.end(), '\t'), std::count(line.begin(), line.end(), '\t'));
+        }
+
+        command = (format("%1%\"%2%\" %3% %4%,iTRAQ8plex,PivotITRAQBySource \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainPeptideColumns % quantifiedInputFilepath).str();
+        unit_assert_operator_equal(0, testCommand(command));
+        unit_assert(bfs::exists(quantifiedOutputFilepath));
+        bfs::rename(quantifiedOutputFilepath, testDataPath / ("merged-quantified-iTRAQ8plex-" + groupColumn + ".tsv"));
+    }
+
+    vector<string> modificationGroupColumns;
+    modificationGroupColumns += "Modification", "DeltaMass", "ModifiedSite", "ProteinSite";
+
+    string mainModificationColumns = " ProteinSite,ModifiedSite,MonoDeltaMass,AvgDeltaMass,ProteinOffsets,PeptideSequences,DistinctPeptides,DistinctMatches,FilteredSpectra";
+    string expectedModificationHeader = bal::trim_copy(bal::replace_all_copy(mainModificationColumns, ",", "\t"));
+
+    // run through all the peptide group modes with all columns after embedding gene metadata
+    BOOST_FOREACH(const string& groupColumn, modificationGroupColumns)
+    {
+        command = (format("%1%\"%2%\" %3% %4% \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainModificationColumns % inputFilepath).str();
+        unit_assert_operator_equal(0, testCommand(command));
+        unit_assert(bfs::exists(outputFilepath));
+        bfs::rename(outputFilepath, testDataPath / ("merged-no-quantitation-" + groupColumn + ".tsv"));
+
+        command = (format("%1%\"%2%\" %3% %4%,iTRAQ8plex,PivotITRAQBySource \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainModificationColumns % inputFilepath).str();
+        unit_assert_operator_equal(0, testCommand(command));
+        unit_assert(bfs::exists(outputFilepath));
+        bfs::rename(outputFilepath, testDataPath / ("merged-empty-iTRAQ8plex-" + groupColumn + ".tsv"));
+        {
+            ifstream outputFile((testDataPath / ("merged-empty-iTRAQ8plex-" + groupColumn + ".tsv")).string().c_str());
+            string line;
+            getline(outputFile, line);
+            unit_assert_operator_equal(expectedModificationHeader, line);
+            // TODO: figure out how to test the output of the second line
+            getline(outputFile, line);
+            unit_assert_operator_equal(std::count(expectedModificationHeader.begin(), expectedModificationHeader.end(), '\t'), std::count(line.begin(), line.end(), '\t'));
+        }
+
+        command = (format("%1%\"%2%\" %3% %4%,iTRAQ8plex,PivotITRAQBySource \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainModificationColumns % quantifiedInputFilepath).str();
         unit_assert_operator_equal(0, testCommand(command));
         unit_assert(bfs::exists(quantifiedOutputFilepath));
         bfs::rename(quantifiedOutputFilepath, testDataPath / ("merged-quantified-iTRAQ8plex-" + groupColumn + ".tsv"));
@@ -728,6 +776,7 @@ void testIdpQuery(const string& idpQueryPath, const bfs::path& testDataPath)
     {
         string quantifiedInputFilepath = (testDataPath / "merged-TMT10plex-withIsobaricSampleMapping.idpDB").string();
         string quantifiedOutputFilepath = (testDataPath / "merged-TMT10plex-withIsobaricSampleMapping.tsv").string();
+        string expectedIsobaricSampleMappingHeader = "Accession\t201203-TMT2\t201203-TMT3\t201203-TMT5\t201203-TMT7\t201203-TMT8\t201203-TMT9\t201203-TMT10\t201208-TMT1\t201208-TMT2\t201208-TMT3\t201208-TMT5\t201208-TMT7\t201208-TMT8\t201208-TMT9";
 
         command = (format("%1%\"%2%\" ProteinGroup Accession,PivotTMTByGroup \"%3%\"%1%") % commandQuote % idpQueryPath % quantifiedInputFilepath).str();
         unit_assert_operator_equal(0, testCommand(command));
@@ -738,8 +787,10 @@ void testIdpQuery(const string& idpQueryPath, const bfs::path& testDataPath)
             getline(outputFile, line);
             // /201203 Empty,201203-TMT2,201203-TMT3,Empty,201203-TMT5,Reference,201203-TMT7,201203-TMT8,201203-TMT9,201203-TMT10
             // /201208 201208-TMT1,201208-TMT2,201208-TMT3,Empty,201208-TMT5,Reference,201208-TMT7,201208-TMT8,201208-TMT9,Empty
-            unit_assert_operator_equal("Accession\t201203-TMT2\t201203-TMT3\t201203-TMT5\t201203-TMT7\t201203-TMT8\t201203-TMT9\t201203-TMT10\t201208-TMT1\t201208-TMT2\t201208-TMT3\t201208-TMT5\t201208-TMT7\t201208-TMT8\t201208-TMT9\t", line);
+            unit_assert_operator_equal(expectedIsobaricSampleMappingHeader, line);
             // TODO: figure out how to test the output of the second line
+            getline(outputFile, line);
+            unit_assert_operator_equal(std::count(expectedIsobaricSampleMappingHeader.begin(), expectedIsobaricSampleMappingHeader.end(), '\t'), std::count(line.begin(), line.end(), '\t'));
         }
     }
 }
@@ -806,7 +857,7 @@ int main(int argc, char* argv[])
     }
     catch (exception& e)
     {
-        TEST_FAILED(e.what())
+        TEST_FAILED(string("[CommandlineTest] ") + e.what())
     }
     catch (...)
     {

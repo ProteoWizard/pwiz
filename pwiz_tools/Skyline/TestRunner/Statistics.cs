@@ -98,7 +98,7 @@ namespace TestRunner
         }
 
         /// <summary>
-        /// Calculates the stadard deviation (sqrt(variance)) of the set
+        /// Calculates the standard deviation (sqrt(variance)) of the set
         /// of numbers.
         /// </summary>
         /// <returns>Standard deviation</returns>

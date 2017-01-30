@@ -68,7 +68,7 @@ namespace pwiz.Skyline.Model.Results
             RawIntensities = Intensities = intensities;
             RawMassErrors = massErrors;
             RawScanIds = ScanIndexes = scanIds;
-            if (result)
+            if (result && RawTimes.Any())
             {
                 Key = Key.ChangeOptionalTimes(RawTimes.First(), RawTimes.Last(), RawCenterOfGravityTime);
             }
@@ -437,6 +437,10 @@ namespace pwiz.Skyline.Model.Results
             return result;
         }
 
+        public override string ToString()
+        {
+            return Key + string.Format(" ({0})", ProviderId);   // Not L10N
+        }
     }
 
     internal sealed class ChromDataPeak : ITransitionPeakData<IDetailedPeakData>, IDetailedPeakData

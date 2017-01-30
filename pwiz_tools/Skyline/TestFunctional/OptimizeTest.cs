@@ -704,9 +704,9 @@ namespace pwiz.SkylineTestFunctional
             var dlgExportFinal2 = ShowDialog<ExportMethodDlg>(SkylineWindow.ShowExportTransitionListDlg);
             RunUI(() =>
             {
-                dlgExportFinal2.OptimizeType = ExportOptimize.NONE;
-                dlgExportFinal2.OkDialog(outTransitionsFinalWithOptLib);
+                dlgExportFinal2.OptimizeType = ExportOptimize.NONE;                
             });
+            OkDialog(dlgExportFinal2, () => dlgExportFinal2.OkDialog(outTransitionsFinalWithOptLib));
             AssertEx.FileEquals(outTransitionsFinalWithOptLib, TestFilesDir.GetTestPath(@"covdata\cov_final_expected2.csv"));
 
             // Remove all results and export again, relying on the values in the library (3 values will be missing)

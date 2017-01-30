@@ -18,13 +18,22 @@
  */
 package edu.washington.gs.skyline.model.quantification;
 
+import java.awt.*;
+
 public enum SampleType {
-    unknown,
-    standard,
-    qc,
-    solvent,
-    blank,
-    double_blank;
+    unknown(Color.black),
+    standard(Color.gray),
+    qc(Color.green),
+    solvent(new Color(255,226,43)),
+    blank(Color.blue),
+    double_blank(new Color(255, 230, 216));
+    private Color color;
+    private SampleType(Color color) {
+        this.color = color;
+    }
+    public Color getColor() {
+        return color;
+    }
     public static SampleType fromName(String name) {
         if (name == null || 0 == name.length()) {
             return unknown;

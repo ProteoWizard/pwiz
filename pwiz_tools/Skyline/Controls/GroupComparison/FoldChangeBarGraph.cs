@@ -68,6 +68,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             {
                 _bindingListSource = FoldChangeBindingSource.GetBindingListSource();
                 _bindingListSource.ListChanged += BindingListSourceOnListChanged;
+                _bindingListSource.AllRowsChanged += (sender, args)=>QueueUpdateGraph();
                 if (_skylineWindow == null)
                 {
                     _skylineWindow = ((SkylineDataSchema) _bindingListSource.ViewInfo.DataSchema).SkylineWindow;

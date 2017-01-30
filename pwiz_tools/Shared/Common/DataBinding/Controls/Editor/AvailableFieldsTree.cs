@@ -64,6 +64,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                 };
             ImageList.Images.AddRange(ImagelistImages);
             DrawMode = TreeViewDrawMode.OwnerDrawText;
+            ShowNodeToolTips = true;
         }
         [Browsable(false)]
         public ColumnDescriptor RootColumn
@@ -153,6 +154,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             var nodeData = new NodeData(columnDescriptor);
             node.Tag = nodeData;
             node.Text = columnDescriptor.GetColumnCaption(ColumnCaptionType.localized);
+            node.ToolTipText = columnDescriptor.Description;
             UpdateNode(node);
             node.Nodes.Clear();
             node.Nodes.Add(new TreeNode {Tag = NodeData.UninitializedTag});

@@ -19,20 +19,14 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 
 namespace pwiz.Common.DataBinding.RowSources
 {
-    public class BindingListSupport<T> : Collection<T>, IBindingList
+    public class BindingListSupport<T> : WrappedCollection<T>, IBindingList
     {
         private HashSet<ListChangedEventHandler> _eventHandlers;
-
-        public BindingListSupport(IList<T> list) : base(list)
-        {
-            AllowEdit = true;
-        }
 
         public BindingListSupport()
         {
@@ -44,24 +38,24 @@ namespace pwiz.Common.DataBinding.RowSources
             throw new InvalidOperationException();
         }
 
-        public void AddIndex(PropertyDescriptor property)
+        public virtual void AddIndex(PropertyDescriptor property)
         {
         }
 
-        public void ApplySort(PropertyDescriptor property, ListSortDirection direction)
+        public virtual void ApplySort(PropertyDescriptor property, ListSortDirection direction)
         {
         }
 
-        public int Find(PropertyDescriptor property, object key)
+        public virtual int Find(PropertyDescriptor property, object key)
         {
             return -1;
         }
 
-        public void RemoveIndex(PropertyDescriptor property)
+        public virtual void RemoveIndex(PropertyDescriptor property)
         {
         }
 
-        public void RemoveSort()
+        public virtual void RemoveSort()
         {
         }
 

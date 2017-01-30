@@ -316,7 +316,7 @@ namespace Test
         [TestCategory("Model")]
         public void TestSchemaUpdater()
         {
-            Assert.AreEqual(15, SchemaUpdater.CurrentSchemaRevision);
+            Assert.AreEqual(16, SchemaUpdater.CurrentSchemaRevision);
 
             var testModel = new TestModel() { TestContext = TestContext };
             TestModel.ClassInitialize(TestContext);
@@ -326,6 +326,9 @@ namespace Test
             string filename = null;
 
             // test all revisions without a data filter applied
+            // we don't need to test upgrade from 15 to 17; the extra column (PrecursorMzTolerance) is ignored
+            // we don't need to test upgrade from 14 to 15; the extra table (IsobaricSampleMapping) is ignored
+            // we don't need to test upgrade from 13 to 14; the extra column (QuantitationSettings) are ignored
             // we don't need to test upgrade from 12 to 13; the extra table (PeptideModificationProbability) is ignored and necessary for the current NHibernate bindings
             // we don't need to test upgrade from 11 to 12; the changed table (XICMetrics) is ignored
             // we don't need to test upgrade from 10 to 11; the extra columns (GeneGroups, Genes) are ignored

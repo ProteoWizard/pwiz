@@ -387,7 +387,7 @@ namespace pwiz.Skyline.Model.Databinding
             return null;
         }
 
-        public static IEnumerable<PropertyDescriptor> ListProperties(SrmDocument document, Type componentType)
+        public static IEnumerable<RatioPropertyDescriptor> ListProperties(SrmDocument document, Type componentType)
         {
             var modifications = document.Settings.PeptideSettings.Modifications;
             var propertyNames = new List<string>();

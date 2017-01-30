@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using pwiz.BiblioSpec;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -69,9 +70,9 @@ namespace pwiz.Skyline.Model.Lib
         public LibraryBuildAction Action { get; set; }
         public bool KeepRedundant { get; set; }
         public double? CutOffScore { get; set; }
-        public string Authority { get; set; }
         public string Id { get; set; }
         public bool IncludeAmbiguousMatches { get; set; }
+        public IrtStandard IrtStandard { get; set; }
 
         public IList<string> InputFiles
         {
@@ -120,7 +121,6 @@ namespace pwiz.Skyline.Model.Lib
             string redundantLibrary = BiblioSpecLiteSpec.GetRedundantName(OutputPath);
             var blibBuilder = new BlibBuild(redundantLibrary, InputFiles, TargetSequences)
             {
-                Authority = Authority,
                 IncludeAmbiguousMatches = IncludeAmbiguousMatches,
                 CutOffScore = CutOffScore,
                 Id = Id,
@@ -157,6 +157,7 @@ namespace pwiz.Skyline.Model.Lib
                     {
                         return false;
                     }
+
                     saver.Commit();
                 }
             }

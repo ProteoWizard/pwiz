@@ -30,6 +30,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib.ChromLib;
 using pwiz.Skyline.Model.Lib.Midas;
 using pwiz.Skyline.Model.Results;
@@ -141,14 +142,14 @@ namespace pwiz.Skyline.Model.Lib
                         var midasLibPath = MidasLibSpec.GetLibraryFileName(container.DocumentFilePath);
                         midasLibSpec = (MidasLibSpec)LibrarySpec.CreateFromPath(MidasLibSpec.DEFAULT_NAME, midasLibPath);
                     }
-                    MidasLibrary.AddSpectra(midasLibSpec.FilePath, missingMidasFiles.Select(f => new MsDataFilePath(f)).ToArray(), new LoadMonitor(this, container, null), out failedMidasFiles);
+                    MidasLibrary.AddSpectra(midasLibSpec.FilePath, missingMidasFiles.Select(f => new MsDataFilePath(f)).ToArray(), docCurrent, new LoadMonitor(this, container, null), out failedMidasFiles);
                     if (failedMidasFiles.Count < missingMidasFiles.Length)
                     {
                         if (!newMidasLibSpec)
                             ReloadLibraries(container, midasLibSpec);
                         midasLibrary = (MidasLibrary) LoadLibrary(midasLibSpec, () => new LoadMonitor(this, container, !newMidasLibSpec ? midasLibSpec : null));
 
-                        if (!dictLibraries.ContainsKey(midasLibSpec.Name))
+                        if (midasLibrary != null && !dictLibraries.ContainsKey(midasLibSpec.Name))
                             dictLibraries.Add(midasLibSpec.Name, midasLibrary);
                     }
                     else
@@ -336,6 +337,7 @@ namespace pwiz.Skyline.Model.Lib
             public LibrarySpec LibrarySpec { get; private set; }
             public BuildFunction BuildFunc { get; private set; }
             public string ExtraMessage { get; set; }
+            public IrtStandard IrtStandard { get; set; }
         }
 
         public void BuildLibrary(IDocumentContainer container, ILibraryBuilder builder, AsyncCallback callback)
@@ -367,9 +369,17 @@ namespace pwiz.Skyline.Model.Lib
             {
                 success = builder.BuildLibrary(monitor);
                 var biblioSpecLiteBuilder = builder as BiblioSpecLiteBuilder;
-                if (null != biblioSpecLiteBuilder && !string.IsNullOrEmpty(biblioSpecLiteBuilder.AmbiguousMatchesMessage))
+                if (null != biblioSpecLiteBuilder)
                 {
-                    buildState.ExtraMessage = biblioSpecLiteBuilder.AmbiguousMatchesMessage;
+                    if (!string.IsNullOrEmpty(biblioSpecLiteBuilder.AmbiguousMatchesMessage))
+                    {
+                        buildState.ExtraMessage = biblioSpecLiteBuilder.AmbiguousMatchesMessage;
+                    }
+                    if (biblioSpecLiteBuilder.IrtStandard != null &&
+                        biblioSpecLiteBuilder.IrtStandard != IrtStandard.NULL)
+                    {
+                        buildState.IrtStandard = biblioSpecLiteBuilder.IrtStandard;
+                    }
                 }
             }
 
@@ -712,6 +722,33 @@ namespace pwiz.Skyline.Model.Lib
         public virtual IList<RetentionTimeSource> ListRetentionTimeSources()
         {
             return new RetentionTimeSource[0];
+        }
+
+        public IEnumerable<IRetentionTimeProvider> RetentionTimeProvidersIrt
+        {
+            get
+            {
+                LibraryRetentionTimes irts;
+                if (TryGetIrts(out irts))
+                    yield return irts;
+            }
+        }
+
+        public IEnumerable<IRetentionTimeProvider> RetentionTimeProviders
+        {
+            get
+            {
+                var fileCount = FileCount;
+                if (!fileCount.HasValue)
+                    yield break;
+
+                for (var i = 0; i < fileCount.Value; i++)
+                {
+                    LibraryRetentionTimes retentionTimes;
+                    if (TryGetRetentionTimes(i, out retentionTimes))
+                        yield return retentionTimes;
+                }
+            }
         }
         
         #region File reading utility functions
@@ -1474,11 +1511,13 @@ namespace pwiz.Skyline.Model.Lib
     /// </summary>
     public class SpectrumMzInfo
     {
+        public string SourceFile { get; set; }
         public LibKey Key { get; set; }
         public double PrecursorMz { get; set; }
+        public double? RetentionTime { get; set; }
         public IsotopeLabelType Label { get; set; }
         public SpectrumPeaksInfo SpectrumPeaks { get; set; }
-        public double? RetentionTime { get; set; }
+        public List<Tuple<string, double, bool>> RetentionTimes { get; set; } // (File, RT, IsBest)
 
         public const double PRECURSOR_MZ_TOL = 0.001;
 
@@ -1509,9 +1548,11 @@ namespace pwiz.Skyline.Model.Lib
             var newPeaks = peaks.Concat(peaksOther).ToArray();
             return new SpectrumMzInfo
             {
+                SourceFile = infoOther.SourceFile,
                 Key = infoOther.Key,
                 Label = infoOther.Label,
                 PrecursorMz = infoOther.PrecursorMz,
+                RetentionTime = infoOther.RetentionTime,
                 SpectrumPeaks = new SpectrumPeaksInfo(newPeaks)
             };
         }
@@ -1542,15 +1583,16 @@ namespace pwiz.Skyline.Model.Lib
             var spectrumMzInfos = new List<SpectrumMzInfo>();
             foreach (var key in library.Keys)
             {
-                SpectrumPeaksInfo peaks;
-                if (!library.TryLoadSpectrum(key, out peaks))
+                var info = library.GetSpectra(key, null, LibraryRedundancy.best).FirstOrDefault();
+                if (info == null)
                 {
                     throw new IOException(string.Format(Resources.SpectrumMzInfo_GetInfoFromLibrary_Library_spectrum_for_sequence__0__is_missing_, key.Sequence));
                 }
                 spectrumMzInfos.Add(new SpectrumMzInfo
                 {
+                    SourceFile = info.FileName,
                     Key = key,
-                    SpectrumPeaks = peaks
+                    SpectrumPeaks = info.SpectrumPeaksInfo
                 });
             }
             return spectrumMzInfos;
@@ -1768,8 +1810,10 @@ namespace pwiz.Skyline.Model.Lib
         private readonly byte[] _key;
 
         public LibKey(string sequence, int charge)
-            : this(Encoding.UTF8.GetBytes(sequence), 0, sequence.Length, charge)
         {
+            _key = new byte[sequence.Length + 1];
+            _key[0] = (byte)charge;
+            Encoding.ASCII.GetBytes(sequence, 0, sequence.Length, _key, 1);
         }
 
         public LibKey(byte[] sequence, int start, int len, int charge)
@@ -1904,7 +1948,7 @@ namespace pwiz.Skyline.Model.Lib
             var precursor = PrecursorMz.GetValueOrDefault().ToString("0.000", CultureInfo.CurrentCulture); // Not L10N
             if (!HasRetentionTime)
                 return precursor;
-            var rt = RetentionTime.GetValueOrDefault().ToString("0.000", CultureInfo.CurrentCulture); // Not L10N
+            var rt = RetentionTime.GetValueOrDefault().ToString("0.00", CultureInfo.CurrentCulture); // Not L10N
             return string.Format("{0} ({1})", precursor, rt); // Not L10N
         }
 

@@ -193,4 +193,10 @@
   <data name="GroupComparisonViewContext_Delete_Delete_items" xml:space="preserve">
     <value>アイテムを削除</value>
   </data>
+  <data name="SummarizationMethod_AVERAGING_Sum_of_transition_areas" xml:space="preserve">
+    <value>トランジション領域の合計</value>
+  </data>
+  <data name="SummarizationMethod_MEDIANPOLISH_Tukey_s_Median_Polish" xml:space="preserve">
+    <value>Tukeyの中央値完全化</value>
+  </data>
 </root>

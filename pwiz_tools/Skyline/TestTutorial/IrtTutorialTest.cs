@@ -204,7 +204,7 @@ namespace pwiz.SkylineTestTutorial
             WaitForClosedForm(peptideSettingsUI1);
 
             // Inspect RT regression graph p. 8
-            RunUI(SkylineWindow.ShowRTLinearRegressionGraph);
+            RunUI(SkylineWindow.ShowRTLinearRegressionGraphScoreToRun);
             WaitForGraphs();
 
             RestoreViewOnScreen(08);
@@ -530,7 +530,7 @@ namespace pwiz.SkylineTestTutorial
             const string sched90MinFileroot = "A_D110913_SiRT_HELA_11_sMRM_150selected_90min-5-40_SIMPLE"; // Not L10N
             ImportNewResults(new[] { sched90MinFileroot }, -1, false);
 
-            RunUI(SkylineWindow.ShowRTLinearRegressionGraph);
+            RunUI(SkylineWindow.ShowRTLinearRegressionGraphScoreToRun);
             WaitForGraphs();
 
             PauseForScreenShot<GraphSummary.RTGraphView>("RT Regression graph metafile", 23);

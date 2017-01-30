@@ -278,6 +278,7 @@
 <Component Feature="MainFeature"><File Id="_Clearcore2.Muni.dll" Name="Clearcore2.Muni.dll" Source="msvc-release\Clearcore2.Muni.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_Clearcore2.RawXYProcessing.dll" Name="Clearcore2.RawXYProcessing.dll" Source="msvc-release\Clearcore2.RawXYProcessing.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_Clearcore2.StructuredStorage.dll" Name="Clearcore2.StructuredStorage.dll" Source="msvc-release\Clearcore2.StructuredStorage.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Clearcore2.UserLog.Types.dll" Name="Clearcore2.UserLog.Types.dll" Source="msvc-release\Clearcore2.UserLog.Types.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_Clearcore2.Utility.dll" Name="Clearcore2.Utility.dll" Source="msvc-release\Clearcore2.Utility.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_Clearcore2.XmlHelpers.dll" Name="Clearcore2.XmlHelpers.dll" Source="msvc-release\Clearcore2.XmlHelpers.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_Microsoft.Practices.Unity.Configuration.dll" Name="Microsoft.Practices.Unity.Configuration.dll" Source="msvc-release\Microsoft.Practices.Unity.Configuration.dll" KeyPath="yes"/></Component>

@@ -42,7 +42,9 @@ public class GroupComparisonDataSet {
     }
 
     public void setNormalizationMethod(NormalizationMethod normalizationMethod) {
-        this.normalizationMethod = normalizationMethod;
+        if (normalizationMethod != null) {
+            this.normalizationMethod = normalizationMethod;
+        }
     }
 
     public LinearFitResult calculateFoldChange(String label) {
@@ -63,13 +65,13 @@ public class GroupComparisonDataSet {
                 if (log2Abundance == null) {
                     continue;
                 }
-                Replicate combinedReplicate = new Replicate(entry.getKey().getLeft(), null);
+                Replicate combinedReplicate = new Replicate(entry.getKey().getLeft(), entry.getKey().getValue());
                 ResultFileData resultFileData = combinedReplicate.ensureResultFileData();
                 resultFileData.setTransitionAreas(label,
                         TransitionAreas.fromMap(Collections.singletonMap("", Math.pow(2.0, log2Abundance))));
-                if (null != getNormalizationMethod().getIsotopeLabelTypeName()) {
+                if (getNormalizationMethod() instanceof NormalizationMethod.RatioToLabel) {
                     TransitionAreas denominator = TransitionAreas.fromMap(Collections.singletonMap("", 1.0));
-                    resultFileData.setTransitionAreas(getNormalizationMethod().getIsotopeLabelTypeName(), denominator);
+                    resultFileData.setTransitionAreas(((NormalizationMethod.RatioToLabel) getNormalizationMethod()).getIsotopeLabelTypeName(), denominator);
                 }
                 summarizedRows.add(combinedReplicate);
             }
@@ -92,7 +94,7 @@ public class GroupComparisonDataSet {
 
     List<Replicate> removeIncompleteReplicates(String label, List<Replicate> replicates) {
         TransitionKeys requiredTransitions = null;
-        if (!getNormalizationMethod().isAllowMissingTransitions()) {
+        if (!(getNormalizationMethod() instanceof NormalizationMethod.RatioToLabel)) {
             requiredTransitions = TransitionKeys.EMPTY;
             for (Replicate replicate : replicates) {
                 TransitionAreas transitionAreas = replicate.getTransitionAreas(label);
@@ -158,9 +160,26 @@ public class GroupComparisonDataSet {
             }
             return log2(normalizedIntensity);
         }
+
+        @Override
+        public String toString() {
+            return "Replicate{" +
+                    "control=" + control +
+                    ", bioReplicate=" + bioReplicate +
+                    ", super=" + super.toString() +
+                    '}';
+        }
     }
 
     protected double log2(double value) {
         return Math.log(value) / Math.log(2.0);
+    }
+
+    @Override
+    public String toString() {
+        return "GroupComparisonDataSet{" +
+                "normalizationMethod=" + normalizationMethod +
+                ", replicates=" + replicates +
+                '}';
     }
 }

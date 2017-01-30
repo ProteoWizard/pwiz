@@ -22,6 +22,7 @@ using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
@@ -71,11 +72,22 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsFalse(ReportShutdownDlg.HadUnexpectedShutdown(true));
 
             // Show upgrade dialog
-            using (var dlg = new UpgradeDlg(Program.LICENSE_VERSION_CURRENT - 1))
+            using (var dlg = new UpgradeLicenseDlg(Program.LICENSE_VERSION_CURRENT - 1))
             {
-                RunDlg<UpgradeDlg>(
-                    () => dlg.ShowDialog(),
-                    d => d.Close());
+                RunDlg<UpgradeLicenseDlg>(() => dlg.ShowDialog(), d => d.Close());
+            }
+
+            // Show import retry dialog (requires some extra work to avoid blocking the counting)
+            var dlgCount = ShowDialog<ImportResultsRetryCountdownDlg>(ShowImportResultsRetryCountdownDlg);
+//            Thread.Sleep(20*1000);
+            OkDialog(dlgCount, dlgCount.Cancel);
+        }
+
+        private void ShowImportResultsRetryCountdownDlg()
+        {
+            using (var dlg = new ImportResultsRetryCountdownDlg(20, () => { }, () => { }))
+            {
+                dlg.ShowDialog();
             }
         }
     }

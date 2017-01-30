@@ -93,7 +93,7 @@ public class TransitionKeys implements Iterable<String>
         }
         ArrayList<String> list = new ArrayList<>(size() + transitionKeys.size());
         list.addAll(asList());
-        list.addAll(asList());
+        list.addAll(transitionKeys.asList());
         return of(list);
     }
 

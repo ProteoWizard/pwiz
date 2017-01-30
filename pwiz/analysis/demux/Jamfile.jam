@@ -1,0 +1,60 @@
+#
+# $Id$
+#
+#
+# Original author: Matt Chambers <matt.chambers <a.t> vanderbilt.edu>
+#
+# Copyright 2016 Vanderbilt University - Nashville, TN 37232
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+#
+
+project
+    : requirements 
+        <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
+    ;
+    
+
+lib pwiz_analysis_demux
+    : # sources
+        CubicHermiteSpline.cpp
+        DemuxDebugReader.cpp
+        DemuxDebugWriter.cpp
+        DemuxHelpers.cpp
+        DemuxSolver.cpp
+        MatrixIO.cpp
+        MSXDemultiplexer.cpp
+        OverlapDemultiplexer.cpp
+        PrecursorMaskCodec.cpp
+        SpectrumPeakExtractor.cpp
+        $(PWIZ_LIBRARIES_PATH)/CSpline/CSpline.cpp
+    : # requirements
+        <include>$(PWIZ_LIBRARIES_PATH)/Eigen
+        <include>$(PWIZ_LIBRARIES_PATH)/CSpline
+        #<library>/ext/boost//thread
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
+       #<define>_USE_DEMUX_DEBUG_WRITER
+    : # default-build
+    : # usage-requirements
+        <include>$(PWIZ_LIBRARIES_PATH)/Eigen
+        <include>$(PWIZ_LIBRARIES_PATH)/CSpline
+        #<library>/ext/boost//thread
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
+    ;
+
+unit-test-if-exists CubicHermiteSplineTest : CubicHermiteSplineTest.cpp pwiz_analysis_demux ;
+unit-test-if-exists DemuxDebugReadWriteTest : DemuxDebugReadWriteTest.cpp pwiz_analysis_demux ;
+unit-test-if-exists MatrixIOTest : MatrixIOTest.cpp pwiz_analysis_demux ;
+unit-test-if-exists SpectrumPeakExtractorTest : SpectrumPeakExtractorTest.cpp pwiz_analysis_demux ../../data/msdata//pwiz_data_msdata_examples ../common//pwiz_analysis_common ;
+unit-test-if-exists DemuxHelpersTest : DemuxHelpersTest.cpp pwiz_analysis_demux ../../data/msdata//pwiz_data_msdata_examples ;
+unit-test-if-exists DemuxSolverTest : DemuxSolverTest.cpp pwiz_analysis_demux ;

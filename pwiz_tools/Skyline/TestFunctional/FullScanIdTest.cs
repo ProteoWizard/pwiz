@@ -71,7 +71,6 @@ namespace pwiz.SkylineTestFunctional
                 buildLibraryDlg.LibraryPath = libraryPath;
                 buildLibraryDlg.LibraryKeepRedundant = true;
                 buildLibraryDlg.LibraryBuildAction = LibraryBuildAction.Create;
-                buildLibraryDlg.LibraryAuthority = "proteomics.fhcrc.org";
                 buildLibraryDlg.OkWizardPage();
                 buildLibraryDlg.AddInputFiles(new [] { pepXmlPath });
             });

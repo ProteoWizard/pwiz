@@ -28,6 +28,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ViewEditor));
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
@@ -43,10 +44,12 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.toolButtonFind = new System.Windows.Forms.ToolStripButton();
             this.toolButtonShowAdvanced = new System.Windows.Forms.ToolStripButton();
+            this.helpToolStripButton = new System.Windows.Forms.ToolStripButton();
             this.panel1 = new System.Windows.Forms.Panel();
             this.btnPreview = new System.Windows.Forms.Button();
             this.panelViewEditor = new System.Windows.Forms.Panel();
             this.panelButtons = new System.Windows.Forms.Panel();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.tabControl1.SuspendLayout();
             this.toolStrip.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -113,7 +116,8 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             this.toolButtonRedo,
             this.toolStripSeparator1,
             this.toolButtonFind,
-            this.toolButtonShowAdvanced});
+            this.toolButtonShowAdvanced,
+            this.helpToolStripButton});
             resources.ApplyResources(this.toolStrip, "toolStrip");
             this.toolStrip.Name = "toolStrip";
             // 
@@ -150,6 +154,13 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             this.toolButtonShowAdvanced.Name = "toolButtonShowAdvanced";
             this.toolButtonShowAdvanced.Click += new System.EventHandler(this.toolButtonShowAdvanced_Click);
             // 
+            // helpToolStripButton
+            // 
+            this.helpToolStripButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            resources.ApplyResources(this.helpToolStripButton, "helpToolStripButton");
+            this.helpToolStripButton.Name = "helpToolStripButton";
+            this.helpToolStripButton.Click += new System.EventHandler(this.helpToolStripButton_Click);
+            // 
             // panel1
             // 
             this.panel1.Controls.Add(this.btnPreview);
@@ -178,6 +189,12 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             this.panelButtons.Controls.Add(this.btnOK);
             resources.ApplyResources(this.panelButtons, "panelButtons");
             this.panelButtons.Name = "panelButtons";
+            // 
+            // toolTip1
+            // 
+            this.toolTip1.AutoPopDelay = 32767;
+            this.toolTip1.InitialDelay = 500;
+            this.toolTip1.ReshowDelay = 100;
             // 
             // ViewEditor
             // 
@@ -226,7 +243,8 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         private System.Windows.Forms.Panel panelViewEditor;
         private System.Windows.Forms.Panel panelButtons;
         private System.Windows.Forms.Button btnPreview;
-        private System.Windows.Forms.Timer timer1;
         private System.Windows.Forms.ToolStripButton toolButtonFind;
+        private System.Windows.Forms.ToolStripButton helpToolStripButton;
+        private System.Windows.Forms.ToolTip toolTip1;
     }
 }

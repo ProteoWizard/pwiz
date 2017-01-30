@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Util
@@ -69,8 +70,8 @@ namespace pwiz.Skyline.Util
                 }
                 using (var reader = new StringReader(clipboardText))
                 {
-                    e.Handled = PerformUndoableOperation(Resources.DataGridViewPasteHandler_DataGridViewOnKeyDown_Paste, 
-                        () => Paste(reader));
+                    e.Handled = PerformUndoableOperation(Resources.DataGridViewPasteHandler_DataGridViewOnKeyDown_Paste,
+                        monitor => Paste(monitor, reader));
                 }
             }
             else if (e.KeyCode == Keys.Delete && 0 == e.Modifiers)
@@ -79,15 +80,22 @@ namespace pwiz.Skyline.Util
             }
         }
 
-        private bool PerformUndoableOperation(string description, Func<bool> operation)
+        private bool PerformUndoableOperation(string description, Func<ILongWaitBroker, bool> operation)
         {
             using (var undoTransaction = SkylineWindow.BeginUndo(description))
             {
                 bool resultsGridSynchSelectionOld = Settings.Default.ResultsGridSynchSelection;
+                bool enabledOld = DataGridView.Enabled;
                 try
                 {
+                    DataGridView.Enabled = false;
                     Settings.Default.ResultsGridSynchSelection = false;
-                    if (operation())
+                    var longOperationRunner = new LongOperationRunner
+                    {
+                        ParentControl = FormUtil.FindTopLevelOwner(DataGridView),
+                        JobTitle = description
+                    };
+                    if (longOperationRunner.CallFunction(operation))
                     {
                         undoTransaction.Commit();
                         return true;
@@ -96,6 +104,7 @@ namespace pwiz.Skyline.Util
                 }
                 finally
                 {
+                    DataGridView.Enabled = enabledOld;
                     Settings.Default.ResultsGridSynchSelection = resultsGridSynchSelectionOld;
                 }
             }
@@ -108,7 +117,7 @@ namespace pwiz.Skyline.Util
         /// Returns true if any changes were made to the document, false if there were no
         /// changes.
         /// </summary>
-        private bool Paste(TextReader reader)
+        private bool Paste(ILongWaitBroker longWaitBroker, TextReader reader)
         {
             bool anyChanges = false;
             var columnsByDisplayIndex =
@@ -129,35 +138,42 @@ namespace pwiz.Skyline.Util
 
             for (int iRow = iFirstRow; iRow < DataGridView.Rows.Count; iRow++)
             {
+                if (longWaitBroker.IsCanceled)
+                {
+                    return anyChanges;
+                }
+                longWaitBroker.Message = string.Format(Resources.DataGridViewPasteHandler_Paste_Pasting_row__0_, iRow + 1);
                 string line = reader.ReadLine();
                 if (null == line)
                 {
                     return anyChanges;
                 }
                 var row = DataGridView.Rows[iRow];
-                var values = SplitLine(line).GetEnumerator();
-                for (int iCol = iFirstCol; iCol < columnsByDisplayIndex.Count(); iCol++)
+                using (var values = SplitLine(line).GetEnumerator())
                 {
-                    if (!values.MoveNext())
+                    for (int iCol = iFirstCol; iCol < columnsByDisplayIndex.Count(); iCol++)
                     {
-                        break;
+                        if (!values.MoveNext())
+                        {
+                            break;
+                        }
+                        var column = columnsByDisplayIndex[iCol];
+                        if (column.ReadOnly)
+                        {
+                            continue;
+                        }
+                        if (!TrySetValue(row.Cells[column.Index], values.Current))
+                        {
+                            return anyChanges;
+                        }
+                        anyChanges = true;
                     }
-                    var column = columnsByDisplayIndex[iCol];
-                    if (column.ReadOnly)
-                    {
-                        continue;
-                    }
-                    if (!TrySetValue(row.Cells[column.Index], values.Current))
-                    {
-                        return anyChanges;
-                    }
-                    anyChanges = true;
                 }
             }
             return anyChanges;
         }
 
-        private bool ClearCells()
+        private bool ClearCells(ILongWaitBroker longWaitBroker)
         {
             if (DataGridView.SelectedRows.Count > 0)
             {
@@ -171,8 +187,15 @@ namespace pwiz.Skyline.Util
             bool anyChanges = false;
             var cellsByRow = DataGridView.SelectedCells.Cast<DataGridViewCell>().ToLookup(cell => cell.RowIndex).ToArray();
             Array.Sort(cellsByRow, (g1,g2)=>g1.Key.CompareTo(g2.Key));
-            foreach (var rowGrouping in cellsByRow)
+            for (int iGrouping = 0; iGrouping < cellsByRow.Length; iGrouping++)
             {
+                if (longWaitBroker.IsCanceled)
+                {
+                    return anyChanges;
+                }
+                longWaitBroker.ProgressValue = 100 * iGrouping / cellsByRow.Length;
+                longWaitBroker.Message = string.Format(Resources.DataGridViewPasteHandler_ClearCells_Cleared__0___1__rows, iGrouping, cellsByRow.Length);
+                var rowGrouping = cellsByRow[iGrouping];
                 var cells = rowGrouping.ToArray();
                 Array.Sort(cells, (c1, c2) => c1.ColumnIndex.CompareTo(c2.ColumnIndex));
                 foreach (var cell in cells)
@@ -191,7 +214,11 @@ namespace pwiz.Skyline.Util
         {
             IDataGridViewEditingControl editingControl = null;
             DataGridViewEditingControlShowingEventHandler onEditingControlShowing =
-                (sender, args) => editingControl = args.Control as IDataGridViewEditingControl;
+                (sender, args) =>
+                {
+                    Assume.IsNull(editingControl);
+                    editingControl = args.Control as IDataGridViewEditingControl;
+                };
             try
             {
                 DataGridView.EditingControlShowing += onEditingControlShowing;
@@ -220,6 +247,11 @@ namespace pwiz.Skyline.Util
                     return false;
                 }
                 return true;
+            }
+            catch (Exception e)
+            {
+                Program.ReportException(e);
+                return false;
             }
             finally
             {

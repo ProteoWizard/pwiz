@@ -561,7 +561,7 @@
     <value>textBoxError</value>
   </data>
   <data name="&gt;&gt;textBoxError.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.Graphs.DisabledRichTextBox, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.Graphs.DisabledRichTextBox, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;textBoxError.Parent" xml:space="preserve">
     <value>panelError</value>
@@ -636,7 +636,7 @@
     <value>textBoxError</value>
   </data>
   <data name="&gt;&gt;textBoxError.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.Graphs.DisabledRichTextBox, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.Graphs.DisabledRichTextBox, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;textBoxError.Parent" xml:space="preserve">
     <value>panelError</value>
@@ -1029,7 +1029,7 @@
     <value>graphChromatograms</value>
   </data>
   <data name="&gt;&gt;graphChromatograms.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.Graphs.AsyncChromatogramsGraph2, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.Graphs.AsyncChromatogramsGraph2, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;graphChromatograms.Parent" xml:space="preserve">
     <value>$this</value>

@@ -60,6 +60,7 @@ struct ProgressMonitorForwarder : public pwiz::util::IterationListener
                                cancel);
             return cancel ? Status_Cancel : Status_Ok;
         }
+        throw runtime_error("NULL managedFunctionPtr in ProgressMonitorForwarder");
     }
 };
 

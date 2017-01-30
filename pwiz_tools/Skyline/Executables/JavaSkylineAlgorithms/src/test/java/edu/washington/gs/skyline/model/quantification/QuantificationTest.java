@@ -58,7 +58,7 @@ public class QuantificationTest extends TestCase {
 
     public void testRatioToHeavy() throws Exception {
         List<InputRecord> allInputRecords = readInputRecords("NoNormalizationInput.csv");
-        allInputRecords = filterRecords(NormalizationMethod.forIsotopeLabelType("heavy"), allInputRecords);
+        allInputRecords = filterRecords(new NormalizationMethod.RatioToLabel("heavy"), allInputRecords);
         Map<RecordKey, Double> expected = readExpectedRows("RatioToHeavy.csv");
         for (Map.Entry<RecordKey, Double> entry : expected.entrySet()) {
             List<InputRecord> records =
@@ -90,10 +90,11 @@ public class QuantificationTest extends TestCase {
         if (record.getArea() == null) {
             return false;
         }
-        if (normalizationMethod.getIsotopeLabelTypeName() == null && !"light".equals(record.getIsotopeLabelType())) {
+        if (!(normalizationMethod instanceof NormalizationMethod.RatioToLabel)
+                && !"light".equals(record.getIsotopeLabelType())) {
             return false;
         }
-        if (!normalizationMethod.isAllowTruncated() && record.isTruncated()) {
+        if (!normalizationMethod.isAllowTruncatedTransitions() && record.isTruncated()) {
             return false;
         }
         return true;
@@ -149,7 +150,7 @@ public class QuantificationTest extends TestCase {
         throw new NotImplementedException();
     }
 
-    class InputRecord {
+    public class InputRecord {
         final RecordKey key;
         final int precursorCharge;
         final String fragmentIon;

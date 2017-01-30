@@ -68,4 +68,15 @@ public class LinearFitResult {
     public void setPValue(double pValue) {
         this.pValue = pValue;
     }
+
+    @Override
+    public String toString() {
+        return "LinearFitResult{" +
+                "estimatedValue=" + estimatedValue +
+                ", standardError=" + standardError +
+                ", tValue=" + tValue +
+                ", degreesOfFreedom=" + degreesOfFreedom +
+                ", pValue=" + pValue +
+                '}';
+    }
 }

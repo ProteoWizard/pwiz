@@ -165,6 +165,8 @@ namespace pwiz.Skyline
             _proteinMetadataManager.ProgressUpdateEvent += UpdateProgress;
             _proteinMetadataManager.Register(this);
 
+            checkForUpdatesMenuItem.Visible =
+                checkForUpdatesSeparator.Visible = ApplicationDeployment.IsNetworkDeployed;
 
             // Begin ToolStore check for updates to currently installed tools
             ActionUtil.RunAsync(() => ToolStoreUtil.CheckForUpdates(Settings.Default.ToolList.ToArray()), "Check for tool updates");    // Not L10N
@@ -287,26 +289,7 @@ namespace pwiz.Skyline
 
         protected override void OnHandleCreated(EventArgs e)
         {
-            if (ApplicationDeployment.IsNetworkDeployed)
-            {
-                try
-                {
-                    var appDeployment = ApplicationDeployment.CurrentDeployment;
-                    if (appDeployment != null)
-                    {
-                        appDeployment.CheckForUpdateAsync();
-                    }
-                }
-                catch (DeploymentDownloadException)
-                {
-                }
-                catch (InvalidDeploymentException)
-                {
-                }
-                catch (InvalidOperationException)
-                {
-                }
-            }
+            UpgradeManager.CheckForUpdateAsync(this);
 
             base.OnHandleCreated(e);
         }
@@ -2611,7 +2594,7 @@ namespace pwiz.Skyline
 
         public void AddGroupComparison()
         {
-            using (var editDlg = new EditGroupComparisonDlg(this, GroupComparisonDef.EMPTY.ChangeSumTransitions(true),
+            using (var editDlg = new EditGroupComparisonDlg(this, GroupComparisonDef.EMPTY,
                 Settings.Default.GroupComparisonDefList))
             {
                 if (editDlg.ShowDialog(this) == DialogResult.OK)
@@ -2815,8 +2798,10 @@ namespace pwiz.Skyline
                 using (var dlg = new EditCustomMoleculeDlg(this, Resources.SkylineWindow_AddSmallMolecule_Add_Precursor,
                     null, existingPrecursors,
                     TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE, Document.Settings,
+                    // ReSharper disable PossibleMultipleEnumeration  (inspection on TC gives false warning here)
                     (existingIons == null) ? nodePep.Peptide.CustomIon.Name : existingIons.First().Name,
                     (existingIons == null) ? nodePep.Peptide.CustomIon.Formula : existingIons.First().Formula,
+                    // ReSharper restore PossibleMultipleEnumeration
                     notFirst ? nodePep.TransitionGroups.First().TransitionGroup.PrecursorCharge : 1,
                     notFirst ? nodePep.TransitionGroups.First().ExplicitValues : ExplicitTransitionGroupValues.EMPTY,
                     null,
@@ -3685,6 +3670,21 @@ namespace pwiz.Skyline
             WebHelpers.OpenLink(this, "http://proteome.gs.washington.edu/software/Skyline/issues.html"); // Not L10N
         }
 
+        private void checkForUpdatesMenuItem_Click(object sender, EventArgs e)
+        {
+            CheckForUpdate();
+        }
+
+        public void CheckForUpdate()
+        {
+            // Make sure the document is saved before doing this since it could
+            // restart the application
+            if (Dirty)
+                SaveDocument();
+
+            UpgradeManager.CheckForUpdateAsync(this, false);
+        }
+
         private void aboutMenuItem_Click(object sender, EventArgs e)
         {
             using (var about = new AboutDlg())
@@ -4292,11 +4292,11 @@ namespace pwiz.Skyline
 
             // Update the summary graphs if necessary.
             if (_graphRetentionTime != null && _graphRetentionTime.ResultsIndex != ComboResults.SelectedIndex)
-                _graphRetentionTime.ResultsIndex = ComboResults.SelectedIndex;
+                _graphRetentionTime.SetResultIndexes(ComboResults.SelectedIndex,_graphRetentionTime.OriginalResultsIndex);
             if (_graphPeakArea != null && _graphPeakArea.ResultsIndex != ComboResults.SelectedIndex)
-                _graphPeakArea.ResultsIndex = ComboResults.SelectedIndex;
+                _graphPeakArea.SetResultIndexes(ComboResults.SelectedIndex);
             if (_graphMassError != null && _graphMassError.ResultsIndex != ComboResults.SelectedIndex)
-                _graphMassError.ResultsIndex = ComboResults.SelectedIndex;
+                _graphMassError.SetResultIndexes(ComboResults.SelectedIndex);
             var liveResultsGrid = (LiveResultsGrid)_resultsGridForm;
             if (null != liveResultsGrid)
             {
@@ -4601,8 +4601,9 @@ namespace pwiz.Skyline
 
         private void UpdateImportProgress(MultiProgressStatus multiStatus)
         {
-            buttonShowAllChromatograms.Visible = statusProgress.Visible = !multiStatus.IsFinal;
-            if (ImportingResultsWindow == null && !multiStatus.IsFinal)
+            bool showable = !multiStatus.IsFinal || multiStatus.IsError;
+            buttonShowAllChromatograms.Visible = statusProgress.Visible = showable;
+            if (ImportingResultsWindow == null && showable)
             {
                 Assume.IsFalse(multiStatus.IsEmpty);    // Should never be starting results window with empty status
                 ImportingResultsWindow = new AllChromatogramsGraph { Owner = this, ChromatogramManager = _chromatogramManager };

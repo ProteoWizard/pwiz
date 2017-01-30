@@ -148,6 +148,8 @@
     <Compile Include="AddLibraryTest.cs" />
     <Compile Include="AssociateProteinsDlgTest.cs" />
     <Compile Include="BackgroundEventThreadsTest.cs" />
+    <Compile Include="BlibIrtTest.cs" />
+    <Compile Include="CalibrationScenariosTest.cs" />
     <Compile Include="CalibrationTest.cs" />
     <Compile Include="ChorusFunctionalTest.cs" />
     <Compile Include="DocumentGridClipboardOperationsTest.cs" />
@@ -166,10 +168,12 @@
     <Compile Include="ExportChromatogramTest.cs" />
     <Compile Include="ExportIsolationListTest.cs" />
     <Compile Include="ExportDiaListTest.cs" />
+    <Compile Include="ExportSpectralLibraryTest.cs" />
     <Compile Include="FilterMzTest.cs" />
     <Compile Include="FindColumnTest.cs" />
     <Compile Include="FullScanGraphTest.cs" />
     <Compile Include="FullScanIdTest.cs" />
+    <Compile Include="GroupComparisonScenariosTest.cs" />
     <Compile Include="GroupComparisonTest.cs" />
     <Compile Include="ImmediateWindowTest.cs" />
     <Compile Include="ImportDocTest.cs" />
@@ -179,6 +183,7 @@
     <Compile Include="ExplicitMultiTypeTest.cs" />
     <Compile Include="ExplicitVariableTest.cs" />
     <Compile Include="ImportFailureTest.cs" />
+    <Compile Include="ImportIsolationSchemeTest.cs" />
     <Compile Include="ImportPeptideSearchTest.cs" />
     <Compile Include="ImportResultsCancelTest.cs" />
     <Compile Include="InsertModTest.cs" />
@@ -249,6 +254,8 @@
     <Compile Include="SwathIsolationListsTest.cs" />
     <Compile Include="UniquePeptidesDialogTest.cs" />
     <Compile Include="UniquePeptidesSettingsTest.cs" />
+    <Compile Include="RunToRunRegressionTest.cs" />
+    <Compile Include="UpgradeTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Shared\BiblioSpec\BiblioSpec.csproj">
@@ -302,6 +309,7 @@
     <None Include="AnnotationTest.zip" />
     <None Include="AssayLibraryImportTest.zip" />
     <None Include="BackgroundProteomeTest.zip" />
+    <None Include="CalibrationScenariosTest.zip" />
     <None Include="CalibrationTest.zip" />
     <None Include="ChorusFunctionalTest.zip" />
     <None Include="ConfigureToolsDlgTest.zip" />
@@ -313,11 +321,13 @@
     <None Include="ExportChromatogramTest.zip" />
     <None Include="ExportIsolationListTest.zip" />
     <None Include="ExportMethodDialogTest.zip" />
+    <None Include="ExportSpectralLibraryTest.zip" />
     <None Include="FilterMzTest.zip" />
     <None Include="FullScanIdTest.zip" />
     <None Include="GroupComparisonTest.zip" />
     <None Include="ImportDocTest.zip" />
     <None Include="ImportFailureTest.zip" />
+    <None Include="ImportIsolationSchemeTest.zip" />
     <None Include="ImportPeptideSearchTest.zip" />
     <None Include="InsertTest.zip" />
     <None Include="InstallToolsTest.zip" />

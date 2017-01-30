@@ -2,7 +2,7 @@
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
- * Copyright 2010 University of Washington - Seattle, WA
+ * Copyright 2016 University of Washington - Seattle, WA
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.Windows.Forms;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -24,17 +26,60 @@ namespace pwiz.Skyline.Alerts
 {
     public partial class UpgradeDlg : FormEx
     {
-        public UpgradeDlg(int licenseVersion)
+        private readonly string _defaultButtonText;
+
+        public UpgradeDlg(string versionText, bool automatic, bool updateFound)
         {
             InitializeComponent();
 
+            _defaultButtonText = btnLater.Text;
+            VersionText = versionText;
+            UpdateAutomatic = automatic;
+            UpdateFound = updateFound;
+
             // Designer has problems with getting images from resources
             pictureSkyline.Image = Resources.SkylineImg;
+
+            if (!updateFound)
+            {
+                labelRelease.Text = Resources.UpgradeDlg_UpgradeDlg_No_update_was_found_;
+                labelDetail.Visible = labelDirections.Visible = linkReleaseNotes.Visible = false;
+                btnLater.Visible = false;
+                btnInstall.Text = MultiButtonMsgDlg.BUTTON_OK;
+            }
+            else
+            {
+                labelRelease.Text = string.Format(labelRelease.Text, Program.Name, versionText ?? string.Empty);
+                if (automatic)
+                    labelDetail.Text = labelDetailAutomatic.Text;
+            }
+
+            cbAtStartup.Checked = UpgradeManager.CheckAtStartup;
         }
 
-        private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        public string VersionText { get; private set; }
+        public bool UpdateAutomatic { get; private set; }
+        public bool UpdateFound { get; private set; }
+
+        public bool CheckAtStartup
         {
-            WebHelpers.OpenLink(this, "https://skyline.gs.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=LicenseAgreement"); // Not L10N
+            get { return cbAtStartup.Checked; }
+            set { cbAtStartup.Checked = value; }
+        }
+
+        private void cbAtStartup_CheckedChanged(object sender, EventArgs e)
+        {
+            btnLater.Text = cbAtStartup.Checked ? _defaultButtonText : Resources.UpgradeDlg_cbAtStartup_CheckedChanged_Maybe__Later;
+
+            // Make this change immediate and persistent.
+            UpgradeManager.CheckAtStartup = cbAtStartup.Checked;
+            Settings.Default.Save();
+        }
+
+        private void linkReleaseNotes_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            string notes = Install.Type == Install.InstallType.release ? "notes" : "notes-daily";  // Not L10N
+            WebHelpers.OpenSkylineShortLink(this, notes);
         }
     }
 }

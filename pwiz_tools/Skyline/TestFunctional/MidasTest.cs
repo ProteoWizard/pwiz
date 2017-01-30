@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -26,6 +27,7 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Lib.Midas;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
@@ -49,16 +51,25 @@ namespace pwiz.SkylineTestFunctional
                 return;
 
             var doc = SkylineWindow.Document;
-            var documentPath = TestFilesDir.GetTestPath("Bg test MIDAS.sky");
+            var documentPath = TestFilesDir.GetTestPath("102816 ApoB MIDAS testing v2.sky");
             RunUI(() => SkylineWindow.OpenFile(documentPath));
             WaitForDocumentChangeLoaded(doc);
 
-            var wiffPath = TestFilesDir.GetTestPath("070215 BG LM 40f MIDAS 2.wiff");
-            ImportResultsFile(wiffPath);
+            var wiffPath = TestFilesDir.GetTestPath("102816 Plas ApoB MIDAS testing 2.wiff");
+            var importResults = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
+            RunUI(() =>
+            {
+                importResults.NamedPathSets =
+                    new[] {"MIDAS1", "MIDAS2", "MIDAS3"}.Select((sampleName, index) => new KeyValuePair<string, MsDataFileUri[]>(sampleName,
+                        new MsDataFileUri[] {new MsDataFilePath(wiffPath, sampleName, index)})).ToArray();
+            });
+            var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(importResults.OkDialog);
+            OkDialog(importResultsNameDlg, importResultsNameDlg.NoDialog);
+            
             WaitForCondition(() => SkylineWindow.Document.Settings.PeptideSettings.Libraries.HasMidasLibrary);
             doc = SkylineWindow.Document;
 
-            Assert.AreEqual(1, doc.Settings.MeasuredResults.Chromatograms.Count);
+            Assert.AreEqual(3, doc.Settings.MeasuredResults.Chromatograms.Count);
 
             var libraries = doc.Settings.PeptideSettings.Libraries;
             var midasLibs = libraries.MidasLibraries.ToArray();
@@ -70,44 +81,105 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(MidasLibSpec.DEFAULT_NAME, midasLibSpec.Name);
             Assert.IsTrue(File.Exists(midasLibSpec.FilePath));
             Assert.AreEqual(1, midasLib.FileCount);
-            Assert.AreEqual(10, midasLib.SpectrumCount);
+            Assert.AreEqual(218, midasLib.SpectrumCount);
 
-            CheckMidasRts(450.6959, 4.0);
-            CheckMidasRts(503.2368, 3.5);
-            CheckMidasRts(542.2645, 5.2);
-            CheckMidasRts(550.2802, 4.9);
-            CheckMidasRts(550.7940, 2.6);
-            CheckMidasRts(607.8588);
-            CheckMidasRts(671.3379, 4.7);
-            CheckMidasRts(697.8694);
-            CheckMidasRts(714.8469, 4.7);
-            CheckMidasRts(729.3652, 4.2);
-            CheckMidasRts(871.9516);
-            CheckMidasRts(879.4339);
-            CheckMidasRts(433.8791);
+            CheckMidasRts(570.2720, 12.9, 15.0, 26.0, 16.6);
+            CheckMidasRts(506.8237, 24.6, 13.0, 14.9, 8.9, 21.5, 21.8, 14.5, 10.7, 22.5, 23.1, 13.8, 25.0);
+            CheckMidasRts(704.8666);
+            CheckMidasRts(470.2468);
+            CheckMidasRts(567.9618);
+            CheckMidasRts(862.4725);
+            CheckMidasRts(575.3174, 24.2, 15.2);
+            CheckMidasRts(636.3457);
+            CheckMidasRts(873.9567, 29.2, 28.9, 28.6);
+            CheckMidasRts(582.9736, 24.4, 29.0, 9.3, 20.3);
+            CheckMidasRts(654.8454);
+            CheckMidasRts(569.7800, 21.4, 13.8, 15.1, 16.4, 16.7);
+            CheckMidasRts(816.9227, 22.2, 20.5);
+            CheckMidasRts(544.9509, 6.1, 14.9, 13.7, 7.9, 17.0, 13.4, 9.0);
+            CheckMidasRts(589.8139);
+            CheckMidasRts(1027.0700);
+            CheckMidasRts(685.0491);
+            CheckMidasRts(770.9383);
+            CheckMidasRts(514.2946);
+            CheckMidasRts(640.8641);
+            CheckMidasRts(427.5785, 19.9);
+            CheckMidasRts(619.8300, 14.0, 13.7, 19.8);
+            CheckMidasRts(413.5558, 13.9, 13.6, 9.7);
+            CheckMidasRts(691.6919);
+            CheckMidasRts(535.8159, 16.5, 13.4, 11.0, 26.3, 12.5);
+            CheckMidasRts(653.8557);
+            CheckMidasRts(436.2396, 16.3);
+            CheckMidasRts(687.3384);
+            CheckMidasRts(458.5614);
+            CheckMidasRts(843.4157);
+            CheckMidasRts(562.6129, 16.9, 17.5, 30.6, 26.3, 21.3, 13.6, 32.1);
+            CheckMidasRts(710.0267);
+            CheckMidasRts(680.8044);
+            CheckMidasRts(454.2054);
+            CheckMidasRts(753.3939);
+            CheckMidasRts(502.5984);
+            CheckMidasRts(689.3445);
+            CheckMidasRts(611.8068);
+            CheckMidasRts(408.2069, 15.1, 9.0);
+            CheckMidasRts(791.4172);
+            CheckMidasRts(527.9472, 16.0, 30.0, 15.7, 5.6, 25.6, 18.3, 19.6, 16.5, 12.7, 11.1, 12.0);
+            CheckMidasRts(801.9174);
+            CheckMidasRts(534.9473, 19.0, 16.4, 18.3, 7.0, 12.5, 6.1, 19.6, 21.6);
+            CheckMidasRts(509.2489);
+            CheckMidasRts(801.4303, 18.8, 32.7, 25.7);
+            CheckMidasRts(534.6226);
 
-            var peptideSettings = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-            var midasBuildCancel = ShowDialog<MultiButtonMsgDlg>(peptideSettings.ShowBuildLibraryDlg);
-            Assert.AreEqual(Resources.PeptideSettingsUI_ShowBuildLibraryDlg_This_document_has_a_MIDAS_library__Would_you_like_to_build_a_spectral_library_from_it_, midasBuildCancel.Message);
+            var midasBuildCancel = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.ShowExportSpectralLibraryDialog);
+            Assert.AreEqual(Resources.SkylineWindow_ShowExportSpectralLibraryDialog_This_document_has_a_MIDAS_library__Would_you_like_to_build_a_spectral_library_from_it_, midasBuildCancel.Message);
             OkDialog(midasBuildCancel, midasBuildCancel.BtnCancelClick);
-            var midasBuildNo = ShowDialog<MultiButtonMsgDlg>(peptideSettings.ShowBuildLibraryDlg);
-            var normalBuild = ShowDialog<BuildLibraryDlg>(midasBuildNo.ClickNo);
-            OkDialog(normalBuild, normalBuild.CancelDialog);
-            var midasBlib = TestFilesDir.GetTestPath("midas.blib");
-            RunUI(() => peptideSettings.ShowBuildLibraryDlg(midasBlib));
-            WaitForOpenForm<BuildLibraryNotification>();
-            WaitForConditionUI(10000, () => peptideSettings.LibraryDriver.List.Count == 2);
+
+            // Get transition rankings
+            var ranks = new Dictionary<Identity, Dictionary<double, int>>();
+            foreach (var nodeTranGroup in doc.PeptideTransitionGroups)
+            {
+                foreach (var nodeTran in nodeTranGroup.Transitions)
+                {
+                    var rank = nodeTran.GetRank(null, false);
+                    if (rank != null)
+                    {
+                        Dictionary<double, int> tranGroupRanks;
+                        if (!ranks.TryGetValue(nodeTranGroup.Id, out tranGroupRanks))
+                        {
+                            tranGroupRanks = new Dictionary<double, int>();
+                            ranks[nodeTranGroup.Id] = tranGroupRanks;
+                        }
+                        tranGroupRanks[nodeTran.Mz] = rank.Value;
+                    }
+                }
+            }
+
+            var transitionSettings = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
             RunUI(() =>
             {
-                var libSpec = peptideSettings.LibraryDriver.List.Last();
-                Assert.AreEqual(midasBlib, libSpec.FilePath); 
-                Assert.AreEqual(MidasBlibBuilder.BLIB_NAME_SKYLINE, libSpec.Name);
+                transitionSettings.SetAutoSelect = true;
+                transitionSettings.IonCount = 2;
             });
-            // Test that the normal library build form appears if we already have a MIDAS blib file
-            var normalBuild2 = ShowDialog<BuildLibraryDlg>(peptideSettings.ShowBuildLibraryDlg);
-            OkDialog(normalBuild2, normalBuild2.CancelDialog);
 
-            OkDialog(peptideSettings, peptideSettings.OkDialog);
+            OkDialog(transitionSettings, transitionSettings.OkDialog);
+            doc = WaitForDocumentChange(doc);
+
+            foreach (var nodeTranGroup in doc.PeptideTransitionGroups)
+            {
+                Dictionary<double, int> tranGroupRanks;
+                if (!ranks.TryGetValue(nodeTranGroup.Id, out tranGroupRanks))
+                {
+                    tranGroupRanks = new Dictionary<double, int>();
+                }
+                foreach (var nodeTran in nodeTranGroup.Transitions)
+                {
+                    Assert.IsTrue(nodeTran.HasLibInfo);
+                    Assert.IsTrue(tranGroupRanks.ContainsKey(nodeTran.Mz));
+                    var rank = nodeTran.GetRank(null, false);
+                    Assert.IsTrue(rank != null && rank <= 2);
+                    Assert.AreEqual(tranGroupRanks[nodeTran.Mz], rank);
+                }
+            }
 
             var manageResults = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);
             var doc1 = doc;
@@ -129,9 +201,9 @@ namespace pwiz.SkylineTestFunctional
                 Assert.Fail("Precursor {0} not found", precursorMz);
             WaitForGraphs();
             var graphChromatograms = SkylineWindow.GraphChromatograms.ToArray();
-            if (graphChromatograms.Length != 1)
+            if (graphChromatograms.Length < 1)
                 Assert.Fail("Missing GraphChromatogram");
-            var midasRts = graphChromatograms.First().MidasRetentionMsMs.ToList();
+            var midasRts = (graphChromatograms.First().MidasRetentionMsMs ?? new double[0]).ToList();
             foreach (var expectedRt in expectedRts)
             {
                 var foundRt = false;
@@ -145,15 +217,15 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
                 if (!foundRt)
-                    Assert.Fail("Didn't find expected MIDAS retention time {0}", expectedRt);
+                    Assert.Fail("Didn't find expected MIDAS retention time {0} for precursor {1}", expectedRt, precursorMz);
             }
             if (midasRts.Any())
             {
                 var sb = new StringBuilder();
-                sb.Append("Found unexpected MIDAS retention times:");
+                sb.Append("Found unexpected MIDAS retention times for precursor {0}:");
                 foreach (var midasRt in midasRts)
                     sb.Append(" " + midasRt.ToString(CultureInfo.InvariantCulture));
-                Assert.Fail(sb.ToString());
+                Assert.Fail(sb.ToString(), precursorMz);
             }
         }
 
