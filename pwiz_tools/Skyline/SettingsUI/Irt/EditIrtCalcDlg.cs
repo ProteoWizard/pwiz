@@ -395,7 +395,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     using (FileSaver fileSaver = new FileSaver(path))
                     {
                         IrtDb db = IrtDb.CreateIrtDb(fileSaver.SafeName);
-                        db.AddPeptides(AllPeptides.ToArray());
+                        db.AddPeptides(null, AllPeptides.ToArray());
                         fileSaver.Commit();
                     }
                 }

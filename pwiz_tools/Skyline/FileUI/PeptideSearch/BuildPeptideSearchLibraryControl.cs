@@ -346,7 +346,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                                     return;
 
                                 var irtDb = IrtDb.CreateIrtDb(path);
-                                irtDb.AddPeptides(standard.Peptides.Concat(processedDbIrtPeptides).ToList());
+                                irtDb.AddPeptides(null, standard.Peptides.Concat(processedDbIrtPeptides).ToList());
                             }
                         }
                     }

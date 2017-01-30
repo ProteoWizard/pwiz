@@ -13263,6 +13263,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Adding peptides.
+        /// </summary>
+        public static string IrtDb_AddPeptides_Adding_peptides {
+            get {
+                return ResourceManager.GetString("IrtDb_AddPeptides_Adding_peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to iRT Database Files.
         /// </summary>
         public static string IrtDb_FILTER_IRTDB_iRT_Database_Files {

@@ -184,18 +184,29 @@ namespace pwiz.Skyline.Model.Irt
             return result;
         }
 
-        public IrtDb AddPeptides(IList<DbIrtPeptide> newPeptides)
+        public IrtDb AddPeptides(IProgressMonitor monitor, IList<DbIrtPeptide> newPeptides)
         {
+            IProgressStatus status = new ProgressStatus(Resources.IrtDb_AddPeptides_Adding_peptides);
+            var total = newPeptides.Count;
+            var i = 0;
             using (var session = OpenWriteSession())
             using (var transaction = session.BeginTransaction())
             {
                 foreach (var peptideNewDisconnected in newPeptides.Select(peptideNew => new DbIrtPeptide(peptideNew) {Id = null}))
                 {
                     session.SaveOrUpdate(peptideNewDisconnected);
+                    if (monitor != null)
+                    {
+                        if (monitor.IsCanceled)
+                            return null;
+                        monitor.UpdateProgress(status = status.ChangePercentComplete(++i * 100 / total));
+                    }
                 }
 
                 transaction.Commit();
             }
+            if (monitor != null)
+                monitor.UpdateProgress(status.Complete());
 
             return ChangeProp(ImClone(this), im => im.LoadPeptides(newPeptides));
         }

@@ -329,14 +329,13 @@ namespace pwiz.Skyline.SettingsUI
                     Point anchor = NotificationAnchor;
                     frm.Left = anchor.X;
                     frm.Top = anchor.Y - frm.Height;
-                    if (!string.IsNullOrEmpty(buildState.ExtraMessage))
+                    NotificationContainerForm.BeginInvoke(new Action(() =>
                     {
-                        NotificationContainerForm.BeginInvoke(new Action(() => MessageDlg.Show(NotificationContainerForm, buildState.ExtraMessage)));
-                    }
-                    if (buildState.IrtStandard != null && buildState.IrtStandard != IrtStandard.NULL)
-                    {
-                        NotificationContainerForm.BeginInvoke(new Action(() => AddIrts(buildState)));
-                    }
+                        if (!string.IsNullOrEmpty(buildState.ExtraMessage))
+                            MessageDlg.Show(TopMostApplicationForm, buildState.ExtraMessage);
+                        if (buildState.IrtStandard != null && buildState.IrtStandard != IrtStandard.NULL)
+                            AddIrts(buildState);
+                    }));
                     var thread = BackgroundEventThreads.CreateThreadForAction(frm.Notify);
                     thread.Name = "BuildLibraryNotification"; // Not L10N
                     thread.IsBackground = true;
@@ -350,50 +349,53 @@ namespace pwiz.Skyline.SettingsUI
         {
             try
             {
+                Library lib;
+                ProcessedIrtAverages processed = null;
+                var initialMessage = Resources.LibraryBuildNotificationHandler_LibraryBuildCompleteCallback_Adding_iRTs_to_library;
                 using (var longWait = new LongWaitDlg { Text = Resources.LibraryBuildNotificationHandler_LibraryBuildCompleteCallback_Adding_iRTs_to_library })
                 {
-                    Library lib = null;
-                    var status = longWait.PerformWork(NotificationContainerForm, 800, monitor =>
+                    var status = longWait.PerformWork(TopMostApplicationForm, 800, monitor =>
+                    {
+                        var initStatus = new ProgressStatus(initialMessage).ChangeSegments(0, 2);
+                        monitor.UpdateProgress(initStatus);
                         lib = NotificationContainer.LibraryManager.TryGetLibrary(buildState.LibrarySpec) ??
-                              NotificationContainer.LibraryManager.LoadLibrary(buildState.LibrarySpec, () => new DefaultFileLoadMonitor(monitor)));
-                    foreach (var stream in lib.ReadStreams)
-                        stream.CloseStream();
-                    if (status.IsCanceled)
-                    {
-                        return;
-                    }
-                    if (status.IsError)
-                        throw status.ErrorException;
-                    ProcessedIrtAverages processed = null;
-                    status = longWait.PerformWork(NotificationContainerForm, 800, monitor =>
-                    {
-                        processed = RCalcIrt.ProcessRetentionTimes(monitor, lib.RetentionTimeProviders,
-                            lib.FileCount ?? 0, buildState.IrtStandard.Peptides.ToArray(), new DbIrtPeptide[0]);
+                              NotificationContainer.LibraryManager.LoadLibrary(buildState.LibrarySpec, () => new DefaultFileLoadMonitor(monitor));
+                        foreach (var stream in lib.ReadStreams)
+                            stream.CloseStream();
+                        if (longWait.IsCanceled)
+                            return;
+                        processed = RCalcIrt.ProcessRetentionTimes(monitor, lib.RetentionTimeProviders, lib.FileCount ?? 0,
+                                                                   buildState.IrtStandard.Peptides.ToArray(), new DbIrtPeptide[0]);
                     });
                     if (status.IsCanceled)
-                    {
                         return;
-                    }
                     if (status.IsError)
                         throw status.ErrorException;
-
-                    using (var resultsDlg = new AddIrtPeptidesDlg(processed))
+                }
+                using (var resultsDlg = new AddIrtPeptidesDlg(processed))
+                {
+                    if (resultsDlg.ShowDialog(TopMostApplicationForm) == DialogResult.OK)
                     {
-                        if (resultsDlg.ShowDialog(NotificationContainerForm) == DialogResult.OK)
-                        {
-                            var processedDbIrtPeptides = processed.DbIrtPeptides.ToArray();
-                            if (!processedDbIrtPeptides.Any())
-                                return;
+                        var processedDbIrtPeptides = processed.DbIrtPeptides.ToArray();
+                        if (!processedDbIrtPeptides.Any())
+                            return;
 
-                            var irtDb = IrtDb.CreateIrtDb(buildState.LibrarySpec.FilePath);
-                            irtDb.AddPeptides(buildState.IrtStandard.Peptides.Concat(processedDbIrtPeptides).ToList());
+                        using (var longWait = new LongWaitDlg {Text = Resources.LibraryBuildNotificationHandler_LibraryBuildCompleteCallback_Adding_iRTs_to_library})
+                        {
+                            var status = longWait.PerformWork(TopMostApplicationForm, 800, monitor =>
+                            {
+                                var irtDb = IrtDb.CreateIrtDb(buildState.LibrarySpec.FilePath);
+                                irtDb.AddPeptides(monitor, buildState.IrtStandard.Peptides.Concat(processedDbIrtPeptides).ToList());
+                            });
+                            if (status.IsError)
+                                throw status.ErrorException;
                         }
                     }
                 }
             }
             catch (Exception x)
             {
-                MessageDlg.ShowWithException(NotificationContainerForm,
+                MessageDlg.ShowWithException(TopMostApplicationForm,
                     TextUtil.LineSeparate(Resources.LibraryBuildNotificationHandler_LibraryBuildCompleteCallback_An_error_occurred_trying_to_add_iRTs_to_the_library_, x.Message), x);
             }
         }

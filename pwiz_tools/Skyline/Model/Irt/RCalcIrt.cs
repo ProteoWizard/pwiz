@@ -124,7 +124,7 @@ namespace pwiz.Skyline.Model.Irt
                     }
                 }
 
-                irtDbMinimal.AddPeptides(persistPeptides);
+                irtDbMinimal.AddPeptides(null, persistPeptides);
                 fs.Commit();
             }
 
