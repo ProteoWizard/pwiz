@@ -207,6 +207,14 @@ void MzXMLParser::parseChunk() {
     }
 }
 
+bool MzXMLParser::peekSpectrum(SpecData* dst) {
+    if (spectra_.empty() || !dst) {
+        return false;
+    }
+    *dst = *(spectra_.front());
+    return true;
+}
+
 bool MzXMLParser::popSpectrum(SpecData* dst) {
     if (spectra_.empty()) {
         return false;
@@ -256,7 +264,7 @@ bool MzXMLParser::getSpectrum(int identifier, SpecData& returnData, SPEC_ID_TYPE
                     // Already been discarded
                     return false;
                 } else if (identifier == current) {
-                    popSpectrum(&returnData);
+                    peekSpectrum(&returnData);
                     return true;
                 } else {
                     popSpectrum();
@@ -272,7 +280,7 @@ bool MzXMLParser::getSpectrum(int identifier, SpecData& returnData, SPEC_ID_TYPE
                 while (discardCount_ < identifier) {
                     popSpectrum();
                 }
-                popSpectrum(&returnData);
+                peekSpectrum(&returnData);
                 return true;
             }
             while (popSpectrum());

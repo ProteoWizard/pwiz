@@ -40,6 +40,7 @@ protected:
     SpecData* startSpectrum(const XML_Char **attr);
     void abortSpectrum();
     void parseChunk();
+    bool peekSpectrum(SpecData* dst);
     bool popSpectrum(SpecData* dst = NULL);
 
     std::ifstream* file_;
