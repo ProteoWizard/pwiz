@@ -108,6 +108,7 @@ class TandemNativeParser : public BuildParser, public SpecFileReader
   double mass_;        // precursor m/z doesn't appear to be stored in file
   int seqStart_;  // mod positions are given relative to the protein
   double retentionTime_;
+  string retentionTimeStr_;
   string descriptionStr_; // filename, scan, charge
   string curFilename_; // taken from description
   map<string, vector<PSM*> > fileMap_; // psms stored by spec filename

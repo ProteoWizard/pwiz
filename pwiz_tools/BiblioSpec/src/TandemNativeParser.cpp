@@ -183,9 +183,11 @@ void TandemNativeParser::parseSpectraFile(const XML_Char** attr){
  * element.
  */
 void TandemNativeParser::parseNote(const XML_Char** attr){
-    if (curFilename_.empty()) {
-        const char* label = getAttrValue("label", attr);
-        if( curState_ == PEAKS_STATE && (strcmp(label, "Description") == 0)){
+    const char* label = getAttrValue("label", attr);
+    bool description = strcmp(label, "Description") == 0;
+    if (description) {
+        retentionTimeStr_.clear();
+        if (curFilename_.empty() && curState_ == PEAKS_STATE) {
             newState(DESCRIPTION_STATE);
         }
     }
@@ -311,27 +313,15 @@ void TandemNativeParser::parseValues(const XML_Char** attr){
  * Use curState to determine if we are there.
  */
 void TandemNativeParser::characters(const XML_Char *s, int len){
-    if( curState_ != PEAKS_MZ_STATE && curState_ != PEAKS_INTENSITY_STATE
-        && curState_ != DESCRIPTION_STATE  ){
-        return;
-    }
-
-    // grab the data
-    char* buf = new char[len + 1];
-    strncpy(buf, s, len);
-    buf[len] = '\0';  
-
     // concatinate it on to the appropriate string
     if( curState_ == PEAKS_MZ_STATE){
-        mzStr_ += buf;
+        mzStr_.append(s, len);
     } else if( curState_ == PEAKS_INTENSITY_STATE){
-        intensityStr_ += buf;
+        intensityStr_.append(s, len);
     } else if( curState_ == DESCRIPTION_STATE ){
-        descriptionStr_ += buf;
+        retentionTimeStr_.append(s, len);
+        descriptionStr_.append(s, len);
     }
-
-    // clean up
-    delete [] buf;
 }
 
 void TandemNativeParser::getPeaks(
@@ -423,6 +413,15 @@ void TandemNativeParser::endGroup(){
 void TandemNativeParser::endNote(){
     if( curState_ == DESCRIPTION_STATE ){
         curState_ = getLastState();
+
+        const string rtStr = "RTINSECONDS=";
+        size_t rtStart = retentionTimeStr_.find(rtStr);
+        if (rtStart != string::npos) {
+            rtStart += rtStr.length();
+            size_t rtEnd = retentionTimeStr_.find_first_not_of("0123456789.", rtStart);
+            string rt = (rtEnd != string::npos) ? retentionTimeStr_.substr(rtStart, rtEnd - rtStart) : retentionTimeStr_.substr(rtStart);
+            retentionTime_ = atof(rt.c_str()) / 60;
+        }
 
         // File: "F:\QE\07-14-16\QE02179.raw"; SpectrumID: "287"; ...
         size_t fileStart = descriptionStr_.find("File:");
@@ -544,7 +543,7 @@ void TandemNativeParser::saveSpectrum(){
     stringsToPeaks();
 
     // confirm that we have the same number of m/z's and intensities
-    if( numIntensities_ != numMzs_ ){
+   if( numIntensities_ != numMzs_ ){
         // TODO get line number
         throw BlibException(false, "Different numbers of peaks. Spectrum %d "
                             "has %d fragment m/z values and %d intensities.",
