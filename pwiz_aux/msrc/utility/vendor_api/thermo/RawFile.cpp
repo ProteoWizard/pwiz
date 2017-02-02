@@ -1634,7 +1634,7 @@ class ChromatogramDataImpl : public ChromatogramData
         startTime_(startTime),
         endTime_(endTime)
     {
-        if (v.vt != (VT_ARRAY | VT_R8))
+        if (size > 0 && v.vt != (VT_ARRAY | VT_R8))
             throw RawEgg("ChromatogramDataImpl(): VARIANT error.");
     }
 

@@ -43,12 +43,15 @@ class ManagedSafeArray
         array_(0),
         data_(0)
     {
-        if (!(v.vt & VT_ARRAY) || !v.parray)
-            throw RawEgg("ManagedSafeArray(): VARIANT error.");
+        if (size_ > 0)
+        {
+            if (!(v.vt & VT_ARRAY) || !v.parray)
+                throw RawEgg("ManagedSafeArray(): VARIANT error.");
 
-        HRESULT hr = SafeArrayAccessData(v.parray, &data_);
-        if (FAILED(hr) || !data_)
-            throw RawEgg("ManagedSafeArray(): Data access error.");
+            HRESULT hr = SafeArrayAccessData(v.parray, &data_);
+            if (FAILED(hr) || !data_)
+                throw RawEgg("ManagedSafeArray(): Data access error.");
+        }
 
         array_ = v.parray;
         v.parray = NULL;
@@ -56,8 +59,11 @@ class ManagedSafeArray
 
     ~ManagedSafeArray()
     {
-        SafeArrayUnaccessData(array_);
-        SafeArrayDestroy(array_);
+        if (size_ > 0)
+        {
+            SafeArrayUnaccessData(array_);
+            SafeArrayDestroy(array_);
+        }
     }
 
     long size() const {return size_;}
