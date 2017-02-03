@@ -196,12 +196,9 @@ namespace pwiz.SkylineTestTutorial
                           Assert.AreEqual(0, standardPeptidesArray[1].Irt, 0.001);
                           Assert.AreEqual(100, standardPeptidesArray[10].Irt, 0.005);
                           CheckIrtStandardPeptides(standardPeptidesArray, irtDefText, 0.00001);
-
-                          editIrtCalc1.OkDialog();
-                          peptideSettingsUI1.OkDialog();
                       });
-            WaitForClosedForm(editIrtCalc1);
-            WaitForClosedForm(peptideSettingsUI1);
+            OkDialog(editIrtCalc1, editIrtCalc1.OkDialog);
+            OkDialog(peptideSettingsUI1, peptideSettingsUI1.OkDialog);
 
             // Inspect RT regression graph p. 8
             RunUI(SkylineWindow.ShowRTLinearRegressionGraphScoreToRun);
@@ -272,11 +269,12 @@ namespace pwiz.SkylineTestTutorial
             {
                 var docPre = SkylineWindow.Document;
                 var peptideSettingsUI2 = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-                var regressionDlg = ShowDialog<EditRTDlg>(peptideSettingsUI2.AddRTRegression);
+                RunUI(() => peptideSettingsUI2.ChooseRegression(irtPredictorName));
+                var regressionDlg = ShowDialog<EditRTDlg>(peptideSettingsUI2.EditRegression);
                 RunUI(() =>
                 {
-                    regressionDlg.SetRegressionName(irtPredictorName);
-                    regressionDlg.ChooseCalculator(irtCalcName);
+                    Assert.AreEqual(irtPredictorName, regressionDlg.Regression.Name);
+                    Assert.AreEqual(irtCalcName, regressionDlg.Regression.Calculator.Name);
                     regressionDlg.SetAutoCalcRegression(true);
                     regressionDlg.SetTimeWindow(5);
                 });

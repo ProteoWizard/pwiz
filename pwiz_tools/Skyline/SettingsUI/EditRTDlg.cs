@@ -44,6 +44,8 @@ namespace pwiz.Skyline.SettingsUI
         private readonly IEnumerable<RetentionTimeRegression> _existing;
         private RetentionTimeStatistics _statistics;
 
+        public const double DEFAULT_RT_WINDOW = 10.0;
+
         public EditRTDlg(IEnumerable<RetentionTimeRegression> existing)
         {
             _existing = existing;
@@ -231,6 +233,17 @@ namespace pwiz.Skyline.SettingsUI
                 cbAutoCalc.Checked = false;
             if (calc != null)
             {
+                // Automatically set up if all fields are empty
+                if (calc is RCalcIrt)
+                {
+                    if (string.IsNullOrEmpty(textName.Text))
+                        textName.Text = Helpers.GetUniqueName(calc.Name, name => !_driverCalculators.List.Contains(c => Equals(c.Name, name)));
+                    if (string.IsNullOrEmpty(textSlope.Text) && string.IsNullOrEmpty(textIntercept.Text))
+                        cbAutoCalc.Checked = true;
+                    if (string.IsNullOrEmpty(textTimeWindow.Text))
+                        textTimeWindow.Text = DEFAULT_RT_WINDOW.ToString(LocalizationHelper.CurrentCulture);
+                }
+
                 try
                 {
                     var regressionPeps = UpdateCalculator(calc);

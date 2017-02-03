@@ -493,7 +493,14 @@ namespace pwiz.Skyline.SettingsUI
             var list = Settings.Default.RTScoreCalculatorList;
             var calcNew = list.EditItem(this, null, list, null);
             if (calcNew != null)
+            {
                 list.SetValue(calcNew);
+                // Automatically add new RT regression using this calculator
+                var regressionName = Helpers.GetUniqueName(calcNew.Name, name => !_driverRT.List.Contains(r => Equals(r.Name, name)));
+                var regression = new RetentionTimeRegression(regressionName, calcNew, null, null, EditRTDlg.DEFAULT_RT_WINDOW, new List<MeasuredRetentionTime>());
+                Settings.Default.RetentionTimeList.Add(regression);
+                _driverRT.LoadList(regression.GetKey());
+            }
         }
 
         private void editCalculatorCurrentContextMenuItem_Click(object sender, EventArgs e)
