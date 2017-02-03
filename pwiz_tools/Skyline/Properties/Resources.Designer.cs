@@ -24227,7 +24227,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unique peptides.
+        ///   Looks up a localized string similar to Unique peptides: {0}.
         /// </summary>
         public static string SpectrumLibraryInfoDlg_SetDetailsText_Unique_peptides {
             get {
@@ -24241,6 +24241,15 @@ namespace pwiz.Skyline.Properties {
         public static string SpectrumLibraryInfoDlg_SetDetailsText_Unique_peptides__0__ {
             get {
                 return ResourceManager.GetString("SpectrumLibraryInfoDlg_SetDetailsText_Unique_peptides__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unique precursors: {0}.
+        /// </summary>
+        public static string SpectrumLibraryInfoDlg_SetDetailsText_Unique_Precursors___0_ {
+            get {
+                return ResourceManager.GetString("SpectrumLibraryInfoDlg_SetDetailsText_Unique_Precursors___0_", resourceCulture);
             }
         }
         

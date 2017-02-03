@@ -151,20 +151,20 @@ namespace pwiz.Skyline.Model
             var measuredResults = document.Settings.MeasuredResults;
             foreach (var dataFile in DocLib.LibraryDetails.DataFiles)
             {
-                var msDataFilePath = new MsDataFilePath(dataFile);
-                SpectrumSourceFiles[dataFile] = new FoundResultsFilePossibilities(msDataFilePath.GetFileNameWithoutExtension());
+                var msDataFilePath = new MsDataFilePath(dataFile.FilePath);
+                SpectrumSourceFiles[dataFile.FilePath] = new FoundResultsFilePossibilities(msDataFilePath.GetFileNameWithoutExtension());
 
                 // If a matching file is already in the document, then don't include
                 // this library spectrum source in the set of files to find.
-                if (measuredResults != null && measuredResults.FindMatchingMSDataFile(MsDataFileUri.Parse(dataFile)) != null)
+                if (measuredResults != null && measuredResults.FindMatchingMSDataFile(MsDataFileUri.Parse(dataFile.FilePath)) != null)
                     continue;
 
-                if (File.Exists(dataFile) && DataSourceUtil.IsDataSource(dataFile))
+                if (File.Exists(dataFile.FilePath) && DataSourceUtil.IsDataSource(dataFile.FilePath))
                 {
                     // We've found the dataFile in the exact location
                     // specified in the document library, so just add it
                     // to the "FOUND" list.
-                    SpectrumSourceFiles[dataFile].ExactMatch = msDataFilePath.ToString();
+                    SpectrumSourceFiles[dataFile.FilePath].ExactMatch = msDataFilePath.ToString();
                 }
             }
             DocLib.ReadStream.CloseStream();
