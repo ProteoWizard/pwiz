@@ -126,7 +126,7 @@ namespace pwiz.Skyline.Alerts
             }
             if (libraryDetails.UniquePeptideCount > 0)
             {
-                detailsText.AppendLine(string.Format(Resources.SpectrumLibraryInfoDlg_SetDetailsText_Unique_peptides, libraryDetails.UniquePeptideCount.ToString(numFormat)));
+                detailsText.AppendLine(string.Format(Resources.SpectrumLibraryInfoDlg_SetDetailsText_Unique_peptides__0__, libraryDetails.UniquePeptideCount.ToString(numFormat)));
             }
             detailsText.AppendLine(string.Format(Resources.SpectrumLibraryInfoDlg_SetDetailsText_Unique_Precursors___0_,
                                                  libraryDetails.SpectrumCount.ToString(numFormat)));

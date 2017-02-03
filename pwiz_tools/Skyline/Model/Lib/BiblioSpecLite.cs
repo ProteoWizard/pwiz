@@ -115,7 +115,6 @@ namespace pwiz.Skyline.Model.Lib
 
         private PooledSqliteConnection _sqliteConnection;
         private PooledSqliteConnection _sqliteConnectionRedundant;
-        private IStreamManager _streamManager;
 
         private BiblioLiteSourceInfo[] _librarySourceFiles;
 
@@ -161,7 +160,6 @@ namespace pwiz.Skyline.Model.Lib
 
             // Create the SQLite connection without actually connecting
             _sqliteConnection = new PooledSqliteConnection(streamManager.ConnectionPool, FilePath);
-            _streamManager = streamManager;
 
             // Create an empty list for _librarySource files, will be updated when library is loaded
             _librarySourceFiles = new BiblioLiteSourceInfo[0];
@@ -271,6 +269,7 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
                     {
+                        // ReSharper disable NonLocalizedString
                         select.CommandText =
                             @"SELECT ssf.fileName, st.scoreType, ssf.cutoffScore, rt.bestSpectrum
                             FROM SpectrumSourceFiles ssf 
@@ -279,6 +278,7 @@ namespace pwiz.Skyline.Model.Lib
                             LEFT JOIN ScoreTypes st 
                             ON st.id IN (SELECT rs.ScoreType FROM RefSpectra rs WHERE rs.fileId = ssf.id)
                             ORDER BY ssf.fileName;";
+                        // ReSharper restore NonLocalizedString
                         using (SQLiteDataReader reader = select.ExecuteReader())
                         {
                             while (reader.Read())
