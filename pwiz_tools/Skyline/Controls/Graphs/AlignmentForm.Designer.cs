@@ -36,7 +36,7 @@ namespace pwiz.Skyline.Controls.Graphs
             this.lblFormDescription = new System.Windows.Forms.Label();
             this.comboAlignAgainst = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
-            this.dataGridView1 = new System.Windows.Forms.DataGridView();
+            this.dataGridView1 = new pwiz.Common.Controls.CommonDataGridView();
             this.colLibrary = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colDataFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colSlope = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -344,7 +344,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.ComboBox comboAlignAgainst;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.DataGridView dataGridView1;
+        private pwiz.Common.Controls.CommonDataGridView dataGridView1;
         private System.Windows.Forms.SplitContainer splitContainer1;
         private ZedGraph.ZedGraphControl zedGraphControl;
         private System.Windows.Forms.BindingSource bindingSource;

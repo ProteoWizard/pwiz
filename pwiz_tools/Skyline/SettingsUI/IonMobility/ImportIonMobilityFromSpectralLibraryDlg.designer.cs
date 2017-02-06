@@ -43,7 +43,7 @@
             this.textFilePath = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
             this.btnBrowseFile = new System.Windows.Forms.Button();
-            this.gridRegression = new System.Windows.Forms.DataGridView();
+            this.gridRegression = new pwiz.Common.Controls.CommonDataGridView();
             this.Charge = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Slope = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Intercept = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -215,7 +215,7 @@
         private System.Windows.Forms.TextBox textFilePath;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Button btnBrowseFile;
-        private System.Windows.Forms.DataGridView gridRegression;
+        private pwiz.Common.Controls.CommonDataGridView gridRegression;
         private System.Windows.Forms.DataGridViewTextBoxColumn Charge;
         private System.Windows.Forms.DataGridViewTextBoxColumn Slope;
         private System.Windows.Forms.DataGridViewTextBoxColumn Intercept;

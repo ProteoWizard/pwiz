@@ -36,7 +36,7 @@
             this.availableFieldsTreeFilter = new pwiz.Common.DataBinding.Controls.Editor.AvailableFieldsTree();
             this.panel1 = new System.Windows.Forms.Panel();
             this.btnAddFilter = new System.Windows.Forms.Button();
-            this.dataGridViewFilter = new System.Windows.Forms.DataGridView();
+            this.dataGridViewFilter = new pwiz.Common.Controls.CommonDataGridView();
             this.colFilterColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colFilterOperation = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.colFilterOperand = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -195,7 +195,7 @@
         private AvailableFieldsTree availableFieldsTreeFilter;
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.Button btnAddFilter;
-        private System.Windows.Forms.DataGridView dataGridViewFilter;
+        private pwiz.Common.Controls.CommonDataGridView dataGridViewFilter;
         private System.Windows.Forms.DataGridViewTextBoxColumn colFilterColumn;
         private System.Windows.Forms.DataGridViewComboBoxColumn colFilterOperation;
         private System.Windows.Forms.DataGridViewTextBoxColumn colFilterOperand;

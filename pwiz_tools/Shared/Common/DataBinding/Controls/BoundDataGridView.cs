@@ -23,6 +23,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
+using pwiz.Common.Controls;
 using pwiz.Common.DataBinding.Internal;
 
 namespace pwiz.Common.DataBinding.Controls
@@ -34,7 +35,7 @@ namespace pwiz.Common.DataBinding.Controls
     /// the BindingSource's DataSource to be set to the BindingListView.
     /// 
     /// </summary>
-    public class BoundDataGridView : DataGridView
+    public class BoundDataGridView : CommonDataGridView
     {
         private BindingListSource _bindingListSource;
         private IViewContext _viewContext;

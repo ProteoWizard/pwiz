@@ -18,10 +18,11 @@
  */
 using System;
 using System.Windows.Forms;
+using pwiz.Common.Controls;
 
 namespace pwiz.Skyline.Controls
 {
-    public class DataGridViewEx : DataGridView
+    public class DataGridViewEx : CommonDataGridView
     {
         protected override bool ProcessDataGridViewKey(KeyEventArgs e)
         {

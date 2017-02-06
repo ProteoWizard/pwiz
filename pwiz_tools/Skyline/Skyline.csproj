@@ -998,18 +998,6 @@
     <Compile Include="FileUI\ImportResultsSamplesDlg.Designer.cs">
       <DependentUpon>ImportResultsSamplesDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="FileUI\PivotReportDlg.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="FileUI\PivotReportDlg.Designer.cs">
-      <DependentUpon>PivotReportDlg.cs</DependentUpon>
-    </Compile>
-    <Compile Include="FileUI\PreviewReportDlg.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="FileUI\PreviewReportDlg.Designer.cs">
-      <DependentUpon>PreviewReportDlg.cs</DependentUpon>
-    </Compile>
     <Compile Include="Controls\Graphs\SpectrumGraphItem.cs" />
     <Compile Include="Controls\SequenceTree.cs">
       <SubType>Component</SubType>
@@ -2233,18 +2221,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\MatchModificationsControl.zh-CHS.resx">
       <DependentUpon>MatchModificationsControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="FileUI\PivotReportDlg.ja.resx">
-      <DependentUpon>PivotReportDlg.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="FileUI\PivotReportDlg.zh-CHS.resx">
-      <DependentUpon>PivotReportDlg.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="FileUI\PreviewReportDlg.ja.resx">
-      <DependentUpon>PreviewReportDlg.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="FileUI\PreviewReportDlg.zh-CHS.resx">
-      <DependentUpon>PreviewReportDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PublishDocumentDlg.ja.resx">
       <DependentUpon>PublishDocumentDlg.cs</DependentUpon>
@@ -3632,14 +3608,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ImportResultsSamplesDlg.resx">
       <DependentUpon>ImportResultsSamplesDlg.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="FileUI\PivotReportDlg.resx">
-      <DependentUpon>PivotReportDlg.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="FileUI\PreviewReportDlg.resx">
-      <DependentUpon>PreviewReportDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\SequenceTree.resx">

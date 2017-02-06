@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(RTDetails));
-            this.gridStatistics = new System.Windows.Forms.DataGridView();
+            this.gridStatistics = new pwiz.Common.Controls.CommonDataGridView();
             this.Peptide = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Hydrophobicity = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Predicted = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -109,7 +109,7 @@
 
         #endregion
 
-        private System.Windows.Forms.DataGridView gridStatistics;
+        private pwiz.Common.Controls.CommonDataGridView gridStatistics;
         private System.Windows.Forms.Button btnOk;
         private System.Windows.Forms.DataGridViewTextBoxColumn Peptide;
         private System.Windows.Forms.DataGridViewTextBoxColumn Hydrophobicity;

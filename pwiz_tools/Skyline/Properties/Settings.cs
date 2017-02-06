@@ -25,7 +25,6 @@ using System.Xml.Serialization;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -2915,28 +2914,7 @@ namespace pwiz.Skyline.Properties
         public ReportSpec EditItem(Control owner, ReportSpec item,
             IEnumerable<ReportSpec> existing, object tag)
         {
-            using (PivotReportDlg editReport = new PivotReportDlg(existing ?? this))
-            {
-                try
-                {
-                    var databaseProvider = tag as IReportDatabaseProvider;
-                    if (databaseProvider != null)
-                        editReport.SetDatabase(databaseProvider.GetDatabase(owner));
-                    editReport.SetReportSpec(item);
-                    if (editReport.ShowDialog(owner) == DialogResult.OK)
-                    {
-                        return editReport.GetReportSpec();
-                    }
-                }
-                catch (Exception x)
-                {
-                    var message = TextUtil.LineSeparate(Resources.ReportSpecList_EditItem_An_unexpected_error_occurred_while_analyzing_the_current_document,
-                                                        x.Message);
-                    MessageDlg.Show(owner,message);
-                }
-
-                return null;
-            }
+            throw new InvalidOperationException();
         }
 
         public ReportSpec CopyItem(ReportSpec item)
