@@ -176,6 +176,13 @@ void Reader_Waters::read(const string& filename,
     if (runIndex != 0)
         throw ReaderFail("[Reader_Waters::read] multiple runs not supported");
 
+    string::const_iterator unicodeCharItr = std::find_if(filename.begin(), filename.end(), [](char ch) { return !isprint(ch) || static_cast<int>(ch) < 0; });
+    if (unicodeCharItr != filename.end())
+    {
+        auto utf8CharAsString = [](string::const_iterator ch, string::const_iterator end) { string utf8; while (ch != end && *ch < 0) { utf8 += *ch; ++ch; }; return utf8; };
+        throw ReaderFail(string("[Reader_Waters::read()] Waters API does not support Unicode in filepaths ('") + utf8CharAsString(unicodeCharItr, filename.end()) + "')");
+    }
+
     RawDataPtr rawdata = RawDataPtr(new RawData(filename));
 
     result.run.spectrumListPtr = SpectrumListPtr(new SpectrumList_Waters(result, rawdata, config));
