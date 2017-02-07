@@ -95,16 +95,11 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 Assert.AreEqual(0, dlg.PeptidesCount);
-                Assert.AreEqual(4, dlg.RunsConvertedCount);
-                Assert.AreEqual(2, dlg.RunsFailedCount);
+                Assert.AreEqual(1, dlg.RunsConvertedCount);  // Libraries now convert through internal alignment to single RT scale
+                Assert.AreEqual(0, dlg.RunsFailedCount);
             });
 
-            VerifyRegression(dlg, 0, true, 11, 1, 1);
-            VerifyRegression(dlg, 1, true, 11, 1, 2);
-            VerifyRegression(dlg, 2, true, 11, 1, 1);
-            VerifyRegression(dlg, 3, true, 11, 1, 2);
-            VerifyRegression(dlg, 4, false, 11, 1, 2);
-            VerifyRegression(dlg, 5, false, 11, 1, 2);
+            VerifyRegression(dlg, 0, true, 11, 1, 0);
 
             OkDialog(dlg, dlg.OkDialog);
         }

@@ -2174,6 +2174,17 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The added file included {0} repeated protein sequences. Their names were added as aliases to ensure the protein list contains only one copy of each sequence..
+        /// </summary>
+        public static string BuildBackgroundProteomeDlg_AddFastaFile_The_added_file_included__0__repeated_protein_sequences__Their_names_were_added_as_aliases_to_ensure_the_protein_list_contains_only_one_copy_of_each_sequence_ {
+            get {
+                return ResourceManager.GetString("BuildBackgroundProteomeDlg_AddFastaFile_The_added_file_included__0__repeated_prot" +
+                        "ein_sequences__Their_names_were_added_as_aliases_to_ensure_the_protein_list_cont" +
+                        "ains_only_one_copy_of_each_sequence_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Add FASTA File.
         /// </summary>
         public static string BuildBackgroundProteomeDlg_btnAddFastaFile_Click_Add_FASTA_File {

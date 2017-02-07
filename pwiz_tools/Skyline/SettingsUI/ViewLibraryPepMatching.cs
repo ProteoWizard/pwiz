@@ -151,67 +151,76 @@ namespace pwiz.Skyline.SettingsUI
             int peptides = 0;
             int totalPeptides = _libraryPepInfos.Length;
 
-            foreach (ViewLibraryPepInfo pepInfo in _libraryPepInfos)
+            ProteomeDb proteomeDb = null;
+
+            try
             {
-                if (broker.IsCanceled)
-                    return;
-
-                int charge = pepInfo.Key.Charge;
-                // Find the matching peptide.
-                var nodePepMatched = AssociateMatchingPeptide(pepInfo, charge).PeptideNode;
-                if (nodePepMatched != null)
+                foreach (ViewLibraryPepInfo pepInfo in _libraryPepInfos)
                 {
-                    MatchedPeptideCount++;
+                    if (broker.IsCanceled)
+                        return;
 
-                    PeptideMatch peptideMatchInDict;
-                    // If peptide is already in the dictionary of peptides to add, merge the children.
-                    if (!dictNewNodePeps.TryGetValue(nodePepMatched.SequenceKey, out peptideMatchInDict))
+                    int charge = pepInfo.Key.Charge;
+                    // Find the matching peptide.
+                    var nodePepMatched = AssociateMatchingPeptide(pepInfo, charge).PeptideNode;
+                    if (nodePepMatched != null)
                     {
-                        IList<ProteinInfo> matchedProteins = null;
+                        MatchedPeptideCount++;
 
-                        var sequence = nodePepMatched.Peptide.Sequence;
-                        // This is only set if the user has checked the associate peptide box. 
-                        if (_backgroundProteome != null)
+                        PeptideMatch peptideMatchInDict;
+                        // If peptide is already in the dictionary of peptides to add, merge the children.
+                        if (!dictNewNodePeps.TryGetValue(nodePepMatched.SequenceKey, out peptideMatchInDict))
                         {
-                            // We want to query the background proteome as little as possible,
-                            // so sequences are mapped to protein lists in a dictionary.
-                            if (!dictSequenceProteins.TryGetValue(sequence, out matchedProteins))
+                            IList<ProteinInfo> matchedProteins = null;
+
+                            var sequence = nodePepMatched.Peptide.Sequence;
+                            // This is only set if the user has checked the associate peptide box. 
+                            if (_backgroundProteome != null)
                             {
-                                using (var proteomeDb = _backgroundProteome.OpenProteomeDb())
+                                // We want to query the background proteome as little as possible,
+                                // so sequences are mapped to protein lists in a dictionary.
+                                if (!dictSequenceProteins.TryGetValue(sequence, out matchedProteins))
                                 {
+                                    if (proteomeDb == null)
+                                        proteomeDb = _backgroundProteome.OpenProteomeDb();
                                     var digestion = _backgroundProteome.GetDigestion(proteomeDb, Settings.PeptideSettings);
                                     if (digestion != null)
                                     {
-                                        matchedProteins = digestion.GetProteinsWithSequence(sequence).Select(protein=>new ProteinInfo(protein)).ToList();
+                                        matchedProteins = digestion.GetProteinsWithSequence(sequence, proteomeDb).Select(protein => new ProteinInfo(protein)).ToList();
                                         dictSequenceProteins.Add(sequence, matchedProteins);
                                     }
                                 }
+
                             }
-                            
+                            dictNewNodePeps.Add(nodePepMatched.SequenceKey,
+                                new PeptideMatch(nodePepMatched, matchedProteins,
+                                    MatchesFilter(sequence, charge)));
                         }
-                        dictNewNodePeps.Add(nodePepMatched.SequenceKey, 
-                            new PeptideMatch(nodePepMatched, matchedProteins, 
-                                MatchesFilter(sequence, charge)));
-                    }
-                    else
-                    {
-                        PeptideDocNode nodePepInDictionary = peptideMatchInDict.NodePep;
-                        if (!nodePepInDictionary.HasChildCharge(charge))
+                        else
                         {
-                            List<DocNode> newChildren = nodePepInDictionary.Children.ToList();
-                            newChildren.AddRange(nodePepMatched.Children);
-                            newChildren.Sort(Peptide.CompareGroups);
-                            var key = nodePepMatched.SequenceKey;
-                            dictNewNodePeps.Remove(key);
-                            dictNewNodePeps.Add(key, 
-                                new PeptideMatch((PeptideDocNode)nodePepInDictionary.ChangeChildren(newChildren),
-                                    peptideMatchInDict.Proteins, peptideMatchInDict.MatchesFilterSettings));
+                            PeptideDocNode nodePepInDictionary = peptideMatchInDict.NodePep;
+                            if (!nodePepInDictionary.HasChildCharge(charge))
+                            {
+                                List<DocNode> newChildren = nodePepInDictionary.Children.ToList();
+                                newChildren.AddRange(nodePepMatched.Children);
+                                newChildren.Sort(Peptide.CompareGroups);
+                                var key = nodePepMatched.SequenceKey;
+                                dictNewNodePeps.Remove(key);
+                                dictNewNodePeps.Add(key,
+                                    new PeptideMatch((PeptideDocNode)nodePepInDictionary.ChangeChildren(newChildren),
+                                        peptideMatchInDict.Proteins, peptideMatchInDict.MatchesFilterSettings));
+                            }
                         }
                     }
+                    peptides++;
+                    int progressValue = (int)((peptides + 0.0) / totalPeptides * PERCENT_PEPTIDE_MATCH);
+                    broker.ProgressValue = progressValue;
                 }
-                peptides++;
-                int progressValue = (int)((peptides + 0.0) / totalPeptides * PERCENT_PEPTIDE_MATCH);
-                broker.ProgressValue = progressValue;
+            }
+            finally
+            {
+                if (proteomeDb != null)
+                    proteomeDb.Dispose();
             }
             PeptideMatches = dictNewNodePeps;
         }
@@ -241,7 +250,8 @@ namespace pwiz.Skyline.SettingsUI
                     var digestion = _backgroundProteome.GetDigestion(proteomeDb, Settings.PeptideSettings);
                     if (digestion != null)
                     {
-                        matchedProteins = digestion.GetProteinsWithSequence(sequence).Select(protein=>new ProteinInfo(protein)).ToArray();
+                        matchedProteins = digestion.GetProteinsWithSequence(sequence, proteomeDb)
+                            .Select(protein=>new ProteinInfo(protein)).ToArray();
                     }
                 }
             }
@@ -388,6 +398,8 @@ namespace pwiz.Skyline.SettingsUI
         {
             selectedPath = toPath;
             IList<DocNode> nodePepGroups = new List<DocNode>();
+            var keysAddedWithoutMatch = new 
+                SortedDictionary<PeptideSequenceModKey, PeptideMatch>();
             foreach (PeptideGroupDocNode nodePepGroup in document.PeptideGroups)
             {
                 IList<DocNode> nodePeps = new List<DocNode>();
@@ -399,9 +411,13 @@ namespace pwiz.Skyline.SettingsUI
                     // or if we are in a peptide list and this peptide has been matched to protein(s),
                     // then we don't touch this particular node.
                     if (!dictCopy.TryGetValue(key, out peptideMatch) ||
-                        (nodePepGroup.IsPeptideList && 
-                        (peptideMatch.Proteins != null && peptideMatch.Proteins.Any()))) 
+                        (nodePepGroup.IsPeptideList &&
+                         (peptideMatch.Proteins != null && peptideMatch.Proteins.Any())))
+                    {
                         nodePeps.Add(nodePep);
+                        if (keysAddedWithoutMatch.ContainsKey(key))
+                            keysAddedWithoutMatch.Add(key, new PeptideMatch(null, null, false));
+                    }
                     else
                     {
                         var proteinName = nodePepGroup.PeptideGroup.Name;

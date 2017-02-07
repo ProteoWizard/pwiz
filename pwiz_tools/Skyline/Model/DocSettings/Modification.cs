@@ -1062,7 +1062,7 @@ namespace pwiz.Skyline.Model.DocSettings
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             return ArrayUtil.EqualsDeep(obj._modifications, _modifications) &&
-                Equals(obj.Peptide, Peptide);
+                Equals(obj.Peptide.Sequence, Peptide.Sequence);
         }
 
         public override bool Equals(object obj)
@@ -1078,7 +1078,7 @@ namespace pwiz.Skyline.Model.DocSettings
             unchecked
             {
                 int result = _modifications.GetHashCodeDeep();
-                result = (result*397) ^ Peptide.GetHashCode();
+                result = (result*397) ^ Peptide.Sequence.GetHashCode();
                 return result;
             }
         }

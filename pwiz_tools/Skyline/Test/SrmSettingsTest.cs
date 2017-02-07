@@ -309,6 +309,7 @@ namespace pwiz.SkylineTest
             AssertEx.DeserializeNoError<Enzyme>("<enzyme name=\"Validate (4)\" cut_c=\"M\" no_cut_c=\"N\" cut_n=\"K\" no_cut_n=\"P\" />");
             AssertEx.DeserializeNoError<Enzyme>("<enzyme name=\"Validate (1)\" cut_c=\"M\" no_cut_c=\"P\" />");
             AssertEx.DeserializeNoError<Enzyme>("<enzyme name=\"Validate (1)\" cut_n=\"M\" no_cut_n=\"P\" />");
+            AssertEx.DeserializeNoError<Enzyme>("<enzyme name=\"Validate (1)\" cut_n=\"M\" no_cut_n=\"P\" semi=\"True\"/>");
 
             // Missing parameters
             AssertEx.DeserializeError<Enzyme>("<enzyme/>");
@@ -363,13 +364,73 @@ namespace pwiz.SkylineTest
             var enzymeUnrestrictedBothTrypsin = new Enzyme("U-B-Trypsin", "K", null, "R", null);
             DigestsTo(sequence, false, 10, enzymeUnrestrictedBothTrypsin, "RFAHFAHP", "RFAHK", "PAHK", "AHME", "RMLSTK", "RSTTK", "RK");
             DigestsTo(sequence, true, 10, enzymeUnrestrictedBothTrypsin, "RFAHK", "PAHK", "AHME", "RK");
+            var enzymeTrypsinSemi = new Enzyme("Trypsin (semi)", "KR", "P", null, null, true);
+            DigestsTo(sequence, false, 12, null, 4, enzymeTrypsinSemi,
+                "FAHFAHPR",
+                "FAHFAHP",
+                "FAHFAH",
+                "FAHFA",
+                "FAHF",
+                "AHFAHPR",
+                "HFAHPR",
+                "FAHPR",
+                "AHPR",
+                "FAHKPAHK",
+                "FAHKPAH",
+                "FAHKPA",
+                "FAHKP",
+                "FAHK",
+                "AHKPAHK",
+                "HKPAHK",
+                "KPAHK",
+                "PAHK",
+                "AHMER",
+                "AHME",
+                "HMER",
+                "MLSTK",
+                "MLST",
+                "LSTK",
+                "STTK");
+            DigestsTo("ASKSUPAHLONGNONCLEAVINGSEQUENCERCPEPTIDE", false, 2, 8, 5, enzymeTrypsinSemi,
+                "SUPAHLON",
+                "SUPAHLO",
+                "SUPAHL",
+                "SUPAH",
+                "EQUENCER",
+                "QUENCER",
+                "UENCER",
+                "ENCER",
+                "CPEPTIDE",
+                "CPEPTID",
+                "CPEPTI",
+                "CPEPT",
+                "PEPTIDE",
+                "EPTIDE",
+                "PTIDE");
+            // Make sure Equals and GetHashCode are implemented to include the new semi bool
+            var trypCompare = new Enzyme("Trypsin", "KR", "P", null, null);
+            var trypSemiCompare = new Enzyme("Trypsin", "KR", "P", null, null, true);
+            Assert.AreNotEqual(trypCompare, trypSemiCompare);
+            Assert.AreNotEqual(trypCompare.GetHashCode(), trypSemiCompare.GetHashCode());
+            // And serialization is implemented to include new property
+            AssertEx.Serializable(enzymeTrypsinSemi, (e1, e2) =>
+            {
+                Assert.AreEqual(e1, e2);
+                Assert.AreNotSame(e1, e2);
+            });
         }
 
         private static void DigestsTo(string sequence, bool excludeRaggedEnds, int expectedCleavagePoints, Enzyme enzyme, params string[] pepSeqs)
         {
+            DigestsTo(sequence, excludeRaggedEnds, expectedCleavagePoints, null, null, enzyme, pepSeqs);
+        }
+        
+        private static void DigestsTo(string sequence, bool excludeRaggedEnds, int expectedCleavagePoints, int? maxPepLen, int? minPepLen, Enzyme enzyme, params string[] pepSeqs)
+        {
             var fastaSeq = new FastaSequence("p", "d", new ProteinMetadata[0], sequence);
             var digestSettings = new DigestSettings(0, excludeRaggedEnds);
-            var peptides = "Missed " + enzyme.CountCleavagePoints(sequence) + " " + string.Join(" ", enzyme.Digest(fastaSeq, digestSettings).Select(p => p.Sequence));
+            var peptides = "Missed " + enzyme.CountCleavagePoints(sequence) + " " +
+                string.Join(" ", enzyme.Digest(fastaSeq, digestSettings, maxPepLen, minPepLen).Select(p => p.Sequence));
             var expected = "Missed " + expectedCleavagePoints + " " + string.Join(" ", pepSeqs);
             Assert.AreEqual(expected, peptides);
         }

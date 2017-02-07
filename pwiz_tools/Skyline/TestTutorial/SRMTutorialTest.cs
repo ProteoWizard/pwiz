@@ -81,10 +81,9 @@ namespace pwiz.SkylineTestTutorial
             {
                 backProteomeDlg.BackgroundProteomePath = GetTestPath("Skyline");
                 backProteomeDlg.BackgroundProteomeName = "TubercuList_v2-6";
-                backProteomeDlg.AddFastaFile(fastaFile);
-                WaitForCondition(() => backProteomeDlg.StatusText.Length > 10);
-                Assert.IsTrue(backProteomeDlg.StatusText.Contains("3982".ToString(CultureInfo.CurrentCulture)));
             });
+            AddFastaToBackgroundProteome(backProteomeDlg, fastaFile, 40);
+            RunUI(() => Assert.IsTrue(backProteomeDlg.StatusText.Contains(3982.ToString(CultureInfo.CurrentCulture))));
             OkDialog(backProteomeDlg, backProteomeDlg.OkDialog);
 
             RunUI(() => pepSettings.SelectedTab = PeptideSettingsUI.TABS.Prediction);
@@ -213,7 +212,7 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(matchingDlg, matchingDlg.OkDialog);
             OkDialog(peptidePasteDlg, peptidePasteDlg.OkDialog);
 
-            int expectedTrans = TransitionGroup.IsAvoidMismatchedIsotopeTransitions ? 306 : 313;
+            int expectedTrans = TransitionGroup.IsAvoidMismatchedIsotopeTransitions ? 324 : 331;
             var docAfterPaste = WaitForDocumentChange(docBeforePaste);
             AssertEx.IsDocumentState(docAfterPaste, null, 10, 30, 68, expectedTrans);
             RunUI(() =>
@@ -266,7 +265,7 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(pepSettings2, pepSettings2.OkDialog);
             WaitForLibrary(20213);
             WaitForCondition(() => SkylineWindow.Document.PeptideTransitionCount != expectedTrans);
-            int expectedTransAfter = TransitionGroup.IsAvoidMismatchedIsotopeTransitions ? 444 : 450;
+            int expectedTransAfter = TransitionGroup.IsAvoidMismatchedIsotopeTransitions ? 464 : 470;
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 10, 30, 96, expectedTransAfter);
 
             var libraryExpl = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);

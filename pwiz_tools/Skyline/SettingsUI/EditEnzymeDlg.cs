@@ -66,6 +66,7 @@ namespace pwiz.Skyline.SettingsUI
                     textCleavage.Text = string.Empty;
                     textRestrict.Text = string.Empty;
                     comboDirection.SelectedIndex = 0;
+                    cbSemiCleavage.Checked = false;
                 }
                 else
                 {
@@ -90,6 +91,7 @@ namespace pwiz.Skyline.SettingsUI
                         textCleavage.Text = _enzyme.CleavageC;
                         textRestrict.Text = _enzyme.RestrictC;
                     }
+                    cbSemiCleavage.Checked = _enzyme.IsSemiCleaving;
                 }
             }
         }

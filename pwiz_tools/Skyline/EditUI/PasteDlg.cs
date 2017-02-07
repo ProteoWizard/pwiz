@@ -1464,7 +1464,7 @@ namespace pwiz.Skyline.EditUI
                 {
                     return null;
                 }
-                var proteins = digestion.GetProteinsWithSequence(peptideSequence);
+                var proteins = digestion.GetProteinsWithSequence(peptideSequence, proteomeDb);
                 return proteins.ConvertAll(protein => protein.Name);
             }
         }

@@ -41,6 +41,8 @@ namespace pwiz.Skyline.Model
         public const int MIN_PRECURSOR_DECOY_MASS_SHIFT = -30;
         public const int MAX_PRECURSOR_DECOY_MASS_SHIFT = 30;
 
+        public const int MAX_MATCHED_MSMS_PEAKS = 100;
+
         public static ICollection<int> MassShifts { get { return MASS_SHIFTS; } }
 
         private static readonly HashSet<int> MASS_SHIFTS = new HashSet<int>(MassShiftEnum);
@@ -850,7 +852,7 @@ namespace pwiz.Skyline.Model
                     if (libraries.TryLoadSpectrum(new LibKey(sequenceMod, PrecursorCharge), out spectrumInfo))
                     {
                         var spectrumInfoR = new LibraryRankedSpectrumInfo(spectrumInfo, labelType,
-                            this, settings, mods, useFilter, 50);
+                            this, settings, mods, useFilter, MAX_MATCHED_MSMS_PEAKS);
                         foreach (var rmi in spectrumInfoR.PeaksRanked)
                         {
                             if (!transitionRanks.ContainsKey(rmi.PredictedMz))

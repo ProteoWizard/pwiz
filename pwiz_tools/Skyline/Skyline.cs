@@ -174,12 +174,12 @@ namespace pwiz.Skyline
             ToolReportCache.Instance.Register(this);
 
             // Get placement values before changing anything.
+            bool maximize = Settings.Default.MainWindowMaximized || Program.DemoMode;
             Size size = Settings.Default.MainWindowSize;
             if (!size.IsEmpty)
                 Size = size;
 
             // Restore window placement.
-            bool maximize = Settings.Default.MainWindowMaximized || Program.DemoMode;
             Point location = Settings.Default.MainWindowLocation;
             if (!location.IsEmpty)
             {

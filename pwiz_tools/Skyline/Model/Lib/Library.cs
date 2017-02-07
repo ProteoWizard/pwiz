@@ -1097,7 +1097,8 @@ namespace pwiz.Skyline.Model.Lib
                 // Adjust the running mean.
                 meanTimes += (time - meanTimes)/(i+1);
             }
-            return retentionTimes.Average();
+            var statTimes = new Statistics(retentionTimes);
+            return statTimes.Median();
         }
 
         public TimeSource? GetTimeSource(string sequence)

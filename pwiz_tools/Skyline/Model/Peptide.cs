@@ -542,7 +542,7 @@ namespace pwiz.Skyline.Model
         #endregion
     }
 
-    public sealed class PeptideSequenceModKey
+    public sealed class PeptideSequenceModKey : IComparable
     {
         public PeptideSequenceModKey(Peptide peptide, ExplicitMods modifications)
         {
@@ -590,6 +590,22 @@ namespace pwiz.Skyline.Model
                 hashCode = (hashCode * 397) ^ (CustomIon != null ? CustomIon.GetHashCode() : 0);
                 return hashCode;
             }
+        }
+
+        public int CompareTo(object obj)
+        {
+            return String.Compare(ToString(), obj.ToString(), StringComparison.Ordinal);
+        }
+
+        public override string ToString()
+        {
+            if (CustomIon != null)
+                return CustomIon.ToString();
+            if (Modifications == null)
+                return Sequence;
+
+            var calc = new ExplicitSequenceMassCalc(Modifications, SrmSettings.MonoisotopicMassCalc, IsotopeLabelType.light);
+            return calc.GetModifiedSequence(Sequence, true);
         }
 
         #endregion

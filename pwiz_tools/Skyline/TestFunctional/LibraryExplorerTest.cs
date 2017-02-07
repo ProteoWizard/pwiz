@@ -652,7 +652,7 @@ namespace pwiz.SkylineTestFunctional
             var fmpDlg0 = ShowDialog<FilterMatchedPeptidesDlg>(() => _viewLibUI.AddAllPeptides());
             RunUI(() => fmpDlg0.AddFiltered = true);
             using (new CheckDocumentStateWithPossibleProteinMetadataBackgroundUpdate(1, 82, 96,
-                TransitionGroup.IsAvoidMismatchedIsotopeTransitions ? 279 : 282))
+                TransitionGroup.IsAvoidMismatchedIsotopeTransitions ? 285 : 288))
             {
                 RunDlg<MultiButtonMsgDlg>(fmpDlg0.OkDialog, msgDlg => msgDlg.Btn1Click());
             }

@@ -526,8 +526,8 @@ namespace pwiz.Skyline
                 if (fileName != null)
                 {
                     // First look for the file name in the document directory
-                    string pathLibrary = Path.Combine(Path.GetDirectoryName(documentPath) ?? string.Empty, fileName);
-                    if (File.Exists(pathLibrary))
+                    string pathLibrary = PathEx.FindExistingRelativeFile(documentPath, fileName);
+                    if (pathLibrary != null)
                         return library.CreateSpec(pathLibrary).ChangeDocumentLocal(true);
                     // In the user's default library directory
                     pathLibrary = Path.Combine(Settings.Default.LibraryDirectory, fileName);
@@ -574,10 +574,8 @@ namespace pwiz.Skyline
             }
 
             // First look for the file name in the document directory
-            string fileName = Path.GetFileName(irtCalc.DatabasePath);
-            string filePath = Path.Combine(Path.GetDirectoryName(documentPath) ?? string.Empty, fileName ?? string.Empty);
-
-            if (File.Exists(filePath))
+            string filePath = PathEx.FindExistingRelativeFile(documentPath, irtCalc.DatabasePath);
+            if (filePath != null)
             {
                 try
                 {
@@ -613,10 +611,8 @@ namespace pwiz.Skyline
             }
 
             // First look for the file name in the document directory
-            string fileName = Path.GetFileName(optLib.DatabasePath);
-            string filePath = Path.Combine(Path.GetDirectoryName(documentPath) ?? string.Empty, fileName ?? string.Empty);
-
-            if (File.Exists(filePath))
+            string filePath = PathEx.FindExistingRelativeFile(documentPath, optLib.DatabasePath);
+            if (filePath != null)
             {
                 try
                 {
@@ -654,10 +650,8 @@ namespace pwiz.Skyline
             }
 
             // First look for the file name in the document directory
-            string fileName = Path.GetFileName(ionMobilityLibSpec.PersistencePath);
-            string filePath = Path.Combine(Path.GetDirectoryName(documentPath) ?? string.Empty, fileName ?? string.Empty);
-
-            if (File.Exists(filePath))
+            string filePath = PathEx.FindExistingRelativeFile(documentPath, ionMobilityLibSpec.PersistencePath);
+            if (filePath != null)
             {
                 try
                 {
@@ -696,12 +690,12 @@ namespace pwiz.Skyline
                     return result;                
             }
 
-            string fileName = Path.GetFileName(backgroundProteomeSpec.DatabasePath);
             // First look for the file name in the document directory
-            string pathBackgroundProteome = Path.Combine(Path.GetDirectoryName(documentPath) ?? string.Empty, fileName ?? string.Empty);
-            if (File.Exists(pathBackgroundProteome))
+            string pathBackgroundProteome = PathEx.FindExistingRelativeFile(documentPath, backgroundProteomeSpec.DatabasePath);
+            if (pathBackgroundProteome != null)
                 return new BackgroundProteomeSpec(backgroundProteomeSpec.Name, pathBackgroundProteome);
             // In the user's default library directory
+            string fileName = Path.GetFileName(backgroundProteomeSpec.DatabasePath);
             pathBackgroundProteome = Path.Combine(Settings.Default.ProteomeDbDirectory, fileName ?? string.Empty);
             if (File.Exists(pathBackgroundProteome))
                 return new BackgroundProteomeSpec(backgroundProteomeSpec.Name, pathBackgroundProteome);

@@ -607,7 +607,7 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() =>
                 {
                     Assert.AreEqual(558, addPeptidesDlg.PeptidesCount);
-                    Assert.AreEqual(2, addPeptidesDlg.RunsConvertedCount);
+                    Assert.AreEqual(1, addPeptidesDlg.RunsConvertedCount);  // Libraries now convert through internal alignment to single RT scale
                     Assert.AreEqual(3, addPeptidesDlg.KeepPeptidesCount);
                 });
 
@@ -636,7 +636,7 @@ namespace pwiz.SkylineTestTutorial
                           // If the cache gets rebuilt, then because the chromatograms
                           // were minimized, the peak picking is not exactly the same
                           // using the minimized chromatograms.
-                          VerifyRTRegression(0.3, 19.47, 0.9998);
+                          VerifyRTRegression(0.3, 19.37, 0.9998);
                           var graphChrom = SkylineWindow.GetGraphChrom("Velos_2011_1110_RJ_16"); // Not L10N
                           Assert.AreEqual(37.6, graphChrom.RetentionMsMs[0], 0.05);
                           Assert.IsTrue(graphChrom.BestPeakTime.HasValue);

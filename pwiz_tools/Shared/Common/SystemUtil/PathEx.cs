@@ -149,5 +149,31 @@ namespace pwiz.Common.SystemUtil
             string messageWithPath = string.Join(Environment.NewLine, argumentException.Message, path);
             return new ArgumentException(messageWithPath, argumentException);
         }
+
+        /// <summary>
+        /// Given a path to an anchor file and a path where another file used to exist, the function
+        /// tests for existence of the file in the same folder as the anchor and two parent folders up.
+        /// </summary>
+        /// <param name="relativeFilePath">Path to the anchor file</param>
+        /// <param name="findFilePath">Outdated path to the file to find</param>
+        /// <returns>The path to the file, if it exists, or null if it is not found</returns>
+        public static string FindExistingRelativeFile(string relativeFilePath, string findFilePath)
+        {
+            string fileName = Path.GetFileName(findFilePath);
+            string searchDir = Path.GetDirectoryName(relativeFilePath);
+            // Look in document directory and two parent directories up
+            for (int i = 0; i < 2; i++)
+            {
+                string filePath = Path.Combine(searchDir ?? string.Empty, fileName ?? string.Empty);
+                if (File.Exists(filePath))
+                    return filePath;
+                // Look in parent directory
+                searchDir = Path.GetDirectoryName(searchDir);
+                // Stop if the root directory was checked last
+                if (searchDir == null)
+                    break;
+            }
+            return null;
+        }
     }
 }

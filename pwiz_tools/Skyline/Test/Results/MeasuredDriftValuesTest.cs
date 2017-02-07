@@ -42,7 +42,13 @@ namespace pwiz.SkylineTest.Results
             var testFilesDir = new TestFilesDir(TestContext, @"Test\Results\BlibDriftTimeTest.zip"); // Re-used from BlibDriftTimeTest
             // Open document with some peptides but no results
             var docPath = testFilesDir.GetTestPath("BlibDriftTimeTest.sky");
+            // This was a malformed document, which caused problems after a fix to not recalculate
+            // document library settings on open. To avoid rewriting this test for the document
+            // which now contains 2 precursors, the first precursor is removed immediately.
             SrmDocument docOriginal = ResultsUtil.DeserializeDocument(docPath);
+            var pathFirstPeptide = docOriginal.GetPathTo((int) SrmDocument.Level.Molecules, 0);
+            var nodeFirstPeptide = (DocNodeParent) docOriginal.FindNode(pathFirstPeptide);
+            docOriginal = (SrmDocument) docOriginal.RemoveChild(pathFirstPeptide, nodeFirstPeptide.Children[0]);
             using (var docContainer = new ResultsTestDocumentContainer(docOriginal, docPath))
             {
                 var doc = docContainer.Document;

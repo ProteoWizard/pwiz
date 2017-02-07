@@ -412,7 +412,7 @@ namespace pwiz.SkylineTestA
             var docFilterAdditionalWindows = docLibFiltered.ChangeSettings(settingsNew);
             
             // Check that now no more transitions are between 750 and 1250
-            Assert.AreEqual(8, docFilterAdditionalWindows.PeptideTransitionCount);
+            Assert.AreEqual(10, docFilterAdditionalWindows.PeptideTransitionCount);
             Assert.AreEqual(0, docFilterAdditionalWindows.PeptideTransitions.Count(nodeTran =>
                 nodeTran.Mz > 750 && nodeTran.Mz < 1250));
             // But other transitions remain unchanged

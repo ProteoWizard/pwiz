@@ -223,8 +223,15 @@ namespace pwiz.Skyline.Model
             PeptideSettings pepSettings = settings.PeptideSettings;
             DigestSettings digest = pepSettings.DigestSettings;
             IPeptideFilter filter = (useFilter ? settings : PeptideFilter.UNFILTERED);
-
-            foreach (var peptide in pepSettings.Enzyme.Digest(this, digest))
+            int? maxLen = null, minLen = null;
+            var pick = pepSettings.Libraries.Pick;
+            if (useFilter && pick != PeptidePick.library && pick != PeptidePick.either)
+            {
+                // CONSIDER(brendanx): It should be possible to get min and max length from libraries
+                maxLen = pepSettings.Filter.MaxPeptideLength;
+                minLen = pepSettings.Filter.MinPeptideLength;
+            }
+            foreach (var peptide in pepSettings.Enzyme.Digest(this, digest, maxLen, minLen))
             {
                 if (null != peptideSequence && peptideSequence != peptide.Sequence)
                 {

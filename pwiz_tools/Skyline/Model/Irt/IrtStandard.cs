@@ -286,6 +286,26 @@ namespace pwiz.Skyline.Model.Irt
             NULL, BIOGNOSYS_10, BIOGNOSYS_11, PIERCE, REPLICAL, SCIEX, SIGMA, APOA1, CIRT_SHORT
         });
 
+        /// <summary>
+        /// Corrections in percentile of spectral library scan times for peptides with trailing elution profiles that remain
+        /// detectable in DDA.
+        /// </summary>
+        private static readonly Dictionary<string, double> _peptideSpectrumTimeSkewCorrections = new Dictionary<string, double>
+        {
+            // Biognosys
+            {"YILAGVENSK", 0.3}, // Not L10N
+            {"DGLDAASYYAPVR", 0.3}, // Not L10N
+            {"LFLQFGAQGSPFLK", 0.3} // Not L10N
+        };
+
+        public static double GetSpectrumTimePercentile(string modifiedSequence)
+        {
+            double percentile;
+            if (!_peptideSpectrumTimeSkewCorrections.TryGetValue(modifiedSequence, out percentile))
+                percentile = 0.5;
+            return percentile;
+        }
+
         public IrtStandard(string name, string skyFile, IEnumerable<DbIrtPeptide> peptides)
         {
             Name = name;

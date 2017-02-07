@@ -364,7 +364,10 @@ namespace pwiz.Skyline.SettingsUI
                             stream.CloseStream();
                         if (longWait.IsCanceled)
                             return;
-                        processed = RCalcIrt.ProcessRetentionTimes(monitor, lib.RetentionTimeProviders, lib.FileCount ?? 0,
+                        var irtProviders = lib.RetentionTimeProvidersIrt.ToArray();
+                        if (!irtProviders.Any())
+                            irtProviders = lib.RetentionTimeProviders.ToArray();
+                        processed = RCalcIrt.ProcessRetentionTimes(monitor, irtProviders, irtProviders.Length,
                                                                    buildState.IrtStandard.Peptides.ToArray(), new DbIrtPeptide[0]);
                     });
                     if (status.IsCanceled)

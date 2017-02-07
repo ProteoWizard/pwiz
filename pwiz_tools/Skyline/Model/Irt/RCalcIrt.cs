@@ -24,6 +24,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -256,6 +257,8 @@ namespace pwiz.Skyline.Model.Irt
                 var data = new RetentionTimeProviderData(retentionTimeProvider, standardPeptideList.OrderBy(peptide => peptide.Irt));
                 if (data.RegressionSuccess || data.CalcRegressionWith(retentionTimeProvider, standardPeptideList, items))
                 {
+                    // Trace.WriteLine(string.Format("slope = {0}, intercept = {1}", data.RegressionRefined.Slope, data.RegressionRefined.Intercept));
+
                     AddRetentionTimesToDict(retentionTimeProvider, data.RegressionRefined, dictPeptideAverages, standardPeptideList);
                 }
                 dictProviderData.Add(new KeyValuePair<string, RetentionTimeProviderData>(retentionTimeProvider.Name, data));
@@ -403,23 +406,31 @@ namespace pwiz.Skyline.Model.Irt
 
     public class IrtPeptideAverages
     {
+        private readonly List<double> _irtValues;
+
         public IrtPeptideAverages(string peptideModSeq, double irtAverage, TimeSource? timeSource)
         {
             PeptideModSeq = peptideModSeq;
-            IrtAverage = irtAverage;
+            _irtValues = new List<double> { irtAverage };
             TimeSource = timeSource;
-            RunCount = 1;
         }
 
         public string PeptideModSeq { get; private set; }
-        public double IrtAverage { get; private set; }
+
+        public double IrtAverage
+        {
+            get
+            {
+                var statIrts = new Statistics(_irtValues);
+                return statIrts.Median();
+            }
+        }
+
         public TimeSource? TimeSource { get; private set; }
-        private int RunCount { get; set; }
 
         public void AddIrt(double irt)
         {
-            RunCount++;
-            IrtAverage += (irt - IrtAverage) / RunCount;
+            _irtValues.Add(irt);
         }
     }
 
@@ -438,8 +449,14 @@ namespace pwiz.Skyline.Model.Irt
                 listIrts.Add(standardPeptide.Irt);
             }
 
+            var arrayTimes = listTimes.ToArray();
+            var libraryTimes = retentionTimes as LibraryRetentionTimes;
+            // if (libraryTimes != null)
+            //     Trace.WriteLine(libraryTimes.Name);
+            // Trace.WriteLine(string.Format("times = {0}", string.Join(", ", arrayTimes.Select(t => string.Format("{0:F02}", t)))));
+
             Peptides = listPeptides.ToArray();
-            Times = listTimes.ToArray();
+            Times = arrayTimes;
             Irts = listIrts.ToArray();
             MissingIndices = new HashSet<int>();
             for (var i = 0; i < Times.Length; i++)

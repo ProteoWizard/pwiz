@@ -38,6 +38,8 @@ namespace pwiz.Skyline.Model.DocSettings
 {
     public interface IRegressionFunction
     {
+        double Slope { get; }
+        double Intercept { get; }
         double GetY(double x);
     }
 
@@ -189,26 +191,32 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             double? score = Calculator.ScoreSequence(seq);
             if (score.HasValue)
-                return GetRetentionTime(score.Value, conversion);
+                return GetRetentionTime(score.Value, conversion, false);
             return null;
         }
 
-        public double? GetRetentionTime(double score)
+        public double? GetRetentionTime(double score, bool fullPrecision = false)
         {
-            return GetRetentionTime(score, Conversion);
+            return GetRetentionTime(score, Conversion, fullPrecision);
         }
 
-        public double? GetRetentionTime(double score, ChromFileInfoId fileId)
+        public double? GetRetentionTime(double score, ChromFileInfoId fileId, bool fullPrecision = false)
         {
-            return GetRetentionTime(score, GetConversion(fileId));
+            return GetRetentionTime(score, GetConversion(fileId), fullPrecision);
         }
 
-        private static double? GetRetentionTime(double score, IRegressionFunction conversion)
+        private static double? GetRetentionTime(double score, IRegressionFunction conversion, bool fullPrecision)
         {
-            // CONSIDER: Return the full value?
-            return conversion != null
-                       ? GetRetentionTimeDisplay(conversion.GetY(score))
-                       : null;
+            if (conversion != null)
+            {
+                // CONSIDER: Return the full value in more cases?
+                double time = conversion.GetY(score);
+                if (!fullPrecision)
+                    time = GetRetentionTimeDisplay(time).Value;
+                return time;
+            }
+
+            return null;
         }
 
         public IRegressionFunction GetConversion(ChromFileInfoId fileId)
@@ -271,19 +279,21 @@ namespace pwiz.Skyline.Model.DocSettings
                 // have changed.  This is important to avoid an infinite loop when
                 // not enough information is present to actually calculate the Conversion
                 // parameter.
-                var enumPrevious = previous.PeptideTransitionGroups.GetEnumerator();
-                foreach (var nodeGroup in document.PeptideTransitionGroups)
+                using (var enumPrevious = previous.PeptideTransitionGroups.GetEnumerator())
                 {
-                    if (!enumPrevious.MoveNext())
-                        return true;
-                    var nodeGroupPrevious = enumPrevious.Current;
-                    if (nodeGroupPrevious == null)
-                        return true;
-                    if (!ReferenceEquals(nodeGroup.Id, nodeGroupPrevious.Id) ||
-                        !ReferenceEquals(nodeGroup.Results, nodeGroupPrevious.Results))
-                        return true;
+                    foreach (var nodeGroup in document.PeptideTransitionGroups)
+                    {
+                        if (!enumPrevious.MoveNext())
+                            return true;
+                        var nodeGroupPrevious = enumPrevious.Current;
+                        if (nodeGroupPrevious == null)
+                            return true;
+                        if (!ReferenceEquals(nodeGroup.Id, nodeGroupPrevious.Id) ||
+                            !ReferenceEquals(nodeGroup.Results, nodeGroupPrevious.Results))
+                            return true;
+                    }
+                    return enumPrevious.MoveNext();
                 }
-                return enumPrevious.MoveNext();
             }
 
             // If there is a documentwide regression, but no per-file information
@@ -313,9 +323,10 @@ namespace pwiz.Skyline.Model.DocSettings
         /// </summary>
         /// <param name="peptidesTimes">List of peptide-time pairs</param>
         /// <param name="scoreCache">Cached pre-calculated scores for these peptides</param>
+        /// <param name="fileId">The file id (optional) with which an iRT regression may be associated</param>
         /// <returns>Calculated values for the peptides using this regression</returns>
         public RetentionTimeStatistics CalcStatistics(List<MeasuredRetentionTime> peptidesTimes,
-            IDictionary<string, double> scoreCache)
+            IDictionary<string, double> scoreCache, ChromFileInfoId fileId = null)
         {
             var listPeptides = new List<string>();
             var listHydroScores = new List<double>();
@@ -329,7 +340,10 @@ namespace pwiz.Skyline.Model.DocSettings
                 double score = usableCalc ? ScoreSequence(Calculator, scoreCache, seq) : 0;
                 listPeptides.Add(seq);
                 listHydroScores.Add(score);
-                listPredictions.Add(GetRetentionTime(score) ?? 0);
+                var predictedRT = fileId != null
+                    ? GetRetentionTime(score, fileId, true)
+                    : GetRetentionTime(score, true);
+                listPredictions.Add(predictedRT ?? 0);
                 listRetentionTimes.Add(peptideTime.RetentionTime);
             }
 

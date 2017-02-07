@@ -43,7 +43,7 @@ namespace pwiz.SkylineTestTutorial
     /// Testing the tutorial for Skyline Targeted Method Editing
     /// </summary>
     [TestClass]
-    public class MethodEditTutorialTest : AbstractFunctionalTest
+    public class MethodEditTutorialTest : AbstractFunctionalTestEx
     {
         private const string YEAST_ATLAS = "Yeast (Atlas)"; // Not L10N
         private const string YEAST_GPM = "Yeast (GPM)"; // Not L10N
@@ -104,9 +104,8 @@ namespace pwiz.SkylineTestTutorial
                 buildBackgroundProteomeDlg.BackgroundProteomePath =
                     TestFilesDirs[0].GetTestPath(@"MethodEdit\FASTA\Yeast"); // Not L10N
                 buildBackgroundProteomeDlg.BackgroundProteomeName = "Yeast"; // Not L10N
-                buildBackgroundProteomeDlg.AddFastaFile(
-                    TestFilesDirs[0].GetTestPath(@"MethodEdit\FASTA\sgd_yeast.fasta")); // Not L10N
             });
+            AddFastaToBackgroundProteome(buildBackgroundProteomeDlg, TestFilesDirs[0].GetTestPath(@"MethodEdit\FASTA\sgd_yeast.fasta"), 61);
             PauseForScreenShot<BuildBackgroundProteomeDlg>("Edit Background Proteome form", 5); // Not L10N
 
             OkDialog(buildBackgroundProteomeDlg, buildBackgroundProteomeDlg.OkDialog);

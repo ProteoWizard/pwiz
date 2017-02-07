@@ -261,7 +261,8 @@ namespace pwiz.Skyline.Model
         public const double FORMAT_VERSION_3_54 = 3.54; // Native q values
         public const double FORMAT_VERSION_3_55 = 3.55; // Adds linear width option for drift time filtering
         public const double FORMAT_VERSION_3_6 = 3.6; // Improved full-scan settings for DIA isolation schemes and add selective extraction
-        public const double FORMAT_VERSION = FORMAT_VERSION_3_6;
+        public const double FORMAT_VERSION_3_61 = 3.61; // Semi-cleavage enzymes
+        public const double FORMAT_VERSION = FORMAT_VERSION_3_61;
 
         public const int MAX_PEPTIDE_COUNT = 100*1000;
         public const int MAX_TRANSITION_COUNT = 10*MAX_PEPTIDE_COUNT; // Modern DIA experiments may often have 6 transitions per peptide + 3 precursor ions

@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Graphs;
 using System.Windows.Forms;
@@ -67,6 +68,7 @@ namespace pwiz.SkylineTestUtil
             WaitForCondition(() => File.Exists(documentFile));
             RunUI(() => SkylineWindow.OpenFile(documentFile));
             WaitForDocumentLoaded();
+            Thread.Sleep(1000);
         }
 
         public void ConvertDocumentToSmallMolecules(RefinementSettings.ConvertToSmallMoleculesMode mode = RefinementSettings.ConvertToSmallMoleculesMode.formulas, 
@@ -299,6 +301,20 @@ namespace pwiz.SkylineTestUtil
             var graphChromatogram = SkylineWindow.GraphChromatograms.First();
             WaitForConditionUI(() => SkylineWindow.GraphFullScan != null && SkylineWindow.GraphFullScan.IsLoaded);
             Assert.IsTrue(graphChromatogram.TestFullScanSelection(x, y, paneKey));
+        }
+
+        public void AddFastaToBackgroundProteome(BuildBackgroundProteomeDlg proteomeDlg, string fastaFile, int repeats)
+        {
+            RunDlg<MessageDlg>(
+                () => proteomeDlg.AddFastaFile(TestFilesDirs[0].GetTestPath(fastaFile)),
+                messageDlg =>
+                {
+                    Assert.AreEqual(
+                        string.Format(Resources.BuildBackgroundProteomeDlg_AddFastaFile_The_added_file_included__0__repeated_protein_sequences__Their_names_were_added_as_aliases_to_ensure_the_protein_list_contains_only_one_copy_of_each_sequence_,
+                        repeats), messageDlg.Message);
+                    messageDlg.OkDialog();
+                }); // Not L10N
+            
         }
     }
 }

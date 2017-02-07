@@ -421,7 +421,7 @@ namespace pwiz.SkylineTestTutorial
 
             var docProteins = WaitForDocumentChange(docInitial);
 
-            AssertEx.IsDocumentState(docProteins, null, 250, 346, 347, 1034);
+            AssertEx.IsDocumentState(docProteins, null, 250, 346, 347, 1041);
 
             PauseForScreenShot("Main window", 21);
         }

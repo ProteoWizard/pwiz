@@ -32,6 +32,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.Util;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
@@ -132,6 +133,12 @@ namespace pwiz.Skyline.Model.Lib
                     return library;
             }
             return null;
+        }
+
+        public static BiblioSpecLiteLibrary GetUnloadedDocumentLibrary(BiblioSpecLiteSpec spec)
+        {
+            Assume.IsTrue(spec.IsDocumentLibrary);  // Otherwise, not using as intended
+            return new BiblioSpecLiteLibrary(spec);
         }
 
         /// <summary>
@@ -546,12 +553,12 @@ namespace pwiz.Skyline.Model.Lib
                                     break;
                                 case 3:
                                     select.CommandText =
-                                        "SELECT RefSpectraId, SpectrumSourceId, retentionTime, ionMobilityValue, ionMobilityType, ionMobilityHighEnergyDriftTimeOffsetMsec FROM [RetentionTimes]"; // Not L10N
+                                        "SELECT RefSpectraId, SpectrumSourceId, retentionTime, ionMobilityType, ionMobilityValue, ionMobilityHighEnergyDriftTimeOffsetMsec FROM [RetentionTimes]"; // Not L10N
                                     hasIonMobilityTypeColumn = true;
                                     break;
                                 case 2:
                                     select.CommandText =
-                                        "SELECT RefSpectraId, SpectrumSourceId, retentionTime, ionMobilityValue, ionMobilityType FROM [RetentionTimes]"; // Not L10N
+                                        "SELECT RefSpectraId, SpectrumSourceId, retentionTime, ionMobilityType, ionMobilityValue FROM [RetentionTimes]"; // Not L10N
                                     hasIonMobilityTypeColumn = true;
                                     break;
                             } 
@@ -572,9 +579,10 @@ namespace pwiz.Skyline.Model.Lib
                     {
                         while (reader.Read())
                         {
-                            var refSpectraId = reader.GetInt32(0);
-                            var spectrumSourceID = reader.GetInt32(1);
-                            var retentionTime = reader.GetValue(2) as double?;
+                            int colIndex = 0;
+                            var refSpectraId = reader.GetInt32(colIndex++);
+                            var spectrumSourceID = reader.GetInt32(colIndex++);
+                            var retentionTime = reader.GetValue(colIndex++) as double?;
                             // One-to-many from this entry in the RetentionTimes table to entries in the RefSpectra table
                             spectraIdFileIdTimes.Add(new KeyValuePair<int, KeyValuePair<int, double>>(
                                 refSpectraId, 
@@ -584,10 +592,10 @@ namespace pwiz.Skyline.Model.Lib
                             {
                                 if (hasIonMobilityTypeColumn)
                                 {
-                                    var ionMobilityType = NullSafeToInteger(reader.GetValue(4));
+                                    var ionMobilityType = NullSafeToInteger(reader.GetValue(colIndex++));
                                     bool isCCS = (ionMobilityType == (int) IonMobilityType.collisionalCrossSection);
-                                    double ionMobility = ionMobilityType > 0 ? reader.GetDouble(3) : 0;
-                                    double highEnergyDriftTimeOffsetMsec = ionMobilityType > 0 && schemaVer > 2 ? reader.GetDouble(5) : 0;
+                                    double ionMobility = ionMobilityType > 0 ? reader.GetDouble(colIndex++) : 0;
+                                    double highEnergyDriftTimeOffsetMsec = ionMobilityType > 0 && schemaVer > 2 ? reader.GetDouble(colIndex) : 0;
                                     spectraIdFileIdIonMobilities.Add(new KeyValuePair<int, KeyValuePair<int, IonMobilityInfo>>(
                                         refSpectraId, 
                                         new KeyValuePair<int, IonMobilityInfo>(spectrumSourceID,
@@ -595,9 +603,9 @@ namespace pwiz.Skyline.Model.Lib
                                 }
                                 else
                                 {
-                                    double driftTimeMsec = reader.GetDouble(3);
-                                    double collisionalCrossSectionSqA = reader.GetDouble(4);
-                                    double highEnergyDriftTimeOffsetMsec = reader.GetDouble(5);
+                                    double driftTimeMsec = reader.GetDouble(colIndex++);
+                                    double collisionalCrossSectionSqA = reader.GetDouble(colIndex++);
+                                    double highEnergyDriftTimeOffsetMsec = reader.GetDouble(colIndex++);
                                     var ionMobilityInfo = 
                                         driftTimeMsec == 0 && collisionalCrossSectionSqA == 0 && highEnergyDriftTimeOffsetMsec == 0 ?
                                         IonMobilityInfo.EMPTY :
@@ -1160,6 +1168,95 @@ namespace pwiz.Skyline.Model.Lib
                 }
             }
             return times.SelectMany(array => array);
+        }
+
+        private const int MIN_IRT_ALIGNMENT_POINT_COUNT = 10;
+
+        public override bool TryGetIrts(out LibraryRetentionTimes retentionTimes)
+        {
+            // TODO: This is a bit of a hack that needs to be improved to work better for
+            //       more cases and further optimized. But, it has been shown to work very
+            //       well for the case where the library is composed of a number of highly
+            //       similar runs, and acceptably even for the combined runs of the Navarro,
+            //       Nature Biotech, 2016 HYE data set where 6 runs share only tens of peptides
+            //       including the iRT standards with the first run.
+            var newSources = ResultNameMap.FromNamedElements(ListRetentionTimeSources());
+            var allLibraryRetentionTimes = ReadAllRetentionTimes(newSources);
+            foreach (var retentionTimeSource in newSources.Values)
+            {
+                var fileAlignments = CalculateFileRetentionTimeAlignments(retentionTimeSource.Name, allLibraryRetentionTimes);
+                if (fileAlignments == null)
+                    break;
+                retentionTimes = new LibraryRetentionTimes(FilePath, AlignAndAverageAllRetentionTimes(newSources, fileAlignments));
+                return true;
+            }
+            retentionTimes = null;
+            return false;
+        }
+
+        public ResultNameMap<IDictionary<string, double>> ReadAllRetentionTimes(ResultNameMap<RetentionTimeSource> sources)
+        {
+            var allRetentionTimes = new Dictionary<string, IDictionary<string, double>>();
+            foreach (var source in sources)
+            {
+                LibraryRetentionTimes libraryRetentionTimes;
+                if (TryGetRetentionTimes(MsDataFileUri.Parse(source.Value.Name), out libraryRetentionTimes))
+                    allRetentionTimes.Add(source.Key, libraryRetentionTimes.GetFirstRetentionTimes());
+            }
+            return ResultNameMap.FromDictionary(allRetentionTimes);
+        }
+
+        public static IList<AlignedRetentionTimes> CalculateFileRetentionTimeAlignments(
+            string dataFileName, ResultNameMap<IDictionary<string, double>> libraryRetentionTimes)
+        {
+            var targetTimes = libraryRetentionTimes.Find(dataFileName);
+            var alignments = new List<AlignedRetentionTimes>();
+            foreach (var entry in libraryRetentionTimes)
+            {
+                AlignedRetentionTimes aligned = null;
+                if (dataFileName != entry.Key)
+                {
+                    aligned = AlignedRetentionTimes.AlignLibraryRetentionTimes(targetTimes, entry.Value, 0, () => false);
+                    if (aligned != null && aligned.RegressionPointCount < MIN_IRT_ALIGNMENT_POINT_COUNT)
+                        return null;
+                }
+                alignments.Add(aligned);
+            }
+            return alignments;
+        }
+
+        private IDictionary<string, Tuple<TimeSource, double[]>> AlignAndAverageAllRetentionTimes(
+            ResultNameMap<RetentionTimeSource> sources, IList<AlignedRetentionTimes> fileAlignments)
+        {
+            var allRetentionTimes = new Dictionary<string, List<double>>();
+            int i = 0;
+            foreach (var source in sources)
+            {
+                LibraryRetentionTimes libraryRetentionTimes;
+                if (TryGetRetentionTimes(MsDataFileUri.Parse(source.Value.Name), out libraryRetentionTimes))
+                    AddAlignedRetentionTimes(libraryRetentionTimes, allRetentionTimes, fileAlignments[i]);
+                i++;
+            }
+            return allRetentionTimes.ToDictionary(t => t.Key,
+                t => new Tuple<TimeSource, double[]>(TimeSource.scan,
+                    new[] { new Statistics(t.Value).Percentile(IrtStandard.GetSpectrumTimePercentile(t.Key)) }));
+        }
+
+        private void AddAlignedRetentionTimes(LibraryRetentionTimes libraryTimes, IDictionary<string, List<double>> allRetentionTimes, AlignedRetentionTimes fileAlignment)
+        {
+            foreach (var measuredTime in libraryTimes.PeptideRetentionTimes)
+            {
+                List<double> peptideTimes;
+                if (!allRetentionTimes.TryGetValue(measuredTime.PeptideSequence, out peptideTimes))
+                {
+                    peptideTimes = new List<double>();
+                    allRetentionTimes.Add(measuredTime.PeptideSequence, peptideTimes);
+                }
+                var alignedTime = measuredTime.RetentionTime;
+                if (fileAlignment != null)
+                    alignedTime = fileAlignment.RegressionRefined.Conversion.GetY(alignedTime);
+                peptideTimes.Add(alignedTime);
+            }
         }
 
         public override bool TryGetIonMobilities(LibKey key, MsDataFileUri filePath, out IonMobilityInfo[] ionMobilities)

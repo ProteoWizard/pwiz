@@ -1112,6 +1112,7 @@ namespace pwiz.Skyline.Properties
             return new[]
                 {
                     GetDefault(),
+                    new Enzyme("Trypsin (semi)", "KR", "P", null, null, true), // Added post-3.6 (without forcing a new list version)
                     new Enzyme("Trypsin/P", "KR", ""),
                     new Enzyme("TrypsinK", "K", "P"), 
                     new Enzyme("TrypsinR", "R", "P"), 

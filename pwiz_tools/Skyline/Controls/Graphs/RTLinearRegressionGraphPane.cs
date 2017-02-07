@@ -28,6 +28,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using ZedGraph;
@@ -407,6 +408,7 @@ namespace pwiz.Skyline.Controls.Graphs
             private readonly RetentionTimeScoreCache _scoreCache;
 
             private readonly RetentionTimeRegression _regressionPredict;
+            private readonly IRegressionFunction _conversionPredict;
             private readonly RetentionTimeStatistics _statisticsPredict;
 
             private readonly RetentionTimeRegression _regressionAll;
@@ -430,8 +432,16 @@ namespace pwiz.Skyline.Controls.Graphs
             private bool IsRunToRun { get { return _graphPane != null && _graphPane.RunToRun; }  }
 
 
-            public GraphData(SrmDocument document, GraphData dataPrevious,
-                int targetIndex, double threshold, int? thresholdPrecision, bool refine, bool bestResult, PointsTypeRT pointsType, int originalIndex = -1,RTLinearRegressionGraphPane graphPane = null)
+            public GraphData(SrmDocument document,
+                GraphData dataPrevious,
+                int targetIndex,
+                double threshold,
+                int? thresholdPrecision,
+                bool refine,
+                bool bestResult,
+                PointsTypeRT pointsType,
+                int originalIndex = -1,
+                RTLinearRegressionGraphPane graphPane = null)
             {
                 _document = document;
                 _graphPane = graphPane;
@@ -608,9 +618,22 @@ namespace pwiz.Skyline.Controls.Graphs
                     else
                     {
                         IDictionary<string, double> scoreCache = null;
-                        if (_regressionAll != null && ReferenceEquals(_regressionAll.Calculator, _regressionPredict.Calculator))
+                        if (_regressionAll != null && Equals(_regressionAll.Calculator, _regressionPredict.Calculator))
                             scoreCache = _statisticsAll.ScoreCache;
-                        _statisticsPredict = _regressionPredict.CalcStatistics(_targetTimes, scoreCache);
+                        // This is a bit of a HACK to better support the very common case of replicate graphing
+                        // with a replicate that only has one file. More would need to be done for replicates
+                        // composed of multiple files.
+                        ChromFileInfoId fileId = null;
+                        if (!bestResult && targetIndex != -1)
+                        {
+                            var chromatogramSet = document.Settings.MeasuredResults.Chromatograms[targetIndex];
+                            if (chromatogramSet.FileCount > 0)
+                            {
+                                fileId = chromatogramSet.MSDataFileInfos[0].FileId;
+                                _conversionPredict = _regressionPredict.GetConversion(fileId);
+                            }
+                        }
+                        _statisticsPredict = _regressionPredict.CalcStatistics(_targetTimes, scoreCache, fileId);
                     }
                 }
 
@@ -997,7 +1020,16 @@ namespace pwiz.Skyline.Controls.Graphs
             private double GetResidual(RetentionTimeRegression regression, double score, double time)
             {
                 //We round this for numerical error.
-                return Math.Round(time - regression.Conversion.GetY(score), 6);
+                return Math.Round(time - GetConversion(regression).GetY(score), 6);
+            }
+
+            private IRegressionFunction GetConversion(RetentionTimeRegression regression)
+            {
+                if (regression == null)
+                    return null;
+                if (ReferenceEquals(regression, _regressionPredict) && _conversionPredict != null)
+                    return _conversionPredict;
+                return regression.Conversion;
             }
 
             private static void GraphRegression(GraphPane graphPane,
@@ -1075,11 +1107,12 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
-            private static float AddRegressionLabel(PaneBase graphPane, Graphics g, double score, double time,
+            private float AddRegressionLabel(PaneBase graphPane, Graphics g, double score, double time,
                                                     RetentionTimeRegression regression, RetentionTimeStatistics statistics, Color color)
             {
                 string label;
-                if (regression == null || regression.Conversion == null || statistics == null)
+                var conversion = GetConversion(regression);
+                if (conversion == null || statistics == null)
                 {
                     label = String.Format("{0} = ?, {1} = ?\n" + "{2} = ?\n" + "r = ?", // Not L10N
                                           Resources.Regression_slope,
@@ -1090,9 +1123,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     label = String.Format("{0} = {1:F02}, {2} = {3:F02}\n" + "{4} = {5:F01}\n" + "r = {6}",   // Not L10N
                                           Resources.Regression_slope,
-                                          regression.Conversion.Slope,
+                                          conversion.Slope,
                                           Resources.Regression_intercept, 
-                                          regression.Conversion.Intercept,
+                                          conversion.Intercept,
                                           Resources.GraphData_AddRegressionLabel_window,
                                           regression.TimeWindow,
                                           Math.Round(statistics.R, RetentionTimeRegression.ThresholdPrecision));

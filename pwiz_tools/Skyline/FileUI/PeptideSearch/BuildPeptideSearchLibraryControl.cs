@@ -329,7 +329,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     ProcessedIrtAverages processed = null;
                     var status = longWait.PerformWork(WizardForm, 800, monitor =>
                     {
-                        processed = RCalcIrt.ProcessRetentionTimes(monitor, lib.RetentionTimeProviders, lib.FileCount ?? 0, standard.Peptides.ToArray(), new DbIrtPeptide[0]);
+                        var irtProviders = lib.RetentionTimeProvidersIrt.ToArray();
+                        if (!irtProviders.Any())
+                            irtProviders = lib.RetentionTimeProviders.ToArray();
+                        processed = RCalcIrt.ProcessRetentionTimes(monitor, irtProviders, irtProviders.Length,
+                            standard.Peptides.ToArray(), new DbIrtPeptide[0]);
                     });
                     if (status.IsError)
                     {

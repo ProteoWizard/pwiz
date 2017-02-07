@@ -215,7 +215,14 @@ namespace pwiz.ProteomeDatabase.API
             public ICollection<DbProteinName> Names { get; private set; }
         }
 
-        public void AddFastaFile(StreamReader reader, IProgressMonitor progressMonitor, ref IProgressStatus status,  bool delayAnalyzeDb)
+        public void AddFastaFile(StreamReader reader, IProgressMonitor progressMonitor, ref IProgressStatus status, bool delayAnalyzeDb)
+        {
+            int duplicateSequenceCount;
+            AddFastaFile(reader, progressMonitor, ref status, delayAnalyzeDb, out duplicateSequenceCount);
+        }
+
+        public void AddFastaFile(StreamReader reader, IProgressMonitor progressMonitor, ref IProgressStatus status,
+            bool delayAnalyzeDb, out int duplicateSequenceCount)
         {
             Dictionary<string, ProtIdNames> proteinIds = new Dictionary<string, ProtIdNames>();
             using (ISession session = OpenWriteSession()) // This is a long session, but there's no harm since db is useless till its done
@@ -226,6 +233,7 @@ namespace pwiz.ProteomeDatabase.API
                         proteinIds.Add(protein.Sequence, new ProtIdNames(protein.Id.Value, protein.Names));
                 }
                 int proteinCount = 0;
+                duplicateSequenceCount = 0;
                 using (var transaction = session.BeginTransaction())
                 using (IDbCommand insertProtein = session.Connection.CreateCommand())
                 using (IDbCommand insertName = session.Connection.CreateCommand())
@@ -259,6 +267,7 @@ namespace pwiz.ProteomeDatabase.API
                         if (proteinIds.TryGetValue(protein.Sequence, out proteinIdNames))
                         {
                             existingProtein = true;
+                            duplicateSequenceCount++;
                         }
                         else
                         {

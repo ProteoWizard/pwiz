@@ -39,7 +39,7 @@ namespace pwiz.Skyline.Model.DocSettings
         private char[] _restrictN;
         private char[] _cleavageAll;
 
-        static private readonly char[] nonAAs = {'*', '-'};
+        private static readonly char[] nonAAs = {'*', '-'};
 
         public Enzyme(string name, string cleavage, string restrict)
             : this(name, cleavage, restrict, null, null)
@@ -55,13 +55,15 @@ namespace pwiz.Skyline.Model.DocSettings
         {            
         }
 
-        public Enzyme(string name, string cleavage, string restrict, string cleavageN, string restrictN)
+        public Enzyme(string name, string cleavage, string restrict, string cleavageN, string restrictN, bool isSemiCleaving = false)
             : base(name)
         {
             CleavageC = MakeEmptyNull(cleavage);
             RestrictC = MakeEmptyNull(restrict);
             CleavageN = MakeEmptyNull(cleavageN);
             RestrictN = MakeEmptyNull(restrictN);
+
+            IsSemiCleaving = isSemiCleaving;
 
             Validate();
         }
@@ -70,6 +72,8 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             return !string.IsNullOrEmpty(s) ? s : null;
         }
+
+        public bool IsSemiCleaving { get; private set; }
 
         public string CleavageC { get; private set; }
 
@@ -126,6 +130,8 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             private readonly int[] _matches;
             private int _lastMatch;
+            private int _lastResetMatch = -1;
+
             public Matcher(string sequence, List<int> matches )
             {
                 Length = sequence.Length;
@@ -136,16 +142,16 @@ namespace pwiz.Skyline.Model.DocSettings
 
             public void Reset()
             {
-                _lastMatch = 0;
+                _lastMatch = ++_lastResetMatch;
             }
 
             public int? Match(int startat)
             {
                 if (_lastMatch >= _matches.Length)
                 {
-                    if (_matches.Length == 0)
+                    if (_matches.Length == 0 || _matches[_matches.Length - 1] < startat)
                         return null;
-                    _lastMatch = 0;
+                    _lastMatch = _lastResetMatch = 0;
                 }
                 while (startat > _matches[_lastMatch])
                 {
@@ -159,11 +165,13 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
-        public IEnumerable<Peptide> Digest(FastaSequence fastaSeq, DigestSettings settings, int? maxPeptideSequenceLength = null)
+        public IEnumerable<Peptide> Digest(FastaSequence fastaSeq, DigestSettings settings, int? maxPeptideSequenceLength = null, int? minPeptideSequenceLength = null)
         {
             int begin = 0;
             var sequence = fastaSeq.Sequence;
             int len = sequence.Length;
+            int maxPepLen = maxPeptideSequenceLength ?? int.MaxValue;
+            int minPepLen = minPeptideSequenceLength ?? 1;
             var matcher = new Matcher(sequence, GetMatches(sequence));
             while (begin < len)
             {
@@ -173,8 +181,10 @@ namespace pwiz.Skyline.Model.DocSettings
                 int missed = 0;
                 do
                 {
+                    int endLast = end;
                     var m = matcher.Match(end);
                     end = m + 1 ?? len;
+
                     // Save the end of the first cleavage
                     if (missed == 0)
                         endFirst = end;
@@ -195,17 +205,37 @@ namespace pwiz.Skyline.Model.DocSettings
                         }
                     }
 
-                    // Single amino acid peptides have no fragment ions.
-                    int count = end - begin;
                     // If the sequence is longer than we care to consider, quit
-                    if (maxPeptideSequenceLength.HasValue && count > maxPeptideSequenceLength)
-                        break;
+                    int count = end - begin;
+                    bool tooLong = maxPeptideSequenceLength.HasValue && count > maxPeptideSequenceLength;
 
-                    if (count > 1 && sequence.IndexOfAny(nonAAs, begin, count) == -1) // Not L10N
+                    if (!minPeptideSequenceLength.HasValue || count >= minPeptideSequenceLength.Value)
                     {
-                        yield return new Peptide(fastaSeq, sequence.Substring(begin, end - begin),
-                            begin, end, missed);
+                        // Single amino acid peptides have no fragment ions.
+                        if (count > 1 && sequence.IndexOfAny(nonAAs, begin, count) == -1) // Not L10N
+                        {
+                            if (!tooLong)
+                            {
+                                yield return new Peptide(fastaSeq, sequence.Substring(begin, end - begin),
+                                    begin, end, missed);
+                            }
+
+                            if (IsSemiCleaving)
+                            {
+                                // Add N-terminal semi-cleavage, which excludes peptides already included in prior peptide,
+                                // when missed cleavage occurs
+                                for (int i = Math.Min(count - 1, maxPepLen); i >= Math.Max(endLast - begin + 1, minPepLen); i--)
+                                    yield return new Peptide(fastaSeq, sequence.Substring(begin, i), begin, begin + i, missed);
+                                // Add C-terminal semi-cleavage, which excludes peptides to come in subsequent peptides,
+                                // when missed cleavage occurs
+                                for (int i = Math.Min(count - 1, maxPepLen); i >= Math.Max(end - endFirst + 1, minPepLen); i--)
+                                    yield return new Peptide(fastaSeq, sequence.Substring(end - i, i), end - i, end, missed);
+                            }
+                        }
                     }
+
+                    if (tooLong)
+                        break;
 
                     // Increment missed cleavages for next loop.
                     missed++;
@@ -287,6 +317,7 @@ namespace pwiz.Skyline.Model.DocSettings
             no_cut_c,
             cut_n,
             no_cut_n,
+            semi,
         }
 
         private void Validate()
@@ -346,6 +377,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             // Read tag attributes
             base.ReadXml(reader);
+            IsSemiCleaving = reader.GetBoolAttribute(ATTR.semi);
             CleavageC = reader.GetAttribute(ATTR.cut) ?? reader.GetAttribute(ATTR.cut_c);
             RestrictC = MakeEmptyNull(reader.GetAttribute(ATTR.no_cut) ?? reader.GetAttribute(ATTR.no_cut_c));
             var type = reader.GetAttribute(ATTR.sense, ToSeqTerminus);
@@ -391,6 +423,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 writer.WriteAttributeString(ATTR.no_cut, RestrictN);
                 writer.WriteAttribute(ATTR.sense, SequenceTerminus.N);
             }
+            writer.WriteAttribute(ATTR.semi, IsSemiCleaving);
         }
 
         #endregion
@@ -401,11 +434,12 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             string textC = ToString(CleavageC, RestrictC, SequenceTerminus.C);
             string textN = ToString(CleavageN, RestrictN, SequenceTerminus.N);
+            string semiCleavingSuffix = IsSemiCleaving ? " (semi)" : string.Empty;  // Not L10N
             if (string.IsNullOrEmpty(textN))
-                return string.Format("{0} {1}", Name, textC); // Not L10N
+                return string.Format("{0} {1}{2}", Name, textC, semiCleavingSuffix); // Not L10N
             if (string.IsNullOrEmpty(textC))
-                return string.Format("{0} {1} n-term", Name, textN); // Not L10N
-            return string.Format("{0} {1} c-term & {2} n-term", Name, textC, textN); // Not L10N
+                return string.Format("{0} {1} n-term{2}", Name, textN, semiCleavingSuffix); // Not L10N
+            return string.Format("{0} {1} c-term & {2} n-term{3}", Name, textC, textN, semiCleavingSuffix); // Not L10N
         }
 
         private static string ToString(string cleavage, string restrict, SequenceTerminus term)
@@ -425,7 +459,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 string.Equals(CleavageC, other.CleavageC) &&
                 string.Equals(RestrictC, other.RestrictC) &&
                 string.Equals(CleavageN, other.CleavageN) &&
-                string.Equals(RestrictN, other.RestrictN);
+                string.Equals(RestrictN, other.RestrictN) &&
+                IsSemiCleaving == other.IsSemiCleaving;
         }
 
         public override bool Equals(object obj)
@@ -444,6 +479,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 hashCode = (hashCode*397) ^ (RestrictC != null ? RestrictC.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ (CleavageN != null ? CleavageN.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ (RestrictN != null ? RestrictN.GetHashCode() : 0);
+                hashCode = (hashCode*397) ^ IsSemiCleaving.GetHashCode();
                 return hashCode;
             }
         }

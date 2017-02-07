@@ -1395,6 +1395,7 @@ namespace pwiz.Skyline.Model.DocSettings
             int len = libraries.Libraries.Count;
             int docLibShift = hasDocLib ? 1 : 0;
             LibrarySpec[] librarySpecs = new LibrarySpec[len + docLibShift];
+            Library[] librariesNew = new Library[librarySpecs.Length];
             for (int i = 0; i < len; i++)
             {
                 int iSpec = i + docLibShift;
@@ -1407,6 +1408,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     continue;
                 }
 
+                librariesNew[iSpec] = library;
                 librarySpecs[iSpec] = findLibrarySpec(library);
                 if (librarySpecs[iSpec] == null)
                     return null;    // Canceled
@@ -1420,14 +1422,15 @@ namespace pwiz.Skyline.Model.DocSettings
 
             if (hasDocLib)
             {
-                string docLibName = Path.GetFileNameWithoutExtension(docLibPath);
-                librarySpecs[0] = new BiblioSpecLiteSpec(docLibName, docLibPath).ChangeDocumentLibrary(true);
+                var documentLibrarySpec = BiblioSpecLiteSpec.GetDocumentLibrarySpec(docLibPath);
+                librariesNew[0] = BiblioSpecLiteLibrary.GetUnloadedDocumentLibrary(documentLibrarySpec);
+                librarySpecs[0] = documentLibrarySpec;
             }
 
             if (ArrayUtil.EqualsDeep(librarySpecs, libraries.LibrarySpecs))
                 return this;
 
-            libraries = libraries.ChangeLibrarySpecs(librarySpecs);
+            libraries = libraries.ChangeLibraries(librarySpecs, librariesNew);
             return ChangePeptideSettings(PeptideSettings.ChangeLibraries(libraries));
         }
 
@@ -2066,29 +2069,31 @@ namespace pwiz.Skyline.Model.DocSettings
             bool diffStaticMods = !StaticMod.EquivalentImplicitMods(newMods.StaticModifications,
                                            oldMods.StaticModifications);
             bool diffHeavyMods = false;
-            var enumNewHeavyMods = newMods.GetHeavyModifications().GetEnumerator();
-            foreach (var oldTypedMods in oldMods.GetHeavyModifications())
+            using (var enumNewHeavyMods = newMods.GetHeavyModifications().GetEnumerator())
             {
-                if (!enumNewHeavyMods.MoveNext())   // synch with foreach
+                foreach (var oldTypedMods in oldMods.GetHeavyModifications())
                 {
-                    // If fewer heavy label types
-                    diffHeavyMods = true;
-                    break;
-                }
-                var newTypedMods = enumNewHeavyMods.Current;
-                if (newTypedMods == null || // ReSharper
+                    if (!enumNewHeavyMods.MoveNext()) // synch with foreach
+                    {
+                        // If fewer heavy label types
+                        diffHeavyMods = true;
+                        break;
+                    }
+                    var newTypedMods = enumNewHeavyMods.Current;
+                    if (newTypedMods == null || // ReSharper
                         !Equals(newTypedMods.LabelType, oldTypedMods.LabelType) ||
                         !StaticMod.EquivalentImplicitMods(newTypedMods.Modifications,
                                                           oldTypedMods.Modifications))
-                {
-                    // If label types or implicit modifications differ
-                    diffHeavyMods = true;
-                    break;
+                    {
+                        // If label types or implicit modifications differ
+                        diffHeavyMods = true;
+                        break;
+                    }
                 }
+                // If not different yet, then make sure nothing was added
+                if (!diffHeavyMods)
+                    diffHeavyMods = enumNewHeavyMods.MoveNext();
             }
-            // If not different yet, then make sure nothing was added
-            if (!diffHeavyMods)
-                diffHeavyMods = enumNewHeavyMods.MoveNext();
 
             // Set explicit differences, if no differences in the global implicit modifications,
             // but the modifications have changed.
@@ -2242,9 +2247,19 @@ namespace pwiz.Skyline.Model.DocSettings
                 // If the old settings had a library that had never been
                 // loaded before or differs from the previously loaded library,
                 // then peptides must be updated.
-                if (oldLibrary == null ||
-                    newLibrary == null ||
-                    // Do not check for difference in loaded state!!  This will cause
+                if (oldLibrary == null || newLibrary == null)
+                {
+                    return false;
+                }
+                if (oldLib.LibrarySpecs[i].IsDocumentLibrary && newLib.LibrarySpecs[i].IsDocumentLibrary)
+                {
+                    // Old library and new libary are not the same during loading, since
+                    // we do not save out the LSID for the document library. Avoid recalculating
+                    // library settings during document Open.
+                    if (!oldLibrary.IsSameLibrary(newLibrary))
+                        continue;
+                }
+                if (// Do not check for difference in loaded state!!  This will cause
                     // all precursors to load library spectra during file open, which
                     // is too slow.
                     // oldLibrary.IsLoaded != newLibrary.IsLoaded ||

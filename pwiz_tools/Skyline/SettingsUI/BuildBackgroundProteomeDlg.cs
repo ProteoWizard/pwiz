@@ -250,6 +250,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             String databasePath = textPath.Text;
             Settings.Default.FastaDirectory = Path.GetDirectoryName(fastaFilePath);
+            int duplicateSequenceCount = 0;
             using (var longWaitDlg = new LongWaitDlg { ProgressValue = 0 })
             {
                 try
@@ -264,7 +265,7 @@ namespace pwiz.Skyline.SettingsUI
                             using (var reader = File.OpenText(fastaFilePath))
                             {
                                 IProgressStatus status = new ProgressStatus(longWaitDlg.Message);
-                                proteomeDb.AddFastaFile(reader, progressMonitor, ref status, false);
+                                proteomeDb.AddFastaFile(reader, progressMonitor, ref status, false, out duplicateSequenceCount);
                             }
                         }
                     });
@@ -282,6 +283,11 @@ namespace pwiz.Skyline.SettingsUI
             if (path != null)
                 listboxFasta.Items.Add(path);
             RefreshStatus();
+
+            if (duplicateSequenceCount > 0)
+            {
+                MessageDlg.Show(this, string.Format(Resources.BuildBackgroundProteomeDlg_AddFastaFile_The_added_file_included__0__repeated_protein_sequences__Their_names_were_added_as_aliases_to_ensure_the_protein_list_contains_only_one_copy_of_each_sequence_, duplicateSequenceCount));
+            }
         }
 
         private void textName_TextChanged(object sender, EventArgs e)

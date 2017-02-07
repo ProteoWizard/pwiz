@@ -1288,6 +1288,11 @@ namespace pwiz.Skyline.Model
                 return Equals(identity.Sequence, Sequence) &&
                        Equals(identity.CustomIon, CustomIon);
             }
+
+            public override string ToString()
+            {
+                return CustomIon != null ? CustomIon.ToString() : Sequence;
+            }
         }
     }
 }

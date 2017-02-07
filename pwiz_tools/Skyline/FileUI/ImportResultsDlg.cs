@@ -287,7 +287,7 @@ namespace pwiz.Skyline.FileUI
             var dataSources = GetDataSourcePaths(this, _documentSavedPath);
             if (dataSources == null || dataSources.Length == 0)
             {
-                MessageBox.Show(this, Resources.ImportResultsDlg_GetDataSourcePathsFile_No_results_files_chosen, Program.Name);
+                // Above call will have shown a message if necessary, or not if canceled
                 return null;
             }
 

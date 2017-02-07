@@ -45,6 +45,7 @@
             this.textCleavageN = new System.Windows.Forms.TextBox();
             this.labelRestrictN = new System.Windows.Forms.Label();
             this.labelCleavageN = new System.Windows.Forms.Label();
+            this.cbSemiCleavage = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // labelCleavage
@@ -134,12 +135,20 @@
             resources.ApplyResources(this.labelCleavageN, "labelCleavageN");
             this.labelCleavageN.Name = "labelCleavageN";
             // 
+            // cbSemiCleavage
+            // 
+            resources.ApplyResources(this.cbSemiCleavage, "cbSemiCleavage");
+            this.cbSemiCleavage.Name = "cbSemiCleavage";
+            this.helpTip.SetToolTip(this.cbSemiCleavage, resources.GetString("cbSemiCleavage.ToolTip"));
+            this.cbSemiCleavage.UseVisualStyleBackColor = true;
+            // 
             // EditEnzymeDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.cbSemiCleavage);
             this.Controls.Add(this.textRestrictN);
             this.Controls.Add(this.labelRestrictN);
             this.Controls.Add(this.textCleavageN);
@@ -181,5 +190,6 @@
         private System.Windows.Forms.Label labelRestrictN;
         private System.Windows.Forms.TextBox textCleavageN;
         private System.Windows.Forms.Label labelCleavageN;
+        private System.Windows.Forms.CheckBox cbSemiCleavage;
     }
 }

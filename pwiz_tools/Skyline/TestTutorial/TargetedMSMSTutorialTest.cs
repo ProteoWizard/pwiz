@@ -347,7 +347,7 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search Build Spectral Library with files page", 16);
             
             RunDlg<MessageDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck, dlg => dlg.OkDialog());
-            doc = WaitForDocumentChangeLoaded(doc);
+            doc = WaitForDocumentChangeLoaded(doc, WAIT_TIME*2);    // double wait time, becuase of intermittent failures on nightly runs
 
             // Verify document library was built
             string docLibPath = BiblioSpecLiteSpec.GetLibraryFileName(documentFile);

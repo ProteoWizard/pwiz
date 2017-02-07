@@ -102,7 +102,7 @@ namespace pwiz.SkylineTestFunctional
             CheckMidasRts(685.0491);
             CheckMidasRts(770.9383);
             CheckMidasRts(514.2946);
-            CheckMidasRts(640.8641);
+            CheckMidasRts(640.8641, 10.4, 13.9, 21.9, 20.2, 20.8, 19.8);
             CheckMidasRts(427.5785, 19.9);
             CheckMidasRts(619.8300, 14.0, 13.7, 19.8);
             CheckMidasRts(413.5558, 13.9, 13.6, 9.7);
@@ -114,7 +114,7 @@ namespace pwiz.SkylineTestFunctional
             CheckMidasRts(458.5614);
             CheckMidasRts(843.4157);
             CheckMidasRts(562.6129, 16.9, 17.5, 30.6, 26.3, 21.3, 13.6, 32.1);
-            CheckMidasRts(710.0267);
+            CheckMidasRts(710.0267, 29.3, 22.9, 18.73, 22.57, 23.8, 26.0, 21.9, 22.1);
             CheckMidasRts(680.8044);
             CheckMidasRts(454.2054);
             CheckMidasRts(753.3939);
@@ -126,7 +126,7 @@ namespace pwiz.SkylineTestFunctional
             CheckMidasRts(527.9472, 16.0, 30.0, 15.7, 5.6, 25.6, 18.3, 19.6, 16.5, 12.7, 11.1, 12.0);
             CheckMidasRts(801.9174);
             CheckMidasRts(534.9473, 19.0, 16.4, 18.3, 7.0, 12.5, 6.1, 19.6, 21.6);
-            CheckMidasRts(509.2489);
+            CheckMidasRts(509.2489, 13.7);
             CheckMidasRts(801.4303, 18.8, 32.7, 25.7);
             CheckMidasRts(534.6226);
 

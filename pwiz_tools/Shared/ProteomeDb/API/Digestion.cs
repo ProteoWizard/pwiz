@@ -44,12 +44,13 @@ namespace pwiz.ProteomeDatabase.API
         public int MinSequenceLength { get; private set; }
         public int MaxSequenceLength { get; private set; }
 
-        public List<Protein> GetProteinsWithSequence(String sequence)
+        public List<Protein> GetProteinsWithSequence(String sequence, ProteomeDb proteomeDb)
         {
-            return GetProteinsWithSequences(new[] { sequence }, null)[sequence];
+            return GetProteinsWithSequences(new[] { sequence }, proteomeDb, null)[sequence];
         }
 
-        public Dictionary<string, List<Protein>> GetProteinsWithSequences(IEnumerable<string> sequences, IProgressMonitor progressMonitor)
+        public Dictionary<string, List<Protein>> GetProteinsWithSequences(IEnumerable<string> sequences,
+            ProteomeDb proteomeDb, IProgressMonitor progressMonitor)
         {
             var sequenceList = sequences.ToList();
             var indexSequences = sequenceList.Select(sequence => sequence.Substring(0, Math.Min(sequence.Length, MaxSequenceLength))).Distinct().ToList();
@@ -60,7 +61,6 @@ namespace pwiz.ProteomeDatabase.API
                 results.Add(s, new List<Protein>());
             }
 
-            using (var proteomeDb = OpenProteomeDb())
             using (ISession session = proteomeDb.OpenSession())
             {
                 var digestion = GetEntity(session);
