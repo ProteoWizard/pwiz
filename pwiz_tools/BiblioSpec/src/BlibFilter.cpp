@@ -315,7 +315,6 @@ void BlibFilter::buildNonRedundantLib()
             int scoreTypeId = sqlite3_column_int(scoreStmt, 0);
             string scoreType = (const char*)sqlite3_column_text(scoreStmt, 1);
             if (scoreType == "PERCOLATOR QVALUE" ||
-                scoreType == "PEPTIDE PROPHET SOMETHING" ||
                 scoreType == "SPECTRUM MILL" ||
                 scoreType == "IDPICKER FDR" ||
                 scoreType == "MASCOT IONS SCORE" ||
@@ -331,6 +330,7 @@ void BlibFilter::buildNonRedundantLib()
                 scoreType == "BYONIC SCORE") {
                 higherIsBetter_[scoreTypeId] = false;
             } else if (
+                scoreType == "PEPTIDE PROPHET SOMETHING" ||
                 scoreType == "PROTEIN PILOT CONFIDENCE" ||
                 scoreType == "SCAFFOLD SOMETHING" ||
                 scoreType == "PEPTIDE SHAKER CONFIDENCE") {
