@@ -18,6 +18,7 @@
  */
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -138,9 +139,21 @@ namespace pwiz.SkylineTestA
 
             // Make sure transition lists export to various formats and roundtrip
             VerifyExportRoundTrip(new ThermoMassListExporter(docMulti), docFasta);
-            VerifyExportRoundTrip(new AbiMassListExporter(docMulti), docFasta);
+            // Add Oxidation (M) as a static modification to challenge new mass list importing flexibility
+            VerifyExportRoundTrip(new AbiMassListExporter(AddOxidationM(docMulti)), AddOxidationM(docFasta));
             VerifyExportRoundTrip(new AgilentMassListExporter(docMulti), docFasta);
             VerifyExportRoundTrip(new WatersMassListExporter(docMulti), docFasta);
+        }
+
+        private SrmDocument AddOxidationM(SrmDocument doc)
+        {
+            return doc.ChangeSettings(
+                doc.Settings.ChangePeptideModifications(mod =>
+                {
+                    var staticMods = mod.StaticModifications.ToList();
+                    staticMods.Add(UniMod.GetModification("Oxidation (M)", true).ChangeVariable(false));
+                    return mod.ChangeStaticModifications(staticMods);
+                }));
         }
 
         [TestMethod]

@@ -434,7 +434,7 @@ namespace pwiz.Skyline.Model
                 if (_rowReader == null)
                 {
                     _rowReader = GeneralRowReader.Create(lines, headers, decoyColumn, FormatProvider, Separator, Settings, irtColumn, libraryColumn);
-                    if (_rowReader == null && headers == null)
+                    if (_rowReader == null && headers == null && lines.Count > 1)
                     {
                         // Check for a possible header row
                         headers = lines[0].Split(Separator);
@@ -1388,7 +1388,7 @@ namespace pwiz.Skyline.Model
         private class ExPeptideRowReader : MassListRowReader
         {
             // Protein.Peptide.+.Label
-            private const string REGEX_PEPTIDE_FORMAT = @"^([^. ]+)\.([A-Z0-9_+\-\[\]]+)\..+\.(light|{0})$"; // Not L10N
+            private const string REGEX_PEPTIDE_FORMAT = @"^([^. ]+)\.([A-Za-z 0-9_+\-\[\]]+)\..+\.(light|{0})$"; // Not L10N
 
             private ExPeptideRowReader(IFormatProvider provider,
                                        char separator,

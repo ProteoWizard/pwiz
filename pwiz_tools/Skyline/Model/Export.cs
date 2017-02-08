@@ -2095,34 +2095,36 @@ namespace pwiz.Skyline.Model
             else
             {
 
-            var mods = new ExplicitMods(nodePep,
-                                        settings.PeptideSettings.Modifications.StaticModifications
-                                            .Where(mod => !mod.IsVariable).ToArray(),
-                                        Settings.Default.StaticModList,
+                var staticExplicitMods = settings.PeptideSettings.Modifications.StaticModifications
+                    .Where(mod => !mod.IsVariable).ToArray();
+                var staticModsList = new StaticModList();
+                staticModsList.AddRange(staticExplicitMods);
+                var mods = new ExplicitMods(nodePep,
+                                        staticExplicitMods,
+                                        staticModsList, 
                                         new List<TypedModifications>(),
                                         null);
-
             
-            if (nodePep.ExplicitMods != null)
-            {
-                var staticMods = new List<ExplicitMod>();
-                if (mods.StaticModifications != null)
+                if (nodePep.ExplicitMods != null)
                 {
-                    foreach (var staticMod in mods.StaticModifications)
-                        staticMods.Add(staticMod);
-                }
-                if (nodePep.ExplicitMods.StaticModifications != null)
-                {
-                    if (!nodePep.ExplicitMods.IsVariableStaticMods)
+                    var staticMods = new List<ExplicitMod>();
+                    if (mods.StaticModifications != null)
                     {
-                        // Explicit modifications (not variable) override the settings
-                        staticMods.Clear();
+                        foreach (var staticMod in mods.StaticModifications)
+                            staticMods.Add(staticMod);
                     }
-                    foreach (var explicitMod in nodePep.ExplicitMods.StaticModifications)
-                        staticMods.Add(explicitMod);
+                    if (nodePep.ExplicitMods.StaticModifications != null)
+                    {
+                        if (!nodePep.ExplicitMods.IsVariableStaticMods)
+                        {
+                            // Explicit modifications (not variable) override the settings
+                            staticMods.Clear();
+                        }
+                        foreach (var explicitMod in nodePep.ExplicitMods.StaticModifications)
+                            staticMods.Add(explicitMod);
+                    }
+                    mods = mods.ChangeStaticModifications(staticMods);
                 }
-                mods = mods.ChangeStaticModifications(staticMods);
-            }
 
                 result = settings.GetModifiedSequence(nodePep.Peptide.Sequence,
                                                                             IsotopeLabelType.light,
