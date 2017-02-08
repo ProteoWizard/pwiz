@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -147,7 +148,7 @@ namespace pwiz.Skyline.FileUI
 
         public IEnumerable<string> LibraryRuns
         {
-            get { return listLibraries.Items.Cast<SprectrumSourceFileDetails>().Select(file => file.FilePath); }
+            get { return listLibraries.Items.Cast<string>(); }
         }
 
         public IEnumerable<string> SelectedLibraryRuns
@@ -155,19 +156,16 @@ namespace pwiz.Skyline.FileUI
             get
             {
                 return SelectedIndices(listLibraries).Select(i => listLibraries.Items[i])
-                    .Cast<SprectrumSourceFileDetails>().Select(a => a.FilePath);
+                    .Cast<string>().Select(a => a.ToString(CultureInfo.InvariantCulture));
             }
 
             set
             {
-                listLibraries.SelectedIndices.Clear();
-                for (int i = 0; i < listLibraries.Items.Count; i++)
+                listLibraries.SelectedItems.Clear();
+                foreach (var action in listLibraries.Items.Cast<string>()
+                        .Where(action => value.Contains(action.ToString(CultureInfo.InvariantCulture))).ToArray())
                 {
-                    var sourceFileDetails = (SprectrumSourceFileDetails) listLibraries.Items[i];
-                    if (value.Contains(sourceFileDetails.FilePath))
-                    {
-                        listLibraries.SelectedIndices.Add(i);
-                    }
+                    listLibraries.SelectedItems.Add(action);
                 }
             }
         }
@@ -201,22 +199,26 @@ namespace pwiz.Skyline.FileUI
         {
             if (listLibraries.Items.Count != 0)
             {
-                foreach (var chromFileInfo in ChromatogramsRemovedList.SelectMany(chrom => chrom.MSDataFileInfos))
+                foreach (var chrom in ChromatogramsRemovedList)
                 {
-                    foreach (var dataFile in DocumentLibraries.SelectMany(f =>
-                        f.LibraryDetails.DataFiles.Select(file => file.FilePath)))
+                    foreach (var chromFileInfo in chrom.MSDataFileInfos)
                     {
-                        if (MeasuredResults.IsBaseNameMatch(chromFileInfo.FilePath.GetFileNameWithoutExtension(),
-                            Path.GetFileNameWithoutExtension(dataFile)))
+                        foreach (var documentLibrary in DocumentLibraries)
                         {
-                            int foundIndex = listLibraries.Items.Cast<SprectrumSourceFileDetails>()
-                                    .Select(item=>item.FilePath).ToList().IndexOf(dataFile);
-                            if (foundIndex != -1)
+                            foreach (var dataFile in documentLibrary.LibraryDetails.DataFiles)
                             {
-                                LibraryRunsRemovedList.Add(dataFile);
-                                listLibraries.Items.RemoveAt(foundIndex);
-                                if (listLibraries.Items.Count == 0)
-                                    return;
+                                if (MeasuredResults.IsBaseNameMatch(chromFileInfo.FilePath.GetFileNameWithoutExtension(),
+                                    Path.GetFileNameWithoutExtension(dataFile)))
+                                {
+                                    int foundIndex = listLibraries.FindString(dataFile);
+                                    if (ListBox.NoMatches != foundIndex)
+                                    {
+                                        LibraryRunsRemovedList.Add(dataFile);
+                                        listLibraries.Items.RemoveAt(foundIndex);
+                                        if (listLibraries.Items.Count == 0)
+                                            return;
+                                    }
+                                }
                             }
                         }
                     }
@@ -611,9 +613,9 @@ namespace pwiz.Skyline.FileUI
             using (new UpdateList(this, listLibraries))
             {
                 var removedList = RemoveSelected(listLibraries);
-                foreach (SprectrumSourceFileDetails item in removedList)
+                foreach (var item in removedList)
                 {
-                    LibraryRunsRemovedList.Add(item.FilePath);
+                    LibraryRunsRemovedList.Add(item.ToString());
                 }
             }
 
@@ -642,9 +644,9 @@ namespace pwiz.Skyline.FileUI
         {
             using (new UpdateList(this, listLibraries))
             {
-                foreach (SprectrumSourceFileDetails item in listLibraries.Items)
+                foreach (var item in listLibraries.Items)
                 {
-                    LibraryRunsRemovedList.Add(item.FilePath);
+                    LibraryRunsRemovedList.Add(item.ToString());
                 }
                 listLibraries.Items.Clear();
             }

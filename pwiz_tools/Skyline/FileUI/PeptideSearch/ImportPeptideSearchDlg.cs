@@ -191,7 +191,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     foreach (var dataFile in documentLibrary.LibraryDetails.DataFiles)
                     {
                         if (!doc.Settings.HasResults ||
-                                doc.Settings.MeasuredResults.FindMatchingMSDataFile(MsDataFileUri.Parse(dataFile.FilePath)) == null)
+                                doc.Settings.MeasuredResults.FindMatchingMSDataFile(MsDataFileUri.Parse(dataFile)) == null)
                             return true;
                     }
                 }

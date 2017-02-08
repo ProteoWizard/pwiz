@@ -18,7 +18,6 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -32,8 +31,6 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.DocSettings.Extensions;
-using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
@@ -167,19 +164,6 @@ namespace pwiz.SkylineTestUtil
                        librarySettings.Libraries.Count > 0 &&
                        librarySettings.Libraries[0].Keys.Count() == expectedSpectra;
             });
-        }
-
-        public static void AddLibrary(LibrarySpec libSpec, Library lib)
-        {
-            var libspecList = new List<LibrarySpec>(SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs);
-            libspecList.Add(libSpec);
-            var liblist = new List<Library>(SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries);
-            liblist.Add(lib);
-
-            RunUI(() => SkylineWindow.ModifyDocument("Add lib", doc =>
-                doc.ChangeSettings(SkylineWindow.Document.Settings.ChangePeptideLibraries(libs => libs.ChangeLibrarySpecs(libspecList).ChangeLibraries(liblist)))));
-
-            SkylineWindow.Document.Settings.UpdateLists(SkylineWindow.DocumentFilePath);
         }
 
         public TransitionSettingsUI ShowTransitionSettings(TransitionSettingsUI.TABS tab)

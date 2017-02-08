@@ -221,31 +221,30 @@ namespace pwiz.Skyline.Model.Lib
             get { return _librarySourceFiles.Length; }
         }
 
-        public const string FORMAT_NAME ="BiblioSpec"; // Not L10N
-
         public override LibraryDetails LibraryDetails
         {
             get
             {
-                IEnumerable<SprectrumSourceFileDetails> dataFiles;
+                string[] dataFiles;
                 if (_librarySourceFiles == null)
                 {
-                    dataFiles = new SprectrumSourceFileDetails[0];
+                    dataFiles = new string[] {};
                 }
                 else
                 {
-                    dataFiles = GetDataFileDetails();
+                    dataFiles = (from sourceFile in _librarySourceFiles
+                                 let fileName = sourceFile.FilePath
+                                 where fileName != null
+                                 select fileName).ToArray();
                 }
-                var uniquePeptideCount = Keys.Select(entry => entry.Sequence).Distinct().Count();
 
                 LibraryDetails details = new LibraryDetails
                                              {
-                                                 Format = FORMAT_NAME,
+                                                 Format = "BiblioSpec", // Not L10N
                                                  Revision = Revision.ToString(LocalizationHelper.CurrentCulture),
                                                  Version = SchemaVersion.ToString(LocalizationHelper.CurrentCulture),
-                                                 SpectrumCount = SpectrumCount,
-                                                 UniquePeptideCount = uniquePeptideCount,
-                                                 DataFiles = dataFiles,
+                                                 PeptideCount = SpectrumCount,
+                                                 DataFiles = dataFiles
                                              };
 
                 // In Schema Version 1, the RefSpectra table contains 
@@ -264,70 +263,6 @@ namespace pwiz.Skyline.Model.Lib
                 }
                 
                 return details;
-            }
-        }
-
-        public IEnumerable<SprectrumSourceFileDetails> GetDataFileDetails()
-        {
-            try
-            {
-                var results = new List<SprectrumSourceFileDetails>();
-                lock (_sqliteConnection)
-                {
-                    using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
-                    {
-                        // ReSharper disable NonLocalizedString
-                        select.CommandText =
-                            @"SELECT ssf.fileName, st.scoreType, ssf.cutoffScore, rt.bestSpectrum
-                            FROM SpectrumSourceFiles ssf 
-                            LEFT JOIN RetentionTimes rt
-                            ON rt.SpectrumSourceID = ssf.id
-                            LEFT JOIN ScoreTypes st 
-                            ON st.id IN (SELECT rs.ScoreType FROM RefSpectra rs WHERE rs.fileId = ssf.id)
-                            ORDER BY ssf.fileName;";
-                        // ReSharper restore NonLocalizedString
-                        using (SQLiteDataReader reader = select.ExecuteReader())
-                        {
-                            while (reader.Read())
-                            {
-                                String filename = reader.GetString(0);
-                                var dataFileDetails = new SprectrumSourceFileDetails(filename);
-                                results.Add(dataFileDetails);
-                                string scoreName = reader.GetString(1);
-                                if (scoreName != null)
-                                {
-                                    dataFileDetails.CutoffScores[scoreName] = reader.GetDouble(2);
-                                }
-                                int bestSpectrum = reader.GetInt16(3);
-                                dataFileDetails.BestSpectrum = bestSpectrum;
-                            }
-                        }
-                    }
-                }
-                var r = new Dictionary<string, SprectrumSourceFileDetails>();
-                foreach (var result in results)
-                {
-                    var key = result.FilePath;
-                    if (!r.ContainsKey(key))
-                        r.Add(key, new SprectrumSourceFileDetails(key));
-
-                    var file = r[key];
-                    file.BestSpectrum += result.BestSpectrum;
-                    file.MatchedSpectrum++;
-
-                    foreach (var scoreName in result.CutoffScores.Keys)
-                    {
-                        if(!file.CutoffScores.ContainsKey(scoreName))
-                            file.CutoffScores.Add(scoreName, result.CutoffScores[scoreName]);
-                    }
-                }
-                List<SprectrumSourceFileDetails> mergedResults = r.Values.ToList();
-                return mergedResults;
-
-            }
-            catch (Exception)
-            {
-                return _librarySourceFiles.Select(file => new SprectrumSourceFileDetails(file.FilePath));
             }
         }
 

@@ -282,7 +282,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             get
             {
-                LibraryDetails details = new LibraryDetails { Format = "NIST", SpectrumCount = SpectrumCount }; // Not L10N
+                LibraryDetails details = new LibraryDetails { Format = "NIST", PeptideCount = SpectrumCount }; // Not L10N
 
                 if (!string.IsNullOrEmpty(Id))
                 {

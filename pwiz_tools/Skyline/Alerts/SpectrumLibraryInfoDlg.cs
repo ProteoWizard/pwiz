@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Windows.Forms;
@@ -34,60 +33,30 @@ namespace pwiz.Skyline.Alerts
         public SpectrumLibraryInfoDlg(LibraryDetails libraryDetails)
         {
             InitializeComponent();
-            Icon = Resources.Skyline;
 
-            cutoffScoreCol.DefaultCellStyle.NullValue = TextUtil.EXCEL_NA;
-            scoreTypeCol.DefaultCellStyle.NullValue = TextUtil.EXCEL_NA;
+            Icon = Resources.Skyline;
 
             // library details
             SetDetailsText(libraryDetails);
- 
+
             // links to library source(s)
             SetLibraryLinks(libraryDetails);
 
-            // Data grid view
-            var dataGridViewHeight = 0;
-            if (libraryDetails.DataFiles.Any())
+            // list of data files, if available
+            if(libraryDetails.DataFiles.Any())
             {
-                PopulateScoreGrid(libraryDetails);
-
-                const int maxDisplayRows = 10;
-                dataGridViewHeight = Math.Min(libraryGridView.Rows.Count, maxDisplayRows) * libraryGridView.Rows[0].Height +
-                                    libraryGridView.ColumnHeadersHeight;
-            }
-            else
-            {
-                libraryGridView.Hide();
-            }
-            var _height = labelLibInfo.Height  + linkSpecLibLinks.Height + dataGridViewHeight + btnOk.Height + 70;
-            Height = _height;
-        }
-
-        private void PopulateScoreGrid(LibraryDetails libraryDetails)
-        {
-            // Populates DataGridView with files and their given scores
-            foreach (var file in libraryDetails.DataFiles)
-            {
-                var fileName = Path.GetFileName(file.FilePath);
-                var spectrumCount = file.BestSpectrum;
-                var matchedCount = file.MatchedSpectrum;
-                if (file.CutoffScores.Any())
-                {
-                    foreach (var cuttoffScore in file.CutoffScores)
-                    {
-                        libraryGridView.Rows.Add(fileName, cuttoffScore.Key, cuttoffScore.Value, matchedCount, spectrumCount);
-                    }
-                }
-                else
-                {
-                    libraryGridView.Rows.Add(fileName, null, null, matchedCount, spectrumCount);
-                }
-            }
+                SetDataFileList(libraryDetails);
+                textBoxDataFiles.Show();
+                 
+                // TODO:  This makes no sense.  This always adds 100 pixels to the form height.
+                Height += Math.Max(0, 100);  
+            } 
         }
 
         private void SetLibraryLinks(LibraryDetails libraryDetails)
         {
             linkSpecLibLinks.Text = string.Empty;
+
             if(libraryDetails.LibLinks.Any())
             {
                 string labelStr = libraryDetails.LibLinks.Count() == 1
@@ -105,13 +74,26 @@ namespace pwiz.Skyline.Alerts
             }
         }
 
+        private void SetDataFileList(LibraryDetails libraryDetails)
+        {
+            if(!libraryDetails.DataFiles.Any())
+                return;
+
+            var fileList = new StringBuilder();
+            foreach (var filename in libraryDetails.DataFiles)
+            {
+                fileList.AppendLine(Path.GetFileName(filename));
+            }
+            textBoxDataFiles.Text = fileList.ToString();
+        }
+
         private void SetDetailsText(LibraryDetails libraryDetails)
         {
             const string numFormat = "#,0"; // Not L10N
 
             var detailsText = new StringBuilder();
 
-            detailsText.AppendLine(string.Format(Resources.SpectrumLibraryInfoDlg_SetDetailsText__0__library, libraryDetails.Format));   
+            detailsText.AppendLine(string.Format(Resources.SpectrumLibraryInfoDlg_SetDetailsText__0__library, libraryDetails.Format));
             if(!string.IsNullOrEmpty(libraryDetails.Id))
             {
                 detailsText.AppendLine(string.Format(Resources.SpectrumLibraryInfoDlg_SetDetailsText_ID__0__, libraryDetails.Id));
@@ -124,12 +106,8 @@ namespace pwiz.Skyline.Alerts
             {
                 detailsText.AppendLine(string.Format(Resources.SpectrumLibraryInfoDlg_SetDetailsText_Version__0__, libraryDetails.Version));
             }
-            if (libraryDetails.UniquePeptideCount > 0)
-            {
-                detailsText.AppendLine(string.Format(Resources.SpectrumLibraryInfoDlg_SetDetailsText_Unique_peptides__0__, libraryDetails.UniquePeptideCount.ToString(numFormat)));
-            }
-            detailsText.AppendLine(string.Format(Resources.SpectrumLibraryInfoDlg_SetDetailsText_Unique_Precursors___0_,
-                                                 libraryDetails.SpectrumCount.ToString(numFormat)));
+            detailsText.AppendLine(string.Format(Resources.SpectrumLibraryInfoDlg_SetDetailsText_Unique_peptides__0__,
+                                                 libraryDetails.PeptideCount.ToString(numFormat)));
 
             if (libraryDetails.TotalPsmCount > 0)
             {
@@ -155,32 +133,6 @@ namespace pwiz.Skyline.Alerts
             string target = e.Link.LinkData.ToString();
 
             WebHelpers.OpenLink(this, target);
-        }
-
-        private void btnOk_Click(object sender, EventArgs e)
-        {
-            OkDialog();
-        }
-
-        public void OkDialog()
-        {
-            DialogResult = DialogResult.OK;
-        }
-
-        // Currently only used by test
-        public IList<SprectrumSourceFileDetails> GetGridView()
-        {
-            List<SprectrumSourceFileDetails> items = new List<SprectrumSourceFileDetails>();
-            foreach (DataGridViewRow dr in libraryGridView.Rows)
-            {
-                SprectrumSourceFileDetails row = new SprectrumSourceFileDetails(dr.Cells[0].Value.ToString());
-                if (dr.Cells[1].Value != null)
-                    row.CutoffScores[dr.Cells[1].Value.ToString()] = double.Parse(dr.Cells[2].Value.ToString());
-                row.MatchedSpectrum = int.Parse(dr.Cells[3].Value.ToString());
-                row.BestSpectrum = int.Parse(dr.Cells[4].Value.ToString());
-                items.Add(row);
-            }
-            return items;
         }
     }
 }

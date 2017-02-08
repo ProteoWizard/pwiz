@@ -21,10 +21,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
-using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
@@ -38,7 +36,7 @@ namespace pwiz.SkylineTestFunctional
     /// Functional test for managing the library runs in a document library
     /// </summary>
     [TestClass]
-    public class ManageLibraryRunsTest : AbstractFunctionalTestEx
+    public class ManageLibraryRunsTest : AbstractFunctionalTest
     {
         private string DocumentPath { get; set; }
 
@@ -94,39 +92,9 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         private void TestLibraryInfo()
         {
-            var libspec = new BiblioSpecLiteSpec("ManageLibraryRunsTestScores", TestFilesDir.GetTestPath("ManageLibraryRunsTestScores.blib"));
-            var newLib = BiblioSpecLiteLibrary.Load(libspec, new DefaultFileLoadMonitor(new SilentProgressMonitor()));
-            AddLibrary(libspec, newLib);
-            WaitForDocumentLoaded();
-            
             var libExplore = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
-
-            var specLibInfoDlg = ShowDialog<SpectrumLibraryInfoDlg>(libExplore.ShowLibDetails);
-
-            IList <SprectrumSourceFileDetails> datafiles = specLibInfoDlg.GetGridView();
-            Assert.AreEqual(datafiles.Count, 5);
-            foreach (var file in datafiles)
-            {
-                Assert.AreEqual(0, file.BestSpectrum);
-                Assert.AreEqual(0, file.MatchedSpectrum);
-                Assert.AreEqual(file.CutoffScores.Count, 0);
-            }
-
-            OkDialog(specLibInfoDlg, specLibInfoDlg.OkDialog);
-
-            var modDlg = ShowDialog<AddModificationsDlg>(() => libExplore.ChangeSelectedLibrary("ManageLibraryRunsTestScores"));
-            OkDialog(modDlg, modDlg.OkDialog);
-            specLibInfoDlg = ShowDialog<SpectrumLibraryInfoDlg>(libExplore.ShowLibDetails);
-            datafiles = specLibInfoDlg.GetGridView();
-            Assert.AreEqual(datafiles.Count, 4);
-            Assert.AreEqual(datafiles[0].CutoffScores.Count, 1);
-            Assert.AreEqual(datafiles[0].MatchedSpectrum, 1);
-            Assert.AreEqual(datafiles[0].BestSpectrum, 1);
-            Assert.AreEqual(datafiles[1].CutoffScores.Count, 1);
-            Assert.AreEqual(datafiles[1].MatchedSpectrum, 10);
-            Assert.AreEqual(datafiles[1].BestSpectrum, 9);
-            
-            OkDialog(specLibInfoDlg, specLibInfoDlg.OkDialog);
+            RunDlg<SpectrumLibraryInfoDlg>(libExplore.ShowLibDetails,
+                dlg => dlg.Close());
             OkDialog(libExplore, libExplore.CancelDialog);
         }
 
@@ -140,9 +108,9 @@ namespace pwiz.SkylineTestFunctional
                 foreach (var dataFile in DocumentLibrary.LibraryDetails.DataFiles)
                 {
                     if (MeasuredResults.IsBaseNameMatch(chromFileInfo.FilePath.GetFileNameWithoutExtension(),
-                                                        Path.GetFileNameWithoutExtension(dataFile.FilePath)))
+                                                        Path.GetFileNameWithoutExtension(dataFile)))
                     {
-                        dataFilesToRemove.Add(dataFile.FilePath);
+                        dataFilesToRemove.Add(dataFile);
                     }
                 }
             }
@@ -167,13 +135,13 @@ namespace pwiz.SkylineTestFunctional
             // Make sure the library runs corresponding to the replicate were removed
             foreach (var dataFile in dataFilesToRemove)
             {
-                Assert.IsFalse(DocumentLibrary.LibraryDetails.DataFiles.Select(file => file.FilePath).Contains(dataFile));
+                Assert.IsFalse(DocumentLibrary.LibraryDetails.DataFiles.Contains(dataFile));
             }
         }
 
         private void TestRemoveOneLibraryRunAndCorrespondingReplicates()
         {
-            List<string> dataFiles = new List<string>(DocumentLibrary.LibraryDetails.DataFiles.Select(f => f.FilePath));
+            List<string> dataFiles = new List<string>(DocumentLibrary.LibraryDetails.DataFiles);
             string dataFileToRemove = dataFiles[0];
 
             var matchingFile = SkylineWindow.Document.Settings.MeasuredResults.FindMatchingMSDataFile(MsDataFileUri.Parse(dataFileToRemove));
@@ -197,7 +165,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Make sure the data file was removed, but the document library still exisits
             Assert.IsNotNull(DocumentLibrary);
-            Assert.IsFalse(DocumentLibrary.LibraryDetails.DataFiles.Select(file => file.FilePath).Contains(dataFileToRemove));
+            Assert.IsFalse(DocumentLibrary.LibraryDetails.DataFiles.Contains(dataFileToRemove));
             Assert.IsTrue(VerifyDocumentLibrary());
 
             // Make sure the replicates corresponding to the data file was removed
@@ -212,8 +180,8 @@ namespace pwiz.SkylineTestFunctional
             {
                 dlg.SelectLibraryRunsTab();
                 List<string> libRuns = dlg.LibraryRuns.ToList();
-                List<string> dataFiles = new List<string>(DocumentLibrary.LibraryDetails.DataFiles.Select(file => file.FilePath));
-                Assert.IsTrue(ArrayUtil.EqualsDeep(dataFiles, libRuns));
+                List<string> dataFiles = new List<string>(DocumentLibrary.LibraryDetails.DataFiles);
+                Assert.IsTrue(ArrayUtil.ReferencesEqual(dataFiles, libRuns));
                 dlg.RemoveAllLibraryRuns();
                 libRuns = dlg.LibraryRuns.ToList();
                 Assert.IsTrue(libRuns.Count == 0);

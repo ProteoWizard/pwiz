@@ -1754,7 +1754,7 @@ namespace pwiz.Skyline.Model.Lib
     public sealed class LibraryDetails
     {
         private readonly IList<LibraryLink> _libLinks;
-        private IEnumerable<SprectrumSourceFileDetails> _dataFiles;
+        private IEnumerable<string> _dataFiles;
         
         public LibraryDetails()
         {
@@ -1776,12 +1776,13 @@ namespace pwiz.Skyline.Model.Lib
         // version of the program that generated the library
         public string Version { get; set; }
 
-        public int SpectrumCount { get; set; }
-        public int UniquePeptideCount { get; set; }
+        public int PeptideCount { get; set; }
+
         public int TotalPsmCount { get; set; }
-		public IEnumerable<SprectrumSourceFileDetails> DataFiles
+
+		public IEnumerable<String> DataFiles
         { 
-            get { return _dataFiles ?? (_dataFiles = new List<SprectrumSourceFileDetails>()); }
+            get { return _dataFiles ?? (_dataFiles = new List<string>(0)); }
 		    set { _dataFiles = value; }
         }
 
@@ -1789,7 +1790,6 @@ namespace pwiz.Skyline.Model.Lib
         {
             get { return _libLinks; }
         }
-
     }
 
     /// <summary>
@@ -2139,21 +2139,5 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         #endregion
-    }
-
-    public class SprectrumSourceFileDetails
-    {
-        public SprectrumSourceFileDetails(String filePath)
-        {
-            FilePath = filePath;
-            CutoffScores = new Dictionary<string, double>();
-            BestSpectrum = 0;
-            MatchedSpectrum = 0;
-        }
-
-        public String FilePath { get; private set; }
-        public Dictionary<string, double> CutoffScores { get; private set; }
-        public int BestSpectrum { get; set; }
-        public int MatchedSpectrum { get; set; }
     }
 }
