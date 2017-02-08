@@ -24,7 +24,6 @@ using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -450,7 +449,7 @@ namespace pwiz.Skyline.Model.Irt
             }
 
             var arrayTimes = listTimes.ToArray();
-            var libraryTimes = retentionTimes as LibraryRetentionTimes;
+            // var libraryTimes = retentionTimes as LibraryRetentionTimes;
             // if (libraryTimes != null)
             //     Trace.WriteLine(libraryTimes.Name);
             // Trace.WriteLine(string.Format("times = {0}", string.Join(", ", arrayTimes.Select(t => string.Format("{0:F02}", t)))));
