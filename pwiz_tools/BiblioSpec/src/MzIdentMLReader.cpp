@@ -245,6 +245,7 @@ void MzIdentMLReader::extractModifications(PeptidePtr peptide, PSM* psm){
         // in BiblioSpec.  Instead, N-terminal modifications are treated as modifictions
         // to the first amino acid residue, as in X! Tandem.
         location = max(location, 1);
+        location = min(location, (int)peptide->peptideSequence.length());
         psm->mods.push_back(SeqMod(location, massDelta));
     }
 
