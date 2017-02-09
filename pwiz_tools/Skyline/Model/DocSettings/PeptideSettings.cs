@@ -1249,9 +1249,9 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             // Make sure the internal standard type is reference equal with
             // the first heavy type.
-            var enumHeavy = heavyMods.GetEnumerator();
-            if (enumHeavy.MoveNext() && enumHeavy.Current != null)
-                InternalStandardTypes = new[] {enumHeavy.Current.LabelType};
+            var firstHeavy = heavyMods.FirstOrDefault();
+            if (firstHeavy != null)
+                InternalStandardTypes = new[] {firstHeavy.LabelType};
         }
 
         public PeptideModifications(IList<StaticMod> staticMods,

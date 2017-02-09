@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+// ReSharper disable VirtualMemberCallInConstructor
 
 namespace pwiz.ProteomeDatabase.DataModel
 {

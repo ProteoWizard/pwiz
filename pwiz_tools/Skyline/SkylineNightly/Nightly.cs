@@ -114,7 +114,7 @@ namespace SkylineNightly
                 Log(errMessage);
             if (string.IsNullOrEmpty(LogFileName))
             {
-                MessageBox.Show(message, "SkylineNightly Help");
+                MessageBox.Show(message, @"SkylineNightly Help");    // Not L10N
             }
             else
             {

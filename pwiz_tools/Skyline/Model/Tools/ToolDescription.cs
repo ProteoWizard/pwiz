@@ -303,7 +303,7 @@ namespace pwiz.Skyline.Model.Tools
             }
         }
 
-        private Thread PostToLink(string url, SrmDocument doc, IProgressMonitor progressMonitor, IWebHelpers webHelpers)
+        private void PostToLink(string url, SrmDocument doc, IProgressMonitor progressMonitor, IWebHelpers webHelpers)
         {
             var thread = new Thread(() =>
             {
@@ -317,7 +317,6 @@ namespace pwiz.Skyline.Model.Tools
                 }
             });
             thread.Start();
-            return thread;
         }
 
         private void PostToLinkBackground(string url, SrmDocument doc, IProgressMonitor progressMonitor, IWebHelpers webHelpers)
@@ -327,7 +326,7 @@ namespace pwiz.Skyline.Model.Tools
                 webHelpers.PostToLink(url, report);
         }
 
-        private Thread RunExecutable(SrmDocument document, IToolMacroProvider toolMacroProvider, TextWriter textWriter, IProgressMonitor progressMonitor, Control parent)
+        private void RunExecutable(SrmDocument document, IToolMacroProvider toolMacroProvider, TextWriter textWriter, IProgressMonitor progressMonitor, Control parent)
         {
             var thread = new Thread(() =>
             {
@@ -342,7 +341,6 @@ namespace pwiz.Skyline.Model.Tools
             });
             LocalizationHelper.InitThread(thread);
             thread.Start();
-            return thread;
         }
 
         /// <summary>

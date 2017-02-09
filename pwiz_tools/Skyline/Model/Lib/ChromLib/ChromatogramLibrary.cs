@@ -41,8 +41,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
     [XmlRoot("chromatogram_library")]
     public class ChromatogramLibrary : CachedLibrary<ChromLibSpectrumInfo>
     {
-        private IStreamManager _streamManager;
-        private PooledSessionFactory _pooledSessionFactory;
+        private readonly PooledSessionFactory _pooledSessionFactory;
         public const string EXT_CACHE = ".clc"; // Not L10N
 
         private ChromatogramLibrarySourceInfo[] _librarySourceFiles;
@@ -66,7 +65,6 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
         public ChromatogramLibrary(ChromatogramLibrarySpec chromatogramLibrarySpec, IStreamManager streamManager)
             : this(chromatogramLibrarySpec)
         {
-            _streamManager = streamManager;
             _pooledSessionFactory = new PooledSessionFactory(streamManager.ConnectionPool, typeof (ChromLibEntity),
                                                              chromatogramLibrarySpec.FilePath);
         }

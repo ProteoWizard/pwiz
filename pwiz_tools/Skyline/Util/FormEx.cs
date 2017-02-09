@@ -34,6 +34,15 @@ namespace pwiz.Skyline.Util
         private const int TIMEOUT_SECONDS = 10;
         private static readonly List<FormEx> _undisposedForms = new List<FormEx>();
 
+        /// <summary>
+        /// Sealed to keep ReSharper happy, because we set it in constructors
+        /// </summary>
+        public sealed override string Text
+        {
+            get { return base.Text; }
+            set { base.Text = value; }
+        }
+
         public DialogResult ShowWithTimeout(IWin32Window parent, string message)
         {
             if (Program.FunctionalTest && Program.PauseSeconds == 0 && !Debugger.IsAttached)

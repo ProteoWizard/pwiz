@@ -140,9 +140,10 @@ namespace pwiz.SkylineTestFunctional
             var calibrationForm = FindOpenForm<CalibrationForm>();
             foreach (var quant in ListAllQuantificationSettings())
             {
+                var quantValue = quant; // For ReSharper
                 RunUI(() => SkylineWindow.ModifyDocument("Change Quantification Settings", doc => doc.ChangeSettings(
                     doc.Settings.ChangePeptideSettings(
-                        doc.Settings.PeptideSettings.ChangeAbsoluteQuantification(quant)))));
+                        doc.Settings.PeptideSettings.ChangeAbsoluteQuantification(quantValue)))));
                 WaitForGraphs();
                 CalibrationCurve calibrationCurve = calibrationForm.CalibrationCurve;
                 if (quant.MsLevel == 1 && quant.RegressionFit != RegressionFit.NONE)

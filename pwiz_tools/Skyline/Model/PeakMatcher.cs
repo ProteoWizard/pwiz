@@ -220,20 +220,22 @@ namespace pwiz.Skyline.Model
             // TODO: Try to improve this. Align peaks in area descending order until peaks do not match
             var alignments = new List<PeakAlignment>();
             bool referenceAligned = false;
-            var referenceIter = referenceMatchData.OrderByDescending(d => d.PercentArea).GetEnumerator();
-            var curIter = matchData.OrderByDescending(d => d.PercentArea).GetEnumerator();
-            while (referenceIter.MoveNext() && curIter.MoveNext())
+            using (var referenceIter = referenceMatchData.OrderByDescending(d => d.PercentArea).GetEnumerator())
+            using (var curIter = matchData.OrderByDescending(d => d.PercentArea).GetEnumerator())
             {
-                var alignAttempt = new PeakAlignment(referenceIter.Current, curIter.Current);
-                if (!TryInsertPeakAlignment(alignments, alignAttempt))
-                    break;
-
-                if (referenceTarget == alignAttempt.ReferencePeak)
+                while (referenceIter.MoveNext() && curIter.MoveNext())
                 {
-                    // Reference target aligned
-                    referenceAligned = true;
-                    matchData = new List<PeakMatchData> {alignAttempt.AlignedPeak};
-                    break;
+                    var alignAttempt = new PeakAlignment(referenceIter.Current, curIter.Current);
+                    if (!TryInsertPeakAlignment(alignments, alignAttempt))
+                        break;
+
+                    if (referenceTarget == alignAttempt.ReferencePeak)
+                    {
+                        // Reference target aligned
+                        referenceAligned = true;
+                        matchData = new List<PeakMatchData> { alignAttempt.AlignedPeak };
+                        break;
+                    }
                 }
             }
 

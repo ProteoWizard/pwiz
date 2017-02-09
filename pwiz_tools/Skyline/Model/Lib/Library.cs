@@ -1927,6 +1927,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public override bool Equals(object obj)
         {
+            if (obj == null) return false;
             if (obj.GetType() != typeof(LibKey)) return false;
             return Equals((LibKey)obj);
         }
@@ -2052,12 +2053,14 @@ namespace pwiz.Skyline.Model.Lib
                 return false;
 
             // Compare each amino acid
-            var enumObjAa = obj.AminoAcids.GetEnumerator();
-            foreach (char aa in AminoAcids)
+            using (var enumObjAa = obj.AminoAcids.GetEnumerator())
             {
-                enumObjAa.MoveNext();
-                if (aa != enumObjAa.Current)
-                    return false;
+                foreach (char aa in AminoAcids)
+                {
+                    enumObjAa.MoveNext();
+                    if (aa != enumObjAa.Current)
+                        return false;
+                }
             }
 
             return true;
@@ -2065,6 +2068,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public override bool Equals(object obj)
         {
+            if (obj == null) return false;
             if (obj.GetType() != typeof(LibSeqKey)) return false;
             return Equals((LibSeqKey)obj);
         }
@@ -2121,6 +2125,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public override bool Equals(object obj)
         {
+            if (obj == null) return false;
             if (obj.GetType() != typeof(LibKeyOld)) return false;
             return Equals((LibKeyOld)obj);
         }

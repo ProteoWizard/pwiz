@@ -78,26 +78,28 @@ namespace pwiz.Common.Chemistry
 
         public int CompareTo(T that)
         {
-            var thisEnumerator = GetEnumerator();
-            var thatEnumerator = that.GetEnumerator();
-            while (thisEnumerator.MoveNext())
+            using (var thisEnumerator = GetEnumerator())
+            using (var thatEnumerator = that.GetEnumerator())
             {
-                if (!thatEnumerator.MoveNext())
+                while (thisEnumerator.MoveNext())
                 {
-                    return 1;
+                    if (!thatEnumerator.MoveNext())
+                    {
+                        return 1;
+                    }
+                    int keyCompare = string.CompareOrdinal(thisEnumerator.Current.Key, thatEnumerator.Current.Key);
+                    if (keyCompare != 0)
+                    {
+                        return keyCompare;
+                    }
+                    int valueCompare = thisEnumerator.Current.Value.CompareTo(thatEnumerator.Current.Value);
+                    if (valueCompare != 0)
+                    {
+                        return valueCompare;
+                    }
                 }
-                int keyCompare = string.CompareOrdinal(thisEnumerator.Current.Key, thatEnumerator.Current.Key);
-                if (keyCompare != 0)
-                {
-                    return keyCompare;
-                }
-                int valueCompare = thisEnumerator.Current.Value.CompareTo(thatEnumerator.Current.Value);
-                if (valueCompare != 0)
-                {
-                    return valueCompare;
-                }
+                return thatEnumerator.MoveNext() ? -1 : 0;
             }
-            return thatEnumerator.MoveNext() ? -1 : 0;
         }
         public ImmutableSortedList<string, TValue> Dictionary
         {

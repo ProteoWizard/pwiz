@@ -1,6 +1,6 @@
 namespace pwiz.Skyline.FileUI.PeptideSearch
 {
-    partial class ImportPeptideSearchDlg
+    sealed partial class ImportPeptideSearchDlg
     {
         /// <summary>
         /// Required designer variable.

@@ -109,16 +109,18 @@ namespace pwiz.Common.DataAnalysis
         public static double DotProduct(IEnumerable<double> vector1, IEnumerable<double> vector2)
         {
             double total = 0;
-            var en1 = vector1.GetEnumerator();
-            var en2 = vector2.GetEnumerator();
-            while (en1.MoveNext())
+            using (var en1 = vector1.GetEnumerator())
+            using (var en2 = vector2.GetEnumerator())
             {
-                en2.MoveNext();
-                total += en1.Current * en2.Current;
-            }
-            if (en2.MoveNext())
-            {
-                throw new ArgumentException("vector2 was too long"); // Not L10N
+                while (en1.MoveNext())
+                {
+                    en2.MoveNext();
+                    total += en1.Current * en2.Current;
+                }
+                if (en2.MoveNext())
+                {
+                    throw new ArgumentException("vector2 was too long"); // Not L10N
+                }
             }
             return total;
         }

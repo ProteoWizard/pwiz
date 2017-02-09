@@ -166,7 +166,7 @@ namespace pwiz.Skyline.Model.Results
             dataFilePath = Path.Combine(docDir,  fileName);
             if (File.Exists(dataFilePath) || Directory.Exists(dataFilePath))
                 return dataFilePath;
-            string docParentDir = Path.GetDirectoryName(docDir) ?? Directory.GetCurrentDirectory();
+            string docParentDir = Path.GetDirectoryName(docDir);
             dataFilePath = Path.Combine(docParentDir, fileName);
             if (File.Exists(dataFilePath) || Directory.Exists(dataFilePath))
                 return dataFilePath;

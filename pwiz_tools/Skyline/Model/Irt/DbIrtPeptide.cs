@@ -23,6 +23,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Properties;
+// ReSharper disable VirtualMemberCallInConstructor
 
 namespace pwiz.Skyline.Model.Irt
 {

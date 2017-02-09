@@ -638,32 +638,36 @@ namespace pwiz.SkylineTestA.Results
             // Note that we can't just run the lists in parallel - one of these is likely a small molecule conversion of the other,
             // and will have its transitions sorted differently
             Assert.AreEqual(docA.MoleculeTransitionGroupCount, docB.MoleculeTransitionGroupCount);
-            var docBTransitionGroups = docB.MoleculeTransitionGroups.GetEnumerator();
-            foreach (var transGroupDocA in docA.MoleculeTransitionGroups)
+            using (var docBTransitionGroups = docB.MoleculeTransitionGroups.GetEnumerator())
             {
-                Assert.IsTrue(docBTransitionGroups.MoveNext());
-                var transGroupDocB = docBTransitionGroups.Current;
-                Assert.AreEqual(transGroupDocA.TransitionCount, transGroupDocB.TransitionCount);
-                var docBTransitions = transGroupDocB.Transitions.ToArray();
-                var docBTransitionsMatched = new List<TransitionDocNode>();
-                foreach (var transDocA in transGroupDocA.Transitions)
+                foreach (var transGroupDocA in docA.MoleculeTransitionGroups)
                 {
-                    var a = transDocA;
-                    var transDocB = docBTransitions.FirstOrDefault(b => 
-                        a.Transition.IsPrecursor() == b.Transition.IsPrecursor() &&
-                        Math.Abs(a.Mz - b.Mz) <= 1.0E-5 &&
-                        ((a.Results == null)
-                            ? (b.Results == null)
-                            : (a.Results.Count == b.Results.Count)));
-                    Assert.IsNotNull(transDocB, "failed to find matching transition");
-                    Assert.IsFalse(docBTransitionsMatched.Contains(transDocB), "transition matched twice");
-                    docBTransitionsMatched.Add(transDocB);
-                    var docBChromInfos = transDocB.ChromInfos.GetEnumerator();
-                    foreach (var infoDocA in transDocA.ChromInfos)
+                    Assert.IsTrue(docBTransitionGroups.MoveNext());
+                    var transGroupDocB = docBTransitionGroups.Current;
+                    Assert.AreEqual(transGroupDocA.TransitionCount, transGroupDocB.TransitionCount);
+                    var docBTransitions = transGroupDocB.Transitions.ToArray();
+                    var docBTransitionsMatched = new List<TransitionDocNode>();
+                    foreach (var transDocA in transGroupDocA.Transitions)
                     {
-                        Assert.IsTrue(docBChromInfos.MoveNext());
-                        var infoDocB = docBChromInfos.Current;
-                        Assert.IsTrue(infoDocA.Equals(infoDocB));
+                        var a = transDocA;
+                        var transDocB = docBTransitions.FirstOrDefault(b =>
+                            a.Transition.IsPrecursor() == b.Transition.IsPrecursor() &&
+                            Math.Abs(a.Mz - b.Mz) <= 1.0E-5 &&
+                            ((a.Results == null)
+                                ? (b.Results == null)
+                                : (a.Results.Count == b.Results.Count)));
+                        Assert.IsNotNull(transDocB, "failed to find matching transition");
+                        Assert.IsFalse(docBTransitionsMatched.Contains(transDocB), "transition matched twice");
+                        docBTransitionsMatched.Add(transDocB);
+                        using (var docBChromInfos = transDocB.ChromInfos.GetEnumerator())
+                        {
+                            foreach (var infoDocA in transDocA.ChromInfos)
+                            {
+                                Assert.IsTrue(docBChromInfos.MoveNext());
+                                var infoDocB = docBChromInfos.Current;
+                                Assert.IsTrue(infoDocA.Equals(infoDocB));
+                            }
+                        }
                     }
                 }
             }

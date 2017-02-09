@@ -84,9 +84,10 @@ namespace pwiz.Skyline.FileUI
                     .Cast<ListBoxItem>().Select(item => item.ChromatogramSet);
                 foreach (var replicate in loadedReplicates)
                 {
+                    var replicateReference = replicate; // For ReSharper
                     if (document.Settings.MeasuredResults == null ||
                         !document.Settings.MeasuredResults.Chromatograms.Any(
-                            chromSetCompare => ReferenceEquals(chromSetCompare, replicate)))
+                            chromSetCompare => ReferenceEquals(chromSetCompare, replicateReference)))
                     {
                         throw new InvalidDataException(Resources.ChooseSchedulingReplicatesDlg_btnOk_Click_The_set_of_replicates_in_this_document_has_changed___Please_choose_again_which_replicates_to_use_for_the_retention_time_filter_);
                     }

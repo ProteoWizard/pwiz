@@ -81,13 +81,14 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(ratioIndex >= 0);
                 foreach (var peptide in allPeptides)
                 {
+                    var peptidePath = peptide.IdentityPath;
                     bool hasMatchingPrecursorResult =
                         peptide.Precursors.Any(
                             precursor =>
                                 precursor.Results.Values.Any(
                                     precursorResult =>
                                         RatioValue.GetRatio(precursorResult.ChromInfo.Ratios[ratioIndex]) >= filterValue));
-                    Assert.AreEqual(hasMatchingPrecursorResult, filteredPeptides.Any(filteredPeptide => filteredPeptide.IdentityPath.Equals(peptide.IdentityPath)));
+                    Assert.AreEqual(hasMatchingPrecursorResult, filteredPeptides.Any(filteredPeptide => filteredPeptide.IdentityPath.Equals(peptidePath)));
                 }
             }
             );

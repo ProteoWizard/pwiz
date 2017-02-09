@@ -772,7 +772,7 @@ namespace pwiz.Skyline.ToolsUI
             }            
         }
         
-        public class MacroMenuItem : ToolStripMenuItem  
+        public sealed class MacroMenuItem : ToolStripMenuItem  
         { 
             private readonly Macro _macro;
             private readonly TextBox _targetTextBox;

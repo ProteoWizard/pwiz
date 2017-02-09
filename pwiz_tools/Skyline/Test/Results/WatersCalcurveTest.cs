@@ -433,16 +433,17 @@ namespace pwiz.SkylineTest.Results
                 // Unfortunately, this is to hard to maintain when cache changes are made.
                 // AssertEx.Cloned(docCached, docReload);
 
-            // The one cache should be present
-            Assert.IsTrue(File.Exists(cachePath));
-            // And the replicate cache files should have been removed
-            foreach (var cacheName in replicateCacheNames)
-            {
-                var path = testFilesDir.GetTestPath(cacheName);
-                Assert.IsFalse(File.Exists(path));
-            }
+                // The one cache should be present
+                Assert.IsTrue(File.Exists(cachePath));
+                // And the replicate cache files should have been removed
+                foreach (var cacheName in replicateCacheNames)
+                {
+                    var path = testFilesDir.GetTestPath(cacheName);
+                    Assert.IsFalse(File.Exists(path));
+                }
 
                 // Save the cache file time stamp
+                // ReSharper disable once AssignNullToNotNullAttribute
                 var cacheInfo = new FileInfo(cachePath);
                 long cacheSize = cacheInfo.Length;
 

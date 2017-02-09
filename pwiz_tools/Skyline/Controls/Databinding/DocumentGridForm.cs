@@ -29,7 +29,8 @@ namespace pwiz.Skyline.Controls.Databinding
 {
     public partial class DocumentGridForm : DataboundGridForm
     {
-        private string _originalFormTitle;
+        private readonly string _originalFormTitle;
+
         public DocumentGridForm(SkylineViewContext viewContext)
         {
             InitializeComponent();

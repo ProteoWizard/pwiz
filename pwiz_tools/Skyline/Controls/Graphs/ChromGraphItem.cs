@@ -30,7 +30,7 @@ using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public class ChromGraphItem : AbstractChromGraphItem
+    public sealed class ChromGraphItem : AbstractChromGraphItem
     {
         private const string FONT_FACE = "Arial"; // Not L10N
 

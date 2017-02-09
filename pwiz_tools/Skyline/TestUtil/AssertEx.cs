@@ -835,57 +835,90 @@ namespace pwiz.SkylineTestUtil
             Serializable(converted);
             Serializable(document);
 
-            var convertedMoleculeGroupsIterator = converted.MoleculeGroups.GetEnumerator();
-            foreach (var peptideGroupDocNode in document.MoleculeGroups)
+            using (var convertedMoleculeGroupsIterator = converted.MoleculeGroups.GetEnumerator())
             {
-                convertedMoleculeGroupsIterator.MoveNext();
-                var convertedMoleculeGroupDocNode = convertedMoleculeGroupsIterator.Current;
-                var convertedMoleculesIterator = convertedMoleculeGroupDocNode.Molecules.GetEnumerator();
+                foreach (var peptideGroupDocNode in document.MoleculeGroups)
+                {
+                    convertedMoleculeGroupsIterator.MoveNext();
+                    ConvertedSmallMoleculePeptideGroupIsSimilar(convertedMoleculeGroupsIterator.Current, peptideGroupDocNode);
+                }
+                Assert.IsFalse(convertedMoleculeGroupsIterator.MoveNext());
+            }
+        }
+
+        private static void ConvertedSmallMoleculePeptideGroupIsSimilar(PeptideGroupDocNode convertedMoleculeGroupDocNode,
+            PeptideGroupDocNode peptideGroupDocNode)
+        {
+            using (var convertedMoleculesIterator = convertedMoleculeGroupDocNode.Molecules.GetEnumerator())
+            {
                 foreach (var mol in peptideGroupDocNode.Molecules)
                 {
                     convertedMoleculesIterator.MoveNext();
                     var convertedMol = convertedMoleculesIterator.Current;
                     if (convertedMol.Note != null)
-                        Assert.AreEqual(mol.Note ?? string.Empty, convertedMol.Note.Replace(RefinementSettings.TestingConvertedFromProteomic, string.Empty));
+                        Assert.AreEqual(mol.Note ?? string.Empty,
+                            convertedMol.Note.Replace(RefinementSettings.TestingConvertedFromProteomic, string.Empty));
                     else
-                        Assert.AreEqual(mol.CustomIon.InvariantName, SrmDocument.TestingNonProteomicMoleculeName); // This was the magic test molecule
+                        Assert.AreEqual(mol.CustomIon.InvariantName, SrmDocument.TestingNonProteomicMoleculeName);
+                            // This was the magic test molecule
                     Assert.AreEqual(mol.SourceKey, convertedMol.SourceKey);
                     Assert.AreEqual(mol.Rank, convertedMol.Rank);
                     Assert.AreEqual(mol.Results, convertedMol.Results);
                     Assert.AreEqual(mol.ExplicitRetentionTime, convertedMol.ExplicitRetentionTime);
                     Assert.AreEqual(mol.BestResult, convertedMol.BestResult);
-                    var convertedTransitionGroupIterator = convertedMol.TransitionGroups.GetEnumerator();
-                    foreach (var transitionGroupDocNode in mol.TransitionGroups)
-                    {
-                        convertedTransitionGroupIterator.MoveNext();
-                        var convertedTransitionGroupDocNode = convertedTransitionGroupIterator.Current;
-                        Assert.AreEqual(transitionGroupDocNode.TransitionGroup.PrecursorCharge, convertedTransitionGroupDocNode.TransitionGroup.PrecursorCharge);
-                        Assert.AreEqual(transitionGroupDocNode.TransitionGroup.LabelType, convertedTransitionGroupDocNode.TransitionGroup.LabelType);
-                        Assert.AreEqual(transitionGroupDocNode.PrecursorMz, convertedTransitionGroupDocNode.PrecursorMz, SequenceMassCalc.MassTolerance, "transitiongroup as small molecule");
-                        Assert.AreEqual(transitionGroupDocNode.IsotopeDist, convertedTransitionGroupDocNode.IsotopeDist);
-                        // Remove any library info, since for the moment at least small molecules don't support this and it won't roundtrip
-                        var resultsNew = RefinementSettings.RemoveTransitionGroupChromInfoLibraryInfo(transitionGroupDocNode);
-                        Assert.AreEqual(resultsNew, convertedTransitionGroupDocNode.Results, transitionGroupDocNode + " vs " + convertedTransitionGroupDocNode);
-
-                        Assert.AreEqual(transitionGroupDocNode.TransitionGroup.PrecursorCharge, convertedTransitionGroupDocNode.TransitionGroup.PrecursorCharge);
-                        Assert.AreEqual(transitionGroupDocNode.TransitionGroup.LabelType, convertedTransitionGroupDocNode.TransitionGroup.LabelType);
-
-                        var convertedTransitionIterator = convertedTransitionGroupDocNode.Transitions.GetEnumerator();
-                        foreach (var transition in transitionGroupDocNode.Transitions)
-                        {
-                            convertedTransitionIterator.MoveNext();
-                            var convertedTransition = convertedTransitionIterator.Current;
-                            Assert.AreEqual(transition.Mz, convertedTransition.Mz, SequenceMassCalc.MassTolerance, "transition as small molecule");
-                            Assert.AreEqual(transition.IsotopeDistInfo, convertedTransition.IsotopeDistInfo);
-                            Assert.AreEqual(transition.Results, convertedTransition.Results);
-                        }
-                        Assert.IsFalse(convertedTransitionIterator.MoveNext());
-                    }
-                    Assert.IsFalse(convertedTransitionGroupIterator == null || convertedTransitionGroupIterator.MoveNext());
+                    ConvertedSmallMoleculeIsSimilar(convertedMol, mol);
                 }
                 Assert.IsFalse(convertedMoleculesIterator.MoveNext());
             }
-            Assert.IsFalse(convertedMoleculeGroupsIterator.MoveNext());
+        }
+
+        private static void ConvertedSmallMoleculeIsSimilar(PeptideDocNode convertedMol, PeptideDocNode mol)
+        {
+            using (var convertedTransitionGroupIterator = convertedMol.TransitionGroups.GetEnumerator())
+            {
+                foreach (var transitionGroupDocNode in mol.TransitionGroups)
+                {
+                    convertedTransitionGroupIterator.MoveNext();
+                    var convertedTransitionGroupDocNode = convertedTransitionGroupIterator.Current;
+                    Assert.AreEqual(transitionGroupDocNode.TransitionGroup.PrecursorCharge,
+                        convertedTransitionGroupDocNode.TransitionGroup.PrecursorCharge);
+                    Assert.AreEqual(transitionGroupDocNode.TransitionGroup.LabelType,
+                        convertedTransitionGroupDocNode.TransitionGroup.LabelType);
+                    Assert.AreEqual(transitionGroupDocNode.PrecursorMz, convertedTransitionGroupDocNode.PrecursorMz,
+                        SequenceMassCalc.MassTolerance, "transitiongroup as small molecule");
+                    Assert.AreEqual(transitionGroupDocNode.IsotopeDist, convertedTransitionGroupDocNode.IsotopeDist);
+                    // Remove any library info, since for the moment at least small molecules don't support this and it won't roundtrip
+                    var resultsNew = RefinementSettings.RemoveTransitionGroupChromInfoLibraryInfo(transitionGroupDocNode);
+                    Assert.AreEqual(resultsNew, convertedTransitionGroupDocNode.Results,
+                        transitionGroupDocNode + " vs " + convertedTransitionGroupDocNode);
+
+                    Assert.AreEqual(transitionGroupDocNode.TransitionGroup.PrecursorCharge,
+                        convertedTransitionGroupDocNode.TransitionGroup.PrecursorCharge);
+                    Assert.AreEqual(transitionGroupDocNode.TransitionGroup.LabelType,
+                        convertedTransitionGroupDocNode.TransitionGroup.LabelType);
+
+                    ConvertedSmallMoleculePrecursorIsSimilar(convertedTransitionGroupDocNode, transitionGroupDocNode);
+                }
+                Assert.IsFalse(convertedTransitionGroupIterator == null || convertedTransitionGroupIterator.MoveNext());
+            }
+        }
+
+        private static void ConvertedSmallMoleculePrecursorIsSimilar(TransitionGroupDocNode convertedTransitionGroupDocNode,
+            TransitionGroupDocNode transitionGroupDocNode)
+        {
+            using (var convertedTransitionIterator = convertedTransitionGroupDocNode.Transitions.GetEnumerator())
+            {
+                foreach (var transition in transitionGroupDocNode.Transitions)
+                {
+                    convertedTransitionIterator.MoveNext();
+                    var convertedTransition = convertedTransitionIterator.Current;
+                    Assert.AreEqual(transition.Mz, convertedTransition.Mz, SequenceMassCalc.MassTolerance,
+                        "transition as small molecule");
+                    Assert.AreEqual(transition.IsotopeDistInfo, convertedTransition.IsotopeDistInfo);
+                    Assert.AreEqual(transition.Results, convertedTransition.Results);
+                }
+                Assert.IsFalse(convertedTransitionIterator.MoveNext());
+            }
         }
     }
 }

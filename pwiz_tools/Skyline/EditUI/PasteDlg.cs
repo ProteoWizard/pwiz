@@ -1390,18 +1390,20 @@ namespace pwiz.Skyline.EditUI
             foreach (var values in ParseColumnarData(text))
             {
                 var row = dataGridView.Rows[dataGridView.Rows.Add()];
-                var valueEnumerator = values.GetEnumerator();
-                foreach (DataGridViewColumn column in columns)
+                using (var valueEnumerator = values.GetEnumerator())
                 {
-                    if (column.ReadOnly || !column.Visible)
+                    foreach (DataGridViewColumn column in columns)
                     {
-                        continue;
+                        if (column.ReadOnly || !column.Visible)
+                        {
+                            continue;
+                        }
+                        if (!valueEnumerator.MoveNext())
+                        {
+                            break;
+                        }
+                        row.Cells[column.Index].Value = valueEnumerator.Current;
                     }
-                    if (!valueEnumerator.MoveNext())
-                    {
-                        break;
-                    }
-                    row.Cells[column.Index].Value = valueEnumerator.Current;
                 }
                 if (enumerateProteins)
                 {

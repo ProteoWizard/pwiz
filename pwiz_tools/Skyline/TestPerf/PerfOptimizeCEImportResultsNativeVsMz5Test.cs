@@ -23,6 +23,7 @@ using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
@@ -115,7 +116,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 {
                     MsDataFileImpl.PerfUtilFactory.IssueDummyPerfUtils = (loop==0); // turn on performance measurement after initial warmup loop
                     RunFunctionalTest();
-                    File.Delete(Path.ChangeExtension(_skyFile,"skyd")); // make sure we're clean for next pass
+                    // make sure we're clean for next pass
+                    File.Delete(Path.ChangeExtension(_skyFile, ChromatogramCache.EXT) ?? ChromatogramCache.EXT); // Not null for ReSharper
                     
                 }
             }

@@ -168,8 +168,7 @@ namespace pwiz.Skyline.ToolsUI
             }
             catch (TargetInvocationException ex)
             {
-                var exceptionType = ex.InnerException.GetType();
-                if (exceptionType == typeof (ToolExecutionException) || exceptionType == typeof(WebException))
+                if (ex.InnerException is ToolExecutionException || ex.InnerException is WebException)
                     MessageDlg.ShowException(this, ex);
                 else
                 {

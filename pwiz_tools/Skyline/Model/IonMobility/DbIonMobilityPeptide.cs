@@ -19,6 +19,7 @@
 using System;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib.BlibData;
+// ReSharper disable VirtualMemberCallInConstructor
 
 namespace pwiz.Skyline.Model.IonMobility
 {

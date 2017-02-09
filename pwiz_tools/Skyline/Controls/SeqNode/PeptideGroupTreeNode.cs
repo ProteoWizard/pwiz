@@ -398,58 +398,60 @@ namespace pwiz.Skyline.Controls.SeqNode
                                         IEnumerable<DocNode> peptidesChoices, ICollection<DocNode> peptidesChosen, Peptide peptideSelected,
                                         Graphics g, RenderTools rt, float height, float width)
         {
-            IEnumerator<DocNode> peptides = peptidesChoices.GetEnumerator();
-            DocNode choice = peptides.MoveNext() ? peptides.Current : null;
-            bool chosen = peptidesChosen.Contains(choice);
-            Peptide peptide = PeptideFromChoice(choice);
-
-            if (elipsis)
+            using (var peptides = peptidesChoices.GetEnumerator())
             {
-                SizeF sizeElipsis = g.MeasureString(" ...", rt.FontNormal); // Not L10N
-                width -= sizeElipsis.Width;
-            }
+                DocNode choice = peptides.MoveNext() ? peptides.Current : null;
+                bool chosen = peptidesChosen.Contains(choice);
+                Peptide peptide = PeptideFromChoice(choice);
 
-            float widthTotal = 0;
-            PointF ptDraw = new PointF(widthTotal, height);
-            if (peptideList && aa[start] == 'X') // Not L10N: For amino acid comparison
-                start++;
-            for (int i = start; i < aa.Length; i++)
-            {
-                Font font = rt.FontNormal;
-                Brush brush = rt.BrushNormal;
-                if (peptide != null)
+                if (elipsis)
                 {
-                    while (peptide != null && i >= peptide.End)
-                    {
-                        choice = peptides.MoveNext() ? peptides.Current : null;
-                        chosen = peptidesChosen.Contains(choice);
-                        peptide = PeptideFromChoice(choice);
-                    }
-                    if (peptide != null && i >= peptide.Begin)
-                    {
-                        font = rt.FontBold;
-                        if (Equals(peptide, peptideSelected))
-                            brush = rt.BrushSelected;
-                        else
-                            brush = (chosen ? rt.BrushChosen : rt.BrushChoice);
-                    }
+                    SizeF sizeElipsis = g.MeasureString(" ...", rt.FontNormal); // Not L10N
+                    width -= sizeElipsis.Width;
                 }
-                if (peptideList && aa[i] == 'X') // Not L10N: For amino acid comparison
-                    return i + 1;
-                string s = aa.Substring(i, 1);
-                SizeF sizeAa = g.MeasureString(s, font);
-                widthTotal += sizeAa.Width;
-                if (widthTotal > width)
+
+                float widthTotal = 0;
+                PointF ptDraw = new PointF(widthTotal, height);
+                if (peptideList && aa[start] == 'X') // Not L10N: For amino acid comparison
+                    start++;
+                for (int i = start; i < aa.Length; i++)
                 {
-                    if (elipsis && draw)
-                        g.DrawString(" ...", rt.FontNormal, rt.BrushNormal, ptDraw); // Not L10N
-                    return i;
-                }
-                widthTotal -= 4;    // Remove MeasureString padding.
-                if (draw)
-                {
-                    g.DrawString(s, font, brush, ptDraw);
-                    ptDraw.X = widthTotal;
+                    Font font = rt.FontNormal;
+                    Brush brush = rt.BrushNormal;
+                    if (peptide != null)
+                    {
+                        while (peptide != null && i >= peptide.End)
+                        {
+                            choice = peptides.MoveNext() ? peptides.Current : null;
+                            chosen = peptidesChosen.Contains(choice);
+                            peptide = PeptideFromChoice(choice);
+                        }
+                        if (peptide != null && i >= peptide.Begin)
+                        {
+                            font = rt.FontBold;
+                            if (Equals(peptide, peptideSelected))
+                                brush = rt.BrushSelected;
+                            else
+                                brush = (chosen ? rt.BrushChosen : rt.BrushChoice);
+                        }
+                    }
+                    if (peptideList && aa[i] == 'X') // Not L10N: For amino acid comparison
+                        return i + 1;
+                    string s = aa.Substring(i, 1);
+                    SizeF sizeAa = g.MeasureString(s, font);
+                    widthTotal += sizeAa.Width;
+                    if (widthTotal > width)
+                    {
+                        if (elipsis && draw)
+                            g.DrawString(" ...", rt.FontNormal, rt.BrushNormal, ptDraw); // Not L10N
+                        return i;
+                    }
+                    widthTotal -= 4;    // Remove MeasureString padding.
+                    if (draw)
+                    {
+                        g.DrawString(s, font, brush, ptDraw);
+                        ptDraw.X = widthTotal;
+                    }
                 }
             }
 
@@ -493,53 +495,54 @@ namespace pwiz.Skyline.Controls.SeqNode
             }
             sb.Append("</i>"); // Not L10N
 
-            IEnumerator<DocNode> peptides = GetChoices(true).GetEnumerator();
-            HashSet<DocNode> peptidesChosen = new HashSet<DocNode>(Chosen);
-            PeptideDocNode nodePep = (PeptideDocNode)(peptides.MoveNext() ? peptides.Current : null);
-            bool chosen = (nodePep != null && peptidesChosen.Contains(nodePep));
-
-            bool inPeptide = false;
-            string aa = fastaSeq.Sequence;
-            for (int i = 0; i < aa.Length; i++)
+            using (var peptides = GetChoices(true).GetEnumerator())
             {
-                if (nodePep != null)
+                HashSet<DocNode> peptidesChosen = new HashSet<DocNode>(Chosen);
+                PeptideDocNode nodePep = (PeptideDocNode)(peptides.MoveNext() ? peptides.Current : null);
+                bool chosen = (nodePep != null && peptidesChosen.Contains(nodePep));
+
+                bool inPeptide = false;
+                string aa = fastaSeq.Sequence;
+                for (int i = 0; i < aa.Length; i++)
                 {
-                    while (nodePep != null && i >= nodePep.Peptide.End)
+                    if (nodePep != null)
                     {
-                        nodePep = (PeptideDocNode)(peptides.MoveNext() ? peptides.Current : null);
-                        if (nodePep != null)
+                        while (nodePep != null && i >= nodePep.Peptide.End)
                         {
-                            bool chosenNew = peptidesChosen.Contains(nodePep);
-                            // Need a new font tag, if the chosen state is changing
-                            if (chosenNew != chosen)
+                            nodePep = (PeptideDocNode)(peptides.MoveNext() ? peptides.Current : null);
+                            if (nodePep != null)
                             {
-                                sb.Append("</font>"); // Not L10N
-                                inPeptide = false;
+                                bool chosenNew = peptidesChosen.Contains(nodePep);
+                                // Need a new font tag, if the chosen state is changing
+                                if (chosenNew != chosen)
+                                {
+                                    sb.Append("</font>"); // Not L10N
+                                    inPeptide = false;
+                                }
+                                chosen = chosenNew;
                             }
-                            chosen = chosenNew;
                         }
-                    }
-                    if (nodePep != null && i >= nodePep.Peptide.Begin)
-                    {
-                        if (!inPeptide)
+                        if (nodePep != null && i >= nodePep.Peptide.Begin)
                         {
-                            sb.Append(chosen
-                                          ? "<font style=\"font-weight: bold; color: blue\">" // Not L10N
-                                          : "<font style=\"font-weight: bold\">"); // Not L10N
-                            inPeptide = true;
+                            if (!inPeptide)
+                            {
+                                sb.Append(chosen
+                                              ? "<font style=\"font-weight: bold; color: blue\">" // Not L10N
+                                              : "<font style=\"font-weight: bold\">"); // Not L10N
+                                inPeptide = true;
+                            }
+                        }
+                        else if (inPeptide)
+                        {
+                            sb.Append("</font>"); // Not L10N
+                            inPeptide = false;
                         }
                     }
-                    else if (inPeptide)
-                    {
-                        sb.Append("</font>"); // Not L10N
-                        inPeptide = false;
-                    }
+                    sb.Append(aa[i]);
                 }
-                sb.Append(aa[i]);
+                if (inPeptide)
+                    sb.Append("</font>"); // Not L10N
             }
-            if (inPeptide)
-                sb.Append("</font>"); // Not L10N
-            
 
             data.SetData(DataFormats.Html, HtmlFragment.ClipBoardText(sb.ToString()));                
 

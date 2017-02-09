@@ -329,7 +329,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 scanProvider,
                 transitionIndex, 
                 scanIndex);
-            ClickedChromatogram(this, e);
+            if (ClickedChromatogram != null)    // For ReSharper
+                ClickedChromatogram(this, e);
         }
 
         [Browsable(true)]

@@ -284,6 +284,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\RecordNavBar.ja.resx">
       <DependentUpon>RecordNavBar.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\RecordNavBar.resx">
       <DependentUpon>RecordNavBar.cs</DependentUpon>
@@ -312,6 +313,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="DataBinding\Controls\Editor\FilterTab.ja.resx">
       <DependentUpon>FilterTab.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="DataBinding\Controls\Editor\FilterTab.zh-CHS.resx">
       <DependentUpon>FilterTab.cs</DependentUpon>
@@ -345,6 +347,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="DataBinding\Controls\Editor\ViewEditor.resx">
       <DependentUpon>ViewEditor.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="DataBinding\Controls\Editor\FilterTab.resx">
       <DependentUpon>FilterTab.cs</DependentUpon>

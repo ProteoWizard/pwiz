@@ -45,7 +45,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.IO;
@@ -4110,32 +4109,32 @@ namespace pwiz.Skyline.Model
             where TItem : ChromInfo
         {
             bool started = false;
-            var enumReplicates = settings.MeasuredResults.Chromatograms.GetEnumerator();
-            foreach (var listChromInfo in results)
+            using (var enumReplicates = settings.MeasuredResults.Chromatograms.GetEnumerator())
             {
-// ReSharper disable RedundantAssignment
-                bool success = enumReplicates.MoveNext();
-                Debug.Assert(success);
-// ReSharper restore RedundantAssignment
-                if (listChromInfo == null)
-                    continue;
-                var chromatogramSet = enumReplicates.Current;
-                if (chromatogramSet == null)
-                    continue;
-                string name = chromatogramSet.Name;
-                foreach (var chromInfo in listChromInfo)
+                foreach (var listChromInfo in results)
                 {
-                    if (!started)
+                    bool success = enumReplicates.MoveNext();
+                    Assume.IsTrue(success);
+                    if (listChromInfo == null)
+                        continue;
+                    var chromatogramSet = enumReplicates.Current;
+                    if (chromatogramSet == null)
+                        continue;
+                    string name = chromatogramSet.Name;
+                    foreach (var chromInfo in listChromInfo)
                     {
-                        writer.WriteStartElement(start);
-                        started = true;                        
+                        if (!started)
+                        {
+                            writer.WriteStartElement(start);
+                            started = true;
+                        }
+                        writer.WriteStartElement(startChild);
+                        writer.WriteAttribute(ATTR.replicate, name);
+                        if (chromatogramSet.FileCount > 1)
+                            writer.WriteAttribute(ATTR.file, chromatogramSet.GetFileSaveId(chromInfo.FileId));
+                        writeChromInfo(writer, chromInfo);
+                        writer.WriteEndElement();
                     }
-                    writer.WriteStartElement(startChild);
-                    writer.WriteAttribute(ATTR.replicate, name);
-                    if (chromatogramSet.FileCount > 1)
-                        writer.WriteAttribute(ATTR.file, chromatogramSet.GetFileSaveId(chromInfo.FileId));
-                    writeChromInfo(writer, chromInfo);
-                    writer.WriteEndElement();
                 }
             }
             if (started)

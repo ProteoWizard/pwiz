@@ -251,6 +251,8 @@ namespace pwiz.ProteomeDatabase.API
 
         public bool Equals(ProteinMetadata other)
         {
+            if (other == null)
+                return false;
             if (!string.Equals(Name, other.Name))
                 return false;
             if (!string.Equals(PreferredName, other.PreferredName))
@@ -421,6 +423,8 @@ namespace pwiz.ProteomeDatabase.API
 
         public bool Equals(WebSearchInfo other)
         {
+            if (other == null)
+                return false;
             if (!_history.SequenceEqual(other._history))
                 return false;
             return true;

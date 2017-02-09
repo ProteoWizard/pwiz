@@ -182,6 +182,7 @@ namespace pwiz.Skyline.SettingsUI
             if (!Equals(itemNew, default(TItem)) && !Equals(itemNew, List[i]))
             {
                 List[i] = itemNew;
+                // ReSharper disable once PossibleNullReferenceException
                 LoadList(itemNew.GetKey());
             }
             else

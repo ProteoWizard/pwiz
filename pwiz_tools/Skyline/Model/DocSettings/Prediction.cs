@@ -537,8 +537,7 @@ namespace pwiz.Skyline.Model.DocSettings
             if (count == 0)
                 return null;
 
-            RetentionScoreCalculatorSpec[] calculatorCandidates = calculators == null ?
-                                                                  new RetentionScoreCalculatorSpec[0] : calculators.ToArray();
+            RetentionScoreCalculatorSpec[] calculatorCandidates = calculators.ToArray();
             int calcs = calculatorCandidates.Length;
 
             // An array, indexed by calculator, of scores of peptides by each calculator
@@ -2112,18 +2111,29 @@ namespace pwiz.Skyline.Model.DocSettings
         public const int MIN_OPT_STEP_COUNT = 1;
         public const int MAX_OPT_STEP_COUNT = 10;
 
+        private double _stepSize;
+        private int _stepCount;
+
         protected OptimizableRegression(string name, double stepSize, int stepCount)
             : base(name)
         {
-            StepSize = stepSize;
-            StepCount = stepCount;
+            _stepSize = stepSize;
+            _stepCount = stepCount;
         }
 
         public abstract OptimizationType OptType { get; }
 
-        public virtual double StepSize { get; protected set; }
+        public virtual double StepSize
+        {
+            get { return _stepSize; }
+            protected set { _stepSize = value; }
+        }
 
-        public virtual int StepCount { get; protected set; }
+        public virtual int StepCount
+        {
+            get { return _stepCount; }
+            protected set { _stepCount = value; }
+        }
 
         protected abstract double DefaultStepSize { get; }
 

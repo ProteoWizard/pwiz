@@ -349,6 +349,7 @@ namespace pwiz.Skyline.Model
         protected DocNodeParent(Identity id, Annotations annotations, IList<DocNode> children, bool autoManageChildren) : base(id, annotations)
         {
             Children = children;
+            // ReSharper disable once VirtualMemberCallInConstructor : Has always worked before
             Children = OnChangingChildren(this);
             _nodeCountStack = GetCounts(children);
             AutoManageChildren = autoManageChildren;

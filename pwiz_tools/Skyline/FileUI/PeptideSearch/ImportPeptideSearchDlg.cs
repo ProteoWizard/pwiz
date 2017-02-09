@@ -37,7 +37,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.FileUI.PeptideSearch
 {
-    public partial class ImportPeptideSearchDlg : FormEx, IMultipleViewProvider
+    public sealed partial class ImportPeptideSearchDlg : FormEx, IMultipleViewProvider
     {
         public enum Pages
         {

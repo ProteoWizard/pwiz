@@ -118,7 +118,7 @@ namespace pwiz.Common.SystemUtil
                 }
             }
             path = Path.GetDirectoryName(Environment.GetFolderPath(Environment.SpecialFolder.Personal));
-            path = Path.Combine(path ?? String.Empty, "Downloads"); // Not L10N
+            path = Path.Combine(path, "Downloads"); // Not L10N
             return path;
         }
 

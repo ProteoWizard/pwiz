@@ -106,6 +106,7 @@ namespace pwiz.Skyline.Model.Databinding
             var oldReports = oldList.Select(item => new ReportOrViewSpec(item));
             var convertedReports = ReportSharing.ConvertAll(oldReports, new SrmDocument(SrmSettingsList.GetDefault()));
             AddRange(convertedReports.Select(view=>new ReportOrViewSpec(view)));
+            // ReSharper disable once VirtualMemberCallInConstructor
             ValidateLoad();
         }
 

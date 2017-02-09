@@ -85,8 +85,6 @@ namespace SkylineTester
             while (!File.Exists(Path.Combine(solutionDirectory, "Skyline.sln")))
             {
                 solutionDirectory = Path.GetDirectoryName(solutionDirectory);
-                if (solutionDirectory == null)
-                    throw new ApplicationException("Can't find solution directory");
             }
 
             using (var zipFile = new ZipFile(zipPath))

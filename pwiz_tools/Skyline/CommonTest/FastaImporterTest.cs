@@ -99,8 +99,8 @@ namespace CommonTest
         }
 
         public bool Equals(FastaHeaderReaderResult other)
-        {
-            return Equals(Protein, other.Protein);
+        {            
+            return other != null && Equals(Protein, other.Protein);
         }
     }
 

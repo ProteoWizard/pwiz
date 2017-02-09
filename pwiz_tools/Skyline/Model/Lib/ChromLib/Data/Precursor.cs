@@ -19,6 +19,7 @@
 using System.Collections.Generic;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util.Extensions;
+// ReSharper disable VirtualMemberCallInConstructor
 
 namespace pwiz.Skyline.Model.Lib.ChromLib.Data
 {

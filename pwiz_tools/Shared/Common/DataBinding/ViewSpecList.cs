@@ -182,7 +182,7 @@ namespace pwiz.Common.DataBinding
 
         public override int GetHashCode()
         {
-            unchecked
+            // unchecked
             {
                 return ViewSpecs.GetHashCode();
             }

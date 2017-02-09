@@ -1655,14 +1655,16 @@ namespace pwiz.Skyline
                 return;
 
             selectPath = null;
-            var enumGroupsCurrent = docCurrent.MoleculeGroups.GetEnumerator();
-            foreach (PeptideGroupDocNode nodePepGroup in docNew.MoleculeGroups)
+            using (var enumGroupsCurrent = docCurrent.MoleculeGroups.GetEnumerator())
             {
-                if (enumGroupsCurrent.MoveNext() &&
-                    !ReferenceEquals(nodePepGroup, enumGroupsCurrent.Current))
+                foreach (PeptideGroupDocNode nodePepGroup in docNew.MoleculeGroups)
                 {
-                    selectPath = new IdentityPath(nodePepGroup.Id);
-                    break;
+                    if (enumGroupsCurrent.MoveNext() &&
+                        !ReferenceEquals(nodePepGroup, enumGroupsCurrent.Current))
+                    {
+                        selectPath = new IdentityPath(nodePepGroup.Id);
+                        break;
+                    }
                 }
             }
 
@@ -1705,14 +1707,16 @@ namespace pwiz.Skyline
                             return doc;
                     }
 
-                    var enumGroupsCurrent = doc.MoleculeGroups.GetEnumerator();
-                    foreach (PeptideGroupDocNode nodePepGroup in docNew.MoleculeGroups)
+                    using (var enumGroupsCurrent = doc.MoleculeGroups.GetEnumerator())
                     {
-                        if (enumGroupsCurrent.MoveNext() &&
-                            !ReferenceEquals(nodePepGroup, enumGroupsCurrent.Current))
+                        foreach (PeptideGroupDocNode nodePepGroup in docNew.MoleculeGroups)
                         {
-                            selectPath = new IdentityPath(nodePepGroup.Id);
-                            break;
+                            if (enumGroupsCurrent.MoveNext() &&
+                                !ReferenceEquals(nodePepGroup, enumGroupsCurrent.Current))
+                            {
+                                selectPath = new IdentityPath(nodePepGroup.Id);
+                                break;
+                            }
                         }
                     }
 

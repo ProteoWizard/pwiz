@@ -20,6 +20,7 @@
 using System;
 using System.IO;
 using pwiz.Skyline.Model.Hibernate;
+// ReSharper disable VirtualMemberCallInConstructor
 
 namespace pwiz.Skyline.Model.Lib.Midas
 {

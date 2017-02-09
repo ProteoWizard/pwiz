@@ -27,11 +27,13 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     {
         public SummaryValue(Statistics statistics)
         {
-            Mean = statistics.Mean();
+            double mean = statistics.Mean();
+            Mean = mean;
             if (statistics.Length > 1)
             {
-                Stdev = statistics.StdDev();
-                Cv = Stdev/Mean;
+                double stdev = statistics.StdDev();
+                Stdev = stdev;
+                Cv = stdev/mean;
             }
         }
 

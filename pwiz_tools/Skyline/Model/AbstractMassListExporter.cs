@@ -834,7 +834,7 @@ namespace pwiz.Skyline.Model
                 }
                 else
                 {
-                    BaseName = Path.Combine(Path.GetDirectoryName(fileName) ?? string.Empty,
+                    BaseName = Path.Combine(Path.GetDirectoryName(fileName),
                         Path.GetFileNameWithoutExtension(fileName));
                 }
             }

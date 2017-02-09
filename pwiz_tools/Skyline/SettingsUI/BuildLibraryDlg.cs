@@ -237,7 +237,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 try
                 {
-                    outputPath = Path.GetDirectoryName(outputPath) ?? string.Empty;                
+                    outputPath = Path.GetDirectoryName(outputPath);                
                 }
                 catch (Exception)
                 {

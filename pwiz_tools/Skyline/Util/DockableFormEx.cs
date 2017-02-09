@@ -25,6 +25,15 @@ namespace pwiz.Skyline.Util
 {
     public class DockableFormEx : DockableForm, IFormView
     {
+        /// <summary>
+        /// Sealed to keep ReSharper happy, because we set it in constructors
+        /// </summary>
+        public sealed override string Text
+        {
+            get { return base.Text; }
+            set { base.Text = value; }
+        }
+
         protected override void OnParentChanged(EventArgs e)
         {
             base.OnParentChanged(e);

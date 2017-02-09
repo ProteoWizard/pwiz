@@ -196,6 +196,7 @@ namespace pwiz.SkylineTestA.Results
         private static ResultsTestDocumentContainer MinimizeCacheFile(SrmDocument document,
                 ChromCacheMinimizer.Settings settings, string skyFilePath)
         {
+            Assert.IsNotNull(skyFilePath);  // For ReSharper
             string skydFilePath = Path.ChangeExtension(skyFilePath, ChromatogramCache.EXT);
             ChromCacheMinimizer chromCacheMinimizer = document.Settings.MeasuredResults.GetChromCacheMinimizer(document);
             using (var fs = new FileSaver(skydFilePath))

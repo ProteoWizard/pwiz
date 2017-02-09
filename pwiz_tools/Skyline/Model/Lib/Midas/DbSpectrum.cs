@@ -22,6 +22,7 @@ using System.IO;
 using Ionic.Zlib;
 using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Util;
+// ReSharper disable VirtualMemberCallInConstructor
 
 namespace pwiz.Skyline.Model.Lib.Midas
 {

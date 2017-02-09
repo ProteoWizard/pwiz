@@ -28,7 +28,7 @@ namespace pwiz.Skyline.EditUI
     /// <summary>
     /// Menu item to copy the data from a ZedGraph to the clipboard as tab separated values
     /// </summary>
-    public class CopyGraphDataToolStripMenuItem : ToolStripMenuItem
+    public sealed class CopyGraphDataToolStripMenuItem : ToolStripMenuItem
     {
         public CopyGraphDataToolStripMenuItem(ZedGraphControl zedGraphControl)
         {

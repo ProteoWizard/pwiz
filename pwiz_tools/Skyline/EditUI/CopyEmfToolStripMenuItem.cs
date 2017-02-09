@@ -31,7 +31,7 @@ namespace pwiz.Skyline.EditUI
     /// CONSIDER(nicksh): it would be nice if this also copied CF_BITMAP format to the clipboard,
     /// but I haven't been able to get that to work.
     /// </summary>
-    public class CopyEmfToolStripMenuItem : ToolStripMenuItem
+    public sealed class CopyEmfToolStripMenuItem : ToolStripMenuItem
     {
         // Not L10N
         [DllImport("user32.dll")]

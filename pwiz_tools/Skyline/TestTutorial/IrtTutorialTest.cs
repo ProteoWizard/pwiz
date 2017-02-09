@@ -94,11 +94,13 @@ namespace pwiz.SkylineTestTutorial
                       {
                           SkylineWindow.ArrangeGraphsTiled();
                           SkylineWindow.ShowRTPeptideGraph();
-                          var enumLabels = SkylineWindow.RTGraphController.GraphSummary.Categories.GetEnumerator();
-                          foreach (var nodePep in docCalibrate.Peptides)
+                          using (var enumLabels = SkylineWindow.RTGraphController.GraphSummary.Categories.GetEnumerator())
                           {
-                              Assert.IsTrue(enumLabels.MoveNext() && enumLabels.Current != null);
-                              Assert.IsTrue(nodePep.Peptide.Sequence.StartsWith(enumLabels.Current.Substring(0, 3)));
+                              foreach (var nodePep in docCalibrate.Peptides)
+                              {
+                                  Assert.IsTrue(enumLabels.MoveNext() && enumLabels.Current != null);
+                                  Assert.IsTrue(nodePep.Peptide.Sequence.StartsWith(enumLabels.Current.Substring(0, 3)));
+                              }
                           }
                       });
 

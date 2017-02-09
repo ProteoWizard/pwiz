@@ -78,7 +78,7 @@ namespace pwiz.Skyline.ToolsUI
             }
             catch (TargetInvocationException x)
             {
-                if (x.InnerException.GetType() == typeof(ToolExecutionException) || x.InnerException is WebException)
+                if (x.InnerException is ToolExecutionException || x.InnerException is WebException)
                     MessageDlg.Show(parent, String.Format(Resources.ConfigureToolsDlg_GetZipFromWeb_Error_connecting_to_the_Tool_Store___0_, x.Message));
                 else
                     throw;

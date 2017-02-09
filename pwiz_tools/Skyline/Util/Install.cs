@@ -51,7 +51,10 @@ namespace pwiz.Skyline.Util
         {
             get
             {
-                var myAssemblyName = AssemblyName.GetAssemblyName(Assembly.GetExecutingAssembly().Location);
+                var myAssemplyLocation = Assembly.GetExecutingAssembly().Location;
+                if (myAssemplyLocation == null) // For ReSharper
+                    return true;    // Assume 64-bit
+                var myAssemblyName = AssemblyName.GetAssemblyName(myAssemplyLocation);
                 return ProcessorArchitecture.MSIL == myAssemblyName.ProcessorArchitecture;
             }
         }

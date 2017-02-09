@@ -1657,8 +1657,6 @@ namespace pwiz.Skyline
                     using (var docLibrary = new LibraryReference(blibDb.CreateLibraryFromSpectra(
                         docLibrarySpec, librarySpectra, libraryName, progressMonitor)))
                     {
-                        if (docLibrary == null)
-                            return false;
                         var newSettings = docNew.Settings.ChangePeptideLibraries(
                             libs => libs.ChangeLibrary(docLibrary.Reference, docLibrarySpec, indexOldLibrary));
                         docNew = docNew.ChangeSettings(newSettings, new SrmSettingsChangeMonitor(progressMonitor,

@@ -204,12 +204,9 @@ namespace pwiz.Skyline.Controls
                 base.WndProc(ref m);
                 if (m.Msg == WM_VSCROLL)
                 {
-                    if (Scroll != null)
-                    {
-                        ScrollEventArgs scrollEventArgs = 
-                            new ScrollEventArgs{ScrollPosition = GetScrollPos(m.HWnd, SB_VERT)};
+                    var scrollEventArgs = new ScrollEventArgs{ScrollPosition = GetScrollPos(m.HWnd, SB_VERT)};
+                    if (Scroll != null) // For ReSharper
                         Scroll.Invoke(this, scrollEventArgs);
-                    }
                 }
             }
             public event EventHandler<ScrollEventArgs> Scroll;

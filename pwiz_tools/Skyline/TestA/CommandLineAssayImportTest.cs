@@ -169,7 +169,7 @@ namespace pwiz.SkylineTestA
 
             // 10. Irt database errors
             documentUpdated = TestFilesDir.GetTestPath("AQUA4_Human_Blank2.sky");
-            string irtDatabasePath = Path.ChangeExtension(documentUpdated, IrtDb.EXT);
+            string irtDatabasePath = Path.ChangeExtension(documentUpdated, IrtDb.EXT) ?? IrtDb.EXT; // Not null for ReSharper
             string textIrt = TestFilesDir.GetTestPath("OpenSWATH_SM4_iRT.csv");
             File.WriteAllText(irtDatabasePath, irtDatabasePath); // Dummy file containing its own path
             output = RunCommand("--in=" + documentBlank,
