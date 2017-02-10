@@ -214,7 +214,7 @@ namespace pwiz.Skyline.Model.Results
                 if (Q1 != 0)
                 {
                     var lastProductFilter = productFilters[targetCount - 1];
-                    if ((lastProductFilter.TargetMz + lastProductFilter.FilterWidth/2) < mzArray[0])
+                    if ((lastProductFilter.TargetMz.Value + lastProductFilter.FilterWidth/2) < mzArray[0])
                         continue;
                 }
 

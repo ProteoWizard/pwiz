@@ -1137,6 +1137,10 @@ namespace pwiz.ProteowizardWrapper
         public static readonly SignedMz EMPTY = new SignedMz(null, false);
         public static readonly SignedMz ZERO = new SignedMz(0);
 
+        /// <summary>
+        /// Returns the mz value, which is normally a positive number even for negative ion mode
+        /// (Check the IsNegative flag to know the ion mode, or use RawValue for a value that is negative if ion is negative)
+        /// </summary>
         public double Value
         {
             get { return _mz.Value; }
@@ -1273,7 +1277,7 @@ namespace pwiz.ProteowizardWrapper
             return 0; // Both empty
         }
 
-        public int CompareTolerant(SignedMz other, float tolerance)
+        public int CompareTolerant(SignedMz other, double tolerance)
         {
             if (_mz.HasValue != other.HasValue)
             {

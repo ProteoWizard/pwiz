@@ -576,8 +576,14 @@ namespace pwiz.Skyline.Model.Results
             {
                 double isolationWidth = _instrument.MaxMz - _instrument.MinMz;
                 double isolationMz = _instrument.MinMz + isolationWidth / 2;
-                // CONSIDER: Negative polarity MSe?
-                yield return new IsolationWindowFilter(new SignedMz(isolationMz, false), isolationWidth);
+                if (precursors.Any(p => p.PrecursorMz.IsNegative))
+                {
+                    yield return new IsolationWindowFilter(new SignedMz(isolationMz, true), isolationWidth);
+                }
+                if (precursors.Any(p => !p.PrecursorMz.IsNegative))
+                {
+                    yield return new IsolationWindowFilter(new SignedMz(isolationMz, false), isolationWidth);
+                }
             }
             else if (precursors.Count > 0)
             {
@@ -811,12 +817,12 @@ namespace pwiz.Skyline.Model.Results
             return donePairs;
         }
 
-        private int IndexOfFilter(double precursorMz, double window)
+        private int IndexOfFilter(SignedMz precursorMz, double window)
         {
             return IndexOfFilter(precursorMz, window, 0, _filterMzValues.Length - 1);
         }
 
-        private int IndexOfFilter(double precursorMz, double window, int left, int right)
+        private int IndexOfFilter(SignedMz precursorMz, double window, int left, int right)
         {
             // Binary search for the right precursorMz
             if (left > right)
@@ -835,12 +841,9 @@ namespace pwiz.Skyline.Model.Results
             return mid;
         }
 
-        private static int CompareMz(double mz1, double mz2, double window)
+        private static int CompareMz(SignedMz mz1, SignedMz mz2, double window)
         {
-            double startMz = mz1 - window/2;
-            if (startMz < mz2 && mz2 < startMz + window)
-                return 0;
-            return (mz1 > mz2 ? 1 : -1);
+            return mz1.CompareTolerant(mz2, 0.5 * window);
         }
 
         public ChromatogramRequestDocument ToChromatogramRequestDocument()
