@@ -166,7 +166,8 @@ namespace pwiz.Skyline.Model.Proteome
         private readonly Enzyme _enzyme;
         public ProteaseImpl(Enzyme enzyme)
         {
-            _enzyme = enzyme;
+            // Background proteome databases cannot yet deal with semi-cleaving enzymes
+            _enzyme = !enzyme.IsSemiCleaving ? enzyme : enzyme.ChangeSemiCleaving(false);
         }
 
         public IEnumerable<DigestedPeptide> Digest(Protein protein, int maxMissedCleavages)

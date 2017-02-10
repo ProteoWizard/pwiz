@@ -99,6 +99,11 @@ namespace pwiz.Skyline.Model.DocSettings
         public bool IsNTerm { get { return Type == SequenceTerminus.N; } }
         public bool IsBothTerm { get { return Type == null; } }
 
+        public Enzyme ChangeSemiCleaving(bool isSemi)
+        {
+            return ChangeProp(ImClone(this), im => im.IsSemiCleaving = isSemi);
+        }
+
         // Using this handrolled Regex equivalent because actual Regex is a bottleneck in multithreading
         // due to cacheing of the compiled regex by the system - the cache can be a lock contention
         private List<int> GetMatches(string sequence)
@@ -434,12 +439,11 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             string textC = ToString(CleavageC, RestrictC, SequenceTerminus.C);
             string textN = ToString(CleavageN, RestrictN, SequenceTerminus.N);
-            string semiCleavingSuffix = IsSemiCleaving ? " (semi)" : string.Empty;  // Not L10N
             if (string.IsNullOrEmpty(textN))
-                return string.Format("{0} {1}{2}", Name, textC, semiCleavingSuffix); // Not L10N
+                return string.Format("{0} {1}", Name, textC); // Not L10N
             if (string.IsNullOrEmpty(textC))
-                return string.Format("{0} {1} n-term{2}", Name, textN, semiCleavingSuffix); // Not L10N
-            return string.Format("{0} {1} c-term & {2} n-term{3}", Name, textC, textN, semiCleavingSuffix); // Not L10N
+                return string.Format("{0} {1} n-term", Name, textN); // Not L10N
+            return string.Format("{0} {1} c-term & {2} n-term", Name, textC, textN); // Not L10N
         }
 
         private static string ToString(string cleavage, string restrict, SequenceTerminus term)
