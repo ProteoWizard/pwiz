@@ -42,16 +42,13 @@ PWIZ_API_DECL ostream& operator<<(ostream& os, const MZTolerance& mzt)
 PWIZ_API_DECL istream& operator>>(istream& is, MZTolerance& mzt)
 {
     string temp;
-#if defined(__clang__)
+
+    // in order to handle both '10ppm' and '10 ppm', this is easier than istream (which may or may not have skipws flag set)
     getline(is, temp);
-    size_t unitsIndex = temp.find_first_not_of("0123456789.-");
-    string value = temp.substr(0, unitsIndex);
-    temp.erase(0, unitsIndex);
-    temp.erase(temp.begin(), std::find_if(temp.begin(), temp.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
-    mzt.value = lexical_cast<double>(value);
-#else
-    is >> mzt.value >> temp;
-#endif
+    size_t endOfValue = temp.find_first_not_of("0123456789.-");
+    size_t startOfUnits = temp.find_first_not_of(" ", endOfValue);
+    mzt.value = lexical_cast<double>(temp.data(), endOfValue);
+    temp.erase(temp.begin(), temp.begin()+startOfUnits);
 
     bal::to_lower(temp);
     if (temp == "mz" || temp == "m/z" || bal::starts_with(temp, "da")) mzt.units = MZTolerance::MZ;

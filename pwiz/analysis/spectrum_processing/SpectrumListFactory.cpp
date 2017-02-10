@@ -76,13 +76,14 @@ inline const char* cppTypeToNaturalLanguage(float T) { return "a real number"; }
 inline const char* cppTypeToNaturalLanguage(double T) { return "a real number"; }
 inline const char* cppTypeToNaturalLanguage(bool T) { return "true or false"; }
 inline const char* cppTypeToNaturalLanguage(const string& T) { return "some text"; }
-inline const char* cppTypeToNaturalLanguage(const MZTolerance& T) { return "a mass tolerance (tolerance and units (ppm or Da)"; }
+inline const char* cppTypeToNaturalLanguage(const MZTolerance& T) { return "a mass tolerance (e.g. '10 ppm', '2.5 Da')"; }
+inline const char* cppTypeToNaturalLanguage(const SpectrumList_Filter::Predicate::FilterMode& T) { return "a filter mode ('include' or 'exclude')"; }
 
 
 /// parses a lexical-castable key=value pair from a string of arguments which may also include non-key-value strings;
 /// if the key is not in the argument string, defaultValue is returned;
 /// if bad_lexical_cast is thrown, it is converted into a sensible error message
-template <typename ArgT>
+template <typename ArgT, int tokensInValue = 1>
 ArgT parseKeyValuePair(string& args, const string& tokenName, const ArgT& defaultValue)
 {
     try
@@ -94,16 +95,23 @@ ArgT parseKeyValuePair(string& args, const string& tokenName, const ArgT& defaul
             if (valueIndex < args.length())
             {
                 string valueStr;
-                try
+                size_t nextTokenIndex = args.find(" ", valueIndex);
+                for (int i = tokensInValue; i >= 0; --i)
                 {
-                    valueStr = args.substr(valueIndex, args.find(" ", valueIndex) - valueIndex);
-                    ArgT value = lexical_cast<ArgT>(valueStr);
-                    args.erase(keyIndex, args.find(" ", valueIndex) - keyIndex);
-                    return value;
-                }
-                catch (bad_lexical_cast&)
-                {
-                    throw runtime_error("error parsing \"" + valueStr + "\" as value for \"" + tokenName + "\"; expected " + cppTypeToNaturalLanguage(defaultValue));
+                    try
+                    {
+                        valueStr = args.substr(valueIndex, nextTokenIndex - valueIndex);
+                        ArgT value = lexical_cast<ArgT>(valueStr.c_str(), valueStr.length());
+                        args.erase(keyIndex, nextTokenIndex - keyIndex);
+                        return value;
+                    }
+                    catch (exception&)
+                    {
+                        nextTokenIndex = args.find(" ", nextTokenIndex+1);
+                        if (i > 0)
+                            continue;
+                        throw runtime_error("error parsing \"" + valueStr + "\" as value for \"" + tokenName + "\"; expected " + cppTypeToNaturalLanguage(defaultValue));
+                    }
                 }
             }
         }
@@ -858,8 +866,13 @@ UsageInfo usage_mzWindow = {"<mzrange>",
     "100.1 to 307.5, use --filter \"mzWindow [100.1,307.5]\" ."
 };
 
-SpectrumListPtr filterCreator_mzPrecursors(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
+SpectrumListPtr filterCreator_mzPrecursors(const MSData& msd, const string& carg, pwiz::util::IterationListenerRegistry* ilr)
 {
+    string arg = carg;
+
+    auto mzTol = parseKeyValuePair<MZTolerance, 2>(arg, "mzTol=", MZTolerance(10, MZTolerance::PPM));
+    auto mode = parseKeyValuePair<SpectrumList_Filter::Predicate::FilterMode>(arg, "mode=", SpectrumList_Filter::Predicate::FilterMode_Include);
+
     char open='\0', comma='\0', close='\0';
     std::set<double> setMz;
 
@@ -880,14 +893,18 @@ SpectrumListPtr filterCreator_mzPrecursors(const MSData& msd, const string& arg,
         cerr << "mzPrecursors filter expected a list of m/z values formatted something like \"[123.4,567.8,789.0]\"" << endl;
         return SpectrumListPtr();
     }
+
     return SpectrumListPtr(new
         SpectrumList_Filter(msd.run.spectrumListPtr,
-                            SpectrumList_FilterPredicate_PrecursorMzSet(setMz)));
+                            SpectrumList_FilterPredicate_PrecursorMzSet(setMz, mzTol, mode)));
 }
-UsageInfo usage_mzPrecursors = {"<precursor_mz_list>",
-    "Retains spectra with precursor m/z values found in the <precursor_mz_list>.  For example, in msconvert to retain "
-    "only spectra with precursor m/z values of 123.4 and 567.8 you would use --filter \"mzPrecursors [123.4,567.8]\".  "
+UsageInfo usage_mzPrecursors = {"<precursor_mz_list> [mzTol=<mzTol (10 ppm)>] [mode=<include|exclude (include)>]",
+    "Filters spectra based on precursor m/z values found in the <precursor_mz_list>, with <mzTol> m/z tolerance. To retain "
+    "only spectra with precursor m/z values of 123.4 and 567.8, use --filter \"mzPrecursors [123.4,567.8]\". "
     "Note that this filter will drop MS1 scans unless you include 0.0 in the list of precursor values."
+    "   <mzTol> is optional and must be specified as a number and units (PPM or MZ). For example, \"5 PPM\" or \"2.1 MZ\".\n"
+    "   <mode> is optional and must be either \"include\" (the default) or \"exclude\".  If \"exclude\" is "
+    "used, the filter drops spectra that match the various criteria instead of keeping them."
     };
 
 SpectrumListPtr filterCreator_msLevel(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
@@ -956,14 +973,14 @@ SpectrumListPtr filterCreator_mzPresent(const MSData& msd, const string& arg, pw
     parser >> close;
 
     std::string inex = "include";
-    bool inverse = false;
+    auto mode = SpectrumList_Filter::Predicate::FilterMode_Include;
     if (parser.good())
         parser >> inex;
     if (inex != "include" && inex != "exclude")
         throw user_error("[SpectrumListFactory::filterCreator_mzPresent()] invalid parameter (expected \"include\" or \"exclude\")");
 
     if (inex == "exclude")
-        inverse = true;
+        mode = SpectrumList_Filter::Predicate::FilterMode_Exclude;
 
     if (open!='[' || close!=']')
     {
@@ -973,7 +990,7 @@ SpectrumListPtr filterCreator_mzPresent(const MSData& msd, const string& arg, pw
 
     return SpectrumListPtr(new
         SpectrumList_Filter(msd.run.spectrumListPtr,
-                        SpectrumList_FilterPredicate_MzPresent(mzt, setMz, ThresholdFilter(byType, threshold, orientation, msLevels), inverse)));
+                        SpectrumList_FilterPredicate_MzPresent(mzt, setMz, ThresholdFilter(byType, threshold, orientation, msLevels), mode)));
 }
 UsageInfo usage_mzPresent = {"<tolerance> <type> <threshold> <orientation> <mz_list> [<include_or_exclude>]",
     "This filter is similar to the \"threshold\" filter, with a few more options.\n"

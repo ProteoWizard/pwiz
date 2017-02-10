@@ -47,6 +47,13 @@ class PWIZ_API_DECL SpectrumList_Filter : public msdata::SpectrumListWrapper
     /// SpectrumList_Filter to create the filtered list of spectra
     struct PWIZ_API_DECL Predicate
     {
+        /// controls whether spectra that pass the predicate are included or excluded from the result
+        enum FilterMode
+        {
+            FilterMode_Include,
+            FilterMode_Exclude
+        };
+
         /// can be overridden in subclasses that know they will need a certain detail level;
         /// it must be overridden to return DetailLevel_FullData if binary data is needed
         virtual msdata::DetailLevel suggestedDetailLevel() const {return msdata::DetailLevel_InstantMetadata;}
@@ -86,6 +93,10 @@ class PWIZ_API_DECL SpectrumList_Filter : public msdata::SpectrumListWrapper
     SpectrumList_Filter(SpectrumList_Filter&);
     SpectrumList_Filter& operator=(SpectrumList_Filter&);
 };
+
+
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const SpectrumList_Filter::Predicate::FilterMode& mode);
+PWIZ_API_DECL std::istream& operator>>(std::istream& is, SpectrumList_Filter::Predicate::FilterMode& mode);
 
 
 class PWIZ_API_DECL SpectrumList_FilterPredicate_IndexSet : public SpectrumList_Filter::Predicate
@@ -166,12 +177,14 @@ class PWIZ_API_DECL SpectrumList_FilterPredicate_ChargeStateSet : public Spectru
 class PWIZ_API_DECL SpectrumList_FilterPredicate_PrecursorMzSet : public SpectrumList_Filter::Predicate
 {
     public:
-	SpectrumList_FilterPredicate_PrecursorMzSet(const std::set<double>& precursorMzSet);
+	SpectrumList_FilterPredicate_PrecursorMzSet(const std::set<double>& precursorMzSet, chemistry::MZTolerance tolerance, FilterMode mode);
     virtual boost::logic::tribool accept(const msdata::SpectrumIdentity& spectrumIdentity) const {return boost::logic::indeterminate;}
     virtual boost::logic::tribool accept(const msdata::Spectrum& spectrum) const;
 
     private:
 	std::set<double> precursorMzSet_;
+    chemistry::MZTolerance tolerance_;
+    FilterMode mode_;
 
 	double getPrecursorMz(const msdata::Spectrum& spectrum) const;
 };
@@ -230,7 +243,7 @@ class PWIZ_API_DECL SpectrumList_FilterPredicate_Polarity : public SpectrumList_
 class PWIZ_API_DECL SpectrumList_FilterPredicate_MzPresent : public SpectrumList_Filter::Predicate
 {
     public:
-    SpectrumList_FilterPredicate_MzPresent(chemistry::MZTolerance mzt, std::set<double> mzSet, ThresholdFilter tf, bool inverse);
+    SpectrumList_FilterPredicate_MzPresent(chemistry::MZTolerance mzt, std::set<double> mzSet, ThresholdFilter tf, FilterMode mode);
     virtual msdata::DetailLevel suggestedDetailLevel() const {return msdata::DetailLevel_FullData;}
     virtual boost::logic::tribool accept(const msdata::SpectrumIdentity& spectrumIdentity) const {return boost::logic::indeterminate;}
     virtual boost::logic::tribool accept(const msdata::Spectrum& spectrum) const;
@@ -239,7 +252,7 @@ class PWIZ_API_DECL SpectrumList_FilterPredicate_MzPresent : public SpectrumList
     chemistry::MZTolerance mzt_;
     std::set<double> mzSet_;
     ThresholdFilter tf_;
-    bool inverse_;
+    FilterMode mode_;
 };
 
 } // namespace analysis

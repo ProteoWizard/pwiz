@@ -592,18 +592,18 @@ void testMZPresentFilter(SpectrumListPtr sl)
     double threshold = 10;
     IntegerSet msLevels(1, INT_MAX);
     ThresholdFilter tf(ThresholdFilter::ThresholdingBy_Count, threshold, ThresholdFilter::Orientation_MostIntense, msLevels);
-    SpectrumList_Filter filter(ms2filter, SpectrumList_FilterPredicate_MzPresent(mzt, mzSet, tf, false));
+    SpectrumList_Filter filter(ms2filter, SpectrumList_FilterPredicate_MzPresent(mzt, mzSet, tf, SpectrumList_Filter::Predicate::FilterMode_Include));
 
     if (os_)
     {
         printSpectrumList(filter, *os_);
         *os_ << endl;
     }
-    unit_assert(filter.size() == 4);
-    unit_assert(filter.spectrumIdentity(0).id == "scan=102");
-    unit_assert(filter.spectrumIdentity(1).id == "scan=104");
-    unit_assert(filter.spectrumIdentity(2).id == "scan=105");
-    unit_assert(filter.spectrumIdentity(3).id == "scan=107");
+    unit_assert_operator_equal(4, filter.size());
+    unit_assert_operator_equal("scan=102", filter.spectrumIdentity(0).id);
+    unit_assert_operator_equal("scan=104", filter.spectrumIdentity(1).id);
+    unit_assert_operator_equal("scan=105", filter.spectrumIdentity(2).id);
+    unit_assert_operator_equal("scan=107", filter.spectrumIdentity(3).id);
 
     // test mz present on MS level 1 (exclude test)
     SpectrumListPtr ms1filter(new SpectrumList_Filter(sl, SpectrumList_FilterPredicate_MSLevelSet(IntegerSet(1))));
@@ -613,17 +613,17 @@ void testMZPresentFilter(SpectrumListPtr sl)
     mzSet1.insert(300.0);
     double threshold1 = 5;
     ThresholdFilter tf1(ThresholdFilter::ThresholdingBy_Count, threshold1, ThresholdFilter::Orientation_MostIntense, msLevels);
-    SpectrumList_Filter filter1(ms1filter, SpectrumList_FilterPredicate_MzPresent(mzt1, mzSet1, tf1, true));
+    SpectrumList_Filter filter1(ms1filter, SpectrumList_FilterPredicate_MzPresent(mzt1, mzSet1, tf1, SpectrumList_Filter::Predicate::FilterMode_Exclude));
 
     if (os_)
     {
         printSpectrumList(filter1, *os_);
         *os_ << endl;
     }
-    unit_assert(filter1.size() == 3);
-    unit_assert(filter1.spectrumIdentity(0).id == "scan=100");
-    unit_assert(filter1.spectrumIdentity(1).id == "scan=106");
-    unit_assert(filter1.spectrumIdentity(2).id == "scan=109");
+    unit_assert_operator_equal(3, filter1.size());
+    unit_assert_operator_equal("scan=100", filter1.spectrumIdentity(0).id);
+    unit_assert_operator_equal("scan=106", filter1.spectrumIdentity(1).id);
+    unit_assert_operator_equal("scan=109", filter1.spectrumIdentity(2).id);
 }
 
 void test()

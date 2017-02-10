@@ -435,6 +435,57 @@ void testWrapTitleMaker()
     }
 }
 
+void testWrapPrecursorMzSet()
+{
+    MSData msd;
+    examples::initializeTiny(msd);
+    auto originalSL = msd.run.spectrumListPtr;
+
+    {
+        SpectrumListFactory::wrap(msd, "mzPrecursors [445]"); // default tolerance does not match to 445.34
+        SpectrumListPtr& sl = msd.run.spectrumListPtr;
+        unit_assert_operator_equal(0, sl->size());
+    }
+
+    {
+        msd.run.spectrumListPtr = originalSL;
+        SpectrumListFactory::wrap(msd, "mzPrecursors [445] mzTol=1mz");
+        SpectrumListPtr& sl = msd.run.spectrumListPtr;
+        unit_assert_operator_equal(1, sl->size());
+        unit_assert_operator_equal("scan=20", sl->spectrumIdentity(0).id);
+    }
+
+    {
+        msd.run.spectrumListPtr = originalSL;
+        SpectrumListFactory::wrap(msd, "mzPrecursors [445] mzTol=1.0 mz"); // mzTol should still parse correctly with a space
+        SpectrumListPtr& sl = msd.run.spectrumListPtr;
+        unit_assert_operator_equal(1, sl->size());
+        unit_assert_operator_equal("scan=20", sl->spectrumIdentity(0).id);
+    }
+
+    {
+        msd.run.spectrumListPtr = originalSL;
+        SpectrumListFactory::wrap(msd, "mzPrecursors [445.34] mode=exclude"); // only 1 MS2 left, but MS1s aren't excluded now
+        SpectrumListPtr& sl = msd.run.spectrumListPtr;
+        unit_assert_operator_equal(4, sl->size());
+        unit_assert_operator_equal("scan=19", sl->spectrumIdentity(0).id);
+        unit_assert_operator_equal("scan=21", sl->spectrumIdentity(1).id);
+        unit_assert_operator_equal("scan=22", sl->spectrumIdentity(2).id);
+        unit_assert_operator_equal("sample=1 period=1 cycle=23 experiment=1", sl->spectrumIdentity(3).id);
+    }
+
+    {
+        msd.run.spectrumListPtr = originalSL;
+        SpectrumListFactory::wrap(msd, "mzPrecursors [0,445.34]"); // bring back the MS1s explicitly
+        SpectrumListPtr& sl = msd.run.spectrumListPtr;
+        unit_assert_operator_equal(4, sl->size());
+        unit_assert_operator_equal("scan=19", sl->spectrumIdentity(0).id);
+        unit_assert_operator_equal("scan=20", sl->spectrumIdentity(1).id);
+        unit_assert_operator_equal("scan=21", sl->spectrumIdentity(2).id);
+        unit_assert_operator_equal("sample=1 period=1 cycle=23 experiment=1", sl->spectrumIdentity(3).id);
+    }
+}
+
 void test()
 {
     testUsage(); 
@@ -449,6 +500,7 @@ void test()
     testWrapMassAnalyzer();
     testWrapPolarity();
     testWrapTitleMaker();
+    testWrapPrecursorMzSet();
 }
 
 
