@@ -84,7 +84,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 var peptideSettings = SkylineWindow.DocumentUI.Settings.PeptideSettings;
                 var backgroundProteome = peptideSettings.BackgroundProteome;
-                return backgroundProteome.HasDigestion(peptideSettings) && !backgroundProteome.NeedsProteinMetadataSearch && !SkylineWindow.DocumentUI.IsProteinMetadataPending;
+                return !backgroundProteome.NeedsProteinMetadataSearch && !SkylineWindow.DocumentUI.IsProteinMetadataPending;
             });
 
             // Add FASTA sequence that's not in the library
@@ -111,7 +111,9 @@ namespace pwiz.SkylineTestFunctional
                     rowcount += node.GetNodeCount(false);
                 }
             });
-            var uniquePeptidesDlg = ShowDialog<UniquePeptidesDlg>(SkylineWindow.ShowUniquePeptidesDlg);
+
+            var upgradeBackgroundProteome = ShowDialog<AlertDlg>(SkylineWindow.ShowUniquePeptidesDlg);
+            var uniquePeptidesDlg = ShowDialog<UniquePeptidesDlg>(upgradeBackgroundProteome.ClickNo);
             WaitForConditionUI(() => uniquePeptidesDlg.GetDataGridView().RowCount == rowcount);
             if (bogus)
             {

@@ -1247,9 +1247,6 @@
   <data name="EditFragmentLossDlg_EditFragmentLossDlg__Monoisotopic_loss_" xml:space="preserve">
     <value>&amp;Monoisotopic loss:</value>
   </data>
-  <data name="BackgroundProteomeSpec_Digest_Digesting__0__" xml:space="preserve">
-    <value>Digesting {0}</value>
-  </data>
   <data name="ComparePeakBoundariesList_Title_Edit_Peak_Boundary_Comparisons" xml:space="preserve">
     <value>Edit Peak Boundary Comparisons</value>
   </data>
@@ -4436,9 +4433,6 @@ If you prefer you can choose to report anonymously.</value>
   </data>
   <data name="AddIrtSpectralLibrary_OkDialog_The_file__0__is_not_a_BiblioSpec_or_Chromatogram_library" xml:space="preserve">
     <value>The file {0} is not a BiblioSpec or Chromatogram library.</value>
-  </data>
-  <data name="BackgroundProteomeManager_LoadBackground_Digesting__0__proteome" xml:space="preserve">
-    <value>Digesting {0} proteome</value>
   </data>
   <data name="SkylineWindow_Paste_Paste_proteins" xml:space="preserve">
     <value>Paste proteins</value>
@@ -9355,6 +9349,12 @@ If your transition list format combines formulas and adducts in a single column 
   </data>
   <data name="BuildBackgroundProteomeDlg_AddFastaFile_The_added_file_included__0__repeated_protein_sequences__Their_names_were_added_as_aliases_to_ensure_the_protein_list_contains_only_one_copy_of_each_sequence_" xml:space="preserve">
     <value>The added file included {0} repeated protein sequences. Their names were added as aliases to ensure the protein list contains only one copy of each sequence.</value>
+  </data>
+  <data name="ViewLibraryDlg_EnsureDigested_The_background_proteome___0___is_in_an_older_format___In_order_to_be_able_to_efficiently_find_peptide_sequences__the_background_proteome_should_be_upgraded_to_the_latest_version___Do_you_want_to_upgrade_the_background_proteome_now_" xml:space="preserve">
+    <value>The background proteome '{0}' is in an older format.  In order to be able to efficiently find peptide sequences, the background proteome should be upgraded to the latest version.  Do you want to upgrade the background proteome now?</value>
+  </data>
+  <data name="ViewLibraryDlg_EnsureDigested_Copying_database" xml:space="preserve">
+    <value>Copying database</value>
   </data>
   <data name="EditIrtCalcDlg_OkDialog_Spectral_libraries_cannot_be_modified__You_must_save_this_iRT_calculator_as_a_new_file_" xml:space="preserve">
     <value>Spectral libraries cannot be modified. You must save this iRT calculator as a new file.</value>

@@ -69,12 +69,12 @@ namespace pwiz.Skyline.SettingsUI
             this.comboDriftTimePredictor = new System.Windows.Forms.ComboBox();
             this.textSpectralLibraryDriftTimesResolvingPower = new System.Windows.Forms.TextBox();
             this.cbUseSpectralLibraryDriftTimes = new System.Windows.Forms.CheckBox();
+            this.comboBoxPeptideUniquenessConstraint = new System.Windows.Forms.ComboBox();
             this.textSpectralLibraryDriftTimesWidthAtDtMax = new System.Windows.Forms.TextBox();
             this.textSpectralLibraryDriftTimesWidthAtDt0 = new System.Windows.Forms.TextBox();
-            this.comboBoxPeptideUniquenessConstraint = new System.Windows.Forms.ComboBox();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabDigestion = new System.Windows.Forms.TabPage();
-            this.labelPeptideUniquenessConstraint = new System.Windows.Forms.Label(); 
+            this.labelPeptideUniquenessConstraint = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.label15 = new System.Windows.Forms.Label();
@@ -447,6 +447,18 @@ namespace pwiz.Skyline.SettingsUI
             this.comboBoxPeptideUniquenessConstraint.Name = "comboBoxPeptideUniquenessConstraint";
             this.helpTip.SetToolTip(this.comboBoxPeptideUniquenessConstraint, resources.GetString("comboBoxPeptideUniquenessConstraint.ToolTip"));
             // 
+            // textSpectralLibraryDriftTimesWidthAtDtMax
+            // 
+            resources.ApplyResources(this.textSpectralLibraryDriftTimesWidthAtDtMax, "textSpectralLibraryDriftTimesWidthAtDtMax");
+            this.textSpectralLibraryDriftTimesWidthAtDtMax.Name = "textSpectralLibraryDriftTimesWidthAtDtMax";
+            this.helpTip.SetToolTip(this.textSpectralLibraryDriftTimesWidthAtDtMax, resources.GetString("textSpectralLibraryDriftTimesWidthAtDtMax.ToolTip"));
+            // 
+            // textSpectralLibraryDriftTimesWidthAtDt0
+            // 
+            resources.ApplyResources(this.textSpectralLibraryDriftTimesWidthAtDt0, "textSpectralLibraryDriftTimesWidthAtDt0");
+            this.textSpectralLibraryDriftTimesWidthAtDt0.Name = "textSpectralLibraryDriftTimesWidthAtDt0";
+            this.helpTip.SetToolTip(this.textSpectralLibraryDriftTimesWidthAtDt0, resources.GetString("textSpectralLibraryDriftTimesWidthAtDt0.ToolTip"));
+            // 
             // tabControl1
             // 
             resources.ApplyResources(this.tabControl1, "tabControl1");
@@ -479,18 +491,6 @@ namespace pwiz.Skyline.SettingsUI
             // 
             resources.ApplyResources(this.labelPeptideUniquenessConstraint, "labelPeptideUniquenessConstraint");
             this.labelPeptideUniquenessConstraint.Name = "labelPeptideUniquenessConstraint";
-            // 
-            // textSpectralLibraryDriftTimesWidthAtDtMax
-            // 
-            resources.ApplyResources(this.textSpectralLibraryDriftTimesWidthAtDtMax, "textSpectralLibraryDriftTimesWidthAtDtMax");
-            this.textSpectralLibraryDriftTimesWidthAtDtMax.Name = "textSpectralLibraryDriftTimesWidthAtDtMax";
-            this.helpTip.SetToolTip(this.textSpectralLibraryDriftTimesWidthAtDtMax, resources.GetString("textSpectralLibraryDriftTimesWidthAtDtMax.ToolTip"));
-            // 
-            // textSpectralLibraryDriftTimesWidthAtDt0
-            // 
-            resources.ApplyResources(this.textSpectralLibraryDriftTimesWidthAtDt0, "textSpectralLibraryDriftTimesWidthAtDt0");
-            this.textSpectralLibraryDriftTimesWidthAtDt0.Name = "textSpectralLibraryDriftTimesWidthAtDt0";
-            this.helpTip.SetToolTip(this.textSpectralLibraryDriftTimesWidthAtDt0, resources.GetString("textSpectralLibraryDriftTimesWidthAtDt0.ToolTip"));
             // 
             // label2
             // 

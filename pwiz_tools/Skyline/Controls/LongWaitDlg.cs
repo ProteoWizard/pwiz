@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
@@ -32,11 +33,11 @@ namespace pwiz.Skyline.Controls
 
         private Control _parentForm;
         private Exception _exception;
-        private bool _clickedCancel;
         private int _progressValue = -1;
         private string _message;
         private int _tickCount;
         private DateTime _startTime;
+        private CancellationTokenSource _cancellationTokenSource;
 
         private IAsyncResult _result;
 
@@ -65,6 +66,7 @@ namespace pwiz.Skyline.Controls
 
             if (!IsCancellable)
                 Height -= Height - btnCancel.Bottom;
+            _cancellationTokenSource = new CancellationTokenSource();
         }
 
         public string Message
@@ -246,7 +248,7 @@ namespace pwiz.Skyline.Controls
 
         private void FinishDialog()
         {
-            if (!_clickedCancel)
+            if (!_cancellationTokenSource.IsCancellationRequested)
             {
                 var runningTime = DateTime.Now.Subtract(_startTime);
                 // Show complete status before returning.
@@ -267,7 +269,7 @@ namespace pwiz.Skyline.Controls
 
         public bool IsCanceled
         {
-            get { return _clickedCancel; }
+            get { return _cancellationTokenSource.IsCancellationRequested; }
         }
 
         private void btnCancel_Click(object sender, EventArgs e)
@@ -277,10 +279,10 @@ namespace pwiz.Skyline.Controls
 
         private void OnClickedCancel()
         {
-            if (!_clickedCancel)
+            if (!_cancellationTokenSource.IsCancellationRequested)
             {
+                _cancellationTokenSource.Cancel();
                 labelMessage.Text += _cancelMessage;
-                _clickedCancel = true;
             }
         }
 
@@ -299,7 +301,7 @@ namespace pwiz.Skyline.Controls
             UpdateTaskbarProgress(progressBar.Value);
 
             if (_message != null && !Equals(_message, labelMessage.Text))
-                labelMessage.Text = _message + (_clickedCancel ? _cancelMessage : string.Empty);
+                labelMessage.Text = _message + (_cancellationTokenSource.IsCancellationRequested ? _cancelMessage : string.Empty);
         }
 
         protected virtual void UpdateTaskbarProgress(int? percentComplete)
@@ -314,6 +316,8 @@ namespace pwiz.Skyline.Controls
         {
             Close();
         }
+
+        public CancellationToken CancellationToken { get { return _cancellationTokenSource.Token; } }
 
         private sealed class IndefiniteWaitBroker
         {

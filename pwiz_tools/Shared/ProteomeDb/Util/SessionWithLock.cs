@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.Collections;
 using System.Data;
 using System.Linq.Expressions;
 using System.Threading;
@@ -25,56 +24,30 @@ using NHibernate;
 using NHibernate.Engine;
 using NHibernate.Stat;
 using NHibernate.Type;
-using pwiz.ProteomeDatabase.Properties;
 
 #pragma warning disable 612,618
 namespace pwiz.ProteomeDatabase.Util
 {
-    public class SessionWithLock : ISession
+    public class SessionWithLock : AbstractSessionWithLock, ISession
     {
         readonly ISession _session;
-        readonly ReaderWriterLock _lock;
-        readonly bool _writeLock;
 
         public SessionWithLock(ISession session, ReaderWriterLock readerWriterLock, bool writeLock)
+            : this(session, readerWriterLock, writeLock, CancellationToken.None)
+        {
+            
+        }
+
+        public SessionWithLock(ISession session, ReaderWriterLock readerWriterLock, bool writeLock, CancellationToken cancellationToken)
+            :base(readerWriterLock, writeLock, cancellationToken)
         {
             _session = session;
-            _lock = readerWriterLock;
-            _writeLock = writeLock;
-            if (_writeLock)
-            {
-                if (_lock.IsReaderLockHeld)
-                {
-                    throw new InvalidOperationException(
-                        Resources.SessionWithLock_SessionWithLock_Cant_acquire_write_lock_while_holding_read_lock);
-                }
-                _lock.AcquireWriterLock(int.MaxValue);
-            }
-            else
-            {
-                _lock.AcquireReaderLock(int.MaxValue);
-            }
         }
 
-        private void EnsureWriteLock()
-        {
-            if (!_writeLock)
-            {
-                throw new InvalidOperationException(Resources.SessionWithLock_EnsureWriteLock_Must_have_write_lock);
-            }
-        }
-
-        public void Dispose()
+        public override void Dispose()
         {
             _session.Dispose();
-            if (_writeLock)
-            {
-                _lock.ReleaseWriterLock();
-            }
-            else
-            {
-                _lock.ReleaseReaderLock();
-            }
+            base.Dispose();
         }
 
         public void Flush()
@@ -102,7 +75,7 @@ namespace pwiz.ProteomeDatabase.Util
             return _session.Close();
         }
 
-        public void CancelQuery()
+        public override void CancelQuery()
         {
             _session.CancelQuery();
         }
@@ -240,21 +213,6 @@ namespace pwiz.ProteomeDatabase.Util
             _session.Delete(obj);
         }
 
-        public IList Find(string query)
-        {
-            return _session.CreateQuery(query).List();
-        }
-
-        public IEnumerable Enumerable(string query)
-        {
-            return _session.CreateQuery(query).Enumerable();
-        }
-
-        public ICollection Filter(object collection, string filter)
-        {
-            return _session.CreateFilter(collection, filter).List();
-        }
-
         public int Delete(string query)
         {
             EnsureWriteLock();
@@ -333,11 +291,6 @@ namespace pwiz.ProteomeDatabase.Util
         public IQuery GetNamedQuery(string queryName)
         {
             return _session.GetNamedQuery(queryName);
-        }
-
-        public IQuery CreateSQLQuery(string sql, string returnAlias, Type returnClass)
-        {
-            return _session.CreateSQLQuery(sql).AddEntity(returnAlias, returnClass);
         }
 
         public ISQLQuery CreateSQLQuery(string queryString)

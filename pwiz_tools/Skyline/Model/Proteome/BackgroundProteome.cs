@@ -150,41 +150,26 @@ namespace pwiz.Skyline.Model.Proteome
         public static readonly BackgroundProteome NONE =
             new BackgroundProteome(BackgroundProteomeList.GetDefault());
 
-
-        private readonly HashSet<string> _digestionNames;
-
-        public BackgroundProteome(BackgroundProteomeSpec backgroundProteomeSpec) : this(backgroundProteomeSpec, false)
-        {
-            // We intentionally do not copy cache information
-        }
-
-        public BackgroundProteome(BackgroundProteomeSpec backgroundProteomeSpec, bool queryDigestions)
+        public BackgroundProteome(BackgroundProteomeSpec backgroundProteomeSpec) 
             : base(backgroundProteomeSpec.Name, backgroundProteomeSpec.DatabasePath)
         {
-            _digestionNames = new HashSet<string>();
             _cache = new BackgroundProteomeMetadataCache(this);
             if (!IsNone)
             {
                 try
                 {
-                    using (var proteomeDb = OpenProteomeDb())
-                    {
-                        if (queryDigestions)
-                            _digestionNames.UnionWith(proteomeDb.ListDigestions().Select(digestion => digestion.Name));
-                    }
+                    OpenProteomeDb();
                 }
                 catch (Exception)
                 {
                     DatabaseInvalid = true;
                 }
             }
-            if (queryDigestions)
-                DatabaseValidated = true;
+            DatabaseValidated = true;
         }
 
         private BackgroundProteome()
         {
-            _digestionNames = new HashSet<string>();
             _cache = new BackgroundProteomeMetadataCache(this);
         }
 
@@ -344,15 +329,10 @@ namespace pwiz.Skyline.Model.Proteome
             }
             return sequences;
         }
-
-        public bool HasDigestion(PeptideSettings peptideSettings)
-        {
-            return _digestionNames.Contains(peptideSettings.Enzyme.Name);
-        }
         
         public Digestion GetDigestion(ProteomeDb proteomeDb, PeptideSettings peptideSettings)
         {
-            return proteomeDb.GetDigestion(peptideSettings.Enzyme.Name);
+            return proteomeDb.GetDigestion();
         }
 
         public class DigestionPeptideStatsDetailed
@@ -423,8 +403,7 @@ namespace pwiz.Skyline.Model.Proteome
                 return false;
             }
             if (DatabaseInvalid != that.DatabaseInvalid 
-               || DatabaseValidated != that.DatabaseValidated
-               || !_digestionNames.SetEquals(that._digestionNames))
+               || DatabaseValidated != that.DatabaseValidated)
             {
                 return false;
             }

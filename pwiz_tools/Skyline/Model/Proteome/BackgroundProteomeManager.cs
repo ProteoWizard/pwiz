@@ -59,10 +59,6 @@ namespace pwiz.Skyline.Model.Proteome
             {
                 return true;
             }
-            if (!Equals(GetEnzyme(document), GetEnzyme(previous)))
-            {
-                return true;
-            }
             return false;
         }
 
@@ -115,10 +111,6 @@ namespace pwiz.Skyline.Model.Proteome
             {
                 return null;
             }
-            if (!backgroundProteome.HasDigestion(settings))
-            {
-                return "BackgroundProteomeManager: !backgroundProteome.HasDigestion(peptideSettings)"; // Not L10N
-            }
             if (!requireResolvedProteinMetadata || !backgroundProteome.NeedsProteinMetadataSearch)
             {
                 return null;
@@ -130,11 +122,6 @@ namespace pwiz.Skyline.Model.Proteome
         private static BackgroundProteome GetBackgroundProteome(SrmDocument document)
         {
             return document.Settings.PeptideSettings.BackgroundProteome;
-        }
-
-        private static Enzyme GetEnzyme(SrmDocument document)
-        {
-            return document.Settings.PeptideSettings.Enzyme;
         }
 
         protected override IEnumerable<IPooledStream> GetOpenStreams(SrmDocument document)
@@ -163,30 +150,27 @@ namespace pwiz.Skyline.Model.Proteome
             // Only allow one background proteome to load at a time.  This can
             // get tricky, if the user performs an undo and then a redo across
             // a change in background proteome.
-            // Our first priority is doing the digestions, the second is accessing web
-            // services to add missing protein metadata.
+            // Our only priority is accessing web services to add missing protein metadata.
             // There may also be a load initiation by the Peptide Settings dialog as foreground task,
             // it takes priority over the background task.
+
             lock (_lockLoadBackgroundProteome)
             {
                 BackgroundProteome originalBackgroundProteome = settings.BackgroundProteome;
-                // Check to see whether the Digestion already exists but has not been queried yet.
-                BackgroundProteome backgroundProteomeWithDigestions = new BackgroundProteome(originalBackgroundProteome, true);
-                if (IsNotLoadedExplained(settings, backgroundProteomeWithDigestions, true) == null)
+                BackgroundProteome validatedBackgroundProtome = originalBackgroundProteome.DatabaseValidated 
+                    ? originalBackgroundProteome 
+                    : new BackgroundProteome(originalBackgroundProteome.BackgroundProteomeSpec);
+                if (IsNotLoadedExplained(settings, validatedBackgroundProtome, true) == null)
                 {
-                    // digest is ready, and protein metdata is resolved
-                    CompleteProcessing(container, backgroundProteomeWithDigestions);
-                    Helpers.AssignIfEquals(ref backgroundProteomeWithDigestions, originalBackgroundProteome);
-                    return backgroundProteomeWithDigestions; // No change needed
+                    // protein metadata is resolved
+                    CompleteProcessing(container, validatedBackgroundProtome);
+                    Helpers.AssignIfEquals(ref validatedBackgroundProtome, originalBackgroundProteome);
+                    return validatedBackgroundProtome; // No change needed
                 }
-                // are we here to do the digest, or to resolve the protein metadata?
-                var needsProteinMetadataSearch = backgroundProteomeWithDigestions.NeedsProteinMetadataSearch;
-                bool getMetadata = (IsNotLoadedExplained(settings, backgroundProteomeWithDigestions, false) == null) &&
-                                   needsProteinMetadataSearch;
-
+                // we are here to resolve the protein metadata
                 string name = originalBackgroundProteome.Name;
                 IProgressStatus progressStatus =
-                    new ProgressStatus(string.Format(getMetadata?Resources.BackgroundProteomeManager_LoadBackground_Resolving_protein_details_for__0__proteome:Resources.BackgroundProteomeManager_LoadBackground_Digesting__0__proteome, name));
+                    new ProgressStatus(string.Format(Resources.BackgroundProteomeManager_LoadBackground_Resolving_protein_details_for__0__proteome, name));
                 try
                 {
                     // The transaction commit for writing the digestion info can be very lengthy, avoid lock timeouts
@@ -194,13 +178,9 @@ namespace pwiz.Skyline.Model.Proteome
                     using (FileSaver fs = new FileSaver(originalBackgroundProteome.DatabasePath, StreamManager))
                     {
                         File.Copy(originalBackgroundProteome.DatabasePath, fs.SafeName, true);
-                        var digestHelper = new DigestHelper(this, container, docCurrent, settings, name, fs.SafeName, true);
+                        var digestHelper = new DigestHelper(this, container, docCurrent, name, fs.SafeName, true);
 
-                        bool success;
-                        if (getMetadata)
-                            success = digestHelper.LookupProteinMetadata(ref progressStatus);
-                        else
-                            success = digestHelper.Digest(ref progressStatus, true); // Delay indexing until we copy the file back
+                        bool success = digestHelper.LookupProteinMetadata(ref progressStatus);
                         if (digestHelper.IsCanceled || !success)
                         {
                             // Processing was canceled
@@ -232,14 +212,14 @@ namespace pwiz.Skyline.Model.Proteome
                             }
                         }
 
-                        var proteomeWithDigestions = new BackgroundProteome(originalBackgroundProteome, true);
-                        using (var proteomeDb = proteomeWithDigestions.OpenProteomeDb())
+                        var updatedProteome = new BackgroundProteome(originalBackgroundProteome);
+                        using (var proteomeDb = originalBackgroundProteome.OpenProteomeDb())
                         {
                             proteomeDb.AnalyzeDb(); // Now it's safe to start this potentially lengthy indexing operation
                         }
-                        CompleteProcessing(container, proteomeWithDigestions);
+                        CompleteProcessing(container, updatedProteome);
                         UpdateProgress(progressStatus.Complete());
-                        return proteomeWithDigestions;
+                        return updatedProteome;
                     }
                 }
                 catch (Exception x)
@@ -317,7 +297,6 @@ namespace pwiz.Skyline.Model.Proteome
             private readonly BackgroundProteomeManager _manager;
             private readonly IDocumentContainer _container;
             private readonly SrmDocument _document;
-            private readonly PeptideSettings _settings;
             private readonly string _nameProteome;
             private readonly string _pathProteome;
             private readonly bool _isTemporary;  // Are we doing this work on a temporary copy of the DB?
@@ -327,7 +306,6 @@ namespace pwiz.Skyline.Model.Proteome
             public DigestHelper(BackgroundProteomeManager manager,
                                 IDocumentContainer container,
                                 SrmDocument document,
-                                PeptideSettings settings,
                                 string nameProteome,
                                 string pathProteome,
                                 bool isTemporary)
@@ -335,25 +313,9 @@ namespace pwiz.Skyline.Model.Proteome
                 _manager = manager;
                 _container = container;
                 _document = document;
-                _settings = settings;
                 _nameProteome = nameProteome;
                 _pathProteome = pathProteome;
                 _isTemporary = isTemporary;
-            }
-
-            public bool Digest(ref IProgressStatus progressStatus, bool delayDbIndexing)
-            {
-                using (var proteomeDb = ProteomeDb.OpenProteomeDb(_pathProteome,_isTemporary))
-                {
-                    var enzyme = _settings.Enzyme;
-
-                    _progressStatus = progressStatus.ChangeMessage(
-                        string.Format(Resources.DigestHelper_Digest_Digesting__0__proteome_with__1__, _nameProteome, enzyme.Name));
-                    var digestion = proteomeDb.Digest(new ProteaseImpl(enzyme), ProteomeDb.PROTDB_MAX_MISSED_CLEAVAGES, this, ref _progressStatus, delayDbIndexing);
-                    progressStatus = _progressStatus;
-
-                    return digestion != null;
-                }
             }
 
             public bool LookupProteinMetadata(ref IProgressStatus progressStatus)

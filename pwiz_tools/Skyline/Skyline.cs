@@ -2175,6 +2175,10 @@ namespace pwiz.Skyline
             {
                 return;  // No selection
             }
+            if (!ViewLibraryDlg.EnsureDigested(this, DocumentUI.Settings.PeptideSettings.BackgroundProteome))
+            {
+                return;
+            }
             using (UniquePeptidesDlg uniquePeptidesDlg = new UniquePeptidesDlg(this)
             {
                 PeptideGroupTreeNodes = peptideGroupTreeNodes

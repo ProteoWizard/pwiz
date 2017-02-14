@@ -141,8 +141,6 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(pepSettings, pepSettings.OkDialog);
 
             WaitForConditionUI(
-                () => SkylineWindow.StatusContains(Resources.BackgroundProteomeSpec_Digest_Digesting__0__));
-            WaitForConditionUI(
                 () => SkylineWindow.StatusContains(Resources.BackgroundProteomeManager_LoadBackground_Resolving_protein_details_for__0__proteome) ||
                       SkylineWindow.StatusContains(ProteomeDatabase.Properties.Resources.ProteomeDb_LookupProteinMetadata_Retrieving_details_for__0__proteins));
             WaitForConditionUI(() => SkylineWindow.StatusContains(Resources.SkylineWindow_UpdateProgressUI_Ready));

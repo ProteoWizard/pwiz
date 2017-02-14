@@ -24,9 +24,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.ProteomeDatabase.Fasta;
-using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Proteome;
-using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest.Proteome
@@ -52,16 +49,14 @@ namespace pwiz.SkylineTest.Proteome
 
                 using (ProteomeDb proteomeDb = ProteomeDb.CreateProteomeDb(protDbPath))
                 {
-                    Enzyme trypsin = EnzymeList.GetDefault();
                     IProgressStatus status = new ProgressStatus(string.Empty);
                     using (var reader = new StreamReader(fastaPath))
                     {
                         proteomeDb.AddFastaFile(reader, new SilentProgressMonitor(), ref status, true); // Delay indexing
                     }
                     // perform digestion
-                    proteomeDb.Digest(new ProteaseImpl(trypsin), ProteomeDb.PROTDB_MAX_MISSED_CLEAVAGES, new SilentProgressMonitor(), ref status); 
-                    Digestion digestion = proteomeDb.GetDigestion(trypsin.Name);
-                    var digestedProteins0 = digestion.GetProteinsWithSequencePrefix("EDGWVK", 100);
+                    Digestion digestion = proteomeDb.GetDigestion();
+                    var digestedProteins0 = digestion.GetProteinsWithSequence("EDGWVK");
                     Assert.IsTrue(digestedProteins0.Count >= 1);
                 }
             }

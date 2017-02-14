@@ -18,6 +18,8 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using NHibernate;
 using pwiz.ProteomeDatabase.DataModel;
 using pwiz.ProteomeDatabase.Util;
 
@@ -145,5 +147,28 @@ namespace pwiz.ProteomeDatabase.API
             return Name.CompareTo(other.Name);
 // ReSharper restore StringCompareToIsCultureSpecific
         }
+        internal static IList<Protein> GetProteinWithIds(ProteomeDbPath proteomeDbPath, IStatelessSession session, ICollection<long> ids)
+        {
+            if (ids.Count == 0)
+            {
+                return new Protein[0];
+            }
+            var hql = "SELECT p, pn"
+              + "\nFROM " + typeof(DbProtein) + " p, " + typeof(DbProteinName) + " pn"
+              + "\nWHERE p.Id = pn.Protein.Id AND p.Id IN (:Ids)";
+            var query = session.CreateQuery(hql);
+            query.SetParameterList("Ids", ids);
+            var proteins = new List<Protein>();
+
+            var rowsByProteinId = query.List().Cast<object[]>().ToLookup(row => ((DbProtein)row[0]).Id.Value);
+            foreach (var grouping in rowsByProteinId)
+            {
+                var protein = (DbProtein)grouping.First()[0];
+                var names = grouping.Select(row => row[1]).Cast<DbProteinName>();
+                proteins.Add(new Protein(proteomeDbPath, protein, names));
+            }
+            return proteins;
+        }
+
     }
 }

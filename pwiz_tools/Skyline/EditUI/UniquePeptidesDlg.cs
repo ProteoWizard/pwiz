@@ -174,14 +174,6 @@ namespace pwiz.Skyline.EditUI
                 }
             }
             _peptideProteins = null;
-            var peptideSettings = DocumentUIContainer.DocumentUI.Settings.PeptideSettings;
-            if (!BackgroundProteome.HasDigestion(peptideSettings))
-            {
-                MessageDlg.Show(this, string.Format(Resources.UniquePeptidesDlg_OnShown_The_background_proteome__0__has_not_yet_finished_being_digested_with__1__,
-                                                    BackgroundProteome.Name, peptideSettings.Enzyme.Name));
-                Close();
-                return;
-            }
             LaunchPeptideProteinsQuery();
         }
 
@@ -290,13 +282,13 @@ namespace pwiz.Skyline.EditUI
             List<HashSet<Protein>> peptideProteins = new List<HashSet<Protein>>();
             if (BackgroundProteome != null)
             {
-                using (var proteomeDb = BackgroundProteome.OpenProteomeDb())
+                using (var proteomeDb = BackgroundProteome.OpenProteomeDb(longWaitBroker.CancellationToken))
                 {
-                    Digestion digestion = BackgroundProteome.GetDigestion(proteomeDb, SrmDocument.Settings.PeptideSettings);
+                    Digestion digestion = proteomeDb.GetDigestion();
                     if (digestion != null)
                     {
                         var peptidesOfInterest = _peptideDocNodes.Select(node => node.Peptide.Sequence);
-                        var sequenceProteinsDict = digestion.GetProteinsWithSequences(peptidesOfInterest, proteomeDb, null);
+                        var sequenceProteinsDict = digestion.GetProteinsWithSequences(peptidesOfInterest);
                         if (longWaitBroker.IsCanceled)
                         {
                             return;

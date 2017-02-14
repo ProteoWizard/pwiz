@@ -221,7 +221,7 @@ namespace pwiz.Skyline.SettingsUI
             BackgroundProteome backgroundProteome = BackgroundProteome.NONE;
             if (!backgroundProteomeSpec.IsNone)
             {
-                backgroundProteome = new BackgroundProteome(backgroundProteomeSpec, true);
+                backgroundProteome = new BackgroundProteome(backgroundProteomeSpec);
                 if (backgroundProteome.DatabaseInvalid)
                 {
 

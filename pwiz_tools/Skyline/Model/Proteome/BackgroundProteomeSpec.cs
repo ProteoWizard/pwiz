@@ -19,9 +19,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using System.Xml;
 using System.Xml.Serialization;
-using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -63,6 +63,11 @@ namespace pwiz.Skyline.Model.Proteome
             return ProteomeDb.OpenProteomeDb(DatabasePath);
         }
 
+        public ProteomeDb OpenProteomeDb(CancellationToken cancellationToken)
+        {
+            return ProteomeDb.OpenProteomeDb(DatabasePath, cancellationToken);
+        }
+
         public override void ReadXml(XmlReader reader)
         {
             base.ReadXml(reader);
@@ -90,16 +95,6 @@ namespace pwiz.Skyline.Model.Proteome
         public static BackgroundProteomeSpec Deserialize(XmlReader reader)
         {
             return reader.Deserialize(new BackgroundProteomeSpec());
-        }
-
-        public Digestion Digest(Enzyme enzyme, DigestSettings digestSettings, ILoadMonitor loader)
-        {
-            IProgressStatus progressStatus = new ProgressStatus(string.Format(Resources.BackgroundProteomeSpec_Digest_Digesting__0__, enzyme.Name));
-            loader.UpdateProgress(progressStatus);
-            using (var proteomeDb = OpenProteomeDb())
-            {
-                return proteomeDb.Digest(new ProteaseImpl(enzyme), digestSettings.MaxMissedCleavages, loader, ref progressStatus);
-            }
         }
 
         public FastaSequence GetFastaSequence(String proteinName)
@@ -161,7 +156,7 @@ namespace pwiz.Skyline.Model.Proteome
         }
     }
 
-    public class ProteaseImpl : IProtease
+    public class ProteaseImpl
     {
         private readonly Enzyme _enzyme;
         public ProteaseImpl(Enzyme enzyme)

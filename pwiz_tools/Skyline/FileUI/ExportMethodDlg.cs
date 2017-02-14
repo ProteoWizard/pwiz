@@ -1527,7 +1527,7 @@ namespace pwiz.Skyline.FileUI
             // Switch back to the UI thread to update the form
             try
             {
-                if (IsHandleCreated)
+                if (IsHandleCreated && !IsDisposed)
                     Invoke(new Action<int?>(UpdateMethodCount), methodCount);
             }
 // ReSharper disable EmptyGeneralCatchClause

@@ -328,7 +328,6 @@ namespace pwiz.Skyline.SettingsUI
                 btnAddFastaFile.Enabled = true;
                 ProteomeDb proteomeDb = null;
                 int proteinCount = 0;
-                IList<Digestion> digestions = null;
                 try
                 {
                     using (var longWaitDlg = new LongWaitDlg
@@ -346,7 +345,6 @@ namespace pwiz.Skyline.SettingsUI
                             if (proteomeDb != null)
                             {
                                 proteinCount = proteomeDb.GetProteinCount(); // This can be a lengthy operation on a large protdb, do it within the longwait
-                                digestions = proteomeDb.ListDigestions();
                             }
                     });
                     }
@@ -357,11 +355,6 @@ namespace pwiz.Skyline.SettingsUI
                         string.Format(
                             Resources.BuildBackgroundProteomeDlg_RefreshStatus_The_proteome_file_contains__0__proteins,
                             proteinCount);
-                    if (proteinCount != 0 && digestions.Count > 0)
-                    {
-                        tbxStatus.Text = TextUtil.LineSeparate(tbxStatus.Text,
-                            Resources.BuildBackgroundProteomeDlg_RefreshStatus_The_proteome_has_already_been_digested);
-                    }
                 }
                 catch (Exception)
                 {
@@ -382,6 +375,7 @@ namespace pwiz.Skyline.SettingsUI
                 tbxStatus.Text = Resources.BuildBackgroundProteomeDlg_RefreshStatus_Click_the_Open_button_to_choose_an_existing_proteome_file_or_click_the_Create_button_to_create_a_new_proteome_file;
             }
         }
+
 
         #region Functional test support
 

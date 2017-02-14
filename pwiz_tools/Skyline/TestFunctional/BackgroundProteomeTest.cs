@@ -139,8 +139,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 var peptideSettings = Program.ActiveDocument.Settings.PeptideSettings;
                 var backgroundProteome = peptideSettings.BackgroundProteome;
-                return backgroundProteome.HasDigestion(peptideSettings) &&
-                    !backgroundProteome.NeedsProteinMetadataSearch;
+                return !backgroundProteome.NeedsProteinMetadataSearch;
             });
         }
     }

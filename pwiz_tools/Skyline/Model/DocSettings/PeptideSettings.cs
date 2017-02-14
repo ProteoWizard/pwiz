@@ -911,7 +911,6 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             return ChangeProp(ImClone(this), im => im.PeptideUniqueness = prop);
         }
-
         #endregion
 
         public bool Accept(SrmSettings settings, Peptide peptide, ExplicitMods explicitMods, out bool allowVariableMods)
@@ -1009,7 +1008,7 @@ namespace pwiz.Skyline.Model.DocSettings
             min_length,
             max_length,
             auto_select,
-            unique_by,
+            unique_by
         }
 
         private enum EL

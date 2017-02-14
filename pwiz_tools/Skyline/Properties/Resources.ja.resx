@@ -1247,9 +1247,6 @@
   <data name="EditFragmentLossDlg_EditFragmentLossDlg__Monoisotopic_loss_" xml:space="preserve">
     <value>モノアイソトピックロス(&amp;M)：</value>
   </data>
-  <data name="BackgroundProteomeSpec_Digest_Digesting__0__" xml:space="preserve">
-    <value>{0}の消化中</value>
-  </data>
   <data name="ComparePeakBoundariesList_Title_Edit_Peak_Boundary_Comparisons" xml:space="preserve">
     <value>ピーク境界比較を編集</value>
   </data>

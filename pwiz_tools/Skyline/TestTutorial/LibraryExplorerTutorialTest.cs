@@ -20,7 +20,6 @@ using System;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Lib;
@@ -371,13 +370,6 @@ namespace pwiz.SkylineTestTutorial
             });
             OkDialog(peptideSettingsUI3, peptideSettingsUI3.OkDialog);
             
-            Assert.IsTrue(WaitForCondition(() =>
-            {
-                var peptideSettings = Program.ActiveDocument.Settings.PeptideSettings;
-                var backgroundProteome = peptideSettings.BackgroundProteome;
-                return (backgroundProteome.HasDigestion(peptideSettings));
-            }));
-
             WaitForBackgroundProteomeLoaderCompleted(); // wait for protDB to populate protein metadata
 
             RunUI(() =>
@@ -394,9 +386,10 @@ namespace pwiz.SkylineTestTutorial
 
             docInitial = WaitForProteinMetadataBackgroundLoaderCompletedUI();
 
+            var confirmUpgrade = ShowDialog<AlertDlg>(viewLibraryDlg1.AddAllPeptides);
             // Add everything in the library to the document.
             var filterMatchedPeptidesDlg = 
-                ShowDialog<FilterMatchedPeptidesDlg>(viewLibraryDlg1.AddAllPeptides);
+                ShowDialog<FilterMatchedPeptidesDlg>(confirmUpgrade.ClickYes);
             
             RunUI(() =>
                       {

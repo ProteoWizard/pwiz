@@ -75,6 +75,9 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Google.Protobuf">
+      <HintPath>..\Lib\Google.Protobuf.dll</HintPath>
+    </Reference>
     <Reference Include="Iesi.Collections">
       <HintPath>..\Lib\NHibernate\Iesi.Collections.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
@@ -116,12 +119,10 @@
     <Compile Include="API\ProteinMetadata.cs" />
     <Compile Include="API\ProteomeDb.cs" />
     <Compile Include="DataModel\DbProteinAnnotation.cs" />
-    <Compile Include="DataModel\DbDigestedPeptide.cs" />
-    <Compile Include="DataModel\DbDigestedPeptideProtein.cs" />
-    <Compile Include="DataModel\DbDigestion.cs" />
     <Compile Include="DataModel\DbProtein.cs" />
     <Compile Include="DataModel\DbProteinName.cs" />
     <Compile Include="DataModel\DbEntity.cs" />
+    <Compile Include="DataModel\DbSubsequence.cs" />
     <Compile Include="DataModel\DbVersionInfo.cs" />
     <Compile Include="Fasta\WebEnabledFastaImporter.cs" />
     <Compile Include="Fasta\IpiToUniprotMap.cs" />
@@ -131,10 +132,12 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="Util\AbstractSessionWithLock.cs" />
     <Compile Include="Util\DatabaseResource.cs" />
     <Compile Include="Util\ProteomeDbPath.cs" />
     <Compile Include="Util\SessionFactoryFactory.cs" />
     <Compile Include="Util\SessionWithLock.cs" />
+    <Compile Include="Util\StatelessSessionWithLock.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="DataModel\mapping.xml">
@@ -147,7 +150,7 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
+      <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>

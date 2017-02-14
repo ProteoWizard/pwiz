@@ -20,8 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NHibernate;
-using NHibernate.Criterion;
-using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.DataModel;
 
 namespace pwiz.ProteomeDatabase.API
@@ -29,119 +27,213 @@ namespace pwiz.ProteomeDatabase.API
     /// <summary>
     /// Public API for the digestion of the proteome by a particular enzyme.
     /// </summary>
-    public class Digestion : EntityModel<DbDigestion>
+    public class Digestion
     {
-        public Digestion(ProteomeDb proteomeDb, DbDigestion digestion) : base(proteomeDb, digestion)
+        public Digestion(ProteomeDb proteomeDb)
         {
-            Name = digestion.Name;
-            Description = digestion.Description;
-            MinSequenceLength = digestion.MinSequenceLength;
-            MaxSequenceLength = digestion.MaxSequenceLength;
+            ProteomeDb = proteomeDb;
         }
 
-        public String Name { get; private set; }
-        public String Description { get; private set; }
-        public int MinSequenceLength { get; private set; }
-        public int MaxSequenceLength { get; private set; }
+        public ProteomeDb ProteomeDb {get; private set;}
 
-        public List<Protein> GetProteinsWithSequence(String sequence, ProteomeDb proteomeDb)
+        public bool? UseSubsequenceTable { get; set; }
+
+        public List<Protein> GetProteinsWithSequence(String sequence)
         {
-            return GetProteinsWithSequences(new[] { sequence }, proteomeDb, null)[sequence];
+            return GetProteinsWithSequences(new[] { sequence })[sequence];
         }
 
-        public Dictionary<string, List<Protein>> GetProteinsWithSequences(IEnumerable<string> sequences,
-            ProteomeDb proteomeDb, IProgressMonitor progressMonitor)
+        public List<Protein> GetProteinsWithSequence(IStatelessSession session, String sequence)
         {
-            var sequenceList = sequences.ToList();
-            var indexSequences = sequenceList.Select(sequence => sequence.Substring(0, Math.Min(sequence.Length, MaxSequenceLength))).Distinct().ToList();
+            return GetProteinsWithSequences(session, new[] {sequence})[sequence];
+        }
+
+        public IDictionary<String, List<Protein>> GetProteinsWithSequences(IEnumerable<string> sequences)
+        {
+            using (var session = ProteomeDb.OpenStatelessSession(false))
+            {
+                return GetProteinsWithSequences(session, sequences);
+            }
+        }
+
+        public IDictionary<String, List<Protein>> GetProteinsWithSequences(IStatelessSession session,
+            IEnumerable<string> sequences)
+        {
+            var sequenceList = sequences.ToArray();
+            var proteinIds = GetProteinIdsThatMightHaveSequence(session, sequenceList);
             var results = new Dictionary<string, List<Protein>>();
-
+            var proteins = GetProteinWithIds(session, proteinIds);
             foreach (var s in sequenceList.Distinct())
             {
-                results.Add(s, new List<Protein>());
-            }
-
-            using (ISession session = proteomeDb.OpenSession())
-            {
-                var digestion = GetEntity(session);
-                var completedQueries = 0;
-                for (var querySize = Math.Min(500,indexSequences.Count); querySize > 0; )  // A retry loop in case our query overwhelms SQLite
-                {
-                    try
-                    {
-                        while (completedQueries < indexSequences.Count)
-                        {
-                            var hql = "SELECT DISTINCT pp.Protein, pn, pp.Protein.Sequence" // Not L10N
-                                      + "\nFROM " + typeof (DbDigestedPeptideProtein) + " pp, " + typeof (DbProteinName) + " pn" // Not L10N
-                                      + "\nWHERE pp.Protein.Id = pn.Protein.Id AND pn.IsPrimary <> 0" // Not L10N
-                                      + "\nAND pp.Peptide.Digestion = :Digestion" // Not L10N
-                                      + "\nAND pp.Peptide.Sequence IN (:Sequences)"; // Not L10N
-                            var query = session.CreateQuery(hql);
-                            query.SetParameter("Digestion", digestion); // Not L10N
-                            query.SetParameterList("Sequences", indexSequences.Skip(completedQueries).Take(querySize)); // Not L10N
-                            foreach (object[] values in query.List())
-                            {
-                                // At this point what we have is a list of proteins which are a likely match, but not certain.
-                                // That's because the indexing scheme only uses the first MaxSequenceLength AAs of a peptide.
-                                var protein = (DbProtein) values[0];
-                                var name = (DbProteinName) values[1];
-                                var proteinSequence = (String) values[2];
-                                foreach (
-                                    var sequence in
-                                        sequenceList.Where(
-                                            seq => proteinSequence.IndexOf(seq, StringComparison.Ordinal) >= 0))
-                                {
-                                    // N.B. at this point all we really know is that this peptide sequence is found in this protein's sequence.
-                                    // We don't really know that it's a plausible product of the current digestion.  
-                                    results[sequence].Add(new Protein(ProteomeDbPath, protein, name));
-                                }
-                            }
-                            if (progressMonitor != null && progressMonitor.IsCanceled)
-                            {
-                                break;
-                            }
-                            completedQueries += querySize;
-                        }
-                        break;
-                    }
-                    catch (Exception x)
-                    {
-                        // Failed - probably due to too-large query
-                        querySize /= 2;
-                        if (querySize == 0)
-                        {
-                            throw new Exception("error reading protdb file", x); // Not L10N
-                        }
-                    }
-                }  // End dynamic query size loop
+                results.Add(s, proteins.Where(p => p.Sequence.IndexOf(s, StringComparison.Ordinal) >= 0).ToList());
             }
             return results;
         }
 
-        public List<KeyValuePair<Protein, String>> GetProteinsWithSequencePrefix(String sequence, int maxResults)
+        internal ICollection<long> GetProteinIdsThatMightHaveSequence(IStatelessSession session, ICollection<string> sequencesToLookFor)
         {
-            List<KeyValuePair<Protein,String>> proteinSequences = new List<KeyValuePair<Protein,String>>();
-            using (var proteomeDb = OpenProteomeDb())
-            using (ISession session = proteomeDb.OpenSession())
+            Func<ICollection<String>, IEnumerable<long>> functionToCall;
+            IList<String> uniqueStrings;
+            bool useSubsequenceTable;
+            if (UseSubsequenceTable.HasValue)
             {
-                DbDigestion digestion = GetEntity(session);
-                ICriteria criteria = session.CreateCriteria(typeof(DbDigestedPeptide))
-                    .Add(Restrictions.Eq("Digestion", digestion)) // Not L10N
-                    .Add(Restrictions.Like("Sequence", sequence + "%")) // Not L10N
-                    .AddOrder(Order.Asc("Sequence")) // Not L10N
-                    .SetMaxResults(maxResults);
-                foreach (DbDigestedPeptide dbDigestedPeptide in criteria.List())
+                useSubsequenceTable = UseSubsequenceTable.Value;
+            }
+            else
+            {
+                useSubsequenceTable = ProteomeDb.HasSubsequencesTable(()=>session.Connection) &&
+                                      !sequencesToLookFor.Any(s => s.Length < ProteomeDb.MIN_SEQUENCE_LENGTH);
+            }
+            if (useSubsequenceTable)
+            {
+                functionToCall = batchedArgs => QuerySubsequencesTableForSubstrings(session, batchedArgs);
+                uniqueStrings = RemoveSuperstrings(sequencesToLookFor
+                    .Select(s => s.Substring(0, Math.Min(s.Length, ProteomeDb.MAX_SEQUENCE_LENGTH))));
+            }
+            else
+            {
+                functionToCall = batchedArgs => QueryProteinTableForSubstrings(session, batchedArgs);
+                uniqueStrings = RemoveSuperstrings(sequencesToLookFor);
+            }
+            return BatchUpArgumentsForFunction(functionToCall, uniqueStrings, 500).Distinct().ToArray();
+        }
+
+        private IList<T> BatchUpArgumentsForFunction<T>(Func<ICollection<String>, IEnumerable<T>> function, 
+            IList<string> arguments, int maxBatchSize)
+        {
+            var processedArgumentCount = 0;
+            List<T> results = new List<T>();
+            for (var batchSize = Math.Min(maxBatchSize, arguments.Count); ; )  // A retry loop in case our query overwhelms SQLite
+            {
+                try
                 {
-                    foreach (var peptideProtein in dbDigestedPeptide.PeptideProteins)
+                    while (processedArgumentCount < arguments.Count)
                     {
-                        proteinSequences.Add(
-                            new KeyValuePair<Protein, string>(
-                                new Protein(ProteomeDbPath, peptideProtein.Protein),
-                                dbDigestedPeptide.Sequence));
+                        ProteomeDb.CancellationToken.ThrowIfCancellationRequested();
+                        results.AddRange(function(arguments.Skip(processedArgumentCount).Take(batchSize).ToArray()));
+                        processedArgumentCount += batchSize;
+                    }
+                    return results;
+                }
+                catch (Exception)
+                {
+                    // Failed - probably due to too-large query
+                    batchSize /= 2;
+                    if (batchSize < 1)
+                    {
+                        throw;
+                    }
+                }
+            } // End dynamic query size loop
+        }
+
+        /// <summary>
+        /// Removes all strings from the list which contain another string in the list.
+        /// </summary>
+        private static List<String> RemoveSuperstrings(IEnumerable<String> strings)
+        {
+            IGrouping<int, String>[] stringsByLength = strings.Distinct().ToLookup(s => s.Length).ToArray();
+            Array.Sort(stringsByLength, (group1, group2)=>group1.Key.CompareTo(group2.Key));
+            
+            List<String> returnedStrings = new List<string>();
+            // Add strings in order from shortest to longest. 
+            // Skip any string which contains a string that is already going to be return.
+            foreach (IGrouping<int, String> grouping in stringsByLength)
+            {
+                int lastGroupEnd = returnedStrings.Count;
+                if (lastGroupEnd == 0)
+                {
+                    returnedStrings.AddRange(grouping);
+                    continue;
+                }
+                foreach (String nextString in grouping)
+                {
+                    if (returnedStrings.Take(lastGroupEnd)
+                        .Any(s => nextString.IndexOf(s, StringComparison.Ordinal) >= 0))
+                    {
+                        continue;
+                    }
+                    returnedStrings.Add(nextString);
+                }
+            }
+            return returnedStrings;
+        }
+
+        /// <summary>
+        /// Use the ProteomeDbSubsequences table to find the protein ids which might contain
+        /// one of the specified strings.
+        /// </summary>
+        private IEnumerable<long> QuerySubsequencesTableForSubstrings(IStatelessSession session, ICollection<string> sequenceList)
+        {
+            IQuery query = MakeQueryForSubsequencesTable(session, sequenceList);
+            return query.List<byte[]>().SelectMany(DbSubsequence.BytesToProteinIds);
+        }
+
+        // ReSharper disable NonLocalizedString
+        private IList<Protein> GetProteinWithIds(IStatelessSession session, ICollection<long> ids)
+        {
+            return Protein.GetProteinWithIds(ProteomeDb.ProteomeDbPath, session, ids);
+        }
+
+        private IEnumerable<long> QueryProteinTableForSubstrings(IStatelessSession session, ICollection<string> sequenceList)
+        {
+            List<String> likeClauses = new List<string>();
+            foreach (String seq in sequenceList)
+            {
+                likeClauses.Add("p.Sequence LIKE '%" + seq + "%'");
+            }
+            String hql = "SELECT p.Id FROM " + typeof(DbProtein) + " p WHERE\n"
+                + String.Join("\nOR ", likeClauses);
+            IQuery query = session.CreateQuery(hql);
+            return query.List<long>();
+        }
+
+        private IQuery MakeQueryForSubsequencesTable(IStatelessSession session, ICollection<string> sequenceList)
+        {
+            String hql;
+            IQuery query;
+            if (sequenceList.All(s=>s.Length >= ProteomeDb.MAX_SEQUENCE_LENGTH))
+            {
+                hql = "SELECT ProteinIdBytes"
+                    + "\nFROM " + typeof(DbSubsequence) + " ss"
+                    + "\nWHERE ss.Sequence IN (:Sequences)";
+                query = session.CreateQuery(hql);
+                query.SetParameterList("Sequences", sequenceList);
+                return query;
+            }
+            List<String> likeClauses = new List<string>();
+            List<String> exactMatches = new List<string>();
+            foreach (String seq in sequenceList)
+            {
+                if (seq.Length >= ProteomeDb.MAX_SEQUENCE_LENGTH)
+                {
+                    exactMatches.Add(seq);
+                }
+                else
+                {
+                    if (seq.Length >= ProteomeDb.MIN_SEQUENCE_LENGTH)
+                    {
+                        likeClauses.Add("ss.Sequence LIKE '" + seq + "%'");
+                    }
+                    else
+                    {
+                        likeClauses.Add("ss.Sequence LIKE '%" + seq + "%'");
                     }
                 }
             }
-            return proteinSequences;
+            hql = "SELECT ProteinIdBytes FROM " + typeof(DbSubsequence) + " ss WHERE ";
+            hql = hql + String.Join("\nOR ", likeClauses);
+            if (exactMatches.Any())
+            {
+                hql += "\nOR ss.Sequence IN (:exactMatches)";
+            }
+            query = session.CreateQuery(hql);
+            if (exactMatches.Any())
+            {
+                query.SetParameterList("exactMatches", exactMatches);
+            }
+            return query;
         }
+        // ReSharper restore NonLocalizedString
     }
 }

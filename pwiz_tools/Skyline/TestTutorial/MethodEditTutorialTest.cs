@@ -126,13 +126,6 @@ namespace pwiz.SkylineTestTutorial
                     SkylineWindow.Document.Settings.PeptideSettings.Libraries.IsNotLoadedExplained ?? "<null>");
             }
 
-            WaitForCondition(() =>
-            {
-                var peptideSettings = SkylineWindow.Document.Settings.PeptideSettings;
-                var backgroundProteome = peptideSettings.BackgroundProteome;
-                return (backgroundProteome.HasDigestion(peptideSettings));
-            }, "backgroundProteome.HasDigestion");
-
             // Wait a bit in case web access is turned on and backgroundProteome is actually resolving protein metadata
             int millis = (AllowInternetAccess ? 300 : 60) * 1000;
             WaitForCondition(millis, () => !SkylineWindow.Document.Settings.PeptideSettings.BackgroundProteome.NeedsProteinMetadataSearch, "backgroundProteome.NeedsProteinMetadataSearch"); 

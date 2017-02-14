@@ -55,7 +55,7 @@ namespace pwiz.Skyline.EditUI
 
             _statementCompletionEditBox = new StatementCompletionTextBox(DocumentUiContainer)
                                               {
-                                                  MatchTypes = ProteinMatchType.name | ProteinMatchType.description
+                                                  MatchTypes = ProteinMatchTypes.OfValues(ProteinMatchType.name, ProteinMatchType.description)
                                               };
             _statementCompletionEditBox.SelectionMade += statementCompletionEditBox_SelectionMade;
             gridViewProteins.DataGridViewKey += OnDataGridViewKey;
@@ -1237,19 +1237,19 @@ namespace pwiz.Skyline.EditUI
         private void gridViewPeptides_CellBeginEdit(object sender, DataGridViewCellCancelEventArgs e)
         {
             _statementCompletionEditBox.MatchTypes = e.ColumnIndex == colPeptideSequence.Index
-                ? ProteinMatchType.sequence : 0;
+                ? ProteinMatchTypes.Singleton(ProteinMatchType.sequence) : ProteinMatchTypes.EMPTY;
         }
 
         private void gridViewProteins_CellBeginEdit(object sender, DataGridViewCellCancelEventArgs e)
         {
             _statementCompletionEditBox.MatchTypes = e.ColumnIndex == colProteinName.Index
-                ? (ProteinMatchType.all & ~ProteinMatchType.sequence) : 0;  // name, description, accession, etc
+                ? ProteinMatchTypes.ALL.Except(ProteinMatchType.sequence) : ProteinMatchTypes.EMPTY;  // name, description, accession, etc
         }
 
         private void gridViewTransitionList_CellBeginEdit(object sender, DataGridViewCellCancelEventArgs e)
         {
             _statementCompletionEditBox.MatchTypes = e.ColumnIndex == colTransitionPeptide.Index
-                ? ProteinMatchType.sequence : 0;
+                ? ProteinMatchTypes.Singleton(ProteinMatchType.sequence) : ProteinMatchTypes.EMPTY;
         }
 
         private void gridViewProteins_KeyDown(object sender, KeyEventArgs e)
@@ -1405,11 +1405,11 @@ namespace pwiz.Skyline.EditUI
                         row.Cells[column.Index].Value = valueEnumerator.Current;
                     }
                 }
-                if (enumerateProteins)
-                {
-                    EnumerateProteins(dataGridView, row.Index, keepAllPeptides, ref numUnmatched, ref numMulitpleMatches, 
-                        ref numFiltered, listPepSeqs);
-                }
+				if (enumerateProteins)
+				{
+					EnumerateProteins(dataGridView, row.Index, keepAllPeptides, ref numUnmatched, ref numMulitpleMatches,
+						ref numFiltered, listPepSeqs);
+				}
             }
         }
 
@@ -1466,7 +1466,7 @@ namespace pwiz.Skyline.EditUI
                 {
                     return null;
                 }
-                var proteins = digestion.GetProteinsWithSequence(peptideSequence, proteomeDb);
+                var proteins = digestion.GetProteinsWithSequence(peptideSequence);
                 return proteins.ConvertAll(protein => protein.Name);
             }
         }

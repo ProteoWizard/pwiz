@@ -98,6 +98,8 @@ namespace pwiz.Skyline.Util
         /// an OperationCanceledOperation if the user has canceled.
         /// </summary>
         void SetProgressCheckCancel(int step, int totalSteps);
+
+        CancellationToken CancellationToken { get; }
     }
 
     /// <summary>

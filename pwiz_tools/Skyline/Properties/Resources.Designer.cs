@@ -1629,15 +1629,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Digesting {0} proteome.
-        /// </summary>
-        public static string BackgroundProteomeManager_LoadBackground_Digesting__0__proteome {
-            get {
-                return ResourceManager.GetString("BackgroundProteomeManager_LoadBackground_Digesting__0__proteome", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Failed updating background proteome {0}..
         /// </summary>
         public static string BackgroundProteomeManager_LoadBackground_Failed_updating_background_proteome__0__ {
@@ -1663,15 +1654,6 @@ namespace pwiz.Skyline.Properties {
         public static string BackgroundProteomeManager_LoadBackground_Unable_to_rename_temporary_file_to__0__ {
             get {
                 return ResourceManager.GetString("BackgroundProteomeManager_LoadBackground_Unable_to_rename_temporary_file_to__0__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Digesting {0}.
-        /// </summary>
-        public static string BackgroundProteomeSpec_Digest_Digesting__0__ {
-            get {
-                return ResourceManager.GetString("BackgroundProteomeSpec_Digest_Digesting__0__", resourceCulture);
             }
         }
         
@@ -28055,6 +28037,24 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("ViewLibraryDlg_EnsureBackgroundProteome_The_background_proteome_must_be_digested_" +
                         "in_order_to_associate_proteins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Copying database.
+        /// </summary>
+        public static string ViewLibraryDlg_EnsureDigested_Copying_database {
+            get {
+                return ResourceManager.GetString("ViewLibraryDlg_EnsureDigested_Copying_database", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The background proteome &apos;{0}&apos; is in an older format.  In order to be able to efficiently find peptide sequences, the background proteome should be upgraded to the latest version.  Do you want to upgrade the background proteome now?.
+        /// </summary>
+        public static string ViewLibraryDlg_EnsureDigested_The_background_proteome___0___is_in_an_older_format___In_order_to_be_able_to_efficiently_find_peptide_sequences__the_background_proteome_should_be_upgraded_to_the_latest_version___Do_you_want_to_upgrade_the_background_proteome_now_ {
+            get {
+                return ResourceManager.GetString(@"ViewLibraryDlg_EnsureDigested_The_background_proteome___0___is_in_an_older_format___In_order_to_be_able_to_efficiently_find_peptide_sequences__the_background_proteome_should_be_upgraded_to_the_latest_version___Do_you_want_to_upgrade_the_background_proteome_now_", resourceCulture);
             }
         }
         

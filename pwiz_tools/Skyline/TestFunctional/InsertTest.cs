@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
@@ -60,12 +59,6 @@ namespace pwiz.SkylineTestFunctional
                 });
             RunUI(peptideSettingsUI.OkDialog);
             WaitForClosedForm(peptideSettingsUI);
-            WaitForCondition(() =>
-            {
-                var peptideSettings = Program.ActiveDocument.Settings.PeptideSettings;
-                var backgroundProteome = peptideSettings.BackgroundProteome;
-                return backgroundProteome.HasDigestion(peptideSettings);
-            });
             WaitForBackgroundProteomeLoaderCompleted(); // Allow protDB file to populate protein metadata first
 
             SetClipboardTextUI(PEPTIDES_CLIPBOARD_TEXT);

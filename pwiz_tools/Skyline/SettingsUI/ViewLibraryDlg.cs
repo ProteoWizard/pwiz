@@ -26,7 +26,9 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.MSGraph;
+using pwiz.ProteomeDatabase.API;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -41,6 +43,7 @@ using pwiz.Skyline.Util;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib.Midas;
+using pwiz.Skyline.Model.Proteome;
 using ZedGraph;
 using pwiz.Skyline.Util.Extensions;
 using Label = System.Windows.Forms.Label;
@@ -1297,7 +1300,7 @@ namespace pwiz.Skyline.SettingsUI
                                                         _matcher,
                                                         _peptides);
 
-            if (!EnsureBackgroundProteome(startingDocument, pepMatcher))
+            if (!EnsureBackgroundProteome(startingDocument, pepMatcher, false))
                 return;
 
             var pepInfo = (ViewLibraryPepInfo)listPeptide.SelectedItem;
@@ -1369,7 +1372,7 @@ namespace pwiz.Skyline.SettingsUI
             Document.Settings.UpdateDefaultModifications(true, true);
         }
 
-        private bool EnsureBackgroundProteome(SrmDocument document, ViewLibraryPepMatching pepMatcher)
+        private bool EnsureBackgroundProteome(SrmDocument document, ViewLibraryPepMatching pepMatcher, bool ensureDigested)
         {
             if (cbAssociateProteins.Checked)
             {
@@ -1381,16 +1384,65 @@ namespace pwiz.Skyline.SettingsUI
                                         ViewLibraryDlg_EnsureBackgroundProteome_A_background_proteome_is_required_to_associate_proteins);
                     return false;
                 }
-                if(!backgroundProteome.HasDigestion(document.Settings.PeptideSettings))
+                if (ensureDigested)
                 {
-                    MessageDlg.Show(this,
-                                    Resources.
-                                        ViewLibraryDlg_EnsureBackgroundProteome_The_background_proteome_must_be_digested_in_order_to_associate_proteins);
-                    return false;
+                    if (!EnsureDigested(this, backgroundProteome))
+                    {
+                        return false;
+                    }
                 }
                 pepMatcher.SetBackgroundProteome(backgroundProteome);
             }
             return true;
+        }
+
+        public static bool EnsureDigested(Control owner, BackgroundProteome backgroundProteome)
+        {
+            using (var proteomeDb = backgroundProteome.OpenProteomeDb())
+            {
+                if (proteomeDb.IsDigested())
+                {
+                    return true;
+                }
+            }
+            String message = string.Format(
+                Resources.ViewLibraryDlg_EnsureDigested_The_background_proteome___0___is_in_an_older_format___In_order_to_be_able_to_efficiently_find_peptide_sequences__the_background_proteome_should_be_upgraded_to_the_latest_version___Do_you_want_to_upgrade_the_background_proteome_now_,
+                backgroundProteome.Name);
+            using (var alertDlg = new AlertDlg(message, MessageBoxButtons.YesNoCancel))
+            {
+                switch (alertDlg.ShowDialog(owner))
+                {
+                    case DialogResult.Cancel:
+                        return false;
+                    case DialogResult.No:
+                        return true;
+                }
+            }
+            using (var longWaitDlg = new LongWaitDlg())
+            {
+                bool finished = false;
+                longWaitDlg.PerformWork(owner, 1000, progressMonitor =>
+                {
+                    using (var fileSaver = new FileSaver(backgroundProteome.DatabasePath))
+                    {
+                        var progressStatus = new ProgressStatus().ChangeMessage(Resources.ViewLibraryDlg_EnsureDigested_Copying_database);
+                        progressMonitor.UpdateProgress(progressStatus);
+                        File.Copy(backgroundProteome.DatabasePath, fileSaver.SafeName, true);
+
+                        using (var newProteomeDb = ProteomeDb.OpenProteomeDb(fileSaver.SafeName, longWaitDlg.CancellationToken))
+                        {
+                            newProteomeDb.Digest(progressMonitor, ref progressStatus);
+                        }
+                        if (progressMonitor.IsCanceled)
+                        {
+                            return;
+                        }
+                        fileSaver.Commit();
+                        finished = true;
+                    }
+                });
+                return finished;
+            }
         }
 
         public DialogResult CheckLibraryInSettings()
@@ -1446,9 +1498,8 @@ namespace pwiz.Skyline.SettingsUI
                                                         _matcher,
                                                         _peptides);
 
-            if (!EnsureBackgroundProteome(startingDocument, pepMatcher))
+            if (!EnsureBackgroundProteome(startingDocument, pepMatcher, true))
                 return;
-
             pepMatcher.AddAllPeptidesSelectedPath = Program.MainWindow.SelectedPath;
 
             SrmDocument newDocument;

@@ -20,7 +20,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
@@ -452,12 +451,6 @@ namespace pwiz.SkylineTestFunctional
                 buildBackgroundProteomeDlg.OkDialog();
             });
             RunUI(peptideSettingsUI.OkDialog);
-            WaitForCondition(() =>
-            {
-                var peptideSettings = Program.ActiveDocument.Settings.PeptideSettings;
-                var backgroundProteome = peptideSettings.BackgroundProteome;
-                return backgroundProteome.HasDigestion(peptideSettings);
-            });
             WaitForDocumentLoaded(); // Give background loader a chance to get the protein metadata too
 
             RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, transitionSettingsUI =>
@@ -476,8 +469,11 @@ namespace pwiz.SkylineTestFunctional
                 _viewLibUI.AssociateMatchingProteins = true;
             });
             var addLibraryDlg = ShowDialog<MultiButtonMsgDlg>(_viewLibUI.AddAllPeptides);
+            OkDialog(addLibraryDlg, addLibraryDlg.Btn0Click);
+            var upgradeBackgroundProteome = WaitForOpenForm<AlertDlg>();
+            OkDialog(upgradeBackgroundProteome, upgradeBackgroundProteome.ClickYes);
             // Add the library to the document.
-            var filterMatchedPeptidesDlg = ShowDialog<FilterMatchedPeptidesDlg>(addLibraryDlg.Btn0Click);
+            var filterMatchedPeptidesDlg = WaitForOpenForm<FilterMatchedPeptidesDlg>();
             RunUI(() => filterMatchedPeptidesDlg.AddUnmatched = false);
             using (new CheckDocumentStateWithPossibleProteinMetadataBackgroundUpdate(4, 10, 13, 39))
             {

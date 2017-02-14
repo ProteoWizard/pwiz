@@ -21,7 +21,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Proteome;
@@ -77,31 +79,43 @@ namespace pwiz.Skyline.EditUI
             var proteinAssociations = new List<KeyValuePair<FastaSequence, List<PeptideDocNode>>>();
             var peptidesForMatching = ListPeptidesForMatching();
 
-            using (var proteomeDb = proteome.OpenProteomeDb())
+            IDictionary<String, List<Protein>> proteinsWithSequences = null;
+            using (var longWaitDlg = new LongWaitDlg())
             {
-                var proteins = proteomeDb.ListProteinSequences();
-                foreach (var protein in proteins)
+                longWaitDlg.PerformWork(this, 1000, longWaitBroker =>
                 {
-                    var matches = new List<PeptideDocNode>();
-                    foreach (var peptide in peptidesForMatching)
+                    using (var proteomeDb = proteome.OpenProteomeDb(longWaitBroker.CancellationToken))
                     {
-                        if (protein.Sequence.IndexOf(peptide.Peptide.Sequence, StringComparison.Ordinal) < 0)
-                        {
-                            continue;
-                        }
-                        matches.Add(peptide);
+                        proteinsWithSequences = proteomeDb.GetDigestion()
+                            .GetProteinsWithSequences(peptidesForMatching.Select(pep => pep.Peptide.Sequence));
                     }
-                    if (matches.Count > 0)
+                });
+            }
+            if (proteinsWithSequences == null)
+            {
+                return;
+            }
+            HashSet<String> processedProteinSequence = new HashSet<string>();
+            foreach (var entry in proteinsWithSequences)
+            {
+                foreach (var protein in entry.Value)
+                {
+                    if (!processedProteinSequence.Add(protein.Sequence))
                     {
-                        FastaSequence fastaSequence = proteome.MakeFastaSequence(protein);
-                        if (fastaSequence != null)
-                        {
-                            proteinAssociations.Add(new KeyValuePair<FastaSequence, List<PeptideDocNode>>(fastaSequence, matches));
-                        }
+                        continue;
+                    }
+                    var matches = peptidesForMatching.Where(pep => protein.Sequence.Contains(pep.Peptide.Sequence)).ToList();
+                    if (matches.Count == 0)
+                    {
+                        continue;
+                    }
+                    FastaSequence fastaSequence = proteome.MakeFastaSequence(protein);
+                    if (fastaSequence != null)
+                    {
+                        proteinAssociations.Add(new KeyValuePair<FastaSequence, List<PeptideDocNode>>(fastaSequence, matches));
                     }
                 }
             }
-
             SetCheckBoxListItems(proteinAssociations, 
                 Resources.AssociateProteinsDlg_UseBackgroundProteome_No_matches_were_found_using_the_background_proteome_);
             

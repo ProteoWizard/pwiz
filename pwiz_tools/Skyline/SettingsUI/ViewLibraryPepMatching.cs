@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
+using NHibernate;
 using pwiz.Common.Collections;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Alerts;
@@ -152,7 +153,7 @@ namespace pwiz.Skyline.SettingsUI
             int totalPeptides = _libraryPepInfos.Length;
 
             ProteomeDb proteomeDb = null;
-
+            IStatelessSession session = null;
             try
             {
                 foreach (ViewLibraryPepInfo pepInfo in _libraryPepInfos)
@@ -182,13 +183,14 @@ namespace pwiz.Skyline.SettingsUI
                                 if (!dictSequenceProteins.TryGetValue(sequence, out matchedProteins))
                                 {
                                     if (proteomeDb == null)
-                                        proteomeDb = _backgroundProteome.OpenProteomeDb();
-                                    var digestion = _backgroundProteome.GetDigestion(proteomeDb, Settings.PeptideSettings);
-                                    if (digestion != null)
                                     {
-                                        matchedProteins = digestion.GetProteinsWithSequence(sequence, proteomeDb).Select(protein => new ProteinInfo(protein)).ToList();
-                                        dictSequenceProteins.Add(sequence, matchedProteins);
+                                        proteomeDb = _backgroundProteome.OpenProteomeDb(broker.CancellationToken);
+                                        session = proteomeDb.OpenStatelessSession(false);
                                     }
+                                    var digestion = proteomeDb.GetDigestion();
+                                    matchedProteins = digestion.GetProteinsWithSequence(session, sequence)
+                                        .Select(protein => new ProteinInfo(protein)).ToList();
+                                    dictSequenceProteins.Add(sequence, matchedProteins);
                                 }
 
                             }
@@ -207,22 +209,25 @@ namespace pwiz.Skyline.SettingsUI
                                 var key = nodePepMatched.SequenceKey;
                                 dictNewNodePeps.Remove(key);
                                 dictNewNodePeps.Add(key,
-                                    new PeptideMatch((PeptideDocNode)nodePepInDictionary.ChangeChildren(newChildren),
+                                    new PeptideMatch((PeptideDocNode) nodePepInDictionary.ChangeChildren(newChildren),
                                         peptideMatchInDict.Proteins, peptideMatchInDict.MatchesFilterSettings));
                             }
                         }
                     }
                     peptides++;
-                    int progressValue = (int)((peptides + 0.0) / totalPeptides * PERCENT_PEPTIDE_MATCH);
+                    int progressValue = (int) ((peptides + 0.0)/totalPeptides*PERCENT_PEPTIDE_MATCH);
                     broker.ProgressValue = progressValue;
                 }
+                PeptideMatches = dictNewNodePeps;
             }
             finally
             {
-                if (proteomeDb != null)
-                    proteomeDb.Dispose();
+                using (proteomeDb)
+                using (session)
+                {
+                    
+                }
             }
-            PeptideMatches = dictNewNodePeps;
         }
 
         public bool MatchesFilter(string sequence, int charge)
@@ -250,7 +255,7 @@ namespace pwiz.Skyline.SettingsUI
                     var digestion = _backgroundProteome.GetDigestion(proteomeDb, Settings.PeptideSettings);
                     if (digestion != null)
                     {
-                        matchedProteins = digestion.GetProteinsWithSequence(sequence, proteomeDb)
+                        matchedProteins = digestion.GetProteinsWithSequence(sequence)
                             .Select(protein=>new ProteinInfo(protein)).ToArray();
                     }
                 }

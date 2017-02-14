@@ -36,7 +36,7 @@ namespace pwiz.ProteomeDatabase.Properties {
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Resources.ResourceManager ResourceManager {
+        public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("pwiz.ProteomeDatabase.Properties.Resources", typeof(Resources).Assembly);
@@ -51,7 +51,7 @@ namespace pwiz.ProteomeDatabase.Properties {
         ///   resource lookups using this strongly typed resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Globalization.CultureInfo Culture {
+        public static global::System.Globalization.CultureInfo Culture {
             get {
                 return resourceCulture;
             }
@@ -64,7 +64,7 @@ namespace pwiz.ProteomeDatabase.Properties {
         ///   Looks up a localized string similar to 
         ///Description: {0}.
         /// </summary>
-        internal static string ProteinMetadata_DisplayText_ {
+        public static string ProteinMetadata_DisplayText_ {
             get {
                 return ResourceManager.GetString("ProteinMetadata_DisplayText_", resourceCulture);
             }
@@ -73,7 +73,7 @@ namespace pwiz.ProteomeDatabase.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Accession: {0} .
         /// </summary>
-        internal static string ProteinMetadata_DisplayText_Accession___0__ {
+        public static string ProteinMetadata_DisplayText_Accession___0__ {
             get {
                 return ResourceManager.GetString("ProteinMetadata_DisplayText_Accession___0__", resourceCulture);
             }
@@ -82,7 +82,7 @@ namespace pwiz.ProteomeDatabase.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Gene: {0} .
         /// </summary>
-        internal static string ProteinMetadata_DisplayText_Gene___0__ {
+        public static string ProteinMetadata_DisplayText_Gene___0__ {
             get {
                 return ResourceManager.GetString("ProteinMetadata_DisplayText_Gene___0__", resourceCulture);
             }
@@ -91,7 +91,7 @@ namespace pwiz.ProteomeDatabase.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Name: {0} .
         /// </summary>
-        internal static string ProteinMetadata_DisplayText_Name___0__ {
+        public static string ProteinMetadata_DisplayText_Name___0__ {
             get {
                 return ResourceManager.GetString("ProteinMetadata_DisplayText_Name___0__", resourceCulture);
             }
@@ -100,7 +100,7 @@ namespace pwiz.ProteomeDatabase.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Preferred Name: {0} .
         /// </summary>
-        internal static string ProteinMetadata_DisplayText_Preferred_Name___0__ {
+        public static string ProteinMetadata_DisplayText_Preferred_Name___0__ {
             get {
                 return ResourceManager.GetString("ProteinMetadata_DisplayText_Preferred_Name___0__", resourceCulture);
             }
@@ -109,7 +109,7 @@ namespace pwiz.ProteomeDatabase.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Searched: .
         /// </summary>
-        internal static string ProteinMetadata_DisplayText_Searched__ {
+        public static string ProteinMetadata_DisplayText_Searched__ {
             get {
                 return ResourceManager.GetString("ProteinMetadata_DisplayText_Searched__", resourceCulture);
             }
@@ -118,7 +118,7 @@ namespace pwiz.ProteomeDatabase.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Species: {0} .
         /// </summary>
-        internal static string ProteinMetadata_DisplayText_Species___0__ {
+        public static string ProteinMetadata_DisplayText_Species___0__ {
             get {
                 return ResourceManager.GetString("ProteinMetadata_DisplayText_Species___0__", resourceCulture);
             }
@@ -127,7 +127,7 @@ namespace pwiz.ProteomeDatabase.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Added {0} proteins.
         /// </summary>
-        internal static string ProteomeDb_AddFastaFile_Added__0__proteins {
+        public static string ProteomeDb_AddFastaFile_Added__0__proteins {
             get {
                 return ResourceManager.GetString("ProteomeDb_AddFastaFile_Added__0__proteins", resourceCulture);
             }
@@ -136,7 +136,7 @@ namespace pwiz.ProteomeDatabase.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Finished importing {0} proteins.
         /// </summary>
-        internal static string ProteomeDb_AddFastaFile_Finished_importing__0__proteins {
+        public static string ProteomeDb_AddFastaFile_Finished_importing__0__proteins {
             get {
                 return ResourceManager.GetString("ProteomeDb_AddFastaFile_Finished_importing__0__proteins", resourceCulture);
             }
@@ -145,7 +145,7 @@ namespace pwiz.ProteomeDatabase.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Saving changes.
         /// </summary>
-        internal static string ProteomeDb_AddFastaFile_Saving_changes {
+        public static string ProteomeDb_AddFastaFile_Saving_changes {
             get {
                 return ResourceManager.GetString("ProteomeDb_AddFastaFile_Saving_changes", resourceCulture);
             }
@@ -154,7 +154,7 @@ namespace pwiz.ProteomeDatabase.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Digested {0} proteins into {1} unique peptides.
         /// </summary>
-        internal static string ProteomeDb_Digest_Digested__0__proteins_into__1__unique_peptides {
+        public static string ProteomeDb_Digest_Digested__0__proteins_into__1__unique_peptides {
             get {
                 return ResourceManager.GetString("ProteomeDb_Digest_Digested__0__proteins_into__1__unique_peptides", resourceCulture);
             }
@@ -163,7 +163,7 @@ namespace pwiz.ProteomeDatabase.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Digesting {0} proteins.
         /// </summary>
-        internal static string ProteomeDb_Digest_Digesting__0__proteins {
+        public static string ProteomeDb_Digest_Digesting__0__proteins {
             get {
                 return ResourceManager.GetString("ProteomeDb_Digest_Digesting__0__proteins", resourceCulture);
             }
@@ -172,7 +172,7 @@ namespace pwiz.ProteomeDatabase.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Listing existing peptides.
         /// </summary>
-        internal static string ProteomeDb_Digest_Listing_existing_peptides {
+        public static string ProteomeDb_Digest_Listing_existing_peptides {
             get {
                 return ResourceManager.GetString("ProteomeDb_Digest_Listing_existing_peptides", resourceCulture);
             }
@@ -181,16 +181,25 @@ namespace pwiz.ProteomeDatabase.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Listing proteins.
         /// </summary>
-        internal static string ProteomeDb_Digest_Listing_proteins {
+        public static string ProteomeDb_Digest_Listing_proteins {
             get {
                 return ResourceManager.GetString("ProteomeDb_Digest_Listing_proteins", resourceCulture);
             }
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Analyzing protein sequences.
+        /// </summary>
+        public static string ProteomeDb_DigestProteins_Analyzing_protein_sequences {
+            get {
+                return ResourceManager.GetString("ProteomeDb_DigestProteins_Analyzing_protein_sequences", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Looking for unresolved protein details.
         /// </summary>
-        internal static string ProteomeDb_LookupProteinMetadata_looking_for_unresolved_protein_details {
+        public static string ProteomeDb_LookupProteinMetadata_looking_for_unresolved_protein_details {
             get {
                 return ResourceManager.GetString("ProteomeDb_LookupProteinMetadata_looking_for_unresolved_protein_details", resourceCulture);
             }
@@ -208,7 +217,7 @@ namespace pwiz.ProteomeDatabase.Properties {
         /// <summary>
         ///   Looks up a localized string similar to {0} does not appear to be a valid &quot;.protDB&quot; background proteome file..
         /// </summary>
-        internal static string ProteomeDb_ProteomeDb__0__does_not_appear_to_be_a_valid___protDB__background_proteome_file_ {
+        public static string ProteomeDb_ProteomeDb__0__does_not_appear_to_be_a_valid___protDB__background_proteome_file_ {
             get {
                 return ResourceManager.GetString("ProteomeDb_ProteomeDb__0__does_not_appear_to_be_a_valid___protDB__background_prot" +
                         "eome_file_", resourceCulture);
@@ -216,9 +225,18 @@ namespace pwiz.ProteomeDatabase.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The file {0} does not exist..
+        /// </summary>
+        public static string ProteomeDb_ProteomeDb_The_file__0__does_not_exist_ {
+            get {
+                return ResourceManager.GetString("ProteomeDb_ProteomeDb_The_file__0__does_not_exist_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Proteome file {0} has a format which is newer than the current software.  Please update to the latest software version and try again..
         /// </summary>
-        internal static string SessionFactoryFactory_EnsureVersion_Background_proteome_file__0__has_a_format_which_is_newer_than_the_current_software___Please_update_to_the_latest_software_version_and_try_again_ {
+        public static string SessionFactoryFactory_EnsureVersion_Background_proteome_file__0__has_a_format_which_is_newer_than_the_current_software___Please_update_to_the_latest_software_version_and_try_again_ {
             get {
                 return ResourceManager.GetString("SessionFactoryFactory_EnsureVersion_Background_proteome_file__0__has_a_format_whi" +
                         "ch_is_newer_than_the_current_software___Please_update_to_the_latest_software_ver" +
@@ -229,7 +247,7 @@ namespace pwiz.ProteomeDatabase.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Must have write lock.
         /// </summary>
-        internal static string SessionWithLock_EnsureWriteLock_Must_have_write_lock {
+        public static string SessionWithLock_EnsureWriteLock_Must_have_write_lock {
             get {
                 return ResourceManager.GetString("SessionWithLock_EnsureWriteLock_Must_have_write_lock", resourceCulture);
             }
@@ -238,7 +256,7 @@ namespace pwiz.ProteomeDatabase.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Can&apos;t acquire write lock while holding read lock..
         /// </summary>
-        internal static string SessionWithLock_SessionWithLock_Cant_acquire_write_lock_while_holding_read_lock {
+        public static string SessionWithLock_SessionWithLock_Cant_acquire_write_lock_while_holding_read_lock {
             get {
                 return ResourceManager.GetString("SessionWithLock_SessionWithLock_Cant_acquire_write_lock_while_holding_read_lock", resourceCulture);
             }
