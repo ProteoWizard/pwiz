@@ -22,7 +22,7 @@ welcomeIncludes=set(["pwiz\\pwiz","pwiz\\data","libraries\\zlib","libraries\\lib
 welcomeSrcDirs=set(["pwiz\\data","pwiz\\analysis","pwiz\\utility","pwiz_tools\\examples\\","pwiz_tools\\common\\","libraries\\libsvm","libraries\\Eigen","libraries\\CSpline"])
 
 # include the whole boost_aux tree, and others with depth but no -I reference
-complicatedTrees = ["boost_aux"]
+complicatedTrees = ["boost_aux","Eigen","CSpline"]
 subtleIncludes = ["pwiz_aux","pwiz/utility/findmf"]
 
 # boost aux source files we need to compile
