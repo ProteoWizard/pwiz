@@ -28,6 +28,7 @@ and was released under the cc-wiki licence with attirbution ( this paragraph ) r
 #include "CSpline.h"
 
 #include <algorithm>
+#include <cmath>
 
 	using namespace std;
 
