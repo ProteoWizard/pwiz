@@ -246,7 +246,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 Title = Resources.EditIrtCalcDlg_btnBrowseDb_Click_Open_iRT_Database,
                 InitialDirectory = Settings.Default.ActiveDirectory,
                 DefaultExt = IrtDb.EXT,
-                Filter = TextUtil.FileDialogFiltersAll(IrtDb.FILTER_IRTDB, ChromatogramLibrary.FILTER_CLIB)
+                Filter = TextUtil.FileDialogFiltersAll(IrtDb.FILTER_IRTDB, BiblioSpecLiteSpec.FILTER_BLIB, ChromatogramLibrary.FILTER_CLIB)
             })
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
@@ -332,13 +332,17 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 textDatabase.Focus();
                 return;
             }
-            bool chromLib = string.Equals(Path.GetExtension(path), ChromatogramLibrarySpec.EXT);
-            if (chromLib && DatabaseChanged)
+            string ext = Path.GetExtension(path);
+            bool chromLib = string.Equals(ext, ChromatogramLibrarySpec.EXT);
+            bool specLib = string.Equals(ext, BiblioSpecLiteSpec.EXT);
+            if ((chromLib || specLib) && DatabaseChanged)
             {
                 string pathNew;
                 do
                 {
-                    MessageDlg.Show(this, Resources.EditIrtCalcDlg_OkDialog_Chromatogram_libraries_cannot_be_modified__You_must_save_this_iRT_calculator_as_a_new_file_);
+                    MessageDlg.Show(this, chromLib
+                        ? Resources.EditIrtCalcDlg_OkDialog_Chromatogram_libraries_cannot_be_modified__You_must_save_this_iRT_calculator_as_a_new_file_
+                        : Resources.EditIrtCalcDlg_OkDialog_Spectral_libraries_cannot_be_modified__You_must_save_this_iRT_calculator_as_a_new_file_);
                     using (var saveDlg = new SaveFileDialog {Filter = IrtDb.FILTER_IRTDB})
                     {
                         if (saveDlg.ShowDialog(this) == DialogResult.Cancel)
@@ -350,7 +354,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 } while (string.Equals(path, pathNew));
                 path = pathNew;
             }
-            if (!string.Equals(Path.GetExtension(path), IrtDb.EXT) && !(chromLib && !DatabaseChanged))
+            if (!string.Equals(Path.GetExtension(path), IrtDb.EXT) && !((chromLib || specLib) && !DatabaseChanged))
                 path += IrtDb.EXT;
 
             //This function MessageBox.Show's error messages

@@ -2946,7 +2946,11 @@ namespace pwiz.Skyline
                 if (ps.ShowDialog(parent) == DialogResult.OK)
                 {
                     if (ps.IsShowLibraryExplorer)
-                        OwnedForms[OwnedForms.IndexOf(form => form is ViewLibraryDlg)].Activate();
+                    {
+                        int libraryExpIndex = OwnedForms.IndexOf(form => form is ViewLibraryDlg);
+                        if (libraryExpIndex != -1)
+                            OwnedForms[libraryExpIndex].Activate();
+                    }
 
                     HashSet<string> missingPeptides;
                     var newStandard = RCalcIrtStandard(out missingPeptides);

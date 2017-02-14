@@ -150,6 +150,10 @@ namespace pwiz.Skyline
 
                     ProcessDocument(commandArgs);
                     PerformExportOperations(commandArgs);
+
+                    // CONSIDER: Need to use new argument
+                    // Save any settings list changes made by opening the document
+                    // Settings.Default.Save();
                 }
             }
             finally
@@ -470,6 +474,9 @@ namespace pwiz.Skyline
 
                     _out.WriteLine(Resources.CommandLine_OpenSkyFile_File__0__opened_, Path.GetFileName(skylineFile));
                 }
+
+                // Update settings for this file
+                _doc.Settings.UpdateLists(skylineFile);
             }
             catch (FileNotFoundException)
             {

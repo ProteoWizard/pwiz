@@ -8419,6 +8419,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Spectral libraries cannot be modified. You must save this iRT calculator as a new file..
+        /// </summary>
+        public static string EditIrtCalcDlg_OkDialog_Spectral_libraries_cannot_be_modified__You_must_save_this_iRT_calculator_as_a_new_file_ {
+            get {
+                return ResourceManager.GetString("EditIrtCalcDlg_OkDialog_Spectral_libraries_cannot_be_modified__You_must_save_this" +
+                        "_iRT_calculator_as_a_new_file_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to standard.
         /// </summary>
         public static string EditIrtCalcDlg_OkDialog_standard_table_name {

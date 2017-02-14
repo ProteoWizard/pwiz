@@ -284,5 +284,11 @@ namespace pwiz.Skyline.Controls.Databinding
         {
             UpdateButtons();
         }
+
+        private void treeView1_DoubleClick(object sender, EventArgs e)
+        {
+            // Export the selected report
+            OkDialog();
+        }
     }
 }
