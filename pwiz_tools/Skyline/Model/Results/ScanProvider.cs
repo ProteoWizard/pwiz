@@ -161,13 +161,15 @@ namespace pwiz.Skyline.Model.Results
             
             if (File.Exists(dataFilePath) || Directory.Exists(dataFilePath))
                 return dataFilePath;
+            // ReSharper disable ConstantNullCoalescingCondition
             string fileName = Path.GetFileName(dataFilePath) ?? string.Empty;
             string docDir = Path.GetDirectoryName(DocFilePath) ?? Directory.GetCurrentDirectory();
             dataFilePath = Path.Combine(docDir,  fileName);
             if (File.Exists(dataFilePath) || Directory.Exists(dataFilePath))
                 return dataFilePath;
-            string docParentDir = Path.GetDirectoryName(docDir);
+            string docParentDir = Path.GetDirectoryName(docDir) ?? Directory.GetCurrentDirectory();
             dataFilePath = Path.Combine(docParentDir, fileName);
+            // ReSharper restore ConstantNullCoalescingCondition
             if (File.Exists(dataFilePath) || Directory.Exists(dataFilePath))
                 return dataFilePath;
             if (!string.IsNullOrEmpty(Program.ExtraRawFileSearchFolder))

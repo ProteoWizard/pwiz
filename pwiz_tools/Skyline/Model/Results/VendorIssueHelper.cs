@@ -81,24 +81,27 @@ namespace pwiz.Skyline.Model.Results
 
                         var proteinPilotCommandWithArgsSplit =
                             proteinPilotCommandWithArgs.Split(new[] { "\" \"" }, StringSplitOptions.RemoveEmptyEntries);     // Remove " "%1" // Not L10N
-                        string path = Path.GetDirectoryName(proteinPilotCommandWithArgsSplit[0].Trim('\\', '\"')); // Remove preceding "
-                        var groupFileExtractorPath = Path.Combine(path, EXE_GROUP_FILE_EXTRACTOR);
-                        if (File.Exists(groupFileExtractorPath))
+                        string path = Path.GetDirectoryName(proteinPilotCommandWithArgsSplit[0].Trim(new[] { '\\', '\"' })); // Remove preceding "
+                        if (!string.IsNullOrEmpty(path))
                         {
-                            groupConverterExePath = groupFileExtractorPath;
-                        }
-                        else
-                        {
-                            var group2XmlPath = Path.Combine(path, EXE_GROUP2_XML);
-                            if (File.Exists(group2XmlPath))
+                            var groupFileExtractorPath = Path.Combine(path, EXE_GROUP_FILE_EXTRACTOR);
+                            if (File.Exists(groupFileExtractorPath))
                             {
-                                groupConverterExePath = group2XmlPath;
+                                groupConverterExePath = groupFileExtractorPath;
                             }
                             else
                             {
-                                string errorMessage = string.Format(Resources.VendorIssueHelper_ConvertPilotFiles_Unable_to_find__0__or__1__in_directory__2____Please_reinstall_ProteinPilot_software_to_be_able_to_handle__group_files_,
-                                    EXE_GROUP_FILE_EXTRACTOR, EXE_GROUP2_XML, path);
-                                throw new IOException(errorMessage);
+                                var group2XmlPath = Path.Combine(path, EXE_GROUP2_XML);
+                                if (File.Exists(group2XmlPath))
+                                {
+                                    groupConverterExePath = group2XmlPath;
+                                }
+                                else
+                                {
+                                    string errorMessage = string.Format(Resources.VendorIssueHelper_ConvertPilotFiles_Unable_to_find__0__or__1__in_directory__2____Please_reinstall_ProteinPilot_software_to_be_able_to_handle__group_files_,
+                                        EXE_GROUP_FILE_EXTRACTOR, EXE_GROUP2_XML, path);
+                                    throw new IOException(errorMessage);
+                                }
                             }
                         }
                     }
@@ -124,7 +127,8 @@ namespace pwiz.Skyline.Model.Results
                                   CreateNoWindow = true,
                                   UseShellExecute = false,
                                   // Common directory includes the directory separator
-                                  WorkingDirectory = Path.GetDirectoryName(groupConverterExePath),
+                                  // ReSharper disable once ConstantNullCoalescingCondition
+                                  WorkingDirectory = Path.GetDirectoryName(groupConverterExePath) ?? string.Empty,
                                   Arguments = string.Join(" ", argv.ToArray()), // Not L10N
                                   RedirectStandardError = true,
                                   RedirectStandardOutput = true,

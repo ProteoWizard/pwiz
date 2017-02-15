@@ -85,6 +85,8 @@ namespace SkylineTester
             while (!File.Exists(Path.Combine(solutionDirectory, "Skyline.sln")))
             {
                 solutionDirectory = Path.GetDirectoryName(solutionDirectory);
+                if (string.IsNullOrEmpty(solutionDirectory))
+                    throw new ApplicationException("Can't find solution directory");                    
             }
 
             using (var zipFile = new ZipFile(zipPath))
@@ -146,7 +148,7 @@ namespace SkylineTester
                     foreach (var testZipFile in zipFilesList)
                     {
                         var testZipDirectory = Path.GetDirectoryName(testZipFile);
-                        if (testZipDirectory == null)
+                        if (string.IsNullOrEmpty(testZipDirectory))
                             continue;
                         testZipDirectory = Path.Combine(zipFilesDirectory,
                             testZipDirectory.Substring(solutionDirectory.Length + 1));

@@ -237,7 +237,8 @@ namespace pwiz.Skyline.SettingsUI
             {
                 try
                 {
-                    outputPath = Path.GetDirectoryName(outputPath);                
+                    // ReSharper disable once ConstantNullCoalescingCondition
+                    outputPath = Path.GetDirectoryName(outputPath) ?? string.Empty;                
                 }
                 catch (Exception)
                 {

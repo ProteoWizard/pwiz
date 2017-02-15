@@ -118,6 +118,8 @@ namespace pwiz.Common.SystemUtil
                 }
             }
             path = Path.GetDirectoryName(Environment.GetFolderPath(Environment.SpecialFolder.Personal));
+            if (string.IsNullOrEmpty(path)) // Keep multiple versions of ReSharper happy
+                path = string.Empty;
             path = Path.Combine(path, "Downloads"); // Not L10N
             return path;
         }

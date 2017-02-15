@@ -3506,8 +3506,10 @@ namespace pwiz.Skyline.Model
             string skylinePath = Assembly.GetExecutingAssembly().Location;
             if (string.IsNullOrEmpty(skylinePath))
                 throw new IOException(Resources.WatersMethodExporter_EnsureLibraries_Waters_method_creation_software_may_not_be_installed_correctly);
-            string buildSubdir = Path.GetDirectoryName(EXE_BUILD_WATERS_METHOD);
-            string exeDir = Path.Combine(Path.GetDirectoryName(skylinePath), buildSubdir);
+
+            // ReSharper disable ConstantNullCoalescingCondition
+            string buildSubdir = Path.GetDirectoryName(EXE_BUILD_WATERS_METHOD) ?? string.Empty;
+            string exeDir = Path.Combine(Path.GetDirectoryName(skylinePath) ?? string.Empty, buildSubdir);
             string dacServerPath = AdvApi.GetPathFromProgId("DACScanStats.DACScanStats"); // Not L10N
             if (dacServerPath == null)
             {
@@ -3527,7 +3529,8 @@ namespace pwiz.Skyline.Model
                 dacServerPath = Path.Combine(dacServerPath, "bin"); // Not L10N
             }
 
-            string massLynxDir = Path.GetDirectoryName(dacServerPath);
+            string massLynxDir = Path.GetDirectoryName(dacServerPath) ?? string.Empty;
+            // ReSharper restore ConstantNullCoalescingCondition
             foreach (var library in DEPENDENCY_LIBRARIES)
             {
                 string srcFile = Path.Combine(massLynxDir, library);
