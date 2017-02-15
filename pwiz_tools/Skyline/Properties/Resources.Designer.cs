@@ -28773,5 +28773,23 @@ namespace pwiz.Skyline.Properties {
                 return ResourceManager.GetString("XmlUtil_WriteElements_Attempt_to_serialize_list_missing_an_element", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed attempting to add the file {0}.
+        /// </summary>
+        public static string ZipFileShare_AddFile_Failed_attempting_to_add_the_file__0_ {
+            get {
+                return ResourceManager.GetString("ZipFileShare_AddFile_Failed_attempting_to_add_the_file__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The name &apos;{0}&apos; is already in use from the path {1}.
+        /// </summary>
+        public static string ZipFileShare_AddFile_The_name___0___is_already_in_use_from_the_path__1_ {
+            get {
+                return ResourceManager.GetString("ZipFileShare_AddFile_The_name___0___is_already_in_use_from_the_path__1_", resourceCulture);
+            }
+        }
     }
 }

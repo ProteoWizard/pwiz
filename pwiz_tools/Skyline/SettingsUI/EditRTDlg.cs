@@ -237,7 +237,7 @@ namespace pwiz.Skyline.SettingsUI
                 if (calc is RCalcIrt)
                 {
                     if (string.IsNullOrEmpty(textName.Text))
-                        textName.Text = Helpers.GetUniqueName(calc.Name, name => !_driverCalculators.List.Contains(c => Equals(c.Name, name)));
+                        textName.Text = Helpers.GetUniqueName(calc.Name, name => !_existing.Contains(r => Equals(r.Name, name)));
                     if (string.IsNullOrEmpty(textSlope.Text) && string.IsNullOrEmpty(textIntercept.Text))
                         cbAutoCalc.Checked = true;
                     if (string.IsNullOrEmpty(textTimeWindow.Text))

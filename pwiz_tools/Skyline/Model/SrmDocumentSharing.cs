@@ -182,11 +182,8 @@ namespace pwiz.Skyline.Model
             ProgressMonitor = progressMonitor;
             ProgressMonitor.UpdateProgress(_progressStatus = new ProgressStatus(DefaultMessage));
 
-            using (var zip = new ZipFile())
+            using (var zip = new ZipFileShare())
             {
-                // Make sure large files don't cause this to fail.
-                zip.UseZip64WhenSaving = Zip64Option.AsNecessary;
-
                 if (CompleteSharing)
                     ShareComplete(zip);
                 else
@@ -194,25 +191,25 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        private void ShareComplete(ZipFile zip)
+        private void ShareComplete(ZipFileShare zip)
         {
             // If complete sharing, just zip up existing files
             var pepSettings = Document.Settings.PeptideSettings;
             var transitionSettings = Document.Settings.TransitionSettings;
             if (Document.Settings.HasBackgroundProteome)
-                zip.AddFile(pepSettings.BackgroundProteome.BackgroundProteomeSpec.DatabasePath, string.Empty);
+                zip.AddFile(pepSettings.BackgroundProteome.BackgroundProteomeSpec.DatabasePath);
             if (Document.Settings.HasRTCalcPersisted)
-                zip.AddFile(pepSettings.Prediction.RetentionTime.Calculator.PersistencePath, string.Empty);
+                zip.AddFile(pepSettings.Prediction.RetentionTime.Calculator.PersistencePath);
             if (Document.Settings.HasOptimizationLibraryPersisted)
-                zip.AddFile(transitionSettings.Prediction.OptimizedLibrary.PersistencePath, string.Empty);
+                zip.AddFile(transitionSettings.Prediction.OptimizedLibrary.PersistencePath);
             if (Document.Settings.HasIonMobilityLibraryPersisted)
-                zip.AddFile(pepSettings.Prediction.DriftTimePredictor.IonMobilityLibrary.PersistencePath, string.Empty);
+                zip.AddFile(pepSettings.Prediction.DriftTimePredictor.IonMobilityLibrary.PersistencePath);
             var libfiles = new HashSet<string>();
             foreach (var librarySpec in pepSettings.Libraries.LibrarySpecs)
             {
                 if (libfiles.Add(librarySpec.FilePath)) // Sometimes the same .blib file is referred to by different library specs
                 {
-                    zip.AddFile(librarySpec.FilePath, string.Empty);
+                    zip.AddFile(librarySpec.FilePath);
 
                     if (Document.Settings.TransitionSettings.FullScan.IsEnabledMs)
                     {
@@ -224,11 +221,11 @@ namespace pwiz.Skyline.Model
             }
 
             ShareDataAndView(zip);
-            zip.AddFile(DocumentPath, string.Empty);
+            zip.AddFile(DocumentPath);
             Save(zip);
         }
 
-        private void ShareMinimal(ZipFile zip)
+        private void ShareMinimal(ZipFileShare zip)
         {
             TemporaryDirectory tempDir = null;
             try
@@ -247,7 +244,7 @@ namespace pwiz.Skyline.Model
                     string tempDbPath = Document.Settings.PeptideSettings.Prediction.RetentionTime
                         .Calculator.PersistMinimized(tempDir.DirPath, Document);
                     if (tempDbPath != null)
-                        zip.AddFile(tempDbPath, string.Empty);
+                        zip.AddFile(tempDbPath);
                 }
                 if (Document.Settings.HasOptimizationLibraryPersisted)
                 {
@@ -256,7 +253,7 @@ namespace pwiz.Skyline.Model
                     string tempDbPath = Document.Settings.TransitionSettings.Prediction.OptimizedLibrary.PersistMinimized(
                             tempDir.DirPath, Document);
                     if (tempDbPath != null)
-                        zip.AddFile(tempDbPath, string.Empty);
+                        zip.AddFile(tempDbPath);
                 }
                 if (Document.Settings.HasIonMobilityLibraryPersisted)
                 {
@@ -266,7 +263,7 @@ namespace pwiz.Skyline.Model
                     string tempDbPath = Document.Settings.PeptideSettings.Prediction.DriftTimePredictor
                         .IonMobilityLibrary.PersistMinimized(tempDir.DirPath, Document);
                     if (tempDbPath != null)
-                        zip.AddFile(tempDbPath, string.Empty);
+                        zip.AddFile(tempDbPath);
                 }
                 if (Document.Settings.HasLibraries)
                 {
@@ -282,7 +279,7 @@ namespace pwiz.Skyline.Model
                     foreach (var librarySpec in Document.Settings.PeptideSettings.Libraries.LibrarySpecs)
                     {
                         var tempLibPath = Path.Combine(tempDir.DirPath, Path.GetFileName(librarySpec.FilePath) ?? string.Empty);
-                        zip.AddFile(tempLibPath, string.Empty);
+                        zip.AddFile(tempLibPath);
 
                         // If there is a .redundant.blib file that corresponds to a .blib file
                         // in the temp temporary directory, add that as well
@@ -292,7 +289,7 @@ namespace pwiz.Skyline.Model
 
                 ShareDataAndView(zip);
                 if (ReferenceEquals(docOriginal, Document))
-                    zip.AddFile(DocumentPath, string.Empty);
+                    zip.AddFile(DocumentPath);
                 else
                 {
                     // If minimizing changed the document, then serialize and archive the new document
@@ -308,7 +305,7 @@ namespace pwiz.Skyline.Model
                     {
                         XmlSerializer ser = new XmlSerializer(typeof(SrmDocument));
                         ser.Serialize(writer, Document);
-                        zip.AddFile(tempDocPath, string.Empty);
+                        zip.AddFile(tempDocPath);
                     }
                 }
                 Save(zip);
@@ -332,36 +329,35 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        private void IncludeRedundantBlib(LibrarySpec librarySpec, ZipFile zip, string blibPath)
+        private void IncludeRedundantBlib(LibrarySpec librarySpec, ZipFileShare zip, string blibPath)
         {
             if (librarySpec is BiblioSpecLiteSpec)
             {
                 var redundantBlibPath = BiblioSpecLiteSpec.GetRedundantName(blibPath);
                 if (File.Exists(redundantBlibPath))
                 {
-                    zip.AddFile(redundantBlibPath, string.Empty);
+                    zip.AddFile(redundantBlibPath);
                 }
             }
         }
 
-        private void ShareDataAndView(ZipFile zip)
+        private void ShareDataAndView(ZipFileShare zip)
         {
             string pathCache = ChromatogramCache.FinalPathForName(DocumentPath, null);
             if (File.Exists(pathCache))
-                zip.AddFile(pathCache, string.Empty);
+                zip.AddFile(pathCache);
             string viewPath = SkylineWindow.GetViewFile(DocumentPath);
             if (File.Exists(viewPath))
-                zip.AddFile(viewPath, string.Empty);
+                zip.AddFile(viewPath);
         }
 
-        private void Save(ZipFile zip)
+        private void Save(ZipFileShare zip)
         {
-            CountEntries = zip.Entries.Count;
+            CountEntries = zip.CountEntries;
 
             using (var saver = new FileSaver(SharedPath))
             {
-                zip.SaveProgress += SrmDocumentSharing_SaveProgress;
-                zip.Save(saver.SafeName);
+                zip.Save(saver.SafeName, SrmDocumentSharing_SaveProgress);
                 ProgressMonitor.UpdateProgress(_progressStatus.Complete());
                 saver.Commit();
             }
@@ -427,6 +423,52 @@ namespace pwiz.Skyline.Model
                         ProgressMonitor.UpdateProgress(_progressStatus = _progressStatus.ChangeMessage(message));
                     }
                 }
+            }
+        }
+
+        private class ZipFileShare : IDisposable
+        {
+            private readonly ZipFile _zip;
+            private readonly IDictionary<string, string> _dictNameToPath;
+
+            public ZipFileShare()
+            {
+                // Make sure large files don't cause this to fail.
+                _zip = new ZipFile { UseZip64WhenSaving = Zip64Option.AsNecessary };
+
+                _dictNameToPath = new Dictionary<string, string>();
+            }
+
+            public int CountEntries { get { return _zip.Entries.Count; } }
+
+            public void AddFile(string path)
+            {
+                string existingPath;
+                string fileName = Path.GetFileName(path) ?? string.Empty;
+                if (_dictNameToPath.TryGetValue(fileName, out existingPath))
+                {
+                    if (path != existingPath)
+                    {
+                        throw new IOException(TextUtil.LineSeparate(string.Format(Resources.ZipFileShare_AddFile_Failed_attempting_to_add_the_file__0_, path),
+                            string.Format(Resources.ZipFileShare_AddFile_The_name___0___is_already_in_use_from_the_path__1_, fileName, existingPath)));
+                    }
+
+                    // No need to add exactly the same path twice
+                    return;
+                }
+                _dictNameToPath.Add(fileName, path);
+                _zip.AddFile(path, string.Empty);
+            }
+
+            public void Save(string path, EventHandler<SaveProgressEventArgs> progressEvent)
+            {
+                _zip.SaveProgress += progressEvent;
+                _zip.Save(path);
+            }
+
+            public void Dispose()
+            {
+                if (_zip != null) _zip.Dispose();
             }
         }
 
