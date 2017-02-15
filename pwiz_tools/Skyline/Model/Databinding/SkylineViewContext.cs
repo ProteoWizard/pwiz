@@ -587,9 +587,6 @@ namespace pwiz.Skyline.Model.Databinding
             }
         }
 
-        /// <summary>
-        /// For testing
-        /// </summary>
         public override void ImportViewsFromFile(Control owner, ViewGroup group, string fileName)
         {
             ViewSpecList views;
@@ -601,7 +598,7 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 new MessageBoxHelper(owner.FindForm()).ShowXmlParsingError(
                     string.Format(Resources.SkylineViewContext_ImportViews_Failure_loading__0__, fileName),
-                    fileName, x.InnerException);
+                    fileName, x.InnerException ?? x);
                 return;
             }
             if (!views.ViewSpecs.Any())
