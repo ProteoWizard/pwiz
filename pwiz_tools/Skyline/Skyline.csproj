@@ -29,7 +29,7 @@
     <TargetFrameworkProfile />
     <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
     <EnableSecurityDebugging>false</EnableSecurityDebugging>
-    <PublishUrl>S:\webapps\ROOT\software\Skyline-daily13-64\</PublishUrl>
+    <PublishUrl>T:\labkey\static\software\Skyline-daily13-64\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Web</InstallFrom>
     <UpdateEnabled>false</UpdateEnabled>
@@ -46,8 +46,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>10165</ApplicationRevision>
-    <ApplicationVersion>3.6.1.10165</ApplicationVersion>
+    <ApplicationRevision>10482</ApplicationRevision>
+    <ApplicationVersion>3.6.1.10482</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
