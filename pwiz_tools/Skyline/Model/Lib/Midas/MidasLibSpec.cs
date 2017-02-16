@@ -19,6 +19,7 @@
 
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Skyline.Util;
@@ -29,9 +30,15 @@ namespace pwiz.Skyline.Model.Lib.Midas
     public sealed class MidasLibSpec : LibrarySpec
     {
         public const string EXT = ".midas"; // Not L10N
-        public const string DEFAULT_NAME = "MIDAS"; // Not L10N
+        public const string PREFIX = "MIDAS_"; // Not L10N
 
         private static readonly PeptideRankId[] RANK_IDS = { PEP_RANK_COPIES, PEP_RANK_PICKED_INTENSITY };
+
+        public static string GetName(string documentPath, IEnumerable<LibrarySpec> libSpecs)
+        {
+            var name = PREFIX + Path.GetFileNameWithoutExtension(documentPath);
+            return Helpers.GetUniqueName(name, libSpecs.Select(libSpec => libSpec.Name).ToArray());
+        }
         
         public static string GetLibraryFileName(string documentPath)
         {

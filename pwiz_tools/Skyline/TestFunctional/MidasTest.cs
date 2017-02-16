@@ -78,7 +78,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(1, midasLibSpecs.Length);
             var midasLib = midasLibs[0];
             var midasLibSpec = midasLibSpecs[0];
-            Assert.AreEqual(MidasLibSpec.DEFAULT_NAME, midasLibSpec.Name);
+            Assert.AreEqual(MidasLibSpec.PREFIX + Path.GetFileNameWithoutExtension(documentPath), midasLibSpec.Name);
             Assert.IsTrue(File.Exists(midasLibSpec.FilePath));
             Assert.AreEqual(1, midasLib.FileCount);
             Assert.AreEqual(218, midasLib.SpectrumCount);

@@ -238,7 +238,11 @@ namespace pwiz.Skyline.Model.Lib.Midas
             var precursors = (from nodePepGroup in doc.PeptideGroups
                               from nodePep in nodePepGroup.Peptides
                               from nodeTranGroup in nodePep.TransitionGroups
-                              select new Tuple<double, string, int>(nodeTranGroup.PrecursorMz, nodePep.ModifiedSequence, nodeTranGroup.PrecursorCharge)).ToList();
+                              select new Tuple<double, string, int>(
+                                  nodeTranGroup.PrecursorMz,
+                                  doc.Settings.GetPrecursorCalc(nodeTranGroup.TransitionGroup.LabelType, nodePep.ExplicitMods).GetModifiedSequence(nodePep.Peptide.Sequence, false),
+                                  nodeTranGroup.PrecursorCharge
+                              )).ToList();
             if (!precursors.Any())
                 return;
 
@@ -362,7 +366,9 @@ namespace pwiz.Skyline.Model.Lib.Midas
 
         public override bool ContainsAny(LibSeqKey key)
         {
-            return _spectra.SelectMany(fileSpectra => fileSpectra.Value).Where(spectra=>null != spectra.DocumentPeptide).Any(spectra => new LibSeqKey(spectra.DocumentPeptide).Equals(key));
+            return _spectra.SelectMany(fileSpectra => fileSpectra.Value)
+                           .Where(spectra=> null != spectra.DocumentPeptide)
+                           .Any(spectra => new LibSeqKey(FastaSequence.StripModifications(spectra.DocumentPeptide)).Equals(key));
         }
 
         public override bool TryGetLibInfo(LibKey key, out SpectrumHeaderInfo libInfo)
@@ -584,7 +590,7 @@ namespace pwiz.Skyline.Model.Lib.Midas
             }
         }
 
-        public static void AddSpectra(string midasLibPath, MsDataFilePath[] resultsFiles, SrmDocument doc, ILoadMonitor monitor, out List<MsDataFilePath> failedFiles)
+        public static void AddSpectra(MidasLibSpec libSpec, MsDataFilePath[] resultsFiles, SrmDocument doc, ILoadMonitor monitor, out List<MsDataFilePath> failedFiles)
         {
             // Get spectra from results files
             var newSpectra = new List<DbSpectrum>();
@@ -633,8 +639,7 @@ namespace pwiz.Skyline.Model.Lib.Midas
             monitor.UpdateProgress(progress);
 
             // Add spectra to library
-            var libSpec = new MidasLibSpec(MidasLibSpec.DEFAULT_NAME, midasLibPath);
-            var midasLib = !File.Exists(midasLibPath) ? Create(libSpec) : Load(libSpec, monitor);
+            var midasLib = !File.Exists(libSpec.FilePath) ? Create(libSpec) : Load(libSpec, monitor);
             if (midasLib == null)
             {
                 monitor.UpdateProgress(progress.ChangeErrorException(new Exception(Resources.MidasLibrary_AddSpectra_Error_loading_MIDAS_library_for_adding_spectra_)));
@@ -651,7 +656,7 @@ namespace pwiz.Skyline.Model.Lib.Midas
                     results[kvp.Key.FilePath] = kvp.Key;
             }
 
-            using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory(midasLibPath, typeof(MidasLibrary), false))
+            using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory(libSpec.FilePath, typeof(MidasLibrary), false))
             using (var session = new SessionWithLock(sessionFactory.OpenSession(), new ReaderWriterLock(), true))
             using (var transaction = session.BeginTransaction())
             {
