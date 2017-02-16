@@ -470,8 +470,6 @@ namespace pwiz.SkylineTestFunctional
             });
             var addLibraryDlg = ShowDialog<MultiButtonMsgDlg>(_viewLibUI.AddAllPeptides);
             OkDialog(addLibraryDlg, addLibraryDlg.Btn0Click);
-            var upgradeBackgroundProteome = WaitForOpenForm<AlertDlg>();
-            OkDialog(upgradeBackgroundProteome, upgradeBackgroundProteome.ClickYes);
             // Add the library to the document.
             var filterMatchedPeptidesDlg = WaitForOpenForm<FilterMatchedPeptidesDlg>();
             RunUI(() => filterMatchedPeptidesDlg.AddUnmatched = false);
