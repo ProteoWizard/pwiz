@@ -303,7 +303,7 @@ namespace TestRunnerLib
                 "{0,3} failures, {1:F2}/{2:F1} MB\r\n\r\n!!! {3} FAILED\r\n{4}\r\n{5}\r\n!!!\r\n\r\n",
                 FailureCount, managedMemory, TotalMemory, test.TestMethod.Name,
                 message,
-                stackTrace);
+                exception);
             return false;
         }
 

@@ -235,7 +235,12 @@ namespace pwiz.Skyline.Model.Lib
             finally
             {
                 foreach (var library in dictLibraries.Values.Where(lib => lib.ReadStream != null))
-                    library.ReadStream.CloseStream();
+                {
+                    lock (library.ReadStream)
+                    {
+                        library.ReadStream.CloseStream();
+                    }
+                }
                 EndProcessing(docCurrent);
             }
 
