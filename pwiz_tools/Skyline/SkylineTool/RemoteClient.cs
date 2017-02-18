@@ -27,7 +27,7 @@ namespace SkylineTool
     {
         protected RemoteClient(string connectionName)
         {
-            Timeout = 10;
+            Timeout = 1000;
             ConnectionName = connectionName;
         }
 
