@@ -47,7 +47,7 @@ namespace BiblioSpec {
 class LibReader{
  public:
   LibReader();
-  LibReader(const char* libName);
+  LibReader(const char* libName, int modPrecision = -1);
   ~LibReader();
 
   int getSpecInMzRange(double minMz, double maxMz, int minPeaks,
@@ -80,6 +80,7 @@ class LibReader{
   void initialize();
  protected:
   char  libraryName_[1024];
+  int modPrecision_;
   sqlite3* db_;
   double expLowMZ_; //experimental spectral low_end precursorMZ
   double expHighMZ_; //experimental spectral high_end precursorMZ

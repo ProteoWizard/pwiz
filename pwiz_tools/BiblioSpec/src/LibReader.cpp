@@ -22,6 +22,7 @@
 //class definition for LibReader.h
 
 #include "LibReader.h"
+#include <map>
 
 using namespace std;
 
@@ -35,11 +36,12 @@ LibReader::LibReader() :
     expHighChg_(-1),
     totalCount_(-1),
     curSpecId_(1),
-    maxSpecId_(0)
+    maxSpecId_(0),
+    modPrecision_(-1)
 {
 }
 
-LibReader::LibReader(const char* libName) :
+LibReader::LibReader(const char* libName, int modPrecision) :
     expLowMZ_(0.0),
     expHighMZ_(0.0),
     expPreChg_(-1),
@@ -47,7 +49,8 @@ LibReader::LibReader(const char* libName) :
     expHighChg_(-1),
     totalCount_(-1),
     curSpecId_(1),
-    maxSpecId_(0)
+    maxSpecId_(0),
+    modPrecision_(modPrecision)
 {
     strcpy(libraryName_, libName);
     initialize();
@@ -341,7 +344,6 @@ RefSpectrum LibReader::getRefSpec(int libID)
             "peptideModSeq,prevAA, nextAA, copies, numPeaks, peakMZ, peakIntensity "
             "from RefSpectra, RefSpectraPeaks where id=%d AND id=RefSpectraID", libID);
 
-
     RefSpectrum tmpRef;
 
     sqlite3_stmt *pStmt;
@@ -409,12 +411,10 @@ bool LibReader::getRefSpec(int libID, RefSpectrum& spec)
     if( rc==SQLITE_ROW ) {
 
         spec.setLibSpecID(sqlite3_column_int(pStmt,0));
-        spec.setSeq(reinterpret_cast<const char*>(sqlite3_column_text(pStmt,
-                                                                        1)));
+        spec.setSeq(reinterpret_cast<const char*>(sqlite3_column_text(pStmt, 1)));
         spec.setMz(sqlite3_column_double(pStmt,2));
         spec.setCharge(sqlite3_column_int(pStmt,3));
-        spec.setMods(reinterpret_cast<const char*>(sqlite3_column_text(pStmt,
-                                                                         4)));
+        spec.setMods(reinterpret_cast<const char*>(sqlite3_column_text(pStmt, 4)));
         spec.setPrevAA("-");
         spec.setNextAA("-");
         spec.setCopies(sqlite3_column_int(pStmt,7));
@@ -425,9 +425,7 @@ bool LibReader::getRefSpec(int libID, RefSpectrum& spec)
         int numBytes2=sqlite3_column_bytes(pStmt,10);
         Byte* comprI = (Byte*)sqlite3_column_blob(pStmt,10);
 
-
-        spec.setRawPeaks(getUncompressedPeaks(numPeaks, numBytes1,
-                                              comprM, numBytes2, comprI));
+        spec.setRawPeaks(getUncompressedPeaks(numPeaks, numBytes1, comprM, numBytes2, comprI));
 
     } else {
         Verbosity::debug("SQLITE error message: %s", sqlite3_errmsg(db_) );
@@ -436,7 +434,36 @@ bool LibReader::getRefSpec(int libID, RefSpectrum& spec)
         return false;
     }
 
-    rc = sqlite3_finalize(pStmt);
+    sqlite3_finalize(pStmt);
+
+    if (modPrecision_ >= 0) {
+        sprintf(szSqlStmt, "SELECT position, mass FROM Modifications WHERE RefSpectraId = %d", libID);
+        sqlite3_stmt* modStmt;
+        rc = sqlite3_prepare(db_, szSqlStmt, -1, &modStmt, NULL);
+        if (rc != SQLITE_OK) {
+            Verbosity::error("Cannot prepare SQL statement: %s ", sqlite3_errmsg(db_));
+        }
+        map<int, double> mods;
+        while (sqlite3_step(modStmt) == SQLITE_ROW) {
+            int position = sqlite3_column_int(modStmt, 0);
+            double mass = sqlite3_column_double(modStmt, 1);
+            map<int, double>::iterator j = mods.find(position);
+            if (j == mods.end()) {
+                mods[position] = mass;
+            } else {
+                j->second += mass;
+            }
+        }
+        sqlite3_finalize(modStmt);
+
+        string seq = spec.getSeq();
+        char modBuf[256];
+        for (map<int, double>::const_reverse_iterator j = mods.rbegin(); j != mods.rend(); j++) {
+            sprintf(modBuf, "[%s%.*f]", j->second >= 0 ? "+" : "", modPrecision_, j->second);
+            seq.insert(j->first, modBuf);
+        }
+        spec.setMods(seq);
+    }
 
     return true;
 }
@@ -636,7 +663,6 @@ int LibReader::getAllRefSpec(vector<RefSpectrum*>& specs)
  * already.
  */
 bool LibReader::getNextSpectrum(RefSpectrum& spec){
-
     // keep trying spec ids until we find one or get to the end
     while( curSpecId_ <= maxSpecId_  && !getRefSpec(curSpecId_, spec) ){
         Verbosity::debug("Skipping spectrum %d.", curSpecId_);

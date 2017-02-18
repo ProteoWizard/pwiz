@@ -59,7 +59,7 @@ int main(int argc, char* argv[])
     
     // open library reader
     Verbosity::status("Opening library %s.", libName.c_str());
-    LibReader library(libName.c_str());
+    LibReader library(libName.c_str(), options_table["mod-precision"].as<int>());
 
     // open a spectrum writer
     Verbosity::status("Writing spectra to %s.", ms2Name.c_str());
@@ -102,6 +102,11 @@ void ParseCommandline(const int argc,
             ("intensity-precision,i",
              value<int>()->default_value(1),
              "Precision for peak intensities.  Default 1."
+             )
+
+            ("mod-precision,p",
+             value<int>()->default_value(-1),
+             "Precision for modification masses.  Default -1 (use value in PeptideModSeq column)."
              )
             ;
 
