@@ -120,8 +120,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
                 var tolerance = (float)ChromTaskList.SrmDocument.Settings.TransitionSettings.Instrument.MzMatchTolerance;
                 Assume.IsNull(chromKey.OptionalMinTime);
                 Assume.IsNull(chromKey.OptionalMaxTime);
-                Assume.IsTrue(0 == chromKey.IonMobilityValue);
-                Assume.IsTrue(0 == chromKey.IonMobilityExtractionWidth);
+                Assume.IsTrue(chromKey.DriftFilter.IsEmpty);
                 keyIndex = _chromKeyIndiceses.IndexOf(entry => entry.Key.CompareTolerant(chromKey, tolerance) == 0);
             }
             if (keyIndex == -1 || _chromKeyIndiceses == null)   // Keep ReSharper from complaining

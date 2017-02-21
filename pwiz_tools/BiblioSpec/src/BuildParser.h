@@ -89,7 +89,6 @@ class BuildParser : protected SAXHandler{
   void sortPsmMods(PSM* psm);
   double calculatePeptideMass(PSM* psm);
   int calculateCharge(double neutralMass, double precursorMz);
-  void verifySequences();
   void filterBySequence(const set<string>* targetSequences, const set<string>* targetSequencesModified);
   void removeDuplicates();
   string fileNotFoundMessage(std::string specfileroot,
@@ -116,9 +115,9 @@ class BuildParser : protected SAXHandler{
                        const vector<std::string>& extensions,
                        const vector<std::string>& directories = vector<std::string>());
 
+  void verifySequences();
   double getScoreThreshold(BUILD_INPUT fileType);
-  void findScanNumFromName();
-  void findScanIndexFromName();
+  void findScanIndexFromName(const std::map<PSM*, double>& precursorMap);
   sqlite3_int64 insertSpectrumFilename(string& filename, bool insertAsIs = false);
   void buildTables(PSM_SCORE_TYPE score_type, string specfilename = "", bool showSpecProgress = true);
   const char* getPsmFilePath(); // path containing file being parsed

@@ -122,6 +122,7 @@
                       <xs:attribute name="charge" type="xs:nonNegativeInteger" use="required"/>
                       <xs:attribute name="drift_time" type="xs:double" use="required"/>
                       <xs:attribute name="high_energy_drift_time_offset" type="xs:double" use="optional"/>
+                      <xs:attribute name="ccs" type="xs:double" use="optional"/>
                     </xs:complexType>
                   </xs:element>
                 </xs:sequence>
@@ -976,6 +977,7 @@
         <xs:attribute name="charge" type="xs:integer" use="required"/>
         <xs:attribute name="precursor_mz" type="xs:double" use="required"/>
         <xs:attribute name="collision_energy" type="xs:double"/>
+        <xs:attribute name="ccs" type="xs:double" use="optional"/>
         <xs:attribute name="declustering_potential" type="xs:double"/>
         <!-- label can be "heavy", "light" or a user defined name -->
         <xs:attribute name="isotope_label" type="xs:string"/>
@@ -984,6 +986,7 @@
         <xs:attribute name="explicit_declustering_potential" type="xs:double"/>
         <xs:attribute name="explicit_drift_time_msec" type="xs:double"/>
         <xs:attribute name="explicit_drift_time_high_energy_offset_msec" type="xs:double"/>
+        <xs:attribute name="explicit_ccs_sqa" type="xs:double"/>
         <xs:attribute name="explicit_s_lens" type="xs:double"/>
         <xs:attribute name="explicit_cone_voltage" type="xs:double"/>
         <xs:attribute name="explicit_compensation_voltage" type="xs:double"/>
@@ -1596,6 +1599,10 @@
         <xs:attribute name="step" type="xs:int"/>
         <xs:attribute name="start_time" type="xs:double"/>
         <xs:attribute name="end_time" type="xs:double"/>
+        <xs:attribute name="ccs" type="xs:double" use="optional"/>
+        <xs:attribute name="drift_time_ms1" type="xs:double" use="optional"/>
+        <xs:attribute name="drift_time_fragment" type="xs:double" use="optional"/>
+        <xs:attribute name="drift_time_window" type="xs:double" use="optional"/>
         <xs:attribute name="fwhm" type="xs:double"/>
         <xs:attribute name="area" type="xs:double"/>
         <xs:attribute name="background" type="xs:double"/>
@@ -1623,6 +1630,8 @@
         <xs:attribute name="retention_time" type="xs:double"/>
         <xs:attribute name="start_time" type="xs:double"/>
         <xs:attribute name="end_time" type="xs:double"/>
+        <xs:attribute name="drift_time" type="xs:double" use="optional"/>
+        <xs:attribute name="drift_time_window" type="xs:double" use="optional"/>
         <xs:attribute name="fwhm" type="xs:double"/>
         <xs:attribute name="fwhm_degenerate" type="xs:boolean"/>
         <xs:attribute name="area" type="xs:double"/>

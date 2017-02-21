@@ -669,27 +669,27 @@ namespace pwiz.Skyline.Model.Lib
         /// </summary>
         /// <param name="key">A sequence, charge pair</param>
         /// <param name="filePath">A file for which the ion mobility information is requested</param>
-        /// <param name="ionMobilities">A list of ion mobility info, if successful</param>
+        /// <param name="driftTimes">A list of ion mobility info, if successful</param>
         /// <returns>True if ion mobility information was retrieved successfully</returns>
-        public abstract bool TryGetIonMobilities(LibKey key, MsDataFileUri filePath, out IonMobilityInfo[] ionMobilities);
+        public abstract bool TryGetDriftTimeInfos(LibKey key, MsDataFileUri filePath, out DriftTimeInfo[] driftTimes);
 
         /// <summary>
         /// Attempts to get ion mobility information for all of the
         /// (sequence, charge) pairs identified from a specific file.
         /// </summary>
         /// <param name="filePath">A file for which the ion mobility information is requested</param>
-        /// <param name="ionMobilities"></param>
+        /// <param name="driftTimes"></param>
         /// <returns>True if ion mobility information was retrieved successfully</returns>
-        public abstract bool TryGetIonMobilities(MsDataFileUri filePath, out LibraryIonMobilityInfo ionMobilities);
+        public abstract bool TryGetDriftTimeInfos(MsDataFileUri filePath, out LibraryDriftTimeInfo driftTimes);
 
         /// <summary>
         /// Attempts to get ion mobility information for all of the
         /// (sequence, charge) pairs identified from a specific file by index.
         /// </summary>
         /// <param name="fileIndex">Index of a file for which the ion mobility information is requested</param>
-        /// <param name="ionMobilities"></param>
+        /// <param name="driftTimes"></param>
         /// <returns>True if ion mobility information was retrieved successfully</returns>
-        public abstract bool TryGetIonMobilities(int fileIndex, out LibraryIonMobilityInfo ionMobilities);
+        public abstract bool TryGetDriftTimeInfos(int fileIndex, out LibraryDriftTimeInfo driftTimes);
 
         /// <summary>
         /// Gets all of the spectrum information for a particular (sequence, charge) pair.  This
@@ -965,24 +965,24 @@ namespace pwiz.Skyline.Model.Lib
             return false;
         }
 
-        public override bool TryGetIonMobilities(LibKey key, MsDataFileUri filePath, out IonMobilityInfo[] ionMobilities)
+        public override bool TryGetDriftTimeInfos(LibKey key, MsDataFileUri filePath, out DriftTimeInfo[] driftTimes)
         {
             // By default, no ion mobility information is available
-            ionMobilities = null;
+            driftTimes = null;
             return false;
         }
 
-        public override bool TryGetIonMobilities(MsDataFileUri filePath, out LibraryIonMobilityInfo ionMobilities)
+        public override bool TryGetDriftTimeInfos(MsDataFileUri filePath, out LibraryDriftTimeInfo driftTimes)
         {
             // By default, no ion mobility information is available
-            ionMobilities = null;
+            driftTimes = null;
             return false;
         }
 
-        public override bool TryGetIonMobilities(int fileIndex, out LibraryIonMobilityInfo ionMobilities)
+        public override bool TryGetDriftTimeInfos(int fileIndex, out LibraryDriftTimeInfo driftTimes)
         {
             // By default, no ion mobility information is available
-            ionMobilities = null;
+            driftTimes = null;
             return false;
         }
 
@@ -1142,37 +1142,71 @@ namespace pwiz.Skyline.Model.Lib
         }
     }
 
-    public sealed class LibraryIonMobilityInfo : IIonMobilityInfoProvider
+    public sealed class LibraryDriftTimeInfo : IDriftTimeInfoProvider
     {
-        private readonly IDictionary<LibKey, IonMobilityInfo[]> _dictChargedPeptideIonMobilities;
+        private readonly IDictionary<LibKey, DriftTimeInfo[]> _dictChargedPeptideDriftTimeInfos;
 
-        public LibraryIonMobilityInfo(string path, IDictionary<LibKey, IonMobilityInfo[]> dictChargedPeptideIonMobilities)
+        public LibraryDriftTimeInfo(string path, IDictionary<LibKey, DriftTimeInfo[]> dictChargedPeptideDriftTimeInfos)
         {
             Name = path;
-            _dictChargedPeptideIonMobilities = dictChargedPeptideIonMobilities;
+            _dictChargedPeptideDriftTimeInfos = dictChargedPeptideDriftTimeInfos;
         }
 
         public string Name { get; private set; }
 
         /// <summary>
-        /// Return the average measured drift time for spectra that were identified with a
-        /// specific modified peptide sequence and charge state.  
+        /// Return the median measured CCS for spectra that were identified with a
+        /// specific modified peptide sequence and charge state.
         /// </summary>
-        public DriftTimeInfo GetLibraryMeasuredDriftTimeAndHighEnergyOffset(LibKey chargedPeptide)
+        public double? GetLibraryMeasuredCollisionalCrossSection(LibKey chargedPeptide)
         {
-            IonMobilityInfo[] ionMobilities;
-            if ((!_dictChargedPeptideIonMobilities.TryGetValue(chargedPeptide, out ionMobilities)) || (ionMobilities == null))
+            DriftTimeInfo[] driftTimes;
+            if ((!_dictChargedPeptideDriftTimeInfos.TryGetValue(chargedPeptide, out driftTimes)) || (driftTimes == null))
                 return null;
-            if (!ionMobilities.Any(dt => dt.HasDriftTime))
+            double? ccs = null;
+            var ccsValues = Array.FindAll(driftTimes, im => im.HasCollisionalCrossSection);
+            if (ccsValues.Any())
+            {
+                ccs = new Statistics(ccsValues.Select(im => im.CollisionalCrossSectionSqA.Value)).Median();
+            }
+            return ccs;
+        }
+
+        /// <summary>
+        /// Return the median measured drift time for spectra that were identified with a
+        /// specific modified peptide sequence and charge state.  Prefer to use median CCS
+        /// when possible, and calculate DT from that.
+        /// </summary>
+        public DriftTimeInfo GetLibraryMeasuredDriftTimeAndHighEnergyOffset(LibKey chargedPeptide, double mz, IConversionDriftTimeCCSProvider conversionDriftTimeCcsProvider)
+        {
+            DriftTimeInfo[] driftTimes;
+            if ((!_dictChargedPeptideDriftTimeInfos.TryGetValue(chargedPeptide, out driftTimes)) || (driftTimes == null))
                 return null;
-            double? result = Array.FindAll(ionMobilities, dt => dt.HasDriftTime).Select(dt => dt.DriftTimeMsec.Value).Average();
-            double highEnergyDriftTimeOffsetMsec = Array.FindAll(ionMobilities, dt => dt.HasDriftTime).Select(dt => dt.HighEnergyDriftTimeOffsetMsec).Average();
-            return new DriftTimeInfo(result, highEnergyDriftTimeOffsetMsec);
+            double? result = null;
+            double? ccs = null;
+            var ionMobilityInfos = conversionDriftTimeCcsProvider != null ? Array.FindAll(driftTimes, im => im.HasCollisionalCrossSection) : null;
+            if (ionMobilityInfos != null && ionMobilityInfos.Any())
+            {
+                // Use median CCS to calculate a DT
+                ccs = new Statistics(ionMobilityInfos.Select(im => im.CollisionalCrossSectionSqA.Value)).Median(); // Median is more tolerant of errors than Average
+                result = conversionDriftTimeCcsProvider.DriftTimeFromCCS(ccs.Value, mz, chargedPeptide.Charge);
+            }
+            else
+            {
+                // Use median DT
+                ionMobilityInfos = Array.FindAll(driftTimes, dt => dt.HasDriftTime);
+                if (ionMobilityInfos.Any())
+                    result = new Statistics(ionMobilityInfos.Select(dt => dt.DriftTimeMsec.Value)).Median(); // Median is more tolerant of errors than Average
+            }
+            if (!ionMobilityInfos.Any())
+                return null;
+            var highEnergyDriftTimeOffsetMsec = new Statistics(ionMobilityInfos.Select(dt => dt.HighEnergyDriftTimeOffsetMsec)).Median(); // Median is more tolerant of errors than Average
+            return new DriftTimeInfo(result, ccs, highEnergyDriftTimeOffsetMsec);
        }
 
-        public IDictionary<LibKey, IonMobilityInfo[]> GetIonMobilityDict()
+        public IDictionary<LibKey, DriftTimeInfo[]> GetIonMobilityDict()
         {
-            return _dictChargedPeptideIonMobilities;
+            return _dictChargedPeptideDriftTimeInfos;
         }
     }
 
@@ -1614,48 +1648,6 @@ namespace pwiz.Skyline.Model.Lib
         }
     }
 
-    /// <summary>
-    /// Information about ion mobility - either an actual collisional cross section,
-    /// or a drift time needing translation to collisional cross section 
-    /// </summary>
-    public class IonMobilityInfo : IComparable
-    {
-        public static IonMobilityInfo EMPTY = new IonMobilityInfo(null, null, 0);
-
-        public IonMobilityInfo(double? driftTimeMsec, double? collisionalCrossSectionSqA, double highEnergyDriftTimeOffsetMsec)
-        {
-            DriftTimeMsec = driftTimeMsec;
-            CollisionalCrossSectionSqA = collisionalCrossSectionSqA;
-            HighEnergyDriftTimeOffsetMsec = highEnergyDriftTimeOffsetMsec;
-        }
-        public double? DriftTimeMsec { get; private set; }
-        public double? CollisionalCrossSectionSqA { get; private set; }
-        public double HighEnergyDriftTimeOffsetMsec { get; private set; }
-
-        public bool HasCollisionalCrossSection { get { return (CollisionalCrossSectionSqA ?? 0) != 0; } }
-        public bool HasDriftTime { get { return (DriftTimeMsec ?? 0) != 0; } }
-        public bool IsEmpty { get { return !HasDriftTime && !HasCollisionalCrossSection; } }
-
-        public int CompareTo(object obj)
-        {
-            IonMobilityInfo other = obj as IonMobilityInfo;
-            if (other == null)
-                return 1;
-            if (HasDriftTime)
-            {
-                if (!other.HasDriftTime)
-                    return 1;
-                return DriftTimeMsec.Value.CompareTo(other.DriftTimeMsec.Value);
-            }
-            if (HasCollisionalCrossSection)
-            {
-                if (!other.HasCollisionalCrossSection)
-                    return 1;
-                return CollisionalCrossSectionSqA.Value.CompareTo(other.CollisionalCrossSectionSqA.Value);
-            }
-            return 0;
-        }
-    }
 
     /// <summary>
     /// Information required for spectrum display in a list.
@@ -1668,14 +1660,14 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         public SpectrumInfo(Library library, IsotopeLabelType labelType,
-            string filePath, double? retentionTime, IonMobilityInfo ionMobilityInfo, bool isBest, object spectrumKey)
+            string filePath, double? retentionTime, DriftTimeInfo driftTimeInfo, bool isBest, object spectrumKey)
         {
             Library = library;
             LabelType = labelType;
             SpectrumKey = spectrumKey;
             FilePath = filePath;
             RetentionTime = retentionTime;
-            IonMobilityInfo = ionMobilityInfo;
+            DriftTimeInfo = driftTimeInfo ?? DriftTimeInfo.EMPTY;
             IsBest = isBest;
         }
 
@@ -1700,7 +1692,7 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
         public double? RetentionTime { get; set; }
-        public IonMobilityInfo IonMobilityInfo { get; private set; }
+        public DriftTimeInfo DriftTimeInfo { get; private set; }
         public bool IsBest { get; private set; }
 
         public SpectrumHeaderInfo SpectrumHeaderInfo { get; set; }
@@ -1727,6 +1719,8 @@ namespace pwiz.Skyline.Model.Lib
             public IonType IonType { get; set; }
             public int Ordinal { get; set; }
             public int MassIndex { get; set; }
+            // public DriftTimeFilter driftTime { get; set; } TODO(bspratt) IMS in chromatogram libs?
+
         }
     }
 

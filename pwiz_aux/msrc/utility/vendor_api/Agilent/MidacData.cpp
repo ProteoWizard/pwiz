@@ -184,7 +184,9 @@ blt::local_date_time MidacDataImpl::getAcquisitionTime() const
         else if (acquisitionTime.Year < 1400)
             acquisitionTime = acquisitionTime.AddYears(1400 - acquisitionTime.Year);
 
-        bpt::ptime pt(bdt::time_from_OADATE<bpt::ptime>(acquisitionTime.ToUniversalTime().ToOADate()));
+        acquisitionTime = acquisitionTime.ToUniversalTime();
+        bpt::ptime pt(boost::gregorian::date(acquisitionTime.Year, boost::gregorian::greg_month(acquisitionTime.Month), acquisitionTime.Day),
+            bpt::time_duration(acquisitionTime.Hour, acquisitionTime.Minute, acquisitionTime.Second, bpt::millisec(acquisitionTime.Millisecond).fractional_seconds()));
         return blt::local_date_time(pt, blt::time_zone_ptr()); // keep time as UTC
     }
     CATCH_AND_FORWARD
@@ -225,6 +227,11 @@ int MidacDataImpl::getTotalIonMobilityFramesPresent() const
 FramePtr MidacDataImpl::getIonMobilityFrame(int frameIndex) const
 {
     try {return FramePtr(new FrameImpl(imsReader_, frameIndex));} CATCH_AND_FORWARD
+}
+
+bool MidacDataImpl::canConvertDriftTimeAndCCS() const
+{
+    try { return  imsCcsReader_->HasSingleFieldCcsInformation; } CATCH_AND_FORWARD
 }
 
 double MidacDataImpl::driftTimeToCCS(double driftTimeInMilliseconds, double mz, int charge) const

@@ -14828,12 +14828,32 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The value {0} is not a valid collisional cross section..
+        /// </summary>
+        public static string MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_value__0__is_not_a_valid_collisional_cross_section_ {
+            get {
+                return ResourceManager.GetString("MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_value__0__is_not_a" +
+                        "_valid_collisional_cross_section_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The value {0} is not a valid drift time..
         /// </summary>
         public static string MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_value__0__is_not_a_valid_drift_time_ {
             get {
                 return ResourceManager.GetString("MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_value__0__is_not_a" +
                         "_valid_drift_time_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The value {0} is not a valid high energy offset..
+        /// </summary>
+        public static string MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_value__0__is_not_a_valid_high_energy_offset_ {
+            get {
+                return ResourceManager.GetString("MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_value__0__is_not_a" +
+                        "_valid_high_energy_offset_", resourceCulture);
             }
         }
         
@@ -17103,6 +17123,15 @@ namespace pwiz.Skyline.Properties {
         public static string PasteDlg_ShowNoErrors_No_errors {
             get {
                 return ResourceManager.GetString("PasteDlg_ShowNoErrors_No_errors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Collisional Cross Section (sq A).
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_Collisional_Cross_Section__sq_A_ {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Collisional_Cross_Section__sq_A_", resourceCulture);
             }
         }
         
@@ -24029,6 +24058,16 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Formula_already_c" +
                         "ontains_an_adduct_description__and_it_does_not_match_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid collisional cross section value {0}.
+        /// </summary>
+        public static string SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_collisional_cross_section_value__0_ {
+            get {
+                return ResourceManager.GetString("SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_collision" +
+                        "al_cross_section_value__0_", resourceCulture);
             }
         }
         

@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using pwiz.ProteowizardWrapper;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Results
@@ -35,8 +36,7 @@ namespace pwiz.Skyline.Model.Results
         public SignedMz PrecursorMz;
         public SignedMz ProductMz;
         public double? ExtractionWidth;
-        public double? IonMobilityValue;
-        public double? IonMobilityExtractionWidth;
+        public DriftTimeFilter DriftTimeInfo;
         public Identity Id;  // ID of the associated TransitionDocNode
     }
 
@@ -48,6 +48,8 @@ namespace pwiz.Skyline.Model.Results
         float[] Times { get; }
         TransitionFullScanInfo[] Transitions { get; }
         MsDataSpectrum[] GetMsDataFileSpectraWithCommonRetentionTime(int dataFileSpectrumStartIndex); // Return a collection of consecutive scans with common retention time and increasing drift times (or a single scan if no drift info in file)
+        bool ProvidesCollisionalCrossSectionConverter { get; }
+        double? CCSFromDriftTime(double driftTime, double mz, int charge); // Return a collisional cross section for this drift time at this mz and charge, if reader supports this
         bool Adopt(IScanProvider scanProvider);
     }
 
@@ -67,6 +69,15 @@ namespace pwiz.Skyline.Model.Results
             Transitions = transitions;
 
             _getMsDataFileScanIds = getMsDataFileScanIds;
+        }
+
+        public bool ProvidesCollisionalCrossSectionConverter { get { return _dataFile != null && _dataFile.ProvidesCollisionalCrossSectionConverter; } }
+
+        public double? CCSFromDriftTime(double driftTime, double mz, int charge)
+        {
+            if (_dataFile == null)
+                return null;
+            return _dataFile.CCSFromDriftTime(driftTime, mz, charge);
         }
 
         public bool Adopt(IScanProvider other)

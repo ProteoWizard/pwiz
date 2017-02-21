@@ -26,13 +26,21 @@ using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.RemoteApi.GeneratedCode;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
 {
-    public interface IFilterInstrumentInfo
+    public interface IFilterInstrumentInfo : IConversionDriftTimeCCSProvider
     {
         bool IsWatersFile { get; }
         bool IsAgilentFile { get; }
+    }
+
+    public interface IConversionDriftTimeCCSProvider
+    {
+        bool ProvidesCollisionalCrossSectionConverter { get; }
+        double DriftTimeFromCCS(double ccs, double mz, int charge); // Convert from Collisional Cross Section to Drift Time (Agilent only, at least initially)
+        double CCSFromDriftTime(double dt, double mz, int charge); // Convert from Drift Time to Collisional Cross Section (Agilent only, at least initially)
     }
 
     public sealed class SpectrumFilter : IFilterInstrumentInfo
@@ -54,6 +62,7 @@ namespace pwiz.Skyline.Model.Results
         private readonly bool _isWatersFile;
         private readonly bool _isWatersMse;
         private readonly bool _isAgilentMse;
+        private readonly IConversionDriftTimeCCSProvider _conversionDriftTimeCcsProvider;
         private int _mseLevel;
         private MsDataSpectrum _mseLastSpectrum;
         private int _mseLastSpectrumLevel; // for averaging Agilent stepped CE spectra
@@ -67,8 +76,11 @@ namespace pwiz.Skyline.Model.Results
             _fullScan = document.Settings.TransitionSettings.FullScan;
             _instrument = document.Settings.TransitionSettings.Instrument;
             _acquisitionMethod = _fullScan.AcquisitionMethod;
+            _conversionDriftTimeCcsProvider = instrumentInfo;
             if (instrumentInfo != null)
+            {
                 _isWatersFile = instrumentInfo.IsWatersFile;
+            }
             IsFirstPass = firstPass;
 
             var comparer = PrecursorTextId.PrecursorTextIdComparerInstance;
@@ -85,10 +97,10 @@ namespace pwiz.Skyline.Model.Results
                     {
                         var key = new PrecursorTextId(SignedMz.ZERO, null, ChromExtractor.summed);  // TIC
                         dictPrecursorMzToFilter.Add(key, new SpectrumFilterPair(key, PeptideDocNode.UNKNOWN_COLOR, dictPrecursorMzToFilter.Count,
-                            _instrument.MinTime, _instrument.MaxTime, null, null, 0, _isHighAccMsFilter, _isHighAccProductFilter));
+                            _instrument.MinTime, _instrument.MaxTime, null, null, DriftTimeInfo.EMPTY, _isHighAccMsFilter, _isHighAccProductFilter));
                         key = new PrecursorTextId(SignedMz.ZERO, null, ChromExtractor.base_peak);   // BPC
                         dictPrecursorMzToFilter.Add(key, new SpectrumFilterPair(key, PeptideDocNode.UNKNOWN_COLOR, dictPrecursorMzToFilter.Count,
-                            _instrument.MinTime, _instrument.MaxTime, null, null, 0, _isHighAccMsFilter, _isHighAccProductFilter));
+                            _instrument.MinTime, _instrument.MaxTime, null, null, DriftTimeInfo.EMPTY, _isHighAccMsFilter, _isHighAccProductFilter));
                     }
                 }
                 if (EnabledMsMs)
@@ -136,14 +148,16 @@ namespace pwiz.Skyline.Model.Results
                         double? minTime = _minTime, maxTime = _maxTime;
                         double? startDriftTimeMsec = null, endDriftTimeMsec = null;
                         double windowDT;
-                        double highEnergyDriftTimeOffsetMsec = 0;
-                        DriftTimeInfo centerDriftTime = document.Settings.PeptideSettings.Prediction.GetDriftTime(
-                            nodePep, nodeGroup, libraryIonMobilityInfo, driftTimeMax, out windowDT);
-                        if (centerDriftTime.DriftTimeMsec(false).HasValue)
+                        var ionMobility = document.Settings.PeptideSettings.Prediction.GetDriftTime(
+                            nodePep, nodeGroup, libraryIonMobilityInfo, _conversionDriftTimeCcsProvider, driftTimeMax, out windowDT);
+                        if (ionMobility.DriftTimeMsec.HasValue)
                         {
-                            startDriftTimeMsec = centerDriftTime.DriftTimeMsec(false) - windowDT / 2; // Get the low energy drift time
+                            startDriftTimeMsec = ionMobility.DriftTimeMsec - windowDT / 2; // Get the low energy drift time
                             endDriftTimeMsec = startDriftTimeMsec + windowDT;
-                            highEnergyDriftTimeOffsetMsec = centerDriftTime.HighEnergyDriftTimeOffsetMsec;
+                        }
+                        else
+                        {
+                            ionMobility = DriftTimeInfo.EMPTY;
                         }
 
                         if (canSchedule)
@@ -198,7 +212,7 @@ namespace pwiz.Skyline.Model.Results
                         if (!dictPrecursorMzToFilter.TryGetValue(key, out filter))
                         {
                             filter = new SpectrumFilterPair(key, nodePep.Color, dictPrecursorMzToFilter.Count, minTime, maxTime,
-                                startDriftTimeMsec, endDriftTimeMsec, highEnergyDriftTimeOffsetMsec,
+                                startDriftTimeMsec, endDriftTimeMsec, ionMobility,
                                 _isHighAccMsFilter, _isHighAccProductFilter);
                             dictPrecursorMzToFilter.Add(key, filter);
                         }
@@ -238,6 +252,28 @@ namespace pwiz.Skyline.Model.Results
             }
 
             InitRTLimits();
+        }
+
+        public bool ProvidesCollisionalCrossSectionConverter { get { return _conversionDriftTimeCcsProvider != null;  } }
+
+        public double DriftTimeFromCCS(double ccs, double mz, int charge)
+        {
+            if (ProvidesCollisionalCrossSectionConverter)
+            {
+                return _conversionDriftTimeCcsProvider.DriftTimeFromCCS(ccs, mz, charge);
+            }
+            Assume.IsNotNull(_conversionDriftTimeCcsProvider, "No CCS to DT translation is possible for this data set"); // Not L10N
+            return 0;
+        }
+
+        public double CCSFromDriftTime(double dt, double mz, int charge)
+        {
+            if (ProvidesCollisionalCrossSectionConverter)
+            {
+                return _conversionDriftTimeCcsProvider.CCSFromDriftTime(dt, mz, charge);
+            }
+            Assume.IsNotNull(_conversionDriftTimeCcsProvider, "No DT to CCS translation is possible for this data set"); // Not L10N
+            return 0;
         }
 
         private bool CanSchedule(SrmDocument document, IRetentionTimePredictor retentionTimePredictor)

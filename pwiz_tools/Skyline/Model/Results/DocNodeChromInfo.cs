@@ -171,6 +171,7 @@ namespace pwiz.Skyline.Model.Results
                                         float? retentionTime,
                                         float? startTime,
                                         float? endTime,
+                                        TransitionGroupDriftTimeInfo driftInfo,
                                         float? fwhm,
                                         float? area,
                                         float? areaMs1,
@@ -196,6 +197,7 @@ namespace pwiz.Skyline.Model.Results
             RetentionTime = retentionTime;
             StartRetentionTime = startTime;
             EndRetentionTime = endTime;
+            DriftInfo = driftInfo ?? TransitionGroupDriftTimeInfo.EMPTY;
             Fwhm = fwhm;
             Area = area;
             AreaMs1 = areaMs1;
@@ -222,6 +224,7 @@ namespace pwiz.Skyline.Model.Results
         public float? RetentionTime { get; private set; }
         public float? StartRetentionTime { get; private set; }
         public float? EndRetentionTime { get; private set; }
+        public TransitionGroupDriftTimeInfo DriftInfo { get; private set; }
         public float? Fwhm { get; private set; }
         public float? Area { get; private set; }
         public float? AreaMs1 { get; private set; }
@@ -312,6 +315,7 @@ namespace pwiz.Skyline.Model.Results
                    other.RetentionTime.Equals(RetentionTime) &&
                    other.StartRetentionTime.Equals(StartRetentionTime) &&
                    other.EndRetentionTime.Equals(EndRetentionTime) &&
+                   Equals(other.DriftInfo, DriftInfo) &&
                    other.Fwhm.Equals(Fwhm) &&
                    other.Area.Equals(Area) &&
                    other.AreaMs1.Equals(AreaMs1) &&
@@ -349,6 +353,7 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ (RetentionTime.HasValue ? RetentionTime.Value.GetHashCode() : 0);
                 result = (result*397) ^ (StartRetentionTime.HasValue ? StartRetentionTime.Value.GetHashCode() : 0);
                 result = (result*397) ^ (EndRetentionTime.HasValue ? EndRetentionTime.Value.GetHashCode() : 0);
+                result = (result*397) ^ DriftInfo.GetHashCode();
                 result = (result*397) ^ (Fwhm.HasValue ? Fwhm.Value.GetHashCode() : 0);
                 result = (result*397) ^ (Area.HasValue ? Area.Value.GetHashCode() : 0);
                 result = (result*397) ^ (AreaMs1.HasValue ? AreaMs1.Value.GetHashCode() : 0);
@@ -406,8 +411,10 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public TransitionChromInfo(ChromFileInfoId fileId, int optimizationStep, ChromPeak peak,
+            DriftTimeFilter ionMobility,
             IList<float?> ratios, Annotations annotations, UserSet userSet)
             : this(fileId, optimizationStep, peak.MassError, peak.RetentionTime, peak.StartTime, peak.EndTime,
+                   ionMobility,
                    peak.Area, peak.BackgroundArea, peak.Height, peak.Fwhm,
                    peak.IsFwhmDegenerate, peak.IsTruncated, peak.Identified, 0, 0,
                    ratios, annotations, userSet)
@@ -416,6 +423,7 @@ namespace pwiz.Skyline.Model.Results
 
         public TransitionChromInfo(ChromFileInfoId fileId, int optimizationStep, float? massError,
                                    float retentionTime, float startRetentionTime, float endRetentionTime,
+                                   DriftTimeFilter ionMobility,
                                    float area, float backgroundArea, float height,
                                    float fwhm, bool fwhmDegenerate, bool? truncated,
                                    PeakIdentification identified, short rank, short rankByLevel,
@@ -427,6 +435,7 @@ namespace pwiz.Skyline.Model.Results
             RetentionTime = retentionTime;
             StartRetentionTime = startRetentionTime;
             EndRetentionTime = endRetentionTime;
+            DriftTimeFilter = ionMobility ?? DriftTimeFilter.EMPTY;
             Area = area;
             BackgroundArea = backgroundArea;
             Height = height;
@@ -455,6 +464,7 @@ namespace pwiz.Skyline.Model.Results
         public float RetentionTime { get; private set; }
         public float StartRetentionTime { get; private set; }
         public float EndRetentionTime { get; private set; }
+        public DriftTimeFilter DriftTimeFilter { get; private set; } // The actual drift time and width used for this transition, and the CCS value (if any) for the precursor
         public float Area { get; private set; }
         public float BackgroundArea { get; private set; }
         public float Height { get; private set; }
@@ -616,6 +626,7 @@ namespace pwiz.Skyline.Model.Results
                    other.RetentionTime == RetentionTime &&
                    other.StartRetentionTime == StartRetentionTime &&
                    other.EndRetentionTime == EndRetentionTime &&
+                   Equals(other.DriftTimeFilter, DriftTimeFilter) &&
                    other.Area == Area &&
                    other.BackgroundArea == BackgroundArea &&
                    other.Height == Height &&
@@ -647,6 +658,7 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ RetentionTime.GetHashCode();
                 result = (result*397) ^ StartRetentionTime.GetHashCode();
                 result = (result*397) ^ EndRetentionTime.GetHashCode();
+                result = (result*397) ^ DriftTimeFilter.GetHashCode();
                 result = (result*397) ^ Area.GetHashCode();
                 result = (result*397) ^ BackgroundArea.GetHashCode();
                 result = (result*397) ^ Height.GetHashCode();

@@ -1506,6 +1506,7 @@ namespace pwiz.Skyline.Model.DocSettings
             modified_sequence,
             charge,
             drift_time,
+            ccs,
             high_energy_drift_time_offset
         }
 
@@ -1524,8 +1525,9 @@ namespace pwiz.Skyline.Model.DocSettings
             // Read tag attributes
             ModifiedSequence = reader.GetAttribute(ATTR.modified_sequence);
             Charge = reader.GetIntAttribute(ATTR.charge);
-            DriftTimeInfo = new DriftTimeInfo(reader.GetDoubleAttribute(ATTR.drift_time),
-                                                             reader.GetDoubleAttribute(ATTR.high_energy_drift_time_offset, 0));
+            DriftTimeInfo = new DriftTimeInfo(reader.GetNullableDoubleAttribute(ATTR.drift_time),
+                reader.GetNullableDoubleAttribute(ATTR.ccs),
+                reader.GetDoubleAttribute(ATTR.high_energy_drift_time_offset, 0));
             // Consume tag
             reader.Read();
         }
@@ -1535,8 +1537,9 @@ namespace pwiz.Skyline.Model.DocSettings
             // Write tag attributes
             writer.WriteAttribute(ATTR.modified_sequence, ModifiedSequence);
             writer.WriteAttribute(ATTR.charge, Charge);
-            writer.WriteAttributeNullable(ATTR.drift_time, DriftTimeInfo.DriftTimeMsec(false));
+            writer.WriteAttributeNullable(ATTR.drift_time, DriftTimeInfo.DriftTimeMsec);
             writer.WriteAttribute(ATTR.high_energy_drift_time_offset, DriftTimeInfo.HighEnergyDriftTimeOffsetMsec);
+            writer.WriteAttributeNullable(ATTR.ccs, DriftTimeInfo.CollisionalCrossSectionSqA);
         }
 
         #endregion
@@ -2436,36 +2439,49 @@ namespace pwiz.Skyline.Model.DocSettings
         #endregion
     }
 
-    public interface IIonMobilityInfoProvider
+    public interface IDriftTimeInfoProvider
     {
         string Name { get; }
 
-        DriftTimeInfo GetLibraryMeasuredDriftTimeAndHighEnergyOffset(LibKey peptide);
+        DriftTimeInfo GetLibraryMeasuredDriftTimeAndHighEnergyOffset(LibKey peptide, double mz, IConversionDriftTimeCCSProvider instrumentInfo);
 
-        IDictionary<LibKey, IonMobilityInfo[]> GetIonMobilityDict();
+        IDictionary<LibKey, DriftTimeInfo[]> GetIonMobilityDict();
 
     }
 
     /// <summary>
-    /// Contains drift time information, including details such as
-    /// the effect on drift time in high energy spectra as in Waters MSe
+    /// Contains drift time and its Collisional Cross Section basis (if known), 
+    /// and the effect on drift time in high energy spectra as in Waters MSe
     /// </summary>
-    public class DriftTimeInfo
+    public class DriftTimeInfo : IComparable
     {
-        private double? _driftTimeMsec;
+        public static readonly DriftTimeInfo EMPTY = new DriftTimeInfo(null, null, 0);
+      
 
-        public DriftTimeInfo(double? driftTimeMsec, double highEnergyDriftTimeOffsetMsec)
+        public DriftTimeInfo(double? driftTimeMsec, double? collisionalCrossSectionSqA, 
+            double highEnergyDriftTimeOffsetMsec)
         {
-            _driftTimeMsec = driftTimeMsec;
+            DriftTimeMsec = driftTimeMsec;
+            CollisionalCrossSectionSqA = collisionalCrossSectionSqA;
             HighEnergyDriftTimeOffsetMsec = highEnergyDriftTimeOffsetMsec;
         }
 
+        public double? DriftTimeMsec { get; private set; } 
+        public double? CollisionalCrossSectionSqA { get; private set; } 
         public double HighEnergyDriftTimeOffsetMsec { get; private set; } // As in Waters MSe, where product ions fly a bit faster due to added kinetic energy
 
-        public double? DriftTimeMsec(bool isHighEnergy)
+        public double? GetHighEnergyDriftTimeMsec()
         {
-            return _driftTimeMsec.HasValue ? _driftTimeMsec + (isHighEnergy ? HighEnergyDriftTimeOffsetMsec : 0) : null;
+            if (DriftTimeMsec.HasValue)
+            {
+                return DriftTimeMsec.Value + HighEnergyDriftTimeOffsetMsec;
+            }
+            return null;
         }
+
+        public bool HasCollisionalCrossSection { get { return (CollisionalCrossSectionSqA ?? 0) != 0; } }
+        public bool HasDriftTime { get { return (DriftTimeMsec ?? 0) != 0; } }
+        public bool IsEmpty { get { return !HasDriftTime && !HasCollisionalCrossSection; } }
 
         public override bool Equals(object obj)
         {
@@ -2474,27 +2490,119 @@ namespace pwiz.Skyline.Model.DocSettings
             return 0 == CompareTo(obj as DriftTimeInfo);
         }
 
-        public override int GetHashCode()
+        public DriftTimeInfo ChangeDriftTimeMsec(double? driftTimeMsec)
         {
-            return _driftTimeMsec.GetHashCode()* 397 ^ HighEnergyDriftTimeOffsetMsec.GetHashCode();
+            return new DriftTimeInfo(driftTimeMsec, CollisionalCrossSectionSqA, HighEnergyDriftTimeOffsetMsec);
         }
 
-        public int CompareTo(DriftTimeInfo other)
+        public override int GetHashCode()
         {
-            double diff = 0;
-            if (_driftTimeMsec.HasValue && other._driftTimeMsec.HasValue)
-                diff = _driftTimeMsec.Value - other._driftTimeMsec.Value;
-            else if (_driftTimeMsec.HasValue)
+            unchecked
+            {
+                var hashCode = DriftTimeMsec.GetHashCode();
+                hashCode = (hashCode * 397) ^ CollisionalCrossSectionSqA.GetHashCode();
+                hashCode = (hashCode * 397) ^ HighEnergyDriftTimeOffsetMsec.GetHashCode();
+                return hashCode;
+            }
+        }
+
+        public int CompareTo(object obj)
+        {
+            DriftTimeInfo other = obj as DriftTimeInfo;
+            if (other == null)
                 return 1;
-            else if (other._driftTimeMsec.HasValue)
-                return -1;
-            if (diff == 0)
-                diff =  HighEnergyDriftTimeOffsetMsec - other.HighEnergyDriftTimeOffsetMsec;
+            var val = Nullable.Compare(CollisionalCrossSectionSqA, other.CollisionalCrossSectionSqA);
+            if (val != 0)
+                return val;
+            val = Nullable.Compare(DriftTimeMsec, other.DriftTimeMsec);
+            if (val != 0)
+                return val;
+            var diff =  HighEnergyDriftTimeOffsetMsec - other.HighEnergyDriftTimeOffsetMsec;
             if (diff > 0)
                 return 1;
             else if (diff < 0)
                 return -1;
             return 0;
+        }
+    }
+
+    /// <summary>
+    /// Contains the drift time and window used to filter scans, and and CCS basis for the drift time if known
+    /// </summary>
+    public class DriftTimeFilter : IComparable
+    {
+        public static readonly DriftTimeFilter EMPTY = new DriftTimeFilter(null, null, null);
+
+        public static DriftTimeFilter GetDriftTimeFilter(double? driftTimeMsec,
+            double? driftTimeExtractionWindowWidthMsec,
+            double? collisionalCrossSectionSqA)
+        {
+            if (!driftTimeMsec.HasValue
+                && !driftTimeExtractionWindowWidthMsec.HasValue
+                && !collisionalCrossSectionSqA.HasValue)
+            {
+                return EMPTY;
+            }
+            return new DriftTimeFilter(driftTimeMsec, 
+                driftTimeExtractionWindowWidthMsec,
+                collisionalCrossSectionSqA);
+        }
+
+        private DriftTimeFilter(double? driftTimeMsec,
+            double? driftTimeExtractionWindowWidthMsec,
+            double? collisionalCrossSectionSqA)
+        {
+            DriftTimeMsec = driftTimeMsec;
+            DriftTimeExtractionWindowWidthMsec = driftTimeExtractionWindowWidthMsec;
+            CollisionalCrossSectionSqA = collisionalCrossSectionSqA;
+        }
+
+        public double? DriftTimeMsec { get; private set; }
+        public double? DriftTimeExtractionWindowWidthMsec { get; private set; }
+        public double? CollisionalCrossSectionSqA { get; private set; } // The CCS value used to get the drift time, if any
+
+        public bool HasDriftTime { get { return (DriftTimeMsec ?? 0) != 0; } }
+        public bool IsEmpty { get { return !HasDriftTime; } }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return 0 == CompareTo(obj as DriftTimeFilter);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = DriftTimeMsec.GetHashCode();
+                hashCode = (hashCode * 397) ^ DriftTimeExtractionWindowWidthMsec.GetHashCode();
+                hashCode = (hashCode * 397) ^ CollisionalCrossSectionSqA.GetHashCode();
+                return hashCode;
+            }
+        }
+
+        public int CompareTo(object obj)
+        {
+            var other = obj as DriftTimeFilter;
+            if (other == null)
+                return 1;
+            var val = Nullable.Compare(DriftTimeMsec, other.DriftTimeMsec);
+            if (val != 0)
+                return val;
+            val = Nullable.Compare(CollisionalCrossSectionSqA, other.CollisionalCrossSectionSqA);
+            if (val != 0)
+                return val;
+            return Nullable.Compare(DriftTimeExtractionWindowWidthMsec, other.DriftTimeExtractionWindowWidthMsec);
+        }
+
+        public override string ToString()
+        {
+            if (CollisionalCrossSectionSqA.HasValue)
+            {
+                return string.Format("dt{0:F04}(ccs{2:F04})/w{1:F04}", DriftTimeMsec, DriftTimeExtractionWindowWidthMsec, CollisionalCrossSectionSqA); // Not L10N
+            }
+            return string.Format("dt{0:F04}/w{1:F04}", DriftTimeMsec, DriftTimeExtractionWindowWidthMsec); // Not L10N
         }
     }
 
@@ -2701,7 +2809,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 if (MeasuredDriftTimePeptides.TryGetValue(chargedPeptide, out dt))
                     return dt;
             }
-            return new DriftTimeInfo(null, 0);
+            return DriftTimeInfo.EMPTY;
         }
 
         public IDictionary<LibKey, DriftTimeInfo> MeasuredDriftTimePeptides
@@ -2793,18 +2901,32 @@ namespace pwiz.Skyline.Model.DocSettings
             return null;
         }
 
-        public DriftTimeInfo GetDriftTimeInfo(LibKey peptide)
+        public DriftTimeInfo GetDriftTimeInfo(LibKey peptide, IConversionDriftTimeCCSProvider conversionDriftTimeCcsProvider)
+        {
+            var ionMobility = GetIonMobilityInfo(peptide);
+            // Convert from CCS to DT if possible
+            if (conversionDriftTimeCcsProvider != null && ionMobility != null && ionMobility.HasCollisionalCrossSection && peptide.PrecursorMz.HasValue)
+            {
+                var driftTimeMsec = conversionDriftTimeCcsProvider.DriftTimeFromCCS(ionMobility.CollisionalCrossSectionSqA.Value,
+                    peptide.PrecursorMz.Value, peptide.Charge);
+                ionMobility = new DriftTimeInfo(driftTimeMsec, ionMobility.CollisionalCrossSectionSqA, ionMobility.HighEnergyDriftTimeOffsetMsec);
+            }
+            return ionMobility;
+        }
+
+        public DriftTimeInfo GetIonMobilityInfo(LibKey peptide)
         {
             // Do we see this in our list of observed drift times?
+            DriftTimeInfo driftTime = null;
+            var found = false;
             if (MeasuredDriftTimePeptides != null)
             {
-                DriftTimeInfo driftTime;
                 if (MeasuredDriftTimePeptides.TryGetValue(peptide, out driftTime))
-                    return driftTime;
+                    found = true;
             }
-            if (IonMobilityLibrary != null && !IonMobilityLibrary.IsNone)
+            if (!found && IonMobilityLibrary != null && !IonMobilityLibrary.IsNone)
             {
-                ChargeRegressionLine regressionLine = GetRegressionLine(peptide.Charge); 
+                ChargeRegressionLine regressionLine = GetRegressionLine(peptide.Charge);
                 if (regressionLine != null)
                 {
                     if (!IonMobilityLibrary.IsUsable)
@@ -2812,22 +2934,22 @@ namespace pwiz.Skyline.Model.DocSettings
                         // First access?  Load the library.
                         IonMobilityLibrary = IonMobilityLibrary.Initialize(null);
                     }
-                    return IonMobilityLibrary.GetDriftTimeInfo(peptide.Sequence, regressionLine); //  regressionLine.GetY(peptideInfo.CollisionalCrossSection) or null;
+                    driftTime = IonMobilityLibrary.GetDriftTimeInfo(peptide.Sequence, regressionLine); //  regressionLine.GetY(peptideInfo.CollisionalCrossSection) or null;
                 }
             }
-            return null;
+            return driftTime;
         }
 
         /// <summary>
         /// Get the drift time in msec for the charged peptide, and the width of the window
         /// centered on that based on the drift time predictor's claimed resolving power
         /// </summary>
-        public DriftTimeInfo GetDriftTimeInfo(LibKey peptide, double driftTimeMax, out double dtWindowWidthMsec)
+        public DriftTimeInfo GetDriftTimeInfo(LibKey peptide, IConversionDriftTimeCCSProvider conversionDriftTimeCcsProvider, double driftTimeMax, out double dtWindowWidthMsec)
         {
-            DriftTimeInfo driftTime = GetDriftTimeInfo(peptide);
+            DriftTimeInfo driftTime = GetDriftTimeInfo(peptide, conversionDriftTimeCcsProvider);
             if (driftTime != null)
             {
-                dtWindowWidthMsec = WindowWidthCalculator.WidthAt(driftTime.DriftTimeMsec(false) ?? 0, driftTimeMax); 
+                dtWindowWidthMsec = WindowWidthCalculator.WidthAt(driftTime.DriftTimeMsec ?? 0, driftTimeMax); 
             }
             else
             {

@@ -708,7 +708,8 @@ namespace pwiz.Skyline.Model.Results
                                                       originalHeader.Flags,
                                                       originalHeader.StatusId,
                                                       originalHeader.StatusRank,
-                                                      originalHeader.StartTime, originalHeader.EndTime);
+                                                      originalHeader.StartTime, originalHeader.EndTime,
+                                                      originalHeader.CollisionalCrossSection);
                 _chromGroupHeaderInfos.Add(header);
             }
 

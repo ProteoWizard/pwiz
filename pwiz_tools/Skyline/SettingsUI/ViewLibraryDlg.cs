@@ -727,7 +727,7 @@ namespace pwiz.Skyline.SettingsUI
                             {
                                 labelRT.Text = Resources.ViewLibraryDlg_UpdateUI_RT + COLON_SEP + rt;
                             }
-                            IonMobilityInfo dt = bestSpectrum.IonMobilityInfo;
+                            DriftTimeInfo dt = bestSpectrum.DriftTimeInfo;
                             if (dt != null && !dt.IsEmpty)
                             {
                                 var dtText = string.Empty;

@@ -473,6 +473,7 @@ namespace pwiz.Skyline.Model.Databinding
                     columnsToRemove.Add(PropertyPath.Root.Property("DecoyMzShift"));
                     columnsToRemove.Add(PropertyPath.Root.Property("ExplicitDriftTimeMsec"));
                     columnsToRemove.Add(PropertyPath.Root.Property("ExplicitDriftTimeHighEnergyOffsetMsec"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitCollisionalCrossSection"));
                     columnsToRemove.Add(PropertyPath.Root.Property("ExplicitCompensationVoltage"));
                     columnsToRemove.Add(PropertyPath.Root.Property("ExplicitDeclusteringPotential"));
                     columnsToRemove.Add(PropertyPath.Root.Property("ExplicitSLens"));

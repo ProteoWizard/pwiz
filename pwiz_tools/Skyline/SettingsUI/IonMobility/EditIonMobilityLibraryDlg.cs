@@ -638,7 +638,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
 
 
-        private static IEnumerable<IIonMobilityInfoProvider> GetIonMobilityProviders(Library library)
+        private static IEnumerable<IDriftTimeInfoProvider> GetIonMobilityProviders(Library library)
         {
             int? fileCount = library.FileCount;
             if (!fileCount.HasValue)
@@ -646,14 +646,14 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
             for (int i = 0; i < fileCount.Value; i++)
             {
-                LibraryIonMobilityInfo ionMobilities;
-                if (library.TryGetIonMobilities(i, out ionMobilities))
-                    yield return ionMobilities;
+                LibraryDriftTimeInfo driftTimes;
+                if (library.TryGetDriftTimeInfos(i, out driftTimes))
+                    yield return driftTimes;
             }
         }
 
         public static IEnumerable<ValidatingIonMobilityPeptide> ConvertDriftTimesToCollisionalCrossSections(IProgressMonitor monitor,
-                                      IEnumerable<IIonMobilityInfoProvider> providers,
+                                      IEnumerable<IDriftTimeInfoProvider> providers,
                                       int countProviders,
                                       IDictionary<int, RegressionLine> regressions)
         {

@@ -1182,6 +1182,7 @@
     <Compile Include="Model\TransitionDocNode.cs" />
     <Compile Include="Model\TransitionGroup.cs" />
     <Compile Include="Model\TransitionGroupDocNode.cs" />
+    <Compile Include="Model\TransitionGroupDriftTimeInfo.cs" />
     <Compile Include="Model\Undo.cs" />
     <Compile Include="Controls\UndoRedoButtons.cs" />
     <Compile Include="Model\V01\Sequence.cs" />

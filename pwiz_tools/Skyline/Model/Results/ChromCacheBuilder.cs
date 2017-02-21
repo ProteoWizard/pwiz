@@ -1353,7 +1353,8 @@ namespace pwiz.Skyline.Model.Results
                     chromDataSet.StatusId,
                     chromDataSet.StatusRank,
                     chromDataSet.MinRawTime,
-                    chromDataSet.MaxRawTime);
+                    chromDataSet.MaxRawTime,
+                    chromDataSet.CollisionalCrossSection);
 
                 header.CalcTextIdIndex(chromDataSet.ModifiedSequence, _dictSequenceToByteIndex, _listTextIdBytes);
 
@@ -1362,8 +1363,8 @@ namespace pwiz.Skyline.Model.Results
                 {
                     var chromTran = new ChromTransition(chromData.Key.Product,
                         chromData.Key.ExtractionWidth,
-                        chromData.Key.IonMobilityValue,
-                        chromData.Key.IonMobilityExtractionWidth,
+                        (float)(chromData.Key.DriftFilter.DriftTimeMsec??0),
+                        (float)(chromData.Key.DriftFilter.DriftTimeExtractionWindowWidthMsec ?? 0),
                         chromData.Key.Source);
                     if (massErrors != null && chromData.MassErrors10X == null)
                     {

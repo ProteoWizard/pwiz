@@ -19,17 +19,23 @@
 
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.SettingsUI.IonMobility;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
@@ -39,7 +45,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
     /// Verify consistent import of Agilent IMS ramped CE data in concert with SpectrumMill.
     /// </summary>
     [TestClass]
-    public class PerfImportAgilentSpectrumMillRampedIMSTest : AbstractFunctionalTest
+    public class PerfImportAgilentSpectrumMillRampedIMSTest : AbstractFunctionalTestEx
     {
 
         [TestMethod]
@@ -48,7 +54,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         {
             // RunPerfTests = true; // Uncomment this to force test to run in UI
             Log.AddMemoryAppender();
-            TestFilesZip = "https://skyline.gs.washington.edu/perftests/PerfImportAgilentSpectrumMillRampedIMS.zip";
+            TestFilesZip = "https://skyline.gs.washington.edu/perftests/PerfImportAgilentSpectrumMillRampedIMS2.zip";
             TestFilesPersistent = new[] { ".d" }; // List of file basenames that we'd like to unzip alongside parent zipFile, and (re)use in place
 
             MsDataFileImpl.PerfUtilFactory.IssueDummyPerfUtils = false; // Turn on performance measurement
@@ -67,23 +73,45 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             return TestFilesDirs[0].GetTestPath(relativePath);
         }
 
+        private string CheckDelta(double a, double b, double delta, string what, string key)
+        {
+            return (Math.Abs(a - b) > delta)
+                ? what + " " + string.Format("{0:F02}", a) + " differs from expected " + string.Format("{0:F02}", b) + " by " + string.Format("{0:F02}", Math.Abs(a - b)) + " for " + key + "\n"
+                : string.Empty;
+
+        }
+
+        private string CheckDeltaPct(double a, double b, double delta, string what, string key)
+        {
+            double pctDiff = (a == 0) ? ((b == 0) ? 0 : 100) : (100*Math.Abs(a - b)/a);
+            return (pctDiff > delta)
+                ? what + " " + string.Format("{0:F02}", a) + " differs from expected " + string.Format("{0:F02}", b) + " by " + string.Format("{0:F02}", pctDiff) + "% for " + key + "\n"
+                : string.Empty;
+
+        }
 
         protected override void DoTest()
         {
-            bool useDriftTimes = true; // false;  // If false, don't use any drift information in chromatogram extraction
-            bool CCSonly = false; // If true, force conversion from CCS to DT
-            // ReSharper disable ConditionIsAlwaysTrueOrFalse
-            Testit(useDriftTimes, CCSonly);
+            LibraryDriftTimeInfo driftInfoExplicitDT= null;
+            Testit(true, ref driftInfoExplicitDT); // Read both CCS and DT
+            Testit(true, ref driftInfoExplicitDT); // Force conversion from CCS to DT, compare to previously read DT
+            Testit(false, ref driftInfoExplicitDT); // Compare our ability to locate drift peaks, and derive CCS from those, with explicitly provided values
             // ReSharper restore ConditionIsAlwaysTrueOrFalse
         }
 
         private void Testit(
             bool useDriftTimes, // If false, don't use any drift information in chromatogram extraction
-            bool CCSonly // If true, force conversion from CCS to DT
+            ref LibraryDriftTimeInfo driftInfoExplicitDT
             )
         {
-            string skyfile = TestFilesDir.GetTestPath("test.sky");
-            RunUI(() => SkylineWindow.SaveDocument(skyfile));
+            bool CCSonly = driftInfoExplicitDT != null;  // If true, force conversion from CCS to DT
+            var ext = useDriftTimes ? (CCSonly ? "CCS" : "DT") : "train";
+            string skyfile = TestFilesDir.GetTestPath("test_" + ext + ".sky");
+            RunUI(() =>
+            {
+                SkylineWindow.NewDocument(true);
+                SkylineWindow.SaveDocument(skyfile);
+            });
 
 
 
@@ -102,31 +130,28 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
             // Launch import peptide search wizard
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
+            const string basename = "40minG_WBP_wide_z2-3_mid_BSA_5pmol_01";
+            var searchResults = GetTestPath(basename+".pep.xml");
 
-            string one = GetTestPath("40mingradient_IMS_AllIons_ramped_01.pep.xml");
-            string two = GetTestPath("40mingradient_IMS_AllIons_ramped_02.pep.xml");
-
-            string[] searchFiles = { one,two };
             var doc = SkylineWindow.Document;
 
-            if (CCSonly)
+            if (CCSonly || !useDriftTimes)
             {
                 // Hide the drift time info provided by SpectrumMill, so we have to convert from CCS
-                foreach (var file in searchFiles)
-                {
-                    var mzxmlFile = file.Replace("pep.xml", "mzXML");
-                    var fileContents = File.ReadAllText(mzxmlFile);
-                    fileContents = fileContents.Replace(" DT=", " xx="); 
-                    File.WriteAllText(mzxmlFile, fileContents);                    
-                }
+                var mzxmlFile = searchResults.Replace("pep.xml", "mzXML");
+                var fileContents = File.ReadAllText(mzxmlFile);
+                fileContents = fileContents.Replace(" DT=", " xx="); 
+                if (!useDriftTimes)
+                    fileContents = fileContents.Replace(" CCS=", " xxx=");
+                File.WriteAllText(mzxmlFile, fileContents);                    
             }
 
-
+            var searchResultsList = new[] {searchResults};
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage ==
                                 ImportPeptideSearchDlg.Pages.spectra_page);
-                importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(searchFiles);
+                importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(searchResultsList);
                 importPeptideSearchDlg.BuildPepSearchLibControl.CutOffScore = 0.95;
                 importPeptideSearchDlg.BuildPepSearchLibControl.FilterForDocumentPeptides = false;
             });
@@ -150,12 +175,20 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 importResultsControl.ExcludeSpectrumSourceFiles = true;
                 importResultsControl.UpdateResultsFiles(new []{TestFilesDirs[0].PersistentFilesDir}, true); // Go look in the persistent files dir
             });
-            var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
-            RunUI(() =>
+            if (searchResultsList.Length > 1)
             {
-                importResultsNameDlg.NoDialog();
-            });
-            WaitForClosedForm(importResultsNameDlg);
+                // Deal with the common name start dialog
+                var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
+                RunUI(() =>
+                {
+                    importResultsNameDlg.NoDialog();
+                });
+                WaitForClosedForm(importResultsNameDlg);
+            }
+            else
+            {
+                RunUI(() => importPeptideSearchDlg.ClickNextButtonNoCheck());
+            }
             // Modifications are already set up, so that page should get skipped.
             RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.PrecursorCharges = new []{2,3,4,5});
             RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.PrecursorMassAnalyzer = FullScanMassAnalyzerType.tof);
@@ -172,19 +205,123 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             WaitForDocumentChangeLoaded(doc, 15 * 60 * 1000); // 15 minutes
             var doc1 = WaitForDocumentLoaded(400000);
 
-            AssertEx.IsDocumentState(doc1, null, 1, 40, 48, 144);
+            AssertEx.IsDocumentState(doc1, null, 1, 34, 45, 135);
             loadStopwatch.Stop();
             DebugLog.Info("load time = {0}", loadStopwatch.ElapsedMilliseconds);
+            var errmsg = "";
+            if (!useDriftTimes)
+            {
+                // Inspect the loaded data directly to derive DT and CCS
+                // Verify ability to extract predictions from raw data
+                var peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(
+                    () => SkylineWindow.ShowPeptideSettingsUI(PeptideSettingsUI.TABS.Prediction));
+
+                // Simulate user picking Edit Current from the Drift Time Predictor combo control
+                var driftTimePredictorDlg = ShowDialog<EditDriftTimePredictorDlg>(peptideSettingsDlg.AddDriftTimePredictor);
+                RunUI(() =>
+                {
+                    driftTimePredictorDlg.SetPredictorName("test");
+                    driftTimePredictorDlg.SetResolvingPower(50);
+                    driftTimePredictorDlg.GetDriftTimesFromResults();
+                    driftTimePredictorDlg.OkDialog();
+                });
+                WaitForClosedForm(driftTimePredictorDlg);
+                RunUI(() =>
+                {
+                    peptideSettingsDlg.OkDialog();
+                });
+                WaitForClosedForm(peptideSettingsDlg);
+
+                var document = SkylineWindow.Document;
+                var measuredDTs = document.Settings.PeptideSettings.Prediction.DriftTimePredictor.MeasuredDriftTimePeptides;
+                Assert.IsNotNull(driftInfoExplicitDT, "driftInfoExplicitDT != null");
+                var explicitDTs = driftInfoExplicitDT.GetIonMobilityDict();
+
+                string errMsgAll = string.Empty;
+
+                // A handful of peptides that really should have been trained on a clean sample
+                var expectedDiffs = new Dictionary<string, double>
+                {
+                    {"LC[+57.0]VLHEK++", 18.09 }
+                };
+                foreach (var pair in doc1.PeptidePrecursorPairs)
+                {
+                    string errMsg = string.Empty;
+                    var key = new LibKey(pair.NodePep.ModifiedSequence, pair.NodeGroup.PrecursorCharge);
+                    double tolerCCS = 5;
+                    if (expectedDiffs.ContainsKey(key.ToString()))
+                    {
+                        tolerCCS = expectedDiffs[key.ToString()] + .1;
+                    }
+                    if (!explicitDTs.ContainsKey(key))
+                    {
+                        errMsg += "Could not locate explicit IMS info for " + key +"\n";
+                    }
+                    var given = explicitDTs[key][0];
+                    var measured = measuredDTs[key];
+                    var msg = CheckDeltaPct(given.CollisionalCrossSectionSqA ?? 0, measured.CollisionalCrossSectionSqA ?? 0, tolerCCS, "measured CCS", key.ToString());
+                    if (!string.IsNullOrEmpty(msg))
+                    {
+                        errMsg += msg + CheckDeltaPct(given.DriftTimeMsec.Value, measured.DriftTimeMsec.Value, -1, "measured drift time", key.ToString());
+                    }
+                    else
+                    {
+                        errMsg += CheckDelta(given.DriftTimeMsec.Value, measured.DriftTimeMsec.Value, 10.0, "measured drift time", key.ToString());
+                    }
+                    errMsg += CheckDelta(given.HighEnergyDriftTimeOffsetMsec, measured.HighEnergyDriftTimeOffsetMsec, 2.0, "measured drift time high energy offset", key.ToString());
+                    if (!string.IsNullOrEmpty(errMsg))
+                        errMsgAll += "\n" + errMsg;
+                }
+                if (!string.IsNullOrEmpty(errMsgAll))
+                    Assert.Fail(errMsgAll);
+                return;
+            }
+
+            LibraryDriftTimeInfo libraryDriftTimeInfo;
+            doc1.Settings.PeptideSettings.Libraries.Libraries.First().TryGetDriftTimeInfos(0, out libraryDriftTimeInfo);
+            if (driftInfoExplicitDT == null)
+            {
+                driftInfoExplicitDT = libraryDriftTimeInfo;
+            }
+            else
+            {
+                var instrumentInfo = new DataFileInstrumentInfo(new MsDataFileImpl(GetTestPath(basename+".d")));
+                var dictExplicitDT = driftInfoExplicitDT.GetIonMobilityDict();
+                foreach (var pep in doc1.Peptides)
+                {
+                    foreach (var nodeGroup in pep.TransitionGroups)
+                    {
+                        double windowDT;
+                        var calculatedDriftTime = doc1.Settings.PeptideSettings.Prediction.GetDriftTime(
+                            pep, nodeGroup, libraryDriftTimeInfo, instrumentInfo, 0, out windowDT);
+                        var libKey = new LibKey(pep.ModifiedSequence, nodeGroup.PrecursorCharge);
+                        DriftTimeInfo[] infoValueExplicitDT;
+                        if (!dictExplicitDT.TryGetValue(libKey, out infoValueExplicitDT))
+                        {
+                            errmsg += "No driftinfo value found for " + libKey.Key + "\n";
+                        }
+                        else
+                        {
+                            var ionMobilityInfo = infoValueExplicitDT[0];
+                            if (Math.Abs((ionMobilityInfo.DriftTimeMsec??0) - (calculatedDriftTime.DriftTimeMsec??0))>1)
+                            {
+                                errmsg += String.Format("calculated DT ({0}) and explicit DT ({1}, CCS={4}) do not agree (abs delta = {2}) for {3}\n",
+                                    calculatedDriftTime.DriftTimeMsec, ionMobilityInfo.DriftTimeMsec, 
+                                    Math.Abs((calculatedDriftTime.DriftTimeMsec??0) - (ionMobilityInfo.DriftTimeMsec??0)), libKey,
+                                    ionMobilityInfo.CollisionalCrossSectionSqA??0);
+                            }
+                        }
+                    }
+                }
+            }
 
             float tolerance = (float)doc1.Settings.TransitionSettings.Instrument.MzMatchTolerance;
             double maxHeight = 0;
             var results = doc1.Settings.MeasuredResults;
+            var numPeaks = 
+                new[] { 8, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 9, 10, 7, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 9, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 9, 9, 10, 10, 8, 10, 10, 10, 10, 10 } ;
 
-            var numPeaks = useDriftTimes ?
-                new[] { 10, 10, 10, 10, 10, 6, 6, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 7, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 8, 10, 10, 10 } :
-                new[] { 10, 10, 10, 10, 9, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 9, 10 };
             int npIndex = 0;
-            var errmsg = "";
             foreach (var pair in doc1.PeptidePrecursorPairs)
             {
                 ChromatogramGroupInfo[] chromGroupInfo;
@@ -203,7 +340,53 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 }
             }
             Assert.IsTrue(errmsg.Length == 0, errmsg);
-            Assert.AreEqual(useDriftTimes ? 2194736 : 4912494, maxHeight, 1);
-        }  
+            Assert.AreEqual(2265204, maxHeight, 1);
+
+            // Does CCS show up in reports?
+            TestReports(doc1);
+
+            // And verify roundtrip of ion mobility 
+            AssertEx.RoundTrip(SkylineWindow.Document);
+            RunUI(() =>
+            {
+                SkylineWindow.SaveDocument(skyfile);
+                SkylineWindow.NewDocument(true);
+                SkylineWindow.OpenFile(skyfile);
+            });
+            TestReports(SkylineWindow.Document);
+        }
+
+        private void TestReports(SrmDocument doc1)
+        {
+            // Verify reports working for CCS
+            var documentGrid = ShowDialog<DocumentGridForm>(() => SkylineWindow.ShowDocumentGrid(true));
+            EnableDocumentGridColumns(documentGrid,
+                Resources.SkylineViewContext_GetTransitionListReportSpec_Small_Molecule_Transition_List,
+                doc1.PeptideTransitionCount,
+                new[]
+                {
+                    "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.CollisionalCrossSection",
+                    "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.DriftTimeMS1",
+                    "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.DriftTimeFragment",
+                    "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.DriftTimeWindow"
+                });
+            CheckFieldByName(documentGrid, "DriftTimeMS1", 18.43);
+            CheckFieldByName(documentGrid, "DriftTimeFragment", null); // Document is all precursor
+            CheckFieldByName(documentGrid, "DriftTimeWindow", 0.74);
+            CheckFieldByName(documentGrid, "CollisionalCrossSection", 292.4);
+            // And clean up after ourselves
+            RunUI(() => documentGrid.Close());
+        }
+
+        private void CheckFieldByName(DocumentGridForm documentGrid, string name, double? expected)
+        {
+            var col = FindDocumentGridColumn(documentGrid, "Results!*.Value.PrecursorResult."+name);
+            RunUI(() =>
+            {
+                var val = documentGrid.DataGridView.Rows[0].Cells[col.Index].Value as double?;
+                Assert.AreEqual(expected.HasValue, val.HasValue, name);
+                Assert.AreEqual(expected??0, val??0, 0.005, name);
+            });
+        }
     }
 }

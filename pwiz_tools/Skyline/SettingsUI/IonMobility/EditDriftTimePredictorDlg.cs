@@ -45,6 +45,8 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
         public const int COLUMN_SEQUENCE = 0;
         public const int COLUMN_CHARGE = 1;
         public const int COLUMN_DRIFT_TIME_MSEC = 2;
+        public const int COLUMN_CCS = 3;
+        public const int COLUMN_DRIFT_TIME_HIGH_ENERGY_OFFSET = 4;
 
 
         public EditDriftTimePredictorDlg(IEnumerable<DriftTimePredictor> existing)
@@ -55,7 +57,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             InitializeComponent();
 
 
-            // TODO: ion mobility libraries are more complex than initially thought - put this off until after summer 2014 release
+            // TODO: ion mobility libraries are more complex than initially thought - leave these conversions to the mass spec vendors for now
             labelIonMobilityLibrary.Visible = comboLibrary.Visible = false;
  
             Icon = Resources.Skyline;
@@ -116,16 +118,21 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 cbOffsetHighEnergySpectra.Checked = hasHighEnergyOffsets;
                 foreach (var p in predictor.MeasuredDriftTimePeptides)
                 {
+                    var ccs = p.Value.CollisionalCrossSectionSqA.HasValue
+                        ? string.Format("{0:F04}",p.Value.CollisionalCrossSectionSqA.Value) // Not L10N
+                        : string.Empty;
                     if (hasHighEnergyOffsets)
                         gridMeasuredDriftTimes.Rows.Add(p.Key.Sequence,
                             p.Key.Charge.ToString(LocalizationHelper.CurrentCulture),
-                            (p.Value.DriftTimeMsec(false) ?? 0).ToString(LocalizationHelper.CurrentCulture),
+                            (p.Value.DriftTimeMsec ?? 0).ToString(LocalizationHelper.CurrentCulture),
+                            ccs,
                             p.Value.HighEnergyDriftTimeOffsetMsec.ToString(LocalizationHelper.CurrentCulture)
                             );
                     else
                         gridMeasuredDriftTimes.Rows.Add(p.Key.Sequence,
                             p.Key.Charge.ToString(LocalizationHelper.CurrentCulture),
-                            (p.Value.DriftTimeMsec(false) ?? 0).ToString(LocalizationHelper.CurrentCulture)
+                            (p.Value.DriftTimeMsec ?? 0).ToString(LocalizationHelper.CurrentCulture),
+                            ccs
                             );
                 }
             }
@@ -162,12 +169,12 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             labelConversionParameters.Enabled = gridRegression.Enabled =
                 labelConversionParameters.Visible = gridRegression.Visible =
                     _showRegressions;
-            gridMeasuredDriftTimes.Columns[3].Visible = cbOffsetHighEnergySpectra.Checked;
+            gridMeasuredDriftTimes.Columns[COLUMN_DRIFT_TIME_HIGH_ENERGY_OFFSET].Visible = cbOffsetHighEnergySpectra.Checked;
 
             if (oldVisible != _showRegressions)
             {
                 int adjust = (gridRegression.Size.Height + 2*labelConversionParameters.Size.Height) * (_showRegressions ? 1 : -1);
-                if (!labelIonMobilityLibrary.Visible) // TODO: ion mobility libraries are more complex than initially thought - put this off until after summer 2014 release
+                if (!labelIonMobilityLibrary.Visible) // TODO: ion mobility libraries are more complex than initially thought - leave these conversions to the mass spec vendors for now
                     adjust -= (2*labelIonMobilityLibrary.Size.Height + comboLibrary.Size.Height);
                 Size = new Size(Size.Width, Size.Height + adjust);
                 gridMeasuredDriftTimes.Size = new Size(gridMeasuredDriftTimes.Size.Width, gridMeasuredDriftTimes.Size.Height - adjust);
@@ -481,24 +488,28 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                     continue;
 
                 string seq;
-                if (!ValidateSequence(e, row.Cells[0], out seq))
+                if (!ValidateSequence(e, row.Cells[EditDriftTimePredictorDlg.COLUMN_SEQUENCE], out seq))
                     return null;
 
                 int charge;
-                if (!ValidateCharge(e, row.Cells[1], out charge))
+                if (!ValidateCharge(e, row.Cells[EditDriftTimePredictorDlg.COLUMN_CHARGE], out charge))
                     return null;
 
                 double driftTime;
-                if (!ValidateDriftTime(e, row.Cells[2], out driftTime))
+                if (!ValidateDriftTime(e, row.Cells[EditDriftTimePredictorDlg.COLUMN_DRIFT_TIME_MSEC], out driftTime))
+                    return null;
+
+                double? ccs;
+                if (!ValidateCCS(e, row.Cells[EditDriftTimePredictorDlg.COLUMN_CCS], out ccs))
                     return null;
 
                 double highEnergyDriftTimeOffset = 0; // Set default value in case user does not provide one
-                if (useHighEnergyOffsets && !ValidateHighEnergyDriftTimeOffset(e, row.Cells[3], out highEnergyDriftTimeOffset))
+                if (useHighEnergyOffsets && !ValidateHighEnergyDriftTimeOffset(e, row.Cells[EditDriftTimePredictorDlg.COLUMN_DRIFT_TIME_HIGH_ENERGY_OFFSET], out highEnergyDriftTimeOffset))
                     return null;
 
                 try
                 {
-                    dict.Add(new LibKey(seq,charge), new DriftTimeInfo(driftTime, highEnergyDriftTimeOffset));
+                    dict.Add(new LibKey(seq,charge), new DriftTimeInfo(driftTime, ccs, highEnergyDriftTimeOffset));
                 }
                 // ReSharper disable once EmptyGeneralCatchClause
                 catch
@@ -536,7 +547,18 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             if (!ValidateCell(e, cell, Convert.ToDouble, out driftTime, true))
                 return false;
 
-            // TODO: Range check.
+            return true;
+        }
+
+        private bool ValidateCCS(CancelEventArgs e, DataGridViewCell cell, out double? ccs)
+        {
+            double val;
+            if (!ValidateCell(e, cell, Convert.ToDouble, out val, false))
+            {
+                ccs = null;
+                return false;
+            }
+            ccs = val;
 
             return true;
         }
@@ -545,8 +567,6 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
         {
             if (!ValidateCell(e, cell, Convert.ToDouble, out driftTimeHighEnergyOffset, false))
                 return false;
-
-            // TODO: Range check.
 
             return true;
         }
@@ -582,8 +602,11 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             }
             catch (Exception)
             {
-                InvalidCell(e, cell, Resources.EditDriftTimePredictorDlg_ValidateCell_The_entry__0__is_not_valid_, value);
-                return false;
+                if (required || !string.IsNullOrEmpty(value))
+                {
+                    InvalidCell(e, cell, Resources.EditDriftTimePredictorDlg_ValidateCell_The_entry__0__is_not_valid_, value);
+                    return false;
+                }
             }
 
             return true;
@@ -635,6 +658,20 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             if (!double.TryParse(values[EditDriftTimePredictorDlg.COLUMN_DRIFT_TIME_MSEC].Trim(), out tempDouble))
                 return string.Format(Resources.MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_value__0__is_not_a_valid_drift_time_, values[EditDriftTimePredictorDlg.COLUMN_DRIFT_TIME_MSEC].Trim());
 
+            if (values.Length > EditDriftTimePredictorDlg.COLUMN_CCS)
+            {
+                // Parse CCS, if any
+                if (!string.IsNullOrEmpty(values[EditDriftTimePredictorDlg.COLUMN_CCS]) && 
+                        !double.TryParse(values[EditDriftTimePredictorDlg.COLUMN_CCS].Trim(), out tempDouble))
+                    return string.Format(Resources.MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_value__0__is_not_a_valid_collisional_cross_section_, values[EditDriftTimePredictorDlg.COLUMN_CCS].Trim());
+            }
+            if (values.Length > EditDriftTimePredictorDlg.COLUMN_DRIFT_TIME_HIGH_ENERGY_OFFSET)
+            {
+                // Parse high energy offset, if any
+                if (!string.IsNullOrEmpty(values[EditDriftTimePredictorDlg.COLUMN_DRIFT_TIME_HIGH_ENERGY_OFFSET]) &&
+                        !double.TryParse(values[EditDriftTimePredictorDlg.COLUMN_DRIFT_TIME_HIGH_ENERGY_OFFSET].Trim(), out tempDouble))
+                    return string.Format(Resources.MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_value__0__is_not_a_valid_high_energy_offset_, values[EditDriftTimePredictorDlg.COLUMN_DRIFT_TIME_HIGH_ENERGY_OFFSET].Trim());
+            }
             return null;
         }
 

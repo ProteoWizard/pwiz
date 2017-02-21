@@ -67,7 +67,7 @@ namespace pwiz.SkylineTestA
             // check analyzer
             Assert.AreEqual("", instrumentConfigList[0].Analyzer);
             // check detector
-            Assert.IsNull(instrumentConfigList[0].Detector);
+            Assert.AreEqual("", instrumentConfigList[0].Detector);
 
             instrumentConfigList = InstrumentInfoUtil.GetInstrumentInfo(INFO3).ToList();
             Assert.AreEqual(1, instrumentConfigList.Count(), INFO3);
@@ -94,7 +94,7 @@ namespace pwiz.SkylineTestA
             Assert.AreEqual("", instrumentConfigList[1].Analyzer);
 
             // check detector 1
-            Assert.IsNull(instrumentConfigList[0].Detector);
+            Assert.AreEqual("", instrumentConfigList[0].Detector);
 
             // check detector 2
             Assert.AreEqual("", instrumentConfigList[1].Detector);

@@ -365,7 +365,11 @@ blt::local_date_time WiffFileImpl::getSampleAcquisitionTime(int sample, bool adj
     try
     {
         setSample(sample);
-        bpt::ptime pt(bdt::time_from_OADATE<bpt::ptime>(this->sample->Details->AcquisitionDateTime.ToOADate()));
+
+        System::DateTime acquisitionTime = this->sample->Details->AcquisitionDateTime;
+        bpt::ptime pt(boost::gregorian::date(acquisitionTime.Year, boost::gregorian::greg_month(acquisitionTime.Month), acquisitionTime.Day),
+            bpt::time_duration(acquisitionTime.Hour, acquisitionTime.Minute, acquisitionTime.Second, bpt::millisec(acquisitionTime.Millisecond).fractional_seconds()));
+
         if (adjustToHostTime)
         {
             bpt::time_duration tzOffset = bpt::second_clock::universal_time() - bpt::second_clock::local_time();

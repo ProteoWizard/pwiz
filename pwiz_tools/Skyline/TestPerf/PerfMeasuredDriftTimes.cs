@@ -93,9 +93,9 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                     if (precursors.Contains(key))
                     {
                         count++;
-                        Assert.AreNotEqual(curatedDTs[key].DriftTimeMsec(false).Value, measuredDTs[pass][key].DriftTimeMsec(false).Value, "measured drift time should differ somewhat for "+key);
+                        Assert.AreNotEqual(curatedDTs[key].DriftTimeMsec.Value, measuredDTs[pass][key].DriftTimeMsec.Value, "measured drift time should differ somewhat for "+key);
                     }
-                    Assert.AreEqual(curatedDTs[key].DriftTimeMsec(false).Value, measuredDTs[pass][key].DriftTimeMsec(false).Value, 1.0, "measured drift time differs too much for " + key);
+                    Assert.AreEqual(curatedDTs[key].DriftTimeMsec.Value, measuredDTs[pass][key].DriftTimeMsec.Value, 1.0, "measured drift time differs too much for " + key);
                     Assert.AreEqual(curatedDTs[key].HighEnergyDriftTimeOffsetMsec, measuredDTs[pass][key].HighEnergyDriftTimeOffsetMsec, 2.0, "measured drift time high energy offset differs too much for " + key);
                 }
                 Assert.AreEqual(document.MoleculeTransitionGroupCount, count, "did not find drift times for all precursors"); // Expect to find a value for each precursor
@@ -125,11 +125,12 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 if (precursors.Contains(key))
                 {
                     ccount++;
-                    if (measuredDTs[0][key].DriftTimeMsec(true).Value == measuredDTs[1][key].DriftTimeMsec(true).Value)
+                    if (measuredDTs[0][key].GetHighEnergyDriftTimeMsec().Value == measuredDTs[1][key].GetHighEnergyDriftTimeMsec().Value)
                         noChange.Add(key);
                 }
-                Assert.AreEqual(measuredDTs[0][key].DriftTimeMsec(false).Value, measuredDTs[1][key].DriftTimeMsec(false).Value, 1.0, "averaged measured drift time differs for " + key);
+                Assert.AreEqual(measuredDTs[0][key].DriftTimeMsec.Value, measuredDTs[1][key].DriftTimeMsec.Value, 1.0, "averaged measured drift time differs for " + key);
                 Assert.AreEqual(measuredDTs[0][key].HighEnergyDriftTimeOffsetMsec, measuredDTs[1][key].HighEnergyDriftTimeOffsetMsec, 2.0, "averaged measured drift time high energy offset differs for " + key);
+                Assert.AreEqual(measuredDTs[0][key].CollisionalCrossSectionSqA.Value, measuredDTs[1][key].CollisionalCrossSectionSqA.Value, 1.0, "averaged measured CCS differs for " + key);
             }
             Assert.AreEqual(document.MoleculeTransitionGroupCount, ccount, "did not find drift times for all precursors"); // Expect to find a value for each precursor
             Assert.IsTrue(noChange.Count < ccount/2,"expected most values to shift a little without the nice clean training data");

@@ -546,11 +546,12 @@ namespace pwiz.Skyline.Model.Results
                                      int numPeaks, int startPeakIndex, int startScoreIndex, int maxPeakIndex,
                                      int numPoints, int compressedSize, int uncompressedSize, long location, FlagValues flags,
                                      int statusId, int statusRank,
-                                     float? startTime, float? endTime)
+                                     float? startTime, float? endTime,
+                                     double? collisionalCrossSection)
             : this(precursor, -1, 0, fileIndex, numTransitions, startTransitionIndex,
                    numPeaks, startPeakIndex, startScoreIndex, maxPeakIndex, numPoints,
                    compressedSize, uncompressedSize, location, flags, statusId, statusRank,
-                   startTime, endTime)
+                   startTime, endTime, collisionalCrossSection)
         {
         }
 
@@ -562,7 +563,8 @@ namespace pwiz.Skyline.Model.Results
                                      int numPeaks, int startPeakIndex, int startScoreIndex, int maxPeakIndex,
                                      int numPoints, int compressedSize, int uncompressedSize, long location, FlagValues flags,
                                      int statusId, int statusRank,
-                                     float? startTime, float? endTime)
+                                     float? startTime, float? endTime,
+                                     double? collisionalCrossSection)
             : this()
         {
             _precursor = precursor.Value;
@@ -593,7 +595,7 @@ namespace pwiz.Skyline.Model.Results
             _startTime = startTime ?? -1;
             _endTime = endTime ?? -1;
             Align1 = 0;
-            Align2 = 0;
+            _collisionalCrossSection = (float)(collisionalCrossSection ?? 0);
             if (_startTime < 0)
             {
                 _startTime = -1;  // Unknown
@@ -626,7 +628,7 @@ namespace pwiz.Skyline.Model.Results
             (FlagValues) headerInfo.Flags,
             headerInfo.StatusId,
             headerInfo.StatusRank,
-            null, null)
+            null, null, null)
         {
         }
 
@@ -644,7 +646,7 @@ namespace pwiz.Skyline.Model.Results
             -1,
             headerInfo.LocationPoints,
             0, -1, -1,
-            null, null)
+            null, null, null)
         {
         }
 
@@ -695,7 +697,7 @@ namespace pwiz.Skyline.Model.Results
         public int UncompressedSize { get; private set; }
         public float _startTime { get; private set; } // For SRM data with same precursor but different RT interval - negative values mean "unknown"
         public float _endTime { get; private set; } // For SRM data with same precursor but different RT interval - negative values mean "unknown"
-        public int Align2 { get; private set; } 
+        public float _collisionalCrossSection { get; private set; } // Non-positive value means "unknown"
         /////////////////////////////////////////////////////////////////////
 
         public override string ToString()
@@ -738,6 +740,16 @@ namespace pwiz.Skyline.Model.Results
         public SignedMz Precursor
         {
             get { return new SignedMz(_precursor, NegativeCharge); }
+        }
+
+        public float? CollisionalCrossSection
+        {
+            get
+            {
+                if (_collisionalCrossSection <= 0)
+                    return null;
+                return _collisionalCrossSection;
+            }
         }
 
         public bool HasStatusId { get { return ((short)StatusId) != -1; } }
@@ -1245,12 +1257,12 @@ namespace pwiz.Skyline.Model.Results
 
         const FlagValues MASK_SOURCE = (FlagValues) 0x03;
 
-        public ChromTransition(double product, float extractionWidth, float ionMobilityValue, float ionMobilityExtractionWidth, ChromSource source) : this()
+        public ChromTransition(double product, float extractionWidth, float driftTime, float driftTimeExtractionWidth, ChromSource source) : this()
         {
             Product = product;
             ExtractionWidth = extractionWidth;
-            IonMobilityValue = ionMobilityValue;
-            IonMobilityExtractionWidth = ionMobilityExtractionWidth;
+            DriftTime = driftTime;
+            DriftTimeExtractionWidth = driftTimeExtractionWidth;
             Source = source;
             Align1 = 0;
         }
@@ -1267,8 +1279,8 @@ namespace pwiz.Skyline.Model.Results
 
         public double Product { get; private set; }
         public float ExtractionWidth { get; private set; }  // In m/z
-        public float IonMobilityValue { get; private set; } // Get the units (msec or area) from the source files
-        public float IonMobilityExtractionWidth { get; private set; } // Get the units (msec or area) from the source files
+        public float DriftTime { get; private set; } // In msec
+        public float DriftTimeExtractionWidth { get; private set; } // In msec
         public ushort FlagBits { get; private set; }
         public ushort Align1 { get; private set; }  // Explicitly declaring alignment padding the compiler will add anyway
 
@@ -1420,7 +1432,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public override string ToString()
         {
-            return string.Format("{0:F04} {1:F04} - {2}", Product, IonMobilityValue, Source); // Not L10N
+            return string.Format("{0:F04} {1:F04} - {2}", Product, DriftTime, Source); // Not L10N
         }
 
         #endregion
@@ -1985,7 +1997,7 @@ namespace pwiz.Skyline.Model.Results
 
     public class ChromKey : IComparable<ChromKey>
     {
-        public static readonly ChromKey EMPTY = new ChromKey(null, SignedMz.ZERO, 0, 0,
+        public static readonly ChromKey EMPTY = new ChromKey(null, SignedMz.ZERO, null,
             SignedMz.ZERO, 0, 0, ChromSource.unknown, ChromExtractor.summed, false, false, null, null);
 
         public ChromKey(byte[] textIdBytes,
@@ -1994,8 +2006,7 @@ namespace pwiz.Skyline.Model.Results
                         SignedMz precursor,
                         SignedMz product,
                         double extractionWidth,
-                        double ionMobilityValue,
-                        double ionMobilityExtractionWidth,
+                        DriftTimeFilter ionMobility,
                         ChromSource source,
                         ChromExtractor extractor,
                         bool calculatedMzs,
@@ -2005,8 +2016,7 @@ namespace pwiz.Skyline.Model.Results
                         double? optionalCenterOfGravityTime = null)
             : this(textIdIndex != -1 ? Encoding.UTF8.GetString(textIdBytes, textIdIndex, textIdLen) : null,
                    precursor,
-                   ionMobilityValue,
-                   ionMobilityExtractionWidth,
+                   ionMobility,
                    product,
                    0,
                    extractionWidth,
@@ -2022,8 +2032,7 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromKey(string textId,
                         SignedMz precursor,
-                        double? ionMobilityValue,
-                        double ionMobilityExtractionWidth,
+                        DriftTimeFilter driftTimeFilter,
                         SignedMz product,
                         double ceValue,
                         double extractionWidth,
@@ -2037,8 +2046,7 @@ namespace pwiz.Skyline.Model.Results
         {
             TextId = textId;
             Precursor = precursor;
-            IonMobilityValue = (float)(ionMobilityValue ?? 0);
-            IonMobilityExtractionWidth = (float)ionMobilityExtractionWidth;
+            DriftFilter = driftTimeFilter ?? DriftTimeFilter.EMPTY;
             Product = product;
             CollisionEnergy = (float) ceValue;
             ExtractionWidth = (float) extractionWidth;
@@ -2053,8 +2061,8 @@ namespace pwiz.Skyline.Model.Results
 
         public string TextId { get; private set; }  // Modified sequence or custom ion id
         public SignedMz Precursor { get; private set; }
-        public float IonMobilityValue { get; private set; } // Dimensionless here - depends on source files
-        public float IonMobilityExtractionWidth { get; private set; } // Dimensionless here - depends on source files
+        public double? CollisionalCrossSection { get { return DriftFilter == null ? null : DriftFilter.CollisionalCrossSectionSqA; } }
+        public DriftTimeFilter DriftFilter { get; private set; }
         public SignedMz Product { get; private set; }
         public float CollisionEnergy { get; private set; }
         public float ExtractionWidth { get; private set; }
@@ -2080,8 +2088,7 @@ namespace pwiz.Skyline.Model.Results
         {
             return new ChromKey(TextId,
                                 Precursor,
-                                IonMobilityValue,
-                                IonMobilityExtractionWidth,
+                                DriftFilter,
                                 Product + step*ChromatogramInfo.OPTIMIZE_SHIFT_SIZE,
                                 0,
                                 ExtractionWidth,
@@ -2098,8 +2105,7 @@ namespace pwiz.Skyline.Model.Results
         {
             return new ChromKey(TextId,
                                 Precursor,
-                                IonMobilityValue,
-                                IonMobilityExtractionWidth,
+                                DriftFilter,
                                 Product,
                                 CollisionEnergy,
                                 ExtractionWidth,
@@ -2118,8 +2124,8 @@ namespace pwiz.Skyline.Model.Results
         public override string ToString()
         {
             if (TextId != null)
-                return string.Format("{0:F04}, {1:F04} im{4:F04} - {2} - {3}", Precursor.RawValue, Product.RawValue, Source, TextId, IonMobilityValue); // Not L10N
-            return string.Format("{0:F04}, {1:F04} im{3:F04} - {2}", Precursor.RawValue, Product.RawValue, Source, IonMobilityValue); // Not L10N
+                return string.Format("{0:F04}, {1:F04} {4} - {2} - {3}", Precursor.RawValue, Product.RawValue, Source, TextId, DriftFilter); // Not L10N
+            return string.Format("{0:F04}, {1:F04} {3} - {2}", Precursor.RawValue, Product.RawValue, Source, DriftFilter); // Not L10N
         }
 
         public int CompareTo(ChromKey key)
@@ -2191,6 +2197,8 @@ namespace pwiz.Skyline.Model.Results
             if (c != 0)
                 return c;
             return ExtractionWidth.CompareTo(key.ExtractionWidth);
+
+            // CONSIDER(bspratt) - we're currently ignoring ion mobility for comparison
         }
 
         private bool HighlyOverlapping(ChromKey key)
@@ -2332,7 +2340,7 @@ namespace pwiz.Skyline.Model.Results
                         ceValue = Math.Abs(ceParsed);
                     }
                 }
-                return new ChromKey(null, new SignedMz(precursor, isNegativeCharge), 0, 0, new SignedMz(product, isNegativeCharge), ceValue, 0, ChromSource.fragment, ChromExtractor.summed, false, true, null, null);
+                return new ChromKey(null, new SignedMz(precursor, isNegativeCharge), null, new SignedMz(product, isNegativeCharge), ceValue, 0, ChromSource.fragment, ChromExtractor.summed, false, true, null, null);
             }
             catch (FormatException)
             {
@@ -2346,8 +2354,7 @@ namespace pwiz.Skyline.Model.Results
         {
             return string.Equals(TextId, other.TextId) &&
                 Precursor.Equals(other.Precursor) &&
-                IonMobilityValue.Equals(other.IonMobilityValue) &&
-                IonMobilityExtractionWidth.Equals(other.IonMobilityExtractionWidth) &&
+                DriftFilter.Equals(other.DriftFilter) &&
                 Product.Equals(other.Product) &&
                 CollisionEnergy.Equals(other.CollisionEnergy) &&
                 ExtractionWidth.Equals(other.ExtractionWidth) &&
@@ -2371,8 +2378,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 var hashCode = (TextId != null ? TextId.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ Precursor.GetHashCode();
-                hashCode = (hashCode*397) ^ IonMobilityValue.GetHashCode();
-                hashCode = (hashCode*397) ^ IonMobilityExtractionWidth.GetHashCode();
+                hashCode = (hashCode*397) ^ DriftFilter.GetHashCode();
                 hashCode = (hashCode*397) ^ Product.GetHashCode();
                 hashCode = (hashCode*397) ^ CollisionEnergy.GetHashCode();
                 hashCode = (hashCode*397) ^ ExtractionWidth.GetHashCode();
@@ -2465,6 +2471,7 @@ namespace pwiz.Skyline.Model.Results
 
         internal ChromGroupHeaderInfo Header { get { return _groupHeaderInfo; } }
         public SignedMz PrecursorMz { get { return new SignedMz(_groupHeaderInfo.Precursor, _groupHeaderInfo.NegativeCharge); } }
+        public double? PrecursorCollisionalCrossSection { get { return _groupHeaderInfo.CollisionalCrossSection; } }
         public MsDataFileUri FilePath { get { return _allFiles[_groupHeaderInfo.FileIndex].FilePath; } }
         public DateTime FileWriteTime { get { return _allFiles[_groupHeaderInfo.FileIndex].FileWriteTime; } }
         public DateTime? RunStartTime { get { return _allFiles[_groupHeaderInfo.FileIndex].RunStartTime; } }
@@ -2847,14 +2854,19 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public double? IonMobilityValue
+        public double? DriftTime
         {
-            get { return FloatToNullableDouble(ChromTransition.IonMobilityValue); }
+            get { return FloatToNullableDouble(ChromTransition.DriftTime); }
         }
 
-        public double? IonMobilityExtractionWidth
+        public double? DriftTimeExtractionWidth
         {
-            get { return FloatToNullableDouble(ChromTransition.IonMobilityExtractionWidth); }
+            get { return FloatToNullableDouble(ChromTransition.DriftTimeExtractionWidth); }
+        }
+
+        public DriftTimeFilter GetDriftTimeFilter()
+        {
+            return DriftTimeFilter.GetDriftTimeFilter(DriftTime, DriftTimeExtractionWidth, _groupHeaderInfo.CollisionalCrossSection);
         }
 
         private static double? FloatToNullableDouble(float value)

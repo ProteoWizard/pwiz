@@ -414,6 +414,11 @@ SpectrumList_IonMobility::SpectrumList_IonMobility(msdata::SpectrumList^ inner)
     msdata::SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
 }
 
+bool SpectrumList_IonMobility::canConvertDriftTimeAndCCS()
+{
+    try { return base_->canConvertDriftTimeAndCCS(); } CATCH_AND_FORWARD
+}
+
 double SpectrumList_IonMobility::driftTimeToCCS(double driftTime, double mz, int charge)
 {
     try { return base_->driftTimeToCCS(driftTime, mz, charge); } CATCH_AND_FORWARD

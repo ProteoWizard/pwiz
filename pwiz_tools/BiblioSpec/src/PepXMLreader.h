@@ -82,6 +82,8 @@ class PepXMLreader : public BuildParser{
   ANALYSIS analysisType_;  ///< e.g. Peptide Prophet
   PSM_SCORE_TYPE scoreType_;
   int lastFilePosition_;
+  map<PSM*, double> precursorMap_;
+  map<PSM*, double> spectrumMillScores_;
 
   //for each spectrum
   

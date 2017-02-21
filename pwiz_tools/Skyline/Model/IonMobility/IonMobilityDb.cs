@@ -107,7 +107,7 @@ namespace pwiz.Skyline.Model.IonMobility
         {
             DbIonMobilityPeptide pep;
             if (DictLibrary.TryGetValue(seq, out pep))
-                return new DriftTimeInfo(regression.GetY(pep.CollisionalCrossSection), pep.HighEnergyDriftTimeOffsetMsec);
+                return new DriftTimeInfo(regression.GetY(pep.CollisionalCrossSection), pep.CollisionalCrossSection, pep.HighEnergyDriftTimeOffsetMsec);
             return null;
         }
 

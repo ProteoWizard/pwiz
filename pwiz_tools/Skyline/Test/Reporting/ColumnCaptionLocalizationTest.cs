@@ -88,6 +88,37 @@ namespace pwiz.SkylineTest.Reporting
         }
 
         /// <summary>
+        /// Tests that all columns that can be displayed in Skyline Live Reports have an entry in "ColumnToolTips.resx".
+        /// If you add a Property to any of the entities that get displayed in Skyline Live Reports, you probably have
+        /// to add an entry to ColumnToolTips.resx so that the column tooltip can be localized.
+        /// </summary>
+        //[TestMethod] // TODO(bspratt/nicksh) Enable this once Nick and Brian have the last handful of column tooltips ready
+        public void TestAllColumnToolTipsAreLocalized()
+        {
+            var documentContainer = new MemoryDocumentContainer();
+            Assert.IsTrue(documentContainer.SetDocument(new SrmDocument(SrmSettingsList.GetDefault()), documentContainer.Document));
+            SkylineDataSchema skylineDataSchema = new SkylineDataSchema(documentContainer, SkylineDataSchema.GetLocalizedSchemaLocalizer());
+            var missingCaptions = new HashSet<ColumnCaption>();
+            foreach (var columnDescriptor in
+                    EnumerateAllColumnDescriptors(skylineDataSchema, STARTING_TYPES))
+            {
+                var invariantDescription = skylineDataSchema.GetColumnDescription(columnDescriptor);
+                if (string.IsNullOrEmpty(invariantDescription))
+                {
+                    var invariantCaption = skylineDataSchema.GetColumnCaption(columnDescriptor);
+                    missingCaptions.Add(invariantCaption);
+                }
+            }
+            if (missingCaptions.Count == 0)
+            {
+                return;
+            }
+            StringWriter message = new StringWriter();
+            WriteResXFile(message, missingCaptions);
+            Assert.Fail("Missing localized tooltips for column captions: {0}", message.ToString().Replace("<data","\r\n<data"));
+        }
+
+        /// <summary>
         /// Tests that all of the entries in ColumnCaptions.resx actually show up in Skyline Live Reports somewhere.
         /// </summary>
         [TestMethod]

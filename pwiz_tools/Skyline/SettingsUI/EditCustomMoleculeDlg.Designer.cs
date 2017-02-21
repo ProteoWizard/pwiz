@@ -44,9 +44,11 @@
             this.textCompensationVoltage = new System.Windows.Forms.TextBox();
             this.textCharge = new System.Windows.Forms.TextBox();
             this.textName = new System.Windows.Forms.TextBox();
+            this.textBoxCCS = new System.Windows.Forms.TextBox();
             this.btnOK = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.groupBoxOptionalValues = new System.Windows.Forms.GroupBox();
+            this.labelCCS = new System.Windows.Forms.Label();
             this.labelCompensationVoltage = new System.Windows.Forms.Label();
             this.labelDeclusteringPotential = new System.Windows.Forms.Label();
             this.labelDriftTimeMsec = new System.Windows.Forms.Label();
@@ -146,6 +148,12 @@
             this.textName.Name = "textName";
             this.toolTip1.SetToolTip(this.textName, resources.GetString("textName.ToolTip"));
             // 
+            // textBoxCCS
+            // 
+            resources.ApplyResources(this.textBoxCCS, "textBoxCCS");
+            this.textBoxCCS.Name = "textBoxCCS";
+            this.toolTip1.SetToolTip(this.textBoxCCS, resources.GetString("textBoxCCS.ToolTip"));
+            // 
             // btnOK
             // 
             resources.ApplyResources(this.btnOK, "btnOK");
@@ -162,6 +170,8 @@
             // 
             // groupBoxOptionalValues
             // 
+            this.groupBoxOptionalValues.Controls.Add(this.labelCCS);
+            this.groupBoxOptionalValues.Controls.Add(this.textBoxCCS);
             this.groupBoxOptionalValues.Controls.Add(this.labelCompensationVoltage);
             this.groupBoxOptionalValues.Controls.Add(this.textCompensationVoltage);
             this.groupBoxOptionalValues.Controls.Add(this.labelDeclusteringPotential);
@@ -183,6 +193,11 @@
             resources.ApplyResources(this.groupBoxOptionalValues, "groupBoxOptionalValues");
             this.groupBoxOptionalValues.Name = "groupBoxOptionalValues";
             this.groupBoxOptionalValues.TabStop = false;
+            // 
+            // labelCCS
+            // 
+            resources.ApplyResources(this.labelCCS, "labelCCS");
+            this.labelCCS.Name = "labelCCS";
             // 
             // labelCompensationVoltage
             // 
@@ -298,5 +313,7 @@
         private System.Windows.Forms.TextBox textCompensationVoltage;
         private System.Windows.Forms.Label labelDeclusteringPotential;
         private System.Windows.Forms.TextBox textDeclusteringPotential;
+        private System.Windows.Forms.Label labelCCS;
+        private System.Windows.Forms.TextBox textBoxCCS;
     }
 }

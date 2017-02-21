@@ -87,6 +87,8 @@ namespace pwiz.Skyline.SettingsUI
                 textSLens.Visible = false;
                 labelCompensationVoltage.Visible = false;
                 textCompensationVoltage.Visible = false;
+                labelCCS.Visible = false;
+                textBoxCCS.Visible = false;
                 labelConeVoltage.Visible = false;
                 textConeVoltage.Visible = false;
                 labelDriftTimeHighEnergyOffsetMsec.Visible = false;
@@ -207,7 +209,9 @@ namespace pwiz.Skyline.SettingsUI
         {
             get
             {
-                return new ExplicitTransitionGroupValues(CollisionEnergy, DriftTimeMsec, DriftTimeHighEnergyOffsetMsec, SLens, ConeVoltage, DeclusteringPotential, CompensationVoltage);
+                return new ExplicitTransitionGroupValues(CollisionEnergy, DriftTimeMsec, DriftTimeHighEnergyOffsetMsec, 
+                    CollisionalCrossSectionSqA,
+                    SLens, ConeVoltage, DeclusteringPotential, CompensationVoltage);
             }
             set
             {
@@ -216,6 +220,7 @@ namespace pwiz.Skyline.SettingsUI
                 CollisionEnergy = resultExplicitTransitionGroupValues.CollisionEnergy;
                 DriftTimeMsec = resultExplicitTransitionGroupValues.DriftTimeMsec;
                 DriftTimeHighEnergyOffsetMsec = resultExplicitTransitionGroupValues.DriftTimeHighEnergyOffsetMsec;
+                CollisionalCrossSectionSqA = resultExplicitTransitionGroupValues.CollisionalCrossSectionSqA;
                 SLens = resultExplicitTransitionGroupValues.SLens;
                 ConeVoltage = resultExplicitTransitionGroupValues.ConeVoltage;
                 DeclusteringPotential = resultExplicitTransitionGroupValues.DeclusteringPotential;
@@ -346,6 +351,12 @@ namespace pwiz.Skyline.SettingsUI
         {
             get { return NullForEmpty(textDriftTimeHighEnergyOffsetMsec.Text); }
             set { textDriftTimeHighEnergyOffsetMsec.Text = value == null ? string.Empty : value.Value.ToString(LocalizationHelper.CurrentCulture); } // Negative values are normal here
+        }
+
+        public double? CollisionalCrossSectionSqA
+        {
+            get { return NullForEmpty(textBoxCCS.Text); }
+            set { textBoxCCS.Text = EmptyForNullOrNonPositive(value); }
         }
 
         public IsotopeLabelType IsotopeLabelType

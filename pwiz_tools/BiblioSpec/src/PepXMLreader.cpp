@@ -280,6 +280,7 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
        bal::to_lower(score_name);
 
        if (score_name == "expect" ||
+           (analysisType_ == SPECTRUM_MILL_ANALYSIS && score_name == "smscore") ||
            (analysisType_ == PROTEOME_DISCOVERER_ANALYSIS && scoreType_ == SEQUEST_XCORR && score_name == "q-value") ||
            (analysisType_ == PROTEOME_DISCOVERER_ANALYSIS && scoreType_ == MASCOT_IONS_SCORE && score_name == "exp-value") ||
            (analysisType_ == MORPHEUS_ANALYSIS && score_name == "psm q-value") ||
@@ -291,7 +292,6 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
            pepProb = pow(10, pepProb / -10.0);
        }
    }
-   // no score for spectrum mill
    // mascot score is ??
 }
 
@@ -314,7 +314,26 @@ void PepXMLreader::endElement(const XML_Char* name)
         // if we are using pep.xml from Spectrum mill, we still don't have
         // scan numbers/indexes, here's a hack to get them
         if( analysisType_ == SPECTRUM_MILL_ANALYSIS ) {
-            findScanIndexFromName();
+            findScanIndexFromName(precursorMap_);
+            verifySequences();
+            for (size_t i = 0; i < psms_.size(); i++) {
+                PSM* iPSM = psms_[i];
+                for (size_t j = i + 1; j < psms_.size(); j++) {
+                    PSM* jPSM = psms_[j];
+                    if (iPSM->modifiedSeq == jPSM->modifiedSeq && iPSM->charge == jPSM->charge) {
+                        double iScore = spectrumMillScores_[iPSM];
+                        double jScore = spectrumMillScores_[jPSM];
+                        if (iScore < jScore) {
+                            delete iPSM;
+                            psms_.erase(psms_.begin() + i--);
+                            break;
+                        } else {
+                            delete jPSM;
+                            psms_.erase(psms_.begin() + j--);
+                        }
+                    }
+                }
+            }
         }
         // file progress will be incremented in buildTables
         // if we are counting bytes instead of number of spec files
@@ -363,6 +382,13 @@ void PepXMLreader::endElement(const XML_Char* name)
         // mascot has spectra with no peptides, but could report warning if spectrum mill or peptide prophet don't have a peptide sequence
         if( scorePasses(pepProb) && (int)strlen(pepSeq) > 0) {
             curPSM_ = new PSM();
+            
+            if (analysisType_ == SPECTRUM_MILL_ANALYSIS) {
+                // store score for comparison later, but not in database
+                spectrumMillScores_[curPSM_] = pepProb;
+                pepProb = 0;
+            }
+            
             curPSM_->charge = charge;
             curPSM_->unmodSeq = pepSeq;
             if (scanIndex >= 0) {
@@ -378,6 +404,9 @@ void PepXMLreader::endElement(const XML_Char* name)
                                scanNumber, charge, pepProb, pepSeq,
                                spectrumName.c_str());
             psms_.push_back(curPSM_);
+            if (analysisType_ == SPECTRUM_MILL_ANALYSIS) {
+                precursorMap_[curPSM_] = precursorMZ;
+            }
             curPSM_ = NULL;
         }
 

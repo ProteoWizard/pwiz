@@ -773,27 +773,30 @@ namespace pwiz.Skyline.Controls.Graphs
                     FindNearestIndex(chromGroup.Times, (float) chromGroup.StartTime),
                     FindNearestIndex(chromGroup.Times, (float) chromGroup.EndTime));
             var chromPeak = new ChromPeak(crawPeakFinder, crawdadPeak, 0, chromGroup.Times, chromData.Intensities, null);
-            transitionChromInfo = new TransitionChromInfo(null, 0, chromPeak, new float?[0], Annotations.EMPTY,
+            transitionChromInfo = new TransitionChromInfo(null, 0, chromPeak,
+                null, // CONSIDER(bspratt) IMS in chromatogram libraries?
+                new float?[0], Annotations.EMPTY,
                                                             UserSet.FALSE);
             var peaks = new[] {chromPeak};
-            var header = new ChromGroupHeaderInfo(precursorMz, 
-              0,  // file index
-              1, // numTransitions
-              0, // startTransitionIndex
-              peaks.Length, // numPeaks
-              0, // startPeakIndex
-              0, // startscoreindex
-              0,// maxPeakIndex
-              chromGroup.Times.Length, // numPoints
-              0, // compressedSize
-              0, // uncompressedsize
-              0,  //location
-              0, -1, -1, null, null);
+            var header = new ChromGroupHeaderInfo(precursorMz,
+                0,  // file index
+                1, // numTransitions
+                0, // startTransitionIndex
+                peaks.Length, // numPeaks
+                0, // startPeakIndex
+                0, // startscoreindex
+                0,// maxPeakIndex
+                chromGroup.Times.Length, // numPoints
+                0, // compressedSize
+                0, // uncompressedsize
+                0,  //location
+                0, -1, -1, null, null, null); // CONSIDER(bspratt) IMS in chromatogram libraries?
+            var driftTimeFilter = DriftTimeFilter.EMPTY; // CONSIDER(bspratt) IMS in chromatogram libraries?
 
             chromatogramInfo = new ChromatogramInfo(header,
                     new Dictionary<Type, int>(), 0,
                     new ChromCachedFile[0],
-                    new[] { new ChromTransition(chromData.Mz, 0, 0, 0, ChromSource.unknown), },
+                    new[] { new ChromTransition(chromData.Mz, 0, (float)(driftTimeFilter.DriftTimeMsec??0), (float)(driftTimeFilter.DriftTimeExtractionWindowWidthMsec??0), ChromSource.unknown), },
                     peaks, null,
                     chromGroup.Times, new[] { chromData.Intensities }, null, null);
             

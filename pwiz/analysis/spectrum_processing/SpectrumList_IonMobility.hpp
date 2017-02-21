@@ -40,6 +40,9 @@ class PWIZ_API_DECL SpectrumList_IonMobility : public msdata::SpectrumListWrappe
     static bool accept(const msdata::SpectrumListPtr& inner);
     virtual msdata::SpectrumPtr spectrum(size_t index, bool getBinaryData = false) const;
 
+    /// returns true if file in question contains necessary information for CCS/DT handling
+    virtual bool canConvertDriftTimeAndCCS() const;
+
     /// returns collisional cross-section associated with the drift time (specified in milliseconds)
     virtual double driftTimeToCCS(double driftTime, double mz, int charge) const;
 

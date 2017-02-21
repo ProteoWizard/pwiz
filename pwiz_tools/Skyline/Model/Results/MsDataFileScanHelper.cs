@@ -78,7 +78,7 @@ namespace pwiz.Skyline.Model.Results
             var hasDriftInfo = false;
             foreach (var transition in ScanProvider.Transitions)
             {
-                if (!transition.IonMobilityValue.HasValue || !transition.IonMobilityExtractionWidth.HasValue)
+                if (!transition.DriftTimeInfo.HasDriftTime || !transition.DriftTimeInfo.DriftTimeExtractionWindowWidthMsec.HasValue)
                 {
                     // Accept all values
                     minDrift = double.MinValue;
@@ -87,15 +87,32 @@ namespace pwiz.Skyline.Model.Results
                 else if (sourceType == ChromSource.unknown || transition.Source == sourceType)
                 {
                     // Products and precursors may have different expected drift time values in Waters MsE
-                    double startDrift = transition.IonMobilityValue.Value -
-                                        transition.IonMobilityExtractionWidth.Value / 2;
-                    double endDrift = startDrift + transition.IonMobilityExtractionWidth.Value;
+                    double startDrift = transition.DriftTimeInfo.DriftTimeMsec.Value -
+                                        transition.DriftTimeInfo.DriftTimeExtractionWindowWidthMsec.Value / 2;
+                    double endDrift = startDrift + transition.DriftTimeInfo.DriftTimeExtractionWindowWidthMsec.Value;
                     minDrift = Math.Min(minDrift, startDrift);
                     maxDrift = Math.Max(maxDrift, endDrift);
                     hasDriftInfo = true;
                 }
             }
             return hasDriftInfo;
+        }
+
+        /// <summary>
+        /// Return a collisional cross section for this drift time at this mz, if reader supports this
+        /// </summary>
+        public double? CCSFromDriftTime(double driftTime, double mz, int charge)
+        {
+            if (ScanProvider == null)
+            {
+                return null;
+            }
+            return ScanProvider.CCSFromDriftTime(driftTime, mz, charge);
+        }
+
+        public bool ProvidesCollisionalCrossSectionConverter
+        {
+            get { return ScanProvider != null && ScanProvider.ProvidesCollisionalCrossSectionConverter; }
         }
 
         public int[][] GetScanIndexes()
@@ -216,6 +233,20 @@ namespace pwiz.Skyline.Model.Results
                     return _scanProvider != null ? getProp(_scanProvider) : defaultValue;
                 }
             }
+
+            /// <summary>
+            /// Return a collisional cross section for this drift time at this mz, if reader supports this
+            /// </summary>
+            public double? CCSFromDriftTime(double driftTime, double mz, int charge)
+            {
+                if (_scanProvider == null)
+                {
+                    return null;
+                }
+                return _scanProvider.CCSFromDriftTime(driftTime, mz, charge);
+            }
+
+            public bool ProvidesCollisionalCrossSectionConverter { get { return _scanProvider != null && _scanProvider.ProvidesCollisionalCrossSectionConverter; } }
 
             /// <summary>
             /// Always run on a specific background thread to avoid changing threads when dealing

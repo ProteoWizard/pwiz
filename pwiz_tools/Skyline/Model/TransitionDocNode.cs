@@ -415,7 +415,7 @@ namespace pwiz.Skyline.Model
             return ChangeProp(ImClone(this), im => im.ResultsRank = prop);
         }
 
-        public DocNode ChangePeak(int indexSet, ChromFileInfoId fileId, int step, ChromPeak peak, int ratioCount, UserSet userSet)
+        public DocNode ChangePeak(int indexSet, ChromFileInfoId fileId, int step, ChromPeak peak, DriftTimeFilter ionMobility, int ratioCount, UserSet userSet)
         {
             if (Results == null)
                 return this;
@@ -423,7 +423,7 @@ namespace pwiz.Skyline.Model
             var listChromInfo = Results[indexSet];
             var listChromInfoNew = new List<TransitionChromInfo>();
             if (listChromInfo == null)
-                listChromInfoNew.Add(CreateChromInfo(fileId, step, peak, ratioCount, userSet));
+                listChromInfoNew.Add(CreateChromInfo(fileId, step, peak, ionMobility, ratioCount, userSet));
             else
             {
                 bool peakAdded = false;
@@ -455,7 +455,7 @@ namespace pwiz.Skyline.Model
                             chromInfo.FileIndex >= fileId.GlobalIndex &&
                             chromInfo.OptimizationStep > step)
                         {
-                            listChromInfoNew.Add(CreateChromInfo(fileId, step, peak, ratioCount, userSet));
+                            listChromInfoNew.Add(CreateChromInfo(fileId, step, peak, ionMobility, ratioCount, userSet));
                             peakAdded = true;
                         }
                         listChromInfoNew.Add(chromInfo);
@@ -463,16 +463,16 @@ namespace pwiz.Skyline.Model
                 }
                 // Finally, make sure the peak is added
                 if (!peakAdded)
-                    listChromInfoNew.Add(CreateChromInfo(fileId, step, peak, ratioCount, userSet));
+                    listChromInfoNew.Add(CreateChromInfo(fileId, step, peak, ionMobility, ratioCount, userSet));
             }
 
             return ChangeResults((Results<TransitionChromInfo>)
                                  Results.ChangeAt(indexSet, new ChromInfoList<TransitionChromInfo>(listChromInfoNew)));
         }
 
-        private static TransitionChromInfo CreateChromInfo(ChromFileInfoId fileId, int step, ChromPeak peak, int ratioCount, UserSet userSet)
+        private static TransitionChromInfo CreateChromInfo(ChromFileInfoId fileId, int step, ChromPeak peak, DriftTimeFilter ionMobility, int ratioCount, UserSet userSet)
         {
-            return new TransitionChromInfo(fileId, step, peak, new float?[ratioCount], Annotations.EMPTY, userSet);
+            return new TransitionChromInfo(fileId, step, peak, ionMobility, new float?[ratioCount], Annotations.EMPTY, userSet);
         }
 
         public DocNode RemovePeak(int indexSet, ChromFileInfoId fileId, UserSet userSet)

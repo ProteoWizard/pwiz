@@ -25,6 +25,7 @@ using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -557,21 +558,21 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         // No ion mobility data in BiblioSpec libs (those are ancient - try BiblioSpecLite instead)
-        public override bool TryGetIonMobilities(LibKey key, MsDataFileUri filePath, out IonMobilityInfo[] ionMobilities)
+        public override bool TryGetDriftTimeInfos(LibKey key, MsDataFileUri filePath, out DriftTimeInfo[] driftTimes)
         {
-            ionMobilities = null;
+            driftTimes = null;
             return false;
         }
 
-        public override bool TryGetIonMobilities(MsDataFileUri filePath, out LibraryIonMobilityInfo ionMobilities)
+        public override bool TryGetDriftTimeInfos(MsDataFileUri filePath, out LibraryDriftTimeInfo driftTimes)
         {
-            ionMobilities = null;
+            driftTimes = null;
             return false;
         }
 
-        public override bool TryGetIonMobilities(int fileIndex, out LibraryIonMobilityInfo ionMobilities)
+        public override bool TryGetDriftTimeInfos(int fileIndex, out LibraryDriftTimeInfo driftTimes)
         {
-            ionMobilities = null;
+            driftTimes = null;
             return false;
         }
 

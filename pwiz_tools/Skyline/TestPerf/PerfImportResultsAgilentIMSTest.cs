@@ -45,7 +45,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         {
             Log.AddMemoryAppender();
 
-            TestFilesZip = "https://skyline.gs.washington.edu/perftests/PerfImportResultsAgilentIMSv4.zip";
+            TestFilesZip = "https://skyline.gs.washington.edu/perftests/PerfImportResultsAgilentIMSv5.zip";
             TestFilesPersistent = new[] { "19pep_1700V_pos_3May14_Legolas.d", "19pep_1700V_CE22_pos_5May14_Legolas.d" }; // list of files that we'd like to unzip alongside parent zipFile, and (re)use in place
 
             MsDataFileImpl.PerfUtilFactory.IssueDummyPerfUtils = false; // turn on performance measurement

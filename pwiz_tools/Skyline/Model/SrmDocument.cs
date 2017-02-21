@@ -260,7 +260,7 @@ namespace pwiz.Skyline.Model
         public const double FORMAT_VERSION_3_54 = 3.54; // Native q values
         public const double FORMAT_VERSION_3_55 = 3.55; // Adds linear width option for drift time filtering
         public const double FORMAT_VERSION_3_6 = 3.6; // Improved full-scan settings for DIA isolation schemes and add selective extraction
-        public const double FORMAT_VERSION_3_61 = 3.61; // Semi-cleavage enzymes
+        public const double FORMAT_VERSION_3_61 = 3.61; //  Semi-cleavage enzymes and ion mobility CCS work
         public const double FORMAT_VERSION = FORMAT_VERSION_3_61;
 
         public const int MAX_PEPTIDE_COUNT = 100*1000;
@@ -1859,6 +1859,12 @@ namespace pwiz.Skyline.Model
             public const string explicit_retention_time_window = "explicit_retention_time_window";
             public const string explicit_drift_time_msec = "explicit_drift_time_msec";
             public const string explicit_drift_time_high_energy_offset_msec = "explicit_drift_time_high_energy_offset_msec";
+            public const string explicit_ccs_sqa = "explicit_ccs_sqa";
+            public const string drift_time_ms1 = "drift_time_ms1";
+            public const string drift_time_fragment = "drift_time_fragment";
+            public const string drift_time = "drift_time";
+            public const string drift_time_window = "drift_time_window";
+            public const string ccs = "ccs";
             public const string avg_measured_retention_time = "avg_measured_retention_time";
             public const string isotope_label = "isotope_label";
             public const string fragment_type = "fragment_type";
@@ -2268,11 +2274,12 @@ namespace pwiz.Skyline.Model
             double? importedCollisionEnergy = reader.GetNullableDoubleAttribute(ATTR.explicit_collision_energy);
             double? importedDriftTimeMsec = reader.GetNullableDoubleAttribute(ATTR.explicit_drift_time_msec);
             double? importedDriftTimeHighEnergyOffsetMsec = reader.GetNullableDoubleAttribute(ATTR.explicit_drift_time_high_energy_offset_msec);
+            double? importedCCS = reader.GetNullableDoubleAttribute(ATTR.explicit_ccs_sqa);
             double? importedSLens = reader.GetNullableDoubleAttribute(FormatVersion < FORMAT_VERSION_3_52 ? ATTR.s_lens_obsolete : ATTR.explicit_s_lens);
             double? importedConeVoltage = reader.GetNullableDoubleAttribute(FormatVersion < FORMAT_VERSION_3_52 ? ATTR.cone_voltage_obsolete : ATTR.explicit_cone_voltage);
             double? importedCompensationVoltage = reader.GetNullableDoubleAttribute(ATTR.explicit_compensation_voltage);
             double? importedDeclusteringPotential = reader.GetNullableDoubleAttribute(ATTR.explicit_declustering_potential);
-            return new ExplicitTransitionGroupValues(importedCollisionEnergy, importedDriftTimeMsec, importedDriftTimeHighEnergyOffsetMsec, importedSLens, importedConeVoltage, 
+            return new ExplicitTransitionGroupValues(importedCollisionEnergy, importedDriftTimeMsec, importedDriftTimeHighEnergyOffsetMsec, importedCCS, importedSLens, importedConeVoltage, 
                 importedDeclusteringPotential, importedCompensationVoltage);
         }
 
@@ -2643,6 +2650,10 @@ namespace pwiz.Skyline.Model
             float? retentionTime = reader.GetNullableFloatAttribute(ATTR.retention_time);
             float? startTime = reader.GetNullableFloatAttribute(ATTR.start_time);
             float? endTime = reader.GetNullableFloatAttribute(ATTR.end_time);
+            float? ccs = reader.GetNullableFloatAttribute(ATTR.ccs);
+            float? driftTimeMS1 = reader.GetNullableFloatAttribute(ATTR.drift_time_ms1);
+            float? driftTimeFragment = reader.GetNullableFloatAttribute(ATTR.drift_time_fragment);
+            float? driftTimeWindow = reader.GetNullableFloatAttribute(ATTR.drift_time_window);
             float? fwhm = reader.GetNullableFloatAttribute(ATTR.fwhm);
             float? area = reader.GetNullableFloatAttribute(ATTR.area);
             float? backgroundArea = reader.GetNullableFloatAttribute(ATTR.background);
@@ -2675,6 +2686,7 @@ namespace pwiz.Skyline.Model
                                                 retentionTime,
                                                 startTime,
                                                 endTime,
+                                                TransitionGroupDriftTimeInfo.GetTransitionGroupIonMobilityInfo(ccs, driftTimeMS1, driftTimeFragment, driftTimeWindow),
                                                 fwhm,
                                                 area, null, null, // Ms1 and Fragment values calculated later
                                                 backgroundArea, null, null, // Ms1 and Fragment values calculated later
@@ -3065,6 +3077,8 @@ namespace pwiz.Skyline.Model
                     PeakIdentification.FALSE, XmlUtil.EnumCase.upper);
                 UserSet userSet = reader.GetEnumAttribute(ATTR.user_set, UserSetFastLookup.Dict,
                     UserSet.FALSE, XmlUtil.EnumCase.upper);
+                double? driftTime = reader.GetNullableDoubleAttribute(ATTR.drift_time);
+                double? driftTimeWindow = reader.GetNullableDoubleAttribute(ATTR.drift_time_window);
                 var annotations = Annotations.EMPTY;
                 if (!reader.IsEmptyElement)
                 {
@@ -3077,7 +3091,8 @@ namespace pwiz.Skyline.Model
                                                massError,
                                                retentionTime,
                                                startRetentionTime,
-                                               endRetentionTime,
+                                               endRetentionTime, 
+                                               DriftTimeFilter.GetDriftTimeFilter(driftTime, driftTimeWindow, null), 
                                                area,
                                                backgroundArea,
                                                height,
@@ -3283,6 +3298,7 @@ namespace pwiz.Skyline.Model
             writer.WriteAttributeNullable(ATTR.explicit_collision_energy, importedAttributes.CollisionEnergy);
             writer.WriteAttributeNullable(ATTR.explicit_drift_time_msec, importedAttributes.DriftTimeMsec);
             writer.WriteAttributeNullable(ATTR.explicit_drift_time_high_energy_offset_msec, importedAttributes.DriftTimeHighEnergyOffsetMsec);
+            writer.WriteAttributeNullable(ATTR.explicit_ccs_sqa, importedAttributes.CollisionalCrossSectionSqA);
             writer.WriteAttributeNullable(ATTR.explicit_s_lens, importedAttributes.SLens);
             writer.WriteAttributeNullable(ATTR.explicit_cone_voltage, importedAttributes.ConeVoltage);
             writer.WriteAttributeNullable(ATTR.explicit_declustering_potential, importedAttributes.DeclusteringPotential);
@@ -3594,6 +3610,10 @@ namespace pwiz.Skyline.Model
             writer.WriteAttributeNullable(ATTR.retention_time, chromInfo.RetentionTime);
             writer.WriteAttributeNullable(ATTR.start_time, chromInfo.StartRetentionTime);
             writer.WriteAttributeNullable(ATTR.end_time, chromInfo.EndRetentionTime);
+            writer.WriteAttributeNullable(ATTR.ccs, chromInfo.DriftInfo.CollisionalCrossSection);
+            writer.WriteAttributeNullable(ATTR.drift_time_ms1, chromInfo.DriftInfo.DriftTimeMS1);
+            writer.WriteAttributeNullable(ATTR.drift_time_fragment, chromInfo.DriftInfo.DriftTimeFragment);
+            writer.WriteAttributeNullable(ATTR.drift_time_window, chromInfo.DriftInfo.DriftTimeWindow);
             writer.WriteAttributeNullable(ATTR.fwhm, chromInfo.Fwhm);
             writer.WriteAttributeNullable(ATTR.area, chromInfo.Area);
             writer.WriteAttributeNullable(ATTR.background, chromInfo.BackgroundArea);
@@ -4059,6 +4079,8 @@ namespace pwiz.Skyline.Model
                 writer.WriteAttribute(ATTR.retention_time, chromInfo.RetentionTime);
                 writer.WriteAttribute(ATTR.start_time, chromInfo.StartRetentionTime);
                 writer.WriteAttribute(ATTR.end_time, chromInfo.EndRetentionTime);
+                writer.WriteAttributeNullable(ATTR.drift_time, chromInfo.DriftTimeFilter.DriftTimeMsec);
+                writer.WriteAttributeNullable(ATTR.drift_time_window, chromInfo.DriftTimeFilter.DriftTimeExtractionWindowWidthMsec);
                 writer.WriteAttribute(ATTR.area, chromInfo.Area);
                 writer.WriteAttribute(ATTR.background, chromInfo.BackgroundArea);
                 writer.WriteAttribute(ATTR.height, chromInfo.Height);

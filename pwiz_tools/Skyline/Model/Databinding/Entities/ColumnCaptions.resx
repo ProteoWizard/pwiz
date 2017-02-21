@@ -777,6 +777,9 @@
   <data name="ExplicitDriftTimeHighEnergyOffsetMsec">
     <value>Explicit Drift Time High Energy Offset Msec</value>
   </data>
+  <data name="ExplicitCollisionalCrossSection">
+    <value>Explicit Collisional Cross Section</value>
+  </data>
   <data name="ExplicitDriftTimeMsec">
     <value>Explicit Drift Time Msec</value>
   </data>
@@ -819,5 +822,16 @@
   <data name="MoleculeFormula">
     <value>Molecule Formula</value>
   </data>
-
+  <data name="CollisionalCrossSection">
+    <value>Collisional Cross Section</value>
+  </data>
+  <data name="DriftTimeMS1">
+    <value>Drift Time MS1</value>
+  </data>
+  <data name="DriftTimeFragment">
+    <value>Drift Time Fragment</value>
+  </data>
+  <data name="DriftTimeWindow">
+    <value>Drift Time Window</value>
+  </data>
 </root>

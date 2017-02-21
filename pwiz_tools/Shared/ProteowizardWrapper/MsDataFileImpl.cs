@@ -57,6 +57,8 @@ namespace pwiz.ProteowizardWrapper
         private readonly ReaderConfig _config;
         private SpectrumList _spectrumList;
         private ChromatogramList _chromatogramList;
+        private bool? _providesConversionCCStoDT;
+        private SpectrumList_IonMobility _collisionalCrossSectionConverter; // For Agilent (and others, eventually?) conversion from CCS to DT
         private MsDataScanCache _scanCache;
         private readonly IPerfUtil _perf; // for performance measurement, dummied by default
         private readonly LockMassParameters _lockmassParameters; // For Waters lockmass correction
@@ -406,6 +408,35 @@ namespace pwiz.ProteowizardWrapper
         public bool IsShimadzuFile
         {
             get { return _msDataFile.fileDescription.sourceFiles.Any(source => source.hasCVParam(CVID.MS_Shimadzu_Biotech_nativeID_format)); }
+        }
+
+        public bool ProvidesCollisionalCrossSectionConverter
+        {
+            get
+            {
+                if (!_providesConversionCCStoDT.HasValue)
+                    _providesConversionCCStoDT = CollisionalCrossSectionConverter.canConvertDriftTimeAndCCS();
+                return _providesConversionCCStoDT.Value;
+            }
+        }
+
+        public SpectrumList_IonMobility CollisionalCrossSectionConverter
+        {
+            // Currently only works for Agilent, allows for conversion from CCS to DT
+            get {
+                return _collisionalCrossSectionConverter ??
+                       (_collisionalCrossSectionConverter = new SpectrumList_IonMobility(SpectrumList));
+            }
+        }
+
+        public double DriftTimeFromCCS(double ccs, double mz, int charge)
+        {
+            return CollisionalCrossSectionConverter.ccsToDriftTime(ccs, mz, charge);
+        }
+
+        public double CCSFromDriftTime(double dt, double mz, int charge)
+        {
+            return CollisionalCrossSectionConverter.driftTimeToCCS(dt, mz, charge);
         }
 
         private ChromatogramList ChromatogramList
@@ -1012,6 +1043,9 @@ namespace pwiz.ProteowizardWrapper
             if (_chromatogramList != null)
                 _chromatogramList.Dispose();
             _chromatogramList = null;
+            if (_collisionalCrossSectionConverter != null)
+                _collisionalCrossSectionConverter.Dispose();
+            _collisionalCrossSectionConverter = null;
             if (_msDataFile != null)
                 _msDataFile.Dispose();
             _msDataFile = null;
@@ -1393,10 +1427,10 @@ namespace pwiz.ProteowizardWrapper
         public MsInstrumentConfigInfo(string model, string ionization,
                                       string analyzer, string detector)
         {
-            Model = model != null ? model.Trim() : null;
-            Ionization = ionization != null ? ionization.Replace('\n',' ').Trim() : null; // Not L10N
-            Analyzer = analyzer != null ? analyzer.Replace('\n', ' ').Trim() : null; // Not L10N
-            Detector = detector != null ? detector.Replace('\n', ' ').Trim() : null; // Not L10N
+            Model = model != null ? model.Trim() : string.Empty;
+            Ionization = ionization != null ? ionization.Replace('\n', ' ').Trim() : string.Empty; // Not L10N
+            Analyzer = analyzer != null ? analyzer.Replace('\n', ' ').Trim() : string.Empty; // Not L10N
+            Detector = detector != null ? detector.Replace('\n', ' ').Trim() : string.Empty; // Not L10N
         }
 
         public bool IsEmpty

@@ -110,6 +110,7 @@ class MassHunterDataImpl : public MassHunterData
     virtual bool hasIonMobilityData() const;
     virtual int getTotalIonMobilityFramesPresent() const;
     virtual FramePtr getIonMobilityFrame(int frameIndex) const;
+    virtual bool canConvertDriftTimeAndCCS() const { return false; }
     virtual double driftTimeToCCS(double driftTimeInMilliseconds, double mz, int charge) const { throw runtime_error("[MassHunterDataImpl::driftTimeToCCS] not available on non-IMS data"); }
     virtual double ccsToDriftTime(double ccs, double mz, int charge) const { throw runtime_error("[MassHunterDataImpl::ccsToDriftTime] not available on non-IMS data"); }
 
@@ -407,7 +408,9 @@ blt::local_date_time MassHunterDataImpl::getAcquisitionTime() const
         else if (acquisitionTime.Year < 1400)
             acquisitionTime = acquisitionTime.AddYears(1400 - acquisitionTime.Year);
 
-        bpt::ptime pt(bdt::time_from_OADATE<bpt::ptime>(acquisitionTime.ToUniversalTime().ToOADate()));
+        acquisitionTime = acquisitionTime.ToUniversalTime();
+        bpt::ptime pt(boost::gregorian::date(acquisitionTime.Year, boost::gregorian::greg_month(acquisitionTime.Month), acquisitionTime.Day),
+            bpt::time_duration(acquisitionTime.Hour, acquisitionTime.Minute, acquisitionTime.Second, bpt::millisec(acquisitionTime.Millisecond).fractional_seconds()));
         return blt::local_date_time(pt, blt::time_zone_ptr()); // keep time as UTC
     }
     CATCH_AND_FORWARD

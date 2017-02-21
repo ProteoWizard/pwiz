@@ -56,6 +56,13 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             return _chorusSession.GetSpectra(chorusAccount, ChorusUrl, Source, precursor, dataFileSpectrumStartIndex);
         }
 
+        public bool ProvidesCollisionalCrossSectionConverter { get { return false; } }
+
+        public double? CCSFromDriftTime(double driftTime, double mz, int charge)
+        {
+            return null; // Unsupported
+        }
+
         public bool Adopt(IScanProvider scanProvider)
         {
             return false;

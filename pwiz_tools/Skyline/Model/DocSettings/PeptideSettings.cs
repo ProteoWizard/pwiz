@@ -316,7 +316,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public DriftTimeWindowWidthCalculator LibraryDriftTimesWindowWidthCalculator { get; private set; }
 
-        public LibraryIonMobilityInfo LibraryIonMobilityInfo { get; private set; }
+        public LibraryDriftTimeInfo LibraryDriftTimeInfo { get; private set; }
 
         public int CalcMaxTrendReplicates(SrmDocument document)
         {
@@ -465,27 +465,31 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <summary>
         /// Get drift time for the charged peptide from explicitly set values, or our drift time predictor, or,
         /// failing that, from the provided spectral library if it has bare drift times.
-        /// If no drift info is available, returns a new zero'd out drift time info object.
+        /// If no drift info is available, returns a new zero'd out ion mobility info object.
         /// </summary>
         public DriftTimeInfo GetDriftTime(PeptideDocNode  nodePep,
             TransitionGroupDocNode nodeGroup,
-            LibraryIonMobilityInfo libraryIonMobilityInfo, 
+            LibraryDriftTimeInfo libraryDriftTimeInfo,
+            IConversionDriftTimeCCSProvider instrumentInfo, // For converting CCS to DT if needed
             double driftTimeMax, 
             out double windowDtMsec)
         {
-            if (nodeGroup.ExplicitValues.DriftTimeMsec.HasValue)
+            if (nodeGroup.ExplicitValues.CollisionalCrossSectionSqA.HasValue && instrumentInfo != null && instrumentInfo.ProvidesCollisionalCrossSectionConverter)
             {
-                // Use the explicitly specified value
-                var result = new DriftTimeInfo(nodeGroup.ExplicitValues.DriftTimeMsec,
+                // Use the explicitly specified CCS value
+                var dt = instrumentInfo.DriftTimeFromCCS(nodeGroup.ExplicitValues.CollisionalCrossSectionSqA.Value, 
+                    nodeGroup.PrecursorMz, nodeGroup.TransitionGroup.PrecursorCharge);
+                var result = new DriftTimeInfo(dt,
+                    nodeGroup.ExplicitValues.CollisionalCrossSectionSqA,
                     nodeGroup.ExplicitValues.DriftTimeHighEnergyOffsetMsec ?? 0);
                 // Now get the resolving power
                 if (DriftTimePredictor != null)
                 {
-                    windowDtMsec = DriftTimePredictor.WindowWidthCalculator.WidthAt(result.DriftTimeMsec(false).Value, driftTimeMax);
+                    windowDtMsec = DriftTimePredictor.WindowWidthCalculator.WidthAt(result.DriftTimeMsec.Value, driftTimeMax);
                 }
                 else if (UseLibraryDriftTimes)
                 {
-                    windowDtMsec = LibraryDriftTimesWindowWidthCalculator.WidthAt(result.DriftTimeMsec(false).Value, driftTimeMax);
+                    windowDtMsec = LibraryDriftTimesWindowWidthCalculator.WidthAt(result.DriftTimeMsec.Value, driftTimeMax);
                 }
                 else
                 {
@@ -493,10 +497,33 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
                 return result;
             }
-            else
+            else if (nodeGroup.ExplicitValues.DriftTimeMsec.HasValue)
+            {
+                // Use the explicitly specified DT value
+                var result = new DriftTimeInfo(nodeGroup.ExplicitValues.DriftTimeMsec,
+                    nodeGroup.ExplicitValues.CollisionalCrossSectionSqA,
+                    nodeGroup.ExplicitValues.DriftTimeHighEnergyOffsetMsec ?? 0);
+                // Now get the resolving power
+                if (DriftTimePredictor != null)
+                {
+                    windowDtMsec = DriftTimePredictor.WindowWidthCalculator.WidthAt(result.DriftTimeMsec.Value, driftTimeMax);
+                }
+                else if (UseLibraryDriftTimes)
+                {
+                    windowDtMsec = LibraryDriftTimesWindowWidthCalculator.WidthAt(result.DriftTimeMsec.Value, driftTimeMax);
+                }
+                else
+                {
+                    windowDtMsec = 0;
+                }
+                return result;
+            }
+            else 
             {
                 return GetDriftTimeHelper(
-                    new LibKey(nodePep.RawTextId, nodeGroup.TransitionGroup.PrecursorCharge), libraryIonMobilityInfo, driftTimeMax,
+                    new LibKey(nodePep.RawTextId, nodeGroup.TransitionGroup.PrecursorCharge),
+                    nodeGroup.PrecursorMz, instrumentInfo,
+                    libraryDriftTimeInfo, driftTimeMax,
                     out windowDtMsec);
             }
         }
@@ -506,27 +533,28 @@ namespace pwiz.Skyline.Model.DocSettings
         /// Use GetDriftTime() instead.
         /// </summary>
         public DriftTimeInfo GetDriftTimeHelper(LibKey chargedPeptide,
-            LibraryIonMobilityInfo libraryIonMobilityInfo, 
+            double mz, IConversionDriftTimeCCSProvider conversionDriftTimeCcsProvider,
+            LibraryDriftTimeInfo libraryDriftTimeInfo, 
             double driftTimeMax, out  double windowDtMsec)
         {
             if (DriftTimePredictor != null)
             {
-                var result = DriftTimePredictor.GetDriftTimeInfo(chargedPeptide, driftTimeMax, out windowDtMsec);
-                if (result != null && result.DriftTimeMsec(false).HasValue)
+                var result = DriftTimePredictor.GetDriftTimeInfo(chargedPeptide, conversionDriftTimeCcsProvider, driftTimeMax, out windowDtMsec);
+                if (result != null && result.DriftTimeMsec.HasValue)
                     return result;
             }
 
-            if (libraryIonMobilityInfo != null)
+            if (libraryDriftTimeInfo != null)
             {
-                var dt = libraryIonMobilityInfo.GetLibraryMeasuredDriftTimeAndHighEnergyOffset(chargedPeptide);
-                if ((dt != null) && dt.DriftTimeMsec(false).HasValue && UseLibraryDriftTimes)
+                var dt = libraryDriftTimeInfo.GetLibraryMeasuredDriftTimeAndHighEnergyOffset(chargedPeptide, mz, conversionDriftTimeCcsProvider);
+                if ((dt != null) && dt.DriftTimeMsec.HasValue && UseLibraryDriftTimes)
                 {
-                    windowDtMsec = LibraryDriftTimesWindowWidthCalculator.WidthAt(dt.DriftTimeMsec(false).Value, driftTimeMax);
+                    windowDtMsec = LibraryDriftTimesWindowWidthCalculator.WidthAt(dt.DriftTimeMsec.Value, driftTimeMax);
                     return dt;
                 }
             }
             windowDtMsec = 0;
-            return new DriftTimeInfo(null, 0);
+            return DriftTimeInfo.EMPTY;
         }
 
         /// <summary>
@@ -2045,7 +2073,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// Get all ion mobilities associated with this filepath.  Then look at all the others
         /// and get any that don't appear in the inital set, setting them up to be averaged.
         /// </summary>
-        public bool TryGetIonMobilities(MsDataFileUri filePath, out LibraryIonMobilityInfo ionMobilities)
+        public bool TryGetDriftTimeInfos(MsDataFileUri filePath, out LibraryDriftTimeInfo driftTimes)
         {
             Assume.IsTrue(IsLoaded);
 
@@ -2053,17 +2081,17 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 // Only one of the available libraries may claim ownership of the file
                 // in question.
-                if (lib != null && lib.TryGetIonMobilities(filePath, out ionMobilities))
+                if (lib != null && lib.TryGetDriftTimeInfos(filePath, out driftTimes))
                 {
                     // TODO - or HACK, IF YOU PREFER: something better than this:
                     // Look at all available sublibraries, use them to backfill
                     // any missing drift time info in this one
-                    var ionMobilitiesList = new List<LibraryIonMobilityInfo>();
-                    LibraryIonMobilityInfo ionMobilitiesOther;
+                    var ionMobilitiesList = new List<LibraryDriftTimeInfo>();
+                    LibraryDriftTimeInfo driftTimesOther;
                     int i = 0;
-                    while (lib.TryGetIonMobilities(i++, out ionMobilitiesOther)) // Returns false when i> internal list length
+                    while (lib.TryGetDriftTimeInfos(i++, out driftTimesOther)) // Returns false when i> internal list length
                     {
-                        ionMobilitiesList.Add(ionMobilitiesOther);
+                        ionMobilitiesList.Add(driftTimesOther);
                     }
 
                     for (i = 0; i < ionMobilitiesList.Count; i++)
@@ -2072,10 +2100,10 @@ namespace pwiz.Skyline.Model.DocSettings
                         foreach (var im in thisDict) // For each entry this sublibrary
                         {
                             // If this key is not in the source file in question
-                            if (!ionMobilities.GetIonMobilityDict().ContainsKey(im.Key))
+                            if (!driftTimes.GetIonMobilityDict().ContainsKey(im.Key))
                             {
                                 // Aggregate with any others (averaging happens elsewhere)
-                                var info = new List<IonMobilityInfo>();
+                                var info = new List<DriftTimeInfo>();
                                 for (int j = i; j < ionMobilitiesList.Count; j++)
                                 {
                                     var thatDict = ionMobilitiesList[j].GetIonMobilityDict();
@@ -2086,7 +2114,7 @@ namespace pwiz.Skyline.Model.DocSettings
                                 }
                                 if (info.Any())
                                 {
-                                    ionMobilities.GetIonMobilityDict().Add(im.Key,info.ToArray());
+                                    driftTimes.GetIonMobilityDict().Add(im.Key,info.ToArray());
                                 }
                             }
                         }
@@ -2095,7 +2123,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     return true;
                 }
             }
-            ionMobilities = null;
+            driftTimes = null;
             return false;
         }
 

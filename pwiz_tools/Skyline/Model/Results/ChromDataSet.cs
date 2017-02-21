@@ -130,6 +130,11 @@ namespace pwiz.Skyline.Model.Results
             get { return _listChromData.Count > 0 ? BestChromatogram.Key.Precursor : SignedMz.ZERO; }
         }
 
+        public double? CollisionalCrossSection
+        {
+            get { return _listChromData.Count > 0 ? BestChromatogram.Key.CollisionalCrossSection : null; }
+        }
+
         public ChromExtractor Extractor
         {
             get { return _listChromData.Count > 0 ? BestChromatogram.Key.Extractor : ChromExtractor.summed; }

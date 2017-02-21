@@ -208,6 +208,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A measure of ion mobility, in square angstroms, which is typically converted to drift time and used in extracting chromatograms from ion mobility mass spectra..
+        /// </summary>
+        internal static string CollisionalCrossSection {
+            get {
+                return ResourceManager.GetString("CollisionalCrossSection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Collision Energy for the precursor ion according to instrument/vendor
         ///specific default collision energy equation within Skyline.
         /// </summary>
@@ -387,6 +396,33 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Ion mobility drift time (in milliseconds) for fragment ions, which typically move faster due to more energetic collisions.
+        /// </summary>
+        internal static string DriftTimeFragment {
+            get {
+                return ResourceManager.GetString("DriftTimeFragment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ion mobility drift time (in milliseconds)  for precursor ions, which typically move slightly slower than fragment ions as they are less energetic.
+        /// </summary>
+        internal static string DriftTimeMS1 {
+            get {
+                return ResourceManager.GetString("DriftTimeMS1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ion mobility drift time window (in milliseconds)  used in chromatogram extraction.
+        /// </summary>
+        internal static string DriftTimeWindow {
+            get {
+                return ResourceManager.GetString("DriftTimeWindow", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The position of the last (C-terminal) amino acid of the peptide within its
         ///containing protein sequence, or #N/A if no protein sequence is available.
         /// </summary>
@@ -420,6 +456,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         internal static string EstimatedValue {
             get {
                 return ResourceManager.GetString("EstimatedValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The exact desired collisional cross section (in square angstroms) to be converted to drift time and used in extracting chromatograms from ion mobility mass spectra, overriding all model values. .
+        /// </summary>
+        internal static string ExplicitCollisionalCrossSection {
+            get {
+                return ResourceManager.GetString("ExplicitCollisionalCrossSection", resourceCulture);
             }
         }
         

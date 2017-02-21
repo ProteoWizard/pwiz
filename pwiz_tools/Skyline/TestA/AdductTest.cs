@@ -37,8 +37,8 @@ namespace pwiz.SkylineTestA
         {
             int z;
             var actual = IonInfo.ApplyAdductToFormula(PENTANE, adduct, out z).ToString();
-            Assert.AreEqual(expectedFormula, actual);
-            Assert.AreEqual(expectedCharge, z);
+            Assert.AreEqual(expectedFormula, actual, "unexpected formula for adduct "+adduct);
+            Assert.AreEqual(expectedCharge, z, "unexpected charge for adduct " + adduct);
         }
 
         private void TestTaxolAdduct(string adduct, double expectedMz, int expectedCharge)

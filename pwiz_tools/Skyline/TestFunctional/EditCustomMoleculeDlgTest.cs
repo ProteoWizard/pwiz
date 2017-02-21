@@ -149,6 +149,7 @@ namespace pwiz.SkylineTestFunctional
                 // Test the "set" part of "Issue 371: Small molecules: need to be able to import and/or set CE, RT and DT for individual precursors and products"
                 editMoleculeDlgA.DriftTimeMsec = ExplicitTransitionGroupValues.TEST.DriftTimeMsec.Value;
                 editMoleculeDlgA.DriftTimeHighEnergyOffsetMsec = ExplicitTransitionGroupValues.TEST.DriftTimeHighEnergyOffsetMsec.Value;
+                editMoleculeDlgA.CollisionalCrossSectionSqA = ExplicitTransitionGroupValues.TEST.CollisionalCrossSectionSqA.Value;
                 editMoleculeDlgA.CollisionEnergy = ExplicitTransitionGroupValues.TEST.CollisionEnergy.Value;
                 editMoleculeDlgA.SLens = ExplicitTransitionGroupValues.TEST.SLens.Value;
                 editMoleculeDlgA.ConeVoltage = ExplicitTransitionGroupValues.TEST.ConeVoltage;
@@ -328,9 +329,9 @@ namespace pwiz.SkylineTestFunctional
             double windowDT;
             double driftTimeMax = 1000.0;
             var centerDriftTime = newdoc.Settings.PeptideSettings.Prediction.GetDriftTime(
-                                       newdoc.Molecules.First(), newdoc.MoleculeTransitionGroups.First(), null, driftTimeMax, out windowDT);
-            Assert.AreEqual(ExplicitTransitionGroupValues.TEST.DriftTimeMsec.Value, centerDriftTime.DriftTimeMsec(false) ?? 0, .0001);
-            Assert.AreEqual(ExplicitTransitionGroupValues.TEST.DriftTimeMsec.Value + ExplicitTransitionGroupValues.TEST.DriftTimeHighEnergyOffsetMsec.Value, centerDriftTime.DriftTimeMsec(true) ?? 0, .0001);
+                                       newdoc.Molecules.First(), newdoc.MoleculeTransitionGroups.First(), null, null, driftTimeMax, out windowDT);
+            Assert.AreEqual(ExplicitTransitionGroupValues.TEST.DriftTimeMsec.Value, centerDriftTime.DriftTimeMsec ?? 0, .0001);
+            Assert.AreEqual(ExplicitTransitionGroupValues.TEST.DriftTimeMsec.Value + ExplicitTransitionGroupValues.TEST.DriftTimeHighEnergyOffsetMsec.Value, centerDriftTime.GetHighEnergyDriftTimeMsec() ?? 0, .0001);
             Assert.AreEqual(0, windowDT, .0001);
 
             // Verify that tree selection doesn't change just because we changed an ID object

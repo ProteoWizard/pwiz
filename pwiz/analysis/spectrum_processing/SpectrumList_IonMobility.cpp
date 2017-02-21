@@ -68,6 +68,17 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_IonMobility::spectrum(size_t index, bool 
     return inner_->spectrum(index, getBinaryData);
 }
 
+PWIZ_API_DECL bool SpectrumList_IonMobility::canConvertDriftTimeAndCCS() const
+{
+    switch (mode_)
+    {
+    case 0:
+    default:
+        return false; // Only Agilent provides this capabilty, for now
+
+    case 1: return dynamic_cast<detail::SpectrumList_Agilent*>(&*inner_)->canConvertDriftTimeAndCCS();
+    }
+}
 
 PWIZ_API_DECL double SpectrumList_IonMobility::driftTimeToCCS(double driftTime, double mz, int charge) const
 {

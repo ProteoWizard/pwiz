@@ -655,11 +655,11 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                     CollisionalCrossSectionSqA = 0,
                     HighEnergyDriftTimeOffsetMsec = 0,
                 };
-                if (null != spectrum.IonMobilityInfo)
+                if (null != spectrum.DriftTimeInfo)
                 {
-                    dbRetentionTimes.CollisionalCrossSectionSqA = spectrum.IonMobilityInfo.CollisionalCrossSectionSqA.GetValueOrDefault();
-                    dbRetentionTimes.DriftTimeMsec = spectrum.IonMobilityInfo.DriftTimeMsec.GetValueOrDefault();
-                    dbRetentionTimes.HighEnergyDriftTimeOffsetMsec = spectrum.IonMobilityInfo.HighEnergyDriftTimeOffsetMsec;
+                    dbRetentionTimes.CollisionalCrossSectionSqA = spectrum.DriftTimeInfo.CollisionalCrossSectionSqA.GetValueOrDefault();
+                    dbRetentionTimes.DriftTimeMsec = spectrum.DriftTimeInfo.DriftTimeMsec ?? 0; // Get the low energy value
+                    dbRetentionTimes.HighEnergyDriftTimeOffsetMsec = spectrum.DriftTimeInfo.HighEnergyDriftTimeOffsetMsec;
                 }
 
                 if (refSpectra.RetentionTimes == null)
@@ -718,11 +718,11 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                        PeakMZ = MZsToBytes(peaksInfo.Peaks)
                                    };
 
-            if (null != spectrum.IonMobilityInfo)
+            if (null != spectrum.DriftTimeInfo)
             {
-                refSpectra.CollisionalCrossSectionSqA = spectrum.IonMobilityInfo.CollisionalCrossSectionSqA.GetValueOrDefault();
-                refSpectra.DriftTimeMsec = spectrum.IonMobilityInfo.DriftTimeMsec.GetValueOrDefault();
-                refSpectra.DriftTimeHighEnergyOffsetMsec = spectrum.IonMobilityInfo.HighEnergyDriftTimeOffsetMsec;
+                refSpectra.CollisionalCrossSectionSqA = spectrum.DriftTimeInfo.CollisionalCrossSectionSqA.GetValueOrDefault();
+                refSpectra.DriftTimeMsec = spectrum.DriftTimeInfo.DriftTimeMsec ?? 0;
+                refSpectra.DriftTimeHighEnergyOffsetMsec = spectrum.DriftTimeInfo.HighEnergyDriftTimeOffsetMsec;
             }
 
             refSpectra.RetentionTime = spectrum.RetentionTime.GetValueOrDefault();

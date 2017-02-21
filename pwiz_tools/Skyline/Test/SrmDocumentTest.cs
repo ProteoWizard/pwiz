@@ -126,6 +126,7 @@ namespace pwiz.SkylineTest
         {
             ValidateDocMolecules(DOC_MOLECULES);  // V3.12, where s_lens and cone_voltage were misnamed
             ValidateDocMolecules(DOC_MOLECULES.Replace("3.12", "3.52").Replace("s_lens", "explicit_s_lens").Replace("cone_voltage", "explicit_cone_voltage"));
+            ValidateDocMolecules(DOC_MOLECULES.Replace("3.12", "3.61").Replace("s_lens", "explicit_s_lens").Replace("cone_voltage", "explicit_ccs_sqa=\"345.6\" explicit_cone_voltage")); // In 3.61 we have CCS
         }
 
         private static void ValidateDocMolecules(string docText)
@@ -149,6 +150,8 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(99, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.ConeVoltage);
             Assert.AreEqual(2.34, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.DriftTimeMsec);
             Assert.AreEqual(-0.12, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.DriftTimeHighEnergyOffsetMsec.Value, 1E-12);
+            if (doc.FormatVersion >= 3.61)
+                Assert.AreEqual(345.6, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.CollisionalCrossSectionSqA.Value, 1E-12);
             Assert.IsTrue(doc.MoleculeTransitions.ElementAt(0).Transition.IsCustom());
             Assert.AreEqual(transition, doc.MoleculeTransitions.ElementAt(0).Transition.CustomIon);
             Assert.AreEqual(transition2, doc.MoleculeTransitions.ElementAt(1).Transition.CustomIon);

@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using pwiz.ProteowizardWrapper;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.RemoteApi.GeneratedCode;
 
 namespace pwiz.Skyline.Model.Results
@@ -32,7 +33,7 @@ namespace pwiz.Skyline.Model.Results
         private static readonly SpectrumProductFilter[] EMPTY_FILTERS = new SpectrumProductFilter[0];
 
         public SpectrumFilterPair(PrecursorTextId precursorTextId, Color peptideColor, int id, double? minTime, double? maxTime,
-            double? minDriftTimeMsec, double? maxDriftTimeMsec, double highEnergyDriftTimeOffsetMsec, bool highAccQ1, bool highAccQ3)
+            double? minDriftTimeMsec, double? maxDriftTimeMsec, DriftTimeInfo driftTimeInfo, bool highAccQ1, bool highAccQ3)
         {
             Id = id;
             ModifiedSequence = precursorTextId.TextId;
@@ -43,7 +44,7 @@ namespace pwiz.Skyline.Model.Results
             MaxTime = maxTime;
             MinDriftTimeMsec = minDriftTimeMsec;
             MaxDriftTimeMsec = maxDriftTimeMsec;
-            HighEnergyDriftTimeOffsetMsec = highEnergyDriftTimeOffsetMsec;
+            DriftTimeInfo = driftTimeInfo ?? DriftTimeInfo.EMPTY;
             HighAccQ1 = highAccQ1;
             HighAccQ3 = highAccQ3;
 
@@ -103,7 +104,7 @@ namespace pwiz.Skyline.Model.Results
         public double? MaxTime { get; private set; }
         private double? MinDriftTimeMsec { get; set; }
         private double? MaxDriftTimeMsec { get; set; }
-        private double? HighEnergyDriftTimeOffsetMsec { get; set; }
+        private DriftTimeInfo DriftTimeInfo { get; set; }
         private SpectrumProductFilter[] Ms1ProductFilters { get; set; }
         private SpectrumProductFilter[] SimProductFilters { get; set; }
         public SpectrumProductFilter[] Ms2ProductFilters { get; set; }
@@ -295,13 +296,11 @@ namespace pwiz.Skyline.Model.Results
                 for (int i = 0; i < targetCount; i++)
                     extractedIntensities[i] *= scale;
             }
-            double dtCenter, dtWidth;
-            GetDriftTimeWindow(out dtCenter, out dtWidth, useDriftTimeHighEnergyOffset);
+            var dtFilter = GetDriftTimeWindow(useDriftTimeHighEnergyOffset);
             return new ExtractedSpectrum(ModifiedSequence,
                 PeptideColor,
                 Q1,
-                dtCenter,
-                dtWidth,
+                dtFilter, 
                 Extractor,
                 Id,
                 productFilters,
@@ -386,17 +385,13 @@ namespace pwiz.Skyline.Model.Results
         {
             if (null != productFilters)
             {
-                double? imCenterOpt = null;
-                double imCenter, imWidth;
-                if (GetDriftTimeWindow(out imCenter, out imWidth, highEnergy))
-                    imCenterOpt = imCenter;
+                var ionMobility = GetDriftTimeWindow(highEnergy);
                 foreach (var spectrumProductFilter in productFilters)
                 {
                     spectrumProductFilter.FilterId = listChromKeys.Count;
                     var key = new ChromKey(ModifiedSequence,
                         Q1,
-                        imCenterOpt,
-                        imWidth,
+                        ionMobility,
                         spectrumProductFilter.TargetMz,
                         0,  // CE value (Shimadzu SRM only)
                         spectrumProductFilter.FilterWidth,
@@ -442,9 +437,9 @@ namespace pwiz.Skyline.Model.Results
             if (MinDriftTimeMsec.HasValue && MaxDriftTimeMsec.HasValue)
             {
                 docFilterPair.DriftTime = (MinDriftTimeMsec.Value + MaxDriftTimeMsec.Value)/2;
-                if (ChromSource.fragment == chromSource && HighEnergyDriftTimeOffsetMsec.HasValue)
+                if (ChromSource.fragment == chromSource) // Use high energy offset for fragments
                 {
-                    docFilterPair.DriftTime += HighEnergyDriftTimeOffsetMsec.Value;
+                    docFilterPair.DriftTime += DriftTimeInfo.HighEnergyDriftTimeOffsetMsec;
                 }
                 docFilterPair.DriftTimeSpecified = true;
                 docFilterPair.DriftTimeWindow = MaxDriftTimeMsec.Value - MinDriftTimeMsec.Value;
@@ -470,26 +465,24 @@ namespace pwiz.Skyline.Model.Results
         {
             if (!driftTimeMsec.HasValue)
                 return true; // It doesn't NOT have the drift time, since there isn't one
-            double offset = (highEnergy ? HighEnergyDriftTimeOffsetMsec??0 : 0);
+            double offset = highEnergy ? DriftTimeInfo.HighEnergyDriftTimeOffsetMsec : 0;
             return (!MinDriftTimeMsec.HasValue || MinDriftTimeMsec.Value+offset <= driftTimeMsec) &&
                 (!MaxDriftTimeMsec.HasValue || MaxDriftTimeMsec.Value+offset >= driftTimeMsec);
         }
 
-        public bool GetDriftTimeWindow(out double center, out double width, bool highEnergy)
+        public DriftTimeFilter GetDriftTimeWindow(bool highEnergy)
         {
             if (MinDriftTimeMsec.HasValue && MaxDriftTimeMsec.HasValue)
             {
                 // High energy (product ion) scans may have a faster drift time, as in Waters MsE
-                double offset = (highEnergy ? HighEnergyDriftTimeOffsetMsec ?? 0 : 0);
-                width = MaxDriftTimeMsec.Value - MinDriftTimeMsec.Value;
-                center = offset + MinDriftTimeMsec.Value + 0.5*width;
-                return true;
+                double offset = highEnergy ? DriftTimeInfo.HighEnergyDriftTimeOffsetMsec : 0;
+                var width = MaxDriftTimeMsec.Value - MinDriftTimeMsec.Value;
+                var center = offset + MinDriftTimeMsec.Value + 0.5*width;
+                return DriftTimeFilter.GetDriftTimeFilter(center, width, DriftTimeInfo.CollisionalCrossSectionSqA);
             }
             else
             {
-                width = 0;
-                center = 0;
-                return false;
+                return DriftTimeFilter.EMPTY;
             }
         }
     }

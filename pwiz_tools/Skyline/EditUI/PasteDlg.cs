@@ -1605,6 +1605,7 @@ namespace pwiz.Skyline.EditUI
             public const string cePrecursor = "PrecursorCE"; // Not L10N
             public const string dtPrecursor = "PrecursorDT"; // Not L10N
             public const string dtHighEnergyOffset = "HighEnergyDTOffset"; // Not L10N
+            public const string ccsPrecursor = "PrecursorCCS"; // Not L10N
             public const string slens = "SLens"; // Not L10N
             public const string coneVoltage = "ConeVoltage"; // Not L10N
             public const string compensationVoltage = "CompensationVoltage"; // Not L10N
@@ -1634,6 +1635,7 @@ namespace pwiz.Skyline.EditUI
                     cePrecursor,
                     dtPrecursor,
                     dtHighEnergyOffset,
+                    ccsPrecursor,
                     slens,
                     coneVoltage,
                     compensationVoltage,
@@ -1720,6 +1722,7 @@ namespace pwiz.Skyline.EditUI
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.coneVoltage, Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.dtPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Drift_Time__msec_);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.dtHighEnergyOffset, Resources.PasteDlg_UpdateMoleculeType_Explicit_Drift_Time_High_Energy_Offset__msec_);
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.ccsPrecursor, Resources.PasteDlg_UpdateMoleculeType_Collisional_Cross_Section__sq_A_);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.compensationVoltage, Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.declusteringPotential, Resources.PasteDlg_UpdateMoleculeType_Explicit_Declustering_Potential);
 

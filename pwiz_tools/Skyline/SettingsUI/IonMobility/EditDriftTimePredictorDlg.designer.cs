@@ -45,10 +45,6 @@
             this.textResolvingPower = new System.Windows.Forms.TextBox();
             this.textName = new System.Windows.Forms.TextBox();
             this.gridMeasuredDriftTimes = new pwiz.Common.Controls.CommonDataGridView();
-            this.MeasuredDriftTimeSequence = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.MeasuredDriftTimeCharge = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.MeasuredDriftTimeMsec = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.MeasuredDriftTimeHighEnergyOffsetMsec = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.cbOffsetHighEnergySpectra = new System.Windows.Forms.CheckBox();
             this.btnUseResults = new System.Windows.Forms.Button();
             this.cbLinear = new System.Windows.Forms.CheckBox();
@@ -66,6 +62,11 @@
             this.labelWidthDtMax = new System.Windows.Forms.Label();
             this.labelWidthDtZeroUnits = new System.Windows.Forms.Label();
             this.labelWidthDtMaxUnits = new System.Windows.Forms.Label();
+            this.MeasuredDriftTimeSequence = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.MeasuredDriftTimeCharge = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.MeasuredDriftTimeMsec = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.MeasuredDriftTimeCCSsqA = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.MeasuredDriftTimeHighEnergyOffsetMsec = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.gridRegression)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.gridMeasuredDriftTimes)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingChargeRegressionLines)).BeginInit();
@@ -166,6 +167,7 @@
             this.MeasuredDriftTimeSequence,
             this.MeasuredDriftTimeCharge,
             this.MeasuredDriftTimeMsec,
+            this.MeasuredDriftTimeCCSsqA,
             this.MeasuredDriftTimeHighEnergyOffsetMsec});
             dataGridViewCellStyle5.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle5.BackColor = System.Drawing.SystemColors.Window;
@@ -186,27 +188,6 @@
             this.gridMeasuredDriftTimes.RowHeadersDefaultCellStyle = dataGridViewCellStyle6;
             this.helpTip.SetToolTip(this.gridMeasuredDriftTimes, resources.GetString("gridMeasuredDriftTimes.ToolTip"));
             this.gridMeasuredDriftTimes.KeyDown += new System.Windows.Forms.KeyEventHandler(this.gridMeasuredDriftTimes_KeyDown);
-            // 
-            // MeasuredDriftTimeSequence
-            // 
-            this.MeasuredDriftTimeSequence.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            resources.ApplyResources(this.MeasuredDriftTimeSequence, "MeasuredDriftTimeSequence");
-            this.MeasuredDriftTimeSequence.Name = "MeasuredDriftTimeSequence";
-            // 
-            // MeasuredDriftTimeCharge
-            // 
-            resources.ApplyResources(this.MeasuredDriftTimeCharge, "MeasuredDriftTimeCharge");
-            this.MeasuredDriftTimeCharge.Name = "MeasuredDriftTimeCharge";
-            // 
-            // MeasuredDriftTimeMsec
-            // 
-            resources.ApplyResources(this.MeasuredDriftTimeMsec, "MeasuredDriftTimeMsec");
-            this.MeasuredDriftTimeMsec.Name = "MeasuredDriftTimeMsec";
-            // 
-            // MeasuredDriftTimeHighEnergyOffsetMsec
-            // 
-            resources.ApplyResources(this.MeasuredDriftTimeHighEnergyOffsetMsec, "MeasuredDriftTimeHighEnergyOffsetMsec");
-            this.MeasuredDriftTimeHighEnergyOffsetMsec.Name = "MeasuredDriftTimeHighEnergyOffsetMsec";
             // 
             // cbOffsetHighEnergySpectra
             // 
@@ -303,6 +284,32 @@
             resources.ApplyResources(this.labelWidthDtMaxUnits, "labelWidthDtMaxUnits");
             this.labelWidthDtMaxUnits.Name = "labelWidthDtMaxUnits";
             // 
+            // MeasuredDriftTimeSequence
+            // 
+            this.MeasuredDriftTimeSequence.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            resources.ApplyResources(this.MeasuredDriftTimeSequence, "MeasuredDriftTimeSequence");
+            this.MeasuredDriftTimeSequence.Name = "MeasuredDriftTimeSequence";
+            // 
+            // MeasuredDriftTimeCharge
+            // 
+            resources.ApplyResources(this.MeasuredDriftTimeCharge, "MeasuredDriftTimeCharge");
+            this.MeasuredDriftTimeCharge.Name = "MeasuredDriftTimeCharge";
+            // 
+            // MeasuredDriftTimeMsec
+            // 
+            resources.ApplyResources(this.MeasuredDriftTimeMsec, "MeasuredDriftTimeMsec");
+            this.MeasuredDriftTimeMsec.Name = "MeasuredDriftTimeMsec";
+            // 
+            // MeasuredDriftTimeCCSsqA
+            // 
+            resources.ApplyResources(this.MeasuredDriftTimeCCSsqA, "MeasuredDriftTimeCCSsqA");
+            this.MeasuredDriftTimeCCSsqA.Name = "MeasuredDriftTimeCCSsqA";
+            // 
+            // MeasuredDriftTimeHighEnergyOffsetMsec
+            // 
+            resources.ApplyResources(this.MeasuredDriftTimeHighEnergyOffsetMsec, "MeasuredDriftTimeHighEnergyOffsetMsec");
+            this.MeasuredDriftTimeHighEnergyOffsetMsec.Name = "MeasuredDriftTimeHighEnergyOffsetMsec";
+            // 
             // EditDriftTimePredictorDlg
             // 
             this.AcceptButton = this.btnOk;
@@ -362,10 +369,6 @@
         private System.Windows.Forms.Label label2;
         private pwiz.Common.Controls.CommonDataGridView gridMeasuredDriftTimes;
         private System.Windows.Forms.CheckBox cbOffsetHighEnergySpectra;
-        private System.Windows.Forms.DataGridViewTextBoxColumn MeasuredDriftTimeSequence;
-        private System.Windows.Forms.DataGridViewTextBoxColumn MeasuredDriftTimeCharge;
-        private System.Windows.Forms.DataGridViewTextBoxColumn MeasuredDriftTimeMsec;
-        private System.Windows.Forms.DataGridViewTextBoxColumn MeasuredDriftTimeHighEnergyOffsetMsec;
         private System.Windows.Forms.Button btnUseResults;
         private System.Windows.Forms.CheckBox cbLinear;
         private System.Windows.Forms.Label labelWidthDtZero;
@@ -374,5 +377,10 @@
         private System.Windows.Forms.TextBox textWidthAtDtMax;
         private System.Windows.Forms.Label labelWidthDtZeroUnits;
         private System.Windows.Forms.Label labelWidthDtMaxUnits;
+        private System.Windows.Forms.DataGridViewTextBoxColumn MeasuredDriftTimeSequence;
+        private System.Windows.Forms.DataGridViewTextBoxColumn MeasuredDriftTimeCharge;
+        private System.Windows.Forms.DataGridViewTextBoxColumn MeasuredDriftTimeMsec;
+        private System.Windows.Forms.DataGridViewTextBoxColumn MeasuredDriftTimeCCSsqA;
+        private System.Windows.Forms.DataGridViewTextBoxColumn MeasuredDriftTimeHighEnergyOffsetMsec;
     }
 }

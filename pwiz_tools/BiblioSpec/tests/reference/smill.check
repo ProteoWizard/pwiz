@@ -1,11 +1,9 @@
 libLSID	numSpecs	majorVersion	minorVersion
-urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:smill.blib	2	1	4
+urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:smill.blib	1	1	4
 id	RefSpectraID	position	mass
 1	1	11	10.007999
-2	2	11	10.007999
 id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	driftTimeMsec	collisionalCrossSectionSqA	driftTimeHighEnergyOffsetMsec	retentionTime	fileID	SpecIDinFile	score	scoreType
 1	TPAQFDADELR	637.0	2	TPAQFDADELR[+10.0]	-	-	1	1010	0.0	0.0	0.0	0.0	1	CPTAC_Set4_725_091509.0252.0718.2.pkl	0.0	3
-2	TPAQFDADELR	636.86	2	TPAQFDADELR[+10.0]	-	-	1	206	0.0	0.0	0.0	0.0	1	CPTAC_Set4_725_091509.0273.0781.2.pkl	0.0	3
 id	fileName	cutoffScore
 1	/BiblioSpec/tests/inputs/CPTAC_Set4_725_091509.mzXML	-1.0
 id	scoreType

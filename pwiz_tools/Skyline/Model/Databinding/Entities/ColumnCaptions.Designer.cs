@@ -205,6 +205,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Collisional Cross Section.
+        /// </summary>
+        public static string CollisionalCrossSection {
+            get {
+                return ResourceManager.GetString("CollisionalCrossSection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Collision Energy.
         /// </summary>
         public static string CollisionEnergy {
@@ -394,6 +403,33 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Drift Time Fragment.
+        /// </summary>
+        public static string DriftTimeFragment {
+            get {
+                return ResourceManager.GetString("DriftTimeFragment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Drift Time MS1.
+        /// </summary>
+        public static string DriftTimeMS1 {
+            get {
+                return ResourceManager.GetString("DriftTimeMS1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Drift Time Window.
+        /// </summary>
+        public static string DriftTimeWindow {
+            get {
+                return ResourceManager.GetString("DriftTimeWindow", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to End Pos.
         /// </summary>
         public static string EndPos {
@@ -426,6 +462,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string EstimatedValue {
             get {
                 return ResourceManager.GetString("EstimatedValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Explicit Collisional Cross Section.
+        /// </summary>
+        public static string ExplicitCollisionalCrossSection {
+            get {
+                return ResourceManager.GetString("ExplicitCollisionalCrossSection", resourceCulture);
             }
         }
         

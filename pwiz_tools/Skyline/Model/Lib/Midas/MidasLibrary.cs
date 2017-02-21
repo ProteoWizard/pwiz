@@ -29,6 +29,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.Util;
 using pwiz.ProteowizardWrapper;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
@@ -451,21 +452,21 @@ namespace pwiz.Skyline.Model.Lib.Midas
             return false;
         }
 
-        public override bool TryGetIonMobilities(LibKey key, MsDataFileUri filePath, out IonMobilityInfo[] ionMobilities)
+        public override bool TryGetDriftTimeInfos(LibKey key, MsDataFileUri filePath, out DriftTimeInfo[] driftTimes)
         {
-            ionMobilities = null;
+            driftTimes = null;
             return false;
         }
 
-        public override bool TryGetIonMobilities(MsDataFileUri filePath, out LibraryIonMobilityInfo ionMobilities)
+        public override bool TryGetDriftTimeInfos(MsDataFileUri filePath, out LibraryDriftTimeInfo driftTimes)
         {
-            ionMobilities = null;
+            driftTimes = null;
             return false;
         }
 
-        public override bool TryGetIonMobilities(int fileIndex, out LibraryIonMobilityInfo ionMobilities)
+        public override bool TryGetDriftTimeInfos(int fileIndex, out LibraryDriftTimeInfo driftTimes)
         {
-            ionMobilities = null;
+            driftTimes = null;
             return false;
         }
 

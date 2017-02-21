@@ -73,15 +73,15 @@ namespace pwiz.SkylineTest.Results
                 Assert.AreEqual(TestSmallMolecules ? 2 : 1, result.Count);
                 const double expectedDT = 4.0019;
                 var expectedOffset = .4829;
-                Assert.AreEqual(expectedDT, result.Values.First().DriftTimeMsec(false).Value, .001);
+                Assert.AreEqual(expectedDT, result.Values.First().DriftTimeMsec.Value, .001);
                 Assert.AreEqual(expectedOffset, result.Values.First().HighEnergyDriftTimeOffsetMsec, .001);
 
                 // Check ability to update, and to preserve unchanged
                 var revised = new Dictionary<LibKey, DriftTimeInfo>();
                 var libKey = result.Keys.First();
-                revised.Add(libKey, new DriftTimeInfo(4, 0.234));
+                revised.Add(libKey, new DriftTimeInfo(4, null, 0.234));  // N.B. CCS handling would require actual raw data in this test, it's covered in a perf test
                 var libKey2 = new LibKey("DEADEELS", 2);
-                revised.Add(libKey2, new DriftTimeInfo(5, 0.123));
+                revised.Add(libKey2, new DriftTimeInfo(5, null, 0.123));
                 document =
                     document.ChangeSettings(
                         document.Settings.ChangePeptidePrediction(prediction => new PeptidePrediction(null, new DriftTimePredictor("test", revised, null, null, DriftTimeWindowWidthCalculator.DriftTimePeakWidthType.resolving_power, 40, 0, 0))));
@@ -90,9 +90,9 @@ namespace pwiz.SkylineTest.Results
                         document, docContainer.DocumentFilePath)).DriftTimePredictor;
                 result = newPred.MeasuredDriftTimePeptides;
                 Assert.AreEqual(TestSmallMolecules ? 3 : 2, result.Count);
-                Assert.AreEqual(expectedDT, result[libKey].DriftTimeMsec(false).Value, .001);
+                Assert.AreEqual(expectedDT, result[libKey].DriftTimeMsec.Value, .001);
                 Assert.AreEqual(expectedOffset, result[libKey].HighEnergyDriftTimeOffsetMsec, .001);
-                Assert.AreEqual(5, result[libKey2].DriftTimeMsec(false).Value, .001);
+                Assert.AreEqual(5, result[libKey2].DriftTimeMsec.Value, .001);
                 Assert.AreEqual(0.123, result[libKey2].HighEnergyDriftTimeOffsetMsec, .001);
             }
         }

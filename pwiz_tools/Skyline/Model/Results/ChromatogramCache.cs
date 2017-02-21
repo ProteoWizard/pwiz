@@ -25,6 +25,7 @@ using System.Text;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -921,8 +922,8 @@ namespace pwiz.Skyline.Model.Results
                     outStream.Write(BitConverter.GetBytes(tran.ExtractionWidth), 0, sizeof(float));
                     if (FORMAT_VERSION_CACHE > FORMAT_VERSION_CACHE_7)
                     {
-                        outStream.Write(BitConverter.GetBytes(tran.IonMobilityValue), 0, sizeof(float));
-                        outStream.Write(BitConverter.GetBytes(tran.IonMobilityExtractionWidth), 0, sizeof(float));
+                        outStream.Write(BitConverter.GetBytes(tran.DriftTime), 0, sizeof(float));
+                        outStream.Write(BitConverter.GetBytes(tran.DriftTimeExtractionWidth), 0, sizeof(float));
                     }
                     outStream.Write(BitConverter.GetBytes(tran.FlagBits), 0, sizeof(ushort));
                     outStream.Write(BitConverter.GetBytes(tran.Align1), 0, sizeof(ushort));
@@ -1003,7 +1004,7 @@ namespace pwiz.Skyline.Model.Results
                         outStream.Write(BitConverter.GetBytes(info.UncompressedSize), 0, sizeof (int));
                         outStream.Write(BitConverter.GetBytes(info._startTime), 0, sizeof (float));
                         outStream.Write(BitConverter.GetBytes(info._endTime), 0, sizeof (float));
-                        outStream.Write(BitConverter.GetBytes(info.Align2), 0, sizeof (int));
+                        outStream.Write(BitConverter.GetBytes(info._collisionalCrossSection), 0, sizeof (float));
                     }
                 }
                 else
@@ -1249,8 +1250,9 @@ namespace pwiz.Skyline.Model.Results
                     float extractionWidth = tranInfo.ExtractionWidth;
                     ChromSource source = tranInfo.Source;
                     ChromKey key = new ChromKey(_textIdBytes, groupInfo.TextIdIndex, groupInfo.TextIdLen,
-                        groupInfo.Precursor, product, extractionWidth, tranInfo.IonMobilityValue, 
-                        tranInfo.IonMobilityExtractionWidth,  source, groupInfo.Extractor, true, true,
+                        groupInfo.Precursor, product, extractionWidth, 
+                        DriftTimeFilter.GetDriftTimeFilter(tranInfo.DriftTime, tranInfo.DriftTimeExtractionWidth, groupInfo.CollisionalCrossSection),
+                        source, groupInfo.Extractor, true, true,
                         null, null);    // this provider can't provide these optional times
 
                     int id = groupInfo.HasStatusId ? groupInfo.StatusId : i;
@@ -1356,7 +1358,8 @@ namespace pwiz.Skyline.Model.Results
                                                                       lastEntry.StatusId,
                                                                       lastEntry.StatusRank,
                                                                       lastEntry.StartTime, 
-                                                                      lastEntry.EndTime));
+                                                                      lastEntry.EndTime,
+                                                                      lastEntry.CollisionalCrossSection));
                         int start = lastEntry.StartTransitionIndex;
                         int end = start + lastEntry.NumTransitions;
                         for (int j = start; j < end; j++)

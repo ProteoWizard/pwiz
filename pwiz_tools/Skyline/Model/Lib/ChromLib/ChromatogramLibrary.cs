@@ -106,7 +106,8 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                                 Charge = transition.Charge == 0 ? precursor.Charge : transition.Charge,
                                 IonType = Helpers.ParseEnum(transition.FragmentType, IonType.y),
                                 Ordinal = transition.FragmentOrdinal,
-                                MassIndex = transition.MassIndex
+                                MassIndex = transition.MassIndex,
+                                // DriftTimeFilter = DriftTimeFilter.EMPTY // CONSIDER(bspratt) ion mobility info in chromatogram libs?
                             });
                         height = Math.Max(height, transition.Height);
                     }
@@ -131,7 +132,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                             StartTime = startTime,
                             EndTime = endTime,
                             Times = timeIntensities.Times,
-                            ChromDatas = chromDatas,
+                            ChromDatas = chromDatas
                         };
                 }
             }

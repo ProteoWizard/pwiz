@@ -271,7 +271,7 @@ namespace pwiz.Skyline.Model.Results
                         filterIndex,
                         dataSpectrum.Mzs,
                         dataSpectrum.Intensities,
-                        0, 0, // ion mobility unknown
+                        DriftTimeFilter.EMPTY, // ion mobility unknown
                         chromMap);
                 }
                 else if (_filter.EnabledMsMs || _filter.EnabledMs)
@@ -437,8 +437,7 @@ namespace pwiz.Skyline.Model.Results
                     var key = new ChromKey(
                         collector.ModifiedSequence,
                         collector.PrecursorMz,
-                        collector.IonMobilityValue,
-                        collector.IonMobilityExtractionWidth,
+                        collector.IonMobility,
                         pairProduct.Key.TargetMz,
                         0,
                         pairProduct.Key.FilterWidth,
@@ -487,15 +486,14 @@ namespace pwiz.Skyline.Model.Results
                                                int filterIndex,
                                                double[] mzs,
                                                double[] intensities,
-                                               double ionMobilityValue,
-                                               double ionMobilityExtractionWidth,
+                                               DriftTimeFilter ionMobility,
                                                ChromDataCollectorSet chromMap)
         {
             float[] intensityFloats = new float[intensities.Length];
             for (int i = 0; i < intensities.Length; i++)
                 intensityFloats[i] = (float) intensities[i];
             var productFilters = mzs.Select(mz => new SpectrumProductFilter(new SignedMz(mz, precursorMz.IsNegative), 0)).ToArray();
-            var spectrum = new ExtractedSpectrum(modifiedSequence, peptideColor, precursorMz, ionMobilityValue, ionMobilityExtractionWidth,
+            var spectrum = new ExtractedSpectrum(modifiedSequence, peptideColor, precursorMz, ionMobility,
                 ChromExtractor.summed, filterIndex, productFilters, intensityFloats, null);
             chromMap.ProcessExtractedSpectrum(time, _collectors, -1, spectrum, null);
         }
@@ -1290,22 +1288,32 @@ namespace pwiz.Skyline.Model.Results
                     : 0;
             }
         }
+    }
 
-        private class DataFileInstrumentInfo : IFilterInstrumentInfo
+    public class DataFileInstrumentInfo : IFilterInstrumentInfo
+    {
+        private readonly MsDataFileImpl _dataFile;
+
+        public DataFileInstrumentInfo(MsDataFileImpl dataFile)
         {
-            private readonly MsDataFileImpl _dataFile;
+            _dataFile = dataFile;
+        }
 
-            public DataFileInstrumentInfo(MsDataFileImpl dataFile)
-            {
-                _dataFile = dataFile;
-            }
+        public bool IsWatersFile { get { return _dataFile.IsWatersFile; } }
 
-            public bool IsWatersFile { get { return _dataFile.IsWatersFile; } }
+        public bool IsAgilentFile { get { return _dataFile.IsAgilentFile; } }
 
-            public bool IsAgilentFile { get { return _dataFile.IsAgilentFile; } }
+        public bool ProvidesCollisionalCrossSectionConverter { get { return _dataFile.ProvidesCollisionalCrossSectionConverter; } }
+
+        public double DriftTimeFromCCS(double ccs, double mz, int charge)
+        {
+            return _dataFile.DriftTimeFromCCS(ccs, mz, charge);
+        }
+        public double CCSFromDriftTime(double dt, double mz, int charge)
+        {
+            return _dataFile.CCSFromDriftTime(dt, mz, charge);
         }
     }
-    
     internal enum TimeSharing { single, shared, grouped }
 
     internal sealed class ChromDataCollectorSet
@@ -1354,8 +1362,7 @@ namespace pwiz.Skyline.Model.Results
         public void ProcessExtractedSpectrum(float time, SpectraChromDataProvider.Collectors chromatograms, int scanId, ExtractedSpectrum spectrum, Action<int, ChromCollector> addCollector)
         {
             var precursorMz = spectrum.PrecursorMz;
-            double? ionMobilityValue = spectrum.IonMobilityValue;
-            double ionMobilityExtractionWidth = spectrum.IonMobilityExtractionWidth;
+            var ionMobility = spectrum.IonMobility;
             string textId = spectrum.TextId;
             ChromExtractor extractor = spectrum.Extractor;
             int ionScanCount = spectrum.ProductFilters.Length;
@@ -1368,7 +1375,7 @@ namespace pwiz.Skyline.Model.Results
                 collector = PrecursorCollectorMap[index].Item2;
             else
             {
-                collector = new ChromDataCollector(textId, precursorMz, ionMobilityValue, ionMobilityExtractionWidth, index, IsGroupedTime);
+                collector = new ChromDataCollector(textId, precursorMz, ionMobility, index, IsGroupedTime);
                 PrecursorCollectorMap[index] = new Tuple<PrecursorTextId, ChromDataCollector>(key, collector);
             }
 
@@ -1443,12 +1450,11 @@ namespace pwiz.Skyline.Model.Results
 
     internal sealed class ChromDataCollector
     {
-        public ChromDataCollector(string modifiedSequence, SignedMz precursorMz, double ? ionMobilityValue, double ionMobilityExtractionWidth, int statusId, bool isGroupedTime)
+        public ChromDataCollector(string modifiedSequence, SignedMz precursorMz, DriftTimeFilter ionMobility, int statusId, bool isGroupedTime)
         {
             ModifiedSequence = modifiedSequence;
             PrecursorMz = precursorMz;
-            IonMobilityValue = ionMobilityValue;
-            IonMobilityExtractionWidth = ionMobilityExtractionWidth;
+            IonMobility = ionMobility;
             StatusId = statusId;
             ProductIntensityMap = new Dictionary<SpectrumProductFilter, ChromCollector>();
             if (isGroupedTime)
@@ -1460,8 +1466,7 @@ namespace pwiz.Skyline.Model.Results
 
         public string ModifiedSequence { get; private set; }
         public SignedMz PrecursorMz { get; private set; }
-        public double? IonMobilityValue { get; private set; }
-        public double IonMobilityExtractionWidth { get; private set; }
+        public DriftTimeFilter IonMobility { get; private set; }
         public int StatusId { get; private set; }
         public Dictionary<SpectrumProductFilter, ChromCollector> ProductIntensityMap { get; private set; }
         public readonly SortedBlockedList<float> GroupedTimesCollector;

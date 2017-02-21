@@ -88,6 +88,7 @@ namespace pwiz.SkylineTestFunctional
             const double precursorCE = 1.23;
             const double precursorDT = 2.34;
             const double highEnergyDtOffset = -.012;
+            const double precursorCCS = 345.6;
             const double slens = 6.789;
             const double coneVoltage = 7.89;
             const double compensationVoltage = 8.901;
@@ -123,6 +124,7 @@ namespace pwiz.SkylineTestFunctional
                     PasteDlg.SmallMoleculeTransitionListColumnHeaders.adductProduct,
                     PasteDlg.SmallMoleculeTransitionListColumnHeaders.dtPrecursor,
                     PasteDlg.SmallMoleculeTransitionListColumnHeaders.dtHighEnergyOffset,
+                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.ccsPrecursor,
                     PasteDlg.SmallMoleculeTransitionListColumnHeaders.slens,
                     PasteDlg.SmallMoleculeTransitionListColumnHeaders.coneVoltage,
                     PasteDlg.SmallMoleculeTransitionListColumnHeaders.compensationVoltage,
@@ -131,7 +133,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Default col order is listname, preName, PreFormula, preAdduct, preMz, preCharge, prodName, ProdFormula, prodAdduct, prodMz, prodCharge
             string line1 = "MyMolecule\tMyMol\tMyFrag\tC34H12O4\tC34H3O\t" + precursorMzAtZNeg2 + "\t" + productMzAtZNeg2 + "\t-2\t-2\tlight\t" +
-                precursorRT + "\t" + precursorRTWindow + "\t" + precursorCE + "\t" + note + "\t\t\t" + precursorDT + "\t" + highEnergyDtOffset + "\t" + slens + "\t" + coneVoltage +
+                precursorRT + "\t" + precursorRTWindow + "\t" + precursorCE + "\t" + note + "\t\t\t" + precursorDT + "\t" + highEnergyDtOffset + "\t" + precursorCCS + "\t" + slens + "\t" + coneVoltage +
                 "\t" + compensationVoltage + "\t" + declusteringPotential; // Legit
             const string line2start = "\r\nMyMolecule2\tMyMol2\tMyFrag2\tCH12O4\tCH3O\t";
             const string line3 = "\r\nMyMolecule2\tMyMol2\tMyFrag2\tCH12O4\tCHH500000000\t\t\t1\t1";
@@ -177,8 +179,8 @@ namespace pwiz.SkylineTestFunctional
                 // By default we don't show drift or other exotic columns
                 var columnOrder = (withSpecials == 0) ? fullColumnOrder.Take(16).ToArray() : fullColumnOrder;
                 // Take a legit full paste and mess with each field in turn
-                string[] fields = { "MyMol", "MyPrecursor", "MyProduct", "C12H9O4", "C6H4O2", "217.049535420091", "108.020580420091", "1", "1", "heavy", "123", "5", "25", "this is a note", "[M+]", "[M+]", "7", "9", "88.5", "99.6", "77.3", "66.2" };
-                string[] badfields = { "", "", "", "123", "C6H2O2[M+2H]", "fish", "-345", "cat", "pig", "12", "frog", "hamster", "boston", "", "[M+foo]", "wut", "foosball", "greasy", "mumble", "gumdrop", "dingle", "gorse", "AHHHHHRGH" };
+                string[] fields = { "MyMol", "MyPrecursor", "MyProduct", "C12H9O4", "C6H4O2", "217.049535420091", "108.020580420091", "1", "1", "heavy", "123", "5", "25", "this is a note", "[M+]", "[M+]", "7", "9", "123", "88.5", "99.6", "77.3", "66.2" };
+                string[] badfields = { "", "", "", "123", "C6H2O2[M+2H]", "fish", "-345", "cat", "pig", "12", "frog", "hamster", "boston", "", "[M+foo]", "wut", "foosball", "greasy", "mumble", "gumdrop", "dingle", "gorse", "AHHHHHRGH", "banananana" };
                 var expectedErrors = new List<string>()
                 {
                     Resources.PasteDlg_ShowNoErrors_No_errors, Resources.PasteDlg_ShowNoErrors_No_errors, Resources.PasteDlg_ShowNoErrors_No_errors,  // No name, no problem
@@ -203,6 +205,8 @@ namespace pwiz.SkylineTestFunctional
                          string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_drift_time_value__0_,badfields[s++]));
                      expectedErrors.Add(
                          string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_drift_time_high_energy_offset_value__0_, badfields[s++]));
+                     expectedErrors.Add(
+                         string.Format(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_collisional_cross_section_value__0_, badfields[s++]));
                      expectedErrors.Add(
                          string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_S_Lens_value__0_, badfields[s++]));
                      expectedErrors.Add(
@@ -235,6 +239,7 @@ namespace pwiz.SkylineTestFunctional
             var product = transitionGroup.Transitions.First();
             Assert.AreEqual(precursorCE, transitionGroup.ExplicitValues.CollisionEnergy);
             Assert.AreEqual(precursorDT, transitionGroup.ExplicitValues.DriftTimeMsec);
+            Assert.AreEqual(precursorCCS, transitionGroup.ExplicitValues.CollisionalCrossSectionSqA);
             Assert.AreEqual(slens, transitionGroup.ExplicitValues.SLens);
             Assert.AreEqual(coneVoltage, transitionGroup.ExplicitValues.ConeVoltage);
             Assert.AreEqual(compensationVoltage, transitionGroup.ExplicitValues.CompensationVoltage);
@@ -555,6 +560,7 @@ namespace pwiz.SkylineTestFunctional
                 EnableDocumentGridColumns(documentGrid, Resources.SkylineViewContext_GetDocumentGridRowSources_Precursors, 16, new[] {
                     "Proteins!*.Peptides!*.Precursors!*.ExplicitDriftTimeMsec",
                     "Proteins!*.Peptides!*.Precursors!*.ExplicitDriftTimeHighEnergyOffsetMsec",
+                    "Proteins!*.Peptides!*.Precursors!*.ExplicitCollisionalCrossSection",
                     "Proteins!*.Peptides!*.Precursors!*.ExplicitCollisionEnergy",
                     "Proteins!*.Peptides!*.Precursors!*.ExplicitDeclusteringPotential",
                     "Proteins!*.Peptides!*.Precursors!*.ExplicitCompensationVoltage"});
@@ -589,7 +595,13 @@ namespace pwiz.SkylineTestFunctional
                 WaitForCondition(() => (SkylineWindow.Document.MoleculeTransitionGroups.Any() &&
                   SkylineWindow.Document.MoleculeTransitionGroups.First().ExplicitValues.DriftTimeHighEnergyOffsetMsec.Equals(explicitDTOffset)));
 
-            // And clean up after ourselves
+                const double explicitCCS = 345.6;
+                var colCCS = FindDocumentGridColumn(documentGrid, "ExplicitCollisionalCrossSection");
+                RunUI(() => documentGrid.DataGridView.Rows[0].Cells[colCCS.Index].Value = explicitCCS);
+                WaitForCondition(() => (SkylineWindow.Document.MoleculeTransitionGroups.Any() &&
+                  SkylineWindow.Document.MoleculeTransitionGroups.First().ExplicitValues.CollisionalCrossSectionSqA.Equals(explicitCCS)));
+
+                // And clean up after ourselves
             RunUI(() => documentGrid.Close());
             NewDocument();
             RunUI(() => Settings.Default.CustomMoleculeTransitionInsertColumnsList = saveColumnOrder);

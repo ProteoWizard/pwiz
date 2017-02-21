@@ -271,6 +271,7 @@ namespace pwiz.Skyline.Model
         private int INDEX_NOTE { get { return ColumnIndex(PasteDlg.SmallMoleculeTransitionListColumnHeaders.note); } }
         private int INDEX_MOLECULE_DRIFT_TIME_MSEC { get { return ColumnIndex(PasteDlg.SmallMoleculeTransitionListColumnHeaders.dtPrecursor); } }
         private int INDEX_HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC { get { return ColumnIndex(PasteDlg.SmallMoleculeTransitionListColumnHeaders.dtHighEnergyOffset); } }
+        private int INDEX_MOLECULE_CCS { get { return ColumnIndex(PasteDlg.SmallMoleculeTransitionListColumnHeaders.ccsPrecursor); } }
         private int INDEX_SLENS { get { return ColumnIndex(PasteDlg.SmallMoleculeTransitionListColumnHeaders.slens); } }
         private int INDEX_CONE_VOLTAGE { get { return ColumnIndex(PasteDlg.SmallMoleculeTransitionListColumnHeaders.coneVoltage); } }
         private int INDEX_COMPENSATION_VOLTAGE { get { return ColumnIndex(PasteDlg.SmallMoleculeTransitionListColumnHeaders.compensationVoltage); } }
@@ -573,6 +574,19 @@ namespace pwiz.Skyline.Model
                 });
                 return null;
             }
+            double? ccsPrecursor = null;
+            if (row.GetCellAsDouble(INDEX_MOLECULE_CCS, out dtmp))
+                ccsPrecursor = dtmp;
+            else if (!String.IsNullOrEmpty(row.GetCell(INDEX_MOLECULE_CCS)))
+            {
+                ShowTransitionError(new PasteError
+                {
+                    Column = INDEX_MOLECULE_CCS,
+                    Line = row.Index,
+                    Message = String.Format(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_collisional_cross_section_value__0_, row.GetCell(INDEX_MOLECULE_CCS))
+                });
+                return null;
+            }
             string errMessage = String.Format(getPrecursorColumns
                 ? Resources.PasteDlg_ValidateEntry_Error_on_line__0___Precursor_needs_values_for_any_two_of__Formula__m_z_or_Charge_
                 : Resources.PasteDlg_ValidateEntry_Error_on_line__0___Product_needs_values_for_any_two_of__Formula__m_z_or_Charge_, row.Index + 1);
@@ -664,7 +678,7 @@ namespace pwiz.Skyline.Model
                 var retentionTimeInfo = retentionTime.HasValue
                     ? new ExplicitRetentionTimeInfo(retentionTime.Value, retentionTimeWindow)
                     : null;
-                var explicitTransitionGroupValues = new ExplicitTransitionGroupValues(collisionEnergy, driftTimePrecursorMsec, driftTimeHighEnergyOffsetMsec, slens,
+                var explicitTransitionGroupValues = new ExplicitTransitionGroupValues(collisionEnergy, driftTimePrecursorMsec, driftTimeHighEnergyOffsetMsec, ccsPrecursor, slens,
                     coneVoltage, declusteringPotential, compensationVoltage);
                 var massOk = true;
                 var massTooLow = false;

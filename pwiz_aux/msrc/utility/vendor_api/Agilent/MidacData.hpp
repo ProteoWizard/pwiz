@@ -71,6 +71,7 @@ class MidacDataImpl : public MassHunterData
     virtual bool hasIonMobilityData() const;
     virtual int getTotalIonMobilityFramesPresent() const;
     virtual FramePtr getIonMobilityFrame(int frameIndex) const;
+    virtual bool canConvertDriftTimeAndCCS() const;
     virtual double driftTimeToCCS(double driftTimeInMilliseconds, double mz, int charge) const;
     virtual double ccsToDriftTime(double ccs, double mz, int charge) const;
 

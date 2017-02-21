@@ -123,7 +123,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
                 foreach (var chromatogram in chromatogramGroup.Chromatogram)
                 {
                     yield return new ChromKey(chromatogramGroup.ModifiedSequence, new SignedMz(chromatogramGroup.PrecursorMz), 
-                        null, 0,
+                        null,
                         new SignedMz(chromatogram.ProductMz), 0, chromatogram.MzWindow, chromSource, chromExtractor, false, false,
                         null, null);    // Optional retention and drift times not used in this provider
                 }

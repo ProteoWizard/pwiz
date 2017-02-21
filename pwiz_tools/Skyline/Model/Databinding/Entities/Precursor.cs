@@ -336,6 +336,20 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        public double? ExplicitCollisionalCrossSection
+        {
+            get
+            {
+                return DocNode.ExplicitValues.CollisionalCrossSectionSqA;
+            }
+            set
+            {
+                var values = DocNode.ExplicitValues.ChangeCollisionalCrossSection(value);
+                ChangeDocNode(EditDescription.SetColumn("ExplicitCollisionalCrossSection", value), // Not L10N
+                    DocNode.ChangeExplicitValues(values));
+            }
+        }
+
         [InvariantDisplayName("PrecursorNote")]
         public string Note
         {

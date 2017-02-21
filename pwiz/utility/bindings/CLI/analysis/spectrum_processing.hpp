@@ -397,6 +397,9 @@ public ref class SpectrumList_IonMobility : public msdata::SpectrumList
     /// </summary>
     static bool accept(msdata::SpectrumList^ inner);
 
+    // returns true if the data file actually has necessary info for CCS/DT handling
+    virtual bool canConvertDriftTimeAndCCS();
+
     /// returns collisional cross-section associated with the drift time (specified in milliseconds)
     virtual double driftTimeToCCS(double driftTime, double mz, int charge);
 

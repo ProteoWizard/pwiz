@@ -700,41 +700,22 @@ string BuildParser::getSpecFileName() {
  * Can't use MSToolkit because it doesn't extract the parentFileName
  * attribute from the spectrum.  Neither does RAMP.
  */
-void BuildParser::findScanNumFromName() {
-
-    // make a map of names and scan numbers (to be filled in)
-    map<string, int> nameNumTable;
-    for(size_t i=0; i<psms_.size(); i++) {
-        PSM* cur_psm = psms_.at(i);
-        nameNumTable.insert( pair<string,int>(cur_psm->specName, -1) );
-    }
-
-    // open and read file using the custom reader
-    const char* specFileName = curSpecFileName_.c_str();
-    mzxmlFinder reader(specFileName);
-    reader.findScanNumFromName(&nameNumTable);
-
-    for(size_t i=0; i<psms_.size(); i++) {
-        PSM* cur_psm = psms_.at(i);
-        // get the new scan number and update the psm
-        cur_psm->specKey = nameNumTable.find(cur_psm->specName)->second;
-    }
-
-}
-
-/**
- * \brief Read through the mxXML file one spec at a time and match up
- * scan index numbers with the scan names used by Spectrum Mill.
- * Can't use MSToolkit because it doesn't extract the parentFileName
- * attribute from the spectrum.  Neither does RAMP.
- */
-void BuildParser::findScanIndexFromName() {
+void BuildParser::findScanIndexFromName(const map<PSM*, double>& precursorMap) {
 
     // make a map for of names and scan numbers (to be filled in)
-    map<string, int> nameNumTable;
+    map<string, mzxmlFinder::SpecInfo*> nameNumTable;
     for(size_t i=0; i<psms_.size(); i++) {
         PSM* cur_psm = psms_.at(i);
-        nameNumTable.insert( pair<string,int>(cur_psm->specName, -1) );
+        string specName = cur_psm->specName;
+        map<PSM*, double>::const_iterator j = precursorMap.find(cur_psm);
+        if (j == precursorMap.end()) {
+            Verbosity::warn("Couldn't find precursor for spectrum '%s'", cur_psm->specName.c_str());
+            continue;
+        }
+        double precursor = j->second;
+        map<string, mzxmlFinder::SpecInfo*>::iterator k = nameNumTable.find(specName);
+        mzxmlFinder::SpecInfo* old = k == nameNumTable.end() ? NULL : k->second;
+        nameNumTable[specName] = new mzxmlFinder::SpecInfo(precursor, old);
     }
 
     // open and read file using the custom reader
@@ -744,10 +725,26 @@ void BuildParser::findScanIndexFromName() {
 
     for(size_t i=0; i<psms_.size(); i++) {
         PSM* cur_psm = psms_.at(i);
+        string specName = cur_psm->specName;
         // get the new scan number and update the psm
-        cur_psm->specIndex = nameNumTable.find(cur_psm->specName)->second;
+        map<PSM*, double>::const_iterator j = precursorMap.find(cur_psm);
+        if (j == precursorMap.end()) {
+            continue;
+        }
+        map<string, mzxmlFinder::SpecInfo*>::iterator k = nameNumTable.find(specName);
+        if (k == nameNumTable.end()) {
+            continue;
+        }
+        mzxmlFinder::SpecInfo* info = k->second->getMatch(j->second);
+        if (info != NULL) {
+            cur_psm->specIndex = info->getScan();
+        }
     }
 
+    // cleanup
+    for (map<string, mzxmlFinder::SpecInfo*>::iterator i = nameNumTable.begin(); i != nameNumTable.end(); i++) {
+        delete i->second;
+    }
 }
 void BuildParser::initSpecProgress(int numSpec){
 

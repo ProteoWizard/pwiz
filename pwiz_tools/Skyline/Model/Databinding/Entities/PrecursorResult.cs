@@ -132,6 +132,16 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 return SrmDocument.GetOptimizedCompensationVoltage(Precursor.Peptide.DocNode, Precursor.DocNode);
             }
         }
+
+        [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
+        public double? CollisionalCrossSection { get { return ChromInfo.DriftInfo.CollisionalCrossSection; } }
+        [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
+        public double? DriftTimeMS1 { get { return ChromInfo.DriftInfo.DriftTimeMS1; } }
+        [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
+        public double? DriftTimeFragment { get { return ChromInfo.DriftInfo.DriftTimeFragment; } }
+        [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
+        public double? DriftTimeWindow { get { return ChromInfo.DriftInfo.DriftTimeWindow; } }
+
         [InvariantDisplayName("PrecursorReplicateNote")]
         public string Note 
         { 

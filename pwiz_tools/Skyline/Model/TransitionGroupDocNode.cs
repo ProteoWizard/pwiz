@@ -1219,6 +1219,7 @@ namespace pwiz.Skyline.Model
                                     if (!keepUserSet || chromInfo == null || chromInfo.UserSet == UserSet.FALSE || missmatchedEmptyReintegrated)
                                     {
                                         ChromPeak peak = ChromPeak.EMPTY;
+                                        DriftTimeFilter ionMobility = null;
                                         if (info != null)
                                         {
                                             // If the peak boundaries have been set by the user, make sure this peak matches
@@ -1243,6 +1244,7 @@ namespace pwiz.Skyline.Model
                                                     peak = info.GetPeak(bestIndex);
                                                 peak = CheckForcedPeak(peak, integrateAll);
                                             }
+                                            ionMobility = info.GetDriftTimeFilter();
                                         }
 
                                         // Avoid creating new info objects that represent the same data
@@ -1250,7 +1252,7 @@ namespace pwiz.Skyline.Model
                                         if (chromInfo == null || !chromInfo.Equivalent(fileId, step, peak) || chromInfo.UserSet != userSet)
                                         {
                                             int ratioCount = settingsNew.PeptideSettings.Modifications.RatioInternalStandardTypes.Count;
-                                            chromInfo = CreateTransionChromInfo(chromInfo, fileId, step, peak, ratioCount, userSet);
+                                            chromInfo = CreateTransitionChromInfo(chromInfo, fileId, step, peak, ionMobility, ratioCount, userSet);
                                         }
                                     }
 
@@ -1376,15 +1378,14 @@ namespace pwiz.Skyline.Model
             return peak;
         }
 
-        private static TransitionChromInfo CreateTransionChromInfo(TransitionChromInfo chromInfo, ChromFileInfoId fileId,
-                                                            int step, ChromPeak peak, int ratioCount, UserSet userSet)
+        private static TransitionChromInfo CreateTransitionChromInfo(TransitionChromInfo chromInfo, ChromFileInfoId fileId,
+                                              int step, ChromPeak peak, DriftTimeFilter ionMobility, int ratioCount, UserSet userSet)
         {
             // Use the old ratio for now, and it will be corrected by the peptide,
             // if it is incorrect.
             IList<float?> ratios = chromInfo != null ? chromInfo.Ratios : TransitionChromInfo.GetEmptyRatios(ratioCount);
             Annotations annotations = chromInfo != null ? chromInfo.Annotations : Annotations.EMPTY;
-
-            return new TransitionChromInfo(fileId, step, peak, ratios, annotations, userSet);
+            return new TransitionChromInfo(fileId, step, peak, ionMobility, ratios, annotations, userSet);
         }
 
         /// <summary>
@@ -2092,11 +2093,15 @@ namespace pwiz.Skyline.Model
 
                     Ratios = chromInfo.Ratios;
                     Annotations = chromInfo.Annotations;
+
+                    DriftTimeInfo = chromInfo.DriftInfo;
                 }
                 else
                 {
                     Ratios = TransitionGroupChromInfo.GetEmptyRatios(ratioCount);
                     Annotations = Annotations.EMPTY;
+
+                    DriftTimeInfo = TransitionGroupDriftTimeInfo.EMPTY; 
                 }
 
                 if (reintegratePeak != null)
@@ -2118,6 +2123,7 @@ namespace pwiz.Skyline.Model
             private float? RetentionTime { get; set; }
             private float? StartTime { get; set; }
             private float? EndTime { get; set; }
+            private TransitionGroupDriftTimeInfo DriftTimeInfo { get; set; }
             private float? Fwhm { get; set; }
             private float? Area { get; set; }
             private float? AreaMs1 { get; set; }
@@ -2145,6 +2151,9 @@ namespace pwiz.Skyline.Model
             {
                 if (info == null)
                     return;
+
+                // Aggregate ion mobility information across all transitions
+                DriftTimeInfo = DriftTimeInfo.AddDriftTimeFilterInfo(info.DriftTimeFilter, nodeTran.Transition.IsPrecursor());
 
                 ResultsCount++;
 
@@ -2256,6 +2265,7 @@ namespace pwiz.Skyline.Model
                                                     RetentionTime,
                                                     StartTime,
                                                     EndTime,
+                                                    DriftTimeInfo,
                                                     Fwhm,
                                                     Area, AreaMs1, AreaFragment,
                                                     BackgroundArea, BackgroundAreaMs1, BackgroundAreaFragment,
@@ -2426,7 +2436,7 @@ namespace pwiz.Skyline.Model
 
                         ChromPeak peakNew = chromInfo.GetPeak(indexPeakBest);
                         nodeTranNew = (TransitionDocNode) nodeTranNew.ChangePeak(
-                                                              indexSet, fileId, step, peakNew, ratioCount, userSet);
+                                                              indexSet, fileId, step, peakNew, chromInfo.GetDriftTimeFilter(), ratioCount, userSet);
                     }
                     listChildrenNew.Add(nodeTranNew);
                 }
@@ -2503,7 +2513,9 @@ namespace pwiz.Skyline.Model
                         var chromInfo = chromInfoArray[i];
                         int step = i - numSteps;
                         nodeTranNew = (TransitionDocNode) nodeTranNew.ChangePeak(indexSet, fileId, step,
-                                                                                    chromInfo.CalcPeak(startIndex, endIndex, flags), ratioCount, userSet);
+                                                                                    chromInfo.CalcPeak(startIndex, endIndex, flags),
+                                                                                    chromInfo.GetDriftTimeFilter(),
+                                                                                    ratioCount, userSet);
                     }
                     listChildrenNew.Add(nodeTranNew);
                 }

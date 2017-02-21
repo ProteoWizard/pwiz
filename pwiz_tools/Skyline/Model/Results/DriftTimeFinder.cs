@@ -53,7 +53,7 @@ namespace pwiz.Skyline.Model.Results
 
         private struct DriftTimeIntensityPair
         {
-            public double? DriftTime { get; set; }
+            public DriftTimeInfo DriftTime { get; set; }
             public double Intensity { get; set; }
         }
 
@@ -115,13 +115,14 @@ namespace pwiz.Skyline.Model.Results
                 foreach (var dt in _ms1DriftTimes)
                 {
                     // Choose the drift time which gave the largest signal
-                    var ms1DriftTime = dt.Value.OrderByDescending(p => p.Intensity).First().DriftTime;
+                    // CONSIDER: average DT and CCS values that fall "near" the DT of largest signal?
+                    var ms1IonMobility = dt.Value.OrderByDescending(p => p.Intensity).First().DriftTime;
                     // Check for MS2 data to use for high energy offset
                     List<DriftTimeIntensityPair> listDt;
-                    var ms2DriftTime = _ms2DriftTimes.TryGetValue(dt.Key, out listDt)
+                    var ms2IonMobility = _ms2DriftTimes.TryGetValue(dt.Key, out listDt)
                         ? listDt.OrderByDescending(p => p.Intensity).First().DriftTime
-                        : (ms1DriftTime ?? 0);
-                    var value = new DriftTimeInfo(ms1DriftTime, ms2DriftTime - ms1DriftTime ?? 0);
+                        : ms1IonMobility;
+                    var value = new DriftTimeInfo(ms1IonMobility.DriftTimeMsec, ms1IonMobility.CollisionalCrossSectionSqA, ms2IonMobility.DriftTimeMsec - ms1IonMobility.DriftTimeMsec ?? 0);
                     if (!measured.ContainsKey(dt.Key))
                         measured.Add(dt.Key, value);
                     else
@@ -133,7 +134,19 @@ namespace pwiz.Skyline.Model.Results
                     if (!_ms1DriftTimes.ContainsKey(dt.Key))
                     {
                         // Only MS2 drift times found, use that
-                        var value = new DriftTimeInfo(dt.Value.OrderByDescending(p => p.Intensity).First().DriftTime, 0);
+                        var driftTimeIntensityPair = dt.Value.OrderByDescending(p => p.Intensity).First();
+                        var value = driftTimeIntensityPair.DriftTime;
+                        // Note collisional cross section
+                        if (_msDataFileScanHelper.ProvidesCollisionalCrossSectionConverter)
+                        {
+                            var ccs = _msDataFileScanHelper.CCSFromDriftTime(value.DriftTimeMsec.Value,
+                                dt.Key.PrecursorMz.Value, dt.Key.Charge);
+                            if (ccs.HasValue)
+                            {
+                                value = new DriftTimeInfo(value.DriftTimeMsec, ccs, value.HighEnergyDriftTimeOffsetMsec);
+                            }
+                        }
+
                         if (!measured.ContainsKey(dt.Key))
                             measured.Add(dt.Key, value);
                         else
@@ -169,7 +182,7 @@ namespace pwiz.Skyline.Model.Results
 
                     ChromatogramGroupInfo[] chromGroupInfos;
                     results.TryLoadChromatogram(i, nodePep, nodeGroup, tolerance, true, out chromGroupInfos);
-                    foreach (var chromInfo in chromGroupInfos.Where(c => filePath == c.FilePath))
+                    foreach (var chromInfo in chromGroupInfos.Where(c => Equals(filePath, c.FilePath)))
                     {
                         if (!ProcessChromInfo(filePath, chromInfo, pair, nodeGroup, tolerance, libKey)) 
                             return false; // User cancelled
@@ -318,7 +331,7 @@ namespace pwiz.Skyline.Model.Results
                 ms1DriftTimeBest =
                     _ms1DriftTimes[libKey].OrderByDescending(p => p.Intensity)
                         .FirstOrDefault()
-                        .DriftTime;
+                        .DriftTime.DriftTimeMsec;
             }
             else
             {
@@ -365,9 +378,10 @@ namespace pwiz.Skyline.Model.Results
             if (driftTime.HasValue)
             {
                 var dict = (msLevel == 1) ? _ms1DriftTimes : _ms2DriftTimes;
+                var ccs = msLevel == 1 && _msDataFileScanHelper.ProvidesCollisionalCrossSectionConverter ? _msDataFileScanHelper.CCSFromDriftTime(driftTime.Value, transitions.First().PrecursorMz, libKey.Charge) : null;
                 var result = new DriftTimeIntensityPair
                 {
-                    DriftTime = driftTime.Value,
+                    DriftTime = new DriftTimeInfo(driftTime, ccs, 0),
                     Intensity = maxIntensity
                 };
                 List<DriftTimeIntensityPair> listPairs;
