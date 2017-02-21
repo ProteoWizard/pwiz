@@ -74,11 +74,11 @@ namespace pwiz.Skyline.Model
                 }
 
                 // Sanity check: being based on the precursor m/z, CCS and DT window really should all be the same for all transitions
-                Assume.IsTrue(Equals(DriftTimeWindow, (float?)driftTimeFilter.DriftTimeExtractionWindowWidthMsec));
+                Assume.IsTrue(Equals(DriftTimeWindow ?? float.NaN, (float)(driftTimeFilter.DriftTimeExtractionWindowWidthMsec ?? float.NaN))); // Using ??NaN to avoid resharper complaints about casting double? to float?
                 if (driftTimeFilter.CollisionalCrossSectionSqA.HasValue)
                 {
                     // We will not see repeated CCS values from transition drift time filters when deserializing, but when we do they must agree
-                    Assume.IsTrue(Equals(CollisionalCrossSection, (float?)driftTimeFilter.CollisionalCrossSectionSqA));
+                    Assume.IsTrue(Equals(CollisionalCrossSection ?? float.NaN, (float)(driftTimeFilter.CollisionalCrossSectionSqA ?? float.NaN))); // Using ??Nan to avoid resharper complaints about casting double? to float?
                 }
 
                 // Filling in MS1 or MS2 data, or just more of what we already know
