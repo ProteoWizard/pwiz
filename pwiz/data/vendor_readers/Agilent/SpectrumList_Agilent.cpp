@@ -657,7 +657,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, bool getB
 PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLevel detailLevel) const {return SpectrumPtr();}
 PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLevel detailLevel, const pwiz::util::IntegerSet& msLevelsToCentroid) const {return SpectrumPtr();}
 PWIZ_API_DECL pwiz::analysis::Spectrum3DPtr SpectrumList_Agilent::spectrum3d(double scanStartTime, const boost::icl::interval_set<double>& driftTimeRanges) const {return pwiz::analysis::Spectrum3DPtr();}
-PWIZ_API_DECL  bool canConvertDriftTimeAndCCS() const { return false; }
+PWIZ_API_DECL bool SpectrumList_Agilent::canConvertDriftTimeAndCCS() const { return false; }
 PWIZ_API_DECL double SpectrumList_Agilent::driftTimeToCCS(double driftTime, double mz, int charge) const {return 0;}
 PWIZ_API_DECL double SpectrumList_Agilent::ccsToDriftTime(double ccs, double mz, int charge) const {return 0;}
 
