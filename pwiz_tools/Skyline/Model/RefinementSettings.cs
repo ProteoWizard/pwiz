@@ -415,7 +415,8 @@ namespace pwiz.Skyline.Model
                         new SrmSettingsDiff(false, false, false, false, true, false));
                 }
                 nodeGroupRefined = Refine(nodeGroupRefined, bestResultIndex);
-                if (nodeGroupRefined.Children.Count < minTrans)
+                // Avoid removing a standard precursor because it lacks the minimum number of transitions
+                if (nodeGroupRefined.Children.Count < minTrans && nodePep.GlobalStandardType == null)
                     continue;
 
                 if (peakFoundRatio.HasValue)

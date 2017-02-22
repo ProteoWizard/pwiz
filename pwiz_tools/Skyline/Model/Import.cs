@@ -96,9 +96,12 @@ namespace pwiz.Skyline.Model
                 {
                     // TODO when changing from ILongWaitBroker to IProgressMonitor, the old code was:
                     // if (progressMonitor.IsCanceled || progressMonitor.IsDocumentChanged(Document))
-                    // IProgressMonitor does not have IsDocumentChangesd.
+                    // IProgressMonitor does not have IsDocumentChanged.
                     if (progressMonitor.IsCanceled)
+                    {
+                        EmptyPeptideGroupCount = 0;
                         return new PeptideGroupDocNode[0];
+                    }
                     int progressNew = (int) (linesRead*100/lineCount);
                     if (progressPercent != progressNew)
                         progressMonitor.UpdateProgress(status = status.ChangePercentComplete(progressPercent = progressNew));
