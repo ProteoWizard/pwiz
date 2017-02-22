@@ -443,10 +443,14 @@ bool LibReader::getRefSpec(int libID, RefSpectrum& spec)
         if (rc != SQLITE_OK) {
             Verbosity::error("Cannot prepare SQL statement: %s ", sqlite3_errmsg(db_));
         }
+        string seq = spec.getSeq();
         map<int, double> mods;
         while (sqlite3_step(modStmt) == SQLITE_ROW) {
             int position = sqlite3_column_int(modStmt, 0);
             double mass = sqlite3_column_double(modStmt, 1);
+            if (position > seq.length()) {
+                position = seq.length();
+            }
             map<int, double>::iterator j = mods.find(position);
             if (j == mods.end()) {
                 mods[position] = mass;
@@ -456,7 +460,6 @@ bool LibReader::getRefSpec(int libID, RefSpectrum& spec)
         }
         sqlite3_finalize(modStmt);
 
-        string seq = spec.getSeq();
         char modBuf[256];
         for (map<int, double>::const_reverse_iterator j = mods.rbegin(); j != mods.rend(); j++) {
             sprintf(modBuf, "[%s%.*f]", j->second >= 0 ? "+" : "", modPrecision_, j->second);
