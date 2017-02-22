@@ -868,6 +868,7 @@
     <Compile Include="Model\IonMobility\IonMobilityDb.cs" />
     <Compile Include="Model\IonMobility\IonMobilityLibrary.cs" />
     <Compile Include="Model\Irt\IrtStandard.cs" />
+    <Compile Include="Model\IsolationSchemeReader.cs" />
     <Compile Include="Model\Lib\AlignedRetentionTimes.cs" />
     <Compile Include="Model\Lib\BlibData\DbModificationRedundant.cs" />
     <Compile Include="Model\Lib\BlibData\DbRefSpectraRedundantPeaks.cs" />

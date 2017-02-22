@@ -24,10 +24,10 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
-using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.FileUI;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -1031,231 +1031,42 @@ namespace pwiz.Skyline.SettingsUI
             ImportRangesFromFiles(dataSources);
         }
 
-        public void ImportRangesFromFiles(MsDataFileUri[] dataSources)
+        private void ImportRangesFromFiles(MsDataFileUri[] dataSources)
         {
             try
             {
-                var isolationRanges = new List<IsolationRange>();
+                IsolationScheme isolationScheme = null;
                 using (var dlg = new LongWaitDlg
                 {
                     Message = Resources.EditIsolationSchemeDlg_ImportRangesFromFiles_Reading_isolation_scheme___
                 })
                 {
-                    dlg.PerformWork(this, 500, broker => ReadIsolationRangesFromFiles(dataSources, isolationRanges, broker));
+                    var reader = new IsolationSchemeReader(dataSources);
+                    dlg.PerformWork(this, 500, progressMonitor => isolationScheme = reader.Import("temp", progressMonitor)); // Not L10N
                 }
 
-                int marginCount = isolationRanges.Select((r, i) => CalculateMargin(isolationRanges, i)).Count(v => v.HasValue);
-                cbSpecifyMargin.Checked = marginCount > 1;
-                comboDeconvPre.SelectedItem = HasOverlapMultiplexing(isolationRanges)
-                    ? DeconvolutionMethod.OVERLAP
-                    : DeconvolutionMethod.NONE;
-                _gridViewDriver.Items.Clear();
-                for (int i = 0; i < isolationRanges.Count; i++)
+                if (isolationScheme != null)
                 {
-                    var range = isolationRanges[i];
-                    double? margin = CalculateMargin(isolationRanges, i);
-                    _gridViewDriver.Items.Add(new EditIsolationWindow
+                    cbSpecifyMargin.Checked = isolationScheme.PrespecifiedIsolationWindows.Count(w => w.StartMargin.HasValue) > 1;
+                    comboDeconvPre.SelectedItem = isolationScheme.SpecialHandling == IsolationScheme.SpecialHandlingType.OVERLAP_MULTIPLEXED
+                        ? DeconvolutionMethod.OVERLAP
+                        : DeconvolutionMethod.NONE;
+                    _gridViewDriver.Items.Clear();
+                    foreach (var isolationWindow in isolationScheme.PrespecifiedIsolationWindows)
                     {
-                        Start = range.Start,
-                        End = range.End,
-                        StartMargin = margin
-                    });
+                        _gridViewDriver.Items.Add(new EditIsolationWindow
+                        {
+                            Start = isolationWindow.Start,
+                            End = isolationWindow.End,
+                            StartMargin = isolationWindow.StartMargin
+                        });
+                    }
                 }
             }
             catch (Exception x)
             {
                 MessageDlg.ShowWithException(this, TextUtil.LineSeparate(Resources.EditIsolationSchemeDlg_ImportRangesFromFiles_Failed_reading_isolation_scheme_, x.Message), x);
             }
-        }
-
-        private bool HasOverlapMultiplexing(IList<IsolationRange> isolationRanges)
-        {
-            // 4 is the absolute minimum possible number of ranges for overlap demux
-            if (isolationRanges.Count < 4)
-                return false;
-
-            int halfCount = isolationRanges.Count/2;
-            int overlapCount = 0;
-            foreach (var range in isolationRanges.Skip(halfCount))
-            {
-                if (HasOverlappingRanges(range, isolationRanges.Take(halfCount)))
-                    overlapCount++;
-            }
-            // If at least 1/4 of the ranges overlap in a demultiplexible way, then
-            // guess that overlap multiplexing was attempted. Ideally 1/2 would overlap
-            // with the other half, but mistakes have been seen, and they are much harder
-            // to figure out, if graphed without overlap.
-            return overlapCount > halfCount/2;
-        }
-
-        private bool HasOverlappingRanges(IsolationRange range, IEnumerable<IsolationRange> rangesFirstHalf)
-        {
-            bool seenLesser = false, seenGreater = false, leftOverlap = false, rightOverlap = false;
-            double middleOfRange = (range.Start + range.End)/2;
-            foreach (var rangeCheck in rangesFirstHalf)
-            {
-                if (rangeCheck.Start < range.Start)
-                {
-                    seenLesser = true;
-                    if (Math.Abs(middleOfRange - rangeCheck.End) <= 0.1)
-                        leftOverlap = true;
-                }
-                if (rangeCheck.End > range.End)
-                {
-                    seenGreater = true;
-                    if (Math.Abs(middleOfRange - rangeCheck.Start) <= 0.1)
-                        rightOverlap = true;
-                }
-            }
-            return (leftOverlap && rightOverlap) ||
-                   (leftOverlap && !seenGreater) ||
-                   (rightOverlap && !seenLesser);
-        }
-
-        private double? CalculateMargin(IList<IsolationRange> isolationRanges, int i)
-        {
-            if (isolationRanges.Count < 2)
-                return null;
-            double? overlapLeft = null;
-            if (i > 0)
-                overlapLeft = isolationRanges[i - 1].End - isolationRanges[i].Start;
-            double? overlapRight = null;
-            if (i < isolationRanges.Count - 1)
-                overlapRight = isolationRanges[i].End - isolationRanges[i + 1].Start;
-            double overlap;
-            if (!overlapLeft.HasValue || !overlapRight.HasValue)
-                overlap = overlapLeft ?? overlapRight ?? 0;
-            else if (Math.Abs(overlapLeft.Value - overlapRight.Value) > 0.1)
-            {
-                return null;
-            }
-            else
-            {
-                overlap = overlapLeft.Value;
-            }
-            if (Math.Round(overlap) < 1)
-                return null;
-            return overlap/2;
-        }
-
-        private void ReadIsolationRangesFromFiles(MsDataFileUri[] dataSources, List<IsolationRange> isolationRanges, ILongWaitBroker broker)
-        {
-            var isolationRangesResult = new IsolationRange[0];
-            for (int i = 0; i < dataSources.Length; i++)
-            {
-                broker.ProgressValue = i * 100 / dataSources.Length;
-
-                isolationRangesResult = ReadIsolationRanges(dataSources[i], isolationRangesResult, broker);
-            }
-            broker.ProgressValue = 100;
-
-            isolationRanges.AddRange(isolationRangesResult);
-        }
-
-        private const int MAX_SPECTRA_PER_CYCLE = 200; // SCIEX has used 100 and Thermo MSX can use 20 * 5
-        private const int MAX_MULTI_CYCLE = MAX_SPECTRA_PER_CYCLE*3;
-
-        private IsolationRange[] ReadIsolationRanges(MsDataFileUri dataSource, IsolationRange[] isolationRanges, ILongWaitBroker broker)
-        {
-            var dictRangeCounts = isolationRanges.ToDictionary(r => r, r => 0);
-            var listRanges = new List<IsolationRange>(isolationRanges);
-            double minStart = double.MaxValue, maxStart = double.MinValue;
-
-            using (var dataFile = new MsDataFileImpl(dataSource.GetFilePath(), simAsSpectra: true))
-            {
-                int lookAheadCount = Math.Min(MAX_MULTI_CYCLE, dataFile.SpectrumCount);
-                for (int i = 0; i < lookAheadCount; i++)
-                {
-                    if (dataFile.GetMsLevel(i) != 2)
-                        continue;
-
-                    var spectrum = dataFile.GetSpectrum(i);
-                    foreach (var precursor in spectrum.Precursors)
-                    {
-                        if (!precursor.IsolationWindowLower.HasValue || !precursor.IsolationWindowUpper.HasValue)
-                            throw new IOException(string.Format(Resources.EditIsolationSchemeDlg_ReadIsolationRanges_Missing_isolation_range_for_the_isolation_target__0__m_z_in_the_file__1_, precursor.IsolationWindowTargetMz, dataSource));
-                        double start = precursor.IsolationWindowTargetMz.Value - precursor.IsolationWindowLower.Value;
-                        double end = precursor.IsolationWindowTargetMz.Value + precursor.IsolationWindowUpper.Value;
-                        var range = new IsolationRange(start, end);
-                        int count;
-                        if (!dictRangeCounts.TryGetValue(range, out count))
-                        {
-                            count = 0;
-                            dictRangeCounts.Add(range, count);
-                            listRanges.Add(range);
-                        }
-                        if (count == 2)
-                        {
-                            // Repeating for the third time
-                            i = lookAheadCount;
-                            break;
-                        }
-                        dictRangeCounts[range] = count + 1;
-                        minStart = Math.Min(minStart, range.Start);
-                        maxStart = Math.Max(maxStart, range.Start);
-                    }
-                }
-            }
-            if (dictRangeCounts.Values.Any(c => c == 1))
-            {
-                if (dictRangeCounts.Count > 2)
-                {
-                    // Sometime demux of overlapping schemes leaves wings that repeat only every other cycle
-                    RemoveRangeSingleton(minStart, dictRangeCounts, listRanges);
-                    RemoveRangeSingleton(maxStart, dictRangeCounts, listRanges);
-                }
-
-                if (dictRangeCounts.Values.Any(c => c == 1))
-                    throw new IOException(string.Format(Resources.EditIsolationSchemeDlg_ReadIsolationRanges_No_repeating_isolation_scheme_found_in__0_, dataSource));
-            }
-            return listRanges.ToArray();
-        }
-
-        private static void RemoveRangeSingleton(double rangeStart, Dictionary<IsolationRange, int> dictRangeCounts, List<IsolationRange> listRanges)
-        {
-            var rangeMin = dictRangeCounts.First(p => p.Key.Start == rangeStart).Key;
-            if (dictRangeCounts[rangeMin] == 1)
-            {
-                dictRangeCounts.Remove(rangeMin);
-                listRanges.Remove(rangeMin);
-            }
-        }
-
-        private class IsolationRange
-        {
-            public IsolationRange(double start, double end)
-            {
-                Start = start;
-                End = end;
-            }
-
-            public double Start { get; private set; }
-            public double End { get; private set; }
-
-            #region object overrides
-
-            protected bool Equals(IsolationRange other)
-            {
-                return Start.Equals(other.Start) && End.Equals(other.End);
-            }
-
-            public override bool Equals(object obj)
-            {
-                if (ReferenceEquals(null, obj)) return false;
-                if (ReferenceEquals(this, obj)) return true;
-                if (obj.GetType() != GetType()) return false;
-                return Equals((IsolationRange) obj);
-            }
-
-            public override int GetHashCode()
-            {
-                unchecked
-                {
-                    return (Start.GetHashCode()*397) ^ End.GetHashCode();
-                }
-            }
-
-            #endregion
         }
     }
 }

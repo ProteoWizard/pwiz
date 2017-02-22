@@ -34,7 +34,8 @@ namespace pwiz.Skyline.SettingsUI
         {
             // Construct IsolationWindow to perform validation.
 // ReSharper disable ObjectCreationAsStatement
-            new IsolationWindow(this);
+            new IsolationWindow(Start ?? TransitionFullScan.MIN_RES_MZ, End ?? TransitionFullScan.MAX_RES_MZ,
+                Target, StartMargin, EndMargin, CERange);
 // ReSharper restore ObjectCreationAsStatement
         }
     }
