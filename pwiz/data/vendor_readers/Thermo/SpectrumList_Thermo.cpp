@@ -569,7 +569,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
                 // the current scan is MS3 or higher, its precursor scan's last isolation m/z should be the next
                 // to last isolation m/z of the current scan;
                 // i.e. MS3 with filter "234.56@cid30.00 123.45@cid30.00" matches to MS2 with filter "234.56@cid30.00"
-                double precursorIsolationMz = i > 0 ? scanInfo->precursorMZ(i-1) : 0;
+                double precursorIsolationMz = i > 0 ? scanInfo->precursorMZ(i-1, false) : 0;
                 size_t precursorScanIndex = findPrecursorSpectrumIndex(msLevel-1, precursorIsolationMz, index);
                 if (precursorScanIndex < index_.size())
                 {
