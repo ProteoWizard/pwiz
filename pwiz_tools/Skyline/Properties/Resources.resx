@@ -9377,4 +9377,7 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_value__0__is_not_a_valid_high_energy_offset_" xml:space="preserve">
     <value>The value {0} is not a valid high energy offset.</value>
   </data>
+  <data name="IsolationSchemeReader_ReadIsolationRangesFromFiles_Reading_isolation_scheme_from__0_" xml:space="preserve">
+    <value>Reading isolation scheme from {0}</value>
+  </data>
 </root>

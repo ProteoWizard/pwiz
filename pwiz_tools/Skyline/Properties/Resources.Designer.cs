@@ -13527,6 +13527,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Reading isolation scheme from {0}.
+        /// </summary>
+        public static string IsolationSchemeReader_ReadIsolationRangesFromFiles_Reading_isolation_scheme_from__0_ {
+            get {
+                return ResourceManager.GetString("IsolationSchemeReader_ReadIsolationRangesFromFiles_Reading_isolation_scheme_from_" +
+                        "_0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Fixed.
         /// </summary>
         public static string IsolationWidthType_FIXED_Fixed {
