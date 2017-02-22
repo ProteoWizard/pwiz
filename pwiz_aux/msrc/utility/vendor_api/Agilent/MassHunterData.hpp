@@ -279,7 +279,7 @@ class PWIZ_API_DECL MassHunterData
     virtual std::string getVersion() const = 0;
     virtual DeviceType getDeviceType() const = 0;
     virtual std::string getDeviceName(DeviceType deviceType) const = 0;
-    virtual boost::local_time::local_date_time getAcquisitionTime() const = 0;
+    virtual boost::local_time::local_date_time getAcquisitionTime(bool adjustToHostTime) const = 0;
     virtual IonizationMode getIonModes() const = 0;
     virtual MSScanType getScanTypes() const = 0;
     virtual MSStorageMode getSpectraFormat() const = 0;

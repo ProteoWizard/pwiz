@@ -100,7 +100,7 @@ class MassHunterDataImpl : public MassHunterData
     virtual std::string getVersion() const;
     virtual DeviceType getDeviceType() const;
     virtual std::string getDeviceName(DeviceType deviceType) const;
-    virtual blt::local_date_time getAcquisitionTime() const;
+    virtual blt::local_date_time getAcquisitionTime(bool adjustToHostTime) const;
     virtual IonizationMode getIonModes() const;
     virtual MSScanType getScanTypes() const;
     virtual MSStorageMode getSpectraFormat() const;
@@ -396,7 +396,7 @@ std::string MassHunterDataImpl::getDeviceName(DeviceType deviceType) const
     try {return ToStdString(reader_->FileInformation->GetDeviceName((MHDAC::DeviceType) deviceType));} CATCH_AND_FORWARD
 }
 
-blt::local_date_time MassHunterDataImpl::getAcquisitionTime() const
+blt::local_date_time MassHunterDataImpl::getAcquisitionTime(bool adjustToHostTime) const
 {
     try
     {
@@ -408,10 +408,16 @@ blt::local_date_time MassHunterDataImpl::getAcquisitionTime() const
         else if (acquisitionTime.Year < 1400)
             acquisitionTime = acquisitionTime.AddYears(1400 - acquisitionTime.Year);
 
-        acquisitionTime = acquisitionTime.ToUniversalTime();
         bpt::ptime pt(boost::gregorian::date(acquisitionTime.Year, boost::gregorian::greg_month(acquisitionTime.Month), acquisitionTime.Day),
-            bpt::time_duration(acquisitionTime.Hour, acquisitionTime.Minute, acquisitionTime.Second, bpt::millisec(acquisitionTime.Millisecond).fractional_seconds()));
-        return blt::local_date_time(pt, blt::time_zone_ptr()); // keep time as UTC
+                      bpt::time_duration(acquisitionTime.Hour, acquisitionTime.Minute, acquisitionTime.Second, bpt::millisec(acquisitionTime.Millisecond).fractional_seconds()));
+
+        if (adjustToHostTime)
+        {
+            bpt::time_duration tzOffset = bpt::second_clock::universal_time() - bpt::second_clock::local_time();
+            return blt::local_date_time(pt + tzOffset, blt::time_zone_ptr()); // treat time as if it came from host's time zone; actual time zone may not be provided by Sciex
+        }
+        else
+            return blt::local_date_time(pt, blt::time_zone_ptr());
     }
     CATCH_AND_FORWARD
 }

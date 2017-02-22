@@ -61,7 +61,7 @@ class MidacDataImpl : public MassHunterData
     virtual std::string getVersion() const;
     virtual DeviceType getDeviceType() const;
     virtual std::string getDeviceName(DeviceType deviceType) const;
-    virtual blt::local_date_time getAcquisitionTime() const;
+    virtual blt::local_date_time getAcquisitionTime(bool adjustToHostTime) const;
     virtual IonizationMode getIonModes() const;
     virtual MSScanType getScanTypes() const;
     virtual MSStorageMode getSpectraFormat() const;
