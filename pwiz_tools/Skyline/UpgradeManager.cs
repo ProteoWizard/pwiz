@@ -24,6 +24,7 @@ using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Properties;
@@ -81,6 +82,11 @@ namespace pwiz.Skyline
             _endUpdateEvent = new AutoResetEvent(false);
         }
 
+        private Control ParentWindow
+        {
+            get { return FormUtil.FindTopLevelOpenForm() ?? _parentWindow; }
+        }
+
         private void BeginCheck()
         {
             // Use backround worker instead of CheckForUpdateAsync to avoid
@@ -116,7 +122,7 @@ namespace pwiz.Skyline
             if (ex != null)
             {
                 // Show an error message box to allow a user to inspect the exception stack trace
-                MessageDlg.ShowWithException(_parentWindow,
+                MessageDlg.ShowWithException(ParentWindow,
                     Resources.UpgradeManager_updateCheck_Complete_Failed_attempting_to_check_for_an_upgrade_, ex);
                 // Show no upgrade found message to allow a user to turn off or on this checking
                 ShowUpgradeForm(null, false, false);
@@ -135,7 +141,7 @@ namespace pwiz.Skyline
                     ProgressValue = 0
                 })
                 {
-                    longWaitUpdate.PerformWork(_parentWindow, 500, broker =>
+                    longWaitUpdate.PerformWork(ParentWindow, 500, broker =>
                     {
                         BeginUpdate(broker);
                         _endUpdateEvent.WaitOne();
@@ -147,7 +153,7 @@ namespace pwiz.Skyline
 
                 if (_completeArgs.Error != null)
                 {
-                    MessageDlg.ShowWithException(_parentWindow,
+                    MessageDlg.ShowWithException(ParentWindow,
                         Resources.UpgradeManager_updateCheck_Complete_Failed_attempting_to_upgrade_, _completeArgs.Error);
                     if (ShowUpgradeForm(null, false, true))
                         AppDeployment.OpenInstallLink();
@@ -177,21 +183,13 @@ namespace pwiz.Skyline
             {
                 try
                 {
-                    return dlgUpgrade.ShowDialog(_parentWindow) == DialogResult.OK;
+                    return dlgUpgrade.ShowDialog(ParentWindow) == DialogResult.OK;
                 }
                 catch (ObjectDisposedException)
                 {
                     try
                     {
-                        if (Program.MainWindow != null && !ReferenceEquals(_parentWindow, Program.MainWindow))
-                        {
-                            _parentWindow = Program.MainWindow;
-                            return dlgUpgrade.ShowDialog(_parentWindow) == DialogResult.OK;
-                        }
-                        else
-                        {
-                            return dlgUpgrade.ShowDialog() == DialogResult.OK;
-                        }
+                        return dlgUpgrade.ShowDialog() == DialogResult.OK;
                     }
                     catch (Exception)
                     {

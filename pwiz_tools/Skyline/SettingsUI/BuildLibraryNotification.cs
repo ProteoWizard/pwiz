@@ -267,17 +267,8 @@ namespace pwiz.Skyline.SettingsUI
         {
             get
             {
-                Form[] openForms = FormUtil.OpenForms;
-                for (int i = openForms.Length - 1; i >= 0; i--)
-                {
-                    Form form = openForms[i];
-                    if (form is BuildLibraryNotification)
-                        continue;
-                    return form;
-                }
-                // Should never happen, but to be safe at least return this
-                // Skyline window.
-                return NotificationContainerForm;
+                return FormUtil.FindTopLevelOpenForm(f => f is BuildLibraryNotification) ??
+                    NotificationContainerForm;
             }
         }
 

@@ -95,6 +95,22 @@ namespace pwiz.Common.SystemUtil
             return form.ShowInTaskbar || form.Modal;
         }
 
+        public static Form FindTopLevelOpenForm(Func<Form, bool> skipForm = null)
+        {
+            Form[] openForms = OpenForms;
+            for (int i = openForms.Length - 1; i >= 0; i--)
+            {
+                Form form = openForms[i];
+                if (skipForm != null && skipForm(form))
+                    continue;
+                if (form.IsDisposed)
+                    continue;
+                return form;
+            }
+            // Should never happen
+            return null;
+        }
+
         /// <summary>
         /// Returns all open forms in the application.
         /// Thread-safe version of <see cref="Application.OpenForms"/>.
