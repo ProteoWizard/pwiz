@@ -443,16 +443,59 @@ namespace pwiz.SkylineTestFunctional
                 OkDialog(irtDlgAdd, irtDlgAdd.CancelButton.PerformClick);
             }
 
-            OkDialog(editRT2, editRT2.CancelButton.PerformClick);
-            OkDialog(peptideSettingsDlg2, peptideSettingsDlg2.CancelButton.PerformClick);
+
+            var docIrtBefore = SkylineWindow.Document;
+
+            OkDialog(editRT2, editRT2.OkDialog);
+            OkDialog(peptideSettingsDlg2, peptideSettingsDlg2.OkDialog);
             WaitForClosedForm(peptideSettingsDlg2);
 
-            //Restore the document to contain all 29 peptides
-            RunUI(SkylineWindow.Undo);
+            var docIrt = VerifyIrtStandards(docIrtBefore, true);
 
+            RunUI(() =>
+            {
+                // Select 3 of the standards and delete them
+                SkylineWindow.SequenceTree.KeysOverride = Keys.None;
+                SkylineWindow.SelectedPath = SkylineWindow.DocumentUI.GetPathTo((int)SrmDocument.Level.Molecules, 0);
+                SkylineWindow.SequenceTree.KeysOverride = Keys.Shift;
+                SkylineWindow.SelectedPath = SkylineWindow.DocumentUI.GetPathTo((int)SrmDocument.Level.Molecules, 2);
+                SkylineWindow.SequenceTree.KeysOverride = Keys.None;
+                SkylineWindow.EditDelete();
+            });
+
+            // Should still have iRT peptides
+            docIrt = VerifyIrtStandards(docIrt, true);             
+            // Remove one more and standards should be cleared
+            RunUI(SkylineWindow.Cut);
+            docIrt = VerifyIrtStandards(docIrt, false);
+            RunUI(SkylineWindow.Paste);
+            docIrt = VerifyIrtStandards(docIrt, true);             
+            
+            // Repeat without results
+            RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults, dlg =>
+            {
+                dlg.RemoveAllReplicates();
+                dlg.OkDialog();
+            });
+
+            docIrt = VerifyIrtStandards(docIrt, true);
+            RunUI(SkylineWindow.EditDelete);
+            docIrt = VerifyIrtStandards(docIrt, false);
+            RunUI(SkylineWindow.Paste);
+            VerifyIrtStandards(docIrt, true);             
+
+            //Restore the document to contain all 29 peptides
+            RunUI(() => SkylineWindow.UndoRestore(7));
 
             //Open peptide settings
             var peptideSettingsDlg3 = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            RunDlg<EditListDlg<SettingsListBase<RetentionTimeRegression>, RetentionTimeRegression>>(peptideSettingsDlg3.EditRegressionList,
+                dlg =>
+                {
+                    dlg.SelectLastItem();
+                    dlg.RemoveItem();
+                    dlg.OkDialog();
+                });
 
             //Add a new regression
             var editRT3 = ShowDialog<EditRTDlg>(peptideSettingsDlg3.AddRTRegression);
@@ -646,6 +689,28 @@ namespace pwiz.SkylineTestFunctional
 
             // Make sure no message boxes are left open
             Assert.IsNull(FindOpenForm<MessageDlg>());
+        }
+
+        private SrmDocument VerifyIrtStandards(SrmDocument docBefore, bool expectStandards)
+        {
+            var doc = WaitForDocumentChangeLoaded(docBefore);
+
+            // Either all standards or all not standards
+            foreach (var nodePep in doc.Peptides)
+            {
+                if (expectStandards)
+                {
+                    Assert.IsTrue(nodePep.GlobalStandardType == StandardType.IRT,
+                        string.Format("{0} expected marked as iRT standard", nodePep.Peptide.Sequence));
+                }
+                else
+                {
+                    Assert.IsFalse(nodePep.GlobalStandardType == StandardType.IRT,
+                        string.Format("{0} expected cleared of iRT standard", nodePep.Peptide.Sequence));
+                }
+            }
+
+            return doc;
         }
 
         private static string BuildStandardText(IEnumerable<MeasuredPeptide> standard, Func<string, string> adjustSeq)

@@ -170,6 +170,18 @@ namespace pwiz.Skyline.Model.DocSettings
                     });
         }
 
+        public RetentionTimeRegression ForceRecalculate()
+        {
+            return ChangeProp(ImClone(this), im =>
+                    {
+                        im.Conversion = null;
+                        im._listFileIdToConversion = null;
+                        im._isMissingStandardPeptides = false;
+                        im._dictStandardPeptides = null;
+                        im.InsufficientCorrelation = false;
+                    });
+        }
+
         public RetentionTimeRegression ChangeInsufficientCorrelation(bool insufficient)
         {
             return ChangeProp(ImClone(this), im => im.InsufficientCorrelation = insufficient);

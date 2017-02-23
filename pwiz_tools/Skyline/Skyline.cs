@@ -922,6 +922,11 @@ namespace pwiz.Skyline
             _undoManager.Undo();
         }
 
+        public void UndoRestore(int index)
+        {
+            _undoManager.UndoRestore(index);
+        }
+
         public void Redo()
         {
             if (StatementCompletionAction(textBox => textBox.Undo()))

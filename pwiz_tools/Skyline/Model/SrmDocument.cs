@@ -644,11 +644,6 @@ namespace pwiz.Skyline.Model
             // Note protein metadata readiness
             docClone.IsProteinMetadataPending = docClone.CalcIsProteinMetadataPending();
 
-            // If this document has associated results, update the results
-            // for any peptides that have changed.
-            if (!Settings.HasResults)
-                return docClone.Children;
-
             // If iRT standards have changed, reset auto-calculated conversion to make sure they are
             // updated on a background thread
             if (!ReferenceEquals(Settings.GetPeptideStandards(StandardType.IRT),
@@ -656,8 +651,14 @@ namespace pwiz.Skyline.Model
                 docClone.Settings.PeptideSettings.Prediction.RetentionTime != null)
             {
                 docClone.Settings = docClone.Settings.ChangePeptidePrediction(p =>
-                    p.ChangeRetentionTime(p.RetentionTime.ClearEquations()));
+                    p.ChangeRetentionTime(p.RetentionTime.ForceRecalculate()));
             }
+
+            // If this document has associated results, update the results
+            // for any peptides that have changed.
+            if (!Settings.HasResults)
+                return docClone.Children;
+
             // Store indexes to previous results in a dictionary for lookup
             var dictPeptideIdPeptide = new Dictionary<int, PeptideDocNode>();
             // Unless the normalization standards have changed, which require recalculating of all ratios
