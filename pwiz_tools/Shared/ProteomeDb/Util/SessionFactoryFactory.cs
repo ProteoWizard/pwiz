@@ -76,6 +76,8 @@ namespace pwiz.ProteomeDatabase.Util
         public static Configuration ConfigureMappings(Configuration configuration, Type typeDb, string schemaFilename = DEFAULT_SCHEMA_FILENAME)
         {
             Assembly assembly = typeDb.Assembly;
+            configuration.SetDefaultAssembly(assembly.FullName);
+            configuration.SetDefaultNamespace(typeDb.Namespace);
             return configuration.AddInputStream(
                 assembly.GetManifestResourceStream(typeDb.Namespace + "." + schemaFilename)); // Not L10N
         }
