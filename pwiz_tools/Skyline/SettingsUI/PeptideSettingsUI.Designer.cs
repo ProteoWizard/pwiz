@@ -72,6 +72,7 @@ namespace pwiz.Skyline.SettingsUI
             this.comboBoxPeptideUniquenessConstraint = new System.Windows.Forms.ComboBox();
             this.textSpectralLibraryDriftTimesWidthAtDtMax = new System.Windows.Forms.TextBox();
             this.textSpectralLibraryDriftTimesWidthAtDt0 = new System.Windows.Forms.TextBox();
+            this.btnFilter = new System.Windows.Forms.Button();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabDigestion = new System.Windows.Forms.TabPage();
             this.labelPeptideUniquenessConstraint = new System.Windows.Forms.Label();
@@ -459,6 +460,14 @@ namespace pwiz.Skyline.SettingsUI
             this.textSpectralLibraryDriftTimesWidthAtDt0.Name = "textSpectralLibraryDriftTimesWidthAtDt0";
             this.helpTip.SetToolTip(this.textSpectralLibraryDriftTimesWidthAtDt0, resources.GetString("textSpectralLibraryDriftTimesWidthAtDt0.ToolTip"));
             // 
+            // btnFilter
+            // 
+            resources.ApplyResources(this.btnFilter, "btnFilter");
+            this.btnFilter.Name = "btnFilter";
+            this.helpTip.SetToolTip(this.btnFilter, resources.GetString("btnFilter.ToolTip"));
+            this.btnFilter.UseVisualStyleBackColor = true;
+            this.btnFilter.Click += new System.EventHandler(this.btnFilter_Click);
+            // 
             // tabControl1
             // 
             resources.ApplyResources(this.tabControl1, "tabControl1");
@@ -624,6 +633,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // tabLibrary
             // 
+            this.tabLibrary.Controls.Add(this.btnFilter);
             this.tabLibrary.Controls.Add(this.btnExplore);
             this.tabLibrary.Controls.Add(this.btnBuildLibrary);
             this.tabLibrary.Controls.Add(this.panelPick);
@@ -1013,5 +1023,6 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.Label labelWidthDtZero;
         private System.Windows.Forms.Label labelWidthAtDt0Units;
         private System.Windows.Forms.Label labelWidthAtDtMaxUnits;
+        private System.Windows.Forms.Button btnFilter;
     }
 }

@@ -702,7 +702,7 @@ this filter</value>
     <value>10</value>
   </data>
   <data name="btnExplore.Location" type="System.Drawing.Point, System.Drawing">
-    <value>272, 96</value>
+    <value>272, 126</value>
   </data>
   <data name="btnExplore.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -726,7 +726,7 @@ this filter</value>
     <value>tabLibrary</value>
   </data>
   <data name="&gt;&gt;btnExplore.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="btnBuildLibrary.Location" type="System.Drawing.Point, System.Drawing">
     <value>272, 66</value>
@@ -735,7 +735,7 @@ this filter</value>
     <value>75, 23</value>
   </data>
   <data name="btnBuildLibrary.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+    <value>3</value>
   </data>
   <data name="btnBuildLibrary.Text" xml:space="preserve">
     <value>&amp;Build...</value>
@@ -754,7 +754,7 @@ from various peptide search engines.</value>
     <value>tabLibrary</value>
   </data>
   <data name="&gt;&gt;btnBuildLibrary.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="comboRank.Location" type="System.Drawing.Point, System.Drawing">
     <value>25, 87</value>
@@ -902,13 +902,13 @@ picked for each protein.</value>
     <value>tabLibrary</value>
   </data>
   <data name="&gt;&gt;editLibraries.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="listLibraries.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 36</value>
   </data>
   <data name="listLibraries.Size" type="System.Drawing.Size, System.Drawing">
-    <value>226, 79</value>
+    <value>226, 109</value>
   </data>
   <data name="listLibraries.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -933,7 +933,7 @@ modifications tab.</value>
     <value>tabLibrary</value>
   </data>
   <data name="&gt;&gt;listLibraries.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>6</value>
   </data>
   <data name="btnUpdateCalculator.Location" type="System.Drawing.Point, System.Drawing">
     <value>204, 34</value>
@@ -1191,6 +1191,36 @@ W = (W0 + T*(Wmax-W0)/dtMax)
   </data>
   <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDt0.ZOrder" xml:space="preserve">
     <value>3</value>
+  </data>
+  <data name="btnFilter.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnFilter.Location" type="System.Drawing.Point, System.Drawing">
+    <value>272, 96</value>
+  </data>
+  <data name="btnFilter.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnFilter.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="btnFilter.Text" xml:space="preserve">
+    <value>&amp;Filter...</value>
+  </data>
+  <data name="btnFilter.ToolTip" xml:space="preserve">
+    <value>Filter a MS/MS spectral library from a MIDAS library</value>
+  </data>
+  <data name="&gt;&gt;btnFilter.Name" xml:space="preserve">
+    <value>btnFilter</value>
+  </data>
+  <data name="&gt;&gt;btnFilter.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnFilter.Parent" xml:space="preserve">
+    <value>tabLibrary</value>
+  </data>
+  <data name="&gt;&gt;btnFilter.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <data name="tabControl1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
@@ -1862,13 +1892,13 @@ W = (W0 + T*(Wmax-W0)/dtMax)
     <value>6</value>
   </data>
   <data name="panelPick.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 136</value>
+    <value>3, 166</value>
   </data>
   <data name="panelPick.Size" type="System.Drawing.Size, System.Drawing">
     <value>357, 190</value>
   </data>
   <data name="panelPick.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+    <value>6</value>
   </data>
   <data name="&gt;&gt;panelPick.Name" xml:space="preserve">
     <value>panelPick</value>
@@ -1880,7 +1910,7 @@ W = (W0 + T*(Wmax-W0)/dtMax)
     <value>tabLibrary</value>
   </data>
   <data name="&gt;&gt;panelPick.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="label11.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1907,7 +1937,7 @@ W = (W0 + T*(Wmax-W0)/dtMax)
     <value>tabLibrary</value>
   </data>
   <data name="&gt;&gt;label11.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="tabLibrary.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>

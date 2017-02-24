@@ -74,6 +74,7 @@ ExportMethodDlg.MethodView,TestExportDiaList
 ExportMethodDlg.TransitionListView,TestExportMethodDlg
 ExportReportDlg,TestReportSummaryWithOldReports
 FilterMatchedPeptidesDlg,TestInsert
+FilterMidasLibraryDlg,TestMidas
 FindColumnDlg,TestFindColumn
 FindNodeDlg,TestCustomReportsTutorial
 FindResultsForm,TestPeakPickingTutorial

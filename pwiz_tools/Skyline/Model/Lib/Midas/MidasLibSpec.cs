@@ -34,10 +34,12 @@ namespace pwiz.Skyline.Model.Lib.Midas
 
         private static readonly PeptideRankId[] RANK_IDS = { PEP_RANK_COPIES, PEP_RANK_PICKED_INTENSITY };
 
-        public static string GetName(string documentPath, IEnumerable<LibrarySpec> libSpecs)
+        public static string GetName(string documentPath, IEnumerable<LibrarySpec> libSpecs = null)
         {
             var name = PREFIX + Path.GetFileNameWithoutExtension(documentPath);
-            return Helpers.GetUniqueName(name, libSpecs.Select(libSpec => libSpec.Name).ToArray());
+            return libSpecs != null
+                ? Helpers.GetUniqueName(name, libSpecs.Select(libSpec => libSpec.Name).ToArray())
+                : name;
         }
         
         public static string GetLibraryFileName(string documentPath)

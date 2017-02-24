@@ -11408,6 +11408,42 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Export Filtered MIDAS Library.
+        /// </summary>
+        public static string FilterMidasLibraryDlg_btnBrowse_Click_Export_Filtered_MIDAS_Library {
+            get {
+                return ResourceManager.GetString("FilterMidasLibraryDlg_btnBrowse_Click_Export_Filtered_MIDAS_Library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A library with this name already exists..
+        /// </summary>
+        public static string FilterMidasLibraryDlg_OkDialog_A_library_with_this_name_already_exists_ {
+            get {
+                return ResourceManager.GetString("FilterMidasLibraryDlg_OkDialog_A_library_with_this_name_already_exists_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You must enter a name for the filtered library..
+        /// </summary>
+        public static string FilterMidasLibraryDlg_OkDialog_You_must_enter_a_name_for_the_filtered_library_ {
+            get {
+                return ResourceManager.GetString("FilterMidasLibraryDlg_OkDialog_You_must_enter_a_name_for_the_filtered_library_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You must enter a path for the filtered library..
+        /// </summary>
+        public static string FilterMidasLibraryDlg_OkDialog_You_must_enter_a_path_for_the_filtered_library_ {
+            get {
+                return ResourceManager.GetString("FilterMidasLibraryDlg_OkDialog_You_must_enter_a_path_for_the_filtered_library_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap Find {
@@ -15218,15 +15254,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to MIDAS Library Files.
-        /// </summary>
-        public static string MidasLibSpec_FILTER_MIDAS_Library_Files {
-            get {
-                return ResourceManager.GetString("MidasLibSpec_FILTER_MIDAS_Library_Files", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to The cache file has not been loaded yet..
         /// </summary>
         public static string MinimizeResultsDlg_ChromCacheMinimizer_The_cache_file_has_not_been_loaded_yet {
@@ -18593,20 +18620,21 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Create MIDAS Spectral Library.
-        /// </summary>
-        public static string PeptideSettingsUI_ShowBuildLibraryDlg_Create_MIDAS_Spectral_Library {
-            get {
-                return ResourceManager.GetString("PeptideSettingsUI_ShowBuildLibraryDlg_Create_MIDAS_Spectral_Library", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Finishing up building library.
         /// </summary>
         public static string PeptideSettingsUI_ShowBuildLibraryDlg_Finishing_up_building_library {
             get {
                 return ResourceManager.GetString("PeptideSettingsUI_ShowBuildLibraryDlg_Finishing_up_building_library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Multiple MIDAS libraries in document. Select only one before filtering..
+        /// </summary>
+        public static string PeptideSettingsUI_ShowFilterMidasDlg_Multiple_MIDAS_libraries_in_document__Select_only_one_before_filtering_ {
+            get {
+                return ResourceManager.GetString("PeptideSettingsUI_ShowFilterMidasDlg_Multiple_MIDAS_libraries_in_document__Select" +
+                        "_only_one_before_filtering_", resourceCulture);
             }
         }
         
@@ -23681,16 +23709,6 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("SkylineWindow_ShowExportSpectralLibraryDialog_The_document_must_contain_results_t" +
                         "o_export_a_spectral_library_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to This document has a MIDAS library. Would you like to build a spectral library from it?.
-        /// </summary>
-        public static string SkylineWindow_ShowExportSpectralLibraryDialog_This_document_has_a_MIDAS_library__Would_you_like_to_build_a_spectral_library_from_it_ {
-            get {
-                return ResourceManager.GetString("SkylineWindow_ShowExportSpectralLibraryDialog_This_document_has_a_MIDAS_library__" +
-                        "Would_you_like_to_build_a_spectral_library_from_it_", resourceCulture);
             }
         }
         
@@ -28833,7 +28851,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The name &apos;{0}&apos; is already in use from the path {1}.
+        ///   Looks up a localized string similar to Collisional Cross Section (sq A).
         /// </summary>
         public static string ZipFileShare_AddFile_The_name___0___is_already_in_use_from_the_path__1_ {
             get {

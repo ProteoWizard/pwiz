@@ -33,6 +33,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Lib.Midas;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
@@ -140,6 +141,7 @@ namespace pwiz.Skyline.SettingsUI
             _driverBackgroundProteome = new SettingsListComboDriver<BackgroundProteomeSpec>(comboBackgroundProteome, Settings.Default.BackgroundProteomeList);
             _driverBackgroundProteome.LoadList(_peptideSettings.BackgroundProteome.Name);
             UpdatePeptideUniquenessEnabled();
+            FilterLibraryEnabled = _peptideSettings.Libraries.HasMidasLibrary;
 
             panelPick.Visible = listLibrarySpecs.Count > 0;
             btnExplore.Enabled = listLibraries.Items.Count > 0;
@@ -190,6 +192,24 @@ namespace pwiz.Skyline.SettingsUI
         public PeptideIntegration Integration { get { return _peptideSettings.Integration; } }
         public bool IsShowLibraryExplorer { get; set; }
         public TABS? TabControlSel { get; set; }
+
+        public bool FilterLibraryEnabled
+        {
+            get { return btnFilter.Visible; }
+            private set
+            {
+                if (value)
+                {
+                    btnFilter.Show();
+                    btnExplore.Top = btnFilter.Bottom + 7;
+                }
+                else
+                {
+                    btnExplore.Location = btnFilter.Location;
+                    btnFilter.Hide();
+                }
+            }
+        }
 
         protected override void OnShown(EventArgs e)
         {
@@ -710,6 +730,39 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        private void btnFilter_Click(object sender, EventArgs e)
+        {
+            ShowFilterMidasDlg();
+        }
+
+        public void ShowFilterMidasDlg()
+        {
+            var midasLibSpecs = _driverLibrary.Chosen.OfType<MidasLibSpec>().ToArray();
+            if (midasLibSpecs.Length > 1)
+            {
+                midasLibSpecs = midasLibSpecs.Where(lib => Equals(lib.Name, MidasLibSpec.GetName(_parent.DocumentFilePath))).ToArray();
+                if (midasLibSpecs.Length != 1)
+                {
+                    MessageDlg.Show(this, Resources.PeptideSettingsUI_ShowFilterMidasDlg_Multiple_MIDAS_libraries_in_document__Select_only_one_before_filtering_);
+                    return;
+                }
+                midasLibSpecs = new[] {midasLibSpecs[0]};
+            }
+            var midasLibSpec = midasLibSpecs[0];
+
+            using (var filterDlg = new FilterMidasLibraryDlg(_parent.DocumentFilePath, midasLibSpec, _driverLibrary.List))
+            {
+                if (filterDlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    var midasLib = _libraryManager.LoadLibrary(midasLibSpec, () => null) as MidasLibrary;
+                    var builder = new MidasBlibBuilder(_parent.Document, midasLib, filterDlg.LibraryName, filterDlg.FileName);
+                    builder.BuildLibrary(null);
+                    Settings.Default.SpectralLibraryList.Add(builder.LibrarySpec);
+                    _driverLibrary.LoadList();
+                }
+            }
+        }
+
         private void listLibraries_ItemCheck(object sender, ItemCheckEventArgs e)
         {
             if (e.NewValue == CheckState.Checked && listLibraries.CheckedItems.Count == 0)
@@ -721,6 +774,16 @@ namespace pwiz.Skyline.SettingsUI
             int match = comboMatching.SelectedIndex;
             if (match == (int) PeptidePick.library || match == (int) PeptidePick.both)
                 UpdateRanks(e);
+
+            var isMidas = _driverLibrary.List[e.Index] is MidasLibSpec;
+            if (e.NewValue == CheckState.Checked && !FilterLibraryEnabled && isMidas)
+            {
+                FilterLibraryEnabled = true;
+            }
+            else if (e.NewValue == CheckState.Unchecked && FilterLibraryEnabled && _driverLibrary.Chosen.OfType<MidasLibSpec>().Count() == 1 && isMidas)
+            {
+                FilterLibraryEnabled = false;
+            }
         }
 
         private void comboMatching_SelectedIndexChanged(object sender, EventArgs e)

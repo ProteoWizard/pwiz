@@ -28,17 +28,16 @@ namespace pwiz.Skyline.Model.Lib.Midas
     public class MidasBlibBuilder : ILibraryBuilder
     {
         private const string BLIB_NAME_INTERNAL = "midas"; // Not L10N
-        public const string BLIB_NAME_SKYLINE = "MIDAS (blib)"; // Not L10N
 
         private readonly SrmDocument _doc;
         private readonly MidasLibrary _library;
         private readonly LibrarySpec _libSpec;
 
-        public MidasBlibBuilder(SrmDocument doc, MidasLibrary library, string blibPath)
+        public MidasBlibBuilder(SrmDocument doc, MidasLibrary library, string libName, string blibPath)
         {
             _doc = doc;
             _library = library;
-            _libSpec = new BiblioSpecLiteSpec(BLIB_NAME_SKYLINE, blibPath);
+            _libSpec = new BiblioSpecLiteSpec(libName, blibPath);
         }
 
         public bool BuildLibrary(IProgressMonitor progress)
@@ -50,21 +49,21 @@ namespace pwiz.Skyline.Model.Lib.Midas
                 {
                     // For each precursor, export the spectrum with the highest TIC within peak boundaries
                     DbSpectrum bestSpectrum = null;
-                    double bestIntensity = double.MinValue;
+                    var bestDistance = double.MaxValue;
                     foreach (var result in nodeTranGroup.Results)
                     {
                         if (result == null)
                             continue;
 
-                        foreach (var resultsFile in result.Where(resultsFile => resultsFile.StartRetentionTime.HasValue && resultsFile.EndRetentionTime.HasValue))
+                        foreach (var resultsFile in result.Where(resultsFile => resultsFile.RetentionTime.HasValue))
                         {
-                            foreach (var spectrum in _library.GetSpectraByRetentionTime(null, nodeTranGroup.PrecursorMz, resultsFile.StartRetentionTime.Value, resultsFile.EndRetentionTime.Value))
+                            foreach (var spectrum in _library.GetSpectraByPrecursor(null, nodeTranGroup.PrecursorMz))
                             {
-                                double currentIntensity = spectrum.Intensities.Sum();
-                                if (currentIntensity > bestIntensity)
+                                var currentDistance = Math.Abs(spectrum.RetentionTime - resultsFile.RetentionTime.Value);
+                                if (currentDistance < bestDistance)
                                 {
                                     bestSpectrum = spectrum;
-                                    bestIntensity = currentIntensity;
+                                    bestDistance = currentDistance;
                                 }
                             }
                         }

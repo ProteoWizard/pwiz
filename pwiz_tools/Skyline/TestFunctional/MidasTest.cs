@@ -23,12 +23,10 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Lib.Midas;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
 
@@ -85,54 +83,66 @@ namespace pwiz.SkylineTestFunctional
 
             CheckMidasRts(570.2720, 12.9, 15.0, 26.0, 16.6);
             CheckMidasRts(506.8237, 24.6, 13.0, 14.9, 8.9, 21.5, 21.8, 14.5, 10.7, 22.5, 23.1, 13.8, 25.0);
-            CheckMidasRts(704.8666);
-            CheckMidasRts(470.2468);
-            CheckMidasRts(567.9618);
-            CheckMidasRts(862.4725);
+            CheckMidasRts(704.8666, 18.1, 21.6, 25.9);
+            CheckMidasRts(470.2468, 3.3, 19.5, 11.9, 19.1, 7.7);
+            CheckMidasRts(567.9618, 19.1, 9.3, 14.9, 14.6, 12.9);
+            CheckMidasRts(862.4725, 32.9, 12.8, 24.2, 18.6);
             CheckMidasRts(575.3174, 24.2, 15.2);
-            CheckMidasRts(636.3457);
+            CheckMidasRts(636.3457, 8.1, 32.8, 18.0, 18.3);
             CheckMidasRts(873.9567, 29.2, 28.9, 28.6);
             CheckMidasRts(582.9736, 24.4, 29.0, 9.3, 20.3);
-            CheckMidasRts(654.8454);
+            CheckMidasRts(654.8454, 13.8, 31.7, 22.3, 31.0, 30.7);
             CheckMidasRts(569.7800, 21.4, 13.8, 15.1, 16.4, 16.7);
             CheckMidasRts(816.9227, 22.2, 20.5);
             CheckMidasRts(544.9509, 6.1, 14.9, 13.7, 7.9, 17.0, 13.4, 9.0);
-            CheckMidasRts(589.8139);
-            CheckMidasRts(1027.0700);
-            CheckMidasRts(685.0491);
-            CheckMidasRts(770.9383);
-            CheckMidasRts(514.2946);
+            CheckMidasRts(589.8139, 13.5, 15.1, 6.7, 12.4, 18.5);
+            CheckMidasRts(1027.0700, 31.2, 25.8, 33.1);
+            CheckMidasRts(685.0491, 20.5, 19.5, 25.7, 31.2, 16.0);
+            CheckMidasRts(770.9383, 20.9, 15.0, 17.6);
+            CheckMidasRts(514.2946, 17.7, 12.7, 19.3, 15.8, 19.6, 13.3, 20.0, 14.8, 14.1);
             CheckMidasRts(640.8641, 10.4, 13.9, 21.9, 20.2, 20.8, 19.8);
             CheckMidasRts(427.5785, 19.9);
             CheckMidasRts(619.8300, 14.0, 13.7, 19.8);
             CheckMidasRts(413.5558, 13.9, 13.6, 9.7);
-            CheckMidasRts(691.6919);
+            CheckMidasRts(691.6919, 32.7, 19.6, 21.4, 28.1);
             CheckMidasRts(535.8159, 16.5, 13.4, 11.0, 26.3, 12.5);
-            CheckMidasRts(653.8557);
+            CheckMidasRts(653.8557, 30.5, 27.6, 25.7, 26.1, 20.1, 22.0);
             CheckMidasRts(436.2396, 16.3);
-            CheckMidasRts(687.3384);
-            CheckMidasRts(458.5614);
-            CheckMidasRts(843.4157);
+            CheckMidasRts(687.3384, 32.4, 26.5, 32.0, 25.7, 19.7, 24.3, 20.7, 21.3);
+            CheckMidasRts(458.5614, 14.2);
+            CheckMidasRts(843.4157, 25.8, 26.3);
             CheckMidasRts(562.6129, 16.9, 17.5, 30.6, 26.3, 21.3, 13.6, 32.1);
             CheckMidasRts(710.0267, 29.3, 22.9, 18.73, 22.57, 23.8, 26.0, 21.9, 22.1);
-            CheckMidasRts(680.8044);
-            CheckMidasRts(454.2054);
-            CheckMidasRts(753.3939);
-            CheckMidasRts(502.5984);
-            CheckMidasRts(689.3445);
-            CheckMidasRts(611.8068);
+            CheckMidasRts(680.8044, 26.6, 13.5, 12.3, 27.9, 12.0, 28.2, 21.2);
+            CheckMidasRts(454.2054, 22.1, 6.3, 15.6, 12.1);
+            CheckMidasRts(753.3939, 27.3, 11.0, 11.2);
+            CheckMidasRts(502.5984, 10.3, 13.0, 8.2, 11.0, 11.5, 20.4);
+            CheckMidasRts(689.3445, 24.5, 32.8, 25.6, 32.5, 27.9, 27.1, 26.8, 26.5);
+            CheckMidasRts(611.8068, 31.9, 14.0, 21.5, 18.8, 21.2, 29.5, 14.3, 13.4, 13.1);
             CheckMidasRts(408.2069, 15.1, 9.0);
-            CheckMidasRts(791.4172);
+            CheckMidasRts(791.4172, 31.3, 25.0);
             CheckMidasRts(527.9472, 16.0, 30.0, 15.7, 5.6, 25.6, 18.3, 19.6, 16.5, 12.7, 11.1, 12.0);
-            CheckMidasRts(801.9174);
+            CheckMidasRts(801.9174, 28.0, 10.4, 32.8);
             CheckMidasRts(534.9473, 19.0, 16.4, 18.3, 7.0, 12.5, 6.1, 19.6, 21.6);
             CheckMidasRts(509.2489, 13.7);
             CheckMidasRts(801.4303, 18.8, 32.7, 25.7);
-            CheckMidasRts(534.6226);
+            CheckMidasRts(534.6226, 7.0, 18.9, 16.5);
 
-            var midasBuildCancel = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.ShowExportSpectralLibraryDialog);
-            Assert.AreEqual(Resources.SkylineWindow_ShowExportSpectralLibraryDialog_This_document_has_a_MIDAS_library__Would_you_like_to_build_a_spectral_library_from_it_, midasBuildCancel.Message);
-            OkDialog(midasBuildCancel, midasBuildCancel.BtnCancelClick);
+            var peptideSettings = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            RunUI(() =>
+            {
+                peptideSettings.SelectedTab = PeptideSettingsUI.TABS.Library;
+                Assert.AreEqual(1, peptideSettings.LibraryDriver.Chosen.OfType<MidasLibSpec>().Count());
+                Assert.IsTrue(peptideSettings.FilterLibraryEnabled);
+            });
+            var filterDlg = ShowDialog<FilterMidasLibraryDlg>(peptideSettings.ShowFilterMidasDlg);
+            RunUI(() =>
+            {
+                Assert.AreEqual("MIDAS_Filter_102816 ApoB MIDAS testing v2", filterDlg.LibraryName);
+                Assert.AreEqual(TestFilesDir.GetTestPath("102816 ApoB MIDAS testing v2.midas.blib"), filterDlg.FileName);
+            });
+            OkDialog(filterDlg, filterDlg.OkDialog);
+            OkDialog(peptideSettings, peptideSettings.OkDialog);
 
             // Get transition rankings
             var ranks = new Dictionary<Identity, Dictionary<double, int>>();
@@ -158,6 +168,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 transitionSettings.SetAutoSelect = true;
+                transitionSettings.UseLibraryPick = true;
                 transitionSettings.IonCount = 2;
             });
 
@@ -171,12 +182,10 @@ namespace pwiz.SkylineTestFunctional
                 {
                     tranGroupRanks = new Dictionary<double, int>();
                 }
-                foreach (var nodeTran in nodeTranGroup.Transitions)
+                foreach (var nodeTran in nodeTranGroup.Transitions.Where(nodeTran => nodeTran.HasLibInfo && tranGroupRanks.ContainsKey(nodeTran.Mz)))
                 {
-                    Assert.IsTrue(nodeTran.HasLibInfo);
-                    Assert.IsTrue(tranGroupRanks.ContainsKey(nodeTran.Mz));
                     var rank = nodeTran.GetRank(null, false);
-                    Assert.IsTrue(rank != null && rank <= 2);
+                    Assert.IsTrue(rank == null || rank <= 2);
                     Assert.AreEqual(tranGroupRanks[nodeTran.Mz], rank);
                 }
             }
@@ -195,7 +204,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsFalse(doc.Settings.PeptideSettings.Libraries.HasMidasLibrary);
         }
 
-        private static void CheckMidasRts(double precursorMz, params double[] expectedRts)
+        private void CheckMidasRts(double precursorMz, params double[] expectedRts)
         {
             if (!SelectPrecursor(precursorMz))
                 Assert.Fail("Precursor {0} not found", precursorMz);

@@ -199,6 +199,14 @@ namespace pwiz.Skyline.Model.Lib
                         libraries = docNew.Settings.PeptideSettings.Libraries;
                         list.Add(midasLibrary);
                         docNew.Settings.UpdateLists(container.DocumentFilePath);
+
+                        // Switch to pick by filter if there are no other libraries
+                        if (libSpecs.Count == 1)
+                        {
+                            libraries = libraries.ChangePick(PeptidePick.filter);
+                            docNew = docNew.ChangeSettings(docNew.Settings.ChangeTransitionSettings(
+                                settings => settings.ChangeLibraries(settings.Libraries.ChangePick(TransitionLibraryPick.none))));
+                        }
                     }
                     libraries = libraries.ChangeLibraries(list.ToArray());
 
