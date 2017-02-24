@@ -875,7 +875,10 @@ namespace pwiz.Skyline.Model
             document = RemoveDecoys(document);
 
             if (decoysMethod == DecoyGeneration.SHUFFLE_SEQUENCE)
-                return GenerateDecoysFunc(document, numDecoys, true, GetShuffledPeptideSequence);
+            {
+                var random = new Random(RANDOM_SEED);
+                return GenerateDecoysFunc(document, numDecoys, true, m => GetShuffledPeptideSequence(m, random));
+            }
             
             if (decoysMethod == DecoyGeneration.REVERSE_SEQUENCE)
                 return GenerateDecoysFunc(document, numDecoys, false, GetReversedPeptideSequence);
@@ -920,10 +923,11 @@ namespace pwiz.Skyline.Model
 
             var decoyNodePepList = new List<PeptideDocNode>();
             var setDecoyKeys = new HashSet<PeptideModKey>();
+            var randomShift = new Random(RANDOM_SEED);
             while (numDecoys > 0)
             {
                 int startDecoys = numDecoys;
-                foreach (var nodePep in document.Peptides.ToArray().RandomOrder())
+                foreach (var nodePep in document.Peptides.ToArray().RandomOrder(RANDOM_SEED))
                 {
                     if (numDecoys == 0)
                         break;
@@ -950,7 +954,7 @@ namespace pwiz.Skyline.Model
                     foreach (var comparableGroups in PeakFeatureEnumerator.ComparableGroups(nodePep))
                     {
                         var decoyNodeTranGroupList = GetDecoyGroups(nodePep, decoyPeptide, seqMods.Mods, comparableGroups, document,
-                                                                    Equals(seqMods.Sequence, peptide.Sequence));
+                                                                    Equals(seqMods.Sequence, peptide.Sequence), randomShift);
                         if (decoyNodeTranGroupList.Count == 0)
                             continue;
 
@@ -984,7 +988,7 @@ namespace pwiz.Skyline.Model
         }
 
         private static List<TransitionGroupDocNode> GetDecoyGroups(PeptideDocNode nodePep, Peptide decoyPeptide,
-            ExplicitMods mods, IEnumerable<TransitionGroupDocNode> comparableGroups, SrmDocument document, bool shiftMass)
+            ExplicitMods mods, IEnumerable<TransitionGroupDocNode> comparableGroups, SrmDocument document, bool shiftMass, Random randomShift)
         {
             var decoyNodeTranGroupList = new List<TransitionGroupDocNode>();
 
@@ -1004,7 +1008,7 @@ namespace pwiz.Skyline.Model
                 }
                 else if (shiftMass)
                 {
-                    precursorMassShift = GetPrecursorMassShift();
+                    precursorMassShift = GetPrecursorMassShift(randomShift);
                 }
                 else
                 {
@@ -1016,7 +1020,7 @@ namespace pwiz.Skyline.Model
 
                 var decoyNodeTranList = nodeGroupPrimary != null
                     ? decoyGroup.GetMatchingTransitions(document.Settings, nodeGroupPrimary, mods)
-                    : GetDecoyTransitions(nodeGroup, decoyGroup, shiftMass);
+                    : GetDecoyTransitions(nodeGroup, decoyGroup, shiftMass, randomShift);
 
                 var nodeGroupDecoy = new TransitionGroupDocNode(decoyGroup,
                                                                 Annotations.EMPTY,
@@ -1039,7 +1043,7 @@ namespace pwiz.Skyline.Model
             return decoyNodeTranGroupList;
         }
 
-        private static TransitionDocNode[] GetDecoyTransitions(TransitionGroupDocNode nodeGroup, TransitionGroup decoyGroup, bool shiftMass)
+        private static TransitionDocNode[] GetDecoyTransitions(TransitionGroupDocNode nodeGroup, TransitionGroup decoyGroup, bool shiftMass, Random randomShift)
         {
             var decoyNodeTranList = new List<TransitionDocNode>();
             foreach (var nodeTran in nodeGroup.Transitions)
@@ -1047,7 +1051,7 @@ namespace pwiz.Skyline.Model
                 var transition = nodeTran.Transition;
                 int productMassShift = 0;
                 if (shiftMass)
-                    productMassShift = GetProductMassShift();
+                    productMassShift = GetProductMassShift(randomShift);
                 else if (transition.IsPrecursor() && decoyGroup.DecoyMassShift.HasValue)
                     productMassShift = decoyGroup.DecoyMassShift.Value;
                 var decoyTransition = new Transition(decoyGroup, transition.IonType, transition.CleavageOffset,
@@ -1058,19 +1062,19 @@ namespace pwiz.Skyline.Model
             return decoyNodeTranList.ToArray();
         }
 
-        static readonly Random RANDOM = new Random();
+        private const int RANDOM_SEED = 7*7*7*7*7; // 7^5 recommended by Brian S.
 
-        private static int GetPrecursorMassShift()
+        private static int GetPrecursorMassShift(Random random)
         {
             // Do not allow zero for the mass shift of the precursor
-            int massShift = RANDOM.Next(TransitionGroup.MIN_PRECURSOR_DECOY_MASS_SHIFT,
+            int massShift = random.Next(TransitionGroup.MIN_PRECURSOR_DECOY_MASS_SHIFT,
                                           TransitionGroup.MAX_PRECURSOR_DECOY_MASS_SHIFT);
             return massShift < 0 ? massShift : massShift + 1;
         }
 
-        private static int GetProductMassShift()
+        private static int GetProductMassShift(Random random)
         {
-            int massShift = RANDOM.Next(Transition.MIN_PRODUCT_DECOY_MASS_SHIFT,
+            int massShift = random.Next(Transition.MIN_PRODUCT_DECOY_MASS_SHIFT,
                                         Transition.MAX_PRODUCT_DECOY_MASS_SHIFT);
             // TODO: Validation code (at least 5 from the precursor)
             return massShift < 0 ? massShift : massShift + 1;
@@ -1123,7 +1127,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        private static SequenceMods GetShuffledPeptideSequence(SequenceMods seqMods)
+        private static SequenceMods GetShuffledPeptideSequence(SequenceMods seqMods, Random random)
         {
             string sequence = seqMods.Sequence;
             char finalA = sequence.Last();
@@ -1137,7 +1141,7 @@ namespace pwiz.Skyline.Model
                 for (int i = 0; i < lenPrefix; i++)
                     newIndices[i] = i;
                 for (int i = 0; i < lenPrefix; i++)
-                    Helpers.Swap(ref newIndices[RANDOM.Next(newIndices.Length)], ref newIndices[RANDOM.Next(newIndices.Length)]);
+                    Helpers.Swap(ref newIndices[random.Next(newIndices.Length)], ref newIndices[random.Next(newIndices.Length)]);
 
                 // Move the amino acids to their new positions
                 char[] shuffledArray = new char[lenPrefix];

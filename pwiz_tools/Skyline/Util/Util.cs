@@ -690,13 +690,13 @@ namespace pwiz.Skyline.Util
         /// Creates a random order of indexes into an array for a random linear walk
         /// through an array.
         /// </summary>
-        public static IEnumerable<TItem> RandomOrder<TItem>(this IList<TItem> list)
+        public static IEnumerable<TItem> RandomOrder<TItem>(this IList<TItem> list, int? seed = null)
         {
             int count = list.Count;
             var indexOrder = new int[count];
             for (int i = 0; i < count; i++)
                 indexOrder[i] = i;
-            Random r = new Random();
+            Random r = seed.HasValue ? new Random(seed.Value) : new Random();
             for (int i = 0; i < count; i++)
                 Helpers.Swap(ref indexOrder[0], ref indexOrder[r.Next(count)]);
             foreach (int i in indexOrder)
