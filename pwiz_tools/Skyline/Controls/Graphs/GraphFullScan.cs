@@ -30,6 +30,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
@@ -308,6 +309,11 @@ namespace pwiz.Skyline.Controls.Graphs
 
             double retentionTime = _msDataFileScanHelper.MsDataSpectra[0].RetentionTime ?? _msDataFileScanHelper.ScanProvider.Times[_msDataFileScanHelper.ScanIndex];
             GraphPane.Title.Text = string.Format(Resources.GraphFullScan_CreateGraph__0_____1_F2__min_, _msDataFileScanHelper.FileName, retentionTime);
+            if (Settings.Default.ShowFullScanNumber && _msDataFileScanHelper.MsDataSpectra.Any())
+            {
+                GraphPane.Title.Text = TextUtil.SpaceSeparate(GraphPane.Title.Text, 
+                    Resources.GraphFullScan_CreateGraph_Scan_Number_, _msDataFileScanHelper.MsDataSpectra[0].Id);
+            }
 
             FireSelectedScanChanged(retentionTime);
         }
@@ -800,6 +806,9 @@ namespace pwiz.Skyline.Controls.Graphs
         private void graphControl_ContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
         {
             ZedGraphHelper.BuildContextMenu(graphControl, menuStrip, true);
+            showScanNumberContextMenuItem.Checked = Settings.Default.ShowFullScanNumber;
+            menuStrip.Items.Add(new ToolStripSeparator());
+            menuStrip.Items.Add(showScanNumberContextMenuItem);
         }
 
         private void graphControl_MouseClick(object sender, MouseEventArgs e)
@@ -884,6 +893,13 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         #endregion Test support
+
+        private void showScanNumberToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowFullScanNumber = !Settings.Default.ShowFullScanNumber;
+            CreateGraph();
+            UpdateUI();
+        }
     }
 
     public class SpectrumItem : AbstractMSGraphItem

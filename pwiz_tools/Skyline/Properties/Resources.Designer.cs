@@ -12021,6 +12021,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Scan Number:.
+        /// </summary>
+        public static string GraphFullScan_CreateGraph_Scan_Number_ {
+            get {
+                return ResourceManager.GetString("GraphFullScan_CreateGraph_Scan_Number_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to MS/MS.
         /// </summary>
         public static string GraphFullScan_GraphFullScan_MS_MS {
@@ -28851,7 +28860,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Collisional Cross Section (sq A).
+        ///   Looks up a localized string similar to The name &apos;{0}&apos; is already in use from the path {1}.
         /// </summary>
         public static string ZipFileShare_AddFile_The_name___0___is_already_in_use_from_the_path__1_ {
             get {

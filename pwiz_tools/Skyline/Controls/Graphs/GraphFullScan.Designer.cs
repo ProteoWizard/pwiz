@@ -44,8 +44,11 @@
             this.filterBtn = new System.Windows.Forms.ToolStripButton();
             this.lblScanId = new System.Windows.Forms.ToolStripLabel();
             this.btnIsolationWindow = new System.Windows.Forms.ToolStripButton();
+            this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.showScanNumberContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.GraphPanel.SuspendLayout();
             this.toolBar.SuspendLayout();
+            this.contextMenuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // toolStripLabel1
@@ -83,8 +86,8 @@
             this.graphControl.ScrollMinY = 0D;
             this.graphControl.ScrollMinY2 = 0D;
             this.graphControl.ContextMenuBuilder += new ZedGraph.ZedGraphControl.ContextMenuBuilderEventHandler(this.graphControl_ContextMenuBuilder);
-            this.graphControl.MouseClick += new System.Windows.Forms.MouseEventHandler(this.graphControl_MouseClick);
             this.graphControl.MouseMoveEvent += new ZedGraph.ZedGraphControl.ZedMouseEventHandler(this.graphControl_MouseMove);
+            this.graphControl.MouseClick += new System.Windows.Forms.MouseEventHandler(this.graphControl_MouseClick);
             // 
             // toolBar
             // 
@@ -188,6 +191,19 @@
             this.btnIsolationWindow.Name = "btnIsolationWindow";
             this.btnIsolationWindow.Click += new System.EventHandler(this.btnIsolationWindow_Click);
             // 
+            // contextMenuStrip1
+            // 
+            this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.showScanNumberContextMenuItem});
+            this.contextMenuStrip1.Name = "contextMenuStrip1";
+            resources.ApplyResources(this.contextMenuStrip1, "contextMenuStrip1");
+            // 
+            // showScanNumberContextMenuItem
+            // 
+            this.showScanNumberContextMenuItem.Name = "showScanNumberContextMenuItem";
+            resources.ApplyResources(this.showScanNumberContextMenuItem, "showScanNumberContextMenuItem");
+            this.showScanNumberContextMenuItem.Click += new System.EventHandler(this.showScanNumberToolStripMenuItem_Click);
+            // 
             // GraphFullScan
             // 
             resources.ApplyResources(this, "$this");
@@ -201,6 +217,7 @@
             this.GraphPanel.PerformLayout();
             this.toolBar.ResumeLayout(false);
             this.toolBar.PerformLayout();
+            this.contextMenuStrip1.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -221,6 +238,8 @@
         private System.Windows.Forms.ToolStripButton btnIsolationWindow;
         private System.Windows.Forms.ToolStripButton spectrumBtn;
         private System.Windows.Forms.ToolStripButton filterBtn;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
+        private System.Windows.Forms.ToolStripMenuItem showScanNumberContextMenuItem;
 
 
     }
