@@ -611,7 +611,7 @@ namespace pwiz.SkylineTestUtil
         public static void Cloned(SrmDocument expected, SrmDocument actual)
         {
             DocsEqual(expected, actual);
-            if (!ReferenceEquals(expected, actual))
+            if (ReferenceEquals(expected, actual))
             {
                 Assert.AreNotSame(expected, actual);
             }
@@ -619,11 +619,15 @@ namespace pwiz.SkylineTestUtil
 
         public static void Cloned(object expected, object actual)
         {
+            Cloned(expected, actual, null);
+        }
+        public static void Cloned(object expected, object actual, object def)
+        {
             if (!Equals(expected, actual))
             {
                 Assert.AreEqual(expected, actual);
             }
-            if (!ReferenceEquals(expected, actual))
+            if (ReferenceEquals(expected, actual) && !ReferenceEquals(actual, def))
             {
                 Assert.AreNotSame(expected, actual);
             }
@@ -762,19 +766,22 @@ namespace pwiz.SkylineTestUtil
 
         public static void SettingsCloned(SrmSettings target, SrmSettings copy)
         {
-            Cloned(target.PeptideSettings.Enzyme, copy.PeptideSettings.Enzyme);
-            Cloned(target.PeptideSettings.DigestSettings, copy.PeptideSettings.DigestSettings);
-            Cloned(target.PeptideSettings.Filter, copy.PeptideSettings.Filter);
-            Cloned(target.PeptideSettings.Libraries, copy.PeptideSettings.Libraries);
-            Cloned(target.PeptideSettings.Modifications, copy.PeptideSettings.Modifications);
-            Cloned(target.PeptideSettings.Prediction, copy.PeptideSettings.Prediction);
+            var defSet = SrmSettingsList.GetDefault();
+            var defPep = defSet.PeptideSettings;
+            Cloned(target.PeptideSettings.Enzyme, copy.PeptideSettings.Enzyme, defPep.Enzyme);
+            Cloned(target.PeptideSettings.DigestSettings, copy.PeptideSettings.DigestSettings, defPep.DigestSettings);
+            Cloned(target.PeptideSettings.Filter, copy.PeptideSettings.Filter, defPep.Filter);
+            Cloned(target.PeptideSettings.Libraries, copy.PeptideSettings.Libraries, defPep.Libraries);
+            Cloned(target.PeptideSettings.Modifications, copy.PeptideSettings.Modifications, defPep.Modifications);
+            Cloned(target.PeptideSettings.Prediction, copy.PeptideSettings.Prediction, defPep.Prediction);
             Cloned(target.PeptideSettings, copy.PeptideSettings);
-            Cloned(target.TransitionSettings.Prediction, copy.TransitionSettings.Prediction);
-            Cloned(target.TransitionSettings.Filter, copy.TransitionSettings.Filter);
-            Cloned(target.TransitionSettings.Libraries, copy.TransitionSettings.Libraries);
-            Cloned(target.TransitionSettings.Integration, copy.TransitionSettings.Integration);
-            Cloned(target.TransitionSettings.Instrument, copy.TransitionSettings.Instrument);
-            Cloned(target.TransitionSettings.FullScan, copy.TransitionSettings.FullScan);
+            var defTran = defSet.TransitionSettings;
+            Cloned(target.TransitionSettings.Prediction, copy.TransitionSettings.Prediction, defTran.Prediction);
+            Cloned(target.TransitionSettings.Filter, copy.TransitionSettings.Filter, defTran.Filter);
+            Cloned(target.TransitionSettings.Libraries, copy.TransitionSettings.Libraries, defTran.Libraries);
+            Cloned(target.TransitionSettings.Integration, copy.TransitionSettings.Integration, defTran.Integration);
+            Cloned(target.TransitionSettings.Instrument, copy.TransitionSettings.Instrument, defTran.Instrument);
+            Cloned(target.TransitionSettings.FullScan, copy.TransitionSettings.FullScan, defTran.FullScan);
             Cloned(target.TransitionSettings, copy.TransitionSettings);
             Cloned(target, copy);
         }

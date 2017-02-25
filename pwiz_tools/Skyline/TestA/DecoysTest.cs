@@ -46,7 +46,7 @@ namespace pwiz.SkylineTestA
 
             // Second call to generate decoys to make sure that it removes the original Decoys group and generates a completely new one.
             var newDecoysDoc = refineSettings.GenerateDecoys(decoysDoc, numDecoys, DecoyGeneration.ADD_RANDOM);
-            Assert.AreNotEqual(decoysDoc.PeptideGroups.First(nodePeptideGroup => nodePeptideGroup.IsDecoy),
+            AssertEx.Cloned(decoysDoc.PeptideGroups.First(nodePeptideGroup => nodePeptideGroup.IsDecoy),
                 newDecoysDoc.PeptideGroups.First(nodePeptideGroup => nodePeptideGroup.IsDecoy));
 
             // MS1 document with precursors and variable modifications, shuffled
