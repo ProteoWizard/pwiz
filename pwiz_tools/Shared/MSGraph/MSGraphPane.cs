@@ -499,13 +499,20 @@ namespace pwiz.MSGraph
                         {
                             var rectID = _labelBoundsCache.GetLabelBounds(id, this, g);
 
-                            if (rectID.Left  < rectPeak.Right && rectID.Right > rectID.Left)
+                            // If the rectangles overlap
+                            if (Math.Min(rectID.Right, rectPeak.Right) - Math.Max(rectID.Left, rectPeak.Left) > 0 &&
+                                Math.Min(rectID.Bottom, rectPeak.Bottom) - Math.Max(rectID.Top, rectPeak.Top) > 0)
                             {
-                                pixelShift = Math.Max(rectID.Height, pixelShift);
+                                pixelShift = Math.Max(rectID.Height + 7, pixelShift);   // 7 pixel gap between labels
                             }
                         }
+                        double y2Pos = yAxis.Scale.ReverseTransform(pts[2].Y);
                         double labelHeight = 
-                            Math.Abs(yAxis.Scale.ReverseTransform(pts[0].Y - pixelShift) - yAxis.Scale.ReverseTransform(pts[2].Y));
+                            Math.Abs(yAxis.Scale.ReverseTransform(pts[0].Y - pixelShift) - y2Pos);
+                        // If separating the labels takes too much space, just revert to showing them aligned
+                        if (labelHeight >= axisHeight / 2)
+                            labelHeight = Math.Abs(yAxis.Scale.ReverseTransform(pts[0].Y) - y2Pos);
+
                         if (labelHeight < axisHeight / 2)
                         {
                             // Ensure that the YAxis will have enough space to show the label.
@@ -515,7 +522,7 @@ namespace pwiz.MSGraph
                             // When calculating the scaling required, take into account that the height of the label
                             // itself will not shrink when we shrink the YAxis.
                             var labelYMaxRequired = (text.Location.Y - labelHeight*YAxis.Scale.Min/axisHeight)/
-                                                    (1 - labelHeight/axisHeight) + pixelShift;
+                                                    (1 - labelHeight/axisHeight);
                             yMaxRequired = Math.Max(yMaxRequired, labelYMaxRequired);
                         }
                     }
