@@ -130,8 +130,7 @@ namespace pwiz.ProteowizardWrapper
                     simAsSpectra = simAsSpectra,
                     srmAsSpectra = srmAsSpectra,
                     acceptZeroLengthSpectra = acceptZeroLengthSpectra,
-                    ignoreZeroIntensityPoints = ignoreZeroIntensityPoints,
-                    adjustUnknownTimeZonesToHostTimeZone = false // Assume UTC if data source does not specify timezone
+                    ignoreZeroIntensityPoints = ignoreZeroIntensityPoints
                 };
                 _lockmassParameters = lockmassParameters;
                 FULL_READER_LIST.read(path, _msDataFile, sampleIndex, _config);
