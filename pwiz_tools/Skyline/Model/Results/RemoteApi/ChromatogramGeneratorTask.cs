@@ -112,7 +112,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             }
         }
 
-        public bool GetChromatogram(ChromKey chromKey, out float[] times, out int[] scanIds, out float[] intensities, out float[] massErrors)
+        public bool GetChromatogram(ChromKey chromKey, out TimeIntensities timeIntensities)
         {
             int keyIndex = -1;
             if (_chromKeyIndiceses != null)
@@ -125,40 +125,21 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             }
             if (keyIndex == -1 || _chromKeyIndiceses == null)   // Keep ReSharper from complaining
             {
-                times = null;
-                scanIds = null;
-                intensities = null;
-                massErrors = null;
+                timeIntensities = null;
                 return false;
             }
             ChromKeyIndices chromKeyIndices = _chromKeyIndiceses[keyIndex];
             var chromGroupInfo = _chromatogramCache.LoadChromatogramInfo(chromKeyIndices.GroupIndex);
             chromGroupInfo.ReadChromatogram(_chromatogramCache);
             var tranInfo = chromGroupInfo.GetTransitionInfo(chromKeyIndices.TranIndex);
-            times = tranInfo.Times;
-            if (times.Length == 0)
+            if (tranInfo.TimeIntensities == null || tranInfo.TimeIntensities.NumPoints == 0)
             {
                 // Chorus returns zero length chromatogram to indicate that no spectra matched
                 // the precursor filter.
-                times = null;
-                scanIds = null;
-                intensities = null;
-                massErrors = null;
+                timeIntensities = null;
                 return false;
             }
-            if (null != tranInfo.ScanIndexes)
-            {
-                scanIds = tranInfo.ScanIndexes[(short) chromKeyIndices.Key.Source];
-            }
-            else
-            {
-                scanIds = null;
-            }
-            intensities = tranInfo.Intensities;
-            massErrors = null;
-            if (tranInfo.MassError10Xs != null)
-                massErrors = tranInfo.MassError10Xs.Select(m => m / 10.0f).ToArray();
-            CoalesceIntensities(ref times, ref scanIds, ref intensities, ref massErrors);
+            timeIntensities = CoalesceIntensities(tranInfo.TimeIntensities);
             return true;
         }
 
@@ -167,9 +148,12 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
         /// and appropriately averaging the mass errors.
         /// TODO(nicksh): Remove this once Chorus changes to not have these duplicates.
         /// </summary>
-        private void CoalesceIntensities(ref float[] times, ref int[] scanIds, ref float[] intensities,
-            ref float[] massErrors)
+        private TimeIntensities CoalesceIntensities(TimeIntensities timeIntensities)
         {
+            IList<float> times = timeIntensities.Times;
+            IList<float> intensities = timeIntensities.Intensities;
+            IList<int> scanIds = timeIntensities.ScanIds;
+            IList<float> massErrors = timeIntensities.MassErrors;
             List<float> newTimes = new List<float>();
             List<int> newScanIds = new List<int>();
             List<float> newIntensities = new List<float>();
@@ -181,7 +165,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             double curMassError = 0;
             bool anyCoalescing = false;
 
-            for (int i = 0; i < times.Length; i++)
+            for (int i = 0; i < times.Count; i++)
             {
                 if (times[i] != curTime)
                 {
@@ -234,18 +218,9 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             }
             if (!anyCoalescing)
             {
-                return;
+                return timeIntensities;
             }
-            times = newTimes.ToArray();
-            intensities = newIntensities.ToArray();
-            if (null != scanIds)
-            {
-                scanIds = newScanIds.ToArray();
-            }
-            if (null != massErrors)
-            {
-                massErrors = newMassErrors.ToArray();
-            }
+            return new TimeIntensities(newTimes, newIntensities, massErrors == null ? null : newMassErrors, scanIds == null ? null : newScanIds);
         }
 
         internal class MemoryPooledStream : IPooledStream

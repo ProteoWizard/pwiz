@@ -16,11 +16,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Collections;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -344,11 +344,11 @@ namespace pwiz.SkylineTest.Results
 
                                 // Check times
                                 var times = tranInfo.Times;
-                                int iStart = Array.BinarySearch(times, peakInfo.StartTime);
+                                int iStart = CollectionUtil.BinarySearch(times, peakInfo.StartTime);
                                 Assert.IsTrue(iStart >= 0);
-                                int iEnd = Array.BinarySearch(times, peakInfo.EndTime);
+                                int iEnd = CollectionUtil.BinarySearch(times, peakInfo.EndTime);
                                 Assert.IsTrue(iEnd >= 0);
-                                int iPeak = Array.BinarySearch(times, iStart, iEnd - iStart, peakInfo.RetentionTime);
+                                int iPeak = CollectionUtil.BinarySearch(times, peakInfo.RetentionTime);
                                 // Check intensities at times
                                 var intensities = tranInfo.Intensities;
                                 Assert.IsTrue(intensities[iStart] < intensities[iPeak]);

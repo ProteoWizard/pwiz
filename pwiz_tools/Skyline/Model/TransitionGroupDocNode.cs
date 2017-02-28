@@ -2504,13 +2504,13 @@ namespace pwiz.Skyline.Model
                 {
                     // CONSIDER: Do this more efficiently?  Only when there is opimization
                     //           data will the loop execute more than once.
-                    int startIndex = chromGroupInfo.IndexOfNearestTime((float)startTime);
-                    int endIndex = chromGroupInfo.IndexOfNearestTime((float)endTime);
                     int numSteps = chromInfoArray.Length/2;
                     var nodeTranNew = nodeTran;
                     for (int i = 0; i < chromInfoArray.Length; i++)
                     {
                         var chromInfo = chromInfoArray[i];
+                        int startIndex = chromInfo.IndexOfNearestTime((float)startTime);
+                        int endIndex = chromInfo.IndexOfNearestTime((float)endTime);
                         int step = i - numSteps;
                         nodeTranNew = (TransitionDocNode) nodeTranNew.ChangePeak(indexSet, fileId, step,
                                                                                     chromInfo.CalcPeak(startIndex, endIndex, flags),

@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System.Collections.Generic;
 using System.Linq;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Properties;
@@ -25,7 +27,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
     public class ChorusScanProvider : IScanProvider
     {
         private ChorusSession _chorusSession;
-        public ChorusScanProvider(string docFilePath, ChorusUrl chorusUrl, ChromSource source, float[] times,
+        public ChorusScanProvider(string docFilePath, ChorusUrl chorusUrl, ChromSource source, IList<float> times,
             TransitionFullScanInfo[] transitions)
         {
             ChorusUrl = chorusUrl;
@@ -47,7 +49,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
         public string DocFilePath { get; private set; }
         public MsDataFileUri DataFilePath { get; private set; }
         public ChromSource Source { get; private set; }
-        public float[] Times { get; private set; }
+        public IList<float> Times { get; private set; }
         public TransitionFullScanInfo[] Transitions { get; private set; }
         public MsDataSpectrum[] GetMsDataFileSpectraWithCommonRetentionTime(int dataFileSpectrumStartIndex)
         {

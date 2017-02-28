@@ -101,6 +101,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Shared\Lib\DigitalRune.Windows.Docking.dll</HintPath>
     </Reference>
+    <Reference Include="Google.Protobuf">
+      <HintPath>..\Shared\Lib\Google.Protobuf.dll</HintPath>
+    </Reference>
     <Reference Include="Ionic.Zip, Version=1.9.1.8, Culture=neutral, PublicKeyToken=edbe51ad942a3f5c, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Shared\Lib\DotNetZip\Release\Ionic.Zip.dll</HintPath>
@@ -1086,6 +1089,8 @@
     <Compile Include="Model\Results\AbstractDemultiplexer.cs" />
     <Compile Include="Model\Results\ArrayPool.cs" />
     <Compile Include="Model\Results\CachedChromatogramDataProvider.cs" />
+    <Compile Include="Model\Results\CachedFileHeader.cs" />
+    <Compile Include="Model\Results\CacheFormat.cs" />
     <Compile Include="Model\Results\ChorusResponseChromDataProvider.cs" />
     <Compile Include="Model\Results\Chromatogram.cs" />
     <Compile Include="Model\Results\ChromatogramCache.cs" />
@@ -1109,6 +1114,8 @@
     <Compile Include="Model\Results\Crawdad\Crawdads.cs" />
     <Compile Include="Model\Results\DriftTimeFinder.cs" />
     <Compile Include="Model\Results\FastOverlapDemultiplexer.cs" />
+    <Compile Include="Model\Results\ProtoBuf\ChromatogramGroupData.cs" />
+    <Compile Include="Model\Results\TimeIntensitiesGroup.cs" />
     <Compile Include="Model\Results\MsDataFileScanHelper.cs" />
     <Compile Include="Model\Results\MsDataFileScanIds.cs" />
     <Compile Include="Model\Results\Demultiplexer.cs" />
@@ -1162,12 +1169,14 @@
     <Compile Include="Model\Results\SpectraChromDataProvider.cs" />
     <Compile Include="Model\Results\SpectrumFilter.cs" />
     <Compile Include="Model\Results\SpectrumFilterPair.cs" />
+    <Compile Include="Model\Results\TimeIntensities.cs" />
     <Compile Include="Model\Results\VendorIssueHelper.cs" />
     <Compile Include="Model\RetentionTimes\DocumentRetentionTimes.cs" />
     <Compile Include="Model\RetentionTimes\FileRetentionTimeAlignments.cs" />
     <Compile Include="Model\RetentionTimes\RetentionTimeManager.cs" />
     <Compile Include="Model\RetentionTimes\RetentionTimeSource.cs" />
     <Compile Include="Model\RetentionTimes\RetentionTimeValues.cs" />
+    <Compile Include="Model\SkylineVersion.cs" />
     <Compile Include="Model\SmallMoleculeTransitionListReader.cs" />
     <Compile Include="Model\SrmDocument.cs" />
     <Compile Include="Model\SrmDocumentExtensions.cs" />
@@ -2349,6 +2358,7 @@
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\Sciex.sky" />
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\RePLiCal.sky" />
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\Biognosys10.sky" />
+    <None Include="Model\Results\ProtoBuf\ChromatogramGroupData.proto" />
     <None Include="Resources\StartPage\GroupedStudies_thumb.jpg" />
     <None Include="Resources\StartPage\DIA_thumb.jpg" />
     <None Include="Resources\StartPage\SmallMolecule_thumb.jpg" />
@@ -3104,6 +3114,7 @@
     <Compile Include="Util\CultureUtil.cs" />
     <Compile Include="Util\DataGridViewPasteHandler.cs" />
     <Compile Include="Util\DataSourceUtil.cs" />
+    <Compile Include="Util\DirectSerializer.cs" />
     <Compile Include="Util\DockableFormEx.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -3838,6 +3849,16 @@
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
+    </PublishFile>
+    <PublishFile Include="MassSpecDataReader">
+      <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="modifications.xml">
       <Visible>False</Visible>

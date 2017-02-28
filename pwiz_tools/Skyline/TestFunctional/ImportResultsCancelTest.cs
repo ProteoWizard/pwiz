@@ -38,7 +38,7 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestImportResultsCancel()
         {
-            Run(@"TestFunctional\RetentionTimeFilterTest.zip");
+            Run(@"TestFunctional\ImportResultsCancelTest.zip");
         }
 
         protected override void DoTest()

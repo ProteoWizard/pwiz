@@ -35,6 +35,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 
@@ -515,7 +516,7 @@ namespace pwiz.Skyline.Util
         Uri SendZipFile(Server server, string folderPath, string zipFilePath, IProgressMonitor progressMonitor);
         JObject SupportedVersionsJson(Server server);
         void UploadSharedZipFile(Control parent, Server server, string zipFilePath, string folderPath);
-        bool ServerSupportsSkydVersion(FolderInformation folderInfo, IDocumentUIContainer _docContainer,
+        ShareType DecideShareType(FolderInformation folderInfo, IDocumentUIContainer _docContainer,
             IWin32Window parent);
     }
 
@@ -524,50 +525,59 @@ namespace pwiz.Skyline.Util
         public abstract JToken GetInfoForFolders(Server server, string folder);
         public abstract Uri SendZipFile(Server server, string folderPath, string zipFilePath, IProgressMonitor progressMonitor);
         public abstract JObject SupportedVersionsJson(Server server);
-        
-        public bool ServerSupportsSkydVersion(FolderInformation folderInfo, IDocumentUIContainer _docContainer, IWin32Window parent)
+
+        public CacheFormatVersion GetSupportedSkydVersion(FolderInformation folderInfo)
         {
-            var settings = _docContainer.DocumentUI.Settings;
-            Assume.IsTrue(_docContainer.DocumentUI.IsLoaded);
-            var cacheVersion = settings.HasResults ? settings.MeasuredResults.CacheVersion : null;
-
-            if (cacheVersion == null)
-            {
-                // The document may not have any chromatogram data.
-                return true;
-            }
-
             var serverVersionsJson = SupportedVersionsJson(folderInfo.Server);
             if (serverVersionsJson == null)
             {
                 // There was an error getting the server-supported skyd version for some reason.
                 // Perhaps this is an older server that did not understand the request, or
                 // the returned JSON was malformed. Let the document upload continue.
-                return true;
+                return CacheFormatVersion.CURRENT;
             }
 
-            int? serverVersion = null;
             JToken serverSkydVersion;
             if (serverVersionsJson.TryGetValue("SKYD_version", out serverSkydVersion)) // Not L10N
             {
                 int version;
                 if (int.TryParse(serverSkydVersion.Value<string>(), out version))
                 {
-                    serverVersion = version;
+                    return (CacheFormatVersion) version;
                 }
             }
 
-            if (serverVersion.HasValue && cacheVersion.Value > serverVersion.Value)
+            return CacheFormatVersion.CURRENT;
+        }
+
+        public ShareType DecideShareType(FolderInformation folderInfo, IDocumentUIContainer docContainer,
+            IWin32Window parent)
+        {
+            ShareType shareType = ShareType.DEFAULT;
+            
+            var settings = docContainer.DocumentUI.Settings;
+            Assume.IsTrue(docContainer.DocumentUI.IsLoaded);
+            var cacheVersion = settings.HasResults ? settings.MeasuredResults.CacheVersion : null;
+
+            if (!cacheVersion.HasValue)
             {
-                MessageDlg.Show(parent,
-                    string.Format(
-                        Resources.PublishDocumentDlg_ServerSupportsSkydVersion_,
-                        cacheVersion.Value)
-                    );
-                return false;
+                // The document may not have any chromatogram data.
+                return shareType;
             }
 
-            return true;
+            CacheFormatVersion supportedVersion = GetSupportedSkydVersion(folderInfo);
+            if (supportedVersion >= cacheVersion.Value)
+            {
+                return shareType;
+            }
+            var skylineVersion = SkylineVersion.SupportedForSharing().FirstOrDefault(ver => ver.CacheFormatVersion <= supportedVersion);
+            if (skylineVersion == null)
+            {
+                MessageDlg.Show(parent,
+                    string.Format(Resources.PublishDocumentDlg_ServerSupportsSkydVersion_, (int) cacheVersion.Value));
+                return null;
+            }
+            return shareType.ChangeSkylineVersion(skylineVersion);
         }
 
         public void UploadSharedZipFile(Control parent, Server server, string zipFilePath, string folderPath)

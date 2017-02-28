@@ -114,15 +114,15 @@ namespace pwiz.Skyline.Model.Results
             /// <summary>
             /// Add a complete transition to AllChromatogramsGraph.
             /// </summary>
-            public void AddTransition(string modifiedSequence, Color color, int index, int rank, float[] times, float[] intensities)
+            public void AddTransition(string modifiedSequence, Color color, int index, int rank, IList<float> times, IList<float> intensities)
             {
-                if (rank == 0 || times.Length == 0)
+                if (rank == 0 || times.Count == 0)
                     return;
 
-                float maxTime = times[times.Length - 1];
+                float maxTime = times[times.Count - 1];
                 MaxRetentionTime = Math.Max(MaxRetentionTime, maxTime);
 
-                for (int i = 0; i < times.Length; i++)
+                for (int i = 0; i < times.Count; i++)
                     AddIntensity(modifiedSequence, color, index, times[i], intensities[i]);
             }
 

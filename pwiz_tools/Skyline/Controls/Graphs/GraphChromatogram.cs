@@ -69,7 +69,12 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get
             {
-                return Helpers.ParseEnum(Settings.Default.TransformTypeChromatogram, TransformChrom.none);
+                var transformType = Settings.Default.TransformTypeChromatogram;
+                if (transformType == "none") // Not L10N
+                {
+                    return TransformChrom.interpolated;
+                }
+                return Helpers.ParseEnum(transformType, TransformChrom.interpolated);
             }
         }
 
@@ -1106,7 +1111,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var nodeGroup = _nodeGroups != null ? _nodeGroups[0] : null;
             if (nodeGroup == null)
                 nodeTranSelected = null;
-            var info = chromGroupInfo.GetTransitionInfo(new SignedMz(0, nodeGroup != null && nodeGroup.PrecursorCharge < 0), 0);
+            var info = chromGroupInfo.GetTransitionInfo(new SignedMz(0, nodeGroup != null && nodeGroup.PrecursorCharge < 0), 0, TransformChrom.raw);
 
             TransitionChromInfo tranPeakInfo = null;
             if (nodeGroup != null)
@@ -1229,7 +1234,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     var nodeTran = displayTrans[i];
                     // Get chromatogram info for this transition
-                    arrayChromInfo[i] = chromGroupInfo.GetTransitionInfo(nodeTran.Mz, mzMatchTolerance);
+                    arrayChromInfo[i] = chromGroupInfo.GetTransitionInfo(nodeTran.Mz, mzMatchTolerance, TransformChrom.raw);
                 }
             }
 
@@ -1842,7 +1847,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var listChromInfo = new List<ChromatogramInfo>();
                 foreach (TransitionDocNode nodeTran in nodeGroup.Children)
                 {
-                    var info = chromGroupInfo.GetTransitionInfo(nodeTran.Mz, mzMatchTolerance);
+                    var info = chromGroupInfo.GetTransitionInfo(nodeTran.Mz, mzMatchTolerance, TransformChrom.raw);
                     if (info == null)
                         continue;
 
@@ -1971,7 +1976,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     ChromFileInfoId fileId = chromatograms.FindFile(chromGroupInfo);
                     foreach (var nodeTran in precursor.Transitions)
                     {
-                        var info = chromGroupInfo.GetTransitionInfo(nodeTran.Mz, mzMatchTolerance);
+                        var info = chromGroupInfo.GetTransitionInfo(nodeTran.Mz, mzMatchTolerance, TransformChrom.raw);
                         if (info == null)
                             continue;
                         if (sumInfo == null)
@@ -1980,8 +1985,9 @@ namespace pwiz.Skyline.Controls.Graphs
                         {
                             float[] sumTimes;
                             float[] sumIntensities;
+                            // TODO(toaarray)
                             if (!AddTransitions.Add(
-                                info.Times, info.Intensities, sumInfo.Times, sumInfo.Intensities,
+                                info.Times.ToArray(), info.Intensities.ToArray(), sumInfo.Times.ToArray(), sumInfo.Intensities.ToArray(),
                                 out sumTimes, out sumIntensities))
                                 continue;
                             sumInfo = new ChromatogramInfo(sumTimes, sumIntensities);
@@ -2025,10 +2031,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 var peptideDocNode = peptideDocNodes[displayPeptides[i].PeptideIndex];
 
                 // Intersect best peak with summed transition.
-                if (bestPeakInfo != null && sumInfo.Times != null && sumInfo.Times.Length > 0)
+                if (bestPeakInfo != null && sumInfo.Times != null && sumInfo.Times.Count > 0)
                 {
                     float startRetentionTime = Math.Max(bestPeakInfo.StartRetentionTime, sumInfo.Times[0]);
-                    float endRetentionTime = Math.Min(bestPeakInfo.EndRetentionTime, sumInfo.Times[sumInfo.Times.Length - 1]);
+                    float endRetentionTime = Math.Min(bestPeakInfo.EndRetentionTime, sumInfo.Times[sumInfo.Times.Count - 1]);
                     if (endRetentionTime > startRetentionTime)
                     {
                         if (bestStartTime > startRetentionTime)

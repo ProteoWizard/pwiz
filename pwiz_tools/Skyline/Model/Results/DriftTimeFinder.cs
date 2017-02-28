@@ -251,18 +251,20 @@ namespace pwiz.Skyline.Model.Results
         {
             var transitions = new List<TransitionFullScanInfo>();
             var chromSource = (msLevel == 1) ? ChromSource.ms1 : ChromSource.fragment;
+            IList<float> times = null;
             foreach (var tranPointSet in transitionPointSets.Where(t => t.Source == chromSource))
             {
                 transitions.Add(new TransitionFullScanInfo
                 {
                     //Name = tranPointSet.Header.,
                     Source = chromSource,
-                    ScanIndexes = chromInfo.ScanIndexes,
+                    ScanIndexes = null == tranPointSet.ScanIndexes ? null : tranPointSet.ScanIndexes.ToArray(),
                     PrecursorMz = chromInfo.PrecursorMz,
                     ProductMz = tranPointSet.ProductMz,
                     ExtractionWidth = tranPointSet.ExtractionWidth,
                     //Id = nodeTran.Id
                 });
+                times = tranPointSet.Times;
             }
 
             if (!transitions.Any())
@@ -276,21 +278,19 @@ namespace pwiz.Skyline.Model.Results
             {
                 scanProvider = new ScanProvider(_documentFilePath,
                     filePath,
-                    chromSource, chromInfo.Times, transitions.ToArray(),
+                    chromSource, times, transitions.ToArray(),
                     () => _document.Settings.MeasuredResults.LoadMSDataFileScanIds(filePath));
             }
             else
             {
                 scanProvider = new ChorusScanProvider(_documentFilePath,
                     chorusUrl,
-                    chromSource, chromInfo.Times, transitions.ToArray());
+                    chromSource, times, transitions.ToArray());
             }
 
             // Across all spectra at the peak retention time, find the one with max total 
             // intensity for the mz's of interest (ie the isotopic distribution) and note its drift time.
-            var scanIndex = chromInfo.ScanIndexes != null
-                ? MsDataFileScanHelper.FindScanIndex(chromInfo, apexRT.Value)
-                : -1;
+            var scanIndex = MsDataFileScanHelper.FindScanIndex(times, apexRT.Value);
             _msDataFileScanHelper.UpdateScanProvider(scanProvider, 0, scanIndex);
             _msDataFileScanHelper.MsDataSpectra = null; // Reset
             scanIndex = _msDataFileScanHelper.GetScanIndex();

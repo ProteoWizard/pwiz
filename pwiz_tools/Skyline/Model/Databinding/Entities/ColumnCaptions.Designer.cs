@@ -1366,6 +1366,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Points Across Peak.
+        /// </summary>
+        public static string PointsAcrossPeak {
+            get {
+                return ResourceManager.GetString("PointsAcrossPeak", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Precursor.
         /// </summary>
         public static string Precursor {

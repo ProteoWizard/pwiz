@@ -104,14 +104,14 @@ namespace pwiz.Skyline.Model.Results
         /// <summary>
         /// Get a chromatogram with properly sorted time values.
         /// </summary>
-        public void ReleaseChromatogram(byte[] bytesFromDisk, out float[] times, out float[] intensities, out float[] massErrors, out int[] scanIds)
+        public void ReleaseChromatogram(byte[] bytesFromDisk, out TimeIntensities timeIntensities)
         {
-            times = Times.ToArray(bytesFromDisk);
-            intensities = Intensities.ToArray(bytesFromDisk);
-            massErrors = MassErrors != null
+            var times = Times.ToArray(bytesFromDisk);
+            var intensities = Intensities.ToArray(bytesFromDisk);
+            var massErrors = MassErrors != null
                 ? MassErrors.ToArray(bytesFromDisk)
                 : null;
-            scanIds = Scans != null
+            var scanIds = Scans != null
                 ? Scans.ToArray(bytesFromDisk)
                 : null;
             // Make sure times and intensities match in length.
@@ -127,7 +127,7 @@ namespace pwiz.Skyline.Model.Results
                     string.Format(Resources.ChromCollector_ReleaseChromatogram_Intensities___0___and_mass_errors___1___disagree_in_point_count_,
                     intensities.Length, massErrors.Length));
             }
-
+            timeIntensities = new TimeIntensities(times, intensities, massErrors, scanIds);
             // Release memory.
             Times = null;
             Intensities = null;
@@ -577,7 +577,7 @@ namespace pwiz.Skyline.Model.Results
         /// <returns>-1 if chromatogram is not finished yet.</returns>
         public int ReleaseChromatogram(
             int chromatogramIndex, float retentionTime, ChromCollector collector,
-            out float[] times, out float[] intensities, out float[] massErrors, out int[] scanIds)
+            out TimeIntensities timeIntensities)
         {
             int groupIndex = GetGroupIndex(chromatogramIndex);
             var spillFile = _spillFiles[groupIndex];
@@ -585,20 +585,14 @@ namespace pwiz.Skyline.Model.Results
             // Not done reading yet.
             if (retentionTime < spillFile.MaxTime || (collector != null && !collector.IsSetTimes))
             {
-                times = null;
-                intensities = null;
-                massErrors = null;
-                scanIds = null;
+                timeIntensities = null;
                 return -1;
             }
 
             // No chromatogram information collected.
             if (collector == null)
             {
-                times = EMPTY_FLOAT_ARRAY;
-                intensities = EMPTY_FLOAT_ARRAY;
-                massErrors = null;
-                scanIds = null;
+                timeIntensities = TimeIntensities.EMPTY;
                 return 0;
             }
 
@@ -618,7 +612,7 @@ namespace pwiz.Skyline.Model.Results
                     // spillFile.CloseStream();
                 }
             }
-            collector.ReleaseChromatogram(_bytesFromSpillFile, out times, out intensities, out massErrors, out scanIds);
+            collector.ReleaseChromatogram(_bytesFromSpillFile, out timeIntensities);
                 
             return collector.StatusId;
         }

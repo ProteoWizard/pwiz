@@ -201,7 +201,7 @@ namespace pwiz.SkylineTest.Results
                     for (int complete = 0; complete <= 1; complete++)
                     {
                         var sharePath = testFilesDir.GetTestPath(complete == 1 ? "share_complete.zip" : "share_minimized.zip");
-                        var share = new SrmDocumentSharing(document, docPath, sharePath, complete == 1);
+                        var share = new SrmDocumentSharing(document, docPath, sharePath, new ShareType(complete == 1, null));
                         share.Share(new SilentProgressMonitor());
 
                         var files = share.ListEntries().ToArray();

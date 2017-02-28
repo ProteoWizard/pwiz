@@ -39,6 +39,7 @@ namespace pwiz.SkylineTestFunctional
         private string[] _cachePaths;
         private int[] _groupCounts;
         private int[] _tranCounts;
+        private int[] _peakCounts;
         private long[] _cacheSizes;
 
         [TestMethod]
@@ -63,6 +64,7 @@ namespace pwiz.SkylineTestFunctional
                                          };
             _groupCounts = new[] {36, 24, 12, 6, 10};
             _tranCounts = new[] {72, 48, 24, 23, 440};
+            _peakCounts = new[] {518, 310, 162, 52, 3608};
 
             _cachePaths = new string[_documentPaths.Length];
             _cacheSizes = new long[_documentPaths.Length];
@@ -437,6 +439,7 @@ namespace pwiz.SkylineTestFunctional
             int dataGroupCount = _groupCounts[docIndex];
             int dataTranCount = _tranCounts[docIndex];
             long format3Size = _cacheSizes[docIndex];
+            int peakCount = _peakCounts[docIndex];
 
             long cacheSize = format3Size;
             int fileCachedCount = docInitial.Settings.MeasuredResults.MSDataFileInfos.Count();
@@ -451,7 +454,9 @@ namespace pwiz.SkylineTestFunctional
                 // Allow for a difference in sizes due to the extra information.
                 int fileFlagsSize = sizeof(int)*fileCachedCount;
                 // And SeqIndex, SeqCount, StartScoreIndex and padding
-                int groupHeadersSize = ChromGroupHeaderInfo5.DeltaSize5*dataGroupCount;
+                var deltaSize5 = ChromGroupHeaderInfo.GetStructSize(CacheFormatVersion.Five) -
+                                 ChromGroupHeaderInfo.GetStructSize(CacheFormatVersion.Four);
+                int groupHeadersSize = deltaSize5*dataGroupCount;
                 // And flags for each transition
                 int transitionFlagsSize = ChromTransition5.DeltaSize5*dataTranCount;
                 // And num seq byte count, seq location, score types, num scores and score location
@@ -480,6 +485,16 @@ namespace pwiz.SkylineTestFunctional
                 // Version 11 adds uncompressed buffer size for convenience, and some time span metadata
                 cacheSize += ChromGroupHeaderInfo.DeltaSize11 * dataGroupCount;
             }
+            if (ChromatogramCache.FORMAT_VERSION_CACHE >= CacheFormatVersion.Twelve)
+            {
+                cacheSize += peakCount * (ChromPeak.GetStructSize(CacheFormatVersion.Twelve) -
+                                         ChromPeak.GetStructSize(CacheFormatVersion.Eleven));
+                cacheSize += dataTranCount*
+                             (ChromTransition.GetStructSize(CacheFormatVersion.Twelve) -
+                              ChromTransition.GetStructSize(CacheFormatVersion.Eleven));
+            }
+            cacheSize += CacheHeaderStruct.GetStructSize(ChromatogramCache.FORMAT_VERSION_CACHE) -
+                         CacheHeaderStruct.GetStructSize(ChromatogramCache.FORMAT_VERSION_CACHE_11);
             return cacheSize;
         }
 

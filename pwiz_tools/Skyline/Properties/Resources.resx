@@ -2295,9 +2295,6 @@
   <data name="SkylineWindow_sortProteinsMenuItem_Click_Sort_proteins_by_name" xml:space="preserve">
     <value>Sort proteins by name</value>
   </data>
-  <data name="ShareTypeDlg_ShareTypeDlg_The_document_can_be_shared_either_in_its_complete_form_or_in_a_minimal_form_intended_for_read_only_use_with" xml:space="preserve">
-    <value>The document can be shared either in its complete form, or in a minimal form intended for read-only use with:</value>
-  </data>
   <data name="SkylineWindow_ImportMassList_The_transition_list_appears_to_contain_iRT_values__but_the_document_does_not_have_an_iRT_calculator___Create_a_new_calculator_and_add_these_iRT_values_" xml:space="preserve">
     <value>The transition list appears to contain iRT values, but the document does not have an iRT calculator.  Create a new calculator and add these iRT values?</value>
   </data>
@@ -2384,9 +2381,6 @@
   </data>
   <data name="EditCoVDlg_btnOk_Click_Maximum_compensation_voltage_cannot_be_less_than_minimum_compensation_volatage_" xml:space="preserve">
     <value>Maximum compensation voltage cannot be less than minimum compensation volatage.</value>
-  </data>
-  <data name="ShareTypeDlg_ShareTypeDlg_its_background_proteome_disconnected" xml:space="preserve">
-    <value>Its background proteome disconnected.</value>
   </data>
   <data name="EditIsolationSchemeDlg_OkDialog_There_are_gaps_in_a_single_cycle_of_your_extraction_windows__Do_you_want_to_continue_" xml:space="preserve">
     <value>There are gaps in a single cycle of your extraction windows. Are you sure you want to continue?</value>
@@ -3350,9 +3344,6 @@ Are you sure you want to continue?</value>
   </data>
   <data name="CommandLine_ExportInstrumentFile_Method__0__exported_successfully_" xml:space="preserve">
     <value>Method {0} exported successfully.</value>
-  </data>
-  <data name="ShareTypeDlg_ShareTypeDlg_Choose_the_appropriate_sharing_option_below" xml:space="preserve">
-    <value>Choose the appropriate sharing option below.</value>
   </data>
   <data name="PythonInstaller_InstallPackages_Package_installation_failed__Error_log_output_in_immediate_window_" xml:space="preserve">
     <value>Package installation failed. Error log output in immediate window.</value>
@@ -4944,9 +4935,6 @@ If you prefer you can choose to report anonymously.</value>
   <data name="MProphetFeaturesDlg_OkDialog_To_export_MProphet_features_first_train_an_MProphet_model_" xml:space="preserve">
     <value>To export MProphet features first train an MProphet model.</value>
   </data>
-  <data name="ShareTypeDlg_ShareTypeDlg_its_retention_time_calculator_minimized_to_contain_only_standard_peptides_and_library_peptides_used_in_the_document" xml:space="preserve">
-    <value>Its retention time calculator minimized to contain only standard peptides and library peptides used in the document.</value>
-  </data>
   <data name="OpenDataSourceDialog_populateComboBoxFromDirectory_Network_Share" xml:space="preserve">
     <value>Network Share</value>
   </data>
@@ -5173,9 +5161,6 @@ If you prefer you can choose to report anonymously.</value>
   </data>
   <data name="DocumentGridViewContext_Preview_Preview___0_" xml:space="preserve">
     <value>Preview: {0}</value>
-  </data>
-  <data name="ShareTypeDlg_ShareTypeDlg_all_libraries_minimized_to_contain_only_precursors_used_in_the_document" xml:space="preserve">
-    <value>all libraries minimized to contain only precursors used in the document</value>
   </data>
   <data name="EditOptimizationLibraryDlg_OkDialog_Click_the_Create_button_to_create_a_new_library_or_the_Open_button_to_open_an_existing_library_file_" xml:space="preserve">
     <value>Click the Create button to create a new library or the Open button to open an existing library file.</value>
@@ -6597,9 +6582,6 @@ If you prefer you can choose to report anonymously.</value>
   </data>
   <data name="SkylineWindow_FindBackgroundProteome_Background_Proteome" xml:space="preserve">
     <value>Background Proteome</value>
-  </data>
-  <data name="ShareTypeDlg_ShareTypeDlg_Invalid_use_of__0__for_document_without_background_proteome_retention_time_calculator_or_libraries" xml:space="preserve">
-    <value>Invalid use of {0} for document without background proteome, retention time calculator or libraries.</value>
   </data>
   <data name="DataProcessing" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\dataprocessing.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -9296,6 +9278,15 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="EditIsolationSchemeDlg_ReadIsolationRanges_No_repeating_isolation_scheme_found_in__0_" xml:space="preserve">
     <value>No repeating isolation scheme found in {0}</value>
   </data>
+  <data name="SkylineVersion_GetCurrentVersionName_Current___0__" xml:space="preserve">
+    <value>Current ({0})</value>
+  </data>
+  <data name="SkylineVersion_GetCurrentVersionName_Developer_Build" xml:space="preserve">
+    <value>Developer Build</value>
+  </data>
+  <data name="SkylineVersion_V3_6_Skyline_3_6" xml:space="preserve">
+    <value>Skyline 3.6</value>
+  </data>
   <data name="GraphData_CorrelationLabel_Measured_Time___0__" xml:space="preserve">
     <value>Measured Time ({0})</value>
   </data>
@@ -9388,5 +9379,8 @@ If your transition list format combines formulas and adducts in a single column 
   </data>
   <data name="FilterMidasLibraryDlg_btnBrowse_Click_Export_Filtered_MIDAS_Library" xml:space="preserve">
     <value>Export Filtered MIDAS Library</value>
+  </data>
+  <data name="SrmDocumentSharing_MinimizeToFile_Writing_chromatograms" xml:space="preserve">
+    <value>Writing chromatograms</value>
   </data>
 </root>

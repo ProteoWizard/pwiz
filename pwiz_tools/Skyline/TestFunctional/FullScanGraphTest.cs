@@ -20,6 +20,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -35,6 +36,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            Settings.Default.TransformTypeChromatogram = TransformChrom.interpolated.ToString();
             OpenDocument("BlibDriftTimeTest.sky");
             ImportResults("ID12692_01_UCA168_3727_040714.mz5");
             FindNode("453");

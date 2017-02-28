@@ -443,8 +443,8 @@ namespace pwiz.SkylineTestA
                 public int EndIndex { get { return _data.Length - 1; } }
                 public int StartIndex { get { return 0; } }
                 public int Length { get { return _data.Length; } }
-                public float[] Times { get { throw new InvalidOperationException(); } }
-                public float[] Intensities { get { return _data; } }
+                public IList<float> Times { get { throw new InvalidOperationException(); } }
+                public IList<float> Intensities { get { return _data; } }
                 public float? MassError { get; private set; }
             }
         }

@@ -85,9 +85,9 @@ namespace pwiz.Skyline.Model.Results
 
         public bool IsTimeNormalArea { get; private set; }
 
-        public int? CacheVersion
+        public CacheFormatVersion? CacheVersion
         {
-            get { return _cacheFinal != null ? _cacheFinal.Version : (int?) null; }
+            get { return _cacheFinal != null ? _cacheFinal.Version : (CacheFormatVersion?) null; }
         }
 
         public bool IsLoaded
@@ -590,7 +590,6 @@ namespace pwiz.Skyline.Model.Results
                 ChromatogramGroupInfo[] info;
                 if (!cache.TryLoadChromatogramInfo(nodePep, nodeGroup, tolerance, chromatogram, out info))
                     continue;
-
                 foreach (var chromInfo in info)
                 {
                     // Short-circuit further processing for common case in label free data

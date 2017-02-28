@@ -1965,7 +1965,9 @@ namespace pwiz.Skyline
             var transform = GraphChromatogram.Transform;
 
             transformChromNoneMenuItem.Checked = transformChromNoneContextMenuItem.Checked =
-                (transform == TransformChrom.none);
+                (transform == TransformChrom.raw);
+            transformChromInterploatedMenuItem.Checked = transformChromInterpolatedContextMenuItem.Checked =
+                (transform == TransformChrom.interpolated);
             secondDerivativeMenuItem.Checked = secondDerivativeContextMenuItem.Checked =
                 (transform == TransformChrom.craw2d);
             firstDerivativeMenuItem.Checked = firstDerivativeContextMenuItem.Checked =
@@ -1976,9 +1978,17 @@ namespace pwiz.Skyline
 
         private void transformChromNoneMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.TransformTypeChromatogram = TransformChrom.none.ToString();
+            Settings.Default.TransformTypeChromatogram = TransformChrom.raw.ToString();
             UpdateChromGraphs();
         }
+
+
+        private void transformInterpolatedMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.TransformTypeChromatogram = TransformChrom.interpolated.ToString();
+            UpdateChromGraphs();
+        }
+
 
         private void secondDerivativeMenuItem_Click(object sender, EventArgs e)
         {

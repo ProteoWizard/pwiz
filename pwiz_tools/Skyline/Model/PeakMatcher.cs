@@ -59,7 +59,7 @@ namespace pwiz.Skyline.Model
                 return;
 
             var chromGroupInfo = chromGroupInfos.FirstOrDefault(info => Equals(chromSet.GetFileInfo(tranGroupChromInfo.FileId).FilePath, info.FilePath));
-            if (chromGroupInfo == null || chromGroupInfo.NumPeaks == 0 || !chromGroupInfo.Times.Any())
+            if (chromGroupInfo == null || chromGroupInfo.NumPeaks == 0 || !chromGroupInfo.TimeIntensitiesGroup.HasAnyPoints)
                 return;
 
             runTime = chromGroupInfo.RunStartTime;
@@ -76,8 +76,8 @@ namespace pwiz.Skyline.Model
             }
                     
             // Get time information
-            float timeMin = chromGroupInfo.Times.First();
-            float timeMax = chromGroupInfo.Times.Last();
+            float timeMin = chromGroupInfo.TimeIntensitiesGroup.MinTime;
+            float timeMax = chromGroupInfo.TimeIntensitiesGroup.MaxTime;
 
             float totalArea = chromGroupInfo.TransitionPointSets.Sum(chromInfo => chromInfo.Peaks.Sum(peak => peak.Area));
             for (int i = 0; i < chromGroupInfo.NumPeaks; i++)
@@ -209,7 +209,7 @@ namespace pwiz.Skyline.Model
                 return null;
 
             var chromGroupInfo = loadInfos.FirstOrDefault(info => Equals(info.FilePath, fileInfo.FilePath));
-            if (chromGroupInfo == null || chromGroupInfo.NumPeaks == 0 || !chromGroupInfo.Times.Any())
+            if (chromGroupInfo == null || chromGroupInfo.NumPeaks == 0 || !chromGroupInfo.TimeIntensitiesGroup.HasAnyPoints)
                 return null;
 
             var matchData = new List<PeakMatchData>();
@@ -248,8 +248,8 @@ namespace pwiz.Skyline.Model
                 if (prev != null || next != null)
                 {
                     // At least one alignment occurred
-                    var chromGroupMinTime = chromGroupInfo.Times.First();
-                    var chromGroupMaxTime = chromGroupInfo.Times.Last();
+                    var chromGroupMinTime = chromGroupInfo.TimeIntensitiesGroup.MinTime;
+                    var chromGroupMaxTime = chromGroupInfo.TimeIntensitiesGroup.MaxTime;
 
                     float scale = (chromGroupMaxTime - chromGroupMinTime)/(referenceTarget.MaxTime - referenceTarget.MinTime);
                     manualMatch = MakePeakMatchBetween(scale, referenceTarget, prev, next);
@@ -475,8 +475,8 @@ namespace pwiz.Skyline.Model
                 EndTime = peak.EndTime;
                 ShiftLeft = 0;
                 ShiftRight = 0;
-                MinTime = chromGroupInfo.Times.First();
-                MaxTime = chromGroupInfo.Times.Last();
+                MinTime = chromGroupInfo.TimeIntensitiesGroup.MinTime;
+                MaxTime = chromGroupInfo.TimeIntensitiesGroup.MaxTime;
             }
 
             public double GetMatchScore(PeakMatchData other)

@@ -152,5 +152,14 @@ namespace pwiz.Common.Collections
             }
             return range.Start;
         }
+
+        public static void Copy<T>(IList<T> sourceList, int sourceIndex, IList<T> destinationList, int destinationIndex,
+            int length)
+        {
+            for (int i = 0; i < length; i++)
+            {
+                destinationList[destinationIndex + i] = sourceList[sourceIndex + i];
+            }
+        }
     }
 }

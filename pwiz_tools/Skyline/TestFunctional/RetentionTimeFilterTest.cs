@@ -260,17 +260,17 @@ namespace pwiz.SkylineTestFunctional
                 out basePeakChromatograms));
             if (basePeakChromatograms.Length > 0)
             {
-                double runStartTime = basePeakChromatograms.Min(chromGroup => chromGroup.Times[0]);
+                double runStartTime = basePeakChromatograms.Min(chromGroup => chromGroup.TimeIntensitiesGroup.MinTime);
                 double runEndTime =
-                    basePeakChromatograms.Max(chromGroup => chromGroup.Times[chromGroup.Times.Length - 1]);
+                    basePeakChromatograms.Max(chromGroup => chromGroup.TimeIntensitiesGroup.MaxTime);
                 expectedStartTime = Math.Max(runStartTime, expectedStartTime);
                 expectedEndTime = Math.Min(runEndTime, expectedEndTime);
             }
             const double delta = .15;
             foreach (var chromGroupInfo in chromGroupInfos)
             {
-                double startTime = chromGroupInfo.Times[0];
-                double endTime = chromGroupInfo.Times[chromGroupInfo.Times.Length - 1];
+                double startTime = chromGroupInfo.TimeIntensitiesGroup.MinTime;
+                double endTime = chromGroupInfo.TimeIntensitiesGroup.MaxTime;
                 if (Math.Abs(expectedStartTime - startTime) > delta)
                 {
                     Assert.AreEqual(expectedStartTime, startTime, delta);

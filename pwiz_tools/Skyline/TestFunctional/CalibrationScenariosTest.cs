@@ -21,6 +21,7 @@ using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.Model;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -62,7 +63,7 @@ namespace pwiz.SkylineTestFunctional
                 var directory = Path.Combine(TestContext.TestRunResultsDirectory, "CalibrationScenarioTest");
                 Directory.CreateDirectory(directory);
                 string baseName = Path.Combine(directory, scenarioName);
-                RunUI(() => SkylineWindow.ShareDocument(baseName + ".sky.zip", true));
+                RunUI(() => SkylineWindow.ShareDocument(baseName + ".sky.zip", ShareType.COMPLETE));
                 var reports = new[]
                 {
                     "CalibrationCurves",

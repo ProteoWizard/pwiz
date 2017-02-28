@@ -275,7 +275,7 @@ namespace pwiz.SkylineTestFunctional
             IDictionary<string, ZipEntry> newFileSet,
             string documentName)
         {
-            RunUI(() => SkylineWindow.ShareDocument(zipPath, completeSharing));
+            RunUI(() => SkylineWindow.ShareDocument(zipPath, new ShareType(completeSharing, null)));
 
             bool extract = !completeSharing;
             string extractDir = Path.Combine(Path.GetDirectoryName(zipPath) ?? "",

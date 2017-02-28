@@ -224,10 +224,10 @@ namespace pwiz.Skyline.Model
                                     iColor++;
                                     result.Add(new Chromatogram
                                     {
-                                        Intensities = transitionInfo.Intensities,
+                                        Intensities = transitionInfo.Intensities.ToArray(),
                                         ProductMz = transitionInfo.ProductMz.RawValue??0,  // For negative ion mode data this will be a negative value
                                         PrecursorMz = chromatogramGroup.PrecursorMz.RawValue??0,  // For negative ion mode data this will be a negative value
-                                        Times = transitionInfo.Times,
+                                        Times = transitionInfo.Times.ToArray(),
                                         Color = color
                                     });
                                 }

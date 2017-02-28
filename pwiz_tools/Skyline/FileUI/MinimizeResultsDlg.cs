@@ -51,8 +51,8 @@ namespace pwiz.Skyline.FileUI
             InitializeComponent();
             Icon = Resources.Skyline;
             Settings = new ChromCacheMinimizer.Settings()
-                .SetDiscardUnmatchedChromatograms(true)
-                .SetNoiseTimeRange(null);
+                .ChangeDiscardUnmatchedChromatograms(true)
+                .ChangeNoiseTimeRange(null);
             DocumentUIContainer = documentUIContainer;
             bindingSource1.DataSource = _rowItems = new BindingList<GridRowItem>();
         }
@@ -205,7 +205,7 @@ namespace pwiz.Skyline.FileUI
 
         private void cbxDiscardUnmatchedChromatograms_CheckedChanged(object sender, EventArgs e)
         {
-            Settings = Settings.SetDiscardUnmatchedChromatograms(cbxDiscardUnmatchedChromatograms.Checked);
+            Settings = Settings.ChangeDiscardUnmatchedChromatograms(cbxDiscardUnmatchedChromatograms.Checked);
         }
 
         private void tbxNoiseTimeRange_Leave(object sender, EventArgs e)
@@ -227,14 +227,14 @@ namespace pwiz.Skyline.FileUI
                 return;
             }
 
-            Settings = Settings.SetNoiseTimeRange(noiseTime);
+            Settings = Settings.ChangeNoiseTimeRange(noiseTime);
         }
 
         private void cbxLimitNoiseTime_CheckedChanged(object sender, EventArgs e)
         {
             Settings = cbxLimitNoiseTime.Checked
-                           ? Settings.SetNoiseTimeRange(double.Parse(tbxNoiseTimeRange.Text))
-                           : Settings.SetNoiseTimeRange(null);
+                           ? Settings.ChangeNoiseTimeRange(double.Parse(tbxNoiseTimeRange.Text))
+                           : Settings.ChangeNoiseTimeRange(null);
         }
 
         private void btnMinimize_Click(object sender, EventArgs e)

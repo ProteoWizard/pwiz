@@ -510,12 +510,12 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// Time array shared by all transitions of a precursor, and on the
         /// same scale as all other precursors of a peptide.
         /// </summary>
-        float[] Times { get; }
+        IList<float> Times { get; }
 
         /// <summary>
         /// Intensity array linear-interpolated to the shared time scale.
         /// </summary>
-        float[] Intensities { get; }
+        IList<float> Intensities { get; }
         // ReSharper restore UnusedMemberInSuper.Global
     }
 

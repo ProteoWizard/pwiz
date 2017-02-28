@@ -260,7 +260,7 @@ namespace pwiz.Skyline.Model
         public const double FORMAT_VERSION_3_54 = 3.54; // Native q values
         public const double FORMAT_VERSION_3_55 = 3.55; // Adds linear width option for drift time filtering
         public const double FORMAT_VERSION_3_6 = 3.6; // Improved full-scan settings for DIA isolation schemes and add selective extraction
-        public const double FORMAT_VERSION_3_61 = 3.61; //  Semi-cleavage enzymes and ion mobility CCS work
+        public const double FORMAT_VERSION_3_61 = 3.61; //  Semi-cleavage enzymes and ion mobility CCS work, points across peak
         public const double FORMAT_VERSION = FORMAT_VERSION_3_61;
 
         public const int MAX_PEPTIDE_COUNT = 100*1000;
@@ -1929,6 +1929,7 @@ namespace pwiz.Skyline.Model
             public const string qvalue = "qvalue";
             public const string zscore = "zscore";
             public const string exclude_from_calibration = "exclude_from_calibration";
+            public const string points_across = "points_across";
             // ReSharper restore NonLocalizedString
         }
         // ReSharper restore InconsistentNaming
@@ -3074,6 +3075,7 @@ namespace pwiz.Skyline.Model
                 short rank = (short) reader.GetIntAttribute(ATTR.rank);
                 short rankByLevel = (short) reader.GetIntAttribute(ATTR.rank_by_level, rank);
                 bool? truncated = reader.GetNullableBoolAttribute(ATTR.truncated);
+                short pointsAcross = (short) reader.GetIntAttribute(ATTR.points_across, 0);
                 var identified = reader.GetEnumAttribute(ATTR.identified, PeakIdentificationFastLookup.Dict,
                     PeakIdentification.FALSE, XmlUtil.EnumCase.upper);
                 UserSet userSet = reader.GetEnumAttribute(ATTR.user_set, UserSetFastLookup.Dict,
@@ -3100,6 +3102,7 @@ namespace pwiz.Skyline.Model
                                                fwhm,
                                                fwhmDegenerate,
                                                truncated,
+                                               pointsAcross,
                                                identified,
                                                rank,
                                                rankByLevel,
@@ -3175,8 +3178,9 @@ namespace pwiz.Skyline.Model
         /// <param name="writer">The XML writer</param>
         public void WriteXml(XmlWriter writer)
         {
-            writer.WriteAttribute(ATTR.format_version, FORMAT_VERSION);
-            writer.WriteAttribute(ATTR.software_version, Install.ProgramNameAndVersion);
+            var skylineVersion = SkylineVersion.FromXmlWriter(writer);
+            writer.WriteAttribute(ATTR.format_version, skylineVersion.SrmDocumentVersion);
+            writer.WriteAttribute(ATTR.software_version, skylineVersion.InvariantVersionName);
 
             writer.WriteElement(Settings);
             foreach (PeptideGroupDocNode nodeGroup in Children)
@@ -4070,6 +4074,7 @@ namespace pwiz.Skyline.Model
 
         private static void WriteTransitionChromInfo(XmlWriter writer, TransitionChromInfo chromInfo)
         {
+            var skylineVersion = SkylineVersion.FromXmlWriter(writer);
             if (chromInfo.OptimizationStep != 0)
                 writer.WriteAttribute(ATTR.step, chromInfo.OptimizationStep);
 
@@ -4090,6 +4095,10 @@ namespace pwiz.Skyline.Model
                 writer.WriteAttributeNullable(ATTR.truncated, chromInfo.IsTruncated);
                 writer.WriteAttribute(ATTR.identified, chromInfo.Identified.ToString().ToLowerInvariant());
                 writer.WriteAttribute(ATTR.rank, chromInfo.Rank);
+                if (skylineVersion.SrmDocumentVersion >= FORMAT_VERSION_3_61)
+                {
+                    writer.WriteAttributeNullable(ATTR.points_across, chromInfo.PointsAcrossPeak);
+                }
                 if (chromInfo.Rank != chromInfo.RankByLevel)
                     writer.WriteAttribute(ATTR.rank_by_level, chromInfo.RankByLevel);
             }

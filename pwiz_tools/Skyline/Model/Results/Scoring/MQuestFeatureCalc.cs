@@ -1349,7 +1349,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             }
         }
 
-        private static Statistics GetStatistics(float[] intensities, int startIndex, int count)
+        private static Statistics GetStatistics(IList<float> intensities, int startIndex, int count)
         {
             var result = new double[count];
             for (int i = 0; i < count; i++)

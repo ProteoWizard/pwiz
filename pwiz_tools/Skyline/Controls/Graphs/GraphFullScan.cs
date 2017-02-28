@@ -660,7 +660,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (_msDataFileScanHelper.MsDataSpectra != null)
             {
                 leftButton.Enabled = (_msDataFileScanHelper.ScanIndex > 0);
-                rightButton.Enabled = (_msDataFileScanHelper.ScanIndex < _msDataFileScanHelper.ScanProvider.Times.Length-1);
+                rightButton.Enabled = (_msDataFileScanHelper.ScanIndex < _msDataFileScanHelper.ScanProvider.Times.Count-1);
                 lblScanId.Text = _msDataFileScanHelper.GetScanIndex().ToString("D"); // Not L10N
                 if (!spectrumBtn.Checked)
                     GraphPane.SetScale(CreateGraphics());
@@ -700,13 +700,12 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (_msDataFileScanHelper.MsDataSpectra == null)
                 return;
-            if (_msDataFileScanHelper.ScanIndex + delta < 0 || _msDataFileScanHelper.ScanIndex + delta >= _msDataFileScanHelper.ScanProvider.Times.Length)
+            if (_msDataFileScanHelper.ScanIndex + delta < 0 || _msDataFileScanHelper.ScanIndex + delta >= _msDataFileScanHelper.ScanProvider.Times.Count)
                 return;
 
-            int[][] scanIds = _msDataFileScanHelper.GetScanIndexes();
-            var sourceScanIds = scanIds[(int) _msDataFileScanHelper.Source];
+            var sourceScanIds = _msDataFileScanHelper.GetScanIndexes(_msDataFileScanHelper.Source);
             int scanId = sourceScanIds[_msDataFileScanHelper.ScanIndex];
-            while ((delta < 0 && _msDataFileScanHelper.ScanIndex > 0) || (delta > 0 && _msDataFileScanHelper.ScanIndex < sourceScanIds.Length-1))
+            while ((delta < 0 && _msDataFileScanHelper.ScanIndex > 0) || (delta > 0 && _msDataFileScanHelper.ScanIndex < sourceScanIds.Count-1))
             {
                 _msDataFileScanHelper.ScanIndex += delta;
                 int newScanId = sourceScanIds[_msDataFileScanHelper.ScanIndex];

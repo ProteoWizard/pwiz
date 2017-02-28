@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -2292,9 +2292,6 @@
   <data name="SkylineWindow_sortProteinsMenuItem_Click_Sort_proteins_by_name" xml:space="preserve">
     <value>タンパク質を名前別で並べ替え</value>
   </data>
-  <data name="ShareTypeDlg_ShareTypeDlg_The_document_can_be_shared_either_in_its_complete_form_or_in_a_minimal_form_intended_for_read_only_use_with" xml:space="preserve">
-    <value>ドキュメントは、ドキュメント全体あるいは読み取り専用の最小の形式として共有できます：</value>
-  </data>
   <data name="SkylineWindow_ImportMassList_The_transition_list_appears_to_contain_iRT_values__but_the_document_does_not_have_an_iRT_calculator___Create_a_new_calculator_and_add_these_iRT_values_" xml:space="preserve">
     <value>トランジションリストにはiRT値が含まれていないようですが、ドキュメントにはiRTカルキュレータがありません。 新しいカルキュレータを作成し、これらのiRT値を追加しますか？</value>
   </data>
@@ -2381,9 +2378,6 @@
   </data>
   <data name="EditCoVDlg_btnOk_Click_Maximum_compensation_voltage_cannot_be_less_than_minimum_compensation_volatage_" xml:space="preserve">
     <value>最大補償電圧は、最小補償電圧未満であってはなりません。</value>
-  </data>
-  <data name="ShareTypeDlg_ShareTypeDlg_its_background_proteome_disconnected" xml:space="preserve">
-    <value>このバックグラウンドプロテオームが切断されています。</value>
   </data>
   <data name="EditIsolationSchemeDlg_OkDialog_There_are_gaps_in_a_single_cycle_of_your_extraction_windows__Do_you_want_to_continue_" xml:space="preserve">
     <value>抽出ウィンドウの単一サイクルにギャップがあります。本当に続行しますか？</value>
@@ -3347,9 +3341,6 @@
   </data>
   <data name="CommandLine_ExportInstrumentFile_Method__0__exported_successfully_" xml:space="preserve">
     <value>メソッド{0}が正常にエクスポートされました。</value>
-  </data>
-  <data name="ShareTypeDlg_ShareTypeDlg_Choose_the_appropriate_sharing_option_below" xml:space="preserve">
-    <value>以下から適切な共有オプションを選択します。</value>
   </data>
   <data name="PythonInstaller_InstallPackages_Package_installation_failed__Error_log_output_in_immediate_window_" xml:space="preserve">
     <value>パッケージのインストールに失敗しました。即時ウィンドウ内のログ出力エラー。</value>
@@ -4944,9 +4935,6 @@
   <data name="MProphetFeaturesDlg_OkDialog_To_export_MProphet_features_first_train_an_MProphet_model_" xml:space="preserve">
     <value>MProphetの機能をエクスポートするには、まずMProphetモデルをトレーニングします。</value>
   </data>
-  <data name="ShareTypeDlg_ShareTypeDlg_its_retention_time_calculator_minimized_to_contain_only_standard_peptides_and_library_peptides_used_in_the_document" xml:space="preserve">
-    <value>ドキュメントで使用される標準ペプチドとライブラリペプチドのみを含むように、この保持時間カルキュレータが最小化されています。</value>
-  </data>
   <data name="OpenDataSourceDialog_populateComboBoxFromDirectory_Network_Share" xml:space="preserve">
     <value>ネットワーク共有</value>
   </data>
@@ -5173,9 +5161,6 @@
   </data>
   <data name="DocumentGridViewContext_Preview_Preview___0_" xml:space="preserve">
     <value>プレビュー：{0}</value>
-  </data>
-  <data name="ShareTypeDlg_ShareTypeDlg_all_libraries_minimized_to_contain_only_precursors_used_in_the_document" xml:space="preserve">
-    <value>ドキュメントで使用するプリカーサーのみを含むようにすべてのライブラリが最小化されています</value>
   </data>
   <data name="EditOptimizationLibraryDlg_OkDialog_Click_the_Create_button_to_create_a_new_library_or_the_Open_button_to_open_an_existing_library_file_" xml:space="preserve">
     <value>作成ボタンをクリックして新しいライブラリを作成するか、開くボタンをクリックして既存のライブラリファイルを開きます。</value>
@@ -6597,9 +6582,6 @@
   </data>
   <data name="SkylineWindow_FindBackgroundProteome_Background_Proteome" xml:space="preserve">
     <value>バックグラウンドプロテオーム</value>
-  </data>
-  <data name="ShareTypeDlg_ShareTypeDlg_Invalid_use_of__0__for_document_without_background_proteome_retention_time_calculator_or_libraries" xml:space="preserve">
-    <value>バックグラウンドプロテオーム、保持時間カルキュレータまたはライブラリのないドキュメントの{0}の無効な使用です。</value>
   </data>
   <data name="DataProcessing" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\dataprocessing.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>

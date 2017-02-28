@@ -2552,7 +2552,7 @@ namespace pwiz.Skyline
             {
                 saver.CheckException();
 
-                using (var writer = new XmlWriterWithProgress(saver.SafeName, outFile, Encoding.UTF8, doc.MoleculeTransitionCount, progressMonitor))
+                using (var writer = new XmlWriterWithProgress(saver.SafeName, outFile, Encoding.UTF8, doc.MoleculeTransitionCount, SkylineVersion.CURRENT, progressMonitor))
                 {
                     XmlSerializer ser = new XmlSerializer(typeof(SrmDocument));
                     ser.Serialize(writer, doc);
@@ -2708,7 +2708,7 @@ namespace pwiz.Skyline
         {
             var waitBroker = new CommandProgressMonitor(statusWriter,
                 new ProgressStatus(Resources.SkylineWindow_ShareDocument_Compressing_Files));
-            var sharing = new SrmDocumentSharing(document, documentPath, fileDest, false);
+            var sharing = new SrmDocumentSharing(document, documentPath, fileDest, ShareType.DEFAULT);
             try
             {
                 sharing.Share(waitBroker);

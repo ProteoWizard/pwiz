@@ -333,7 +333,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             foreach (var pdTran in GetIonTypes(tranGroupPeakDatas))
             {
                 var peakData = pdTran.PeakData;
-                if (peakData == null || peakData.Intensities == null || peakData.Intensities.Length == 0)
+                if (peakData == null || peakData.Intensities == null || peakData.Intensities.Count == 0)
                     continue;
                 double? snValue = GetSnValue(peakData);
                 if (snValue.HasValue)
@@ -360,8 +360,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             const int halfRange = 500;
             int startNoiseCalc = Math.Max(peakData.StartIndex - halfRange, 0);
-            int endNoiseCalc = Math.Min(peakData.EndIndex + halfRange, peakData.Intensities.Length);
-            if (peakData.StartIndex > peakData.Intensities.Length || peakData.StartIndex == -1 || peakData.EndIndex == -1)
+            int endNoiseCalc = Math.Min(peakData.EndIndex + halfRange, peakData.Intensities.Count);
+            if (peakData.StartIndex > peakData.Intensities.Count || peakData.StartIndex == -1 || peakData.EndIndex == -1)
                 return null;
             int intensityCount = (endNoiseCalc - peakData.EndIndex) + (peakData.StartIndex - startNoiseCalc);
             if (intensityCount == 0)

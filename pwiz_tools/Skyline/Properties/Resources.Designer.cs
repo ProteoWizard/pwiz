@@ -21379,64 +21379,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to all libraries minimized to contain only precursors used in the document.
-        /// </summary>
-        public static string ShareTypeDlg_ShareTypeDlg_all_libraries_minimized_to_contain_only_precursors_used_in_the_document {
-            get {
-                return ResourceManager.GetString("ShareTypeDlg_ShareTypeDlg_all_libraries_minimized_to_contain_only_precursors_used" +
-                        "_in_the_document", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Choose the appropriate sharing option below..
-        /// </summary>
-        public static string ShareTypeDlg_ShareTypeDlg_Choose_the_appropriate_sharing_option_below {
-            get {
-                return ResourceManager.GetString("ShareTypeDlg_ShareTypeDlg_Choose_the_appropriate_sharing_option_below", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Invalid use of {0} for document without background proteome, retention time calculator or libraries..
-        /// </summary>
-        public static string ShareTypeDlg_ShareTypeDlg_Invalid_use_of__0__for_document_without_background_proteome_retention_time_calculator_or_libraries {
-            get {
-                return ResourceManager.GetString("ShareTypeDlg_ShareTypeDlg_Invalid_use_of__0__for_document_without_background_prot" +
-                        "eome_retention_time_calculator_or_libraries", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Its background proteome disconnected..
-        /// </summary>
-        public static string ShareTypeDlg_ShareTypeDlg_its_background_proteome_disconnected {
-            get {
-                return ResourceManager.GetString("ShareTypeDlg_ShareTypeDlg_its_background_proteome_disconnected", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Its retention time calculator minimized to contain only standard peptides and library peptides used in the document..
-        /// </summary>
-        public static string ShareTypeDlg_ShareTypeDlg_its_retention_time_calculator_minimized_to_contain_only_standard_peptides_and_library_peptides_used_in_the_document {
-            get {
-                return ResourceManager.GetString("ShareTypeDlg_ShareTypeDlg_its_retention_time_calculator_minimized_to_contain_only" +
-                        "_standard_peptides_and_library_peptides_used_in_the_document", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The document can be shared either in its complete form, or in a minimal form intended for read-only use with:.
-        /// </summary>
-        public static string ShareTypeDlg_ShareTypeDlg_The_document_can_be_shared_either_in_its_complete_form_or_in_a_minimal_form_intended_for_read_only_use_with {
-            get {
-                return ResourceManager.GetString("ShareTypeDlg_ShareTypeDlg_The_document_can_be_shared_either_in_its_complete_form_" +
-                        "or_in_a_minimal_form_intended_for_read_only_use_with", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Error copying template file {0} to destination {1}..
         /// </summary>
         public static string ShimadzuMethodExporter_ExportMethod_Error_copying_template_file__0__to_destination__1__ {
@@ -21695,6 +21637,33 @@ namespace pwiz.Skyline.Properties {
                 return ResourceManager.GetString("SkylineStartup_SkylineStartup_Use_the_Skyline_Import_Peptide_Search_wizard_to_bui" +
                         "ld_a_spectral_library_from_peptide_search_results_on_DDA_data__and_then_import_t" +
                         "he_raw_data_to_quantify_peptides_using_Skyline_MS1_Filtering_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Current ({0}).
+        /// </summary>
+        public static string SkylineVersion_GetCurrentVersionName_Current___0__ {
+            get {
+                return ResourceManager.GetString("SkylineVersion_GetCurrentVersionName_Current___0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Developer Build.
+        /// </summary>
+        public static string SkylineVersion_GetCurrentVersionName_Developer_Build {
+            get {
+                return ResourceManager.GetString("SkylineVersion_GetCurrentVersionName_Developer_Build", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Skyline 3.6.
+        /// </summary>
+        public static string SkylineVersion_V3_6_Skyline_3_6 {
+            get {
+                return ResourceManager.GetString("SkylineVersion_V3_6_Skyline_3_6", resourceCulture);
             }
         }
         
@@ -24635,6 +24604,15 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("SrmDocumentSharing_FindSharedSkylineFile_The_zip_file_is_not_a_shared_file_The_fi" +
                         "le_does_not_contain_any_Skyline_documents", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Writing chromatograms.
+        /// </summary>
+        public static string SrmDocumentSharing_MinimizeToFile_Writing_chromatograms {
+            get {
+                return ResourceManager.GetString("SrmDocumentSharing_MinimizeToFile_Writing_chromatograms", resourceCulture);
             }
         }
         

@@ -77,6 +77,9 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public UserSet UserSetPeak { get { return ChromInfo.UserSet; } }
         [Format(NullValue = TextUtil.EXCEL_NA)]
         public int OptStep { get { return ChromInfo.OptimizationStep; } }
+        [Format(NullValue = TextUtil.EXCEL_NA)]
+        public int? PointsAcrossPeak { get { return ChromInfo.PointsAcrossPeak; } }
+
         [InvariantDisplayName("TransitionReplicateNote")]
         public string Note
         {

@@ -31,7 +31,7 @@ namespace pwiz.Skyline.Model.Results
     {
         public string Name;
         public ChromSource Source;
-        public int[][] ScanIndexes;
+        public IList<int> ScanIndexes;
         public Color Color;
         public SignedMz PrecursorMz;
         public SignedMz ProductMz;
@@ -45,7 +45,7 @@ namespace pwiz.Skyline.Model.Results
         string DocFilePath { get; }
         MsDataFileUri DataFilePath { get; }
         ChromSource Source { get; }
-        float[] Times { get; }
+        IList<float> Times { get; }
         TransitionFullScanInfo[] Transitions { get; }
         MsDataSpectrum[] GetMsDataFileSpectraWithCommonRetentionTime(int dataFileSpectrumStartIndex); // Return a collection of consecutive scans with common retention time and increasing drift times (or a single scan if no drift info in file)
         bool ProvidesCollisionalCrossSectionConverter { get; }
@@ -60,7 +60,7 @@ namespace pwiz.Skyline.Model.Results
         private Func<MsDataFileScanIds> _getMsDataFileScanIds;
 
         public ScanProvider(string docFilePath, MsDataFileUri dataFilePath, ChromSource source,
-            float[] times, TransitionFullScanInfo[] transitions, Func<MsDataFileScanIds> getMsDataFileScanIds)
+            IList<float> times, TransitionFullScanInfo[] transitions, Func<MsDataFileScanIds> getMsDataFileScanIds)
         {
             DocFilePath = docFilePath;
             DataFilePath = dataFilePath;
@@ -97,7 +97,7 @@ namespace pwiz.Skyline.Model.Results
         public string DocFilePath { get; private set; }
         public MsDataFileUri DataFilePath { get; private set; }
         public ChromSource Source { get; private set; }
-        public float[] Times { get; private set; }
+        public IList<float> Times { get; private set; }
         public TransitionFullScanInfo[] Transitions { get; private set; }
 
         /// <summary>

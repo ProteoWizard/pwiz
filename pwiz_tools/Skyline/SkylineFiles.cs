@@ -868,7 +868,7 @@ namespace pwiz.Skyline
                         longWaitDlg.PerformWork(this, 800, progressMonitor =>
                         {
                             using (var writer = new XmlWriterWithProgress(saver.SafeName, fileName, Encoding.UTF8,
-                                document.MoleculeTransitionCount, progressMonitor)
+                                document.MoleculeTransitionCount, SkylineVersion.CURRENT, progressMonitor)
                             {
                                 Formatting = Formatting.Indented
                             })
@@ -1082,17 +1082,13 @@ namespace pwiz.Skyline
                 fileName = DocumentFilePath;
             }
 
-            bool completeSharing = true;
-            if (document.Settings.HasLibraries ||
-                document.Settings.HasBackgroundProteome ||
-                document.Settings.HasRTCalcPersisted)
+            
+            ShareType shareType;
+            using (var dlgType = new ShareTypeDlg(document))
             {
-                using (var dlgType = new ShareTypeDlg(document))
-                {
-                    if (dlgType.ShowDialog(this) == DialogResult.Cancel)
-                        return;
-                    completeSharing = dlgType.IsCompleteSharing;
-                }
+                if (dlgType.ShowDialog(this) == DialogResult.Cancel)
+                    return;
+                shareType = dlgType.ShareType;
             }
 
             using (var dlg = new SaveFileDialog
@@ -1113,11 +1109,11 @@ namespace pwiz.Skyline
                 if (!saved && !SaveDocument())
                     return;
 
-                ShareDocument(dlg.FileName, completeSharing);
+                ShareDocument(dlg.FileName, shareType);
             }
         }
 
-        public bool ShareDocument(string fileDest, bool completeSharing)
+        public bool ShareDocument(string fileDest, ShareType shareType)
         {
             try
             {
@@ -1126,7 +1122,7 @@ namespace pwiz.Skyline
                 {
                     using (var longWaitDlg = new LongWaitDlg { Text = Resources.SkylineWindow_ShareDocument_Compressing_Files, })
                     {
-                        var sharing = new SrmDocumentSharing(DocumentUI, DocumentFilePath, fileDest,  completeSharing);
+                        var sharing = new SrmDocumentSharing(DocumentUI, DocumentFilePath, fileDest, shareType);
                         longWaitDlg.PerformWork(this, 1000, sharing.Share);
                         success = !longWaitDlg.IsCanceled;
                     }
@@ -2441,9 +2437,9 @@ namespace pwiz.Skyline
                     {
                         ReimportChromatograms(documentUI, dlg.ReimportChromatograms);
                     }
-                    catch (Exception)
+                    catch (Exception exception)
                     {
-                        MessageDlg.Show(this, Resources.SkylineWindow_ManageResults_A_failure_occurred_attempting_to_reimport_results);
+                        MessageDlg.ShowWithException(this, Resources.SkylineWindow_ManageResults_A_failure_occurred_attempting_to_reimport_results, exception);
                     }
 
                     // And update the document to reflect real changes to the results structure
@@ -2718,7 +2714,7 @@ namespace pwiz.Skyline
                     publishDocumentDlg.PanoramaPublishClient = publishClient;
                     if (publishDocumentDlg.ShowDialog(this) == DialogResult.OK)
                     {
-                        if (ShareDocument(publishDocumentDlg.FileName, false))
+                        if (ShareDocument(publishDocumentDlg.FileName, publishDocumentDlg.ShareType))
                             publishDocumentDlg.Upload(this);
                     }
                 }
@@ -2757,11 +2753,14 @@ namespace pwiz.Skyline
                 return false;
 
             var fileInfo = new FolderInformation(server, true);
-            if (!publishClient.ServerSupportsSkydVersion(fileInfo, this, this))
+            ShareType shareType = publishClient.DecideShareType(fileInfo, this, this);
+            if (shareType == null)
+            {
                 return false;
+            }
 
             var zipFilePath = FileEx.GetTimeStampedFileName(fileName);
-            if (!ShareDocument(zipFilePath, false))
+            if (!ShareDocument(zipFilePath, shareType))
                 return false;
 
             var serverRelativePath = folders["path"].ToString() + '/'; // Not L10N

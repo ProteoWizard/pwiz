@@ -489,6 +489,9 @@
   <data name="PointCount">
     <value>Point Count</value>
   </data>
+  <data name="PointsAcrossPeak">
+    <value>Points Across Peak</value>
+  </data>
   <data name="Precursor">
     <value>Precursor</value>
   </data>

@@ -120,6 +120,7 @@ namespace pwiz.Skyline
             this.splitGraphContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.transformChromContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.transformChromNoneContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.transformChromInterpolatedContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.secondDerivativeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.firstDerivativeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.smoothSGChromContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -260,10 +261,10 @@ namespace pwiz.Skyline
             this.toolStripSeparator49 = new System.Windows.Forms.ToolStripSeparator();
             this.exportReportMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator50 = new System.Windows.Forms.ToolStripSeparator();
-            this.exportSpectralLibraryMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.eSPFeaturesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.mProphetFeaturesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.exportSpectralLibraryMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.chromatogramsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.mProphetFeaturesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.chorusRequestToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mruBeforeToolStripSeparator = new System.Windows.Forms.ToolStripSeparator();
             this.mruAfterToolStripSeparator = new System.Windows.Forms.ToolStripSeparator();
@@ -386,6 +387,7 @@ namespace pwiz.Skyline
             this.splitGraphMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.transformChromMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.transformChromNoneMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.transformChromInterploatedMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.secondDerivativeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.firstDerivativeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.smoothSGChromMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -1110,6 +1112,7 @@ namespace pwiz.Skyline
             // 
             this.transformChromContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.transformChromNoneContextMenuItem,
+            this.transformChromInterpolatedContextMenuItem,
             this.secondDerivativeContextMenuItem,
             this.firstDerivativeContextMenuItem,
             this.smoothSGChromContextMenuItem});
@@ -1122,6 +1125,12 @@ namespace pwiz.Skyline
             this.transformChromNoneContextMenuItem.Name = "transformChromNoneContextMenuItem";
             resources.ApplyResources(this.transformChromNoneContextMenuItem, "transformChromNoneContextMenuItem");
             this.transformChromNoneContextMenuItem.Click += new System.EventHandler(this.transformChromNoneMenuItem_Click);
+            // 
+            // transformChromInterpolatedContextMenuItem
+            // 
+            this.transformChromInterpolatedContextMenuItem.Name = "transformChromInterpolatedContextMenuItem";
+            resources.ApplyResources(this.transformChromInterpolatedContextMenuItem, "transformChromInterpolatedContextMenuItem");
+            this.transformChromInterpolatedContextMenuItem.Click += new System.EventHandler(this.transformInterpolatedMenuItem_Click);
             // 
             // secondDerivativeContextMenuItem
             // 
@@ -3003,6 +3012,7 @@ namespace pwiz.Skyline
             // 
             this.transformChromMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.transformChromNoneMenuItem,
+            this.transformChromInterploatedMenuItem,
             this.secondDerivativeMenuItem,
             this.firstDerivativeMenuItem,
             this.smoothSGChromMenuItem});
@@ -3015,6 +3025,12 @@ namespace pwiz.Skyline
             this.transformChromNoneMenuItem.Name = "transformChromNoneMenuItem";
             resources.ApplyResources(this.transformChromNoneMenuItem, "transformChromNoneMenuItem");
             this.transformChromNoneMenuItem.Click += new System.EventHandler(this.transformChromNoneMenuItem_Click);
+            // 
+            // transformChromInterploatedMenuItem
+            // 
+            this.transformChromInterploatedMenuItem.Name = "transformChromInterploatedMenuItem";
+            resources.ApplyResources(this.transformChromInterploatedMenuItem, "transformChromInterploatedMenuItem");
+            this.transformChromInterploatedMenuItem.Click += new System.EventHandler(this.transformInterpolatedMenuItem_Click);
             // 
             // secondDerivativeMenuItem
             // 
@@ -4140,6 +4156,8 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripSeparator checkForUpdatesSeparator;
         private System.Windows.Forms.ToolStripMenuItem checkForUpdatesMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exportSpectralLibraryMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem transformChromInterploatedMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem transformChromInterpolatedContextMenuItem;
     }
 }
 

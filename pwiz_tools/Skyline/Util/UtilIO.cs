@@ -1016,16 +1016,18 @@ namespace pwiz.Skyline.Util
         }
     }
 
-    public class XmlWriterWithProgress : XmlTextWriter
+    public class XmlWriterWithProgress : XmlTextWriter, ISkylineVersionContainer
     {
         private readonly IProgressMonitor _progressMonitor;
         private IProgressStatus _status;
         private readonly int _transitionCount;
         private int _transitionsWritten;
+        private SkylineVersion _skylineVersion;
 
-        public XmlWriterWithProgress(string filename, string displayName, Encoding encoding, int transitionCount, IProgressMonitor progressMonitor)
+        public XmlWriterWithProgress(string filename, string displayName, Encoding encoding, int transitionCount, SkylineVersion skylineVersion, IProgressMonitor progressMonitor)
             : base(filename, encoding)
         {
+            _skylineVersion = skylineVersion;
             _progressMonitor = progressMonitor;
             _status = new ProgressStatus(Path.GetFileName(displayName));
 
@@ -1035,6 +1037,11 @@ namespace pwiz.Skyline.Util
         public void WroteTransition()
         {
             _status = _status.UpdatePercentCompleteProgress(_progressMonitor, ++_transitionsWritten, _transitionCount);
+        }
+
+        public SkylineVersion GetSkylineVersion()
+        {
+            return _skylineVersion;
         }
     }
 

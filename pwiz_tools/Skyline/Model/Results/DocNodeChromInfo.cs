@@ -416,7 +416,9 @@ namespace pwiz.Skyline.Model.Results
             : this(fileId, optimizationStep, peak.MassError, peak.RetentionTime, peak.StartTime, peak.EndTime,
                    ionMobility,
                    peak.Area, peak.BackgroundArea, peak.Height, peak.Fwhm,
-                   peak.IsFwhmDegenerate, peak.IsTruncated, peak.Identified, 0, 0,
+                   peak.IsFwhmDegenerate, peak.IsTruncated, 
+                   peak.PointsAcross, 
+                   peak.Identified, 0, 0,
                    ratios, annotations, userSet)
         {            
         }
@@ -425,7 +427,7 @@ namespace pwiz.Skyline.Model.Results
                                    float retentionTime, float startRetentionTime, float endRetentionTime,
                                    DriftTimeFilter ionMobility,
                                    float area, float backgroundArea, float height,
-                                   float fwhm, bool fwhmDegenerate, bool? truncated,
+                                   float fwhm, bool fwhmDegenerate, bool? truncated, short? pointsAcrossPeak,
                                    PeakIdentification identified, short rank, short rankByLevel,
                                    IList<float?> ratios, Annotations annotations, UserSet userSet)
             : base(fileId)
@@ -451,6 +453,7 @@ namespace pwiz.Skyline.Model.Results
             Ratios = ratios;
             Annotations = annotations;
             UserSet = userSet;
+            PointsAcrossPeak = pointsAcrossPeak;
         }
 
         /// <summary>
@@ -475,6 +478,7 @@ namespace pwiz.Skyline.Model.Results
         public PeakIdentification Identified { get; private set; }
         public short Rank { get; private set; }
         public short RankByLevel { get; private set; }
+        public short? PointsAcrossPeak { get; private set; }
 
         /// <summary>
         /// Set after creation at the peptide results calculation level
@@ -584,6 +588,7 @@ namespace pwiz.Skyline.Model.Results
             chromInfo.IsTruncated = peak.IsTruncated;
             chromInfo.Identified = peak.Identified;
             chromInfo.UserSet = userSet;
+            chromInfo.PointsAcrossPeak = peak.PointsAcross;
             return chromInfo;
         }
 
@@ -639,7 +644,8 @@ namespace pwiz.Skyline.Model.Results
                    ArrayUtil.EqualsDeep(other.Ratios, Ratios) &&
                    other.OptimizationStep.Equals(OptimizationStep) &&
                    other.Annotations.Equals(Annotations) &&
-                   other.UserSet.Equals(UserSet);
+                   other.UserSet.Equals(UserSet) &&
+                   other.PointsAcrossPeak.Equals(PointsAcrossPeak);
         }
 
         public override bool Equals(object obj)
@@ -672,6 +678,7 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ OptimizationStep.GetHashCode();
                 result = (result*397) ^ Annotations.GetHashCode();
                 result = (result*397) ^ UserSet.GetHashCode();
+                result = (result*397) ^ PointsAcrossPeak.GetHashCode();
                 return result;
             }
         }

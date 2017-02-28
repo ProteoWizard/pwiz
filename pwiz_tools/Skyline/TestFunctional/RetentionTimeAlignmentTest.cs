@@ -149,8 +149,8 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreNotEqual(0, infoSet.Length);
             foreach (var chromatogramGroupInfo in infoSet)
             {
-                Assert.AreEqual(startTime, chromatogramGroupInfo.Times.First(), .1);
-                Assert.AreEqual(endTime, chromatogramGroupInfo.Times.Last(), .1);
+                Assert.AreEqual(startTime, chromatogramGroupInfo.TimeIntensitiesGroup.MinTime, .1);
+                Assert.AreEqual(endTime, chromatogramGroupInfo.TimeIntensitiesGroup.MaxTime, .1);
             }
         }
 

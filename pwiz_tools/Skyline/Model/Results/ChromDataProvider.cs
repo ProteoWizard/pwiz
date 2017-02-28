@@ -81,7 +81,7 @@ namespace pwiz.Skyline.Model.Results
         public virtual void SetRequestOrder(IList<IList<int>> orderedSets) { }
 
         public abstract bool GetChromatogram(int id, string modifiedSequence, Color color, out ChromExtra extra,
-            out float[] times, out int[] scanIndexes, out float[] intensities, out float[] massErrors);
+            out TimeIntensities timeIntensities);
 
         public abstract double? MaxRetentionTime { get; }
 
@@ -266,18 +266,19 @@ namespace pwiz.Skyline.Model.Results
             get { return _chromIds; }
         }
 
-        public override bool GetChromatogram(int id, string modifiedSequence, Color color, out ChromExtra extra, out float[] times, out int[] scanIndexes, out float[] intensities, out float[] massErrors)
+        public override bool GetChromatogram(int id, string modifiedSequence, Color color, out ChromExtra extra, out TimeIntensities timeIntensities)
         {
             // No mass errors in SRM
-            massErrors = null;
             if (_readChromatograms == 0)
             {
                 _readStartTime = DateTime.Now;
             }
 
             string chromId;
+            float[] times;
+            float[] intensities;
             _dataFile.GetChromatogram(id, out chromId, out times, out intensities);
-            scanIndexes = null;
+            timeIntensities = new TimeIntensities(times, intensities, null, null);
 
             // Assume that each chromatogram will be read once, though this may
             // not always be completely true.

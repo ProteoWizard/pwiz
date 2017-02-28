@@ -28,31 +28,30 @@ using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
-using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Results
 {
     public sealed class ChromatogramCache : Immutable, IDisposable
     {
-        public const int FORMAT_VERSION_CACHE_11 = 11; // Adds chromatogram start, stop times, and uncompressed size info, and new flag bit for SignedMz
-        public const int FORMAT_VERSION_CACHE_10 = 10; // Introduces waters lockmass correction in MSDataFileUri syntax
-        public const int FORMAT_VERSION_CACHE_9 = 9; // Introduces abbreviated scan ids
-        public const int FORMAT_VERSION_CACHE_8 = 8; // Introduces ion mobility data
-        public const int FORMAT_VERSION_CACHE_7 = 7; // Introduces UTF8 character support
-        public const int FORMAT_VERSION_CACHE_6 = 6;
-        public const int FORMAT_VERSION_CACHE_5 = 5;
-        public const int FORMAT_VERSION_CACHE_4 = 4;
-        public const int FORMAT_VERSION_CACHE_3 = 3;
-        public const int FORMAT_VERSION_CACHE_2 = 2;
+        public const CacheFormatVersion FORMAT_VERSION_CACHE_11 = CacheFormatVersion.Eleven; // Adds chromatogram start, stop times, and uncompressed size info, and new flag bit for SignedMz
+        public const CacheFormatVersion FORMAT_VERSION_CACHE_10 = CacheFormatVersion.Ten; // Introduces waters lockmass correction in MSDataFileUri syntax
+        public const CacheFormatVersion FORMAT_VERSION_CACHE_9 = CacheFormatVersion.Nine; // Introduces abbreviated scan ids
+        public const CacheFormatVersion FORMAT_VERSION_CACHE_8 = CacheFormatVersion.Eight; // Introduces ion mobility data
+        public const CacheFormatVersion FORMAT_VERSION_CACHE_7 = CacheFormatVersion.Seven; // Introduces UTF8 character support
+        public const CacheFormatVersion FORMAT_VERSION_CACHE_6 = CacheFormatVersion.Six;
+        public const CacheFormatVersion FORMAT_VERSION_CACHE_5 = CacheFormatVersion.Five;
+        public const CacheFormatVersion FORMAT_VERSION_CACHE_4 = CacheFormatVersion.Four;
+        public const CacheFormatVersion FORMAT_VERSION_CACHE_3 = CacheFormatVersion.Three;
+        public const CacheFormatVersion FORMAT_VERSION_CACHE_2 = CacheFormatVersion.Two;
 
         public const string EXT = ".skyd"; // Not L10N
         public const string PEAKS_EXT = ".peaks"; // Not L10N
         public const string SCANS_EXT = ".scans"; // Not L10N
         public const string SCORES_EXT = ".scores"; // Not L10N
 
-        public static int FORMAT_VERSION_CACHE
+        public static CacheFormatVersion FORMAT_VERSION_CACHE
         {
-            get { return FORMAT_VERSION_CACHE_11; }
+            get { return CacheFormatVersion.CURRENT; }
         }
 
         // Set default block size for scoures BlockedArray<float>
@@ -141,7 +140,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public string CachePath { get; private set; }
-        public int Version { get; private set; }
+        public CacheFormatVersion Version { get; private set; }
         public IList<ChromCachedFile> CachedFiles { get { return _cachedFiles; } }
         public IPooledStream ReadStream { get; private set; }
 
@@ -176,7 +175,7 @@ namespace pwiz.Skyline.Model.Results
             get { return IsVersionCurrent(Version); }
         }
 
-        public static bool IsVersionCurrent(int version)
+        public static bool IsVersionCurrent(CacheFormatVersion version)
         {
             return (version >= FORMAT_VERSION_CACHE_3 && FORMAT_VERSION_CACHE >= version);
         }
@@ -437,92 +436,32 @@ namespace pwiz.Skyline.Model.Results
         }
 
         // ReSharper disable UnusedMember.Local
-        private enum Header
-        {
-            // Version 9 header addition
-            location_scan_ids_lo,
-            location_scan_ids_hi,
-
-            // Version 5 header addition
-            num_score_types,
-            num_scores,
-            location_scores_lo,
-            location_scores_hi,
-            num_textid_bytes,
-            location_textid_bytes_lo,
-            location_textid_bytes_hi,
-
-            format_version,
-            num_peaks,
-            location_peaks_lo,
-            location_peaks_hi,
-            num_transitions,
-            location_trans_lo,
-            location_trans_hi,
-            num_chromatograms,
-            location_headers_lo,
-            location_headers_hi,
-            num_files,
-            location_files_lo,
-            location_files_hi,
-
-            count
-        }
 
         public static int HeaderSize
         {
             get
             {
-                var headerFirst = FORMAT_VERSION_CACHE > FORMAT_VERSION_CACHE_4
-                                     ? FORMAT_VERSION_CACHE > FORMAT_VERSION_CACHE_8
-                                        ? Header.location_scan_ids_lo : Header.num_score_types
-                                     : Header.format_version;
-                return (Header.count - headerFirst)*sizeof (int);
+                return CacheHeaderStruct.GetStructSize(FORMAT_VERSION_CACHE);
             }
         }
 
-        private enum FileHeader
-        {
-            modified_lo,
-            modified_hi,
-            len_path,
-            // Version 3 file header addition
-            runstart_lo,
-            runstart_hi,
-            // Version 4 file header addition
-            len_instrument_info,
-            // Version 5 file header addition
-            flags,
-            // Version 6 file header addition
-            max_retention_time,
-            max_intensity,
-            // Version 9 file header addition
-            size_scan_ids,
-            location_scan_ids_lo,
-            location_scan_ids_hi,
-
-            count,
-            count2 = runstart_lo,
-            count3 = len_instrument_info,
-            count4 = flags,
-            count5 = max_retention_time,
-            count6 = size_scan_ids
-        }
         // ReSharper restore UnusedMember.Local
 
-        public struct RawData
+        public class RawData
         {
-            public static readonly RawData EMPTY = new RawData
-                {
-                    ChromCacheFiles = new ChromCachedFile[0],
-                    ChromatogramEntries = new ChromGroupHeaderInfo[0],
-                    ChromTransitions = new ChromTransition[0],
-                    ChromatogramPeaks = new BlockedArray<ChromPeak>(),
-                    ScoreTypes = new Type[0],
-                    Scores = new BlockedArray<float>(),
-                };
+            public RawData(CacheFormat cacheFormat)
+            {
+                CacheFormat = cacheFormat;
+                ChromCacheFiles = new ChromCachedFile[0];
+                ChromatogramEntries = new ChromGroupHeaderInfo[0];
+                ChromTransitions = new ChromTransition[0];
+                ChromatogramPeaks = new BlockedArray<ChromPeak>();
+                ScoreTypes = new Type[0];
+                Scores = new BlockedArray<float>();
+            }
 
-            public int FormatVersion { get; set; }
+            public CacheFormat CacheFormat { get; private set; }
+            public CacheFormatVersion FormatVersion { get { return CacheFormat.FormatVersion; } }
             public ChromCachedFile[] ChromCacheFiles { get; set; }
             public ChromGroupHeaderInfo[] ChromatogramEntries { get; set; }
             public ChromTransition[] ChromTransitions { get; set; }
@@ -633,116 +572,62 @@ namespace pwiz.Skyline.Model.Results
 
         public static long LoadStructs(Stream stream, IProgressStatus status, IProgressMonitor progressMonitor, out RawData raw, bool assumeNegativeChargeInPreV11Caches)
         {
-            // Read library header from the end of the cache
-            const int countHeader = (int)Header.count * 4;
-            stream.Seek(-countHeader, SeekOrigin.End);
-
-            byte[] cacheHeader = new byte[countHeader];
-            ReadComplete(stream, cacheHeader, countHeader);
-
-            int formatVersion = GetInt32(cacheHeader, (int) Header.format_version);
-            if (formatVersion > FORMAT_VERSION_CACHE)
+            CacheHeaderStruct cacheHeader = CacheHeaderStruct.Read(stream);
+            if (cacheHeader.formatVersion < CacheFormatVersion.Two || cacheHeader.numFiles == 0)
             {
-                throw new IOException(TextUtil.LineSeparate(string.Format(Resources.ChromatogramCache_LoadStructs_The_SKYD_file_format__0__is_not_supported_by_Skyline__1__,
-                                                                          formatVersion, Install.Version),
-                                                            Resources.ChromatogramCache_LoadStructs_Please_check_for_a_newer_release_));
+                // Unexpected empty cache.  Return values that will force it to be completely rebuild.
+                raw = new RawData(CacheFormat.EMPTY);
+                return 0;
             }
-            if (formatVersion < FORMAT_VERSION_CACHE_2)
-            {
-                return EmptyCache(out raw);
-            }
-
-            raw = new RawData { FormatVersion =  formatVersion };
-            int numPeaks = GetInt32(cacheHeader, (int)Header.num_peaks);
-            long locationPeaks = BitConverter.ToInt64(cacheHeader, ((int)Header.location_peaks_lo) * 4);
-            int numChrom = GetInt32(cacheHeader, (int)Header.num_chromatograms);
-            long locationTrans = BitConverter.ToInt64(cacheHeader, ((int)Header.location_trans_lo) * 4);
-            int numFiles = GetInt32(cacheHeader, (int)Header.num_files);
-            long locationHeaders = BitConverter.ToInt64(cacheHeader, ((int)Header.location_headers_lo) * 4);
-            int numTrans = GetInt32(cacheHeader, (int)Header.num_transitions);
-            long locationFiles = BitConverter.ToInt64(cacheHeader, ((int)Header.location_files_lo) * 4);
-            int numScoreTypes = 0, numScores = 0;
-            long locationScoreTypes = locationPeaks;
-            int numTextIdBytes = 0;
-            long locationTextIdBytes = locationPeaks;
-            if (formatVersion > FORMAT_VERSION_CACHE_4)
-            {
-                numScoreTypes = GetInt32(cacheHeader, (int)Header.num_score_types);
-                numScores = GetInt32(cacheHeader, (int)Header.num_scores);
-                locationScoreTypes = BitConverter.ToInt64(cacheHeader, ((int)Header.location_scores_lo) * 4);
-                numTextIdBytes = GetInt32(cacheHeader, (int)Header.num_textid_bytes);
-                locationTextIdBytes = BitConverter.ToInt64(cacheHeader, ((int)Header.location_textid_bytes_lo) * 4);
-            }
-            raw.LocationScanIds = locationPeaks;
+            var formatVersion = cacheHeader.formatVersion;
+            CacheFormat cacheFormat = CacheFormat.FromCacheHeader(cacheHeader);
+            raw = new RawData(cacheFormat);
             if (formatVersion > FORMAT_VERSION_CACHE_8)
             {
-                raw.LocationScanIds = BitConverter.ToInt64(cacheHeader, ((int)Header.location_scan_ids_lo) * 4);
+                raw.LocationScanIds = cacheHeader.locationScanIds;
             }
-            raw.CountBytesScanIds = locationPeaks - raw.LocationScanIds;
-
-            // Unexpected empty cache.  Return values that will force it to be completely rebuild.
-            if (numFiles == 0)
+            else
             {
-                return EmptyCache(out raw);
+                raw.LocationScanIds = cacheHeader.locationScanIds;
             }
-
+            raw.CountBytesScanIds = cacheHeader.locationPeaks - raw.LocationScanIds;
             // Read list of files cached
-            stream.Seek(locationFiles, SeekOrigin.Begin);
-            raw.ChromCacheFiles = new ChromCachedFile[numFiles];
-            var countFileHeader = GetFileHeaderCount(formatVersion);
+            stream.Seek(cacheHeader.locationFiles, SeekOrigin.Begin);
+            raw.ChromCacheFiles = new ChromCachedFile[cacheHeader.numFiles];
 
-            byte[] fileHeader = new byte[countFileHeader];
-            byte[] filePathBuffer = new byte[1024];
-            for (int i = 0; i < numFiles; i++)
+            var cachedFileHeaderSerializer = cacheFormat.CachedFileSerializer();
+
+            for (int i = 0; i < cacheHeader.numFiles; i++)
             {
-                ReadComplete(stream, fileHeader, countFileHeader);
-                long modifiedBinary = BitConverter.ToInt64(fileHeader, ((int)FileHeader.modified_lo) * 4);
-                int lenPath = GetInt32(fileHeader, (int)FileHeader.len_path);
+                var cachedFileStruct = cachedFileHeaderSerializer.ReadArray(stream, 1)[0];
+                int lenPath = cachedFileStruct.lenPath;
+                var filePathBuffer = new byte[lenPath];
                 ReadComplete(stream, filePathBuffer, lenPath);
                 string filePathString = formatVersion > FORMAT_VERSION_CACHE_6
                                       ? Encoding.UTF8.GetString(filePathBuffer, 0, lenPath)
                                       : Encoding.Default.GetString(filePathBuffer, 0, lenPath); // Backward compatibility
                 var filePath = MsDataFileUri.Parse(filePathString);
-                long runstartBinary = (IsVersionCurrent(formatVersion)
-                                           ? BitConverter.ToInt64(fileHeader, ((int)FileHeader.runstart_lo) * 4)
-                                           : 0);
 
-                ChromCachedFile.FlagValues fileFlags = 0;
-                if (formatVersion > FORMAT_VERSION_CACHE_4)
-                    fileFlags = (ChromCachedFile.FlagValues) GetInt32(fileHeader, (int) FileHeader.flags);
-                float maxRT = 0, maxIntensity = 0;
-                if (formatVersion > FORMAT_VERSION_CACHE_5)
-                {
-                    maxRT = GetFloat(fileHeader, (int)FileHeader.max_retention_time);
-                    maxIntensity = GetFloat(fileHeader, (int)FileHeader.max_intensity);
-                }
-                int sizeScanIds = 0;
-                long locationScanIds = 0;
-                if (formatVersion > FORMAT_VERSION_CACHE_8)
-                {
-                    sizeScanIds = GetInt32(fileHeader, (int) FileHeader.size_scan_ids);
-                    locationScanIds = BitConverter.ToInt64(fileHeader, ((int) FileHeader.location_scan_ids_lo)*4);
-                }
                 string instrumentInfoStr = null;
                 if (formatVersion > FORMAT_VERSION_CACHE_3)
                 {
-                    int lenInstrumentInfo = GetInt32(fileHeader, (int) FileHeader.len_instrument_info);
+                    int lenInstrumentInfo = cachedFileStruct.lenInstrumentInfo;
                     byte[] instrumentInfoBuffer = new byte[lenInstrumentInfo];
                     ReadComplete(stream, instrumentInfoBuffer, lenInstrumentInfo);
                     instrumentInfoStr = Encoding.UTF8.GetString(instrumentInfoBuffer, 0, lenInstrumentInfo);
                 }
 
-                DateTime modifiedTime = DateTime.FromBinary(modifiedBinary);
-                DateTime? runstartTime = runstartBinary != 0 ? DateTime.FromBinary(runstartBinary) : (DateTime?) null;
+                DateTime modifiedTime = DateTime.FromBinary(cachedFileStruct.modified);
+                DateTime? runstartTime = cachedFileStruct.runstart != 0 ? DateTime.FromBinary(cachedFileStruct.runstart) : (DateTime?)null;
                 var instrumentInfoList = InstrumentInfoUtil.GetInstrumentInfo(instrumentInfoStr);
                 raw.ChromCacheFiles[i] = new ChromCachedFile(filePath,
-                                                             fileFlags,
+                                                             cachedFileStruct.flags,
                                                              modifiedTime,
                                                              runstartTime,
-                                                             maxRT,
-                                                             maxIntensity,
-                                                             sizeScanIds,
-                                                             locationScanIds,
+                                                             cachedFileStruct.maxRetentionTime,
+                                                             cachedFileStruct.maxIntensity,
+                                                             cachedFileStruct.sizeScanIds,
+                                                             cachedFileStruct.locationScanIds,
                                                              instrumentInfoList);
             }
 
@@ -750,29 +635,36 @@ namespace pwiz.Skyline.Model.Results
                 progressMonitor.UpdateProgress(status = status.ChangePercentComplete(10));
 
             // Read list of chromatogram group headers
-            stream.Seek(locationHeaders, SeekOrigin.Begin);
-            raw.ChromatogramEntries = ChromGroupHeaderInfo.ReadArray(stream, numChrom, formatVersion, assumeNegativeChargeInPreV11Caches);
+            stream.Seek(cacheHeader.locationHeaders, SeekOrigin.Begin);
+            raw.ChromatogramEntries = cacheFormat.ChromGroupHeaderInfoSerializer()
+                .ReadArray(stream, cacheHeader.numChromatograms);
+            if (formatVersion < CacheFormatVersion.Eleven && assumeNegativeChargeInPreV11Caches)
+            {
+                raw.ChromatogramEntries = raw.ChromatogramEntries
+                    .Select(chromGroupHeader => chromGroupHeader.ChangeChargeToNegative())
+                    .ToArray();
+            }
 
             if (formatVersion > FORMAT_VERSION_CACHE_4)
             {
                 // Read textId bytes (sequence, or custom ion id)
-                raw.TextIdBytes = new byte[numTextIdBytes];
-                stream.Seek(locationTextIdBytes, SeekOrigin.Begin);
+                raw.TextIdBytes = new byte[cacheHeader.numTextIdBytes];
+                stream.Seek(cacheHeader.locationTextIdBytes, SeekOrigin.Begin);
                 ReadComplete(stream, raw.TextIdBytes, raw.TextIdBytes.Length);
             }
             else
             {
                 raw.TextIdBytes = null;
             }
-            if (formatVersion > FORMAT_VERSION_CACHE_4 && numScoreTypes > 0)
+            if (formatVersion > FORMAT_VERSION_CACHE_4 && cacheHeader.numScoreTypes > 0)
             {
                 // Read scores
-                raw.ScoreTypes = new Type[numScoreTypes];
-                stream.Seek(locationScoreTypes, SeekOrigin.Begin);
-                byte[] scoreTypeLengths = new byte[numScoreTypes * 4];
+                raw.ScoreTypes = new Type[cacheHeader.numScoreTypes];
+                stream.Seek(cacheHeader.locationScores, SeekOrigin.Begin);
+                byte[] scoreTypeLengths = new byte[cacheHeader.numScoreTypes * 4];
                 byte[] typeNameBuffer = new byte[1024];
                 ReadComplete(stream, scoreTypeLengths, scoreTypeLengths.Length);
-                for (int i = 0; i < numScoreTypes; i++)
+                for (int i = 0; i < cacheHeader.numScoreTypes; i++)
                 {
                     int lenTypeName = GetInt32(scoreTypeLengths, i);
                     ReadComplete(stream, typeNameBuffer, lenTypeName);
@@ -780,7 +672,7 @@ namespace pwiz.Skyline.Model.Results
                 }
                 raw.Scores = new BlockedArray<float>(
                     count => PrimitiveArrays.Read<float>(stream, count),
-                    numScores,
+                    cacheHeader.numScores,
                     sizeof(float),
                     DEFAULT_SCORES_BLOCK_SIZE);
             }
@@ -794,50 +686,24 @@ namespace pwiz.Skyline.Model.Results
                 progressMonitor.UpdateProgress(status = status.ChangePercentComplete(30));
 
             // Read list of transitions
-            stream.Seek(locationTrans, SeekOrigin.Begin);
-            raw.ChromTransitions = ChromTransition.ReadArray(stream, numTrans, formatVersion);
+            stream.Seek(cacheHeader.locationTransitions, SeekOrigin.Begin);
+            raw.ChromTransitions = cacheFormat.ChromTransitionSerializer().ReadArray(stream, cacheHeader.numTransitions);
 
             if (progressMonitor != null)
                 progressMonitor.UpdateProgress(status = status.ChangePercentComplete(50));
 
             // Read list of peaks
-            stream.Seek(locationPeaks, SeekOrigin.Begin);
+            stream.Seek(cacheHeader.locationPeaks, SeekOrigin.Begin);
+            var peakSerializer = cacheFormat.ChromPeakSerializer();
             raw.ChromatogramPeaks = new BlockedArray<ChromPeak>(
-                count => ChromPeak.ReadArray(stream, count), 
-                numPeaks, 
+                count => peakSerializer.ReadArray(stream, count), 
+                cacheHeader.numPeaks, 
                 ChromPeak.SizeOf,
                 ChromPeak.DEFAULT_BLOCK_SIZE,
                 progressMonitor,
                 status);
 
             return raw.LocationScanIds;  // Bytes of chromatogram data
-        }
-
-        private static int GetFileHeaderCount(int formatVersion)
-        {
-            switch (formatVersion)
-            {
-                case FORMAT_VERSION_CACHE_2:
-                    return (int) (FileHeader.count2)*4;
-                case FORMAT_VERSION_CACHE_3:
-                    return (int) (FileHeader.count3)*4;
-                case FORMAT_VERSION_CACHE_4:
-                    return (int) (FileHeader.count4)*4;
-                case FORMAT_VERSION_CACHE_5:
-                    return (int) (FileHeader.count5)*4;
-                case FORMAT_VERSION_CACHE_6:
-                case FORMAT_VERSION_CACHE_7:
-                case FORMAT_VERSION_CACHE_8:
-                    return (int) (FileHeader.count6)*4;
-                default:
-                    return (int) (FileHeader.count)*4;
-            }
-        }
-
-        private static long EmptyCache(out RawData raw)
-        {
-            raw = RawData.EMPTY;
-            return 0;
         }
 
         private static int GetInt32(byte[] bytes, int index)
@@ -862,7 +728,8 @@ namespace pwiz.Skyline.Model.Results
         /// Write mostly new information taken from an existing cache, without
         /// breaking encapsulation.
         /// </summary>
-        public static void WriteStructs(Stream outStream,
+        public static void WriteStructs(CacheFormat cacheFormat, 
+                                        Stream outStream,
                                         Stream outStreamScans,
                                         Stream outStreamPeaks,
                                         Stream outStreamScores,
@@ -874,7 +741,8 @@ namespace pwiz.Skyline.Model.Results
                                         int peakCount,
                                         ChromatogramCache originalCache)
         {
-            WriteStructs(outStream,
+            WriteStructs(cacheFormat,
+                         outStream,
                          outStreamScans,
                          outStreamPeaks,
                          outStreamScores,
@@ -887,7 +755,8 @@ namespace pwiz.Skyline.Model.Results
                          peakCount);
         }
 
-        public static void WriteStructs(Stream outStream,
+        public static void WriteStructs(CacheFormat cacheFormat,
+                                        Stream outStream,
                                         Stream outStreamScans,
                                         Stream outStreamPeaks,
                                         Stream outStreamScores,
@@ -899,14 +768,14 @@ namespace pwiz.Skyline.Model.Results
                                         int scoreCount,
                                         int peakCount)
         {
+            var formatVersion = cacheFormat.FormatVersion;
             long locationScans = outStream.Position;
-            if (FORMAT_VERSION_CACHE > FORMAT_VERSION_CACHE_8)
+            if (formatVersion > FORMAT_VERSION_CACHE_8)
             {
                 // Write any scan ids
                 outStreamScans.Seek(0, SeekOrigin.Begin);
                 outStreamScans.CopyTo(outStream);
             }
-
             // Write the picked peaks
             long locationPeaks = outStream.Position;
             outStreamPeaks.Seek(0, SeekOrigin.Begin);
@@ -914,30 +783,12 @@ namespace pwiz.Skyline.Model.Results
 
             // Write the transitions
             long locationTrans = outStream.Position;
-            foreach (var tran in chromTransitions)
-            {
-                if (FORMAT_VERSION_CACHE > FORMAT_VERSION_CACHE_4)
-                {
-                    outStream.Write(BitConverter.GetBytes(tran.Product), 0, sizeof(double));
-                    outStream.Write(BitConverter.GetBytes(tran.ExtractionWidth), 0, sizeof(float));
-                    if (FORMAT_VERSION_CACHE > FORMAT_VERSION_CACHE_7)
-                    {
-                        outStream.Write(BitConverter.GetBytes(tran.DriftTime), 0, sizeof(float));
-                        outStream.Write(BitConverter.GetBytes(tran.DriftTimeExtractionWidth), 0, sizeof(float));
-                    }
-                    outStream.Write(BitConverter.GetBytes(tran.FlagBits), 0, sizeof(ushort));
-                    outStream.Write(BitConverter.GetBytes(tran.Align1), 0, sizeof(ushort));
-                }
-                else
-                {
-                    outStream.Write(BitConverter.GetBytes((float)tran.Product), 0, sizeof(float));
-                }
-            }
-
+            
+            cacheFormat.ChromTransitionSerializer().WriteItems(outStream, chromTransitions);
             long locationScores = outStream.Position;
             long locationTextIdBytes = outStream.Position;
             int countScores = (int) (outStreamScores.Position/sizeof (float));
-            if (FORMAT_VERSION_CACHE > FORMAT_VERSION_CACHE_4)
+            if (formatVersion > FORMAT_VERSION_CACHE_4)
             {
                 // Write the scores
                 StringBuilder sbTypes = new StringBuilder();
@@ -965,64 +816,14 @@ namespace pwiz.Skyline.Model.Results
                 }
             }
 
-            // Write sorted list of chromatogram header info structs
-            chromatogramEntries.Sort();
+            // Sort the chromatogramEntries ("OrderBy" is a stable sort)
+            var sortedEntries = chromatogramEntries.OrderBy(entry => entry).ToArray();
+            chromatogramEntries.Clear();
+            chromatogramEntries.AddRange(sortedEntries);
 
             long locationHeaders = outStream.Position;
-            foreach (var info in chromatogramEntries)
-            {
-                long lastPeak = info.StartPeakIndex + info.NumPeaks*info.NumTransitions;
-                if (lastPeak > peakCount)
-                    throw new InvalidDataException(string.Format(Resources.ChromatogramCache_WriteStructs_Failure_writing_cache___Specified__0__peaks_exceed_total_peak_count__1_, lastPeak, peakCount));
-                if (FORMAT_VERSION_CACHE > FORMAT_VERSION_CACHE_4)
-                {
-                    outStream.Write(BitConverter.GetBytes(info.TextIdIndex), 0, sizeof(int));
-                    outStream.Write(BitConverter.GetBytes(info.StartTransitionIndex), 0, sizeof(int));
-                    outStream.Write(BitConverter.GetBytes(info.StartPeakIndex), 0, sizeof(int));
-                    outStream.Write(BitConverter.GetBytes(info.StartScoreIndex), 0, sizeof(int));
-                    outStream.Write(BitConverter.GetBytes(info.NumPoints), 0, sizeof(int));
-                    outStream.Write(BitConverter.GetBytes(info.CompressedSize), 0, sizeof(int));
-                    outStream.Write(BitConverter.GetBytes(info.FlagBits), 0, sizeof(ushort));
-                    outStream.Write(BitConverter.GetBytes(info.FileIndex), 0, sizeof(ushort));
-                    outStream.Write(BitConverter.GetBytes(info.TextIdLen), 0, sizeof(ushort));
-                    outStream.Write(BitConverter.GetBytes(info.NumTransitions), 0, sizeof(ushort));
-                    outStream.Write(new[] {info.NumPeaks, (byte)info.MaxPeakIndex}, 0, 2);
-                    outStream.Write(BitConverter.GetBytes(info.Align1), 0, sizeof(ushort));
-                    if (FORMAT_VERSION_CACHE > FORMAT_VERSION_CACHE_5)
-                    {
-                        outStream.Write(BitConverter.GetBytes(info.StatusId), 0, sizeof(ushort));
-                        outStream.Write(BitConverter.GetBytes(info.StatusRank), 0, sizeof(ushort));                        
-                    }
-                    else
-                    {
-                        outStream.Write(BitConverter.GetBytes(0), 0, sizeof(int));
-                    }
-                    outStream.Write(BitConverter.GetBytes(info._precursor), 0, sizeof(double));
-                    outStream.Write(BitConverter.GetBytes(info.LocationPoints), 0, sizeof(long));
-                    if (FORMAT_VERSION_CACHE > FORMAT_VERSION_CACHE_10)
-                    {
-                        outStream.Write(BitConverter.GetBytes(info.UncompressedSize), 0, sizeof (int));
-                        outStream.Write(BitConverter.GetBytes(info._startTime), 0, sizeof (float));
-                        outStream.Write(BitConverter.GetBytes(info._endTime), 0, sizeof (float));
-                        outStream.Write(BitConverter.GetBytes(info._collisionalCrossSection), 0, sizeof (float));
-                    }
-                }
-                else
-                {
-                    outStream.Write(BitConverter.GetBytes((float)info.Precursor), 0, sizeof(float));
-                    outStream.Write(BitConverter.GetBytes((int)info.FileIndex), 0, sizeof(int));
-                    outStream.Write(BitConverter.GetBytes((int)info.NumTransitions), 0, sizeof(int));
-                    outStream.Write(BitConverter.GetBytes(info.StartTransitionIndex), 0, sizeof(int));
-                    outStream.Write(BitConverter.GetBytes((int)info.NumPeaks), 0, sizeof(int));
-                    outStream.Write(BitConverter.GetBytes(info.StartPeakIndex), 0, sizeof(int));
-                    outStream.Write(BitConverter.GetBytes((int)info.MaxPeakIndex), 0, sizeof(int));
-                    outStream.Write(BitConverter.GetBytes(info.NumPoints), 0, sizeof(int));
-                    outStream.Write(BitConverter.GetBytes(info.CompressedSize), 0, sizeof(int));
-                    outStream.Write(BitConverter.GetBytes(0), 0, sizeof(int));  // Alignment for 64-bit LocationPoints value
-                    outStream.Write(BitConverter.GetBytes(info.LocationPoints), 0, sizeof(long));
-                }
-            }
 
+            cacheFormat.ChromGroupHeaderInfoSerializer().WriteItems(outStream, chromatogramEntries);
             // Write the list of cached files and their modification time stamps
             long locationFiles = outStream.Position;
             byte[] pathBuffer = new byte[0x1000];
@@ -1047,18 +848,18 @@ namespace pwiz.Skyline.Model.Results
                 outStream.Write(BitConverter.GetBytes(instrumentInfoLen), 0, sizeof(int));
 
                 // Version 5 write flags
-                if (FORMAT_VERSION_CACHE > FORMAT_VERSION_CACHE_4)
+                if (formatVersion > FORMAT_VERSION_CACHE_4)
                     outStream.Write(BitConverter.GetBytes((int) cachedFile.Flags), 0, sizeof(int));
 
                 // Version 6 write time and intensity dimensions
-                if (FORMAT_VERSION_CACHE > FORMAT_VERSION_CACHE_5)
+                if (formatVersion > FORMAT_VERSION_CACHE_5)
                 {
                     outStream.Write(BitConverter.GetBytes(cachedFile.MaxRetentionTime), 0, sizeof(float));
                     outStream.Write(BitConverter.GetBytes(cachedFile.MaxIntensity), 0, sizeof(float));
                 }
 
                 // Version 9 write scan id info
-                if (FORMAT_VERSION_CACHE > FORMAT_VERSION_CACHE_8)
+                if (formatVersion > FORMAT_VERSION_CACHE_8)
                 {
                     outStream.Write(BitConverter.GetBytes(cachedFile.SizeScanIds), 0, sizeof(int));
                     outStream.Write(BitConverter.GetBytes(cachedFile.LocationScanIds), 0, sizeof(long));
@@ -1069,35 +870,24 @@ namespace pwiz.Skyline.Model.Results
                 outStream.Write(instrumentInfoBuffer, 0, instrumentInfoLen);
             }
 
-            // Write the initial file header
-            if (FORMAT_VERSION_CACHE > FORMAT_VERSION_CACHE_8)
+            CacheHeaderStruct cacheHeader = new CacheHeaderStruct(cacheFormat)
             {
-                // scan ids
-                outStream.Write(BitConverter.GetBytes(locationScans), 0, sizeof(long));
-            }
-            if (FORMAT_VERSION_CACHE > FORMAT_VERSION_CACHE_4)
-            {
-                // scores
-                outStream.Write(BitConverter.GetBytes(scoreTypes.Count), 0, sizeof(int));
-                outStream.Write(BitConverter.GetBytes(countScores), 0, sizeof(int));
-                outStream.Write(BitConverter.GetBytes(locationScores), 0, sizeof(long));
-                // sequence or custom ion id bytes
-                int countTextIdBytes = (textIdBytes != null ? textIdBytes.Count : 0);
-                outStream.Write(BitConverter.GetBytes(countTextIdBytes), 0, sizeof(int));
-                outStream.Write(BitConverter.GetBytes(locationTextIdBytes), 0, sizeof(long));
-            }
-            // The format version must remain in the same relative position as in the
-            // original file.  Obviously, it should have been written as the last element,
-            // and not the first above the other values.
-            outStream.Write(BitConverter.GetBytes(FORMAT_VERSION_CACHE), 0, sizeof(int));
-            outStream.Write(BitConverter.GetBytes(peakCount), 0, sizeof(int));
-            outStream.Write(BitConverter.GetBytes(locationPeaks), 0, sizeof(long));
-            outStream.Write(BitConverter.GetBytes(chromTransitions.Count), 0, sizeof(int));
-            outStream.Write(BitConverter.GetBytes(locationTrans), 0, sizeof(long));
-            outStream.Write(BitConverter.GetBytes(chromatogramEntries.Count), 0, sizeof(int));
-            outStream.Write(BitConverter.GetBytes(locationHeaders), 0, sizeof(long));
-            outStream.Write(BitConverter.GetBytes(chromCachedFiles.Count), 0, sizeof(int));
-            outStream.Write(BitConverter.GetBytes(locationFiles), 0, sizeof(long));
+                locationScanIds = locationScans,
+                numScoreTypes = scoreTypes.Count,
+                numScores = countScores,
+                locationScores = locationScores,
+                numTextIdBytes = textIdBytes != null ? textIdBytes.Count : 0,
+                locationTextIdBytes = locationTextIdBytes,
+                numPeaks = peakCount,
+                locationPeaks = locationPeaks,
+                numTransitions = chromTransitions.Count,
+                locationTransitions = locationTrans,
+                numChromatograms = chromatogramEntries.Count,
+                locationHeaders = locationHeaders,
+                numFiles = chromCachedFiles.Count,
+                locationFiles = locationFiles
+            };
+            cacheHeader.Write(outStream);
         }
 
         public static void BytesToTimeIntensities(byte[] bytes, int numPoints, int numTrans, bool withErrors,
@@ -1266,12 +1056,18 @@ namespace pwiz.Skyline.Model.Results
             ILongWaitBroker progress)
         {
             string cachePathOpt = FinalPathForName(documentPath, null);
+            return OptimizeToPath(null, cachePathOpt, msDataFilePaths, streamManager, progress);
+        }
 
+        public ChromatogramCache OptimizeToPath(CacheFormatVersion? formatVersion, string cachePathOpt,
+            IEnumerable<MsDataFileUri> msDataFilePaths, IStreamManager streamManager, ILongWaitBroker progress)
+        {
             var cachedFilePaths = new HashSet<MsDataFileUri>(CachedFilePaths);
             cachedFilePaths.IntersectWith(msDataFilePaths);
+
             // If the cache contains only the files in the document, then no
             // further optimization is necessary.
-            if (cachedFilePaths.Count == CachedFiles.Count)
+            if (cachedFilePaths.Count == CachedFiles.Count && !formatVersion.HasValue || formatVersion == Version)
             {
                 if (Equals(cachePathOpt, CachePath))
                     return this;
@@ -1279,12 +1075,13 @@ namespace pwiz.Skyline.Model.Results
                 using (FileSaver fs = new FileSaver(cachePathOpt))
                 {
                     File.Copy(CachePath, fs.SafeName, true);
-                    fs.Commit(ReadStream);                    
+                    fs.Commit(ReadStream);
                 }
-                return ChangeCachePath(cachePathOpt,streamManager);
+                return ChangeCachePath(cachePathOpt, streamManager);
             }
 
-            Assume.IsTrue(cachedFilePaths.Count > 0);
+            CacheFormat cacheFormat = CacheFormat.FromVersion(formatVersion ?? CacheFormatVersion.CURRENT);
+                        Assume.IsTrue(cachedFilePaths.Count > 0);
 
             // Create a copy of the headers
             var listEntries = new List<ChromGroupHeaderInfo>(_chromatogramEntries);
@@ -1314,7 +1111,7 @@ namespace pwiz.Skyline.Model.Results
                 fs.Stream = streamManager.CreateStream(fs.SafeName, FileMode.Create, true);
                 int peakCount = 0, scoreCount = 0;
 
-                byte[] buffer = new byte[0x40000];  // 256K
+                byte[] buffer = new byte[0x40000]; // 256K
 
                 int i = 0;
                 do
@@ -1335,31 +1132,32 @@ namespace pwiz.Skyline.Model.Results
                             continue;
                         // Otherwise add entries to the keep lists
                         int textIdIndex = -1;
-                        if (lastEntry.TextIdIndex != -1 && !dictKeepTextIdIndices.TryGetValue(lastEntry.TextIdIndex, out textIdIndex))
+                        if (lastEntry.TextIdIndex != -1 &&
+                            !dictKeepTextIdIndices.TryGetValue(lastEntry.TextIdIndex, out textIdIndex))
                         {
                             textIdIndex = listKeepTextIdBytes.Count;
                             dictKeepTextIdIndices.Add(lastEntry.TextIdIndex, textIdIndex);
                         }
                         listKeepEntries.Add(new ChromGroupHeaderInfo(lastEntry.Precursor,
-                                                                      textIdIndex,
-                                                                      lastEntry.TextIdLen,
-                                                                      listKeepCachedFiles.Count,
-                                                                      lastEntry.NumTransitions,
-                                                                      listKeepTransitions.Count,
-                                                                      lastEntry.NumPeaks,
-                                                                      peakCount,
-                                                                      scoreCount,
-                                                                      lastEntry.MaxPeakIndex,
-                                                                      lastEntry.NumPoints,
-                                                                      lastEntry.CompressedSize,
-                                                                      lastEntry.UncompressedSize,
-                                                                      lastEntry.LocationPoints + offsetPoints,
-                                                                      lastEntry.Flags,
-                                                                      lastEntry.StatusId,
-                                                                      lastEntry.StatusRank,
-                                                                      lastEntry.StartTime, 
-                                                                      lastEntry.EndTime,
-                                                                      lastEntry.CollisionalCrossSection));
+                            textIdIndex,
+                            lastEntry.TextIdLen,
+                            listKeepCachedFiles.Count,
+                            lastEntry.NumTransitions,
+                            listKeepTransitions.Count,
+                            lastEntry.NumPeaks,
+                            peakCount,
+                            scoreCount,
+                            lastEntry.MaxPeakIndex,
+                            lastEntry.NumPoints,
+                            lastEntry.CompressedSize,
+                            lastEntry.UncompressedSize,
+                            lastEntry.LocationPoints + offsetPoints,
+                            lastEntry.Flags,
+                            lastEntry.StatusId,
+                            lastEntry.StatusRank,
+                            lastEntry.StartTime,
+                            lastEntry.EndTime,
+                            lastEntry.CollisionalCrossSection));
                         int start = lastEntry.StartTransitionIndex;
                         int end = start + lastEntry.NumTransitions;
                         for (int j = start; j < end; j++)
@@ -1367,9 +1165,19 @@ namespace pwiz.Skyline.Model.Results
                         start = lastEntry.StartPeakIndex;
                         end = start + lastEntry.NumPeaks*lastEntry.NumTransitions;
                         peakCount += end - start;
+                        var chromPeakSerializer = cacheFormat.ChromPeakSerializer();
                         _chromatogramPeaks.WriteArray(
                             (peaks, startIndex, count) =>
-                            ChromPeak.WriteArray(fsPeaks.FileStream.SafeFileHandle, peaks, startIndex, count),
+                            {
+                                if (startIndex == 0 && count == peaks.Length)
+                                {
+                                    chromPeakSerializer.WriteItems(fsPeaks.FileStream, peaks);
+                                }
+                                else
+                                {
+                                    chromPeakSerializer.WriteItems(fsPeaks.FileStream, peaks.Skip(startIndex).Take(count));    
+                                }
+                            },
                             start,
                             end - start);
 
@@ -1385,7 +1193,8 @@ namespace pwiz.Skyline.Model.Results
                         {
                             _scores.WriteArray(
                                 (scores, startIndex, count) =>
-                                FastWrite.WriteFloats(fsScores.FileStream.SafeFileHandle, scores, startIndex, count),
+                                    FastWrite.WriteFloats(fsScores.FileStream.SafeFileHandle, scores, startIndex,
+                                        count),
                                 start,
                                 end - start);
                         }
@@ -1416,13 +1225,14 @@ namespace pwiz.Skyline.Model.Results
 
                     if (progress != null)
                         progress.SetProgressCheckCancel(i, listEntries.Count);
-                }
-                while (i < listEntries.Count);
+                } while (i < listEntries.Count);
 
                 long locationAllScanIds = fs.Stream.Position;
                 long countBytesAllScanIds = fsScans.Stream.Position;
 
-                WriteStructs(fs.Stream,
+                WriteStructs(
+                    cacheFormat,
+                    fs.Stream,
                     fsScans.Stream,
                     fsPeaks.Stream,
                     fsScores.Stream,
@@ -1438,27 +1248,27 @@ namespace pwiz.Skyline.Model.Results
 
                 fsPeaks.Stream.Seek(0, SeekOrigin.Begin);
                 fsScores.Stream.Seek(0, SeekOrigin.Begin);
-                var rawData = new RawData
-                    {
-                        FormatVersion = FORMAT_VERSION_CACHE,
-                        ChromCacheFiles = listKeepCachedFiles.ToArray(),
-                        ChromatogramEntries = listKeepEntries.ToArray(),
-                        ChromTransitions = listKeepTransitions.ToArray(),
-                        ChromatogramPeaks = new BlockedArray<ChromPeak>(
-                            count => ChromPeak.ReadArray(fsPeaks.FileStream, count), peakCount,
-                            ChromPeak.SizeOf, ChromPeak.DEFAULT_BLOCK_SIZE),
-                        TextIdBytes = listKeepTextIdBytes.ToArray(),
-                        ScoreTypes = scoreTypes,
-                        Scores = new BlockedArray<float>(
-                            count => PrimitiveArrays.Read<float>(fsScores.FileStream, count), scoreCount,
-                            sizeof(float), DEFAULT_SCORES_BLOCK_SIZE),
-                        LocationScanIds = locationAllScanIds,
-                        CountBytesScanIds = countBytesAllScanIds,
-                    };
+                var peakSerializer = cacheFormat.ChromPeakSerializer();
+                var rawData = new RawData(cacheFormat)
+                {
+                    ChromCacheFiles = listKeepCachedFiles.ToArray(),
+                    ChromatogramEntries = listKeepEntries.ToArray(),
+                    ChromTransitions = listKeepTransitions.ToArray(),
+                    ChromatogramPeaks = new BlockedArray<ChromPeak>(
+                        count => peakSerializer.ReadArray(fsPeaks.FileStream, count), peakCount,
+                        ChromPeak.SizeOf, ChromPeak.DEFAULT_BLOCK_SIZE),
+                    TextIdBytes = listKeepTextIdBytes.ToArray(),
+                    ScoreTypes = scoreTypes,
+                    Scores = new BlockedArray<float>(
+                        count => PrimitiveArrays.Read<float>(fsScores.FileStream, count), scoreCount,
+                        sizeof(float), DEFAULT_SCORES_BLOCK_SIZE),
+                    LocationScanIds = locationAllScanIds,
+                    CountBytesScanIds = countBytesAllScanIds,
+                };
                 return new ChromatogramCache(cachePathOpt,
-                                             rawData,
-                                             // Create a new read stream, for the newly created file
-                                             streamManager.CreatePooledStream(cachePathOpt, false));
+                                rawData,
+                    // Create a new read stream, for the newly created file
+                                streamManager.CreatePooledStream(cachePathOpt, false));
             }
         }
 

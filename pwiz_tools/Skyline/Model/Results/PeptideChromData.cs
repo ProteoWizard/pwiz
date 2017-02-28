@@ -259,10 +259,8 @@ namespace pwiz.Skyline.Model.Results
         {
             // Handle an issue where the ProteoWizard Reader_Thermo returns chromatograms
             // with alternating zero intensity scans with real data
-            if (ThermoZerosFix())
+            while (ThermoZerosFix())
             {
-                EvenlySpaceTimes();
-                return;
             }
             // Moved to ProteoWizard
             //                else if (WiffZerosFix())
@@ -278,7 +276,7 @@ namespace pwiz.Skyline.Model.Results
             List<double> listDeltas = new List<double>();
             List<double> listMaxDeltas = new List<double>();
             double maxIntensity = 0;
-            float[] firstTimes = null;
+            IList<float> firstTimes = null;
             double expectedTimeDelta = 0;
             //                int countChromData = 0;
             foreach (var chromData in ChromDatas)
@@ -287,18 +285,19 @@ namespace pwiz.Skyline.Model.Results
                 if (firstTimes == null)
                 {
                     firstTimes = chromData.Times;
-                    if (firstTimes.Length == 0)
+                    if (firstTimes.Count == 0)
                         continue;
-                    expectedTimeDelta = (firstTimes[firstTimes.Length - 1] - firstTimes[0]) / firstTimes.Length;
+                    expectedTimeDelta = (firstTimes[firstTimes.Count - 1] - firstTimes[0]) / firstTimes.Count;
                 }
-                if (firstTimes.Length != chromData.Times.Length)
+                if (firstTimes.Count != chromData.Times.Count)
                     foundVariation = true;
 
                 double lastTime = 0;
                 var times = chromData.Times;
-                if (times.Length > 0)
+                if (times.Count > 0)
                     lastTime = times[0];
-                for (int i = 1, len = chromData.Times.Length; i < len; i++)
+
+                for (int i = 1, len = chromData.Times.Count; i < len; i++)
                 {
                     double time = times[i];
                     double delta = time - lastTime;
@@ -366,11 +365,9 @@ namespace pwiz.Skyline.Model.Results
             // this peptide will be mapped onto.
             double start, end;
             GetExtents(inferZeros, intervalDelta, out start, out end);
-
-            var listTimesNew = new List<float>();
-            for (double t = start; t <= end; t += intervalDelta)
-                listTimesNew.Add((float)t);
-            float[] timesNew = listTimesNew.ToArray();
+            var interpolationParams = InterpolationParams.WithInterval(start, end, intervalDelta)
+                .ChangeInferZeroes(inferZeros);
+            var timesNew = interpolationParams.GetEvenlySpacedTimesFloat().ToArray();
 
             // Perform interpolation onto the new times
             foreach (var chromDataSet in DataSets)
@@ -390,8 +387,9 @@ namespace pwiz.Skyline.Model.Results
 
                 foreach (var chromData in chromDataSet.Chromatograms)
                 {
-                    chromData.Interpolate(timesNewPrecursor, intervalDelta, inferZeros);
+                    chromData.Interpolate(timesNewPrecursor, inferZeros);
                 }
+                chromDataSet.InterpolationParams = interpolationParams.ChangeStartEndIndex(startSet, endSet);
                 chromDataSet.PeptideIndexOffset = startSet;
             }
         }
@@ -424,6 +422,19 @@ namespace pwiz.Skyline.Model.Results
             if (intervalDelta < pointsMinDelta)
                 intervalDelta = pointsMinDelta;  // For breakpoint setting
             return intervalDelta;
+        }
+
+        public bool IsProcessedScans { get { return _isProcessedScans; } }
+
+        public bool IsSaveRawTimes
+        {
+            get
+            {
+                // We do not save raw times if there is an optimization function because it is too hard.
+                var chromatogramSet = _document.Settings.MeasuredResults.Chromatograms.FirstOrDefault(
+                    c => null != c.GetFileInfo(FileInfo.FileId));
+                return chromatogramSet == null || null == chromatogramSet.OptimizationFunction;
+            }
         }
 
         private static double GetIntervalMaxDelta(IList<double> listMaxDeltas, double intervalDelta)

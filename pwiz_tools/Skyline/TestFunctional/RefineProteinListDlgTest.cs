@@ -35,7 +35,7 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestRefineProteinListDlg()
         {
-            TestFilesZip = @"TestFunctional\RetentionTimeFilterTest.zip";
+            TestFilesZip = @"TestFunctional\ImportResultsCancelTest.zip";
             RunFunctionalTest();
         }
 

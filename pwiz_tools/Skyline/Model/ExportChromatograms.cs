@@ -114,8 +114,9 @@ namespace pwiz.Skyline.Model
                         // Skip the files that have not been selected for export
                         if (!filesToExport.Contains(fileName))
                             continue;
-                        IList<float> times = chromInfo.Times;
-                        IList<float> intensities = chromInfo.IntensityArray[0];
+                        var firstChromatogram = chromInfo.TransitionPointSets.First();
+                        IList<float> times = firstChromatogram.Times;
+                        IList<float> intensities = firstChromatogram.Intensities;
                         float tic = CalculateTic(times, intensities);
                         string extractorName = GetExtractorName(extractor);
                         string[] fieldArray =
@@ -133,10 +134,26 @@ namespace pwiz.Skyline.Model
 
                     }
                 }
-                foreach (var peptideNode in Document.Molecules)
+                var molecules = Document.Molecules.ToArray();
+                for (int iMolecule = 0; iMolecule < molecules.Length; iMolecule++)
                 {
+                    if (longWaitBroker != null)
+                    {
+                        if (longWaitBroker.IsCanceled)
+                        {
+                            return;
+                        }
+                        longWaitBroker.UpdateProgress(status = status.ChangePercentComplete(iMolecule*100/molecules.Length));
+                    }
+                    var peptideNode = molecules[iMolecule];
                     foreach (TransitionGroupDocNode groupNode in peptideNode.Children)
+                    {
+                        if (longWaitBroker != null && longWaitBroker.IsCanceled)
+                        {
+                            return;
+                        }
                         ExportGroupNode(peptideNode, groupNode, chromatograms, filesToExport, chromSources, writer, cultureInfo);
+                    }
                 }
             }
         }

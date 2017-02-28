@@ -72,6 +72,7 @@ namespace pwiz.Skyline.FileUI
         }
 
         public string FileName { get { return tbFilePath.Text; } }
+        public ShareType ShareType { get; set; }
 
         private void PublishDocumentDlg_Load(object sender, EventArgs e)
         {
@@ -234,7 +235,8 @@ namespace pwiz.Skyline.FileUI
                 return;
             }
 
-            if (!PanoramaPublishClient.ServerSupportsSkydVersion(folderInfo,_docContainer, this))
+            ShareType = PanoramaPublishClient.DecideShareType(folderInfo, _docContainer, this);
+            if (ShareType == null)
             {
                 return;
             }

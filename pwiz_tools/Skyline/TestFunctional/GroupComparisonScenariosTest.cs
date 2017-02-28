@@ -24,6 +24,7 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.GroupComparison;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.SkylineTestUtil;
 
@@ -60,7 +61,7 @@ namespace pwiz.SkylineTestFunctional
                 var directory = Path.Combine(TestContext.TestRunResultsDirectory, "GroupComparisonScenariosTest");
                 Directory.CreateDirectory(directory);
                 string baseName = Path.Combine(directory, scenarioName);
-                RunUI(() => SkylineWindow.ShareDocument(baseName + ".sky.zip", true));
+                RunUI(() => SkylineWindow.ShareDocument(baseName + ".sky.zip", ShareType.COMPLETE));
                 foreach (var groupComparison in SkylineWindow.Document.Settings.DataSettings.GroupComparisonDefs)
                 {
                     String groupComparisonName = groupComparison.Name;

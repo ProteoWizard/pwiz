@@ -562,7 +562,7 @@ namespace pwiz.Skyline.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("none")]
+        [global::System.Configuration.DefaultSettingValueAttribute("interpolated")]
         public string TransformTypeChromatogram {
             get {
                 return ((string)(this["TransformTypeChromatogram"]));

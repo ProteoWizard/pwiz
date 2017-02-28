@@ -2292,9 +2292,6 @@
   <data name="SkylineWindow_sortProteinsMenuItem_Click_Sort_proteins_by_name" xml:space="preserve">
     <value>按名称归类蛋白质</value>
   </data>
-  <data name="ShareTypeDlg_ShareTypeDlg_The_document_can_be_shared_either_in_its_complete_form_or_in_a_minimal_form_intended_for_read_only_use_with" xml:space="preserve">
-    <value>本文档能够以完整形式共享，也能够以仅限阅读的最小形式共享：</value>
-  </data>
   <data name="SkylineWindow_ImportMassList_The_transition_list_appears_to_contain_iRT_values__but_the_document_does_not_have_an_iRT_calculator___Create_a_new_calculator_and_add_these_iRT_values_" xml:space="preserve">
     <value>离子对列表中似乎包含 iRT 值，但文档中并没有 iRT 计算器。 创建新的计算器并添加这些 iRT 值？</value>
   </data>
@@ -2381,9 +2378,6 @@
   </data>
   <data name="EditCoVDlg_btnOk_Click_Maximum_compensation_voltage_cannot_be_less_than_minimum_compensation_volatage_" xml:space="preserve">
     <value>最大补偿电压不能小于最小补偿电压。</value>
-  </data>
-  <data name="ShareTypeDlg_ShareTypeDlg_its_background_proteome_disconnected" xml:space="preserve">
-    <value>其背景蛋白质组链接已去除。</value>
   </data>
   <data name="EditIsolationSchemeDlg_OkDialog_There_are_gaps_in_a_single_cycle_of_your_extraction_windows__Do_you_want_to_continue_" xml:space="preserve">
     <value>在您提取窗口的单一周期内存在间隙。您确定想要继续？</value>
@@ -3347,9 +3341,6 @@
   </data>
   <data name="CommandLine_ExportInstrumentFile_Method__0__exported_successfully_" xml:space="preserve">
     <value>方法{0}已成功导出。</value>
-  </data>
-  <data name="ShareTypeDlg_ShareTypeDlg_Choose_the_appropriate_sharing_option_below" xml:space="preserve">
-    <value>选择下方适当的共享选择。</value>
   </data>
   <data name="PythonInstaller_InstallPackages_Package_installation_failed__Error_log_output_in_immediate_window_" xml:space="preserve">
     <value>软件包安装失败。在即时窗口中记录输出失败。</value>
@@ -4944,9 +4935,6 @@
   <data name="MProphetFeaturesDlg_OkDialog_To_export_MProphet_features_first_train_an_MProphet_model_" xml:space="preserve">
     <value>如要导出 MProphet 特性，首先训练一个 MProphet 模型。</value>
   </data>
-  <data name="ShareTypeDlg_ShareTypeDlg_its_retention_time_calculator_minimized_to_contain_only_standard_peptides_and_library_peptides_used_in_the_document" xml:space="preserve">
-    <value>其保留时间计算器已被最小化，以仅包含用于文档的标准肽段和库肽段。</value>
-  </data>
   <data name="OpenDataSourceDialog_populateComboBoxFromDirectory_Network_Share" xml:space="preserve">
     <value>网络共享</value>
   </data>
@@ -5173,9 +5161,6 @@
   </data>
   <data name="DocumentGridViewContext_Preview_Preview___0_" xml:space="preserve">
     <value>预览：{0}</value>
-  </data>
-  <data name="ShareTypeDlg_ShareTypeDlg_all_libraries_minimized_to_contain_only_precursors_used_in_the_document" xml:space="preserve">
-    <value>所有库都经过最小化处理，以仅包含用于文档的母离子</value>
   </data>
   <data name="EditOptimizationLibraryDlg_OkDialog_Click_the_Create_button_to_create_a_new_library_or_the_Open_button_to_open_an_existing_library_file_" xml:space="preserve">
     <value>单击“创建”按钮来创建一个新库或单击“打开”按钮来打开现有的库文件。</value>
@@ -6597,9 +6582,6 @@
   </data>
   <data name="SkylineWindow_FindBackgroundProteome_Background_Proteome" xml:space="preserve">
     <value>背景蛋白质组</value>
-  </data>
-  <data name="ShareTypeDlg_ShareTypeDlg_Invalid_use_of__0__for_document_without_background_proteome_retention_time_calculator_or_libraries" xml:space="preserve">
-    <value>无背景蛋白质组、保留时间计算器或库，{0}针对文档的无效使用。</value>
   </data>
   <data name="DataProcessing" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\dataprocessing.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>

@@ -138,7 +138,7 @@
       <Value Profile="(Default)">none</Value>
     </Setting>
     <Setting Name="TransformTypeChromatogram" Type="System.String" Scope="User">
-      <Value Profile="(Default)">none</Value>
+      <Value Profile="(Default)">interpolated</Value>
     </Setting>
     <Setting Name="SrmResultsSourceType" Type="System.String" Scope="User">
       <Value Profile="(Default)" />

@@ -766,13 +766,14 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public static void MakeChromatogramInfo(SignedMz precursorMz, LibraryChromGroup chromGroup, LibraryChromGroup.ChromData chromData, out ChromatogramInfo chromatogramInfo, out TransitionChromInfo transitionChromInfo)
         {
+            var timeIntensities = new TimeIntensities(chromGroup.Times, chromData.Intensities, null, null);
             var crawPeakFinder = Crawdads.NewCrawdadPeakFinder();
             crawPeakFinder.SetChromatogram(chromGroup.Times, chromData.Intensities);
             var crawdadPeak =
                 crawPeakFinder.GetPeak(
                     FindNearestIndex(chromGroup.Times, (float) chromGroup.StartTime),
                     FindNearestIndex(chromGroup.Times, (float) chromGroup.EndTime));
-            var chromPeak = new ChromPeak(crawPeakFinder, crawdadPeak, 0, chromGroup.Times, chromData.Intensities, null);
+            var chromPeak = new ChromPeak(crawPeakFinder, crawdadPeak, 0, timeIntensities, null);
             transitionChromInfo = new TransitionChromInfo(null, 0, chromPeak,
                 null, // CONSIDER(bspratt) IMS in chromatogram libraries?
                 new float?[0], Annotations.EMPTY,
@@ -798,7 +799,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     new ChromCachedFile[0],
                     new[] { new ChromTransition(chromData.Mz, 0, (float)(driftTimeFilter.DriftTimeMsec??0), (float)(driftTimeFilter.DriftTimeExtractionWindowWidthMsec??0), ChromSource.unknown), },
                     peaks, null,
-                    chromGroup.Times, new[] { chromData.Intensities }, null, null);
+                    TimeIntensitiesGroup.Singleton(timeIntensities));
             
         }
     }

@@ -77,17 +77,11 @@ namespace pwiz.Skyline.Model.Results
             string modifiedSequence,
             Color peptideColor,
             out ChromExtra extra,
-            out float[] times, 
-            out int[] scanIndexes, 
-            out float[] intensities,
-            out float[] massErrors)
+            out TimeIntensities timeIntensities)
         {
             bool loaded = false;
             extra = null;
-            times = null;
-            scanIndexes = null;
-            intensities = null;
-            massErrors = null;
+            timeIntensities = null;
             int idRemain = id;
             for (int iTaskList = 0; iTaskList < _chromatogramRequestProviders.Length; iTaskList++)
             {
@@ -104,7 +98,7 @@ namespace pwiz.Skyline.Model.Results
                     chromTaskList.SetMinimumSimultaneousTasks(3);
                 }
                 ChromKey chromKey = requestProvider.ChromKeys[idRemain];
-                loaded = chromTaskList.GetChromatogram(chromKey, out times, out scanIndexes, out intensities, out massErrors);
+                loaded = chromTaskList.GetChromatogram(chromKey, out timeIntensities);
                 if (loaded)
                 {
                     extra = new ChromExtra(id, chromKey.Precursor == 0 ? 0 : -1);
@@ -116,15 +110,15 @@ namespace pwiz.Skyline.Model.Results
                     {
                         _sourceHasPositivePolarityData = true;
                     }
-                    if (times.Length > 0 && Status is ChromatogramLoadingStatus)
+                    if (timeIntensities.NumPoints > 0 && Status is ChromatogramLoadingStatus)
                     {
                         ((ChromatogramLoadingStatus)Status).Transitions.AddTransition(
                                 modifiedSequence,
                                 peptideColor,
                                 extra.StatusId,
                                 extra.StatusRank,
-                                times,
-                                intensities);
+                                timeIntensities.Times,
+                                timeIntensities.Intensities);
                     }
                 }
                 break;

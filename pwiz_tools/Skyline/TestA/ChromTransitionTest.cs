@@ -82,7 +82,7 @@ namespace pwiz.SkylineTestA
         {
             Assert.AreEqual(4, sizeof(ChromTransition4));
             Assert.AreEqual(16, sizeof(ChromTransition5));
-            Assert.AreEqual(24, sizeof(ChromTransition));
+            Assert.AreEqual(24, ChromTransition.GetStructSize(CacheFormatVersion.CURRENT));
         }
 
         /// <summary>

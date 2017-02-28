@@ -118,7 +118,8 @@ namespace pwiz.Skyline.Model.Results
                     }
 
                     _peakCount += rawData.ChromatogramPeaks.Length;
-                    rawData.ChromatogramPeaks.WriteArray(block => ChromPeak.WriteArray(_fsPeaks.FileStream.SafeFileHandle, block));
+                    var chromPeakSerializer = CacheFormat.ChromPeakSerializer();
+                    rawData.ChromatogramPeaks.WriteArray(block => chromPeakSerializer.WriteItems(_fsPeaks.FileStream, block));
                     _listTransitions.AddRange(rawData.ChromTransitions);
                     // Initialize the score types the first time through
                     if (_scoreTypesCount == -1)

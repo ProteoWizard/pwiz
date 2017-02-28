@@ -50,6 +50,7 @@ namespace pwiz.Skyline.Model.Results
                                    Action<ChromatogramCache, IProgressStatus> completed)
         {
             CachePath = cachePath;
+            CacheFormat = CacheFormat.CURRENT;
             _fs = new FileSaver(CachePath);
             _fsScans = new FileSaver(CachePath + ChromatogramCache.SCANS_EXT, true);
             _fsPeaks = new FileSaver(CachePath + ChromatogramCache.PEAKS_EXT, true);
@@ -60,6 +61,8 @@ namespace pwiz.Skyline.Model.Results
         }
 
         protected string CachePath { get; private set; }
+
+        public CacheFormat CacheFormat { get; protected set; }
 
         protected void Complete(Exception x)
         {
@@ -78,7 +81,8 @@ namespace pwiz.Skyline.Model.Results
                                 locationScanIds = _fs.Stream.Position;
                                 countBytesScanIds = _fsScans.Stream.Position;
 
-                                ChromatogramCache.WriteStructs(_fs.Stream,
+                                ChromatogramCache.WriteStructs(CacheFormat,
+                                                               _fs.Stream,
                                                                _fsScans.Stream,
                                                                _fsPeaks.Stream,
                                                                _fsScores.Stream,
@@ -116,22 +120,22 @@ namespace pwiz.Skyline.Model.Results
 
                             _fsPeaks.Stream.Seek(0, SeekOrigin.Begin);
                             _fsScores.Stream.Seek(0, SeekOrigin.Begin);
-                            var rawData = new ChromatogramCache.RawData
+                            var peakSerializer = CacheFormat.ChromPeakSerializer();
+                            var rawData = new ChromatogramCache.RawData(CacheFormat)
                             {
-                                FormatVersion = ChromatogramCache.FORMAT_VERSION_CACHE,
                                 ChromCacheFiles = _listCachedFiles.ToArray(),
                                 ChromatogramEntries = _listGroups.ToArray(),
                                 ChromTransitions = _listTransitions.ToArray(),
                                 ChromatogramPeaks = new BlockedArray<ChromPeak>(
-                                    count => ChromPeak.ReadArray(_fsPeaks.FileStream, count), _peakCount,
+                                    count => peakSerializer.ReadArray(_fsPeaks.FileStream, count), _peakCount,
                                     ChromPeak.SizeOf, ChromPeak.DEFAULT_BLOCK_SIZE),
                                 ScoreTypes = _listScoreTypes.ToArray(),
                                 Scores = new BlockedArray<float>(
                                     count => PrimitiveArrays.Read<float>(_fsScores.FileStream, count), _scoreCount,
                                     sizeof(float), ChromatogramCache.DEFAULT_SCORES_BLOCK_SIZE),
                                 TextIdBytes = _listTextIdBytes.ToArray(),
-                                LocationScanIds = locationScanIds,
                                 CountBytesScanIds = countBytesScanIds,
+                                LocationScanIds = locationScanIds
                             };
                             result = new ChromatogramCache(CachePath, rawData, readStream);
                             _status = _status.Complete();

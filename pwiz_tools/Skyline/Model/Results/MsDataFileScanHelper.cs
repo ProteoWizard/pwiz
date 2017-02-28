@@ -115,13 +115,13 @@ namespace pwiz.Skyline.Model.Results
             get { return ScanProvider != null && ScanProvider.ProvidesCollisionalCrossSectionConverter; }
         }
 
-        public int[][] GetScanIndexes()
+        public IList<int> GetScanIndexes(ChromSource source)
         {
             if (ScanProvider != null)
             {
                 foreach (var transition in ScanProvider.Transitions)
                 {
-                    if (transition.Source == ScanProvider.Source)
+                    if (transition.Source == source)
                         return transition.ScanIndexes;
                 }
             }
@@ -130,29 +130,34 @@ namespace pwiz.Skyline.Model.Results
 
         public int GetScanIndex()
         {
-            var scanIndexes = GetScanIndexes();
-            var result = scanIndexes != null ? scanIndexes[(int)Source][ScanIndex] : -1;
+            var scanIndexes = GetScanIndexes(Source);
+            var result = scanIndexes != null ? scanIndexes[ScanIndex] : -1;
             if (result < 0)
                 MsDataSpectra = null;
             return result;
         }
 
-        public static int FindScanIndex(ChromatogramGroupInfo chromatogramGroupInfo, double retentionTime)
+        public static int FindScanIndex(ChromatogramInfo chromatogramInfo, double retentionTime)
         {
-            if (chromatogramGroupInfo.ScanIndexes == null)
+            if (chromatogramInfo.TimeIntensities.ScanIds == null)
                 return -1;
-            return FindScanIndex(chromatogramGroupInfo, retentionTime, 0, chromatogramGroupInfo.Times.Length);
+            return FindScanIndex(chromatogramInfo.Times, retentionTime, 0, chromatogramInfo.Times.Count);
         }
 
-        private static int FindScanIndex(ChromatogramGroupInfo chromatogramGroupInfo, double retentionTime, int startIndex, int endIndex)
+        public static int FindScanIndex(IList<float> times, double retentionTime)
+        {
+            return FindScanIndex(times, retentionTime, 0, times.Count);
+        }
+
+        private static int FindScanIndex(IList<float> times, double retentionTime, int startIndex, int endIndex)
         {
             if (endIndex - startIndex <= 1)
                 return startIndex;
 
             int index = (startIndex + endIndex) / 2;
-            return (retentionTime < chromatogramGroupInfo.Times[index])
-                ? FindScanIndex(chromatogramGroupInfo, retentionTime, startIndex, index)
-                : FindScanIndex(chromatogramGroupInfo, retentionTime, index, endIndex);
+            return (retentionTime < times[index])
+                ? FindScanIndex(times, retentionTime, startIndex, index)
+                : FindScanIndex(times, retentionTime, index, endIndex);
         }
 
         public void UpdateScanProvider(IScanProvider scanProvider, int transitionIndex, int scanIndex)
@@ -221,7 +226,7 @@ namespace pwiz.Skyline.Model.Results
                 get { return GetProviderProperty(p => p.Transitions, new TransitionFullScanInfo[0]); }
             }
 
-            public float[] Times
+            public IList<float> Times
             {
                 get { return GetProviderProperty(p => p.Times, new float[0]); }
             }

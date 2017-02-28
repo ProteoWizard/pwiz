@@ -16,7 +16,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -59,7 +61,7 @@ namespace pwiz.SkylineTestA.Results
                 ChromCacheMinimizer chromCacheMinimizer =
                     docResults.Settings.MeasuredResults.GetChromCacheMinimizer(docResults);
                 ChromCacheMinimizer.Settings settings =
-                    new ChromCacheMinimizer.Settings().SetDiscardUnmatchedChromatograms(true);
+                    new ChromCacheMinimizer.Settings().ChangeDiscardUnmatchedChromatograms(true);
                 ChromCacheMinimizer.MinStatistics minStatistics = null;
                 chromCacheMinimizer.Minimize(settings, s => minStatistics = s, null);
                 Assert.AreEqual(100, minStatistics.PercentComplete);
@@ -77,7 +79,7 @@ namespace pwiz.SkylineTestA.Results
                 ChromCacheMinimizer.MinStatistics statsMissingFirstProtein = null;
                 ChromCacheMinimizer.MinStatistics statsWithOnlyFirstProtein = null;
 
-                settings = settings.SetDiscardUnmatchedChromatograms(true);
+                settings = settings.ChangeDiscardUnmatchedChromatograms(true);
                 ChromCacheMinimizer minimizerMissingFirstProtein =
                     docMissingFirstPeptide.Settings.MeasuredResults.GetChromCacheMinimizer(docMissingFirstPeptide);
                 ChromCacheMinimizer minimizerWithOnlyFirstProtein =
@@ -88,7 +90,7 @@ namespace pwiz.SkylineTestA.Results
                 Assert.AreEqual(100, statsWithOnlyFirstProtein.PercentComplete);
                 Assert.AreEqual(1.0, statsMissingFirstProtein.MinimizedRatio + statsWithOnlyFirstProtein.MinimizedRatio,
                                 .00001);
-                settings = settings.SetDiscardUnmatchedChromatograms(false);
+                settings = settings.ChangeDiscardUnmatchedChromatograms(false);
                 ChromCacheMinimizer.MinStatistics statsMissingFirstProteinKeepAll = null;
                 ChromCacheMinimizer.MinStatistics statsWithOnlyFirstProteinKeepAll = null;
                 minimizerMissingFirstProtein.Minimize(settings, s => statsMissingFirstProteinKeepAll = s, null);
@@ -122,15 +124,15 @@ namespace pwiz.SkylineTestA.Results
 
 
                 ChromCacheMinimizer.Settings settings = new ChromCacheMinimizer.Settings()
-                    .SetDiscardUnmatchedChromatograms(false)
-                    .SetNoiseTimeRange(1.0);
+                    .ChangeDiscardUnmatchedChromatograms(false)
+                    .ChangeNoiseTimeRange(1.0);
                 string minimized1Path = testFilesDir.GetTestPath("NoiseTimeLimited1.sky");
                 string minimized2Path = testFilesDir.GetTestPath("NoiseTimeLimited2.sky");
                 using (var docContainerMinimized1Min = MinimizeCacheFile(docResults,
-                                                                         settings.SetNoiseTimeRange(1.0),
+                                                                         settings.ChangeNoiseTimeRange(1.0),
                                                                          minimized1Path))
                 using (var docContainerMinimized2Min = MinimizeCacheFile(docResults,
-                                                                         settings.SetNoiseTimeRange(2.0),
+                                                                         settings.ChangeNoiseTimeRange(2.0),
                                                                          minimized2Path))
                 {
                     SrmDocument docMinimized1Min = docContainerMinimized1Min.Document;
@@ -159,30 +161,30 @@ namespace pwiz.SkylineTestA.Results
                             ChromatogramGroupInfo chromGroupOriginal = chromGroupsOriginal[iChromGroup];
                             var times = new[]
                                     {
-                                        chromGroupOriginal.Times[0],
-                                        chromGroup2.Times[0],
-                                        chromGroup1.Times[0],
-                                        chromGroup1.Times[chromGroup1.Times.Length - 1],
-                                        chromGroup2.Times[chromGroup2.Times.Length - 1],
-                                        chromGroupOriginal.Times[chromGroupOriginal.Times.Length - 1]
+                                        GetTimes(chromGroupOriginal)[0],
+                                        GetTimes(chromGroup2)[0],
+                                        GetTimes(chromGroup1)[0],
+                                        GetTimes(chromGroup1).Last(),
+                                        GetTimes(chromGroup2).Last(),
+                                        GetTimes(chromGroupOriginal).Last()
                                     };
                             // The two minute window around the peak might overlap with either the start or end of the original chromatogram,
                             // but will never overlap with both.
-                            Assert.IsTrue(chromGroup2.Times[0] > chromGroupOriginal.Times[0]
+                            Assert.IsTrue(GetTimes(chromGroup2)[0] > GetTimes(chromGroupOriginal)[0]
                                           ||
-                                          chromGroup2.Times[chromGroup2.Times.Length - 1] <
-                                          chromGroupOriginal.Times[chromGroupOriginal.Times.Length - 1]);
+                                          GetTimes(chromGroup2).Last() <
+                                          GetTimes(chromGroupOriginal).Last());
                             // If the two minute window does not overlap with the start/end of the original chromatogram, then the difference
                             // in time between the one minute window and the two minute window will be approximately 1 minute.
-                            if (chromGroup2.Times[0] > chromGroupOriginal.Times[0])
+                            if (GetTimes(chromGroup2)[0] > GetTimes(chromGroupOriginal)[0])
                             {
-                                Assert.AreEqual(chromGroup2.Times[0], chromGroup1.Times[0] - 1, .1);
+                                Assert.AreEqual(GetTimes(chromGroup2)[0], GetTimes(chromGroup1)[0] - 1, .1);
                             }
-                            if (chromGroup2.Times[chromGroup2.Times.Length - 1] <
-                                chromGroupOriginal.Times[chromGroupOriginal.Times.Length - 1])
+                            if (GetTimes(chromGroup2).Last() <
+                                GetTimes(chromGroupOriginal).Last())
                             {
-                                Assert.AreEqual(chromGroup2.Times[chromGroup2.Times.Length - 1],
-                                                chromGroup1.Times[chromGroup1.Times.Length - 1] + 1, .1);
+                                Assert.AreEqual(GetTimes(chromGroup2).Last(),
+                                                GetTimes(chromGroup1).Last() + 1, .1);
                             }
                             float[] timesSorted = times.ToArray();
                             Array.Sort(timesSorted);
@@ -191,6 +193,20 @@ namespace pwiz.SkylineTestA.Results
                     }
                 }
             }
+        }
+
+        private static IList<float> GetTimes(ChromatogramGroupInfo chromatogramGroupInfo)
+        {
+            var timeIntensitiesGroup = chromatogramGroupInfo.TimeIntensitiesGroup;
+            if (timeIntensitiesGroup is RawTimeIntensities)
+            {
+                return ((RawTimeIntensities) timeIntensitiesGroup).GetInterpolatedTimes();
+            }
+            if (timeIntensitiesGroup is InterpolatedTimeIntensities)
+            {
+                return ((InterpolatedTimeIntensities) timeIntensitiesGroup).InterpolatedTimes;
+            }
+            return null;
         }
 
         private static ResultsTestDocumentContainer MinimizeCacheFile(SrmDocument document,

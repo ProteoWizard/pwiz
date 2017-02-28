@@ -25,6 +25,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.RemoteApi;
 using pwiz.Skyline.Model.Results.RemoteApi.GeneratedCode;
 using pwiz.Skyline.Properties;
@@ -52,12 +53,9 @@ namespace pwiz.SkylineTestConnected.Results.RemoteApi
             var failedTasks = new HashSet<ChromatogramGeneratorTask>();
             foreach (var chromKey in chromTaskList.ChromKeys)
             {
-                float[] times;
-                float[] intensities;
-                float[] massErrors;
-                int[] scanIds;
-                chromTaskList.GetChromatogram(chromKey, out times, out scanIds, out intensities, out massErrors);
-                if (null == times)
+                TimeIntensities timeIntensities;
+                chromTaskList.GetChromatogram(chromKey, out timeIntensities);
+                if (null == timeIntensities)
                 {
                     var task = chromTaskList.GetGeneratorTask(chromKey);
                     if (failedTasks.Add(task))

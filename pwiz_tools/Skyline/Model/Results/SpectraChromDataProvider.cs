@@ -548,17 +548,17 @@ namespace pwiz.Skyline.Model.Results
 
         public override bool GetChromatogram(
             int id, string modifiedSequence, Color peptideColor,
-            out ChromExtra extra, out float[] times, out int[] scanIndexes, out float[] intensities, out float[] massErrors)
+            out ChromExtra extra, out TimeIntensities timeIntensities)
         {
             var statusId = _collectors.ReleaseChromatogram(id, _chromGroups,
-                out times, out intensities, out massErrors, out scanIndexes);
+                out timeIntensities);
             extra = new ChromExtra(statusId, 0);
 
             // Each chromatogram will be read only once!
             _readChromatograms++;
 
             UpdatePercentComplete();
-            return times.Length > 0;
+            return timeIntensities.NumPoints > 0;
         }
 
         private void UpdatePercentComplete()
@@ -1096,10 +1096,7 @@ namespace pwiz.Skyline.Model.Results
             public int ReleaseChromatogram(
                 int chromatogramIndex,
                 ChromGroups chromGroups,
-                out float[] times,
-                out float[] intensities,
-                out float[] massErrors,
-                out int[] scanIds)
+                out TimeIntensities timeIntensities)
             {
                 lock (this)
                 {
@@ -1111,11 +1108,11 @@ namespace pwiz.Skyline.Model.Results
                         if (chromGroups != null)
                         {
                             status = chromGroups.ReleaseChromatogram(chromatogramIndex, _retentionTime, collector,
-                                out times, out intensities, out massErrors, out scanIds);
+                                out timeIntensities);
                         }
                         else
                         {
-                            collector.ReleaseChromatogram(null, out times, out intensities, out massErrors, out scanIds);
+                            collector.ReleaseChromatogram(null, out timeIntensities);
                             status = collector.StatusId;
                         }
                         if (status >= 0)

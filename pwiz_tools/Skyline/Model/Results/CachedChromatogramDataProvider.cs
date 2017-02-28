@@ -94,7 +94,7 @@ namespace pwiz.Skyline.Model.Results
 
         public override bool GetChromatogram(
             int id, string modifiedSequence, Color peptideColor,
-            out ChromExtra extra, out float[] times, out int[] scanIndexes, out float[] intensities, out float[] massErrors)
+            out ChromExtra extra, out TimeIntensities timeIntensities)
         {
             var chromKeyIndices = _chromKeyIndices[id];
             if (_lastChromGroupInfo == null || _lastIndices.GroupIndex != chromKeyIndices.GroupIndex)
@@ -104,14 +104,7 @@ namespace pwiz.Skyline.Model.Results
             }
             _lastIndices = chromKeyIndices;
             var tranInfo = _lastChromGroupInfo.GetTransitionInfo(chromKeyIndices.TranIndex);
-            times = tranInfo.Times;
-            intensities = tranInfo.Intensities;
-            massErrors = null;
-            if (tranInfo.MassError10Xs != null)
-                massErrors = tranInfo.MassError10Xs.Select(m => m/10.0f).ToArray();
-            scanIndexes = null;
-            if (tranInfo.ScanIndexes != null)
-                scanIndexes = tranInfo.ScanIndexes[(int) chromKeyIndices.Key.Source];
+            timeIntensities = tranInfo.TimeIntensities;
 
             // Assume that each chromatogram will be read once, though this may
             // not always be completely true.
@@ -130,8 +123,8 @@ namespace pwiz.Skyline.Model.Results
                     peptideColor,
                     chromKeyIndices.StatusId,
                     chromKeyIndices.StatusRank,
-                    times,
-                    intensities);
+                    timeIntensities.Times,
+                    timeIntensities.Intensities);
             }
             return true;
         }
