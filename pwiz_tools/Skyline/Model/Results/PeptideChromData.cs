@@ -1006,6 +1006,8 @@ namespace pwiz.Skyline.Model.Results
 
         public double CombinedScore { get; private set; }
 
+        public string CombinedScoreText { get; private set; }
+
         public bool IsIdentified { get { return IdentifiedCount > 0; } }
 
         public IEnumerable<PeptideChromDataPeak> OrderedPeaks
@@ -1054,6 +1056,7 @@ namespace pwiz.Skyline.Model.Results
                 }
             }
             CombinedScore = ScoringModel.Score(modelFeatures);
+            // CombinedScoreText = ScoringModel.ScoreText(modelFeatures); // For debugging scoring
             foreach (var peak in this.Where(peak => peak.PeakGroup != null))
             {
                 peak.PeakGroup.DetailScores = detailFeatures;

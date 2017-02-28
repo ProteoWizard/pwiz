@@ -270,6 +270,16 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 return base.Score(features);
             }
 
+            public override string ScoreText(IList<float> features)
+            {
+                if (features.Any(float.IsNaN))
+                {
+                    // Replace any NaN's with 0 so that we behave the same as PeptideChromDataPeakList.ScorePeptideSets
+                    features = features.Select(feature => float.IsNaN(feature) ? 0 : feature).ToArray();
+                }
+                return base.ScoreText(features);
+            }
+
             public override void WriteXml(XmlWriter writer)
             {
                 throw new InvalidOperationException();

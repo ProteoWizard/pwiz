@@ -19,8 +19,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -68,6 +70,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
         double Score(IList<float> features);
 
         /// <summary>
+        /// Scoring function for the model
+        /// </summary>
+        string ScoreText(IList<float> features);
+
+        /// <summary>
         /// Was the model trained with a decoy set?
         /// </summary>
         bool UsesDecoys { get; }
@@ -104,6 +111,10 @@ namespace pwiz.Skyline.Model.Results.Scoring
         public virtual double Score(IList<float> features)
         {
             return Parameters.Score(features);
+        }
+        public virtual string ScoreText(IList<float> features)
+        {
+            return Parameters.ScoreText(features);
         }
         public bool UsesDecoys { get; protected set; }
         public bool UsesSecondBest { get; protected set; }
@@ -212,6 +223,34 @@ namespace pwiz.Skyline.Model.Results.Scoring
         public double Score(IList<float> features)
         {
             return Score(features, Weights, Bias);
+        }
+
+        public static string ScoreText(IList<float> features, IList<double> weights, double bias)
+        {
+            if (features.Count != weights.Count)
+            {
+                throw new InvalidDataException(string.Format(Resources.LinearModelParams_Score_Attempted_to_score_a_peak_with__0__features_using_a_model_with__1__trained_scores_,
+                                               features.Count, weights.Count));
+            }
+            var scoreText = new StringBuilder();
+            if (bias > 0)
+                scoreText.Append(bias.ToString(CultureInfo.InvariantCulture));
+            for (int i = 0; i < features.Count; ++i)
+            {
+                if (!double.IsNaN(weights[i]))
+                {
+                    if (scoreText.Length > 0)
+                        scoreText.Append(" + ");    // Not L10N
+                    scoreText.Append(string.Format("{0}*{1}", weights[i], features[i]));    // Not L10N
+                }
+            }
+            scoreText.Append(string.Format(" = {0}", Score(features, weights, bias))); // Not L10N
+            return scoreText.ToString();
+        }
+
+        public string ScoreText(IList<float> features)
+        {
+            return ScoreText(features, Weights, Bias);
         }
 
         /// <summary>
