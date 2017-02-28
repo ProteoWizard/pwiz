@@ -2082,6 +2082,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     graphItems.Add(graphItem);
             }
 
+            // ReSharper disable PossibleInvalidCastException
             foreach (var graphItem in graphItems)
             {
                 var curveItem = _graphHelper.AddChromatogram(new PaneKey(), graphItem);
@@ -2089,6 +2090,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var fillAlpha = graphItem.GraphInfo.IsSelected ? 60 : 15;
                 ((LineItem)curveItem).Line.Fill = new Fill(Color.FromArgb(fillAlpha, graphItem.GraphInfo.Color));
             }
+            // ReSharper enable PossibleInvalidCastException
         }
 
         private void SetRetentionTimeIndicators(ChromGraphItem chromGraphPrimary,
