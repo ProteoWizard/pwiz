@@ -223,7 +223,7 @@ namespace pwiz.Skyline
                 var message = TextUtil.LineSeparate(string.Format(
                         Resources.SkylineWindow_OpenSharedFile_Failure_extracting_Skyline_document_from_zip_file__0__,
                         zipPath), e.Message);
-                MessageDlg.ShowWithException(this, message, e);
+                MessageDlg.ShowWithException(parentWindow ?? this, message, e);
                 return false;
             }
         }
@@ -339,7 +339,7 @@ namespace pwiz.Skyline
                 docLibFile = BiblioSpecLiteSpec.GetLibraryFileName(documentPath);
                 if (!File.Exists(docLibFile))
                 {
-                    MessageDlg.Show(this, string.Format(Resources.SkylineWindow_ConnectLibrarySpecs_Could_not_find_the_spectral_library__0__for_this_document__Without_the_library__no_spectrum_ID_information_will_be_available_, docLibFile));
+                    MessageDlg.Show(parent, string.Format(Resources.SkylineWindow_ConnectLibrarySpecs_Could_not_find_the_spectral_library__0__for_this_document__Without_the_library__no_spectrum_ID_information_will_be_available_, docLibFile));
                 }
             }
 
