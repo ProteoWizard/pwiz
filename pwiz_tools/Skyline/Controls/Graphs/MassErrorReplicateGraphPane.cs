@@ -132,6 +132,14 @@ namespace pwiz.Skyline.Controls.Graphs
            int? charge = null;
            int countLabelTypes = document.Settings.PeptideSettings.Modifications.CountLabelTypes;
            int colorOffset = 0;
+           var transitionGroupDocNode = parentNode as TransitionGroupDocNode;
+           if (transitionGroupDocNode != null && displayType == DisplayTypeChrom.products)
+           {
+               // If we are only displaying product ions, we want to use an offset in the colors array
+               // so that we do not re-use colors that would be used for any precursor ions.
+               colorOffset =
+                   GraphChromatogram.GetDisplayTransitions(transitionGroupDocNode, DisplayTypeChrom.precursors).Count();
+           }
            for (int i = 0; i < graphData.DocNodes.Count; i++)
            {
                 var docNode = graphData.DocNodes[i];

@@ -341,7 +341,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 // 2. In a separate pane of the split graph (Transitions -> All AND Transitions -> Split Graph)
                 // 3. In a single pane by themselves (Transition -> Products)
                 // We will use an offset in the colors array for cases 2 and 3 so that we do not reuse the precursor ion colors.
-                var nodeDisplayType = GraphChromatogram.GetDisplayType(document, selectedTreeNode);
+                var nodeDisplayType = GraphChromatogram.GetDisplayType(document, parentGroupNode);
                 if (displayType == DisplayTypeChrom.products && 
                     (nodeDisplayType != DisplayTypeChrom.single || 
                     (nodeDisplayType == DisplayTypeChrom.single && !optimizationPresent)))
