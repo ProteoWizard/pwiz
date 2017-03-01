@@ -918,7 +918,9 @@ namespace pwiz.SkylineTestFunctional
 
             // When mods are unreadable, default to the approach of deducing modified state from precursor mz
             const string textModifiedSeqExpected = "PVIC[+57.0]ATQM[+16.0]LESMTYNPR";
-            string textModPrefix = "PrecursorMz\tProductMz\tPeptideSequence\tProteinName\n" + 1013.9 + "\t" + 868.39 + "\t";
+            double precursorMz = 1013.9, productMz = 868.39;
+            const string textModPrefixFormat = "PrecursorMz\tProductMz\tPeptideSequence\tProteinName\n{0}\t{1}\t";
+            string textModPrefix = string.Format(textModPrefixFormat, precursorMz, productMz);
             string textModUnreadMod = textModPrefix + "PVIC[CAM]ATQM[bad_mod_&^$]LESMTYNPR\t1/YAL038W\n";
             RunUI(() => ClipboardEx.SetText(textModUnreadMod));
             RunUI(() => PasteOnePeptide(textModifiedSeqExpected));
@@ -936,6 +938,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => PasteOnePeptide(textModifiedSeqExpected));
 
             LoadDocument(documentModMatcher);
+            textModPrefix = string.Format(textModPrefixFormat, precursorMz, productMz + 16); // Add +16 to product which now contains the mod
             string textModSecond = textModPrefix + "PVIC[+" + string.Format("{0:F01}", 57) + "]ATQMLESM[+" + string.Format("{0:F01}", 16) + "]TYNPR\t1/YAL038W\n";
             RunUI(() => ClipboardEx.SetText(textModSecond));
             RunUI(() => PasteOnePeptide("PVIC[+57.0]ATQMLESM[+16.0]TYNPR"));

@@ -427,7 +427,7 @@ namespace pwiz.Skyline.Model
             _massDiffC = _massCalc.CalculateMassFromFormula("NH3");
             _massDiffY = _massCalc.CalculateMassFromFormula("H2O");
             _massDiffX = _massCalc.CalculateMassFromFormula("CO2");
-            _massDiffZ = _massDiffY - _massCalc.CalculateMassFromFormula("NH2");
+            _massDiffZ = _massDiffY - _massCalc.CalculateMassFromFormula("NH3");
 
             _massCleaveN = _massCalc.CalculateMassFromFormula("H");
             _massCleaveC = _massCalc.CalculateMassFromFormula("OH");
