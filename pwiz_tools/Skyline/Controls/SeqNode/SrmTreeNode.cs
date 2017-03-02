@@ -749,10 +749,17 @@ namespace pwiz.Skyline.Controls.SeqNode
                 nodeDoc = docNodes[i];
                 TNode nodeTree;
                 if (!remaining.TryGetValue(nodeDoc.Id.GlobalIndex, out nodeTree))
+                {
                     nodeTree = create(tree, nodeDoc);
-                else if (!ReferenceEquals(nodeTree.Model, nodeDoc))
-                    nodeTree.Model = nodeDoc;
-                treeNodes.Insert(i, nodeTree);
+                    treeNodes.Insert(i, nodeTree);
+                }
+                else
+                {
+                    // Insert first, or node icons may not update correctly for a tree node with no tree
+                    treeNodes.Insert(i, nodeTree);
+                    if (!ReferenceEquals(nodeTree.Model, nodeDoc)) 
+                        nodeTree.Model = nodeDoc;
+                }
                 // Best replicate display, requires that the node have correct
                 // parenting, before the text and icons can be set correctly.
                 // So, force a model change to update those values.

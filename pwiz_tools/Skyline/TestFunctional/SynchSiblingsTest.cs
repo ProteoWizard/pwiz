@@ -97,6 +97,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForClosedForm(pickList0);
 
             VerifySynchronized(SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Nodes);
+            Assert.AreEqual(8, SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Nodes[0].Nodes.Count);
 
             // Uncheck one transition without synchronizing
             var pickList1 = ShowDialog<PopupPickList>(SkylineWindow.ShowPickChildrenInTest);
