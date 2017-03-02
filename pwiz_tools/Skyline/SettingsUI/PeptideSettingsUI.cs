@@ -141,7 +141,7 @@ namespace pwiz.Skyline.SettingsUI
             _driverBackgroundProteome = new SettingsListComboDriver<BackgroundProteomeSpec>(comboBackgroundProteome, Settings.Default.BackgroundProteomeList);
             _driverBackgroundProteome.LoadList(_peptideSettings.BackgroundProteome.Name);
             UpdatePeptideUniquenessEnabled();
-            FilterLibraryEnabled = _peptideSettings.Libraries.HasMidasLibrary;
+            FilterLibraryEnabled = _peptideSettings.Libraries.HasMidasLibrary && _parent.Document.Settings.HasResults;
 
             panelPick.Visible = listLibrarySpecs.Count > 0;
             btnExplore.Enabled = listLibraries.Items.Count > 0;
@@ -754,7 +754,15 @@ namespace pwiz.Skyline.SettingsUI
             {
                 if (filterDlg.ShowDialog(this) == DialogResult.OK)
                 {
-                    var midasLib = _libraryManager.LoadLibrary(midasLibSpec, () => null) as MidasLibrary;
+                    MidasLibrary midasLib = null;
+                    using (var longWait = new LongWaitDlg
+                    {
+                        Text = Resources.PeptideSettingsUI_ShowFilterMidasDlg_Loading_MIDAS_Library,
+                        Message = string.Format(Resources.PeptideSettingsUI_ShowFilterMidasDlg_Loading__0_, Path.GetFileName(midasLibSpec.FilePath))
+                    })
+                    {
+                        longWait.PerformWork(this, 800, monitor => midasLib = _libraryManager.LoadLibrary(midasLibSpec, () => new DefaultFileLoadMonitor(monitor)) as MidasLibrary);
+                    }
                     var builder = new MidasBlibBuilder(_parent.Document, midasLib, filterDlg.LibraryName, filterDlg.FileName);
                     builder.BuildLibrary(null);
                     Settings.Default.SpectralLibraryList.Add(builder.LibrarySpec);
@@ -776,7 +784,7 @@ namespace pwiz.Skyline.SettingsUI
                 UpdateRanks(e);
 
             var isMidas = _driverLibrary.List[e.Index] is MidasLibSpec;
-            if (e.NewValue == CheckState.Checked && !FilterLibraryEnabled && isMidas)
+            if (e.NewValue == CheckState.Checked && !FilterLibraryEnabled && isMidas && _parent.Document.Settings.HasResults)
             {
                 FilterLibraryEnabled = true;
             }

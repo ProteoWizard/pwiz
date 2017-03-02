@@ -18638,6 +18638,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Loading {0}.
+        /// </summary>
+        public static string PeptideSettingsUI_ShowFilterMidasDlg_Loading__0_ {
+            get {
+                return ResourceManager.GetString("PeptideSettingsUI_ShowFilterMidasDlg_Loading__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Loading MIDAS Library.
+        /// </summary>
+        public static string PeptideSettingsUI_ShowFilterMidasDlg_Loading_MIDAS_Library {
+            get {
+                return ResourceManager.GetString("PeptideSettingsUI_ShowFilterMidasDlg_Loading_MIDAS_Library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Multiple MIDAS libraries in document. Select only one before filtering..
         /// </summary>
         public static string PeptideSettingsUI_ShowFilterMidasDlg_Multiple_MIDAS_libraries_in_document__Select_only_one_before_filtering_ {

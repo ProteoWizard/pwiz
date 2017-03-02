@@ -45,7 +45,7 @@ namespace pwiz.Skyline.Model.Lib.Midas
             var bestSpectra = new List<SpectrumMzInfo>();
             foreach (var nodePep in _doc.Peptides)
             {
-                foreach (var nodeTranGroup in nodePep.TransitionGroups)
+                foreach (var nodeTranGroup in nodePep.TransitionGroups.Where(nodeTranGroup => nodeTranGroup.Results != null))
                 {
                     // For each precursor, export the spectrum with the highest TIC within peak boundaries
                     DbSpectrum bestSpectrum = null;

@@ -9383,4 +9383,10 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="SrmDocumentSharing_MinimizeToFile_Writing_chromatograms" xml:space="preserve">
     <value>Writing chromatograms</value>
   </data>
+  <data name="PeptideSettingsUI_ShowFilterMidasDlg_Loading_MIDAS_Library" xml:space="preserve">
+    <value>Loading MIDAS Library</value>
+  </data>
+  <data name="PeptideSettingsUI_ShowFilterMidasDlg_Loading__0_" xml:space="preserve">
+    <value>Loading {0}</value>
+  </data>
 </root>
