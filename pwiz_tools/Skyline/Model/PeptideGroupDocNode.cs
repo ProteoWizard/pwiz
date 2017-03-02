@@ -158,7 +158,8 @@ namespace pwiz.Skyline.Model
                 Dictionary<PeptideModKey, DocNode> mapIdToChild = CreatePeptideModToChildMap();
 
                 IEnumerable<PeptideDocNode> peptideDocNodes;
-                if (settingsNew.PeptideSettings.Filter.PeptideUniqueness == PeptideFilter.PeptideUniquenessConstraint.none ||
+                if (!IsProtein ||
+                    settingsNew.PeptideSettings.Filter.PeptideUniqueness == PeptideFilter.PeptideUniquenessConstraint.none ||
                                         settingsNew.PeptideSettings.NeedsBackgroundProteomeUniquenessCheckProcessing)
                 {
                     peptideDocNodes = GetPeptideNodes(settingsNew, true).ToList();
@@ -195,7 +196,7 @@ namespace pwiz.Skyline.Model
                         // It's possible during document load for uniqueness dict to get out of synch, so be 
                         // cautious with lookup and just return false of not found. Final document change will clean that up.
                         bool isUnique;
-                        return uniquenessDict.TryGetValue(p.Peptide.Sequence, out isUnique) && isUnique;
+                        return IsNonProteomic || (uniquenessDict.TryGetValue(p.Peptide.Sequence, out isUnique) && isUnique);
                     });
                 }
                 
