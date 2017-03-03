@@ -102,6 +102,8 @@ namespace pwiz.SkylineTestFunctional
                 // Exit the test tool.
                 _testToolClient.Exit();
 
+                // At this point the client is gone, but Skyline is not aware of that. Connection timeouts ensue.
+
                 // Make sure we got all the library info we expect.
                 Assert.IsTrue(docPreLibrary.Peptides.All(nodePep => !nodePep.HasLibInfo));
                 var docWithLibrary = WaitForDocumentChangeLoaded(docPreLibrary);
@@ -129,18 +131,27 @@ namespace pwiz.SkylineTestFunctional
 
             private void KillNamedProcess()
             {
-                var processList = Process.GetProcessesByName(_processName);
-                foreach (var process in processList)
+                var failed = false;
+                for (var retry = 0; retry < 10; retry++)
                 {
-                    process.Kill();
-                    try
+                    var processList = Process.GetProcessesByName(_processName);
+                    foreach (var process in processList)
                     {
-                        process.WaitForExit();
+                        process.Kill();
+                        try
+                        {
+                            process.WaitForExit();
+                        }
+                        catch
+                        {
+                            failed = true;
+                        }
                     }
-                    // ReSharper disable once EmptyGeneralCatchClause
-                    catch
+                    if (!failed)
                     {
+                        break;
                     }
+                    Thread.Sleep(100); // Let the OS catch up with us
                 }
             }
         }
