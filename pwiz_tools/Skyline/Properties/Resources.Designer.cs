@@ -1111,6 +1111,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Message truncated. Press Ctrl+C to copy entire message to the clipboard..
+        /// </summary>
+        public static string AlertDlg_TruncateMessage_Message_truncated__Press_Ctrl_C_to_copy_entire_message_to_the_clipboard_ {
+            get {
+                return ResourceManager.GetString("AlertDlg_TruncateMessage_Message_truncated__Press_Ctrl_C_to_copy_entire_message_t" +
+                        "o_the_clipboard_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0}:{1}.
         /// </summary>
         public static string AlignedFile_AlignLibraryRetentionTimes__0__1__ {

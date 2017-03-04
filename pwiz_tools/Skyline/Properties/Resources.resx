@@ -9383,6 +9383,9 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="SrmDocumentSharing_MinimizeToFile_Writing_chromatograms" xml:space="preserve">
     <value>Writing chromatograms</value>
   </data>
+  <data name="AlertDlg_TruncateMessage_Message_truncated__Press_Ctrl_C_to_copy_entire_message_to_the_clipboard_" xml:space="preserve">
+    <value>Message truncated. Press Ctrl+C to copy entire message to the clipboard.</value>
+  </data>
   <data name="PeptideSettingsUI_ShowFilterMidasDlg_Loading_MIDAS_Library" xml:space="preserve">
     <value>Loading MIDAS Library</value>
   </data>
