@@ -215,6 +215,45 @@ namespace pwiz.Skyline.Model.Results
             return 0;
         }
 
+        /// <summary>
+        /// Adds the intensities from the other TimeIntensities to the intensities in this.
+        /// The returned TimeIntensities will have the same set of times as this.
+        /// </summary>
+        public TimeIntensities AddIntensities(TimeIntensities other)
+        {
+            if (!Times.Equals(other.Times))
+            {
+                other = other.Interpolate(Times, false);
+            }
+            float[] newIntensities = new float[Times.Count];
+            for (int i = 0; i < Times.Count; i++)
+            {
+                // Avoid arithmetic overflow
+                double intensitySum = Intensities[i] + other.Intensities[i];
+                newIntensities[i] = intensitySum < float.MaxValue ? (float)intensitySum : float.MaxValue;
+            }
+            return new TimeIntensities(Times, newIntensities, null, null);
+        }
+
+        /// <summary>
+        /// Adds the intensities from the other TimeIntensities to the intensities in this.
+        /// The returned TimeIntensities whill have a set of times which is the union of the 
+        /// times in this and <paramref name="other"/>.
+        /// </summary>
+        public TimeIntensities MergeTimesAndAddIntensities(TimeIntensities other)
+        {
+            if (Times.Equals(other.Times))
+            {
+                return AddIntensities(other);
+            }
+            var mergedTimes = ImmutableList.ValueOf(Times.Concat(other.Times).Distinct().OrderBy(time => time));
+            if (mergedTimes.Equals(Times))
+            {
+                return AddIntensities(other);
+            }
+            return Interpolate(mergedTimes, false).AddIntensities(other);
+        }
+
         public TimeIntensities Truncate(double minRetentionTime, double maxRetentionTime)
         {
             int firstIndex = CollectionUtil.BinarySearch(Times, (float) minRetentionTime);

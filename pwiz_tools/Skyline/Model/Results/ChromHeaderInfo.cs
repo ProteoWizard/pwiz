@@ -2513,21 +2513,10 @@ namespace pwiz.Skyline.Model.Results
 
         public void SumIntensities(IList<ChromatogramInfo> listInfo)
         {
-            var intensitiesNew = new float[Intensities.Count];
-            foreach (var info in listInfo)
+            foreach (var chromatogramInfo in listInfo)
             {
-                if (info == null)
-                    continue;
-
-                var intensitiesAdd = info.Intensities;
-                for (int i = 0; i < intensitiesAdd.Count; i++)
-                {
-                    // Avoid arithmetic overflow
-                    double intensitySum = intensitiesNew[i] + intensitiesAdd[i];
-                    intensitiesNew[i] = intensitySum < float.MaxValue ? (float) intensitySum : float.MaxValue;
-                }
+                TimeIntensities = TimeIntensities.MergeTimesAndAddIntensities(chromatogramInfo.TimeIntensities);
             }
-            TimeIntensities = TimeIntensities.ChangeIntensities(intensitiesNew);
         }
 
         public void Transform(TransformChrom transformChrom)

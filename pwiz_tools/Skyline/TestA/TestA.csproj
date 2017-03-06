@@ -197,6 +197,7 @@
     <Compile Include="Results\DocumentRetentionTimesTest.cs" />
     <Compile Include="Results\StructSerializerTest.cs" />
     <Compile Include="Results\StructSizeTest.cs" />
+    <Compile Include="Results\TimeIntensitiesTest.cs" />
     <Compile Include="SignedMzTest.cs" />
     <Compile Include="StringHelpersTest.cs" />
     <Compile Include="TestSerializeIsolationScheme.cs" />

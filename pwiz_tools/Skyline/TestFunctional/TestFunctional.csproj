@@ -152,6 +152,7 @@
     <Compile Include="CalibrationScenariosTest.cs" />
     <Compile Include="CalibrationTest.cs" />
     <Compile Include="ChorusFunctionalTest.cs" />
+    <Compile Include="ChromGraphTransformTest.cs" />
     <Compile Include="DocumentGridClipboardOperationsTest.cs" />
     <Compile Include="DocumentReportTest.cs" />
     <Compile Include="DocumentSizeErrorTest.cs" />
@@ -313,6 +314,7 @@
     <None Include="CalibrationScenariosTest.zip" />
     <None Include="CalibrationTest.zip" />
     <None Include="ChorusFunctionalTest.zip" />
+    <None Include="ChromGraphTransformTest.zip" />
     <None Include="ConfigureToolsDlgTest.zip" />
     <None Include="CopyPasteTest.zip" />
     <None Include="DocumentGridTest.zip" />
