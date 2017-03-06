@@ -196,7 +196,7 @@ void fillInMetadata(const string& rawpath, MassHunterDataPtr rawfile, MSData& ms
         msd.run.defaultInstrumentConfigurationPtr = msd.instrumentConfigurationPtrs[0];
 
     msd.run.id = msd.id;
-    msd.run.startTimeStamp = encode_xml_datetime(rawfile->getAcquisitionTime(config.adjustUnknownTimeZonesToHostTimeZone));
+    msd.run.startTimeStamp = encode_xml_datetime(rawfile->getAcquisitionTime(false));  // All but the oldest Agilent formats state their time zones
 }
 
 } // namespace
