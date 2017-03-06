@@ -664,7 +664,7 @@ namespace pwiz.Skyline.Model
             {
                 double monoMass;
                 double averageMmass;
-                if (driftTimePrecursorMsec.HasValue)
+                if (driftTimePrecursorMsec.HasValue || ccsPrecursor.HasValue)
                 {
                     if (!driftTimeHighEnergyOffsetMsec.HasValue)
                     {
