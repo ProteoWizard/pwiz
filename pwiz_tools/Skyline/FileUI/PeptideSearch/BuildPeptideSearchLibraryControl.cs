@@ -24,6 +24,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -319,6 +320,51 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             var lib = ImportPeptideSearch.DocLib;
 
+            ProcessedIrtAverages processed = null;
+            using (var longWait = new LongWaitDlg
+            {
+                Text = Resources.BuildPeptideSearchLibraryControl_AddIrtLibraryTable_Processing_Retention_Times
+            })
+            {
+                try
+                {
+                    var status = longWait.PerformWork(WizardForm, 800, monitor =>
+                    {
+                        var irtProviders = lib.RetentionTimeProvidersIrt.ToArray();
+                        if (!irtProviders.Any())
+                            irtProviders = lib.RetentionTimeProviders.ToArray();
+                        processed = RCalcIrt.ProcessRetentionTimes(monitor, irtProviders, irtProviders.Length, standard.Peptides.ToArray(), new DbIrtPeptide[0]);
+                    });
+                    if (status.IsError)
+                        throw status.ErrorException;
+                }
+                catch (Exception x)
+                {
+                    MessageDlg.ShowWithException(WizardForm,
+                        TextUtil.LineSeparate(Resources.BuildPeptideSearchLibraryControl_AddIrtLibraryTable_An_error_occurred_while_processing_retention_times_, x.Message), x);
+                    return;
+                }
+            }
+
+            var recalibrate = false;
+            if (processed.CanRecalibrateStandards(standard.Peptides))
+            {
+                using (var dlg = new MultiButtonMsgDlg(
+                    TextUtil.LineSeparate(Resources.LibraryGridViewDriver_AddToLibrary_Do_you_want_to_recalibrate_the_iRT_standard_values_relative_to_the_peptides_being_added_,
+                                          Resources.LibraryGridViewDriver_AddToLibrary_This_can_improve_retention_time_alignment_under_stable_chromatographic_conditions_),
+                    MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false))
+                {
+                    if (dlg.ShowDialog(WizardForm) == DialogResult.Yes)
+                        recalibrate = true;
+                }
+            }
+
+            using (var resultsDlg = new AddIrtPeptidesDlg(processed))
+            {
+                if (resultsDlg.ShowDialog(this) != DialogResult.OK)
+                    return;
+            }
+
             using (var longWait = new LongWaitDlg
             {
                 Text = Resources.BuildPeptideSearchLibraryControl_AddIrtLibraryTable_Adding_iRTs_to_Library
@@ -326,34 +372,22 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 try
                 {
-                    ProcessedIrtAverages processed = null;
+                    ImmutableList<DbIrtPeptide> newStandards = null;
                     var status = longWait.PerformWork(WizardForm, 800, monitor =>
                     {
-                        var irtProviders = lib.RetentionTimeProvidersIrt.ToArray();
-                        if (!irtProviders.Any())
-                            irtProviders = lib.RetentionTimeProviders.ToArray();
-                        processed = RCalcIrt.ProcessRetentionTimes(monitor, irtProviders, irtProviders.Length,
-                            standard.Peptides.ToArray(), new DbIrtPeptide[0]);
+                        if (recalibrate)
+                        {
+                            monitor.UpdateProgress(new ProgressStatus().ChangeSegments(0, 2));
+                            newStandards = ImmutableList.ValueOf(processed.RecalibrateStandards(standard.Peptides));
+                            processed = RCalcIrt.ProcessRetentionTimes(
+                                monitor, processed.ProviderData.Select(data => data.Value.RetentionTimeProvider),
+                                processed.ProviderData.Count, newStandards.ToArray(), new DbIrtPeptide[0]);
+                        }
+                        var irtDb = IrtDb.CreateIrtDb(path);
+                        irtDb.AddPeptides(monitor, (newStandards ?? standard.Peptides).Concat(processed.DbIrtPeptides).ToList());
                     });
                     if (status.IsError)
-                    {
-                        MessageDlg.ShowException(WizardForm, status.ErrorException);
-                    }
-                    else
-                    {
-                        using (var resultsDlg = new AddIrtPeptidesDlg(processed))
-                        {
-                            if (resultsDlg.ShowDialog(this) == DialogResult.OK)
-                            {
-                                var processedDbIrtPeptides = processed.DbIrtPeptides.ToArray();
-                                if (!processedDbIrtPeptides.Any())
-                                    return;
-
-                                var irtDb = IrtDb.CreateIrtDb(path);
-                                irtDb.AddPeptides(null, standard.Peptides.Concat(processedDbIrtPeptides).ToList());
-                            }
-                        }
-                    }
+                        throw status.ErrorException;
                 }
                 catch (Exception x)
                 {

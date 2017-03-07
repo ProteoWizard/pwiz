@@ -971,6 +971,49 @@ namespace pwiz.Skyline.SettingsUI.Irt
                         dictLibraryIndices.Add(Items[i].PeptideModSeq, i);
                 }
 
+                List<DbIrtPeptide> newStandards = null;
+                if (irtAverages.CanRecalibrateStandards(StandardPeptideList))
+                {
+                    using (var dlg = new MultiButtonMsgDlg(
+                        TextUtil.LineSeparate(Resources.LibraryGridViewDriver_AddToLibrary_Do_you_want_to_recalibrate_the_iRT_standard_values_relative_to_the_peptides_being_added_,
+                                              Resources.LibraryGridViewDriver_AddToLibrary_This_can_improve_retention_time_alignment_under_stable_chromatographic_conditions_),
+                        MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, true))
+                    {
+                        switch (dlg.ShowDialog(MessageParent))
+                        {
+                        case DialogResult.Cancel:
+                            return;
+                        case DialogResult.Yes:
+                            using (var longWait = new LongWaitDlg
+                            {
+                                Text = Resources.LibraryGridViewDriver_AddToLibrary_Recalibrate_iRT_Standard_Peptides,
+                                Message = Resources.LibraryGridViewDriver_AddToLibrary_Recalibrating_iRT_standard_peptides_and_reprocessing_iRT_values
+                            })
+                            {
+                                try
+                                {
+                                    newStandards = irtAverages.RecalibrateStandards(StandardPeptideList);
+                                    var status = longWait.PerformWork(MessageParent, 800, monitor => irtAverages = RCalcIrt.ProcessRetentionTimes(
+                                        monitor, irtAverages.ProviderData.Select(data => data.Value.RetentionTimeProvider),
+                                        irtAverages.ProviderData.Count, newStandards.ToArray(), Items.ToArray()));
+                                    if (status.IsError)
+                                    {
+                                        MessageDlg.ShowWithException(MessageParent, Resources.LibraryGridViewDriver_AddToLibrary_An_error_occurred_while_recalibrating_, status.ErrorException);
+                                        return;
+                                    }
+                                }
+                                catch (Exception x)
+                                {
+                                    var message = TextUtil.LineSeparate(Resources.LibraryGridViewDriver_AddToLibrary_An_error_occurred_while_recalibrating_, x.Message);
+                                    MessageDlg.Show(MessageParent, message);
+                                    return;
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+
                 var listPeptidesNew = irtAverages.DbIrtPeptides.ToList();
                 var listChangedPeptides = new List<string>();
                 var listOverwritePeptides = new List<string>();
@@ -1017,6 +1060,16 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     if (dlg.ShowDialog(MessageParent) != DialogResult.OK)
                         return;
                     action = dlg.Action;
+                }
+
+                if (newStandards != null)
+                {
+                    StandardPeptideList.RaiseListChangedEvents = false;
+                    StandardPeptideList.Clear();
+                    foreach (var newStandard in newStandards)
+                        StandardPeptideList.Add(newStandard);
+                    StandardPeptideList.RaiseListChangedEvents = true;
+                    StandardPeptideList.ResetBindings();
                 }
 
                 Items.RaiseListChangedEvents = false;

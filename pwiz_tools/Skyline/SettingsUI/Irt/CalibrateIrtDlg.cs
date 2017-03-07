@@ -303,11 +303,11 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 var cirtPeptides = new List<MeasuredPeptide>();
                 foreach (var pep in doc.Peptides)
                 {
-                    if (pep.SchedulingTime.HasValue && !pep.IsDecoy)
+                    if (pep.PercentileMeasuredRetentionTime.HasValue && !pep.IsDecoy)
                     {
                         var seq = doc.Settings.GetModifiedSequence(pep);
-                        var schedulingTime = pep.SchedulingTime.Value;
-                        var measuredPeptide = new MeasuredPeptide(seq, schedulingTime);
+                        var time = pep.PercentileMeasuredRetentionTime.Value;
+                        var measuredPeptide = new MeasuredPeptide(seq, time);
                         if (!IrtStandard.CIRT.Contains(seq))
                             docPeptides.Add(measuredPeptide);
                         else

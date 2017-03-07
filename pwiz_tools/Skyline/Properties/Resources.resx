@@ -9392,4 +9392,31 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="PeptideSettingsUI_ShowFilterMidasDlg_Loading__0_" xml:space="preserve">
     <value>Loading {0}</value>
   </data>
+  <data name="EditIrtCalcDlg_RecalibrateStandards_Could_not_get_a_minimum_or_maximum_standard_peptide_" xml:space="preserve">
+    <value>Could not get a minimum or maximum standard peptide.</value>
+  </data>
+  <data name="LibraryGridViewDriver_AddToLibrary_Recalibrate_iRT_Standard_Peptides" xml:space="preserve">
+    <value>Recalibrate iRT Standard Peptides</value>
+  </data>
+  <data name="LibraryGridViewDriver_AddToLibrary_Recalibrating_iRT_standard_peptides_and_reprocessing_iRT_values" xml:space="preserve">
+    <value>Recalibrating iRT standard peptides and reprocessing iRT values</value>
+  </data>
+  <data name="LibraryGridViewDriver_AddToLibrary_An_error_occurred_while_recalibrating_" xml:space="preserve">
+    <value>An error occurred while recalibrating.</value>
+  </data>
+  <data name="LibraryGridViewDriver_AddToLibrary_This_can_improve_retention_time_alignment_under_stable_chromatographic_conditions_" xml:space="preserve">
+    <value>This can improve retention time alignment under stable chromatographic conditions.</value>
+  </data>
+  <data name="ProcessedIrtAverages_RecalibrateStandards_A_standard_peptide_was_missing_when_trying_to_recalibrate_" xml:space="preserve">
+    <value>A standard peptide was missing when trying to recalibrate.</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_AddIrtLibraryTable_Processing_Retention_Times" xml:space="preserve">
+    <value>Processing Retention Times</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_AddIrtLibraryTable_An_error_occurred_while_processing_retention_times_" xml:space="preserve">
+    <value>An error occurred while processing retention times.</value>
+  </data>
+  <data name="LibraryGridViewDriver_AddToLibrary_Do_you_want_to_recalibrate_the_iRT_standard_values_relative_to_the_peptides_being_added_" xml:space="preserve">
+    <value>Do you want to recalibrate the iRT standard values relative to the peptides being added?</value>
+  </data>
 </root>

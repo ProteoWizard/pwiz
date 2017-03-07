@@ -401,6 +401,78 @@ namespace pwiz.Skyline.Model.Irt
                        select new DbIrtPeptide(pepAverage.PeptideModSeq, pepAverage.IrtAverage, false, pepAverage.TimeSource ?? TimeSource.peak);
             }
         }
+
+        public bool CanRecalibrateStandards(IList<DbIrtPeptide> standardPeptideList)
+        {
+            if (!standardPeptideList.Any())
+                return false;
+
+            var standards = new HashSet<string>(standardPeptideList.Select(standard => standard.PeptideModSeq));
+            foreach (var data in ProviderData)
+            {
+                foreach (var peptide in data.Value.Peptides.Where((peptide, i) => !data.Value.MissingIndices.Contains(i)))
+                {
+                    if (standards.Remove(peptide) && standards.Count == 0)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        public List<DbIrtPeptide> RecalibrateStandards(IList<DbIrtPeptide> standardPeptideList)
+        {
+            var peptideAllIrtTimes = new Dictionary<string, List<Tuple<double, double>>>(); // peptide -> list of (irt, time)
+            foreach (var data in ProviderData)
+            {
+                for (var i = 0; i < data.Value.Peptides.Length; i++)
+                {
+                    if (data.Value.MissingIndices.Contains(i))
+                        continue;
+
+                    var peptide = data.Value.Peptides[i];
+                    List<Tuple<double, double>> pepTimes;
+                    if (!peptideAllIrtTimes.TryGetValue(peptide, out pepTimes))
+                    {
+                        pepTimes = new List<Tuple<double, double>>();
+                        peptideAllIrtTimes[peptide] = pepTimes;
+                    }
+                    pepTimes.Add(Tuple.Create(data.Value.Irts[i], data.Value.Times[i]));
+                }
+            }
+            var peptideBestIrtTimes = new Dictionary<string, Tuple<double, double>>(); // peptide -> (percentile irt, percentile time)
+            foreach (var peptide in peptideAllIrtTimes)
+            {
+                var statIrts = new Statistics(peptide.Value.Select(p => p.Item1));
+                var statTimes = new Statistics(peptide.Value.Select(p => p.Item2));
+                var percentile = IrtStandard.GetSpectrumTimePercentile(peptide.Key);
+                peptideBestIrtTimes[peptide.Key] = Tuple.Create(statIrts.Percentile(percentile), statTimes.Percentile(percentile));
+            }
+            DbIrtPeptide min = null, max = null;
+            foreach (var standard in standardPeptideList) // loop over list of standard peptides to find min/max that we have values for
+            {
+                if ((min == null || standard.Irt < min.Irt) && peptideBestIrtTimes.ContainsKey(standard.PeptideModSeq))
+                    min = standard;
+                if ((max == null || standard.Irt > max.Irt) && peptideBestIrtTimes.ContainsKey(standard.PeptideModSeq))
+                    max = standard;
+            }
+            if (min == null || max == null)
+                throw new Exception(Resources.EditIrtCalcDlg_RecalibrateStandards_Could_not_get_a_minimum_or_maximum_standard_peptide_);
+
+            var statX = new Statistics(peptideBestIrtTimes[min.PeptideModSeq].Item2, peptideBestIrtTimes[max.PeptideModSeq].Item2);
+            var statY = new Statistics(peptideBestIrtTimes[min.PeptideModSeq].Item1, peptideBestIrtTimes[max.PeptideModSeq].Item1);
+            var line = new RegressionLine(statY.Slope(statX), statY.Intercept(statX));
+            var newStandardPeptideList = new List<DbIrtPeptide>();
+            foreach (var peptide in standardPeptideList)
+            {
+                Tuple<double, double> times;
+                if (!peptideBestIrtTimes.TryGetValue(peptide.PeptideModSeq, out times))
+                    throw new Exception(Resources.ProcessedIrtAverages_RecalibrateStandards_A_standard_peptide_was_missing_when_trying_to_recalibrate_);
+                newStandardPeptideList.Add(new DbIrtPeptide(peptide) { Irt = line.GetY(times.Item2) });
+            }
+            return newStandardPeptideList;
+        }
     }
 
     public class IrtPeptideAverages
@@ -437,6 +509,8 @@ namespace pwiz.Skyline.Model.Irt
     {
         public RetentionTimeProviderData(IRetentionTimeProvider retentionTimes, IEnumerable<DbIrtPeptide> standardPeptides)
         {
+            RetentionTimeProvider = retentionTimes;
+
             // Attempt to get regression based on standards
             var listPeptides = new List<string>();
             var listTimes = new List<double>();
@@ -524,6 +598,8 @@ namespace pwiz.Skyline.Model.Irt
             }
             return false;
         }
+
+        public IRetentionTimeProvider RetentionTimeProvider { get; private set; }
 
         public string[] Peptides { get; private set; }
         public double[] Times { get; private set; }

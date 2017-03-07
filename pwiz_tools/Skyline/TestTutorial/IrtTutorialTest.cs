@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.EditUI;
@@ -415,7 +416,8 @@ namespace pwiz.SkylineTestTutorial
             {
                 var editIrtCalc2 = ShowDialog<EditIrtCalcDlg>(SkylineWindow.ShowEditCalculatorDlg);
                 RunUI(() => Assert.AreEqual(0, editIrtCalc2.LibraryPeptideCount));
-                var addPeptidesDlg = ShowDialog<AddIrtPeptidesDlg>(editIrtCalc2.AddResults);
+                var recalibrateDlg = ShowDialog<MultiButtonMsgDlg>(editIrtCalc2.AddResults);
+                var addPeptidesDlg = ShowDialog<AddIrtPeptidesDlg>(recalibrateDlg.Btn1Click);
 
                 PauseForScreenShot<AddIrtPeptidesDlg>("Add Peptides form", 15);
 
@@ -605,7 +607,8 @@ namespace pwiz.SkylineTestTutorial
                 PauseForScreenShot<AddIrtSpectralLibrary>("Add Spectral Library form", 27);
             
                 // Verify converted peptide iRT values and OK dialogs, p. 28
-                var addPeptidesDlg = ShowDialog<AddIrtPeptidesDlg>(addLibrayDlg.OkDialog);
+                var recalibrateDlg = ShowDialog<MultiButtonMsgDlg>(addLibrayDlg.OkDialog);
+                var addPeptidesDlg = ShowDialog<AddIrtPeptidesDlg>(recalibrateDlg.Btn1Click);
                 RunUI(() =>
                 {
                     Assert.AreEqual(558, addPeptidesDlg.PeptidesCount);
@@ -655,7 +658,8 @@ namespace pwiz.SkylineTestTutorial
             // Add results and verify add dialog counts, p. 29-30
             {
                 var editIrtCalc = ShowDialog<EditIrtCalcDlg>(SkylineWindow.ShowEditCalculatorDlg);
-                var addPeptidesDlg = ShowDialog<AddIrtPeptidesDlg>(editIrtCalc.AddResults);
+                var recalibrateDlg = ShowDialog<MultiButtonMsgDlg>(editIrtCalc.AddResults);
+                var addPeptidesDlg = ShowDialog<AddIrtPeptidesDlg>(recalibrateDlg.Btn1Click);
                 RunUI(() =>
                 {
                     Assert.AreEqual(0, addPeptidesDlg.PeptidesCount);

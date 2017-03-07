@@ -2533,6 +2533,25 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to An error occurred while processing retention times..
+        /// </summary>
+        public static string BuildPeptideSearchLibraryControl_AddIrtLibraryTable_An_error_occurred_while_processing_retention_times_ {
+            get {
+                return ResourceManager.GetString("BuildPeptideSearchLibraryControl_AddIrtLibraryTable_An_error_occurred_while_proce" +
+                        "ssing_retention_times_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Processing Retention Times.
+        /// </summary>
+        public static string BuildPeptideSearchLibraryControl_AddIrtLibraryTable_Processing_Retention_Times {
+            get {
+                return ResourceManager.GetString("BuildPeptideSearchLibraryControl_AddIrtLibraryTable_Processing_Retention_Times", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Add document spectral library.
         /// </summary>
         public static string BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_document_spectral_library {
@@ -8450,6 +8469,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Could not get a minimum or maximum standard peptide..
+        /// </summary>
+        public static string EditIrtCalcDlg_RecalibrateStandards_Could_not_get_a_minimum_or_maximum_standard_peptide_ {
+            get {
+                return ResourceManager.GetString("EditIrtCalcDlg_RecalibrateStandards_Could_not_get_a_minimum_or_maximum_standard_p" +
+                        "eptide_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} Peptide.
         /// </summary>
         public static string EditIrtCalcDlg_UpdateNumPeptides__0__Peptide {
@@ -14100,6 +14129,54 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to An error occurred while recalibrating..
+        /// </summary>
+        public static string LibraryGridViewDriver_AddToLibrary_An_error_occurred_while_recalibrating_ {
+            get {
+                return ResourceManager.GetString("LibraryGridViewDriver_AddToLibrary_An_error_occurred_while_recalibrating_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Do you want to recalibrate the iRT standard values relative to the peptides being added?.
+        /// </summary>
+        public static string LibraryGridViewDriver_AddToLibrary_Do_you_want_to_recalibrate_the_iRT_standard_values_relative_to_the_peptides_being_added_ {
+            get {
+                return ResourceManager.GetString("LibraryGridViewDriver_AddToLibrary_Do_you_want_to_recalibrate_the_iRT_standard_va" +
+                        "lues_relative_to_the_peptides_being_added_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Recalibrate iRT Standard Peptides.
+        /// </summary>
+        public static string LibraryGridViewDriver_AddToLibrary_Recalibrate_iRT_Standard_Peptides {
+            get {
+                return ResourceManager.GetString("LibraryGridViewDriver_AddToLibrary_Recalibrate_iRT_Standard_Peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Recalibrating iRT standard peptides and reprocessing iRT values.
+        /// </summary>
+        public static string LibraryGridViewDriver_AddToLibrary_Recalibrating_iRT_standard_peptides_and_reprocessing_iRT_values {
+            get {
+                return ResourceManager.GetString("LibraryGridViewDriver_AddToLibrary_Recalibrating_iRT_standard_peptides_and_reproc" +
+                        "essing_iRT_values", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This can improve retention time alignment under stable chromatographic conditions..
+        /// </summary>
+        public static string LibraryGridViewDriver_AddToLibrary_This_can_improve_retention_time_alignment_under_stable_chromatographic_conditions_ {
+            get {
+                return ResourceManager.GetString("LibraryGridViewDriver_AddToLibrary_This_can_improve_retention_time_alignment_unde" +
+                        "r_stable_chromatographic_conditions_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to There is already an optimization with sequence &apos;{0}&apos; and product ion &apos;{2}&apos; in the list..
         /// </summary>
         public static string LibraryGridViewDriver_DoCellValidating_There_is_already_an_optimization_with_sequence___0___and_product_ion___2___in_the_list_ {
@@ -18959,6 +19036,16 @@ namespace pwiz.Skyline.Properties {
             get {
                 object obj = ResourceManager.GetObject("Print", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A standard peptide was missing when trying to recalibrate..
+        /// </summary>
+        public static string ProcessedIrtAverages_RecalibrateStandards_A_standard_peptide_was_missing_when_trying_to_recalibrate_ {
+            get {
+                return ResourceManager.GetString("ProcessedIrtAverages_RecalibrateStandards_A_standard_peptide_was_missing_when_try" +
+                        "ing_to_recalibrate_", resourceCulture);
             }
         }
         

@@ -25,6 +25,7 @@ using pwiz.Common.Collections;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
@@ -280,6 +281,21 @@ namespace pwiz.Skyline.Model
                 return GetAverageResultValue(chromInfo => chromInfo.RetentionTime.HasValue
                                              ? chromInfo.RetentionTime.Value
                                              : (float?)null);
+            }
+        }
+
+        public float? PercentileMeasuredRetentionTime
+        {
+            get
+            {
+                var statTimes = new Statistics(
+                    from result in Results.Where(result => result != null)
+                    from chromInfo in result.Where(chromInfo => !Equals(chromInfo, default(PeptideChromInfo)))
+                    where chromInfo.RetentionTime.HasValue
+                    select (double)chromInfo.RetentionTime.Value);
+                return statTimes.Length > 0
+                    ? (float?)statTimes.Percentile(IrtStandard.GetSpectrumTimePercentile(ModifiedSequence))
+                    : null;
             }
         }
 

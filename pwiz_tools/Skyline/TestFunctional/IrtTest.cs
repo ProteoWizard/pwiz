@@ -184,7 +184,8 @@ namespace pwiz.SkylineTestFunctional
                       });
 
             //Add results
-            RunDlg<AddIrtPeptidesDlg>(irtDlg1.AddResults, addPeptidesDlg => addPeptidesDlg.OkDialog());
+            var recalibrateDlg1 = ShowDialog<MultiButtonMsgDlg>(irtDlg1.AddResults);
+            RunDlg<AddIrtPeptidesDlg>(recalibrateDlg1.Btn1Click, addPeptidesDlg => addPeptidesDlg.OkDialog());
 
             RunUI(() => Assert.AreEqual(numLibraryPeps, irtDlg1.LibraryPeptideCount));
 
@@ -426,7 +427,8 @@ namespace pwiz.SkylineTestFunctional
                 });
 
                 RunUI(() => addDlg.FilePath = databasePath);
-                RunDlg<AddIrtPeptidesDlg>(addDlg.OkDialog, addPepDlg => addPepDlg.OkDialog());
+                var recalibrateDlg = ShowDialog<MultiButtonMsgDlg>(addDlg.OkDialog);
+                RunDlg<AddIrtPeptidesDlg>(recalibrateDlg.Btn1Click, addPepDlg => addPepDlg.OkDialog());
                 Assert.AreEqual(18, irtDlgAdd.LibraryPeptideCount);
 
                 OkDialog(irtDlgAdd, irtDlgAdd.CancelButton.PerformClick);
@@ -437,7 +439,8 @@ namespace pwiz.SkylineTestFunctional
                 var irtDlgAdd = ShowDialog<EditIrtCalcDlg>(editRT2.EditCurrentCalculator);
                 var addDlg = ShowDialog<AddIrtCalculatorDlg>(irtDlgAdd.AddIrtDatabase);
                 RunUI(() => addDlg.CalculatorName = irtCalc);
-                RunDlg<AddIrtPeptidesDlg>(addDlg.OkDialog, addPepDlg => addPepDlg.OkDialog());
+                var recalibrateDlg = ShowDialog<MultiButtonMsgDlg>(addDlg.OkDialog);
+                RunDlg<AddIrtPeptidesDlg>(recalibrateDlg.Btn1Click, addPepDlg => addPepDlg.OkDialog());
                 Assert.AreEqual(18, irtDlgAdd.LibraryPeptideCount);
 
                 OkDialog(irtDlgAdd, irtDlgAdd.CancelButton.PerformClick);
@@ -513,7 +516,8 @@ namespace pwiz.SkylineTestFunctional
             var irtDlg3 = ShowDialog<EditIrtCalcDlg>(editCalculator.EditItem);
 
             //Add the 18 non-standard peptides to the calculator, then OkDialog back to Skyline
-            RunDlg<AddIrtPeptidesDlg>(irtDlg3.AddResults, addPeptidesDlg => addPeptidesDlg.OkDialog());
+            var recalibrateDlg2 = ShowDialog<MultiButtonMsgDlg>(irtDlg3.AddResults);
+            RunDlg<AddIrtPeptidesDlg>(recalibrateDlg2.Btn1Click, addPeptidesDlg => addPeptidesDlg.OkDialog());
 
             RunUI(() =>
                       {
@@ -756,7 +760,8 @@ namespace pwiz.SkylineTestFunctional
 
             if(add)
             {
-                RunDlg<AddIrtPeptidesDlg>(dlg.AddResults, addDlg =>
+                var recalibrateDlg = ShowDialog<MultiButtonMsgDlg>(dlg.AddResults);
+                RunDlg<AddIrtPeptidesDlg>(recalibrateDlg.Btn1Click, addDlg =>
                                                               {
                                                                   addDlg.Action = AddIrtPeptidesAction.skip;
                                                                   addDlg.OkDialog();
