@@ -98,17 +98,23 @@ namespace SkylineRunner
                     return 1;
                 }
 
+                var exitCode = 0;
+
                 using (StreamReader sr = new StreamReader(pipeStream))
                 {
                     string line;
                     //While (!done reading)
                     while ((line = sr.ReadLine()) != null)
                     {
+                        if (line.StartsWith("Error:"))
+                        {
+                            exitCode = 2;
+                        }
                         Console.WriteLine(line);
                     }
                 }
+                return exitCode;
             }
-            return 0;
         }
 
         private bool WaitForConnection(NamedPipeServerStream serverStream, string inPipeName)
