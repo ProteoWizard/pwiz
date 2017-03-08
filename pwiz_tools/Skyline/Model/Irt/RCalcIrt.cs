@@ -410,7 +410,8 @@ namespace pwiz.Skyline.Model.Irt
             var standards = new HashSet<string>(standardPeptideList.Select(standard => standard.PeptideModSeq));
             foreach (var data in ProviderData)
             {
-                foreach (var peptide in data.Value.Peptides.Where((peptide, i) => !data.Value.MissingIndices.Contains(i)))
+                var dataCurrent = data;
+                foreach (var peptide in data.Value.Peptides.Where((peptide, i) => !dataCurrent.Value.MissingIndices.Contains(i)))
                 {
                     if (standards.Remove(peptide) && standards.Count == 0)
                     {
