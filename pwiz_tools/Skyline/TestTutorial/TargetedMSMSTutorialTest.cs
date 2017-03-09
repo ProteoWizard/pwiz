@@ -117,10 +117,8 @@ namespace pwiz.SkylineTestTutorial
 
         protected override void DoTest()
         {
-            LaunchDebuggerOnWaitForConditionTimeout = true; // TODO(bspratt) remove this once we understand why this test hangs on slower PCs
             LowResTest();
             TofTest();
-            LaunchDebuggerOnWaitForConditionTimeout = false; // TODO(bspratt) remove this once we understand why this test hangs on slower PCs
         }
 
         private void LowResTest()
