@@ -3781,6 +3781,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed attempting to get full path for {0}.
+        /// </summary>
+        public static string CommandArgs_GetFullPath_Failed_attempting_to_get_full_path_for__0_ {
+            get {
+                return ResourceManager.GetString("CommandArgs_GetFullPath_Failed_attempting_to_get_full_path_for__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The instrument type {0} is not valid for isolation list export.
         /// </summary>
         public static string CommandArgs_IsolationListInstrumentType_The_instrument_type__0__is_not_valid_for_isolation_list_export {
@@ -3817,6 +3826,15 @@ namespace pwiz.Skyline.Properties {
         public static string CommandArgs_PanoramaArgsComplete_plural_ {
             get {
                 return ResourceManager.GetString("CommandArgs_PanoramaArgsComplete_plural_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to --import-cache-file can only be specified once.
+        /// </summary>
+        public static string CommandArgs_ParseArgsInternal___import_cache_file_can_only_be_specified_once {
+            get {
+                return ResourceManager.GetString("CommandArgs_ParseArgsInternal___import_cache_file_can_only_be_specified_once", resourceCulture);
             }
         }
         

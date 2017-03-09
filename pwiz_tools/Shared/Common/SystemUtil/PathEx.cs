@@ -164,7 +164,7 @@ namespace pwiz.Common.SystemUtil
             string fileName = Path.GetFileName(findFilePath);
             string searchDir = Path.GetDirectoryName(relativeFilePath);
             // Look in document directory and two parent directories up
-            for (int i = 0; i < 2; i++)
+            for (int i = 0; i <= 2; i++)
             {
                 string filePath = Path.Combine(searchDir ?? string.Empty, fileName ?? string.Empty);
                 if (File.Exists(filePath))

@@ -112,6 +112,7 @@ namespace pwiz.Skyline.Model
         public void Load(
             IList<DataFileReplicates> loadList,
             SrmDocument document,
+            string documentFilePath,
             ChromatogramCache cacheRecalc,
             MultiFileLoadMonitor loadMonitor,
             Action<ChromatogramCache, IProgressStatus> complete)
@@ -149,6 +150,7 @@ namespace pwiz.Skyline.Model
                         Path = loadItem.DataFile,
                         PartPath = loadItem.PartPath,
                         Document = document,
+                        DocumentFilePath = documentFilePath,
                         CacheRecalc = cacheRecalc,
                         Status = loadingStatus,
                         LoadMonitor = new SingleFileLoadMonitor(loadMonitor, loadItem.DataFile),
@@ -173,7 +175,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public bool CompleteDocument(SrmDocument document, MultiFileLoadMonitor loadMonitor)
+        public bool CompleteDocument(SrmDocument document, ILoadMonitor loadMonitor)
         {
             // Refuse completion, if anything is still not final
             var status = Status;
@@ -226,6 +228,7 @@ namespace pwiz.Skyline.Model
             public MsDataFileUri Path;
             public string PartPath;
             public SrmDocument Document;
+            public string DocumentFilePath;
             public ChromatogramCache CacheRecalc;
             public IProgressStatus Status;
             public ILoadMonitor LoadMonitor;
@@ -236,6 +239,7 @@ namespace pwiz.Skyline.Model
         {
             ChromatogramCache.Build(
                 loadInfo.Document,
+                loadInfo.DocumentFilePath,
                 loadInfo.CacheRecalc,
                 loadInfo.PartPath,
                 loadInfo.Path,

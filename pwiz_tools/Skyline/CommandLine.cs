@@ -125,7 +125,8 @@ namespace pwiz.Skyline
             }
             if (commandArgs.ImportingSkyr)
             {
-                ImportSkyr(commandArgs.SkyrPath, commandArgs.ResolveSkyrConflictsBySkipping);
+                if (!ImportSkyr(commandArgs.SkyrPath, commandArgs.ResolveSkyrConflictsBySkipping))
+                    return;
             }
             if (!commandArgs.RequiresSkylineDocument)
             {
@@ -2208,11 +2209,12 @@ namespace pwiz.Skyline
             return commandLineArguments.ToString();
         }
 
-        public void ImportSkyr(string path, bool? resolveSkyrConflictsBySkipping)
+        public bool ImportSkyr(string path, bool? resolveSkyrConflictsBySkipping)
         {          
             if (!File.Exists(path))
             {
                 _out.WriteLine(Resources.CommandLine_ImportSkyr_Error___0__does_not_exist____report_add_command_failed_, path);
+                return false;
             }
             else
             {           
@@ -2225,7 +2227,7 @@ namespace pwiz.Skyline
                 catch (Exception e)
                 {
                     _out.WriteLine(Resources.CommandLine_ImportSkyr_, path, e);
-                    return;
+                    return false;
                 }
                 if (imported)
                 {
@@ -2233,6 +2235,7 @@ namespace pwiz.Skyline
                     _out.WriteLine(Resources.CommandLine_ImportSkyr_Success__Imported_Reports_from__0_, Path.GetFileNameWithoutExtension(path));
                 }
             }
+            return true;
         }
 
         private class ImportSkyrHelper
@@ -3084,7 +3087,9 @@ namespace pwiz.Skyline
                     for (int i = 0; i < multiStatus.ProgressList.Count; i++)
                     {
                         var progressStatus = multiStatus.ProgressList[i];
-                        if (progressStatus.State == ProgressState.running)
+                        if (Program.ImportProgressPipe != null)
+                            sb.Append(string.Format("%%{0}", progressStatus.PercentComplete));  // double %% used for easy parsing by parent process
+                        else if (progressStatus.State == ProgressState.running)
                             sb.Append(string.Format("[{0:##0}] {1:#0}%  ", i+1, progressStatus.PercentComplete)); // Not L10N
                     }
                     _out.WriteLine(sb.ToString());

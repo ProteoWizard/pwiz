@@ -19,6 +19,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -549,20 +550,80 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public static void Build(SrmDocument document, ChromatogramCache cacheRecalc,
+        public static void Build(SrmDocument document, string documentFilePath, ChromatogramCache cacheRecalc,
             string cachePath, MsDataFileUri msDataFileUri, IProgressStatus status, ILoadMonitor loader,
             Action<ChromatogramCache, IProgressStatus> complete)
         {
             try
             {
-                status = ((ChromatogramLoadingStatus) status).ChangeFilePath(msDataFileUri);
-                var builder = new ChromCacheBuilder(document, cacheRecalc, cachePath, msDataFileUri, loader, status, complete);
-                builder.BuildCache();
+                if (Program.MultiProcImport && Program.ImportProgressPipe == null)
+                {
+                    // Import using a child process.
+                    Run(msDataFileUri, documentFilePath, cachePath, status, loader);
+
+                    var cacheNew = Load(cachePath, status, loader, false);
+                    complete(cacheNew, status);
+                }
+                else
+                {
+                    // Import using threads in this process.
+                    status = ((ChromatogramLoadingStatus) status).ChangeFilePath(msDataFileUri);
+                    var builder = new ChromCacheBuilder(document, cacheRecalc, cachePath, msDataFileUri, loader, status, complete);
+                    builder.BuildCache();
+                }
             }
             catch (Exception x)
             {
                 complete(null, status.ChangeErrorException(x));
             }
+        }
+
+        private static void Run(MsDataFileUri msDataFileUri, string documentFilePath, string cachePath, IProgressStatus status, ILoadMonitor loader)
+        {
+            // Arguments for child Skyline process.
+            string importProgressPipe = "SkylineImportProgress-" + Guid.NewGuid();  // Not L10N
+            var argsText =
+                "--in=\"" + documentFilePath + "\" " +  // Not L10N
+                "--import-file=\"" + msDataFileUri.GetFilePath() + "\" " +  // Not L10N
+                "--import-file-cache=\"" + cachePath + "\" " +  // Not L10N
+                "--import-progress-pipe=\"" + importProgressPipe + "\" " +  // Not L10N
+                "--import-no-join";  // Not L10N
+            var psi = new ProcessStartInfo
+            {
+                FileName = Process.GetCurrentProcess().MainModule.FileName,
+                Arguments = argsText,
+                UseShellExecute = false,
+            };
+            RunProcess(psi, importProgressPipe, status, loader);
+        }
+
+        private static void RunProcess(ProcessStartInfo psi, string importProgressPipe, IProgressStatus status, ILoadMonitor loader)
+        {
+            // Make sure required streams are redirected.
+            psi.RedirectStandardOutput = true;
+            psi.RedirectStandardError = true;
+
+            var proc = Process.Start(psi);
+            if (proc == null)
+                throw new IOException(string.Format("Failure starting {0} command.", psi.FileName));
+
+            var reader = new ProcessStreamReader(proc);
+            string line;
+            while ((line = reader.ReadLine()) != null)
+            {
+                var index = line.IndexOf("%%", StringComparison.Ordinal);   // Not L10N
+                if (index >= 0)
+                {
+                    int percentComplete;
+                    if (int.TryParse(line.Substring(index + 2), out percentComplete))
+                    {
+                        status = status.ChangePercentComplete(percentComplete);
+                        loader.UpdateProgress(status);
+                    }
+                }
+            }
+
+            proc.WaitForExit();
         }
 
         public static long LoadStructs(Stream stream, out RawData raw, bool assumeNegativeChargesInPreV11Caches)

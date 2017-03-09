@@ -1106,7 +1106,7 @@ namespace pwiz.Skyline.Model.Results
                     _resultsClone._listPartialCaches = MakeReadOnly(new[] {_resultsClone._cacheFinal});
 
                 // Try loading the final cache from disk, if progressive loading has not started
-                string cachePath = ChromatogramCache.FinalPathForName(_documentPath, null);
+                string cachePath = Program.ReplicateCachePath ?? ChromatogramCache.FinalPathForName(_documentPath, null);
                 if (!CheckFinalCache(cachePath))
                     return; // Error reported
 
@@ -1143,7 +1143,7 @@ namespace pwiz.Skyline.Model.Results
                     }
 
                     // Start loading uncached paths in parallel.
-                    _multiFileLoader.Load(uncachedPaths, _document, _resultsClone._cacheRecalc, _loadMonitor, FinishCacheBuild);
+                    _multiFileLoader.Load(uncachedPaths, _document, _documentPath, _resultsClone._cacheRecalc, _loadMonitor, FinishCacheBuild);
                     return;
                 }
 

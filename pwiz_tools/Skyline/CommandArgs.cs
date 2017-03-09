@@ -581,6 +581,11 @@ namespace pwiz.Skyline
                 {
                     ImportThreads = int.Parse(pair.Value);
                 }
+                else if (IsNameValue(pair, "import-process-count")) // Not L10N
+                {
+                    ImportThreads = int.Parse(pair.Value);
+                    Program.MultiProcImport = true;
+                }
                 else if (IsNameOnly(pair, "timestamp")) // Not L10N
                 {
                     _out.IsTimeStamped = true;
@@ -937,6 +942,28 @@ namespace pwiz.Skyline
                     {
                         ReplicateFile.Add(new MsDataFilePath(GetFullPath(pair.Value)));
                     }
+                    RequiresSkylineDocument = true;
+                }
+
+                else if (IsNameValue(pair, "import-file-cache"))
+                {
+                    if (Program.ReplicateCachePath != null)
+                    {
+                        _out.WriteLine(Resources.CommandArgs_ParseArgsInternal___import_cache_file_can_only_be_specified_once);
+                        return false;
+                    }
+                    Program.ReplicateCachePath = pair.Value;
+                    RequiresSkylineDocument = true;
+                }
+
+                else if (IsNameValue(pair, "import-progress-pipe"))
+                {
+                    if (Program.ImportProgressPipe != null)
+                    {
+                        _out.WriteLine("--import-progress-pipe can only be specified once");
+                        return false;
+                    }
+                    Program.ImportProgressPipe = pair.Value;
                     RequiresSkylineDocument = true;
                 }
 
@@ -1550,7 +1577,14 @@ namespace pwiz.Skyline
 
         private static string GetFullPath(string path)
         {
-            return Path.GetFullPath(path);
+            try
+            {
+                return Path.GetFullPath(path);
+            }
+            catch (Exception)
+            {
+                throw new IOException(string.Format(Resources.CommandArgs_GetFullPath_Failed_attempting_to_get_full_path_for__0_, path));
+            }
         }
 
         private bool IsNameOnly(NameValuePair pair, string name)

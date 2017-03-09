@@ -9419,4 +9419,10 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="LibraryGridViewDriver_AddToLibrary_Do_you_want_to_recalibrate_the_iRT_standard_values_relative_to_the_peptides_being_added_" xml:space="preserve">
     <value>Do you want to recalibrate the iRT standard values relative to the peptides being added?</value>
   </data>
+  <data name="CommandArgs_ParseArgsInternal___import_cache_file_can_only_be_specified_once" xml:space="preserve">
+    <value>--import-cache-file can only be specified once</value>
+  </data>
+  <data name="CommandArgs_GetFullPath_Failed_attempting_to_get_full_path_for__0_" xml:space="preserve">
+    <value>Failed attempting to get full path for {0}</value>
+  </data>
 </root>

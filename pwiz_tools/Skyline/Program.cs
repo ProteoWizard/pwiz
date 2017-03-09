@@ -77,6 +77,9 @@ namespace pwiz.Skyline
         public static List<Exception> TestExceptions { get; set; }
         public static bool DisableJoining { get; set; }
         public static bool NoAllChromatogramsGraph { get; set; }
+        public static string ReplicateCachePath { get; set; }
+        public static string ImportProgressPipe { get; set; }
+        public static bool MultiProcImport { get; set; }
  
         private static bool _initialized;                           // Flag to do some initialization just once per process.
         private static string _name;                                // Program name.
