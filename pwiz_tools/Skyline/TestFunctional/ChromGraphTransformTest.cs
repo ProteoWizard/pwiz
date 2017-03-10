@@ -51,7 +51,7 @@ namespace pwiz.SkylineTestFunctional
                 Settings.Default.TransformTypeChromatogram = transformChrom.ToString();
                 foreach (var peptideGroup in SkylineWindow.Document.MoleculeGroups)
                 {
-                    foreach (var peptide in peptideGroup.Molecules)
+                    foreach (var peptide in peptideGroup.Peptides) // Avoid any small molecule test nodes
                     {
                         TestPeptide(peptideGroup, peptide);
                     }
