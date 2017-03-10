@@ -382,7 +382,7 @@ namespace pwiz.Skyline.Model.Irt
 
         public static bool Match(DbIrtPeptide x, DbIrtPeptide y, double? irtTolerance)
         {
-            return Equals(SequenceMassCalc.NormalizeModifiedSequence(x.PeptideModSeq), SequenceMassCalc.NormalizeModifiedSequence(y.PeptideModSeq)) &&
+            return Equals(x.GetNormalizedModifiedSequence(), y.GetNormalizedModifiedSequence()) &&
                    (!irtTolerance.HasValue || Math.Abs(x.Irt - y.Irt) < irtTolerance.Value);
         }
 

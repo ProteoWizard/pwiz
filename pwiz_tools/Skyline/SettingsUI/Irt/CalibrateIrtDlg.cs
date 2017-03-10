@@ -66,8 +66,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         public void OkDialog()
         {
-            var irts = IrtStandard.CIRT.Peptides.ToDictionary(p =>
-                SequenceMassCalc.NormalizeModifiedSequence(p.PeptideModSeq), p => p.Irt);
+            var irts = IrtStandard.CIRT.Peptides.ToDictionary(p => p.GetNormalizedModifiedSequence(), p => p.Irt);
             var calibrationPeptides = new List<Tuple<DbIrtPeptide, double>>();
             foreach (var pep in StandardPeptideList)
             {
@@ -417,7 +416,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 var listIrt = new List<double>();
 
                 var irts = IrtStandard.CIRT.Peptides.ToDictionary(p =>
-                    SequenceMassCalc.NormalizeModifiedSequence(p.PeptideModSeq), p => p.Irt);
+                    p.GetNormalizedModifiedSequence(), p => p.Irt);
 
                 foreach (var peptide in peptides)
                 {

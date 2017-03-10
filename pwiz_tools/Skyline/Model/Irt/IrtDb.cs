@@ -167,9 +167,10 @@ namespace pwiz.Skyline.Model.Irt
 
         public IEnumerable<DbIrtPeptide> GetPeptides()
         {
-            using (var session = new SessionWithLock(_sessionFactory.OpenSession(), _databaseLock, false))
+            using (var session = new StatelessSessionWithLock(_sessionFactory.OpenStatelessSession(), _databaseLock,
+                    false, CancellationToken.None))
             {
-                return session.CreateCriteria(typeof (DbIrtPeptide)).List<DbIrtPeptide>();
+                return session.CreateCriteria(typeof(DbIrtPeptide)).List<DbIrtPeptide>();
             }
         }
 
@@ -262,7 +263,7 @@ namespace pwiz.Skyline.Model.Irt
                     // attempts to enforce only normalized modified sequences, but this extra protection
                     // handles irtdb files created before normalization was implemented, or edited outside
                     // Skyline.
-                    dict.Add(SequenceMassCalc.NormalizeModifiedSequence(pep.PeptideModSeq), pep.Irt);
+                    dict.Add(pep.GetNormalizedModifiedSequence(), pep.Irt);
                 }
                 catch (ArgumentException)
                 {

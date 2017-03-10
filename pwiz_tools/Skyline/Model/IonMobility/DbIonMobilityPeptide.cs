@@ -18,12 +18,11 @@
  */
 using System;
 using pwiz.Skyline.Model.Irt;
-using pwiz.Skyline.Model.Lib.BlibData;
 // ReSharper disable VirtualMemberCallInConstructor
 
 namespace pwiz.Skyline.Model.IonMobility
 {
-    public class DbIonMobilityPeptide : DbEntity, IPeptideData
+    public class DbIonMobilityPeptide : DbAbstractPeptide
     {
         public override Type EntityClass
         {
@@ -31,12 +30,9 @@ namespace pwiz.Skyline.Model.IonMobility
         }
 
         // public virtual long? ID { get; set; } // in DbEntity
-        public virtual string PeptideModSeq { get; set; }
         public virtual double CollisionalCrossSection { get; set; }
         public virtual double HighEnergyDriftTimeOffsetMsec { get; set; }
 
-        public virtual string Sequence { get { return PeptideModSeq; } }
-        
         /// <summary>
         /// For NHibernate only
         /// </summary>

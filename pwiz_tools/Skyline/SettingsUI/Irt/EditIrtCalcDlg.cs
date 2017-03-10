@@ -512,16 +512,12 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         private void LoadStandard(IEnumerable<DbIrtPeptide> standard)
         {
-            StandardPeptideList.Clear();
-            foreach (var peptide in standard.Where(pep => pep.Standard))
-                StandardPeptideList.Add(new DbIrtPeptide(peptide));
+            ReplaceItems(StandardPeptideList, standard.Where(pep=>pep.Standard).Select(pep=>new DbIrtPeptide(pep)));
         }
 
         private void LoadLibrary(IEnumerable<DbIrtPeptide> library)
         {
-            LibraryPeptideList.Clear();
-            foreach (var peptide in library.Where(pep => !pep.Standard))
-                LibraryPeptideList.Add(peptide);
+            ReplaceItems(LibraryPeptideList, library.Where(pep=>!pep.Standard).Select(pep=>new DbIrtPeptide(pep)));
         }
 
         /// <summary>
@@ -568,6 +564,25 @@ namespace pwiz.Skyline.SettingsUI.Irt
         public void AddIrtDatabase()
         {
             _gridViewLibraryDriver.AddIrtDatabase();
+        }
+
+        private void ReplaceItems<T>(BindingList<T> bindingList, IEnumerable<T> newItems)
+        {
+            bool raiseEventsOld = bindingList.RaiseListChangedEvents;
+            try
+            {
+                bindingList.RaiseListChangedEvents = false;
+                bindingList.Clear();
+                foreach (var item in newItems)
+                {
+                    bindingList.Add(item);
+                }
+            }
+            finally
+            {
+                bindingList.RaiseListChangedEvents = raiseEventsOld;
+            }
+            bindingList.ResetBindings();
         }
 
         private class StandardGridViewDriver : PeptideGridViewDriver<DbIrtPeptide>

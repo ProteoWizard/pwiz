@@ -188,7 +188,7 @@ namespace pwiz.Skyline.Model.IonMobility
                     // Unnormalized modified sequences will not match anything.  The user interface
                     // attempts to enforce only normalized modified sequences, but this extra protection
                     // handles IonMobilitydb files edited outside Skyline.  TODO - copied from iRT code - is this an issue here?
-                    var peptide = SequenceMassCalc.NormalizeModifiedSequence(pep.PeptideModSeq);
+                    var peptide = pep.GetNormalizedModifiedSequence();
                     DbIonMobilityPeptide ignored;
                     if (! dict.TryGetValue(peptide, out ignored) )
                         dict.Add(peptide, pep);

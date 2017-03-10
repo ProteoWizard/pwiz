@@ -32,7 +32,43 @@ namespace pwiz.Skyline.Model.Irt
         string Sequence { get; }
     }
 
-    public class DbIrtPeptide : DbEntity, IPeptideData
+    public abstract class DbAbstractPeptide : DbEntity, IPeptideData
+    {
+        private string _peptideModSeq;
+        private string _normalizedModifiedSequence;
+
+        protected DbAbstractPeptide()
+        {
+        }
+
+        protected DbAbstractPeptide(DbAbstractPeptide other)
+        {
+            _peptideModSeq = other._peptideModSeq;
+            _normalizedModifiedSequence = other._normalizedModifiedSequence;
+        }
+
+        public virtual string PeptideModSeq
+        {
+            get { return _peptideModSeq; }
+            set
+            {
+                _peptideModSeq = value;
+                _normalizedModifiedSequence = null;
+            }
+        }
+        public virtual string Sequence { get { return PeptideModSeq; } }
+
+        public virtual string GetNormalizedModifiedSequence()
+        {
+            if (_normalizedModifiedSequence == null)
+            {
+                _normalizedModifiedSequence = SequenceMassCalc.NormalizeModifiedSequence(_peptideModSeq);
+            }
+            return _normalizedModifiedSequence;
+        }
+    }
+
+    public class DbIrtPeptide : DbAbstractPeptide
     {
         public override Type EntityClass
         {
@@ -49,12 +85,10 @@ namespace pwiz.Skyline.Model.Irt
         )
         */
         // public virtual long? ID { get; set; } // in DbEntity
-        public virtual string PeptideModSeq { get; set; }
         public virtual double Irt { get; set; }
         public virtual bool Standard { get; set; }
         public virtual int? TimeSource { get; set; } // null = unknown, 0 = scan, 1 = peak
 
-        public virtual string Sequence { get { return PeptideModSeq; } }
 
         /// <summary>
         /// For NHibernate only
@@ -63,10 +97,12 @@ namespace pwiz.Skyline.Model.Irt
         {            
         }
 
-        public DbIrtPeptide(DbIrtPeptide other)
-            : this(other.PeptideModSeq, other.Irt, other.Standard, other.TimeSource)
+        public DbIrtPeptide(DbIrtPeptide other) : base(other)
         {
             Id = other.Id;
+            Irt = other.Irt;
+            Standard = other.Standard;
+            TimeSource = other.TimeSource;
         }
 
         public DbIrtPeptide(string seq, double irt, bool standard, TimeSource timeSource)
