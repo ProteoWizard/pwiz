@@ -64,6 +64,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkylineNightly", "SkylineNi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestConnected", "TestConnected\TestConnected.csproj", "{5D4E9180-FD66-4C11-8C16-11921865EDBD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkylineCmd", "SkylineCmd\SkylineCmd.csproj", "{FA16A0EF-EDF7-4515-BD93-44BADD7AB98A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -240,6 +242,14 @@ Global
 		{5D4E9180-FD66-4C11-8C16-11921865EDBD}.Release|x64.Build.0 = Release|x64
 		{5D4E9180-FD66-4C11-8C16-11921865EDBD}.Release|x86.ActiveCfg = Release|x86
 		{5D4E9180-FD66-4C11-8C16-11921865EDBD}.Release|x86.Build.0 = Release|x86
+		{FA16A0EF-EDF7-4515-BD93-44BADD7AB98A}.Debug|x64.ActiveCfg = Debug|x64
+		{FA16A0EF-EDF7-4515-BD93-44BADD7AB98A}.Debug|x64.Build.0 = Debug|x64
+		{FA16A0EF-EDF7-4515-BD93-44BADD7AB98A}.Debug|x86.ActiveCfg = Debug|x86
+		{FA16A0EF-EDF7-4515-BD93-44BADD7AB98A}.Debug|x86.Build.0 = Debug|x86
+		{FA16A0EF-EDF7-4515-BD93-44BADD7AB98A}.Release|x64.ActiveCfg = Release|x64
+		{FA16A0EF-EDF7-4515-BD93-44BADD7AB98A}.Release|x64.Build.0 = Release|x64
+		{FA16A0EF-EDF7-4515-BD93-44BADD7AB98A}.Release|x86.ActiveCfg = Release|x64
+		{FA16A0EF-EDF7-4515-BD93-44BADD7AB98A}.Release|x86.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

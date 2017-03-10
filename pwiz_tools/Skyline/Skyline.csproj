@@ -3834,6 +3834,10 @@
       <Project>{B99650EE-AF46-47B4-A4A9-212ADE7809B7}</Project>
       <Name>ZedGraph</Name>
     </ProjectReference>
+    <ProjectReference Include="SkylineCmd\SkylineCmd.csproj">
+      <Project>{fa16a0ef-edf7-4515-bd93-44badd7ab98a}</Project>
+      <Name>SkylineCmd</Name>
+    </ProjectReference>
     <ProjectReference Include="SkylineTool\SkylineTool.csproj">
       <Project>{3FD4E167-8F9C-4116-8122-67C7AD143490}</Project>
       <Name>SkylineTool</Name>
