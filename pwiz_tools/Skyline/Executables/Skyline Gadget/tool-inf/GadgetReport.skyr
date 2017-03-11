@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<views>
+  <view name="GadgetReport" rowsource="pwiz.Skyline.Model.Databinding.Entities.Peptide" sublist="Results!*">
+    <column name="Sequence" />
+    <column name="Protein.Name" />
+    <column name="Results!*.Value.ResultFile.Replicate.Name" />
+    <column name="Results!*.Value.ResultFile.FileName" />
+    <column name="Results!*.Value.PeptidePeakFoundRatio" />
+    <column name="Results!*.Value.PeptideRetentionTime" />
+    <column name="Protein.PreferredName" />
+    <column name="Protein.Accession" />
+    <column name="Results!*.Value.RatioToStandard" />
+  </view>
+</views>
