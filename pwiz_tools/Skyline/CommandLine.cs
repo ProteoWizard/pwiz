@@ -3088,7 +3088,7 @@ namespace pwiz.Skyline
                     {
                         var progressStatus = multiStatus.ProgressList[i];
                         if (Program.ImportProgressPipe != null)
-                            sb.Append(string.Format("%%{0}", progressStatus.PercentComplete));  // double %% used for easy parsing by parent process
+                            sb.Append(string.Format("%%{0}", progressStatus.PercentComplete)); // Not L10N double %% used for easy parsing by parent process
                         else if (progressStatus.State == ProgressState.running)
                             sb.Append(string.Format("[{0:##0}] {1:#0}%  ", i+1, progressStatus.PercentComplete)); // Not L10N
                     }
