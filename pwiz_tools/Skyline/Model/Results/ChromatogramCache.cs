@@ -114,7 +114,7 @@ namespace pwiz.Skyline.Model.Results
         private readonly ImmutableList<ChromCachedFile> _cachedFiles;
         // ReadOnlyCollection is not fast enough for use with these arrays
         private readonly ChromGroupHeaderInfo[] _chromatogramEntries;
-        private readonly ChromTransition[] _chromTransitions;
+        private readonly BlockedArray<ChromTransition> _chromTransitions;
         private readonly BlockedArray<ChromPeak> _chromatogramPeaks;
         private readonly Dictionary<Type, int> _scoreTypeIndices;
         private readonly BlockedArray<float> _scores;
@@ -455,7 +455,7 @@ namespace pwiz.Skyline.Model.Results
                 CacheFormat = cacheFormat;
                 ChromCacheFiles = new ChromCachedFile[0];
                 ChromatogramEntries = new ChromGroupHeaderInfo[0];
-                ChromTransitions = new ChromTransition[0];
+                ChromTransitions = new BlockedArray<ChromTransition>();
                 ChromatogramPeaks = new BlockedArray<ChromPeak>();
                 ScoreTypes = new Type[0];
                 Scores = new BlockedArray<float>();
@@ -465,7 +465,7 @@ namespace pwiz.Skyline.Model.Results
             public CacheFormatVersion FormatVersion { get { return CacheFormat.FormatVersion; } }
             public ChromCachedFile[] ChromCacheFiles { get; set; }
             public ChromGroupHeaderInfo[] ChromatogramEntries { get; set; }
-            public ChromTransition[] ChromTransitions { get; set; }
+            public BlockedArray<ChromTransition> ChromTransitions { get; set; }
             public BlockedArray<ChromPeak> ChromatogramPeaks { get; set; }
             public Type[] ScoreTypes { get; set; }
             public BlockedArray<float> Scores { get; set; }
@@ -748,7 +748,13 @@ namespace pwiz.Skyline.Model.Results
 
             // Read list of transitions
             stream.Seek(cacheHeader.locationTransitions, SeekOrigin.Begin);
-            raw.ChromTransitions = cacheFormat.ChromTransitionSerializer().ReadArray(stream, cacheHeader.numTransitions);
+            raw.ChromTransitions = new BlockedArray<ChromTransition>(
+                count => cacheFormat.ChromTransitionSerializer().ReadArray(stream, count),
+                cacheHeader.numTransitions,
+                ChromTransition.SizeOf,
+                ChromTransition.DEFAULT_BLOCK_SIZE,
+                progressMonitor,
+                status);
 
             if (progressMonitor != null)
                 progressMonitor.UpdateProgress(status = status.ChangePercentComplete(50));
@@ -1157,7 +1163,7 @@ namespace pwiz.Skyline.Model.Results
 
             var listKeepEntries = new List<ChromGroupHeaderInfo>();
             var listKeepCachedFiles = new List<ChromCachedFile>();
-            var listKeepTransitions = new List<ChromTransition>();
+            var listKeepTransitions = new BlockedArrayList<ChromTransition>(ChromTransition.SizeOf, ChromTransition.DEFAULT_BLOCK_SIZE);
             var listKeepTextIdBytes = new List<byte>();
             var dictKeepTextIdIndices = new Dictionary<int, int>();
             var scoreTypes = ScoreTypes.ToArray();
@@ -1314,7 +1320,7 @@ namespace pwiz.Skyline.Model.Results
                 {
                     ChromCacheFiles = listKeepCachedFiles.ToArray(),
                     ChromatogramEntries = listKeepEntries.ToArray(),
-                    ChromTransitions = listKeepTransitions.ToArray(),
+                    ChromTransitions = listKeepTransitions.ToBlockedArray(),
                     ChromatogramPeaks = new BlockedArray<ChromPeak>(
                         count => peakSerializer.ReadArray(fsPeaks.FileStream, count), peakCount,
                         ChromPeak.SizeOf, ChromPeak.DEFAULT_BLOCK_SIZE),

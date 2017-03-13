@@ -1022,12 +1022,20 @@ namespace pwiz.Skyline.Util
             }
         }
 
+        public BlockedArray(BlockedArrayList<TItem> items)
+        {
+            _itemCount = items.Count;
+            _blocks = items.GetBlocks().ToList();
+        }
+
         /// <summary>
         /// Number of items in this array.
         /// </summary>
         public int Length { get { return _itemCount; } }
 
         public int Count { get { return Length; } }
+
+        public IEnumerable<TItem[]> Blocks { get { return _blocks; } }
 
         /// <summary>
         /// Return the item corresponding to the given index.
@@ -1089,6 +1097,154 @@ namespace pwiz.Skyline.Util
                 startIndex += writeCount;
                 count -= writeCount;
             }
+        }
+    }
+
+    public class BlockedArrayList<TItem> : IList<TItem>
+    {
+        private List<List<TItem>> _blocks = new List<List<TItem>>{new List<TItem>()};
+        private int _itemCount;
+        private readonly int _itemsPerBlock;
+
+        public BlockedArrayList(int itemSize, int bytesPerBlock)
+        {
+            _itemsPerBlock = bytesPerBlock/itemSize;
+        }
+
+        public IEnumerator<TItem> GetEnumerator()
+        {
+            return _blocks.SelectMany(block => block).GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public void Add(TItem item)
+        {
+            var block = _blocks.Last();
+            if (block.Count >= _itemsPerBlock)
+            {
+                block = new List<TItem>();
+                _blocks.Add(block);
+            }
+            block.Add(item);
+            _itemCount++;
+        }
+
+        public void AddRange(BlockedArray<TItem> chromTransitions)
+        {
+            int transferCount = chromTransitions.Count;
+            int blockIndex = 0;
+            int itemIndex = 0;
+            var chromTransitionBlocks = chromTransitions.Blocks.ToArray();
+
+            while (transferCount > 0)
+            {
+                var blockSrc = chromTransitionBlocks[blockIndex];
+                int copyCount = blockSrc.Length - itemIndex;
+
+                var blockDest = _blocks.Last();
+                if (blockDest.Count >= _itemsPerBlock)
+                {
+                    // Pre-allocate a new list to the smaller of the number of items
+                    // to copy or the total items per block
+                    blockDest = new List<TItem>(Math.Min(copyCount, _itemsPerBlock));
+                    _blocks.Add(blockDest);
+                }
+                // Copy everything remaining in current source block or the maximum left in the destination block
+                int remainder = _itemsPerBlock - blockDest.Count;
+                if (copyCount <= remainder)
+                {
+                    blockDest.AddRange(blockSrc.Skip(itemIndex).Take(copyCount));
+                    blockIndex++;
+                    itemIndex = 0;
+                }
+                else
+                {
+                    copyCount = remainder;
+                    blockDest.AddRange(blockSrc.Skip(itemIndex).Take(copyCount));
+                    itemIndex += copyCount;
+                }
+                transferCount -= copyCount;
+                _itemCount += copyCount;
+            }
+        }
+
+        public void Clear()
+        {
+            _blocks = new List<List<TItem>> { new List<TItem>() };
+            _itemCount = 0;
+        }
+
+        public bool Contains(TItem item)
+        {
+            return _blocks.Contains(l => l.Contains(item));
+        }
+
+        public void CopyTo(TItem[] array, int arrayIndex)
+        {
+            throw new NotSupportedException();
+        }
+
+        public bool Remove(TItem item)
+        {
+            throw new NotSupportedException();
+        }
+
+        public int Count { get { return _itemCount; } }
+        public bool IsReadOnly { get { return false; } }
+
+        public IEnumerable<TItem[]> GetBlocks()
+        {
+            return _blocks.Select(b => b.ToArray());
+        }
+
+        public int IndexOf(TItem item)
+        {
+            int index = 0;
+            foreach (var block in _blocks)
+            {
+                foreach (var itemTest in block)
+                {
+                    if (Equals(item, itemTest))
+                        return index;
+                    index++;
+                }
+            }
+            return -1;
+        }
+
+        public TItem this[int index]
+        {
+            get
+            {
+                if (index >= _itemCount)
+                    throw new IndexOutOfRangeException();
+                var blockIndex = index / _itemsPerBlock;
+                var itemIndex = index % _itemsPerBlock;
+                return _blocks[blockIndex][itemIndex];
+            }
+            set
+            {
+                throw new NotSupportedException();
+            }
+        }
+
+        public void Insert(int index, TItem item)
+        {
+            throw new NotSupportedException();
+        }
+
+        public void RemoveAt(int index)
+        {
+            throw new NotSupportedException();
+        }
+
+        public BlockedArray<TItem> ToBlockedArray()
+        {
+            return new BlockedArray<TItem>(this);
         }
     }
 

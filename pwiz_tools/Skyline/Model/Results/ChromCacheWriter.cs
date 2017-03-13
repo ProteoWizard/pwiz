@@ -32,7 +32,8 @@ namespace pwiz.Skyline.Model.Results
         private readonly Action<ChromatogramCache, IProgressStatus> _completed;
 
         protected readonly List<ChromCachedFile> _listCachedFiles = new List<ChromCachedFile>();
-        protected readonly List<ChromTransition> _listTransitions = new List<ChromTransition>();
+        protected readonly BlockedArrayList<ChromTransition> _listTransitions =
+            new BlockedArrayList<ChromTransition>(ChromTransition.SizeOf, ChromTransition.DEFAULT_BLOCK_SIZE);
         protected readonly List<ChromGroupHeaderInfo> _listGroups = new List<ChromGroupHeaderInfo>();
         protected readonly List<byte> _listTextIdBytes = new List<byte>();
         protected readonly List<Type> _listScoreTypes = new List<Type>();
@@ -125,7 +126,7 @@ namespace pwiz.Skyline.Model.Results
                             {
                                 ChromCacheFiles = _listCachedFiles.ToArray(),
                                 ChromatogramEntries = _listGroups.ToArray(),
-                                ChromTransitions = _listTransitions.ToArray(),
+                                ChromTransitions = _listTransitions.ToBlockedArray(),
                                 ChromatogramPeaks = new BlockedArray<ChromPeak>(
                                     count => peakSerializer.ReadArray(_fsPeaks.FileStream, count), _peakCount,
                                     ChromPeak.SizeOf, ChromPeak.DEFAULT_BLOCK_SIZE),

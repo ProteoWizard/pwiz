@@ -511,6 +511,9 @@ namespace pwiz.Skyline.Model.Results
 
         #endregion
 
+        // Set default block size for BlockedArray<ChromTransition>
+        public const int DEFAULT_BLOCK_SIZE = 100 * 1024 * 1024;  // 100 megabytes
+
         public static unsafe int SizeOf
         {
             get { return sizeof(ChromGroupHeaderInfo); }
@@ -900,6 +903,15 @@ namespace pwiz.Skyline.Model.Results
                 default:
                     return FlagValues.sim;
             }
+        }
+
+        // Set default block size for BlockedArray<ChromTransition>
+        public const int DEFAULT_BLOCK_SIZE = 100 * 1024 * 1024;  // 100 megabytes
+
+        // sizeof(ChromPeak)
+        public static int SizeOf
+        {
+            get { unsafe { return sizeof(ChromTransition); } }
         }
 
         #region Fast file I/O
@@ -1983,14 +1995,14 @@ namespace pwiz.Skyline.Model.Results
         protected readonly ChromGroupHeaderInfo _groupHeaderInfo;
         protected readonly IDictionary<Type, int> _scoreTypeIndices;
         protected readonly IList<ChromCachedFile> _allFiles;
-        protected readonly ChromTransition[] _allTransitions;
+        protected readonly IReadOnlyList<ChromTransition> _allTransitions;
         protected readonly IReadOnlyList<ChromPeak> _allPeaks;
         protected readonly IReadOnlyList<float> _allScores;
 
         public ChromatogramGroupInfo(ChromGroupHeaderInfo groupHeaderInfo,
                                      IDictionary<Type, int> scoreTypeIndices,
                                      IList<ChromCachedFile> allFiles,
-                                     ChromTransition[] allTransitions,
+                                     IReadOnlyList<ChromTransition> allTransitions,
                                      IReadOnlyList<ChromPeak> allPeaks,
                                      IReadOnlyList<float> allScores)
         {
@@ -2345,7 +2357,7 @@ namespace pwiz.Skyline.Model.Results
                                 IDictionary<Type, int> scoreTypeIndices,
                                 int transitionIndex,
                                 IList<ChromCachedFile> allFiles,
-                                ChromTransition[] allTransitions,
+                                IReadOnlyList<ChromTransition> allTransitions,
                                 IReadOnlyList<ChromPeak> allPeaks,
                                 IReadOnlyList<float> allScores,
                                 TimeIntensitiesGroup timeIntensitiesGroup)
