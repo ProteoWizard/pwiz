@@ -21,10 +21,13 @@
 
 #include <sqlite3.h>
 #include <time.h>
+#include <boost/lexical_cast.hpp>
 
 #include "zlib.h"
 #include "BlibMaker.h"
 #include "SqliteRoutine.h"
+
+using namespace std;
 
 namespace BiblioSpec {
 
@@ -512,15 +515,19 @@ void BlibMaker::transferSpectrumFiles(const char* schemaTmp){ //i.e. db name
     while( rc == SQLITE_ROW ){
         // if fileName doesn't exist in main db...
         string fileName(reinterpret_cast<const char*>(sqlite3_column_text(pStmt, 1)));
-        fileName = SqliteRoutine::ESCAPE_APOSTROPHES(fileName);
-        sprintf(zSql, 
-                "INSERT INTO SpectrumSourceFiles (fileName, cutoffScore) VALUES ('%s', %f)",
-                fileName.c_str(), sqlite3_column_double(pStmt, 2));
-        sql_stmt(zSql);
+        double cutoff = sqlite3_column_double(pStmt, 2);
+
+        int existingFileId = getFileId(fileName, cutoff);
+        if (existingFileId >= 0) {
+            oldToNewFileID_[sqlite3_column_int(pStmt, 0)] = existingFileId;
+            rc = sqlite3_step(pStmt);
+            continue;
+        }
+
+        int newFileId = addFile(fileName, cutoff);
 
         // map old id (looked up) to new (current row number)
-        oldToNewFileID_[sqlite3_column_int(pStmt, 0)] = 
-            (int)sqlite3_last_insert_rowid(db);
+        oldToNewFileID_[sqlite3_column_int(pStmt, 0)] = newFileId;
 
         // else oldToNewFileID_[sqlite3_column_int(pStmt, 0)] = id of existing entry
         rc = sqlite3_step(pStmt);
@@ -721,6 +728,53 @@ void BlibMaker::transferPeaks(const char* schemaTmp,
 
     if (rc != SQLITE_DONE)
         fail_sql(rc, zSql, NULL, "Failed importing peaks.");
+}
+
+int BlibMaker::getFileId(const string& file, double cutoffScore) {
+    map< string, pair<int, double> >::const_iterator i = fileIdCache_.find(file);
+    if (i != fileIdCache_.end()) {
+        if (cutoffScore != i->second.second && tableColumnExists("main", "SpectrumSourceFiles", "cutoffScore")) {
+            string sql_statement =
+                "UPDATE SpectrumSourceFiles SET cutoffScore = -1 WHERE id = " + boost::lexical_cast<string>(i->second.first);
+            sql_stmt(sql_statement.c_str());
+        }
+        return i->second.first;
+    }
+
+    string cutoffSelect = tableColumnExists("main", "SpectrumSourceFiles", "cutoffScore") ? "cutoffScore" : "-1";
+    string statement = "SELECT id, " + cutoffSelect + " FROM SpectrumSourceFiles WHERE filename = '";
+    statement += SqliteRoutine::ESCAPE_APOSTROPHES(file);
+    statement += "'";
+
+    int iRow, iCol;
+    char** result;
+    int returnCode = sqlite3_get_table(getDb(), statement.c_str(), &result, &iRow, &iCol, 0);
+    check_rc(returnCode, statement.c_str());
+    if (iRow > 0) {
+        sqlite3_int64 fileId = atol(result[1]);
+        sqlite3_free_table(result);
+        fileIdCache_[file] = make_pair(fileId, atof(result[2]));
+        return fileId;
+    }
+    sqlite3_free_table(result);
+    return -1;
+}
+
+int BlibMaker::addFile(const string& file, double cutoffScore) {
+    string sql_statement;
+    if (tableColumnExists("main", "SpectrumSourceFiles", "cutoffScore")) {
+        sql_statement = "INSERT INTO SpectrumSourceFiles(fileName, cutoffScore) VALUES('";
+        sql_statement += SqliteRoutine::ESCAPE_APOSTROPHES(file);
+        sql_statement += "', " + boost::lexical_cast<string>(cutoffScore) + ")";
+    } else {
+        sql_statement = "INSERT INTO SpectrumSourceFiles(filename) VALUES('";
+        sql_statement += SqliteRoutine::ESCAPE_APOSTROPHES(file);
+        sql_statement += "')";
+    }
+    sql_stmt(sql_statement.c_str());
+    int newFileId = sqlite3_last_insert_rowid(getDb());
+    fileIdCache_[file] = make_pair(newFileId, cutoffScore);
+    return newFileId;
 }
 
 void BlibMaker::insertPeaks(int spectraID, int levelCompress, int peaksCount, 

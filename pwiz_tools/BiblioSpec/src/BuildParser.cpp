@@ -203,7 +203,6 @@ const char* BuildParser::getPsmFilePath(){ // path containing file being parsed
     return filepath_.c_str();
 }
 
-
 /**
  * \brief For sorting by position ascending.
  */
@@ -228,31 +227,13 @@ sqlite3_int64 BuildParser::insertSpectrumFilename(string& filename,
     }
 
     // first see if the file already exists
-    string statement = "SELECT id FROM SpectrumSourceFiles WHERE filename = '";
-    statement += SqliteRoutine::ESCAPE_APOSTROPHES(fullPath);
-    statement += "'";
-
-    int iRow, iCol;
-    char** result;
-    int returnCode = sqlite3_get_table(blibMaker_.getDb(), 
-                                       statement.c_str(),
-                                       &result, &iRow, &iCol, 0);
-    blibMaker_.check_rc(returnCode, statement.c_str());
-    if( iRow > 0 ){ // file already exists
-        sqlite3_int64 fileID = atol(result[1]);
-        sqlite3_free_table(result);
-        return fileID;
+    int existingFileId = blibMaker_.getFileId(fullPath, blibMaker_.getCutoffScore());
+    if (existingFileId >= 0) {
+        return existingFileId;
     }
-    sqlite3_free_table(result);
-
-    string sql_statement = "INSERT INTO SpectrumSourceFiles(fileName, cutoffScore) VALUES('";
-    sql_statement += SqliteRoutine::ESCAPE_APOSTROPHES(fullPath);
-    sql_statement += "', " + boost::lexical_cast<string>(blibMaker_.getCutoffScore()) + ")";
-
-    blibMaker_.sql_stmt(sql_statement.c_str());
 
     // get the file ID to save with each spectrum
-    sqlite3_int64 fileId = sqlite3_last_insert_rowid(blibMaker_.getDb());
+    sqlite3_int64 fileId = blibMaker_.addFile(fullPath, blibMaker_.getCutoffScore());
 
     const int MAX_SPECTRUM_FILES = 500;
     int curFile = blibMaker_.getCurFile();

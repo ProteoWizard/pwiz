@@ -27,6 +27,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <map>
+#include <utility>
 #include "smart_stmt.h"
 #include "BlibUtils.h"
 #include "Verbosity.h"
@@ -74,6 +75,8 @@ public:
     void fail_sql(int rc, const char* stmt, const char* err, 
                   const char* msg = NULL) const;
 
+    int getFileId(const std::string& file, double cutoffScore);
+    int addFile(const std::string& file, double cutoffScore);
     void insertPeaks(int spectraID, int levelCompress, int peaksCount, 
                      double* pM, float* pI);
     void beginTransaction();
@@ -140,6 +143,7 @@ private:
     bool redundant;
     bool overwrite;
     string message;
+    map< string, pair<int, double> > fileIdCache_; // file -> id, cutoff
     map<int,int> oldToNewFileID_;
     int unknown_file_id; // if incoming libs don't have file ids,
                          // use this id in new library
