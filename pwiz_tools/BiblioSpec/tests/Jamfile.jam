@@ -162,10 +162,6 @@ rule blib-test-search ( name : args * : output-name : reference-names + : inputs
       : $(name) ;
 }
 
-# Test building with same spectrum file
-
-blib-test-build sqt-ms2-multiple : -o : output/demo.blib : sqt-ms2-multiple.check : inputs/demo.sqt inputs/demo.sqt ;
-
 # Test building with sqt files
 
 blib-test-build sqt-ms2 : -o : output/demo.blib : sqt-ms2.check : inputs/demo.sqt ;
