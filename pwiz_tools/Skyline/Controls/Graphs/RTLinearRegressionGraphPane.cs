@@ -246,7 +246,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public bool Refine(Func<bool> isCanceled)
         {
             GraphData dataCurrent = Data;
-            GraphData dataNew = dataCurrent.Refine(isCanceled);
+            GraphData dataNew = dataCurrent != null ? dataCurrent.Refine(isCanceled) : null;
 
             // No refinement happened, if data did not change
             if (ReferenceEquals(dataNew, dataCurrent))
