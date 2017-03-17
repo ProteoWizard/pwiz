@@ -2070,61 +2070,81 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         /// <summary>
-        /// Get all ion mobilities associated with this filepath.  Then look at all the others
-        /// and get any that don't appear in the inital set, setting them up to be averaged.
+        /// Retrieve library ion mobility info for this particular file, if any
+        /// </summary>
+        private LibraryDriftTimeInfo GetLibraryDriftTimesForFilePath(MsDataFileUri filePath)
+        {
+            foreach (var lib in _libraries)
+            {
+                // Only one of the available libraries may claim ownership of the file
+                // in question.
+                LibraryDriftTimeInfo driftTimes;
+                if (lib != null && lib.TryGetDriftTimeInfos(filePath, out driftTimes))
+                {
+                    return driftTimes; // Found a library for this file in particular
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Combine ion mobility info from all lib and sub-libs into a single dict
+        /// </summary>
+        private Dictionary<LibKey, List<DriftTimeInfo>> GetAllLibraryDriftTimes()
+        {
+            var ionMobilitiesDict = new Dictionary<LibKey, List<DriftTimeInfo>>();
+            foreach (var lib in _libraries.Where(l => l != null))
+            {
+                // Get drift times for all files in each library
+                LibraryDriftTimeInfo driftTimes;
+                for (int i = 0; lib.TryGetDriftTimeInfos(i, out driftTimes); i++) // Returns false when i> internal list length
+                {
+                    if (driftTimes == null)
+                        continue;
+
+                    foreach (var dt in driftTimes.GetIonMobilityDict())
+                    {
+                        List<DriftTimeInfo> listTimes;
+                        if (!ionMobilitiesDict.TryGetValue(dt.Key, out listTimes))
+                        {
+                            listTimes = new List<DriftTimeInfo>();
+                            ionMobilitiesDict.Add(dt.Key, listTimes);
+                        }
+                        listTimes.AddRange(dt.Value);
+                    }
+                }
+            }
+            return ionMobilitiesDict;
+        }
+
+        /// <summary>
+        /// Get all ion mobilities from libs associated with this filepath.  Then look at all the others
+        /// and get any values that don't appear in the inital set (how that list is used - averaged etc - is determined elsewhere).
+        /// TODO(bspratt): It would be more maintainable if this and other things we get from libraries (like RT)
+        /// shared some kind of common interface so there is guaranteed consistent behavior around how we pick from
+        /// other libraries when the ostensibly correct library doesn't have values we need
         /// </summary>
         public bool TryGetDriftTimeInfos(MsDataFileUri filePath, out LibraryDriftTimeInfo driftTimes)
         {
             Assume.IsTrue(IsLoaded);
-
-            foreach (Library lib in _libraries)
+            // Get driftimes from library for this file, if any
+            driftTimes = GetLibraryDriftTimesForFilePath(filePath);
+            var resultDict = driftTimes == null ?
+                new Dictionary<LibKey, DriftTimeInfo[]>() :
+                new Dictionary<LibKey, DriftTimeInfo[]>(driftTimes.GetIonMobilityDict());
+            // Note initial findings
+            var foundDictKeys = new HashSet<LibKey>(resultDict.Keys); 
+            // Look at all available libraries and sublibraries, use them to backfill any potentially missing drift time info 
+            foreach (var im in GetAllLibraryDriftTimes().Where(kvp => !foundDictKeys.Contains(kvp.Key)))
             {
-                // Only one of the available libraries may claim ownership of the file
-                // in question.
-                if (lib != null && lib.TryGetDriftTimeInfos(filePath, out driftTimes))
-                {
-                    // TODO - or HACK, IF YOU PREFER: something better than this:
-                    // Look at all available sublibraries, use them to backfill
-                    // any missing drift time info in this one
-                    var ionMobilitiesList = new List<LibraryDriftTimeInfo>();
-                    LibraryDriftTimeInfo driftTimesOther;
-                    int i = 0;
-                    while (lib.TryGetDriftTimeInfos(i++, out driftTimesOther)) // Returns false when i> internal list length
-                    {
-                        ionMobilitiesList.Add(driftTimesOther);
-                    }
-
-                    for (i = 0; i < ionMobilitiesList.Count; i++)
-                    {
-                        var thisDict = ionMobilitiesList[i].GetIonMobilityDict();
-                        foreach (var im in thisDict) // For each entry this sublibrary
-                        {
-                            // If this key is not in the source file in question
-                            if (!driftTimes.GetIonMobilityDict().ContainsKey(im.Key))
-                            {
-                                // Aggregate with any others (averaging happens elsewhere)
-                                var info = new List<DriftTimeInfo>();
-                                for (int j = i; j < ionMobilitiesList.Count; j++)
-                                {
-                                    var thatDict = ionMobilitiesList[j].GetIonMobilityDict();
-                                    if (thatDict.ContainsKey(im.Key))
-                                    {
-                                        info.AddRange(thatDict[im.Key]);
-                                    }
-                                }
-                                if (info.Any())
-                                {
-                                    driftTimes.GetIonMobilityDict().Add(im.Key,info.ToArray());
-                                }
-                            }
-                        }
-                    }
-
-                    return true;
-                }
+                resultDict.Add(im.Key, im.Value.ToArray());
             }
-            driftTimes = null;
-            return false;
+            if (resultDict.Count > foundDictKeys.Count)
+            {
+                // Other libraries contributed some drift info
+                driftTimes = new LibraryDriftTimeInfo(filePath.GetFilePath(), resultDict);
+            }
+            return driftTimes != null;
         }
 
 

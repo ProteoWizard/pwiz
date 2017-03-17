@@ -47,20 +47,35 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
     [TestClass]
     public class PerfImportAgilentSpectrumMillRampedIMSTest : AbstractFunctionalTestEx
     {
+        private int _testCase;
+
+        [TestMethod]
+        [Timeout(6000000)]  // Initial download can take a long time
+        public void AgilentSpectrumMillSpectralLibTest()
+        {
+            AgilentSpectrumMillTest(2);
+        }
 
         [TestMethod]
         [Timeout(6000000)]  // Initial download can take a long time
         public void AgilentSpectrumMillRampedIMSImportTest()
         {
+            AgilentSpectrumMillTest(1);
+        }
+
+        private void AgilentSpectrumMillTest(int testCase)
+        {
             // RunPerfTests = true; // Uncomment this to force test to run in UI
             Log.AddMemoryAppender();
-            TestFilesZip = "https://skyline.gs.washington.edu/perftests/PerfImportAgilentSpectrumMillRampedIMS2.zip";
+            _testCase = testCase;
+            TestFilesZip = _testCase ==1 ? "https://skyline.gs.washington.edu/perftests/PerfImportAgilentSpectrumMillRampedIMS2.zip" :
+                                           "https://skyline.gs.washington.edu/perftests/PerfImportAgilentSpectrumMillLibTest.zip";
             TestFilesPersistent = new[] { ".d" }; // List of file basenames that we'd like to unzip alongside parent zipFile, and (re)use in place
 
             MsDataFileImpl.PerfUtilFactory.IssueDummyPerfUtils = false; // Turn on performance measurement
 
             RunFunctionalTest();
-            
+
             var logs = Log.GetMemoryAppendedLogEvents();
             var stats = PerfUtilFactory.SummarizeLogs(logs, TestFilesPersistent); // Show summary
             var log = new Log("Summary");
@@ -94,8 +109,11 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         {
             LibraryDriftTimeInfo driftInfoExplicitDT= null;
             Testit(true, ref driftInfoExplicitDT); // Read both CCS and DT
-            Testit(true, ref driftInfoExplicitDT); // Force conversion from CCS to DT, compare to previously read DT
-            Testit(false, ref driftInfoExplicitDT); // Compare our ability to locate drift peaks, and derive CCS from those, with explicitly provided values
+            if (_testCase == 1)
+            {
+                Testit(true, ref driftInfoExplicitDT); // Force conversion from CCS to DT, compare to previously read DT
+                Testit(false, ref driftInfoExplicitDT); // Compare our ability to locate drift peaks, and derive CCS from those, with explicitly provided values
+            }
             // ReSharper restore ConditionIsAlwaysTrueOrFalse
         }
 
@@ -130,7 +148,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
             // Launch import peptide search wizard
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
-            const string basename = "40minG_WBP_wide_z2-3_mid_BSA_5pmol_01";
+            var basename = _testCase==1 ? "40minG_WBP_wide_z2-3_mid_BSA_5pmol_01" : "09_BSAtrypticdigest_5uL_IMQTOF_AltFramesdtramp_dAJS009";
+            var nextFile = _testCase == 1 ? null : "10_BSAtrypticdigest_5uL_IMQTOF_AltFramesdtramp_dAJS010.d";
             var searchResults = GetTestPath(basename+".pep.xml");
 
             var doc = SkylineWindow.Document;
@@ -202,10 +221,16 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 importPeptideSearchDlg.ClickNextButton();
             });
             WaitForClosedForm(importPeptideSearchDlg);
-            WaitForDocumentChangeLoaded(doc, 15 * 60 * 1000); // 15 minutes
-            var doc1 = WaitForDocumentLoaded(400000);
+            var doc1 = WaitForDocumentChangeLoaded(doc, 15 * 60 * 1000); // 15 minutes
 
-            AssertEx.IsDocumentState(doc1, null, 1, 34, 45, 135);
+            if (_testCase == 1)
+            {
+                AssertEx.IsDocumentState(doc1, null, 1, 34, 45, 135);
+            }
+            else
+            {
+                AssertEx.IsDocumentState(doc1, null, 1, 36, 43, 129);
+            }
             loadStopwatch.Stop();
             DebugLog.Info("load time = {0}", loadStopwatch.ElapsedMilliseconds);
             var errmsg = "";
@@ -318,8 +343,9 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             float tolerance = (float)doc1.Settings.TransitionSettings.Instrument.MzMatchTolerance;
             double maxHeight = 0;
             var results = doc1.Settings.MeasuredResults;
-            var numPeaks = 
-                new[] { 8, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 9, 10, 7, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 9, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 9, 9, 10, 10, 8, 10, 10, 10, 10, 10 } ;
+            var numPeaks = _testCase == 1 ?
+                new[] {  8, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,  9, 10, 7, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,  9, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 9, 9, 10, 10, 8, 10, 10, 10, 10, 10 } :
+                new[] { 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 8,  9, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10 };
 
             int npIndex = 0;
             foreach (var pair in doc1.PeptidePrecursorPairs)
@@ -340,10 +366,18 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 }
             }
             Assert.IsTrue(errmsg.Length == 0, errmsg);
-            Assert.AreEqual(2265204, maxHeight, 1);
+            Assert.AreEqual(_testCase == 1 ? 2265204 : 1326442, maxHeight, 1);
 
             // Does CCS show up in reports?
-            TestReports(doc1);
+            var expectedDtWindow = _testCase == 1 ? 0.74 : 0.94;
+            TestReports(doc1, 0, expectedDtWindow);
+
+            if (nextFile != null)
+            {
+                // Verify that we can use library generated for one file as the default for another without its own library
+                ImportResults(nextFile);
+                TestReports(SkylineWindow.Document, 1, expectedDtWindow);
+            }
 
             // And verify roundtrip of ion mobility 
             AssertEx.RoundTrip(SkylineWindow.Document);
@@ -353,16 +387,40 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 SkylineWindow.NewDocument(true);
                 SkylineWindow.OpenFile(skyfile);
             });
-            TestReports(SkylineWindow.Document);
+            TestReports(SkylineWindow.Document, 1, expectedDtWindow);
+
+            /* TODO(bspratt) - this is a known problem but no time to fix it right now
+            // Watch for problem with reimport after changed DT window
+            var docResolvingPower = SkylineWindow.Document;
+            var peptideSettingsUI2 = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            RunUI(() =>
+            {
+                // ReSharper disable once ConditionIsAlwaysTrueOrFalse
+                peptideSettingsUI2.IsUseSpectralLibraryDriftTimes = useDriftTimes;
+                peptideSettingsUI2.SpectralLibraryDriftTimeResolvingPower = 40;
+            });
+            OkDialog(peptideSettingsUI2, peptideSettingsUI2.OkDialog);
+            var docReimport = WaitForDocumentChangeLoaded(docResolvingPower);
+            // Reimport data for a replicate
+            RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults, dlg =>
+            {
+                var chromatograms = docReimport.Settings.MeasuredResults.Chromatograms;
+                dlg.SelectedChromatograms = new[] { chromatograms[0] };
+                dlg.ReimportResults();
+                dlg.OkDialog();
+            });
+            TestReports(SkylineWindow.Document, 0, 0.92);
+            */
+
         }
 
-        private void TestReports(SrmDocument doc1)
+        private void TestReports(SrmDocument doc1, int row, double expectedDtWindow)
         {
             // Verify reports working for CCS
             var documentGrid = ShowDialog<DocumentGridForm>(() => SkylineWindow.ShowDocumentGrid(true));
             EnableDocumentGridColumns(documentGrid,
                 Resources.SkylineViewContext_GetTransitionListReportSpec_Small_Molecule_Transition_List,
-                doc1.PeptideTransitionCount,
+                doc1.PeptideTransitionCount * doc1.MeasuredResults.Chromatograms.Count,
                 new[]
                 {
                     "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.CollisionalCrossSection",
@@ -370,20 +428,21 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                     "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.DriftTimeFragment",
                     "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.DriftTimeWindow"
                 });
-            CheckFieldByName(documentGrid, "DriftTimeMS1", 18.43);
-            CheckFieldByName(documentGrid, "DriftTimeFragment", null); // Document is all precursor
-            CheckFieldByName(documentGrid, "DriftTimeWindow", 0.74);
-            CheckFieldByName(documentGrid, "CollisionalCrossSection", 292.4);
+            CheckFieldByName(documentGrid, "DriftTimeMS1", row, _testCase == 1 ? 18.43 : 23.50);
+            CheckFieldByName(documentGrid, "DriftTimeFragment", row, null); // Document is all precursor
+            CheckFieldByName(documentGrid, "DriftTimeWindow", row, expectedDtWindow);
+            CheckFieldByName(documentGrid, "CollisionalCrossSection", row, _testCase == 1 ? 292.4 : 333.34);
             // And clean up after ourselves
             RunUI(() => documentGrid.Close());
         }
 
-        private void CheckFieldByName(DocumentGridForm documentGrid, string name, double? expected)
+        private void CheckFieldByName(DocumentGridForm documentGrid, string name, int row, double? expected)
         {
             var col = FindDocumentGridColumn(documentGrid, "Results!*.Value.PrecursorResult."+name);
             RunUI(() =>
             {
-                var val = documentGrid.DataGridView.Rows[0].Cells[col.Index].Value as double?;
+                // By checking the 1th row we check both the single file and two file cases
+                var val = documentGrid.DataGridView.Rows[row].Cells[col.Index].Value as double?;
                 Assert.AreEqual(expected.HasValue, val.HasValue, name);
                 Assert.AreEqual(expected??0, val??0, 0.005, name);
             });
