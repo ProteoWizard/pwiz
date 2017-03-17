@@ -1692,12 +1692,21 @@ namespace pwiz.Skyline.Model.Results
             int c;
 
             // First deal with empty keys sorting to the end
-            if (IsEmpty && key.IsEmpty)
-                return 0;
             if (IsEmpty)
+            {
+                if (key.IsEmpty)
+                {
+                    return 0;
+                }
                 return 1;
-            if (key.IsEmpty)
-                return -1;
+            }
+            else
+            {
+                if (key.IsEmpty)
+                {
+                    return -1;
+                }
+            }
 
             // OptionalCenterOfGravityTime is only set for SRM. Here we are ording
             // everything by maximum retention time to know when chromatograms can be

@@ -536,11 +536,7 @@ namespace pwiz.Skyline.Model.Results
             var listChrom = new List<ChromatogramGroupInfo>();
             foreach (var cache in CachesEx)
             {
-                ChromatogramGroupInfo[] info;
-                if (!cache.TryLoadAllIonsChromatogramInfo(extractor, chromatogram, out info))
-                    continue;
-
-                foreach (var chromInfo in info)
+                foreach (var chromInfo in cache.LoadAllIonsChromatogramInfo(extractor, chromatogram))
                 {
                     if (loadPoints)
                         chromInfo.ReadChromatogram(cache);
@@ -587,9 +583,8 @@ namespace pwiz.Skyline.Model.Results
             IList<ChromatogramGroupInfo> listChrom = EMPTY_GROUP_INFOS;
             foreach (var cache in CachesEx)
             {
-                ChromatogramGroupInfo[] info;
-                if (!cache.TryLoadChromatogramInfo(nodePep, nodeGroup, tolerance, chromatogram, out info))
-                    continue;
+                ChromatogramGroupInfo[] info = cache.LoadChromatogramInfos(nodePep, nodeGroup, tolerance, chromatogram)
+                    .ToArray();
                 foreach (var chromInfo in info)
                 {
                     // Short-circuit further processing for common case in label free data

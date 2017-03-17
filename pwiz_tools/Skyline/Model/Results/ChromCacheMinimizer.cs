@@ -91,9 +91,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 foreach (var nodeGroup in nodePep.TransitionGroups)
                 {
-                    ChromatogramGroupInfo[] groupInfos;
-                    ChromatogramCache.TryLoadChromatogramInfo(nodePep, nodeGroup, _tolerance, null, out groupInfos);
-                    foreach (var chromGroupInfo in groupInfos)
+                    foreach (var chromGroupInfo in ChromatogramCache.LoadChromatogramInfos(nodePep, nodeGroup, _tolerance, null))
                     {
                         int headerIndex = chromGroupHeaderToIndex[chromGroupInfo.Header.LocationPoints];
                         if (chromGroups[headerIndex] == null)

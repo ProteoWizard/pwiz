@@ -248,8 +248,8 @@ namespace pwiz.Skyline.Model.Results
             return scanIdBytes;
         }
 
-        public bool TryLoadChromatogramInfo(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup,
-            float tolerance, ChromatogramSet chromatograms, out ChromatogramGroupInfo[] groupInfos)
+        public IEnumerable<ChromatogramGroupInfo> LoadChromatogramInfos(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup,
+            float tolerance, ChromatogramSet chromatograms)
         {
             var precursorMz = nodeGroup != null ? nodeGroup.PrecursorMz : SignedMz.ZERO;
             double? explicitRT = null;
@@ -260,43 +260,24 @@ namespace pwiz.Skyline.Model.Results
             int i = FindEntry(precursorMz, tolerance);
             if (i == -1)
             {
-                groupInfos = new ChromatogramGroupInfo[0];
-                return false;
+                return new ChromatogramGroupInfo[0];
             }
 
-            int countInfos = GetHeaderInfos(nodePep, precursorMz, explicitRT, tolerance, chromatograms, i, null);
-            groupInfos = new ChromatogramGroupInfo[countInfos];
-            if (countInfos == 0)
-                return false;
-            GetHeaderInfos(nodePep, precursorMz, explicitRT, tolerance, chromatograms, i, groupInfos);
-            return true;
+            return GetHeaderInfos(nodePep, precursorMz, explicitRT, tolerance, chromatograms, i);
         }
 
         public bool HasAllIonsChromatograms
         {
             get
             {
-                ChromatogramGroupInfo[] groupInfos;
-                return TryLoadChromatogramInfo(null, null, 0, null, out groupInfos);
+                return LoadChromatogramInfos(null, null, 0, null).Any();
             }
         }
 
-        public bool TryLoadAllIonsChromatogramInfo(ChromExtractor extractor, ChromatogramSet chromatograms, out ChromatogramGroupInfo[] infoSet)
+        public IEnumerable<ChromatogramGroupInfo> LoadAllIonsChromatogramInfo(ChromExtractor extractor, ChromatogramSet chromatograms)
         {
-            ChromatogramGroupInfo[] groupInfos;
-            if (TryLoadChromatogramInfo(null, null, 0, chromatograms, out groupInfos))
-            {
-                var infoSetNew = new List<ChromatogramGroupInfo>();
-                foreach (ChromatogramGroupInfo groupInfo in groupInfos)
-                {
-                    if (groupInfo.Header.Extractor == extractor)
-                        infoSetNew.Add(groupInfo);
-                }
-                infoSet = infoSetNew.ToArray();
-                return true;
-            }
-            infoSet = new ChromatogramGroupInfo[0];
-            return false;
+            return LoadChromatogramInfos(null, null, 0, chromatograms)
+                .Where(groupInfo => groupInfo.Header.Extractor == extractor);
         }
 
         public ChromatogramGroupInfo LoadChromatogramInfo(int index)
@@ -339,11 +320,10 @@ namespace pwiz.Skyline.Model.Results
             ReadStream.CloseStream();
         }
 
-        private int GetHeaderInfos(PeptideDocNode nodePep, SignedMz precursorMz, double? explicitRT, float tolerance,
-            ChromatogramSet chromatograms, int i, ChromatogramGroupInfo[] groupInfos)
+        private IEnumerable<ChromatogramGroupInfo> GetHeaderInfos(PeptideDocNode nodePep, SignedMz precursorMz, double? explicitRT, float tolerance,
+            ChromatogramSet chromatograms, int i)
         {
             // Add entries to a list until they no longer match
-            int countInfos = 0;
             for (; i < _chromatogramEntries.Length && MatchMz(precursorMz, _chromatogramEntries[i].Precursor, tolerance); i++)
             {
                 if (nodePep != null && !TextIdEqual(i, nodePep))
@@ -357,12 +337,9 @@ namespace pwiz.Skyline.Model.Results
                     (entry.StartTime <= explicitRT && explicitRT <= entry.EndTime))
                 // No overlap
                 {
-                    if (groupInfos != null)
-                        groupInfos[countInfos] = LoadChromatogramInfo(entry);
-                    countInfos++;
+                    yield return LoadChromatogramInfo(entry);
                 }
             }
-            return countInfos;
         }
 
         private bool TextIdEqual(int entryIndex, PeptideDocNode nodePep)
