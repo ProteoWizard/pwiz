@@ -18,7 +18,7 @@
  */
 
 using System.Drawing;
-using pwiz.ProteowizardWrapper;
+using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.Results

@@ -19,6 +19,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Common.Chemistry;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Properties;
 

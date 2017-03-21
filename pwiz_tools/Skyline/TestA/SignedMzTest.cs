@@ -19,7 +19,7 @@
 
 using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.ProteowizardWrapper;
+using pwiz.Common.Chemistry;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestA

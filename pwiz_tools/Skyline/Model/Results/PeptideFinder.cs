@@ -19,7 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections;
-using pwiz.ProteowizardWrapper;
+using pwiz.Common.Chemistry;
 
 namespace pwiz.Skyline.Model.Results
 {

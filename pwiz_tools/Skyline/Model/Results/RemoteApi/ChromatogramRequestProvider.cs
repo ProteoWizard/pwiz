@@ -17,8 +17,8 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
+using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
-using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.RemoteApi.GeneratedCode;
 
