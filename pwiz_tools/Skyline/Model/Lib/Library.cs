@@ -601,6 +601,12 @@ namespace pwiz.Skyline.Model.Lib
         public abstract LibraryDetails LibraryDetails { get; }
 
         /// <summary>
+        /// Only contains paths for files in library
+        /// Unlike LibraryDetails which contains more information
+        /// </summary>
+        public abstract  LibraryFiles LibraryFiles { get; }
+
+        /// <summary>
         /// Attempts to get spectrum header information for a specific
         /// (sequence, charge) pair.
         /// </summary>
@@ -1752,6 +1758,17 @@ namespace pwiz.Skyline.Model.Lib
         public string Link { get; private set; }
     }
 
+    public sealed class LibraryFiles
+    {
+        private IEnumerable<string> _filePaths;
+
+        public IEnumerable<string> FilePaths
+        {
+            get { return _filePaths ?? (_filePaths = new List<string>()); }
+            set { _filePaths = value; }
+        }
+    }
+
     /// <summary>
     /// Some spectrum library details that can be displayed in a dialog box.
     /// This can be the format of the library (e.g. BiblioSpec, SpectraST etc.),
@@ -1761,7 +1778,7 @@ namespace pwiz.Skyline.Model.Lib
     public sealed class LibraryDetails
     {
         private readonly IList<LibraryLink> _libLinks;
-        private IEnumerable<string> _dataFiles;
+        private IEnumerable<SpectrumSourceFileDetails> _dataFiles;
         
         public LibraryDetails()
         {
@@ -1783,14 +1800,13 @@ namespace pwiz.Skyline.Model.Lib
         // version of the program that generated the library
         public string Version { get; set; }
 
-        public int PeptideCount { get; set; }
-
+        public int SpectrumCount { get; set; }
+        public int UniquePeptideCount { get; set; }
         public int TotalPsmCount { get; set; }
-
-		public IEnumerable<String> DataFiles
+        public IEnumerable<SpectrumSourceFileDetails> DataFiles
         { 
-            get { return _dataFiles ?? (_dataFiles = new List<string>(0)); }
-		    set { _dataFiles = value; }
+            get { return _dataFiles ?? (_dataFiles = new List<SpectrumSourceFileDetails>()); }
+            set { _dataFiles = value; }
         }
 
         public IEnumerable<LibraryLink> LibLinks
@@ -2151,5 +2167,21 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         #endregion
+    }
+
+    public class SpectrumSourceFileDetails
+    {
+        public SpectrumSourceFileDetails(String filePath)
+        {
+            FilePath = filePath;
+            CutoffScores = new Dictionary<string, double?>();
+            BestSpectrum = 0;
+            MatchedSpectrum = 0;
+        }
+
+        public string FilePath { get; private set; }
+        public Dictionary<string, double?> CutoffScores { get; private set; }
+        public int BestSpectrum { get; set; }
+        public int MatchedSpectrum { get; set; }
     }
 }

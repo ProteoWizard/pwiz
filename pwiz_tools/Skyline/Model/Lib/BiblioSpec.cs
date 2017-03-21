@@ -214,11 +214,16 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     Format = "BiblioSpec", // Not L10N
                     Revision = Revision.ToString(LocalizationHelper.CurrentCulture),
-                    PeptideCount = SpectrumCount
+                    SpectrumCount = SpectrumCount
                 };
 
                 return details;
             }
+        }
+
+        public override LibraryFiles LibraryFiles
+        {
+            get { return new LibraryFiles();  }
         }
 
         /// <summary>

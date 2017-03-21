@@ -74,7 +74,7 @@ namespace pwiz.Skyline.FileUI
                     {
                         DocumentLibrarySpecs.Add(documentLibrarySpec);
                         DocumentLibraries.Add(documentLibrary);
-                        foreach (var dataFile in documentLibrary.LibraryDetails.DataFiles)
+                        foreach (var dataFile in documentLibrary.LibraryFiles.FilePaths)
                         {
                             listLibraries.Items.Add(dataFile);
                         }
@@ -205,7 +205,7 @@ namespace pwiz.Skyline.FileUI
                     {
                         foreach (var documentLibrary in DocumentLibraries)
                         {
-                            foreach (var dataFile in documentLibrary.LibraryDetails.DataFiles)
+                            foreach (var dataFile in documentLibrary.LibraryFiles.FilePaths)
                             {
                                 if (MeasuredResults.IsBaseNameMatch(chromFileInfo.FilePath.GetFileNameWithoutExtension(),
                                     Path.GetFileNameWithoutExtension(dataFile)))

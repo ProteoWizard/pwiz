@@ -148,6 +148,7 @@ namespace pwiz.Skyline.Model.Lib
         private BiblioSpecLiteLibrary(LibrarySpec spec)
             : base(spec)
         {
+            _librarySourceFiles = new BiblioLiteSourceInfo[0];
             FilePath = spec.FilePath;
             CachePath = GetLibraryCachePath(FilePath);
         }
@@ -221,30 +222,37 @@ namespace pwiz.Skyline.Model.Lib
             get { return _librarySourceFiles.Length; }
         }
 
+        public const string FORMAT_NAME ="BiblioSpec"; // Not L10N
+
+        public override LibraryFiles LibraryFiles
+        {
+            get
+            {
+                return new LibraryFiles
+                {
+                    FilePaths = from sourceFile in _librarySourceFiles
+                        let fileName = sourceFile.FilePath
+                        where fileName != null
+                        select fileName
+                };
+            }
+        }
+
         public override LibraryDetails LibraryDetails
         {
             get
             {
-                string[] dataFiles;
-                if (_librarySourceFiles == null)
-                {
-                    dataFiles = new string[] {};
-                }
-                else
-                {
-                    dataFiles = (from sourceFile in _librarySourceFiles
-                                 let fileName = sourceFile.FilePath
-                                 where fileName != null
-                                 select fileName).ToArray();
-                }
+                var dataFiles = GetDataFileDetails();
+                var uniquePeptideCount = Keys.Select(entry => entry.Sequence).Distinct().Count();
 
                 LibraryDetails details = new LibraryDetails
                                              {
-                                                 Format = "BiblioSpec", // Not L10N
+                                                 Format = FORMAT_NAME,
                                                  Revision = Revision.ToString(LocalizationHelper.CurrentCulture),
                                                  Version = SchemaVersion.ToString(LocalizationHelper.CurrentCulture),
-                                                 PeptideCount = SpectrumCount,
-                                                 DataFiles = dataFiles
+                                                 SpectrumCount = SpectrumCount,
+                                                 UniquePeptideCount = uniquePeptideCount,
+                                                 DataFiles = dataFiles,
                                              };
 
                 // In Schema Version 1, the RefSpectra table contains 
@@ -263,6 +271,75 @@ namespace pwiz.Skyline.Model.Lib
                 }
                 
                 return details;
+            }
+        }
+
+        public IEnumerable<SpectrumSourceFileDetails> GetDataFileDetails()
+        {
+            try
+            {
+                var detailsByFileName = new Dictionary<string, SpectrumSourceFileDetails>();
+
+                lock (_sqliteConnection)
+                {
+                    using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
+                    {
+                        // ReSharper disable NonLocalizedString
+
+                        // Query for the source files.  
+                        // The number of matching entries in the RefSpectra is "BestSpectra".
+                        // The number of entries in the RetentionTimes table is "MatchedSpectra".
+                        // Each of these numbers is subdivided by score type.
+                        // Also, select "ssf.*" because not all tables have a column "cutoffScore".
+                        select.CommandText =
+                            @"SELECT ssf.fileName, st.scoreType, rs.BestSpectra, rs.MatchedSpectra, ssf.*
+                            FROM SpectrumSourceFiles ssf 
+                            LEFT JOIN (SELECT rsInner.fileId, rsInner.scoreType AS scoreType, COUNT(DISTINCT rsInner.id) AS BestSpectra, (SELECT COUNT(*) AS MatchedSpectra FROM RetentionTimes RT WHERE RT.SpectrumSourceId = rsInner.fileId) AS MatchedSpectra 
+                                FROM RefSpectra rsInner GROUP BY rsInner.fileId, rsInner.scoreType) RS ON RS.fileId = ssf.id
+                            LEFT JOIN ScoreTypes st ON rs.scoreType = st.id";
+                        // ReSharper restore NonLocalizedString
+                        using (SQLiteDataReader reader = select.ExecuteReader())
+                        {
+                            int icolCutoffScore = -1;
+                            try
+                            {
+                                icolCutoffScore = reader.GetOrdinal("cutoffScore"); // Not L10N
+                            }
+                            catch (IndexOutOfRangeException)
+                            {
+                                // SQLite returns -1 if column does not exist, but documentation says can throw IndexOutOfRangeException
+                            }
+                            while (reader.Read())
+                            {
+                                string filename = reader.GetString(0);
+                                SpectrumSourceFileDetails sourceFileDetails;
+                                if (!detailsByFileName.TryGetValue(filename, out sourceFileDetails))
+                                {
+                                    sourceFileDetails = new SpectrumSourceFileDetails(filename);
+                                    detailsByFileName.Add(filename, sourceFileDetails);
+                                }
+                                sourceFileDetails.BestSpectrum += Convert.ToInt32(reader.GetValue(2));
+                                sourceFileDetails.MatchedSpectrum += Convert.ToInt32(reader.GetValue(3));
+
+                                string scoreName = reader.GetString(1);
+                                if (null != scoreName)
+                                {
+                                    double? cutoffScore = null;
+                                    if (icolCutoffScore >= 0)
+                                    {
+                                        cutoffScore = Convert.ToDouble(reader.GetValue(icolCutoffScore));
+                                    }
+                                    sourceFileDetails.CutoffScores[scoreName] = cutoffScore;
+                                }
+                            }
+                        }
+                    }
+                }
+                return detailsByFileName.Values.ToArray();
+            }
+            catch (Exception)
+            {
+                return _librarySourceFiles.Select(file => new SpectrumSourceFileDetails(file.FilePath));
             }
         }
 
@@ -1559,6 +1636,7 @@ namespace pwiz.Skyline.Model.Lib
         /// </summary>
         private BiblioSpecLiteLibrary()
         {
+            _librarySourceFiles = new BiblioLiteSourceInfo[0];
         }
 
         private enum ATTR

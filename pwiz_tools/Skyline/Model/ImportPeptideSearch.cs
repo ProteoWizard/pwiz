@@ -149,7 +149,7 @@ namespace pwiz.Skyline.Model
                 return;
 
             var measuredResults = document.Settings.MeasuredResults;
-            foreach (var dataFile in DocLib.LibraryDetails.DataFiles)
+            foreach (var dataFile in DocLib.LibraryFiles.FilePaths)
             {
                 var msDataFilePath = new MsDataFilePath(dataFile);
                 SpectrumSourceFiles[dataFile] = new FoundResultsFilePossibilities(msDataFilePath.GetFileNameWithoutExtension());

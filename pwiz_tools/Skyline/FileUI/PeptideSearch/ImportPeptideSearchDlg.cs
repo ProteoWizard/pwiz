@@ -188,7 +188,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     // CONSIDER: Load the library?
                     if (documentLibrary == null)
                         return false;
-                    foreach (var dataFile in documentLibrary.LibraryDetails.DataFiles)
+                    foreach (var dataFile in documentLibrary.LibraryFiles.FilePaths)
                     {
                         if (!doc.Settings.HasResults ||
                                 doc.Settings.MeasuredResults.FindMatchingMSDataFile(MsDataFileUri.Parse(dataFile)) == null)

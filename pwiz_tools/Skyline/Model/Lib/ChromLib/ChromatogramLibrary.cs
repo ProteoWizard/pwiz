@@ -167,12 +167,35 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
 
         public override LibraryDetails LibraryDetails
         {
-            get { return new LibraryDetails(); }
+            get
+            {
+                return new LibraryDetails
+                {
+                    Format = "ChromatogramLibrary", // Not L10N
+                    Revision = LibraryRevision.ToString(LocalizationHelper.CurrentCulture),
+                    SpectrumCount = 0,
+                    DataFiles = LibraryFiles.FilePaths.Select(f => new SpectrumSourceFileDetails(f)).ToList()
+                };
+            }
+        }
+
+        public override LibraryFiles LibraryFiles
+        {
+            get
+            {
+                return new LibraryFiles
+                {
+                    FilePaths = from sourceFile in _librarySourceFiles
+                                let fileName = sourceFile.FilePath
+                                where fileName != null
+                                select fileName
+                };
+            }
         }
 
         public override int? FileCount
         {
-            get { return _librarySourceFiles.Count(); }
+            get { return _librarySourceFiles.Length; }
         }
 
         private bool Load(ILoadMonitor loader)
@@ -445,6 +468,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
         }
         private ChromatogramLibrary()
         {
+            _librarySourceFiles = new ChromatogramLibrarySourceInfo[0];
         }
         private enum ATTR
         {

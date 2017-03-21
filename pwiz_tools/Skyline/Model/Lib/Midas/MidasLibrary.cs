@@ -103,9 +103,27 @@ namespace pwiz.Skyline.Model.Lib.Midas
                 {
                     Format = "MIDAS", // Not L10N
                     Revision = Revision.ToString(LocalizationHelper.CurrentCulture),
-                    PeptideCount = 0,
-                    DataFiles = _spectra != null ? _spectra.Keys.Select(key => key.FilePath) : new string[0]
+                    SpectrumCount = 0,
+                    DataFiles = LibraryFiles.FilePaths.Select(f => new SpectrumSourceFileDetails(f)).ToList()
                 };
+            }
+        }
+
+        public override LibraryFiles LibraryFiles
+        {
+            get
+            {
+                if (_spectra == null)
+                {
+                    return new LibraryFiles();
+                }
+                else
+                {
+                    return new LibraryFiles
+                    {
+                        FilePaths = _spectra.Keys.Select(key => key.FilePath).Distinct()
+                    };
+                }
             }
         }
 
@@ -138,7 +156,7 @@ namespace pwiz.Skyline.Model.Lib.Midas
             var midasFiles = results.MSDataFileInfos.Where(file => file.HasMidasSpectra).Select(file => file.FilePath.GetFilePath()).Distinct();
             var libFiles = document.Settings.PeptideSettings.Libraries.MidasLibraries.SelectMany(lib => lib.ResultsFiles).Select(Path.GetFileName);
             foreach (var lib in libraries.Where(lib => lib != null))
-                libFiles = libFiles.Concat(lib.LibraryDetails.DataFiles.Select(Path.GetFileName));
+                libFiles = libFiles.Concat(lib.LibraryFiles.FilePaths);
             return midasFiles.Where(f => !libFiles.Contains(Path.GetFileName(f))).ToArray();
         }
 

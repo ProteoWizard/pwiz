@@ -126,7 +126,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             get
             {
-                LibraryDetails details = new LibraryDetails { Format = "SpectraST", PeptideCount = SpectrumCount }; // Not L10N
+                LibraryDetails details = new LibraryDetails { Format = "SpectraST", SpectrumCount = SpectrumCount }; // Not L10N
 
                 if (!string.IsNullOrEmpty(Id))
                 {
@@ -142,6 +142,12 @@ namespace pwiz.Skyline.Model.Lib
 
                 return details;
             }
+        }
+
+        public override LibraryFiles LibraryFiles
+        {
+            // This library doesn't have source file information
+            get { return new LibraryFiles();}
         }
 
         protected override SpectrumHeaderInfo CreateSpectrumHeaderInfo(NistSpectrumInfo info)

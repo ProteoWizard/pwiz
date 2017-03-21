@@ -282,7 +282,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             get
             {
-                LibraryDetails details = new LibraryDetails { Format = "NIST", PeptideCount = SpectrumCount }; // Not L10N
+                LibraryDetails details = new LibraryDetails { Format = "NIST", SpectrumCount = SpectrumCount }; // Not L10N
 
                 if (!string.IsNullOrEmpty(Id))
                 {
@@ -296,6 +296,12 @@ namespace pwiz.Skyline.Model.Lib
                 details.AddLink(LibraryLink.NIST);
                 return details;
             }
+        }
+
+        public override LibraryFiles LibraryFiles
+        {
+            // NIST libraries don't have source file information
+            get { return new LibraryFiles(); }
         }
 
         protected override SpectrumHeaderInfo CreateSpectrumHeaderInfo(NistSpectrumInfo info)
