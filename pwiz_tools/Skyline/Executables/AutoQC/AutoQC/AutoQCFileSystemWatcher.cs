@@ -216,7 +216,7 @@ namespace AutoQC
 
         void OnFileWatcherError(ErrorEventArgs e)
         {
-            _logger.LogError("There was an error watching the folder. {0}", e.GetException().Message);
+            _logger.LogProgramError("There was an error watching the folder. {0}", e.GetException().Message);
             _folderAvailable = false;
         }
 
@@ -275,7 +275,10 @@ namespace AutoQC
             // If we are monitoring a network mapped drive, make sure that we can still connect to it.
             // If we lose connection to a networked drive, FileSystemWatcher does not fire any new events
             // even after the connection is re-established.
-            _networkDrive.EnsureDrive(_fileWatcher.Path);
+            if (!_networkDrive.EnsureDrive(_fileWatcher.Path))
+            {
+                return null;
+            }
         
             if (_dataFiles.IsEmpty)
             {

@@ -36,6 +36,11 @@ namespace AutoQCTest
             AddToLog(message, args);
         }
 
+        public void LogProgramError(string message, params object[] args)
+        {
+            throw new NotImplementedException();
+        }
+
         public void LogException(Exception exception)
         {
             AddToLog(exception.Message);

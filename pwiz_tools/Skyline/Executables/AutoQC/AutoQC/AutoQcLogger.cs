@@ -9,6 +9,7 @@ namespace AutoQC
     {
         void Log(string message, params object[] args);
         void LogError(string message, params object[] args);
+        void LogProgramError(string message, params object[] args);
         void LogException(Exception exception);
         string GetFile();
         void DisableUiLogging();
@@ -44,6 +45,12 @@ namespace AutoQC
                 Thread.Sleep(1000);     
             }
 
+            if (!File.Exists(_filePath))
+            {
+                // Maybe the log file is on a mapped network drive and we have lost connection
+                return;
+            }
+
             BackupLog();
 
             using (var fs = new FileStream(_filePath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))
@@ -62,11 +69,6 @@ namespace AutoQC
 
         private void BackupLog()
         {
-            if (!File.Exists(_filePath))
-            {
-                return;
-            }
-
             var size = new FileInfo(_filePath).Length;
             if (size >= MaxLogSize)
             {
@@ -150,6 +152,23 @@ namespace AutoQC
             }
 
             LogError(line);
+        }
+
+        public void LogProgramError(string line, params object[] args)
+        {
+            if (args != null && args.Length > 0)
+            {
+                line = string.Format(line, args);
+            }
+
+            if (_mainUi != null)
+            {
+                _mainUi.LogErrorToUi(line);
+            }
+
+            LogError(line);
+
+            Program.LogProgramError(line);
         }
 
         public string GetFile()

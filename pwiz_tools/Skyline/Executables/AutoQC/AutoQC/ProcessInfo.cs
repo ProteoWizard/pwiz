@@ -154,11 +154,20 @@ namespace AutoQC
 
         private bool DetectError(string message)
         {
-            if (message == null || !message.StartsWith("Error")) return false;
+            if (string.IsNullOrEmpty(message))
+            {
+                return false;
+            }
+
             if (message.Contains("Failed importing"))
             {
+                // TODO: fix in Skyline? These do not start with "Error"
                 _documentImportFailed = true;
+                return false;
             }
+
+            if (!message.StartsWith("Error")) return false;
+            
             if (message.Contains("PanoramaImportErrorException"))
             {
                 _panoramaUploadFailed = true;

@@ -11,6 +11,7 @@ namespace AutoQC
         private readonly IAutoQcLogger _logger;
         private string _networkDriveLetter;
         private string _networkDrivePath ;
+        private DateTime? _timeDisconnected;
 
         public NetworkDriveUtil(AutoQCFileSystemWatcher fileSystemWatcher, IAutoQcLogger logger)
         {
@@ -18,20 +19,26 @@ namespace AutoQC
             _logger = logger;
         }
 
-        public void EnsureDrive(string path)
+        public bool EnsureDrive(string path)
         {
             if (Directory.Exists(path))
             {
+                if (_timeDisconnected != null)
+                {
+                    // Network drive was disconnected last time we were here, and we couldn't re-map it successfully
+                    _fileSystemWatcher.Restart((DateTime) _timeDisconnected);   
+                }
+                _timeDisconnected = null;
                 ReadNetworkDriveProperties(path);
-                return;
+                return true;
             }
 
-            var timeDisconnected = DateTime.Now.AddMilliseconds(-(ConfigRunner.WAIT_FOR_NEW_FILE));
+            _timeDisconnected = _timeDisconnected ?? DateTime.Now.AddMilliseconds(-(ConfigRunner.WAIT_FOR_NEW_FILE));
 
             _fileSystemWatcher.Pause();
             if (!string.IsNullOrWhiteSpace(_networkDrivePath))
             {
-                _logger.Log("Waiting to reconnect to mapped network drive " + path);
+                _logger.LogProgramError("Attempting to reconnect to mapped network drive " + path);
                 // Attempt to reconnect to a mapped network drive
                 var process = Process.Start("net.exe", @"USE " + _networkDriveLetter + " " + _networkDrivePath);
                 if (process != null)
@@ -39,11 +46,28 @@ namespace AutoQC
                     process.WaitForExit();
                 }
             }
-            _fileSystemWatcher.Restart(timeDisconnected);
+            if (Directory.Exists(path))
+            {
+                _logger.LogError("Reconnected to mapped network drive " + path);
+                _fileSystemWatcher.Restart((DateTime) _timeDisconnected);
+                _timeDisconnected = null;
+                return true;
+            }
+
+            Program.LogProgramError(
+                string.Format(
+                    "Unable to reconnect to network drive. Network deive letter: {0}. Network drive path: {1}",
+                    _networkDriveLetter, _networkDrivePath));
+            return false;
         }
 
         private void ReadNetworkDriveProperties(string path)
         {
+            if (!string.IsNullOrEmpty(_networkDriveLetter) && !(string.IsNullOrEmpty(_networkDrivePath)))
+            {
+                return;
+            }
+
             var driveLetter = GetDriveLetter(path);
 
             if (driveLetter != null)
