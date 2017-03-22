@@ -22,7 +22,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using pwiz.Common.Chemistry;
-using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;

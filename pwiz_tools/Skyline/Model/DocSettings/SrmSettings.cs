@@ -27,7 +27,6 @@ using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
-using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Optimization;
