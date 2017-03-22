@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -79,8 +81,17 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     MinPoints = data.MinPoints
                 };
 
+                string filename;
+                try
+                {
+                    filename = Path.GetFileName(file);
+                }
+                catch (Exception)
+                {
+                    filename = file;
+                }
                 dataGridView.Rows.Add(
-                    Path.GetFileName(file),
+                    filename,
                     graphData.RegularPoints.Count,
                     data.RegressionRefined != null ? data.RegressionRefined.Slope.ToString("F04") : string.Empty, // Not L10N
                     data.RegressionRefined != null ? data.RegressionRefined.Intercept.ToString("F04") : string.Empty, // Not L10N
