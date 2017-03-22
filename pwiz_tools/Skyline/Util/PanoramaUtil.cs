@@ -516,8 +516,7 @@ namespace pwiz.Skyline.Util
         Uri SendZipFile(Server server, string folderPath, string zipFilePath, IProgressMonitor progressMonitor);
         JObject SupportedVersionsJson(Server server);
         void UploadSharedZipFile(Control parent, Server server, string zipFilePath, string folderPath);
-        ShareType DecideShareType(FolderInformation folderInfo, IDocumentUIContainer _docContainer,
-            IWin32Window parent);
+        ShareType DecideShareType(FolderInformation folderInfo, SrmDocument document);
     }
 
     public abstract class AbstractPanoramaPublishClient : IPanoramaPublishClient
@@ -550,13 +549,12 @@ namespace pwiz.Skyline.Util
             return CacheFormatVersion.CURRENT;
         }
 
-        public ShareType DecideShareType(FolderInformation folderInfo, IDocumentUIContainer docContainer,
-            IWin32Window parent)
+        public ShareType DecideShareType(FolderInformation folderInfo, SrmDocument document)
         {
             ShareType shareType = ShareType.DEFAULT;
             
-            var settings = docContainer.DocumentUI.Settings;
-            Assume.IsTrue(docContainer.DocumentUI.IsLoaded);
+            var settings = document.Settings;
+            Assume.IsTrue(document.IsLoaded);
             var cacheVersion = settings.HasResults ? settings.MeasuredResults.CacheVersion : null;
 
             if (!cacheVersion.HasValue)
@@ -573,9 +571,8 @@ namespace pwiz.Skyline.Util
             var skylineVersion = SkylineVersion.SupportedForSharing().FirstOrDefault(ver => ver.CacheFormatVersion <= supportedVersion);
             if (skylineVersion == null)
             {
-                MessageDlg.Show(parent,
-                    string.Format(Resources.PublishDocumentDlg_ServerSupportsSkydVersion_, (int) cacheVersion.Value));
-                return null;
+                throw new PanoramaServerException(string.Format(
+                    Resources.PublishDocumentDlg_ServerSupportsSkydVersion_, (int) cacheVersion.Value));
             }
             return shareType.ChangeSkylineVersion(skylineVersion);
         }

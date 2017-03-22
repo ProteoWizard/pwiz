@@ -235,12 +235,17 @@ namespace pwiz.Skyline.FileUI
                 return;
             }
 
-            ShareType = PanoramaPublishClient.DecideShareType(folderInfo, _docContainer, this);
-            if (ShareType == null)
+            try
             {
+                ShareType = PanoramaPublishClient.DecideShareType(folderInfo, _docContainer.DocumentUI);
+            }
+            catch (PanoramaServerException panoramaServerException)
+            {
+                MessageDlg.ShowWithException(this, panoramaServerException.Message, panoramaServerException);
                 return;
             }
-
+            
+            Assume.IsNotNull(ShareType);
             DialogResult = DialogResult.OK;
         }
            

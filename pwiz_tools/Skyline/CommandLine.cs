@@ -385,7 +385,7 @@ namespace pwiz.Skyline
                     sharedFileName = FileEx.GetTimeStampedFileName(_skylineFile);
                 }
                 var sharedFilePath = Path.Combine(sharedFileDir, sharedFileName);
-                ShareDocument(_doc, _skylineFile, sharedFilePath, _out);
+                ShareDocument(_doc, _skylineFile, sharedFilePath, ShareType.DEFAULT, _out);
             }
             if (commandArgs.PublishingToPanorama)
             {
@@ -2707,11 +2707,11 @@ namespace pwiz.Skyline
             return true;
         }
 
-        private static bool ShareDocument(SrmDocument document, string documentPath, string fileDest, CommandStatusWriter statusWriter)
+        private static bool ShareDocument(SrmDocument document, string documentPath, string fileDest, ShareType shareType, CommandStatusWriter statusWriter)
         {
             var waitBroker = new CommandProgressMonitor(statusWriter,
                 new ProgressStatus(Resources.SkylineWindow_ShareDocument_Compressing_Files));
-            var sharing = new SrmDocumentSharing(document, documentPath, fileDest, ShareType.DEFAULT);
+            var sharing = new SrmDocumentSharing(document, documentPath, fileDest, shareType);
             try
             {
                 sharing.Share(waitBroker);
@@ -2741,8 +2741,20 @@ namespace pwiz.Skyline
 
             public void PublishToPanorama(Server panoramaServer, SrmDocument document, string documentPath, string panoramaFolder)
             {
+                ShareType shareType;
+                try
+                {
+                    WebPanoramaPublishClient publishClient = new WebPanoramaPublishClient();
+                    shareType = publishClient.DecideShareType(new FolderInformation(panoramaServer, true),
+                        document);
+                }
+                catch (PanoramaServerException panoramaServerException)
+                {
+                    _statusWriter.WriteLine(panoramaServerException.Message);
+                    return;
+                }
                 var zipFilePath = FileEx.GetTimeStampedFileName(documentPath);
-                if (ShareDocument(document, documentPath, zipFilePath, _statusWriter))
+                if (ShareDocument(document, documentPath, zipFilePath, shareType, _statusWriter))
                 {
                     PublishDocToPanorama(panoramaServer, zipFilePath, panoramaFolder);
                 }

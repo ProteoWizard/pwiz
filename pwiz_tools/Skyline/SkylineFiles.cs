@@ -2753,9 +2753,14 @@ namespace pwiz.Skyline
                 return false;
 
             var fileInfo = new FolderInformation(server, true);
-            ShareType shareType = publishClient.DecideShareType(fileInfo, this, this);
-            if (shareType == null)
+            ShareType shareType;
+            try
             {
+                shareType = publishClient.DecideShareType(fileInfo, DocumentUI);
+            }
+            catch (PanoramaServerException pse)
+            {
+                MessageDlg.ShowWithException(this, pse.Message, pse);
                 return false;
             }
 
