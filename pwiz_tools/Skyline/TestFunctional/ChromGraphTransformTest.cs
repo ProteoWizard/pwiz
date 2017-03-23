@@ -120,7 +120,9 @@ namespace pwiz.SkylineTestFunctional
 
         private int GetChromatogramCount(MSGraphPane msGraphPane)
         {
-            return GetChromGraphItems(msGraphPane).Count();
+            int count = 0;
+            RunUI(() => count = GetChromGraphItems(msGraphPane).Count());
+            return count;
         }
 
         private IEnumerable<ChromGraphItem> GetChromGraphItems(MSGraphPane msGraphPane)
