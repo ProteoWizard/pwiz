@@ -1413,6 +1413,7 @@ namespace pwiz.Skyline
                 transformChromContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
                     {
                         transformChromNoneContextMenuItem,
+                        transformChromInterpolatedContextMenuItem,
                         secondDerivativeContextMenuItem,
                         firstDerivativeContextMenuItem,
                         smoothSGChromContextMenuItem

@@ -146,10 +146,6 @@ namespace pwiz.Skyline.Model.Results
             TransitionChromSources = ImmutableList<ChromSource>.ValueOf(transitionChromSources);
             Assume.IsTrue(TransitionTimeIntensities.Count > 0);
             Assume.IsTrue(TransitionChromSources.Count == TransitionTimeIntensities.Count);
-            foreach (var timeIntensities in TransitionTimeIntensities)
-            {
-                Assume.IsTrue(Equals(InterpolatedTimes, timeIntensities.Times));
-            }
         }
 
         public ImmutableList<ChromSource> TransitionChromSources { get; private set;}
