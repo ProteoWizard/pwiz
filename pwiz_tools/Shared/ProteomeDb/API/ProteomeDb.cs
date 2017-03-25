@@ -818,5 +818,64 @@ namespace pwiz.ProteomeDatabase.API
             } // End writesession
             return true;
         }
+
+        internal IList<Protein> GetProteinsWithIds(IStatelessSession session, IList<long> proteinIds)
+        {
+            if (proteinIds.Count == 0)
+            {
+                return new Protein[0];
+            }
+
+            return BatchUpArgumentsForFunction(ids =>
+            {
+                // ReSharper disable NonLocalizedString
+                var hql = "SELECT p, pn"
+                  + "\nFROM " + typeof(DbProtein) + " p, " + typeof(DbProteinName) + " pn"
+                  + "\nWHERE p.Id = pn.Protein.Id AND p.Id IN (:Ids)";
+                var query = session.CreateQuery(hql);
+                query.SetParameterList("Ids", ids);
+                // ReSharper restore NonLocalizedString
+                var proteins = new List<Protein>();
+
+                var rowsByProteinId = query.List().Cast<object[]>().ToLookup(row => ((DbProtein) row[0]).Id.Value);
+                foreach (var grouping in rowsByProteinId)
+                {
+                    var protein = (DbProtein) grouping.First()[0];
+                    var names = grouping.Select(row => row[1]).Cast<DbProteinName>();
+                    proteins.Add(new Protein(ProteomeDbPath, protein, names));
+                }
+                return proteins;
+            }, proteinIds, 1000);
+        }
+
+
+        internal IList<TResult> BatchUpArgumentsForFunction<TArg, TResult>(Func<ICollection<TArg>, IEnumerable<TResult>> function, 
+            IList<TArg> arguments, int maxBatchSize)
+        {
+            var processedArgumentCount = 0;
+            List<TResult> results = new List<TResult>();
+            for (var batchSize = Math.Min(maxBatchSize, arguments.Count); ; )  // A retry loop in case our query overwhelms SQLite
+            {
+                try
+                {
+                    while (processedArgumentCount < arguments.Count)
+                    {
+                        CancellationToken.ThrowIfCancellationRequested();
+                        results.AddRange(function(arguments.Skip(processedArgumentCount).Take(batchSize).ToArray()));
+                        processedArgumentCount += batchSize;
+                    }
+                    return results;
+                }
+                catch (Exception)
+                {
+                    // Failed - probably due to too-large query
+                    batchSize /= 2;
+                    if (batchSize < 1)
+                    {
+                        throw;
+                    }
+                }
+            } // End dynamic query size loop
+        }
     }
 }

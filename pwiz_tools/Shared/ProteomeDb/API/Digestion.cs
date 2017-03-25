@@ -62,7 +62,7 @@ namespace pwiz.ProteomeDatabase.API
             var sequenceList = sequences.ToArray();
             var proteinIds = GetProteinIdsThatMightHaveSequence(session, sequenceList);
             var results = new Dictionary<string, List<Protein>>();
-            var proteins = GetProteinWithIds(session, proteinIds);
+            var proteins = GetProteinsWithIds(session, proteinIds);
             foreach (var s in sequenceList.Distinct())
             {
                 results.Add(s, proteins.Where(p => p.Sequence.IndexOf(s, StringComparison.Ordinal) >= 0).ToList());
@@ -70,7 +70,7 @@ namespace pwiz.ProteomeDatabase.API
             return results;
         }
 
-        internal ICollection<long> GetProteinIdsThatMightHaveSequence(IStatelessSession session, ICollection<string> sequencesToLookFor)
+        internal IList<long> GetProteinIdsThatMightHaveSequence(IStatelessSession session, ICollection<string> sequencesToLookFor)
         {
             Func<ICollection<String>, IEnumerable<long>> functionToCall;
             IList<String> uniqueStrings;
@@ -95,36 +95,7 @@ namespace pwiz.ProteomeDatabase.API
                 functionToCall = batchedArgs => QueryProteinTableForSubstrings(session, batchedArgs);
                 uniqueStrings = RemoveSuperstrings(sequencesToLookFor);
             }
-            return BatchUpArgumentsForFunction(functionToCall, uniqueStrings, 500).Distinct().ToArray();
-        }
-
-        private IList<T> BatchUpArgumentsForFunction<T>(Func<ICollection<String>, IEnumerable<T>> function, 
-            IList<string> arguments, int maxBatchSize)
-        {
-            var processedArgumentCount = 0;
-            List<T> results = new List<T>();
-            for (var batchSize = Math.Min(maxBatchSize, arguments.Count); ; )  // A retry loop in case our query overwhelms SQLite
-            {
-                try
-                {
-                    while (processedArgumentCount < arguments.Count)
-                    {
-                        ProteomeDb.CancellationToken.ThrowIfCancellationRequested();
-                        results.AddRange(function(arguments.Skip(processedArgumentCount).Take(batchSize).ToArray()));
-                        processedArgumentCount += batchSize;
-                    }
-                    return results;
-                }
-                catch (Exception)
-                {
-                    // Failed - probably due to too-large query
-                    batchSize /= 2;
-                    if (batchSize < 1)
-                    {
-                        throw;
-                    }
-                }
-            } // End dynamic query size loop
+            return ProteomeDb.BatchUpArgumentsForFunction(functionToCall, uniqueStrings, 500).Distinct().ToArray();
         }
 
         /// <summary>
@@ -170,9 +141,9 @@ namespace pwiz.ProteomeDatabase.API
         }
 
         // ReSharper disable NonLocalizedString
-        private IList<Protein> GetProteinWithIds(IStatelessSession session, ICollection<long> ids)
+        private IList<Protein> GetProteinsWithIds(IStatelessSession session, IList<long> ids)
         {
-            return Protein.GetProteinWithIds(ProteomeDb.ProteomeDbPath, session, ids);
+            return ProteomeDb.GetProteinsWithIds(session, ids);
         }
 
         private IEnumerable<long> QueryProteinTableForSubstrings(IStatelessSession session, ICollection<string> sequenceList)

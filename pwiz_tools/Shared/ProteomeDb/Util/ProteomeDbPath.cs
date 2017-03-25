@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System.Threading;
 using pwiz.ProteomeDatabase.API;
 
 namespace pwiz.ProteomeDatabase.Util
@@ -38,7 +40,12 @@ namespace pwiz.ProteomeDatabase.Util
         /// </summary>
         public ProteomeDb OpenProteomeDb()
         {
-            return ProteomeDb.OpenProteomeDb(FilePath);
+            return OpenProteomeDb(CancellationToken.None);
+        }
+
+        public ProteomeDb OpenProteomeDb(CancellationToken cancellationToken)
+        {
+            return ProteomeDb.OpenProteomeDb(FilePath, cancellationToken);
         }
     }
 }

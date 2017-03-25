@@ -130,14 +130,17 @@ namespace pwiz.ProteomeDatabase.API
             {
                 return;
             }
-            // We fetched the protein ids.  Now fetch all the protein rows themselves.
-            var proteins = Protein.GetProteinWithIds(Settings.ProteomeDbPath, session, newProteinIds);
-            foreach (var protein in proteins)
+            using (var proteomeDb = ProteomeDb.OpenProteomeDb(Settings.ProteomeDbPath.FilePath, CancellationToken))
             {
-                var proteinMatch = new ProteinMatch(Settings, protein);
-                newMatches.Add(protein.Id, proteinMatch);
+                // We fetched the protein ids.  Now fetch all the protein rows themselves.
+                var proteins = proteomeDb.GetProteinsWithIds(session, newProteinIds);
+                foreach (var protein in proteins)
+                {
+                    var proteinMatch = new ProteinMatch(Settings, protein);
+                    newMatches.Add(protein.Id, proteinMatch);
+                }
+                SetProteinMatches(newMatches);
             }
-            SetProteinMatches(newMatches);
         }
         /// <summary>
         /// Updates the set of proteins that match the search text, and notify the callback with the new results.

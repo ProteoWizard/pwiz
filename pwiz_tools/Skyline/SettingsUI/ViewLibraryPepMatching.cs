@@ -42,6 +42,8 @@ namespace pwiz.Skyline.SettingsUI
     /// </summary>
     public class ViewLibraryPepMatching
     {
+        private const int MIN_PEPTIDE_LENGTH = 4;
+        private const int MAX_PROTEIN_MATCHES = 100;
         private readonly SrmDocument _document;
         private readonly Library _selectedLibrary;
         private readonly LibrarySpec _selectedSpec;
@@ -188,8 +190,17 @@ namespace pwiz.Skyline.SettingsUI
                                         session = proteomeDb.OpenStatelessSession(false);
                                     }
                                     var digestion = proteomeDb.GetDigestion();
-                                    matchedProteins = digestion.GetProteinsWithSequence(session, sequence)
-                                        .Select(protein => new ProteinInfo(protein)).ToList();
+                                    if (sequence.Length >= MIN_PEPTIDE_LENGTH)
+                                    {
+                                        matchedProteins = digestion.GetProteinsWithSequence(session, sequence)
+                                            .Select(protein => new ProteinInfo(protein)).ToList();
+                                    }
+                                    if (matchedProteins == null || matchedProteins.Count > MAX_PROTEIN_MATCHES)
+                                    {
+                                        // If the peptide was too short, or matched too many proteins, then
+                                        // treat it as if it was not found in any proteins.
+                                        matchedProteins = new List<ProteinInfo>();
+                                    }
                                     dictSequenceProteins.Add(sequence, matchedProteins);
                                 }
 

@@ -146,6 +146,7 @@
     <Compile Include="CommandLineTest.cs" />
     <Compile Include="CommandLineImportTest.cs" />
     <Compile Include="DecoysTest.cs" />
+    <Compile Include="DigestionTest.cs" />
     <Compile Include="DocLoadLibraryTest.cs" />
     <Compile Include="EspTest.cs" />
     <Compile Include="ExplicitModTest.cs" />
