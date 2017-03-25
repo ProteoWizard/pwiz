@@ -4586,7 +4586,7 @@ namespace pwiz.Skyline
             if (status == null)
             {
                 statusProgress.Visible = false;
-                UpdateTaskbarProgress(null);
+                UpdateTaskbarProgress(TaskbarProgress.TaskbarStates.NoProgress, null);
                 buttonShowAllChromatograms.Visible = false;
                 statusGeneral.Text = Resources.SkylineWindow_UpdateProgressUI_Ready;
                 _timerProgress.Stop();
@@ -4596,18 +4596,16 @@ namespace pwiz.Skyline
                 // Update the status bar with the first progress status.
                 statusProgress.Value = status.PercentComplete;
                 statusProgress.Visible = true;
-                UpdateTaskbarProgress(status.PercentComplete);
+                UpdateTaskbarProgress(TaskbarProgress.TaskbarStates.Normal, status.PercentComplete);
                 statusGeneral.Text = status.Message;
             }
         }
 
-        public void UpdateTaskbarProgress(int? percentComplete)
+        public void UpdateTaskbarProgress(TaskbarProgress.TaskbarStates state, int? percentComplete)
         {
-            if (!percentComplete.HasValue)
-                _taskbarProgress.SetState(Handle, TaskbarProgress.TaskbarStates.NoProgress);
-            else
+            _taskbarProgress.SetState(Handle, state);
+            if (percentComplete.HasValue)
             {
-                _taskbarProgress.SetState(Handle, TaskbarProgress.TaskbarStates.Normal);
                 _taskbarProgress.SetValue(Handle, percentComplete.Value, 100);
             }
         }

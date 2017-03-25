@@ -80,6 +80,10 @@ namespace pwiz.Skyline
                 MruChosenHandler handler = new MruChosenHandler(this, mruList[i]);
                 ToolStripMenuItem item = new ToolStripMenuItem(GetMruName(i, mruList[i], curDir), null,
                     handler.ToolStripMenuItemClick);
+                if (!item.Text.EndsWith(mruList[i]))
+                {
+                    item.ToolTipText = mruList[i];
+                }
                 menu.DropDownItems.Insert(start + i, item);
             }
             mruAfterToolStripSeparator.Visible = (mruList.Count > 0);

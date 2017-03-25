@@ -35,7 +35,6 @@ namespace pwiz.Skyline.Controls
         private Exception _exception;
         private int _progressValue = -1;
         private string _message;
-        private int _tickCount;
         private DateTime _startTime;
         private CancellationTokenSource _cancellationTokenSource;
 
@@ -155,7 +154,6 @@ namespace pwiz.Skyline.Controls
                 if (_message != null)
                     labelMessage.Text = _message;
 
-                _tickCount = 0;
                 ShowDialog(parent);
             }
             finally
@@ -216,7 +214,7 @@ namespace pwiz.Skyline.Controls
                 }
                 _windowShown = false;
             }
-            UpdateTaskbarProgress(null);
+            UpdateTaskbarProgress(TaskbarProgress.TaskbarStates.NoProgress, null);
             base.OnFormClosing(e);
         }
 
@@ -288,28 +286,29 @@ namespace pwiz.Skyline.Controls
 
         private void timerUpdate_Tick(object sender, EventArgs e)
         {
-            _tickCount++;
             if (_progressValue == -1)
             {
-                progressBar.Value = (_tickCount * 10) % 110;
+                progressBar.Style = ProgressBarStyle.Marquee;
+                UpdateTaskbarProgress(TaskbarProgress.TaskbarStates.Indeterminate, null);
             }
             else
             {
+                progressBar.Style = ProgressBarStyle.Continuous;
                 progressBar.Value = _progressValue;
+                UpdateTaskbarProgress(TaskbarProgress.TaskbarStates.Normal, progressBar.Value);
             }
 
-            UpdateTaskbarProgress(progressBar.Value);
 
             if (_message != null && !Equals(_message, labelMessage.Text))
                 labelMessage.Text = _message + (_cancellationTokenSource.IsCancellationRequested ? _cancelMessage : string.Empty);
         }
 
-        protected virtual void UpdateTaskbarProgress(int? percentComplete)
+        protected virtual void UpdateTaskbarProgress(TaskbarProgress.TaskbarStates state, int? percentComplete)
         {
             if (Program.MainWindow != null)
-                Program.MainWindow.UpdateTaskbarProgress(percentComplete);
+                Program.MainWindow.UpdateTaskbarProgress(state, percentComplete);
             else if (Program.StartWindow != null)
-                Program.StartWindow.UpdateTaskbarProgress(percentComplete);
+                Program.StartWindow.UpdateTaskbarProgress(state, percentComplete);
         }
 
         private void timerClose_Tick(object sender, EventArgs e)

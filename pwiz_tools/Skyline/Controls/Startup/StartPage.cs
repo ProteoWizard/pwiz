@@ -577,13 +577,11 @@ namespace pwiz.Skyline.Controls.Startup
 
         public SkylineWindow MainWindow { get; private set; }
 
-        public void UpdateTaskbarProgress(int? percentComplete)
+        public void UpdateTaskbarProgress(TaskbarProgress.TaskbarStates state, int? percentComplete)
         {
-            if (!percentComplete.HasValue)
-                _taskbarProgress.SetState(Handle, TaskbarProgress.TaskbarStates.NoProgress);
-            else
+            _taskbarProgress.SetState(Handle, state);
+            if (percentComplete.HasValue)
             {
-                _taskbarProgress.SetState(Handle, TaskbarProgress.TaskbarStates.Normal);
                 _taskbarProgress.SetValue(Handle, percentComplete.Value, 100);
             }
         }
