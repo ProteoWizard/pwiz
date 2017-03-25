@@ -88,6 +88,7 @@ namespace pwiz.SkylineTestFunctional
 
             foreach (var transitionGroup in peptide.TransitionGroups)
             {
+                string message = peptide.ModifiedSequence + ' ' + transitionGroup.PrecursorMz + ' ' + Settings.Default.TransformTypeChromatogram;
                 var transitionGroupPath = new IdentityPath(peptideGroup.Id, peptide.Id, transitionGroup.Id);
                 RunUI(() => SkylineWindow.SelectedPath = transitionGroupPath);
 
@@ -96,11 +97,11 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() => SkylineWindow.SetDisplayTypeChrom(DisplayTypeChrom.all));
                 if (transitionGroup.GetMsTransitions(true).Any() && transitionGroup.GetMsMsTransitions(true).Any())
                 {
-                    Assert.AreEqual(2, graphControl.MasterPane.PaneList.Count);
+                    Assert.AreEqual(2, graphControl.MasterPane.PaneList.Count, message);
                 }
                 else
                 {
-                    Assert.AreEqual(1, graphControl.MasterPane.PaneList.Count);
+                    Assert.AreEqual(1, graphControl.MasterPane.PaneList.Count, message);
                 }
 
                 foreach (var transition in transitionGroup.Transitions)
