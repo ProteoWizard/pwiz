@@ -23,6 +23,7 @@ using System.Drawing;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
+using pwiz.Common.Chemistry;
 using pwiz.MSGraph;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Alerts;
@@ -794,8 +795,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 MessageDlg.Show(this, "No isolation target"); // Not L10N
             else
             {
-                double low = target.Value - spectrum.Precursors[0].IsolationWindowLower ?? 0;
-                double high = target.Value + spectrum.Precursors[0].IsolationWindowUpper ?? 0;
+                double low = target.Value - spectrum.Precursors[0].IsolationWindowLower ?? SignedMz.ZERO;
+                double high = target.Value + spectrum.Precursors[0].IsolationWindowUpper ?? SignedMz.ZERO;
                 MessageDlg.Show(this, string.Format("Isolation window: {0}, {1}, {2}", low, target, high)); // Not L10N
             }
         }

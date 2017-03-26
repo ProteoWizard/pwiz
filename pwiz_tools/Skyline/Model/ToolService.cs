@@ -225,8 +225,8 @@ namespace pwiz.Skyline.Model
                                     result.Add(new Chromatogram
                                     {
                                         Intensities = transitionInfo.Intensities.ToArray(),
-                                        ProductMz = transitionInfo.ProductMz.RawValue??0,  // For negative ion mode data this will be a negative value
-                                        PrecursorMz = chromatogramGroup.PrecursorMz.RawValue??0,  // For negative ion mode data this will be a negative value
+                                        ProductMz = transitionInfo.ProductMz.RawValue,  // For negative ion mode data this will be a negative value
+                                        PrecursorMz = chromatogramGroup.PrecursorMz.RawValue,  // For negative ion mode data this will be a negative value
                                         Times = transitionInfo.Times.ToArray(),
                                         Color = color
                                     });

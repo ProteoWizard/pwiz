@@ -110,18 +110,19 @@ namespace pwiz.Skyline.Model.Results
         private SpectrumProductFilter[] SimProductFilters { get; set; }
         public SpectrumProductFilter[] Ms2ProductFilters { get; set; }
 
-        public void AddQ1FilterValues(IEnumerable<SignedMz> filterValues, Func<double, double> getFilterWindow)
+        public int AddQ1FilterValues(IEnumerable<SignedMz> filterValues, Func<double, double> getFilterWindow)
         {
-            AddFilterValues(MergeFilters(Ms1ProductFilters, filterValues).Distinct(), getFilterWindow,
-                filters => Ms1ProductFilters = filters);
+            int filterCount = AddFilterValues(MergeFilters(Ms1ProductFilters, filterValues).Distinct(),
+                getFilterWindow, filters => Ms1ProductFilters = filters);
             // Make complete copies for SIM scans. Some day these may be different.
             SimProductFilters = Ms1ProductFilters.Select(f => new SpectrumProductFilter(f.TargetMz, f.FilterWidth)).ToArray();
+            return filterCount * 2;
         }
 
-        public void AddQ3FilterValues(IEnumerable<SignedMz> filterValues, Func<double, double> getFilterWindow)
+        public int AddQ3FilterValues(IEnumerable<SignedMz> filterValues, Func<double, double> getFilterWindow)
         {
-            AddFilterValues(MergeFilters(Ms2ProductFilters, filterValues).Distinct(), getFilterWindow,
-                filters => Ms2ProductFilters = filters);
+            return AddFilterValues(MergeFilters(Ms2ProductFilters, filterValues).Distinct(),
+                getFilterWindow, filters => Ms2ProductFilters = filters);
         }
 
         private static IEnumerable<SignedMz> MergeFilters(IEnumerable<SpectrumProductFilter> existing, IEnumerable<SignedMz> added)
@@ -131,15 +132,15 @@ namespace pwiz.Skyline.Model.Results
             return existing.Select(f => f.TargetMz).Union(added);
         }
 
-        private static void AddFilterValues(IEnumerable<SignedMz> filterValues,
+        private int AddFilterValues(IEnumerable<SignedMz> filterValues,
                                             Func<double, double> getFilterWindow,
-                                            Action<SpectrumProductFilter[]> setProductFilters)
+                                            Action<SpectrumProductFilter[]> setFilters)
         {
-            var listQ3 = filterValues.ToList();
-
-            listQ3.Sort();
-
-            setProductFilters(listQ3.Select(mz => new SpectrumProductFilter(mz, getFilterWindow(mz))).ToArray());
+            var arrayFilters = filterValues.OrderBy(mz => mz)
+                .Select(mz => new SpectrumProductFilter(mz, getFilterWindow(mz)))
+                .ToArray();
+            setFilters(arrayFilters);
+            return arrayFilters.Length;
         }
 
         public ExtractedSpectrum FilterQ1SpectrumList(MsDataSpectrum[] spectra, bool isSimSpectra = false)
@@ -330,7 +331,7 @@ namespace pwiz.Skyline.Model.Results
                 {
                     var product = new ChromatogramRequestDocumentChromatogramGroupChromatogram
                     {
-                        ProductMz = spectrumProductFilter.TargetMz.RawValue.Value, // Negative ion mode values serialize as negative numbers
+                        ProductMz = spectrumProductFilter.TargetMz.RawValue, // Negative ion mode values serialize as negative numbers
                         MzWindow = spectrumProductFilter.FilterWidth,
                     };
                     chromatograms.Add(product);
@@ -347,7 +348,7 @@ namespace pwiz.Skyline.Model.Results
                 {
                     var product = new ChromatogramRequestDocumentChromatogramGroupChromatogram
                     {
-                        ProductMz = spectrumProductFilter.TargetMz.RawValue.Value, // Negative ion mode values serialize as negative numbers
+                        ProductMz = spectrumProductFilter.TargetMz.RawValue, // Negative ion mode values serialize as negative numbers
                         MzWindow = spectrumProductFilter.FilterWidth,
                     };
                     chromatograms.Add(product);
@@ -413,7 +414,7 @@ namespace pwiz.Skyline.Model.Results
             ChromatogramRequestDocumentChromatogramGroup docFilterPair = new ChromatogramRequestDocumentChromatogramGroup
             {
                 ModifiedSequence = ModifiedSequence,
-                PrecursorMz = Q1.RawValue.Value,  // A negative ion mode precursor will be serialized as a negative mz value
+                PrecursorMz = Q1.RawValue,  // A negative ion mode precursor will be serialized as a negative mz value
                 MassErrors = calculateMassErrors,
             };
             switch (Extractor)

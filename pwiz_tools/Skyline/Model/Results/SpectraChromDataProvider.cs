@@ -254,7 +254,7 @@ namespace pwiz.Skyline.Model.Results
                 {
                     var dataSpectrum = _spectra.CurrentSpectrum;
 
-                    var precursorMz = dataSpectrum.Precursors[0].PrecursorMz;
+                    var precursorMz = dataSpectrum.Precursors[0].PrecursorMz ?? SignedMz.ZERO;
                     int filterIndex;
                     if (!dictPrecursorMzToIndex.TryGetValue(precursorMz, out filterIndex))
                     {
@@ -989,7 +989,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public class Collectors
         {
-            private readonly List<ChromCollector> _collectors;
+            private readonly IList<ChromCollector> _collectors;
             private readonly int[] _chromKeyLookup;
             private float _retentionTime;
             private Exception _exception;
@@ -1028,17 +1028,15 @@ namespace pwiz.Skyline.Model.Results
                         lastMaxTime = maxTime;
                     }
                 }
-                ChromKeys = chromKeyArray.ToList();
+                ChromKeys = chromKeyArray;
 
                 // Create empty chromatograms for each ChromKey.
-                _collectors = new List<ChromCollector>(chromKeys.Count);
-                for (int i = 0; i < ChromKeys.Count; i++)
-                    _collectors.Add(null);
+                _collectors = new ChromCollector[chromKeys.Count];
             }
 
             public bool IsRunningAsync { get; private set; }
 
-            public List<ChromKey> ChromKeys { get; private set; }
+            public IList<ChromKey> ChromKeys { get; private set; }
 
             public int Count { get { return ChromKeys.Count; } }
 

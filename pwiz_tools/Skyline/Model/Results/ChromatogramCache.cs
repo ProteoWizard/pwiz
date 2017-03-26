@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -113,7 +112,7 @@ namespace pwiz.Skyline.Model.Results
 
         private readonly ImmutableList<ChromCachedFile> _cachedFiles;
         // ReadOnlyCollection is not fast enough for use with these arrays
-        private readonly ChromGroupHeaderInfo[] _chromatogramEntries;
+        private readonly BlockedArray<ChromGroupHeaderInfo> _chromatogramEntries;
         private readonly BlockedArray<ChromTransition> _chromTransitions;
         private readonly BlockedArray<ChromPeak> _chromatogramPeaks;
         private readonly Dictionary<Type, int> _scoreTypeIndices;
@@ -252,15 +251,24 @@ namespace pwiz.Skyline.Model.Results
             float tolerance, ChromatogramSet chromatograms)
         {
             var precursorMz = nodeGroup != null ? nodeGroup.PrecursorMz : SignedMz.ZERO;
+            // First try to find the entry with zero tolerance, since this is the fastest approach
+            // for large proteomewide extractions from DDA or DIA
+            int i = FindEntry(precursorMz, 0);
+            if (i != -1)
+            {
+                tolerance = 0;
+            }
+            else
+            {
+                i = FindEntry(precursorMz, tolerance);
+                if (i == -1)
+                    return new ChromatogramGroupInfo[0];
+            }
+
             double? explicitRT = null;
             if (nodePep != null && nodePep.ExplicitRetentionTime != null)
             {
                 explicitRT = nodePep.ExplicitRetentionTime.RetentionTime;
-            }
-            int i = FindEntry(precursorMz, tolerance);
-            if (i == -1)
-            {
-                return new ChromatogramGroupInfo[0];
             }
 
             return GetHeaderInfos(nodePep, precursorMz, explicitRT, tolerance, chromatograms, i);
@@ -302,7 +310,7 @@ namespace pwiz.Skyline.Model.Results
 
         public IEnumerable<ChromGroupHeaderInfo> ChromGroupHeaderInfos
         {
-            get { return Array.AsReadOnly(_chromatogramEntries); }
+            get { return _chromatogramEntries; }
         }
 
         private ChromatogramCache ChangeCachePath(string prop, IStreamManager manager)
@@ -324,11 +332,13 @@ namespace pwiz.Skyline.Model.Results
             ChromatogramSet chromatograms, int i)
         {
             // Add entries to a list until they no longer match
-            for (; i < _chromatogramEntries.Length && MatchMz(precursorMz, _chromatogramEntries[i].Precursor, tolerance); i++)
+            for (; i < _chromatogramEntries.Length; i++)
             {
-                if (nodePep != null && !TextIdEqual(i, nodePep))
-                    continue;
                 var entry = _chromatogramEntries[i];
+                if (!MatchMz(precursorMz, entry.Precursor, tolerance))
+                    break;
+                if (nodePep != null && !TextIdEqual(entry, nodePep))
+                    continue;
                 if (chromatograms != null && !chromatograms.ContainsFile(_cachedFiles[entry.FileIndex].FilePath))
                     continue;
                 // If explict retention time info is available, use that to discard obvious mismatches
@@ -342,15 +352,15 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        private bool TextIdEqual(int entryIndex, PeptideDocNode nodePep)
+        private bool TextIdEqual(ChromGroupHeaderInfo entry, PeptideDocNode nodePep)
         {
             // Older format cache files will not have stored textId bytes
             if (Version < FORMAT_VERSION_CACHE_5 && _textIdBytes == null)
                 return true;
-            int textIdIndex = _chromatogramEntries[entryIndex].TextIdIndex;
+            int textIdIndex = entry.TextIdIndex;
             if (textIdIndex == -1)
                 return true;
-            int textIdLen = _chromatogramEntries[entryIndex].TextIdLen;
+            int textIdLen = entry.TextIdLen;
             string compareText = nodePep.RawTextId;
             if (nodePep.Peptide.IsCustomIon)
             {
@@ -431,7 +441,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 CacheFormat = cacheFormat;
                 ChromCacheFiles = new ChromCachedFile[0];
-                ChromatogramEntries = new ChromGroupHeaderInfo[0];
+                ChromatogramEntries = new BlockedArray<ChromGroupHeaderInfo>();
                 ChromTransitions = new BlockedArray<ChromTransition>();
                 ChromatogramPeaks = new BlockedArray<ChromPeak>();
                 ScoreTypes = new Type[0];
@@ -441,7 +451,7 @@ namespace pwiz.Skyline.Model.Results
             public CacheFormat CacheFormat { get; private set; }
             public CacheFormatVersion FormatVersion { get { return CacheFormat.FormatVersion; } }
             public ChromCachedFile[] ChromCacheFiles { get; set; }
-            public ChromGroupHeaderInfo[] ChromatogramEntries { get; set; }
+            public BlockedArray<ChromGroupHeaderInfo> ChromatogramEntries { get; set; }
             public BlockedArray<ChromTransition> ChromTransitions { get; set; }
             public BlockedArray<ChromPeak> ChromatogramPeaks { get; set; }
             public Type[] ScoreTypes { get; set; }
@@ -450,7 +460,7 @@ namespace pwiz.Skyline.Model.Results
             public long LocationScanIds { get; set; }
             public long CountBytesScanIds { get; set; }
 
-            public void RecalcEntry(int entryIndex,
+            public ChromGroupHeaderInfo RecalcEntry(int entryIndex,
                 int offsetFiles,
                 int offsetTransitions,
                 int offsetPeaks,
@@ -459,14 +469,16 @@ namespace pwiz.Skyline.Model.Results
                 Dictionary<string, int> dictTextIdToByteIndex,
                 List<byte> listTextIdBytes)
             {
-                ChromatogramEntries[entryIndex].Offset(offsetFiles,
+                var entry = ChromatogramEntries[entryIndex];
+                entry.Offset(offsetFiles,
                     offsetTransitions,
                     offsetPeaks,
                     offsetScores,
                     offsetPoints);
-                ChromatogramEntries[entryIndex].CalcTextIdIndex(GetTextId(entryIndex),
+                entry.CalcTextIdIndex(GetTextId(entryIndex),
                     dictTextIdToByteIndex,
                     listTextIdBytes);
+                return entry;
             }
             
             private string GetTextId(int entryIndex)
@@ -674,13 +686,17 @@ namespace pwiz.Skyline.Model.Results
 
             // Read list of chromatogram group headers
             stream.Seek(cacheHeader.locationHeaders, SeekOrigin.Begin);
-            raw.ChromatogramEntries = cacheFormat.ChromGroupHeaderInfoSerializer()
-                .ReadArray(stream, cacheHeader.numChromatograms);
+            raw.ChromatogramEntries = new BlockedArray<ChromGroupHeaderInfo>(
+                count => cacheFormat.ChromGroupHeaderInfoSerializer().ReadArray(stream, count),
+                cacheHeader.numChromatograms,
+                ChromGroupHeaderInfo.SizeOf,
+                ChromGroupHeaderInfo.DEFAULT_BLOCK_SIZE,
+                progressMonitor,
+                status);
             if (formatVersion < CacheFormatVersion.Eleven && assumeNegativeChargeInPreV11Caches)
             {
-                raw.ChromatogramEntries = raw.ChromatogramEntries
-                    .Select(chromGroupHeader => chromGroupHeader.ChangeChargeToNegative())
-                    .ToArray();
+                raw.ChromatogramEntries = raw.ChromatogramEntries.ChangeAll(
+                    chromGroupHeader => chromGroupHeader.ChangeChargeToNegative());
             }
 
             if (formatVersion > FORMAT_VERSION_CACHE_4)
@@ -778,7 +794,7 @@ namespace pwiz.Skyline.Model.Results
                                         Stream outStreamPeaks,
                                         Stream outStreamScores,
                                         ICollection<ChromCachedFile> chromCachedFiles,
-                                        List<ChromGroupHeaderInfo> chromatogramEntries,
+                                        ICollection<ChromGroupHeaderInfo> chromatogramEntries,
                                         ICollection<ChromTransition> chromTransitions,
                                         ICollection<Type> scoreTypes,
                                         int scoureCount,
@@ -805,7 +821,7 @@ namespace pwiz.Skyline.Model.Results
                                         Stream outStreamPeaks,
                                         Stream outStreamScores,
                                         ICollection<ChromCachedFile> chromCachedFiles,
-                                        List<ChromGroupHeaderInfo> chromatogramEntries,
+                                        ICollection<ChromGroupHeaderInfo> chromatogramEntries,
                                         ICollection<ChromTransition> chromTransitions,
                                         ICollection<byte> textIdBytes,
                                         ICollection<Type> scoreTypes,
@@ -860,10 +876,14 @@ namespace pwiz.Skyline.Model.Results
                 }
             }
 
+            // ASSUME the entries reach here already sorted by whatever process created them
+            // This allows ChromCacheJoiner to use a merge sort and the sort below is limited to
+            // the 2 GB .NET maximum memory allocation block size.
+            // Old code....
             // Sort the chromatogramEntries ("OrderBy" is a stable sort)
-            var sortedEntries = chromatogramEntries.OrderBy(entry => entry).ToArray();
-            chromatogramEntries.Clear();
-            chromatogramEntries.AddRange(sortedEntries);
+            // var sortedEntries = chromatogramEntries.OrderBy(entry => entry).ToArray();
+            // chromatogramEntries.Clear();
+            // chromatogramEntries.AddRange(sortedEntries);
 
             long locationHeaders = outStream.Position;
 
@@ -1106,12 +1126,18 @@ namespace pwiz.Skyline.Model.Results
         public ChromatogramCache OptimizeToPath(CacheFormatVersion? formatVersion, string cachePathOpt,
             IEnumerable<MsDataFileUri> msDataFilePaths, IStreamManager streamManager, ILongWaitBroker progress)
         {
-            var cachedFilePaths = new HashSet<MsDataFileUri>(CachedFilePaths);
-            cachedFilePaths.IntersectWith(msDataFilePaths);
+            var keepFilePaths = new HashSet<MsDataFileUri>(msDataFilePaths);
+            var keepFileIndices = new HashSet<int>();
+            for (int i = 0; i < _cachedFiles.Count; i++)
+            {
+                var filePath = _cachedFiles[i].FilePath;
+                if (keepFilePaths.Contains(filePath))
+                    keepFileIndices.Add(i);
+            }
 
             // If the cache contains only the files in the document, then no
             // further optimization is necessary.
-            if (cachedFilePaths.Count == CachedFiles.Count && !formatVersion.HasValue || formatVersion == Version)
+            if (keepFilePaths.Count == CachedFiles.Count && !formatVersion.HasValue || formatVersion == Version)
             {
                 if (Equals(cachePathOpt, CachePath))
                     return this;
@@ -1125,22 +1151,20 @@ namespace pwiz.Skyline.Model.Results
             }
 
             CacheFormat cacheFormat = CacheFormat.FromVersion(formatVersion ?? CacheFormatVersion.CURRENT);
-                        Assume.IsTrue(cachedFilePaths.Count > 0);
+                        Assume.IsTrue(keepFilePaths.Count > 0);
 
-            // Create a copy of the headers
-            var listEntries = new List<ChromGroupHeaderInfo>(_chromatogramEntries);
-            // Sort by file, points location
-            listEntries.Sort((e1, e2) =>
-                                 {
-                                     int result = Comparer.Default.Compare(e1.FileIndex, e2.FileIndex);
-                                     if (result != 0)
-                                         return result;
-                                     return Comparer.Default.Compare(e1.LocationPoints, e2.LocationPoints);
-                                 });
+            // Sort by file, points location into new array
+            // CONSIDER: This is limited to 2 GB allocation size, but 4 bytes per Tuple instead of 72 bytes per header
+            var listEntries = _chromatogramEntries
+                .Select((e, i) => new Tuple<int, long, int>(e.FileIndex, e.LocationPoints, i))
+                .Where(t => keepFileIndices.Contains(t.Item1)).ToArray();
+            Array.Sort(listEntries);
 
-            var listKeepEntries = new List<ChromGroupHeaderInfo>();
+            var listKeepEntries = new BlockedArrayList<ChromGroupHeaderInfo>(
+                ChromGroupHeaderInfo.SizeOf, ChromGroupHeaderInfo.DEFAULT_BLOCK_SIZE);
             var listKeepCachedFiles = new List<ChromCachedFile>();
-            var listKeepTransitions = new BlockedArrayList<ChromTransition>(ChromTransition.SizeOf, ChromTransition.DEFAULT_BLOCK_SIZE);
+            var listKeepTransitions = new BlockedArrayList<ChromTransition>(
+                ChromTransition.SizeOf, ChromTransition.DEFAULT_BLOCK_SIZE);
             var listKeepTextIdBytes = new List<byte>();
             var dictKeepTextIdIndices = new Dictionary<int, int>();
             var scoreTypes = ScoreTypes.ToArray();
@@ -1160,20 +1184,16 @@ namespace pwiz.Skyline.Model.Results
                 int i = 0;
                 do
                 {
-                    var firstEntry = listEntries[i];
+                    var firstEntry = _chromatogramEntries[listEntries[i].Item3];
                     var lastEntry = firstEntry;
                     int fileIndex = firstEntry.FileIndex;
-                    bool keepFile = cachedFilePaths.Contains(_cachedFiles[fileIndex].FilePath);
                     long offsetPoints = fs.Stream.Position - firstEntry.LocationPoints;
 
                     int iNext = i;
                     // Enumerate until end of current file encountered
-                    while (iNext < listEntries.Count && fileIndex == listEntries[iNext].FileIndex)
+                    while (iNext < listEntries.Length && fileIndex == _chromatogramEntries[listEntries[iNext].Item3].FileIndex)
                     {
-                        lastEntry = listEntries[iNext++];
-                        // If discarding this file, just skip its entries
-                        if (!keepFile)
-                            continue;
+                        lastEntry = _chromatogramEntries[listEntries[iNext++].Item3];
                         // Otherwise add entries to the keep lists
                         int textIdIndex = -1;
                         if (lastEntry.TextIdIndex != -1 &&
@@ -1244,35 +1264,36 @@ namespace pwiz.Skyline.Model.Results
                         }
                     }
 
-                    if (keepFile)
+                    if (_cachedFiles[fileIndex].SizeScanIds == 0)
+                        listKeepCachedFiles.Add(_cachedFiles[fileIndex]);
+                    else
                     {
-                        if (_cachedFiles[fileIndex].SizeScanIds == 0)
-                            listKeepCachedFiles.Add(_cachedFiles[fileIndex]);
-                        else
-                        {
-                            // Write all scan ids for the last file to the scan ids output stream
-                            inStream.Seek(_locationScanIds + _cachedFiles[fileIndex].LocationScanIds, SeekOrigin.Begin);
-                            int lenReadIds = _cachedFiles[fileIndex].SizeScanIds;
-                            long locationScanIds = fsScans.Stream.Position;
-                            inStream.TransferBytes(fsScans.Stream, lenReadIds, buffer);
-                            listKeepCachedFiles.Add(_cachedFiles[fileIndex].RelocateScanIds(locationScanIds));
-                        }
-
-                        // Write all points for the last file to the output stream
-                        inStream.Seek(firstEntry.LocationPoints, SeekOrigin.Begin);
-                        long lenRead = lastEntry.LocationPoints + lastEntry.CompressedSize - firstEntry.LocationPoints;
-                        inStream.TransferBytes(fs.Stream, lenRead, buffer);
+                        // Write all scan ids for the last file to the scan ids output stream
+                        inStream.Seek(_locationScanIds + _cachedFiles[fileIndex].LocationScanIds, SeekOrigin.Begin);
+                        int lenReadIds = _cachedFiles[fileIndex].SizeScanIds;
+                        long locationScanIds = fsScans.Stream.Position;
+                        inStream.TransferBytes(fsScans.Stream, lenReadIds, buffer);
+                        listKeepCachedFiles.Add(_cachedFiles[fileIndex].RelocateScanIds(locationScanIds));
                     }
+
+                    // Write all points for the last file to the output stream
+                    inStream.Seek(firstEntry.LocationPoints, SeekOrigin.Begin);
+                    long lenRead = lastEntry.LocationPoints + lastEntry.CompressedSize - firstEntry.LocationPoints;
+                    inStream.TransferBytes(fs.Stream, lenRead, buffer);
 
                     // Advance to next file
                     i = iNext;
 
                     if (progress != null)
-                        progress.SetProgressCheckCancel(i, listEntries.Count);
-                } while (i < listEntries.Count);
+                        progress.SetProgressCheckCancel(i, listEntries.Length);
+                } while (i < listEntries.Length);
 
                 long locationAllScanIds = fs.Stream.Position;
                 long countBytesAllScanIds = fsScans.Stream.Position;
+
+                // CONSIDER: We should be able to figure out the order from the original order
+                //           without needing this second sort
+                listKeepEntries.Sort();
 
                 WriteStructs(
                     cacheFormat,
@@ -1296,7 +1317,7 @@ namespace pwiz.Skyline.Model.Results
                 var rawData = new RawData(cacheFormat)
                 {
                     ChromCacheFiles = listKeepCachedFiles.ToArray(),
-                    ChromatogramEntries = listKeepEntries.ToArray(),
+                    ChromatogramEntries = listKeepEntries.ToBlockedArray(),
                     ChromTransitions = listKeepTransitions.ToBlockedArray(),
                     ChromatogramPeaks = new BlockedArray<ChromPeak>(
                         count => peakSerializer.ReadArray(fsPeaks.FileStream, count), peakCount,

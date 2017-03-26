@@ -48,8 +48,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
             EligibleScores = new bool[FeatureCalculators.Count];
             // Disable calculators that have only a single score value or any unknown scores.
-            for (int i = 0; i < FeatureCalculators.Count; i++)
-                EligibleScores[i] = IsValidCalculator(i);
+            ParallelEx.For(0, FeatureCalculators.Count, i => EligibleScores[i] = IsValidCalculator(i));
         }
 
         public IList<PeakTransitionGroupFeatures> PeakGroupFeatures { get { return _peakTransitionGroupFeaturesList; } }
@@ -76,17 +75,22 @@ namespace pwiz.Skyline.Model.Results.Scoring
         public void GetTransitionGroups(out List<IList<float[]>> targetGroups,
             out List<IList<float[]>> decoyGroups)
         {
-            targetGroups = new List<IList<float[]>>();
-            decoyGroups = new List<IList<float[]>>();
+            // Try to avoid too much resizing. Though, we don't know for sure how big these need to be
+            int initCapacity = _peakTransitionGroupFeaturesList.Length / 4;
+            targetGroups = new List<IList<float[]>>(initCapacity);
+            decoyGroups = new List<IList<float[]>>(initCapacity);
 
             foreach (var peakTransitionGroupFeatures in _peakTransitionGroupFeaturesList)
             {
-                var transitionGroup = new List<float[]>();
-                foreach (var peakGroupFeatures in peakTransitionGroupFeatures.PeakGroupFeatures)
-                    transitionGroup.Add(peakGroupFeatures.Features);
-
-                if (!transitionGroup.Any())
+                int featuresCount = peakTransitionGroupFeatures.PeakGroupFeatures.Count;
+                if (featuresCount == 0)
                     continue;
+                var transitionGroup = new float[featuresCount][];
+                for (int i = 0; i < featuresCount; i++)
+                {
+                    transitionGroup[i] = peakTransitionGroupFeatures.PeakGroupFeatures[i].Features;
+                }
+
                 if (peakTransitionGroupFeatures.Id.NodePep.IsDecoy)
                     decoyGroups.Add(transitionGroup);
                 else

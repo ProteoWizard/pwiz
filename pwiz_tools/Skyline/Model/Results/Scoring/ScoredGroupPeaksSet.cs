@@ -117,7 +117,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             var qvalues = new Statistics(pvalues).Qvalues(lambda);
 
             // Select max peak with q value less than the cutoff from each target group.
-            var truePeaks = new List<ScoredPeak>(_scoredGroupPeaksList.Count);
+            var truePeaks = new List<ScoredPeak>(_scoredGroupPeaksList.Count/5);
             for (int i = 0; i < _scoredGroupPeaksList.Count; i++)
             {
                 if (qvalues[i] <= qValueCutoff)
@@ -168,8 +168,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
         private double[] GetMaxScores()
         {
             var maxScores = new double[_scoredGroupPeaksList.Count];
-            for (int i = 0; i < maxScores.Length; i++)
-                maxScores[i] = _scoredGroupPeaksList[i].MaxPeak == null ? double.NaN : _scoredGroupPeaksList[i].MaxPeak.Score;
+            ParallelEx.For(0, maxScores.Length, i =>
+                maxScores[i] = _scoredGroupPeaksList[i].MaxPeak == null ? double.NaN : _scoredGroupPeaksList[i].MaxPeak.Score);
             return maxScores;
         }
 
@@ -180,10 +180,12 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// <returns>Mean peak score.</returns>
         public void ScorePeaks(IList<double> weights)
         {
-            foreach (var peak in _scoredGroupPeaksList.SelectMany(scoredGroupPeaks => scoredGroupPeaks.ScoredPeaks))
+            ParallelEx.For(0, _scoredGroupPeaksList.Count, i =>
             {
-                peak.Score = LinearModelParams.Score(peak.Features, weights, 0);
-            }
+                var scoredPeakGroups = _scoredGroupPeaksList[i];
+                foreach (var peak in scoredPeakGroups.ScoredPeaks)
+                    peak.Score = LinearModelParams.Score(peak.Features, weights, 0);
+            });
 
             // Calculate mean and stdev for top-scoring peaks in each transition group.
             var scores = GetMaxScores();

@@ -36,6 +36,8 @@ namespace pwiz.Skyline.Model.Results
     {
         public static readonly MeasuredResults EMPTY = new MeasuredResults(new ChromatogramSet[0]);
 
+        private static readonly HashSet<MsDataFileUri> EMPTY_FILES = new HashSet<MsDataFileUri>();
+
         private ImmutableList<ChromatogramSet> _chromatograms;
         private ImmutableDictionary<string, int> _dictNameToIndex;
         private ImmutableDictionary<int, int> _dictIdToIndex;
@@ -47,6 +49,7 @@ namespace pwiz.Skyline.Model.Results
         private ChromatogramCache _cacheRecalc;
         private ImmutableList<ChromatogramCache> _listPartialCaches;
         private ImmutableList<string> _listSharedCachePaths;
+        private HashSet<MsDataFileUri> _setCachedFiles = EMPTY_FILES;
 
         public MeasuredResults(IList<ChromatogramSet> chromatograms, bool disableJoining = false)
         {
@@ -152,7 +155,7 @@ namespace pwiz.Skyline.Model.Results
 
         public bool IsCachedFile(MsDataFileUri filePath)
         {
-            return CachedFilePaths.Contains(filePath);
+            return _setCachedFiles.Contains(filePath);
         }
 
         public IEnumerable<Type> CachedScoreTypes
@@ -221,6 +224,11 @@ namespace pwiz.Skyline.Model.Results
                 return Chromatograms.SelectMany(chromSet =>
                     chromSet.MSDataFileInfos).Distinct(new RefCompareChromFileInfo());
             }
+        }
+
+        public bool IsDataFilePath(MsDataFileUri path)
+        {
+            return _setFiles.Contains(path);
         }
 
         public ChromFileInfo GetChromFileInfo<TChromInfo>(Results<TChromInfo> results, int replicateIndex)
@@ -374,7 +382,7 @@ namespace pwiz.Skyline.Model.Results
 
             _cacheFinal.CommitCache(fs);
             // Now the cach needs to be reloaded.
-            return ChangeProp(ImClone(this), im => im._cacheFinal = null);
+            return ChangeProp(ImClone(this), im => im.SetClonedCacheState(null));
         }
 
         public MeasuredResults OptimizeCache(string documentPath, IStreamManager streamManager, ILongWaitBroker progress = null)
@@ -385,7 +393,18 @@ namespace pwiz.Skyline.Model.Results
             var cacheOptimized = _cacheFinal.Optimize(documentPath, MSDataFilePaths, streamManager, progress);
             if (ReferenceEquals(cacheOptimized, _cacheFinal))
                 return this;
-            return ChangeProp(ImClone(this), im => im._cacheFinal = cacheOptimized);
+            return ChangeProp(ImClone(this), im => im.SetClonedCacheState(cacheOptimized));
+        }
+
+        /// <summary>
+        /// Used on a clone during a change operation on a cloned object to set the state of its
+        /// <see cref="ChromatogramCache"/> files
+        /// </summary>
+        private void SetClonedCacheState(ChromatogramCache cacheFinal, IList<ChromatogramCache> partialCaches = null)
+        {
+            _cacheFinal = cacheFinal;
+            _listPartialCaches = MakeReadOnly(partialCaches);
+            _setCachedFiles = new HashSet<MsDataFileUri>(CachedFilePaths);
         }
 
         public MeasuredResults UpdateCaches(string documentPath, MeasuredResults resultsCache)
@@ -399,32 +418,11 @@ namespace pwiz.Skyline.Model.Results
             {
                 results.Chromatograms = results.GetRescoredChromatograms(resultsCache);
             }
-            
-            results._listPartialCaches = resultsCache._listPartialCaches;
-            results._cacheFinal = resultsCache._cacheFinal;
+
+            results.UpdateClonedCaches(resultsCache);
+
             results.IsResultsUpdateRequired = resultsCache.IsResultsUpdateRequired;
             results.IsDeserialized = false;
-
-            // Preserve partial caches in this, if none to add and not final
-            if (results._listPartialCaches == null)
-            {
-                if (results._cacheFinal == null)
-                    results._listPartialCaches = _listPartialCaches;
-            }
-            // If both sets have partial caches, merge them
-            else if (_listPartialCaches != null)
-            {
-                // CONSIDER: It is hypothetically possible that the two sets
-                //           may contain overlapping caches with multiple
-                //           cached files that are not the same, but very
-                //           unlikely.  So, ignored for the moment.
-                var listUnionCaches = new List<ChromatogramCache>(
-                    _listPartialCaches.Union(results._listPartialCaches, ChromatogramCache.PathComparer));
-                if (listUnionCaches.Count != results._listPartialCaches.Count)
-                {
-                    results._listPartialCaches = MakeReadOnly(listUnionCaches);
-                }
-            }
 
             string cachePath = ChromatogramCache.FinalPathForName(documentPath, null);
             var cachedFiles = results.CachedFileInfos.Distinct(new PathComparer<ChromCachedFile>()).ToArray();
@@ -442,6 +440,34 @@ namespace pwiz.Skyline.Model.Results
                 results.Chromatograms = chromatogramSets;
 
             return results;
+        }
+
+        private void UpdateClonedCaches(MeasuredResults resultsCache)
+        {
+            var cacheFinal = resultsCache._cacheFinal;
+            IList<ChromatogramCache> partialCaches = resultsCache._listPartialCaches;
+
+            // Preserve partial caches in this, if none to add and not final
+            if (partialCaches == null)
+            {
+                if (cacheFinal == null)
+                    partialCaches = _listPartialCaches;
+            }
+            // If both sets have partial caches, merge them
+            else if (_listPartialCaches != null)
+            {
+                // CONSIDER: It is hypothetically possible that the two sets
+                //           may contain overlapping caches with multiple
+                //           cached files that are not the same, but very
+                //           unlikely.  So, ignored for the moment.
+                var listUnionCaches = new List<ChromatogramCache>(
+                    _listPartialCaches.Union(partialCaches, ChromatogramCache.PathComparer));
+                if (listUnionCaches.Count != partialCaches.Count)
+                {
+                    partialCaches = MakeReadOnly(listUnionCaches);
+                }
+            }
+            SetClonedCacheState(cacheFinal, partialCaches);
         }
 
         public MeasuredResults ApplyChromatogramSetRemovals(MeasuredResults resultsLoad, MeasuredResults resultsPrevious)
@@ -727,8 +753,7 @@ namespace pwiz.Skyline.Model.Results
                 // to be reloaded to know what is now in it.
                 if (results._cacheFinal != null && !results._cacheFinal.ReadStream.IsModified)
                     listPartialCaches.Insert(0, results._cacheFinal);
-                results._cacheFinal = null;
-                results._listPartialCaches = ImmutableList.ValueOf(listPartialCaches.Count == 0 ? null : listPartialCaches);
+                results.SetClonedCacheState(null, listPartialCaches.Count != 0 ? listPartialCaches : null);
             }
             return results;
         }
@@ -869,8 +894,7 @@ namespace pwiz.Skyline.Model.Results
             }
 
             var results = ImClone(this);
-            results._cacheFinal = null;
-            results._listPartialCaches = MakeReadOnly(listPartialCaches);
+            results.SetClonedCacheState(null, listPartialCaches);
             results._listSharedCachePaths = MakeReadOnly(listSharedCachePaths);
 
             // Calculate the replicates to cover the merge
@@ -989,11 +1013,16 @@ namespace pwiz.Skyline.Model.Results
             if (_cacheFinal == null)
                 throw new InvalidOperationException(Resources.MeasuredResults_ChangeRecalcStatus_Attempting_to_recalculate_peak_integration_without_first_completing_raw_data_import_);
 
-            return ChangeProp(ImClone(this), im =>
-                                                 {
-                                                     im._cacheRecalc = im._cacheFinal;
-                                                     im._cacheFinal = null;
-                                                 });
+            return ChangeProp(ImClone(this), im => im.SetClonedCacheRecalc());
+        }
+
+        /// <summary>
+        /// Sets cache recalc to current catch on a cloned object
+        /// </summary>
+        private void SetClonedCacheRecalc()
+        {
+            _cacheRecalc = _cacheFinal;
+            SetClonedCacheState(null);
         }
 
         #endregion
@@ -1164,8 +1193,7 @@ namespace pwiz.Skyline.Model.Results
                             !_resultsClone.IsSharedCache(firstCache) &&
                             firstCache.CachePath == cachePath)
                 {
-                    _resultsClone._cacheFinal = firstCache;
-                    _resultsClone._listPartialCaches = null;
+                    _resultsClone.SetClonedCacheState(firstCache);
                     _resultsClone.IsResultsUpdateRequired = false;
 
                     ReleaseCacheRecalc();
@@ -1533,7 +1561,7 @@ namespace pwiz.Skyline.Model.Results
                     if (results._listPartialCaches != null)
                         listPartialCaches.AddRange(results._listPartialCaches);
                     listPartialCaches.Add(cache);
-                    results._listPartialCaches = MakeReadOnly(listPartialCaches);
+                    results.SetClonedCacheState(null, listPartialCaches);
                 }
 
                 Complete(results, false);
@@ -1576,8 +1604,7 @@ namespace pwiz.Skyline.Model.Results
                             _loadMonitor.StreamManager.Delete(cachePartial.CachePath);
                     }
 
-                    _resultsClone._listPartialCaches = null;
-                    _resultsClone._cacheFinal = cache;
+                    _resultsClone.SetClonedCacheState(cache);
                 }
 
                 Complete(_resultsClone, true);

@@ -70,7 +70,7 @@ namespace pwiz.Skyline.Model.Results
         {
             public int Compare(PrecursorTextId x, PrecursorTextId y)
             {
-                int c = Comparer.Default.Compare(x.PrecursorMz, y.PrecursorMz);
+                int c = x.PrecursorMz.CompareTo(y.PrecursorMz);
                 if (c != 0)
                     return c;
                 c = string.CompareOrdinal(x.TextId, y.TextId);

@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.IO;
 using System.Reflection;
 
 namespace pwiz.SkylineCmd
@@ -27,15 +28,17 @@ namespace pwiz.SkylineCmd
         static void Main(string[] args)
         {
             Assembly assembly;
+            // SkylineCmd and Skyline must be in the same directory
+            string dirPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty;
             try
             {
-                assembly = Assembly.LoadFrom("Skyline-daily.exe"); // Not L10N
+                assembly = Assembly.LoadFrom(Path.Combine(dirPath, "Skyline-daily.exe")); // Not L10N
             }
             catch (Exception e1)
             {
                 try
                 {
-                    assembly = Assembly.LoadFrom("Skyline.exe"); // Not L10N
+                    assembly = Assembly.LoadFrom(Path.Combine(dirPath, "Skyline.exe")); // Not L10N
                 }
                 catch (Exception e2)
                 {

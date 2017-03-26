@@ -120,8 +120,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             new MQuestRetentionTimePredictionCalc(),
         };
 
-        public override IPeakScoringModel Train(IList<IList<float[]>> targets, IList<IList<float[]>> decoys, LinearModelParams initParameters,
-            bool includeSecondBest = false, bool preTrain = true, IProgressMonitor progressMonitor = null)
+        public override IPeakScoringModel Train(IList<IList<float[]>> targets, IList<IList<float[]>> decoys, LinearModelParams initParameters, int? iterations = null, bool includeSecondBest = false, bool preTrain = true, IProgressMonitor progressMonitor = null)
         {
             return ChangeProp(ImClone(this), im =>
             {

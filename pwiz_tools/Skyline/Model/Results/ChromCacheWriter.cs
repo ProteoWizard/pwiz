@@ -34,7 +34,8 @@ namespace pwiz.Skyline.Model.Results
         protected readonly List<ChromCachedFile> _listCachedFiles = new List<ChromCachedFile>();
         protected readonly BlockedArrayList<ChromTransition> _listTransitions =
             new BlockedArrayList<ChromTransition>(ChromTransition.SizeOf, ChromTransition.DEFAULT_BLOCK_SIZE);
-        protected readonly List<ChromGroupHeaderInfo> _listGroups = new List<ChromGroupHeaderInfo>();
+        protected readonly BlockedArrayList<ChromGroupHeaderInfo> _listGroups =
+            new BlockedArrayList<ChromGroupHeaderInfo>(ChromGroupHeaderInfo.SizeOf, ChromGroupHeaderInfo.DEFAULT_BLOCK_SIZE);
         protected readonly List<byte> _listTextIdBytes = new List<byte>();
         protected readonly List<Type> _listScoreTypes = new List<Type>();
         protected readonly FileSaver _fs;
@@ -82,6 +83,7 @@ namespace pwiz.Skyline.Model.Results
                                 locationScanIds = _fs.Stream.Position;
                                 countBytesScanIds = _fsScans.Stream.Position;
 
+                                _listGroups.Sort();
                                 ChromatogramCache.WriteStructs(CacheFormat,
                                                                _fs.Stream,
                                                                _fsScans.Stream,
@@ -125,7 +127,7 @@ namespace pwiz.Skyline.Model.Results
                             var rawData = new ChromatogramCache.RawData(CacheFormat)
                             {
                                 ChromCacheFiles = _listCachedFiles.ToArray(),
-                                ChromatogramEntries = _listGroups.ToArray(),
+                                ChromatogramEntries = _listGroups.ToBlockedArray(),
                                 ChromTransitions = _listTransitions.ToBlockedArray(),
                                 ChromatogramPeaks = new BlockedArray<ChromPeak>(
                                     count => peakSerializer.ReadArray(_fsPeaks.FileStream, count), _peakCount,

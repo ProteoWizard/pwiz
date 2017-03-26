@@ -272,7 +272,7 @@ namespace pwiz.Skyline.Model.Results
             // No mass errors in SRM
             if (_readChromatograms == 0)
             {
-                _readStartTime = DateTime.Now;
+                _readStartTime = DateTime.UtcNow; // Said to be 117x faster than Now and this is for a delta
             }
 
             string chromId;
@@ -317,7 +317,7 @@ namespace pwiz.Skyline.Model.Results
 
         private double ExpectedReadDurationMinutes
         {
-            get { return DateTime.Now.Subtract(_readStartTime).TotalMinutes * _chromIds.Count / _readChromatograms; }
+            get { return DateTime.UtcNow.Subtract(_readStartTime).TotalMinutes * _chromIds.Count / _readChromatograms; }
         }
 
         public override double? MaxIntensity

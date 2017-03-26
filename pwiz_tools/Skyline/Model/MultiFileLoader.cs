@@ -288,11 +288,14 @@ namespace pwiz.Skyline.Model
     {
         private readonly MultiFileLoadMonitor _loadMonitor;
         private readonly MsDataFileUri _dataFile;
+        private DateTime _lastCancelCheck;
+        private bool _isCanceled;
 
         public SingleFileLoadMonitor(MultiFileLoadMonitor loadMonitor, MsDataFileUri dataFile)
         {
             _loadMonitor = loadMonitor;
             _dataFile = dataFile;
+            _lastCancelCheck = DateTime.UtcNow; // Said to be 117x faster than Now and this is for a delta
             HasUI = loadMonitor.HasUI;
         }
 
@@ -305,7 +308,19 @@ namespace pwiz.Skyline.Model
         {
             get
             {
-                return _loadMonitor.IsCanceledFile(_dataFile);
+                // Once set always true
+                if (_isCanceled)
+                    return true;
+                // Checking for whether a file is canceled showed up in the profiler for
+                // large DIA runs with lots of chromatograms being extracted. So, here
+                // we prevent this check from happening more than once every 10 ms
+                // which is actually long enough to get this under 1% of really huge
+                // extractions.
+                var currentTime = DateTime.UtcNow;
+                if ((currentTime - _lastCancelCheck).TotalMilliseconds < 10)
+                    return false;
+                _lastCancelCheck = currentTime;
+                return _isCanceled = _loadMonitor.IsCanceledFile(_dataFile);
             }
         }
 

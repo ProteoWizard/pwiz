@@ -116,7 +116,7 @@ namespace pwiz.Skyline.Model
             double totalScore = 0.0;
 
             // Prepare to generate the best isolation list possible within the given time limit.
-            var startTime = DateTime.Now;
+            var startTime = DateTime.UtcNow; // Said to be 117x faster than Now and this is for a delta
             var cycle = new Cycle(windowCount, windowsPerScan);
             int cyclesGenerated = 0;
             ProgressStatus status = new ProgressStatus(Resources.AbstractDiaExporter_WriteMultiplexedWindows_Exporting_Isolation_List);
@@ -129,13 +129,13 @@ namespace pwiz.Skyline.Model
                 if (progressMonitor.IsCanceled)
                     return;
                 progressMonitor.UpdateProgress(status.ChangePercentComplete(
-                    (int) (DateTime.Now - startTime).TotalSeconds*100/CalculationTime).ChangeMessage(
+                    (int) (DateTime.UtcNow - startTime).TotalSeconds*100/CalculationTime).ChangeMessage(
                         string.Format(Resources.AbstractDiaExporter_WriteMultiplexedWindows_Exporting_Isolation_List__0__cycles_out_of__1__,
                             cycleNumber - 1, cycleCount)));
 
-                double secondsRemaining = CalculationTime - (DateTime.Now - startTime).TotalSeconds;
+                double secondsRemaining = CalculationTime - (DateTime.UtcNow - startTime).TotalSeconds;
                 double secondsPerCycle = secondsRemaining / (cycleCount - cycleNumber + 1);
-                var endTime = DateTime.Now.AddSeconds(secondsPerCycle);
+                var endTime = DateTime.UtcNow.AddSeconds(secondsPerCycle);
 
                 Cycle bestCycle = null;
                 do
@@ -151,13 +151,13 @@ namespace pwiz.Skyline.Model
                             if (bestCycle.CycleScore == 0.0)
                             {
                                 cyclesGenerated += i + 1 - attemptCount;
-                                endTime = DateTime.Now; // Break outer loop.
+                                endTime = DateTime.UtcNow; // Break outer loop.
                                 break;
                             }
                         }
                     }
                     cyclesGenerated += attemptCount;
-                } while (DateTime.Now < endTime);
+                } while (DateTime.UtcNow < endTime);
 
                 // ReSharper disable PossibleNullReferenceException
                 totalScore += bestCycle.CycleScore;
@@ -191,10 +191,10 @@ namespace pwiz.Skyline.Model
                 return;
             if (cycle.Repeats > 0)
                 Console.WriteLine("Cycle {0}: score {1:0.00}, repeats {2}, minDistance {3}, at iteration {4}, {5:0.00} seconds", // Not L10N
-                    cycleNumber, cycle.CycleScore, cycle.Repeats, cycle.MinDistance, cyclesGenerated, (DateTime.Now - startTime).TotalSeconds);
+                    cycleNumber, cycle.CycleScore, cycle.Repeats, cycle.MinDistance, cyclesGenerated, (DateTime.UtcNow - startTime).TotalSeconds);
             else
                 Console.WriteLine("Cycle {0}: score {1:0.00}, at iteration {2}, {3:0.00} seconds", // Not L10N
-                    cycleNumber, cycle.CycleScore, cyclesGenerated, (DateTime.Now - startTime).TotalSeconds);
+                    cycleNumber, cycle.CycleScore, cyclesGenerated, (DateTime.UtcNow - startTime).TotalSeconds);
         }
 // ReSharper restore LocalizableElement
 

@@ -708,7 +708,7 @@ namespace pwiz.Skyline.Model
                     // Centering resolution must be inversely proportional to charge state
                     // High charge states can bring major peaks close enough toghether to
                     // cause them to be combined and centered in isotope distribution valleys
-                    TransitionFullScan.ISOTOPE_PEAK_CENTERING_RES / (1 + charge/15.0),
+                    TransitionFullScan.ISOTOPE_PEAK_CENTERING_RES / (1 + Math.Abs(charge/15.0)),
                     TransitionFullScan.MIN_ISOTOPE_PEAK_ABUNDANCE);
             }
             return mz;

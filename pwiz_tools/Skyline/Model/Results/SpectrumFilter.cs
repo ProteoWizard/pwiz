@@ -136,6 +136,7 @@ namespace pwiz.Skyline.Model.Results
                     : null;
                 var driftTimeMax = maxObservedDriftTime??0;
 
+                int filterCount = 0;
                 foreach (var nodePep in document.Molecules)
                 {
                     if (firstPass && !retentionTimePredictor.IsFirstPassPeptide(nodePep))
@@ -220,17 +221,17 @@ namespace pwiz.Skyline.Model.Results
 
                         if (!EnabledMs)
                         {
-                            filter.AddQ3FilterValues(from TransitionDocNode nodeTran in nodeGroup.Children
+                            filterCount += filter.AddQ3FilterValues(from TransitionDocNode nodeTran in nodeGroup.Children
                                                      select nodeTran.Mz, calcWindowsQ3);
                         }
                         else if (!EnabledMsMs)
                         {
-                            filter.AddQ1FilterValues(GetMS1MzValues(nodeGroup), calcWindowsQ1);
+                            filterCount += filter.AddQ1FilterValues(GetMS1MzValues(nodeGroup), calcWindowsQ1);
                         }
                         else
                         {
-                            filter.AddQ1FilterValues(GetMS1MzValues(nodeGroup), calcWindowsQ1);
-                            filter.AddQ3FilterValues(from TransitionDocNode nodeTran in nodeGroup.Children
+                            filterCount += filter.AddQ1FilterValues(GetMS1MzValues(nodeGroup), calcWindowsQ1);
+                            filterCount += filter.AddQ3FilterValues(from TransitionDocNode nodeTran in nodeGroup.Children
                                                      where !nodeTran.IsMs1
                                                      select nodeTran.Mz, calcWindowsQ3);
                         }
@@ -238,7 +239,7 @@ namespace pwiz.Skyline.Model.Results
                 }
                 _filterMzValues = dictPrecursorMzToFilter.Values.ToArray();
 
-                var listChromKeyFilterIds = new List<ChromKey>();
+                var listChromKeyFilterIds = new List<ChromKey>(filterCount);
                 foreach (var spectrumFilterPair in _filterMzValues)
                 {
                     spectrumFilterPair.AddChromKeys(listChromKeyFilterIds);
@@ -450,16 +451,16 @@ namespace pwiz.Skyline.Model.Results
                 // If this is actually a run of IMS bins, look at the aggregate isolation window
                 var rt = spectra[0].RetentionTime;
                 var win = GetIsolationWindows(spectra[0].Precursors).FirstOrDefault();
-                double mzLow = win.IsolationMz - (win.IsolationWidth??0) / 2;
-                double mzHigh = win.IsolationMz + (win.IsolationWidth??0) / 2;
+                double mzLow = win.IsolationMz.Value - win.IsolationWidth.Value/2;
+                double mzHigh = win.IsolationMz.Value + win.IsolationWidth.Value/2;
                 for (var i = 1; i < spectra.Length; i++)
                 {
                     var spec = spectra[i];
                     if (!Equals(spec.RetentionTime, rt) || (spec.DriftTimeMsec ?? 0) <= (spectra[i - 1].DriftTimeMsec ?? 0))
                         return true;  // Not a run of IMS bins, must have been actual SIM scan
                     win = GetIsolationWindows(spec.Precursors).FirstOrDefault();
-                    mzLow = Math.Min(mzLow, win.IsolationMz - (win.IsolationWidth ?? 0) / 2);
-                    mzHigh = Math.Max(mzHigh, win.IsolationMz + (win.IsolationWidth ?? 0) / 2);
+                    mzLow = Math.Min(mzLow, win.IsolationMz.Value - win.IsolationWidth.Value / 2);
+                    mzHigh = Math.Max(mzHigh, win.IsolationMz.Value + win.IsolationWidth.Value / 2);
                 }
                 var width = mzHigh - mzLow;
                 isSimSpectrum = IsSimIsolation(new IsolationWindowFilter(new SignedMz(mzLow + width/2), width));
@@ -613,11 +614,11 @@ namespace pwiz.Skyline.Model.Results
             {
                 double isolationWidth = _instrument.MaxMz - _instrument.MinMz;
                 double isolationMz = _instrument.MinMz + isolationWidth / 2;
-                if (precursors.Any(p => p.PrecursorMz.IsNegative))
+                if (precursors.Any(p => p.PrecursorMz.HasValue && p.PrecursorMz.Value.IsNegative))
                 {
                     yield return new IsolationWindowFilter(new SignedMz(isolationMz, true), isolationWidth);
                 }
-                if (precursors.Any(p => !p.PrecursorMz.IsNegative))
+                if (precursors.Any(p => !p.PrecursorMz.HasValue || !p.PrecursorMz.Value.IsNegative))
                 {
                     yield return new IsolationWindowFilter(new SignedMz(isolationMz, false), isolationWidth);
                 }
@@ -635,13 +636,13 @@ namespace pwiz.Skyline.Model.Results
 
         private struct IsolationWindowFilter
         {
-            public IsolationWindowFilter(SignedMz isolationMz, double? isolationWidth) : this()
+            public IsolationWindowFilter(SignedMz? isolationMz, double? isolationWidth) : this()
             {
                 IsolationMz = isolationMz;
                 IsolationWidth = isolationWidth;
             }
 
-            public SignedMz IsolationMz { get; private set; }
+            public SignedMz? IsolationMz { get; private set; }
             public double? IsolationWidth { get; private set; }
 
             #region object overrides
@@ -692,7 +693,7 @@ namespace pwiz.Skyline.Model.Results
             var filterPairs = new List<SpectrumFilterPair>();
             if (acquisitionMethod == FullScanAcquisitionMethod.DIA)
             {
-                var isoTargMz = isoWin.IsolationMz;
+                var isoTargMz = isoWin.IsolationMz.Value;
                 double? isoTargWidth = isoWin.IsolationWidth;
                 if (!ignoreIsolationScheme)
                 {
@@ -722,7 +723,7 @@ namespace pwiz.Skyline.Model.Results
                 double mzDeltaEpsilon = Math.Min(_instrument.MzMatchTolerance, .0001);
 
                 // Isolation width for single is based on the instrument m/z match tolerance
-                var isoTargMz = isoWin.IsolationMz;
+                var isoTargMz = isoWin.IsolationMz.Value;
                 var isoWinSingle = new IsolationWindowFilter(isoTargMz, _instrument.MzMatchTolerance * 2);
 
                 foreach (var filterPair in FindFilterPairs(isoWinSingle, FullScanAcquisitionMethod.DIA, true))

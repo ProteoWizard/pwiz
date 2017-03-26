@@ -32,7 +32,6 @@ using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
-using pwiz.Skyline.Model.Lib;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -40,7 +39,6 @@ namespace pwiz.Skyline.Model.Results
     {
         // Lock on this to access these variables
         private readonly SrmDocument _document;
-        private LibraryRetentionTimes _libraryRetentionTimes;
         private FileBuildInfo _currentFileInfo;
 
         private readonly ChromatogramCache _cacheRecalc;
@@ -225,7 +223,6 @@ namespace pwiz.Skyline.Model.Results
                             _currentFileInfo = new FileBuildInfo(inFile);
                         }
                     }
-                    _libraryRetentionTimes = null;
 
                     // Read and write the mass spec data)
                     if (dataFilePathRecalc != null)
@@ -253,9 +250,6 @@ namespace pwiz.Skyline.Model.Results
                     }
                     else if (SpectraChromDataProvider.HasSpectrumData(inFile))
                     {
-                        if (_document.Settings.TransitionSettings.FullScan.IsEnabled && _libraryRetentionTimes == null)
-                            _libraryRetentionTimes = _document.Settings.GetRetentionTimes(dataFilePath);
-
                         provider = CreateSpectraChromProvider(inFile, fileInfo);
                     }
                     else
@@ -596,12 +590,9 @@ namespace pwiz.Skyline.Model.Results
 
         public static IEnumerable<ChromDataSet> GetChromDataSets(ChromDataProvider provider, bool isTimeNormalArea)
         {
-            var listKeyIndex = new List<ChromKeyProviderIdPair>(provider.ChromIds);
-            listKeyIndex.Sort();
-
             ChromKey lastKey = ChromKey.EMPTY;
             ChromDataSet chromDataSet = null;
-            foreach (var keyIndex in listKeyIndex)
+            foreach (var keyIndex in provider.ChromIds.OrderBy(k => k))
             {
                 var key = keyIndex.Key;
                 var chromData = new ChromData(key, keyIndex.ProviderId);
@@ -881,17 +872,12 @@ namespace pwiz.Skyline.Model.Results
         private static IEnumerable<KeyValuePair<PeptidePrecursorMz, ChromDataSet>> GetMatchingGroups(
             ChromDataSet chromDataSet, List<PeptidePrecursorMz> listMzPrecursors, bool singleMatch)
         {
-            // Find the first precursor m/z that is greater than or equal to the
-            // minimum possible match value
-            string modSeq = chromDataSet.ModifiedSequence;
-            var minMzMatch = chromDataSet.PrecursorMz - TransitionInstrument.MAX_MZ_MATCH_TOLERANCE;
-            var maxMzMatch = chromDataSet.PrecursorMz + TransitionInstrument.MAX_MZ_MATCH_TOLERANCE;
-            var lookup = new PeptidePrecursorMz(null, null, minMzMatch);
-            int i = listMzPrecursors.BinarySearch(lookup, MZ_COMPARER);
-            if (i < 0)
-                i = ~i;
+            SignedMz maxMzMatch;
+            var i = FindMatchMin(chromDataSet, listMzPrecursors, singleMatch, out maxMzMatch);
+
             // Enumerate all possible matching precursor values, collecting the ones
             // with potentially matching product ions
+            string modSeq = chromDataSet.ModifiedSequence;
             var listMatchingGroups = new List<Tuple<PeptidePrecursorMz, ChromDataSet, IList<ChromData>>>();
             for (; i < listMzPrecursors.Count && listMzPrecursors[i].PrecursorMz <= maxMzMatch && listMzPrecursors[i].PrecursorMz.IsNegative == maxMzMatch.IsNegative; i++)
             {
@@ -940,7 +926,7 @@ namespace pwiz.Skyline.Model.Results
 
                 // If this is single matching, as in full-scan filtering, return only nodes
                 // matching a single precursor m/z value.  The one closest to the data.
-                var bestMz = SignedMz.EMPTY;
+                SignedMz? bestMz = null;
                 if (singleMatch)
                 {
                     var matchMz = chromDataSet.PrecursorMz;
@@ -972,6 +958,43 @@ namespace pwiz.Skyline.Model.Results
                         match.Item1, chromDataPart);
                 }
             }
+        }
+
+        private static int FindMatchMin(ChromDataSet chromDataSet, List<PeptidePrecursorMz> listMzPrecursors, bool singleMatch,
+            out SignedMz maxMzMatch)
+        {
+            // Find the first precursor m/z that is greater than or equal to the
+            // minimum possible match value
+            var minMzMatch = chromDataSet.PrecursorMz;
+            maxMzMatch = chromDataSet.PrecursorMz;
+            // Single match should exactly match the precursor m/z
+            int i = -1;
+            if (singleMatch)
+            {
+                i = listMzPrecursors.BinarySearch(new PeptidePrecursorMz(null, null, minMzMatch), MZ_COMPARER);
+                if (i > 0)
+                {
+                    // If found a match, scan back for first matching precursor m/z
+                    while (i > 0 && listMzPrecursors[i - 1].PrecursorMz == chromDataSet.PrecursorMz)
+                        i--;
+                }
+                // Avoid tolerant match looking for zero m/z chromatograms
+                else if (minMzMatch == SignedMz.ZERO)
+                {
+                    i = ~i;
+                }
+            }
+            if (i < 0)
+            {
+                // Not found, so use tolerant matching generally from SRM, but some older
+                // SKYD files also had precursor m/z written as a float
+                minMzMatch -= TransitionInstrument.MAX_MZ_MATCH_TOLERANCE;
+                maxMzMatch += TransitionInstrument.MAX_MZ_MATCH_TOLERANCE;
+                i = listMzPrecursors.BinarySearch(new PeptidePrecursorMz(null, null, minMzMatch), MZ_COMPARER);
+                if (i < 0)
+                    i = ~i;
+            }
+            return i;
         }
 
         private static void FilterMatchingGroups(
@@ -1035,7 +1058,7 @@ namespace pwiz.Skyline.Model.Results
             return result;
         }
 
-        private static List<ChromDataTrans> GetBestMatching(
+        private static IList<IndexChromDataTrans> GetBestMatching(
             IEnumerable<ChromData> chromatograms, IEnumerable<TransitionDocNode> transitions, ExplicitRetentionTimeInfo explicitRT)
         {
             var listMatchingData = new List<IndexChromDataTrans>();
@@ -1112,7 +1135,7 @@ namespace pwiz.Skyline.Model.Results
 
             // Sort back into original order
             listMatchingData.Sort((t1, t2) => Comparer.Default.Compare(t1.Index, t2.Index));
-            return listMatchingData.Select(t => new ChromDataTrans(t.Chrom, t.Trans)).ToList();
+            return listMatchingData;
         }
 
         private static bool AreMatchingPrecursors(MzIndexChromData tc, MzIndexChromData tc2)
@@ -1182,27 +1205,18 @@ namespace pwiz.Skyline.Model.Results
             public TransitionDocNode Trans { get; private set; }
         }
 
-        private class ChromDataTrans
+        private class IndexChromDataTrans
         {
-            public ChromDataTrans(ChromData chrom, TransitionDocNode trans)
+            public IndexChromDataTrans(int index, ChromData chrom, TransitionDocNode trans)
             {
+                Index = index;
                 Chrom = chrom;
                 Trans = trans;
             }
 
+            public int Index { get; private set; }
             public ChromData Chrom { get; private set; }
             public TransitionDocNode Trans { get; private set; }
-        }
-
-        private class IndexChromDataTrans : ChromDataTrans
-        {
-            public IndexChromDataTrans(int index, ChromData chrom, TransitionDocNode trans)
-                : base(chrom, trans)
-            {
-                Index = index;
-            }
-
-            public int Index { get; private set; }
         }
 
         private static readonly MzComparer MZ_COMPARER = new MzComparer();

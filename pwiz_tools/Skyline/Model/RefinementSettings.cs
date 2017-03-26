@@ -751,7 +751,8 @@ namespace pwiz.Skyline.Model
                                 null, null, transitionGroupDocNode.ExplicitValues, resultsNew, null,
                                 transitionGroupDocNode.AutoManageChildren);
                             var mzShift = invertCharges ? 2.0 * BioMassCalc.MassProton : 0;  // We removed hydrogen rather than added
-                            Assume.IsTrue((Math.Abs(newTransitionGroupDocNode.PrecursorMz + mzShift - transitionGroupDocNode.PrecursorMz.Value) - Math.Abs(transitionGroupDocNode.TransitionGroup.PrecursorCharge * BioMassCalc.MassElectron)) <= 1E-5);
+                            Assume.IsTrue(Math.Abs(newTransitionGroupDocNode.PrecursorMz.Value + mzShift - transitionGroupDocNode.PrecursorMz.Value) -
+                                Math.Abs(transitionGroupDocNode.TransitionGroup.PrecursorCharge * BioMassCalc.MassElectron) <= 1E-5);
 
                             foreach (var transition in transitionGroupDocNode.Transitions)
                             {

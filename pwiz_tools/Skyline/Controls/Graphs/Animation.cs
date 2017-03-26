@@ -53,7 +53,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             _startValue = startValue;
-            _startTime = DateTime.Now;
+            _startTime = DateTime.UtcNow; // Said to be 117x faster than Now and this is for a delta
             _endValue = endValue;
 
             // Calculate smoothly accelerating and decelerating scale factors.
@@ -88,7 +88,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 // Choose the next animation step depending on how much time has elapsed
                 // since the animation started. Skip frames if we're not called fast enough.
-                var elapsed = (int)(DateTime.Now - _startTime).TotalMilliseconds;
+                var elapsed = (int)(DateTime.UtcNow - _startTime).TotalMilliseconds;
                 var step = Math.Min(
                     _scaleFactors.Length - 1,
                     elapsed / _updateMsec + 1);

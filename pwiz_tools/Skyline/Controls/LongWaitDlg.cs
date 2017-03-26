@@ -134,7 +134,7 @@ namespace pwiz.Skyline.Controls
 
         public void PerformWork(Control parent, int delayMillis, Action<ILongWaitBroker> performWork)
         {
-            _startTime = DateTime.Now;
+            _startTime = DateTime.UtcNow; // Said to be 117x faster than Now and this is for a delta
             _parentForm = parent;
             try
             {
@@ -248,7 +248,7 @@ namespace pwiz.Skyline.Controls
         {
             if (!_cancellationTokenSource.IsCancellationRequested)
             {
-                var runningTime = DateTime.Now.Subtract(_startTime);
+                var runningTime = DateTime.UtcNow.Subtract(_startTime);
                 // Show complete status before returning.
                 progressBar.Value = _progressValue = 100;
                 labelMessage.Text = _message;

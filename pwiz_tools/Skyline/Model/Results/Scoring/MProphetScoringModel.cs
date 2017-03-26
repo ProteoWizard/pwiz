@@ -153,22 +153,28 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// <summary>
         /// Train the model by iterative calculating weights to separate target and decoy transition groups.
         /// </summary>
-        /// <param name="targets">Target transition groups.</param>
-        /// <param name="decoys">Decoy transition groups.</param>
+        /// <param name="targetsIn">Target transition groups.</param>
+        /// <param name="decoysIn">Decoy transition groups.</param>
         /// <param name="initParameters">Initial model parameters (weights and bias)</param>
-        /// <param name="includeSecondBest"> Include the second best peaks in the targets as decoys?</param>
+        /// <param name="iterations">Optional specific number of iterations to use in training</param>
+        /// <param name="includeSecondBest">Include the second best peaks in the targets as decoys?</param>
         /// <param name="preTrain">Use a pre-trained model to bootstrap the learning.</param>
         /// <param name="progressMonitor"></param>
         /// <returns>Immutable model with new weights.</returns>
-        public override IPeakScoringModel Train(IList<IList<float[]>> targets, IList<IList<float[]>> decoys, LinearModelParams initParameters,
-            bool includeSecondBest = false, bool preTrain = true, IProgressMonitor progressMonitor = null)
+        public override IPeakScoringModel Train(IList<IList<float[]>> targetsIn,
+                                                IList<IList<float[]>> decoysIn,
+                                                LinearModelParams initParameters,
+                                                int? iterations = null,
+                                                bool includeSecondBest = false,
+                                                bool preTrain = true,
+                                                IProgressMonitor progressMonitor = null)
         {
             if(initParameters == null)
                 initParameters = new LinearModelParams(_peakFeatureCalculators.Count);
             return ChangeProp(ImClone(this), im =>
                 {
-                    targets = targets.Where(list => list.Count > 0).ToList();
-                    decoys = decoys.Where(list => list.Count > 0).ToList();
+                    var targets = targetsIn.Where(list => list.Count > 0);
+                    var decoys = decoysIn.Where(list => list.Count > 0);
                     var targetTransitionGroups = new ScoredGroupPeaksSet(targets);
                     var decoyTransitionGroups = new ScoredGroupPeaksSet(decoys);
                     // Bootstrap from the pre-trained legacy model
@@ -206,20 +212,43 @@ namespace pwiz.Skyline.Model.Results.Scoring
                     IProgressStatus status = new ProgressStatus(Resources.MProphetPeakScoringModel_Train_Training_peak_scoring_model);
                     if (progressMonitor != null)
                         progressMonitor.UpdateProgress(status);
-                    for (int iteration = 0; iteration < MAX_ITERATIONS; iteration++)
+                    int iterationCount = iterations ?? MAX_ITERATIONS;
+                    int truePeaksCount = 0;
+                    double qValueCutoff = 0.15; // First iteration cut-off
+                    for (int i = 0; i < iterationCount; i++)
                     {
+                        double decoyMeanNew, decoyStdevNew;
+                        bool colinearWarningNew = colinearWarning;
+                        int truePeaksCountNew = im.CalculateWeights(i,
+                            targetTransitionGroups, decoyTransitionGroups, includeSecondBest, qValueCutoff, calcWeights,
+                            out decoyMeanNew, out decoyStdevNew, ref colinearWarningNew);
+
+                        if (i == 0)
+                            qValueCutoff = 0.02;
+                        else if (truePeaksCountNew < truePeaksCount)
+                        {
+//                            if (qValueCutoff > 0.01)
+//                                qValueCutoff = 0.01;
+                            // CONSIDER: Stopping the second time the count decreases
+                        }
+                        truePeaksCount = truePeaksCountNew;
+                        decoyMean = decoyMeanNew;
+                        decoyStdev = decoyStdevNew;
+                        colinearWarning = colinearWarningNew;
+
                         if (progressMonitor != null)
                         {
                             if (progressMonitor.IsCanceled)
                                 throw new OperationCanceledException();
 
+//                            string formatText = i == 0
+//                                ? "Training peak scoring model (iteration {0} of {1})"
+//                                : "Training peak scoring model (iteration {0} of {1} - {2})";
+                            string formatText = Resources.MProphetPeakScoringModel_Train_Training_peak_scoring_model__iteration__0__of__1__;
                             progressMonitor.UpdateProgress(status =
-                                status.ChangeMessage(string.Format(Resources.MProphetPeakScoringModel_Train_Training_peak_scoring_model__iteration__0__of__1__, iteration + 1, MAX_ITERATIONS))
-                                      .ChangePercentComplete((iteration + 1) * 100 / (MAX_ITERATIONS + 1)));
+                                status.ChangeMessage(string.Format(formatText, i + 1, iterationCount, truePeaksCountNew))
+                                      .ChangePercentComplete((i + 1) * 100 / (iterationCount + 1)));
                         }
-
-                        im.CalculateWeights(iteration, targetTransitionGroups, decoyTransitionGroups,
-                                            includeSecondBest, calcWeights, out decoyMean, out decoyStdev, ref colinearWarning);
 
                         GC.Collect();   // Each loop generates a number of large objects. GC helps to keep private bytes under control
                     }
@@ -231,7 +260,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                     im.Parameters = parameters;
                     im.ColinearWarning = colinearWarning;
                     im.UsesSecondBest = includeSecondBest;
-                    im.UsesDecoys = decoys.Count > 0;
+                    im.UsesDecoys = decoysIn.Count > 0;
                 });
         }
 
@@ -274,15 +303,17 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// <param name="targetTransitionGroups">Target transition groups.</param>
         /// <param name="decoyTransitionGroups">Decoy transition groups.</param>
         /// <param name="includeSecondBest">Include the second best peaks in the targets as additional decoys?</param>
+        /// <param name="qValueCutoff">The q value cut-off for true peaks in the training</param>
         /// <param name="weights">Array of weights per calculator.</param>
         /// <param name="decoyMean">Output mean of decoy transition groups.</param>
         /// <param name="decoyStdev">Output standard deviation of decoy transition groups.</param>
         /// <param name="colinearWarning">Set to true if colinearity was detected.</param>
-        private void CalculateWeights(
+        private int CalculateWeights(
             int iteration,
             ScoredGroupPeaksSet targetTransitionGroups,
             ScoredGroupPeaksSet decoyTransitionGroups,
             bool includeSecondBest,
+            double qValueCutoff,
             double[] weights,
             out double decoyMean,
             out double decoyStdev,
@@ -300,7 +331,6 @@ namespace pwiz.Skyline.Model.Results.Scoring
             }
 
             // Select true target peaks using a q-value cutoff filter.
-            var qValueCutoff = (iteration == 0 ? 0.15 : 0.02);
             var truePeaks = targetTransitionGroups.SelectTruePeaks(qValueCutoff, Lambda, decoyTransitionGroups);
             var decoyPeaks = decoyTransitionGroups.SelectMaxPeaks();
 
@@ -387,6 +417,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
             decoyMean = decoyTransitionGroups.Mean;
             decoyStdev = decoyTransitionGroups.Stdev;
+            return truePeaks.Count;
         }
 
 

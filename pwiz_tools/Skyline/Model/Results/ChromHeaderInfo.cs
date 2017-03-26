@@ -146,6 +146,13 @@ namespace pwiz.Skyline.Model.Results
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct ChromGroupHeaderInfo : IComparable<ChromGroupHeaderInfo>
     {
+        /////////////////////////////////////////////////////////////////////
+        // CAREFUL: This ordering determines the layout of this struct on
+        //          disk from which it gets loaded directly into memory.
+        //          The order and size of each element has been very carefully
+        //          considered to avoid wasted space due to alignment.
+        // ALSO:    With any additions you need to tweak the writer code in 
+        //          ChromatogramCache.WriteStructs since we write element by element.
         private int _textIdIndex;
         private int _startTransitionIndex;
         private int _startPeakIndex;
@@ -169,6 +176,7 @@ namespace pwiz.Skyline.Model.Results
         private float _startTime;
         private float _endTime;
         private float _collisionalCrossSection;
+        /////////////////////////////////////////////////////////////////////
 
         [Flags]
         public enum FlagValues
@@ -308,13 +316,6 @@ namespace pwiz.Skyline.Model.Results
             return value;
         }
 
-        /////////////////////////////////////////////////////////////////////
-        // CAREFUL: This ordering determines the layout of this struct on
-        //          disk from which it gets loaded directly into memory.
-        //          The order and size of each element has been very carefully
-        //          considered to avoid wasted space due to alignment.
-        // ALSO:    With any additions you need to tweak the writer code in 
-        //          ChromatogramCache.WriteStructs since we write element by element.
         public int TextIdIndex { get { return _textIdIndex; } }
         public int StartTransitionIndex { get { return _startTransitionIndex; } }
         public int StartPeakIndex { get { return _startPeakIndex; } }
@@ -331,11 +332,10 @@ namespace pwiz.Skyline.Model.Results
         public long LocationPoints { get{return _locationPoints;} }
         public int UncompressedSize { get{return _uncompressedSize;} }
         public bool IsProcessedScans { get { return _isProcessedScans != 0; } }
-        /////////////////////////////////////////////////////////////////////
 
         public override string ToString()
         {
-            return string.Format("{0:F04}, {1}", Precursor, NumTransitions);    // Not L10N
+            return string.Format("{0:F04}, {1}, {2}", Precursor, NumTransitions, FileIndex);    // Not L10N
         }
 
         public short MaxPeakIndex
@@ -450,7 +450,11 @@ namespace pwiz.Skyline.Model.Results
             int keyCompare = Precursor.CompareTo(info.Precursor);
             if (keyCompare != 0)
                 return keyCompare;
-            return FileIndex - info.FileIndex;
+            keyCompare = FileIndex - info.FileIndex;
+            if (keyCompare != 0)
+                return keyCompare;
+            // For sort stability include the file location
+            return Comparer<long>.Default.Compare(LocationPoints, info.LocationPoints);
         }
 
         #region Fast file I/O
@@ -1607,6 +1611,11 @@ namespace pwiz.Skyline.Model.Results
             OptionalMinTime = optionalMinTime;
             OptionalMaxTime = optionalMaxTime;
             OptionalCenterOfGravityTime = optionalCenterOfGravityTime;
+            // Calculating these values on the fly shows up in a profiler in the CompareTo function
+            // So, probably not worth the space saved in this class
+            IsEmpty = Precursor == 0 && Product == 0 && source == ChromSource.unknown;
+            if (OptionalMaxTime.HasValue && OptionalMinTime.HasValue && (OptionalMaxTime > OptionalMinTime))
+                OptionalMidTime = (OptionalMaxTime.Value + OptionalMinTime.Value) / 2;
         }
 
         public string TextId { get; private set; }  // Modified sequence or custom ion id
@@ -1620,13 +1629,11 @@ namespace pwiz.Skyline.Model.Results
         public ChromExtractor Extractor { get; private set; }
         public bool HasCalculatedMzs { get; private set; }
         public bool HasScanIds { get; private set; }
+        public bool IsEmpty { get; private set; }
         public double? OptionalMinTime { get; private set; }
         public double? OptionalMaxTime { get; private set; }
         public double? OptionalCenterOfGravityTime { get; private set; } // Only used in SRM, to help disambiguate chromatograms with same Q1>Q3 but different retention time intervals
-
-        public double? OptionalMidTime { get { return OptionalMaxTime.HasValue && OptionalMinTime.HasValue && (OptionalMaxTime > OptionalMinTime) ? (OptionalMaxTime.Value + OptionalMinTime.Value) / 2 : (double?)null; } }
-
-        public bool IsEmpty { get { return Precursor == 0 && Product == 0 && Source == ChromSource.unknown; } }
+        public double? OptionalMidTime { get; private set; }
 
         /// <summary>
         /// Adjust the product m/z to look like it does for vendors that allow
@@ -1688,26 +1695,19 @@ namespace pwiz.Skyline.Model.Results
             return CompareTo(key, (mz1, mz2) => mz1.CompareTolerant(mz2, tolerance));
         }
 
+        /// <summary>
+        /// This comparison function shows up as a performance burden during import of large DIA data sets.
+        /// Be very careful changing it and be sure to profile your changes on a large DIA data set.
+        /// </summary>
         private int CompareTo(ChromKey key, Func<SignedMz, SignedMz, int> compareMz)
         {
             int c;
 
             // First deal with empty keys sorting to the end
             if (IsEmpty)
-            {
-                if (key.IsEmpty)
-                {
-                    return 0;
-                }
-                return 1;
-            }
-            else
-            {
-                if (key.IsEmpty)
-                {
-                    return -1;
-                }
-            }
+                return key.IsEmpty ? 0 : 1;
+            if (key.IsEmpty)
+                return -1;
 
             // OptionalCenterOfGravityTime is only set for SRM. Here we are ording
             // everything by maximum retention time to know when chromatograms can be
@@ -1715,13 +1715,15 @@ namespace pwiz.Skyline.Model.Results
             if (!key.OptionalCenterOfGravityTime.HasValue)
             {
                 // Order by maximum retention time.
-                if (OptionalMaxTime.HasValue != key.OptionalMaxTime.HasValue)
-                    return OptionalMaxTime.HasValue ? -1 : 1;
                 if (OptionalMaxTime.HasValue && key.OptionalMaxTime.HasValue)
                 {
                     c = OptionalMaxTime.Value.CompareTo(key.OptionalMaxTime.Value);
                     if (c != 0)
                         return c;
+                }
+                else if (OptionalMaxTime.HasValue != key.OptionalMaxTime.HasValue)
+                {
+                    return OptionalMaxTime.HasValue ? -1 : 1;
                 }
             }
 
@@ -1732,13 +1734,16 @@ namespace pwiz.Skyline.Model.Results
 
             // For SRM data, order by time for chromatograms that are not highly overlapping
             // since these are likely for different targets
-            if (OptionalMidTime.HasValue && key.OptionalMidTime.HasValue && !HighlyOverlapping(key))
+            if (OptionalMidTime.HasValue && key.OptionalMidTime.HasValue)
             {
-                c = OptionalMinTime.Value.CompareTo(key.OptionalMinTime.Value);
-                if (c==0)
-                    c = key.OptionalMaxTime.Value.CompareTo(OptionalMaxTime.Value);
-                if (c != 0)
-                    return c;
+                if (!HighlyOverlapping(key))
+                {
+                    c = OptionalMinTime.Value.CompareTo(key.OptionalMinTime.Value);
+                    if (c == 0)
+                        c = key.OptionalMaxTime.Value.CompareTo(OptionalMaxTime.Value);
+                    if (c != 0)
+                        return c;
+                }
             }
             else if (OptionalMidTime.HasValue != key.OptionalMidTime.HasValue)
             {

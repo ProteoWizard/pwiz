@@ -973,7 +973,7 @@ namespace pwiz.ProteowizardWrapper
                         PrecursorMz = GetPrecursorMz(p, negativePolarity),
                         PrecursorDriftTimeMsec = GetPrecursorDriftTimeMsec(p),
                         PrecursorCollisionEnergy = GetPrecursorCollisionEnergy(p),
-                        IsolationWindowTargetMz = new SignedMz(GetIsolationWindowValue(p, CVID.MS_isolation_window_target_m_z), negativePolarity),
+                        IsolationWindowTargetMz = GetSignedMz(GetIsolationWindowValue(p, CVID.MS_isolation_window_target_m_z), negativePolarity),
                         IsolationWindowLower = GetIsolationWindowValue(p, CVID.MS_isolation_window_lower_offset),
                         IsolationWindowUpper = GetIsolationWindowValue(p, CVID.MS_isolation_window_upper_offset),
                     }).ToArray();
@@ -996,13 +996,20 @@ namespace pwiz.ProteowizardWrapper
                 }).ToArray();
         }
 
-        private static SignedMz GetPrecursorMz(Precursor precursor, bool negativePolarity)
+        private static SignedMz? GetPrecursorMz(Precursor precursor, bool negativePolarity)
         {
             // CONSIDER: Only the first selected ion m/z is considered for the precursor m/z
             var selectedIon = precursor.selectedIons.FirstOrDefault();
             if (selectedIon == null)
-                return SignedMz.EMPTY;
-            return new SignedMz(selectedIon.cvParam(CVID.MS_selected_ion_m_z).value, negativePolarity);
+                return null;
+            return GetSignedMz(selectedIon.cvParam(CVID.MS_selected_ion_m_z).value, negativePolarity);
+        }
+
+        private static SignedMz? GetSignedMz(double? mz, bool negativePolarity)
+        {
+            if (mz.HasValue)
+                return new SignedMz(mz.Value, negativePolarity);
+            return null;
         }
 
         private const string USERPARAM_DRIFT_TIME = "drift time"; // Not L10N
@@ -1153,22 +1160,22 @@ namespace pwiz.ProteowizardWrapper
 
     public struct MsPrecursor
     {
-        public SignedMz PrecursorMz { get; set; }
+        public SignedMz? PrecursorMz { get; set; }
         public double? PrecursorDriftTimeMsec { get; set; }
         public double? PrecursorCollisionEnergy  { get; set; }
-        public SignedMz IsolationWindowTargetMz { get; set; }
+        public SignedMz? IsolationWindowTargetMz { get; set; }
         public double? IsolationWindowUpper { get; set; }
         public double? IsolationWindowLower { get; set; }
-        public SignedMz IsolationMz
+        public SignedMz? IsolationMz
         {
             get
             {
-                var targetMz = IsolationWindowTargetMz.HasValue ? IsolationWindowTargetMz : PrecursorMz;
+                SignedMz? targetMz = IsolationWindowTargetMz ?? PrecursorMz;
                 // If the isolation window is not centered around the target m/z, then return a
                 // m/z value that is centered in the isolation window.
                 if (targetMz.HasValue && IsolationWindowUpper.HasValue && IsolationWindowLower.HasValue &&
                         IsolationWindowUpper.Value != IsolationWindowLower.Value)
-                    return new SignedMz((targetMz * 2 + IsolationWindowUpper.Value - IsolationWindowLower.Value) / 2.0, targetMz.IsNegative);
+                    return new SignedMz((targetMz.Value * 2 + IsolationWindowUpper.Value - IsolationWindowLower.Value) / 2.0, targetMz.Value.IsNegative);
                 return targetMz;
             }
         }

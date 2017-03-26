@@ -28,7 +28,7 @@ namespace pwiz.SkylineTest.Results
 {
     /// <summary>
     /// test for fix of Issue 263: "Too strict about choosing only one precursor for every MS/MS scan in Targeted MS/MS"
-    /// the three peptides in this data set have the same pass, formerly only one of them got assigned a precursor. 
+    /// the three peptides in this data set have the same mass, formerly only one of them got assigned a precursor. 
     /// </summary>
     [TestClass]
     public class MultiplePeptidesSameMzTest : AbstractUnitTest

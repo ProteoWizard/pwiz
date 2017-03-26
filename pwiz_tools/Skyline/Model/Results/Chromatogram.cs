@@ -135,9 +135,8 @@ namespace pwiz.Skyline.Model.Results
             {
                 // Cancelled if file is no longer part of the document, or it is
                 // already loaded.
-                return 
-                    !settings.MeasuredResults.MSDataFilePaths.Contains(dataFilePath) ||
-                    settings.MeasuredResults.CachedFilePaths.Contains(dataFilePath);
+                var res = settings.MeasuredResults;
+                return !res.IsDataFilePath(dataFilePath) || res.IsCachedFile(dataFilePath);
             }
             return false;
         }

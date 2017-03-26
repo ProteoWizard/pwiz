@@ -483,7 +483,7 @@ namespace pwiz.Skyline.Model.Results
 
             private readonly MinStatistics.Replicate[] _replicates;
             private readonly int[] _fileIndexToReplicateIndex;
-            private DateTime _lastOutput = DateTime.Now;
+            private DateTime _lastOutput = DateTime.UtcNow; // Said to be 117x faster than Now and this is for a delta
 
             private static long GetFileSize(ChromGroupHeaderInfo chromGroupHeaderInfo)
             {
@@ -577,9 +577,9 @@ namespace pwiz.Skyline.Model.Results
                 if (progressCallback == null)
                     return;
 
-                var currentTime = DateTime.Now;
+                var currentTime = DateTime.UtcNow;
                 // Show progress at least every second
-                if (!isFinal && (currentTime - _lastOutput).Seconds < 1)
+                if (!isFinal && (currentTime - _lastOutput).TotalSeconds < 1)
                     return;
 
                 progressCallback(new MinStatistics(_replicates));
@@ -601,8 +601,10 @@ namespace pwiz.Skyline.Model.Results
             private readonly FileStream _outputStreamScores;
             private int _peakCount;
             private int _scoreCount;
-            private readonly List<ChromGroupHeaderInfo> _chromGroupHeaderInfos = new List<ChromGroupHeaderInfo>();
-            private readonly List<ChromTransition> _transitions = new List<ChromTransition>();
+            private readonly BlockedArrayList<ChromGroupHeaderInfo> _chromGroupHeaderInfos =
+                new BlockedArrayList<ChromGroupHeaderInfo>(ChromGroupHeaderInfo.SizeOf, ChromGroupHeaderInfo.DEFAULT_BLOCK_SIZE);
+            private readonly BlockedArrayList<ChromTransition> _transitions =
+                new BlockedArrayList<ChromTransition>(ChromTransition.SizeOf, ChromTransition.DEFAULT_BLOCK_SIZE);
             private readonly List<Type> _scoreTypes;
 
             public Writer(ChromatogramCache chromatogramCache, CacheFormat cacheFormat, Stream outputStream, FileStream outputStreamScans, FileStream outputStreamPeaks, FileStream outputStreamScores)
@@ -712,6 +714,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 _originalCache.WriteScanIds(_outputStreamScans);
 
+                _chromGroupHeaderInfos.Sort();
                 ChromatogramCache.WriteStructs(_cacheFormat,
                                                _outputStream,
                                                _outputStreamScans,

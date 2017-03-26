@@ -1331,7 +1331,7 @@ namespace pwiz.Skyline
                 if (commandArgs.IsCreateScoringModel)
                 {
                     modelAndFeatures = CreateScoringModel(commandArgs.ReintegratModelName,
-                        commandArgs.IsDecoyModel, commandArgs.IsSecondBestModel);
+                        commandArgs.IsDecoyModel, commandArgs.IsSecondBestModel, commandArgs.ReintegrateModelIterationCount);
 
                     if (modelAndFeatures == null)
                         return false;
@@ -1365,7 +1365,7 @@ namespace pwiz.Skyline
             public IList<PeakTransitionGroupFeatures> Features { get; private set; }
         }
 
-        private ModelAndFeatures CreateScoringModel(string modelName, bool decoys, bool secondBest)
+        private ModelAndFeatures CreateScoringModel(string modelName, bool decoys, bool secondBest, int? modelIterationCount)
         {
             _out.WriteLine(Resources.CommandLine_CreateScoringModel_Creating_scoring_model__0_, modelName);
 
@@ -1402,7 +1402,7 @@ namespace pwiz.Skyline
 
                 // Train the model.
                 scoringModel = (MProphetPeakScoringModel)scoringModel.Train(targetTransitionGroups,
-                    decoyTransitionGroups, initialParams, secondBest, true, progressMonitor);
+                    decoyTransitionGroups, initialParams, modelIterationCount, secondBest, true, progressMonitor);
 
                 Settings.Default.PeakScoringModelList.SetValue(scoringModel);
 
@@ -3025,7 +3025,7 @@ namespace pwiz.Skyline
         public CommandProgressMonitor(TextWriter outWriter, IProgressStatus status)
         {
             _out = outWriter;
-            _waitStart = _lastOutput = DateTime.Now;
+            _waitStart = _lastOutput = DateTime.UtcNow; // Said to be 117x faster than Now and this is for a delta
 
             UpdateProgress(status);
         }
@@ -3058,10 +3058,10 @@ namespace pwiz.Skyline
                 }  
             }
 
-            var currentTime = DateTime.Now;
+            var currentTime = DateTime.UtcNow;
             // Show progress at least every 2 seconds and at 100%, if any other percentage
             // output has been shown.
-            if ((currentTime - _lastOutput).Seconds < 2 && !status.IsError && (status.PercentComplete != 100 || _lastOutput == _waitStart))
+            if ((currentTime - _lastOutput).TotalSeconds < 2 && !status.IsError && (status.PercentComplete != 100 || _lastOutput == _waitStart))
             {
                 return;
             }

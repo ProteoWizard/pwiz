@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Windows.Forms.VisualStyles;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.SkylineTestUtil;
@@ -37,15 +38,10 @@ namespace pwiz.SkylineTestA
         [TestMethod]
         public void SignedMzUnitTest()
         {
-            var empty = new SignedMz(null, false);
-            Assert.AreEqual(empty, SignedMz.EMPTY);
-            Assert.AreEqual(((double?) null).GetHashCode(), empty.GetHashCode());
-            Assert.IsFalse(empty.HasValue);
             var zero = new SignedMz(0, false);
-            var zeroNeg = new SignedMz(0, true);
             Assert.AreEqual(zero, SignedMz.ZERO);
-            Assert.AreNotEqual(zeroNeg, SignedMz.ZERO);
-            AssertEx.ThrowsException<Exception>(() => zero.Value == empty.Value);
+//            var zeroNeg = new SignedMz(0, true);
+//            Assert.AreNotEqual(zeroNeg, SignedMz.ZERO);
             var neg = new SignedMz(-9.0);  // For deserialization (note single ctor arg) - a negative value is taken to mean negative polarity
             Assert.AreEqual(9.0, neg.Value);
             Assert.IsTrue(neg.IsNegative);
@@ -56,17 +52,17 @@ namespace pwiz.SkylineTestA
                 var one = new SignedMz(1, negative);
                 var two = new SignedMz(2, negative);
                 var three = new SignedMz(3, negative);
-                var minusOne = new SignedMz(-1, negative);  // The notion of ion polarity is unaffected by the sign of the mz value, since we can do addition and subtraction on these
-                Assert.AreEqual(negative, minusOne.IsNegative);
+                Assert.AreEqual(one, new SignedMz(-1, negative));  // The notion of ion polarity is unaffected by the sign of the mz value, since we can do addition and subtraction on these
+                if (negative)
+                    Assert.AreEqual(one, new SignedMz(-1));
+                else
+                    Assert.AreNotEqual(one, new SignedMz(-1));
                 Assert.AreEqual(negative, one.IsNegative);
                 Assert.AreEqual(2, two.Value);
                 Assert.AreEqual(negative ? -2 : 2, two.RawValue);
-                Assert.AreEqual(negative ? 1 : -1, minusOne.RawValue);
                 Assert.AreEqual(three, one + two);
-                Assert.AreEqual(two, three + minusOne);
                 Assert.AreEqual(one, three - two);
-                Assert.AreEqual(-1.0, two - three);
-                Assert.AreEqual(minusOne, two - three);
+                Assert.AreEqual(one, two - three);  // Subtraction always results in an absolute value with the original sign
                 Assert.AreEqual(one, three - 2);
                 Assert.AreEqual(three, one + 2);
                 Assert.IsTrue(three > one);
@@ -76,6 +72,13 @@ namespace pwiz.SkylineTestA
                 var bad = new SignedMz(1, !negative);
                 AssertEx.ThrowsException<InvalidOperationException>(() => one + bad);  // Mixed-polarity math is meaningless
                 AssertEx.ThrowsException<InvalidOperationException>(() => one - bad);
+                Assert.AreEqual(three, three + SignedMz.ZERO);  // Make sure adding or subtracting zero always works
+                Assert.AreEqual(three, three - SignedMz.ZERO);
+                Assert.AreEqual(three, SignedMz.ZERO + three);
+                Assert.AreEqual(three, SignedMz.ZERO - three);
+                Assert.AreEqual(SignedMz.ZERO, SignedMz.ZERO + SignedMz.ZERO);
+                Assert.AreEqual(SignedMz.ZERO, SignedMz.ZERO - SignedMz.ZERO);
+                Assert.AreEqual(SignedMz.ZERO, three - three);
             }
         }
     }

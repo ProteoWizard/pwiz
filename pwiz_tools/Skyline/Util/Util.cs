@@ -976,6 +976,8 @@ namespace pwiz.Skyline.Util
         public BlockedArray(Func<int, TItem[]> readItems, int itemCount, int itemSize, int bytesPerBlock,
             IProgressMonitor progressMonitor = null, IProgressStatus status = null)
         {
+            Assume.IsTrue(itemSize < bytesPerBlock);    // Make sure these values aren't flipped
+
             _itemCount = itemCount;
             _blocks = new List<TItem[]>();
 
@@ -1026,6 +1028,12 @@ namespace pwiz.Skyline.Util
         {
             _itemCount = items.Count;
             _blocks = items.GetBlocks().ToList();
+        }
+
+        private BlockedArray(List<TItem[]> blocks, int itemCount)
+        {
+            _itemCount = itemCount;
+            _blocks = blocks;
         }
 
         /// <summary>
@@ -1098,6 +1106,20 @@ namespace pwiz.Skyline.Util
                 count -= writeCount;
             }
         }
+
+        public BlockedArray<TItem> ChangeAll(Func<TItem, TItem> changeElement)
+        {
+            var newBlocks = new List<TItem[]>();
+            foreach (var block in _blocks)
+            {
+                var newBlock = new TItem[block.Length];
+                newBlocks.Add(newBlock);
+
+                for (int i = 0; i < block.Length; i++)
+                    newBlock[i] = changeElement(block[i]);
+            }
+            return new BlockedArray<TItem>(newBlocks, _itemCount);
+        }
     }
 
     public class BlockedArrayList<TItem> : IList<TItem>
@@ -1131,6 +1153,15 @@ namespace pwiz.Skyline.Util
             }
             block.Add(item);
             _itemCount++;
+        }
+
+        public void AddRange(IList<TItem> chromTransitions)
+        {
+            // CONSIDER: Make this faster than adding one at a time?
+            foreach (var t in chromTransitions)
+            {
+                Add(t);
+            }
         }
 
         public void AddRange(BlockedArray<TItem> chromTransitions)
@@ -1245,6 +1276,69 @@ namespace pwiz.Skyline.Util
         public BlockedArray<TItem> ToBlockedArray()
         {
             return new BlockedArray<TItem>(this);
+        }
+
+        public void Reorder(IEnumerable<int> newOrder)
+        {
+            var blockNext = new List<TItem>(_blocks[0].Count);
+            var blocksNew = new List<List<TItem>>(_blocks.Count) { blockNext };
+            foreach (var i in newOrder)
+            {
+                if (blockNext.Count == _itemsPerBlock)
+                {
+                    blockNext = new List<TItem>(_blocks[blocksNew.Count].Count);
+                    blocksNew.Add(blockNext);
+                }
+                blockNext.Add(this[i]);
+            }
+            _blocks = blocksNew;
+        }
+
+        public void Sort()
+        {
+            Sort(Comparer<TItem>.Default.Compare);
+        }
+
+        public void Sort(Comparison<TItem> compare)
+        {
+            foreach (var block in _blocks)
+                block.Sort(compare);
+            if (_blocks.Count < 2)
+                return;
+
+            try
+            {
+                // Merge sort the blocks into new list
+                var nextIndexes = new int[_blocks.Count];
+                var blockNext = new List<TItem>(_blocks[0].Count);
+                var blocksNew = new List<List<TItem>>(_blocks.Count) { blockNext };
+                for (int i = 0; i < _itemCount; i++)
+                {
+                    if (blockNext.Count == _itemsPerBlock)
+                    {
+                        blockNext = new List<TItem>(_blocks[blocksNew.Count].Count);
+                        blocksNew.Add(blockNext);
+                    }
+                    int iBlockMin = 0;
+                    for (int iBlock = 1; iBlock < _blocks.Count; iBlock++)
+                    {
+                        int iNext = nextIndexes[iBlock];
+                        int iMin = nextIndexes[iBlockMin];
+                        if (iNext >= _blocks[iBlock].Count)
+                            continue;
+                        if (iMin >= _blocks[iBlockMin].Count || compare(_blocks[iBlock][iNext], _blocks[iBlockMin][iMin]) < 1)
+                            iBlockMin = iBlock;
+                    }
+                    blockNext.Add(_blocks[iBlockMin][nextIndexes[iBlockMin]]);
+                    nextIndexes[iBlockMin]++;
+                }
+                _blocks = blocksNew;
+            }
+            catch (Exception e)
+            {
+                Trace.WriteLine(e);
+                throw;
+            }
         }
     }
 

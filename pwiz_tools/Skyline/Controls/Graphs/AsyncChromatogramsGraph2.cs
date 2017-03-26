@@ -83,7 +83,7 @@ namespace pwiz.Skyline.Controls.Graphs
             base.OnLoad(e);
             if (DesignMode) return;
 
-            _lastRender = DateTime.Now;
+            _lastRender = DateTime.UtcNow; // Said to be 117x faster than Now and this is for a delta
 
             timer.Interval = ANIMATE_UPDATERATE;
             timer.Tick += timer_Tick;
@@ -200,7 +200,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             // Tell Zedgraph if axes are being changed.
             double nextTime = info.CurrentTime ?? 0;
-            double millisElapsed = (DateTime.Now - _lastRender).TotalMilliseconds;
+            double millisElapsed = (DateTime.UtcNow - _lastRender).TotalMilliseconds;
             if (_xAxisAnimation.IsActive || _yAxisAnimation.IsActive)
             {
                 info.GraphPane.XAxis.Scale.Max = _xAxisAnimation.Step();
@@ -222,7 +222,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     return;
 
                 IncrementalRender(info, minTime, maxTime);
-                _lastRender = DateTime.Now;
+                _lastRender = DateTime.UtcNow;
             }
 
             _lastTime = nextTime;
