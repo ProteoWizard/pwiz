@@ -67,6 +67,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.SelectedPath = new IdentityPath(peptideGroup.Id, peptide.Id));
             Settings.Default.SplitChromatogramGraph = false;
             RunUI(() => SkylineWindow.SetDisplayTypeChrom(DisplayTypeChrom.all));
+            WaitForGraphs();
 
             var graphChrom = FindOpenForm<GraphChromatogram>();
             MSGraphControl graphControl = (MSGraphControl)graphChrom.Controls.Find("graphControl", true).First();
@@ -84,6 +85,7 @@ namespace pwiz.SkylineTestFunctional
 
             // When Display Type is set to "total", there is one curve per transition group.
             RunUI(() => SkylineWindow.SetDisplayTypeChrom(DisplayTypeChrom.total));
+            WaitForGraphs();
             Assert.AreEqual(peptide.TransitionGroupCount, GetChromatogramCount(graphControl.GraphPane));
 
             foreach (var transitionGroup in peptide.TransitionGroups)
@@ -95,6 +97,7 @@ namespace pwiz.SkylineTestFunctional
                 // Verify that "Split Graph" produces the correct number of panes.
                 Settings.Default.SplitChromatogramGraph = true;
                 RunUI(() => SkylineWindow.SetDisplayTypeChrom(DisplayTypeChrom.all));
+                WaitForGraphs();
                 if (transitionGroup.GetMsTransitions(true).Any() && transitionGroup.GetMsMsTransitions(true).Any())
                 {
                     Assert.AreEqual(2, graphControl.MasterPane.PaneList.Count, message);
@@ -104,11 +107,16 @@ namespace pwiz.SkylineTestFunctional
                     Assert.AreEqual(1, graphControl.MasterPane.PaneList.Count, message);
                 }
 
+                int countTrans = 0;
                 foreach (var transition in transitionGroup.Transitions)
                 {
+                    if (++countTrans >= 5)  // Selecting absolutely everything makes this a pretty long test (this cuts time in half)
+                        break;
+
                     var transitionPath = new IdentityPath(transitionGroupPath, transition.Id);
                     RunUI(() => SkylineWindow.SelectedPath = transitionPath);
                     RunUI(() => SkylineWindow.SetDisplayTypeChrom(DisplayTypeChrom.single));
+                    WaitForGraphs();
                     Assert.AreEqual(1, graphControl.MasterPane.PaneList.Count);
                     if (1 != GetChromatogramCount(graphControl.GraphPane))
                     {
