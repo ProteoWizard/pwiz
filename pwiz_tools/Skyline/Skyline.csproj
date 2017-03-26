@@ -14,7 +14,7 @@
     <FileAlignment>512</FileAlignment>
     <ApplicationIcon>Skyline.ico</ApplicationIcon>
     <IsWebBootstrapper>true</IsWebBootstrapper>
-    <ManifestCertificateThumbprint>51D74A6FC5F02022403411ECD1D7BB317C30D946</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>828D97D15AA50E99C25127B6A71E0A6DFC12027E</ManifestCertificateThumbprint>
     <ManifestKeyFile>
     </ManifestKeyFile>
     <GenerateManifests>true</GenerateManifests>
@@ -46,8 +46,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>10482</ApplicationRevision>
-    <ApplicationVersion>3.6.1.10482</ApplicationVersion>
+    <ApplicationRevision>10615</ApplicationRevision>
+    <ApplicationVersion>3.6.1.10615</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
