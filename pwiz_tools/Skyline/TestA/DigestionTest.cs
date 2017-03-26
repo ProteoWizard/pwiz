@@ -39,9 +39,7 @@ namespace pwiz.SkylineTestA
             StringWriter repetitiveFastaFile = new StringWriter();
             WriteRepetitiveFastaFile(repetitiveFastaFile, "ELVISLIVES", proteinCount);
             IProgressStatus progressStatus = new ProgressStatus();
-            DateTime startTime = DateTime.Now;
             proteomeDb.AddFastaFile(new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(repetitiveFastaFile.ToString()))), new SilentProgressMonitor(), ref progressStatus, false);
-            TestContext.WriteLine("Time to add FASTA file " + DateTime.Now.Subtract(startTime));
             var digestion = proteomeDb.GetDigestion();
             var proteins = digestion.GetProteinsWithSequence("VISLIV");
             Assert.AreEqual(proteinCount, proteins.Count);
