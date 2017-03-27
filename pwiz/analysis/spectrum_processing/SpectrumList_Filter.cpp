@@ -565,6 +565,32 @@ boost::logic::tribool SpectrumList_FilterPredicate_MzPresent::accept(const msdat
     return false;
 }
 
+//
+// SpectrumList_FilterPredicate_ThermoScanFilter
+//
+
+SpectrumList_FilterPredicate_ThermoScanFilter::SpectrumList_FilterPredicate_ThermoScanFilter(const string& matchString, bool matchExact, bool inverse) : matchString_(matchString), matchExact_(matchExact), inverse_(inverse) {}
+
+boost::logic::tribool SpectrumList_FilterPredicate_ThermoScanFilter::accept(const msdata::Spectrum& spectrum) const
+{
+    Scan dummy;
+    const Scan& scan = spectrum.scanList.scans.empty() ? dummy : spectrum.scanList.scans[0];
+    CVParam param = scan.cvParam(MS_filter_string);
+    if (param.cvid == CVID_Unknown) return boost::logic::indeterminate;
+    string scanFilter = param.value;
+    bool filterPass;
+    if (matchExact_)
+    {
+        filterPass = scanFilter == matchString_;
+    }
+    else
+    {
+        filterPass = scanFilter.find(matchString_) != string::npos;
+    }
+    if (inverse_) {filterPass = !filterPass;}
+    return filterPass;
+}
+
 } // namespace analysis
 } // namespace pwiz
 

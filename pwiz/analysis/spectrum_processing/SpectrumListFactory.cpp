@@ -53,7 +53,6 @@
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 
-
 namespace pwiz {
 namespace analysis {
 
@@ -61,7 +60,6 @@ namespace analysis {
 using namespace pwiz::cv;
 using namespace pwiz::msdata;
 using namespace pwiz::util;
-
 
 namespace {
 
@@ -920,18 +918,15 @@ UsageInfo usage_msLevel = {"<mslevels>",
     "This filter selects only spectra with the indicated <mslevels>, expressed as an int_set."}; 
 
 
-SpectrumListPtr filterCreator_mzPresent(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
+SpectrumListPtr filterCreator_mzPresent(const MSData& msd, const string& carg, pwiz::util::IterationListenerRegistry* ilr)
 {
-    istringstream parser(arg);
+    string arg = carg;
 
-    MZTolerance mzt;
-    parser >> mzt;
-
-    string byTypeArg, orientationArg;
-    double threshold;
-    IntegerSet msLevels(1, INT_MAX);
-
-    parser >> byTypeArg >> threshold >> orientationArg;
+    auto mzTol = parseKeyValuePair<MZTolerance, 2>(arg, "mzTol=", MZTolerance(0.5, MZTolerance::MZ));
+    auto mode = parseKeyValuePair<SpectrumList_Filter::Predicate::FilterMode>(arg, "mode=", SpectrumList_Filter::Predicate::FilterMode_Include);
+    string byTypeArg = parseKeyValuePair<string>(arg, "type=", "count");
+    double threshold = parseKeyValuePair<double>(arg, "threshold=", 10000.0);
+    string orientationArg = parseKeyValuePair<string>(arg, "orientation=", "most-intense");
 
     ThresholdFilter::ThresholdingBy_Type byType;
     if (byTypeArg == "count")
@@ -947,7 +942,7 @@ SpectrumListPtr filterCreator_mzPresent(const MSData& msd, const string& arg, pw
     else if (byTypeArg == "tic-cutoff")
         byType = ThresholdFilter::ThresholdingBy_FractionOfTotalIntensityCutoff;
     else
-        return SpectrumListPtr();
+        throw user_error("[SpectrumListFactory::filterCreator_mzPresent()] invalid 'type' parameter (expected 'count', 'count-after-ties', 'absolute', 'tic-relative', 'bpi-relative', or 'tic-cutoff')");
 
     ThresholdFilter::ThresholdingOrientation orientation;
     if (orientationArg == "most-intense")
@@ -955,12 +950,13 @@ SpectrumListPtr filterCreator_mzPresent(const MSData& msd, const string& arg, pw
     else if (orientationArg == "least-intense")
         orientation = ThresholdFilter::Orientation_LeastIntense;
     else
-        return SpectrumListPtr();
+        throw user_error("[SpectrumListFactory::filterCreator_mzPresent()] invalid 'orientation' parameter (expected \"most-intense\" or \"least-intense\")");
 
 
     char open='\0', comma='\0', close='\0';
     std::set<double> setMz;
 
+    istringstream parser(bal::trim_copy(arg));
     parser >> open;
     while (isdigit(parser.peek()))
     {
@@ -972,34 +968,21 @@ SpectrumListPtr filterCreator_mzPresent(const MSData& msd, const string& arg, pw
     }
     parser >> close;
 
-    std::string inex = "include";
-    auto mode = SpectrumList_Filter::Predicate::FilterMode_Include;
-    if (parser.good())
-        parser >> inex;
-    if (inex != "include" && inex != "exclude")
-        throw user_error("[SpectrumListFactory::filterCreator_mzPresent()] invalid parameter (expected \"include\" or \"exclude\")");
-
-    if (inex == "exclude")
-        mode = SpectrumList_Filter::Predicate::FilterMode_Exclude;
-
     if (open!='[' || close!=']')
-    {
-        cerr << "mzPresent filter expected a list of mz values like \"[100,200,300.4\\" << endl ;
-       return SpectrumListPtr();
-    }
+       throw user_error("[SpectrumListFactory::filterCreator_mzPresent()] mzPresent filter expected a list of mz values like \"[100,200,300.4]\"");
 
     return SpectrumListPtr(new
         SpectrumList_Filter(msd.run.spectrumListPtr,
-                        SpectrumList_FilterPredicate_MzPresent(mzt, setMz, ThresholdFilter(byType, threshold, orientation, msLevels), mode)));
+                        SpectrumList_FilterPredicate_MzPresent(mzTol, setMz, ThresholdFilter(byType, threshold, orientation), mode)));
 }
-UsageInfo usage_mzPresent = {"<tolerance> <type> <threshold> <orientation> <mz_list> [<include_or_exclude>]",
-    "This filter is similar to the \"threshold\" filter, with a few more options.\n"
+UsageInfo usage_mzPresent = {"<mz_list> [mzTol=<tolerance> (0.5 mz)] [type=<type> (count)] [threshold=<threshold> (10000)] [orientation=<orientation> (most-intense)] [mode=<include|exclude (include)>]",
+    "This filter includes or excludes spectra depending on whether the specified peaks are present.\n"
+    "   <mz_list> is a list of mz values of the form [mz1,mz2, ... mzn] (for example, \"[100, 300, 405.6]\"). "
+    "Spectra which contain peaks within <tolerance> of any of these values will be kept.\n"
     "   <tolerance> is specified as a number and units (PPM or MZ). For example, \"5 PPM\" or \"2.1 MZ\".\n"
     "   <type>, <threshold>, and <orientation> operate as in the \"threshold\" filter (see above).\n"
-    "   <mz_list> is a list of mz values of the form [mz1,mz2, ... mzn] (for example, \"[100, 300, 405.6]\"). "
-    "Data points within <tolerance> of any of these values will be kept.\n"
-    "   <include_or_exclude> is optional and has value \"include\" (the default) or \"exclude\".  If \"exclude\" is "
-    "used the filter drops data points that match the various criteria instead of keeping them."
+    "   <include|exclude> is optional and has value \"include\" (the default) or \"exclude\".  If \"exclude\" is "
+    "used the filter drops spectra that match the various criteria instead of keeping them."
 };
 
 SpectrumListPtr filterCreator_chargeState(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
@@ -1429,6 +1412,55 @@ UsageInfo usage_polarity = { "<polarity>",
     "   <polarity> is any one of \"positive\" \"negative\" \"+\" or \"-\"."
 };
 
+SpectrumListPtr filterCreator_thermoScanFilterFilter(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
+{
+    istringstream parser(arg);
+    
+    string matchExactArg;
+    string includeArg;
+    string matchStringArg;
+    parser >> matchExactArg >> includeArg;
+    getline(parser, matchStringArg);
+    bal::trim(matchStringArg);
+
+    bool matchExact;
+    bool inverse;
+
+    bal::to_upper(matchExactArg);
+    bal::to_upper(includeArg);
+
+    if (matchExactArg == "EXACT")
+        matchExact = true;
+    else if (matchExactArg == "CONTAINS")
+        matchExact = false;
+    else
+        throw user_error("[SpectrumListFactory::filterCreator_thermoScanFilterFilter()] invalid filter argument for <exact or contains>. Valid options are: exact, contains");
+
+    if (includeArg == "INCLUDE")
+        inverse = false;
+    else if (includeArg == "EXCLUDE")
+        inverse = true;
+    else
+        throw user_error("[SpectrumListFactory::filterCreator_thermoScanFilterFilter()] invalid filter argument for <include or exclude>. Valid options are: include, exclude");
+
+    //cout << "matchExactArg[" << matchExactArg << "]" << endl;
+    //cout << "includeArg[" << includeArg << "]" << endl;
+    //cout << "matchStringArg[" << matchStringArg << "]" << endl;
+
+    return SpectrumListPtr(new SpectrumList_Filter(msd.run.spectrumListPtr, SpectrumList_FilterPredicate_ThermoScanFilter(matchStringArg, matchExact, inverse)));
+}
+
+UsageInfo usage_thermoScanFilter = { "<exact|contains> <include|exclude> <match string>",
+    "   Includes or excludes scans based on the scan filter (Thermo instrumentation only).\n"
+    "   <exact|contains>: If \"exact\" is set, spectra only match the search string if there is an exact match.\n"
+    "                     If \"contains\" is set, spectra match the search string if the search string is \n"
+    "                     contained somewhere in the scan filter.\n"
+    "   <include|exclude>: If \"include\" is set, only spectra that match the filter will be kept.\n"
+    "                      If \"exclude\" is set, only spectra that do NOT match the filter will be kept.\n"
+    "                     used the filter drops data points that match the various criteria instead of keeping them."
+    "   <match string> specifies the search string to be compared to each scan filter (it may contain spaces)\n"
+};
+
 struct JumpTableEntry
 {
     const char* command;
@@ -1461,6 +1493,7 @@ JumpTableEntry jumpTable_[] =
     {"zeroSamples", usage_zeroSamples , filterCreator_ZeroSamples},
     {"mzPresent", usage_mzPresent, filterCreator_mzPresent},
     {"scanSumming", usage_scanSummer, filterCreator_scanSummer},
+    {"thermoScanFilter", usage_thermoScanFilter, filterCreator_thermoScanFilterFilter},
 
     // MSn Spectrum Processing/Filtering
     {"MS2Denoise", usage_MS2Denoise, filterCreator_MS2Denoise},

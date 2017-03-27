@@ -177,16 +177,16 @@ class PWIZ_API_DECL SpectrumList_FilterPredicate_ChargeStateSet : public Spectru
 class PWIZ_API_DECL SpectrumList_FilterPredicate_PrecursorMzSet : public SpectrumList_Filter::Predicate
 {
     public:
-	SpectrumList_FilterPredicate_PrecursorMzSet(const std::set<double>& precursorMzSet, chemistry::MZTolerance tolerance, FilterMode mode);
+    SpectrumList_FilterPredicate_PrecursorMzSet(const std::set<double>& precursorMzSet, chemistry::MZTolerance tolerance, FilterMode mode);
     virtual boost::logic::tribool accept(const msdata::SpectrumIdentity& spectrumIdentity) const {return boost::logic::indeterminate;}
     virtual boost::logic::tribool accept(const msdata::Spectrum& spectrum) const;
 
     private:
-	std::set<double> precursorMzSet_;
+    std::set<double> precursorMzSet_;
     chemistry::MZTolerance tolerance_;
     FilterMode mode_;
 
-	double getPrecursorMz(const msdata::Spectrum& spectrum) const;
+    double getPrecursorMz(const msdata::Spectrum& spectrum) const;
 };
 
 
@@ -253,6 +253,19 @@ class PWIZ_API_DECL SpectrumList_FilterPredicate_MzPresent : public SpectrumList
     std::set<double> mzSet_;
     ThresholdFilter tf_;
     FilterMode mode_;
+};
+
+class PWIZ_API_DECL SpectrumList_FilterPredicate_ThermoScanFilter : public SpectrumList_Filter::Predicate
+{
+    public:
+    SpectrumList_FilterPredicate_ThermoScanFilter(const std::string& matchString, bool matchExact, bool inverse);
+    virtual boost::logic::tribool accept(const msdata::SpectrumIdentity& spectrumIdentity) const {return boost::logic::indeterminate;}
+    virtual boost::logic::tribool accept(const msdata::Spectrum& spectrum) const;
+
+    private:
+    std::string matchString_;
+    bool matchExact_;
+    bool inverse_;
 };
 
 } // namespace analysis
