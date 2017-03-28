@@ -1781,7 +1781,7 @@ namespace pwiz.Skyline.Model
                 // Make sure peptide standards lists are up to date
                 Settings = Settings.CachePeptideStandards(new PeptideGroupDocNode[0], children);
 
-                SetChildren(UpdateResultsSummaries(documentReader.Children, new Dictionary<int, PeptideDocNode>()));
+                SetChildren(UpdateResultsSummaries(children, new Dictionary<int, PeptideDocNode>()));
 
                 IsProteinMetadataPending = CalcIsProteinMetadataPending(); // Background loaders are about to kick in, they need this info.
             }
