@@ -26,6 +26,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Model.V01;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -150,7 +151,7 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(99, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.ConeVoltage);
             Assert.AreEqual(2.34, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.DriftTimeMsec);
             Assert.AreEqual(-0.12, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.DriftTimeHighEnergyOffsetMsec.Value, 1E-12);
-            if (doc.FormatVersion >= 3.61)
+            if (doc.FormatVersion.CompareTo(DocumentFormat.VERSION_3_61) >= 0)
                 Assert.AreEqual(345.6, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.CollisionalCrossSectionSqA.Value, 1E-12);
             Assert.IsTrue(doc.MoleculeTransitions.ElementAt(0).Transition.IsCustom());
             Assert.AreEqual(transition, doc.MoleculeTransitions.ElementAt(0).Transition.CustomIon);

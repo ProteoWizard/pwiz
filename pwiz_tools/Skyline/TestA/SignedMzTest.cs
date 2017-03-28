@@ -18,7 +18,6 @@
  */
 
 using System;
-using System.Windows.Forms.VisualStyles;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.SkylineTestUtil;

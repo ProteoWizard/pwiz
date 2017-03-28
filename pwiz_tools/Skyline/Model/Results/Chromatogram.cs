@@ -29,6 +29,7 @@ using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.RetentionTimes;
+using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -258,7 +259,7 @@ namespace pwiz.Skyline.Model.Results
                         return;
                     }
                     // Full precision XML serialization started on r9730 (see Xml.cs) and 3.53 was added at r9743
-                    else if (docCurrent.FormatVersion >= SrmDocument.FORMAT_VERSION_3_53 && resultsLoad.CacheVersion.HasValue &&
+                    else if (docCurrent.FormatVersion.CompareTo(DocumentFormat.VERSION_3_53) >= 0 && resultsLoad.CacheVersion.HasValue &&
                             resultsPrevious != null && resultsPrevious.IsDeserialized)
                     {
                         // Skip settings change for deserialized document when it first becomes connected with its cache
@@ -698,7 +699,7 @@ namespace pwiz.Skyline.Model.Results
                     reader.Read();
                 } 
             }
-            Annotations = SrmDocument.ReadAnnotations(reader);
+            Annotations = DocumentReader.ReadAnnotations(reader);
 
             MSDataFileInfos = chromFileInfos;
             _fileLoadIds = fileLoadIds.ToArray();
@@ -751,7 +752,7 @@ namespace pwiz.Skyline.Model.Results
 
                 writer.WriteEndElement();
             }
-            SrmDocument.WriteAnnotations(writer, Annotations);
+            DocumentWriter.WriteAnnotations(writer, Annotations);
         }
 
         private void WriteInstrumentConfigList(XmlWriter writer, IList<MsInstrumentConfigInfo> instrumentInfoList)

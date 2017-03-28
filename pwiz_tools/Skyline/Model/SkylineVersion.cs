@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -33,11 +34,11 @@ namespace pwiz.Skyline.Model
             CacheFormatVersion.CURRENT, SrmDocument.FORMAT_VERSION);
         public static readonly SkylineVersion V3_6 = new SkylineVersion(() => Resources.SkylineVersion_V3_6_Skyline_3_6, 
             "Skyline 3.6", // Not L10N
-            CacheFormatVersion.Eleven, SrmDocument.FORMAT_VERSION_3_6);
+            CacheFormatVersion.Eleven, DocumentFormat.VERSION_3_6);
         public static readonly SkylineVersion EARLIEST_SUPPORTED_SAVEAS = V3_6;
 
         private readonly Func<String> _getLabelFunc;
-        private SkylineVersion(Func<String> getLabelFunc, String versionName, CacheFormatVersion cacheFormatVersion, double srmDocumentVersion)
+        private SkylineVersion(Func<String> getLabelFunc, String versionName, CacheFormatVersion cacheFormatVersion, DocumentFormat srmDocumentVersion)
         {
             _getLabelFunc = getLabelFunc;
             InvariantVersionName = versionName;
@@ -47,7 +48,7 @@ namespace pwiz.Skyline.Model
 
         public String Label { get { return _getLabelFunc(); } }
         public String InvariantVersionName { get; private set; }
-        public double SrmDocumentVersion { get; private set; }
+        public DocumentFormat SrmDocumentVersion { get; private set; }
         public CacheFormatVersion CacheFormatVersion { get; private set; }
         public override string ToString()
         {

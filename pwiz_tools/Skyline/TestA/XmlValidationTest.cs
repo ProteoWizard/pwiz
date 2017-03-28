@@ -32,6 +32,7 @@ using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
@@ -119,7 +120,7 @@ namespace pwiz.SkylineTestA
                 Assert.IsNotNull(replicate);
                 var attribs = replicate.Attributes;
                 Assert.IsNotNull(attribs);
-                Assert.AreEqual(replicateName, attribs.GetNamedItem(SrmDocument.ATTR.name).Value);
+                Assert.AreEqual(replicateName, attribs.GetNamedItem(DocumentSerializer.ATTR.name).Value);
 
 
                 var instrumentList = replicate.SelectNodes("sample_file/instrument_info_list/instrument_info");
@@ -227,21 +228,21 @@ namespace pwiz.SkylineTestA
             Assert.IsNotNull(peptide);
             var attribs = peptide.Attributes;
             Assert.IsNotNull(attribs);
-            Assert.AreEqual("AGLCQTFVYGGCR", attribs.GetNamedItem(SrmDocument.ATTR.sequence).Value);
-            Assert.IsNotNull(attribs.GetNamedItem(SrmDocument.ATTR.avg_measured_retention_time));
+            Assert.AreEqual("AGLCQTFVYGGCR", attribs.GetNamedItem(DocumentSerializer.ATTR.sequence).Value);
+            Assert.IsNotNull(attribs.GetNamedItem(DocumentSerializer.ATTR.avg_measured_retention_time));
 
             // There should be an explicit heavy modification on this peptide
-            var modList = peptide.SelectNodes(SrmDocument.EL.explicit_modifications + "/" +
-                                              SrmDocument.EL.explicit_heavy_modifications + "/" +
-                                              SrmDocument.EL.explicit_modification);
+            var modList = peptide.SelectNodes(DocumentSerializer.EL.explicit_modifications + "/" +
+                                              DocumentSerializer.EL.explicit_heavy_modifications + "/" +
+                                              DocumentSerializer.EL.explicit_modification);
             Assert.IsNotNull(modList);
             Assert.AreEqual(1, modList.Count);
             CheckModAttributes(modList.Item(0), "Label:13C", "7", "+5");
 
             // There should be two implicit static modifications on this peptide
-            modList = peptide.SelectNodes(SrmDocument.EL.implicit_modifications + "/" +
-                                          SrmDocument.EL.implicit_static_modifications + "/" +
-                                          SrmDocument.EL.implicit_modification);
+            modList = peptide.SelectNodes(DocumentSerializer.EL.implicit_modifications + "/" +
+                                          DocumentSerializer.EL.implicit_static_modifications + "/" +
+                                          DocumentSerializer.EL.implicit_modification);
             Assert.IsNotNull(modList);
             Assert.AreEqual(2, modList.Count);
             CheckModAttributes(modList.Item(0), "Carbamidomethyl Cysteine", "3", "+57");
@@ -253,23 +254,23 @@ namespace pwiz.SkylineTestA
             Assert.IsNotNull(peptide);
             attribs = peptide.Attributes;
             Assert.IsNotNull(attribs);
-            Assert.AreEqual("GYSIFSYATK", attribs.GetNamedItem(SrmDocument.ATTR.sequence).Value);
-            Assert.IsNotNull(attribs.GetNamedItem(SrmDocument.ATTR.avg_measured_retention_time));
+            Assert.AreEqual("GYSIFSYATK", attribs.GetNamedItem(DocumentSerializer.ATTR.sequence).Value);
+            Assert.IsNotNull(attribs.GetNamedItem(DocumentSerializer.ATTR.avg_measured_retention_time));
 
             // There should not be any explicit modifications on this peptide
-            modList = peptide.SelectNodes(SrmDocument.EL.explicit_modifications);
+            modList = peptide.SelectNodes(DocumentSerializer.EL.explicit_modifications);
             Assert.IsNotNull(modList);
             Assert.AreEqual(0, modList.Count);
             // There should not be any implicit static modifications on this peptide
-            modList = peptide.SelectNodes(SrmDocument.EL.implicit_modifications + "/" +
-                                          SrmDocument.EL.implicit_static_modifications + "/" +
-                                          SrmDocument.EL.implicit_modification);
+            modList = peptide.SelectNodes(DocumentSerializer.EL.implicit_modifications + "/" +
+                                          DocumentSerializer.EL.implicit_static_modifications + "/" +
+                                          DocumentSerializer.EL.implicit_modification);
             Assert.IsNotNull(modList);
             Assert.AreEqual(0, modList.Count);
             // There should be one implicit heavy modifications on this peptide
-            modList = peptide.SelectNodes(SrmDocument.EL.implicit_modifications + "/" +
-                                          SrmDocument.EL.implicit_heavy_modifications + "/" +
-                                          SrmDocument.EL.implicit_modification);
+            modList = peptide.SelectNodes(DocumentSerializer.EL.implicit_modifications + "/" +
+                                          DocumentSerializer.EL.implicit_heavy_modifications + "/" +
+                                          DocumentSerializer.EL.implicit_modification);
             Assert.IsNotNull(modList);
             Assert.AreEqual(1, modList.Count);
             CheckModAttributes(modList.Item(0), "Label:13C(6)15N(2) (C-term K)", "9", "+8");
@@ -281,9 +282,9 @@ namespace pwiz.SkylineTestA
             Assert.IsNotNull(mod);
             var attribs = mod.Attributes;
             Assert.IsNotNull(attribs);
-            Assert.AreEqual(name, attribs.GetNamedItem(SrmDocument.ATTR.modification_name).Value);
-            Assert.AreEqual(index, attribs.GetNamedItem(SrmDocument.ATTR.index_aa).Value);
-            Assert.AreEqual(massdiff, attribs.GetNamedItem(SrmDocument.ATTR.mass_diff).Value);
+            Assert.AreEqual(name, attribs.GetNamedItem(DocumentSerializer.ATTR.modification_name).Value);
+            Assert.AreEqual(index, attribs.GetNamedItem(DocumentSerializer.ATTR.index_aa).Value);
+            Assert.AreEqual(massdiff, attribs.GetNamedItem(DocumentSerializer.ATTR.mass_diff).Value);
         }
 
         private static void WriteDocument(SrmDocument doc, string docPath)
@@ -331,12 +332,12 @@ namespace pwiz.SkylineTestA
 
             XmlDocument xmldoc08 = new XmlDocument();
             xmldoc08.Load(doc08Path);
-            XmlNodeList peptides08 = xmldoc08.GetElementsByTagName(SrmDocument.EL.peptide);
+            XmlNodeList peptides08 = xmldoc08.GetElementsByTagName(DocumentSerializer.EL.peptide);
             Assert.AreEqual(4, peptides08.Count);
 
             XmlDocument xmldocCurrent = new XmlDocument();
             xmldocCurrent.Load(docCurrentPath);
-            XmlNodeList peptidesCurrent = xmldocCurrent.GetElementsByTagName(SrmDocument.EL.peptide);
+            XmlNodeList peptidesCurrent = xmldocCurrent.GetElementsByTagName(DocumentSerializer.EL.peptide);
             Assert.AreEqual(4, peptidesCurrent.Count);
 
             for (int i = 0; i < 4; i++)
@@ -345,25 +346,25 @@ namespace pwiz.SkylineTestA
                 var pepCurrent = peptidesCurrent.Item(i);
 
                 // Compare any variable modifications
-                CompareModifications(pep08, pepCurrent, SrmDocument.EL.variable_modifications + "/" +
-                                                        SrmDocument.EL.variable_modification);
+                CompareModifications(pep08, pepCurrent, DocumentSerializer.EL.variable_modifications + "/" +
+                                                        DocumentSerializer.EL.variable_modification);
 
                 // Compare any explicit static modifications
-                CompareModifications(pep08, pepCurrent, SrmDocument.EL.explicit_modifications + "/" +
-                                                        SrmDocument.EL.explicit_static_modifications + "/" +
-                                                        SrmDocument.EL.explicit_modification);
+                CompareModifications(pep08, pepCurrent, DocumentSerializer.EL.explicit_modifications + "/" +
+                                                        DocumentSerializer.EL.explicit_static_modifications + "/" +
+                                                        DocumentSerializer.EL.explicit_modification);
 
                 // Compare any explicit "heavy" modifications
-                CompareModifications(pep08, pepCurrent, SrmDocument.EL.explicit_modifications + "/" +
-                                                        SrmDocument.EL.explicit_heavy_modifications +
-                                                        "[not(@" + SrmDocument.ATTR.isotope_label + ")]/" +
-                                                        SrmDocument.EL.explicit_modification);
+                CompareModifications(pep08, pepCurrent, DocumentSerializer.EL.explicit_modifications + "/" +
+                                                        DocumentSerializer.EL.explicit_heavy_modifications +
+                                                        "[not(@" + DocumentSerializer.ATTR.isotope_label + ")]/" +
+                                                        DocumentSerializer.EL.explicit_modification);
 
                 // Compare any explicit "heavy2" modifications
-                CompareModifications(pep08, pepCurrent, SrmDocument.EL.explicit_modifications + "/" +
-                                                        SrmDocument.EL.explicit_heavy_modifications +
-                                                        "[@" + SrmDocument.ATTR.isotope_label + " = 'heavy2']/" +
-                                                        SrmDocument.EL.explicit_modification);
+                CompareModifications(pep08, pepCurrent, DocumentSerializer.EL.explicit_modifications + "/" +
+                                                        DocumentSerializer.EL.explicit_heavy_modifications +
+                                                        "[@" + DocumentSerializer.ATTR.isotope_label + " = 'heavy2']/" +
+                                                        DocumentSerializer.EL.explicit_modification);
             }
 
 
@@ -405,21 +406,21 @@ namespace pwiz.SkylineTestA
                                               StaticMod[] heavy2Mods)
         {
 
-            var modListStatic = peptideNode.SelectNodes(SrmDocument.EL.implicit_modifications + "/" +
-                                                        SrmDocument.EL.implicit_static_modifications + "/" +
-                                                        SrmDocument.EL.implicit_modification);
+            var modListStatic = peptideNode.SelectNodes(DocumentSerializer.EL.implicit_modifications + "/" +
+                                                        DocumentSerializer.EL.implicit_static_modifications + "/" +
+                                                        DocumentSerializer.EL.implicit_modification);
             CheckImplicitMods(staticMods, modListStatic);
 
-            var modListHeavy = peptideNode.SelectNodes(SrmDocument.EL.implicit_modifications + "/" +
-                                                       SrmDocument.EL.implicit_heavy_modifications +
-                                                       "[not(@" + SrmDocument.ATTR.isotope_label + ")]/" +
-                                                       SrmDocument.EL.implicit_modification);
+            var modListHeavy = peptideNode.SelectNodes(DocumentSerializer.EL.implicit_modifications + "/" +
+                                                       DocumentSerializer.EL.implicit_heavy_modifications +
+                                                       "[not(@" + DocumentSerializer.ATTR.isotope_label + ")]/" +
+                                                       DocumentSerializer.EL.implicit_modification);
             CheckImplicitMods(heavyMods, modListHeavy);
 
-            var modListHeavy2 = peptideNode.SelectNodes(SrmDocument.EL.implicit_modifications + "/" +
-                                                        SrmDocument.EL.implicit_heavy_modifications +
-                                                        "[@" + SrmDocument.ATTR.isotope_label + " = 'heavy2']/" +
-                                                        SrmDocument.EL.implicit_modification);
+            var modListHeavy2 = peptideNode.SelectNodes(DocumentSerializer.EL.implicit_modifications + "/" +
+                                                        DocumentSerializer.EL.implicit_heavy_modifications +
+                                                        "[@" + DocumentSerializer.ATTR.isotope_label + " = 'heavy2']/" +
+                                                        DocumentSerializer.EL.implicit_modification);
             CheckImplicitMods(heavy2Mods, modListHeavy2);
 
         }
@@ -434,7 +435,7 @@ namespace pwiz.SkylineTestA
                 Assert.IsNotNull(modNode);
                 var attribs = modNode.Attributes;
                 Assert.IsNotNull(attribs);
-                var modName = attribs.GetNamedItem(SrmDocument.ATTR.modification_name).Value;
+                var modName = attribs.GetNamedItem(DocumentSerializer.ATTR.modification_name).Value;
                 Assert.AreEqual(mods[i].Name, modName);
             }
         }
@@ -458,11 +459,11 @@ namespace pwiz.SkylineTestA
                 var attribsCurrent = modCurrent.Attributes;
                 Assert.IsNotNull(attribs08);
                 Assert.IsNotNull(attribsCurrent);
-                CompareAttributes(attribs08, attribsCurrent, SrmDocument.ATTR.index_aa);
-                CompareAttributes(attribs08, attribsCurrent, SrmDocument.ATTR.modification_name);
+                CompareAttributes(attribs08, attribsCurrent, DocumentSerializer.ATTR.index_aa);
+                CompareAttributes(attribs08, attribsCurrent, DocumentSerializer.ATTR.modification_name);
 
                 // Modifications in the current format document must contain a mass_diff attribute
-                Assert.IsNotNull(attribsCurrent.GetNamedItem(SrmDocument.ATTR.mass_diff));
+                Assert.IsNotNull(attribsCurrent.GetNamedItem(DocumentSerializer.ATTR.mass_diff));
             }
         }
 

@@ -286,9 +286,7 @@
     <Compile Include="CommandArgs.cs" />
     <Compile Include="CommandLine.cs" />
     <Compile Include="CommandLineUI.cs" />
-    <Compile Include="Controls\Databinding\BoundDataGridViewEx.cs">
-      <SubType>Component</SubType>
-    </Compile>
+    <Compile Include="Controls\Databinding\BoundDataGridViewEx.cs" />
     <Compile Include="Controls\Databinding\DataboundGridControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -319,9 +317,7 @@
     <Compile Include="Controls\Databinding\LiveResultsGrid.Designer.cs">
       <DependentUpon>LiveResultsGrid.cs</DependentUpon>
     </Compile>
-    <Compile Include="Controls\Databinding\PivotReplicateAndIsotopeLabelWidget.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
+    <Compile Include="Controls\Databinding\PivotReplicateAndIsotopeLabelWidget.cs" />
     <Compile Include="Controls\Databinding\PivotReplicateAndIsotopeLabelWidget.Designer.cs">
       <DependentUpon>PivotReplicateAndIsotopeLabelWidget.cs</DependentUpon>
     </Compile>
@@ -434,9 +430,7 @@
     <Compile Include="Controls\Graphs\GraphSummary.Designer.cs">
       <DependentUpon>GraphSummary.cs</DependentUpon>
     </Compile>
-    <Compile Include="Controls\DataGridViewEx.cs">
-      <SubType>Component</SubType>
-    </Compile>
+    <Compile Include="Controls\DataGridViewEx.cs" />
     <Compile Include="Controls\Graphs\ChromGraphItem.cs" />
     <Compile Include="Controls\Graphs\GraphChromatogram.cs">
       <SubType>Form</SubType>
@@ -1176,6 +1170,10 @@
     <Compile Include="Model\RetentionTimes\RetentionTimeManager.cs" />
     <Compile Include="Model\RetentionTimes\RetentionTimeSource.cs" />
     <Compile Include="Model\RetentionTimes\RetentionTimeValues.cs" />
+    <Compile Include="Model\Serialization\DocumentReader.cs" />
+    <Compile Include="Model\Serialization\DocumentSerializer.cs" />
+    <Compile Include="Model\Serialization\DocumentFormat.cs" />
+    <Compile Include="Model\Serialization\DocumentWriter.cs" />
     <Compile Include="Model\SkylineVersion.cs" />
     <Compile Include="Model\SmallMoleculeTransitionListReader.cs" />
     <Compile Include="Model\SrmDocument.cs" />
