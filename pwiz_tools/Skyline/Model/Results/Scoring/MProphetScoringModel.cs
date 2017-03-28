@@ -43,7 +43,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         private ImmutableList<IPeakFeatureCalculator> _peakFeatureCalculators;
 
         // Number of iterations to run.  Most weight values will converge within this number of iterations.
-        private const int MAX_ITERATIONS = 30;
+        private const int MAX_ITERATIONS = 10;
         public const double DEFAULT_R_LAMBDA = 0.4;    // Lambda for pi-zero from original R mProphet
 
         /// <summary>
@@ -217,19 +217,53 @@ namespace pwiz.Skyline.Model.Results.Scoring
                     double qValueCutoff = 0.15; // First iteration cut-off
                     for (int i = 0; i < iterationCount; i++)
                     {
+                        int percentComplete = 0;
                         double decoyMeanNew, decoyStdevNew;
                         bool colinearWarningNew = colinearWarning;
                         int truePeaksCountNew = im.CalculateWeights(i,
                             targetTransitionGroups, decoyTransitionGroups, includeSecondBest, qValueCutoff, calcWeights,
                             out decoyMeanNew, out decoyStdevNew, ref colinearWarningNew);
 
+                        if (progressMonitor != null)
+                        {
+                            if (progressMonitor.IsCanceled)
+                                throw new OperationCanceledException();
+
+                            // Calculate progress, but wait to make sure convergence has not occurred before setting it
+                            string formatText = i == 0
+                                ? Resources.MProphetPeakScoringModel_Train_Training_scoring_model__iteration__0__of__1__
+                                : Resources.MProphetPeakScoringModel_Train_Training_scoring_model__iteration__0__of__1_____2______peaks_at__3_0_____FDR_;
+                            percentComplete = (i + 1) * 100 / (iterationCount + 1);
+                            status = status.ChangeMessage(string.Format(formatText, i + 1, iterationCount, truePeaksCountNew, qValueCutoff))
+                                .ChangePercentComplete(percentComplete);
+                        }
+
                         if (i == 0)
+                        {
+                            // Tighten the q value cut-off for "truth" to 2% FDR
                             qValueCutoff = 0.02;
+                        }
                         else if (truePeaksCountNew < truePeaksCount)
                         {
-//                            if (qValueCutoff > 0.01)
-//                                qValueCutoff = 0.01;
-                            // CONSIDER: Stopping the second time the count decreases
+                            // The model has leveled off enough to begin losing discriminant value
+                            if (qValueCutoff > 0.01)
+                            {
+                                // Tighten the q value cut-off for "truth" to 1% FDR
+                                qValueCutoff = 0.01;
+                                // And allow the true peaks count to go down in the next iteration
+                                truePeaksCountNew = 0;
+                            }
+                            else
+                            {
+                                if (progressMonitor != null)
+                                {
+                                    progressMonitor.UpdateProgress(status =
+                                        status.ChangeMessage(string.Format(Resources.MProphetPeakScoringModel_Train_Scoring_model_converged__iteration__0_____1______peaks_at__2_0_____FDR_, i + 1, truePeaksCount, qValueCutoff))
+                                              .ChangePercentComplete(Math.Max(95, percentComplete)));
+                                    GC.Collect();
+                                }
+                                break;
+                            }
                         }
                         truePeaksCount = truePeaksCountNew;
                         decoyMean = decoyMeanNew;
@@ -237,18 +271,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                         colinearWarning = colinearWarningNew;
 
                         if (progressMonitor != null)
-                        {
-                            if (progressMonitor.IsCanceled)
-                                throw new OperationCanceledException();
-
-//                            string formatText = i == 0
-//                                ? "Training peak scoring model (iteration {0} of {1})"
-//                                : "Training peak scoring model (iteration {0} of {1} - {2})";
-                            string formatText = Resources.MProphetPeakScoringModel_Train_Training_peak_scoring_model__iteration__0__of__1__;
-                            progressMonitor.UpdateProgress(status =
-                                status.ChangeMessage(string.Format(formatText, i + 1, iterationCount, truePeaksCountNew))
-                                      .ChangePercentComplete((i + 1) * 100 / (iterationCount + 1)));
-                        }
+                            progressMonitor.UpdateProgress(status);
 
                         GC.Collect();   // Each loop generates a number of large objects. GC helps to keep private bytes under control
                     }

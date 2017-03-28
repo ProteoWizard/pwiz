@@ -5856,9 +5856,6 @@
   <data name="ValueMissingException_ValueMissingException_" xml:space="preserve">
     <value>引数--{0}には値が必要であり、--name=value形式で指定しなければなりません</value>
   </data>
-  <data name="MProphetPeakScoringModel_Train_Training_peak_scoring_model__iteration__0__of__1__" xml:space="preserve">
-    <value>ピークスコアモデルをトレーニング（反復{0} / {1}）</value>
-  </data>
   <data name="AbstractDemultiplexer_AnalyzeFile_Isolation_scheme_is_set_to_multiplexing_but_file_does_not_appear_to_contain_multiplexed_acquisition_data_" xml:space="preserve">
     <value>単離スキームは多重化に設定されていますが、ファイルに多重化取得データが含まれていないようです。</value>
   </data>

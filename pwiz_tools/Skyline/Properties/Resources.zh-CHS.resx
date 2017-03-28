@@ -5856,9 +5856,6 @@
   <data name="ValueMissingException_ValueMissingException_" xml:space="preserve">
     <value>参数 --{0}需要数值并且必须在“ --名称=值”的格式中指定。</value>
   </data>
-  <data name="MProphetPeakScoringModel_Train_Training_peak_scoring_model__iteration__0__of__1__" xml:space="preserve">
-    <value>正在训练峰得分模型（重复 {0} 个，共 {1} 个）</value>
-  </data>
   <data name="AbstractDemultiplexer_AnalyzeFile_Isolation_scheme_is_set_to_multiplexing_but_file_does_not_appear_to_contain_multiplexed_acquisition_data_" xml:space="preserve">
     <value>隔离方案的设定旨在用于多路传输，但文件看起来不包含多路复用的采集数据。</value>
   </data>

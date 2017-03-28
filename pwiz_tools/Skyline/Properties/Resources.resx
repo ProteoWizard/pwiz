@@ -5856,9 +5856,6 @@ If you prefer you can choose to report anonymously.</value>
   <data name="ValueMissingException_ValueMissingException_" xml:space="preserve">
     <value>The argument --{0} requires a value and must be specified in the format --name=value</value>
   </data>
-  <data name="MProphetPeakScoringModel_Train_Training_peak_scoring_model__iteration__0__of__1__" xml:space="preserve">
-    <value>Training peak scoring model (iteration {0} of {1})</value>
-  </data>
   <data name="AbstractDemultiplexer_AnalyzeFile_Isolation_scheme_is_set_to_multiplexing_but_file_does_not_appear_to_contain_multiplexed_acquisition_data_" xml:space="preserve">
     <value>Isolation scheme is set to multiplexing but file does not appear to contain multiplexed acquisition data.</value>
   </data>
@@ -9424,5 +9421,14 @@ If your transition list format combines formulas and adducts in a single column 
   </data>
   <data name="CommandArgs_GetFullPath_Failed_attempting_to_get_full_path_for__0_" xml:space="preserve">
     <value>Failed attempting to get full path for {0}</value>
+  </data>
+  <data name="MProphetPeakScoringModel_Train_Training_scoring_model__iteration__0__of__1__" xml:space="preserve">
+    <value>Training scoring model (iteration {0} of {1})</value>
+  </data>
+  <data name="MProphetPeakScoringModel_Train_Training_scoring_model__iteration__0__of__1_____2______peaks_at__3_0_____FDR_" xml:space="preserve">
+    <value>Training scoring model (iteration {0} of {1} - {2:#,#} peaks at {3:0.#%} FDR)</value>
+  </data>
+  <data name="MProphetPeakScoringModel_Train_Scoring_model_converged__iteration__0_____1______peaks_at__2_0_____FDR_" xml:space="preserve">
+    <value>Scoring model converged (iteration {0} - {1:#,#} peaks at {2:0.#%} FDR)</value>
   </data>
 </root>

@@ -46,20 +46,21 @@ namespace pwiz.SkylineTestA
             // This is the MProphet gold standard data file.  See "Supplementary Data 1" from
             // http://www.nature.com/nmeth/journal/v8/n5/full/nmeth.1584.html#/supplementary-information
             // Weights have been normalized (x 13.30133906)
-            // Changed due to upgrade from 7 to 20 iterations
+            // Changed due to upgrade from 7 to 20 iterations (later 30?)
+            // Changed back to 10 maximum with fewer if convergence encountered
             new FileWeights
             {
                 _fileName = "nmeth.1584-S2.csv",         // Not L10N
                 _weights = new[]
                 {
-                    0.7450987,
-                    0.2946793,
-                    10.3627608,
-                    8.1902239,
-                    -0.1633107,
-                    -0.4086730,
-                    1.2581479,
-                    -0.0057355 
+                    0.9969249,
+                    0.2989349,
+                    8.9882895,
+                    8.3330380,
+                    -0.1732025,
+                    -0.1990978,
+                    0.9868408,
+                    -0.0120197
                 }
             },
             // Weights have been normalized (x 15.87149397)
@@ -68,22 +69,22 @@ namespace pwiz.SkylineTestA
                 _fileName = "testfile-no-yseries.csv",   // Not L10N 
                 _weights = new[]
                 {
-                    1.4914017,
-                    -0.1427163,
-                    -5.3524415,
-                    1.1420918,
-                    1.9215814,
-                    -1.6510679,
-                    -0.7949620,
-                    -10.5788174,
-                    -0.8218009,
-                    0.1219481,
-                    -0.0226443,
-                    -5.0446029,
-                    0.4852940,
-                    -0.4622149,
-                    2.6759886,
-                    7.6031936,
+                    1.5839160,
+                    -0.1470850,
+                    -5.4123354,
+                    1.2256853,
+                    1.7409527,
+                    -1.5745945,
+                    -0.8718439,
+                    -10.6460580,
+                    -0.8648927,
+                    0.1257379,
+                    -0.0196414,
+                    -4.1212852,
+                    0.5084217,
+                    -0.4850913,
+                    2.6041720,
+                    7.5260728
                 }
             }
         };
