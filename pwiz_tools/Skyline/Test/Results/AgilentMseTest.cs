@@ -89,7 +89,7 @@ namespace pwiz.SkylineTest.Results
             if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.none)
             {
                 var refine = new RefinementSettings();
-                document = refine.ConvertToSmallMolecules(document, asSmallMolecules, smallMolMode != small_mol_mode.simple);
+                document = refine.ConvertToSmallMolecules(document, asSmallMolecules, smallMolMode == small_mol_mode.simple ? RefinementSettings.ConvertToSmallMoleculesChargesMode.none : RefinementSettings.ConvertToSmallMoleculesChargesMode.invert);
             }
             using (var docContainer = new ResultsTestDocumentContainer(document, docPath))
             {

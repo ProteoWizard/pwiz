@@ -155,7 +155,7 @@ make sure your instrument can handle the full set of transitions.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;radioSingle.ZOrder" xml:space="preserve">
-    <value>24</value>
+    <value>26</value>
   </data>
   <data name="radioProtein.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -189,7 +189,7 @@ make sure your instrument can handle the number of transitions in each file.</va
     <value>$this</value>
   </data>
   <data name="&gt;&gt;radioProtein.ZOrder" xml:space="preserve">
-    <value>23</value>
+    <value>25</value>
   </data>
   <data name="radioBuckets.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -222,7 +222,7 @@ make sure your instrument can handle the number of transitions in each file.</va
     <value>$this</value>
   </data>
   <data name="&gt;&gt;radioBuckets.ZOrder" xml:space="preserve">
-    <value>22</value>
+    <value>24</value>
   </data>
   <data name="textMaxTransitions.Location" type="System.Drawing.Point, System.Drawing">
     <value>21, 214</value>
@@ -250,7 +250,7 @@ if peptide or protein boundaries do not allow the maximum.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textMaxTransitions.ZOrder" xml:space="preserve">
-    <value>21</value>
+    <value>23</value>
   </data>
   <data name="labelMaxTransitions.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -280,7 +280,7 @@ if peptide or protein boundaries do not allow the maximum.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;labelMaxTransitions.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>3</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
     <value>305, 50</value>
@@ -307,7 +307,7 @@ if peptide or protein boundaries do not allow the maximum.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>19</value>
+    <value>21</value>
   </data>
   <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
     <value>305, 14</value>
@@ -334,7 +334,7 @@ if peptide or protein boundaries do not allow the maximum.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
-    <value>20</value>
+    <value>22</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -364,7 +364,7 @@ if peptide or protein boundaries do not allow the maximum.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
-    <value>18</value>
+    <value>20</value>
   </data>
   <data name="comboTargetType.Location" type="System.Drawing.Point, System.Drawing">
     <value>21, 393</value>
@@ -388,7 +388,7 @@ if peptide or protein boundaries do not allow the maximum.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;comboTargetType.ZOrder" xml:space="preserve">
-    <value>17</value>
+    <value>19</value>
   </data>
   <data name="textRunLength.Location" type="System.Drawing.Point, System.Drawing">
     <value>226, 395</value>
@@ -415,7 +415,7 @@ if peptide or protein boundaries do not allow the maximum.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textRunLength.ZOrder" xml:space="preserve">
-    <value>16</value>
+    <value>18</value>
   </data>
   <data name="textDwellTime.Location" type="System.Drawing.Point, System.Drawing">
     <value>479, 393</value>
@@ -442,7 +442,7 @@ if peptide or protein boundaries do not allow the maximum.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textDwellTime.ZOrder" xml:space="preserve">
-    <value>15</value>
+    <value>17</value>
   </data>
   <data name="labelDwellTime.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -475,7 +475,7 @@ if peptide or protein boundaries do not allow the maximum.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;labelDwellTime.ZOrder" xml:space="preserve">
-    <value>14</value>
+    <value>16</value>
   </data>
   <data name="comboInstrument.Items" xml:space="preserve">
     <value>ABI</value>
@@ -514,7 +514,7 @@ if peptide or protein boundaries do not allow the maximum.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;comboInstrument.ZOrder" xml:space="preserve">
-    <value>13</value>
+    <value>15</value>
   </data>
   <data name="label4.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -544,7 +544,7 @@ if peptide or protein boundaries do not allow the maximum.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
-    <value>12</value>
+    <value>14</value>
   </data>
   <data name="labelTemplateFile.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -574,7 +574,7 @@ if peptide or protein boundaries do not allow the maximum.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;labelTemplateFile.ZOrder" xml:space="preserve">
-    <value>11</value>
+    <value>13</value>
   </data>
   <data name="textTemplateFile.Location" type="System.Drawing.Point, System.Drawing">
     <value>21, 478</value>
@@ -598,7 +598,7 @@ if peptide or protein boundaries do not allow the maximum.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textTemplateFile.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>12</value>
   </data>
   <data name="btnBrowseTemplate.Location" type="System.Drawing.Point, System.Drawing">
     <value>291, 476</value>
@@ -625,7 +625,7 @@ if peptide or protein boundaries do not allow the maximum.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnBrowseTemplate.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>11</value>
   </data>
   <data name="cbIgnoreProteins.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -663,7 +663,7 @@ than the maximum number of transitions.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbIgnoreProteins.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>10</value>
   </data>
   <data name="cbEnergyRamp.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -803,6 +803,42 @@ and base name as the Analyst acquisition method.</value>
   <data name="&gt;&gt;cbUseStartAndEndRts.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <data name="comboPolarityFilter.Items" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="comboPolarityFilter.Items1" xml:space="preserve">
+    <value>Positive only</value>
+  </data>
+  <data name="comboPolarityFilter.Items2" xml:space="preserve">
+    <value>Negative only</value>
+  </data>
+  <data name="comboPolarityFilter.Items3" xml:space="preserve">
+    <value>Separated by polarity</value>
+  </data>
+  <data name="comboPolarityFilter.Location" type="System.Drawing.Point, System.Drawing">
+    <value>463, 148</value>
+  </data>
+  <data name="comboPolarityFilter.Size" type="System.Drawing.Size, System.Drawing">
+    <value>173, 24</value>
+  </data>
+  <data name="comboPolarityFilter.TabIndex" type="System.Int32, mscorlib">
+    <value>11</value>
+  </data>
+  <data name="comboPolarityFilter.ToolTip" xml:space="preserve">
+    <value>Controls export behavior for documents with both positive and negative transitions. Allows for output of only positive or only negative transitions, or creates separate outputs for each polarity.</value>
+  </data>
+  <data name="&gt;&gt;comboPolarityFilter.Name" xml:space="preserve">
+    <value>comboPolarityFilter</value>
+  </data>
+  <data name="&gt;&gt;comboPolarityFilter.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboPolarityFilter.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;comboPolarityFilter.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
   <data name="cbSlens.Location" type="System.Drawing.Point, System.Drawing">
     <value>717, 302</value>
   </data>
@@ -828,7 +864,7 @@ and base name as the Analyst acquisition method.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbSlens.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>2</value>
   </data>
   <data name="comboOptimizing.Location" type="System.Drawing.Point, System.Drawing">
     <value>21, 308</value>
@@ -852,7 +888,7 @@ and base name as the Analyst acquisition method.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;comboOptimizing.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>9</value>
   </data>
   <data name="labelOptimizing.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -882,7 +918,7 @@ and base name as the Analyst acquisition method.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;labelOptimizing.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>8</value>
   </data>
   <data name="labelMethods.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -912,7 +948,7 @@ and base name as the Analyst acquisition method.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;labelMethods.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>7</value>
   </data>
   <data name="labelMethodNum.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -969,7 +1005,7 @@ and base name as the Analyst acquisition method.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panelThermoColumns.ZOrder" xml:space="preserve">
-    <value>26</value>
+    <value>28</value>
   </data>
   <data name="panelAbSciexTOF.Location" type="System.Drawing.Point, System.Drawing">
     <value>710, 356</value>
@@ -996,7 +1032,7 @@ and base name as the Analyst acquisition method.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panelAbSciexTOF.ZOrder" xml:space="preserve">
-    <value>25</value>
+    <value>27</value>
   </data>
   <data name="textPrimaryCount.Location" type="System.Drawing.Point, System.Drawing">
     <value>45, 5</value>
@@ -1107,7 +1143,7 @@ and base name as the Analyst acquisition method.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panelTriggered.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>5</value>
   </data>
   <data name="panelThermoRt.Location" type="System.Drawing.Point, System.Drawing">
     <value>463, 278</value>
@@ -1134,7 +1170,7 @@ and base name as the Analyst acquisition method.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panelThermoRt.ZOrder" xml:space="preserve">
-    <value>27</value>
+    <value>29</value>
   </data>
   <data name="comboTuning.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 17</value>
@@ -1215,7 +1251,7 @@ and base name as the Analyst acquisition method.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panelSciexTune.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>4</value>
   </data>
   <data name="cbExportEdcMass.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1272,7 +1308,34 @@ and base name as the Analyst acquisition method.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panelWaters.ZOrder" xml:space="preserve">
-    <value>28</value>
+    <value>30</value>
+  </data>
+  <data name="labelPolarityFilter.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelPolarityFilter.Location" type="System.Drawing.Point, System.Drawing">
+    <value>460, 128</value>
+  </data>
+  <data name="labelPolarityFilter.Size" type="System.Drawing.Size, System.Drawing">
+    <value>117, 17</value>
+  </data>
+  <data name="labelPolarityFilter.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
+  <data name="labelPolarityFilter.Text" xml:space="preserve">
+    <value>Polarit&amp;y:</value>
+  </data>
+  <data name="&gt;&gt;labelPolarityFilter.Name" xml:space="preserve">
+    <value>labelPolarityFilter</value>
+  </data>
+  <data name="&gt;&gt;labelPolarityFilter.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelPolarityFilter.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;labelPolarityFilter.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>

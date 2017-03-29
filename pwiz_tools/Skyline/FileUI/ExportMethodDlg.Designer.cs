@@ -53,6 +53,7 @@
             this.cbTriggerRefColumns = new System.Windows.Forms.CheckBox();
             this.cbExportMultiQuant = new System.Windows.Forms.CheckBox();
             this.cbUseStartAndEndRts = new System.Windows.Forms.CheckBox();
+            this.comboPolarityFilter = new System.Windows.Forms.ComboBox();
             this.cbSlens = new System.Windows.Forms.CheckBox();
             this.comboOptimizing = new System.Windows.Forms.ComboBox();
             this.labelOptimizing = new System.Windows.Forms.Label();
@@ -70,6 +71,7 @@
             this.label6 = new System.Windows.Forms.Label();
             this.panelWaters = new System.Windows.Forms.Panel();
             this.cbExportEdcMass = new System.Windows.Forms.CheckBox();
+            this.labelPolarityFilter = new System.Windows.Forms.Label();
             this.panelThermoColumns.SuspendLayout();
             this.panelAbSciexTOF.SuspendLayout();
             this.panelTriggered.SuspendLayout();
@@ -237,6 +239,20 @@
             this.helpTip.SetToolTip(this.cbUseStartAndEndRts, resources.GetString("cbUseStartAndEndRts.ToolTip"));
             this.cbUseStartAndEndRts.UseVisualStyleBackColor = true;
             // 
+            // comboPolarityFilter
+            // 
+            this.comboPolarityFilter.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboPolarityFilter.FormattingEnabled = true;
+            this.comboPolarityFilter.Items.AddRange(new object[] {
+            resources.GetString("comboPolarityFilter.Items"),
+            resources.GetString("comboPolarityFilter.Items1"),
+            resources.GetString("comboPolarityFilter.Items2"),
+            resources.GetString("comboPolarityFilter.Items3")});
+            resources.ApplyResources(this.comboPolarityFilter, "comboPolarityFilter");
+            this.comboPolarityFilter.Name = "comboPolarityFilter";
+            this.helpTip.SetToolTip(this.comboPolarityFilter, resources.GetString("comboPolarityFilter.ToolTip"));
+            this.comboPolarityFilter.SelectedIndexChanged += new System.EventHandler(this.comboPolarityFilter_SelectedIndexChanged);
+            // 
             // cbSlens
             // 
             resources.ApplyResources(this.cbSlens, "cbSlens");
@@ -340,12 +356,19 @@
             this.cbExportEdcMass.Name = "cbExportEdcMass";
             this.cbExportEdcMass.UseVisualStyleBackColor = true;
             // 
+            // labelPolarityFilter
+            // 
+            resources.ApplyResources(this.labelPolarityFilter, "labelPolarityFilter");
+            this.labelPolarityFilter.Name = "labelPolarityFilter";
+            // 
             // ExportMethodDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.labelPolarityFilter);
+            this.Controls.Add(this.comboPolarityFilter);
             this.Controls.Add(this.cbSlens);
             this.Controls.Add(this.labelMaxTransitions);
             this.Controls.Add(this.panelSciexTune);
@@ -440,5 +463,7 @@
         private System.Windows.Forms.Panel panelWaters;
         private System.Windows.Forms.CheckBox cbExportEdcMass;
         private System.Windows.Forms.CheckBox cbSlens;
+        private System.Windows.Forms.ComboBox comboPolarityFilter;
+        private System.Windows.Forms.Label labelPolarityFilter;
     }
 }

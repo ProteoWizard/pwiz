@@ -9431,4 +9431,7 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="MProphetPeakScoringModel_Train_Scoring_model_converged__iteration__0_____1______peaks_at__2_0_____FDR_" xml:space="preserve">
     <value>Scoring model converged (iteration {0} - {1:#,#} peaks at {2:0.#%} FDR)</value>
   </data>
+  <data name="CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for___exp_polarity__It_must_be_one_of_the_following___1_" xml:space="preserve">
+    <value>Error: "{0}" is not a valid value for --exp-polarity. It must be one of the following: {1}</value>
+  </data>
 </root>

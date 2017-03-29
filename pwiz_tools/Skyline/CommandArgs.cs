@@ -442,6 +442,8 @@ namespace pwiz.Skyline
 
         public string ExportPath { get; private set; }
 
+        public ExportPolarity ExportPolarityFilter { get; private set; }
+
         public ExportCommandProperties ExportCommandProperties
         {
             get
@@ -457,6 +459,7 @@ namespace pwiz.Skyline
                     MaxTransitions = MaxTransitionsPerInjection,
                     MethodType = ExportMethodType,
                     OptimizeType = ExportOptimizeType,
+                    PolarityFilter = ExportPolarityFilter,
                     RunLength = RunLength,
                     SchedulingAlgorithm = ExportSchedulingAlgorithm
                 };
@@ -1257,6 +1260,19 @@ namespace pwiz.Skyline
                 {
                     ExportPath = GetFullPath(pair.Value);
                     RequiresSkylineDocument = true;
+                }
+                else if (IsNameValue(pair, "exp-polarity")) // Not L10N
+                {
+                    try
+                    {
+                        ExportPolarityFilter = (ExportPolarity)Enum.Parse(typeof(ExportPolarity), pair.Value, true);
+                        RequiresSkylineDocument = true;
+                    }
+                    catch (Exception)
+                    {
+                        _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for___exp_polarity__It_must_be_one_of_the_following___1_,
+                            pair.Value, string.Join(", ", Helpers.GetEnumValues<ExportPolarity>().Select(p => p.ToString()))); // Not L10N
+                    }    
                 }
                 else if (IsNameValue(pair, "exp-strategy")) // Not L10N
                 {

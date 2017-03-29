@@ -71,8 +71,10 @@ namespace pwiz.SkylineTestUtil
             Thread.Sleep(1000);
         }
 
-        public void ConvertDocumentToSmallMolecules(RefinementSettings.ConvertToSmallMoleculesMode mode = RefinementSettings.ConvertToSmallMoleculesMode.formulas, 
-            bool invertCharges = false, bool ignoreDecoys = false)
+        
+        public void ConvertDocumentToSmallMolecules(RefinementSettings.ConvertToSmallMoleculesMode mode = RefinementSettings.ConvertToSmallMoleculesMode.formulas,
+            RefinementSettings.ConvertToSmallMoleculesChargesMode invertCharges =  RefinementSettings.ConvertToSmallMoleculesChargesMode.none, 
+            bool ignoreDecoys = false)
         {
             WaitForDocumentLoaded();
             RunUI(() => SkylineWindow.ModifyDocument("Convert to small molecules", document =>

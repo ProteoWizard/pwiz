@@ -579,6 +579,12 @@ namespace pwiz.Skyline.Model
             return Molecules.All(p => p.CanTrigger(replicateIndex));
         }
 
+        public bool IsMixedPolarity()
+        {
+            return MoleculeTransitionGroups.Any(tg => tg.TransitionGroup.PrecursorCharge < 0) &&
+                   MoleculeTransitionGroups.Any(tg => tg.TransitionGroup.PrecursorCharge > 0);
+        }
+
         public bool CanSchedule(bool singleWindow)
         {
             return Settings.PeptideSettings.Prediction.CanSchedule(this, singleWindow

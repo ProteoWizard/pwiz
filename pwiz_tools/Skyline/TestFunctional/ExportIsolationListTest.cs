@@ -67,7 +67,12 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestExportIsolationListAsSmallMoleculesNegative()
         {
-            DoTestExportIsolationList(RefinementSettings.ConvertToSmallMoleculesMode.formulas, negativeCharges:true);
+            DoTestExportIsolationList(RefinementSettings.ConvertToSmallMoleculesMode.formulas, negativeCharges: RefinementSettings.ConvertToSmallMoleculesChargesMode.invert);
+        }
+        [TestMethod]
+        public void TestExportIsolationListAsSmallMoleculesMixedPolarity()
+        {
+            DoTestExportIsolationList(RefinementSettings.ConvertToSmallMoleculesMode.formulas, negativeCharges: RefinementSettings.ConvertToSmallMoleculesChargesMode.invert_some);
         }
 
         [TestMethod]
@@ -85,11 +90,12 @@ namespace pwiz.SkylineTestFunctional
 
         private RefinementSettings.ConvertToSmallMoleculesMode SmallMoleculeTestMode { get; set; }
         private bool AsSmallMoleculesNegative { get; set; }
+        private RefinementSettings.ConvertToSmallMoleculesChargesMode AsSmallMoleculesNegativeMode { get; set; }
         private bool AsExplicitRetentionTimes { get; set; }
         private bool WithSLens { get; set; }
 
-        public void DoTestExportIsolationList(RefinementSettings.ConvertToSmallMoleculesMode asSmallMolecules, 
-            bool asExplicitRetentionTimes = false, bool negativeCharges = false, bool withSLens = false)
+        public void DoTestExportIsolationList(RefinementSettings.ConvertToSmallMoleculesMode asSmallMolecules,
+            bool asExplicitRetentionTimes = false, RefinementSettings.ConvertToSmallMoleculesChargesMode negativeCharges = RefinementSettings.ConvertToSmallMoleculesChargesMode.none, bool withSLens = false)
         {
             if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.none && !RunSmallMoleculeTestVersions)
             {
@@ -98,7 +104,8 @@ namespace pwiz.SkylineTestFunctional
             }
 
             SmallMoleculeTestMode = asSmallMolecules;
-            AsSmallMoleculesNegative = (SmallMoleculeTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none) && negativeCharges;
+            AsSmallMoleculesNegativeMode = negativeCharges;
+            AsSmallMoleculesNegative = negativeCharges != RefinementSettings.ConvertToSmallMoleculesChargesMode.none;
             AsExplicitRetentionTimes = asExplicitRetentionTimes;
             WithSLens = withSLens;
 
@@ -106,10 +113,10 @@ namespace pwiz.SkylineTestFunctional
             // Avoid trying to reuse the .skyd file while another test is still extant
             if (AsExplicitRetentionTimes)
                 TestDirectoryName = "AsExplicitRetentionTimes"; 
-            else if (AsSmallMoleculesNegative)
-                TestDirectoryName = "AsSmallMoleculesNegative_" + SmallMoleculeTestMode;
             else if (SmallMoleculeTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none)
                 TestDirectoryName = "AsSmallMolecules_" + SmallMoleculeTestMode;
+            if (AsSmallMoleculesNegative)
+                TestDirectoryName += "_Negative_" + AsSmallMoleculesNegativeMode;
             if (WithSLens)
                 TestDirectoryName += "WithSLens";
             RunFunctionalTest();
@@ -136,7 +143,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForDocumentLoaded();
             if (SmallMoleculeTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none)
             {
-                ConvertDocumentToSmallMolecules(SmallMoleculeTestMode, AsSmallMoleculesNegative);
+                ConvertDocumentToSmallMolecules(SmallMoleculeTestMode, AsSmallMoleculesNegativeMode);
                 WaitForDocumentLoaded();
             }
 
@@ -382,13 +389,19 @@ namespace pwiz.SkylineTestFunctional
             }
 
             // Open Export Method dialog, and set method to scheduled or standard.
-            string csvPath = TestContext.GetTestPath(csvFilename);
+            string csvPath = TestFilesDirs[0].GetTestPath(csvFilename);
             var exportMethodDlg = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.IsolationList));
+            var exportPolarityFilter = 
+                AsSmallMoleculesNegativeMode != RefinementSettings.ConvertToSmallMoleculesChargesMode.none
+                 && SkylineWindow.Document.IsMixedPolarity() ?
+                ExportPolarity.separate :
+                ExportPolarity.all;
             RunUI(() =>
             {
                 exportMethodDlg.InstrumentType = instrumentType;
                 exportMethodDlg.MethodType = methodType;
                 exportMethodDlg.UseSlens = WithSLens;
+                exportMethodDlg.PolarityFilter = exportPolarityFilter;
                 Assert.IsFalse(exportMethodDlg.IsOptimizeTypeEnabled);
                 Assert.IsTrue(exportMethodDlg.IsTargetTypeEnabled);
                 Assert.IsFalse(exportMethodDlg.IsDwellTimeVisible);
@@ -408,7 +421,17 @@ namespace pwiz.SkylineTestFunctional
             }
 
             // Check for expected output.
-            string csvOut = File.ReadAllText(csvPath);
+            var csvResult = csvPath;
+            if (exportPolarityFilter == ExportPolarity.separate)
+            {
+                // We will have emitted two docs, one for pos and one for neg
+                var ext = csvPath.Substring(csvPath.LastIndexOf('.'));
+                csvResult = csvPath.Replace(ext, string.Format("_{0}_0001{1}", ExportPolarity.negative, ext));
+                var csvPos = File.ReadAllText(csvPath.Replace(ext, string.Format("_{0}_0001{1}", ExportPolarity.positive, ext)));
+                var csvNeg = File.ReadAllText(csvResult);
+                Assert.IsFalse(csvNeg.Equals(csvPos));
+            }
+            string csvOut = File.ReadAllText(csvResult);
             AssertEx.Contains(csvOut, checkStrings);
         }
 

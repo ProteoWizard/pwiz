@@ -634,6 +634,13 @@ namespace pwiz.Skyline.Model
             masses_only  // Convert peptides to custom ions but retain just the masses, no formulas or names so ratio calcs have to work on sorted mz
         };
 
+        public enum ConvertToSmallMoleculesChargesMode
+        {
+            none, // Leave charges alone
+            invert, // Invert charges
+            invert_some // Invert every other transition group
+        }
+
         /// <summary>
         /// Removes any library info - useful in test since for the moment at least small molecules don't support this and it won't roundtrip
         /// </summary>
@@ -689,7 +696,7 @@ namespace pwiz.Skyline.Model
 
         public SrmDocument ConvertToSmallMolecules(SrmDocument document, 
             ConvertToSmallMoleculesMode mode = ConvertToSmallMoleculesMode.formulas, 
-            bool invertCharges = false, 
+            ConvertToSmallMoleculesChargesMode invertChargesMode = ConvertToSmallMoleculesChargesMode.none, 
             bool ignoreDecoys=false)
         {
             if (mode == ConvertToSmallMoleculesMode.none)
@@ -698,6 +705,8 @@ namespace pwiz.Skyline.Model
             var note = new Annotations(TestingConvertedFromProteomic, null, 1); // Mark this as a testing node so we don't sort it
 
             newdoc = (SrmDocument)newdoc.ChangeIgnoreChangingChildren(true); // Retain copied results
+
+            var invertCharges = invertChargesMode == ConvertToSmallMoleculesChargesMode.invert;
 
             foreach (var peptideGroupDocNode in document.MoleculeGroups)
             {
@@ -714,6 +723,10 @@ namespace pwiz.Skyline.Model
                         peptideGroupDocNode.AutoManageChildren);
                     foreach (var mol in peptideGroupDocNode.Molecules)
                     {
+                        if (invertChargesMode == ConvertToSmallMoleculesChargesMode.invert_some)
+                        {
+                            invertCharges = !invertCharges;
+                        }
                         var peptideSequence = mol.Peptide.Sequence;
                         // Create a PeptideDocNode with the presumably baseline charge and label
                         var precursorCharge = (mol.TransitionGroups.Any() ? mol.TransitionGroups.First().TransitionGroup.PrecursorCharge : 0) * (invertCharges ? -1 : 1);

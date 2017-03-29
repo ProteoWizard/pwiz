@@ -34,6 +34,8 @@ namespace pwiz.Skyline.Model
 {
     public abstract class AbstractMassListExporter
     {
+        private ExportPolarity _currentPassPolarityFilter; // For mixed polarity documents
+
         public const int PRIMARY_COUNT_MIN = 1;
         public const int PRIMARY_COUNT_MAX = 10;
         public const int PRIMARY_COUNT_DEFAULT = 2;
@@ -58,6 +60,31 @@ namespace pwiz.Skyline.Model
             CultureInfo = CultureInfo.InvariantCulture;
         }
 
+        public bool PassesPolarityFilter(PeptideGroupDocNode node)
+        {
+            return node.Molecules.Any(PassesPolarityFilter);
+        }
+        public bool PassesPolarityFilter(PeptideDocNode node)
+        {
+            return node.TransitionGroups.Any(PassesPolarityFilter);
+        }
+        public bool PassesPolarityFilter(TransitionGroupDocNode node)
+        {
+            return node.Transitions.Any(PassesPolarityFilter);
+        }
+        public bool PassesPolarityFilter(TransitionDocNode node)
+        {
+            switch (_currentPassPolarityFilter)
+            {
+                case ExportPolarity.all:
+                    return true;
+                case ExportPolarity.negative:
+                    return node.Transition.Charge < 0;
+                case ExportPolarity.positive:
+                    return node.Transition.Charge > 0;
+            }
+            return false;
+        }
         protected RequiredPeptideSet RequiredPeptides { get; private set; }
         public SrmDocument Document { get; private set; }
         public DocNode DocNode { get; private set; }
@@ -78,7 +105,7 @@ namespace pwiz.Skyline.Model
 
         public int? SchedulingReplicateIndex { get; set; }
         public ExportSchedulingAlgorithm SchedulingAlgorithm { get; set; }
-
+        public ExportPolarity PolarityFilter { get; set; }
         public bool Ms1Scan { get; set; }
         public bool InclusionList { get; set; }
         public string MsAnalyzer { get; set; }
@@ -135,23 +162,51 @@ namespace pwiz.Skyline.Model
         public void Export(string fileName)
         {
             bool single = (Strategy == ExportStrategy.Single);
-            RequiredPeptides = GetRequiredPeptides(single);
-            if (MaxTransitions.HasValue && RequiredPeptides.TransitionCount > MaxTransitions)
+            // If we are separating mixed polarities, evaluate limits separately
+            var effectivePolarityFilter =
+                 Document.IsMixedPolarity() ? PolarityFilter : ExportPolarity.all;
+            for (var pass = 0; pass < (effectivePolarityFilter == ExportPolarity.separate ? 2 : 1); pass++)
             {
-                throw new IOException(string.Format(Resources.AbstractMassListExporter_Export_The_number_of_required_transitions__0__exceeds_the_maximum__1__,
-                                                    RequiredPeptides.TransitionCount, MaxTransitions));
+                if (effectivePolarityFilter == ExportPolarity.separate)
+                {
+                    _currentPassPolarityFilter = (pass == 0) ? ExportPolarity.positive : ExportPolarity.negative;
+                }
+                else
+                {
+                    _currentPassPolarityFilter = effectivePolarityFilter; // Single pass, filter pos, neg, or none
+                }
+                RequiredPeptides = GetRequiredPeptides();
+                if (MaxTransitions.HasValue && RequiredPeptides.TransitionCount > MaxTransitions)
+                {
+                    throw new IOException(string.Format(Resources.AbstractMassListExporter_Export_The_number_of_required_transitions__0__exceeds_the_maximum__1__,
+                                                        RequiredPeptides.TransitionCount, MaxTransitions));
+                }
             }
 
-            using (var fileIterator = new FileIterator(fileName, single, IsPrecursorLimited, WriteHeaders))
+            using (var fileIterator = new FileIterator(fileName, single && (effectivePolarityFilter != ExportPolarity.separate), IsPrecursorLimited, WriteHeaders))
             {
                 MemoryOutput = fileIterator.MemoryOutput;
 
                 fileIterator.Init();
 
-                if (MethodType != ExportMethodType.Standard && Strategy == ExportStrategy.Buckets)
-                    ExportScheduledBuckets(fileIterator);
-                else
-                    ExportNormal(fileIterator, single);
+                for (var pass = 0; pass < (effectivePolarityFilter == ExportPolarity.separate ? 2 : 1); pass++)
+                {
+                    if (effectivePolarityFilter == ExportPolarity.separate) 
+                    {
+                        // Split mixed polarities for user convenience
+                        _currentPassPolarityFilter = pass == 0 ? ExportPolarity.positive : ExportPolarity.negative;
+                        fileIterator.PolarityText = "_" + _currentPassPolarityFilter; // Not L10N
+                        if (single)
+                        {
+                            NextFile(fileIterator); // Not actually single if we're splitting out polarities
+                        }
+                        RequiredPeptides = GetRequiredPeptides(); // Reevaluate for this filter
+                    }
+                    if (MethodType != ExportMethodType.Standard && Strategy == ExportStrategy.Buckets)
+                        ExportScheduledBuckets(fileIterator);
+                    else
+                        ExportNormal(fileIterator, single);
+                }
                 fileIterator.Commit();
             }
         }
@@ -168,11 +223,11 @@ namespace pwiz.Skyline.Model
             return nodePep.Peptide.IsCustomIon ? nodeGroup.CustomIon.InvariantName : Document.Settings.GetModifiedSequence(nodePep);
         }
 
-        private RequiredPeptideSet GetRequiredPeptides(bool single)
+        private RequiredPeptideSet GetRequiredPeptides()
         {
-            return single
+            return Strategy == ExportStrategy.Single
                        ? new RequiredPeptideSet()
-                       : new RequiredPeptideSet(Document, IsPrecursorLimited);
+                       : new RequiredPeptideSet(this);
         }
 
         protected sealed class RequiredPeptideSet
@@ -186,17 +241,19 @@ namespace pwiz.Skyline.Model
                 _peptides = new RequiredPeptide[0];
             }
 
-            public RequiredPeptideSet(SrmDocument document, bool isPrecursorLimited)
+            public RequiredPeptideSet(AbstractMassListExporter exporter)
             {
+                SrmDocument document = exporter.Document;
+                bool isPrecursorLimited = exporter.IsPrecursorLimited;
                 _peptides = (from nodePepGroup in document.PeptideGroups
-                             from nodePep in nodePepGroup.Peptides
+                             from nodePep in nodePepGroup.Peptides.Where(exporter.PassesPolarityFilter)
                              where nodePep.GlobalStandardType != null
                              select new RequiredPeptide(nodePepGroup, nodePep))
                     .ToArray();
                 _setPepIndexes = new HashSet<int>(_peptides.Select(pep => pep.PeptideNode.Peptide.GlobalIndex));
                 TransitionCount = _peptides.Sum(pep => isPrecursorLimited
-                                                           ? pep.PeptideNode.TransitionGroupCount
-                                                           : pep.PeptideNode.TransitionCount);
+                        ? pep.PeptideNode.TransitionGroups.Count(exporter.PassesPolarityFilter)
+                        : pep.PeptideNode.TransitionGroups.Sum(tg => tg.Transitions.Count(exporter.PassesPolarityFilter)));
             }
 
             public int TransitionCount { get; private set; }
@@ -224,7 +281,7 @@ namespace pwiz.Skyline.Model
 
         private void ExportNormal(FileIterator fileIterator, bool single)
         {
-            foreach (PeptideGroupDocNode seq in Document.MoleculeGroups)
+            foreach (PeptideGroupDocNode seq in Document.MoleculeGroups.Where(PassesPolarityFilter))
             {
                 // Skip peptide groups with no transitions
                 if (seq.TransitionCount == 0)
@@ -243,7 +300,7 @@ namespace pwiz.Skyline.Model
                     NextFile(fileIterator);
                 }
 
-                foreach (PeptideDocNode peptide in seq.Children)
+                foreach (PeptideDocNode peptide in seq.Molecules.Where(PassesPolarityFilter))
                 {
                     if (DocNode is PeptideDocNode && !ReferenceEquals(peptide, DocNode))
                         continue;
@@ -260,7 +317,7 @@ namespace pwiz.Skyline.Model
                         NextFile(fileIterator);
                     }
 
-                    foreach (TransitionGroupDocNode group in peptide.Children)
+                    foreach (TransitionGroupDocNode group in peptide.TransitionGroups.Where(PassesPolarityFilter))
                     {
                         // Skip precursors with too few transitions.
                         int groupTransitions = group.Children.Count;
@@ -320,12 +377,12 @@ namespace pwiz.Skyline.Model
             var listSchedules = new List<PeptideSchedule>();
             var listRequired = new List<PeptideSchedule>();
             var listUnscheduled = new List<PeptideSchedule>();
-            foreach (PeptideGroupDocNode nodePepGroup in Document.MoleculeGroups)
+            foreach (PeptideGroupDocNode nodePepGroup in Document.MoleculeGroups.Where(PassesPolarityFilter))
             {
-                foreach (PeptideDocNode nodePep in nodePepGroup.Children)
+                foreach (PeptideDocNode nodePep in nodePepGroup.Molecules.Where(PassesPolarityFilter))
                 {
                     var peptideSchedule = new PeptideSchedule(nodePep, maxInstrumentTrans);
-                    foreach (TransitionGroupDocNode nodeTranGroup in nodePep.Children)
+                    foreach (TransitionGroupDocNode nodeTranGroup in nodePep.TransitionGroups.Where(PassesPolarityFilter))
                     {
                         double timeWindow;
                         double retentionTime = predict.PredictRetentionTime(Document, nodePep, nodeTranGroup, SchedulingReplicateIndex,
@@ -510,7 +567,7 @@ namespace pwiz.Skyline.Model
         {
             // Allow derived classes a chance to reorder the transitions.  Currently only used by AB SCIEX.
             var reorderedTransitions = GetTransitionsInBestOrder(nodeGroup, nodeGroupPrimary);
-            foreach (TransitionDocNode nodeTran in reorderedTransitions)
+            foreach (TransitionDocNode nodeTran in reorderedTransitions.Where(PassesPolarityFilter))
             {
                 if (OptimizeType == null)
                 {
@@ -784,10 +841,10 @@ namespace pwiz.Skyline.Model
             return (rank.HasValue && rank.Value <= PrimaryTransitionCount);
         }
 
-        protected virtual IEnumerable<DocNode> GetTransitionsInBestOrder(TransitionGroupDocNode nodeGroup, TransitionGroupDocNode nodeGroupPrimary)
+        protected virtual IEnumerable<TransitionDocNode> GetTransitionsInBestOrder(TransitionGroupDocNode nodeGroup, TransitionGroupDocNode nodeGroupPrimary)
         {
             // most instruments do not care about the order of transitions, just return them in the same order
-            return nodeGroup.Children;
+            return nodeGroup.Transitions;
         }
 
         private bool ExceedsMax(int count)
@@ -844,6 +901,8 @@ namespace pwiz.Skyline.Model
             public string FileName { get; private set; }
             public string BaseName { get; set; }
             public string Suffix { get; set; }
+            public string PolarityText { get; set; }
+            public Dictionary<string, int> FileCountPerPolarity { get; set; }
             public int FileCount { get; set; }
             public int TransitionCount { get; set; }
             // ReSharper restore MemberCanBePrivate.Local
@@ -854,6 +913,7 @@ namespace pwiz.Skyline.Model
 
             public void Init()
             {
+                PolarityText = string.Empty;
                 if (_single)
                 {
                     if (FileName != null)
@@ -911,19 +971,36 @@ namespace pwiz.Skyline.Model
                 Commit();
 
                 TransitionCount = 0;
+                if (FileCountPerPolarity == null)
+                {
+                    FileCountPerPolarity = new Dictionary<string, int> { { PolarityText, 1 } };
+                }
+                else if (!FileCountPerPolarity.ContainsKey(PolarityText))
+                {
+                    FileCountPerPolarity.Add(PolarityText, 1);
+                }
+                else
+                {
+                    FileCountPerPolarity[PolarityText]++;
+                }
                 FileCount++;
-
                 string baseName;
                 // Make sure file names sort into the order in which they were
                 // written.  This will help the results load in tree order.
+                // If we are splitting out by polarity, name such that they will sort by polarity then number.
                 if (Suffix == null)
-                    baseName = string.Format("{0}_{1:0000}", BaseName, FileCount); // Not L10N
+                    baseName = string.Format("{0}{2}_{1:0000}", BaseName, FileCountPerPolarity[PolarityText], PolarityText); // Not L10N
                 else
-                    baseName = string.Format("{0}_{1:0000}_{2}", BaseName, FileCount, Suffix); // Not L10N
+                    baseName = string.Format("{0}{3}_{1:0000}_{2}", BaseName, FileCountPerPolarity[PolarityText], Suffix, PolarityText); // Not L10N
 
                 if (MemoryOutput == null)
                 {
-                    _saver = new FileSaver(baseName + ".csv"); // Not L10N
+                    var ext = Path.GetExtension(FileName);
+                    if (string.IsNullOrEmpty(ext))
+                    {
+                        ext = ".csv"; // Not L10N
+                    }
+                    _saver = new FileSaver(baseName + ext); 
                     _writer = new StreamWriter(_saver.SafeName);
                 }
                 else
@@ -961,12 +1038,12 @@ namespace pwiz.Skyline.Model
 
             public void WriteRequiredTransitions(AbstractMassListExporter exporter, RequiredPeptideSet requiredPeptides)
             {
-                foreach (var requiredPeptide in requiredPeptides.Peptides)
+                foreach (var requiredPeptide in requiredPeptides.Peptides.Where(r => exporter.PassesPolarityFilter(r.PeptideGroupNode)))
                 {
                     var seq = requiredPeptide.PeptideGroupNode;
                     var peptide = requiredPeptide.PeptideNode;
 
-                    foreach (var group in peptide.TransitionGroups)
+                    foreach (var group in peptide.TransitionGroups.Where(exporter.PassesPolarityFilter))
                     {
                         if (exporter.IsolationList)
                         {
@@ -974,7 +1051,7 @@ namespace pwiz.Skyline.Model
                             continue;
                         }
 
-                        foreach (var transition in group.Transitions)
+                        foreach (var transition in group.Transitions.Where(exporter.PassesPolarityFilter))
                         {
                             WriteTransition(exporter, seq, peptide, group, null, transition, 0);
                         }

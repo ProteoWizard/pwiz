@@ -2525,7 +2525,7 @@ namespace pwiz.Skyline
                     }
                 }
             }
-
+            _exportProperties.PolarityFilter = args.ExportPolarityFilter;
             try
             {
                 _exportProperties.ExportFile(instrument, type, args.ExportPath, _doc, args.TemplateFile);
@@ -2537,10 +2537,25 @@ namespace pwiz.Skyline
                 return;
             }
 
+            var exportPath = Path.GetFileName(args.ExportPath);
+            if (_exportProperties.PolarityFilter == ExportPolarity.separate && type != ExportFileType.Method && _doc.IsMixedPolarity())
+            {
+                // Will create a pair of (or pair of sets of) files, let the final confirmation message reflect that
+                var ext = Path.GetExtension(exportPath);
+                if (ext == null)
+                {
+                    exportPath += "*"; // Not L10N
+                }
+                else
+                {
+                    exportPath = exportPath.Replace(ext, "*" + ext); // Not L10N
+                }
+            }
+
             _out.WriteLine(!Equals(type, ExportFileType.Method)
                                ? Resources.CommandLine_ExportInstrumentFile_List__0__exported_successfully_
                                : Resources.CommandLine_ExportInstrumentFile_Method__0__exported_successfully_,
-                           Path.GetFileName(args.ExportPath));
+                           exportPath);
         }
 
         public void SaveDocument(SrmDocument doc, string outFile, TextWriter outText)

@@ -150,6 +150,35 @@ namespace pwiz.Skyline.FileUI
             DwellTime = Settings.Default.ExportMethodDwellTime;
             RunLength = Settings.Default.ExportMethodRunLength;
 
+            // For documents with mixed polarity, offer to emit two different lists or just one polarity
+            var isMixedPolarity = document.IsMixedPolarity();
+            labelPolarityFilter.Visible = comboPolarityFilter.Visible = labelPolarityFilter.Enabled = comboPolarityFilter.Enabled =
+                isMixedPolarity;
+            comboPolarityFilter.SelectedIndex = (int) (comboPolarityFilter.Enabled ?
+                 Helpers.ParseEnum(Settings.Default.ExportPolarityFilterEnum, ExportPolarity.all) :
+                 ExportPolarity.all);
+            PolarityFilter = TypeSafeEnum.ValidateOrDefault((ExportPolarity)comboPolarityFilter.SelectedIndex, ExportPolarity.all);
+            if (isMixedPolarity)
+            {
+                labelPolarityFilter.Left = labelOptimizing.Left;
+                comboPolarityFilter.Left = comboOptimizing.Left;
+                var labelPolarityFilterTop = labelOptimizing.Top;
+                var comboPolarityFilterTop = comboOptimizing.Top;
+                // Put as much vertical space betwween comboPolarityFilter and comboOptimizing as there was between comboOptimizing and method count display
+                var polarityFilterVerticalSpacing = comboOptimizing.Bottom - labelMethodNum.Bottom;
+                foreach (var controlObj in Controls)
+                {
+                    var control = controlObj as Control;
+                    if ((control != null) && (control.Top >= labelPolarityFilterTop))
+                    {
+                        control.Top += polarityFilterVerticalSpacing;
+                    }
+                }
+                labelPolarityFilter.Top = labelPolarityFilterTop;
+                comboPolarityFilter.Top = comboPolarityFilterTop;
+                Height += polarityFilterVerticalSpacing;
+            }
+
             UpdateMaxTransitions();
 
             cbEnergyRamp.Checked = Settings.Default.ExportThermoEnergyRamp;
@@ -403,6 +432,16 @@ namespace pwiz.Skyline.FileUI
             set
             {
                 _exportProperties.UseSlens = cbSlens.Checked = value;
+            }
+        }
+
+        public ExportPolarity PolarityFilter
+        {
+            get { return _exportProperties.PolarityFilter; }
+            set
+            {
+                _exportProperties.PolarityFilter = comboPolarityFilter.Enabled ? value : ExportPolarity.all;
+                comboPolarityFilter.SelectedIndex = (int) _exportProperties.PolarityFilter;
             }
         }
 
@@ -852,6 +891,9 @@ namespace pwiz.Skyline.FileUI
                     outputPath = dlg.FileName;
                 }
             }
+            _exportProperties.PolarityFilter = comboPolarityFilter.Enabled
+                ? (ExportPolarity)comboPolarityFilter.SelectedIndex
+                : ExportPolarity.all;
 
             Settings.Default.ExportDirectory = Path.GetDirectoryName(outputPath);
 
@@ -908,7 +950,8 @@ namespace pwiz.Skyline.FileUI
                 Settings.Default.ExportMultiQuant = ExportMultiQuant;
             if (cbExportEdcMass.Visible)
                 Settings.Default.ExportEdcMass = ExportEdcMass;
-
+            if (comboPolarityFilter.Enabled)
+                Settings.Default.ExportPolarityFilterEnum = TypeSafeEnum.ValidateOrDefault((ExportPolarity)comboPolarityFilter.SelectedIndex, ExportPolarity.all).ToString();
             DialogResult = DialogResult.OK;
             Close();
         }
@@ -1319,6 +1362,12 @@ namespace pwiz.Skyline.FileUI
             UpdateCovControls();
         }
 
+        private void comboPolarityFilter_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            _exportProperties.PolarityFilter = TypeSafeEnum.ValidateOrDefault((ExportPolarity)comboPolarityFilter.SelectedIndex, ExportPolarity.all);
+            CalcMethodCount();
+        }
+
         private void comboTargetType_SelectedIndexChanged(object sender, EventArgs e)
         {
             var targetType = ExportMethodTypeExtension.GetEnum(comboTargetType.SelectedItem.ToString());
@@ -1474,7 +1523,9 @@ namespace pwiz.Skyline.FileUI
 
             if (IsDia)
             {
-                labelMethodNum.Text = 1.ToString(LocalizationHelper.CurrentCulture);
+                // Will we split on polarity?
+                var polaritiesCount = _exportProperties.PolarityFilter == ExportPolarity.separate ? 2 : 1;
+                labelMethodNum.Text = polaritiesCount.ToString(LocalizationHelper.CurrentCulture);
                 return;
             }
 

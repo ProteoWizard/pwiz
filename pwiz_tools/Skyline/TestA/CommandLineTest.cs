@@ -478,17 +478,108 @@ namespace pwiz.SkylineTestA
             /////////////////////////
             // Waters test
             string watersPath = testFilesDir.GetTestPath("Waters_test.csv");
-
-            output = RunCommand("--in=" + docPath,
-                                "--import-file=" + rawPath,
-                                "--exp-translist-instrument=" + ExportInstrumentType.WATERS,
-                                "--exp-file=" + watersPath,
-                                "--exp-run-length=100");
+            var cmd = new[] {
+                "--in=" + docPath,
+                "--exp-translist-instrument=" + ExportInstrumentType.WATERS,
+                "--exp-file=" + watersPath,
+                "--exp-run-length=100"
+                };
+            output = RunCommand(cmd);
 
             //check for success
             CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportInstrumentFile_List__0__exported_successfully_, "Waters_test.csv"), output);
             Assert.IsTrue(File.Exists(watersPath));
             Assert.AreEqual(doc.MoleculeTransitionCount + 1, File.ReadAllLines(watersPath).Length);
+
+            // Run it again as a mixed polarity document
+            MixedPolarityTest(doc, testFilesDir, docPath, watersPath, cmd, false, false);
+        }
+
+        private static void MixedPolarityTest(SrmDocument doc, TestFilesDir testFilesDir, string inPath, string outPath, string[]cmds, 
+            bool precursorsOnly, bool isMethod)
+        {
+            var refine = new RefinementSettings();
+            var docMixed = refine.ConvertToSmallMolecules(doc, RefinementSettings.ConvertToSmallMoleculesMode.formulas,
+                RefinementSettings.ConvertToSmallMoleculesChargesMode.invert_some); // Convert every other transition group to negative charge
+            var xml = string.Empty;
+            AssertEx.RoundTrip(docMixed, ref xml);
+            var skyExt = Path.GetExtension(inPath) ?? string.Empty;
+            var docPathMixed = inPath.Replace(skyExt, "_mixed_polarity"+skyExt);
+            File.WriteAllText(docPathMixed, xml);
+            var ext =  Path.GetExtension(outPath)??string.Empty;
+            foreach (var polarityFilter in Helpers.GetEnumValues<ExportPolarity>().Reverse())
+            {
+                var outname = "polarity_test_" + polarityFilter + ext;
+                var outPathMixed = testFilesDir.GetTestPath(outname);
+                var args = new List<string>(cmds.Select(c => c.Replace(inPath, docPathMixed).Replace(outPath, outPathMixed))) { "--exp-polarity=" + polarityFilter };
+                var output = RunCommand(args.ToArray());
+                if (polarityFilter == ExportPolarity.separate && !isMethod)
+                {
+                    outname = outname.Replace(ext, "*" + ext); // Will create multiple files 
+                }
+                CheckRunCommandOutputContains(
+                    string.Format(isMethod ? 
+                    Resources.CommandLine_ExportInstrumentFile_Method__0__exported_successfully_ : 
+                    Resources.CommandLine_ExportInstrumentFile_List__0__exported_successfully_, outname), output);
+                if (polarityFilter == ExportPolarity.separate)
+                {
+                    PolarityFilterCheck(docMixed, outPathMixed, ExportPolarity.negative, ExportPolarity.separate, precursorsOnly, isMethod);
+                    PolarityFilterCheck(docMixed, outPathMixed, ExportPolarity.positive, ExportPolarity.separate, precursorsOnly, isMethod);
+                }
+                else
+                {
+                    PolarityFilterCheck(docMixed, outPathMixed, polarityFilter, polarityFilter, precursorsOnly, isMethod);
+                }
+            }
+        }
+
+        private static void PolarityFilterCheck(SrmDocument docMixed, string path, ExportPolarity polarityFilter, ExportPolarity mode, bool precursorsOnly, bool isMethod)
+        {
+            var expected = 0;
+            var nPositive = precursorsOnly
+                ? docMixed.MoleculeTransitionGroups.Count(t => t.TransitionGroup.PrecursorCharge > 0)
+                : docMixed.MoleculeTransitions.Count(t => t.Transition.Charge > 0);
+            var nNegative = precursorsOnly
+                ? docMixed.MoleculeTransitionGroups.Count(t => t.TransitionGroup.PrecursorCharge < 0)
+                : docMixed.MoleculeTransitions.Count(t => t.Transition.Charge < 0);
+            if (polarityFilter != ExportPolarity.positive)
+            {
+                expected += nNegative;
+            }
+            if (polarityFilter != ExportPolarity.negative)
+            {
+                expected += nPositive;
+            }
+            var ext = Path.GetExtension(path) ?? string.Empty;
+            if (mode == ExportPolarity.separate)
+            {
+                // Expect a pair of files
+                path = path.Replace(ext, string.Format("_{0}_{1:0000}{2}", ExportPolarity.negative, 1, ext));
+                if (isMethod)
+                {
+                    Assert.IsTrue(Directory.Exists(path));
+                }
+                else
+                {
+                    Assert.IsTrue(File.Exists(path));
+                    Assert.AreEqual(nNegative + 1, File.ReadAllLines(path).Length, polarityFilter.ToString());
+                }
+                path = path.Replace(ExportPolarity.negative.ToString(), ExportPolarity.positive.ToString());
+                expected = nPositive;
+            }
+            else if (isMethod)
+            {
+                path = path.Replace(ext, "_0001"+ext);
+            }
+            if (isMethod)
+            {
+                Assert.IsTrue(Directory.Exists(path));
+            }
+            else
+            {
+                Assert.IsTrue(File.Exists(path));
+                Assert.AreEqual(expected + 1, File.ReadAllLines(path).Count(l => !string.IsNullOrEmpty(l)), polarityFilter.ToString());
+            }
         }
 
         [TestMethod]
@@ -529,13 +620,14 @@ namespace pwiz.SkylineTestA
             string output = "";
             for (int i = 0; !success && i < 3; i++)
             {
-                output = RunCommand("--in=" + docPath2,
-                                           "--exp-method-instrument=Agilent 6400 Series",
-                                           "--exp-template=" + agilentTemplate,
-                                           "--exp-file=" + agilentOut,
-                                           "--exp-dwell-time=20",
-                                           "--exp-strategy=buckets",
-                                           "--exp-max-trans=75");
+                var cmd = new[] {"--in=" + docPath2,
+                                 "--exp-method-instrument=Agilent 6400 Series",
+                                 "--exp-template=" + agilentTemplate,
+                                 "--exp-file=" + agilentOut,
+                                 "--exp-dwell-time=20",
+                                 "--exp-strategy=buckets",
+                                 "--exp-max-trans=75"};
+                output = RunCommand(cmd);
 
                 //check for success
                 success = output.Contains(string.Format(Resources.CommandLine_ExportInstrumentFile_Method__0__exported_successfully_, "Agilent_test.m"));
@@ -543,6 +635,19 @@ namespace pwiz.SkylineTestA
                 // Relax a bit if things aren't going well.
                 if (!success)
                     Thread.Sleep(5000);
+                else
+                {
+                    try
+                    {
+                        // Run it again as a mixed polarity document
+                        var doc = ResultsUtil.DeserializeDocument(docPath2);
+                        MixedPolarityTest(doc, commandFilesDir, docPath2, agilentOut, cmd, false, true);
+                    }
+                    catch (Exception)
+                    {
+                        success = false; // Allow for retries
+                    }
+                }
             }
 
             if (!success)
@@ -638,16 +743,23 @@ namespace pwiz.SkylineTestA
 
             // Isolation list export
             string agilentIsolationPath = testFilesDir.GetTestPath("AgilentIsolationList.csv");
-
-            output = RunCommand("--in=" + docPath,
-                                "--exp-isolationlist-instrument=" + ExportInstrumentType.AGILENT_TOF,
-                                "--exp-strategy=single",
-                                "--exp-file=" + agilentIsolationPath);
+            var cmd = new[]
+            {
+                "--in=" + docPath,
+                "--exp-isolationlist-instrument=" + ExportInstrumentType.AGILENT_TOF,
+                "--exp-strategy=single",
+                "--exp-file=" + agilentIsolationPath
+            };
+            output = RunCommand(cmd);
             Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_ExportInstrumentFile_List__0__exported_successfully_, "AgilentIsolationList.csv")));
             Assert.IsFalse(output.Contains(Resources.CommandLineTest_ConsoleAddFastaTest_Error));
             Assert.IsTrue(File.Exists(agilentIsolationPath));
             doc = ResultsUtil.DeserializeDocument(docPath);
             Assert.AreEqual(doc.PeptideTransitionGroupCount + 1, File.ReadAllLines(agilentIsolationPath).Length);
+
+            // Run it again as a mixed polarity document
+            MixedPolarityTest(doc, testFilesDir, docPath, agilentIsolationPath, cmd, true, false);
+
         }
 
         [TestMethod]
@@ -800,6 +912,7 @@ namespace pwiz.SkylineTestA
                                 "--exp-max-trans=BOGUS",
                                 "--exp-optimizing=BOGUS",
                                 "--exp-method-type=BOGUS",
+                                "--exp-polarity=BOGUS",
                                 "--exp-dwell-time=1000000000", //bogus
                                 "--exp-dwell-time=BOGUS",
                                 "--exp-run-length=1000000000",
@@ -811,7 +924,7 @@ namespace pwiz.SkylineTestA
             Assert.IsFalse(output.Contains(Resources.CommandLineTest_ConsolePathCoverage_successfully_));
 
             Assert.AreEqual(11, CountInstances(Resources.CommandLineTest_ConsoleAddFastaTest_Warning, output));
-            Assert.AreEqual(1, CountInstances(Resources.CommandLineTest_ConsoleAddFastaTest_Error, output));
+            Assert.AreEqual(2, CountInstances(Resources.CommandLineTest_ConsoleAddFastaTest_Error, output));
 
 
             //This test uses a broken Skyline file to test the InvalidDataException catch
@@ -848,6 +961,7 @@ namespace pwiz.SkylineTestA
                                         "exp-method-instrument",
                                         "exp-template",
                                         "exp-file",
+                                        "exp-polarity",
                                         "exp-strategy",
                                         "exp-method-type",
                                         "exp-max-trans",
@@ -871,6 +985,7 @@ namespace pwiz.SkylineTestA
                                                 "exp-add-energy-ramp",
 //                                                "exp-full-scans",
                                                 "tool-output-to-immediate-window",
+                                                "exp-polarity",
                                             });
         }
 

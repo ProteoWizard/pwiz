@@ -99,6 +99,14 @@ namespace pwiz.Skyline.Model
         }  
     }
 
+    public enum ExportPolarity
+    {
+        all,      // Both, in same output
+        positive, // Only positive
+        negative, // Only negative
+        separate  // Both, but in separate outputs
+    }
+
     public enum ExportSchedulingAlgorithm { Average, Trends, Single }
     public static class ExportSchedulingAlgorithmExtension
     {
@@ -343,6 +351,7 @@ namespace pwiz.Skyline.Model
         public virtual int OptimizeStepCount { get; set; }
         public virtual int? SchedulingReplicateNum { get; set; }
         public virtual ExportSchedulingAlgorithm SchedulingAlgorithm { get; set; }
+        public virtual ExportPolarity PolarityFilter { get; set; }
 
         public virtual int PrimaryTransitionCount { get; set; }
         public virtual int DwellTime { get; set; }
@@ -383,6 +392,7 @@ namespace pwiz.Skyline.Model
             exporter.PrimaryTransitionCount = PrimaryTransitionCount;
             exporter.SchedulingReplicateIndex = SchedulingReplicateNum;
             exporter.SchedulingAlgorithm = SchedulingAlgorithm;
+            exporter.PolarityFilter = PolarityFilter;
             return exporter;
         }
 
@@ -1765,11 +1775,11 @@ namespace pwiz.Skyline.Model
             get { return ExportInstrumentType.ABI; }
         }
 
-        protected override IEnumerable<DocNode> GetTransitionsInBestOrder(TransitionGroupDocNode nodeGroup, TransitionGroupDocNode nodeGroupPrimary)
+        protected override IEnumerable<TransitionDocNode> GetTransitionsInBestOrder(TransitionGroupDocNode nodeGroup, TransitionGroupDocNode nodeGroupPrimary)
         {
             if(MethodType != ExportMethodType.Triggered)
             {
-                return nodeGroup.Children;
+                return nodeGroup.Transitions;
             }
 
             IComparer<TransitionOrdered> comparer = TransitionOrdered.TransitionComparerInstance;
@@ -3348,7 +3358,7 @@ namespace pwiz.Skyline.Model
             for (int i = 0; i < 6; i++)
             {
                 var mz = i < transitions.Length
-                    ? GetProductMz(SequenceMassCalc.PersistentMZ(((TransitionDocNode) transitions[i]).Mz), step)
+                    ? GetProductMz(SequenceMassCalc.PersistentMZ(transitions[i].Mz), step)
                     : 0;
                 writer.Write(mz.ToString(MASS_FORMAT, CultureInfo));
                 writer.Write(FieldSeparator);
@@ -3373,7 +3383,7 @@ namespace pwiz.Skyline.Model
             writer.Write(FieldSeparator);
             // EDCMass
             var edcMass = ExportEdcMass && transitions.Any()
-                ? GetProductMz(SequenceMassCalc.PersistentMZ(((TransitionDocNode) transitions.First()).Mz), step)
+                ? GetProductMz(SequenceMassCalc.PersistentMZ(transitions.First().Mz), step)
                 : 0;
             writer.Write(edcMass.ToString(MASS_FORMAT, CultureInfo));
             writer.Write(FieldSeparator);
@@ -3408,7 +3418,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        protected override IEnumerable<DocNode> GetTransitionsInBestOrder(TransitionGroupDocNode nodeGroup, TransitionGroupDocNode nodeGroupPrimary)
+        protected override IEnumerable<TransitionDocNode> GetTransitionsInBestOrder(TransitionGroupDocNode nodeGroup, TransitionGroupDocNode nodeGroupPrimary)
         {
             IComparer<TransitionOrdered> comparer = TransitionOrdered.TransitionComparerInstance;
             // ReSharper disable once CollectionNeverQueried.Local

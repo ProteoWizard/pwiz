@@ -458,14 +458,14 @@ namespace pwiz.Skyline.Model.Serialization
             }
             else
             {
-                if (formatVersionNumber > DocumentFormat.CURRENT.AsDouble())
+                FormatVersion = new DocumentFormat(formatVersionNumber);
+                if (FormatVersion.CompareTo(DocumentFormat.CURRENT) > 0)
                 {
                     throw new VersionNewerException(
                         string.Format(Resources.SrmDocument_ReadXml_The_document_format_version__0__is_newer_than_the_version__1__supported_by__2__,
                                       FormatVersion, formatVersionNumber, Install.ProgramNameAndVersion));
                     
                 }
-                FormatVersion = new DocumentFormat(formatVersionNumber);
             }
 
             reader.ReadStartElement();  // Start document element

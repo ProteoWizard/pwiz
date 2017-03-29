@@ -2325,5 +2325,17 @@ namespace pwiz.Skyline.Properties {
                 this["ShowFullScanNumber"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("all")]
+        public string ExportPolarityFilterEnum {
+            get {
+                return ((string)(this["ExportPolarityFilterEnum"]));
+            }
+            set {
+                this["ExportPolarityFilterEnum"] = value;
+            }
+        }
     }
 }
