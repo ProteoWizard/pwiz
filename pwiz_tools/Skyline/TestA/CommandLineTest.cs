@@ -762,6 +762,14 @@ namespace pwiz.SkylineTestA
 
         }
 
+        private static void AssertErrorCount(int expectedErrorsInOutput, string output, string failureMessage)
+        {
+            // Include not-yet-localized messages in the error count
+            var countErrorsLocalized = Resources.CommandLineTest_ConsoleAddFastaTest_Error.Contains("Error") ? 0 : CountInstances(Resources.CommandLineTest_ConsoleAddFastaTest_Error, output);
+            var countErrorsEnglish = CountInstances("Error", output);
+            Assert.AreEqual(expectedErrorsInOutput, countErrorsLocalized + countErrorsEnglish, failureMessage);
+        }
+
         [TestMethod]
         public void ConsolePathCoverage()
         {
@@ -924,8 +932,7 @@ namespace pwiz.SkylineTestA
             Assert.IsFalse(output.Contains(Resources.CommandLineTest_ConsolePathCoverage_successfully_));
 
             Assert.AreEqual(11, CountInstances(Resources.CommandLineTest_ConsoleAddFastaTest_Warning, output));
-            Assert.AreEqual(2, CountInstances(Resources.CommandLineTest_ConsoleAddFastaTest_Error, output));
-
+            AssertErrorCount(2, output, "Unexpected error count");
 
             //This test uses a broken Skyline file to test the InvalidDataException catch
             var brokenFile = commandFilesDir.GetTestPath("Broken_file.sky");
@@ -1006,7 +1013,7 @@ namespace pwiz.SkylineTestA
             {
                 string arg = string.Format("--{0}", name);
                 string output = RunCommand(getCommandLineForArg(arg));
-                Assert.AreEqual(1, CountInstances(Resources.CommandLineTest_ConsoleAddFastaTest_Error, output), string.Format("No error for argument {0}", arg));
+                AssertErrorCount(1,  output, string.Format("No error for argument {0}", arg));
                 Assert.AreEqual(1, CountInstances(arg, output), string.Format("Missing expected argument {0}", arg));
             }
         }
