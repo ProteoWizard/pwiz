@@ -33,6 +33,8 @@ namespace pwiz.Skyline
 {
     public class CommandArgs
     {
+        private const string ARG_PREFIX = "--";  // Not L10N
+
         public string LogFile { get; private set; }
         public string SkylineFile { get; private set; }
         public List<MsDataFileUri> ReplicateFile { get; private set; }
@@ -498,7 +500,7 @@ namespace pwiz.Skyline
             public NameValuePair(string arg)
                 : this()
             {
-                if (arg.StartsWith("--")) // Not L10N
+                if (arg.StartsWith(ARG_PREFIX)) // Not L10N
                 {
                     arg = arg.Substring(2);
                     int indexEqualsSign = arg.IndexOf('=');
@@ -1571,7 +1573,8 @@ namespace pwiz.Skyline
 
         public static string ArgText(string argName)
         {
-            return "--" + argName;  // Not L10N
+            Assume.IsFalse(argName.StartsWith(ARG_PREFIX));  // Avoid duplicating
+            return ARG_PREFIX + argName;
         }
 
         public static string WarnArgRequirementText(string requiredArg, string usedArg)
@@ -1635,7 +1638,7 @@ namespace pwiz.Skyline
         private bool PanoramaArgsComplete()
         {
             var missingArgs = new List<string>();
-            const string prefix = "--"; // Not L10N
+            const string prefix = ARG_PREFIX;
             if (string.IsNullOrWhiteSpace(PanoramaServerUri))
             {
                 missingArgs.Add(prefix + PANORAMA_SERVER_URI); 
@@ -1668,7 +1671,7 @@ namespace pwiz.Skyline
         private class ValueMissingException : UsageException
         {
             public ValueMissingException(string name)
-                : base(string.Format(Resources.ValueMissingException_ValueMissingException_,  "--" + name)) // Not L10N
+                : base(string.Format(Resources.ValueMissingException_ValueMissingException_,  ArgText(name)))
             {
             }
         }
@@ -1676,7 +1679,7 @@ namespace pwiz.Skyline
         private class ValueUnexpectedException : UsageException
         {
             public ValueUnexpectedException(string name)
-                : base(string.Format(Resources.ValueUnexpectedException_ValueUnexpectedException_The_argument____0__should_not_have_a_value_specified, "--" + name)) // Not L10N
+                : base(string.Format(Resources.ValueUnexpectedException_ValueUnexpectedException_The_argument__0__should_not_have_a_value_specified, ArgText(name)))
             {
             }
         }

@@ -5854,7 +5854,7 @@
     <value>フォルダを選択してください</value>
   </data>
   <data name="ValueMissingException_ValueMissingException_" xml:space="preserve">
-    <value>引数--{0}には値が必要であり、--name=value形式で指定しなければなりません</value>
+    <value>引数{0}には値が必要であり、--name=value形式で指定しなければなりません</value>
   </data>
   <data name="AbstractDemultiplexer_AnalyzeFile_Isolation_scheme_is_set_to_multiplexing_but_file_does_not_appear_to_contain_multiplexed_acquisition_data_" xml:space="preserve">
     <value>単離スキームは多重化に設定されていますが、ファイルに多重化取得データが含まれていないようです。</value>
@@ -5874,8 +5874,8 @@
   <data name="EditIsolationSchemeDlg_comboMargins_SelectedIndexChanged_Start_margin" xml:space="preserve">
     <value>マージンを開始</value>
   </data>
-  <data name="ValueUnexpectedException_ValueUnexpectedException_The_argument____0__should_not_have_a_value_specified" xml:space="preserve">
-    <value>引数--{0}は指定された値を持つことはできません</value>
+  <data name="ValueUnexpectedException_ValueUnexpectedException_The_argument__0__should_not_have_a_value_specified" xml:space="preserve">
+    <value>引数{0}は指定された値を持つことはできません</value>
   </data>
   <data name="AllChromatogramsGraph_UpdateStatus_Joining_chromatograms___" xml:space="preserve">
     <value>クロマトグラムの結合中...</value>

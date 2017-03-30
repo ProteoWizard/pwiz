@@ -932,7 +932,8 @@ namespace pwiz.SkylineTestA
             Assert.IsFalse(output.Contains(Resources.CommandLineTest_ConsolePathCoverage_successfully_));
 
             Assert.AreEqual(11, CountInstances(Resources.CommandLineTest_ConsoleAddFastaTest_Warning, output));
-            AssertErrorCount(2, output, "Unexpected error count");
+            // TODO: Until strings are fully localized, need to count English "Error" also
+            Assert.AreEqual(2, CountErrors(output, true));
 
             //This test uses a broken Skyline file to test the InvalidDataException catch
             var brokenFile = commandFilesDir.GetTestPath("Broken_file.sky");
@@ -1004,16 +1005,17 @@ namespace pwiz.SkylineTestA
 
         private void TestUnexpectedValueFailures(IEnumerable<string> names)
         {
-            TestNameValueFailures(names, arg => string.Format("{0}=true", arg));
+            // TODO: Until strings are fully localized, need to count English "Error" also
+            TestNameValueFailures(names, arg => string.Format("{0}=true", arg), true);
         }
 
-        private void TestNameValueFailures(IEnumerable<string> names, Func<string, string> getCommandLineForArg)
+        private void TestNameValueFailures(IEnumerable<string> names, Func<string, string> getCommandLineForArg, bool allowUnlocalizedErrors = false)
         {
             foreach (var name in names)
             {
                 string arg = string.Format("--{0}", name);
                 string output = RunCommand(getCommandLineForArg(arg));
-                AssertErrorCount(1,  output, string.Format("No error for argument {0}", arg));
+                Assert.AreEqual(1, CountErrors(output, allowUnlocalizedErrors), string.Format("No error for argument {0}", arg));
                 Assert.AreEqual(1, CountInstances(arg, output), string.Format("Missing expected argument {0}", arg));
             }
         }
@@ -1082,6 +1084,16 @@ namespace pwiz.SkylineTestA
                 lastIndex = searchSpace.IndexOf(search, StringComparison.Ordinal);
             }
 
+            return count;
+        }
+
+        public static int CountErrors(string searchSpace, bool allowUnlocalized = false)
+        {
+            const string enError = "Error";
+            string localError = Resources.CommandLineTest_ConsoleAddFastaTest_Error;
+            int count = CountInstances(localError, searchSpace);
+            if (allowUnlocalized && !Equals(localError, enError))
+                   count += CountInstances(enError, searchSpace);
             return count;
         }
         

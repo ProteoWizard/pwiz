@@ -27868,7 +27868,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The argument --{0} requires a value and must be specified in the format --name=value.
+        ///   Looks up a localized string similar to The argument {0} requires a value and must be specified in the format --name=value.
         /// </summary>
         public static string ValueMissingException_ValueMissingException_ {
             get {
@@ -27877,12 +27877,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The argument --{0} should not have a value specified.
+        ///   Looks up a localized string similar to The argument {0} should not have a value specified.
         /// </summary>
-        public static string ValueUnexpectedException_ValueUnexpectedException_The_argument____0__should_not_have_a_value_specified {
+        public static string ValueUnexpectedException_ValueUnexpectedException_The_argument__0__should_not_have_a_value_specified {
             get {
-                return ResourceManager.GetString("ValueUnexpectedException_ValueUnexpectedException_The_argument____0__should_not_h" +
-                        "ave_a_value_specified", resourceCulture);
+                return ResourceManager.GetString("ValueUnexpectedException_ValueUnexpectedException_The_argument__0__should_not_hav" +
+                        "e_a_value_specified", resourceCulture);
             }
         }
         

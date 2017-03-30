@@ -5854,7 +5854,7 @@ If you prefer you can choose to report anonymously.</value>
     <value>Please select a folder</value>
   </data>
   <data name="ValueMissingException_ValueMissingException_" xml:space="preserve">
-    <value>The argument --{0} requires a value and must be specified in the format --name=value</value>
+    <value>The argument {0} requires a value and must be specified in the format --name=value</value>
   </data>
   <data name="AbstractDemultiplexer_AnalyzeFile_Isolation_scheme_is_set_to_multiplexing_but_file_does_not_appear_to_contain_multiplexed_acquisition_data_" xml:space="preserve">
     <value>Isolation scheme is set to multiplexing but file does not appear to contain multiplexed acquisition data.</value>
@@ -5874,8 +5874,8 @@ If you prefer you can choose to report anonymously.</value>
   <data name="EditIsolationSchemeDlg_comboMargins_SelectedIndexChanged_Start_margin" xml:space="preserve">
     <value>Start margin</value>
   </data>
-  <data name="ValueUnexpectedException_ValueUnexpectedException_The_argument____0__should_not_have_a_value_specified" xml:space="preserve">
-    <value>The argument --{0} should not have a value specified</value>
+  <data name="ValueUnexpectedException_ValueUnexpectedException_The_argument__0__should_not_have_a_value_specified" xml:space="preserve">
+    <value>The argument {0} should not have a value specified</value>
   </data>
   <data name="AllChromatogramsGraph_UpdateStatus_Joining_chromatograms___" xml:space="preserve">
     <value>Joining chromatograms...</value>

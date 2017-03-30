@@ -5854,7 +5854,7 @@
     <value>请选择一个文件夹</value>
   </data>
   <data name="ValueMissingException_ValueMissingException_" xml:space="preserve">
-    <value>参数 --{0}需要数值并且必须在“ --名称=值”的格式中指定。</value>
+    <value>参数 {0}需要数值并且必须在“ --名称=值”的格式中指定。</value>
   </data>
   <data name="AbstractDemultiplexer_AnalyzeFile_Isolation_scheme_is_set_to_multiplexing_but_file_does_not_appear_to_contain_multiplexed_acquisition_data_" xml:space="preserve">
     <value>隔离方案的设定旨在用于多路传输，但文件看起来不包含多路复用的采集数据。</value>
@@ -5874,8 +5874,8 @@
   <data name="EditIsolationSchemeDlg_comboMargins_SelectedIndexChanged_Start_margin" xml:space="preserve">
     <value>起始边距</value>
   </data>
-  <data name="ValueUnexpectedException_ValueUnexpectedException_The_argument____0__should_not_have_a_value_specified" xml:space="preserve">
-    <value>参数 --{0}不应该具有指定的值</value>
+  <data name="ValueUnexpectedException_ValueUnexpectedException_The_argument__0__should_not_have_a_value_specified" xml:space="preserve">
+    <value>参数 {0}不应该具有指定的值</value>
   </data>
   <data name="AllChromatogramsGraph_UpdateStatus_Joining_chromatograms___" xml:space="preserve">
     <value>加入色谱图…</value>
