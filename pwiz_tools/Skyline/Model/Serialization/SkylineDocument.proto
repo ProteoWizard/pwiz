@@ -1,0 +1,137 @@
+﻿syntax = "proto3";
+option csharp_namespace = "pwiz.Skyline.Model.Serialization";
+message SkylineDocumentProto {
+	enum UserSet {
+		USER_SET_FALSE = 0;
+		USER_SET_TRUE = 1;
+		USER_SET_IMPORTED = 2;
+		USER_SET_REINTEGRATED = 3;
+		USER_SET_MATCHED = 4;
+	}
+	enum OptionalBool {
+		OPTIONAL_BOOL_MISSING = 0;
+		OPTIONAL_BOOL_TRUE = 1;
+		OPTIONAL_BOOL_FALSE = 2;
+	}
+	enum PeakIdentification {
+		PEAK_IDENTIFICATION_FALSE = 0;
+		PEAK_IDENTIFICATION_TRUE = 1;
+		PEAK_IDENTIFICATION_ALIGNED = 2;
+	}
+	enum IonType {
+		ION_TYPE_unknown = 0;
+		ION_TYPE_a = 1;
+		ION_TYPE_b = 2;
+		ION_TYPE_c = 3;
+		ION_TYPE_x = 4;
+		ION_TYPE_y = 5;
+		ION_TYPE_z = 6;
+		ION_TYPE_precursor = 7;
+		ION_TYPE_custom = 8;
+	}
+
+	message Annotations {
+		string note = 1;
+		int32 color = 2;
+		repeated AnnotationValue values = 3;
+	}
+
+	message AnnotationValue {
+		string name = 1;
+		string textValue = 2;
+	}
+	
+	message TransitionPeak {
+		int32 replicateIndex = 1;
+		int32 fileIndexInReplicate = 2;
+		OptionalFloat massError = 3;
+		float retentionTime = 4;
+		float startRetentionTime = 5;
+		float endRetentionTime = 6;
+		OptionalDouble driftTime = 7;
+		OptionalDouble driftTimeWindow = 8;
+		float area = 9;
+		float backgroundArea = 10;
+		float height = 11;
+		float fwhm = 12;
+		bool isFwhmDegenerate = 13;
+		OptionalBool truncated = 14;
+		PeakIdentification identified = 15;
+		int32 rank = 16;
+		int32 rankByLevel = 17;
+		OptionalInt pointsAcrossPeak = 18;
+		UserSet userSet = 19;
+		sint32 optimizationStep = 23;
+		Annotations annotations = 24;
+	}
+	message TransitionResults {
+		repeated TransitionPeak peaks = 1;
+	}
+	message Transition {
+		OptionalString formula = 1;
+		OptionalDouble averageMass = 2;
+		OptionalDouble monoMass = 3;
+		OptionalString custom_ion_name = 6;
+		OptionalString measured_ion_name = 7;
+		OptionalInt decoyMassShift = 8;
+		sint32 massIndex = 9;
+		OptionalInt isotopeDistRank = 11;
+		OptionalFloat isotopeDistProportion = 12; 
+		sint32 fragmentOrdinal = 13;
+		double calc_neutral_mass = 14;
+		sint32 charge = 15;
+		int32 cleavageAa = 16;
+		double lostMass = 17;
+		Annotations annotations = 18;
+		double precursorMz = 19;
+		double productMz = 20;
+		OptionalDouble collisionEnergy = 21;
+		OptionalDouble declusteringPotential = 22;
+		repeated TransitionLoss losses = 23;
+		IonType fragmentType = 24;
+		TransitionLibInfo libInfo = 25;
+		TransitionResults results = 26;
+	}
+
+	message OptionalFloat {
+		float value = 1;
+	}
+
+	message OptionalDouble {
+		double value = 1;
+	}
+
+	message OptionalInt {
+		sint32 value = 1;
+	}
+
+	message OptionalString {
+		string value = 1;
+	}
+
+	enum LossInclusion {
+		Library = 0;
+		Never = 1;
+		Always = 2;
+	}
+
+	message TransitionLoss {
+		string formula = 1;
+		double monoisotopicMass = 2;
+		double averageMass = 3;
+		LossInclusion lossInclusion = 4;
+		string modificationName = 5;
+		int32 lossIndex = 6;
+	}
+
+
+	message TransitionLibInfo {
+		int32 rank = 1;
+		float intensity = 2;
+	}
+
+	message TransitionData {
+		repeated Transition transitions = 1;
+	}
+}
+

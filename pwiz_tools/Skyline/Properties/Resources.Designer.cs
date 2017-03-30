@@ -5748,6 +5748,33 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Always.
+        /// </summary>
+        public static string CompactFormatOption_ALWAYS_Always {
+            get {
+                return ResourceManager.GetString("CompactFormatOption_ALWAYS_Always", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Never.
+        /// </summary>
+        public static string CompactFormatOption_NEVER_Never {
+            get {
+                return ResourceManager.GetString("CompactFormatOption_NEVER_Never", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Only for large files.
+        /// </summary>
+        public static string CompactFormatOption_ONLY_FOR_LARGE_FILES_Only_for_large_files {
+            get {
+                return ResourceManager.GetString("CompactFormatOption_ONLY_FOR_LARGE_FILES_Only_for_large_files", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &lt;Compare...&gt;.
         /// </summary>
         public static string CompareElement_CompareElement__Compare____ {

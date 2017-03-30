@@ -48,8 +48,9 @@ namespace pwiz.Skyline.Model.Serialization
         public static readonly DocumentFormat  VERSION_3_55 = new DocumentFormat(3.55); // Adds linear width option for drift time filtering
         public static readonly DocumentFormat  VERSION_3_6 = new DocumentFormat(3.6); // Improved full-scan settings for DIA isolation schemes and add selective extraction
         public static readonly DocumentFormat  VERSION_3_61 = new DocumentFormat(3.61); //  Semi-cleavage enzymes and ion mobility CCS work, points across peak
-        public static readonly DocumentFormat  CURRENT = VERSION_3_61;
-
+        public static readonly DocumentFormat VERSION_3_62 = new DocumentFormat(3.62);
+        public static readonly DocumentFormat  CURRENT = VERSION_3_62;
+        public static readonly DocumentFormat BINARY_RESULTS = VERSION_3_62;
 
 
         private readonly double _versionNumber;

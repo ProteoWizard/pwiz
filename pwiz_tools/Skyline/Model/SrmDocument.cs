@@ -47,6 +47,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
+using System.Text;
 using System.Threading;
 using System.Xml;
 using System.Xml.Schema;
@@ -1762,6 +1763,10 @@ namespace pwiz.Skyline.Model
         {            
         }
 
+        /// <summary>
+        /// Deserializes document from XML.
+        /// </summary>
+        /// <param name="reader">The reader positioned at the document start tag</param>
         public void ReadXml(XmlReader reader)
         {
             if (Settings != null)
@@ -1795,18 +1800,39 @@ namespace pwiz.Skyline.Model
 
         public void WriteXml(XmlWriter writer)
         {
-            var xmlWriterWithProgress = writer as XmlWriterWithProgress;
-            DocumentWriter documentWriter;
-            if (xmlWriterWithProgress == null)
+            SerializeToXmlWriter(writer, SkylineVersion.CURRENT, null, null);
+        }
+
+        public void SerializeToXmlWriter(XmlWriter writer, SkylineVersion skylineVersion, IProgressMonitor progressMonitor,
+            IProgressStatus progressStatus)
+        {
+            var documentWriter = new DocumentWriter(this, skylineVersion);
+            if (progressMonitor != null)
             {
-                documentWriter = new DocumentWriter(this, DocumentFormat.CURRENT);
-            }
-            else
-            {
-                documentWriter = new DocumentWriter(this, xmlWriterWithProgress.GetSkylineVersion().SrmDocumentVersion);
-                documentWriter.WroteTransition += xmlWriterWithProgress.WroteTransition;
+                int transitionsWritten = 0;
+                int totalTransitionCount = MoleculeTransitionCount;
+                documentWriter.WroteTransitions += count =>
+                {
+                    transitionsWritten += count;
+                    progressStatus = progressStatus.UpdatePercentCompleteProgress(progressMonitor, transitionsWritten, totalTransitionCount);
+                };
             }
             documentWriter.WriteXml(writer);
+        }
+
+        public void SerializeToFile(string tempName, string displayName, SkylineVersion skylineVersion, IProgressMonitor progressMonitor)
+        {
+            using (var writer = new XmlTextWriter(tempName, Encoding.UTF8)
+            {
+                Formatting = Formatting.Indented
+            })
+            {
+                writer.WriteStartDocument();
+                writer.WriteStartElement("srm_settings"); // Not L10N
+                SerializeToXmlWriter(writer, skylineVersion, progressMonitor, new ProgressStatus(Path.GetFileName(displayName)));
+                writer.WriteEndElement();
+                writer.WriteEndDocument();
+            }
         }
 
         public XmlSchema GetSchema()

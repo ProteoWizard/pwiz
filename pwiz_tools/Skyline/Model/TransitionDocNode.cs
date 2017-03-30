@@ -27,6 +27,8 @@ using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -397,6 +399,222 @@ namespace pwiz.Skyline.Model
                 return right.Mz.CompareTo(left.Mz); // Decreasing mz sort
             }
         }
+
+        public SkylineDocumentProto.Types.Transition ToTransitionProto(SrmSettings settings)
+        {
+            var transitionProto = new SkylineDocumentProto.Types.Transition
+            {
+                FragmentType = DataValues.ToIonType(Transition.IonType),
+
+            };
+            if (Transition.IsCustom())
+            {
+                if (Transition.CustomIon is DocNodeCustomIon)
+                {
+                    transitionProto.Formula = DataValues.ToOptional(Transition.CustomIon.Formula);
+                    transitionProto.AverageMass = DataValues.ToOptional(Transition.CustomIon.AverageMass);
+                    transitionProto.MonoMass = DataValues.ToOptional(Transition.CustomIon.MonoisotopicMass);
+                    transitionProto.CustomIonName = DataValues.ToOptional(Transition.CustomIon.Name);
+                }
+                else
+                {
+                    transitionProto.MeasuredIonName = DataValues.ToOptional(Transition.CustomIon.Name);
+                }
+            }
+            transitionProto.DecoyMassShift = DataValues.ToOptional(Transition.DecoyMassShift);
+            transitionProto.MassIndex = Transition.MassIndex;
+            if (HasDistInfo)
+            {
+                transitionProto.IsotopeDistRank = DataValues.ToOptional(IsotopeDistInfo.Rank);
+                transitionProto.IsotopeDistProportion = DataValues.ToOptional(IsotopeDistInfo.Proportion);
+            }
+            if (!Transition.IsPrecursor())
+            {
+                if (!Transition.IsCustom())
+                {
+                    transitionProto.FragmentOrdinal = Transition.Ordinal;
+                    transitionProto.CalcNeutralMass = GetIonPersistentNeutralMass();
+                }
+                transitionProto.Charge = Transition.Charge;
+                if (!Transition.IsCustom())
+                {
+                    transitionProto.CleavageAa = Transition.AA;
+                    transitionProto.LostMass = LostMass;
+                }
+            }
+            if (Annotations != null)
+            {
+                transitionProto.Annotations = Annotations.ToProtoAnnotations();
+            }
+            transitionProto.ProductMz = Mz;
+            if (Losses != null)
+            {
+                foreach (var loss in Losses.Losses)
+                {
+                    var neutralLoss = new SkylineDocumentProto.Types.TransitionLoss();
+                    if (loss.PrecursorMod == null)
+                    {
+                        neutralLoss.Formula = loss.Loss.Formula;
+                        neutralLoss.MonoisotopicMass = loss.Loss.MonoisotopicMass;
+                        neutralLoss.AverageMass = loss.Loss.AverageMass;
+                        neutralLoss.LossInclusion = DataValues.ToLossInclusion(loss.Loss.Inclusion);
+                    }
+                    else
+                    {
+                        neutralLoss.ModificationName = loss.PrecursorMod.Name;
+                        neutralLoss.LossIndex = loss.LossIndex;
+                    }
+                    transitionProto.Losses.Add(neutralLoss);
+                }
+            }
+            if (HasLibInfo)
+            {
+                transitionProto.LibInfo = new SkylineDocumentProto.Types.TransitionLibInfo
+                {
+                    Intensity = LibInfo.Intensity,
+                    Rank = LibInfo.Rank
+                };
+            }
+            if (Results != null)
+            {
+                transitionProto.Results = new SkylineDocumentProto.Types.TransitionResults();
+                transitionProto.Results.Peaks.AddRange(GetTransitionPeakProtos(settings.MeasuredResults));
+            }
+            return transitionProto;
+        }
+
+        public static TransitionDocNode FromTransitionProto(StringPool stringPool, SrmSettings settings,
+            TransitionGroup group, ExplicitMods mods, IsotopeDistInfo isotopeDist,
+            SkylineDocumentProto.Types.Transition transitionProto)
+        {
+            IonType ionType = DataValues.FromIonType(transitionProto.FragmentType);
+            MeasuredIon measuredIon = null;
+            if (transitionProto.MeasuredIonName != null)
+            {
+                measuredIon = settings.TransitionSettings.Filter.MeasuredIons.SingleOrDefault(
+                    i => i.Name.Equals(transitionProto.MeasuredIonName.Value));
+                if (measuredIon == null)
+                    throw new InvalidDataException(string.Format(Resources.TransitionInfo_ReadXmlAttributes_The_reporter_ion__0__was_not_found_in_the_transition_filter_settings_, transitionProto.MeasuredIonName));
+                ionType = IonType.custom;
+            }
+            bool isCustom = Transition.IsCustom(ionType, group);
+            bool isPrecursor = Transition.IsPrecursor(ionType);
+            CustomIon customIon = null;
+            if (isCustom)
+            {
+                if (measuredIon != null)
+                {
+                    customIon = measuredIon.CustomIon;
+                }
+                else if (isPrecursor)
+                {
+                    customIon = group.CustomIon;
+                }
+                else
+                {
+                    customIon = new DocNodeCustomIon(DataValues.FromOptional(transitionProto.Formula),
+                        DataValues.FromOptional(transitionProto.MonoMass),
+                        DataValues.FromOptional(transitionProto.AverageMass), 
+                        DataValues.FromOptional(transitionProto.CustomIonName));
+                }
+            }
+            Transition transition;
+            if (isCustom)
+            {
+                transition = new Transition(group, isPrecursor ? group.PrecursorCharge : transitionProto.Charge, transitionProto.MassIndex, customIon, ionType);
+            }
+            else if (isPrecursor)
+            {
+                transition = new Transition(group, ionType, group.Peptide.Length - 1, transitionProto.MassIndex,
+                    group.PrecursorCharge, DataValues.FromOptional(transitionProto.DecoyMassShift));
+            }
+            else
+            {
+                int offset = Transition.OrdinalToOffset(ionType, transitionProto.FragmentOrdinal,
+                    group.Peptide.Length);
+                transition = new Transition(group, ionType, offset, transitionProto.MassIndex, transitionProto.Charge, DataValues.FromOptional(transitionProto.DecoyMassShift));
+            }
+            var losses = TransitionLosses.FromLossProtos(settings, transitionProto.Losses);
+            double massH = settings.GetFragmentMass(group.LabelType, mods, transition, isotopeDist);
+            var isotopeDistInfo = GetIsotopeDistInfo(transition, losses, isotopeDist);
+            if (group.DecoyMassShift.HasValue && transitionProto.DecoyMassShift == null)
+            {
+                throw new InvalidDataException(Resources.SrmDocument_ReadTransitionXml_All_transitions_of_decoy_precursors_must_have_a_decoy_mass_shift);
+            }
+
+            TransitionLibInfo libInfo = null;
+            if (transitionProto.LibInfo != null)
+            {
+                libInfo = new TransitionLibInfo(transitionProto.LibInfo.Rank, transitionProto.LibInfo.Intensity);
+            }
+            var annotations = Annotations.FromProtoAnnotations(stringPool, transitionProto.Annotations);
+            var results = TransitionChromInfo.FromProtoTransitionResults(stringPool, settings, transitionProto.Results);
+            return new TransitionDocNode(transition, annotations, losses, massH, isotopeDistInfo, libInfo, results);
+        }
+
+
+        public IEnumerable<SkylineDocumentProto.Types.TransitionPeak> GetTransitionPeakProtos(MeasuredResults measuredResults)
+        {
+            if (Results == null)
+            {
+                yield break;
+            }
+            for (int replicateIndex = 0; replicateIndex < Results.Count; replicateIndex++)
+            {
+                var replicateResults = Results[replicateIndex];
+                if (replicateResults == null)
+                {
+                    continue;
+                }
+                foreach (var transitionChromInfo in replicateResults)
+                {
+                    if (transitionChromInfo == null)
+                    {
+                        continue;
+                    }
+                    var transitionPeak = new SkylineDocumentProto.Types.TransitionPeak();
+                    transitionPeak.OptimizationStep = transitionChromInfo.OptimizationStep;
+                    if (null != transitionChromInfo.Annotations)
+                    {
+                        transitionPeak.Annotations = transitionChromInfo.Annotations.ToProtoAnnotations();
+                    }
+                    transitionPeak.ReplicateIndex = replicateIndex;
+                    transitionPeak.FileIndexInReplicate = measuredResults.Chromatograms[replicateIndex].IndexOfId(transitionChromInfo.FileId);
+                    transitionPeak.MassError = DataValues.ToOptional(transitionChromInfo.MassError);
+                    transitionPeak.RetentionTime = transitionChromInfo.RetentionTime;
+                    transitionPeak.StartRetentionTime = transitionChromInfo.StartRetentionTime;
+                    transitionPeak.EndRetentionTime = transitionChromInfo.EndRetentionTime;
+                    if (transitionChromInfo.DriftTimeFilter != null)
+                    {
+                        transitionPeak.DriftTime = DataValues.ToOptional(transitionChromInfo.DriftTimeFilter.DriftTimeMsec);
+                        transitionPeak.DriftTimeWindow = DataValues.ToOptional(transitionChromInfo.DriftTimeFilter.DriftTimeExtractionWindowWidthMsec);
+                    }
+                    transitionPeak.Area = transitionChromInfo.Area;
+                    transitionPeak.BackgroundArea = transitionChromInfo.BackgroundArea;
+                    transitionPeak.Height = transitionChromInfo.Height;
+                    transitionPeak.Fwhm = transitionChromInfo.Fwhm;
+                    transitionPeak.IsFwhmDegenerate = transitionChromInfo.IsFwhmDegenerate;
+                    transitionPeak.Truncated = DataValues.ToOptional(transitionChromInfo.IsTruncated);
+                    switch (transitionChromInfo.Identified)
+                    {
+                        case PeakIdentification.ALIGNED:
+                            transitionPeak.Identified = SkylineDocumentProto.Types.PeakIdentification.Aligned;
+                            break;
+                        case PeakIdentification.FALSE:
+                            transitionPeak.Identified = SkylineDocumentProto.Types.PeakIdentification.False;
+                            break;
+                        case PeakIdentification.TRUE:
+                            transitionPeak.Identified = SkylineDocumentProto.Types.PeakIdentification.True;
+                            break;
+                    }
+                    transitionPeak.Rank = transitionChromInfo.Rank;
+                    transitionPeak.RankByLevel = transitionChromInfo.RankByLevel;
+                    transitionPeak.PointsAcrossPeak = DataValues.ToOptional(transitionChromInfo.PointsAcrossPeak);
+                    yield return transitionPeak;
+                }
+            }
+        }
+
 
         #region Property change methods
 

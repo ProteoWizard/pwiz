@@ -417,6 +417,54 @@
   <data name="&gt;&gt;tabLanguage.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
+  <data name="comboCompactFormatOption.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 64</value>
+  </data>
+  <data name="comboCompactFormatOption.Size" type="System.Drawing.Size, System.Drawing">
+    <value>162, 21</value>
+  </data>
+  <data name="comboCompactFormatOption.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;comboCompactFormatOption.Name" xml:space="preserve">
+    <value>comboCompactFormatOption</value>
+  </data>
+  <data name="&gt;&gt;comboCompactFormatOption.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboCompactFormatOption.Parent" xml:space="preserve">
+    <value>tabMisc</value>
+  </data>
+  <data name="&gt;&gt;comboCompactFormatOption.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="lblCompactDocumentFormat.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblCompactDocumentFormat.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 48</value>
+  </data>
+  <data name="lblCompactDocumentFormat.Size" type="System.Drawing.Size, System.Drawing">
+    <value>260, 13</value>
+  </data>
+  <data name="lblCompactDocumentFormat.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="lblCompactDocumentFormat.Text" xml:space="preserve">
+    <value>Use compact format when saving Skyline documents:</value>
+  </data>
+  <data name="&gt;&gt;lblCompactDocumentFormat.Name" xml:space="preserve">
+    <value>lblCompactDocumentFormat</value>
+  </data>
+  <data name="&gt;&gt;lblCompactDocumentFormat.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblCompactDocumentFormat.Parent" xml:space="preserve">
+    <value>tabMisc</value>
+  </data>
+  <data name="&gt;&gt;lblCompactDocumentFormat.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
   <data name="checkBoxShowWizard.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -445,7 +493,7 @@
     <value>tabMisc</value>
   </data>
   <data name="&gt;&gt;checkBoxShowWizard.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>2</value>
   </data>
   <data name="tabMisc.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
@@ -622,6 +670,6 @@
     <value>ToolOptionsUI</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

@@ -24,6 +24,7 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -197,6 +198,17 @@ namespace pwiz.Skyline.Model.DocSettings
 
         #endregion
 
+        public SkylineDocumentProto.Types.TransitionLoss ToLossProto()
+        {
+            return new SkylineDocumentProto.Types.TransitionLoss()
+            {
+                Formula = Formula,
+                MonoisotopicMass = MonoisotopicMass,
+                AverageMass = AverageMass,
+                LossInclusion = DataValues.ToLossInclusion(Inclusion)
+            };
+        }
+
         #region object overrides
 
         public bool Equals(FragmentLoss other)
@@ -321,6 +333,50 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             return (from loss in Losses
                     select loss.Loss.ToString(MassType)).ToArray();
+        }
+
+        public static TransitionLosses FromLossProtos(SrmSettings settings,
+            IEnumerable<SkylineDocumentProto.Types.TransitionLoss> lossProtos)
+        {
+            var staticMods = settings.PeptideSettings.Modifications.StaticModifications;
+            MassType massType = settings.TransitionSettings.Prediction.FragmentMassType;
+
+            var listLosses = new List<TransitionLoss>();
+            foreach (var loss in lossProtos)
+            {
+                String nameMod = loss.ModificationName;
+                if (string.IsNullOrEmpty(nameMod))
+                {
+                    listLosses.Add(new TransitionLoss(null,
+                        new FragmentLoss(loss.Formula, loss.MonoisotopicMass,
+                            loss.AverageMass, DataValues.FromLossInclusion(loss.LossInclusion)),
+                        massType));
+                }
+                else
+                {
+                    int indexLoss = loss.LossIndex;
+                    int indexMod = staticMods.IndexOf(mod => Equals(nameMod, mod.Name));
+                    if (indexMod == -1)
+                    {
+                        throw new InvalidDataException(
+                            string.Format(Resources.TransitionInfo_ReadTransitionLosses_No_modification_named__0__was_found_in_this_document,
+                                          nameMod));
+                    }
+                    StaticMod modLoss = staticMods[indexMod];
+                    if (!modLoss.HasLoss || indexLoss >= modLoss.Losses.Count)
+                    {
+                        throw new InvalidDataException(
+                            string.Format(Resources.TransitionInfo_ReadTransitionLosses_Invalid_loss_index__0__for_modification__1__,
+                                          indexLoss, nameMod));
+                    }
+                    listLosses.Add(new TransitionLoss(modLoss, modLoss.Losses[indexLoss], massType));
+                }
+            }
+            if (listLosses.Any())
+            {
+                return new TransitionLosses(listLosses, massType);
+            }
+            return null;
         }
     }
 

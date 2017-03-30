@@ -19,8 +19,10 @@
 
 using System;
 using System.Globalization;
+using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Model.Results.RemoteApi;
+using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -67,6 +69,8 @@ namespace pwiz.Skyline.ToolsUI
             {
                 tabControl.TabPages.Remove(tabChorus);
             }
+            comboCompactFormatOption.Items.AddRange(CompactFormatOption.ALL_VALUES.ToArray());
+            comboCompactFormatOption.SelectedItem = CompactFormatOption.FromSettings();
         }
 
         private void btnEditServers_Click(object sender, EventArgs e)
@@ -101,6 +105,11 @@ namespace pwiz.Skyline.ToolsUI
                     Settings.Default.UsePowerOfTen = powerOfTenCheckBox.Checked;
                     Program.MainWindow.UpdateGraphPanes();
                 }
+                CompactFormatOption compactFormatOption = comboCompactFormatOption.SelectedItem as CompactFormatOption;
+                if (null != compactFormatOption)
+                {
+                    Settings.Default.CompactFormatOption = compactFormatOption.Name;
+                }
             }
             base.OnClosed(e);
         }
@@ -133,6 +142,5 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         #endregion
-
     }
 }

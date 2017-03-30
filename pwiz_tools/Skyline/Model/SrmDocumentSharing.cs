@@ -20,9 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Xml;
-using System.Xml.Serialization;
 using Ionic.Zip;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Lib;
@@ -365,16 +362,9 @@ namespace pwiz.Skyline.Model
                 tempDir = new TemporaryDirectory();
             string fileName = Path.GetFileName(DocumentPath) ?? string.Empty;
             string tempDocPath = Path.Combine(tempDir.DirPath, fileName);
-            using (var writer = new XmlWriterWithProgress(tempDocPath, fileName, Encoding.UTF8,
-                Document.MoleculeTransitionCount, ShareType.SkylineVersion ?? SkylineVersion.CURRENT, ProgressMonitor)
-            {
-                Formatting = Formatting.Indented
-            })
-            {
-                XmlSerializer ser = new XmlSerializer(typeof(SrmDocument));
-                ser.Serialize(writer, Document);
-                zip.AddFile(tempDocPath);
-            }
+            Document.SerializeToFile(tempDocPath, fileName, 
+                ShareType.SkylineVersion ?? SkylineVersion.CURRENT, ProgressMonitor);
+            zip.AddFile(tempDocPath);
             return tempDir;
         }
 

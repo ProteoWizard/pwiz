@@ -22,8 +22,11 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
 {
@@ -292,6 +295,45 @@ namespace pwiz.Skyline.Model
                 }
             }
             return true;
+        }
+
+        public SkylineDocumentProto.Types.Annotations ToProtoAnnotations()
+        {
+            if (IsEmpty)
+            {
+                return null;
+            }
+            SkylineDocumentProto.Types.Annotations protoAnnotations = new SkylineDocumentProto.Types.Annotations
+            {
+                Note = Note,
+                Color = ColorIndex
+            };
+            if (_annotations != null)
+            {
+                foreach (var annotation in _annotations)
+                {
+                    protoAnnotations.Values.Add(new SkylineDocumentProto.Types.AnnotationValue()
+                    {
+                        Name = annotation.Key,
+                        TextValue = annotation.Value
+                    });
+                }
+            }
+            return protoAnnotations;
+        }
+
+        public static Annotations FromProtoAnnotations(StringPool stringPool, SkylineDocumentProto.Types.Annotations protoAnnotations)
+        {
+            Assume.IsNotNull(stringPool);
+            if (protoAnnotations == null)
+            {
+                return EMPTY;
+            }
+            return new Annotations(protoAnnotations.Note, protoAnnotations.Values
+                .Select(value=>new KeyValuePair<string, string>(
+                    stringPool.GetString(value.Name), 
+                    stringPool.GetString(value.TextValue))), 
+                    protoAnnotations.Color);
         }
     }
 }

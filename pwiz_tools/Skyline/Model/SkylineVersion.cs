@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
@@ -85,20 +84,5 @@ namespace pwiz.Skyline.Model
             }
             return string.Format(labelFormat, Install.ProgramNameAndVersion);
         }
-
-        public static SkylineVersion FromXmlWriter(XmlWriter xmlWriter)
-        {
-            var skylineVersionContainer = xmlWriter as ISkylineVersionContainer;
-            if (skylineVersionContainer == null)
-            {
-                return CURRENT;
-            }
-            return skylineVersionContainer.GetSkylineVersion();
-        }
-    }
-
-    public interface ISkylineVersionContainer
-    {
-        SkylineVersion GetSkylineVersion();
     }
 }

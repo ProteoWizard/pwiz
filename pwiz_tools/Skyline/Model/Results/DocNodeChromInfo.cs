@@ -24,6 +24,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -684,6 +685,79 @@ namespace pwiz.Skyline.Model.Results
         }
 
         #endregion
+
+        public static Results<TransitionChromInfo> FromProtoTransitionResults(StringPool stringPool, SrmSettings settings,
+            SkylineDocumentProto.Types.TransitionResults transitionResults)
+        {
+            if (transitionResults == null)
+            {
+                return null;
+            }
+            var measuredResults = settings.MeasuredResults;
+            var peaksByReplicate = transitionResults.Peaks.ToLookup(peak => peak.ReplicateIndex);
+            var lists = new List<ChromInfoList<TransitionChromInfo>>();
+            for (int replicateIndex = 0; replicateIndex < measuredResults.Chromatograms.Count; replicateIndex++)
+            {
+                var transitionChromInfos = peaksByReplicate[replicateIndex]
+                    .Select(transitionPeak => FromProtoTransitionPeak(settings, transitionPeak)).ToArray();
+                if (transitionChromInfos.Length == 0)
+                {
+                    lists.Add(null);
+                }
+                else
+                {
+                    lists.Add(new ChromInfoList<TransitionChromInfo>(transitionChromInfos));
+                }
+            }
+            return new Results<TransitionChromInfo>(lists);
+        }
+
+        private static TransitionChromInfo FromProtoTransitionPeak(SrmSettings settings,
+            SkylineDocumentProto.Types.TransitionPeak transitionPeak)
+        {
+            var measuredResults = settings.MeasuredResults;
+            var fileId = measuredResults.Chromatograms[transitionPeak.ReplicateIndex]
+                .MSDataFileInfos[transitionPeak.FileIndexInReplicate]
+                .FileId;
+            var driftTimeFilter = DriftTimeFilter.GetDriftTimeFilter(
+                DataValues.FromOptional(transitionPeak.DriftTime),
+                DataValues.FromOptional(transitionPeak.DriftTimeWindow),
+                null);
+            short? pointsAcrossPeak = (short?) DataValues.FromOptional(transitionPeak.PointsAcrossPeak);
+            PeakIdentification peakIdentification = PeakIdentification.FALSE;
+            switch (transitionPeak.Identified)
+            {
+                case SkylineDocumentProto.Types.PeakIdentification.Aligned:
+                    peakIdentification = PeakIdentification.ALIGNED;
+                    break;
+                case SkylineDocumentProto.Types.PeakIdentification.True:
+                    peakIdentification = PeakIdentification.TRUE;
+                    break;
+            }
+            return new TransitionChromInfo(
+                fileId, 
+                transitionPeak.OptimizationStep,
+                DataValues.FromOptional(transitionPeak.MassError),
+                transitionPeak.RetentionTime,
+                transitionPeak.StartRetentionTime,
+                transitionPeak.EndRetentionTime,
+                driftTimeFilter,
+                transitionPeak.Area,
+                transitionPeak.BackgroundArea,
+                transitionPeak.Height,
+                transitionPeak.Fwhm,
+                transitionPeak.IsFwhmDegenerate,
+                DataValues.FromOptional(transitionPeak.Truncated),
+                pointsAcrossPeak,
+                peakIdentification,
+                (short) transitionPeak.Rank,
+                (short) transitionPeak.RankByLevel,
+                GetEmptyRatios(settings.PeptideSettings.Modifications.RatioInternalStandardTypes.Count),
+                // TODO
+                Annotations.EMPTY, 
+                DataValues.FromUserSet(transitionPeak.UserSet) 
+                );
+        }
     }
 
     /// <summary>

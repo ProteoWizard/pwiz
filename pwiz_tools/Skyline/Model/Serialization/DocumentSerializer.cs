@@ -74,6 +74,8 @@ namespace pwiz.Skyline.Model.Serialization
             public const string start_rt = "start_rt";
             public const string stop_rt = "stop_rt";
             public const string molecule = "molecule";
+            public const string transition_data = "transition_data";
+            public const string results_data = "results_data";
             // ReSharper restore NonLocalizedString
         }
 

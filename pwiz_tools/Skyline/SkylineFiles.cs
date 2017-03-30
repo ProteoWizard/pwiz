@@ -23,9 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
-using System.Text;
 using System.Windows.Forms;
-using System.Xml;
 using System.Xml.Serialization;
 using Ionic.Zip;
 using Newtonsoft.Json.Linq;
@@ -871,26 +869,14 @@ namespace pwiz.Skyline
                     {
                         longWaitDlg.PerformWork(this, 800, progressMonitor =>
                         {
-                            using (var writer = new XmlWriterWithProgress(saver.SafeName, fileName, Encoding.UTF8,
-                                document.MoleculeTransitionCount, SkylineVersion.CURRENT, progressMonitor)
-                            {
-                                Formatting = Formatting.Indented
-                            })
-                            {
-                                XmlSerializer ser = new XmlSerializer(typeof(SrmDocument));
-                                ser.Serialize(writer, document);
+                            document.SerializeToFile(saver.SafeName, fileName, SkylineVersion.CURRENT, progressMonitor);
+                            // If the user has chosen "Save As", and the document has a
+                            // document specific spectral library, copy this library to 
+                            // the new name.
+                            if (!Equals(DocumentFilePath, fileName))
+                                SaveDocumentLibraryAs(fileName);
 
-                                writer.Flush();
-                                writer.Close();
-
-                                // If the user has chosen "Save As", and the document has a
-                                // document specific spectral library, copy this library to 
-                                // the new name.
-                                if (!Equals(DocumentFilePath, fileName))
-                                    SaveDocumentLibraryAs(fileName);
-
-                                saver.Commit();
-                            }
+                            saver.Commit();
                         });
 
                         // Sometimes this catches a cancellation that doesn't throw an OperationCanceledException.
@@ -906,7 +892,7 @@ namespace pwiz.Skyline
             catch (Exception ex) 
             {
                 var message = TextUtil.LineSeparate(string.Format(Resources.SkylineWindow_SaveDocument_Failed_writing_to__0__, fileName), ex.Message);
-                MessageBox.Show(message);
+                MessageDlg.ShowWithException(this, message, ex);
                 return false;
             }
 

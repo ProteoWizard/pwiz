@@ -22,6 +22,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Xml;
+using Google.Protobuf;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Optimization;
@@ -32,22 +33,25 @@ namespace pwiz.Skyline.Model.Serialization
 {
     public class DocumentWriter : DocumentSerializer
     {
-        public DocumentWriter(SrmDocument document, DocumentFormat documentFormat)
+        public DocumentWriter(SrmDocument document, SkylineVersion skylineVersion)
         {
             Settings = document.Settings;
             Document = document;
-            DocumentFormat = documentFormat;
+            SkylineVersion = skylineVersion;
+            DocumentFormat = skylineVersion.SrmDocumentVersion;
+            CompactFormatOption = CompactFormatOption.FromSettings();
         }
 
+        public SkylineVersion SkylineVersion { get; private set; }
         public SrmDocument Document { get; private set; }
+        public CompactFormatOption CompactFormatOption { get; set; }
 
-        public event Action WroteTransition;
+        public event Action<int> WroteTransitions;
 
         public void WriteXml(XmlWriter writer)
         {
-            var skylineVersion = SkylineVersion.FromXmlWriter(writer);
-            writer.WriteAttribute(ATTR.format_version, skylineVersion.SrmDocumentVersion);
-            writer.WriteAttribute(ATTR.software_version, skylineVersion.InvariantVersionName);
+            writer.WriteAttribute(ATTR.format_version, SkylineVersion.SrmDocumentVersion);
+            writer.WriteAttribute(ATTR.software_version, SkylineVersion.InvariantVersionName);
 
             writer.WriteElement(Settings);
             foreach (PeptideGroupDocNode nodeGroup in Document.Children)
@@ -75,7 +79,11 @@ namespace pwiz.Skyline.Model.Serialization
             writer.WriteAttributeIfString(ATTR.websearch_status, proteinMetadata.WebSearchInfo.ToString());
         }
 
-
+        private bool UseCompactFormat()
+        {
+            return DocumentFormat.CompareTo(DocumentFormat.BINARY_RESULTS) >= 0 &&
+                   CompactFormatOption.UseCompactFormat(Document);
+        }
         /// <summary>
         /// Serializes the contents of a single <see cref="PeptideGroupDocNode"/>
         /// to XML.
@@ -465,11 +473,25 @@ namespace pwiz.Skyline.Model.Serialization
                     EL.precursor_results, EL.precursor_peak, WriteTransitionGroupChromInfo);
             }
 
-            foreach (TransitionDocNode nodeTransition in node.Children)
+            if (UseCompactFormat())
             {
-                writer.WriteStartElement(EL.transition);
-                WriteTransitionXml(writer, nodePep, node, nodeTransition);
+                writer.WriteStartElement(EL.transition_data);
+                var transitionData = new SkylineDocumentProto.Types.TransitionData();
+                transitionData.Transitions.AddRange(node.Transitions.Select(transition => transition.ToTransitionProto(Settings)));
+                byte[] bytes = transitionData.ToByteArray();
+                writer.WriteBase64(bytes, 0, bytes.Length);
                 writer.WriteEndElement();
+                if (WroteTransitions != null)
+                    WroteTransitions(node.TransitionCount);
+            }
+            else
+            {
+                foreach (TransitionDocNode nodeTransition in node.Children)
+                {
+                    writer.WriteStartElement(EL.transition);
+                    WriteTransitionXml(writer, nodePep, node, nodeTransition);
+                    writer.WriteEndElement();
+                }
             }
         }
 
@@ -622,12 +644,27 @@ namespace pwiz.Skyline.Model.Serialization
 
             if (nodeTransition.HasResults)
             {
-                WriteResults(writer, Settings, nodeTransition.Results,
-                    EL.transition_results, EL.transition_peak, WriteTransitionChromInfo);
+                if (nodeTransition.HasResults)
+                {
+                    if (UseCompactFormat())
+                    {
+                        var protoResults = new SkylineDocumentProto.Types.TransitionResults();
+                        protoResults.Peaks.AddRange(nodeTransition.GetTransitionPeakProtos(Settings.MeasuredResults));
+                        byte[] bytes = protoResults.ToByteArray();
+                        writer.WriteStartElement(EL.results_data);
+                        writer.WriteBase64(bytes, 0, bytes.Length);
+                        writer.WriteEndElement();
+                    }
+                    else
+                    {
+                        WriteResults(writer, Settings, nodeTransition.Results,
+                            EL.transition_results, EL.transition_peak, WriteTransitionChromInfo);
+                    }
+                }
             }
 
-            if (WroteTransition != null)
-                WroteTransition();
+            if (WroteTransitions != null)
+                WroteTransitions(1);
         }
 
         private void WriteTransitionLosses(XmlWriter writer, TransitionLosses losses)
@@ -656,9 +693,8 @@ namespace pwiz.Skyline.Model.Serialization
             writer.WriteEndElement();
         }
 
-        private static void WriteTransitionChromInfo(XmlWriter writer, TransitionChromInfo chromInfo)
+        private void WriteTransitionChromInfo(XmlWriter writer, TransitionChromInfo chromInfo)
         {
-            var skylineVersion = SkylineVersion.FromXmlWriter(writer);
             if (chromInfo.OptimizationStep != 0)
                 writer.WriteAttribute(ATTR.step, chromInfo.OptimizationStep);
 
@@ -679,7 +715,7 @@ namespace pwiz.Skyline.Model.Serialization
                 writer.WriteAttributeNullable(ATTR.truncated, chromInfo.IsTruncated);
                 writer.WriteAttribute(ATTR.identified, chromInfo.Identified.ToString().ToLowerInvariant());
                 writer.WriteAttribute(ATTR.rank, chromInfo.Rank);
-                if (skylineVersion.SrmDocumentVersion.CompareTo(DocumentFormat.VERSION_3_61) >= 0)
+                if (SkylineVersion.SrmDocumentVersion.CompareTo(DocumentFormat.VERSION_3_61) >= 0)
                 {
                     writer.WriteAttributeNullable(ATTR.points_across, chromInfo.PointsAcrossPeak);
                 }

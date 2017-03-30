@@ -2569,40 +2569,31 @@ namespace pwiz.Skyline
             using (var saver = new FileSaver(outFile))
             {
                 saver.CheckException();
+                doc.SerializeToFile(saver.SafeName, outFile, SkylineVersion.CURRENT, progressMonitor);
+                // If the user has chosen "Save As", and the document has a
+                // document specific spectral library, copy this library to 
+                // the new name.
+                if (_skylineFile != null && !Equals(_skylineFile, outFile))
+                    SaveDocumentLibraryAs(outFile);
 
-                using (var writer = new XmlWriterWithProgress(saver.SafeName, outFile, Encoding.UTF8, doc.MoleculeTransitionCount, SkylineVersion.CURRENT, progressMonitor))
+                saver.Commit();
+
+                var settings = doc.Settings;
+                if (settings.HasResults)
                 {
-                    XmlSerializer ser = new XmlSerializer(typeof(SrmDocument));
-                    ser.Serialize(writer, doc);
-
-                    writer.Flush();
-                    writer.Close();
-
-                    // If the user has chosen "Save As", and the document has a
-                    // document specific spectral library, copy this library to 
-                    // the new name.
-                    if (_skylineFile != null && !Equals(_skylineFile, outFile))
-                        SaveDocumentLibraryAs(outFile);
-
-                    saver.Commit();
-
-                    var settings = doc.Settings;
-                    if (settings.HasResults)
+                    if (settings.MeasuredResults.IsLoaded)
                     {
-                        if (settings.MeasuredResults.IsLoaded)
-                        {
-                            FileStreamManager fsm = FileStreamManager.Default;
-                            settings.MeasuredResults.OptimizeCache(outFile, fsm);
+                        FileStreamManager fsm = FileStreamManager.Default;
+                        settings.MeasuredResults.OptimizeCache(outFile, fsm);
 
-                            //don't worry about updating the document with the results of optimization
-                            //as is done in SkylineFiles
-                        }
+                        //don't worry about updating the document with the results of optimization
+                        //as is done in SkylineFiles
                     }
-                    else
-                    {
-                        string cachePath = ChromatogramCache.FinalPathForName(outFile, null);
-                        FileEx.SafeDelete(cachePath, true);
-                    }
+                }
+                else
+                {
+                    string cachePath = ChromatogramCache.FinalPathForName(outFile, null);
+                    FileEx.SafeDelete(cachePath, true);
                 }
             }
         }

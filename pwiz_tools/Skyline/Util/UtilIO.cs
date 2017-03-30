@@ -27,7 +27,6 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
-using System.Xml;
 using NHibernate;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.Util;
@@ -1013,35 +1012,6 @@ namespace pwiz.Skyline.Util
             _bytesRead += byteCount;
             _status = _status.UpdatePercentCompleteProgress(_progressMonitor, _bytesRead, _totalBytes);
             return byteCount;
-        }
-    }
-
-    public class XmlWriterWithProgress : XmlTextWriter, ISkylineVersionContainer
-    {
-        private readonly IProgressMonitor _progressMonitor;
-        private IProgressStatus _status;
-        private readonly int _transitionCount;
-        private int _transitionsWritten;
-        private SkylineVersion _skylineVersion;
-
-        public XmlWriterWithProgress(string filename, string displayName, Encoding encoding, int transitionCount, SkylineVersion skylineVersion, IProgressMonitor progressMonitor)
-            : base(filename, encoding)
-        {
-            _skylineVersion = skylineVersion;
-            _progressMonitor = progressMonitor;
-            _status = new ProgressStatus(Path.GetFileName(displayName));
-
-            _transitionCount = transitionCount;
-        }
-
-        public void WroteTransition()
-        {
-            _status = _status.UpdatePercentCompleteProgress(_progressMonitor, ++_transitionsWritten, _transitionCount);
-        }
-
-        public SkylineVersion GetSkylineVersion()
-        {
-            return _skylineVersion;
         }
     }
 

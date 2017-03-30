@@ -2328,6 +2328,18 @@ namespace pwiz.Skyline.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string CompactFormatOption {
+            get {
+                return ((string)(this["CompactFormatOption"]));
+            }
+            set {
+                this["CompactFormatOption"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("all")]
         public string ExportPolarityFilterEnum {
             get {

@@ -42,6 +42,8 @@ namespace pwiz.Skyline.ToolsUI
             this.labelDisplayLanguage = new System.Windows.Forms.Label();
             this.listBoxLanguages = new System.Windows.Forms.ListBox();
             this.tabMisc = new System.Windows.Forms.TabPage();
+            this.comboCompactFormatOption = new System.Windows.Forms.ComboBox();
+            this.lblCompactDocumentFormat = new System.Windows.Forms.Label();
             this.checkBoxShowWizard = new System.Windows.Forms.CheckBox();
             this.tabDisplay = new System.Windows.Forms.TabPage();
             this.powerOfTenCheckBox = new System.Windows.Forms.CheckBox();
@@ -143,10 +145,24 @@ namespace pwiz.Skyline.ToolsUI
             // 
             // tabMisc
             // 
+            this.tabMisc.Controls.Add(this.comboCompactFormatOption);
+            this.tabMisc.Controls.Add(this.lblCompactDocumentFormat);
             this.tabMisc.Controls.Add(this.checkBoxShowWizard);
             resources.ApplyResources(this.tabMisc, "tabMisc");
             this.tabMisc.Name = "tabMisc";
             this.tabMisc.UseVisualStyleBackColor = true;
+            // 
+            // comboCompactFormatOption
+            // 
+            this.comboCompactFormatOption.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboCompactFormatOption.FormattingEnabled = true;
+            resources.ApplyResources(this.comboCompactFormatOption, "comboCompactFormatOption");
+            this.comboCompactFormatOption.Name = "comboCompactFormatOption";
+            // 
+            // lblCompactDocumentFormat
+            // 
+            resources.ApplyResources(this.lblCompactDocumentFormat, "lblCompactDocumentFormat");
+            this.lblCompactDocumentFormat.Name = "lblCompactDocumentFormat";
             // 
             // checkBoxShowWizard
             // 
@@ -228,5 +244,7 @@ namespace pwiz.Skyline.ToolsUI
         private System.Windows.Forms.CheckBox checkBoxShowWizard;
         private System.Windows.Forms.TabPage tabDisplay;
         private System.Windows.Forms.CheckBox powerOfTenCheckBox;
+        private System.Windows.Forms.ComboBox comboCompactFormatOption;
+        private System.Windows.Forms.Label lblCompactDocumentFormat;
     }
 }
