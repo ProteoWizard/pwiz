@@ -2542,6 +2542,10 @@ namespace pwiz.Skyline.Model.Results
         {
             foreach (var chromatogramInfo in listInfo)
             {
+                if (chromatogramInfo == null)
+                {
+                    continue;
+                }
                 TimeIntensities = TimeIntensities.MergeTimesAndAddIntensities(chromatogramInfo.TimeIntensities);
             }
         }
