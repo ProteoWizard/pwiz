@@ -148,6 +148,7 @@
     <Compile Include="DecoysTest.cs" />
     <Compile Include="DigestionTest.cs" />
     <Compile Include="DocLoadLibraryTest.cs" />
+    <Compile Include="DocumentSerializerTest.cs" />
     <Compile Include="EspTest.cs" />
     <Compile Include="ExplicitModTest.cs" />
     <Compile Include="ExportMethodShimadzuTest.cs" />
@@ -255,6 +256,7 @@
     <None Include="CommandLineImportTest.zip" />
     <None Include="CommandLineTest.zip" />
     <None Include="DocLoadLibraryTest.zip" />
+    <EmbeddedResource Include="DocumentSerializerTest.sky" />
     <None Include="FullScanPrecursor.zip" />
     <None Include="ImportAllCmdLineTest.zip" />
     <None Include="MProphetResultsHandlerTest.zip" />

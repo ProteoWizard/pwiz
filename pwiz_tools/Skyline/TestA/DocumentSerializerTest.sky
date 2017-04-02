@@ -1,0 +1,311 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<srm_settings format_version="3.62" software_version="Skyline (64-bit) ">
+  <settings_summary name="Default">
+    <peptide_settings>
+      <enzyme name="Trypsin" cut="KR" no_cut="P" sense="C" />
+      <digest_settings max_missed_cleavages="0" />
+      <peptide_prediction use_measured_rts="true" measured_rt_window="5" use_spectral_library_drift_times="false" spectral_library_drift_times_peak_width_calc_type="resolving_power" spectral_library_drift_times_resolving_power="0" spectral_library_drift_times_width_at_dt_zero="0" spectral_library_drift_times_width_at_dt_max="0" />
+      <peptide_filter start="2" min_length="6" max_length="30">
+        <peptide_exclusions />
+      </peptide_filter>
+      <peptide_libraries pick="filter">
+        <bibliospec_lite_library name="Rat (NIST) (Rat_plasma2) (Rat_plasma)" file_name_hint="rat_consensus_final_true_lib.blib" lsid="urn:lsid:proteome.gs.washington.edu:spectral_libary:bibliospec:nr:minimal:Rat (NIST) (Rat_plasma2) (Rat_plasma):b7934e7c-6cee-482e-bd36-25ddb8b72da9:1.0" revision="1" />
+        <bibliospec_lite_library name="Rat (GPM) (Rat_plasma2) (Rat_plasma)" file_name_hint="rat_cmp_20.blib" lsid="urn:lsid:proteome.gs.washington.edu:spectral_libary:bibliospec:nr:minimal:Rat (GPM) (Rat_plasma2) (Rat_plasma):ffc82bca-7ad0-458b-80f0-f2bf37af94cb:1.0" revision="1" />
+      </peptide_libraries>
+      <peptide_modifications max_variable_mods="3" max_neutral_losses="1">
+        <static_modifications>
+          <static_modification name="Carbamidomethyl Cysteine" aminoacid="C" formula="C2H3ON" />
+        </static_modifications>
+        <heavy_modifications />
+      </peptide_modifications>
+    </peptide_settings>
+    <transition_settings>
+      <transition_prediction precursor_mass_type="Monoisotopic" fragment_mass_type="Monoisotopic" optimize_by="None">
+        <predict_collision_energy name="Thermo" step_size="1" step_count="5">
+          <regression_ce charge="2" slope="0.034" intercept="3.314" />
+          <regression_ce charge="3" slope="0.044" intercept="3.314" />
+        </predict_collision_energy>
+      </transition_prediction>
+      <transition_filter precursor_charges="2" product_charges="1" fragment_types="y" fragment_range_first="ion 3" fragment_range_last="last ion - 1" precursor_mz_window="0" />
+      <transition_libraries ion_match_tolerance="0.5" ion_count="4" pick_from="none" />
+      <transition_integration integrate_all="true" />
+      <transition_instrument min_mz="50" max_mz="1500" mz_match_tolerance="0.055" />
+    </transition_settings>
+    <data_settings document_guid="4d53beb9-0ae3-484c-b793-4dc5988e496e">
+      <annotation name="SubjectId" targets="replicate" type="text" />
+      <annotation name="BioReplicate" targets="replicate" type="text" />
+      <annotation name="Condition" targets="replicate" type="value_list">
+        <value>Healthy</value>
+        <value>Diseased</value>
+      </annotation>
+      <annotation name="MissingData" targets="peptide" type="true_false" />
+    </data_settings>
+    <measured_results time_normal_area="true">
+      <replicate name="D_102_REP1">
+        <sample_file id="D_102_REP1_f0" file_path="E:\skydata\GroupedStudies1\Heart Failure\raw\D_102_REP1.raw" sample_name="D_102_REP1" acquired_time="2009-11-02T19:45:14" modified_time="2011-01-16T20:51:02">
+          <instrument_info_list>
+            <instrument_info>
+              <model>TSQ Vantage</model>
+              <ionsource>nanoelectrospray</ionsource>
+              <analyzer>quadrupole/quadrupole/quadrupole</analyzer>
+              <detector>electron multiplier</detector>
+            </instrument_info>
+          </instrument_info_list>
+        </sample_file>
+      </replicate>
+    </measured_results>
+  </settings_summary>
+  <protein name="IPI:IPI00327469.1|SWISS-PROT:P24090|ENSEMBL:ENSRNOP00000055223|REFSEQ:NP_037030" description="Tax_Id=10116 Gene_Symbol=Ahsg Alpha-2-HS-glycoprotein" label_name="NP_037030" accession="P24090" gene="Ahsg Fetua" species="Rattus norvegicus (Rat)" preferred_name="FETUA_RAT" websearch_status="X#UNP_037030" auto_manage_children="false">
+    <sequence>
+        MKSLVLLLCF AQLWSCQSAP QGAGLGFREL ACDDPETEHV ALIAVDYLNK
+        HLLQGFRQIL NQIDKVKVWS RRPFGEVYEL EIDTLETTCH ALDPTPLANC
+        SVRQQAEHAV EGDCDFHILK QDGQFRVLHA QCHSTPDSAE DVRKFCPRCP
+        ILIRFNDTNV VHTVKTALAA FNAQNNGTYF KLVEISRAQN VPFPVSTLVE
+        FVIAATDCTG QEVTDPAKCN LLAEKQYGFC KATLIHRLGG EEVSVACKLF
+        QTQPQPANAN PAGPAPTVGQ AAPVAPPAGP PESVVVGPVA VPLGLPDHRT
+        HHDLRHAFSP VASVESASGE VLHSPKVGQP GDAGAAGPVA PLCPGRVRYF
+        KI</sequence>
+    <peptide sequence="LGGEEVSVACK" modified_sequence="LGGEEVSVAC[+57.0]K" start="237" end="248" prev_aa="R" next_aa="L" calc_neutral_pep_mass="1147.554324" num_missed_cleavages="0" avg_measured_retention_time="13.4289331">
+      <implicit_modifications>
+        <implicit_static_modifications>
+          <implicit_modification index_aa="9" modification_name="Carbamidomethyl Cysteine" mass_diff="+57" />
+        </implicit_static_modifications>
+        <implicit_heavy_modifications />
+      </implicit_modifications>
+      <peptide_results>
+        <peptide_result replicate="D_102_REP1" peak_count_ratio="1" retention_time="13.4289331" />
+      </peptide_results>
+      <precursor charge="2" calc_neutral_mass="1147.554324" precursor_mz="574.784438" collision_energy="22.856671" modified_sequence="LGGEEVSVAC[+57.0]K">
+        <nist_spectrum_info library_name="Rat (NIST) (Rat_plasma2) (Rat_plasma)" count_measured="93" total_intensity="100710" tfratio="660000" />
+        <precursor_results>
+          <precursor_peak replicate="D_102_REP1" peak_count_ratio="1" retention_time="13.4289331" start_time="13.2614336" end_time="13.6299334" fwhm="0.08127014" area="47426.0039" background="1568.20752" height="3710.823" truncated="0" identified="false" library_dotp="0.9007299" user_set="FALSE" />
+        </precursor_results>
+        <transition fragment_type="y" fragment_ordinal="9" calc_neutral_mass="977.448796" product_charge="1" cleavage_aa="G" loss_neutral_mass="0">
+          <precursor_mz>574.784438</precursor_mz>
+          <product_mz>978.456072</product_mz>
+          <collision_energy>22.856671</collision_energy>
+          <transition_lib_info rank="6" intensity="1846" />
+          <transition_results>
+            <transition_peak replicate="D_102_REP1" retention_time="13.3954334" start_time="13.2614336" end_time="13.6299334" area="3847.00854" background="271.247131" height="658.8465" fwhm="0.07704971" truncated="false" identified="false" rank="5" points_across="10" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="7" calc_neutral_mass="791.38474" product_charge="1" cleavage_aa="E" loss_neutral_mass="0">
+          <precursor_mz>574.784438</precursor_mz>
+          <product_mz>792.392016</product_mz>
+          <collision_energy>22.856671</collision_energy>
+          <transition_lib_info rank="3" intensity="4185" />
+          <transition_results>
+            <transition_peak replicate="D_102_REP1" retention_time="13.3954334" start_time="13.2614336" end_time="13.6299334" area="7571.708" background="33.80324" height="1145.53735" fwhm="0.08127014" truncated="false" identified="false" rank="4" points_across="10" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="6" calc_neutral_mass="662.342146" product_charge="1" cleavage_aa="V" loss_neutral_mass="0">
+          <precursor_mz>574.784438</precursor_mz>
+          <product_mz>663.349422</product_mz>
+          <collision_energy>22.856671</collision_energy>
+          <transition_lib_info rank="2" intensity="4487" />
+          <transition_results>
+            <transition_peak replicate="D_102_REP1" retention_time="13.4289331" start_time="13.2614336" end_time="13.6299334" area="11148.291" background="422.479858" height="1876.15" fwhm="0.07419588" truncated="false" identified="false" rank="2" points_across="10" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="5" calc_neutral_mass="563.273732" product_charge="1" cleavage_aa="S" loss_neutral_mass="0">
+          <precursor_mz>574.784438</precursor_mz>
+          <product_mz>564.281008</product_mz>
+          <collision_energy>22.856671</collision_energy>
+          <transition_lib_info rank="1" intensity="10000" />
+          <transition_results>
+            <transition_peak replicate="D_102_REP1" retention_time="13.4289331" start_time="13.2614336" end_time="13.6299334" area="16608.2227" background="250.575562" height="3710.823" fwhm="0.06260111" truncated="false" identified="false" rank="1" points_across="10" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="4" calc_neutral_mass="476.241704" product_charge="1" cleavage_aa="V" loss_neutral_mass="0">
+          <precursor_mz>574.784438</precursor_mz>
+          <product_mz>477.24898</product_mz>
+          <collision_energy>22.856671</collision_energy>
+          <transition_lib_info rank="5" intensity="1893" />
+          <transition_results>
+            <transition_peak replicate="D_102_REP1" retention_time="13.4289331" start_time="13.2614336" end_time="13.6299334" area="8250.773" background="590.1016" height="1328.91931" fwhm="0.0802812949" truncated="false" identified="false" rank="3" points_across="10" user_set="FALSE" />
+          </transition_results>
+        </transition>
+      </precursor>
+    </peptide>
+  </protein>
+  <peptide_list label_name="NP_037030" label_description="Tax_Id=10116 Gene_Symbol=Ahsg Alpha-2-HS-glycoprotein" auto_manage_children="false">
+    <note category="1">zzzTestingConvertedFromProteomic</note>
+    <molecule ion_formula="C47H81N13O18S[M+2H]" mass_average="1150.31027" mass_monoisotopic="1149.569974" custom_ion_name="LGGEEVSVACK(+H2)" avg_measured_retention_time="13.4289331">
+      <note category="1">zzzTestingConvertedFromProteomic</note>
+      <peptide_results>
+        <peptide_result replicate="D_102_REP1" peak_count_ratio="1" retention_time="13.4289331" />
+      </peptide_results>
+      <precursor charge="2" precursor_mz="574.784438" collision_energy="22.856671" ion_formula="C47H81N13O18S[M+2H]" mass_average="1150.31027" mass_monoisotopic="1149.569974" custom_ion_name="LGGEEVSVACK(+H2)">
+        <note category="1">zzzTestingConvertedFromProteomic</note>
+        <precursor_results>
+          <precursor_peak replicate="D_102_REP1" peak_count_ratio="1" retention_time="13.4289331" start_time="13.2614336" end_time="13.6299334" fwhm="0.08127014" area="47426.0039" background="1568.20752" height="3710.823" truncated="0" identified="false" user_set="FALSE" />
+        </precursor_results>
+        <transition fragment_type="custom" mass_average="978.45662096990941" mass_monoisotopic="978.45662096990941" custom_ion_name="y9" product_charge="1">
+          <note category="1">zzzTestingConvertedFromProteomic</note>
+          <precursor_mz>574.784438</precursor_mz>
+          <product_mz>978.456072</product_mz>
+          <collision_energy>22.856671</collision_energy>
+          <transition_results>
+            <transition_peak replicate="D_102_REP1" retention_time="13.3954334" start_time="13.2614336" end_time="13.6299334" area="3847.00854" background="271.247131" height="658.8465" fwhm="0.07704971" truncated="false" identified="false" rank="5" points_across="10" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="custom" mass_average="792.39256409990935" mass_monoisotopic="792.39256409990935" custom_ion_name="y7" product_charge="1">
+          <note category="1">zzzTestingConvertedFromProteomic</note>
+          <precursor_mz>574.784438</precursor_mz>
+          <product_mz>792.392016</product_mz>
+          <collision_energy>22.856671</collision_energy>
+          <transition_results>
+            <transition_peak replicate="D_102_REP1" retention_time="13.3954334" start_time="13.2614336" end_time="13.6299334" area="7571.708" background="33.80324" height="1145.53735" fwhm="0.08127014" truncated="false" identified="false" rank="4" points_across="10" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="custom" mass_average="663.3499709649094" mass_monoisotopic="663.3499709649094" custom_ion_name="y6" product_charge="1">
+          <note category="1">zzzTestingConvertedFromProteomic</note>
+          <precursor_mz>574.784438</precursor_mz>
+          <product_mz>663.349422</product_mz>
+          <collision_energy>22.856671</collision_energy>
+          <transition_results>
+            <transition_peak replicate="D_102_REP1" retention_time="13.4289331" start_time="13.2614336" end_time="13.6299334" area="11148.291" background="422.479858" height="1876.15" fwhm="0.07419588" truncated="false" identified="false" rank="2" points_across="10" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="custom" mass_average="564.28155701990943" mass_monoisotopic="564.28155701990943" custom_ion_name="y5" product_charge="1">
+          <note category="1">zzzTestingConvertedFromProteomic</note>
+          <precursor_mz>574.784438</precursor_mz>
+          <product_mz>564.281008</product_mz>
+          <collision_energy>22.856671</collision_energy>
+          <transition_results>
+            <transition_peak replicate="D_102_REP1" retention_time="13.4289331" start_time="13.2614336" end_time="13.6299334" area="16608.2227" background="250.575562" height="3710.823" fwhm="0.06260111" truncated="false" identified="false" rank="1" points_across="10" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="custom" mass_average="477.2495285849094" mass_monoisotopic="477.2495285849094" custom_ion_name="y4" product_charge="1">
+          <note category="1">zzzTestingConvertedFromProteomic</note>
+          <precursor_mz>574.784438</precursor_mz>
+          <product_mz>477.24898</product_mz>
+          <collision_energy>22.856671</collision_energy>
+          <transition_results>
+            <transition_peak replicate="D_102_REP1" retention_time="13.4289331" start_time="13.2614336" end_time="13.6299334" area="8250.773" background="590.1016" height="1328.91931" fwhm="0.0802812949" truncated="false" identified="false" rank="3" points_across="10" user_set="FALSE" />
+          </transition_results>
+        </transition>
+      </precursor>
+    </molecule>
+  </peptide_list>
+  <peptide_list label_name="NP_037030" label_description="Tax_Id=10116 Gene_Symbol=Ahsg Alpha-2-HS-glycoprotein" auto_manage_children="false">
+    <note category="1">zzzTestingConvertedFromProteomic</note>
+    <molecule mass_average="1150.31027" mass_monoisotopic="1149.569974" custom_ion_name="LGGEEVSVACK(+H2)" avg_measured_retention_time="13.4289331">
+      <note category="1">zzzTestingConvertedFromProteomic</note>
+      <peptide_results>
+        <peptide_result replicate="D_102_REP1" peak_count_ratio="1" retention_time="13.4289331" />
+      </peptide_results>
+      <precursor charge="2" precursor_mz="574.784438" collision_energy="22.856671" mass_average="1150.31027" mass_monoisotopic="1149.569974" custom_ion_name="LGGEEVSVACK(+H2)">
+        <note category="1">zzzTestingConvertedFromProteomic</note>
+        <precursor_results>
+          <precursor_peak replicate="D_102_REP1" peak_count_ratio="1" retention_time="13.4289331" start_time="13.2614336" end_time="13.6299334" fwhm="0.08127014" area="47426.0039" background="1568.20752" height="3710.823" truncated="0" identified="false" user_set="FALSE" />
+        </precursor_results>
+        <transition fragment_type="custom" mass_average="978.45662096990941" mass_monoisotopic="978.45662096990941" custom_ion_name="y9" product_charge="1">
+          <note category="1">zzzTestingConvertedFromProteomic</note>
+          <precursor_mz>574.784438</precursor_mz>
+          <product_mz>978.456072</product_mz>
+          <collision_energy>22.856671</collision_energy>
+          <transition_results>
+            <transition_peak replicate="D_102_REP1" retention_time="13.3954334" start_time="13.2614336" end_time="13.6299334" area="3847.00854" background="271.247131" height="658.8465" fwhm="0.07704971" truncated="false" identified="false" rank="5" points_across="10" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="custom" mass_average="792.39256409990935" mass_monoisotopic="792.39256409990935" custom_ion_name="y7" product_charge="1">
+          <note category="1">zzzTestingConvertedFromProteomic</note>
+          <precursor_mz>574.784438</precursor_mz>
+          <product_mz>792.392016</product_mz>
+          <collision_energy>22.856671</collision_energy>
+          <transition_results>
+            <transition_peak replicate="D_102_REP1" retention_time="13.3954334" start_time="13.2614336" end_time="13.6299334" area="7571.708" background="33.80324" height="1145.53735" fwhm="0.08127014" truncated="false" identified="false" rank="4" points_across="10" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="custom" mass_average="663.3499709649094" mass_monoisotopic="663.3499709649094" custom_ion_name="y6" product_charge="1">
+          <note category="1">zzzTestingConvertedFromProteomic</note>
+          <precursor_mz>574.784438</precursor_mz>
+          <product_mz>663.349422</product_mz>
+          <collision_energy>22.856671</collision_energy>
+          <transition_results>
+            <transition_peak replicate="D_102_REP1" retention_time="13.4289331" start_time="13.2614336" end_time="13.6299334" area="11148.291" background="422.479858" height="1876.15" fwhm="0.07419588" truncated="false" identified="false" rank="2" points_across="10" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="custom" mass_average="564.28155701990943" mass_monoisotopic="564.28155701990943" custom_ion_name="y5" product_charge="1">
+          <note category="1">zzzTestingConvertedFromProteomic</note>
+          <precursor_mz>574.784438</precursor_mz>
+          <product_mz>564.281008</product_mz>
+          <collision_energy>22.856671</collision_energy>
+          <transition_results>
+            <transition_peak replicate="D_102_REP1" retention_time="13.4289331" start_time="13.2614336" end_time="13.6299334" area="16608.2227" background="250.575562" height="3710.823" fwhm="0.06260111" truncated="false" identified="false" rank="1" points_across="10" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="custom" mass_average="477.2495285849094" mass_monoisotopic="477.2495285849094" custom_ion_name="y4" product_charge="1">
+          <note category="1">zzzTestingConvertedFromProteomic</note>
+          <precursor_mz>574.784438</precursor_mz>
+          <product_mz>477.24898</product_mz>
+          <collision_energy>22.856671</collision_energy>
+          <transition_results>
+            <transition_peak replicate="D_102_REP1" retention_time="13.4289331" start_time="13.2614336" end_time="13.6299334" area="8250.773" background="590.1016" height="1328.91931" fwhm="0.0802812949" truncated="false" identified="false" rank="3" points_across="10" user_set="FALSE" />
+          </transition_results>
+        </transition>
+      </precursor>
+    </molecule>
+  </peptide_list>
+  <peptide_list label_name="NP_037030" label_description="Tax_Id=10116 Gene_Symbol=Ahsg Alpha-2-HS-glycoprotein" auto_manage_children="false">
+    <note category="1">zzzTestingConvertedFromProteomic</note>
+    <molecule mass_average="1150.31027" mass_monoisotopic="1149.569974" avg_measured_retention_time="13.4289331">
+      <note category="1">zzzTestingConvertedFromProteomic</note>
+      <peptide_results>
+        <peptide_result replicate="D_102_REP1" peak_count_ratio="1" retention_time="13.4289331" />
+      </peptide_results>
+      <precursor charge="2" precursor_mz="574.784438" collision_energy="22.856671" mass_average="1150.31027" mass_monoisotopic="1149.569974">
+        <note category="1">zzzTestingConvertedFromProteomic</note>
+        <precursor_results>
+          <precursor_peak replicate="D_102_REP1" peak_count_ratio="1" retention_time="13.4289331" start_time="13.2614336" end_time="13.6299334" fwhm="0.08127014" area="47426.0039" background="1568.20752" height="3710.823" truncated="0" identified="false" user_set="FALSE" />
+        </precursor_results>
+        <transition fragment_type="custom" mass_average="978.45662096990941" mass_monoisotopic="978.45662096990941" product_charge="1">
+          <note category="1">zzzTestingConvertedFromProteomic</note>
+          <precursor_mz>574.784438</precursor_mz>
+          <product_mz>978.456072</product_mz>
+          <collision_energy>22.856671</collision_energy>
+          <transition_results>
+            <transition_peak replicate="D_102_REP1" retention_time="13.3954334" start_time="13.2614336" end_time="13.6299334" area="3847.00854" background="271.247131" height="658.8465" fwhm="0.07704971" truncated="false" identified="false" rank="5" points_across="10" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="custom" mass_average="792.39256409990935" mass_monoisotopic="792.39256409990935" product_charge="1">
+          <note category="1">zzzTestingConvertedFromProteomic</note>
+          <precursor_mz>574.784438</precursor_mz>
+          <product_mz>792.392016</product_mz>
+          <collision_energy>22.856671</collision_energy>
+          <transition_results>
+            <transition_peak replicate="D_102_REP1" retention_time="13.3954334" start_time="13.2614336" end_time="13.6299334" area="7571.708" background="33.80324" height="1145.53735" fwhm="0.08127014" truncated="false" identified="false" rank="4" points_across="10" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="custom" mass_average="663.3499709649094" mass_monoisotopic="663.3499709649094" product_charge="1">
+          <note category="1">zzzTestingConvertedFromProteomic</note>
+          <precursor_mz>574.784438</precursor_mz>
+          <product_mz>663.349422</product_mz>
+          <collision_energy>22.856671</collision_energy>
+          <transition_results>
+            <transition_peak replicate="D_102_REP1" retention_time="13.4289331" start_time="13.2614336" end_time="13.6299334" area="11148.291" background="422.479858" height="1876.15" fwhm="0.07419588" truncated="false" identified="false" rank="2" points_across="10" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="custom" mass_average="564.28155701990943" mass_monoisotopic="564.28155701990943" product_charge="1">
+          <note category="1">zzzTestingConvertedFromProteomic</note>
+          <precursor_mz>574.784438</precursor_mz>
+          <product_mz>564.281008</product_mz>
+          <collision_energy>22.856671</collision_energy>
+          <transition_results>
+            <transition_peak replicate="D_102_REP1" retention_time="13.4289331" start_time="13.2614336" end_time="13.6299334" area="16608.2227" background="250.575562" height="3710.823" fwhm="0.06260111" truncated="false" identified="false" rank="1" points_across="10" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="custom" mass_average="477.2495285849094" mass_monoisotopic="477.2495285849094" product_charge="1">
+          <note category="1">zzzTestingConvertedFromProteomic</note>
+          <precursor_mz>574.784438</precursor_mz>
+          <product_mz>477.24898</product_mz>
+          <collision_energy>22.856671</collision_energy>
+          <transition_results>
+            <transition_peak replicate="D_102_REP1" retention_time="13.4289331" start_time="13.2614336" end_time="13.6299334" area="8250.773" background="590.1016" height="1328.91931" fwhm="0.0802812949" truncated="false" identified="false" rank="3" points_across="10" user_set="FALSE" />
+          </transition_results>
+        </transition>
+      </precursor>
+    </molecule>
+  </peptide_list>
+</srm_settings>
