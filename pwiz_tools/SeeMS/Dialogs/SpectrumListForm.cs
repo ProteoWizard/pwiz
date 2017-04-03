@@ -98,7 +98,7 @@ namespace seems
                     nameColumn.DataPropertyName = nameValuePair[0];
                     gridView.Columns.Insert( 1 + i, nameColumn );
                     string type = null;
-                    if( nameValuePair[0] == "file" )
+                    if( nameValuePair[0] == "file" || nameValuePair[1] == "xsd:string" )
                         type = "System.String";
                     else
                         type = "System.Int32";
