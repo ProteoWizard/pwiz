@@ -563,6 +563,59 @@ namespace pwiz.Skyline.SettingsUI
             listPeptide.EndUpdate();
         }
 
+        public static void GetPeptideInfo(ViewLibraryPepInfo pinfo, ListBox lPeptide, 
+                                        LibKeyModificationMatcher matcher, byte[] lookupPool, 
+                                        out SrmSettings settings, out TransitionGroup transitionGroup, out ExplicitMods mods)
+        {
+            settings = Program.ActiveDocumentUI.Settings;
+
+            if (matcher.HasMatches)
+                settings = settings.ChangePeptideModifications(modifications => matcher.MatcherPepMods);
+
+            var pepInfo = (ViewLibraryPepInfo)lPeptide.SelectedItem;
+            var nodePep = pepInfo.PeptideNode;
+            if (nodePep != null)
+            {
+                mods = nodePep.ExplicitMods;
+                // Should always be just one child.  The child that matched this spectrum.
+                transitionGroup = nodePep.TransitionGroups.First().TransitionGroup;
+            }
+            else if (!pepInfo.Key.IsPrecursorKey)
+            {
+                var peptide = new Peptide(null, pinfo.GetAASequence(lookupPool),
+                                          null, null, 0);
+                transitionGroup = new TransitionGroup(peptide, pinfo.Charge,
+                                                      IsotopeLabelType.light, true, null);
+
+                // Because the document modifications do not explain this peptide, a set of
+                // explicit modifications must be constructed, even if they are empty.
+                IList<ExplicitMod> staticModList = new List<ExplicitMod>();
+                IEnumerable<ModificationInfo> modList = GetModifications(pinfo);
+                foreach (var modInfo in modList)
+                {
+                    var smod = new StaticMod("temp", // Not L10N
+                                             modInfo.ModifiedAminoAcid.ToString(CultureInfo.InvariantCulture),
+                                             null,
+                                             null,
+                                             LabelAtoms.None,
+                                             modInfo.ModifiedMass,
+                                             modInfo.ModifiedMass);
+                    var exmod = new ExplicitMod(modInfo.IndexMod, smod);
+                    staticModList.Add(exmod);
+                }
+
+                mods = new ExplicitMods(peptide, staticModList, new TypedExplicitModifications[0]);
+            }
+            else
+            {
+                // Create custom ion node for midas library
+                var precursor = pepInfo.Key.PrecursorMz.GetValueOrDefault();
+                var peptide = new Peptide(new DocNodeCustomIon(precursor, precursor, precursor.ToString(CultureInfo.CurrentCulture)));
+                transitionGroup = new TransitionGroup(peptide, 0, IsotopeLabelType.light, true, null);
+                mods = new ExplicitMods(peptide, new ExplicitMod[0], new TypedExplicitModifications[0]);
+            }
+        }
+
         /// <summary>
         /// Updates the spectrum graph using the currently selected peptide.
         /// </summary>
@@ -620,48 +673,8 @@ namespace pwiz.Skyline.SettingsUI
                         var rankCharges = settings.TransitionSettings.Filter.ProductCharges;
 
                         ExplicitMods mods;
+                        GetPeptideInfo(_peptides[index], listPeptide, _matcher, _lookupPool, out settings, out transitionGroup, out mods);
                         var pepInfo = (ViewLibraryPepInfo)listPeptide.SelectedItem;
-                        var nodePep = pepInfo.PeptideNode;
-                        if (nodePep != null)
-                        {
-                            mods = nodePep.ExplicitMods;
-                            // Should always be just one child.  The child that matched this spectrum.
-                            transitionGroup = nodePep.TransitionGroups.First().TransitionGroup;
-                        }
-                        else if (!pepInfo.Key.IsPrecursorKey)
-                        {
-                            var peptide = new Peptide(null, _peptides[index].GetAASequence(_lookupPool),
-                                                      null, null, 0);
-                            transitionGroup = new TransitionGroup(peptide, _peptides[index].Charge,
-                                                                  IsotopeLabelType.light, true, null);
-
-                            // Because the document modifications do not explain this peptide, a set of
-                            // explicit modifications must be constructed, even if they are empty.
-                            IList<ExplicitMod> staticModList = new List<ExplicitMod>();
-                            IEnumerable<ModificationInfo> modList = GetModifications(_peptides[index]);
-                            foreach (var modInfo in modList)
-                            {
-                                var smod = new StaticMod("temp", // Not L10N
-                                                         modInfo.ModifiedAminoAcid.ToString(CultureInfo.InvariantCulture),
-                                                         null,
-                                                         null,
-                                                         LabelAtoms.None,
-                                                         modInfo.ModifiedMass,
-                                                         modInfo.ModifiedMass);
-                                var exmod = new ExplicitMod(modInfo.IndexMod, smod);
-                                staticModList.Add(exmod);
-                            }
-
-                            mods = new ExplicitMods(peptide, staticModList, new TypedExplicitModifications[0]);
-                        }
-                        else
-                        {
-                            // Create custom ion node for midas library
-                            var precursor = pepInfo.Key.PrecursorMz.GetValueOrDefault();
-                            var peptide = new Peptide(new DocNodeCustomIon(precursor, precursor, precursor.ToString(CultureInfo.CurrentCulture)));
-                            transitionGroup = new TransitionGroup(peptide, 0, IsotopeLabelType.light, true, null);
-                            mods = new ExplicitMods(peptide, new ExplicitMod[0], new TypedExplicitModifications[0]);
-                        }
 
                         // Make sure the types and charges in the settings are at the head
                         // of these lists to give them top priority, and get rankings correct.
@@ -1750,7 +1763,7 @@ namespace pwiz.Skyline.SettingsUI
                 if (!Equals(pepInfo, _lastTipNode))
                 {
                     _lastTipNode = pepInfo;
-                    _lastTipProvider = new PeptideTipProvider(pepInfo);
+                    _lastTipProvider = new PeptideTipProvider(pepInfo, listPeptide, _matcher, _lookupPool);
                 }
                 tipProvider = _lastTipProvider;
             }
@@ -2167,10 +2180,16 @@ namespace pwiz.Skyline.SettingsUI
         private class PeptideTipProvider : ITipProvider
         {
             private ViewLibraryPepInfo _pepInfo;
+            private ListBox _lbox;
+            private byte[] lookupPool;
+            private LibKeyModificationMatcher matcher;
 
-            public PeptideTipProvider(ViewLibraryPepInfo pepInfo)
+            public PeptideTipProvider(ViewLibraryPepInfo pepInfo, ListBox lbox, LibKeyModificationMatcher _matcher, byte[] _lookupPool)
             {
                 _pepInfo = pepInfo;
+                _lbox = lbox;
+                lookupPool = _lookupPool;
+                matcher = _matcher;
             }
 
             public bool HasTip
@@ -2181,15 +2200,36 @@ namespace pwiz.Skyline.SettingsUI
             public Size RenderTip(Graphics g, Size sizeMax, bool draw)
             {
                 var table = new TableDesc();
+                var tableMz = new TableDesc();
                 SizeF size;
+                SizeF sizeMz;
                 using (RenderTools rt = new RenderTools())
                 {
                     table.AddDetailRow(string.Empty, _pepInfo.DisplayString.Replace(".0]", "]"), rt); // Not L10N
+                    ExplicitMods mods;
+                    TransitionGroup transitionGroup;
+                    SrmSettings settings;
+                    GetPeptideInfo(_pepInfo, _lbox, matcher, lookupPool, out settings, out transitionGroup, out mods);
+                    var pCalc = settings.GetPrecursorCalc(transitionGroup.LabelType, mods);
+                    var massH = pCalc.GetPrecursorMass(_pepInfo.Sequence);
+                    double mz = SequenceMassCalc.PersistentMZ(SequenceMassCalc.GetMZ(massH, transitionGroup.PrecursorCharge));
                     size = table.CalcDimensions(g);
+                    tableMz.AddDetailRow("Precursor m/z", string.Format("{0:F04}", mz), rt); // Not L10N
+                    sizeMz = tableMz.CalcDimensions(g);
+                    size.Height += 2;    // Spacing between details and fragments
                     if (draw)
+                    {
                         table.Draw(g);
+                        g.TranslateTransform(0, size.Height);
+
+                        tableMz.Draw(g);
+                        g.TranslateTransform(0, -size.Height);
+                    }
                 }
-                return new Size((int)size.Width + 2, (int)size.Height + 2);
+
+                int width = (int)Math.Round(Math.Max(sizeMz.Width, size.Width));
+                int height = (int)Math.Round(sizeMz.Height + size.Height);
+                return new Size(width + 2, height + 2);
             }
         }
 
