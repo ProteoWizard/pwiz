@@ -1358,11 +1358,12 @@ namespace pwiz.Skyline.Model.Lib
 
         private int FindSource(MsDataFileUri filePath)
         {
+            string filePathToString = filePath.ToString();
             // First look for an exact path match
-            int i = _librarySourceFiles.IndexOf(info => Equals(filePath.ToString(), info.FilePath));
+            int i = _librarySourceFiles.IndexOf(info => Equals(filePathToString, info.FilePath));
             // Or a straight basename match, which we sometimes use internally
             if (i == -1)
-                i = _librarySourceFiles.IndexOf(info => Equals(filePath.ToString(), info.BaseName));
+                i = _librarySourceFiles.IndexOf(info => Equals(filePathToString, info.BaseName));
             // NOTE: We don't expect multi-part wiff files to appear in a library
             if (i == -1 && null == filePath.GetSampleName())
             {

@@ -178,30 +178,11 @@ namespace pwiz.Skyline.Model
             int progressPercent = 0;
             var docNew = (SrmDocument) Document.ChangeIgnoreChangingChildren(true);
             var docReference = docNew;
-            var sequenceToNode = new Dictionary<Tuple<string, bool>, IList<IdentityPath>>();
+            var sequenceToNode = MakeSequenceDictionary(Document);
             var fileNameToFileMatch = new Dictionary<string, ChromSetFileMatch>();
             var trackAdjustedResults = new HashSet<ResultsKey>();
             var modMatcher = new ModificationMatcher();
-            // Make the dictionary of modified peptide strings to doc nodes and paths
-            for (int i = 0; i < Document.MoleculeCount; ++i)
-            {
-                IdentityPath peptidePath = Document.GetPathTo((int) SrmDocument.Level.Molecules, i);
-                PeptideDocNode peptideNode = (PeptideDocNode) Document.FindNode(peptidePath);
-                var peptidePair = new Tuple<string, bool>(peptideNode.RawTextId, peptideNode.IsDecoy);
-                IList<IdentityPath> idPathList;
-                // Each (sequence, isDecoy) pair can be associated with more than one peptide, 
-                // to handle the case of duplicate peptides in the doucment.
-                if (sequenceToNode.TryGetValue(peptidePair, out idPathList))
-                {
-                    idPathList.Add(peptidePath);
-                    sequenceToNode[peptidePair] = idPathList;
-                }
-                else
-                {
-                    idPathList = new List<IdentityPath> { peptidePath };
-                    sequenceToNode.Add(peptidePair, idPathList);
-                }
-            }
+            var canonicalSequenceDict = new Dictionary<string, string>();
 
             // Add annotations as possible columns
             var allFieldNames = new List<string[]>(FIELD_NAMES);
@@ -238,22 +219,43 @@ namespace pwiz.Skyline.Model
                         linesRead, dataFields.Length, fieldsTotal));
                 }
                 string modifiedPeptideString = dataFields.GetField(Field.modified_peptide);
-                modMatcher.CreateMatches(Document.Settings, 
-                                        new List<string> {modifiedPeptideString}, 
-                                        Settings.Default.StaticModList,
-                                        Settings.Default.HeavyModList);
-                // Convert the modified peptide string into a standardized form that 
-                // converts unimod, names, etc, into masses, eg [+57.0]
-                var nodeForModPep = modMatcher.GetModifiedNode(modifiedPeptideString);
-                if (nodeForModPep == null)
-                {
-                    throw new IOException(string.Format(Resources.PeakBoundaryImporter_Import_Peptide_has_unrecognized_modifications__0__at_line__1_, modifiedPeptideString, linesRead));
-                }
-                nodeForModPep = nodeForModPep.ChangeSettings(Document.Settings, SrmSettingsDiff.ALL);
-                modifiedPeptideString = nodeForModPep.RawTextId; // Modified sequence, or custom ion name
                 string fileName = dataFields.GetField(Field.filename);
                 bool isDecoy = dataFields.IsDecoy(linesRead);
-                var peptideIdentifier = new Tuple<string, bool>(modifiedPeptideString, isDecoy);
+                IList<IdentityPath> pepPaths;
+
+                if (!sequenceToNode.TryGetValue(Tuple.Create(modifiedPeptideString, isDecoy), out pepPaths))
+                {
+                    string canonicalSequence;
+                    if (!canonicalSequenceDict.TryGetValue(modifiedPeptideString, out canonicalSequence))
+                    {
+                        if (modifiedPeptideString.Any(c => c < 'A' || c > 'Z'))
+                        {
+                            modMatcher.CreateMatches(Document.Settings,
+                                new List<string> { modifiedPeptideString },
+                                Settings.Default.StaticModList,
+                                Settings.Default.HeavyModList);
+                            var nodeForModPep = modMatcher.GetModifiedNode(modifiedPeptideString);
+                            if (nodeForModPep == null)
+                            {
+                                throw new IOException(string.Format(Resources.PeakBoundaryImporter_Import_Peptide_has_unrecognized_modifications__0__at_line__1_, modifiedPeptideString, linesRead));
+                            }
+                            nodeForModPep = nodeForModPep.ChangeSettings(Document.Settings, SrmSettingsDiff.ALL);
+                            // Convert the modified peptide string into a standardized form that 
+                            // converts unimod, names, etc, into masses, eg [+57.0]
+                            canonicalSequence = nodeForModPep.RawTextId;
+                            canonicalSequenceDict.Add(modifiedPeptideString, canonicalSequence);
+                        }
+                    }
+                    if (null != canonicalSequence)
+                    {
+                        sequenceToNode.TryGetValue(Tuple.Create(canonicalSequence, isDecoy), out pepPaths);
+                    }
+                }
+                if (null == pepPaths)
+                {
+                    UnrecognizedPeptides.Add(modifiedPeptideString);
+                    continue;
+                }
                 int charge;
                 bool chargeSpecified = dataFields.TryGetCharge(linesRead, out charge);
                 string sampleName = dataFields.GetField(Field.sample_name);
@@ -303,14 +305,6 @@ namespace pwiz.Skyline.Model
                     }
                     fileIds = new[] {sampleFile.FileId};
                 }
-                // Look up the IdentityPath of peptide in first dictionary
-                IList<IdentityPath> pepPaths;
-                if (!sequenceToNode.TryGetValue(peptideIdentifier, out pepPaths))
-                {
-                    UnrecognizedPeptides.Add(modifiedPeptideString);
-                    continue;
-                }
-
                 // Define the annotations to be added
                 var annotations = dataFields.GetAnnotations();
                 AnnotationsAdded = annotations.Keys.ToList();
@@ -337,7 +331,10 @@ namespace pwiz.Skyline.Model
                                 {
                                     var groupPath = new IdentityPath(pepPath, groupNode.Id);
                                     // Attach annotations
-                                    docNew = docNew.AddPrecursorResultsAnnotations(groupPath, fileId, annotations);
+                                    if (annotations.Any())
+                                    {
+                                        docNew = docNew.AddPrecursorResultsAnnotations(groupPath, fileId, annotations);
+                                    }
                                     // Change peak
                                     var filePath = chromSet.GetFileInfo(fileId).FilePath;
                                     if (changePeaks)
@@ -365,6 +362,54 @@ namespace pwiz.Skyline.Model
             if (!ReferenceEquals(docNew, docReference))
                 Document = (SrmDocument) Document.ChangeIgnoreChangingChildren(false).ChangeChildrenChecked(docNew.Children);
             return Document;
+        }
+
+        /// <summary>
+        /// Creates a dictionary mapping from strings to list of peptide IdentityPaths.
+        /// Peptides can be looked up by either their low precision or high precision modified sequence.
+        /// </summary>
+        private IDictionary<Tuple<string, bool>, IList<IdentityPath>> MakeSequenceDictionary(SrmDocument document)
+        {
+            var sequenceToNode = new Dictionary<Tuple<string, bool>, IList<IdentityPath>>();
+            foreach (var moleculeGroup in document.MoleculeGroups)
+            {
+                foreach (var molecule in moleculeGroup.Molecules)
+                {
+                    IdentityPath peptidePath = new IdentityPath(moleculeGroup.PeptideGroup, molecule.Peptide);
+                    foreach (var sequenceKey in ListSequenceKeys(molecule))
+                    {
+                        var peptidePair = Tuple.Create(sequenceKey, molecule.IsDecoy);
+                        IList<IdentityPath> idPathList;
+                        // Each (sequence, isDecoy) pair can be associated with more than one peptide, 
+                        // to handle the case of duplicate peptides in the doucment.
+                        if (sequenceToNode.TryGetValue(peptidePair, out idPathList))
+                        {
+                            idPathList.Add(peptidePath);
+                        }
+                        else
+                        {
+                            idPathList = new List<IdentityPath> { peptidePath };
+                            sequenceToNode.Add(peptidePair, idPathList);
+                        }
+                   }
+                }
+            }
+            return sequenceToNode;
+        }
+
+        /// <summary>
+        /// Lists the strings that can be used to refer to the PeptideDocNode.
+        /// A peptide can be looked up by either its narrow or wide modified sequence.
+        /// A small molecule can be looked up by its RawTextId.
+        /// </summary>
+        private IEnumerable<string> ListSequenceKeys(PeptideDocNode peptideDocNode)
+        {
+            yield return peptideDocNode.RawTextId;
+            if (!string.IsNullOrEmpty(peptideDocNode.ModifiedSequenceDisplay) &&
+                peptideDocNode.ModifiedSequenceDisplay != peptideDocNode.RawTextId)
+            {
+                yield return peptideDocNode.ModifiedSequenceDisplay;
+            }
         }
 
         /// <summary>
