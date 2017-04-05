@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Data.SQLite;
 using System.Drawing;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
@@ -429,6 +430,7 @@ namespace pwiz.Skyline.Controls
         ///   Then present any name, accession, gene, preferredname, or species metadata matches, sorted by the matched metadata field
         ///   Then present any matches against the description field, sorted by the description text starting at the match location
         /// </summary>
+        [MethodImpl(MethodImplOptions.NoOptimization)] // TODO(nicksh): reenable optimizations after we track down a NullReferenceException
         public static IList<ListViewItem> CreateListViewItems(IList<ProteinMatch> matches, String searchText, ProteinMatchTypes matchTypes, PeptideSettings peptideSettings, int maxCount)
         {
             var listItems = new SortedList<string,ListViewItem>();
