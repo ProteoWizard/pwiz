@@ -305,7 +305,7 @@ namespace pwiz.Skyline.Model
             }
             SkylineDocumentProto.Types.Annotations protoAnnotations = new SkylineDocumentProto.Types.Annotations
             {
-                Note = Note,
+                Note = Note ?? string.Empty,
                 Color = ColorIndex
             };
             if (_annotations != null)

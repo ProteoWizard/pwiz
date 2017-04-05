@@ -39,6 +39,8 @@
         <value>Diseased</value>
       </annotation>
       <annotation name="MissingData" targets="peptide" type="true_false" />
+      <annotation name="TransitionResultAnnotation" targets="transition_result" type="text" />
+      <annotation name="TransitionAnnotation" targets="transition" type="text" />
     </data_settings>
     <measured_results time_normal_area="true">
       <replicate name="D_102_REP1">
@@ -81,12 +83,16 @@
           <precursor_peak replicate="D_102_REP1" peak_count_ratio="1" retention_time="13.4289331" start_time="13.2614336" end_time="13.6299334" fwhm="0.08127014" area="47426.0039" background="1568.20752" height="3710.823" truncated="0" identified="false" library_dotp="0.9007299" user_set="FALSE" />
         </precursor_results>
         <transition fragment_type="y" fragment_ordinal="9" calc_neutral_mass="977.448796" product_charge="1" cleavage_aa="G" loss_neutral_mass="0">
+          <annotation name="TransitionAnnotation">Transition:G-y9+</annotation>
           <precursor_mz>574.784438</precursor_mz>
           <product_mz>978.456072</product_mz>
           <collision_energy>22.856671</collision_energy>
           <transition_lib_info rank="6" intensity="1846" />
           <transition_results>
-            <transition_peak replicate="D_102_REP1" retention_time="13.3954334" start_time="13.2614336" end_time="13.6299334" area="3847.00854" background="271.247131" height="658.8465" fwhm="0.07704971" truncated="false" identified="false" rank="5" points_across="10" user_set="FALSE" />
+            <transition_peak replicate="D_102_REP1" retention_time="13.3954334" start_time="13.2614336" end_time="13.6299334" area="3847.00854" background="271.247131" height="658.8465" fwhm="0.07704971" truncated="false" identified="false" rank="5" points_across="10" user_set="FALSE">
+              <annotation name="TextAnnotation">A</annotation>
+              <annotation name="TransitionResultAnnotation">G</annotation>
+            </transition_peak>
           </transition_results>
         </transition>
         <transition fragment_type="y" fragment_ordinal="7" calc_neutral_mass="791.38474" product_charge="1" cleavage_aa="E" loss_neutral_mass="0">
@@ -95,7 +101,9 @@
           <collision_energy>22.856671</collision_energy>
           <transition_lib_info rank="3" intensity="4185" />
           <transition_results>
-            <transition_peak replicate="D_102_REP1" retention_time="13.3954334" start_time="13.2614336" end_time="13.6299334" area="7571.708" background="33.80324" height="1145.53735" fwhm="0.08127014" truncated="false" identified="false" rank="4" points_across="10" user_set="FALSE" />
+            <transition_peak replicate="D_102_REP1" retention_time="13.3954334" start_time="13.2614336" end_time="13.6299334" area="7571.708" background="33.80324" height="1145.53735" fwhm="0.08127014" truncated="false" identified="false" rank="4" points_across="10" user_set="FALSE">
+              <annotation name="TransitionResultAnnotation">X</annotation>
+            </transition_peak>
           </transition_results>
         </transition>
         <transition fragment_type="y" fragment_ordinal="6" calc_neutral_mass="662.342146" product_charge="1" cleavage_aa="V" loss_neutral_mass="0">

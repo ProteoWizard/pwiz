@@ -699,7 +699,7 @@ namespace pwiz.Skyline.Model.Results
             for (int replicateIndex = 0; replicateIndex < measuredResults.Chromatograms.Count; replicateIndex++)
             {
                 var transitionChromInfos = peaksByReplicate[replicateIndex]
-                    .Select(transitionPeak => FromProtoTransitionPeak(settings, transitionPeak)).ToArray();
+                    .Select(transitionPeak => FromProtoTransitionPeak(stringPool, settings, transitionPeak)).ToArray();
                 if (transitionChromInfos.Length == 0)
                 {
                     lists.Add(null);
@@ -712,7 +712,7 @@ namespace pwiz.Skyline.Model.Results
             return new Results<TransitionChromInfo>(lists);
         }
 
-        private static TransitionChromInfo FromProtoTransitionPeak(SrmSettings settings,
+        private static TransitionChromInfo FromProtoTransitionPeak(StringPool stringPool, SrmSettings settings,
             SkylineDocumentProto.Types.TransitionPeak transitionPeak)
         {
             var measuredResults = settings.MeasuredResults;
@@ -753,8 +753,7 @@ namespace pwiz.Skyline.Model.Results
                 (short) transitionPeak.Rank,
                 (short) transitionPeak.RankByLevel,
                 GetEmptyRatios(settings.PeptideSettings.Modifications.RatioInternalStandardTypes.Count),
-                // TODO
-                Annotations.EMPTY, 
+                Annotations.FromProtoAnnotations(stringPool, transitionPeak.Annotations), 
                 DataValues.FromUserSet(transitionPeak.UserSet) 
                 );
         }
