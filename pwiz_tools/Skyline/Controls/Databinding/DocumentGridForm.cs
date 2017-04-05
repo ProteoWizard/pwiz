@@ -17,10 +17,14 @@
  * limitations under the License.
  */
 
+using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -30,6 +34,8 @@ namespace pwiz.Skyline.Controls.Databinding
     public partial class DocumentGridForm : DataboundGridForm
     {
         private readonly string _originalFormTitle;
+        private readonly SkylineWindow _skylineWindow;
+        private IList<AnnotationDef> _annotations;
 
         public DocumentGridForm(SkylineViewContext viewContext)
         {
@@ -37,6 +43,7 @@ namespace pwiz.Skyline.Controls.Databinding
             _originalFormTitle = Text;
             BindingListSource.SetViewContext(viewContext);
             BindingListSource.ListChanged += BindingListSourceOnListChanged;
+            _skylineWindow = viewContext.SkylineDataSchema.SkylineWindow;
         }
 
         private void BindingListSourceOnListChanged(object sender, ListChangedEventArgs listChangedEventArgs)
@@ -78,6 +85,24 @@ namespace pwiz.Skyline.Controls.Databinding
             }
         }
 
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            if (null != _skylineWindow)
+            {
+                _skylineWindow.DocumentUIChangedEvent += SkylineWindowOnDocumentUIChangedEvent;
+            }
+        }
+
+        protected override void OnHandleDestroyed(EventArgs e)
+        {
+            if (null != _skylineWindow)
+            {
+                _skylineWindow.DocumentUIChangedEvent -= SkylineWindowOnDocumentUIChangedEvent;
+            }
+            base.OnHandleDestroyed(e);
+        }
+
         public ViewInfo ViewInfo
         {
             get
@@ -102,5 +127,34 @@ namespace pwiz.Skyline.Controls.Databinding
             }
         }
 
+        private void SkylineWindowOnDocumentUIChangedEvent(object sender, DocumentChangedEventArgs documentChangedEventArgs)
+        {
+            var newAnnotations = ImmutableList.ValueOf(_skylineWindow.DocumentUI.Settings.DataSettings.AnnotationDefs);
+            if (!Equals(newAnnotations, _annotations))
+            {
+                _annotations = newAnnotations;
+                UpdateViewContext();
+            }
+        }
+
+        private void UpdateViewContext()
+        {
+            var documentGridViewContext = BindingListSource.ViewContext as DocumentGridViewContext;
+            if (documentGridViewContext == null)
+            {
+                return;
+            }
+            documentGridViewContext.UpdateBuiltInViews();
+            if (null != BindingListSource.ViewInfo && ViewGroup.BUILT_IN.Id.Equals(BindingListSource.ViewInfo.ViewGroup.Id))
+            {
+                var viewName = BindingListSource.ViewInfo.ViewGroup.Id.ViewName(BindingListSource.ViewInfo.Name);
+                var newViewInfo = documentGridViewContext.GetViewInfo(viewName);
+                if (null != newViewInfo && !Equals(newViewInfo.ViewSpec, BindingListSource.ViewSpec))
+                {
+                    BindingListSource.SetView(newViewInfo, BindingListSource.RowSource);
+                }
+            }
+        }
     }
 }
+

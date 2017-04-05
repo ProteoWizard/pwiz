@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System.Windows.Forms;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
@@ -88,5 +89,10 @@ namespace pwiz.Skyline.Model.Databinding
         {
             return new ViewSpec().SetRowType(typeof (Entities.Protein)).SetSublistId(PropertyPath.Parse("Results!*")); // Not L10N
         }
+
+        public void UpdateBuiltInViews()
+        {
+            RowSources = GetDocumentGridRowSources(SkylineDataSchema);
+}
     }
 }
