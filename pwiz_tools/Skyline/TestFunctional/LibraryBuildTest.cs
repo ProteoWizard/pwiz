@@ -28,9 +28,11 @@ using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
@@ -65,12 +67,12 @@ namespace pwiz.SkylineTestFunctional
                             doc => doc.ChangeSettings(SrmSettingsList.GetDefault())));
 
             // Test error conditions
-            BuildLibraryError("missing_charge.pep.XML", TestFilesDir.FullPath, "uw.edu");
-            BuildLibraryError("non_int_charge.pep.XML");
-            BuildLibraryError("zero_charge.pep.XML");
-            BuildLibraryError("truncated.pep.XML");
-            BuildLibraryError("no_such_file.pep.XML", "Failed to open");
-            BuildLibraryError("missing_mzxml.pep.XML", "Could not find spectrum file");
+            BuildLibraryError("missing_charge.pep.XML", TestFilesDir.FullPath);
+            BuildLibraryError("non_int_charge.pep.XML", null);
+            BuildLibraryError("zero_charge.pep.XML", null);
+            BuildLibraryError("truncated.pep.XML", null);
+            BuildLibraryError("no_such_file.pep.XML", null, "Failed to open");
+            BuildLibraryError("missing_mzxml.pep.XML", null, "Could not find spectrum file");
             // Barbara added code to ProteoWizard to rebuild a missing or invalid mzXML index
             // BuildLibraryError("bad_mzxml.pep.XML", "<index> not found");
             BuildLibraryValid(TestFilesDir.GetTestPath("library_errors"), new[] { "bad_mzxml.pep.XML" }, false, false, false, 1);
@@ -300,6 +302,43 @@ namespace pwiz.SkylineTestFunctional
                 string.Format("Expecting {0} peptides, found {1}.", setPeptides.Count, SkylineWindow.Document.PeptideCount));
             Assert.AreEqual(setPeptides.Count, SkylineWindow.Document.PeptideTransitionGroupCount,
                 "Expecting precursors for peptides matched to library spectrum.");
+
+            // New document
+            docNew = new SrmDocument(SrmSettingsList.GetDefault());
+            RunUI(() => SkylineWindow.SwitchDocument(docNew, null));
+
+            // Tests for adding iRTs to spectral library after building
+            // 1. ask to recalibrate iRTs
+            // 2. ask to add iRTs
+            // 3. if added iRTs, ask to add RT predictor
+
+            // no recalibrate, add iRTs, no add predictor
+            _libraryName = libraryBaseName + "_irt1"; // library_test_irt1
+            BuildLibraryIrt(true, false, false);
+            RunUI(() => Assert.IsTrue(PeptideSettingsUI.Prediction.RetentionTime == null));
+
+            // no recalibrate, add iRTs, add predictor
+            _libraryName = libraryBaseName + "_irt2"; // library_test_irt2
+            BuildLibraryIrt(true, false, true);
+            RunUI(() => Assert.IsTrue(PeptideSettingsUI.Prediction.RetentionTime.Name.Equals("library_test_irt2")));
+            var editIrtDlg2 = ShowDialog<EditIrtCalcDlg>(PeptideSettingsUI.EditCalculator);
+            RunUI(() => Assert.IsTrue(editIrtDlg2.IrtStandards == IrtStandard.BIOGNOSYS_10));
+            OkDialog(editIrtDlg2, editIrtDlg2.CancelDialog);
+
+            // recalibrate, add iRTs, no add predictor
+            _libraryName = libraryBaseName + "_irt3"; // library_test_irt3
+            BuildLibraryIrt(true, true, false);
+            RunUI(() => Assert.IsTrue(PeptideSettingsUI.Prediction.RetentionTime.Name.Equals("library_test_irt2")));
+
+            // recalibrate, add iRTs, add predictor
+            _libraryName = libraryBaseName + "_irt4"; // library_test_irt4
+            BuildLibraryIrt(true, true, true);
+            RunUI(() => Assert.IsTrue(PeptideSettingsUI.Prediction.RetentionTime.Name.Equals("library_test_irt4")));
+            var editIrtDlg4 = ShowDialog<EditIrtCalcDlg>(PeptideSettingsUI.EditCalculator);
+            RunUI(() => Assert.IsTrue(editIrtDlg4.IrtStandards == IrtStandard.NULL));
+            OkDialog(editIrtDlg4, editIrtDlg4.CancelDialog);
+
+            OkDialog(PeptideSettingsUI, PeptideSettingsUI.CancelDialog);
         }
 
         private static void PastePeptideList(string peptideList, bool keep,
@@ -379,8 +418,7 @@ namespace pwiz.SkylineTestFunctional
         private void BuildLibraryValid(string inputDir, IEnumerable<string> inputFiles,
             bool keepRedundant, bool filterPeptides, bool append, int expectedSpectra, int expectedAmbiguous = 0)
         {
-            BuildLibrary(inputDir, inputFiles,
-                null, null, keepRedundant, filterPeptides, append);
+            BuildLibrary(inputDir, inputFiles, null, keepRedundant, filterPeptides, append, null);
 
             if (expectedAmbiguous > 0)
             {
@@ -406,21 +444,14 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(expectedSpectra, librarySettings.Libraries[0].Keys.Count());
         }
 
-        private void BuildLibraryError(string inputFile, params string[] messageParts)
-        {
-            BuildLibraryError(inputFile, null, null, messageParts);
-        }
-
-        private void BuildLibraryError(string inputFile, string libraryPath, string libraryAuth,
-            params string[] messageParts)
+        private void BuildLibraryError(string inputFile, string libraryPath, params string[] messageParts)
         {
             string redundantBuildPath = TestFilesDir.GetTestPath(_libraryName + BiblioSpecLiteSpec.EXT_REDUNDANT);
             FileEx.SafeDelete(redundantBuildPath);
             string nonredundantBuildPath = TestFilesDir.GetTestPath(_libraryName + BiblioSpecLiteSpec.EXT);
             FileEx.SafeDelete(nonredundantBuildPath);
 
-            BuildLibrary(TestFilesDir.GetTestPath("library_errors"), new[] { inputFile },
-                libraryPath, libraryAuth, false, false, false);
+            BuildLibrary(TestFilesDir.GetTestPath("library_errors"), new[] { inputFile }, libraryPath, false, false, false, null);
 
             var messageDlg = WaitForOpenForm<MessageDlg>();
             Assert.IsNotNull(messageDlg, "No message box shown");
@@ -434,6 +465,25 @@ namespace pwiz.SkylineTestFunctional
             CheckLibraryExistence(nonredundantBuildPath, false);
         }
 
+        private void BuildLibraryIrt(bool addIrts, bool recalibrate, bool addPredictor)
+        {
+            BuildLibrary(TestFilesDir.GetTestPath("maxquant_irt"), new[] { "irt_test.msms.txt" }, null, false, false, false, IrtStandard.BIOGNOSYS_10);
+            var addIrtDlg = WaitForOpenForm<AddIrtPeptidesDlg>();
+            if (!addIrts)
+            {
+                OkDialog(addIrtDlg, addIrtDlg.CancelDialog);
+                return;
+            }
+            var recalibrateDlg = ShowDialog<MultiButtonMsgDlg>(addIrtDlg.OkDialog);
+            var addPredictorDlg = recalibrate
+                ? ShowDialog<AddRetentionTimePredictorDlg>(recalibrateDlg.BtnYesClick)
+                : ShowDialog<AddRetentionTimePredictorDlg>(recalibrateDlg.BtnCancelClick);
+            if (addPredictor)
+                OkDialog(addPredictorDlg, addPredictorDlg.OkDialog);
+            else
+                OkDialog(addPredictorDlg, addPredictorDlg.NoDialog);
+        }
+
         private void EnsurePeptideSettings()
         {
             PeptideSettingsUI = FindOpenForm<PeptideSettingsUI>() ??
@@ -441,7 +491,7 @@ namespace pwiz.SkylineTestFunctional
         }
 
         private void BuildLibrary(string inputDir, IEnumerable<string> inputFiles,
-            string libraryPath, string libraryAuth, bool keepRedundant, bool filterPeptides, bool append)
+            string libraryPath, bool keepRedundant, bool filterPeptides, bool append, IrtStandard irtStandard)
         {
             EnsurePeptideSettings();
 
@@ -460,6 +510,8 @@ namespace pwiz.SkylineTestFunctional
                 buildLibraryDlg.LibraryFilterPeptides = filterPeptides;
                 buildLibraryDlg.LibraryBuildAction = (append ?
                     LibraryBuildAction.Append : LibraryBuildAction.Create);
+                if (irtStandard != null && !irtStandard.Equals(IrtStandard.NULL))
+                    buildLibraryDlg.IrtStandard = irtStandard;
                 buildLibraryDlg.OkWizardPage();
                 if (inputPaths != null)
                     buildLibraryDlg.AddInputFiles(inputPaths);

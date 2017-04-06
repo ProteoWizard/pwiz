@@ -3288,8 +3288,8 @@ Are you sure you want to continue?</value>
   <data name="AreaReplicateGraphPane_UpdateGraph_Peak_Area_Percentage" xml:space="preserve">
     <value>Peak Area Percentage</value>
   </data>
-  <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_No_new_peptides_will_be_added_to_the_iRT_database" xml:space="preserve">
-    <value>No new peptides will be added to the iRT database.</value>
+  <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_No_new_peptides_will_be_added_to_the__0__" xml:space="preserve">
+    <value>No new peptides will be added to the {0}.</value>
   </data>
   <data name="CollisionalCrossSectionGridViewDriver_AddSpectralLibrary_Adding_ion_mobility_data_from__0_" xml:space="preserve">
     <value>Adding ion mobility data from {0}</value>
@@ -4968,8 +4968,8 @@ If you prefer you can choose to report anonymously.</value>
   <data name="SkylineWindow_CheckResults_The_data_file___0___is_missing__and_the_following_original_instrument_output_could_not_be_found_" xml:space="preserve">
     <value>The data file '{0}' is missing, and the following original instrument output could not be found:</value>
   </data>
-  <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_1_new_peptide_will_be_added_to_the_iRT_database" xml:space="preserve">
-    <value>1 new peptide will be added to the iRT database.</value>
+  <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_1_new_peptide_will_be_added_to_the__0__" xml:space="preserve">
+    <value>1 new peptide will be added to the {0}.</value>
   </data>
   <data name="FastaImporter_ToFasta_Too_few_columns_found" xml:space="preserve">
     <value>Too few columns found</value>
@@ -9442,5 +9442,14 @@ If your transition list format combines formulas and adducts in a single column 
   </data>
   <data name="CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for___exp_polarity__It_must_be_one_of_the_following___1_" xml:space="preserve">
     <value>Error: "{0}" is not a valid value for --exp-polarity. It must be one of the following: {1}</value>
+  </data>
+  <data name="LibraryBuildNotificationHandler_AddRetentionTimePredictor_Add_retention_time_predictor" xml:space="preserve">
+    <value>Add retention time predictor</value>
+  </data>
+  <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_iRT_database" xml:space="preserve">
+    <value>iRT database</value>
+  </data>
+  <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_spectral_library" xml:space="preserve">
+    <value>spectral library</value>
   </data>
 </root>

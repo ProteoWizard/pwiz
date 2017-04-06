@@ -29,6 +29,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
@@ -269,12 +270,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 return false;
 
             var selectedIrtStandard = comboStandards.SelectedItem as IrtStandard;
+            var addedIrts = false;
             if (selectedIrtStandard != null && selectedIrtStandard != IrtStandard.NULL)
-                AddIrtLibraryTable(docLibSpec.FilePath, selectedIrtStandard);
+                addedIrts = AddIrtLibraryTable(docLibSpec.FilePath, selectedIrtStandard);
 
             var docNew = ImportPeptideSearch.AddDocumentSpectralLibrary(SkylineWindow.Document, docLibSpec);
             if (docNew == null)
                 return false;
+
+            if (addedIrts)
+                docNew = ImportPeptideSearch.AddRetentionTimePredictor(docNew, docLibSpec);
 
             SkylineWindow.ModifyDocument(Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_document_spectral_library, doc => docNew);
 
@@ -313,10 +318,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             return ImportPeptideSearch.HasDocLib;
         }
 
-        private void AddIrtLibraryTable(string path, IrtStandard standard)
+        private bool AddIrtLibraryTable(string path, IrtStandard standard)
         {
             if (!ImportPeptideSearch.HasDocLib || !ImportPeptideSearch.DocLib.IsLoaded)
-                return;
+                return false;
 
             var lib = ImportPeptideSearch.DocLib;
 
@@ -342,8 +347,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 {
                     MessageDlg.ShowWithException(WizardForm,
                         TextUtil.LineSeparate(Resources.BuildPeptideSearchLibraryControl_AddIrtLibraryTable_An_error_occurred_while_processing_retention_times_, x.Message), x);
-                    return;
+                    return false;
                 }
+            }
+
+            using (var resultsDlg = new AddIrtPeptidesDlg(AddIrtPeptidesLocation.spectral_library, processed))
+            {
+                if (resultsDlg.ShowDialog(this) != DialogResult.OK)
+                    return false;
             }
 
             var recalibrate = false;
@@ -351,18 +362,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 using (var dlg = new MultiButtonMsgDlg(
                     TextUtil.LineSeparate(Resources.LibraryGridViewDriver_AddToLibrary_Do_you_want_to_recalibrate_the_iRT_standard_values_relative_to_the_peptides_being_added_,
-                                          Resources.LibraryGridViewDriver_AddToLibrary_This_can_improve_retention_time_alignment_under_stable_chromatographic_conditions_),
+                        Resources.LibraryGridViewDriver_AddToLibrary_This_can_improve_retention_time_alignment_under_stable_chromatographic_conditions_),
                     MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false))
                 {
                     if (dlg.ShowDialog(WizardForm) == DialogResult.Yes)
                         recalibrate = true;
                 }
-            }
-
-            using (var resultsDlg = new AddIrtPeptidesDlg(processed))
-            {
-                if (resultsDlg.ShowDialog(this) != DialogResult.OK)
-                    return;
             }
 
             using (var longWait = new LongWaitDlg
@@ -393,8 +398,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 {
                     MessageDlg.ShowWithException(WizardForm,
                         TextUtil.LineSeparate(Resources.BuildPeptideSearchLibraryControl_AddIrtLibraryTable_An_error_occurred_trying_to_add_iRTs_to_the_library_, x.Message), x);
+                    return false;
                 }
             }
+            return true;
         }
 
         public void ForceWorkflow(ImportPeptideSearchDlg.Workflow workflowType)

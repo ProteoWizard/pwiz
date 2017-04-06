@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.DocSettings;
@@ -46,7 +47,7 @@ namespace pwiz.Skyline.SettingsUI
             get
             {
                 double window;
-                if (Double.TryParse(txtWindow.Text, out window))
+                if (double.TryParse(txtWindow.Text, out window))
                 {
                     return window;
                 }
@@ -55,12 +56,16 @@ namespace pwiz.Skyline.SettingsUI
             set { txtWindow.Text = value.ToString(); }
         }
 
-        public AddRetentionTimePredictorDlg(string libName, string libPath)
+        public AddRetentionTimePredictorDlg(string libName, string libPath, bool allowCancel)
         {
             InitializeComponent();
 
             txtName.Text = libName;
-            Calculator = new RCalcIrt(libName, libPath);
+            Calculator = new RCalcIrt(Helpers.GetUniqueName(libName, Settings.Default.RTScoreCalculatorList.Select(calc => calc.Name).ToArray()), libPath);
+            txtWindow.Text = EditRTDlg.DEFAULT_RT_WINDOW.ToString(LocalizationHelper.CurrentCulture);
+
+            if (!allowCancel)
+                btnCancel.Hide();
         }
 
         private void btnOk_Click(object sender, EventArgs e)
@@ -109,9 +114,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 if (calcDlg.ShowDialog(this) == DialogResult.OK)
                 {
-                    Calculator = ((RCalcIrt) Calculator.ChangeName(calcDlg.CalcName))
-                        .ChangeDatabasePath(calcDlg.Calculator.PersistencePath);
-                    txtName.Text = Calculator.Name;
+                    Calculator = ((RCalcIrt) Calculator.ChangeName(calcDlg.CalcName)).ChangeDatabasePath(calcDlg.Calculator.PersistencePath);
                 }
             }
         }

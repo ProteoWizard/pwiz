@@ -25,9 +25,11 @@ using pwiz.BiblioSpec;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
@@ -124,6 +126,22 @@ namespace pwiz.Skyline.Model
                 libs.AddRange(lib.Libraries.Skip(skipCount));
                 return lib.ChangeDocumentLibrary(true).ChangeLibraries(libSpecs, libs);
             }));
+        }
+
+        public static SrmDocument AddRetentionTimePredictor(SrmDocument doc, LibrarySpec libSpec)
+        {
+            var calc = new RCalcIrt(
+                Helpers.GetUniqueName(libSpec.Name, Settings.Default.RTScoreCalculatorList.Select(lib => lib.Name).ToArray()),
+                libSpec.FilePath);
+            var predictor = new RetentionTimeRegression(
+                Helpers.GetUniqueName(libSpec.Name, Settings.Default.RetentionTimeList.Select(rt => rt.Name).ToArray()),
+                calc, null, null, EditRTDlg.DEFAULT_RT_WINDOW, new List<MeasuredRetentionTime>());
+            Settings.Default.RTScoreCalculatorList.Add(calc);
+            Settings.Default.RetentionTimeList.Add(predictor);
+            return doc.ChangeSettings(
+                doc.Settings.ChangePeptideSettings(
+                    doc.Settings.PeptideSettings.ChangePrediction(
+                        doc.Settings.PeptideSettings.Prediction.ChangeRetentionTime(predictor))));
         }
 
         public bool VerifyRetentionTimes(IEnumerable<string> resultsFiles)

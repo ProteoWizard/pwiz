@@ -144,14 +144,13 @@ namespace pwiz.Skyline.SettingsUI
                         if (lib != null && lib.TryGetIrts(out libRts) &&
                             Settings.Default.RTScoreCalculatorList.All(calc => calc.PersistencePath != path))
                         {
-                            using (var addPredictorDlg = new AddRetentionTimePredictorDlg(name, path))
+                            using (var addPredictorDlg = new AddRetentionTimePredictorDlg(name, path, true))
                             {
                                 switch (addPredictorDlg.ShowDialog(this))
                                 {
                                     case DialogResult.OK:
                                         Settings.Default.RTScoreCalculatorList.Add(addPredictorDlg.Calculator);
                                         Settings.Default.RetentionTimeList.Add(addPredictorDlg.Regression);
-                                        Settings.Default.Save();
                                         break;
                                     case DialogResult.No:
                                         break;

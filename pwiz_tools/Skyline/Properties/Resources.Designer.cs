@@ -422,12 +422,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 1 new peptide will be added to the iRT database..
+        ///   Looks up a localized string similar to 1 new peptide will be added to the {0}..
         /// </summary>
-        public static string AddIrtPeptidesDlg_AddIrtPeptidesDlg_1_new_peptide_will_be_added_to_the_iRT_database {
+        public static string AddIrtPeptidesDlg_AddIrtPeptidesDlg_1_new_peptide_will_be_added_to_the__0__ {
             get {
-                return ResourceManager.GetString("AddIrtPeptidesDlg_AddIrtPeptidesDlg_1_new_peptide_will_be_added_to_the_iRT_databa" +
-                        "se", resourceCulture);
+                return ResourceManager.GetString("AddIrtPeptidesDlg_AddIrtPeptidesDlg_1_new_peptide_will_be_added_to_the__0__", resourceCulture);
             }
         }
         
@@ -460,12 +459,20 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to No new peptides will be added to the iRT database..
+        ///   Looks up a localized string similar to iRT database.
         /// </summary>
-        public static string AddIrtPeptidesDlg_AddIrtPeptidesDlg_No_new_peptides_will_be_added_to_the_iRT_database {
+        public static string AddIrtPeptidesDlg_AddIrtPeptidesDlg_iRT_database {
             get {
-                return ResourceManager.GetString("AddIrtPeptidesDlg_AddIrtPeptidesDlg_No_new_peptides_will_be_added_to_the_iRT_data" +
-                        "base", resourceCulture);
+                return ResourceManager.GetString("AddIrtPeptidesDlg_AddIrtPeptidesDlg_iRT_database", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No new peptides will be added to the {0}..
+        /// </summary>
+        public static string AddIrtPeptidesDlg_AddIrtPeptidesDlg_No_new_peptides_will_be_added_to_the__0__ {
+            get {
+                return ResourceManager.GetString("AddIrtPeptidesDlg_AddIrtPeptidesDlg_No_new_peptides_will_be_added_to_the__0__", resourceCulture);
             }
         }
         
@@ -484,6 +491,15 @@ namespace pwiz.Skyline.Properties {
         public static string AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression_Refined {
             get {
                 return ResourceManager.GetString("AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression_Refined", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to spectral library.
+        /// </summary>
+        public static string AddIrtPeptidesDlg_AddIrtPeptidesDlg_spectral_library {
+            get {
+                return ResourceManager.GetString("AddIrtPeptidesDlg_AddIrtPeptidesDlg_spectral_library", resourceCulture);
             }
         }
         
@@ -13987,6 +14003,16 @@ namespace pwiz.Skyline.Properties {
         public static string Library_ReadComplete_Data_truncation_in_library_header_File_may_be_corrupted {
             get {
                 return ResourceManager.GetString("Library_ReadComplete_Data_truncation_in_library_header_File_may_be_corrupted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add retention time predictor.
+        /// </summary>
+        public static string LibraryBuildNotificationHandler_AddRetentionTimePredictor_Add_retention_time_predictor {
+            get {
+                return ResourceManager.GetString("LibraryBuildNotificationHandler_AddRetentionTimePredictor_Add_retention_time_pred" +
+                        "ictor", resourceCulture);
             }
         }
         

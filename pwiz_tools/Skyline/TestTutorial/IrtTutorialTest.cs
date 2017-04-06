@@ -416,8 +416,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 var editIrtCalc2 = ShowDialog<EditIrtCalcDlg>(SkylineWindow.ShowEditCalculatorDlg);
                 RunUI(() => Assert.AreEqual(0, editIrtCalc2.LibraryPeptideCount));
-                var recalibrateDlg = ShowDialog<MultiButtonMsgDlg>(editIrtCalc2.AddResults);
-                var addPeptidesDlg = ShowDialog<AddIrtPeptidesDlg>(recalibrateDlg.Btn1Click);
+                var addPeptidesDlg = ShowDialog<AddIrtPeptidesDlg>(editIrtCalc2.AddResults);
 
                 PauseForScreenShot<AddIrtPeptidesDlg>("Add Peptides form", 15);
 
@@ -426,9 +425,9 @@ namespace pwiz.SkylineTestTutorial
                     Assert.AreEqual(148, addPeptidesDlg.PeptidesCount);
                     Assert.AreEqual(2, addPeptidesDlg.RunsConvertedCount);
                     Assert.AreEqual(0, addPeptidesDlg.RunsFailedCount);
-                    addPeptidesDlg.OkDialog();
                 });
-                WaitForClosedForm(addPeptidesDlg);
+                var recalibrateDlg = ShowDialog<MultiButtonMsgDlg>(addPeptidesDlg.OkDialog);
+                OkDialog(recalibrateDlg, recalibrateDlg.Btn1Click);
 
                 PauseForScreenShot<EditIrtCalcDlg>("Edit iRT Calculator form", 16);
 
@@ -605,10 +604,9 @@ namespace pwiz.SkylineTestTutorial
                           });
 
                 PauseForScreenShot<AddIrtSpectralLibrary>("Add Spectral Library form", 27);
-            
+
                 // Verify converted peptide iRT values and OK dialogs, p. 28
-                var recalibrateDlg = ShowDialog<MultiButtonMsgDlg>(addLibrayDlg.OkDialog);
-                var addPeptidesDlg = ShowDialog<AddIrtPeptidesDlg>(recalibrateDlg.Btn1Click);
+                var addPeptidesDlg = ShowDialog<AddIrtPeptidesDlg>(addLibrayDlg.OkDialog);
                 RunUI(() =>
                 {
                     Assert.AreEqual(558, addPeptidesDlg.PeptidesCount);
@@ -618,10 +616,8 @@ namespace pwiz.SkylineTestTutorial
 
                 PauseForScreenShot<AddIrtPeptidesDlg>("Add Peptides form", 28);
 
-                RunUI(addPeptidesDlg.OkDialog);
-                WaitForClosedForm(addPeptidesDlg);
-                RunUI(addLibrayDlg.OkDialog);
-                WaitForClosedForm(addLibrayDlg);
+                var recalibrateDlg = ShowDialog<MultiButtonMsgDlg>(addPeptidesDlg.OkDialog);
+                OkDialog(recalibrateDlg, recalibrateDlg.Btn1Click);
 
                 Assert.IsTrue(WaitForConditionUI(() => editIrtCalc.LibraryPeptideCount == 706));
                 RunUI(editIrtCalc.OkDialog);
@@ -658,8 +654,7 @@ namespace pwiz.SkylineTestTutorial
             // Add results and verify add dialog counts, p. 29-30
             {
                 var editIrtCalc = ShowDialog<EditIrtCalcDlg>(SkylineWindow.ShowEditCalculatorDlg);
-                var recalibrateDlg = ShowDialog<MultiButtonMsgDlg>(editIrtCalc.AddResults);
-                var addPeptidesDlg = ShowDialog<AddIrtPeptidesDlg>(recalibrateDlg.Btn1Click);
+                var addPeptidesDlg = ShowDialog<AddIrtPeptidesDlg>(editIrtCalc.AddResults);
                 RunUI(() =>
                 {
                     Assert.AreEqual(0, addPeptidesDlg.PeptidesCount);
@@ -670,8 +665,8 @@ namespace pwiz.SkylineTestTutorial
 
                 PauseForScreenShot <AddIrtPeptidesDlg>("Add Peptides form", 30);
 
-                RunUI(addPeptidesDlg.OkDialog);
-                WaitForClosedForm(addPeptidesDlg);
+                var recalibrateDlg = ShowDialog<MultiButtonMsgDlg>(addPeptidesDlg.OkDialog);
+                OkDialog(recalibrateDlg, recalibrateDlg.Btn1Click);
                 RunUI(editIrtCalc.OkDialog);
                 WaitForClosedForm(editIrtCalc);
             }

@@ -32,16 +32,19 @@ using pwiz.Skyline.Util;
 namespace pwiz.Skyline.SettingsUI.Irt
 {
     public enum AddIrtPeptidesAction { skip, replace, average }
+    public enum AddIrtPeptidesLocation { irt_database, spectral_library }
 
     public partial class AddIrtPeptidesDlg : FormEx
     {
         private readonly Dictionary<DataGridViewRow, RegressionGraphData[]> _regressionGraphData;
 
-        public AddIrtPeptidesDlg(ProcessedIrtAverages processed) : this(processed, new string[]{}, new string[]{}, new string[]{})
+        public AddIrtPeptidesDlg(AddIrtPeptidesLocation location, ProcessedIrtAverages processed)
+            : this(location, processed, new string[] { }, new string[] { }, new string[] { })
         {
         }
 
         public AddIrtPeptidesDlg(
+            AddIrtPeptidesLocation location,
             ProcessedIrtAverages processed,
             IReadOnlyCollection<string> existingPeptides,
             IReadOnlyCollection<string> overwritePeptides,
@@ -108,12 +111,23 @@ namespace pwiz.Skyline.SettingsUI.Irt
             RunsConvertedCount = processed.ProviderData.Count(data => data.Value.RegressionSuccess);
             RunsFailedCount = processed.ProviderData.Count - RunsConvertedCount;
 
+            string locationStr;
+            switch (location)
+            {
+                default:
+                    locationStr = Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_iRT_database;
+                    break;
+                case AddIrtPeptidesLocation.spectral_library:
+                    locationStr = Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_spectral_library;
+                    break;
+            }
+
             if (PeptidesCount == 0)
-                labelPeptidesAdded.Text = Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_No_new_peptides_will_be_added_to_the_iRT_database;
+                labelPeptidesAdded.Text = string.Format(Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_No_new_peptides_will_be_added_to_the__0__, locationStr);
             else if (PeptidesCount == 1)
-                labelPeptidesAdded.Text = Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_1_new_peptide_will_be_added_to_the_iRT_database;
+                labelPeptidesAdded.Text = string.Format(Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_1_new_peptide_will_be_added_to_the__0__, locationStr);
             else
-                labelPeptidesAdded.Text = string.Format(labelPeptidesAdded.Text, PeptidesCount);
+                labelPeptidesAdded.Text = string.Format(labelPeptidesAdded.Text, PeptidesCount, locationStr);
 
             if (RunsConvertedCount == 0)
                 labelRunsConverted.Visible = false;

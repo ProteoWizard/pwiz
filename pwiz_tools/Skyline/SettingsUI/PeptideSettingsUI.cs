@@ -193,6 +193,32 @@ namespace pwiz.Skyline.SettingsUI
         public bool IsShowLibraryExplorer { get; set; }
         public TABS? TabControlSel { get; set; }
 
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            if (_parent != null)
+            {
+                _parent.DocumentUIChangedEvent += ParentOnDocumentChangedEvent;
+            }
+        }
+
+        private void ParentOnDocumentChangedEvent(object sender, DocumentChangedEventArgs documentChangedEventArgs)
+        {
+            _peptideSettings = _parent.DocumentUI.Settings.PeptideSettings;
+            var retentionTime = _peptideSettings.Prediction.RetentionTime;
+            string retentionTimeName = retentionTime != null ? retentionTime.Name : null;
+            _driverRT.LoadList(retentionTimeName);
+        }
+
+        protected override void OnHandleDestroyed(EventArgs e)
+        {
+            if (_parent != null)
+            {
+                _parent.DocumentUIChangedEvent -= ParentOnDocumentChangedEvent;
+            }
+            base.OnHandleDestroyed(e);
+        }
+
         public bool FilterLibraryEnabled
         {
             get { return btnFilter.Visible; }
@@ -726,6 +752,9 @@ namespace pwiz.Skyline.SettingsUI
 
                     Settings.Default.SpectralLibraryList.Add(builder.LibrarySpec);
                     _driverLibrary.LoadList();
+                    var libraryIndex = listLibraries.Items.IndexOf(builder.LibrarySpec.Name);
+                    if (libraryIndex >= 0)
+                        listLibraries.SetItemChecked(libraryIndex, true);
                 }
             }
         }
