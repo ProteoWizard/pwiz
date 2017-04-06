@@ -200,6 +200,7 @@
     <Compile Include="LongWaitTest.cs" />
     <Compile Include="ManageLibraryRunsTest.cs" />
     <Compile Include="ManageResultsTest.cs" />
+    <Compile Include="ManageResultsUndoTest.cs" />
     <Compile Include="MassErrorGraphsTest.cs" />
     <Compile Include="MidasTest.cs" />
     <Compile Include="MiscFormsTest.cs" />
@@ -346,6 +347,7 @@
     <None Include="LiveReportsFilterTest.zip" />
     <None Include="ManageLibraryRunsTest.zip" />
     <None Include="ManageResultsTest.zip" />
+    <None Include="ManageResultsUndoTest.zip" />
     <None Include="MassErrorGraphsTest.zip" />
     <None Include="MidasTest.zip" />
     <None Include="NegativeIonChromatogramsTest.zip" />

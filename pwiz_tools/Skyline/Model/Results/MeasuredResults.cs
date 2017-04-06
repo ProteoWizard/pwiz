@@ -1127,8 +1127,11 @@ namespace pwiz.Skyline.Model.Results
 
                 // If there is a final cache, move it to partial and let it prove itself usable.
                 if (_resultsClone._cacheFinal != null)
-                    _resultsClone._listPartialCaches = MakeReadOnly(new[] {_resultsClone._cacheFinal});
-
+                {
+                    _resultsClone._listPartialCaches = MakeReadOnly(new[] { _resultsClone._cacheFinal });
+                    _resultsClone._cacheFinal = null;
+                }
+                    
                 // Try loading the final cache from disk, if progressive loading has not started
                 string cachePath = Program.ReplicateCachePath ?? ChromatogramCache.FinalPathForName(_documentPath, null);
                 if (!CheckFinalCache(cachePath))
