@@ -299,7 +299,7 @@ namespace pwiz.Skyline.Util
         public double CalculateMassFromFormula(string desc)
         {
             string parse = desc;
-            double totalMass = ParseMass(ref parse);
+            double totalMass = ParseMassExpression(ref parse);
 
             if (totalMass == 0.0 || parse.Length > 0)
                 ThrowArgumentException(desc);
@@ -429,6 +429,9 @@ namespace pwiz.Skyline.Util
         /// The parser removes atoms and counts until it encounters a character
         /// it does not understand as being part of the chemical formula.
         /// The remainder is returned in the desc parameter.
+        /// 
+        /// This parser will stop at the first minus sign. If you need to parse
+        /// an expression that might contain a minus sign, use <see cref="ParseMassExpression"/>.
         /// </summary>
         /// <param name="desc">Input description, and remaining string after parsing</param>
         /// <returns>Total mass of formula parsed</returns>
@@ -447,13 +450,6 @@ namespace pwiz.Skyline.Util
             }
             while (desc.Length > 0)
             {
-                if (desc.StartsWith("-")) // Not L10N
-                {
-                    // As is deprotonation description ie C12H8O2-H (=C12H7O2) or even C12H8O2-H2O (=C12H6O)
-                    desc = desc.Substring(1);
-                    totalMass -= ParseMass(ref desc);
-                    break;
-                }
                 string sym = NextSymbol(desc);
                 double massAtom = GetMass(sym);
 
@@ -481,6 +477,21 @@ namespace pwiz.Skyline.Util
             }
 
             return totalMass;            
+        }
+
+        /// <summary>
+        /// Parse a formula which may contain both positive and negative parts (e.g. "C'4-C4").
+        /// </summary>
+        public double ParseMassExpression(ref string desc)
+        {
+            double totalMass = ParseMass(ref desc);
+            if (desc.StartsWith("-"))
+            {
+                // As is deprotonation description ie C12H8O2-H (=C12H7O2) or even C12H8O2-H2O (=C12H6O)
+                desc = desc.Substring(1);
+                totalMass -= ParseMass(ref desc);
+            }
+            return totalMass;
         }
 
         public double ParseMass(IDictionary<string, int> desc)

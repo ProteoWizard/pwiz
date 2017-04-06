@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
@@ -128,6 +129,62 @@ namespace pwiz.SkylineTestA
 
             AssertEx.ThrowsException<ArgumentException>(() => SequenceMassCalc.NormalizeModifiedSequence("ASC[Carbomidomethyl C]FGHIJ"));
             AssertEx.ThrowsException<ArgumentException>(() => SequenceMassCalc.NormalizeModifiedSequence("ASC[6"));
+        }
+
+        /// <summary>
+        /// Tests that <see cref="BioMassCalc.ParseMass(ref string)"/> works correctly and stops at the first minus sign.
+        /// </summary>
+        [TestMethod]
+        public void TestParseMass()
+        {
+            var bioMassCalc = new BioMassCalc(MassType.Monoisotopic);
+            string description = "C'2";
+            Assert.AreEqual(26, bioMassCalc.ParseMass(ref description), .01);
+            Assert.AreEqual(string.Empty, description);
+            description = "-C'2";
+            Assert.AreEqual(0, bioMassCalc.ParseMass(ref description));
+            Assert.AreEqual("-C'2", description);
+            description = "C'2-C2";
+            Assert.AreEqual(26, bioMassCalc.ParseMass(ref description), .01);
+            Assert.AreEqual("-C2", description);
+            description = "C'2";
+            Assert.AreEqual(26, bioMassCalc.ParseMassExpression(ref description), .01);
+            Assert.AreEqual(string.Empty, description);
+            description = "C'2-C2";
+            Assert.AreEqual(2, bioMassCalc.ParseMassExpression(ref description), .01);
+            Assert.AreEqual(string.Empty, description);
+            description = "C'2-C2-N2";
+            Assert.AreEqual(2, bioMassCalc.ParseMassExpression(ref description), .01);
+            Assert.AreEqual("-N2", description);
+            Assert.AreEqual(2, bioMassCalc.CalculateMassFromFormula("C'2-C2"), .01);
+            AssertEx.ThrowsException<ArgumentException>(()=>bioMassCalc.CalculateMassFromFormula("C'2-C2-N2"));
+        }
+
+        [TestMethod]
+        public void TestParseModParts()
+        {
+            var bioMassCalc = new BioMassCalc(MassType.Monoisotopic);
+            CollectionAssert.AreEqual(new[]{"C'2", ""}, SequenceMassCalc.ParseModParts(bioMassCalc, "C'2"));
+            CollectionAssert.AreEqual(new[]{"", "C2"}, SequenceMassCalc.ParseModParts(bioMassCalc, "-C2"));
+            CollectionAssert.AreEqual(new[]{"C'2", "C2"}, SequenceMassCalc.ParseModParts(bioMassCalc, "C'2-C2"));
+        }
+
+        [TestMethod]
+        public void TestGetIonFormula()
+        {
+            SequenceMassCalc sequenceMassCalc = new SequenceMassCalc(MassType.Monoisotopic);
+            Assert.AreEqual(147.11, sequenceMassCalc.GetPrecursorMass("K"), .1);
+            Assert.AreEqual("C6H14N2O2", sequenceMassCalc.GetIonFormula("K", 0));
+
+            var label13C6K = new StaticMod("label13C6K", "K", null, LabelAtoms.C13);
+            sequenceMassCalc.AddStaticModifications(new []{label13C6K});
+            Assert.AreEqual(153.11, sequenceMassCalc.GetPrecursorMass("K"), .1);
+            Assert.AreEqual("C'6H14N2O2", sequenceMassCalc.GetIonFormula("K", 0));
+
+            var label15N2K = new StaticMod("label15N2K", "K", null, LabelAtoms.N15);
+            sequenceMassCalc.AddStaticModifications(new[]{label15N2K});
+            Assert.AreEqual(155.11, sequenceMassCalc.GetPrecursorMass("K"), .1);
+            Assert.AreEqual("C'6H14N'2O2", sequenceMassCalc.GetIonFormula("K", 0));
         }
     }
 }

@@ -201,13 +201,7 @@ namespace pwiz.Skyline.Model
         public static double ParseModMass(BioMassCalc calc, string desc)
         {
             string parse = desc;
-            double totalMass = calc.ParseMass(ref parse);
-            if (parse.Length > 0 && parse[0] == '-') // Not L10N
-            {
-                parse = parse.Substring(1);
-                totalMass -= calc.ParseMass(ref parse);
-            }
-
+            double totalMass = calc.ParseMassExpression(ref parse);
             if (totalMass == 0.0 || parse.Length > 0)
                 calc.ThrowArgumentException(desc);
 
