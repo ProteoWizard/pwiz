@@ -145,7 +145,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 return;
             }
             documentGridViewContext.UpdateBuiltInViews();
-            if (null != BindingListSource.ViewInfo && ViewGroup.BUILT_IN.Id.Equals(BindingListSource.ViewInfo.ViewGroup.Id))
+            if (null != BindingListSource.ViewInfo && null != BindingListSource.ViewInfo.ViewGroup && ViewGroup.BUILT_IN.Id.Equals(BindingListSource.ViewInfo.ViewGroup.Id))
             {
                 var viewName = BindingListSource.ViewInfo.ViewGroup.Id.ViewName(BindingListSource.ViewInfo.Name);
                 var newViewInfo = documentGridViewContext.GetViewInfo(viewName);
