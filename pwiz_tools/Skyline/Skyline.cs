@@ -64,12 +64,7 @@ using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
-using MultiException = pwiz.Skyline.Model.MultiException;
-using MultiProgressStatus = pwiz.Skyline.Model.MultiProgressStatus;
-using PasteFormat = pwiz.Skyline.EditUI.PasteFormat;
-using Peptide = pwiz.Skyline.Model.Peptide;
 using Timer = System.Windows.Forms.Timer;
-using Transition = pwiz.Skyline.Model.Transition;
 
 namespace pwiz.Skyline
 {
