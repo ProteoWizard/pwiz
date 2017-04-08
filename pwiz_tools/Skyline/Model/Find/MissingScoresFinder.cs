@@ -33,10 +33,10 @@ namespace pwiz.Skyline.Model.Find
         private readonly string _calculatorName;
         private readonly int _selectedCalculator;
         private bool _isLastNodeMatch;
-        private readonly Dictionary<KeyValuePair<int, int>, List<PeakTransitionGroupFeatures>> _featureDictionary;
+        private readonly Dictionary<PeakTransitionGroupIdKey, List<PeakTransitionGroupFeatures>> _featureDictionary;
 
         public MissingScoresFinder(string calculatorName, int selectedCalculator, 
-                                   Dictionary<KeyValuePair<int, int>, List<PeakTransitionGroupFeatures>> featureDictionary)
+                                   Dictionary<PeakTransitionGroupIdKey, List<PeakTransitionGroupFeatures>> featureDictionary)
         {
             _calculatorName = calculatorName;
             _selectedCalculator = selectedCalculator;
@@ -80,7 +80,7 @@ namespace pwiz.Skyline.Model.Find
 
         private bool IsMatch(ChromInfo chromInfo, PeptideDocNode nodePep)
         {
-            var key = new KeyValuePair<int, int>(nodePep.Id.GlobalIndex, chromInfo.FileId.GlobalIndex);
+            var key = new PeakTransitionGroupIdKey(nodePep.Id.GlobalIndex, chromInfo.FileId.GlobalIndex);
             if (!_featureDictionary.ContainsKey(key))
                 return false;
             var listFeatures = _featureDictionary[key];

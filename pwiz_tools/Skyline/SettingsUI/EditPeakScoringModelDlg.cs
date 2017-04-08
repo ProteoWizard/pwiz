@@ -120,13 +120,16 @@ namespace pwiz.Skyline.SettingsUI
         public bool SetScoringModel(Control owner, IPeakScoringModel scoringModel)
         {
             // Scoring model is null if we're creating a new model from scratch (default to mProphet).
+            var document = Program.MainWindow.Document;
             if (scoringModel == null)
-                 scoringModel = new MProphetPeakScoringModel(UNNAMED);
+            {
+                scoringModel = new MProphetPeakScoringModel(UNNAMED, document);
+            }
 
             using (var longWaitDlg = new LongWaitDlg { Text = Resources.EditPeakScoringModelDlg_TrainModelClick_Scoring })
             {
                 longWaitDlg.PerformWork(owner, 800,
-                    progressMonitor => _targetDecoyGenerator = new TargetDecoyGenerator(Program.MainWindow.Document, scoringModel, progressMonitor));
+                    progressMonitor => _targetDecoyGenerator = new TargetDecoyGenerator(document, scoringModel, progressMonitor));
                 if (longWaitDlg.IsCanceled)
                     return false;
             }
@@ -204,7 +207,10 @@ namespace pwiz.Skyline.SettingsUI
             switch (comboModel.SelectedIndex)
             {
                 default:
-                    peakScoringModel = new MProphetPeakScoringModel(ModelName, null as LinearModelParams, null, decoyCheckBox.Checked, secondBestCheckBox.Checked);  
+                    peakScoringModel = new MProphetPeakScoringModel(ModelName,
+                        null as LinearModelParams,
+                        MProphetPeakScoringModel.GetDefaultCalculators(Program.MainWindow.Document),
+                        decoyCheckBox.Checked, secondBestCheckBox.Checked);  
                     break;
                 case SKYLINE_LEGACY_MODEL_INDEX:
                     peakScoringModel = new LegacyScoringModel(ModelName, null, decoyCheckBox.Checked, secondBestCheckBox.Checked);
@@ -739,13 +745,13 @@ namespace pwiz.Skyline.SettingsUI
                 ? modelParameters
                 : TargetDecoyGenerator.CreateParametersSelect(_peakScoringModel, selectedCalculator);
 
-            List<double> targetScores;
-            List<double> decoyScores;
-            List<double> secondBestScores;
+            var targetScores = new List<double>(_targetDecoyGenerator.TargetCount);
+            var decoyScores = new List<double>(_targetDecoyGenerator.DecoyCount);
+            var secondBestScores = new List<double>(_targetDecoyGenerator.TargetCount);
             // Invert the score if its "natural" sign as specified in the calculator's definition is negative
             bool invert = selectedCalculator != -1 && _peakScoringModel.PeakFeatureCalculators[selectedCalculator].IsReversedScore;
             // Evaluate each score on the best peak according to that score (either individual calculator or composite)
-            _targetDecoyGenerator.GetScores(calculatorParameters, calculatorParameters, out targetScores, out decoyScores, out secondBestScores, invert);
+            _targetDecoyGenerator.GetScores(calculatorParameters, calculatorParameters, targetScores, decoyScores, secondBestScores, invert);
             var scoreGroups = new List<List<double>> {targetScores, decoyScores, secondBestScores};
             scoreHistograms = new HistogramGroup(scoreGroups);
             if (selectedCalculator == -1)

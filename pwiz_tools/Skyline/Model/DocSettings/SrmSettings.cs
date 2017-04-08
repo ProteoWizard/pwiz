@@ -615,8 +615,11 @@ namespace pwiz.Skyline.Model.DocSettings
                 return true;
             for (int i = 0; i < peptideGroupDocNodes.Count; i++)
             {
-                var nodePepGroup = (PeptideGroupDocNode) peptideGroupDocNodes[i];
-                var nodePepGroupOrig = (PeptideGroupDocNode) peptideGroupDocNodesOrig[i];
+                var nodePepGroupOrig = (PeptideGroupDocNode)peptideGroupDocNodesOrig[i];
+                // In case the peptides have been freed during command-line processing
+                if (nodePepGroupOrig.Children.Count > 0 && nodePepGroupOrig.Children.First() == null)
+                    return false;   // No standards can change in this case currently
+                var nodePepGroup = (PeptideGroupDocNode)peptideGroupDocNodes[i];
                 if (ReferenceEquals(nodePepGroup, nodePepGroupOrig))
                     continue;
                 if (!ReferenceEquals(nodePepGroup.Id, nodePepGroupOrig.Id))

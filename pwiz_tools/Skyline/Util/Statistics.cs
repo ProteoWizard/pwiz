@@ -1353,20 +1353,6 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
-        /// Calculates the dot-product or cos(angle) between two vectors,
-        /// using the square roots of the values in the vectors.
-        /// </summary>
-        /// <param name="s">The other vector</param>
-        /// <returns>Dot-Product of square roots of values in vectors</returns>
-        public double AngleSqrt(Statistics s)
-        {
-            var stat1 = SqrtAll();
-            var stat2 = s.SqrtAll();
-
-            return stat1.Angle(stat2);
-        }
-
-        /// <summary>
         /// Calculates the normalized contrast angle dot-product or 1 - angle/90 between two vectors,
         /// using the square roots of the values in the vectors.
         /// </summary>
@@ -1374,18 +1360,8 @@ namespace pwiz.Skyline.Util
         /// <returns>Normalized contrast angle dot-product of square roots of values in vectors</returns>
         public double NormalizedContrastAngleSqrt(Statistics s)
         {
-            var stat1 = SqrtAll();
-            var stat2 = s.SqrtAll();
-
-            return stat1.NormalizedContrastAngle(stat2);
-        }
-
-        private Statistics SqrtAll()
-        {
-            var newList = new double[_list.Length];
-            for (int i = 0; i < _list.Length; i++)
-                newList[i] = Math.Sqrt(_list[i]);
-            return new Statistics(newList);
+            // Acos returns the angle in radians, where Pi == 180 degrees
+            return AngleToNormalizedContrastAngle(AngleSqrt(s));
         }
 
         /// <summary>
@@ -1448,6 +1424,42 @@ namespace pwiz.Skyline.Util
 
             // Rounding error can cause values slightly larger than 1.
             return Math.Min(1.0, sumCross/Math.Sqrt(sumLeft*sumRight));
+        }
+
+        /// <summary>
+        /// Calculates the dot-product or cos(angle) between the square roots of two vectors.
+        /// This was added because using new statistics objects to calculate the square roots
+        /// separately was showing up under a profiler in performance critical processing.
+        /// See:
+        /// http://en.wikipedia.org/wiki/Dot_product
+        /// </summary>
+        /// <param name="s">The other vector</param>
+        /// <returns>Dot-Product</returns>
+        public double AngleSqrt(Statistics s)
+        {
+            if (Length != s.Length)
+                return double.NaN;
+
+            double sumCross = 0;
+            double sumLeft = 0;
+            double sumRight = 0;
+
+            for (int i = 0, len = Length; i < len; i++)
+            {
+                double left = Math.Sqrt(_list[i]);
+                double right = Math.Sqrt(s._list[i]);
+
+                sumCross += left * right;
+                sumLeft += left * left;
+                sumRight += right * right;
+            }
+
+            // Avoid dividing by zero
+            if (sumLeft == 0 || sumRight == 0)
+                return sumLeft == 0 && sumRight == 0 ? 1 : 0;
+
+            // Rounding error can cause values slightly larger than 1.
+            return Math.Min(1.0, sumCross / Math.Sqrt(sumLeft * sumRight));
         }
 
         /// <summary>

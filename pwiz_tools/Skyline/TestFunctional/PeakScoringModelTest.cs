@@ -56,15 +56,15 @@ namespace pwiz.SkylineTestFunctional
         private readonly string[] SCORES_AND_WEIGHTS =
         {
             "-16.0207431181424",
-            "True|0.3796|12.9%;False||;False||;True|3.9077|5.4%;True|1.4851|7.3%;True|-0.3235|19.1%;True|0.3322|7.0%;False||;False||;True|4.4983|11.6%;True|10.5468|48.8%;True|0.2756|-20.5%;True|0.3645|7.1%;True|0.1209|3.7%;True|-1.4313|-2.4%;False||;False||;False||;False||;False||;False||;False||;False||;",
-            "True|0.9182|31.4%;False||;False||;False||;True|4.1969|17.9%;True|-0.2949|15.2%;False||;False||;False||;True|4.6487|11.6%;True|8.9371|39.7%;True|0.2519|-16.8%;True|0.2341|5.3%;True|-0.1761|-5.6%;True|0.9744|1.3%;False||;False||;False||;False||;False||;False||;False||;False||;",
+            "True|0.3796|12.9%;False||;False||;True|3.9077|5.4%;True|1.4851|7.3%;True|-0.3235|19.1%;True|0.3322|7.0%;False||;False||;True|4.4983|11.6%;True|10.5468|48.8%;True|0.2756|-20.5%;True|0.3645|7.1%;True|0.1209|3.7%;True|-1.4313|-2.4%;False||;False||;False||;False||;",
+            "True|0.9182|31.4%;False||;False||;False||;True|4.1969|17.9%;True|-0.2949|15.2%;False||;False||;False||;True|4.6487|11.6%;True|8.9371|39.7%;True|0.2519|-16.8%;True|0.2341|5.3%;True|-0.1761|-5.6%;True|0.9744|1.3%;False||;False||;False||;False||;",
             "-16.6149811618695",
             "-9.37936230823946",
             "True|0.9834|74.8%;True|0.9834|15.7%;False||;True|2.9503|9.5%;False||;False||;False||;",
             "-11.6384433498956",
             "True|1.1144|79.9%;True|1.1144|18.5%;False||;True|3.3433|1.6%;False||;False||;False||;",
             "True|0.8633|31.5%;True|2.0177|3.5%;True|6.2170|27.4%;False||;False||;False||;True|7.5352|31.7%;True|-0.1277|5.8%;False||;False||;",
-            "True|0.5606|19.4%;False||;False||;True|4.2627|5.9%;False||;True|-0.3570|21.2%;True|0.3287|7.0%;False||;False||;True|4.6915|12.6%;True|10.8650|52.1%;True|0.2813|-21.6%;True|0.3696|7.7%;True|-0.0418|-1.3%;True|-1.5876|-2.8%;False||;False||;False||;False||;False||;False||;False||;False||;",
+            "True|0.5606|19.4%;False||;False||;True|4.2627|5.9%;False||;True|-0.3570|21.2%;True|0.3287|7.0%;False||;False||;True|4.6915|12.6%;True|10.8650|52.1%;True|0.2813|-21.6%;True|0.3696|7.7%;True|-0.0418|-1.3%;True|-1.5876|-2.8%;False||;False||;False||;False||;",
             "True|0.5322|;False|-1.0352|;False||;False||;True|1.4744|;True|0.0430|;True|0.0477|;False|-0.2740|;False||;True|2.0096|;True|7.7726|;True|-0.0566|;True|0.4751|;True|0.5000|;True|0.5000|;False||;False||;False||;False||;False||;False||;False||;False||;",
         };
 
@@ -74,8 +74,8 @@ namespace pwiz.SkylineTestFunctional
 
             var documentFile = TestFilesDir.GetTestPath("MProphetGold-rescore2.sky");
             RunUI(() => SkylineWindow.OpenFile(documentFile));
-            WaitForDocumentLoaded();
-            _defaultMProphetCalcs = (new MProphetPeakScoringModel("dummy")).PeakFeatureCalculators.ToArray();
+            var docLoaded = WaitForDocumentLoaded();
+            _defaultMProphetCalcs = new MProphetPeakScoringModel("dummy", docLoaded).PeakFeatureCalculators.ToArray();
 
             TestDialog();
             TestModelChangesAndSave();
@@ -283,7 +283,8 @@ namespace pwiz.SkylineTestFunctional
                 // ReSharper disable PossibleNullReferenceException
                 Assert.IsTrue(peakScoringModelMProphet.UsesDecoys);
                 // ReSharper restore PossibleNullReferenceException
-                Assert.AreEqual(peakScoringModelMProphet.PeakFeatureCalculators.Count, 23);
+                Assert.AreEqual(MProphetPeakScoringModel.GetDefaultCalculators(SkylineWindow.Document).Length,
+                    peakScoringModelMProphet.PeakFeatureCalculators.Count);
             });
         }
 
@@ -440,11 +441,13 @@ namespace pwiz.SkylineTestFunctional
         private void VerifyCellValues(EditPeakScoringModelDlg editDlg, string expectedValueString, double sumWeights = 1.0, bool isRecording = true)
         {
             // Parse the expected values
-            var expectedFields = expectedValueString.Split(new[] { '|', ';' });
+            var expectedFields = expectedValueString.Split('|', ';');
             expectedFields = expectedFields.Take(expectedFields.Length - 1).ToArray();
             Assert.AreEqual(expectedFields.Length % 3, 0);
             int numRows = expectedFields.Length / 3;
             // Verify expected number of rows.
+            if (IsRecordMode)
+                numRows = editDlg.PeakCalculatorsGrid.RowCount;
             Assert.AreEqual(editDlg.PeakCalculatorsGrid.RowCount, numRows);
             // Verify normalized weights add to 1
             double sumNormWeights = 0;

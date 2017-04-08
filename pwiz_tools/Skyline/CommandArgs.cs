@@ -597,6 +597,10 @@ namespace pwiz.Skyline
                 {
                     _out.IsTimeStamped = true;
                 }
+                else if (IsNameOnly(pair, "memstamp")) // Not L10N
+                {
+                    _out.IsMemStamped = true;
+                }
 
                 // A command that exports all the tools to a text file in a SkylineRunner form for --batch-commands
                 // Not advertised.

@@ -149,6 +149,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             return MQuestHelpers.GetDefaultIonTypes(new []{tranPeakDatas});
         }
+
+        public override bool IsReferenceScore { get { return true; } }
     }
 
     public class LegacyUnforcedCountScoreDefaultCalc : LegacyCountScoreCalc

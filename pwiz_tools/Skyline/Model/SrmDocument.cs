@@ -646,7 +646,10 @@ namespace pwiz.Skyline.Model
                 docClone.Settings.GetPeptideStandards(StandardType.GLOBAL_STANDARD)))
             {
                 foreach (var nodePeptide in Molecules)
-                    dictPeptideIdPeptide.Add(nodePeptide.Peptide.GlobalIndex, nodePeptide);
+                {
+                    if (nodePeptide != null)    // Or previous peptides were freed during command-line peak picking
+                        dictPeptideIdPeptide.Add(nodePeptide.Peptide.GlobalIndex, nodePeptide);
+                }
             }
 
             return docClone.UpdateResultsSummaries(docClone.Children, dictPeptideIdPeptide);
@@ -762,6 +765,13 @@ namespace pwiz.Skyline.Model
 
             public PeptideGroupDocNode NodeMoleculeGroup { get; private set; }
             public PeptideDocNode NodeMolecule { get; private set; }
+
+            public PeptideDocNode ReleaseMolecule()
+            {
+                var nodeMol = NodeMolecule;
+                NodeMolecule = null;
+                return nodeMol;
+            }
         }
 
         /// <summary>
@@ -899,11 +909,19 @@ namespace pwiz.Skyline.Model
                     // Changes that do not change the peptides can be done quicker with
                     // parallel enumeration of the peptides
                     var moleculeGroupPairs = GetMoleculeGroupPairs(Children);
+                    var resultsHandler = settingsNew.PeptideSettings.Integration.ResultsHandler;
+                    if (resultsHandler != null && resultsHandler.FreeImmutableMemory)
+                    {
+                        // Break immutability (command-line only!) and release the peptides (children of the children)
+                        // so that their memory is freed after they have been processed
+                        foreach (DocNodeParent child in Children)
+                            child.ReleaseChildren();
+                    }
                     var moleculeNodes = new PeptideDocNode[moleculeGroupPairs.Length];
                     var settingsParallel = settingsNew;
                     ParallelEx.For(0, moleculeGroupPairs.Length, i =>
                     {
-                        var nodePep = moleculeGroupPairs[i].NodeMolecule;
+                        var nodePep = moleculeGroupPairs[i].ReleaseMolecule();
                         moleculeNodes[i] = nodePep.ChangeSettings(settingsParallel, diff);
                     });
 

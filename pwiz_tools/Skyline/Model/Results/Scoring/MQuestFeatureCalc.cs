@@ -338,6 +338,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             return MQuestHelpers.GetStandardGroups(peptidePeakData);
         }
+
+        public override bool IsReferenceScore
+        {
+            get { return true; }
+        }
     }
 
     public class MQuestDefaultIntensityCalc : AbstractMQuestIntensityCalc
@@ -366,11 +371,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
         
         protected override float Calculate(PeakScoringContext context, IPeptidePeakData<ISummaryPeakData> summaryPeakData)
         {
-            var tranGroupPeakDatas = GetTransitionGroups(summaryPeakData).ToArray();
+            var tranGroupPeakDatas = GetTransitionGroups(summaryPeakData);
 
             // If there are no light transition groups with library intensities,
             // then this score does not apply.
-            if (tranGroupPeakDatas.Length == 0 || tranGroupPeakDatas.All(pd => pd.NodeGroup == null || pd.NodeGroup.LibInfo == null))
+            if (tranGroupPeakDatas.Count == 0 || tranGroupPeakDatas.All(pd => pd.NodeGroup == null || pd.NodeGroup.LibInfo == null))
                 return float.NaN;
 
             // CONSIDER: With dot-products, when one charge state performs very well, and another
@@ -459,6 +464,10 @@ namespace pwiz.Skyline.Model.Results.Scoring
             return MQuestHelpers.GetStandardGroups(summaryPeakData);
         }
 
+        public override bool IsReferenceScore
+        {
+            get { return true; }
+        }
     }
 
     public class MQuestDefaultIntensityCorrelationCalc : AbstractMQuestIntensityCorrelationCalc
@@ -501,15 +510,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         protected override float Calculate(PeakScoringContext context, IPeptidePeakData<ISummaryPeakData> summaryPeakData)
         {
-            var analyteGroups = new List<ITransitionGroupPeakData<ISummaryPeakData>>();
-            var referenceGroups = new List<ITransitionGroupPeakData<ISummaryPeakData>>();
-            foreach (var pdGroup in summaryPeakData.TransitionGroupPeakData)
-            {
-                if (pdGroup.IsStandard)
-                    referenceGroups.Add(pdGroup);
-                else
-                    analyteGroups.Add(pdGroup);
-            }
+            var analyteGroups = MQuestHelpers.GetAnalyteGroups(summaryPeakData);
+            var referenceGroups = MQuestHelpers.GetStandardGroups(summaryPeakData);
             if (analyteGroups.Count == 0 || referenceGroups.Count == 0)
                 return float.NaN;
 
@@ -541,6 +543,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
         }
 
         public override bool IsReversedScore { get { return false; } }
+
+        public override bool IsReferenceScore { get { return true; } }
 
         protected abstract bool IsIonType(TransitionDocNode nodeTran);
     }
@@ -789,6 +793,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             return MQuestHelpers.GetStandardGroups(summaryPeakData);
         }
+
+        public override bool IsReferenceScore
+        {
+            get { return true; }
+        }
     }
 
     public class MQuestDefaultWeightedShapeCalc : AbstractMQuestWeightedShapeCalc<MQuestDefaultCrossCorrelations>
@@ -926,6 +935,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
             IPeptidePeakData<TData> summaryPeakData)
         {
             return MQuestHelpers.GetStandardGroups(summaryPeakData);
+        }
+
+        public override bool IsReferenceScore
+        {
+            get { return true; }
         }
     }
 
@@ -1101,6 +1115,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
             var statWeights = crossCorrMatrix.GetStats(GetWeight, FilterIons);
             return statValues.Length == 0 ? GetDefaultScore(context) : Calculate(context, statValues, statWeights);
         }
+
+        public override bool IsReferenceScore { get { return true; } }
 
         protected abstract float Calculate(PeakScoringContext context, Statistics statValues, Statistics statWeigths);
 

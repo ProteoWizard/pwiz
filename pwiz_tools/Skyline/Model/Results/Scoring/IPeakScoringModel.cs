@@ -321,6 +321,16 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// True if low scores are better for this calculator, false if high scores are better
         /// </summary>
         bool IsReversedScore { get; }
+
+        /// <summary>
+        /// True if this score applies only to documents with labeled reference standards
+        /// </summary>
+        bool IsReferenceScore { get; }
+
+        /// <summary>
+        /// True if this score applies only to documents with MS1 filtering enabled
+        /// </summary>
+        bool IsMs1Score { get; }
     }
 
     /// <summary>
@@ -343,6 +353,10 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             return Calculate(context, (IPeptidePeakData<ISummaryPeakData>) peakGroupData);
         }
+
+        public virtual bool IsReferenceScore { get { return false; } }
+        
+        public virtual bool IsMs1Score { get { return false; } }
 
         protected abstract float Calculate(PeakScoringContext context, IPeptidePeakData<ISummaryPeakData> summaryPeakData);
     }
@@ -367,6 +381,10 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             return Calculate(context, (IPeptidePeakData<IDetailedPeakData>)peakGroupData);
         }
+
+        public virtual bool IsReferenceScore { get { return false; } }
+
+        public virtual bool IsMs1Score { get { return false; } }
 
         protected abstract float Calculate(PeakScoringContext context, IPeptidePeakData<IDetailedPeakData> summaryPeakData);
     }

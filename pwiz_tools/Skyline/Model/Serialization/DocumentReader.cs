@@ -42,6 +42,23 @@ namespace pwiz.Skyline.Model.Serialization
         public DocumentFormat FormatVersion { get; private set; }
         public PeptideGroupDocNode[] Children { get; private set; }
 
+        private readonly Dictionary<string, string> _uniqueSpecies = new Dictionary<string, string>();
+
+        /// <summary>
+        /// Avoids duplication of species strings
+        /// </summary>
+        public string GetUniqueSpecies(string species)
+        {
+            if (species == null)
+                return null;
+            string uniqueSpecies;
+            if (!_uniqueSpecies.TryGetValue(species, out uniqueSpecies))
+            {
+                _uniqueSpecies.Add(species, species);
+                uniqueSpecies = species;
+            }
+            return uniqueSpecies;
+        }
 
         private PeptideChromInfo ReadPeptideChromInfo(XmlReader reader, ChromFileInfoId fileId)
         {
@@ -522,7 +539,7 @@ namespace pwiz.Skyline.Model.Serialization
             return list.ToArray();
         }
 
-        private static ProteinMetadata ReadProteinMetadataXML(XmlReader reader, bool labelNameAndDescription)
+        private ProteinMetadata ReadProteinMetadataXML(XmlReader reader, bool labelNameAndDescription)
         {
             var labelPrefix = labelNameAndDescription ? "label_" : string.Empty; // Not L10N
             return new ProteinMetadata(
@@ -531,7 +548,7 @@ namespace pwiz.Skyline.Model.Serialization
                 reader.GetAttribute(ATTR.preferred_name),
                 reader.GetAttribute(ATTR.accession),
                 reader.GetAttribute(ATTR.gene),
-                reader.GetAttribute(ATTR.species),
+                GetUniqueSpecies(reader.GetAttribute(ATTR.species)),
                 reader.GetAttribute(ATTR.websearch_status));
         }
 
@@ -621,7 +638,7 @@ namespace pwiz.Skyline.Model.Serialization
         /// </summary>
         /// <param name="reader">The reader positioned at the first element</param>
         /// <returns>A new array of <see cref="ProteinMetadata"/></returns>
-        private static ProteinMetadata[] ReadAltProteinListXml(XmlReader reader)
+        private ProteinMetadata[] ReadAltProteinListXml(XmlReader reader)
         {
             var list = new List<ProteinMetadata>();
             while (reader.IsStartElement(EL.alternative_protein))

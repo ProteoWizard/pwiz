@@ -36,9 +36,10 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public IList<IPeakFeatureCalculator> FeatureCalculators { get; private set; }
 
-        private readonly PeakTransitionGroupFeatures[] _peakTransitionGroupFeaturesList;
+        private readonly PeakTransitionGroupFeatureSet _peakTransitionGroupFeaturesList;
 
-        public Dictionary<KeyValuePair<int, int>, List<PeakTransitionGroupFeatures>> PeakTransitionGroupDictionary { get; private set; }
+        public Dictionary<PeakTransitionGroupIdKey, List<PeakTransitionGroupFeatures>> PeakTransitionGroupDictionary { get; private set; }
+
         public TargetDecoyGenerator(SrmDocument document, IPeakScoringModel scoringModel, IProgressMonitor progressMonitor = null)
         {
             // Determine which calculators will be used to score peaks in this document.
@@ -51,36 +52,33 @@ namespace pwiz.Skyline.Model.Results.Scoring
             ParallelEx.For(0, FeatureCalculators.Count, i => EligibleScores[i] = IsValidCalculator(i));
         }
 
-        public IList<PeakTransitionGroupFeatures> PeakGroupFeatures { get { return _peakTransitionGroupFeaturesList; } }
+        public int TargetCount { get { return _peakTransitionGroupFeaturesList.TargetCount; } }
+        public int DecoyCount { get { return _peakTransitionGroupFeaturesList.DecoyCount; } }
+        public PeakTransitionGroupFeatureSet PeakGroupFeatures { get { return _peakTransitionGroupFeaturesList; } }
 
         private void PopulateDictionary()
         {
-            PeakTransitionGroupDictionary = new Dictionary<KeyValuePair<int, int>, List<PeakTransitionGroupFeatures>>();
-            foreach (var transitionGroupFeatures in _peakTransitionGroupFeaturesList)
+            PeakTransitionGroupDictionary = new Dictionary<PeakTransitionGroupIdKey, List<PeakTransitionGroupFeatures>>();
+            foreach (var transitionGroupFeatures in _peakTransitionGroupFeaturesList.Features)
             {
-                var pepId = transitionGroupFeatures.Id.NodePep.Id.GlobalIndex;
-                var fileId = transitionGroupFeatures.Id.ChromatogramSet.FindFile(transitionGroupFeatures.Id.FilePath).GlobalIndex;
-                var key = new KeyValuePair<int, int>(pepId, fileId);
-                if (PeakTransitionGroupDictionary.ContainsKey(key))
+                var key = transitionGroupFeatures.Key;
+                List<PeakTransitionGroupFeatures> listFeatures;
+                if (!PeakTransitionGroupDictionary.TryGetValue(key, out listFeatures))
                 {
-                    PeakTransitionGroupDictionary[key].Add(transitionGroupFeatures);
+                    listFeatures = new List<PeakTransitionGroupFeatures>();
+                    PeakTransitionGroupDictionary.Add(key, listFeatures);                    
                 }
-                else
-                {
-                    PeakTransitionGroupDictionary.Add(key, new List<PeakTransitionGroupFeatures> { transitionGroupFeatures });
-                } 
+                listFeatures.Add(transitionGroupFeatures);
             }
         }
 
         public void GetTransitionGroups(out List<IList<float[]>> targetGroups,
             out List<IList<float[]>> decoyGroups)
         {
-            // Try to avoid too much resizing. Though, we don't know for sure how big these need to be
-            int initCapacity = _peakTransitionGroupFeaturesList.Length / 4;
-            targetGroups = new List<IList<float[]>>(initCapacity);
-            decoyGroups = new List<IList<float[]>>(initCapacity);
+            targetGroups = new List<IList<float[]>>(TargetCount);
+            decoyGroups = new List<IList<float[]>>(DecoyCount);
 
-            foreach (var peakTransitionGroupFeatures in _peakTransitionGroupFeaturesList)
+            foreach (var peakTransitionGroupFeatures in _peakTransitionGroupFeaturesList.Features)
             {
                 int featuresCount = peakTransitionGroupFeatures.PeakGroupFeatures.Count;
                 if (featuresCount == 0)
@@ -91,7 +89,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                     transitionGroup[i] = peakTransitionGroupFeatures.PeakGroupFeatures[i].Features;
                 }
 
-                if (peakTransitionGroupFeatures.Id.NodePep.IsDecoy)
+                if (peakTransitionGroupFeatures.IsDecoy)
                     decoyGroups.Add(transitionGroup);
                 else
                     targetGroups.Add(transitionGroup);
@@ -108,18 +106,16 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// <param name="decoyScores">Output list of decoy scores.</param>
         /// <param name="secondBestScores">Output list of false target scores.</param>
         /// <param name="invert">If true, select minimum rather than maximum scores</param>
-        public void GetScores(LinearModelParams scoringParams, LinearModelParams calculatorParams, out List<double> targetScores, out List<double> decoyScores,
-            out List<double> secondBestScores, bool invert = false)
+        public void GetScores(LinearModelParams scoringParams, LinearModelParams calculatorParams,
+            List<double> targetScores, List<double> decoyScores, List<double> secondBestScores,
+            bool invert = false)
         {
-            targetScores = new List<double>();
-            decoyScores = new List<double>();
-            secondBestScores = new List<double>();
             int invertSign = invert ? -1 : 1;
 
-            foreach (var peakTransitionGroupFeatures in _peakTransitionGroupFeaturesList)
+            foreach (var peakTransitionGroupFeatures in _peakTransitionGroupFeaturesList.Features)
             {
-                PeakGroupFeatures maxFeatures = null;
-                PeakGroupFeatures nextFeatures = null;
+                PeakGroupFeatures? maxFeatures = null;
+                PeakGroupFeatures? nextFeatures = null;
                 double maxScore = Double.MinValue;
                 double nextScore = Double.MinValue;
 
@@ -148,17 +144,25 @@ namespace pwiz.Skyline.Model.Results.Scoring
                     }
                 }
 
-                double currentScore = maxFeatures == null ? Double.NaN : GetScore(calculatorParams, maxFeatures);
-                if (peakTransitionGroupFeatures.Id.NodePep.IsDecoy)
-                    decoyScores.Add(currentScore);
+                double currentScore = maxFeatures.HasValue
+                    ? GetScore(calculatorParams, maxFeatures.Value) : Double.NaN;
+                if (peakTransitionGroupFeatures.IsDecoy)
+                {
+                    if (decoyScores != null)
+                        decoyScores.Add(currentScore);
+                }
                 else
                 {
                     targetScores.Add(currentScore);
                     // Skip if only one peak
                     if (peakTransitionGroupFeatures.PeakGroupFeatures.Count == 1)
                         continue;
-                    double secondBestScore = nextFeatures == null ? Double.NaN : GetScore(calculatorParams, nextFeatures);
-                    secondBestScores.Add(secondBestScore);
+                    if (secondBestScores != null)
+                    {
+                        double secondBestScore = nextFeatures.HasValue
+                            ? GetScore(calculatorParams, nextFeatures.Value) : Double.NaN;
+                        secondBestScores.Add(secondBestScore);
+                    }
                 }
             }
         }
@@ -223,23 +227,29 @@ namespace pwiz.Skyline.Model.Results.Scoring
         }
 
         private void GetActiveScoredValues(IPeakScoringModel peakScoringModel,
-                                                    LinearModelParams scoringParams,
-                                                    LinearModelParams calculatorParams,
-                                                    out List<double> targetScores,
-                                                    out List<double> activeDecoyScores)
+            LinearModelParams scoringParams,
+            LinearModelParams calculatorParams,
+            out List<double> targetScores,
+            out List<double> activeDecoyScores)
         {
-            List<double> decoyScores;
-            List<double> secondBestScores;
-            activeDecoyScores = new List<double>();
-            GetScores(scoringParams,
-                                calculatorParams,
-                                out targetScores,
-                                out decoyScores,
-                                out secondBestScores);
-            if (peakScoringModel.UsesDecoys)
-                activeDecoyScores.AddRange(decoyScores);
-            if (peakScoringModel.UsesSecondBest)
-                activeDecoyScores.AddRange(secondBestScores);
+            targetScores = new List<double>(TargetCount);
+            List<double> decoyScores = peakScoringModel.UsesDecoys ? new List<double>(DecoyCount) : null;
+            List<double> secondBestScores = peakScoringModel.UsesSecondBest ? new List<double>(TargetCount) : null;
+
+            GetScores(scoringParams, calculatorParams, targetScores, decoyScores, secondBestScores);
+
+            if (peakScoringModel.UsesDecoys && !peakScoringModel.UsesSecondBest)
+                activeDecoyScores = decoyScores;
+            else if (peakScoringModel.UsesSecondBest && !peakScoringModel.UsesDecoys)
+                activeDecoyScores = secondBestScores;
+            else
+            {
+                activeDecoyScores = new List<double>();
+                if (decoyScores != null)
+                    activeDecoyScores.AddRange(decoyScores);
+                if (secondBestScores != null)
+                    activeDecoyScores.AddRange(secondBestScores);
+            }
         }
 
         /// <summary>
@@ -263,7 +273,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             double maxValue = Double.MinValue;
             double minValue = Double.MaxValue;
 
-            foreach (var peakTransitionGroupFeatures in _peakTransitionGroupFeaturesList)
+            foreach (var peakTransitionGroupFeatures in _peakTransitionGroupFeaturesList.Features)
             {
                 // Find the highest and second highest scores among the transitions in this group.
                 foreach (var peakGroupFeatures in peakTransitionGroupFeatures.PeakGroupFeatures)

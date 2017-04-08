@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -94,7 +95,11 @@ namespace pwiz.Skyline
                 var oldOut = _out;
                 try
                 {
-                    _out = new CommandStatusWriter(new StreamWriter(commandArgs.LogFile)) { IsTimeStamped = oldOut.IsTimeStamped };
+                    _out = new CommandStatusWriter(new StreamWriter(commandArgs.LogFile))
+                    {
+                        IsTimeStamped = oldOut.IsTimeStamped,
+                        IsMemStamped = oldOut.IsMemStamped
+                    };
                 }
                 catch (Exception)
                 {
@@ -1355,14 +1360,20 @@ namespace pwiz.Skyline
 
         private class ModelAndFeatures
         {
-            public ModelAndFeatures(PeakScoringModelSpec scoringModel, IList<PeakTransitionGroupFeatures> features)
+            public ModelAndFeatures(PeakScoringModelSpec scoringModel, PeakTransitionGroupFeatureSet features)
             {
                 ScoringModel = scoringModel;
                 Features = features;
             }
 
             public PeakScoringModelSpec ScoringModel { get; private set; }
-            public IList<PeakTransitionGroupFeatures> Features { get; private set; }
+            public PeakTransitionGroupFeatureSet Features { get; private set; }
+
+            public void ReleaseMemory()
+            {
+                ScoringModel = null;
+                Features = null;
+            }
         }
 
         private ModelAndFeatures CreateScoringModel(string modelName, bool decoys, bool secondBest, int? modelIterationCount)
@@ -1372,7 +1383,8 @@ namespace pwiz.Skyline
             try
             {
                 // Create new scoring model using the default calculators.
-                var scoringModel = new MProphetPeakScoringModel(modelName, null as LinearModelParams, null, decoys, secondBest);
+                var calcs = MProphetPeakScoringModel.GetDefaultCalculators(_doc);
+                var scoringModel = new MProphetPeakScoringModel(modelName, null as LinearModelParams, calcs, decoys, secondBest);
                 var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(String.Empty));
                 var targetDecoyGenerator = new TargetDecoyGenerator(_doc, scoringModel, progressMonitor);
 
@@ -1434,7 +1446,9 @@ namespace pwiz.Skyline
                 var resultsHandler = new MProphetResultsHandler(_doc, modelAndFeatures.ScoringModel, modelAndFeatures.Features)
                 {
                     OverrideManual = isOverwritePeaks,
+                    FreeImmutableMemory = true
                 };
+                modelAndFeatures.ReleaseMemory();   // Avoid holding memory through peak adjustment
 
                 var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
 
@@ -2810,6 +2824,8 @@ namespace pwiz.Skyline
 
         public bool IsTimeStamped { get; set; }
 
+        public bool IsMemStamped { get; set; }
+
         public override Encoding Encoding
         {
             get { return _writer.Encoding; }
@@ -2841,10 +2857,28 @@ namespace pwiz.Skyline
 
         public override void WriteLine(string value)
         {
+            var message = new StringBuilder();
             if (IsTimeStamped)
-                value = DateTime.Now.ToString("[yyyy/MM/dd HH:mm:ss]\t") + value; // Not L10N
-            _writer.WriteLine(value);
+                message.Append(DateTime.Now.ToString("[yyyy/MM/dd HH:mm:ss]\t")); // Not L10N
+            if (IsMemStamped)
+            {
+                lock (_writer)
+                {
+                    // This can take long enough that we need to introduce a lock to keep
+                    // output ordered as much as possible
+                    message.Append(MemStamp(GC.GetTotalMemory(false)));
+                    message.Append(MemStamp(Process.GetCurrentProcess().PrivateMemorySize64));
+                }
+            }
+            message.Append(value);
+            _writer.WriteLine(message);
             Flush();
+        }
+
+        private string MemStamp(long memUsed)
+        {
+            const double mb = 1024 * 1024;
+            return string.Format("{0}\t", Math.Round(memUsed/mb)); // Not L10N
         }
     }
 

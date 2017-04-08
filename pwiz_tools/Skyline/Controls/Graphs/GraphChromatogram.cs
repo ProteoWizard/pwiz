@@ -1205,9 +1205,12 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 else
                 {
-                    arrayChromInfo = chromGroupInfo.GetAllTransitionInfo(nodeTranSelected.Mz,
-                                                                            mzMatchTolerance,
-                                                                            chromatograms.OptimizationFunction);
+                    var listChromInfo = new List<ChromatogramInfo>();
+                    chromGroupInfo.GetAllTransitionInfo(nodeTranSelected.Mz,
+                        mzMatchTolerance,
+                        chromatograms.OptimizationFunction,
+                        listChromInfo);
+                    arrayChromInfo = listChromInfo.ToArray();
 
                     if (chromatograms.OptimizationFunction != null)
                     {
@@ -1602,8 +1605,12 @@ namespace pwiz.Skyline.Controls.Graphs
             int totalOptCount = chromatograms.OptimizationFunction.StepCount * 2 + 1;
             foreach (TransitionDocNode nodeTran in nodeGroup.Children)
             {
-                var infos = chromGroupInfo.GetAllTransitionInfo(nodeTran.Mz, mzMatchTolerance,
-                                                                chromatograms.OptimizationFunction);
+                var listChromInfo = new List<ChromatogramInfo>();
+                chromGroupInfo.GetAllTransitionInfo(nodeTran.Mz,
+                    mzMatchTolerance,
+                    chromatograms.OptimizationFunction,
+                    listChromInfo);
+                var infos = listChromInfo.ToArray();
                 if (infos.Length == 0)
                     continue;
 
@@ -2126,7 +2133,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (regression != null && Settings.Default.ShowRetentionTimePred)
             {
                 string modSeq = settings.GetModifiedSequence(lookupSequence, IsotopeLabelType.light, lookupMods);
-                var fileId = chromatograms.FindFile(chromGraphPrimary.Chromatogram);
+                var fileId = chromatograms.FindFile(chromGraphPrimary.Chromatogram.GroupInfo);
                 double? predictedRT = regression.GetRetentionTime(modSeq, fileId);
                 double window = regression.TimeWindow;
 

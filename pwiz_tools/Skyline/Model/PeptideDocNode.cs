@@ -573,7 +573,13 @@ namespace pwiz.Skyline.Model
 
         public IEnumerable<TransitionGroupDocNode> TransitionGroups
         {
-            get { return Children.Cast<TransitionGroupDocNode>(); }
+            get
+            {
+                foreach (TransitionGroupDocNode nodeGroup in Children)
+                {
+                    yield return nodeGroup;
+                }
+            }
         }
 
         public bool HasHeavyTransitionGroups
@@ -1103,16 +1109,15 @@ namespace pwiz.Skyline.Model
 
         private sealed class PeptideResultsCalculator
         {
-            private readonly List<PeptideChromInfoListCalculator> _listResultCalcs =
-                new List<PeptideChromInfoListCalculator>();
+            private readonly List<PeptideChromInfoListCalculator> _listResultCalcs;
 
             public PeptideResultsCalculator(SrmSettings settings, NormalizationMethod normalizationMethod)
             {
                 Settings = settings;
+                _listResultCalcs = new List<PeptideChromInfoListCalculator>(settings.MeasuredResults.Chromatograms.Count);
             }
 
             private SrmSettings Settings { get; set; }
-            private string InternalStandardName { get; set; }
             private int TransitionGroupCount { get; set; }
 
             public void AddGroupChromInfo(TransitionGroupDocNode nodeGroup)
@@ -1139,8 +1144,7 @@ namespace pwiz.Skyline.Model
 
             public PeptideDocNode UpdateResults(PeptideDocNode nodePeptide)
             {
-                var listChromInfoList = _listResultCalcs.ConvertAll(calc =>
-                                                                    calc.CalcChromInfoList(TransitionGroupCount));
+                var listChromInfoList = _listResultCalcs.ConvertAll(calc => calc.CalcChromInfoList(TransitionGroupCount));
                 listChromInfoList = CopyChromInfoAttributes(nodePeptide, listChromInfoList);
                 var results = Results<PeptideChromInfo>.Merge(nodePeptide.Results, listChromInfoList);
                 if (!ReferenceEquals(results, nodePeptide.Results))
@@ -1190,7 +1194,7 @@ namespace pwiz.Skyline.Model
                 {
                     return results;
                 }
-                var excludeFromCalibrations = new Dictionary<int, bool>();
+                Dictionary<int, bool> excludeFromCalibrations = null;   // Delay allocation
                 foreach (var chromInfos in peptideDocNode.Results)
                 {
                     if (chromInfos == null)
@@ -1201,16 +1205,18 @@ namespace pwiz.Skyline.Model
                     {
                         if (chromInfo != null && chromInfo.ExcludeFromCalibration)
                         {
+                            if (excludeFromCalibrations == null)
+                                excludeFromCalibrations = new Dictionary<int, bool>();
                             excludeFromCalibrations.Add(chromInfo.FileId.GlobalIndex,
                                 chromInfo.ExcludeFromCalibration);
                         }
                     }
                 }
-                if (!excludeFromCalibrations.Any())
+                if (excludeFromCalibrations == null)
                 {
                     return results;
                 }
-                List<IList<PeptideChromInfo>> newResults = new List<IList<PeptideChromInfo>>();
+                List<IList<PeptideChromInfo>> newResults = new List<IList<PeptideChromInfo>>(results.Count);
                 for (int replicateIndex = 0; replicateIndex < results.Count; replicateIndex++)
                 {
                     var chromInfoList = results[replicateIndex];
@@ -1220,19 +1226,25 @@ namespace pwiz.Skyline.Model
                     }
                     else
                     {
-                        IList<PeptideChromInfo> newChromInfoList = new List<PeptideChromInfo>();
+                        IList<PeptideChromInfo> newChromInfoList = null;
                         foreach (var chromInfo in chromInfoList)
                         {
+                            var chromInfoAdd = chromInfo;
                             bool excludeFromCalibration;
                             if (chromInfo != null &&
                                 excludeFromCalibrations.TryGetValue(chromInfo.FileId.GlobalIndex,
                                     out excludeFromCalibration))
                             {
-                                newChromInfoList.Add(chromInfo.ChangeExcludeFromCalibration(excludeFromCalibration));
+                                chromInfoAdd = chromInfo.ChangeExcludeFromCalibration(excludeFromCalibration);
                             }
+                            if (newChromInfoList != null)
+                                newChromInfoList.Add(chromInfoAdd);
                             else
                             {
-                                newChromInfoList.Add(chromInfo);
+                                if (chromInfoList.Count < 2)
+                                    newChromInfoList = new SingletonList<PeptideChromInfo>(chromInfoAdd);
+                                else
+                                    newChromInfoList = new List<PeptideChromInfo>(chromInfoList.Count){chromInfoAdd};
                             }
                         }
                         newResults.Add(newChromInfoList);
@@ -1248,12 +1260,14 @@ namespace pwiz.Skyline.Model
             {
                 ResultsIndex = resultsIndex;
                 Settings = settings;
-                Calculators = new Dictionary<int, PeptideChromInfoCalculator>();
             }
-            public String InternalStandardName { get; private set; }
             public int ResultsIndex { get; private set; }
 
             private SrmSettings Settings { get; set; }
+
+            private int FileIndexFirst { get; set; }
+
+            private PeptideChromInfoCalculator CalculatorFirst;
             private Dictionary<int, PeptideChromInfoCalculator> Calculators { get; set; }
 
             public void AddChromInfoList(TransitionGroupDocNode nodeGroup)
@@ -1268,13 +1282,46 @@ namespace pwiz.Skyline.Model
                         continue;
 
                     PeptideChromInfoCalculator calc;
-                    if (!Calculators.TryGetValue(info.FileIndex, out calc))
+                    if (!TryGetCalculator(info.FileIndex, out calc))
                     {
                         calc = new PeptideChromInfoCalculator(Settings, ResultsIndex);
-                        Calculators.Add(info.FileIndex, calc);
+                        AddCalculator(info.FileIndex, calc);
                     }
                     calc.AddChromInfo(nodeGroup, info);
                 }
+            }
+
+            private void AddCalculator(int fileIndex, PeptideChromInfoCalculator calc)
+            {
+                if (CalculatorFirst == null)
+                {
+                    FileIndexFirst = fileIndex;
+                    CalculatorFirst = calc;
+                }
+                else
+                {
+                    if (Calculators == null)
+                        Calculators = new Dictionary<int, PeptideChromInfoCalculator>{{FileIndexFirst, CalculatorFirst}};
+                    Calculators.Add(fileIndex, calc);
+                }
+            }
+
+            private bool TryGetCalculator(int fileIndex, out PeptideChromInfoCalculator calc)
+            {
+                if (CalculatorFirst != null)
+                {
+                    if (FileIndexFirst == fileIndex)
+                    {
+                        calc = CalculatorFirst;
+                        return true;
+                    }
+                    else if (Calculators != null)
+                    {
+                        return Calculators.TryGetValue(fileIndex, out calc);
+                    }
+                }
+                calc = null;
+                return false;
             }
 
             public void AddChromInfoList(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran)
@@ -1289,10 +1336,10 @@ namespace pwiz.Skyline.Model
                         continue;
 
                     PeptideChromInfoCalculator calc;
-                    if (!Calculators.TryGetValue(info.FileIndex, out calc))
+                    if (!TryGetCalculator(info.FileIndex, out calc))
                     {
                         calc = new PeptideChromInfoCalculator(Settings, ResultsIndex);
-                        Calculators.Add(info.FileIndex, calc);
+                        AddCalculator(info.FileIndex, calc);
                     }
                     calc.AddChromInfo(nodeGroup, nodeTran, info);
                 }
@@ -1300,19 +1347,26 @@ namespace pwiz.Skyline.Model
 
             public IList<PeptideChromInfo> CalcChromInfoList(int transitionGroupCount)
             {
-                if (Calculators.Count == 0)
+                if (CalculatorFirst == null)
                     return null;
 
-                var listCalc = new List<PeptideChromInfoCalculator>(Calculators.Values);
-                listCalc.Sort((c1, c2) => c1.FileOrder - c2.FileOrder);
+                if (Calculators == null)
+                {
+                    var chromInfo = CalculatorFirst.CalcChromInfo(transitionGroupCount);
+                    if (chromInfo == null)
+                        return null;
+                    return new SingletonList<PeptideChromInfo>(chromInfo);
+                }
 
-                var listInfo = listCalc.ConvertAll(calc => calc.CalcChromInfo(transitionGroupCount));
-                return (listInfo[0] != null ? listInfo : null);
+                return Calculators.Values
+                    .OrderBy(c => c.FileOrder)
+                    .Select(c => c.CalcChromInfo(transitionGroupCount))
+                    .ToArray();
             }
 
             public IList<TransitionChromInfo> UpdateTransitionRatios(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, IList<TransitionChromInfo> listInfo, bool isMatching)
             {
-                if (Calculators.Count == 0 || listInfo == null)
+                if (CalculatorFirst == null || listInfo == null)
                     return null;
 
                 int countInfo = listInfo.Count;
@@ -1325,7 +1379,7 @@ namespace pwiz.Skyline.Model
                     var info = listInfo[iInfo];
 
                     PeptideChromInfoCalculator calc;
-                    if (!Calculators.TryGetValue(info.FileIndex, out calc))
+                    if (!TryGetCalculator(info.FileIndex, out calc))
                         Assume.Fail();    // Should never happen
                     else
                     {
@@ -1334,7 +1388,7 @@ namespace pwiz.Skyline.Model
                         // first as a shortcut
                         var infoNew = info;
                         if (!ReferenceEquals(ratios, info.Ratios) && !ArrayUtil.EqualsDeep(ratios, info.Ratios))
-                            infoNew = infoNew.ChangeRatios(ratios);
+                            infoNew = infoNew.ChangeRatios(false, ratios);
                         if (isMatching && calc.IsSetMatching && !info.IsUserSetMatched)
                             infoNew = infoNew.ChangeUserSet(UserSet.MATCHED);
                         if (!ReferenceEquals(info, infoNew) && listInfoNew == null)
@@ -1390,7 +1444,7 @@ namespace pwiz.Skyline.Model
                                                                               IList<TransitionGroupChromInfo> listInfo,
                                                                               bool isMatching)
             {
-                if (Calculators.Count == 0 || listInfo == null)
+                if (CalculatorFirst == null || listInfo == null)
                     return null;
 
                 // Delay allocation in the hope that nothing has changed for faster loading
@@ -1402,7 +1456,7 @@ namespace pwiz.Skyline.Model
                     var info = listInfo[iInfo];
 
                     PeptideChromInfoCalculator calc;
-                    if (!Calculators.TryGetValue(info.FileIndex, out calc))
+                    if (!TryGetCalculator(info.FileIndex, out calc))
                         Assume.Fail();    // Should never happen
                     else
                     {
@@ -1522,15 +1576,18 @@ namespace pwiz.Skyline.Model
                     return;
 
                 var key = new TransitionKey(nodeGroup, nodeTran.Key(nodeGroup), nodeGroup.TransitionGroup.LabelType);
-                if (TranAreas.ContainsKey(key))
+                try
+                {
+                    TranAreas.Add(key, info.Area);
+                }
+                catch (Exception e)
                 {
                     if (nodeTran.Transition.IsNonReporterCustomIon())
-                        throw new InvalidDataException(String.Format(Resources.PeptideChromInfoCalculator_AddChromInfo_Conflict_with_transition__0__in__1__for_peak_area_calculation__Did_you_mean_to_use_a_different_precursor_charge_state_or_label_, nodeTran.Transition, nodeGroup.TransitionGroup.Peptide));
+                        throw new InvalidDataException(String.Format(Resources.PeptideChromInfoCalculator_AddChromInfo_Conflict_with_transition__0__in__1__for_peak_area_calculation__Did_you_mean_to_use_a_different_precursor_charge_state_or_label_, nodeTran.Transition, nodeGroup.TransitionGroup.Peptide), e);
                     else
-                        throw new InvalidDataException(String.Format(Resources.PeptideChromInfoCalculator_AddChromInfo_Duplicate_transition___0___found_for_peak_areas, nodeTran.Transition));
+                        throw new InvalidDataException(String.Format(Resources.PeptideChromInfoCalculator_AddChromInfo_Duplicate_transition___0___found_for_peak_areas, nodeTran.Transition), e);
                 }
                 TranTypes.Add(nodeGroup.TransitionGroup.LabelType);
-                TranAreas.Add(key, info.Area);
             }
 
             public PeptideChromInfo CalcChromInfo(int transitionGroupCount)

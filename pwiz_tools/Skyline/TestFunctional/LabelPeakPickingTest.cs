@@ -388,21 +388,20 @@ namespace pwiz.SkylineTestFunctional
         protected bool IsActiveCalculator(EditPeakScoringModelDlg editDlg, Type calcType)
         {
             var index = GetIndex(editDlg, calcType);
-            return editDlg.PeakCalculatorsGrid.Items[index].IsEnabled;
+            return index != -1 && editDlg.PeakCalculatorsGrid.Items[index].IsEnabled;
         }
 
         protected double? ValueCalculator(EditPeakScoringModelDlg editDlg, Type calcType)
         {
             var index = GetIndex(editDlg, calcType);
-            return editDlg.PeakCalculatorsGrid.Items[index].Weight;
+            return index != -1 ? editDlg.PeakCalculatorsGrid.Items[index].Weight : null;
         }
 
         protected int GetIndex(EditPeakScoringModelDlg editDlg, Type calcType)
         {
             var calculators = editDlg.PeakScoringModel.PeakFeatureCalculators;
             var calculator = calculators.FirstOrDefault(calc => calc.GetType() == calcType);
-            Assert.IsNotNull(calculator);
-            return calculators.IndexOf(calculator); 
+            return calculator != null ? calculators.IndexOf(calculator) : -1; 
         }
 
         // Conveniently opens/closes all the intermediate dialogs to open and run a EditPeakScoringModelDlg 

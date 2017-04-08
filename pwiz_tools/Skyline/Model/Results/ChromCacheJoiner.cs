@@ -58,7 +58,7 @@ namespace pwiz.Skyline.Model.Results
                     return;
                 _currentPartIndex = 0;
                 while (JoinNextPart())
-                {                    
+                {
                 }
             }
         }

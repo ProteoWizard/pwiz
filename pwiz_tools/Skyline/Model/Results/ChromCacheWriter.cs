@@ -31,12 +31,12 @@ namespace pwiz.Skyline.Model.Results
     {
         private readonly Action<ChromatogramCache, IProgressStatus> _completed;
 
-        protected readonly List<ChromCachedFile> _listCachedFiles = new List<ChromCachedFile>();
-        protected readonly BlockedArrayList<ChromTransition> _listTransitions =
+        protected List<ChromCachedFile> _listCachedFiles = new List<ChromCachedFile>();
+        protected BlockedArrayList<ChromTransition> _listTransitions =
             new BlockedArrayList<ChromTransition>(ChromTransition.SizeOf, ChromTransition.DEFAULT_BLOCK_SIZE);
-        protected readonly BlockedArrayList<ChromGroupHeaderInfo> _listGroups =
+        protected BlockedArrayList<ChromGroupHeaderInfo> _listGroups =
             new BlockedArrayList<ChromGroupHeaderInfo>(ChromGroupHeaderInfo.SizeOf, ChromGroupHeaderInfo.DEFAULT_BLOCK_SIZE);
-        protected readonly List<byte> _listTextIdBytes = new List<byte>();
+        protected List<byte> _listTextIdBytes = new List<byte>();
         protected readonly List<Type> _listScoreTypes = new List<Type>();
         protected readonly FileSaver _fs;
         protected readonly FileSaver _fsScans;
@@ -123,20 +123,31 @@ namespace pwiz.Skyline.Model.Results
 
                             _fsPeaks.Stream.Seek(0, SeekOrigin.Begin);
                             _fsScores.Stream.Seek(0, SeekOrigin.Begin);
+                            var arrayCachFiles = _listCachedFiles.ToArray();
+                            _listCachedFiles = null;
+                            var arrayChromEntries = _listGroups.ToBlockedArray();
+                            _listGroups = null;
+                            var arrayTransitions = _listTransitions.ToBlockedArray();
+                            _listTransitions = null;
                             var peakSerializer = CacheFormat.ChromPeakSerializer();
+                            var chromPeaks = new BlockedArray<ChromPeak>(
+                                count => peakSerializer.ReadArray(_fsPeaks.FileStream, count), _peakCount,
+                                ChromPeak.SizeOf, ChromPeak.DEFAULT_BLOCK_SIZE);
+                            var scores = new BlockedArray<float>(
+                                count => PrimitiveArrays.Read<float>(_fsScores.FileStream, count), _scoreCount,
+                                sizeof(float), ChromatogramCache.DEFAULT_SCORES_BLOCK_SIZE);
+                            var textIdBytes = _listTextIdBytes.ToArray();
+                            _listTextIdBytes = null;
+
                             var rawData = new ChromatogramCache.RawData(CacheFormat)
                             {
-                                ChromCacheFiles = _listCachedFiles.ToArray(),
-                                ChromatogramEntries = _listGroups.ToBlockedArray(),
-                                ChromTransitions = _listTransitions.ToBlockedArray(),
-                                ChromatogramPeaks = new BlockedArray<ChromPeak>(
-                                    count => peakSerializer.ReadArray(_fsPeaks.FileStream, count), _peakCount,
-                                    ChromPeak.SizeOf, ChromPeak.DEFAULT_BLOCK_SIZE),
+                                ChromCacheFiles = arrayCachFiles,
+                                ChromatogramEntries = arrayChromEntries,
+                                ChromTransitions = arrayTransitions,
+                                ChromatogramPeaks = chromPeaks,
                                 ScoreTypes = _listScoreTypes.ToArray(),
-                                Scores = new BlockedArray<float>(
-                                    count => PrimitiveArrays.Read<float>(_fsScores.FileStream, count), _scoreCount,
-                                    sizeof(float), ChromatogramCache.DEFAULT_SCORES_BLOCK_SIZE),
-                                TextIdBytes = _listTextIdBytes.ToArray(),
+                                Scores = scores,
+                                TextIdBytes = textIdBytes,
                                 CountBytesScanIds = countBytesScanIds,
                                 LocationScanIds = locationScanIds
                             };

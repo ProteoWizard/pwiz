@@ -8,17 +8,29 @@ namespace pwiz.Skyline.Model
 {
     public class DocNodeChildren : IList<DocNode>
     {
-        private readonly IList<DocNode> _items;
-        private readonly Dictionary<Identity, int> _indexes;
+        private readonly int _itemCount;    // Necessary for knowing the count after items have been freed
+        private IList<DocNode> _items;
+        private Dictionary<Identity, int> _indexes;
 
         public DocNodeChildren(IEnumerable<DocNode> items)
         {
             _items = ImmutableList.ValueOf(items);
+            _itemCount = _items.Count;
             _indexes = new Dictionary<Identity, int>(_items.Count, IDENTITY_EQUALITY_COMPARER);
             for (int i = 0; i < _items.Count; i++)
             {
                 _indexes.Add(_items[i].Id, i);
             }
+        }
+
+        /// <summary>
+        /// This breaks immutability, but is necessary for keeping
+        /// memory under control during command-line processing of very large files
+        /// </summary>
+        public void ReleaseChildren()
+        {
+            _items = null;
+            _indexes = null;
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -28,7 +40,15 @@ namespace pwiz.Skyline.Model
 
         public IEnumerator<DocNode> GetEnumerator()
         {
+            if (_items == null)
+                return GetEmptyEnumerator();
             return _items.GetEnumerator();
+        }
+
+        private IEnumerator<DocNode> GetEmptyEnumerator()
+        {
+            for (int i = 0; i < _itemCount; i++)
+                yield return null;
         }
 
         void ICollection<DocNode>.Add(DocNode item)
@@ -54,7 +74,7 @@ namespace pwiz.Skyline.Model
 
         public int Count
         {
-            get { return _items.Count; }
+            get { return _itemCount; }
         }
 
         bool ICollection<DocNode>.Remove(DocNode item)
@@ -84,7 +104,7 @@ namespace pwiz.Skyline.Model
         public int IndexOf(Identity id)
         {
             int index;
-            if (!_indexes.TryGetValue(id, out index))
+            if (_indexes == null || !_indexes.TryGetValue(id, out index))
             {
                 return -1;
             }
@@ -103,7 +123,7 @@ namespace pwiz.Skyline.Model
 
         public DocNode this[int index]
         {
-            get { return _items[index]; }
+            get { return _items != null ? _items[index] : null; }
             set { throw new InvalidOperationException(); }
         }
 
@@ -123,7 +143,7 @@ namespace pwiz.Skyline.Model
 
         public override int GetHashCode()
         {
-            return _items.GetHashCode();
+            return _items != null ? _items.GetHashCode() : 0;
         }
         #endregion
 

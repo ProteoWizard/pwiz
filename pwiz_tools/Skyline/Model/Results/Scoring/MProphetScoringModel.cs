@@ -88,12 +88,33 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
         }
 
-        public MProphetPeakScoringModel(string name)
+        public MProphetPeakScoringModel(string name, SrmDocument document = null)
             : base(name)
         {
-            SetPeakFeatureCalculators(DEFAULT_CALCULATORS);
+            SetPeakFeatureCalculators(GetDefaultCalculators(document));
             Lambda = DEFAULT_R_LAMBDA;   // Default from R
             DoValidate();
+        }
+
+        public static IPeakFeatureCalculator[] GetDefaultCalculators(SrmDocument document)
+        {
+            var calcs = DEFAULT_CALCULATORS;
+            if (document != null)
+            {
+                bool includeReference = document.Settings.PeptideSettings.Modifications.HasHeavyImplicitModifications;
+                bool includeMs1 = document.Settings.TransitionSettings.FullScan.IsEnabledMs;
+                bool includeIds = !document.Settings.DocumentRetentionTimes.IsEmpty;
+
+                if (!includeReference || !includeMs1 || !includeIds)
+                {
+                    calcs = calcs.Where(calc =>
+                            (!calc.IsReferenceScore || includeReference) &&
+                            (!calc.IsMs1Score || includeMs1) &&
+                            (!(calc is LegacyIdentifiedCountCalc) || includeIds))
+                        .ToArray();
+                }
+            }
+            return calcs;
         }
 
         private static readonly IPeakFeatureCalculator[] DEFAULT_CALCULATORS =
@@ -260,7 +281,6 @@ namespace pwiz.Skyline.Model.Results.Scoring
                                     progressMonitor.UpdateProgress(status =
                                         status.ChangeMessage(string.Format(Resources.MProphetPeakScoringModel_Train_Scoring_model_converged__iteration__0_____1______peaks_at__2_0_____FDR_, i + 1, truePeaksCount, qValueCutoff))
                                               .ChangePercentComplete(Math.Max(95, percentComplete)));
-                                    GC.Collect();
                                 }
                                 break;
                             }
@@ -272,8 +292,6 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
                         if (progressMonitor != null)
                             progressMonitor.UpdateProgress(status);
-
-                        GC.Collect();   // Each loop generates a number of large objects. GC helps to keep private bytes under control
                     }
                     if (progressMonitor != null)
                         progressMonitor.UpdateProgress(status.ChangePercentComplete(100));
@@ -294,7 +312,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             {
                 var calculatorType = calculator.GetType();
                 int indexWeight = PeakFeatureCalculators.IndexOf(calc => calc.GetType() == calculatorType);
-                if (!double.IsNaN(weights[indexWeight]))
+                if (indexWeight != -1 && !double.IsNaN(weights[indexWeight]))
                     enabledCount++;
             }
             return enabledCount;

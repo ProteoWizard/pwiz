@@ -87,8 +87,8 @@ namespace pwiz.SkylineTestTutorial
 
         private readonly string[] EXPECTED_COEFFICIENTS =
         {
-            "0.0174|-1.1425|0.2313|1.9599|1.5171|0.0478|0.1870|0.0454| null |0.4290|6.4581|-0.0815|0.4892|0.6203| null | null | null | null | null | null | null | null | null ", // Not L10N
-            "0.1009| null | null | null |6.6851|-0.0636|0.7279|0.9784| null | null | null | null | null | null | null | null | null | null | null | null | null | null | null ", // Not L10N
+            "0.0174|-1.1425|0.2313|1.9599|1.5171|0.0478|0.1870|0.0454| null |0.4290|6.4581|-0.0815|0.4892|0.6203| null | null | null | null | null ", // Not L10N
+            "0.1009| null | null | null |6.6851|-0.0636|0.7279|0.9784| null | null | null | null | null | null | null | null | null | null | null ", // Not L10N
         };
 
         protected override void DoTest()
@@ -196,8 +196,9 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(() =>
             {
+                Assert.AreEqual(19, editDlg.PeakCalculatorsGrid.RowCount);
                 // The rows which the tutorial says are missing scores are in fact missing scores
-                foreach (int i in new[] { 3, 8, 9, 10, 11, 12, 14, 16, 19, 20, 21, 22 })
+                foreach (int i in new[] { 3, 8, 9, 10, 11, 12, 14, 16 }) // MS1 scores are now missing, 19, 20, 21, 22
                 {
                     Assert.IsFalse(editDlg.IsActiveCell(i, 0));
                 }

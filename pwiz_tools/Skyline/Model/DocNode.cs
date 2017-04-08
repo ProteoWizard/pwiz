@@ -389,6 +389,15 @@ namespace pwiz.Skyline.Model
         }
 
         /// <summary>
+        /// This breaks immutability, but it is necessary in order to free child memory
+        /// during command-line processing to achieve maximum scale
+        /// </summary>
+        public void ReleaseChildren()
+        {
+            _children.ReleaseChildren();
+        }
+
+        /// <summary>
         /// Depth of the tree below this node
         /// </summary>
         public int Depth { get { return _nodeCountStack.Count; } }

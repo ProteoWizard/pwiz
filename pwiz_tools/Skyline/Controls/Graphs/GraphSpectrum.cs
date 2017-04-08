@@ -793,14 +793,14 @@ namespace pwiz.Skyline.Controls.Graphs
                 0,  //location
                 0, -1, -1, null, null, null); // CONSIDER(bspratt) IMS in chromatogram libraries?
             var driftTimeFilter = DriftTimeFilter.EMPTY; // CONSIDER(bspratt) IMS in chromatogram libraries?
-
-            chromatogramInfo = new ChromatogramInfo(header,
-                    new Dictionary<Type, int>(), 0,
+            var groupInfo = new ChromatogramGroupInfo(header,
+                    new Dictionary<Type, int>(),
                     new ChromCachedFile[0],
                     new[] { new ChromTransition(chromData.Mz, 0, (float)(driftTimeFilter.DriftTimeMsec??0), (float)(driftTimeFilter.DriftTimeExtractionWindowWidthMsec??0), ChromSource.unknown), },
-                    peaks, null,
-                    TimeIntensitiesGroup.Singleton(timeIntensities));
-            
+                    peaks,
+                    null) { TimeIntensitiesGroup = TimeIntensitiesGroup.Singleton(timeIntensities) };
+
+            chromatogramInfo = new ChromatogramInfo(groupInfo, 0);
         }
     }
 

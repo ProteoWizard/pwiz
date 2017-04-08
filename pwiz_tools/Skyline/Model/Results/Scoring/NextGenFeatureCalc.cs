@@ -155,6 +155,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             return MQuestHelpers.GetMaximumProductMassError(context);
         }
+
+        public override bool IsReferenceScore { get { return true; } }
     }
 
     /// <summary>
@@ -223,6 +225,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             return MQuestHelpers.GetMaximumPrecursorMassError(context);
         }
+
+        public override bool IsMs1Score { get { return true; } }
     }
 
     /// <summary>
@@ -232,7 +236,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public class NextGenIsotopeDotProductCalc : SummaryPeakFeatureCalculator
     {
-        public NextGenIsotopeDotProductCalc() : base("Precursor isotope dot product") { } // Not L10N?
+        public NextGenIsotopeDotProductCalc() : base("Precursor isotope dot product") { } // Not L10N
 
         public override string Name
         {
@@ -245,6 +249,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
         }
 
         public override bool IsReversedScore { get { return false; } }
+
+        public override bool IsMs1Score { get { return true; } }
     }
 
 
@@ -253,12 +259,14 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public class NextGenCrossWeightedShapeCalc : AbstractMQuestWeightedShapeCalc<NextGenCrossCorrelations>
     {
-        public NextGenCrossWeightedShapeCalc() : base("Precursor-product shape score") { } // Not L10N?
+        public NextGenCrossWeightedShapeCalc() : base("Precursor-product shape score") { } // Not L10N
 
         public override string Name
         {
             get { return Resources.NextGenCrossWeightedShapeCalc_NextGenCrossWeightedShapeCalc_Precursor_product_shape_score; }
         }
+
+        public override bool IsMs1Score { get { return true; } }
 
         protected override IList<ITransitionGroupPeakData<TData>> GetTransitionGroups<TData>(
             IPeptidePeakData<TData> summaryPeakData)
@@ -429,5 +437,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             return MQuestHelpers.GetStandardGroups(summaryPeakData);
         }
+
+        public override bool IsReferenceScore { get { return true; } }
     }
 }

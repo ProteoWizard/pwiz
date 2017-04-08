@@ -29,7 +29,7 @@ namespace pwiz.Skyline.Model.Results
     internal class CachedChromatogramDataProvider : ChromDataProvider
     {
         private ChromatogramCache _cache;
-        private int _fileIndex;
+        private readonly int _fileIndex;
         private ChromKeyIndices[] _chromKeyIndices;
 
         private ChromKeyIndices _lastIndices;

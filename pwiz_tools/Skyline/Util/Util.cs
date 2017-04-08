@@ -586,6 +586,102 @@ namespace pwiz.Skyline.Util
 
         #endregion
     }
+
+    /// <summary>
+    /// A singleton list that allows its one value to be changed
+    /// </summary>
+    public class SingletonList<T> : IList<T>
+    {
+        private T _item;
+
+        public SingletonList(T item)
+        {
+            _item = item;
+        }
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            yield return _item;
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public void Add(T item)
+        {
+            throw new NotSupportedException();
+        }
+
+        public void Clear()
+        {
+            throw new NotSupportedException();
+        }
+
+        public bool Contains(T item)
+        {
+            if (item == null)
+                return _item == null;
+
+            return item.Equals(_item);
+        }
+
+        public void CopyTo(T[] array, int arrayIndex)
+        {
+            if (array == null)
+                throw new ArgumentNullException("array");   // Not L10N
+
+            array[arrayIndex] = _item;
+        }
+
+        public bool Remove(T item)
+        {
+            throw new NotSupportedException();
+        }
+
+        public int Count
+        {
+            get { return 1; }
+        }
+
+        public bool IsReadOnly
+        {
+            get { return false; }
+        }
+
+        public int IndexOf(T item)
+        {
+            return Contains(item) ? 0 : -1;
+        }
+
+        public void Insert(int index, T item)
+        {
+            throw new NotSupportedException();
+        }
+
+        public void RemoveAt(int index)
+        {
+            throw new NotSupportedException();
+        }
+
+        public T this[int index]
+        {
+            get
+            {
+                if (index != 0)
+                    throw new IndexOutOfRangeException();
+                return _item;
+            }
+            set
+            {
+                if (index != 0)
+                    throw new IndexOutOfRangeException();
+                _item = value;
+            }
+        }
+    } 
+    
     
     /// <summary>
     /// Exposes a set of generic Array extension utility functions.

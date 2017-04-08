@@ -112,12 +112,12 @@ namespace pwiz.Skyline.Model.Results
 
         private readonly ImmutableList<ChromCachedFile> _cachedFiles;
         // ReadOnlyCollection is not fast enough for use with these arrays
-        private readonly BlockedArray<ChromGroupHeaderInfo> _chromatogramEntries;
-        private readonly BlockedArray<ChromTransition> _chromTransitions;
-        private readonly BlockedArray<ChromPeak> _chromatogramPeaks;
+        private BlockedArray<ChromGroupHeaderInfo> _chromatogramEntries;
+        private BlockedArray<ChromTransition> _chromTransitions;
+        private BlockedArray<ChromPeak> _chromatogramPeaks;
         private readonly Dictionary<Type, int> _scoreTypeIndices;
-        private readonly BlockedArray<float> _scores;
-        private readonly byte[] _textIdBytes;
+        private BlockedArray<float> _scores;
+        private byte[] _textIdBytes;
         private readonly long _locationScanIds;
         private readonly long _countBytesScanIds;
 
@@ -434,6 +434,18 @@ namespace pwiz.Skyline.Model.Results
         }
 
         // ReSharper restore UnusedMember.Local
+
+        public ChromatogramCache ReleaseMemory()
+        {
+            return ChangeProp(ImClone(this), im =>
+            {
+                im._chromatogramEntries = new BlockedArray<ChromGroupHeaderInfo>();
+                im._chromTransitions = new BlockedArray<ChromTransition>();
+                im._chromatogramPeaks = new BlockedArray<ChromPeak>();
+                im._scores = new BlockedArray<float>();
+                im._textIdBytes = new byte[0];
+            });
+        }
 
         public class RawData
         {

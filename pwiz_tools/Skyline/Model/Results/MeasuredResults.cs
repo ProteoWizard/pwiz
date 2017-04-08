@@ -86,6 +86,8 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        public IDictionary<int, int> IdToIndexDictionary { get { return _dictIdToIndex; } }
+
         public bool IsTimeNormalArea { get; private set; }
 
         public CacheFormatVersion? CacheVersion
@@ -580,8 +582,7 @@ namespace pwiz.Skyline.Model.Results
                                         bool loadPoints,
                                         out ChromatogramGroupInfo[] infoSet)
         {
-            return TryLoadChromatogram(_chromatograms[index], nodePep, nodeGroup,
-                                       tolerance, loadPoints, out infoSet);
+            return TryLoadChromatogram(_chromatograms[index], nodePep, nodeGroup, tolerance, loadPoints, out infoSet);
         }
 
         private static readonly ChromatogramGroupInfo[] EMPTY_GROUP_INFOS = new ChromatogramGroupInfo[0];
@@ -591,6 +592,17 @@ namespace pwiz.Skyline.Model.Results
                                         TransitionGroupDocNode nodeGroup,
                                         float tolerance,
                                         bool loadPoints,
+                                        out ChromatogramGroupInfo[] infoSet)
+        {
+            return TryLoadChromatogram(chromatogram, nodePep, nodeGroup, tolerance, loadPoints, null, out infoSet);
+        }
+
+        public bool TryLoadChromatogram(ChromatogramSet chromatogram,
+                                        PeptideDocNode nodePep,
+                                        TransitionGroupDocNode nodeGroup,
+                                        float tolerance,
+                                        bool loadPoints,
+                                        List<ChromatogramGroupInfo> listChromBuffer,   // List can be used to avoid extra allocation
                                         out ChromatogramGroupInfo[] infoSet)
         {
             // Add precursor matches to a list, if they match at least 1 transition
@@ -609,16 +621,23 @@ namespace pwiz.Skyline.Model.Results
             IList<ChromatogramGroupInfo> listChrom = EMPTY_GROUP_INFOS;
             foreach (var cache in CachesEx)
             {
-                ChromatogramGroupInfo[] info = cache.LoadChromatogramInfos(nodePep, nodeGroup, tolerance, chromatogram)
-                    .ToArray();
+                var infoEnum = cache.LoadChromatogramInfos(nodePep, nodeGroup, tolerance, chromatogram);
+                IList<ChromatogramGroupInfo> info = listChromBuffer;
+                infoSet = null;
+                if (info == null)
+                    info = infoSet = infoEnum.ToArray();
+                else
+                {
+                    listChromBuffer.Clear();
+                    listChromBuffer.AddRange(infoEnum);
+                }
                 foreach (var chromInfo in info)
                 {
                     // Short-circuit further processing for common case in label free data
-                    if (_cacheFinal != null && info.Length == 1 && minErrRT == double.MaxValue)
+                    if (_cacheFinal != null && info.Count == 1 && minErrRT == double.MaxValue)
                     {
                         if (loadPoints)
                             info[0].ReadChromatogram(cache);
-                        infoSet = info;
                         return true;
                     }
 
@@ -685,8 +704,18 @@ namespace pwiz.Skyline.Model.Results
                 }
                 listChrom = listChromFinal;
             }
-            infoSet = ReferenceEquals(listChrom, EMPTY_GROUP_INFOS) ? EMPTY_GROUP_INFOS : listChrom.ToArray();
-            return infoSet.Length > 0;
+            if (listChromBuffer != null)
+            {
+                listChromBuffer.Clear();
+                listChromBuffer.AddRange(listChrom);
+                infoSet = null;
+            }
+            else
+            {
+                infoSet = ReferenceEquals(listChrom, EMPTY_GROUP_INFOS)
+                    ? EMPTY_GROUP_INFOS : listChrom.ToArray();
+            }
+            return listChrom.Count > 0;
         }
 
         public bool ContainsChromatogram(string name)
@@ -1119,7 +1148,7 @@ namespace pwiz.Skyline.Model.Results
                 _loadMonitor = loadMonitor;
                 _multiFileLoader = multiFileLoader;
             }
-
+            
             public void Load()
             {
                 // Turn of deserialized flag
@@ -1133,7 +1162,7 @@ namespace pwiz.Skyline.Model.Results
                 }
                     
                 // Try loading the final cache from disk, if progressive loading has not started
-                string cachePath = Program.ReplicateCachePath ?? ChromatogramCache.FinalPathForName(_documentPath, null);
+                string cachePath = FinalCachePath;
                 if (!CheckFinalCache(cachePath))
                     return; // Error reported
 
@@ -1258,6 +1287,14 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
                 return dataFiles;
+            }
+
+            private string FinalCachePath
+            {
+                get
+                {
+                    return Program.ReplicateCachePath ?? ChromatogramCache.FinalPathForName(_documentPath, null);
+                }
             }
 
             private bool CheckFinalCache(string cachePath)
@@ -1462,7 +1499,7 @@ namespace pwiz.Skyline.Model.Results
                                         var listPartialCaches = new List<ChromatogramCache>();
                                         if (_resultsClone._listPartialCaches != null)
                                             listPartialCaches.AddRange(_resultsClone._listPartialCaches);
-                                        listPartialCaches.Add(cache);
+                                        listPartialCaches.Add(EnsureOptimalMemoryUse(cache));
                                         _resultsClone._listPartialCaches = ImmutableList.ValueOf(listPartialCaches);
                                         continue;
                                     }
@@ -1498,7 +1535,7 @@ namespace pwiz.Skyline.Model.Results
                     var assumeNegativeChargeInPreV11Caches = _document.MoleculeTransitionGroups.All(tg => tg.PrecursorMz.IsNegative);
                     var cache = ChromatogramCache.Load(replicatePath, status, _loadMonitor, assumeNegativeChargeInPreV11Caches);
                     if (cache.IsSupportedVersion)
-                        listPartialCaches.Add(cache);
+                        listPartialCaches.Add(EnsureOptimalMemoryUse(cache));
                     else
                     {
                         cache.Dispose();
@@ -1563,11 +1600,20 @@ namespace pwiz.Skyline.Model.Results
                     var listPartialCaches = new List<ChromatogramCache>();
                     if (results._listPartialCaches != null)
                         listPartialCaches.AddRange(results._listPartialCaches);
-                    listPartialCaches.Add(cache);
+                    listPartialCaches.Add(EnsureOptimalMemoryUse(cache));
                     results.SetClonedCacheState(null, listPartialCaches);
                 }
 
                 Complete(results, false);
+            }
+
+            private ChromatogramCache EnsureOptimalMemoryUse(ChromatogramCache cache)
+            {
+                if (!_resultsClone.IsJoiningDisabled || cache.CachePath == FinalCachePath)
+                    return cache;
+                // Free cache memory required for maintaining UI for partial caches, if this is the command-line
+                // The final join will pull everything from disk
+                return cache.ReleaseMemory();
             }
 
             private bool EnsurePathsMatch(ChromatogramCache cache)
