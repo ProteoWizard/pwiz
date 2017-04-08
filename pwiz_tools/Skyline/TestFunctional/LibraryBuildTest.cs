@@ -203,7 +203,8 @@ namespace pwiz.SkylineTestFunctional
 
             // New document
             var docNew = new SrmDocument(SrmSettingsList.GetDefault());
-            RunUI(() => SkylineWindow.SwitchDocument(docNew, null));
+            var docNewCopy = docNew;
+            RunUI(() => SkylineWindow.SwitchDocument(docNewCopy, null));
 
             const string idpList3 = "FHYKTDQGIK\n" +
                                     "WCAIGHQER\n" +
@@ -245,7 +246,8 @@ namespace pwiz.SkylineTestFunctional
             PastePeptideList(idpList, false, idpCount - idpCount3 + 1 /* missing cleavage*/, 0);
 
             // New document
-            RunUI(() => SkylineWindow.SwitchDocument(docNew, null));
+            var docNewCopy2 = docNew;
+            RunUI(() => SkylineWindow.SwitchDocument(docNewCopy2, null));
 
             _libraryName = libraryBaseName + "_cpas1";
             string libraryCpas1 = _libraryName + BiblioSpecLiteSpec.EXT;

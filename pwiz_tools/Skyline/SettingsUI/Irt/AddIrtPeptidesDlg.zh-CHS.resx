@@ -457,9 +457,6 @@
   <data name="labelPeptidesAdded.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <data name="labelPeptidesAdded.Text" xml:space="preserve">
-    <value>{0} 个新肽段将被添加至 iRT 数据库。</value>
-  </data>
   <data name="&gt;&gt;labelPeptidesAdded.Name" xml:space="preserve">
     <value>labelPeptidesAdded</value>
   </data>
