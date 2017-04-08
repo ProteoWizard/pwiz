@@ -485,7 +485,7 @@ namespace pwiz.Skyline.Util
         public double ParseMassExpression(ref string desc)
         {
             double totalMass = ParseMass(ref desc);
-            if (desc.StartsWith("-"))
+            if (desc.StartsWith("-")) // Not L10N
             {
                 // As is deprotonation description ie C12H8O2-H (=C12H7O2) or even C12H8O2-H2O (=C12H6O)
                 desc = desc.Substring(1);
