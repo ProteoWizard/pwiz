@@ -152,7 +152,7 @@ namespace analysis{
         /// Used to find whether a window's center is contained within this window
         bool ContainsCenter(const DemuxWindow& inner) const
         {
-            auto center = static_cast<size_t>(llround(inner.mzLow + (inner.mzHigh - inner.mzLow) / 2.0));
+            auto center = static_cast<MZHash>(llround(inner.mzLow + (inner.mzHigh - inner.mzLow) / 2.0));
             return center >= this->mzLow && center <= this->mzHigh;
         }
 

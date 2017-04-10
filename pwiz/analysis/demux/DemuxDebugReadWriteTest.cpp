@@ -61,7 +61,8 @@ protected:
         uint64_t spectrumIndex;
         for (size_t i = 0; i < debugReader.NumBlocks(); ++i)
         {
-            debugReader.ReadDeconvBlock(spectrumIndex, A_, B_, C_);
+            auto index = static_cast<uint64_t>(spectrumIndex); // needed for 32-bit compatibility
+            debugReader.ReadDeconvBlock(index, A_, B_, C_);
             readSpectrumList.push_back(A_);
             readSpectrumList.push_back(B_);
             readSpectrumList.push_back(C_);

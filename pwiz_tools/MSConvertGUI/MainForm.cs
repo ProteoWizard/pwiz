@@ -108,6 +108,9 @@ namespace MSConvertGUI
             }
             PeakPickingAlgorithmComboBox.SelectedIndex = 0;
 
+            DemuxMassErrorTypeBox.SelectedIndex = 0;
+            DemuxTypeBox.SelectedIndex = 0;
+
             for (int i = 0; i < cmdline_args.Count; i++)
             {
                 // mimic user adding file via filebox
@@ -147,6 +150,7 @@ namespace MSConvertGUI
         {
             MSLevelPanel.Visible = false;
             PeakPickingPanel.Visible = false;
+            DemultiplexPanel.Visible = false;
             ZeroSamplesPanel.Visible = false;
             ETDFilterPanel.Visible = false;
             ThresholdFilterPanel.Visible = false;
@@ -162,6 +166,9 @@ namespace MSConvertGUI
                     break;
                 case "Peak Picking":
                     PeakPickingPanel.Visible = true;
+                    break;
+                case "Demultiplex":
+                    DemultiplexPanel.Visible = true;
                     break;
                 case "Zero Samples":
                     ZeroSamplesPanel.Visible = true;
@@ -355,7 +362,29 @@ namespace MSConvertGUI
                                                                  PeakMSLevelLow.Text, PeakMSLevelHigh.Text)
                                                });
                     }
-                    break; 
+                    break;
+                case "Demultiplex":
+                    String demuxArgs = String.Empty;
+                    if (!String.IsNullOrEmpty(DemuxTypeBox.Text))
+                    {
+                        String optimizationArgs = DemuxTypeBox.Text == "Overlap Only" ? " optimization=overlap_only" : String.Empty;
+                        demuxArgs += optimizationArgs;
+                    }
+                    
+                    if (!String.IsNullOrEmpty(DemuxMassErrorValue.Text) &&
+                        !String.IsNullOrEmpty(DemuxMassErrorTypeBox.Text))
+                    {
+                        demuxArgs += String.Format(" massError={0}{1}",
+                            DemuxMassErrorValue.Text,
+                            DemuxMassErrorTypeBox.Text);
+                    }
+
+                    FilterDGV.Rows.Add(new[]
+                        {
+                            "demultiplex",
+                            demuxArgs
+                        });
+                    break;
                 case "Zero Samples":
                     String args = ZeroSamplesAddMissing.Checked ? "addMissing" : "removeExtra";
                     if ( ZeroSamplesAddMissing.Checked && (!String.IsNullOrEmpty(ZeroSamplesAddMissingFlankCountBox.Text)))
@@ -862,6 +891,13 @@ namespace MSConvertGUI
             setToolTip(this.PeakPickingAlgorithmComboBox, preferVendorHelp,"Peak Picking");
             setToolTip(this.PeakPickingPanel, "Use this filter to perform peak picking (centroiding) on the input data.", "Peak Picking");
 
+            setToolTip(this.DemultiplexPanel, "Use this filter to demultiplex overlapping or MSX data.", "Demultiplex");
+            string massErrorHelp = "Specify the relative (ppm) or absolute (Da) mass error of the MS2 spectra.";
+            setToolTip(this.DemuxMassErrorValue, massErrorHelp);
+            setToolTip(this.DemuxMassErrorTypeBox, massErrorHelp);
+            setToolTip(this.DemuxMassErrorLabel, massErrorHelp);
+            setToolTip(this.DemuxTypeBox, "Specify the type of multiplexing that was used to acquire the data.");
+
             string outputHelp = "Choose the directory for writing the converted file(s).";
             setToolTip(this.OutputLabel, outputHelp);
             setToolTip(this.OutputBox, outputHelp);
@@ -948,6 +984,11 @@ namespace MSConvertGUI
         private void PeakPickingAlgorithmComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
             PeakMinSnr.Enabled = PeakMinSnrLabel.Enabled = PeakMinSpacing.Enabled = PeakMinSpacingLabel.Enabled = ((PeakPickingMethod) PeakPickingAlgorithmComboBox.SelectedIndex == PeakPickingMethod.Cwt);
+        }
+
+        private void MSXCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+
         }
     }
 }

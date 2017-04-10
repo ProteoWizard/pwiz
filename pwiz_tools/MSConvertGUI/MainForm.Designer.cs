@@ -63,7 +63,22 @@ namespace MSConvertGUI
             this.RemoveFileButton = new System.Windows.Forms.Button();
             this.StartButton = new System.Windows.Forms.Button();
             this.FilterGB = new System.Windows.Forms.GroupBox();
+            this.DemultiplexPanel = new System.Windows.Forms.Panel();
+            this.DemuxMassErrorTypeBox = new System.Windows.Forms.ComboBox();
+            this.DemuxMassErrorValue = new System.Windows.Forms.TextBox();
+            this.DemuxMassErrorLabel = new System.Windows.Forms.Label();
+            this.DemuxTypeBox = new System.Windows.Forms.ComboBox();
+            this.LockmassRefinerPanel = new System.Windows.Forms.Panel();
+            this.LockmassTolerance = new System.Windows.Forms.TextBox();
+            this.lockmassToleranceLabel = new System.Windows.Forms.Label();
+            this.lockmassMzLabel = new System.Windows.Forms.Label();
+            this.LockmassMz = new System.Windows.Forms.TextBox();
             this.FilterBox = new System.Windows.Forms.ComboBox();
+            this.MSLevelPanel = new System.Windows.Forms.Panel();
+            this.MSLevelLabel = new System.Windows.Forms.Label();
+            this.MSLabelSeperator = new System.Windows.Forms.Label();
+            this.MSLevelHigh = new System.Windows.Forms.TextBox();
+            this.MSLevelLow = new System.Windows.Forms.TextBox();
             this.PeakPickingPanel = new System.Windows.Forms.Panel();
             this.PeakMinSpacingLabel = new System.Windows.Forms.Label();
             this.PeakMinSpacing = new System.Windows.Forms.TextBox();
@@ -107,6 +122,10 @@ namespace MSConvertGUI
             this.ActivationTypeBox = new System.Windows.Forms.ComboBox();
             this.ActivationTypeLabel = new System.Windows.Forms.Label();
             this.SubsetPanel = new System.Windows.Forms.Panel();
+            this.label2 = new System.Windows.Forms.Label();
+            this.ScanEventHigh = new System.Windows.Forms.TextBox();
+            this.ScanEventLow = new System.Windows.Forms.TextBox();
+            this.ScanEventLabel = new System.Windows.Forms.Label();
             this.mzWinLabel2 = new System.Windows.Forms.Label();
             this.ScanNumberHigh = new System.Windows.Forms.TextBox();
             this.ScanTimeLow = new System.Windows.Forms.TextBox();
@@ -119,11 +138,6 @@ namespace MSConvertGUI
             this.ScanNumberLabel = new System.Windows.Forms.Label();
             this.ScanNumberLow = new System.Windows.Forms.TextBox();
             this.ScanNumberLabel2 = new System.Windows.Forms.Label();
-            this.MSLevelPanel = new System.Windows.Forms.Panel();
-            this.MSLevelLabel = new System.Windows.Forms.Label();
-            this.MSLabelSeperator = new System.Windows.Forms.Label();
-            this.MSLevelHigh = new System.Windows.Forms.TextBox();
-            this.MSLevelLow = new System.Windows.Forms.TextBox();
             this.RemoveFilterButton = new System.Windows.Forms.Button();
             this.AddFilterButton = new System.Windows.Forms.Button();
             this.TextFileRadio = new System.Windows.Forms.RadioButton();
@@ -152,29 +166,21 @@ namespace MSConvertGUI
             this.AboutButton = new System.Windows.Forms.Button();
             this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.label2 = new System.Windows.Forms.Label();
-            this.ScanEventHigh = new System.Windows.Forms.TextBox();
-            this.ScanEventLow = new System.Windows.Forms.TextBox();
-            this.ScanEventLabel = new System.Windows.Forms.Label();
-            this.LockmassRefinerPanel = new System.Windows.Forms.Panel();
-            this.LockmassTolerance = new System.Windows.Forms.TextBox();
-            this.lockmassToleranceLabel = new System.Windows.Forms.Label();
-            this.lockmassMzLabel = new System.Windows.Forms.Label();
-            this.LockmassMz = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.FilterDGV)).BeginInit();
             this.FilterGB.SuspendLayout();
-            this.ChargeStatePredictorPanel.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.ChaSingleBox)).BeginInit();
-            this.ActivationPanel.SuspendLayout();
-            this.SubsetPanel.SuspendLayout();
+            this.DemultiplexPanel.SuspendLayout();
+            this.LockmassRefinerPanel.SuspendLayout();
             this.MSLevelPanel.SuspendLayout();
             this.PeakPickingPanel.SuspendLayout();
             this.ZeroSamplesPanel.SuspendLayout();
             this.ETDFilterPanel.SuspendLayout();
             this.ThresholdFilterPanel.SuspendLayout();
+            this.ChargeStatePredictorPanel.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.ChaSingleBox)).BeginInit();
+            this.ActivationPanel.SuspendLayout();
+            this.SubsetPanel.SuspendLayout();
             this.OptionsGB.SuspendLayout();
             this.SlidingPanel.SuspendLayout();
-            this.LockmassRefinerPanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // FileBox
@@ -283,6 +289,7 @@ namespace MSConvertGUI
             // 
             this.FilterGB.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.FilterGB.Controls.Add(this.DemultiplexPanel);
             this.FilterGB.Controls.Add(this.LockmassRefinerPanel);
             this.FilterGB.Controls.Add(this.FilterBox);
             this.FilterGB.Controls.Add(this.MSLevelPanel);
@@ -300,6 +307,104 @@ namespace MSConvertGUI
             this.FilterGB.TabStop = false;
             this.FilterGB.Text = "Filters";
             // 
+            // DemultiplexPanel
+            // 
+            this.DemultiplexPanel.Controls.Add(this.DemuxMassErrorTypeBox);
+            this.DemultiplexPanel.Controls.Add(this.DemuxMassErrorValue);
+            this.DemultiplexPanel.Controls.Add(this.DemuxMassErrorLabel);
+            this.DemultiplexPanel.Controls.Add(this.DemuxTypeBox);
+            this.DemultiplexPanel.Location = new System.Drawing.Point(22, 46);
+            this.DemultiplexPanel.Name = "DemultiplexPanel";
+            this.DemultiplexPanel.Size = new System.Drawing.Size(283, 91);
+            this.DemultiplexPanel.TabIndex = 18;
+            this.DemultiplexPanel.Visible = false;
+            // 
+            // DemuxMassErrorTypeBox
+            // 
+            this.DemuxMassErrorTypeBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.DemuxMassErrorTypeBox.FormattingEnabled = true;
+            this.DemuxMassErrorTypeBox.Items.AddRange(new object[] {
+            "ppm",
+            "Da"});
+            this.DemuxMassErrorTypeBox.Location = new System.Drawing.Point(151, 50);
+            this.DemuxMassErrorTypeBox.Name = "DemuxMassErrorTypeBox";
+            this.DemuxMassErrorTypeBox.Size = new System.Drawing.Size(58, 21);
+            this.DemuxMassErrorTypeBox.TabIndex = 18;
+            // 
+            // DemuxMassErrorValue
+            // 
+            this.DemuxMassErrorValue.Location = new System.Drawing.Point(87, 51);
+            this.DemuxMassErrorValue.Name = "DemuxMassErrorValue";
+            this.DemuxMassErrorValue.Size = new System.Drawing.Size(48, 20);
+            this.DemuxMassErrorValue.TabIndex = 17;
+            this.DemuxMassErrorValue.Text = "10.0";
+            // 
+            // DemuxMassErrorLabel
+            // 
+            this.DemuxMassErrorLabel.AutoSize = true;
+            this.DemuxMassErrorLabel.Location = new System.Drawing.Point(17, 53);
+            this.DemuxMassErrorLabel.Name = "DemuxMassErrorLabel";
+            this.DemuxMassErrorLabel.Size = new System.Drawing.Size(60, 13);
+            this.DemuxMassErrorLabel.TabIndex = 16;
+            this.DemuxMassErrorLabel.Text = "Mass Error:";
+            // 
+            // DemuxTypeBox
+            // 
+            this.DemuxTypeBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.DemuxTypeBox.FormattingEnabled = true;
+            this.DemuxTypeBox.Items.AddRange(new object[] {
+            "Overlap Only",
+            "MSX (Overlap and Non-Overlap)"});
+            this.DemuxTypeBox.Location = new System.Drawing.Point(20, 16);
+            this.DemuxTypeBox.Name = "DemuxTypeBox";
+            this.DemuxTypeBox.Size = new System.Drawing.Size(189, 21);
+            this.DemuxTypeBox.TabIndex = 15;
+            // 
+            // LockmassRefinerPanel
+            // 
+            this.LockmassRefinerPanel.Controls.Add(this.LockmassTolerance);
+            this.LockmassRefinerPanel.Controls.Add(this.lockmassToleranceLabel);
+            this.LockmassRefinerPanel.Controls.Add(this.lockmassMzLabel);
+            this.LockmassRefinerPanel.Controls.Add(this.LockmassMz);
+            this.LockmassRefinerPanel.Location = new System.Drawing.Point(22, 46);
+            this.LockmassRefinerPanel.Name = "LockmassRefinerPanel";
+            this.LockmassRefinerPanel.Size = new System.Drawing.Size(283, 91);
+            this.LockmassRefinerPanel.TabIndex = 17;
+            this.LockmassRefinerPanel.Visible = false;
+            // 
+            // LockmassTolerance
+            // 
+            this.LockmassTolerance.Location = new System.Drawing.Point(135, 36);
+            this.LockmassTolerance.Name = "LockmassTolerance";
+            this.LockmassTolerance.Size = new System.Drawing.Size(62, 20);
+            this.LockmassTolerance.TabIndex = 1;
+            this.LockmassTolerance.Text = "0.1";
+            // 
+            // lockmassToleranceLabel
+            // 
+            this.lockmassToleranceLabel.AutoSize = true;
+            this.lockmassToleranceLabel.Location = new System.Drawing.Point(48, 39);
+            this.lockmassToleranceLabel.Name = "lockmassToleranceLabel";
+            this.lockmassToleranceLabel.Size = new System.Drawing.Size(79, 13);
+            this.lockmassToleranceLabel.TabIndex = 3;
+            this.lockmassToleranceLabel.Text = "m/z Tolerance:";
+            // 
+            // lockmassMzLabel
+            // 
+            this.lockmassMzLabel.AutoSize = true;
+            this.lockmassMzLabel.Location = new System.Drawing.Point(47, 12);
+            this.lockmassMzLabel.Name = "lockmassMzLabel";
+            this.lockmassMzLabel.Size = new System.Drawing.Size(81, 13);
+            this.lockmassMzLabel.TabIndex = 13;
+            this.lockmassMzLabel.Text = "Reference m/z:";
+            // 
+            // LockmassMz
+            // 
+            this.LockmassMz.Location = new System.Drawing.Point(135, 10);
+            this.LockmassMz.Name = "LockmassMz";
+            this.LockmassMz.Size = new System.Drawing.Size(62, 20);
+            this.LockmassMz.TabIndex = 0;
+            // 
             // FilterBox
             // 
             this.FilterBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
@@ -307,6 +412,7 @@ namespace MSConvertGUI
             this.FilterBox.Items.AddRange(new object[] {
             "MS Level",
             "Peak Picking",
+            "Demultiplex",
             "Lockmass Refiner",
             "Zero Samples",
             "ETD Peak Filter",
@@ -319,6 +425,54 @@ namespace MSConvertGUI
             this.FilterBox.Size = new System.Drawing.Size(132, 21);
             this.FilterBox.TabIndex = 0;
             this.FilterBox.SelectedIndexChanged += new System.EventHandler(this.FilterBox_SelectedIndexChanged);
+            // 
+            // MSLevelPanel
+            // 
+            this.MSLevelPanel.Controls.Add(this.MSLevelLabel);
+            this.MSLevelPanel.Controls.Add(this.MSLabelSeperator);
+            this.MSLevelPanel.Controls.Add(this.MSLevelHigh);
+            this.MSLevelPanel.Controls.Add(this.MSLevelLow);
+            this.MSLevelPanel.Location = new System.Drawing.Point(22, 46);
+            this.MSLevelPanel.Name = "MSLevelPanel";
+            this.MSLevelPanel.Size = new System.Drawing.Size(283, 91);
+            this.MSLevelPanel.TabIndex = 1;
+            this.MSLevelPanel.Visible = false;
+            // 
+            // MSLevelLabel
+            // 
+            this.MSLevelLabel.AutoSize = true;
+            this.MSLevelLabel.Location = new System.Drawing.Point(121, 19);
+            this.MSLevelLabel.Name = "MSLevelLabel";
+            this.MSLevelLabel.Size = new System.Drawing.Size(41, 13);
+            this.MSLevelLabel.TabIndex = 3;
+            this.MSLevelLabel.Text = "Levels:";
+            // 
+            // MSLabelSeperator
+            // 
+            this.MSLabelSeperator.AutoSize = true;
+            this.MSLabelSeperator.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.MSLabelSeperator.Location = new System.Drawing.Point(134, 34);
+            this.MSLabelSeperator.Name = "MSLabelSeperator";
+            this.MSLabelSeperator.Size = new System.Drawing.Size(15, 20);
+            this.MSLabelSeperator.TabIndex = 2;
+            this.MSLabelSeperator.Text = "-";
+            // 
+            // MSLevelHigh
+            // 
+            this.MSLevelHigh.Location = new System.Drawing.Point(151, 36);
+            this.MSLevelHigh.Name = "MSLevelHigh";
+            this.MSLevelHigh.Size = new System.Drawing.Size(37, 20);
+            this.MSLevelHigh.TabIndex = 1;
+            this.MSLevelHigh.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumTextBox_KeyPress);
+            // 
+            // MSLevelLow
+            // 
+            this.MSLevelLow.Location = new System.Drawing.Point(95, 36);
+            this.MSLevelLow.Name = "MSLevelLow";
+            this.MSLevelLow.Size = new System.Drawing.Size(37, 20);
+            this.MSLevelLow.TabIndex = 0;
+            this.MSLevelLow.Text = "1";
+            this.MSLevelLow.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumTextBox_KeyPress);
             // 
             // PeakPickingPanel
             // 
@@ -806,6 +960,39 @@ namespace MSConvertGUI
             this.SubsetPanel.TabIndex = 6;
             this.SubsetPanel.Visible = false;
             // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label2.Location = new System.Drawing.Point(174, 60);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(15, 20);
+            this.label2.TabIndex = 20;
+            this.label2.Text = "-";
+            // 
+            // ScanEventHigh
+            // 
+            this.ScanEventHigh.Location = new System.Drawing.Point(191, 62);
+            this.ScanEventHigh.Name = "ScanEventHigh";
+            this.ScanEventHigh.Size = new System.Drawing.Size(37, 20);
+            this.ScanEventHigh.TabIndex = 19;
+            // 
+            // ScanEventLow
+            // 
+            this.ScanEventLow.Location = new System.Drawing.Point(135, 62);
+            this.ScanEventLow.Name = "ScanEventLow";
+            this.ScanEventLow.Size = new System.Drawing.Size(37, 20);
+            this.ScanEventLow.TabIndex = 18;
+            // 
+            // ScanEventLabel
+            // 
+            this.ScanEventLabel.AutoSize = true;
+            this.ScanEventLabel.Location = new System.Drawing.Point(64, 67);
+            this.ScanEventLabel.Name = "ScanEventLabel";
+            this.ScanEventLabel.Size = new System.Drawing.Size(66, 13);
+            this.ScanEventLabel.TabIndex = 17;
+            this.ScanEventLabel.Text = "Scan Event:";
+            // 
             // mzWinLabel2
             // 
             this.mzWinLabel2.AutoSize = true;
@@ -904,54 +1091,6 @@ namespace MSConvertGUI
             this.ScanNumberLabel2.Size = new System.Drawing.Size(15, 20);
             this.ScanNumberLabel2.TabIndex = 12;
             this.ScanNumberLabel2.Text = "-";
-            // 
-            // MSLevelPanel
-            // 
-            this.MSLevelPanel.Controls.Add(this.MSLevelLabel);
-            this.MSLevelPanel.Controls.Add(this.MSLabelSeperator);
-            this.MSLevelPanel.Controls.Add(this.MSLevelHigh);
-            this.MSLevelPanel.Controls.Add(this.MSLevelLow);
-            this.MSLevelPanel.Location = new System.Drawing.Point(22, 46);
-            this.MSLevelPanel.Name = "MSLevelPanel";
-            this.MSLevelPanel.Size = new System.Drawing.Size(283, 91);
-            this.MSLevelPanel.TabIndex = 1;
-            this.MSLevelPanel.Visible = false;
-            // 
-            // MSLevelLabel
-            // 
-            this.MSLevelLabel.AutoSize = true;
-            this.MSLevelLabel.Location = new System.Drawing.Point(121, 19);
-            this.MSLevelLabel.Name = "MSLevelLabel";
-            this.MSLevelLabel.Size = new System.Drawing.Size(41, 13);
-            this.MSLevelLabel.TabIndex = 3;
-            this.MSLevelLabel.Text = "Levels:";
-            // 
-            // MSLabelSeperator
-            // 
-            this.MSLabelSeperator.AutoSize = true;
-            this.MSLabelSeperator.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.MSLabelSeperator.Location = new System.Drawing.Point(134, 34);
-            this.MSLabelSeperator.Name = "MSLabelSeperator";
-            this.MSLabelSeperator.Size = new System.Drawing.Size(15, 20);
-            this.MSLabelSeperator.TabIndex = 2;
-            this.MSLabelSeperator.Text = "-";
-            // 
-            // MSLevelHigh
-            // 
-            this.MSLevelHigh.Location = new System.Drawing.Point(151, 36);
-            this.MSLevelHigh.Name = "MSLevelHigh";
-            this.MSLevelHigh.Size = new System.Drawing.Size(37, 20);
-            this.MSLevelHigh.TabIndex = 1;
-            this.MSLevelHigh.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumTextBox_KeyPress);
-            // 
-            // MSLevelLow
-            // 
-            this.MSLevelLow.Location = new System.Drawing.Point(95, 36);
-            this.MSLevelLow.Name = "MSLevelLow";
-            this.MSLevelLow.Size = new System.Drawing.Size(37, 20);
-            this.MSLevelLow.TabIndex = 0;
-            this.MSLevelLow.Text = "1";
-            this.MSLevelLow.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumTextBox_KeyPress);
             // 
             // RemoveFilterButton
             // 
@@ -1266,84 +1405,6 @@ namespace MSConvertGUI
             this.dataGridViewTextBoxColumn2.HeaderText = "Parameters";
             this.dataGridViewTextBoxColumn2.Name = "dataGridViewTextBoxColumn2";
             // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label2.Location = new System.Drawing.Point(174, 60);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(15, 20);
-            this.label2.TabIndex = 20;
-            this.label2.Text = "-";
-            // 
-            // ScanEventHigh
-            // 
-            this.ScanEventHigh.Location = new System.Drawing.Point(191, 62);
-            this.ScanEventHigh.Name = "ScanEventHigh";
-            this.ScanEventHigh.Size = new System.Drawing.Size(37, 20);
-            this.ScanEventHigh.TabIndex = 19;
-            // 
-            // ScanEventLow
-            // 
-            this.ScanEventLow.Location = new System.Drawing.Point(135, 62);
-            this.ScanEventLow.Name = "ScanEventLow";
-            this.ScanEventLow.Size = new System.Drawing.Size(37, 20);
-            this.ScanEventLow.TabIndex = 18;
-            // 
-            // ScanEventLabel
-            // 
-            this.ScanEventLabel.AutoSize = true;
-            this.ScanEventLabel.Location = new System.Drawing.Point(64, 67);
-            this.ScanEventLabel.Name = "ScanEventLabel";
-            this.ScanEventLabel.Size = new System.Drawing.Size(66, 13);
-            this.ScanEventLabel.TabIndex = 17;
-            this.ScanEventLabel.Text = "Scan Event:";
-            // 
-            // LockmassRefinerPanel
-            // 
-            this.LockmassRefinerPanel.Controls.Add(this.LockmassTolerance);
-            this.LockmassRefinerPanel.Controls.Add(this.lockmassToleranceLabel);
-            this.LockmassRefinerPanel.Controls.Add(this.lockmassMzLabel);
-            this.LockmassRefinerPanel.Controls.Add(this.LockmassMz);
-            this.LockmassRefinerPanel.Location = new System.Drawing.Point(22, 46);
-            this.LockmassRefinerPanel.Name = "LockmassRefinerPanel";
-            this.LockmassRefinerPanel.Size = new System.Drawing.Size(283, 91);
-            this.LockmassRefinerPanel.TabIndex = 17;
-            this.LockmassRefinerPanel.Visible = false;
-            // 
-            // LockmassTolerance
-            // 
-            this.LockmassTolerance.Location = new System.Drawing.Point(135, 36);
-            this.LockmassTolerance.Name = "LockmassTolerance";
-            this.LockmassTolerance.Size = new System.Drawing.Size(62, 20);
-            this.LockmassTolerance.TabIndex = 1;
-            this.LockmassTolerance.Text = "0.1";
-            // 
-            // lockmassToleranceLabel
-            // 
-            this.lockmassToleranceLabel.AutoSize = true;
-            this.lockmassToleranceLabel.Location = new System.Drawing.Point(48, 39);
-            this.lockmassToleranceLabel.Name = "lockmassToleranceLabel";
-            this.lockmassToleranceLabel.Size = new System.Drawing.Size(79, 13);
-            this.lockmassToleranceLabel.TabIndex = 3;
-            this.lockmassToleranceLabel.Text = "m/z Tolerance:";
-            // 
-            // lockmassMzLabel
-            // 
-            this.lockmassMzLabel.AutoSize = true;
-            this.lockmassMzLabel.Location = new System.Drawing.Point(47, 12);
-            this.lockmassMzLabel.Name = "lockmassMzLabel";
-            this.lockmassMzLabel.Size = new System.Drawing.Size(81, 13);
-            this.lockmassMzLabel.TabIndex = 13;
-            this.lockmassMzLabel.Text = "Reference m/z:";
-            // 
-            // LockmassMz
-            // 
-            this.LockmassMz.Location = new System.Drawing.Point(135, 10);
-            this.LockmassMz.Name = "LockmassMz";
-            this.LockmassMz.Size = new System.Drawing.Size(62, 20);
-            this.LockmassMz.TabIndex = 0;
-            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1370,13 +1431,10 @@ namespace MSConvertGUI
             this.Load += new System.EventHandler(this.MainForm_Load);
             ((System.ComponentModel.ISupportInitialize)(this.FilterDGV)).EndInit();
             this.FilterGB.ResumeLayout(false);
-            this.ChargeStatePredictorPanel.ResumeLayout(false);
-            this.ChargeStatePredictorPanel.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.ChaSingleBox)).EndInit();
-            this.ActivationPanel.ResumeLayout(false);
-            this.ActivationPanel.PerformLayout();
-            this.SubsetPanel.ResumeLayout(false);
-            this.SubsetPanel.PerformLayout();
+            this.DemultiplexPanel.ResumeLayout(false);
+            this.DemultiplexPanel.PerformLayout();
+            this.LockmassRefinerPanel.ResumeLayout(false);
+            this.LockmassRefinerPanel.PerformLayout();
             this.MSLevelPanel.ResumeLayout(false);
             this.MSLevelPanel.PerformLayout();
             this.PeakPickingPanel.ResumeLayout(false);
@@ -1387,12 +1445,17 @@ namespace MSConvertGUI
             this.ETDFilterPanel.PerformLayout();
             this.ThresholdFilterPanel.ResumeLayout(false);
             this.ThresholdFilterPanel.PerformLayout();
+            this.ChargeStatePredictorPanel.ResumeLayout(false);
+            this.ChargeStatePredictorPanel.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.ChaSingleBox)).EndInit();
+            this.ActivationPanel.ResumeLayout(false);
+            this.ActivationPanel.PerformLayout();
+            this.SubsetPanel.ResumeLayout(false);
+            this.SubsetPanel.PerformLayout();
             this.OptionsGB.ResumeLayout(false);
             this.OptionsGB.PerformLayout();
             this.SlidingPanel.ResumeLayout(false);
             this.SlidingPanel.PerformLayout();
-            this.LockmassRefinerPanel.ResumeLayout(false);
-            this.LockmassRefinerPanel.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -1511,6 +1574,11 @@ namespace MSConvertGUI
         private System.Windows.Forms.Label lockmassToleranceLabel;
         private System.Windows.Forms.Label lockmassMzLabel;
         private System.Windows.Forms.TextBox LockmassMz;
+        private System.Windows.Forms.Panel DemultiplexPanel;
+        private System.Windows.Forms.ComboBox DemuxMassErrorTypeBox;
+        private System.Windows.Forms.TextBox DemuxMassErrorValue;
+        private System.Windows.Forms.Label DemuxMassErrorLabel;
+        private System.Windows.Forms.ComboBox DemuxTypeBox;
     }
 }
 

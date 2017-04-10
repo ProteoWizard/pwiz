@@ -156,8 +156,14 @@ namespace analysis{
         // precursors is now filled and sorted
         //@}
 
+        if (precursorsPerSpectrum_ == 0)
+            throw logic_error("Number of precursors per spectrum is 0.");
+
         // We can now solve for spectraPerCycle regardless of the prescence of overlap
         spectraPerCycle_ = demuxWindows.size() / precursorsPerSpectrum_;
+
+        if (spectraPerCycle_ == 0)
+            throw logic_error("Number of spectra per cycle is 0.");
     }
 
     void PrecursorMaskCodec::IdentifyOverlap(vector<IsolationWindow>& isolationWindows)
@@ -251,6 +257,11 @@ namespace analysis{
         set<DemuxWindow> unusedWindows;
         set_difference(possibleWindows.begin(), possibleWindows.end(), usedWindows.begin(), usedWindows.end(), inserter(unusedWindows, unusedWindows.begin()));
         */
+
+        if (overlapsPerSpectrum_ == 0)
+        {
+            throw logic_error("Number of demux windows is 0.");
+        }
 
         isolationWindows = move(returnIsolationWindows);
     }
