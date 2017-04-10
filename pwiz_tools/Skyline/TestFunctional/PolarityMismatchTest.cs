@@ -169,7 +169,8 @@ namespace pwiz.SkylineTestFunctional
                 {
                     importProgress = FindOpenForm<AllChromatogramsGraph>();
                 }
-                WaitForConditionUI(() => !string.IsNullOrEmpty(importProgress.Error) && importProgress.Error.Contains(expectedError));
+                WaitForConditionUI(() => !string.IsNullOrEmpty(importProgress.Error) && importProgress.Error.Contains(expectedError),
+                    string.Format("Timed out waiting for error message containing \"{0}\"", expectedError));
             }
             document = WaitForDocumentChangeLoaded(document);
             return document;
