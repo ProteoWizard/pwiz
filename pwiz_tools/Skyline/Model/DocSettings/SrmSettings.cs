@@ -26,6 +26,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
+using pwiz.Common.PeakFinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Irt;
@@ -825,6 +826,31 @@ namespace pwiz.Skyline.Model.DocSettings
                     return times;
             }
             return GetUnalignedRetentionTimes(lookupSequence, lookupMods);
+        }
+
+        /// <summary>
+        /// If any library has specified explicit peak boundaries for the peptide, then
+        /// return a tuple of peakStartTime, peakEndTime.
+        /// This method just returns the first peak boundary in any library.
+        /// In theory, a library should only have one peak boundary for any peptide.
+        /// </summary>
+        public PeakBounds GetExplicitPeakBounds(PeptideDocNode nodePep, MsDataFileUri filePath)
+        {
+            if (nodePep == null || !nodePep.IsProteomic)
+            {
+                return null;
+            }
+            var modifiedSequences = GetTypedSequences(nodePep.SourceUnmodifiedTextId, nodePep.SourceExplicitMods)
+                .Select(typedSequence => typedSequence.ModifiedSequence).ToArray();
+            foreach (var library in PeptideSettings.Libraries.Libraries)
+            {
+                var peakBoundaries = library.GetExplicitPeakBounds(filePath, modifiedSequences);
+                if (peakBoundaries != null)
+                {
+                    return peakBoundaries;
+                }
+            }
+            return null;
         }
 
         public double[] GetRetentionTimes(string filePath, string peptideSequence, ExplicitMods explicitMods,

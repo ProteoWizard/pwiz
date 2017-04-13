@@ -162,6 +162,17 @@ namespace pwiz.Skyline.Model.Results
                             ionMobility = DriftTimeInfo.EMPTY;
                         }
 
+                        
+                        if (_fullScan.RetentionTimeFilterType != RetentionTimeFilterType.none)
+                        {
+                            var peakBoundaries = document.Settings.GetExplicitPeakBounds(nodePep, msDataFileUri);
+                            if (peakBoundaries != null)
+                            {
+                                minTime = peakBoundaries.StartTime - _fullScan.RetentionTimeFilterLength;
+                                maxTime = peakBoundaries.EndTime + _fullScan.RetentionTimeFilterLength;
+                                canSchedule = false;
+                            }
+                        }
                         if (canSchedule)
                         {
                             if (RetentionTimeFilterType.scheduling_windows == _fullScan.RetentionTimeFilterType)

@@ -259,6 +259,7 @@
     <Compile Include="Graph\GraphPaneData.cs" />
     <Compile Include="PeakFinding\ChromSmoother.cs" />
     <Compile Include="PeakFinding\FoundPeak.cs" />
+    <Compile Include="PeakFinding\PeakBounds.cs" />
     <Compile Include="PeakFinding\PeakFinder.cs" />
     <Compile Include="PeakFinding\IFoundPeak.cs" />
     <Compile Include="PeakFinding\IPeakFinder.cs" />

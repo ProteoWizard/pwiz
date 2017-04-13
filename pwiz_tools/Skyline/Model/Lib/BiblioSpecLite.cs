@@ -29,6 +29,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using pwiz.BiblioSpec;
 using pwiz.Common.Collections;
+using pwiz.Common.PeakFinding;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.Util;
 using pwiz.Skyline.Model.DocSettings;
@@ -108,7 +109,7 @@ namespace pwiz.Skyline.Model.Lib
     [XmlRoot("bibliospec_lite_library")]
     public sealed class BiblioSpecLiteLibrary : CachedLibrary<BiblioLiteSpectrumInfo>
     {
-        private const int FORMAT_VERSION_CACHE = 10;  // v10 changes ion mobility encoding
+        private const int FORMAT_VERSION_CACHE = 11;  // v11 startTime and endTime in RetentionTimes table
 
         public const string DEFAULT_AUTHORITY = "proteome.gs.washington.edu"; // Not L10N
 
@@ -544,96 +545,24 @@ namespace pwiz.Skyline.Model.Lib
 
                 ILookup<int, KeyValuePair<int, double>> retentionTimesBySpectraIdAndFileId = null;
                 ILookup<int, KeyValuePair<int, DriftTimeInfo>> driftTimesBySpectraIdAndFileId = null;
+                ILookup<int, KeyValuePair<int, PeakBounds>> peakBoundsBySpectraIdAndFileId = null;
 
                 if (schemaVer >= 1)
                 {
-                    // Build a one-to-many relationship from the smaller RefSpectra table to the comprehensive RetentionTimes table
-                    var spectraIdFileIdTimes = new List<KeyValuePair<int, KeyValuePair<int, double>>>();
-                    var spectraIdFileIdIonMobilities = new List<KeyValuePair<int, KeyValuePair<int, DriftTimeInfo>>>();
-                    SQLiteDataReader reader = null;
-                    bool hasIonMobilityColumns = false;
-                    bool hasIonMobilityTypeColumn = false;
-                    if (schemaVer > 1)
+                    using (var cmd = _sqliteConnection.Connection.CreateCommand())
                     {
-                        try
+                        cmd.CommandText = "SELECT * FROM RetentionTimes"; // Not L10N
+                        using (var dataReader = cmd.ExecuteReader())
                         {
-                            switch (schemaVer)
-                            {
-                                default:
-                                    select.CommandText =
-                                        "SELECT RefSpectraId, SpectrumSourceId, retentionTime, driftTimeMsec, collisionalCrossSectionSqA, driftTimeHighEnergyOffsetMsec FROM [RetentionTimes]"; // Not L10N
-                                    break;
-                                case 3:
-                                    select.CommandText =
-                                        "SELECT RefSpectraId, SpectrumSourceId, retentionTime, ionMobilityType, ionMobilityValue, ionMobilityHighEnergyDriftTimeOffsetMsec FROM [RetentionTimes]"; // Not L10N
-                                    hasIonMobilityTypeColumn = true;
-                                    break;
-                                case 2:
-                                    select.CommandText =
-                                        "SELECT RefSpectraId, SpectrumSourceId, retentionTime, ionMobilityType, ionMobilityValue FROM [RetentionTimes]"; // Not L10N
-                                    hasIonMobilityTypeColumn = true;
-                                    break;
-                            } 
-                            reader = select.ExecuteReader();
-                            hasIonMobilityColumns = true;
+                            var retentionTimeReader = new RetentionTimeReader(dataReader, schemaVer);
+                            retentionTimeReader.ReadAllRows();
+                            retentionTimesBySpectraIdAndFileId =
+                                retentionTimeReader.SpectaIdFileIdTimes.ToLookup(kvp => kvp.Key, kvp => kvp.Value);
+                            driftTimesBySpectraIdAndFileId =
+                                retentionTimeReader.SpectraIdFileIdIonMobilities.ToLookup(kvp => kvp.Key, kvp => kvp.Value);
+                            peakBoundsBySpectraIdAndFileId = retentionTimeReader.PeakBoundaries.ToLookup(kvp => kvp.Key,
+                                kvp => kvp.Value);
                         }
-                        catch (SQLiteException)
-                        {
-                        }
-                    }
-                    if (null == reader)
-                    {
-                        select.CommandText = "SELECT RefSpectraId, SpectrumSourceId, retentionTime FROM [RetentionTimes]"; // Not L10N
-                        reader = select.ExecuteReader();
-                    }
-                    
-                    using (reader)
-                    {
-                        while (reader.Read())
-                        {
-                            int colIndex = 0;
-                            var refSpectraId = reader.GetInt32(colIndex++);
-                            var spectrumSourceID = reader.GetInt32(colIndex++);
-                            var retentionTime = reader.GetValue(colIndex++) as double?;
-                            // One-to-many from this entry in the RetentionTimes table to entries in the RefSpectra table
-                            spectraIdFileIdTimes.Add(new KeyValuePair<int, KeyValuePair<int, double>>(
-                                refSpectraId, 
-                                new KeyValuePair<int, double>(spectrumSourceID, retentionTime.GetValueOrDefault())) 
-                                );
-                            if (hasIonMobilityColumns)
-                            {
-                                if (hasIonMobilityTypeColumn)
-                                {
-                                    var ionMobilityType = NullSafeToInteger(reader.GetValue(colIndex++));
-                                    bool isCCS = (ionMobilityType == (int) IonMobilityType.collisionalCrossSection);
-                                    double ionMobility = ionMobilityType > 0 ? reader.GetDouble(colIndex++) : 0;
-                                    double highEnergyDriftTimeOffsetMsec = ionMobilityType > 0 && schemaVer > 2 ? reader.GetDouble(colIndex) : 0;
-                                    spectraIdFileIdIonMobilities.Add(new KeyValuePair<int, KeyValuePair<int, DriftTimeInfo>>(
-                                        refSpectraId, 
-                                        new KeyValuePair<int, DriftTimeInfo>(spectrumSourceID,
-                                            new DriftTimeInfo(isCCS? (double?)null : ionMobility, isCCS ? ionMobility : (double?)null, highEnergyDriftTimeOffsetMsec))));
-                                }
-                                else
-                                {
-                                    double driftTimeMsec = reader.GetDouble(colIndex++);
-                                    double collisionalCrossSectionSqA = reader.GetDouble(colIndex++);
-                                    double highEnergyDriftTimeOffsetMsec = reader.GetDouble(colIndex++);
-                                    var ionMobilityInfo = 
-                                        driftTimeMsec == 0 && collisionalCrossSectionSqA == 0 && highEnergyDriftTimeOffsetMsec == 0 ?
-                                        DriftTimeInfo.EMPTY :
-                                        new DriftTimeInfo(driftTimeMsec, collisionalCrossSectionSqA, highEnergyDriftTimeOffsetMsec);
-                                    spectraIdFileIdIonMobilities.Add(new KeyValuePair<int, KeyValuePair<int, DriftTimeInfo>>(
-                                        refSpectraId,
-                                        new KeyValuePair<int, DriftTimeInfo>(spectrumSourceID,
-                                            ionMobilityInfo)));
-                                }
-                            }
-                        }
-                    }
-                    retentionTimesBySpectraIdAndFileId = spectraIdFileIdTimes.ToLookup(kvp => kvp.Key, kvp => kvp.Value);
-                    if (schemaVer > 1)
-                    {
-                        driftTimesBySpectraIdAndFileId = spectraIdFileIdIonMobilities.ToLookup(kvp => kvp.Key, kvp => kvp.Value);
                     }
                 }
                 var setLibKeys = new Dictionary<LibKey, bool>(rows);
@@ -687,13 +616,18 @@ namespace pwiz.Skyline.Model.Lib
                         {
                             driftTimesByFileId = new IndexedIonMobilities(driftTimesBySpectraIdAndFileId[id]);
                         }
+                        var peakBoundariesByFileId = ImmutableSortedList<int, PeakBounds>.EMPTY;
+                        if (peakBoundsBySpectraIdAndFileId != null)
+                        {
+                            peakBoundariesByFileId = ImmutableSortedList.FromValues(peakBoundsBySpectraIdAndFileId[id].Distinct());
+                        }
                         // These libraries should not have duplicates, but just in case.
                         // CONSIDER: Emit error about redundancy?
                         LibKey key = new LibKey(sequence, charge);
                         if (!setLibKeys.ContainsKey(key))
                         {
                             setLibKeys.Add(key, true);
-                            libraryEntries.Add(new BiblioLiteSpectrumInfo(key, copies, numPeaks, id, retentionTimesByFileId, driftTimesByFileId));
+                            libraryEntries.Add(new BiblioLiteSpectrumInfo(key, copies, numPeaks, id, retentionTimesByFileId, driftTimesByFileId, peakBoundariesByFileId));
                         }
                     }
                 }
@@ -743,6 +677,7 @@ namespace pwiz.Skyline.Model.Lib
                         info.Key.WriteSequence(outStream);
                         info.RetentionTimesByFileId.Write(outStream);
                         info.IonMobilitiesByFileId.Write(outStream);
+                        WritePeakBoundaries(outStream, info.PeakBoundariesByFileId);
                     }
 
                     long sourcePosition = 0;
@@ -924,8 +859,10 @@ namespace pwiz.Skyline.Model.Lib
 
                         var retentionTimesByFileId = IndexedRetentionTimes.Read(stream);
                         var driftTimesByFileId = IndexedIonMobilities.Read(stream);
+                        ImmutableSortedList<int, PeakBounds> peakBoundaries =
+                            ReadPeakBoundaries(stream);
                         LibKey key = new LibKey(specSequence, 0, seqLength, charge);
-                        libraryEntries[i] = new BiblioLiteSpectrumInfo(key, copies, numPeaks, id, retentionTimesByFileId, driftTimesByFileId);
+                        libraryEntries[i] = new BiblioLiteSpectrumInfo(key, copies, numPeaks, id, retentionTimesByFileId, driftTimesByFileId, peakBoundaries);
                         if (seqKeyLength > 0)
                         {
                             LibSeqKey seqKey = new LibSeqKey(key, seqKeyHash, seqKeyLength);
@@ -968,6 +905,35 @@ namespace pwiz.Skyline.Model.Lib
                     loader.UpdateProgress(status.ChangeErrorException(x));
                 }
                 return false;
+            }
+        }
+
+        private ImmutableSortedList<int, PeakBounds> ReadPeakBoundaries(Stream stream)
+        {
+            int peakBoundCount = PrimitiveArrays.ReadOneValue<int>(stream);
+            if (peakBoundCount == 0)
+            {
+                return ImmutableSortedList<int, PeakBounds>.EMPTY;
+            }
+            var peakBoundaryValues = new List<KeyValuePair<int, PeakBounds>>();
+            for (int i = 0; i < peakBoundCount; i++)
+            {
+                int fileId = PrimitiveArrays.ReadOneValue<int>(stream);
+                double peakStart = PrimitiveArrays.ReadOneValue<double>(stream);
+                double peakEnd = PrimitiveArrays.ReadOneValue<double>(stream);
+                peakBoundaryValues.Add(new KeyValuePair<int, PeakBounds>(fileId, new PeakBounds(peakStart, peakEnd)));
+            }
+            return ImmutableSortedList.FromValues(peakBoundaryValues);
+        }
+
+        private void WritePeakBoundaries(Stream stream, ImmutableSortedList<int, PeakBounds> peakBoundaries)
+        {
+            PrimitiveArrays.WriteOneValue(stream, peakBoundaries.Count);
+            foreach (var entry in peakBoundaries)
+            {
+                PrimitiveArrays.WriteOneValue(stream, entry.Key);
+                PrimitiveArrays.WriteOneValue(stream, entry.Value.StartTime);
+                PrimitiveArrays.WriteOneValue(stream, entry.Value.EndTime);
             }
         }
 
@@ -1099,6 +1065,39 @@ namespace pwiz.Skyline.Model.Lib
             }
 
             return base.TryGetRetentionTimes(key, filePath, out retentionTimes);
+        }
+
+        public override PeakBounds GetExplicitPeakBounds(MsDataFileUri filePath, IEnumerable<string> peptideSequences)
+        {
+            int iFile = FindSource(filePath);
+            if (iFile < 0)
+            {
+                return null;
+            }
+            int fileId = _librarySourceFiles[iFile].Id;
+            foreach (var sequence in peptideSequences)
+            {
+                var libKey = new LibKey(sequence, 0);
+                int iFirstEntry = CollectionUtil.BinarySearch(_libraryEntries, item => item.Key.CompareSequence(libKey), true);
+                if (iFirstEntry < 0)
+                {
+                    continue;
+                }
+                for (int index = iFirstEntry; index < _libraryEntries.Length; index++)
+                {
+                    var item = _libraryEntries[index];
+                    if (0 != libKey.CompareSequence(item.Key))
+                    {
+                        break;
+                    }
+                    PeakBounds peakBoundaries;
+                    if (item.PeakBoundariesByFileId.TryGetValue(fileId, out peakBoundaries))
+                    {
+                        return peakBoundaries;
+                    }
+                }
+            }
+            return null;
         }
 
         private double[] ReadRetentionTimes(BiblioLiteSpectrumInfo info, BiblioLiteSourceInfo sourceInfo)
@@ -1792,6 +1791,182 @@ namespace pwiz.Skyline.Model.Lib
                 }
             }
         }
+
+        class RetentionTimeReader
+        {
+            enum Column
+            {
+                RefSpectraID,
+                SpectrumSourceID,
+                retentionTime,
+                driftTimeMsec,
+                collisionalCrossSectionSqA,
+                driftTimeHighEnergyOffsetMsec,
+                ionMobilityType,
+                ionMobilityValue,
+                ionMobilityHighEnergyDriftTimeOffsetMsec,
+                startTime,
+                endTime,
+                MAX_COLUMN
+            }
+
+            private int?[] _columnIndexes;
+            private int _schemaVer;
+            private IDataReader _reader;
+
+            public RetentionTimeReader(IDataReader dataReader, int schemaVer)
+            {
+                PeakBoundaries = new List<KeyValuePair<int, KeyValuePair<int, PeakBounds>>>();
+                SpectraIdFileIdIonMobilities = new List<KeyValuePair<int, KeyValuePair<int, DriftTimeInfo>>>();
+                SpectaIdFileIdTimes = new List<KeyValuePair<int, KeyValuePair<int, double>>>();
+                _schemaVer = schemaVer;
+                _columnIndexes = new int?[(int) Column.MAX_COLUMN];
+                _reader = dataReader;
+                for (int colEnum = 0; colEnum < (int) Column.MAX_COLUMN; colEnum++)
+                {
+                    string columnName = ((Column)colEnum).ToString();
+                    int ordinal = dataReader.GetOrdinal(columnName);
+                    if (ordinal >= 0)
+                    {
+                        _columnIndexes[colEnum] = ordinal;
+                    }
+                }
+            }
+
+            public List<KeyValuePair<int, KeyValuePair<int, double>>> SpectaIdFileIdTimes { get; private set; }
+
+            public List<KeyValuePair<int, KeyValuePair<int, DriftTimeInfo>>> SpectraIdFileIdIonMobilities { get; private set;
+            }
+
+            public List<KeyValuePair<int, KeyValuePair<int, PeakBounds>>> PeakBoundaries
+            {
+                get;
+                private set;
+            }
+
+
+            public void ReadAllRows()
+            {
+                while (_reader.Read())
+                {
+                    int? refSpectraId = GetInt(Column.RefSpectraID);
+                    int? spectrumSourceId = GetInt(Column.SpectrumSourceID);
+                    if (!refSpectraId.HasValue || !spectrumSourceId.HasValue)
+                    {
+                        continue;
+                    }
+                    double? retentionTime = ReadRetentionTime();
+                    if (retentionTime.HasValue)
+                    {
+                        SpectaIdFileIdTimes.Add(new KeyValuePair<int, KeyValuePair<int, double>>(refSpectraId.Value,
+                            new KeyValuePair<int, double>(spectrumSourceId.Value, retentionTime.Value)));
+                    }
+                    DriftTimeInfo driftTimeInfo = ReadDriftTimeInfo();
+                    if (driftTimeInfo != null)
+                    {
+                        SpectraIdFileIdIonMobilities.Add(
+                            new KeyValuePair<int, KeyValuePair<int, DriftTimeInfo>>(refSpectraId.Value,
+                                new KeyValuePair<int, DriftTimeInfo>(spectrumSourceId.Value, driftTimeInfo)));
+                    }
+                    var peakBounds = ReadPeakBounds();
+                    if (peakBounds != null)
+                    {
+                        PeakBoundaries.Add(
+                            new KeyValuePair<int, KeyValuePair<int, PeakBounds>>(refSpectraId.Value,
+                                new KeyValuePair<int, PeakBounds>(spectrumSourceId.Value, peakBounds)));
+                    }
+                }
+            }
+
+            public double? ReadRetentionTime()
+            {
+                return GetDouble(Column.retentionTime);
+            }
+
+            public DriftTimeInfo ReadDriftTimeInfo()
+            {
+                if (_schemaVer < 2)
+                {
+                    return null;
+                }
+                switch (_schemaVer)
+                {
+                    default:
+                    {
+                        double driftTimeMsec = GetDouble(Column.driftTimeMsec).GetValueOrDefault();
+                        double collisionalCrossSection =
+                            GetDouble(Column.collisionalCrossSectionSqA).GetValueOrDefault();
+                        double highEnergyOffset =
+                            GetDouble(Column.driftTimeHighEnergyOffsetMsec).GetValueOrDefault();
+                        if (driftTimeMsec == 0 && collisionalCrossSection == 0 &&
+                            highEnergyOffset == 0)
+                        {
+                            return null;
+                        }
+                        return new DriftTimeInfo(driftTimeMsec, collisionalCrossSection, driftTimeMsec);
+                    }
+                    case 3:
+                    case 2:
+                    {
+                        int ionMobilityType = GetInt(Column.ionMobilityType).GetValueOrDefault();
+                        double ionMobilityValue = GetDouble(Column.ionMobilityValue).GetValueOrDefault();
+                        double highEnergyOffset = GetDouble(Column.ionMobilityHighEnergyDriftTimeOffsetMsec).GetValueOrDefault();
+                        if (ionMobilityValue == 0 && highEnergyOffset == 0)
+                        {
+                            return null;
+                        }
+                        bool isCcs = ionMobilityType == (int) IonMobilityType.collisionalCrossSection;
+                        return new DriftTimeInfo(isCcs ? (double?) null : ionMobilityValue, isCcs ? ionMobilityValue : (double?) null, highEnergyOffset);
+                    }
+                }
+            }
+
+            public PeakBounds ReadPeakBounds()
+            {
+                double? startTime = GetDouble(Column.startTime);
+                double? endTime = GetDouble(Column.endTime);
+                if (startTime.HasValue && endTime.HasValue)
+                {
+                    return new PeakBounds(startTime.Value, endTime.Value);
+                }
+                return null;
+            }
+
+            private object GetValue(Column column)
+            {
+                int? columnIndex = _columnIndexes[(int) column];
+                if (!columnIndex.HasValue)
+                {
+                    return null;
+                }
+                object value = _reader.GetValue(columnIndex.Value);
+                if (value is DBNull)
+                {
+                    return null;
+                }
+                return value;
+            }
+
+            private double? GetDouble(Column column)
+            {
+                object value = GetValue(column);
+                if (value == null)
+                {
+                    return null;
+                }
+                return Convert.ToDouble(value);
+            }
+
+            private int? GetInt(Column column)
+            {
+                object value = GetValue(column);
+                if (value == null)
+                {
+                    return null;
+                }
+                return Convert.ToInt32(value);
+            }
+        }
     }
 
     public sealed class SpectrumLiteKey
@@ -1969,8 +2144,13 @@ namespace pwiz.Skyline.Model.Lib
         private readonly int _id;
         private readonly IndexedRetentionTimes _retentionTimesByFileId;
         private readonly IndexedIonMobilities _ionMobilitiesByFileId;
+        private readonly ImmutableSortedList<int, PeakBounds> _peakBoundaries;
 
-        public BiblioLiteSpectrumInfo(LibKey key, int copies, int numPeaks, int id, IndexedRetentionTimes retentionTimesByFileId, IndexedIonMobilities ionMobilitiesByFileId)
+        public BiblioLiteSpectrumInfo(LibKey key, int copies, int numPeaks, int id) : this(key, copies, numPeaks, id, default(IndexedRetentionTimes), default(IndexedIonMobilities), ImmutableSortedList<int, PeakBounds>.EMPTY)
+        {
+        }
+
+        public BiblioLiteSpectrumInfo(LibKey key, int copies, int numPeaks, int id, IndexedRetentionTimes retentionTimesByFileId, IndexedIonMobilities ionMobilitiesByFileId, ImmutableSortedList<int, PeakBounds> peakBoundaries)
         {
             _key = key;
             _copies = copies;
@@ -1978,6 +2158,7 @@ namespace pwiz.Skyline.Model.Lib
             _id = id;
             _retentionTimesByFileId = retentionTimesByFileId;
             _ionMobilitiesByFileId = ionMobilitiesByFileId;
+            _peakBoundaries = peakBoundaries;
         }
 
         public LibKey Key { get { return _key;  } }
@@ -1986,5 +2167,6 @@ namespace pwiz.Skyline.Model.Lib
         public int Id { get { return _id; } }
         public IndexedRetentionTimes RetentionTimesByFileId { get { return _retentionTimesByFileId; } }
         public IndexedIonMobilities IonMobilitiesByFileId { get { return _ionMobilitiesByFileId; } }
+        public ImmutableSortedList<int, PeakBounds> PeakBoundariesByFileId { get { return _peakBoundaries; } }
     }
 }

@@ -154,9 +154,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                     session.Save(dbRefSpectrum);
                     listLibrary.Add(new BiblioLiteSpectrumInfo(spectrum.Key, dbRefSpectrum.Copies,
                                                                 dbRefSpectrum.NumPeaks,
-                                                                (int) (dbRefSpectrum.Id ?? 0),
-                                                                default(IndexedRetentionTimes),
-                                                                default(IndexedIonMobilities)));
+                                                                (int) (dbRefSpectrum.Id ?? 0)));
                     if (progressMonitor != null)
                     {
                         if (progressMonitor.IsCanceled)
@@ -383,9 +381,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                     dictLibrary.Add(libKey,
                                                     new BiblioLiteSpectrumInfo(libKey, refSpectra.Copies,
                                                                                refSpectra.NumPeaks,
-                                                                               (int) (refSpectra.Id ?? 0),
-                                                                               default(IndexedRetentionTimes),
-                                                                               default(IndexedIonMobilities)));
+                                                                               (int) (refSpectra.Id ?? 0)));
                                 }
 
                                 session.Flush();
@@ -419,16 +415,11 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                 session.Flush();
                                 session.Clear();
 
-                                // TODO(nicksh): preserve retention time information.
-                                var retentionTimesByFileId = default(IndexedRetentionTimes);
-                                var driftTimesByFileId = default(IndexedIonMobilities);
                                 dictLibrary.Add(libKey,
                                                 new BiblioLiteSpectrumInfo(libKey,
                                                                            refSpectra.Copies,
                                                                            refSpectra.NumPeaks,
-                                                                           (int) (refSpectra.Id ?? 0), 
-                                                                           retentionTimesByFileId,
-                                                                           driftTimesByFileId));
+                                                                           (int) (refSpectra.Id ?? 0)));
 
                                 // Save entries in the redundant library.
                                 if (saveRedundantLib && redundantSpectraKeys.Count > 0)

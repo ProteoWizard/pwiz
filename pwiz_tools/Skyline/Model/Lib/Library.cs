@@ -27,6 +27,7 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
+using pwiz.Common.PeakFinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -663,6 +664,15 @@ namespace pwiz.Skyline.Model.Lib
         /// <param name="retentionTimes"></param>
         /// <returns>True if retention time information was retrieved successfully</returns>
         public abstract bool TryGetRetentionTimes(int fileIndex, out LibraryRetentionTimes retentionTimes);
+
+        /// <summary>
+        /// If an explicit peak boundary has been set for any of the peptide sequences, then return 
+        /// that peak boundary.
+        /// </summary>
+        public virtual PeakBounds GetExplicitPeakBounds(MsDataFileUri filePath, IEnumerable<string> peptideSequences)
+        {
+            return null;
+        }
 
         /// <summary>
         /// Attempts to get iRT information from the library.

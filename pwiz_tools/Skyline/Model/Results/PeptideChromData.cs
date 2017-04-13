@@ -150,10 +150,19 @@ namespace pwiz.Skyline.Model.Results
         {
             // Make sure times are evenly spaced before doing any peak detection.
             EvenlySpaceTimes();
-
+            var explicitPeakBounds = _document.Settings.GetExplicitPeakBounds(NodePep, FileInfo.FilePath);
             // Pick peak groups at the precursor level
             foreach (var chromDataSet in _dataSets)
-                chromDataSet.PickChromatogramPeaks(_retentionTimes, _isAlignedTimes);
+            {
+                if (explicitPeakBounds == null)
+                {
+                    chromDataSet.PickChromatogramPeaks(_retentionTimes, _isAlignedTimes);
+                }
+                else
+                {
+                    chromDataSet.SetExplicitPeakBounds(explicitPeakBounds);
+                }
+            }
 
             // Merge where possible and pick peak groups at the peptide level
             _listListPeakSets.Clear();

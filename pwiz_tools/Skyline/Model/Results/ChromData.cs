@@ -129,6 +129,13 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        public void SetExplicitPeakBounds(PeakBounds peakBounds)
+        {
+            Finder = Crawdads.NewCrawdadPeakFinder();
+            Finder.SetChromatogram(Times, Intensities);
+            RawPeaks = new [] {Finder.GetPeak(TimeToIndex(peakBounds.StartTime), TimeToIndex(peakBounds.EndTime))};
+        }
+
         private int[] TimesToIndices(double[] retentionTimes)
         {
             var indices = new int[retentionTimes.Length];

@@ -381,6 +381,19 @@ namespace pwiz.Skyline.Model.Results
         private const double NOISE_CORRELATION_THRESHOLD = 0.95;
         private const int MINIMUM_PEAKS = 3;
 
+        public void SetExplicitPeakBounds(PeakBounds peakBounds)
+        {
+            foreach (var chromData in _listChromData)
+            {
+                chromData.SetExplicitPeakBounds(peakBounds);
+
+            }
+            var firstChromData = _listChromData.First();
+            var firstPeak = new ChromDataPeak(firstChromData, firstChromData.RawPeaks.First());
+            ChromDataPeakList chromDataPeakList = new ChromDataPeakList(firstPeak, _listChromData);
+            _listPeakSets.Add(chromDataPeakList);
+        }
+        
         /// <summary>
         /// Do initial grouping of and ranking of peaks using the Crawdad
         /// peak detector.
