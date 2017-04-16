@@ -1903,7 +1903,7 @@ namespace pwiz.Skyline.Model.Lib
                         {
                             return null;
                         }
-                        return new DriftTimeInfo(driftTimeMsec, collisionalCrossSection, driftTimeMsec);
+                        return new DriftTimeInfo(driftTimeMsec, collisionalCrossSection, highEnergyOffset);
                     }
                     case 3:
                     case 2:
