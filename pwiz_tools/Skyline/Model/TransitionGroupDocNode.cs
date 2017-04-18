@@ -1065,7 +1065,11 @@ namespace pwiz.Skyline.Model
 
                     // Check if this object has existing results information
                     int iResultOld;
-                    if (!dictChromIdIndex.TryGetValue(chromatograms.Id.GlobalIndex, out iResultOld) ||
+                    if (!diff.DiffResults)
+                    {
+                        iResultOld = chromIndex;
+                    }
+                    else if (!dictChromIdIndex.TryGetValue(chromatograms.Id.GlobalIndex, out iResultOld) ||
                         (Results != null && iResultOld >= Results.Count))
                     {
                         iResultOld = -1;

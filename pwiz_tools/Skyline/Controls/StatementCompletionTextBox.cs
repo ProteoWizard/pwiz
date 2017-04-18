@@ -581,7 +581,7 @@ namespace pwiz.Skyline.Controls
                     ProteinMetadata mainName = match.AlternativeDescription;
                     string matchName = match.Protein.Name;
                     var proteinInfo = match.Protein.ProteinMetadata;
-                    if (matchName.Length > MAX_NAME_LENGTH)
+                    if (matchName != null && matchName.Length > MAX_NAME_LENGTH)
                         proteinInfo = proteinInfo.ChangeName(matchName.Substring(0, MAX_NAME_LENGTH) + "..."); // Not L10N
                     var alternativeNames = new List<ProteinMetadata>();
                     if (mainName == null)
@@ -616,7 +616,7 @@ namespace pwiz.Skyline.Controls
                         listItem.ToolTipText = StripTabs(tooltip.ToString());
                     }
                     // We want the sort to be on what we matched in the description, and what follows.
-                    var remains = match.Protein.ProteinMetadata.Description;
+                    var remains = match.Protein.ProteinMetadata.Description ?? string.Empty;
                     int pos = remains.ToLower().IndexOf(searchText.ToLower(), StringComparison.Ordinal);
                     if (pos > 0)
                         remains = remains.Substring(pos);

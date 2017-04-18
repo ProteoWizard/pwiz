@@ -36,7 +36,7 @@ namespace pwiz.ProteomeDatabase.DataModel
             IsPrimary = (protein==null);
             Protein = protein;
             // ReSharper restore DoNotCallOverridableMethodsInConstructor
-            _proteinMetadata = proteinMetadata;
+            _proteinMetadata = proteinMetadata ?? ProteinMetadata.EMPTY;
         }
 
         public virtual bool IsPrimary { get; set; }

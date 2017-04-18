@@ -103,7 +103,7 @@ namespace pwiz.Skyline.SettingsUI
             IdentityPath selectedPath;
             IdentityPath toPath = AddAllPeptidesSelectedPath;
 
-             DocAllPeptides = AddPeptides(_document, broker, toPath, out selectedPath);
+            DocAllPeptides = AddPeptides(_document, broker, toPath, out selectedPath);
             AddAllPeptidesSelectedPath = selectedPath;
         }
 
@@ -595,7 +595,7 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         // If the protein is not already in the document, 
                         // check to see if we have already created a PeptideGroupDocNode for it. 
-                        if (dictPeptideGroupsNew.TryGetValue(name, out peptideGroupDocNode))
+                        if (name != null && dictPeptideGroupsNew.TryGetValue(name, out peptideGroupDocNode))
                             foundInList = true;
                         // If not, create a new PeptideGroupDocNode.
                         else

@@ -34,6 +34,7 @@ namespace pwiz.SkylineTestFunctional
     /// <summary>
     /// Functional tests for the Background Proteome.
     /// </summary>
+    // ReSharper disable LocalizableElement
     [TestClass]
     public class BackgroundProteomeTest : AbstractFunctionalTest
     {
@@ -47,8 +48,7 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestBackgroundProteome()
         {
-            TestFilesZip = @"TestFunctional\BackgroundProteomeTest.zip";
-            RunFunctionalTest();
+            TestFilesZip = @"TestFunctional\BackgroundProteomeTest.zip";            RunFunctionalTest();
         }
 
         protected override void DoTest()
@@ -56,43 +56,58 @@ namespace pwiz.SkylineTestFunctional
             var protdbPath = TestFilesDir.GetTestPath(_backgroundProteomeName + ProteomeDb.EXT_PROTDB);
             CreateBackgroundProteome(protdbPath, _backgroundProteomeName, TestFilesDir.GetTestPath("celegans_mini.fasta"));
             WaitForProteinMetadataBackgroundLoaderCompleted();
-            // CreateBackgroundProteome(protdbPath, _backgroundProteomeName, TestFilesDir.GetTestPath("celegans_mini.fasta"), "TrypsinK [K | P]");  TODO(bspratt) - test multi-enzyme protdb
 
             RunUI(() =>
                 {
                     SequenceTree sequenceTree = SkylineWindow.SequenceTree;
                     sequenceTree.BeginEdit(false);
-// ReSharper disable LocalizableElement
                     sequenceTree.StatementCompletionEditBox.TextBox.Text = "Y18D10A.20";    // Not L10N
-// ReSharper restore LocalizableElement
                     sequenceTree.CommitEditBox(false);
                 });
             WaitForProteinMetadataBackgroundLoaderCompleted();
             RunUI(() =>
-                {
-                    SequenceTree sequenceTree = SkylineWindow.SequenceTree;
-                    sequenceTree.BeginEdit(false);
-// ReSharper disable LocalizableElement
-                    sequenceTree.StatementCompletionEditBox.TextBox.Text = "TISEVIAQGK";    // Not L10N
-// ReSharper restore LocalizableElement
-                });
-            var statementCompletionForm = WaitForOpenForm<StatementCompletionForm>();
-            Assert.IsNotNull(statementCompletionForm);
+            {
+                SequenceTree sequenceTree = SkylineWindow.SequenceTree;
+                sequenceTree.BeginEdit(false);
+                sequenceTree.StatementCompletionEditBox.TextBox.Text = "AccessionWithout";
+            });
+            WaitForOpenForm<StatementCompletionForm>();
+            Assert.IsNotNull(FindOpenForm<StatementCompletionForm>());
+            RunUI(() =>
+            {
+                var statementCompletionForm = FindOpenForm<StatementCompletionForm>();
+                Assert.IsNotNull(statementCompletionForm);
+                SequenceTree sequenceTree = SkylineWindow.SequenceTree;
+                Assert.IsNotNull(sequenceTree.StatementCompletionEditBox);
+                sequenceTree.StatementCompletionEditBox.OnSelectionMade(
+                    (StatementCompletionItem) statementCompletionForm.ListView.Items[0].Tag);
+            });
+            WaitForProteinMetadataBackgroundLoaderCompleted();
+            RunUI(() =>
+            {
+                SequenceTree sequenceTree = SkylineWindow.SequenceTree;
+                sequenceTree.BeginEdit(false);
+                sequenceTree.StatementCompletionEditBox.TextBox.Text = "TISEVIAQGK"; // Not L10N
+            });
+            WaitForOpenForm<StatementCompletionForm>();
 
             RunUI(() =>
-                {
-                    SequenceTree sequenceTree = SkylineWindow.SequenceTree;
-                    Assert.IsNotNull(sequenceTree.StatementCompletionEditBox);
-                    sequenceTree.StatementCompletionEditBox.OnSelectionMade(
-                        (StatementCompletionItem) statementCompletionForm.ListView.Items[0].Tag);
-                });
-            WaitForProteinMetadataBackgroundLoaderCompleted();
+            {
+                var statementCompletionForm = FindOpenForm<StatementCompletionForm>();
+                Assert.IsNotNull(statementCompletionForm);
+                SequenceTree sequenceTree = SkylineWindow.SequenceTree;
+                Assert.IsNotNull(sequenceTree.StatementCompletionEditBox);
+                sequenceTree.StatementCompletionEditBox.OnSelectionMade(
+                    (StatementCompletionItem) statementCompletionForm.ListView.Items[0].Tag);
+            });
             var peptideGroups = new List<PeptideGroupDocNode>(Program.ActiveDocument.PeptideGroups);
-            Assert.AreEqual(2, peptideGroups.Count);
+            Assert.AreEqual(3, peptideGroups.Count);
             Assert.AreEqual("Y18D10A.20", peptideGroups[0].Name);
             Assert.IsTrue(peptideGroups[0].AutoManageChildren);
-            Assert.AreEqual("C37A2.7", peptideGroups[1].Name);
-            Assert.IsFalse(peptideGroups[1].AutoManageChildren);
+            Assert.AreEqual("AccessionWithoutDescription", peptideGroups[1].Name);
+            Assert.IsTrue(peptideGroups[1].AutoManageChildren);
+            Assert.AreEqual("C37A2.7", peptideGroups[2].Name);
+            Assert.IsFalse(peptideGroups[2].AutoManageChildren);
 
             // Save and re-open with prot db moved to see MissingFileDlg
             int pepCount = SkylineWindow.Document.PeptideCount;
