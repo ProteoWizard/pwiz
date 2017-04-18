@@ -587,5 +587,8 @@
     <Setting Name="ExportPolarityFilterEnum" Type="System.String" Scope="User">
       <Value Profile="(Default)">all</Value>
     </Setting>
+    <Setting Name="RTRegressionMethod" Type="System.String" Scope="User">
+      <Value Profile="(Default)">linear</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

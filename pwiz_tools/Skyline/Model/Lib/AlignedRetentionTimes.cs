@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.RetentionTimes;
 
 namespace pwiz.Skyline.Model.Lib
 {
@@ -67,7 +68,8 @@ namespace pwiz.Skyline.Model.Lib
         /// In cases where there is more than one MS2 id in either file, only the earliest MS2 id from
         /// each file is used.
         /// </summary>
-        public static AlignedRetentionTimes AlignLibraryRetentionTimes(IDictionary<string, double> target, IDictionary<string, double> originalTimes, double refinementThreshhold, Func<bool> isCanceled)
+        public static AlignedRetentionTimes AlignLibraryRetentionTimes(IDictionary<string, double> target, IDictionary<string, double> originalTimes, double refinementThreshhold, RegressionMethodRT regressionMethod,
+            Func<bool> isCanceled)
         {
             var calculator = new DictionaryRetentionScoreCalculator("alignment", originalTimes); // Not L10N
             var targetTimesList = new List<MeasuredRetentionTime>();
@@ -90,7 +92,7 @@ namespace pwiz.Skyline.Model.Lib
                 targetTimesList.Add(measuredRetentionTime);
             }
             RetentionTimeStatistics regressionStatistics;
-            var regression = RetentionTimeRegression.CalcRegression(XmlNamedElement.NAME_INTERNAL, new[] {calculator}, targetTimesList, out regressionStatistics);
+            var regression = RetentionTimeRegression.CalcRegression(XmlNamedElement.NAME_INTERNAL, new[] {calculator}, regressionMethod,targetTimesList,out regressionStatistics);
             if (regression == null)
             {
                 return null;
@@ -107,7 +109,7 @@ namespace pwiz.Skyline.Model.Lib
                 var cache = new RetentionTimeScoreCache(new[] {calculator}, new MeasuredRetentionTime[0], null);
                 regressionRefined = regression.FindThreshold(refinementThreshhold, null, 0,
                                                                 targetTimesList.Count, new MeasuredRetentionTime[0], targetTimesList,null, regressionStatistics,
-                                                                calculator, cache, isCanceled, ref regressionRefinedStatistics,
+                                                                calculator, regressionMethod, cache, isCanceled, ref regressionRefinedStatistics,
                                                                 ref outIndexes);
             }
                 

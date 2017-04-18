@@ -24,6 +24,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -580,6 +581,7 @@ namespace pwiz.Skyline.Model.Irt
                                                                        new MeasuredRetentionTime[0],
                                                                        peptidesTimes,null,
                                                                        calculator,
+                                                                       RegressionMethodRT.linear, 
                                                                        () => false);
 
                 var startingCount = peptidesTimes.Length;

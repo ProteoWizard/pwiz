@@ -29,6 +29,7 @@ using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
+using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -101,8 +102,13 @@ namespace pwiz.Skyline.SettingsUI
                     else
                     {
                         cbAutoCalc.Checked = false;
-                        textSlope.Text = _regression.Conversion.Slope.ToString(LocalizationHelper.CurrentCulture);
-                        textIntercept.Text = _regression.Conversion.Intercept.ToString(LocalizationHelper.CurrentCulture);
+                        var regressionLine = _regression.Conversion as RegressionLineElement;
+                        if (regressionLine != null)
+                        {
+                            textSlope.Text = regressionLine.Slope.ToString(LocalizationHelper.CurrentCulture);
+                            textIntercept.Text =
+                                regressionLine.Intercept.ToString(LocalizationHelper.CurrentCulture);
+                        }
                     }
                     textTimeWindow.Text = string.Format("{0:F04}", _regression.TimeWindow); // Not L10N
                 }
@@ -543,8 +549,11 @@ namespace pwiz.Skyline.SettingsUI
             RetentionScoreCalculatorSpec calculatorSpec;
             RetentionTimeStatistics statistics;
 
-            RetentionTimeRegression regression = RetentionTimeRegression.CalcRegression("Recalc", calculators, // Not L10N
-                                                                                        peptidesTimes, out statistics);
+            var regression = RetentionTimeRegression.CalcRegression("Recalc", // Not L10N
+                                                                    calculators,
+                                                                    RegressionMethodRT.linear,
+                                                                    peptidesTimes,
+                                                                    out statistics);
 
             double r = 0;
             if (regression == null)
@@ -562,8 +571,12 @@ namespace pwiz.Skyline.SettingsUI
             }
             else
             {
-                textSlope.Text = string.Format("{0}", regression.Conversion.Slope); // Not L10N 
-                textIntercept.Text = string.Format("{0}", regression.Conversion.Intercept); // Not L10N
+                var regressionLine = regression.Conversion as RegressionLineElement;
+                if (regressionLine != null)
+                {
+                    textSlope.Text = string.Format("{0}", regressionLine.Slope); // Not L10N 
+                    textIntercept.Text = string.Format("{0}", regressionLine.Intercept); // Not L10N
+                }
                 textTimeWindow.Text = string.Format("{0:F01}", regression.TimeWindow); // Not L10N
 
                 // Select best calculator match.

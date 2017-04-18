@@ -210,6 +210,7 @@
     <Compile Include="NegativeIonChromatogramsTest.cs" />
     <Compile Include="NeutralLossLibraryTest.cs" />
     <Compile Include="NeutralLossTest.cs" />
+    <Compile Include="NonLinearRegressionTest.cs" />
     <Compile Include="PasteMoleculesTest.cs" />
     <Compile Include="PeakScoringModelTest.cs" />
     <Compile Include="PolarityMismatchTest.cs" />

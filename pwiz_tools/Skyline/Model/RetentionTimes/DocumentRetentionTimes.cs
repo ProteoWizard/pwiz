@@ -31,6 +31,8 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.RetentionTimes
 {
+    public enum RegressionMethodRT { linear, kde, loess }
+
     /// <summary>
     /// Contains all of the retention time alignments that are relevant for a <see cref="SrmDocument"/>
     /// </summary>
@@ -39,12 +41,14 @@ namespace pwiz.Skyline.Model.RetentionTimes
     {
         public static readonly DocumentRetentionTimes EMPTY = new DocumentRetentionTimes(new RetentionTimeSource[0], new FileRetentionTimeAlignments[0]);
         public const double REFINEMENT_THRESHHOLD = .99;
-        public DocumentRetentionTimes(IEnumerable<RetentionTimeSource> sources, IEnumerable<FileRetentionTimeAlignments> fileAlignments) : this()
+        public DocumentRetentionTimes(IEnumerable<RetentionTimeSource> sources, IEnumerable<FileRetentionTimeAlignments> fileAlignments)
+            : this()
         {
             RetentionTimeSources = ResultNameMap.FromNamedElements(sources);
             FileAlignments = ResultNameMap.FromNamedElements(fileAlignments);
         }
-        public DocumentRetentionTimes(SrmDocument document) : this()
+        public DocumentRetentionTimes(SrmDocument document)
+            : this()
         {
             RetentionTimeSources = ListAvailableRetentionTimeSources(document.Settings);
             FileAlignments = ResultNameMap<FileRetentionTimeAlignments>.EMPTY;
@@ -133,12 +137,14 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 {
                     continue;
                 }
-                var alignedFile = AlignedRetentionTimes.AlignLibraryRetentionTimes(targetTimes, entry.Value, REFINEMENT_THRESHHOLD, ()=>progressMonitor.IsCanceled);
+                var alignedFile = AlignedRetentionTimes.AlignLibraryRetentionTimes(targetTimes, entry.Value, REFINEMENT_THRESHHOLD, RegressionMethodRT.linear, () => progressMonitor.IsCanceled);
                 if (alignedFile == null || !RetentionTimeRegression.IsAboveThreshold(alignedFile.RegressionRefinedStatistics.R, REFINEMENT_THRESHHOLD))
                 {
                     continue;
                 }
-                alignments.Add(new RetentionTimeAlignment(entry.Key, alignedFile.RegressionRefined.Conversion));
+                var regressionLine = alignedFile.RegressionRefined.Conversion as RegressionLineElement;
+                if (regressionLine != null)
+                    alignments.Add(new RetentionTimeAlignment(entry.Key, regressionLine));
             }
             return new FileRetentionTimeAlignments(dataFileName, alignments);
         }
@@ -209,7 +215,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
             RetentionTimeSources = ResultNameMap.FromNamedElements(sources);
             FileAlignments = ResultNameMap.FromNamedElements(fileAlignments);
         }
-        
+
         public void WriteXml(XmlWriter writer)
         {
             writer.WriteElements(RetentionTimeSources.Values);

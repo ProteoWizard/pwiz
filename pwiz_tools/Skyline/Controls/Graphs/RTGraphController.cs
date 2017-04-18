@@ -23,6 +23,7 @@ using System.Windows.Forms;
 using pwiz.Common.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -58,6 +59,30 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get { return Helpers.ParseEnum(Settings.Default.RTPointsType, PointsTypeRT.targets); }
             set { Settings.Default.RTPointsType = value.ToString(); }
+        }
+
+        public static RegressionMethodRT RegressionMethod
+        {
+            get { return Helpers.ParseEnum(Settings.Default.RTRegressionMethod, RegressionMethodRT.linear); }
+            set { Settings.Default.RTRegressionMethod = value.ToString(); }
+        }
+
+        public static bool CanDoRefinementForRegressionMethod
+        {
+            get
+            {
+                switch (RegressionMethod)
+                {
+                    case RegressionMethodRT.kde:
+                        return false;
+                    case RegressionMethodRT.loess:
+                        return false;
+                    case RegressionMethodRT.linear:
+                        return true;
+                    default:
+                        return true;
+                } 
+            }
         }
 
         public static double OutThreshold { get { return Settings.Default.RTResidualRThreshold; } }

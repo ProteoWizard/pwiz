@@ -181,6 +181,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         return AlignedRetentionTimes.AlignLibraryRetentionTimes(
                             dataRow.TargetTimes, dataRow.SourceTimes,
                             DocumentRetentionTimes.REFINEMENT_THRESHHOLD,
+                            RegressionMethodRT.linear, 
                             () => cancellationToken.IsCancellationRequested);
                     }
                     catch (OperationCanceledException operationCanceledException)
@@ -331,7 +332,9 @@ namespace pwiz.Skyline.Controls.Graphs
                         var regression = AlignedRetentionTimes.RegressionRefined ?? AlignedRetentionTimes.Regression;
                         if (regression != null)
                         {
-                            return new RegressionLine(regression.Conversion.Slope, regression.Conversion.Intercept);
+                            var regressionLine = regression.Conversion as RegressionLineElement;
+                            if(regressionLine != null)
+                                return new RegressionLine(regressionLine.Slope, regressionLine.Intercept);
                         }
                     }
                     if (Alignment != null)
@@ -395,7 +398,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         return null;
                     }
-                    return AlignedRetentionTimes.Regression.Conversion.Slope;
+                    var regressionLine = AlignedRetentionTimes.Regression.Conversion as RegressionLineElement;
+                    return regressionLine != null ? regressionLine.Slope : null as double?;
                 }
             }
             public double? UnrefinedIntercept
@@ -406,7 +410,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         return null;
                     }
-                    return AlignedRetentionTimes.Regression.Conversion.Intercept;
+                    var regressionLine = AlignedRetentionTimes.Regression.Conversion as RegressionLineElement;
+                    return regressionLine != null ? regressionLine.Intercept: null as double?;
                 }
             }
             public double? UnrefinedCorrelationCoefficient

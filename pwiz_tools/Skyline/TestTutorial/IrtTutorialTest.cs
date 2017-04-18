@@ -27,6 +27,7 @@ using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Results;
@@ -204,7 +205,7 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(peptideSettingsUI1, peptideSettingsUI1.OkDialog);
 
             // Inspect RT regression graph p. 8
-            RunUI(SkylineWindow.ShowRTLinearRegressionGraphScoreToRun);
+            RunUI(SkylineWindow.ShowRTRegressionGraphScoreToRun);
             WaitForGraphs();
 
             RestoreViewOnScreen(08);
@@ -531,7 +532,7 @@ namespace pwiz.SkylineTestTutorial
             const string sched90MinFileroot = "A_D110913_SiRT_HELA_11_sMRM_150selected_90min-5-40_SIMPLE"; // Not L10N
             ImportNewResults(new[] { sched90MinFileroot }, -1, false);
 
-            RunUI(SkylineWindow.ShowRTLinearRegressionGraphScoreToRun);
+            RunUI(SkylineWindow.ShowRTRegressionGraphScoreToRun);
             WaitForGraphs();
 
             PauseForScreenShot<GraphSummary.RTGraphView>("RT Regression graph metafile", 23);
@@ -709,8 +710,9 @@ namespace pwiz.SkylineTestTutorial
         private static void VerifyRTRegression(double slope, double intercept, double r)
         {
             WaitForCondition(() => SkylineWindow.RTGraphController.RegressionRefined != null);
-            Assert.AreEqual(slope, SkylineWindow.RTGraphController.RegressionRefined.Conversion.Slope, 0.005);
-            Assert.AreEqual(intercept, SkylineWindow.RTGraphController.RegressionRefined.Conversion.Intercept, 0.005);
+            var regressionRT = (RegressionLineElement) SkylineWindow.RTGraphController.RegressionRefined.Conversion;
+            Assert.AreEqual(slope, regressionRT.Slope, 0.005);
+            Assert.AreEqual(intercept, regressionRT.Intercept, 0.005);
             Assert.AreEqual(r, SkylineWindow.RTGraphController.StatisticsRefined.R, 0.00005);
         }
 

@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
@@ -103,7 +104,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.OpenFile(documentPath));
             WaitForDocumentLoaded();
 
-            var graphSummary = ShowDialog<GraphSummary>(SkylineWindow.ShowRTLinearRegressionGraphRunToRun);
+            var graphSummary = ShowDialog<GraphSummary>(SkylineWindow.ShowRTRegressionGraphRunToRun);
 
             WaitForGraphs();
 
@@ -174,8 +175,9 @@ namespace pwiz.SkylineTestFunctional
                 var regression = regressionPane.RegressionRefined;
                 var statistics = regressionPane.StatisticsRefined;
                 Assert.AreEqual(1, statistics.R, 10e-3);
-                Assert.AreEqual(1, regression.Conversion.Slope, 10e-3);
-                Assert.AreEqual(0, regression.Conversion.Intercept, 10e-3);
+                var regressionLine = (RegressionLineElement) regression.Conversion;
+                Assert.AreEqual(1, regressionLine.Slope, 10e-3);
+                Assert.AreEqual(0, regressionLine.Intercept, 10e-3);
                 Assert.AreEqual(0.5, regression.TimeWindow, 0.00001);
 
                 RunUI(() => SkylineWindow.ShowPlotType(PlotTypeRT.residuals));
@@ -192,7 +194,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 SkylineWindow.ShowPlotType(PlotTypeRT.correlation);
-                SkylineWindow.ShowRTLinearRegressionGraphScoreToRun();
+                SkylineWindow.ShowRTRegressionGraphScoreToRun();
             });
             if (!graphSummary.TryGetGraphPane(out regressionPane))
                 Assert.Fail("First graph pane was not RTLinearRegressionGraphPane");
@@ -201,12 +203,13 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsFalse(graphSummary.IsRunToRun);
             var regressionScoreToRun = regressionPane.RegressionRefined;
             var statisticsScoreToRun = regressionPane.StatisticsRefined;
-            Assert.AreEqual(1.01, regressionScoreToRun.Conversion.Slope, 10e-3);
-            Assert.AreEqual(0.32, regressionScoreToRun.Conversion.Intercept, 10e-3);
+            var regressionScoreToRunLine = (RegressionLineElement) regressionScoreToRun.Conversion;
+            Assert.AreEqual(1.01, regressionScoreToRunLine.Slope, 10e-3);
+            Assert.AreEqual(0.32, regressionScoreToRunLine.Intercept, 10e-3);
             Assert.AreEqual(15.2, regressionScoreToRun.TimeWindow, 10e-2);
             Assert.AreEqual(0.9483, statisticsScoreToRun.R, 10e-3);
 
-            RunUI(SkylineWindow.ShowRTLinearRegressionGraphRunToRun);
+            RunUI(SkylineWindow.ShowRTRegressionGraphRunToRun);
             Assert.IsTrue(graphSummary.IsRunToRun);
         }
 
@@ -219,8 +222,9 @@ namespace pwiz.SkylineTestFunctional
 
             var targetPeptideCount = statistics.ListRetentionTimes.Count(p => p != 0);
             var originalPeptideCount = statistics.ListHydroScores.Count(p => p != 0);
-            var intercept = regression.Conversion.Intercept;
-            var slope = regression.Conversion.Slope;
+            var regressionLine = (RegressionLineElement) regression.Conversion;
+            var intercept = regressionLine.Intercept;
+            var slope = regressionLine.Slope;
             var window = regression.TimeWindow;
             if (!IsRecordMode)
             {

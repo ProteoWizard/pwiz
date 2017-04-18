@@ -749,11 +749,11 @@
   <data name="runToRunToolStripMenuItem.Text" xml:space="preserve">
     <value>Run To Run</value>
   </data>
-  <data name="linearRegressionContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="regressionContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 22</value>
   </data>
-  <data name="linearRegressionContextMenuItem.Text" xml:space="preserve">
-    <value>Linear Regression</value>
+  <data name="regressionContextMenuItem.Text" xml:space="preserve">
+    <value>Regression</value>
   </data>
   <data name="schedulingContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 22</value>
@@ -893,6 +893,30 @@
   <data name="setRTThresholdContextMenuItem.Text" xml:space="preserve">
     <value>Set Threshold...</value>
   </data>
+  <data name="linearRegressionContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>208, 22</value>
+  </data>
+  <data name="linearRegressionContextMenuItem.Text" xml:space="preserve">
+    <value>Linear Regression</value>
+  </data>
+  <data name="kernelDensityEstimationContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>208, 22</value>
+  </data>
+  <data name="kernelDensityEstimationContextMenuItem.Text" xml:space="preserve">
+    <value>Kernel Density Estimation</value>
+  </data>
+  <data name="loessContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>208, 22</value>
+  </data>
+  <data name="loessContextMenuItem.Text" xml:space="preserve">
+    <value>LOESS</value>
+  </data>
+  <data name="setRegressionMethodContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>177, 22</value>
+  </data>
+  <data name="setRegressionMethodContextMenuItem.Text" xml:space="preserve">
+    <value>Regression Method</value>
+  </data>
   <data name="toolStripSeparator22.Size" type="System.Drawing.Size, System.Drawing">
     <value>174, 6</value>
   </data>
@@ -966,7 +990,7 @@
     <value>174, 6</value>
   </data>
   <data name="contextMenuRetentionTimes.Size" type="System.Drawing.Size, System.Drawing">
-    <value>178, 386</value>
+    <value>178, 408</value>
   </data>
   <data name="&gt;&gt;contextMenuRetentionTimes.Name" xml:space="preserve">
     <value>contextMenuRetentionTimes</value>
@@ -2539,13 +2563,13 @@
     <value>&amp;Peptide Comparison</value>
   </data>
   <data name="scoreToRunMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>143, 22</value>
+    <value>152, 22</value>
   </data>
   <data name="scoreToRunMenuItem.Text" xml:space="preserve">
     <value>Score To Run</value>
   </data>
   <data name="runToRunMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>143, 22</value>
+    <value>152, 22</value>
   </data>
   <data name="runToRunMenuItem.Text" xml:space="preserve">
     <value>Run To Run</value>
@@ -2553,11 +2577,11 @@
   <data name="linearRegressionMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Shift+F8</value>
   </data>
-  <data name="linearRegressionMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="regressionMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>228, 22</value>
   </data>
-  <data name="linearRegressionMenuItem.Text" xml:space="preserve">
-    <value>&amp;Linear Regression</value>
+  <data name="regressionMenuItem.Text" xml:space="preserve">
+    <value>&amp;Regression</value>
   </data>
   <data name="retentionTimeAlignmentsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>228, 22</value>
@@ -3711,10 +3735,10 @@
   <data name="&gt;&gt;timePeptideComparisonContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;linearRegressionContextMenuItem.Name" xml:space="preserve">
-    <value>linearRegressionContextMenuItem</value>
+  <data name="&gt;&gt;regressionContextMenuItem.Name" xml:space="preserve">
+    <value>regressionContextMenuItem</value>
   </data>
-  <data name="&gt;&gt;linearRegressionContextMenuItem.Type" xml:space="preserve">
+  <data name="&gt;&gt;regressionContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;scoreToRunToolStripMenuItem.Name" xml:space="preserve">
@@ -3859,6 +3883,30 @@
     <value>setRTThresholdContextMenuItem</value>
   </data>
   <data name="&gt;&gt;setRTThresholdContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;setRegressionMethodContextMenuItem.Name" xml:space="preserve">
+    <value>setRegressionMethodContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;setRegressionMethodContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;linearRegressionContextMenuItem.Name" xml:space="preserve">
+    <value>linearRegressionToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;linearRegressionContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;kernelDensityEstimationContextMenuItem.Name" xml:space="preserve">
+    <value>kernelDensityEstimationToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;kernelDensityEstimationContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;loessContextMenuItem.Name" xml:space="preserve">
+    <value>lOESSToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;loessContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolStripSeparator22.Name" xml:space="preserve">

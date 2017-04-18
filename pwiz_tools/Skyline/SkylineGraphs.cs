@@ -42,6 +42,7 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs.Calibration;
 using pwiz.Skyline.Controls.GroupComparison;
+using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using ZedGraph;
@@ -253,7 +254,7 @@ namespace pwiz.Skyline
                     retentionTimesMenuItem.Enabled = enableSchedule;
                     replicateComparisonMenuItem.Enabled = enable;
                     timePeptideComparisonMenuItem.Enabled = enable;
-                    linearRegressionMenuItem.Enabled = enable;
+                    regressionMenuItem.Enabled = enable;
                     scoreToRunMenuItem.Enabled = enable;
                     runToRunMenuItem.Enabled = enable; 
                     schedulingMenuItem.Enabled = enableSchedule;
@@ -2738,13 +2739,13 @@ namespace pwiz.Skyline
                 {
                     replicateComparisonContextMenuItem,
                     timePeptideComparisonContextMenuItem,
-                    linearRegressionContextMenuItem,
+                    regressionContextMenuItem,
                     schedulingContextMenuItem
                 });
             }
-            if (linearRegressionContextMenuItem.DropDownItems.Count == 0)
+            if (regressionContextMenuItem.DropDownItems.Count == 0)
             {
-                linearRegressionContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
+                regressionContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
                 {
                     scoreToRunToolStripMenuItem,
                     runToRunToolStripMenuItem
@@ -2766,6 +2767,22 @@ namespace pwiz.Skyline
                 }
                 timeCorrelationContextMenuItem.Checked = RTGraphController.PlotType == PlotTypeRT.correlation;
                 timeResidualsContextMenuItem.Checked = RTGraphController.PlotType == PlotTypeRT.residuals;
+
+                menuStrip.Items.Insert(iInsert++,setRegressionMethodContextMenuItem);
+                if (setRegressionMethodContextMenuItem.DropDownItems.Count == 0)
+                {
+                        setRegressionMethodContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
+                    {
+                        linearRegressionContextMenuItem,
+                        kernelDensityEstimationContextMenuItem,
+                        loessContextMenuItem
+                    });
+                }
+                linearRegressionContextMenuItem.Checked = RTGraphController.RegressionMethod ==
+                                                            RegressionMethodRT.linear;
+                kernelDensityEstimationContextMenuItem.Checked = RTGraphController.RegressionMethod ==
+                                                                   RegressionMethodRT.kde;
+                loessContextMenuItem.Checked = RTGraphController.RegressionMethod == RegressionMethodRT.loess;
 
                 var showPointsTypeStandards = Document.GetRetentionTimeStandards().Any();
                 var showPointsTypeDecoys = Document.PeptideGroups.Any(nodePepGroup => nodePepGroup.Children.Cast<PeptideDocNode>().Any(nodePep => nodePep.IsDecoy));
@@ -2789,6 +2806,8 @@ namespace pwiz.Skyline
                 }
 
                 refineRTContextMenuItem.Checked = set.RTRefinePeptides;
+                //Grey out so user knows we cannot refine with current regression method
+                refineRTContextMenuItem.Enabled = RTGraphController.CanDoRefinementForRegressionMethod;
                 menuStrip.Items.Insert(iInsert++, refineRTContextMenuItem);
                 if (!runToRun)
                 {
@@ -2960,8 +2979,8 @@ namespace pwiz.Skyline
             scoreToRunToolStripMenuItem.Checked = scoreToRunRegression;
             runToRunMenuItem.Checked = runToRunRegression;
             scoreToRunMenuItem.Checked = scoreToRunRegression;
-            linearRegressionMenuItem.Checked = runToRunRegression || scoreToRunRegression;
-            linearRegressionContextMenuItem.Checked = runToRunRegression || scoreToRunRegression;
+            regressionMenuItem.Checked = runToRunRegression || scoreToRunRegression;
+            regressionContextMenuItem.Checked = runToRunRegression || scoreToRunRegression;
                 
             
             replicateComparisonMenuItem.Checked = replicateComparisonContextMenuItem.Checked = visible && (graphType == GraphTypeRT.replicate);
@@ -2969,28 +2988,43 @@ namespace pwiz.Skyline
             schedulingMenuItem.Checked = schedulingContextMenuItem.Checked = visible && (graphType == GraphTypeRT.schedule);
         }
 
-        private void linearRegressionMenuItem_Click(object sender, EventArgs e)
+        private void regressionMenuItem_Click(object sender, EventArgs e)
         {
-            ShowRTLinearRegressionGraphScoreToRun();
+            ShowRTRegressionGraphScoreToRun();
         }
 
         private void fullReplicateComparisonToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            ShowRTLinearRegressionGraphRunToRun();
+            ShowRTRegressionGraphRunToRun();
         }
 
-        public void ShowRTLinearRegressionGraphScoreToRun()
+        public void ShowRTRegressionGraphScoreToRun()
         {
             Settings.Default.RTGraphType = GraphTypeRT.score_to_run_regression.ToString();
             ShowGraphRetentionTime(true);
             UpdateRetentionTimeGraph();
         }
 
-        public void ShowRTLinearRegressionGraphRunToRun()
+        public void ShowRTRegressionGraphRunToRun()
         {
             Settings.Default.RTGraphType = GraphTypeRT.run_to_run_regression.ToString();
             ShowGraphRetentionTime(true);
             UpdateRetentionTimeGraph();
+        }
+
+        private void linearRegressionContextMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowRegressionMethod(RegressionMethodRT.linear);
+        }
+
+        private void kernelDensityEstimationContextMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowRegressionMethod(RegressionMethodRT.kde);
+        }
+
+        private void loessContextMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowRegressionMethod(RegressionMethodRT.loess);
         }
 
         private void timeCorrelationContextMenuItem_Click(object sender, EventArgs e)
@@ -3027,6 +3061,12 @@ namespace pwiz.Skyline
         public void ShowPointsType(PointsTypeRT pointsTypeRT)
         {
             RTGraphController.PointsType = pointsTypeRT;
+            UpdateRetentionTimeGraph();
+        }
+
+        public void ShowRegressionMethod(RegressionMethodRT regressionMethod)
+        {
+            RTGraphController.RegressionMethod = regressionMethod;
             UpdateRetentionTimeGraph();
         }
 

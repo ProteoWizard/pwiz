@@ -30,6 +30,7 @@ using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -41,6 +42,13 @@ namespace pwiz.Skyline.Model.DocSettings
         double Slope { get; }
         double Intercept { get; }
         double GetY(double x);
+
+        /// <summary>
+        /// Get a description of the numerical parameters of the regression.
+        /// </summary>
+        string GetRegressionDescription(double r, double window);
+
+        void GetCurve(RetentionTimeStatistics statistics, out double[] hyrdoScores, out double[] predictions);
     }
 
     /// <summary>
@@ -71,18 +79,35 @@ namespace pwiz.Skyline.Model.DocSettings
         public RetentionTimeRegression(string name, RetentionScoreCalculatorSpec calculator,
                                        double? slope, double? intercept, double window,
                                        IList<MeasuredRetentionTime> peptidesTimes)
+            : this(name, calculator, GetRegressionLine(slope,intercept),window,peptidesTimes)
+        {
+        }
+
+        private static IRegressionFunction GetRegressionLine(double? slope, double? intercept)
+        {
+            if (slope.HasValue && intercept.HasValue)
+            {
+                return new RegressionLineElement(slope.Value, intercept.Value);
+            }
+            else if (slope.HasValue || intercept.HasValue)
+            {
+                throw new InvalidDataException(Resources.RetentionTimeRegression_RetentionTimeRegression_Slope_and_intercept_must_both_have_values_or_both_not_have_values);
+            }
+            return null;
+        }
+
+        public RetentionTimeRegression(string name, RetentionScoreCalculatorSpec calculator,
+            IRegressionFunction conversion, double window, IList<MeasuredRetentionTime> peptidesTimes) 
             : base(name)
         {
             TimeWindow = window;
-            if (slope.HasValue && intercept.HasValue)
-                Conversion = new RegressionLineElement(slope.Value, intercept.Value);
-            else if (slope.HasValue || intercept.HasValue)
-                throw new InvalidDataException(Resources.RetentionTimeRegression_RetentionTimeRegression_Slope_and_intercept_must_both_have_values_or_both_not_have_values);
+            
             PeptideTimes = peptidesTimes;
+            Conversion = conversion;
 
             _calculator = calculator;
             InsufficientCorrelation = false;
-            
+
             Validate();
         }
 
@@ -94,7 +119,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public double TimeWindow { get; private set; }
 
-        public RegressionLineElement Conversion { get; private set; }
+        public IRegressionFunction Conversion { get; private set; }
 
         public bool IsUsable { get { return Conversion != null && Calculator.IsUsable; } }
 
@@ -233,22 +258,23 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public IRegressionFunction GetConversion(ChromFileInfoId fileId)
         {
-            return GetRegressionFunction(fileId) ?? (IRegressionFunction) Conversion;
+            return GetRegressionFunction(fileId) ?? Conversion;
         }
 
         public IRegressionFunction GetUnconversion(ChromFileInfoId fileId)
         {
             double slope, intercept;
-            var regressionLine = GetRegressionFunction(fileId);
-            if (null != regressionLine)
+            var regressionLineFromFile = GetRegressionFunction(fileId);
+            var regressionLine = Conversion as RegressionLineElement;
+            if (null != regressionLineFromFile)
+            {
+                slope = regressionLineFromFile.Slope;
+                intercept = regressionLineFromFile.Intercept;
+            }
+            else if (null != regressionLine)
             {
                 slope = regressionLine.Slope;
                 intercept = regressionLine.Intercept;
-            }
-            else if (null != Conversion)
-            {
-                slope = Conversion.Slope;
-                intercept = Conversion.Intercept;
             }
             else
             {
@@ -401,8 +427,9 @@ namespace pwiz.Skyline.Model.DocSettings
 
         private void Validate()
         {
-            // TODO: Fix this hacky way of dealing with the default value.
-            if (Conversion == null || TimeWindow + Conversion.Slope + Conversion.Intercept != 0 || Calculator != null)
+            // TODO (MAX): Fix this hacky way of dealing with the default value.
+            var conversion = Conversion as RegressionLineElement;
+            if (conversion == null || TimeWindow + conversion.Slope + conversion.Intercept != 0 || Calculator != null)
             {
                 if (Calculator == null)
                     throw new InvalidDataException(Resources.RetentionTimeRegression_Validate_Retention_time_regression_must_specify_a_sequence_to_score_calculator);
@@ -461,7 +488,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
             // Write conversion inner-tag, if not auto-convert
             if (!IsAutoCalculated)
-                writer.WriteElement(EL.regression_rt, Conversion);
+                writer.WriteElement(EL.regression_rt, Conversion as RegressionLineElement);
 
             // Write all measured retention times
             writer.WriteElements(PeptideTimes);
@@ -512,11 +539,12 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public static RetentionTimeRegression CalcRegression(string name,
                                                              IList<RetentionScoreCalculatorSpec> calculators,
+                                                             RegressionMethodRT regressionMethod,
                                                              IList<MeasuredRetentionTime> measuredPeptides,
                                                              out RetentionTimeStatistics statistics)
         {
             RetentionScoreCalculatorSpec s;
-            return CalcRegression(name, calculators, measuredPeptides, null, false, out statistics, out s);
+            return CalcRegression(name, calculators, measuredPeptides, null, false,regressionMethod, out statistics, out s);
         }
 
         /// <summary>
@@ -527,6 +555,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <param name="measuredPeptides">A List of MeasuredRetentionTime objects to build the regression from</param>
         /// <param name="scoreCache">A RetentionTimeScoreCache to try getting scores from before calculating them</param>
         /// <param name="allPeptides">If true, do not let the calculator pick which peptides to use in the regression</param>
+        /// <param name="regressionMethod">The regression method (linear, loess, kde) to use</param>
         /// <param name="statistics">Statistics from the regression of the best calculator</param>
         /// <param name="calculatorSpec">The best calculator</param>
         /// <returns></returns>
@@ -535,6 +564,7 @@ namespace pwiz.Skyline.Model.DocSettings
                                                              IList<MeasuredRetentionTime> measuredPeptides,
                                                              RetentionTimeScoreCache scoreCache,
                                                              bool allPeptides,
+                                                             RegressionMethodRT regressionMethod,
                                                              out RetentionTimeStatistics statistics,
                                                              out RetentionScoreCalculatorSpec calculatorSpec)
         {
@@ -613,6 +643,7 @@ namespace pwiz.Skyline.Model.DocSettings
             List<double> listBest = null;
             int bestCalcIndex = 0;
             Statistics bestCalcStatRT = null;
+            IRegressionFunction bestRegressionFunction = null;
             for (int i = 0; i < calcs; i++)
             {
                 if(setExcludeCalcs.Contains(i))
@@ -620,6 +651,25 @@ namespace pwiz.Skyline.Model.DocSettings
 
                 Statistics statRT = new Statistics(listRTs[i]);
                 Statistics stat = aStatValues[i];
+                IRegressionFunction regressionFunction = null;
+                switch (regressionMethod)
+                {
+                    case RegressionMethodRT.linear:
+                        regressionFunction = new RegressionLineElement(statRT.Slope(stat) ,statRT.Intercept(stat));
+                        break;
+                    case RegressionMethodRT.kde:
+                        var kdeAligner = new KdeAligner(stat.CopyList(), statRT.CopyList(), 0, 1);
+                        kdeAligner.Train();
+                        regressionFunction = kdeAligner.RegressionFunction;
+                        stat = kdeAligner.getTransformedY();
+                        break;
+                    case RegressionMethodRT.loess:
+                        var loessAligner = new LoessAligner(stat.CopyList(), statRT.CopyList(), 0, 1);
+                        loessAligner.Train();
+                        regressionFunction = loessAligner.RegressionFunction;
+                        stat = loessAligner.getTransformedY();
+                        break;
+                }
                 double rVal = statRT.R(stat);
 
                 // Make sure sets containing unknown scores have very low correlations to keep
@@ -633,16 +683,17 @@ namespace pwiz.Skyline.Model.DocSettings
                     listBest = peptideScoresByCalc[i];
                     calcBest = calculatorCandidates[i];
                     bestCalcStatRT = statRT;
+                    bestRegressionFunction = regressionFunction;
                 }
             }
 
-            if (calcBest == null)
+            if (calcBest == null || bestRegressionFunction == null)
                 return null;
 
             calculatorSpec = calcBest;
 
-            double slope = bestCalcStatRT.Slope(statBest);
-            double intercept = bestCalcStatRT.Intercept(statBest);
+            //double slope = bestCalcStatRT.Slope(statBest);
+            //double intercept = bestCalcStatRT.Intercept(statBest);
 
             // Suggest a time window of 4*StdDev (or 2 StdDev on either side of
             // the mean == ~95% of training data).
@@ -655,7 +706,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 window = 0.5;
 
             // Save statistics
-            RegressionLine rlBest = new RegressionLine(slope, intercept);
+            IRegressionFunction rlBest = bestRegressionFunction;
             var listPredicted = listBest.Select(rlBest.GetY).ToList();
             statistics = new RetentionTimeStatistics(r, calcPeptides[bestCalcIndex], listBest, listPredicted, listRTs[bestCalcIndex]);
 
@@ -664,7 +715,7 @@ namespace pwiz.Skyline.Model.DocSettings
             foreach (string pep in calcPeptides[bestCalcIndex])
                 setBestPeptides.Add(pep);
             var calcMeasuredRts = measuredPeptides.Where(pep => setBestPeptides.Contains(pep.PeptideSequence)).ToArray();
-            return new RetentionTimeRegression(name, calcBest, slope, intercept, window, calcMeasuredRts);
+            return new RetentionTimeRegression(name, calcBest, bestRegressionFunction, window, calcMeasuredRts);
         }
 
         private static double ScoreSequence(IRetentionScoreCalculator calculator,
@@ -684,6 +735,7 @@ namespace pwiz.Skyline.Model.DocSettings
                             IList<MeasuredRetentionTime> variableTargetPeptides,
                             IList<MeasuredRetentionTime> variableOrigPeptides,
                             RetentionScoreCalculatorSpec calculator,
+                            RegressionMethodRT regressionMethod,
                             Func<bool> isCanceled)
         {
             var calculators = new[] {calculator};
@@ -694,6 +746,7 @@ namespace pwiz.Skyline.Model.DocSettings
                                                   measuredPeptides,
                                                   scoreCache,
                                                   true,
+                                                  regressionMethod,
                                                   out statisticsAll,
                                                   out calculator);
 
@@ -708,6 +761,7 @@ namespace pwiz.Skyline.Model.DocSettings
                                                    variableOrigPeptides,
                                                    statisticsAll,
                                                    calculator,
+                                                   regressionMethod,
                                                    scoreCache,
                                                    isCanceled,
                                                    ref statisticsRefined,
@@ -725,6 +779,7 @@ namespace pwiz.Skyline.Model.DocSettings
                             IList<MeasuredRetentionTime> variableOrigPeptides,
                             RetentionTimeStatistics statistics,
                             RetentionScoreCalculatorSpec calculator,
+                            RegressionMethodRT regressionMethod,
                             RetentionTimeScoreCache scoreCache,
                             Func<bool> isCanceled,
                             ref RetentionTimeStatistics statisticsResult,
@@ -741,7 +796,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     {
                         if (isCanceled())
                             throw new OperationCanceledException();
-                        RecalcRegression(bestOut, standardPeptides, variableTargetPeptides, variableOrigPeptides,statisticsResult, calculator, scoreCache,
+                        RecalcRegression(bestOut, standardPeptides, variableTargetPeptides, variableOrigPeptides,statisticsResult, calculator, regressionMethod, scoreCache,
                             out statisticsResult, ref outIndexes);
                         if (bestOut >= variableTargetPeptides.Count || !IsAboveThreshold(statisticsResult.R, threshold, precision))
                             break;
@@ -755,7 +810,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 {
                     if (isCanceled())
                         throw new OperationCanceledException();
-                    var regression = RecalcRegression(worstIn, standardPeptides, variableTargetPeptides, variableOrigPeptides, statisticsResult, calculator, scoreCache,
+                    var regression = RecalcRegression(worstIn, standardPeptides, variableTargetPeptides, variableOrigPeptides, statisticsResult, calculator, regressionMethod, scoreCache,
                         out statisticsResult, ref outIndexes);
                     // If there are only 2 left, then this is the best we can do and still have
                     // a linear equation.
@@ -774,7 +829,7 @@ namespace pwiz.Skyline.Model.DocSettings
             HashSet<int> outIndexesNew = outIndexes;
             RetentionTimeStatistics statisticsNew;
             // Rerun the regression
-            var regressionNew = RecalcRegression(mid, standardPeptides, variableTargetPeptides, variableOrigPeptides, statistics, calculator, scoreCache,
+            var regressionNew = RecalcRegression(mid, standardPeptides, variableTargetPeptides, variableOrigPeptides, statistics, calculator, regressionMethod, scoreCache,
                 out statisticsNew, ref outIndexesNew);
             // If no regression could be calculated, give up to avoid infinite recursion.
             if (regressionNew == null)
@@ -786,12 +841,12 @@ namespace pwiz.Skyline.Model.DocSettings
             if (IsAboveThreshold(statisticsResult.R, threshold, precision))
             {
                 return regressionNew.FindThreshold(threshold, precision, mid + 1, right,
-                    standardPeptides, variableTargetPeptides, variableOrigPeptides, statisticsResult, calculator, scoreCache, isCanceled,
+                    standardPeptides, variableTargetPeptides, variableOrigPeptides, statisticsResult, calculator, regressionMethod, scoreCache, isCanceled,
                     ref statisticsResult, ref outIndexes);
             }
 
             return regressionNew.FindThreshold(threshold, precision, left, mid - 1,
-                standardPeptides, variableTargetPeptides, variableOrigPeptides, statisticsResult, calculator, scoreCache, isCanceled,
+                standardPeptides, variableTargetPeptides, variableOrigPeptides, statisticsResult, calculator, regressionMethod, scoreCache, isCanceled,
                 ref statisticsResult, ref outIndexes);
         }
 
@@ -801,6 +856,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     IList<MeasuredRetentionTime> variableOrigPeptides,
                     RetentionTimeStatistics statistics,
                     RetentionScoreCalculatorSpec calculator,
+                    RegressionMethodRT regressionMethod,
                     RetentionTimeScoreCache scoreCache,
                     out RetentionTimeStatistics statisticsResult,
                     ref HashSet<int> outIndexes)
@@ -862,7 +918,7 @@ namespace pwiz.Skyline.Model.DocSettings
             peptidesTimesTry.AddRange(requiredPeptides);
 
             RetentionScoreCalculatorSpec s;
-            return CalcRegression(Name, new[] { calculator }, peptidesTimesTry, scoreCache, true,
+            return CalcRegression(Name, new[] { calculator }, peptidesTimesTry, scoreCache, true,regressionMethod,
                                       out statisticsResult, out s);
         }
 
@@ -1627,6 +1683,16 @@ namespace pwiz.Skyline.Model.DocSettings
             return RegressionLine.GetY(x);
         }
 
+        public string GetRegressionDescription(double r, double window)
+        {
+            return RegressionLine.GetRegressionDescription(r,window);
+        }
+
+        public void GetCurve(RetentionTimeStatistics statistics, out double[] hyrdoScores, out double[] predictions)
+        {
+            RegressionLine.GetCurve(statistics,out hyrdoScores, out predictions);
+        }
+
         public double GetX(double y)
         {
             return RegressionLine.GetX(y);
@@ -2064,6 +2130,16 @@ namespace pwiz.Skyline.Model.DocSettings
             return RegressionLine.GetY(x);
         }
 
+        public string GetRegressionDescription(double r, double window)
+        {
+            return RegressionLine.GetRegressionDescription(r, window);
+        }
+
+        public void GetCurve(RetentionTimeStatistics statistics, out double[] hyrdoScores, out double[] predictions)
+        {
+            RegressionLine.GetCurve(statistics, out hyrdoScores, out predictions);
+        }
+
         #region Implementation of IXmlSerializable
 
         /// <summary>
@@ -2283,6 +2359,16 @@ namespace pwiz.Skyline.Model.DocSettings
             return _regressionLine.GetY(x);
         }
 
+        public string GetRegressionDescription(double r, double window)
+        {
+            return _regressionLine.GetRegressionDescription(r, window);
+        }
+
+        public void GetCurve(RetentionTimeStatistics statistics, out double[] hydroScores, out double[] predictions)
+        {
+            _regressionLine.GetCurve(statistics, out hydroScores, out predictions);
+        }
+
         #region Implementation of IXmlSerializable
 
         /// <summary>
@@ -2343,6 +2429,122 @@ namespace pwiz.Skyline.Model.DocSettings
         #endregion
     }
 
+
+
+    public sealed class PiecewiseLinearRegressionFunction : IRegressionFunction
+    {
+        private readonly double[] _xArr;
+        private readonly double[] _yPred;
+        private readonly double _minX;
+        private readonly double _maxX;
+        private readonly double _rmsd;
+
+        /// <summary>
+        /// Creates a piecewiselinearRegression function
+        /// </summary>
+        /// <param name="xArr">Array of independent values where two linear piece functions intersect.</param>
+        /// <param name="yPred">Corresponding dependent variable values at intersection points</param>
+        /// <param name="rmsd"></param>
+        public PiecewiseLinearRegressionFunction(double[] xArr, double[] yPred, double rmsd)
+        {
+            _xArr = xArr;
+            _yPred = yPred;
+            _minX = xArr[0];
+            _maxX = xArr[xArr.Length - 1];
+            _rmsd = rmsd;
+        }
+
+        public double Slope { get { throw new NotSupportedException(); }}
+        public double Intercept { get { throw new NotSupportedException(); }}
+
+        public double RMSD { get { return _rmsd;} }
+
+        public int LinearFunctionsCount { get { return _xArr.Length - 1; } }
+
+        public double GetY(double x)
+        {
+            if (x <= _minX)
+                return _yPred[0];
+            if (x >= _maxX)
+                return _yPred[_yPred.Length - 1];
+
+            int leftIndex = GetLeftIndex(x, 0, _xArr.Length);
+            return Interpolate(x, leftIndex, leftIndex + 1);
+        }
+
+        public string GetRegressionDescription(double r, double window)
+        {
+            return string.Format("{0} = {1}\n" + "rmsd =  {2}", // Not L10N
+                Resources.PiecewiseLinearRegressionFunction_GetRegressionDescription_piecwise_linear_functions,
+                _xArr.Length - 1,
+                Math.Round(_rmsd, 4)
+            );
+
+        }
+
+        public void GetCurve(RetentionTimeStatistics statistics, out double[] hydroScores, out double[] predictions)
+        {
+            var minHydro = Double.MaxValue;
+            var maxHydro = Double.MinValue;
+            foreach (var hydroScore in statistics.ListHydroScores)
+            {
+                minHydro = Math.Min(minHydro, hydroScore);
+                maxHydro = Math.Max(maxHydro, hydroScore);
+            }
+            var addMin = minHydro < _xArr[0];
+            var addMax = maxHydro > _xArr.Last();
+            var points = _xArr.Length + (addMax ? 1 : 0) + (addMin ? 1 : 0);
+            hydroScores = new double[points];
+            predictions = new double[points];
+            var offset = 0;
+            if (addMin)
+            {
+                hydroScores[0] = minHydro;
+                predictions[0] = GetY(minHydro);
+                offset = 1;
+            }
+            if (addMax)
+            {
+                hydroScores[hydroScores.Length - 1] = maxHydro;
+                predictions[predictions.Length - 1] = GetY(maxHydro);
+            }
+            for (var i = 0; i < _xArr.Length; i++)
+            {
+                hydroScores[offset + i] = _xArr[i];
+                predictions[offset + i] = _yPred[i];
+            }
+        }
+
+        private int GetLeftIndex(double x, int i , int l)
+        {
+            if (l <= 2)
+                return i;
+
+            int j = i + l/2;
+            double mid = _xArr[j];
+            if (x == mid)
+                return j;
+            else if (x > mid)
+                return GetLeftIndex(x, j, l - j + i);
+            else
+                return GetLeftIndex(x, i, j - i);      
+        }
+
+        private double Interpolate(double x, int i, int j)
+        {
+            double leftX = _xArr[i];
+            double rightX = _xArr[j];
+            double leftY = _yPred[i];
+            double rightY = _yPred[j];
+            if (x == leftX)
+                return leftY;
+            else if (x == rightX)
+                return rightY;
+            else
+                return leftY + (x - leftX)*(rightY - leftY)/(rightX - leftX);
+        }
+    }
+
     /// <summary>
     /// Slope and intercept pair used to calculate a y-value from
     /// a given x based on a linear regression.
@@ -2374,6 +2576,41 @@ namespace pwiz.Skyline.Model.DocSettings
         public double GetY(double x)
         {
             return Slope * x + Intercept;
+        }
+
+        public string GetRegressionDescription(double r, double window)
+        {
+            return String.Format("{0} = {1:F02}, {2} = {3:F02}\n" + "{4} = {5:F01}\n" + "r = {6}",   // Not L10N
+                                          Resources.Regression_slope,
+                                          Slope,
+                                          Resources.Regression_intercept,
+                                          Intercept,
+                                          Resources.GraphData_AddRegressionLabel_window,
+                                          window,
+                                          Math.Round(r, RetentionTimeRegression.ThresholdPrecision));
+        }
+
+        public void GetCurve(RetentionTimeStatistics statistics, out double[] lineScores, out double[] lineTimes)
+        {
+            // Find maximum hydrophobicity score points for drawing the regression line
+            lineScores = new[] { Double.MaxValue, 0 };
+            lineTimes = new[] { Double.MaxValue, 0 };
+
+            for (int i = 0; i < statistics.ListHydroScores.Count; i++)
+            {
+                double score = statistics.ListHydroScores[i];
+                double time = statistics.ListPredictions[i];
+                if (score < lineScores[0])
+                {
+                    lineScores[0] = score;
+                    lineTimes[0] = time;
+                }
+                if (score > lineScores[1])
+                {
+                    lineScores[1] = score;
+                    lineTimes[1] = time;
+                }
+            }   
         }
 
         /// <summary>
@@ -2728,7 +2965,7 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 return (ResolvingPower > 0 ? 2.0 / ResolvingPower : double.MaxValue) * driftTime; // 2.0*driftTime/resolvingPower
             }
-            Assume.IsTrue(driftTimeMax > 0, "expected dtMax value > 0 for linear range drift window calculation"); // Not L10N
+            Assume.IsTrue(driftTimeMax > 0, "Expected dtMax value > 0 for linear range drift window calculation"); // Not L10N
             return PeakWidthAtDriftTimeZero + driftTime * (PeakWidthAtDriftTimeMax - PeakWidthAtDriftTimeZero) / driftTimeMax;
         }
 

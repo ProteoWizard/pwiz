@@ -13850,6 +13850,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to KDE Aligner.
+        /// </summary>
+        public static string KdeAlignerFactory_ToString_KDE_Aligner {
+            get {
+                return ResourceManager.GetString("KdeAlignerFactory_ToString_KDE_Aligner", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap Keep {
@@ -14670,6 +14679,15 @@ namespace pwiz.Skyline.Properties {
         public static string LossInclusionExtension_LOCALIZED_VALUES_Never {
             get {
                 return ResourceManager.GetString("LossInclusionExtension_LOCALIZED_VALUES_Never", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to LOWESS Aligner.
+        /// </summary>
+        public static string LowessAlignerFactory_ToString_LOWESS_Aligner {
+            get {
+                return ResourceManager.GetString("LowessAlignerFactory_ToString_LOWESS_Aligner", resourceCulture);
             }
         }
         
@@ -19025,6 +19043,16 @@ namespace pwiz.Skyline.Properties {
         public static string PersistedViews_MainGroup_Main {
             get {
                 return ResourceManager.GetString("PersistedViews_MainGroup_Main", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to piecwise linear functions.
+        /// </summary>
+        public static string PiecewiseLinearRegressionFunction_GetRegressionDescription_piecwise_linear_functions {
+            get {
+                return ResourceManager.GetString("PiecewiseLinearRegressionFunction_GetRegressionDescription_piecwise_linear_functi" +
+                        "ons", resourceCulture);
             }
         }
         

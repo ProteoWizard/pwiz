@@ -793,7 +793,7 @@ namespace pwiz.Skyline.Model.Results
                     _timeWindow = rtSettings.TimeWindow;
                     _calculator = rtSettings.Calculator;
                     if (!rtSettings.IsAutoCalculated)
-                        _conversion = rtSettings.Conversion;
+                        _conversion = rtSettings.Conversion as RegressionLineElement;
                     else
                         _dictSeqToTime = new Dictionary<string, double>();
                 }

@@ -46,7 +46,7 @@ namespace pwiz.Skyline.Util
             return ordered;
         }
 
-        private double[] CopyList()
+        public double[] CopyList()
         {
             var listCopy = new double[_list.Length];
             _list.CopyTo(listCopy, 0);

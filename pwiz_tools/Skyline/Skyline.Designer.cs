@@ -141,7 +141,7 @@ namespace pwiz.Skyline
             this.timeGraphContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.replicateComparisonContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.timePeptideComparisonContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.linearRegressionContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.regressionContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.scoreToRunToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.runToRunToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.schedulingContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -166,6 +166,10 @@ namespace pwiz.Skyline
             this.singleReplicateRTContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.bestReplicateRTContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.setRTThresholdContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.setRegressionMethodContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.linearRegressionContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.kernelDensityEstimationContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.loessContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator22 = new System.Windows.Forms.ToolStripSeparator();
             this.createRTRegressionContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.chooseCalculatorContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -400,7 +404,7 @@ namespace pwiz.Skyline
             this.retentionTimesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.replicateComparisonMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.timePeptideComparisonMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.linearRegressionMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.regressionMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.scoreToRunMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.runToRunMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.retentionTimeAlignmentsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -1244,6 +1248,7 @@ namespace pwiz.Skyline
             this.predictionRTContextMenuItem,
             this.replicatesRTContextMenuItem,
             this.setRTThresholdContextMenuItem,
+            this.setRegressionMethodContextMenuItem,
             this.toolStripSeparator22,
             this.createRTRegressionContextMenuItem,
             this.chooseCalculatorContextMenuItem,
@@ -1263,7 +1268,7 @@ namespace pwiz.Skyline
             this.timeGraphContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.replicateComparisonContextMenuItem,
             this.timePeptideComparisonContextMenuItem,
-            this.linearRegressionContextMenuItem,
+            this.regressionContextMenuItem,
             this.schedulingContextMenuItem});
             this.timeGraphContextMenuItem.Name = "timeGraphContextMenuItem";
             resources.ApplyResources(this.timeGraphContextMenuItem, "timeGraphContextMenuItem");
@@ -1282,19 +1287,19 @@ namespace pwiz.Skyline
             resources.ApplyResources(this.timePeptideComparisonContextMenuItem, "timePeptideComparisonContextMenuItem");
             this.timePeptideComparisonContextMenuItem.Click += new System.EventHandler(this.timePeptideComparisonMenuItem_Click);
             // 
-            // linearRegressionContextMenuItem
+            // regressionContextMenuItem
             // 
-            this.linearRegressionContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.regressionContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.scoreToRunToolStripMenuItem,
             this.runToRunToolStripMenuItem});
-            this.linearRegressionContextMenuItem.Name = "linearRegressionContextMenuItem";
-            resources.ApplyResources(this.linearRegressionContextMenuItem, "linearRegressionContextMenuItem");
+            this.regressionContextMenuItem.Name = "regressionContextMenuItem";
+            resources.ApplyResources(this.regressionContextMenuItem, "regressionContextMenuItem");
             // 
             // scoreToRunToolStripMenuItem
             // 
             this.scoreToRunToolStripMenuItem.Name = "scoreToRunToolStripMenuItem";
             resources.ApplyResources(this.scoreToRunToolStripMenuItem, "scoreToRunToolStripMenuItem");
-            this.scoreToRunToolStripMenuItem.Click += new System.EventHandler(this.linearRegressionMenuItem_Click);
+            this.scoreToRunToolStripMenuItem.Click += new System.EventHandler(this.regressionMenuItem_Click);
             // 
             // runToRunToolStripMenuItem
             // 
@@ -1450,6 +1455,33 @@ namespace pwiz.Skyline
             this.setRTThresholdContextMenuItem.Name = "setRTThresholdContextMenuItem";
             resources.ApplyResources(this.setRTThresholdContextMenuItem, "setRTThresholdContextMenuItem");
             this.setRTThresholdContextMenuItem.Click += new System.EventHandler(this.setRTThresholdContextMenuItem_Click);
+            // 
+            // setRegressionMethodContextMenuItem
+            // 
+            this.setRegressionMethodContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.linearRegressionContextMenuItem,
+            this.kernelDensityEstimationContextMenuItem,
+            this.loessContextMenuItem});
+            this.setRegressionMethodContextMenuItem.Name = "setRegressionMethodContextMenuItem";
+            resources.ApplyResources(this.setRegressionMethodContextMenuItem, "setRegressionMethodContextMenuItem");
+            // 
+            // linearRegressionContextMenuItem
+            // 
+            this.linearRegressionContextMenuItem.Name = "linearRegressionContextMenuItem";
+            resources.ApplyResources(this.linearRegressionContextMenuItem, "linearRegressionContextMenuItem");
+            this.linearRegressionContextMenuItem.Click += new System.EventHandler(this.linearRegressionContextMenuItem_Click);
+            // 
+            // kernelDensityEstimationContextMenuItem
+            // 
+            this.kernelDensityEstimationContextMenuItem.Name = "kernelDensityEstimationContextMenuItem";
+            resources.ApplyResources(this.kernelDensityEstimationContextMenuItem, "kernelDensityEstimationContextMenuItem");
+            this.kernelDensityEstimationContextMenuItem.Click += new System.EventHandler(this.kernelDensityEstimationContextMenuItem_Click);
+            // 
+            // loessContextMenuItem
+            // 
+            this.loessContextMenuItem.Name = "loessContextMenuItem";
+            resources.ApplyResources(this.loessContextMenuItem, "loessContextMenuItem");
+            this.loessContextMenuItem.Click += new System.EventHandler(this.loessContextMenuItem_Click);
             // 
             // toolStripSeparator22
             // 
@@ -3095,7 +3127,7 @@ namespace pwiz.Skyline
             this.retentionTimesMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.replicateComparisonMenuItem,
             this.timePeptideComparisonMenuItem,
-            this.linearRegressionMenuItem,
+            this.regressionMenuItem,
             this.retentionTimeAlignmentsToolStripMenuItem,
             this.schedulingMenuItem});
             resources.ApplyResources(this.retentionTimesMenuItem, "retentionTimesMenuItem");
@@ -3114,19 +3146,19 @@ namespace pwiz.Skyline
             resources.ApplyResources(this.timePeptideComparisonMenuItem, "timePeptideComparisonMenuItem");
             this.timePeptideComparisonMenuItem.Click += new System.EventHandler(this.timePeptideComparisonMenuItem_Click);
             // 
-            // linearRegressionMenuItem
+            // regressionMenuItem
             // 
-            this.linearRegressionMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.regressionMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.scoreToRunMenuItem,
             this.runToRunMenuItem});
-            this.linearRegressionMenuItem.Name = "linearRegressionMenuItem";
-            resources.ApplyResources(this.linearRegressionMenuItem, "linearRegressionMenuItem");
+            this.regressionMenuItem.Name = "regressionMenuItem";
+            resources.ApplyResources(this.regressionMenuItem, "regressionMenuItem");
             // 
             // scoreToRunMenuItem
             // 
             this.scoreToRunMenuItem.Name = "scoreToRunMenuItem";
             resources.ApplyResources(this.scoreToRunMenuItem, "scoreToRunMenuItem");
-            this.scoreToRunMenuItem.Click += new System.EventHandler(this.linearRegressionMenuItem_Click);
+            this.scoreToRunMenuItem.Click += new System.EventHandler(this.regressionMenuItem_Click);
             // 
             // runToRunMenuItem
             // 
@@ -3850,7 +3882,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem exportTransitionListMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exportReportMenuItem;
         private System.Windows.Forms.ToolStripMenuItem timeGraphContextMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem linearRegressionContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem regressionContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem replicateComparisonContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem chromPropsContextMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator26;
@@ -3872,7 +3904,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem autoZoomRTWindowMenuItem;
         private System.Windows.Forms.ToolStripMenuItem autoZoomBothMenuItem;
         private System.Windows.Forms.ToolStripMenuItem retentionTimesMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem linearRegressionMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem regressionMenuItem;
         private System.Windows.Forms.ToolStripMenuItem replicateComparisonMenuItem;
         private System.Windows.Forms.ToolStripMenuItem schedulingMenuItem;
         private System.Windows.Forms.ToolStripMenuItem supportMenuItem;
@@ -4158,6 +4190,10 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem exportSpectralLibraryMenuItem;
         private System.Windows.Forms.ToolStripMenuItem transformChromInterploatedMenuItem;
         private System.Windows.Forms.ToolStripMenuItem transformChromInterpolatedContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem setRegressionMethodContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem linearRegressionContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem kernelDensityEstimationContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem loessContextMenuItem;
     }
 }
 

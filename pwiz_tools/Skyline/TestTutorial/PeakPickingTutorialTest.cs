@@ -166,7 +166,7 @@ namespace pwiz.SkylineTestTutorial
             // Test different point types on RTLinearRegressionGraph
             RunUI(() =>
             {
-                SkylineWindow.ShowRTLinearRegressionGraphScoreToRun();
+                SkylineWindow.ShowRTRegressionGraphScoreToRun();
                 SkylineWindow.ShowPlotType(PlotTypeRT.correlation);
                 SkylineWindow.ChooseCalculator("iRT_SRMAtlas_20121202_noLGG");
             });

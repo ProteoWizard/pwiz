@@ -318,12 +318,12 @@ namespace pwiz.SkylineTestFunctional
             RegressionLineElement line = null;
             RunUI(() =>
                       {
-                          SkylineWindow.ShowRTLinearRegressionGraphScoreToRun();
+                          SkylineWindow.ShowRTRegressionGraphScoreToRun();
                           SkylineWindow.SetupCalculatorChooser();
                           SkylineWindow.ChooseCalculator(irtCalc);
 
                           stats = SkylineWindow.RTGraphController.RegressionRefined.CalcStatistics(docPeptides, null);
-                          line = SkylineWindow.RTGraphController.RegressionRefined.Conversion;
+                          line = SkylineWindow.RTGraphController.RegressionRefined.Conversion as RegressionLineElement;
                       });
             Assert.IsNotNull(stats);
             Assert.IsTrue(stats.R > 0.999);

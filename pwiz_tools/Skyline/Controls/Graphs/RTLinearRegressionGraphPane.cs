@@ -29,6 +29,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using ZedGraph;
@@ -179,7 +180,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public static PeptideDocNode[] CalcOutliers(SrmDocument document, double threshold, int? precision, bool bestResult)
         {
-            var data = new GraphData(document, null, -1, threshold, precision, true, bestResult, RTGraphController.PointsType);
+            var data = new GraphData(document, null, -1, threshold, precision, true, bestResult, RTGraphController.PointsType, RTGraphController.RegressionMethod);
             return data.Refine(() => false).Outliers;
         }
 
@@ -207,10 +208,10 @@ namespace pwiz.Skyline.Controls.Graphs
             return data != null && data.IsValidFor(document);
         }
 
-        public bool IsValidFor(SrmDocument document, int targetIndex, int originalIndex, bool bestResult, double threshold, bool refine, PointsTypeRT pointsType)
+        public bool IsValidFor(SrmDocument document, int targetIndex, int originalIndex, bool bestResult, double threshold, bool refine, PointsTypeRT pointsType, RegressionMethodRT regressionMethod)
         {
             var data = Data;
-            return data != null && data.IsValidFor(document, targetIndex, originalIndex,bestResult, threshold, refine, pointsType);
+            return data != null && data.IsValidFor(document, targetIndex, originalIndex,bestResult, threshold, refine, pointsType, regressionMethod);
         }
 
         public void Clear()
@@ -227,10 +228,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 data.Graph(this, nodeSelected);
         }
 
-        public void Update(SrmDocument document, int targetIndex, double threshold, bool refine, PointsTypeRT pointsType, int origIndex = -1)
+        public void Update(SrmDocument document, int targetIndex, double threshold, bool refine, PointsTypeRT pointsType, RegressionMethodRT regressionMethod, int origIndex = -1)
         {
             bool bestResults = (ShowReplicate == ReplicateDisplay.best);
-            Data = new GraphData(document, Data, targetIndex, threshold, null, refine, bestResults, pointsType, origIndex, this);
+            Data = new GraphData(document, Data, targetIndex, threshold, null, refine, bestResults, pointsType, regressionMethod, origIndex, this);
             
         }
 
@@ -330,7 +331,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (checkData)
                 {
                     double threshold = RTGraphController.OutThreshold;
-                    bool refine = Settings.Default.RTRefinePeptides;
+                    bool refine = Settings.Default.RTRefinePeptides && RTGraphController.CanDoRefinementForRegressionMethod;
+
                     bool bestResult = (ShowReplicate == ReplicateDisplay.best);
                     
                     if ((RTGraphController.PointsType == PointsTypeRT.standards && !document.GetRetentionTimeStandards().Any()) ||
@@ -340,11 +342,12 @@ namespace pwiz.Skyline.Controls.Graphs
                         RTGraphController.PointsType = PointsTypeRT.targets;
                     }
                     PointsTypeRT pointsType = RTGraphController.PointsType;
+                    RegressionMethodRT regressionMethod = RTGraphController.RegressionMethod;
                     
-                    if (!IsValidFor(document, targetIndex, originalIndex, bestResult, threshold, refine, pointsType))
+                    if (!IsValidFor(document, targetIndex, originalIndex, bestResult, threshold, refine, pointsType,regressionMethod))
                     {
 
-                        Update(document,targetIndex, threshold, refine, pointsType, originalIndex);
+                        Update(document,targetIndex, threshold, refine, pointsType, regressionMethod, originalIndex);
                         if (refine && !IsRefined)
                         {
                             // Do refinement on a background thread.
@@ -394,6 +397,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             private readonly SrmDocument _document;
             private readonly RTLinearRegressionGraphPane _graphPane;
+            private readonly RegressionMethodRT _regressionMethod;
             private readonly int _targetIndex;
             private readonly int _originalIndex; // set to -1 if we are using IRTs
             private readonly bool _bestResult;
@@ -440,6 +444,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 bool refine,
                 bool bestResult,
                 PointsTypeRT pointsType,
+                RegressionMethodRT regressionMethod,
                 int originalIndex = -1,
                 RTLinearRegressionGraphPane graphPane = null)
             {
@@ -453,6 +458,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 _threshold = threshold;
                 _thresholdPrecision = thresholdPrecision;
                 _pointsType = pointsType;
+                _regressionMethod = regressionMethod;
                 _peptidesIndexes = new List<PeptideDocumentIndex>();
                 _targetTimes = new List<MeasuredRetentionTime>();
                 var originalTimes = IsRunToRun ? new List<MeasuredRetentionTime>() : null; 
@@ -542,7 +548,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     _calculator = new DictionaryRetentionScoreCalculator(XmlNamedElement.NAME_INTERNAL, origTimesDict);
                     var alignedRetentionTimes = AlignedRetentionTimes.AlignLibraryRetentionTimes(targetTimesDict,
-                        origTimesDict, threshold,
+                        origTimesDict, refine ? threshold : 0, _regressionMethod,
                         () => false);
                     if (alignedRetentionTimes != null)
                     {
@@ -567,6 +573,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             _targetTimes,
                             _scoreCache,
                             true,
+                            _regressionMethod,
                             out _statisticsAll,
                             out _calculator);
                     }
@@ -580,6 +587,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             _targetTimes,
                             _scoreCache,
                             true,
+                            _regressionMethod,
                             out _statisticsAll,
                             out _calculator);
 
@@ -610,7 +618,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     _timesRefined = _statisticsAll.ListRetentionTimes.ToArray();
                 }
 
-                _regressionPredict = IsRunToRun ? null : document.Settings.PeptideSettings.Prediction.RetentionTime;
+                _regressionPredict = (IsRunToRun || _regressionMethod != RegressionMethodRT.linear)  ? null : document.Settings.PeptideSettings.Prediction.RetentionTime;
                 if (_regressionPredict != null)
                 {
                     if (!Equals(_calculator, _regressionPredict.Calculator))
@@ -646,7 +654,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 return ReferenceEquals(document, _document);
             }
 
-            public bool IsValidFor(SrmDocument document, int targetIndex, int originalIndex, bool bestResult, double threshold, bool refine, PointsTypeRT pointsType)
+            public bool IsValidFor(SrmDocument document, int targetIndex, int originalIndex, bool bestResult, double threshold, bool refine, PointsTypeRT pointsType, RegressionMethodRT regressionMethod)
             {
                 string calculatorName = Settings.Default.RTCalculatorName;
                 if (string.IsNullOrEmpty(calculatorName) && !IsRunToRun)
@@ -657,6 +665,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         _bestResult == bestResult &&
                         _threshold == threshold &&
                         _pointsType == pointsType &&
+                        _regressionMethod == regressionMethod && 
                         (IsRunToRun || (_calculatorName == Settings.Default.RTCalculatorName &&
                         ReferenceEquals(_calculator, Settings.Default.GetCalculatorByName(calculatorName)))) &&
                         // Valid if refine is true, and this data requires no further refining
@@ -742,6 +751,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                                                          variableOrigPeptides,
                                                                          _statisticsAll,
                                                                          _calculator,
+                                                                         _regressionMethod,
                                                                          _scoreCache,
                                                                          isCanceled,
                                                                          ref _statisticsRefined,
@@ -897,18 +907,18 @@ namespace pwiz.Skyline.Controls.Graphs
                 string labelPoints = Resources.GraphData_Graph_Peptides;
                 if (!_refine)
                 {
-                    GraphRegression(graphPane, _statisticsAll, Resources.GraphData_Graph_Regression, COLOR_LINE_REFINED);
+                    GraphRegression(graphPane, _statisticsAll, _regressionAll, Resources.GraphData_Graph_Regression, COLOR_LINE_REFINED);
                 }
                 else
                 {
                     labelPoints = Resources.GraphData_Graph_Peptides_Refined;
-                    GraphRegression(graphPane, _statisticsRefined, Resources.GraphData_Graph_Regression_Refined, COLOR_LINE_REFINED);
-                    GraphRegression(graphPane, _statisticsAll, Resources.GraphData_Graph_Regression, COLOR_LINE_ALL);
+                    GraphRegression(graphPane, _statisticsRefined, _regressionAll, Resources.GraphData_Graph_Regression_Refined, COLOR_LINE_REFINED);
+                    GraphRegression(graphPane, _statisticsAll, _regressionAll, Resources.GraphData_Graph_Regression, COLOR_LINE_ALL);
                 }
 
                 if (_regressionPredict != null && Settings.Default.RTPredictorVisible)
                 {
-                    GraphRegression(graphPane, _statisticsPredict, Resources.GraphData_Graph_Predictor, COLOR_LINE_PREDICT);
+                    GraphRegression(graphPane, _statisticsPredict, _regressionAll, Resources.GraphData_Graph_Predictor, COLOR_LINE_PREDICT);
                 }
 
                 var curve = graphPane.AddCurve(labelPoints, _scoresRefined, _timesRefined,
@@ -1033,7 +1043,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             private static void GraphRegression(GraphPane graphPane,
-                                                RetentionTimeStatistics statistics, string name, Color color)
+                                                RetentionTimeStatistics statistics, RetentionTimeRegression regression, string name, Color color)
             {
                 double[] lineScores, lineTimes;
                 if (statistics == null)
@@ -1043,28 +1053,15 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 else
                 {
-                    // Find maximum hydrophobicity score points for drawing the regression line
-                    lineScores = new[] { Double.MaxValue, 0 };
-                    lineTimes = new[] { Double.MaxValue, 0 };
-
-                    for (int i = 0; i < statistics.ListHydroScores.Count; i++)
-                    {
-                        double score = statistics.ListHydroScores[i];
-                        double time = statistics.ListPredictions[i];
-                        if (score < lineScores[0])
-                        {
-                            lineScores[0] = score;
-                            lineTimes[0] = time;
-                        }
-                        if (score > lineScores[1])
-                        {
-                            lineScores[1] = score;
-                            lineTimes[1] = time;
-                        }
-                    }
+                    regression.Conversion.GetCurve(statistics, out lineScores, out lineTimes);    
+                }
+                var curve = graphPane.AddCurve(name, lineScores, lineTimes, color, SymbolType.None);
+                if (lineScores.Length > 0 && lineTimes.Length > 0)
+                {
+                    graphPane.AddCurve(string.Empty, new[] { lineScores[0] }, new[] { lineTimes[0] }, color, SymbolType.Square);
+                    graphPane.AddCurve(string.Empty, new[] { lineScores.Last() }, new[] { lineTimes.Last() }, color, SymbolType.Square);
                 }
 
-                var curve = graphPane.AddCurve(name, lineScores, lineTimes, color);
                 curve.Line.IsAntiAlias = true;
                 curve.Line.IsOptimizedDraw = true;
             }
@@ -1121,14 +1118,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 else
                 {
-                    label = String.Format("{0} = {1:F02}, {2} = {3:F02}\n" + "{4} = {5:F01}\n" + "r = {6}",   // Not L10N
-                                          Resources.Regression_slope,
-                                          conversion.Slope,
-                                          Resources.Regression_intercept, 
-                                          conversion.Intercept,
-                                          Resources.GraphData_AddRegressionLabel_window,
-                                          regression.TimeWindow,
-                                          Math.Round(statistics.R, RetentionTimeRegression.ThresholdPrecision));
+                    label = regression.Conversion.GetRegressionDescription(statistics.R, regression.TimeWindow);
                 }
 
                 TextObj text = new TextObj(label, score, time,

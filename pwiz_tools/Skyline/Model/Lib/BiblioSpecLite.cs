@@ -1227,7 +1227,7 @@ namespace pwiz.Skyline.Model.Lib
                 AlignedRetentionTimes aligned = null;
                 if (dataFileName != entry.Key)
                 {
-                    aligned = AlignedRetentionTimes.AlignLibraryRetentionTimes(targetTimes, entry.Value, 0, () => false);
+                    aligned = AlignedRetentionTimes.AlignLibraryRetentionTimes(targetTimes, entry.Value, 0, RegressionMethodRT.linear, () => false);
                     if (aligned != null && aligned.RegressionPointCount < MIN_IRT_ALIGNMENT_POINT_COUNT)
                         return null;
                 }

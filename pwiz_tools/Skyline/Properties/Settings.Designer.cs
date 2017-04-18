@@ -2349,5 +2349,17 @@ namespace pwiz.Skyline.Properties {
                 this["ExportPolarityFilterEnum"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("linear")]
+        public string RTRegressionMethod {
+            get {
+                return ((string)(this["RTRegressionMethod"]));
+            }
+            set {
+                this["RTRegressionMethod"] = value;
+            }
+        }
     }
 }

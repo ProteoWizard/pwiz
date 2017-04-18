@@ -91,15 +91,19 @@ namespace pwiz.SkylineTestFunctional
             var alignedRetentionTimes10To1 = AlignedRetentionTimes.AlignLibraryRetentionTimes(
                 document.Settings.GetRetentionTimes("S_1").GetFirstRetentionTimes(),
                 document.Settings.GetRetentionTimes("S_10").GetFirstRetentionTimes(),
-                DocumentRetentionTimes.REFINEMENT_THRESHHOLD, ()=>false);
+                DocumentRetentionTimes.REFINEMENT_THRESHHOLD, 
+                RegressionMethodRT.linear, ()=>false);
             var alignedRetentionTimes1To10 = AlignedRetentionTimes.AlignLibraryRetentionTimes(
                 document.Settings.GetRetentionTimes("S_10").GetFirstRetentionTimes(),
                 document.Settings.GetRetentionTimes("S_1").GetFirstRetentionTimes(),
-                DocumentRetentionTimes.REFINEMENT_THRESHHOLD, ()=>false);
-            Assert.AreEqual(af10To1.RegressionLine.Slope, alignedRetentionTimes10To1.RegressionRefined.Conversion.Slope);
-            Assert.AreEqual(af10To1.RegressionLine.Intercept, alignedRetentionTimes10To1.RegressionRefined.Conversion.Intercept);
-            Assert.AreEqual(af1To10.RegressionLine.Slope, alignedRetentionTimes1To10.RegressionRefined.Conversion.Slope);
-            Assert.AreEqual(af1To10.RegressionLine.Intercept, alignedRetentionTimes1To10.RegressionRefined.Conversion.Intercept);
+                DocumentRetentionTimes.REFINEMENT_THRESHHOLD, 
+                RegressionMethodRT.linear, ()=>false);
+            var regressionLine10To1 = (RegressionLineElement) alignedRetentionTimes10To1.RegressionRefined.Conversion;
+            Assert.AreEqual(af10To1.RegressionLine.Slope, regressionLine10To1.Slope);
+            Assert.AreEqual(af10To1.RegressionLine.Intercept, regressionLine10To1.Intercept);
+            var regressionLine1To10 = (RegressionLineElement) alignedRetentionTimes1To10.RegressionRefined.Conversion;
+            Assert.AreEqual(af1To10.RegressionLine.Slope, regressionLine1To10.Slope);
+            Assert.AreEqual(af1To10.RegressionLine.Intercept, regressionLine1To10.Intercept);
 
 
             // Verify that the generated chromatogram is of the expected length around the actual or aligned ID's

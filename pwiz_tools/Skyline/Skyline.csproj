@@ -135,6 +135,9 @@
     <Reference Condition="'$(Platform)' == 'x64'" Include="MethodWriter">
       <HintPath>Method\Shimadzu\x64\MethodWriter.dll</HintPath>
     </Reference>
+    <Reference Include="netchartdir_cp">
+      <HintPath>..\Shared\Lib\netchartdir_cp.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\Shared\Lib\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -1173,6 +1176,9 @@
     <Compile Include="Model\Results\VendorIssueHelper.cs" />
     <Compile Include="Model\RetentionTimes\DocumentRetentionTimes.cs" />
     <Compile Include="Model\RetentionTimes\FileRetentionTimeAlignments.cs" />
+    <Compile Include="Model\RetentionTimes\KdeAligner.cs" />
+    <Compile Include="Model\RetentionTimes\LoessAligner.cs" />
+    <Compile Include="Model\RetentionTimes\PiecewiseLinearAligner.cs" />
     <Compile Include="Model\RetentionTimes\RetentionTimeManager.cs" />
     <Compile Include="Model\RetentionTimes\RetentionTimeSource.cs" />
     <Compile Include="Model\RetentionTimes\RetentionTimeValues.cs" />
