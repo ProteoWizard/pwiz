@@ -69,7 +69,6 @@ rule vendor-api-requirements ( properties * )
         result += <assembly>$(dll_location)/Clearcore2.UserLog.Types.dll ;
         result += <assembly>$(dll_location)/Clearcore2.Utility.dll ;
         result += <assembly>$(dll_location)/Clearcore2.XmlHelpers.dll ;
-        result += <assembly>$(dll_location)/log4net.dll ;
         result += <assembly>$(dll_location)/Microsoft.Practices.Unity.Configuration.dll ;
         result += <assembly>$(dll_location)/Microsoft.Practices.Unity.dll ;
         result += <assembly>$(dll_location)/OFX.Core.Contracts.dll ;
@@ -160,7 +159,6 @@ rule install-requirements ( properties * )
         result += <source>$(dll_location)/Clearcore2.UserLog.Types.dll ;
         result += <source>$(dll_location)/Clearcore2.Utility.dll ;
         result += <source>$(dll_location)/Clearcore2.XmlHelpers.dll ;
-        result += <source>$(dll_location)/log4net.dll ;
         result += <source>$(dll_location)/Microsoft.Practices.Unity.Configuration.dll ;
         result += <source>$(dll_location)/Microsoft.Practices.Unity.dll ;
         result += <source>$(dll_location)/OFX.Core.Contracts.dll ;

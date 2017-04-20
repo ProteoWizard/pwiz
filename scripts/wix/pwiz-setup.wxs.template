@@ -288,6 +288,8 @@
 <Component Feature="MainFeature"><File Id="_OFX.EventServices.dll" Name="OFX.EventServices.dll" Source="msvc-release\OFX.EventServices.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_OFX.Logging.dll" Name="OFX.Logging.dll" Source="msvc-release\OFX.Logging.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_OFX.Security.Core.dll" Name="OFX.Security.Core.dll" Source="msvc-release\OFX.Security.Core.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_OFX.Security.Library.dll" Name="OFX.Security.Library.dll" Source="msvc-release\OFX.Security.Library.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_OFX.Security.SQLiteProviders.dll" Name="OFX.Security.SQLiteProviders.dll" Source="msvc-release\OFX.Security.SQLiteProviders.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_protobuf_net.dll" Name="protobuf-net.dll" Source="msvc-release\protobuf-net.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_Sciex.Clearcore.FMan.dll" Name="Sciex.Clearcore.FMan.dll" Source="msvc-release\Sciex.Clearcore.FMan.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_Sciex.Data.Processing.dll" Name="Sciex.Data.Processing.dll" Source="msvc-release\Sciex.Data.Processing.dll" KeyPath="yes"/></Component>
