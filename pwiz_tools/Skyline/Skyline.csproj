@@ -46,8 +46,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>10615</ApplicationRevision>
-    <ApplicationVersion>3.6.1.10615</ApplicationVersion>
+    <ApplicationRevision>10761</ApplicationRevision>
+    <ApplicationVersion>3.6.1.10761</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -134,9 +134,6 @@
     </Reference>
     <Reference Condition="'$(Platform)' == 'x64'" Include="MethodWriter">
       <HintPath>Method\Shimadzu\x64\MethodWriter.dll</HintPath>
-    </Reference>
-    <Reference Include="netchartdir_cp">
-      <HintPath>..\Shared\Lib\netchartdir_cp.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\Shared\Lib\Newtonsoft.Json.dll</HintPath>
