@@ -738,11 +738,11 @@ namespace pwiz.Skyline.Model.Results
                 writer.WriteAttribute(ATTR.sample_name, fileInfo.FilePath.GetSampleOrFileName());
                 if(fileInfo.RunStartTime != null)
                 {
-                    writer.WriteAttribute(ATTR.acquired_time, XmlConvert.ToString(fileInfo.RunStartTime.Value, XmlDateTimeSerializationMode.Utc)); // Not L10N
+                    writer.WriteAttribute(ATTR.acquired_time, XmlConvert.ToString((DateTime) fileInfo.RunStartTime, "yyyy-MM-ddTHH:mm:ss")); // Not L10N
                 }
                 if(fileInfo.FileWriteTime != null)
                 {
-                    writer.WriteAttribute(ATTR.modified_time, XmlConvert.ToString(fileInfo.FileWriteTime.Value, XmlDateTimeSerializationMode.Utc)); // Not L10N
+                    writer.WriteAttribute(ATTR.modified_time, XmlConvert.ToString((DateTime)fileInfo.FileWriteTime, "yyyy-MM-ddTHH:mm:ss")); // Not L10N
                 }
                 writer.WriteAttribute(ATTR.has_midas_spectra, fileInfo.HasMidasSpectra, false);
                 writer.WriteAttributeNullable(ATTR.explicit_global_standard_area, fileInfo.ExplicitGlobalStandardArea);
