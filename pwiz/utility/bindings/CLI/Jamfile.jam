@@ -202,13 +202,21 @@ rule merge_xdc_files ( targets + : sources * : properties * )
     OUTPUT_PATH on $(targets[1]) = [ path.native [ path.relative-to [ path.make [ path.pwd ] ] $(target-path) ] ] ;
 }
 
-actions merge_xdc_files
+if ( ! --incremental in [ modules.peek : ARGV ] )
 {
-    IF EXIST "%VS90COMNTOOLS%" CALL "%VS90COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
-    IF EXIST "%VS100COMNTOOLS%" CALL "%VS100COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
-    IF EXIST "%VS120COMNTOOLS%" CALL "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
-    xdcmake.exe /nologo $(DOC_DATA_PATH)/*.xdc $(DOC_PATH)/*.xdc /out:$(OUTPUT_PATH)\$(<[1]:D=)
+    actions merge_xdc_files
+    {
+        IF EXIST "%VS90COMNTOOLS%" CALL "%VS90COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
+        IF EXIST "%VS100COMNTOOLS%" CALL "%VS100COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
+        IF EXIST "%VS120COMNTOOLS%" CALL "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
+        xdcmake.exe /nologo $(DOC_DATA_PATH)/*.xdc $(DOC_PATH)/*.xdc /out:$(OUTPUT_PATH)\$(<[1]:D=)
+    }
 }
+else
+{
+    actions merge_xdc_files { }
+}
+
 
 
 make pwiz_bindings_cli.xml
@@ -258,5 +266,7 @@ rule unit-test-requirements ( properties * )
     }
     return $(result) ;
 }
+
+exe benchmark : example/benchmark.cpp : <conditional>@unit-test-requirements ;
 
 }
