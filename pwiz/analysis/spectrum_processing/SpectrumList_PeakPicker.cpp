@@ -26,6 +26,7 @@
 #include "SpectrumList_PeakPicker.hpp"
 #include "pwiz/utility/misc/Container.hpp"
 #include <boost/range/algorithm/remove_if.hpp>
+#include <boost/range/algorithm/remove.hpp>
 
 #include "pwiz/data/vendor_readers/ABI/SpectrumList_ABI.hpp"
 #include "pwiz/data/vendor_readers/ABI/T2D/SpectrumList_ABI_T2D.hpp"
@@ -168,35 +169,66 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_PeakPicker::spectrum(size_t index, bool g
     if (!getBinaryData || !msLevelsToPeakPick_.contains(s->cvParam(MS_ms_level).valueAs<int>()))
         return s;
 
+    bool isCentroided = s->hasCVParam(MS_centroid_spectrum);
     vector<CVParam>& cvParams = s->cvParams;
-    vector<CVParam>::iterator itr = std::find(cvParams.begin(), cvParams.end(), MS_centroid_spectrum);
+    vector<CVParam>::iterator itr;
 
     // return non-profile spectra as-is
     // (could have been acquired as centroid, or vendor may have done the centroiding)
-    if (itr != cvParams.end())
+    if (isCentroided)
     {
         // the vendor spectrum lists must put "profile spectrum" if they actually performed centroiding
-        vector<CVParam>::iterator itr2 = boost::range::remove_if(cvParams, CVParamIs(MS_profile_spectrum));
-        if (itr2 != cvParams.end())
-            cvParams.erase(itr2);
+        itr = boost::range::remove_if(cvParams, CVParamIs(MS_profile_spectrum));
+        if (itr != cvParams.end())
+            cvParams.erase(itr);
         else
             this->warn_once("[SpectrumList_PeakPicker]: one or more spectra are already centroided, no processing needed");
         return s;
     }
 
     // is this declared as profile?
-    itr = std::find(cvParams.begin(), cvParams.end(), MS_profile_spectrum);
-    if (cvParams.end() == itr)
+    bool isProfile = s->hasCVParam(MS_profile_spectrum);
+    ParamGroupPtr specRepParamGroup;
+    if (!isProfile)
     {
         this->warn_once("[SpectrumList_PeakPicker]: one or more spectra have undeclared profile/centroid status, assuming profile data and that peakpicking is needed");
         itr = std::find(cvParams.begin(), cvParams.end(), MS_spectrum_representation); // this should be there if nothing else
+        if (itr == cvParams.end() && !s->hasCVParam(MS_spectrum_representation))
+            this->warn_once("[SpectrumList_PeakPicker]: spectrum representation cvParam is missing completely");
+    }
+    else
+    {
+        itr = std::find(cvParams.begin(), cvParams.end(), MS_profile_spectrum);
+        if (itr == cvParams.end())
+        {
+            // we know spectrum is profile, so find it in paramGroups; specRepParamGroup does double duty here as a "found" boolean
+            for (const auto& pg : s->paramGroupPtrs)
+            {
+                if (!pg) continue;
+                itr = std::find(pg->cvParams.begin(), pg->cvParams.end(), MS_profile_spectrum);
+                if (itr != pg->cvParams.end())
+                {
+                    specRepParamGroup = pg;
+                    break;
+                }
+            }
+            if (!specRepParamGroup)
+                throw std::runtime_error("[SpectrumList_PeakPicker]: spectrum isProfile==true but could not find profile cvParam (report this bug)");
+        }
     }
 
     // make sure the spectrum has binary data
     if (!s->getMZArray().get() || !s->getIntensityArray().get())
         s = inner_->spectrum(index, true);
 
-    // replace profile or nonspecific term with centroid term
+    // replace profile or nonspecific term with centroid term; if spectrum representation is in a paramGroup, we migrate those parameters to the spectrum itself
+    if (specRepParamGroup)
+    {
+        s->cvParams.insert(s->cvParams.end(), specRepParamGroup->cvParams.begin(), specRepParamGroup->cvParams.end());
+        itr = std::find(cvParams.begin(), cvParams.end(), MS_profile_spectrum);
+        boost::range::remove(s->paramGroupPtrs, specRepParamGroup);
+    }
+
     *itr = MS_centroid_spectrum;
 
     try
