@@ -268,5 +268,6 @@ rule unit-test-requirements ( properties * )
 }
 
 exe benchmark : example/benchmark.cpp : <conditional>@unit-test-requirements ;
+explicit benchmark ;
 
 }
