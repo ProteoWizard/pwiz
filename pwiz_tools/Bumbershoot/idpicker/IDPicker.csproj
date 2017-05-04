@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>IDPicker</RootNamespace>
     <AssemblyName>IDPicker</AssemblyName>
-    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <StartupObject>IDPicker.Program</StartupObject>
@@ -479,6 +479,10 @@
       <Project>{13bf2ffb-50a1-4ab1-83a4-5733e36905ce}</Project>
       <Name>CommonUtil</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Shared\zedgraph\ZedGraph.csproj">
+      <Project>{b99650ee-af46-47b4-a4a9-212ade7809b7}</Project>
+      <Name>ZedGraph</Name>
+    </ProjectReference>
     <ProjectReference Include="Controls\Controls.csproj">
       <Project>{8EFCC46A-7415-4BB5-AF34-5E71EF4BEEB0}</Project>
       <Name>Controls</Name>
@@ -490,10 +494,6 @@
     <ProjectReference Include="..\..\Shared\MSGraph\MSGraph.csproj">
       <Project>{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}</Project>
       <Name>MSGraph</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Shared\zedgraph\ZedGraph.csproj">
-      <Project>{B99650EE-AF46-47B4-A4A9-212ADE7809B7}</Project>
-      <Name>ZedGraph</Name>
     </ProjectReference>
     <ProjectReference Include="Model\Model.csproj">
       <Project>{723405E1-1EE4-4978-9470-0B1F28B1A215}</Project>

@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>IDPicker.Controls</RootNamespace>
     <AssemblyName>IDPicker.Controls</AssemblyName>
-    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
@@ -225,6 +225,14 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\SeeMS\seems.csproj">
+      <Project>{2399F68B-D886-4D94-AB4B-700FE3E46849}</Project>
+      <Name>seems</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Shared\Common\CommonUtil.csproj">
+      <Project>{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}</Project>
+      <Name>CommonUtil</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Model\Model.csproj">
       <Project>{723405E1-1EE4-4978-9470-0B1F28B1A215}</Project>
       <Name>Model</Name>

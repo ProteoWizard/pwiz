@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>CustomDataSourceDialog</RootNamespace>
     <AssemblyName>CustomDataSourceDialog</AssemblyName>
-    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
@@ -94,7 +94,7 @@
     </Reference>
     <Reference Include="InteropQonverter, Version=3.0.261.0, Culture=neutral, processorArchitecture=$(Platform)">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>$(BuildPath)\obj\$(Platform)\release\InteropQonverter.dll</HintPath>
+      <HintPath>$(BuildPath)\obj\$(Platform)\$(Configuration)\InteropQonverter.dll</HintPath>
     </Reference>
     <Reference Include="NHibernate, Version=3.1.0.4000, Culture=neutral, PublicKeyToken=aa95f207798dfdb4, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -206,6 +206,10 @@
     <None Include="Resources\Forward Lit.png" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\Shared\Common\CommonUtil.csproj">
+      <Project>{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}</Project>
+      <Name>CommonUtil</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Model\Model.csproj">
       <Project>{723405E1-1EE4-4978-9470-0B1F28B1A215}</Project>
       <Name>Model</Name>
