@@ -205,6 +205,7 @@
     <Compile Include="MassErrorGraphsTest.cs" />
     <Compile Include="MidasTest.cs" />
     <Compile Include="MiscFormsTest.cs" />
+    <Compile Include="MultiSelectPeakAreaGraphTest.cs" />
     <Compile Include="MultiSelectRetentionTimeTest.cs" />
     <Compile Include="MultiSelectTest.cs" />
     <Compile Include="NegativeIonChromatogramsTest.cs" />

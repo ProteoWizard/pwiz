@@ -264,6 +264,15 @@ namespace pwiz.Skyline.Controls.Graphs
                                  nodeGroup.TransitionGroup.LabelTypeText);            
         }
 
+        public static string GetTitle(PeptideDocNode nodePep)
+        {
+            if (nodePep == null)
+            {
+                return string.Empty;
+            }
+            return nodePep.ModifiedSequenceDisplay;
+        }
+
         public override string Title
         {
             get

@@ -19,13 +19,16 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Linq;
+using NHibernate.Mapping;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using ZedGraph;
+using Array = System.Array;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
@@ -127,6 +130,11 @@ namespace pwiz.Skyline.Controls.Graphs
             return false;
         }
 
+        private PeptidesAndTransitionGroups GetSelectedPeptides()
+        {
+            return PeptidesAndTransitionGroups.Get(GraphSummary.StateProvider.SelectedNodes, GraphSummary.ResultsIndex, 100);
+        }
+
         public override void UpdateGraph(bool checkData)
         {
             _dotpLabels = new GraphObjList();
@@ -143,14 +151,22 @@ namespace pwiz.Skyline.Controls.Graphs
                 return;
             }
 
+            var peptidePaths = GetSelectedPeptides().GetUniquePeptidePaths();
+            var pepCount = peptidePaths.ToList().Count;
+            var isMultiSelect = pepCount > 1 ||
+                                (pepCount == 1 &&
+                                 GraphSummary.StateProvider.SelectedNodes.FirstOrDefault() is PeptideGroupTreeNode);
             var selectedTreeNode = GraphSummary.StateProvider.SelectedNode as SrmTreeNode;
+            if (GraphSummary.StateProvider.SelectedNode is EmptyNode) // if EmptyNode selected
+            {
+                selectedTreeNode = GraphSummary.StateProvider.SelectedNodes.First() as SrmTreeNode;
+            }
             if (selectedTreeNode == null || document.FindNode(selectedTreeNode.Path) == null)
             {
                 Title.Text = Resources.AreaReplicateGraphPane_UpdateGraph_Select_a_peptide_to_see_the_peak_area_graph;
                 EmptyGraph(document);
                 return;
             }
-
             BarSettings.Type = BarType;
             Title.Text = null;
 
@@ -205,7 +221,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     BarSettings.Type = BarType.Cluster;
                 }
             }
-            else if (!(selectedTreeNode is TransitionGroupTreeNode))
+            else if (!(selectedTreeNode is TransitionGroupTreeNode || selectedTreeNode is PeptideGroupTreeNode))
             {
                 Title.Text = Resources.AreaReplicateGraphPane_UpdateGraph_Select_a_peptide_to_see_the_peak_area_graph;
                 EmptyGraph(document);
@@ -290,14 +306,23 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             var expectedValue = IsExpectedVisible ? ExpectedVisible : AreaExpectedValue.none;
             var replicateGroupOp = GraphValues.ReplicateGroupOp.FromCurrentSettings(document.Settings);
-            var graphData = new AreaGraphData(document,
-                                              identityPath,
-                                              displayType,
-                                              replicateGroupOp,
-                                              ratioIndex,
-                                              normalizeData,
-                                              expectedValue,
-                                              PaneKey);
+            var graphData = isMultiSelect  ? 
+                new AreaGraphData(document,
+                    peptidePaths,
+                    displayType,
+                    replicateGroupOp,
+                    ratioIndex,
+                    normalizeData,
+                    expectedValue,
+                    PaneKey) : 
+                new AreaGraphData(document,
+                    identityPath,
+                    displayType,
+                    replicateGroupOp,
+                    ratioIndex,
+                    normalizeData,
+                    expectedValue,
+                    PaneKey);
 
             var aggregateOp = replicateGroupOp.AggregateOp;
             // Avoid stacking CVs
@@ -357,6 +382,7 @@ namespace pwiz.Skyline.Controls.Graphs
             for (int i = 0; i < countNodes; i++)
             {
                 var docNode = graphData.DocNodes[i];
+                identityPath = graphData.DocNodePaths[i];
                 var pointPairLists = graphData.PointPairLists[i];
                 int numSteps = pointPairLists.Count/2;
                 for (int iStep = 0; iStep < pointPairLists.Count; iStep++)
@@ -365,7 +391,20 @@ namespace pwiz.Skyline.Controls.Graphs
                     var pointPairList = pointPairLists[iStep];
                     Color color;
                     var nodeGroup = docNode as TransitionGroupDocNode;
-                    if (parentNode is PeptideDocNode)
+                    if (isMultiSelect)
+                    {
+                        var peptideDocNode = docNode as PeptideDocNode;
+                        if (peptideDocNode == null)
+                        {
+                            continue;
+                        }
+                        color = GraphSummary.StateProvider.GetPeptideGraphInfo(peptideDocNode).Color;
+                        if (identityPath.Equals(selectedTreeNode.Path) && step == 0)
+                        {
+                            color = ChromGraphItem.ColorSelected;
+                        }
+                    }
+                    else if (parentNode is PeptideDocNode)
                     {
                         int iColorGroup = GetColorIndex(nodeGroup, countLabelTypes, ref charge, ref iCharge);
                         color = COLORS_GROUPS[iColorGroup % COLORS_GROUPS.Length];
@@ -396,19 +435,33 @@ namespace pwiz.Skyline.Controls.Graphs
                     string label = graphData.DocNodeLabels[i];
                     if (step != 0)
                         label = string.Format(Resources.AreaReplicateGraphPane_UpdateGraph_Step__0_, step);
-                    BarItem curveItem;
+                    CurveItem curveItem;
+
                     // Only use a MeanErrorBarItem if bars are not going to be stacked.
                     // TODO(nicksh): AreaGraphData.NormalizeTo does not know about MeanErrorBarItem 
-                    if (BarSettings.Type != BarType.Stack && BarSettings.Type != BarType.PercentStack && normalizeData == AreaNormalizeToData.none)
+                    if (!isMultiSelect && BarSettings.Type != BarType.Stack && BarSettings.Type != BarType.PercentStack && normalizeData == AreaNormalizeToData.none)
                     {
                         curveItem = new MeanErrorBarItem(label, pointPairList, color, Color.Black);
                     }
                     else 
                     {
-                        curveItem = new BarItem(label, pointPairList, color);
+                        if (isMultiSelect)
+                        {
+                             curveItem = new LineItem(label, pointPairList, color, SymbolType.None) 
+                             {
+                                 Line = new Line {Width = 2, Color = color, IsAntiAlias = true}, 
+                                 Symbol = new Symbol
+                                 {
+                                     Type = SymbolType.Circle, 
+                                     Size = 4,
+                                     Border = new Border(color, 0),
+                                     Fill = new Fill(color)
+                                 }
+                             };
+                        }
+                        else
+                            curveItem = new BarItem(label, pointPairList, color);
                     }
-                    
-
                     if (0 <= selectedReplicateIndex && selectedReplicateIndex < pointPairList.Count)
                     {
                         PointPair pointPair = pointPairList[selectedReplicateIndex];
@@ -421,11 +474,20 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     // Add area for this transition to each area entry
                     AddAreasToSums(pointPairList, sumAreas);
-
-                    curveItem.Bar.Border.IsVisible = false;
-                    curveItem.Bar.Fill.Brush = new SolidBrush(color);
-                    curveItem.Tag = new IdentityPath(identityPath, docNode.Id);
-                    CurveList.Add(curveItem);
+                    if (isMultiSelect)
+                    {
+                        var lineItem = (LineItem)curveItem;
+                        lineItem.Tag = new IdentityPath(identityPath, docNode.Id);
+                        CurveList.Add(lineItem);
+                    }
+                    else
+                    {
+                        var barItem = (BarItem) curveItem;
+                        barItem.Bar.Border.IsVisible = false;
+                        barItem.Bar.Fill.Brush = new SolidBrush(color);
+                        barItem.Tag = new IdentityPath(identityPath, docNode.Id);
+                        CurveList.Add(barItem);
+                    }
                 }
             }
 
@@ -452,21 +514,32 @@ namespace pwiz.Skyline.Controls.Graphs
                         yValue = (areaView == AreaNormalizeToView.area_maximum_view ? Math.Min(maxArea, .999) : maxArea);
                         break;
                 }
-                GraphObjList.Add(new BoxObj(selectedReplicateIndex + .5, yValue, 0.99,
-                                            yValue, Color.Black, Color.Empty)
-                                     {
-                                         IsClippedToChartRect = true,
-                                     });
+                if (isMultiSelect)
+                {
+                    GraphObjList.Add(new LineObj(Color.Black, selectedReplicateIndex + 1, 0, selectedReplicateIndex + 1, sumArea)
+                    {
+                        IsClippedToChartRect = true,
+                        Line = new Line() { Width = 2, Color = Color.Black, Style = DashStyle.Dash}
+                    });
+                }
+                else
+                {
+                    GraphObjList.Add(new BoxObj(selectedReplicateIndex + .5, yValue, 0.99,
+                        yValue, Color.Black, Color.Empty)
+                    {
+                        IsClippedToChartRect = true,
+                    });
+                }
             }
             // Reset the scale when the parent node changes
             bool resetAxes = (_parentNode == null || !ReferenceEquals(_parentNode.Id, parentNode.Id));
             _parentNode = parentNode;
 
-            UpdateAxes(resetAxes, aggregateOp, normalizeData, areaView, standardType);
+            UpdateAxes(resetAxes, aggregateOp, normalizeData, areaView, standardType, isMultiSelect);
         }
 
         private void UpdateAxes(bool resetAxes, GraphValues.AggregateOp aggregateOp, AreaNormalizeToData normalizeData,
-            AreaNormalizeToView areaView, IsotopeLabelType standardType)
+            AreaNormalizeToView areaView, IsotopeLabelType standardType, bool isMultiSelect)
         {
             if (resetAxes)
             {
@@ -558,7 +631,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (!YAxis.Scale.MaxAuto && YAxis.Scale.Max == 100)
                     YAxis.Scale.MaxAuto = true;
             }
-            Legend.IsVisible = Settings.Default.ShowPeakAreaLegend;
+            Legend.IsVisible = !isMultiSelect && Settings.Default.ShowPeakAreaLegend;
             AxisChange();
 
             // Reformat Y-Axis for labels and whiskers
@@ -772,8 +845,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     return;
                 }
                 GraphSummary.ActiveLibrary = false;
-                selectedIndex--;
             }
+            selectedIndex--;
 
             base.ChangeSelection(selectedIndex, identityPath);
         }
@@ -805,6 +878,18 @@ namespace pwiz.Skyline.Controls.Graphs
                 : base(document, identityPath, displayType, replicateGroupOp, paneKey)
             {
                 _docNode = document.FindNode(identityPath);
+                _ratioIndex = ratioIndex;
+                _normalize = normalize;
+                _expectedVisible = expectedVisible;
+            }
+
+            public AreaGraphData(SrmDocument document, IEnumerable<IdentityPath> selectedDocNodePaths, DisplayTypeChrom displayType,
+                GraphValues.ReplicateGroupOp replicateGroupOp,  int ratioIndex,
+                AreaNormalizeToData normalize,
+                AreaExpectedValue expectedVisible,
+                PaneKey paneKey)
+                : base(document, selectedDocNodePaths, displayType, replicateGroupOp, paneKey)
+            {
                 _ratioIndex = ratioIndex;
                 _normalize = normalize;
                 _expectedVisible = expectedVisible;
@@ -1046,6 +1131,57 @@ namespace pwiz.Skyline.Controls.Graphs
                     chromInfoDatas.Select(chromInfoData => (double) (GetValue(chromInfoData.ChromInfo) ?? 0)));
             }
 
+            protected override List<LineInfo> GetPeptidePointPairLists(PeptideDocNode nodePep, bool multiplePeptides)
+            {
+                var tuples = base.GetPeptidePointPairLists(nodePep, multiplePeptides);
+                if (!multiplePeptides)
+                {
+                    return tuples;
+                }
+                var pointLists = new List<List<PointPair>>();
+                foreach (var tuple in tuples)
+                {
+                    foreach (var pointPairList in tuple.PointPairList)
+                    {
+                        for (int i = 0; i < pointPairList.Count; i++)
+                        {
+                            if (i >= pointLists.Count)
+                            {
+                                pointLists.Add(new List<PointPair>());
+                            }
+                            pointLists[i].Add(pointPairList[i]);
+                        }
+                    }
+                }
+                var result = new PointPairList();
+                foreach (var points in pointLists)
+                {
+                    var x = points[0].X;
+                    double y;
+                    if (_ratioIndex == RATIO_INDEX_NONE)
+                    {
+                        y = points.Sum(point => point.Y);
+                    }
+                    else
+                    {
+                        var validPoints = points.Where(p => !double.IsNaN(p.Y)).ToArray();
+                        if (validPoints.Length == 0)
+                        {
+                            y = 0;
+                        }
+                        else
+                        {
+                            y = validPoints.Average(p => p.Y);
+                        }
+                    }
+                    result.Add(new PointPair(x, y));
+                }
+                return new List<LineInfo>()
+                {
+                    new LineInfo(nodePep, nodePep.ModifiedSequenceDisplay, new List<PointPairList> {result})
+                };
+            }
+            
             private float? GetValue(TransitionGroupChromInfo chromInfo)
             {
                 if (chromInfo == null)

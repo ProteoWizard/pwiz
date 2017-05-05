@@ -88,6 +88,12 @@ namespace pwiz.Skyline.Controls.Graphs
             int iNearest;
             if (!FindNearestPoint(new PointF(mouseEventArgs.X, mouseEventArgs.Y), out nearestCurve, out iNearest))
             {
+                var axis = GetNearestXAxis(sender, mouseEventArgs);
+                if (axis != null)
+                {
+                    GraphSummary.Cursor = Cursors.Hand;
+                    return true;
+                }
                 return false;
             }
             IdentityPath identityPath = GetIdentityPath(nearestCurve, iNearest);
@@ -99,10 +105,36 @@ namespace pwiz.Skyline.Controls.Graphs
             return true;
         }
 
+        private XAxis GetNearestXAxis(ZedGraphControl sender, MouseEventArgs mouseEventArgs)
+        {
+            using (Graphics g = sender.CreateGraphics())
+            {
+                object nearestObject;
+                int index;
+                if (FindNearestObject(new PointF(mouseEventArgs.X, mouseEventArgs.Y), g, out nearestObject, out index))
+                {
+                    var axis = nearestObject as XAxis;
+                    if (axis != null)
+                        return axis;
+                }
+            }
+
+            return null;
+        }
+
         public override bool HandleMouseDownEvent(ZedGraphControl sender, MouseEventArgs mouseEventArgs)
         {
             CurveItem nearestCurve;
             int iNearest;
+            var axis = GetNearestXAxis(sender, mouseEventArgs);
+            if (axis != null)
+            {
+                iNearest = (int)axis.Scale.ReverseTransform(mouseEventArgs.X - axis.MajorTic.Size);
+                if (iNearest < 0)
+                    return false;
+                ChangeSelection(iNearest, GraphSummary.StateProvider.SelectedPath);
+                return true;
+            }
             if (!FindNearestPoint(new PointF(mouseEventArgs.X, mouseEventArgs.Y), out nearestCurve, out iNearest))
             {
                 return false;

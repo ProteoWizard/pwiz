@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
@@ -227,6 +228,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 List<IdentityPath> docNodePaths = new List<IdentityPath>();
                 List<List<PointPairList>> pointPairLists = new List<List<PointPairList>>();
                 List<String> docNodeLabels = new List<string>();
+                ReplicateGroups = new ReplicateGroup[0];
                 foreach (var docNodePath in _selectedDocNodePaths)
                 {
                     var docNode = _document.FindNode(docNodePath);
@@ -266,17 +268,15 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         var nodePep = (PeptideDocNode)docNode;
                         ReplicateGroups = GetReplicateGroups(GetReplicateIndices(nodePep)).ToArray();
-
-                        foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
+                        var isMultiSelect = _selectedDocNodePaths.Count > 1 ||
+                                            (_selectedDocNodePaths.Count == 1 && Program.MainWindow != null &&
+                                             Program.MainWindow.SelectedNode is PeptideGroupTreeNode);
+                        foreach (var tuple in GetPeptidePointPairLists(nodePep, isMultiSelect))
                         {
-                            if (!_paneKey.IncludesTransitionGroup(nodeGroup))
-                            {
-                                continue;
-                            }
-                            docNodes.Add(nodeGroup);
+                            docNodes.Add(tuple.Node);
                             docNodePaths.Add(docNodePath);
-                            pointPairLists.Add(GetPointPairLists(nodeGroup, DisplayTypeChrom.total));
-                            docNodeLabels.Add(ChromGraphItem.GetTitle(nodeGroup));
+                            pointPairLists.Add(tuple.PointPairList);
+                            docNodeLabels.Add(tuple.DisplaySeq);
                         }
                     }
                 }
@@ -285,6 +285,20 @@ namespace pwiz.Skyline.Controls.Graphs
                 DocNodes = docNodes;
                 _docNodePaths = ImmutableList.ValueOf(docNodePaths);
                 DocNodeLabels = docNodeLabels;
+            }
+
+            protected virtual List<LineInfo> GetPeptidePointPairLists(PeptideDocNode nodePep, bool multiplePeptides)
+            {
+                var pointPairLists = new List<LineInfo>();
+                foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
+                {
+                    if (!_paneKey.IncludesTransitionGroup(nodeGroup))
+                    {
+                        continue;
+                    }
+                    pointPairLists.Add(new LineInfo(nodeGroup, ChromGraphItem.GetTitle(nodeGroup), GetPointPairLists(nodeGroup, DisplayTypeChrom.all)));
+                }
+                return pointPairLists;
             }
 
             public IList<ReplicateGroup> ReplicateGroups
@@ -608,5 +622,18 @@ namespace pwiz.Skyline.Controls.Graphs
         }
         public string GroupName { get; private set; }
         public ReplicateIndexSet ReplicateIndexes { get; private set; }
+    }
+
+    public class LineInfo
+    {
+        public DocNode Node { set; get; }
+        public string DisplaySeq { set; get; }
+        public List<PointPairList> PointPairList { set; get; }
+        public LineInfo(DocNode _node, string _displaySeq, List<PointPairList> _ppList)
+        {
+            Node = _node;
+            DisplaySeq = _displaySeq;
+            PointPairList = _ppList;
+        }
     }
 }

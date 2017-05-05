@@ -151,10 +151,10 @@ namespace pwiz.SkylineTestFunctional
             {
                 AreaReplicateGraphPane pane;
                 Assert.IsTrue(SkylineWindow.GraphPeakArea.TryGetGraphPane(out pane));
-                Assert.IsTrue(pane.YAxis.Scale.Max < 0.12);
-                Assert.IsTrue(pane.YAxis.Scale.Max > 0.09);
+                Assert.IsTrue(pane.YAxis.Scale.Max < 1.02);
+                Assert.IsTrue(pane.YAxis.Scale.Max > 0.99);
                 Assert.IsTrue(pane.YAxis.Title.Text.StartsWith(Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area_Ratio_To_Global_Standards));
-                Assert.AreEqual(5, SkylineWindow.GraphPeakArea.CurveCount);
+                Assert.AreEqual(3, SkylineWindow.GraphPeakArea.CurveCount);
 
                 // Select a peptide with both light and heavy precursors
                 SkylineWindow.SelectedPath = peptidePath;
