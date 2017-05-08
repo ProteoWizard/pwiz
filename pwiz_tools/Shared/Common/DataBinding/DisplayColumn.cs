@@ -62,6 +62,10 @@ namespace pwiz.Common.DataBinding
 
         public string GetColumnDescription(PivotKey pivotKey)
         {
+            if (ColumnDescriptor == null)
+            {
+                return null;
+            }
             return DataSchema.GetColumnDescription(ColumnDescriptor);
         }
 

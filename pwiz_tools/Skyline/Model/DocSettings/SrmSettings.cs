@@ -844,6 +844,10 @@ namespace pwiz.Skyline.Model.DocSettings
                 .Select(typedSequence => typedSequence.ModifiedSequence).ToArray();
             foreach (var library in PeptideSettings.Libraries.Libraries)
             {
+                if (library == null)
+                {
+                    continue;
+                }
                 var peakBoundaries = library.GetExplicitPeakBounds(filePath, modifiedSequences);
                 if (peakBoundaries != null)
                 {
