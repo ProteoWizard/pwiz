@@ -516,7 +516,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 if (isMultiSelect)
                 {
-                    GraphObjList.Add(new LineObj(Color.Black, selectedReplicateIndex + 1, 0, selectedReplicateIndex + 1, sumArea)
+                    GraphObjList.Add(new LineObj(Color.Black, selectedReplicateIndex + 1, 0, selectedReplicateIndex + 1, maxArea)
                     {
                         IsClippedToChartRect = true,
                         Line = new Line() { Width = 2, Color = Color.Black, Style = DashStyle.Dash}
@@ -845,8 +845,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     return;
                 }
                 GraphSummary.ActiveLibrary = false;
+                selectedIndex--;
             }
-            selectedIndex--;
 
             base.ChangeSelection(selectedIndex, identityPath);
         }
