@@ -47,7 +47,7 @@ class sslPSM : public PSM {
             throw BlibException(false, "Missing scan number.");
         } else {
             try{// might be a scan number or a string identifier
-                psm.specKey = boost::lexical_cast<int>(value);
+                psm.specKey = boost::lexical_cast<int>(trimLeadingZeros(value));
             } catch (bad_lexical_cast) {
                 psm.specName = value;
             }
@@ -58,7 +58,7 @@ class sslPSM : public PSM {
             psm.charge = 0;
         } else {
             try{
-                psm.charge =  boost::lexical_cast<int>(value);
+                psm.charge =  boost::lexical_cast<int>(trimLeadingZeros(value));
             } catch (bad_lexical_cast) {
                 throw BlibException(false, "Non-numeric charge value: %s.",
                                     value.c_str());
@@ -100,6 +100,17 @@ class sslPSM : public PSM {
                                     value.c_str());
             }
         }
+    }
+
+  private:
+    static std::string trimLeadingZeros(std::string s) {
+        if (s.empty()) {
+            return s;
+        }
+        size_t nonZero = s.find_first_not_of('0');
+        return nonZero != string::npos
+            ? s.substr(nonZero)
+            : "0"; // just return a single zero if the string consists of only zeros
     }
 };
 
