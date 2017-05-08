@@ -148,9 +148,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
                 var chromCacheFile = rawData.ChromCacheFiles[0];
                 rawData.ChromCacheFiles = new[]
                 {
-                    new ChromCachedFile(chorusUrl, chromCacheFile.Flags, chromCacheFile.FileWriteTime,
-                        chromCacheFile.RunStartTime, chromCacheFile.MaxRetentionTime, chromCacheFile.MaxIntensity,
-                        chromCacheFile.InstrumentInfoList),
+                    chromCacheFile.ChangeFilePath(chorusUrl)
                 };
                 return new ChromatogramCache(string.Empty, rawData,
                     new ChromatogramGeneratorTask.MemoryPooledStream(memoryStream));

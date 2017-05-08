@@ -42,7 +42,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         public static CalibrationCurveFitter GetCalibrationCurveFitter(SrmSettings srmSettings,
             PeptideGroupDocNode peptideGroup, PeptideDocNode peptide)
         {
-            return new CalibrationCurveFitter(PeptideQuantifier.GetPeptideQuantifier(srmSettings, peptideGroup, peptide), srmSettings);
+            return new CalibrationCurveFitter(PeptideQuantifier.GetPeptideQuantifier(null, srmSettings, peptideGroup, peptide), srmSettings);
         }
 
         public PeptideQuantifier PeptideQuantifier { get; private set; }

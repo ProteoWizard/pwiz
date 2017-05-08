@@ -83,6 +83,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        public double? TicArea { get { return ChromFileInfo.TicArea; } }
+
         public TChromInfo FindChromInfo<TChromInfo>(Results<TChromInfo> chromInfos) where TChromInfo : ChromInfo
         {
             if (null == chromInfos || chromInfos.Count <= Replicate.ReplicateIndex)

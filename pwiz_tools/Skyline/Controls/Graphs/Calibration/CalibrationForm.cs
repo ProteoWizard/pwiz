@@ -135,7 +135,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                         .CalibrationForm_DisplayCalibrationCurve_Select_a_peptide_to_see_its_calibration_curve;
                 return;
             }
-            PeptideQuantifier peptideQuantifier = PeptideQuantifier.GetPeptideQuantifier(document.Settings, peptideGroup,
+            PeptideQuantifier peptideQuantifier = PeptideQuantifier.GetPeptideQuantifier(document, peptideGroup,
                 peptide);
             CalibrationCurveFitter curveFitter = new CalibrationCurveFitter(peptideQuantifier, document.Settings);
             if (peptideQuantifier.QuantificationSettings.RegressionFit == RegressionFit.NONE)

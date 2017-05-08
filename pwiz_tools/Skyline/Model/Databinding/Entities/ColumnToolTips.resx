@@ -771,6 +771,9 @@ file, or the file name again for other file types.</value>
     <value>Standard deviation of the precursor TotalAreaNormalized
 values.</value>
   </data>
+  <data name="TicArea">
+    <value>Integral of the total ion current over the entire run.</value>
+  </data>
   <data name="TotalArea">
     <value>The summed Area values of all individual transitions for the particular
 precursor.</value>

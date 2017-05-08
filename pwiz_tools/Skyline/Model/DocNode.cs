@@ -154,7 +154,7 @@ namespace pwiz.Skyline.Model
 
         #region object overrides
 
-        public bool Equals(DocNode obj)
+        protected bool Equals(DocNode obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;

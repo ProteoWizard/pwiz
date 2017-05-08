@@ -493,6 +493,9 @@ namespace pwiz.SkylineTestFunctional
                              (ChromTransition.GetStructSize(CacheFormatVersion.Twelve) -
                               ChromTransition.GetStructSize(CacheFormatVersion.Eleven));
             }
+            cacheSize += fileCachedCount *
+                         (CachedFileHeaderStruct.GetStructSize(ChromatogramCache.FORMAT_VERSION_CACHE) -
+                          CachedFileHeaderStruct.GetStructSize(CacheFormatVersion.Nine));
             cacheSize += CacheHeaderStruct.GetStructSize(ChromatogramCache.FORMAT_VERSION_CACHE) -
                          CacheHeaderStruct.GetStructSize(ChromatogramCache.FORMAT_VERSION_CACHE_11);
             return cacheSize;

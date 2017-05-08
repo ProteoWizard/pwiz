@@ -38,10 +38,16 @@ namespace pwiz.Skyline.Model.Results
         // Version 9 file header addition
         public int sizeScanIds;
         public long locationScanIds;
+        // Version 13 file header addition
+        public float ticArea;
 
         // ReSharper disable NonLocalizedString
         public static int GetStructSize(CacheFormatVersion formatVersion)
         {
+            if (formatVersion >= CacheFormatVersion.Thirteen)
+            {
+                return 52;
+            }
             if (formatVersion > CacheFormatVersion.Eight)
             {
                 return 48;

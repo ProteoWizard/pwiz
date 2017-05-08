@@ -7096,6 +7096,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Updating document settings to match edits..
+        /// </summary>
+        public static string DataGridViewPasteHandler_EndDeferSettingsChangesOnDocument_Updating_settings {
+            get {
+                return ResourceManager.GetString("DataGridViewPasteHandler_EndDeferSettingsChangesOnDocument_Updating_settings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Pasting row {0}.
         /// </summary>
         public static string DataGridViewPasteHandler_Paste_Pasting_row__0_ {

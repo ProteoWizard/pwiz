@@ -172,7 +172,7 @@ namespace pwiz.Skyline.SettingsUI
             IsShowLibraryExplorer = false;
             tabControl1.TabPages.Remove(tabIntegration);
             comboNormalizationMethod.Items.AddRange(
-                NormalizationMethod.ListNormalizationMethods(parent.DocumentUI, false).ToArray());
+                NormalizationMethod.ListNormalizationMethods(parent.DocumentUI).ToArray());
             comboNormalizationMethod.SelectedItem = _peptideSettings.Quantification.NormalizationMethod;
             comboWeighting.Items.AddRange(RegressionWeighting.All.Cast<object>().ToArray());
             comboWeighting.SelectedItem = _peptideSettings.Quantification.RegressionWeighting;

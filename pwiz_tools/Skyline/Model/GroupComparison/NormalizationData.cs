@@ -22,6 +22,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using MathNet.Numerics.Statistics;
 using pwiz.Common.Collections;
+using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.GroupComparison
@@ -33,16 +34,27 @@ namespace pwiz.Skyline.Model.GroupComparison
     /// </summary>
     public class NormalizationData
     {
+        public static readonly NormalizationData EMPTY = new NormalizationData(new Dictionary<DataKey, DataValue>());
         private readonly IDictionary<DataKey, DataValue> _data;
+        private readonly IDictionary<Tuple<SampleType, IsotopeLabelType>, double> _medianMedians;
 
         private NormalizationData(IDictionary<DataKey, DataValue> data)
         {
             _data = data;
+            _medianMedians = data.ToLookup(keyValuePair => Tuple.Create(keyValuePair.Key.SampleType, keyValuePair.Key.IsotopeLabelType),
+                    kvp => kvp.Value)
+                .ToDictionary(grouping => grouping.Key,
+                    grouping => grouping.Select(dataValue => dataValue.Median).Median());
         }
 
         public static NormalizationData GetNormalizationData(SrmDocument document, bool treatMissingValuesAsZero, double? qValueCutoff)
         {
+            if (!document.Settings.HasResults)
+            {
+                return EMPTY;
+            }
             var intensitiesByFileAndLabelType = new Dictionary<DataKey, List<double>>();
+            var chromatogramSets = document.Settings.MeasuredResults.Chromatograms;
             foreach (var peptideGroup in document.MoleculeGroups)
             {
                 foreach (var peptide in peptideGroup.Molecules)
@@ -66,7 +78,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                             {
                                 continue;
                             }
-                            for (int iResult = 0; iResult < transition.Results.Count; iResult++)
+                            for (int iResult = 0; iResult < transition.Results.Count && iResult < chromatogramSets.Count; iResult++)
                             {
                                 var results = transition.Results[iResult];
                                 if (null == results)
@@ -85,8 +97,8 @@ namespace pwiz.Skyline.Model.GroupComparison
                                     {
                                         continue;
                                     }
-
-                                    var key = new DataKey(chromInfo.FileId, transitionGroup.TransitionGroup.LabelType);
+                                    
+                                    var key = new DataKey(chromInfo.FileId, chromatogramSets[iResult].SampleType, transitionGroup.TransitionGroup.LabelType);
                                     if (transition.IsMs1)
                                     {
                                         double totalArea;
@@ -135,8 +147,8 @@ namespace pwiz.Skyline.Model.GroupComparison
             IEnumerable<Tuple<ChromFileInfoId, IsotopeLabelType, double>> values)
         {
             return new NormalizationData(
-                values.ToLookup(value=>new DataKey(value.Item1, value.Item2), value=>value.Item3)
-                .ToDictionary(grouping=>grouping.Key, grouping=>new DataValue(grouping))
+                values.ToLookup(value => new DataKey(value.Item1, null, value.Item2), value => value.Item3)
+                .ToDictionary(grouping => grouping.Key, grouping => new DataValue(grouping))
                 );
         }
 
@@ -144,7 +156,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             double value)
         {
             DataValue dataValue;
-            if (!_data.TryGetValue(new DataKey(chromFileInfoId, isotopeLabelType), out dataValue))
+            if (!_data.TryGetValue(new DataKey(chromFileInfoId, null, isotopeLabelType), out dataValue))
             {
                 return null;
             }
@@ -154,7 +166,7 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public double? Percentile(ChromFileInfoId chromFileInfoId, IsotopeLabelType isotopeLabelType, double percentile)
         {
-            var dataKey = new DataKey(chromFileInfoId, isotopeLabelType);
+            var dataKey = new DataKey(chromFileInfoId, null, isotopeLabelType);
             DataValue dataValue;
             if (!_data.TryGetValue(dataKey, out dataValue))
             {
@@ -165,7 +177,7 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public double? GetMedian(ChromFileInfoId chromFileInfoId, IsotopeLabelType isotopeLabelType)
         {
-            var dataKey = new DataKey(chromFileInfoId, isotopeLabelType);
+            var dataKey = new DataKey(chromFileInfoId, null, isotopeLabelType);
             DataValue dataValue;
             if (!_data.TryGetValue(dataKey, out dataValue))
             {
@@ -174,11 +186,14 @@ namespace pwiz.Skyline.Model.GroupComparison
             return dataValue.Median;
         }
 
-        public double? GetMedianMedian(IsotopeLabelType isotopeLabelType)
+        public double? GetMedianMedian(SampleType sampleType, IsotopeLabelType isotopeLabelType)
         {
-            return _data.Where(entry => Equals(isotopeLabelType, entry.Key.IsotopeLabelType))
-                .Select(entry => entry.Value.Median)
-                .Median();
+            double medianMedian;
+            if (_medianMedians.TryGetValue(Tuple.Create(sampleType, isotopeLabelType), out medianMedian))
+            {
+                return medianMedian;
+            }
+            return null;
         }
 
         public double? GetMeanPercentile(IsotopeLabelType isotopeLabelType, double percentile)
@@ -201,13 +216,15 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         private struct DataKey
         {
-            public DataKey(ChromFileInfoId chromFileInfoId, IsotopeLabelType isotopeLabelType)
+            public DataKey(ChromFileInfoId chromFileInfoId, SampleType sampleType, IsotopeLabelType isotopeLabelType)
                 : this()
             {
                 ChromFileInfoId = chromFileInfoId;
+                SampleType = sampleType;
                 IsotopeLabelType = isotopeLabelType;
             }
             public ChromFileInfoId ChromFileInfoId { get; private set; }
+            public SampleType SampleType { get; private set; }
             public IsotopeLabelType IsotopeLabelType { get; private set; }
 
             public bool Equals(DataKey other)

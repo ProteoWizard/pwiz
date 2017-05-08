@@ -127,7 +127,7 @@ namespace pwiz.Skyline.Model.Databinding
 
             if (null != document)
             {
-                normalizationMethods.AddRange(NormalizationMethod.ListNormalizationMethods(document, false).Select(ToDropdownItem));
+                normalizationMethods.AddRange(NormalizationMethod.ListNormalizationMethods(document).Select(ToDropdownItem));
                 normalizationMethods.AddRange(NormalizationMethod.RatioToSurrogate.ListSurrogateNormalizationMethods(document).Select(ToDropdownItem));
                 // If there are any molecules that have a normalization method that is not in the list, add it to the end.
                 var normalizationMethodValues = new HashSet<NormalizationMethod>(normalizationMethods.Select(tuple => tuple.Item2)

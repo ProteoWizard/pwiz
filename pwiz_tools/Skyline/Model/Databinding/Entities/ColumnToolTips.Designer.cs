@@ -1942,6 +1942,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Integral of the total ion current over the entire run..
+        /// </summary>
+        internal static string TicArea {
+            get {
+                return ResourceManager.GetString("TicArea", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The summed Area values of all individual transitions for the particular
         ///precursor..
         /// </summary>

@@ -1313,7 +1313,7 @@ namespace pwiz.Skyline.Model.Results
         #endregion
     }
 
-    public struct ChromCachedFile : IPathContainer
+    public class ChromCachedFile : Immutable, IPathContainer
     {
         [Flags]
         public enum FlagValues
@@ -1342,7 +1342,7 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromCachedFile(MsDataFileUri filePath, FlagValues flags, DateTime fileWriteTime, DateTime? runStartTime,
                                float maxRT, float maxIntensity, IEnumerable<MsInstrumentConfigInfo> instrumentInfoList)
-            : this(filePath, flags, fileWriteTime, runStartTime, maxRT, maxIntensity, 0, 0, instrumentInfoList)
+            : this(filePath, flags, fileWriteTime, runStartTime, maxRT, maxIntensity, 0, 0, default(float?), instrumentInfoList)
         {
         }
 
@@ -1354,8 +1354,8 @@ namespace pwiz.Skyline.Model.Results
                                float maxIntensity,
                                int sizeScanIds,
                                long locationScanIds,
+                               float? ticArea,
                                IEnumerable<MsInstrumentConfigInfo> instrumentInfoList)
-            : this()
         {
             FilePath = filePath;
             Flags = flags;
@@ -1365,7 +1365,8 @@ namespace pwiz.Skyline.Model.Results
             MaxIntensity = maxIntensity;
             SizeScanIds = sizeScanIds;
             LocationScanIds = locationScanIds;
-            InstrumentInfoList = instrumentInfoList;
+            TicArea = ticArea;
+            InstrumentInfoList = ImmutableList.ValueOf(instrumentInfoList) ?? ImmutableList<MsInstrumentConfigInfo>.EMPTY;
         }
 
         public MsDataFileUri FilePath { get; private set; }
@@ -1376,7 +1377,8 @@ namespace pwiz.Skyline.Model.Results
         public float MaxIntensity { get; private set; }
         public int SizeScanIds { get; private set; }
         public long LocationScanIds { get; private set; }
-        public IEnumerable<MsInstrumentConfigInfo> InstrumentInfoList { get; private set; } 
+        public ImmutableList<MsInstrumentConfigInfo> InstrumentInfoList { get; private set; }
+        public float? TicArea { get; private set; }
 
         public bool IsCurrent
         {
@@ -1395,8 +1397,17 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromCachedFile RelocateScanIds(long locationScanIds)
         {
-            return new ChromCachedFile(FilePath, Flags, FileWriteTime, RunStartTime, MaxRetentionTime, MaxIntensity,
-                SizeScanIds, locationScanIds, InstrumentInfoList);
+            return ChangeProp(ImClone(this), im => im.LocationScanIds = locationScanIds);
+        }
+
+        public ChromCachedFile ChangeTicArea(float? ticArea)
+        {
+            return ChangeProp(ImClone(this), im => im.TicArea = ticArea);
+        }
+
+        public ChromCachedFile ChangeFilePath(MsDataFileUri filePath)
+        {
+            return ChangeProp(ImClone(this), im => im.FilePath = filePath);
         }
     }
 

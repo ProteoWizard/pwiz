@@ -2283,6 +2283,7 @@
     <EmbeddedResource Include="Model\Databinding\Entities\ColumnToolTips.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>ColumnToolTips.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\Databinding\Entities\ColumnCaptions.zh-CHS.resx">
       <DependentUpon>ColumnCaptions.resx</DependentUpon>

@@ -36,7 +36,8 @@ namespace pwiz.Skyline.Model.Results
         Ten = 10, // Introduces waters lockmass correction in MSDataFileUri syntax
         Eleven = 11, // Adds chromatogram start, stop times, and uncompressed size info, and new flag bit for SignedMz
         Twelve = 12, // Adds structure sizes to CacheHeaderStruct
-        CURRENT = Twelve,
+        Thirteen = 13,
+        CURRENT = Thirteen,
     }
     
     [StructLayout(LayoutKind.Sequential, Pack = 4)]

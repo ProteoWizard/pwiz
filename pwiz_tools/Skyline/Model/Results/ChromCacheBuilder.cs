@@ -482,6 +482,7 @@ namespace pwiz.Skyline.Model.Results
                                      (float) (provider.MaxIntensity ?? 0),
                                      _currentFileInfo.SizeScanIds,
                                      _currentFileInfo.LocationScanIds,
+                                     (float?) provider.TicArea,
                                      _currentFileInfo.InstrumentInfoList));
         }
 

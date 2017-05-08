@@ -107,6 +107,7 @@ namespace pwiz.Common.DataBinding.Internal
             {
                 return new[] {rowItem};
             }
+            tickCounter.Tick();
             IList<object> keys = null;
             if (sublistColumn.CollectionInfo.IsDictionary)
             {
@@ -124,6 +125,7 @@ namespace pwiz.Common.DataBinding.Internal
 
         public RowItem Pivot(TickCounter tickCounter, RowItem rowItem)
         {
+            tickCounter.Tick();
             foreach (var pivotColumn in PivotColumns)
             {
                 var parent = pivotColumn.Parent.CollectionAncestor();
@@ -433,7 +435,7 @@ namespace pwiz.Common.DataBinding.Internal
             public TickCounter(long maxTickCount) : this(CancellationToken.None, maxTickCount)
             {
             }
-            public TickCounter() : this(1000000)
+            public TickCounter() : this(10000000)
             {
             }
             public long TickCount {get { return _tickCount; }}

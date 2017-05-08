@@ -693,6 +693,9 @@
   <data name="StdevTotalAreaRatio">
     <value>Stdev Total Area Ratio</value>
   </data>
+  <data name="TicArea">
+    <value>Total Ion Current Area</value>
+  </data>
   <data name="TotalArea">
     <value>Total Area</value>
   </data>

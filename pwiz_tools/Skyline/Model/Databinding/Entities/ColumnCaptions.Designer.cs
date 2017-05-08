@@ -2023,6 +2023,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Total Ion Current Area.
+        /// </summary>
+        public static string TicArea {
+            get {
+                return ResourceManager.GetString("TicArea", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Total Area.
         /// </summary>
         public static string TotalArea {

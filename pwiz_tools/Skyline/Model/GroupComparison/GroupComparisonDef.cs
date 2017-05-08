@@ -206,7 +206,10 @@ namespace pwiz.Skyline.Model.GroupComparison
             writer.WriteAttributeIfString(ATTR.case_value, CaseValue);
             writer.WriteAttributeIfString(ATTR.identity_annotation, IdentityAnnotation);
             writer.WriteAttribute(ATTR.avg_tech_replicates, AverageTechnicalReplicates, true);
-            writer.WriteAttributeIfString(ATTR.normalization_method, NormalizationMethod.Name);
+            if (NormalizationMethod != null)
+            {
+                writer.WriteAttributeIfString(ATTR.normalization_method, NormalizationMethod.Name);
+            }
             writer.WriteAttribute(ATTR.include_interaction_transitions, IncludeInteractionTransitions, false);
             writer.WriteAttribute(ATTR.summarization_method, SummarizationMethod.Name);
             writer.WriteAttribute(ATTR.confidence_level, ConfidenceLevelTimes100);

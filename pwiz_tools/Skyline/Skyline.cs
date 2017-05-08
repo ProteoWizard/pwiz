@@ -532,7 +532,13 @@ namespace pwiz.Skyline
         {
             // Not allowed to set the document to null.
             Debug.Assert(docNew != null);
-
+            if (docNew.DeferSettingsChanges)
+            {
+                if (!_undoManager.Recording)
+                {
+                    throw new InvalidOperationException();
+                }
+            }
             var docResult = Interlocked.CompareExchange(ref _document, docNew, docOriginal);
             if (!ReferenceEquals(docResult, docOriginal))
                 return false;

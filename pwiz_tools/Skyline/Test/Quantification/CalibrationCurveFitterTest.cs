@@ -205,7 +205,7 @@ namespace pwiz.SkylineTest.Quantification
             PeptideGroupDocNode protein = srmDocument.MoleculeGroups.First();
             PeptideDocNode peptide = protein.Peptides.First();
             peptide = peptide.ChangeInternalStandardConcentration(null);
-            PeptideQuantifier peptideQuantifier = PeptideQuantifier.GetPeptideQuantifier(srmDocument.Settings, protein, peptide);
+            PeptideQuantifier peptideQuantifier = PeptideQuantifier.GetPeptideQuantifier(srmDocument, protein, peptide);
             CalibrationCurveFitter curveFitter = new CalibrationCurveFitter(peptideQuantifier, srmDocument.Settings);
             Assert.AreEqual(QuantificationStrings.Analyte_Concentration, curveFitter.GetXAxisTitle());
             Assert.AreEqual(QuantificationStrings.CalibrationCurveFitter_GetYAxisTitle_Peak_Area, curveFitter.GetYAxisTitle());
@@ -253,7 +253,7 @@ namespace pwiz.SkylineTest.Quantification
             PeptideGroupDocNode protein = srmDocument.MoleculeGroups.First();
             PeptideDocNode peptide = protein.Peptides.First();
             peptide = peptide.ChangeInternalStandardConcentration(null);
-            PeptideQuantifier peptideQuantifier = PeptideQuantifier.GetPeptideQuantifier(srmDocument.Settings, protein, peptide);
+            PeptideQuantifier peptideQuantifier = PeptideQuantifier.GetPeptideQuantifier(srmDocument, protein, peptide);
             CalibrationCurveFitter curveFitter = new CalibrationCurveFitter(peptideQuantifier, srmDocument.Settings);
             Assert.AreEqual(QuantificationStrings.Analyte_Concentration, curveFitter.GetXAxisTitle());
             Assert.AreEqual(CalibrationCurveFitter.PeakAreaRatioText(IsotopeLabelType.light, IsotopeLabelType.heavy), curveFitter.GetYAxisTitle());
@@ -298,7 +298,7 @@ namespace pwiz.SkylineTest.Quantification
             PeptideGroupDocNode protein = srmDocument.MoleculeGroups.First();
             PeptideDocNode peptide = protein.Peptides.First();
             peptide = peptide.ChangeInternalStandardConcentration(internalStandardConcentration);
-            PeptideQuantifier peptideQuantifier = PeptideQuantifier.GetPeptideQuantifier(srmDocument.Settings, protein, peptide);
+            PeptideQuantifier peptideQuantifier = PeptideQuantifier.GetPeptideQuantifier(srmDocument, protein, peptide);
             CalibrationCurveFitter curveFitter = new CalibrationCurveFitter(peptideQuantifier, srmDocument.Settings);
             Assert.AreEqual(CalibrationCurveFitter.ConcentrationRatioText(IsotopeLabelType.light, IsotopeLabelType.heavy), 
                 curveFitter.GetXAxisTitle());
@@ -369,6 +369,7 @@ namespace pwiz.SkylineTest.Quantification
         private CalibrationCurveFitter GetCalibrationCurveFitter(SrmDocument document)
         {
             var peptideQuantifier = new PeptideQuantifier(
+                null,
                 document.MoleculeGroups.First(),
                 document.Peptides.First(), document.Settings.PeptideSettings.Quantification);
             return new CalibrationCurveFitter(peptideQuantifier, document.Settings);

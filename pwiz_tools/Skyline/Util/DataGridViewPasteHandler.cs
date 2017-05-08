@@ -22,6 +22,9 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Controls;
+using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Util
@@ -88,6 +91,8 @@ namespace pwiz.Skyline.Util
                 bool enabledOld = DataGridView.Enabled;
                 try
                 {
+                    var originalDocument = SkylineWindow.DocumentUI;
+                    SkylineWindow.ModifyDocumentNoUndo(doc => doc.BeginDeferSettingsChanges());
                     DataGridView.Enabled = false;
                     Settings.Default.ResultsGridSynchSelection = false;
                     var longOperationRunner = new LongOperationRunner
@@ -97,7 +102,23 @@ namespace pwiz.Skyline.Util
                     };
                     if (longOperationRunner.CallFunction(operation))
                     {
-                        undoTransaction.Commit();
+                        bool success = false;
+                        SkylineWindow.ModifyDocumentNoUndo(doc =>
+                        {
+                            var newDoc = EndDeferSettingsChangesOnDocument(originalDocument.Settings, doc);
+                            if (newDoc != null)
+                            {
+                                success = true;
+                                return newDoc;
+                            }
+                            // If the user cancelled updating the settings, then we have to revert back
+                            // to what the document was before any changes were made.
+                            return originalDocument;
+                        });
+                        if (success)
+                        {
+                            undoTransaction.Commit();
+                        }
                         return true;
                     }
                     return false;
@@ -107,6 +128,25 @@ namespace pwiz.Skyline.Util
                     DataGridView.Enabled = enabledOld;
                     Settings.Default.ResultsGridSynchSelection = resultsGridSynchSelectionOld;
                 }
+            }
+        }
+
+        private SrmDocument EndDeferSettingsChangesOnDocument(SrmSettings originalSettings, SrmDocument document)
+        {
+            string message = Resources.DataGridViewPasteHandler_EndDeferSettingsChangesOnDocument_Updating_settings;
+            using (var longWaitDlg = new LongWaitDlg
+            {
+                Message = message
+            })
+            {
+                SrmDocument newDocument = null;
+                longWaitDlg.PerformWork(SkylineWindow, 1000, progressMonitor =>
+                {
+                    var srmSettingsChangeMonitor = new SrmSettingsChangeMonitor(progressMonitor, 
+                        message);
+                    newDocument = document.EndDeferSettingsChanges(originalSettings, srmSettingsChangeMonitor);
+                });
+                return newDocument;
             }
         }
 

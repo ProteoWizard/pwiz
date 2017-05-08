@@ -435,10 +435,8 @@ namespace pwiz.Skyline.Model.GroupComparison
                     QuantificationSettings quantificationSettings = QuantificationSettings.DEFAULT
                         .ChangeNormalizationMethod(ComparisonDef.NormalizationMethod)
                         .ChangeMsLevel(selector.MsLevel);
-                    var peptideQuantifier = new PeptideQuantifier(selector.Protein, peptide, quantificationSettings)
-                    {
-                        NormalizationData = GetNormalizationData()
-                    };
+                    var peptideQuantifier = new PeptideQuantifier(GetNormalizationData, selector.Protein, peptide,
+                        quantificationSettings);
                     if (null != selector.LabelType)
                     {
                         peptideQuantifier.MeasuredLabelTypes = ImmutableList.Singleton(selector.LabelType);
@@ -463,10 +461,6 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public NormalizationData GetNormalizationData()
         {
-            if (!NormalizationMethod.EQUALIZE_MEDIANS.Equals(ComparisonDef.NormalizationMethod))
-            {
-                return null;
-            }
             if (_normalizationData == null)
             {
                 _normalizationData = NormalizationData.GetNormalizationData(SrmDocument, ComparisonDef.UseZeroForMissingPeaks, ComparisonDef.QValueCutoff);

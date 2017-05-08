@@ -287,5 +287,21 @@ namespace pwiz.Skyline.Model.Results
             }
             return list.Skip(firstIndex).Take(lastIndex - firstIndex + 1);
         }
+
+        public double Integral(int startIndex, int endIndex)
+        {
+            if (startIndex >= endIndex)
+            {
+                return 0;
+            }
+            double total = 0;
+            for (int i = startIndex + 1; i < endIndex; i++)
+            {
+                total += Intensities[i] * (Times[i + 1] - Times[i - 1]) / 2;
+            }
+            total += Intensities[startIndex] * (Times[startIndex + 1] - Times[startIndex]) / 2;
+            total += Intensities[endIndex] * (Times[endIndex] - Times[endIndex - 1]) / 2;
+            return total;
+        }
     }
 }

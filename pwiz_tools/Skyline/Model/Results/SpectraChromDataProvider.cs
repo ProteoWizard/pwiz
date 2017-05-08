@@ -47,6 +47,7 @@ namespace pwiz.Skyline.Model.Results
         private bool _isSingleMzMatch;
         private bool _sourceHasPositivePolarityData;
         private bool _sourceHasNegativePolarityData;
+        private double? _ticArea;
 
         private readonly ChromatogramLoadingStatus.TransitionData _allChromData;
 
@@ -553,6 +554,15 @@ namespace pwiz.Skyline.Model.Results
         {
             var statusId = _collectors.ReleaseChromatogram(id, _chromGroups,
                 out timeIntensities);
+            if (timeIntensities.NumPoints > 0)
+            {
+                var chromKey = _collectors.ChromKeys[id];
+                if (SignedMz.ZERO.Equals(chromKey.Precursor) && SignedMz.ZERO.Equals(chromKey.Product) &&
+                    ChromExtractor.summed == chromKey.Extractor)
+                {
+                    _ticArea = timeIntensities.Integral(0, timeIntensities.NumPoints - 1);
+                }
+            }
             extra = new ChromExtra(statusId, 0);
 
             // Each chromatogram will be read only once!
@@ -594,6 +604,11 @@ namespace pwiz.Skyline.Model.Results
         public override double? MaxIntensity
         {
             get { return Status is ChromatogramLoadingStatus ? ((ChromatogramLoadingStatus)Status).Transitions.MaxIntensity : 0; }
+        }
+
+        public override double? TicArea
+        {
+            get { return _ticArea; } 
         }
 
         public override bool IsProcessedScans

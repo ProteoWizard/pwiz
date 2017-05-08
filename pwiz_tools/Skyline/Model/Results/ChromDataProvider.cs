@@ -88,6 +88,8 @@ namespace pwiz.Skyline.Model.Results
 
         public abstract double? MaxIntensity { get; }
 
+        public virtual double? TicArea { get { return FileInfo.TicArea; } }
+
         public abstract bool IsProcessedScans { get; }
 
         public abstract bool IsSingleMzMatch { get; }

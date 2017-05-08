@@ -22,7 +22,6 @@ using System.Linq;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
-using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util.Extensions;
@@ -122,8 +121,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public QuantificationResult GetQuantification()
         {
-            var quantifier = PeptideQuantifier.GetPeptideQuantifier(SrmDocument.Settings, Peptide.Protein.DocNode, Peptide.DocNode);
-            CalibrationCurveFitter curveFitter = new CalibrationCurveFitter(quantifier, SrmDocument.Settings);
+            CalibrationCurveFitter curveFitter = Peptide.GetCalibrationCurveFitter();
             return curveFitter.GetQuantificationResult(ResultFile.Replicate.ReplicateIndex);
         }
     }

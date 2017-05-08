@@ -38,7 +38,7 @@ namespace pwiz.SkylineTestA.Results
             {
                 foreach (var peptide in peptideGroup.Peptides)
                 {
-                    var peptideQuantifier = new PeptideQuantifier(peptideGroup, peptide, 
+                    var peptideQuantifier = new PeptideQuantifier(null, peptideGroup, peptide, 
                         QuantificationSettings.DEFAULT.ChangeNormalizationMethod(NormalizationMethod.GetNormalizationMethod(IsotopeLabelType.heavy)));
                     for (int replicateIndex = 0; replicateIndex < doc.Settings.MeasuredResults.Chromatograms.Count; replicateIndex++)
                     {

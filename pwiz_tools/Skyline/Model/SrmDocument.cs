@@ -256,6 +256,7 @@ namespace pwiz.Skyline.Model
             RevisionIndex = doc.RevisionIndex;
             UserRevisionIndex = doc.UserRevisionIndex;
             Settings = settings;
+            DeferSettingsChanges = doc.DeferSettingsChanges;
 
             if (changeProps != null)
                 changeProps(this);
@@ -292,6 +293,8 @@ namespace pwiz.Skyline.Model
         /// Document-wide settings information
         /// </summary>
         public SrmSettings Settings { get; private set; }
+
+        public bool DeferSettingsChanges { get; private set; }
 
         /// <summary>
         /// Convenience access to the <see cref="MeasuredResults"/> for easier debugging.
@@ -838,7 +841,7 @@ namespace pwiz.Skyline.Model
             }
 
             // If there were no changes that require DocNode tree updates
-            if (!diff.RequiresDocNodeUpdate)
+            if (DeferSettingsChanges || !diff.RequiresDocNodeUpdate)
                 return ChangeSettingsNoDiff(settingsNew);
             else
             {
@@ -919,8 +922,18 @@ namespace pwiz.Skyline.Model
                     }
                     var moleculeNodes = new PeptideDocNode[moleculeGroupPairs.Length];
                     var settingsParallel = settingsNew;
+                    int currentMoleculeGroupPair = 0;
                     ParallelEx.For(0, moleculeGroupPairs.Length, i =>
                     {
+                        if (progressMonitor != null)
+                        {
+                            if (progressMonitor.IsCanceled())
+                                throw new OperationCanceledException();
+                            var percentComplete = ProgressStatus.ThreadsafeIncementPercent(ref currentMoleculeGroupPair, moleculeGroupPairs.Length);
+                            if (percentComplete.HasValue && percentComplete.Value < 100)
+                                progressMonitor.ChangeProgress(status => status.ChangePercentComplete(percentComplete.Value));
+                        }
+
                         var nodePep = moleculeGroupPairs[i].ReleaseMolecule();
                         moleculeNodes[i] = nodePep.ChangeSettings(settingsParallel, diff);
                     });
@@ -1769,6 +1782,23 @@ namespace pwiz.Skyline.Model
             return Molecules.Where(mol => Equals(mol.GlobalStandardType, StandardType.SURROGATE_STANDARD));
         }
 
+        public SrmDocument BeginDeferSettingsChanges()
+        {
+            return ChangeProp(ImClone(this), im => im.DeferSettingsChanges = true);
+        }
+
+        public SrmDocument EndDeferSettingsChanges(SrmSettings originalSettings, SrmSettingsChangeMonitor progressMonitor)
+        {
+            var docWithOriginalSettings = ChangeProp(ImClone(this), im =>
+            {
+                im.Settings = originalSettings;
+                im.DeferSettingsChanges = false;
+            });
+            return docWithOriginalSettings
+                .ChangeSettings(Settings, progressMonitor)
+                .ChangeMeasuredResults(Settings.MeasuredResults, progressMonitor);
+        }
+
 
         #region Implementation of IXmlSerializable
         /// <summary>
@@ -2183,7 +2213,8 @@ namespace pwiz.Skyline.Model
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return base.Equals(obj) && Equals(obj.Settings, Settings);
+            return base.Equals(obj) && Equals(obj.Settings, Settings) 
+                && Equals(obj.DeferSettingsChanges, DeferSettingsChanges);
         }
 
         public override bool Equals(object obj)

@@ -107,7 +107,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             ReplaceComboItems(comboCaseValue, sortedCaseValues, groupComparisonDef.CaseValue ?? string.Empty);
             ReplaceComboItems(comboIdentityAnnotation, new[] { string.Empty }.Concat(ListReplicateAnnotations()),
                 groupComparisonDef.IdentityAnnotation);
-            ReplaceComboItems(comboNormalizationMethod, NormalizationMethod.ListNormalizationMethods(GroupComparisonModel.Document, true), groupComparisonDef.NormalizationMethod);
+            ReplaceComboItems(comboNormalizationMethod, NormalizationMethod.ListNormalizationMethods(GroupComparisonModel.Document), groupComparisonDef.NormalizationMethod);
             ReplaceComboItems(comboSummaryMethod, SummarizationMethod.ListSummarizationMethods(), groupComparisonDef.SummarizationMethod);
             tbxConfidenceLevel.Text = groupComparisonDef.ConfidenceLevelTimes100.ToString(CultureInfo.CurrentCulture);
             radioScopeProtein.Checked = groupComparisonDef.PerProtein;

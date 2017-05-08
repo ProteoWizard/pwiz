@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
-using NHibernate.Mapping;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
@@ -151,8 +150,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 return;
             }
 
-            var peptidePaths = GetSelectedPeptides().GetUniquePeptidePaths();
-            var pepCount = peptidePaths.ToList().Count;
+            var peptidePaths = GetSelectedPeptides().GetUniquePeptidePaths().ToList();
+            var pepCount = peptidePaths.Count;
             var isMultiSelect = pepCount > 1 ||
                                 (pepCount == 1 &&
                                  GraphSummary.StateProvider.SelectedNodes.FirstOrDefault() is PeptideGroupTreeNode);

@@ -516,6 +516,10 @@ namespace pwiz.Skyline.Model
 
         public static bool Equivalent(Transition t, Transition obj)
         {
+            if (ReferenceEquals(t, obj))
+            {
+                return true;
+            }
             return Equals(obj.IonType, t.IonType) &&
                 obj.CleavageOffset == t.CleavageOffset &&
                 obj.Charge == t.Charge &&

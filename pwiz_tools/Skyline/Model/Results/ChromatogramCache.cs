@@ -690,6 +690,7 @@ namespace pwiz.Skyline.Model.Results
                                                              cachedFileStruct.maxIntensity,
                                                              cachedFileStruct.sizeScanIds,
                                                              cachedFileStruct.locationScanIds,
+                                                             cachedFileStruct.ticArea == 0 ? (float?) null : cachedFileStruct.ticArea,
                                                              instrumentInfoList);
             }
 
@@ -902,48 +903,29 @@ namespace pwiz.Skyline.Model.Results
             cacheFormat.ChromGroupHeaderInfoSerializer().WriteItems(outStream, chromatogramEntries);
             // Write the list of cached files and their modification time stamps
             long locationFiles = outStream.Position;
-            byte[] pathBuffer = new byte[0x1000];
+            var cachedFileSerializer = cacheFormat.CachedFileSerializer();
             foreach (var cachedFile in chromCachedFiles)
             {
-                long time = cachedFile.FileWriteTime.ToBinary();
-                outStream.Write(BitConverter.GetBytes(time), 0, sizeof(long));
-                string filePathString = cachedFile.FilePath.ToString();            
-                int len = Encoding.UTF8.GetByteCount(filePathString);
-                Encoding.UTF8.GetBytes(filePathString, 0, filePathString.Length, pathBuffer, 0);
-                outStream.Write(BitConverter.GetBytes(len), 0, sizeof(int));
-                // Version 3 write modified time
-                var runStartTime = cachedFile.RunStartTime;
-                time = (runStartTime.HasValue ? runStartTime.Value.ToBinary() : 0);
-                outStream.Write(BitConverter.GetBytes(time), 0, sizeof(long));
-
-                // Version 4 write instrument information
-                string instrumentInfo = InstrumentInfoUtil.GetInstrumentInfoString(cachedFile.InstrumentInfoList);
-                int instrumentInfoLen = Encoding.UTF8.GetByteCount(instrumentInfo);
-                byte[] instrumentInfoBuffer = new byte[instrumentInfoLen];
-                Encoding.UTF8.GetBytes(instrumentInfo, 0, instrumentInfo.Length, instrumentInfoBuffer, 0);
-                outStream.Write(BitConverter.GetBytes(instrumentInfoLen), 0, sizeof(int));
-
-                // Version 5 write flags
-                if (formatVersion > FORMAT_VERSION_CACHE_4)
-                    outStream.Write(BitConverter.GetBytes((int) cachedFile.Flags), 0, sizeof(int));
-
-                // Version 6 write time and intensity dimensions
-                if (formatVersion > FORMAT_VERSION_CACHE_5)
+                var filePathBytes = Encoding.UTF8.GetBytes(cachedFile.FilePath.ToString());
+                var instrumentInfoBytes =
+                    Encoding.UTF8.GetBytes(InstrumentInfoUtil.GetInstrumentInfoString(cachedFile.InstrumentInfoList));
+                var cachedFileStruct = new CachedFileHeaderStruct
                 {
-                    outStream.Write(BitConverter.GetBytes(cachedFile.MaxRetentionTime), 0, sizeof(float));
-                    outStream.Write(BitConverter.GetBytes(cachedFile.MaxIntensity), 0, sizeof(float));
-                }
-
-                // Version 9 write scan id info
-                if (formatVersion > FORMAT_VERSION_CACHE_8)
-                {
-                    outStream.Write(BitConverter.GetBytes(cachedFile.SizeScanIds), 0, sizeof(int));
-                    outStream.Write(BitConverter.GetBytes(cachedFile.LocationScanIds), 0, sizeof(long));
-                }
-
+                    modified = cachedFile.FileWriteTime.ToBinary(),
+                    lenPath = filePathBytes.Length,
+                    runstart = cachedFile.RunStartTime.HasValue ? cachedFile.RunStartTime.Value.ToBinary() : 0,
+                    lenInstrumentInfo = instrumentInfoBytes.Length,
+                    flags = cachedFile.Flags,
+                    maxRetentionTime = cachedFile.MaxRetentionTime,
+                    maxIntensity = cachedFile.MaxIntensity,
+                    sizeScanIds = cachedFile.SizeScanIds,
+                    locationScanIds = cachedFile.LocationScanIds,
+                    ticArea = cachedFile.TicArea.GetValueOrDefault()
+                };
+                cachedFileSerializer.WriteItems(outStream, new []{cachedFileStruct});
                 // Write variable length buffers
-                outStream.Write(pathBuffer, 0, len);
-                outStream.Write(instrumentInfoBuffer, 0, instrumentInfoLen);
+                outStream.Write(filePathBytes, 0, filePathBytes.Length);
+                outStream.Write(instrumentInfoBytes, 0, instrumentInfoBytes.Length);
             }
 
             CacheHeaderStruct cacheHeader = new CacheHeaderStruct(cacheFormat)

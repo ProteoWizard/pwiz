@@ -420,6 +420,11 @@ namespace pwiz.Skyline.Model
             {
                 _manager.Rollback();
             }
+
+            public bool IsNested()
+            {
+                return false;
+            }
         }
 
         /// <summary>
@@ -431,6 +436,10 @@ namespace pwiz.Skyline.Model
             public void Dispose() {}
             public void Commit() {}
             public void Rollback() {}
+            public bool IsNested()
+            {
+                return true;
+            }
         }
     }
 }

@@ -649,6 +649,7 @@ namespace pwiz.Skyline.Model.Results
             sample_type,
             has_midas_spectra,
             explicit_global_standard_area,
+            tic_area,
         }
 
         private static readonly IXmlElementHelper<OptimizableRegression>[] OPTIMIZATION_HELPERS =
@@ -688,6 +689,7 @@ namespace pwiz.Skyline.Model.Results
                 chromFileInfo = chromFileInfo.ChangeHasMidasSpectra(reader.GetBoolAttribute(ATTR.has_midas_spectra, false));
                 chromFileInfo = chromFileInfo.ChangeExplicitGlobalStandardArea(
                     reader.GetNullableDoubleAttribute(ATTR.explicit_global_standard_area));
+                chromFileInfo = chromFileInfo.ChangeTicArea(reader.GetNullableDoubleAttribute(ATTR.tic_area));
                 chromFileInfos.Add(chromFileInfo);
                 
                 string id = reader.GetAttribute(ATTR.id) ?? GetOrdinalSaveId(fileLoadIds.Count);
@@ -746,6 +748,7 @@ namespace pwiz.Skyline.Model.Results
                 }
                 writer.WriteAttribute(ATTR.has_midas_spectra, fileInfo.HasMidasSpectra, false);
                 writer.WriteAttributeNullable(ATTR.explicit_global_standard_area, fileInfo.ExplicitGlobalStandardArea);
+                writer.WriteAttributeNullable(ATTR.tic_area, fileInfo.TicArea);
 
                 // instrument information
                 WriteInstrumentConfigList(writer, fileInfo.InstrumentInfoList);
@@ -885,6 +888,7 @@ namespace pwiz.Skyline.Model.Results
         public double MaxIntensity { get; private set; }
         public bool HasMidasSpectra { get; private set; }
         public double? ExplicitGlobalStandardArea { get; private set; }
+        public double? TicArea { get; private set; }
 
         public IList<MsInstrumentConfigInfo> InstrumentInfoList
         {
@@ -922,7 +926,13 @@ namespace pwiz.Skyline.Model.Results
                                                      im.MaxRetentionTime = fileInfo.MaxRetentionTime;
                                                      im.MaxIntensity = fileInfo.MaxIntensity;
                                                      im.HasMidasSpectra = fileInfo.HasMidasSpectra;
+                                                     im.TicArea = fileInfo.TicArea;
                                                  });
+        }
+
+        public ChromFileInfo ChangeTicArea(double? ticArea)
+        {
+            return ChangeProp(ImClone(this), im => im.TicArea = ticArea);
         }
 
         public ChromFileInfo ChangeRetentionTimeAlignments(IEnumerable<KeyValuePair<ChromFileInfoId, RegressionLineElement>> retentionTimeAlignments)
@@ -963,10 +973,13 @@ namespace pwiz.Skyline.Model.Results
                 return false;
             if (!Equals(ExplicitGlobalStandardArea, other.ExplicitGlobalStandardArea))
                 return false;
+            if (!Equals(TicArea, other.TicArea))
+                return false;
             if (!ArrayUtil.EqualsDeep(other.InstrumentInfoList, InstrumentInfoList))
                 return false;
             if (!ArrayUtil.EqualsDeep(other.RetentionTimeAlignments, RetentionTimeAlignments))
                 return false;
+
             return true;
         }
 
@@ -994,6 +1007,7 @@ namespace pwiz.Skyline.Model.Results
                 result = (result * 397) ^ MaxRetentionTime.GetHashCode();
                 result = (result*397) ^ HasMidasSpectra.GetHashCode();
                 result = (result*397) ^ ExplicitGlobalStandardArea.GetHashCode();
+                result = (result * 397) ^ TicArea.GetHashCode();
                 return result;
             }
         }

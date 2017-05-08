@@ -10,25 +10,34 @@ namespace pwiz.Skyline.Model.GroupComparison
 {
     public class PeptideQuantifier
     {
-        public PeptideQuantifier(PeptideGroupDocNode peptideGroup, PeptideDocNode peptideDocNode,
+        private NormalizationData _normalizationData;
+        private Func<NormalizationData> _getNormalizationDataFunc;
+        public PeptideQuantifier(Func<NormalizationData> getNormlizationDataFunc, PeptideGroupDocNode peptideGroup, PeptideDocNode peptideDocNode,
             QuantificationSettings quantificationSettings)
         {
             PeptideGroupDocNode = peptideGroup;
             PeptideDocNode = peptideDocNode;
             QuantificationSettings = quantificationSettings;
-
+            _getNormalizationDataFunc = getNormlizationDataFunc;
         }
 
-        public static PeptideQuantifier GetPeptideQuantifier(SrmSettings srmSettings, PeptideGroupDocNode peptideGroup, PeptideDocNode peptide)
+        public static PeptideQuantifier GetPeptideQuantifier(Func<NormalizationData> getNormalizationDataFunc, SrmSettings srmSettings, PeptideGroupDocNode peptideGroup, PeptideDocNode peptide)
         {
             var mods = srmSettings.PeptideSettings.Modifications;
             // Quantify on all label types which are not internal standards.
             ICollection<IsotopeLabelType> labelTypes = ImmutableList.ValueOf(mods.GetModificationTypes()
                 .Except(mods.InternalStandardTypes));
-            return new PeptideQuantifier(peptideGroup, peptide, srmSettings.PeptideSettings.Quantification)
+            return new PeptideQuantifier(getNormalizationDataFunc, peptideGroup, peptide, srmSettings.PeptideSettings.Quantification)
             {
                 MeasuredLabelTypes = labelTypes
             };
+        }
+
+        public static PeptideQuantifier GetPeptideQuantifier(SrmDocument document, PeptideGroupDocNode peptideGroup,
+            PeptideDocNode peptide)
+        {
+            return GetPeptideQuantifier(() => NormalizationData.GetNormalizationData(document, false, null), 
+                document.Settings, peptideGroup, peptide);
         }
 
         public PeptideGroupDocNode PeptideGroupDocNode { get; private set; }
@@ -43,7 +52,15 @@ namespace pwiz.Skyline.Model.GroupComparison
             }
         }
         public ICollection<IsotopeLabelType> MeasuredLabelTypes { get; set; }
-        public NormalizationData NormalizationData { get; set; }
+
+        public NormalizationData GetNormalizationData()
+        {
+            if (_normalizationData == null)
+            {
+                _normalizationData = _getNormalizationDataFunc();
+            }
+            return _normalizationData;
+        }
         public double? QValueCutoff { get; set; }
 
         public IsotopeLabelType RatioLabelType
@@ -189,12 +206,13 @@ namespace pwiz.Skyline.Model.GroupComparison
                 }
                 else if (Equals(NormalizationMethod, NormalizationMethod.EQUALIZE_MEDIANS))
                 {
-                    if (null == NormalizationData)
+                    var normalizationData = GetNormalizationData();
+                    if (null == normalizationData)
                     {
                         throw new InvalidOperationException(string.Format("Normalization method '{0}' is not supported here.", NormalizationMethod)); // Not L10N
                     }
-                    double? medianAdjustment = NormalizationData.GetMedian(chromInfo.FileId, transitionGroup.TransitionGroup.LabelType) 
-                        - NormalizationData.GetMedianMedian(transitionGroup.TransitionGroup.LabelType);
+                    double? medianAdjustment = normalizationData.GetMedian(chromInfo.FileId, transitionGroup.TransitionGroup.LabelType) 
+                        - normalizationData.GetMedianMedian(srmSettings.MeasuredResults.Chromatograms[replicateIndex].SampleType, transitionGroup.TransitionGroup.LabelType);
                     if (!medianAdjustment.HasValue)
                     {
                         return null;

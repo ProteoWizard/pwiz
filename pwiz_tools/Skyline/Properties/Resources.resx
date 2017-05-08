@@ -9461,4 +9461,7 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="PiecewiseLinearRegressionFunction_GetRegressionDescription_piecwise_linear_functions" xml:space="preserve">
     <value>piecwise linear functions</value>
   </data>
+  <data name="DataGridViewPasteHandler_EndDeferSettingsChangesOnDocument_Updating_settings" xml:space="preserve">
+    <value>Updating document settings to match edits.</value>
+  </data>
 </root>

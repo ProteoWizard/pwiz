@@ -38,10 +38,13 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     public class Peptide : SkylineDocNode<PeptideDocNode>
     {
         private readonly CachedValue<IDictionary<ResultKey, PeptideResult>> _results;
+        private readonly CachedValue<CalibrationCurveFitter> _calibrationCurveFitter;
         public Peptide(SkylineDataSchema dataSchema, IdentityPath identityPath)
             : base(dataSchema, identityPath)
         {
             _results = CachedValue.Create(dataSchema, MakeResults);
+            _calibrationCurveFitter = CachedValue.Create(dataSchema,
+                () => new CalibrationCurveFitter(GetPeptideQuantifier(), SrmDocument.Settings));
         }
 
         private Precursors _precursors;
@@ -347,8 +350,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                var quantifier = PeptideQuantifier.GetPeptideQuantifier(SrmDocument.Settings, Protein.DocNode, DocNode);
-                CalibrationCurveFitter curveFitter = new CalibrationCurveFitter(quantifier, SrmDocument.Settings);
+                CalibrationCurveFitter curveFitter = GetCalibrationCurveFitter();
                 CalibrationCurve calibrationCurve = curveFitter.GetCalibrationCurve();
                 return new LinkValue<CalibrationCurve>(calibrationCurve, (sender, args) =>
                 {
@@ -359,6 +361,18 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                     }
                 });
             }
+        }
+
+        public PeptideQuantifier GetPeptideQuantifier()
+        {
+            var quantifier = PeptideQuantifier.GetPeptideQuantifier(()=>DataSchema.GetReplicateSummaries().GetNormalizationData(), 
+                SrmDocument.Settings, Protein.DocNode, DocNode);
+            return quantifier;
+        }
+
+        public CalibrationCurveFitter GetCalibrationCurveFitter()
+        {
+            return _calibrationCurveFitter.Value;
         }
     }
 }

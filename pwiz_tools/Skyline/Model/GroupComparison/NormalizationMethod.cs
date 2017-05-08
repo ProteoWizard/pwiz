@@ -120,16 +120,13 @@ namespace pwiz.Skyline.Model.GroupComparison
             return Name.GetHashCode();
         }
 
-        public static IList<NormalizationMethod> ListNormalizationMethods(SrmDocument document, bool includeEqualizeMedians)
+        public static IList<NormalizationMethod> ListNormalizationMethods(SrmDocument document)
         {
             var result = new List<NormalizationMethod>
             {
-                NONE
+                NONE,
+                EQUALIZE_MEDIANS,
             };
-            if (includeEqualizeMedians)
-            {
-                result.Add(EQUALIZE_MEDIANS);
-            }
             if (document.Settings.HasGlobalStandardArea)
             {
                 result.Add(GLOBAL_STANDARDS);
