@@ -162,7 +162,7 @@ namespace pwiz.Skyline.Controls.Graphs
             SpectrumDisplayInfo SelectedSpectrum { get; }
             GraphValues.IRetentionTimeTransformOp GetRetentionTimeTransformOperation();
 
-            void BuildChromatogramMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip, ChromFileInfoId chromFileInfoId);
+            void BuildChromatogramMenu(ZedGraphControl zedGraphControl, PaneKey paneKey, ContextMenuStrip menuStrip, ChromFileInfoId chromFileInfoId);
             PeptideGraphInfo GetPeptideGraphInfo(DocNode docNode);
 
             MsDataFileUri SelectedScanFile { get; }
@@ -3289,7 +3289,8 @@ namespace pwiz.Skyline.Controls.Graphs
                                                      ContextMenuStrip menuStrip, Point mousePt,
                                                      ZedGraphControl.ContextMenuObjectState objState)
         {
-            _stateProvider.BuildChromatogramMenu(sender, menuStrip, GetChromFileInfoId());
+            var paneKey = _graphHelper.GetPaneKey(GraphPaneFromPoint(mousePt));
+            stateProvider.BuildChromatogramMenu(sender, paneKey, menuStrip, GetChromFileInfoId());
         }
 
         protected override void OnClosed(EventArgs e)

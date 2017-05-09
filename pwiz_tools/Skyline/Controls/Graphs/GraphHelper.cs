@@ -51,6 +51,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public MSGraphControl GraphControl { get; private set; }
         public IEnumerable<MSGraphPane> GraphPanes { get { return GraphControl.MasterPane.PaneList.OfType<MSGraphPane>(); } }
+        public PaneKey GetPaneKey(GraphPane graphPane) { return _displayState.GraphPaneKeys.FirstOrDefault(paneKey => ReferenceEquals(GetGraphPane(paneKey), graphPane)); }
         public IEnumerable<KeyValuePair<PaneKey, ChromGraphItem>> ListPrimaryGraphItems()
         {
             var chromDisplayState = _displayState as ChromDisplayState;

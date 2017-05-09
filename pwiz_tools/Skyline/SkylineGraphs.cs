@@ -1290,7 +1290,7 @@ namespace pwiz.Skyline
             return SequenceTree.GetPeptideGraphInfo(docNode);
         }
 
-        void GraphChromatogram.IStateProvider.BuildChromatogramMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip, ChromFileInfoId chromFileInfoId)
+        void GraphChromatogram.IStateProvider.BuildChromatogramMenu(ZedGraphControl zedGraphControl, PaneKey paneKey, ContextMenuStrip menuStrip, ChromFileInfoId chromFileInfoId)
         {
             // Store original menuitems in an array, and insert a separator
             ToolStripItem[] items = new ToolStripItem[menuStrip.Items.Count];
@@ -1345,6 +1345,20 @@ namespace pwiz.Skyline
                     {
                         removePeakGraphMenuItem.DropDownItems.Clear();
                         menuStrip.Items.Insert(iInsert++, removePeakGraphMenuItem);
+
+                        // Remove [IsotopeLabelType]
+                        var peptideTreeNode = selectedTreeNode as PeptideTreeNode;
+                        if (peptideTreeNode != null)
+                        {
+                            var nodePep = peptideTreeNode.DocNode;
+                            // only if multiple isotope label types
+                            if (paneKey.IsotopeLabelType != null &&
+                                nodePep.TransitionGroups.Select(nodeTranGroup => nodeTranGroup.TransitionGroup.LabelType).Distinct().Count() > 1)
+                            {
+                                var placeholder = new ToolStripMenuItem {Tag = paneKey.IsotopeLabelType};
+                                removePeakGraphMenuItem.DropDownItems.Add(placeholder);
+                            }
+                        }
                     }
                     menuStrip.Items.Insert(iInsert++, toolStripSeparator33);
                 }
@@ -1700,25 +1714,58 @@ namespace pwiz.Skyline
                 return;
 
             var nodeGroupTree = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>();
-            TransitionGroupDocNode nodeGroup = nodeGroupTree.DocNode;
-            IdentityPath pathGroup = nodeGroupTree.Path;
-            var nodeTranTree = (TransitionTreeNode) SelectedNode;
-            var nodeTran = nodeTranTree.DocNode;
-
-            menu.DropDownItems.Clear();
-
-            if (nodeGroup.TransitionCount > 1)
+            if (nodeGroupTree != null)
             {
-                var handler = new RemovePeakHandler(this, pathGroup, nodeGroup, null);
-                var item = new ToolStripMenuItem(Resources.SkylineWindow_removePeaksGraphMenuItem_DropDownOpening_All, null, handler.menuItem_Click);
-                menu.DropDownItems.Insert(0, item);
+                TransitionGroupDocNode nodeGroup = nodeGroupTree.DocNode;
+                IdentityPath pathGroup = nodeGroupTree.Path;
+                var nodeTranTree = (TransitionTreeNode) SelectedNode;
+                var nodeTran = nodeTranTree.DocNode;
+
+                menu.DropDownItems.Clear();
+
+                if (nodeGroup.TransitionCount > 1)
+                {
+                    var handler = new RemovePeakHandler(this, pathGroup, nodeGroup, null);
+                    var item = new ToolStripMenuItem(Resources.SkylineWindow_removePeaksGraphMenuItem_DropDownOpening_All, null, handler.menuItem_Click);
+                    menu.DropDownItems.Insert(0, item);
+                }
+
+                var chromInfo = GetTransitionChromInfo(nodeTran, SequenceTree.ResultsIndex);
+                if (chromInfo != null && !chromInfo.IsEmpty)
+                {
+                    var handler = new RemovePeakHandler(this, pathGroup, nodeGroup, nodeTran);
+                    var item = new ToolStripMenuItem(ChromGraphItem.GetTitle(nodeTran), null, handler.menuItem_Click);
+                    menu.DropDownItems.Insert(0, item);
+                }
+                return;
             }
 
-            var chromInfo = GetTransitionChromInfo(nodeTran, SequenceTree.ResultsIndex);
-            if (chromInfo != null && !chromInfo.IsEmpty)
+            var nodePepTree = SequenceTree.GetNodeOfType<PeptideTreeNode>();
+            if (nodePepTree != null)
             {
-                var handler = new RemovePeakHandler(this, pathGroup, nodeGroup, nodeTran);
-                var item = new ToolStripMenuItem(ChromGraphItem.GetTitle(nodeTran), null, handler.menuItem_Click);
+                var placeholder = menu.DropDownItems.First() as ToolStripMenuItem;
+                if (placeholder == null)
+                    return;
+
+                var isotopeLabelType = placeholder.Tag as IsotopeLabelType;
+                if (isotopeLabelType == null)
+                    return;
+
+                menu.DropDownItems.Clear();
+
+                nodeGroupTree = (TransitionGroupTreeNode) nodePepTree.FirstNode;
+                while (!Equals(nodeGroupTree.DocNode.TransitionGroup.LabelType, isotopeLabelType))
+                {
+                    var next = nodeGroupTree.NextNode;
+                    if (next == null)
+                        return;
+                    nodeGroupTree = (TransitionGroupTreeNode) next;
+                }
+                var item = new ToolStripMenuItem(Resources.SkylineWindow_removePeaksGraphMenuItem_DropDownOpening_All, null, removePeakContextMenuItem_Click);
+                menu.DropDownItems.Insert(0, item);
+
+                var handler = new RemovePeakHandler(this, nodeGroupTree.Path, nodeGroupTree.DocNode, null);
+                item = new ToolStripMenuItem(isotopeLabelType.Title, null, handler.menuItem_Click);
                 menu.DropDownItems.Insert(0, item);
             }
         }
