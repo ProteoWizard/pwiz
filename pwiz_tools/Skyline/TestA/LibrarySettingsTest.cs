@@ -43,7 +43,7 @@ namespace pwiz.SkylineTestA
         /// </summary>
         private static SpectralLibraryList TestLibraryList { get; set; }
 
-        private static LibrarySpec FindLibrarySpec(Library library)
+        private static LibrarySpec FindLibrarySpec(Library library, LibrarySpec librarySpec)
         {
             LibrarySpec spec;
             if (TestLibraryList.TryGetValue(library.Name, out spec))

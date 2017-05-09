@@ -39,6 +39,11 @@ namespace pwiz.Skyline.Model.Lib
     {
         public const string EXT = ".hlf"; // Not L10N
 
+        public static string FILTER_HLF
+        {
+            get { return TextUtil.FileDialogFilterAll(Resources.XHunterLibrary_SpecFilter_GPM_Spectral_Library, EXT); }
+        }
+
         public static readonly PeptideRankId PEP_RANK_EXPECT =
             new PeptideRankId("Expect", Resources.XHunterLibSpec_PEP_RANK_EXPECT_Expect); // Not L10N
 
@@ -50,6 +55,11 @@ namespace pwiz.Skyline.Model.Lib
         public XHunterLibSpec(string name, string path)
             : base(name, path)
         {
+        }
+
+        public override string Filter
+        {
+            get { return FILTER_HLF; }
         }
 
         public override Library LoadLibrary(ILoadMonitor loader)
@@ -223,7 +233,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public override string SpecFilter
         {
-            get { return TextUtil.FileDialogFilterAll(Resources.XHunterLibrary_SpecFilter_GPM_Spectral_Library, XHunterLibSpec.EXT); }
+            get { return XHunterLibSpec.FILTER_HLF; }
         }
 
         /// <summary>

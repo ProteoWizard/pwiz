@@ -1272,6 +1272,11 @@ namespace pwiz.Skyline.Model.Lib
         public string FilePath { get; private set; }
 
         /// <summary>
+        /// Returns the filter string to be used for finding a library of this type.
+        /// </summary>
+        public abstract string Filter { get; }
+
+        /// <summary>
         /// True if this library spec was created in order to open the current document
         /// only, and should not be stored long term in the global settings.
         /// </summary>

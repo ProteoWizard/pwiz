@@ -79,6 +79,11 @@ namespace pwiz.Skyline.Model.Lib
         {
         }
 
+        public override string Filter
+        {
+            get { return FILTER_BLIB; }
+        }
+
         public override Library LoadLibrary(ILoadMonitor loader)
         {
             return BiblioSpecLiteLibrary.Load(this, loader);

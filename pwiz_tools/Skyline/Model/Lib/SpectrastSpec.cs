@@ -30,9 +30,19 @@ namespace pwiz.Skyline.Model.Lib
     {
         public const string EXT = ".sptxt"; // Not L10N
 
+        public static string FILTER_SPTXT
+        {
+            get { return TextUtil.FileDialogFilterAll(Resources.SpectrastLibrary_SpecFilter_SpectraST_Library, EXT); }            
+        }
+
         public SpectrastSpec(string name, string path)
             : base(name, path)
         {
+        }
+
+        public override string Filter
+        {
+            get { return FILTER_SPTXT; }
         }
 
         public override Library LoadLibrary(ILoadMonitor loader)
@@ -162,7 +172,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public override string SpecFilter
         {
-            get { return TextUtil.FileDialogFilterAll(Resources.SpectrastLibrary_SpecFilter_SpectraST_Library, SpectrastSpec.EXT); }
+            get { return SpectrastSpec.FILTER_SPTXT; }
         }
 
         #region Implementation of IXmlSerializable

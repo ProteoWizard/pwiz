@@ -22,7 +22,9 @@ using System.IO;
 using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Lib.Midas
 {
@@ -33,6 +35,11 @@ namespace pwiz.Skyline.Model.Lib.Midas
         public const string PREFIX = "MIDAS_"; // Not L10N
 
         private static readonly PeptideRankId[] RANK_IDS = { PEP_RANK_COPIES, PEP_RANK_PICKED_INTENSITY };
+
+        public static string FILTER_MIDAS
+        {
+            get { return TextUtil.FileDialogFilterAll(Resources.MidasLibrary_SpecFilter_MIDAS_Spectral_Library, EXT); }
+        }
 
         public static string GetName(string documentPath, IEnumerable<LibrarySpec> libSpecs = null)
         {
@@ -50,6 +57,11 @@ namespace pwiz.Skyline.Model.Lib.Midas
         public MidasLibSpec(string name, string path)
             : base(name, path)
         {
+        }
+
+        public override string Filter
+        {
+            get { return FILTER_MIDAS; }
         }
 
         public override Library LoadLibrary(ILoadMonitor loader)

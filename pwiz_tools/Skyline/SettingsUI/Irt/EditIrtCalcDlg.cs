@@ -246,7 +246,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 Title = Resources.EditIrtCalcDlg_btnBrowseDb_Click_Open_iRT_Database,
                 InitialDirectory = Settings.Default.ActiveDirectory,
                 DefaultExt = IrtDb.EXT,
-                Filter = TextUtil.FileDialogFiltersAll(IrtDb.FILTER_IRTDB, BiblioSpecLiteSpec.FILTER_BLIB, ChromatogramLibrary.FILTER_CLIB)
+                Filter = TextUtil.FileDialogFiltersAll(IrtDb.FILTER_IRTDB, BiblioSpecLiteSpec.FILTER_BLIB, ChromatogramLibrarySpec.FILTER_CLIB)
             })
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)

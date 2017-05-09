@@ -34,7 +34,6 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
-using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Lib.Midas
 {
@@ -86,7 +85,7 @@ namespace pwiz.Skyline.Model.Lib.Midas
 
         public override string SpecFilter
         {
-            get { return TextUtil.FileDialogFilterAll(Resources.MidasLibrary_SpecFilter_MIDAS_Spectral_Library, MidasLibSpec.EXT); }
+            get { return MidasLibSpec.FILTER_MIDAS; }
         }
 
         public override IList<RetentionTimeSource> ListRetentionTimeSources()

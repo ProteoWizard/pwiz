@@ -345,10 +345,11 @@ namespace pwiz.Skyline
                 }
             }
 
-            var settings = document.Settings.ConnectLibrarySpecs(library =>
+            var settings = document.Settings.ConnectLibrarySpecs((library, librarySpec) =>
                 {
+                    string name = library != null ? library.Name : librarySpec.Name;
                     LibrarySpec spec;
-                    if (Settings.Default.SpectralLibraryList.TryGetValue(library.Name, out spec))
+                    if (Settings.Default.SpectralLibraryList.TryGetValue(name, out spec))
                     {
                         if (File.Exists(spec.FilePath))
                             return spec;                        
@@ -356,24 +357,24 @@ namespace pwiz.Skyline
                     if (documentPath == null)
                         return null;
 
-                    string fileName = library.FileNameHint;
+                    string fileName = library != null ? library.FileNameHint : Path.GetFileName(librarySpec.FilePath);
                     if (fileName != null)
                     {
                         // First look for the file name in the document directory
                         string pathLibrary = PathEx.FindExistingRelativeFile(documentPath, fileName);
                         if (pathLibrary != null)
-                            return library.CreateSpec(pathLibrary).ChangeDocumentLocal(true);
+                            return CreateLibrarySpec(library, librarySpec, pathLibrary, true);
                         // In the user's default library directory
                         pathLibrary = Path.Combine(Settings.Default.LibraryDirectory ?? string.Empty, fileName);
                         if (File.Exists(pathLibrary))
-                            return library.CreateSpec(pathLibrary);
+                            return CreateLibrarySpec(library, librarySpec, pathLibrary, false);
                     }
 
                     using (var dlg = new MissingFileDlg
                                   {
-                                      ItemName = library.Name,
+                                      ItemName = name,
                                       ItemType = Resources.SkylineWindow_ConnectLibrarySpecs_Spectral_Library,
-                                      Filter = library.SpecFilter,
+                                      Filter = library != null ? library.SpecFilter : librarySpec.Filter,
                                       FileHint = fileName,
                                       FileDlgInitialPath = Path.GetDirectoryName(documentPath),
                                       Title = Resources.SkylineWindow_ConnectLibrarySpecs_Find_Spectral_Library
@@ -382,7 +383,7 @@ namespace pwiz.Skyline
                         if (dlg.ShowDialog(parent) == DialogResult.OK)
                         {
                             Settings.Default.LibraryDirectory = Path.GetDirectoryName(dlg.FilePath);
-                            return library.CreateSpec(dlg.FilePath);
+                            return CreateLibrarySpec(library, librarySpec, dlg.FilePath, false);
                         }
                     }
 
@@ -402,6 +403,16 @@ namespace pwiz.Skyline
                 return document.ChangeSettingsNoDiff(settings);
 
             return document.ChangeSettings(settings);
+        }
+
+        private static LibrarySpec CreateLibrarySpec(Library library, LibrarySpec librarySpec, string pathLibrary, bool local)
+        {
+            var newLibrarySpec = library != null
+                ? library.CreateSpec(pathLibrary)
+                : librarySpec.ChangeFilePath(pathLibrary);
+            if (local)
+                newLibrarySpec = newLibrarySpec.ChangeDocumentLocal(true);
+            return newLibrarySpec;
         }
 
         private SrmDocument ConnectIrtDatabase(IWin32Window parent, SrmDocument document, string documentPath)
@@ -1053,7 +1064,16 @@ namespace pwiz.Skyline
             var document = DocumentUI;
             if (!document.IsLoaded)
             {
-                MessageDlg.Show(this, Resources.SkylineWindow_shareDocumentMenuItem_Click_The_document_must_be_fully_loaded_before_it_can_be_shared);
+                try
+                {
+                    // Get the description of what is not loaded into the "More Info" section of the message box
+                    // This is helpful for diagnosis, but not yet presented in a form intended for the user
+                    throw new IOException(TextUtil.LineSeparate(document.NonLoadedStateDescriptions));
+                }
+                catch (Exception e)
+                {
+                    MessageDlg.ShowWithException(this, Resources.SkylineWindow_shareDocumentMenuItem_Click_The_document_must_be_fully_loaded_before_it_can_be_shared, e);
+                }
                 return;
             }
 

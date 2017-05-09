@@ -526,29 +526,30 @@ namespace pwiz.Skyline
                 }
             }
 
-            var settings = document.Settings.ConnectLibrarySpecs(library =>
+            var settings = document.Settings.ConnectLibrarySpecs((library, librarySpec) =>
             {
+                string name = library != null ? library.Name : librarySpec.Name;
                 LibrarySpec spec;
-                if (Settings.Default.SpectralLibraryList.TryGetValue(library.Name, out spec))
+                if (Settings.Default.SpectralLibraryList.TryGetValue(name, out spec))
                 {
                     if (File.Exists(spec.FilePath))
                         return spec;
                 }
 
-                string fileName = library.FileNameHint;
+                string fileName = library != null ? library.FileNameHint : Path.GetFileName(librarySpec.FilePath);
                 if (fileName != null)
                 {
                     // First look for the file name in the document directory
                     string pathLibrary = PathEx.FindExistingRelativeFile(documentPath, fileName);
                     if (pathLibrary != null)
-                        return library.CreateSpec(pathLibrary).ChangeDocumentLocal(true);
+                        return CreateLibrarySpec(library, librarySpec, pathLibrary, true);
                     // In the user's default library directory
                     pathLibrary = Path.Combine(Settings.Default.LibraryDirectory, fileName);
                     if (File.Exists(pathLibrary))
-                        return library.CreateSpec(pathLibrary);
+                        return CreateLibrarySpec(library, librarySpec, pathLibrary, false);
                 }
                 _out.WriteLine(Resources.CommandLine_ConnectLibrarySpecs_Warning__Could_not_find_the_spectral_library__0_, library.Name);
-                return library.CreateSpec(null);
+                return CreateLibrarySpec(library, librarySpec, null, false);
             }, docLibFile);
 
             if (ReferenceEquals(settings, document.Settings))
@@ -561,6 +562,16 @@ namespace pwiz.Skyline
                 return document.ChangeSettingsNoDiff(settings);
 
             return document.ChangeSettings(settings);
+        }
+
+        private static LibrarySpec CreateLibrarySpec(Library library, LibrarySpec librarySpec, string pathLibrary, bool local)
+        {
+            var newLibrarySpec = library != null
+                ? library.CreateSpec(pathLibrary)
+                : librarySpec.ChangeFilePath(pathLibrary);
+            if (local)
+                newLibrarySpec = newLibrarySpec.ChangeDocumentLocal(true);
+            return newLibrarySpec;
         }
 
         private SrmDocument ConnectIrtDatabase(SrmDocument document, string documentPath)

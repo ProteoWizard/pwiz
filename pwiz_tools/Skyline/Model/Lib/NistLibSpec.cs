@@ -40,9 +40,19 @@ namespace pwiz.Skyline.Model.Lib
     {
         public const string EXT = ".msp"; // Not L10N
 
+        public static string FILTER_MSP
+        {
+            get { return TextUtil.FileDialogFilterAll(Resources.NistLibrary_SpecFilter_NIST_Spectral_Library, EXT); }            
+        }
+
         public NistLibSpec(string name, string path)
             : base(name, path)
         {
+        }
+
+        public override string Filter
+        {
+            get { return FILTER_MSP; }
         }
 
         public override Library LoadLibrary(ILoadMonitor loader)
@@ -316,7 +326,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public override string SpecFilter
         {
-            get { return TextUtil.FileDialogFilterAll(Resources.NistLibrary_SpecFilter_NIST_Spectral_Library, NistLibSpec.EXT); }
+            get { return NistLibSpec.FILTER_MSP; }
         }
 
         #region Implementation of IXmlSerializable

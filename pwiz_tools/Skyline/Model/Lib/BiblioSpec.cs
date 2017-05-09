@@ -38,11 +38,18 @@ namespace pwiz.Skyline.Model.Lib
     {
         public const string EXT = ".lib"; // Not L10N
 
+        public static string FILTER_LIB { get { return TextUtil.FileDialogFilterAll(Resources.BiblioSpecLibrary_SpecFilter_Legacy_BiblioSpec_Library, EXT); } }
+
         private static readonly PeptideRankId[] RANK_IDS = { PEP_RANK_COPIES, PEP_RANK_PICKED_INTENSITY };
 
         public BiblioSpecLibSpec(string name, string path)
             : base(name, path)
         {
+        }
+
+        public override string Filter
+        {
+            get { return FILTER_LIB; }
         }
 
         public override Library LoadLibrary(ILoadMonitor loader)
@@ -198,7 +205,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public override string SpecFilter
         {
-            get { return TextUtil.FileDialogFilterAll(Resources.BiblioSpecLibrary_SpecFilter_Legacy_BiblioSpec_Library, BiblioSpecLibSpec.EXT); }
+            get { return BiblioSpecLibSpec.FILTER_LIB; }
         }
 
         /// <summary>

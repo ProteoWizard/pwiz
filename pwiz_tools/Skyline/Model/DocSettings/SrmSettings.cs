@@ -1417,7 +1417,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     : null));
         }
 
-        public SrmSettings ConnectLibrarySpecs(Func<Library, LibrarySpec> findLibrarySpec, string docLibPath = null)
+        public SrmSettings ConnectLibrarySpecs(Func<Library, LibrarySpec, LibrarySpec> findLibrarySpec, string docLibPath = null)
         {
             var libraries = PeptideSettings.Libraries;
             bool hasDocLib = libraries.HasDocumentLibrary && null != docLibPath;
@@ -1434,14 +1434,22 @@ namespace pwiz.Skyline.Model.DocSettings
                 var library = libraries.Libraries[i];
                 if (library == null)
                 {
-                    librarySpecs[iSpec] = libraries.LibrarySpecs[i];
-                    if (librarySpecs[iSpec] == null)
+                    var librarySpec = libraries.LibrarySpecs[i];
+                    if (librarySpec == null)
                         throw new InvalidDataException(Resources.SrmSettings_ConnectLibrarySpecs_Settings_missing_library_spec);
+                    librarySpecs[iSpec] = librarySpec;
+                    if (!File.Exists(librarySpec.FilePath))
+                    {
+                        librarySpecs[iSpec] = findLibrarySpec(null, librarySpec);
+                        if (librarySpecs[iSpec] == null)
+                            return null;    // Canceled
+                    }
+
                     continue;
                 }
 
                 librariesNew[iSpec] = library;
-                librarySpecs[iSpec] = findLibrarySpec(library);
+                librarySpecs[iSpec] = findLibrarySpec(library, null);
                 if (librarySpecs[iSpec] == null)
                     return null;    // Canceled
                 if (librarySpecs[iSpec].FilePath == null)

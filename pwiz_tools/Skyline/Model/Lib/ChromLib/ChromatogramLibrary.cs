@@ -47,11 +47,6 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
         private ChromatogramLibrarySourceInfo[] _librarySourceFiles;
         private ChromatogramLibraryIrt[] _libraryIrts;
 
-        public static string FILTER_CLIB
-        {
-            get { return TextUtil.FileDialogFilter(Resources.ChromatogramLibrary_FILTER_CLIB_Chromatogram_Libraries, ChromatogramLibrarySpec.EXT); }
-        }
-
         public ChromatogramLibrary(ChromatogramLibrarySpec chromatogramLibrarySpec) : base(chromatogramLibrarySpec)
         {
             LibrarySpec = chromatogramLibrarySpec;
@@ -146,7 +141,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
 
         public override string SpecFilter
         {
-            get { return TextUtil.FileDialogFiltersAll(FILTER_CLIB); }
+            get { return TextUtil.FileDialogFiltersAll(ChromatogramLibrarySpec.FILTER_CLIB); }
         }
 
         public override IPooledStream ReadStream
