@@ -563,7 +563,7 @@ namespace pwiz.Skyline.SettingsUI
             listPeptide.EndUpdate();
         }
 
-        public static void GetPeptideInfo(ViewLibraryPepInfo pinfo, ListBox lPeptide, 
+        public static void GetPeptideInfo(ViewLibraryPepInfo pinfo, ViewLibraryPepInfo pepInfo, 
                                         LibKeyModificationMatcher matcher, byte[] lookupPool, 
                                         out SrmSettings settings, out TransitionGroup transitionGroup, out ExplicitMods mods)
         {
@@ -572,7 +572,7 @@ namespace pwiz.Skyline.SettingsUI
             if (matcher.HasMatches)
                 settings = settings.ChangePeptideModifications(modifications => matcher.MatcherPepMods);
 
-            var pepInfo = (ViewLibraryPepInfo)lPeptide.SelectedItem;
+//            var pepInfo = (ViewLibraryPepInfo)lPeptide.SelectedItem;
             var nodePep = pepInfo.PeptideNode;
             if (nodePep != null)
             {
@@ -673,8 +673,8 @@ namespace pwiz.Skyline.SettingsUI
                         var rankCharges = settings.TransitionSettings.Filter.ProductCharges;
 
                         ExplicitMods mods;
-                        GetPeptideInfo(_peptides[index], listPeptide, _matcher, _lookupPool, out settings, out transitionGroup, out mods);
                         var pepInfo = (ViewLibraryPepInfo)listPeptide.SelectedItem;
+                        GetPeptideInfo(_peptides[index], pepInfo, _matcher, _lookupPool, out settings, out transitionGroup, out mods);
 
                         // Make sure the types and charges in the settings are at the head
                         // of these lists to give them top priority, and get rankings correct.
@@ -1763,7 +1763,7 @@ namespace pwiz.Skyline.SettingsUI
                 if (!Equals(pepInfo, _lastTipNode))
                 {
                     _lastTipNode = pepInfo;
-                    _lastTipProvider = new PeptideTipProvider(pepInfo, listPeptide, _matcher, _lookupPool);
+                    _lastTipProvider = new PeptideTipProvider(pepInfo, _matcher, _lookupPool);
                 }
                 tipProvider = _lastTipProvider;
             }
@@ -2180,16 +2180,14 @@ namespace pwiz.Skyline.SettingsUI
         private class PeptideTipProvider : ITipProvider
         {
             private ViewLibraryPepInfo _pepInfo;
-            private ListBox _lbox;
-            private byte[] lookupPool;
-            private LibKeyModificationMatcher matcher;
+            private readonly byte[] _lookupPool;
+            private readonly LibKeyModificationMatcher _matcher;
 
-            public PeptideTipProvider(ViewLibraryPepInfo pepInfo, ListBox lbox, LibKeyModificationMatcher _matcher, byte[] _lookupPool)
+            public PeptideTipProvider(ViewLibraryPepInfo pepInfo, LibKeyModificationMatcher matcher, byte[] lookupPool)
             {
                 _pepInfo = pepInfo;
-                _lbox = lbox;
-                lookupPool = _lookupPool;
-                matcher = _matcher;
+                _lookupPool = lookupPool;
+                _matcher = matcher;
             }
 
             public bool HasTip
@@ -2209,7 +2207,7 @@ namespace pwiz.Skyline.SettingsUI
                     ExplicitMods mods;
                     TransitionGroup transitionGroup;
                     SrmSettings settings;
-                    GetPeptideInfo(_pepInfo, _lbox, matcher, lookupPool, out settings, out transitionGroup, out mods);
+                    GetPeptideInfo(_pepInfo, _pepInfo, _matcher, _lookupPool, out settings, out transitionGroup, out mods);
                     var pCalc = settings.GetPrecursorCalc(transitionGroup.LabelType, mods);
                     var massH = pCalc.GetPrecursorMass(_pepInfo.Sequence);
                     double mz = SequenceMassCalc.PersistentMZ(SequenceMassCalc.GetMZ(massH, transitionGroup.PrecursorCharge));
