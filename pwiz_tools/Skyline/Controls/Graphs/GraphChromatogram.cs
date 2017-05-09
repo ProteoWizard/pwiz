@@ -3290,7 +3290,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                                      ZedGraphControl.ContextMenuObjectState objState)
         {
             var paneKey = _graphHelper.GetPaneKey(GraphPaneFromPoint(mousePt));
-            stateProvider.BuildChromatogramMenu(sender, paneKey, menuStrip, GetChromFileInfoId());
+            _stateProvider.BuildChromatogramMenu(sender, paneKey, menuStrip, GetChromFileInfoId());
         }
 
         protected override void OnClosed(EventArgs e)
