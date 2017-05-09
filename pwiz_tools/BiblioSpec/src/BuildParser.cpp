@@ -816,8 +816,11 @@ string BuildParser::getFilenameFromID(const string& idStr){
     size_t start = idStr.find("File:");
     if( start != string::npos ){ // found it
         // strip any following spaces
-        start = idStr.find_first_not_of(' ', start + strlen("File:"));
-        if ( start != string::npos ){
+        start += strlen("File:");
+        while (start < idStr.length() && idStr[start] == ' ') {
+            ++start;
+        }
+        if (start < idStr.length()) {
             size_t end;
             // if the file attribute is quoted, end at tht next quote
             if (idStr[start] == '"'){
@@ -856,21 +859,19 @@ string BuildParser::getFilenameFromID(const string& idStr){
 
     // check for TPP/SEQUEST format <basename>.<start scan>.<end scan>.<charge>[.dta]
     vector<string> parts;
-    boost::split(parts, idStr, boost::is_any_of("."));
+    boost::split(parts, filename.empty() ? idStr : filename, boost::is_any_of("."));
 
-    if ((parts.size() == 4 || (parts.size() == 5 && strcmp(parts[4].c_str(), "dta") == 0))){            
-        if (validInts(parts.begin() + 1, parts.begin() + 4)) {
-            filename = parts[0];
+    if ((parts.size() == 4 || (parts.size() == 5 && parts.back() == "dta")) && validInts(parts.begin() + 1, parts.begin() + 4)) {
+        filename = parts[0];
 
-            // check for special ScaffoldIDNumber prefix
-            const char* scaffoldPrefix = "ScaffoldIDNumber_";
-            size_t lenPrefix = strlen(scaffoldPrefix);
-            if (strncmp(filename.c_str(), scaffoldPrefix, lenPrefix) == 0) {
-                size_t endPrefix = filename.find("_", lenPrefix);
-                if (endPrefix != string::npos && endPrefix < filename.length() - 1
-                        && atoi(filename.substr(lenPrefix, endPrefix - lenPrefix).c_str()) != 0)
-                    filename = filename.substr(endPrefix + 1, filename.length() - endPrefix - 1);
-            }
+        // check for special ScaffoldIDNumber prefix
+        const char* scaffoldPrefix = "ScaffoldIDNumber_";
+        size_t lenPrefix = strlen(scaffoldPrefix);
+        if (strncmp(filename.c_str(), scaffoldPrefix, lenPrefix) == 0) {
+            size_t endPrefix = filename.find("_", lenPrefix);
+            if (endPrefix != string::npos && endPrefix < filename.length() - 1
+                    && atoi(filename.substr(lenPrefix, endPrefix - lenPrefix).c_str()) != 0)
+                filename = filename.substr(endPrefix + 1, filename.length() - endPrefix - 1);
         }
     }
     if (filename.empty()){
