@@ -18948,6 +18948,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Precursor m/z.
+        /// </summary>
+        public static string PeptideTipProvider_RenderTip_Precursor_m_z {
+            get {
+                return ResourceManager.GetString("PeptideTipProvider_RenderTip_Precursor_m_z", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} Precursors.
         /// </summary>
         public static string PeptideTreeNode_ChildHeading__0__ {

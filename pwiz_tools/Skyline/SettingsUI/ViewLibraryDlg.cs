@@ -2212,7 +2212,7 @@ namespace pwiz.Skyline.SettingsUI
                     var massH = pCalc.GetPrecursorMass(_pepInfo.Sequence);
                     double mz = SequenceMassCalc.PersistentMZ(SequenceMassCalc.GetMZ(massH, transitionGroup.PrecursorCharge));
                     size = table.CalcDimensions(g);
-                    tableMz.AddDetailRow("Precursor m/z", string.Format("{0:F04}", mz), rt); // Not L10N
+                    tableMz.AddDetailRow(Resources.PeptideTipProvider_RenderTip_Precursor_m_z, string.Format("{0:F04}", mz), rt); // Not L10N
                     sizeMz = tableMz.CalcDimensions(g);
                     size.Height += 2;    // Spacing between details and fragments
                     if (draw)

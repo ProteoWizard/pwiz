@@ -9464,4 +9464,7 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="DataGridViewPasteHandler_EndDeferSettingsChangesOnDocument_Updating_settings" xml:space="preserve">
     <value>Updating document settings to match edits.</value>
   </data>
+  <data name="PeptideTipProvider_RenderTip_Precursor_m_z" xml:space="preserve">
+    <value>Precursor m/z</value>
+  </data>
 </root>
