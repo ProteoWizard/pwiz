@@ -548,7 +548,7 @@ namespace pwiz.Skyline
                     if (File.Exists(pathLibrary))
                         return CreateLibrarySpec(library, librarySpec, pathLibrary, false);
                 }
-                _out.WriteLine(Resources.CommandLine_ConnectLibrarySpecs_Warning__Could_not_find_the_spectral_library__0_, library.Name);
+                _out.WriteLine(Resources.CommandLine_ConnectLibrarySpecs_Warning__Could_not_find_the_spectral_library__0_, name);
                 return CreateLibrarySpec(library, librarySpec, null, false);
             }, docLibFile);
 
