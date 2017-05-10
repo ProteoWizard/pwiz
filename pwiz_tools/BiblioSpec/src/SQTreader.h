@@ -67,13 +67,6 @@ class SQTreader : public BuildParser {
   SQTversion * sqtVersion;
   double masses_[128];
 
-  // for values read from file
-  double precursorMH;
-  double qvalue;
-  char wholePepSeq[200];
-  int scanNumber;
-  int charge;
-
   boost::xpressive::sregex cometModRegex;
   void extractPSMs(); //populate the list of psms
 

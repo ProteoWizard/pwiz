@@ -234,52 +234,57 @@ void SQTreader::extractPSMs()
         
         curPSM_ = new PSM();
         
+        bool isEof = false;
+        while (file.peek() != 'S') {
+            if (file.eof()) {
+                isEof = true;
+                break;
+            }
+            getline(file, buffer);
+        }
+        if (isEof) {
+            break;
+        }
         getline(file,buffer); //the S line
         
-        wholePepSeq[0]='\0';
         // read the S line to get spectrum scan number, charge, mass
-        if(buffer[0] == 'S') {
-            sscanf(buffer.c_str(), "%*c %d %*d %d %*d %*s %lf %*f %*f %*d", 
-                   &scanNumber,&charge, &precursorMH);
-            curPSM_->charge = charge;
-            curPSM_->specKey = scanNumber;
-        }
+        int scanNumber, charge;
+        sscanf(buffer.c_str(), "%*c %d %*d %d %*d %*s %*lf %*f %*f %*d", 
+               &scanNumber,&charge);
+        curPSM_->charge = charge;
+        curPSM_->specKey = scanNumber;
         
+        if (file.peek() != 'M') {
+            delete curPSM_;
+            curPSM_ = NULL;
+            continue;
+        }
         buffer.clear();
         getline(file,buffer); //the first M line
         // read the first M line to get score and sequence
-        if(buffer[0] == 'M') {
-            double xcorr = 0;
-            sscanf(buffer.c_str(), "%*c %*d %*d %*f %*f %lf %lf %*d %*d %s %*c",
-                   &xcorr, &qvalue, wholePepSeq);
-            if( percolated ){
-                curPSM_->score = -1 * qvalue; // q-value negatated by percolator
-            } else {
-                curPSM_->score = xcorr;
-            }
+        double xcorr, qvalue;
+        char wholePepSeq[200];
+        sscanf(buffer.c_str(), "%*c %*d %*d %*f %*f %lf %lf %*d %*d %s %*c",
+               &xcorr, &qvalue, wholePepSeq);
+        if( percolated ){
+            curPSM_->score = -1 * qvalue; // q-value negatated by percolator
+        } else {
+            curPSM_->score = xcorr;
         }
-        
+
         if( curPSM_->score > scoreThreshold ) {// good matches score 0 to threshold
             delete curPSM_;
             curPSM_ = NULL;
-        } else {
-            // get the unmodified seq and mods from the file's version of seq
-            parseModifiedSeq(wholePepSeq, curPSM_->unmodSeq, curPSM_->mods);
-            psms_.push_back(curPSM_);
-            Verbosity::comment(V_DETAIL, "Saving PSM: scan %i, charge %i, "
-                               "qvalue %.3g, seq %s.", curPSM_->specKey,
-                               curPSM_->charge, curPSM_->score, 
-                               curPSM_->unmodSeq.c_str());
-            curPSM_ = NULL;
+            continue;
         }
-        
-        while(file.peek() != 'S') {
-            if(!file.eof())
-                getline(file,buffer);
-            else
-                break;
-        }
-        
+        // get the unmodified seq and mods from the file's version of seq
+        parseModifiedSeq(wholePepSeq, curPSM_->unmodSeq, curPSM_->mods);
+        psms_.push_back(curPSM_);
+        Verbosity::comment(V_DETAIL, "Saving PSM: scan %i, charge %i, "
+                           "qvalue %.3g, seq %s.", curPSM_->specKey,
+                           curPSM_->charge, curPSM_->score, 
+                           curPSM_->unmodSeq.c_str());
+        curPSM_ = NULL;
     }
    
     PSM_SCORE_TYPE score =  PERCOLATOR_QVALUE;
